@@ -108,8 +108,8 @@ const HomeBlogSection = () => {
                       />
                     </div>
                   ) : (
-                    <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                      <BookOpen className="h-10 w-10 text-primary/30" />
+                    <div className="aspect-video bg-gradient-to-br from-mint/60 to-mint/20 flex items-center justify-center">
+                      <BookOpen className="h-10 w-10 text-charcoal/30" />
                     </div>
                   )}
 
@@ -121,12 +121,15 @@ const HomeBlogSection = () => {
 
                     {/* Attraction badges */}
                     {idx === 0 && (
-                      <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                      <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-klovers-yellow text-charcoal border border-charcoal/10">
                         ⭐ {isAr ? "مميز" : "Featured"}
                       </span>
                     )}
+                    {/* Was bg-primary/10 text-primary: brand yellow as text on a
+                        10% yellow chip, which the board rules out. Mint is the
+                        board's support tone for exactly this job. */}
                     {idx > 0 && (post.seo_score ?? 0) >= 80 && (
-                      <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                      <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-mint text-charcoal border border-charcoal/10">
                         ✨ {isAr ? "موصى به" : "Top Pick"}
                       </span>
                     )}
@@ -163,10 +166,10 @@ const HomeBlogSection = () => {
         )}
 
         <div className="text-center mt-10">
-          <Button variant="outline" asChild size="lg" className="gap-2">
+          <Button variant="outline" asChild size="lg" className="gap-2 rounded-full">
             <Link to="/blog">
               {isAr ? "عرض جميع المقالات" : "View All Articles"}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
           </Button>
         </div>

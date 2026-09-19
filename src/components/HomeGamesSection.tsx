@@ -18,15 +18,21 @@ const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
   .map((id) => GAMES_CATALOG.find((g) => g.id === id))
   .filter((g): g is NonNullable<typeof g> => Boolean(g));
 
-/** Purely decorative gradient per card, cycled by position so adding a game
- *  to HOMEPAGE_GAME_IDS never requires hand-picking a new color. */
+/** Purely decorative wash per card, cycled by position so adding a game to
+ *  HOMEPAGE_GAME_IDS never requires hand-picking a new colour.
+ *
+ *  These were six hexes from no palette at all — peach, baby blue, pink,
+ *  lilac, green, cyan. They now cycle the concept board's three supporting
+ *  tones: Mint #CDEBD7, Peach #FFB7A1 and the pale yellow tint. Written as
+ *  whole literal class strings on purpose: Tailwind's scanner only keeps
+ *  what it can see, so these must never be assembled from fragments. */
 const CARD_STYLES = [
-  { color: "from-[#FFE5CC]/40 to-[#FFE5CC]/10", border: "hover:border-[#FFE5CC]" },
-  { color: "from-[#D6E8FF]/40 to-[#D6E8FF]/10", border: "hover:border-[#D6E8FF]" },
-  { color: "from-[#FFD9E6]/40 to-[#FFD9E6]/10", border: "hover:border-[#FFD9E6]" },
-  { color: "from-[#E8D9FF]/40 to-[#E8D9FF]/10", border: "hover:border-[#E8D9FF]" },
-  { color: "from-[#CFF7D3]/40 to-[#CFF7D3]/10", border: "hover:border-[#CFF7D3]" },
-  { color: "from-[#D7F7F7]/40 to-[#D7F7F7]/10", border: "hover:border-[#D7F7F7]" },
+  { color: "from-[#CDEBD7]/70 to-[#CDEBD7]/20", border: "hover:border-[#CDEBD7]" },
+  { color: "from-[#FFB7A1]/60 to-[#FFB7A1]/15", border: "hover:border-[#FFB7A1]" },
+  { color: "from-[#FFFAC4]/80 to-[#FFFAC4]/25", border: "hover:border-[#FFFAC4]" },
+  { color: "from-[#CDEBD7]/70 to-[#CDEBD7]/20", border: "hover:border-[#CDEBD7]" },
+  { color: "from-[#FFB7A1]/60 to-[#FFB7A1]/15", border: "hover:border-[#FFB7A1]" },
+  { color: "from-[#FFFAC4]/80 to-[#FFFAC4]/25", border: "hover:border-[#FFFAC4]" },
 ];
 
 /** Small marketing accent — not part of the shared catalog on purpose,
@@ -65,8 +71,8 @@ const HomeGamesSection = () => {
   return (
     <section ref={sectionRef} className="py-20 md:py-28 px-4 relative overflow-hidden bg-muted/20">
       {/* Background blobs */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-amber-200/15 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-72 h-72 bg-amber-200/15 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-mint/40 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-72 h-72 bg-peach/30 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl mx-auto relative z-10">
 
@@ -76,7 +82,7 @@ const HomeGamesSection = () => {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full text-sm font-semibold mb-4 border border-black/15 shadow-sm">
+          <div className="inline-flex items-center gap-2 bg-mint text-charcoal px-4 py-2 rounded-full text-sm font-semibold mb-4 border border-charcoal/10 shadow-sm">
             <Gamepad2 className="h-4 w-4" />
             {t("games.learnPlay")}
           </div>
@@ -91,7 +97,7 @@ const HomeGamesSection = () => {
           <div className="flex items-center justify-center gap-4 flex-wrap">
             {STATS.map(({ icon: Icon, value, label }) => (
               <div key={label} className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
-                <div className="h-7 w-7 rounded-lg bg-amber-100 border border-black/10 flex items-center justify-center">
+                <div className="h-7 w-7 rounded-lg bg-mint border border-charcoal/10 flex items-center justify-center">
                   <Icon className="h-3.5 w-3.5 text-foreground" />
                 </div>
                 <div className="text-left">
@@ -118,33 +124,36 @@ const HomeGamesSection = () => {
                 className={`group relative rounded-2xl bg-gradient-to-br ${style.color} border border-border ${style.border} hover:shadow-lg transition-all duration-200 p-4 text-left cursor-pointer`}
               >
                 {HOT_GAME_IDS.has(game.id) && (
-                  <span className="absolute top-2 right-2 text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="absolute top-2 right-2 text-[10px] bg-peach text-charcoal font-bold px-1.5 py-0.5 rounded-full">
                     🔥
                   </span>
                 )}
                 <div className="text-3xl mb-2">{game.emoji}</div>
                 <h3 className="font-bold text-foreground text-sm leading-tight mb-1">{t(game.titleKey)}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{t(game.descKey)}</p>
-                <div className="mt-2 flex items-center gap-1 text-[11px] text-amber-700 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  {tr("Play now", "العب الآن")} <ArrowRight className="h-3 w-3" />
+                <div className="mt-2 flex items-center gap-1 text-[11px] text-charcoal/70 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                  {tr("Play now", "العب الآن")} <ArrowRight className="h-3 w-3 rtl:rotate-180" />
                 </div>
               </button>
             );
           })}
 
-          {/* "Play All" card */}
+          {/* "Play All" card. It used to be a full-yellow gradient, a few
+              hundred pixels above this section's yellow CTA — two primary
+              actions on one screen, which the board rules out. Charcoal keeps
+              it prominent without spending the yellow twice. */}
           <button
             onClick={() => navigate("/games")}
-            className="group rounded-2xl bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 p-4 text-left cursor-pointer flex flex-col justify-between shadow-lg shadow-primary/20"
+            className="group rounded-2xl bg-charcoal hover:bg-charcoal/90 transition-all duration-200 p-4 text-left cursor-pointer flex flex-col justify-between shadow-lg"
           >
-            <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 text-[10px] w-fit mb-2">
+            <Badge className="bg-white/15 text-white hover:bg-white/25 border-0 text-[10px] w-fit mb-2">
               {tr("All Free", "الكل مجاني")}
             </Badge>
             <div>
-              <p className="font-bold text-primary-foreground text-sm leading-tight">{tr(`See All ${totalGames} Games`, `شاهد كل الألعاب الـ ${totalGames}`)}</p>
+              <p className="font-bold text-white text-sm leading-tight">{tr(`See All ${totalGames} Games`, `شاهد كل الألعاب الـ ${totalGames}`)}</p>
               <div className="flex items-center gap-1 mt-1.5">
-                <span className="text-xs text-primary-foreground/80">{tr("Start now", "ابدأ الآن")}</span>
-                <ArrowRight className="h-3 w-3 text-primary-foreground/80 group-hover:translate-x-0.5 transition-transform" />
+                <span className="text-xs text-white/80">{tr("Start now", "ابدأ الآن")}</span>
+                <ArrowRight className="h-3 w-3 text-white/80 group-hover:translate-x-0.5 transition-transform rtl:rotate-180" />
               </div>
             </div>
           </button>
@@ -152,7 +161,7 @@ const HomeGamesSection = () => {
 
         {/* XP banner */}
         <div
-          className={`bg-gradient-to-r from-amber-500/10 via-primary/10 to-green-500/10 border border-border rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 transition-all duration-700 delay-300 ${
+          className={`bg-gradient-to-r from-mint/60 via-klovers-yellow/15 to-peach/40 border border-border rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 transition-all duration-700 delay-300 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
@@ -167,9 +176,9 @@ const HomeGamesSection = () => {
           </div>
         </div>
 
-        {/* CTA */}
+        {/* CTA — the one yellow action in this section */}
         <div className={`text-center transition-all duration-700 delay-400 ${visible ? "opacity-100" : "opacity-0"}`}>
-          <Button size="lg" onClick={() => navigate("/games")} className="text-base px-10 gap-2 h-12 shadow-lg shadow-primary/25">
+          <Button size="lg" onClick={() => navigate("/games")} className="text-base px-10 gap-2 h-12 rounded-full shadow-lg shadow-primary/25">
             <Gamepad2 className="h-4 w-4" />
             {tr(`Play All ${totalGames} Games Free`, `العب كل الألعاب الـ ${totalGames} مجاناً`)}
           </Button>

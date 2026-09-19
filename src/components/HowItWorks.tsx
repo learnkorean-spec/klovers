@@ -32,13 +32,13 @@ const HowItWorks = () => {
               // Wrapper carries the relative context so the badge is NOT clipped by the Card
               <div key={index} className="relative pt-3">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-                  <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm border border-black/25">
+                  <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm border border-charcoal/25">
                     {index + 1}
                   </span>
                 </div>
                 <Card className="group hover:shadow-md transition-all duration-300 border-border hover:border-primary/40 text-center h-full">
                   <CardContent className="pt-8 pb-6 px-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary border border-black/25 flex items-center justify-center mx-auto mb-3 group-hover:bg-[#E6E600] transition-colors">
+                    <div className="w-12 h-12 rounded-xl bg-primary border border-charcoal/25 flex items-center justify-center mx-auto mb-3 group-hover:bg-[#E6E600] transition-colors">
                       <Icon className="h-6 w-6 text-primary-foreground" />
                     </div>
                     {/* dir="auto" lets each card's text flow in the document's language direction */}
@@ -51,10 +51,15 @@ const HowItWorks = () => {
           })}
         </div>
 
-        {/* "What your first class looks like" — pedagogy + trust */}
+        {/* "What your first class looks like" — pedagogy + trust.
+            The kicker used to be text-primary: brand yellow as TEXT on a light
+            card, which the concept board rules out and which measured under
+            2:1. Yellow is a surface here instead — the marker chip. */}
         <div className="max-w-2xl mx-auto mt-12 bg-background border border-border rounded-2xl p-6">
-          <p className="text-xs font-bold text-primary uppercase tracking-widest mb-4 text-center">
-            {isAr ? "ماذا يحدث في أول حصة" : "What your first class looks like"}
+          <p className="text-center mb-4">
+            <span className="inline-block bg-klovers-yellow text-charcoal text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+              {isAr ? "ماذا يحدث في أول حصة" : "What your first class looks like"}
+            </span>
           </p>
           <ul className="space-y-2.5">
             {(isAr ? [
@@ -69,7 +74,7 @@ const HowItWorks = () => {
               "Your teacher identifies your level and maps out your next steps",
             ]).map((item) => (
               <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-4 w-4 text-charcoal/45 shrink-0 mt-0.5" />
                 <span>{item}</span>
               </li>
             ))}
@@ -85,12 +90,12 @@ const HowItWorks = () => {
           <Button
             size="lg"
             asChild
-            className="gap-2 text-base font-bold h-12 px-8"
+            className="gap-2 text-base font-bold h-12 px-8 rounded-full"
             onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "how_it_works_cta" }); } catch {} }}
           >
             <Link to="/free-trial">
               {t("hero", "startNow")}
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5 rtl:rotate-180" />
             </Link>
           </Button>
         </div>

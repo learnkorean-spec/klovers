@@ -6,27 +6,33 @@
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 
-Klovers brand palette — website concept board, September 2026:
-  Klovers Yellow  #FFFF00  main highlight / CTA
-  Mint Green      #CDEBD7  support colour
-  Ivory           #FFF9EC  background
-  Charcoal        #2E2E2E  text / primary
-  Peach           #FFB7A1  accent colour
+Klovers brand palette — website concept board, September 2026.
+The decimals matter: each value below round-trips to the board's exact hex.
+
+  Klovers Yellow  #FFFF00  60 100% 50%      main highlight / CTA
+  Mint Green      #CDEBD7  140 42.9% 86.3%  support colour
+  Ivory           #FFF9EC  41 100% 96.3%    background
+  Charcoal        #2E2E2E  0 0% 18%         text / primary
+  Peach           #FFB7A1  14 100% 81.6%    accent colour
+
+Type, from the same board (loaded in index.html):
+  Poppins  display / headings      Inter   body and UI (Latin)
+  Cairo    body and UI (Arabic)    Caveat  handwritten accent
 */
 
 @layer base {
   :root {
     /* Brand palette — raw tokens */
     --klovers-yellow: 60 100% 50%;
-    --mint: 140 43% 86%;
+    --mint: 140 42.9% 86.3%;
     --mint-foreground: 0 0% 18%;
-    --ivory: 41 100% 96%;
+    --ivory: 41 100% 96.3%;
     --charcoal: 0 0% 18%;
-    --peach: 14 100% 82%;
+    --peach: 14 100% 81.6%;
     --peach-foreground: 0 0% 18%;
 
     /* Semantic tokens */
-    --background: 41 100% 96%;
+    --background: 41 100% 96.3%;
     --foreground: 0 0% 18%;
 
     --card: 0 0% 100%;
@@ -44,7 +50,7 @@ Klovers brand palette — website concept board, September 2026:
     --muted: 41 60% 93%;
     --muted-foreground: 0 0% 35%;
 
-    --accent: 140 43% 86%;
+    --accent: 140 42.9% 86.3%;
     --accent-foreground: 0 0% 18%;
 
     --destructive: 0 72% 50%;
@@ -60,20 +66,24 @@ Klovers brand palette — website concept board, September 2026:
     --sidebar-foreground: 0 0% 18%;
     --sidebar-primary: 60 100% 50%;
     --sidebar-primary-foreground: 0 0% 18%;
-    --sidebar-accent: 140 43% 86%;
+    --sidebar-accent: 140 42.9% 86.3%;
     --sidebar-accent-foreground: 0 0% 18%;
     --sidebar-border: 40 25% 88%;
     --sidebar-ring: 60 100% 50%;
 
     --chart-1: 60 100% 50%;
-    --chart-2: 140 43% 86%;
-    --chart-3: 14 100% 82%;
+    --chart-2: 140 42.9% 86.3%;
+    --chart-3: 14 100% 81.6%;
     --chart-4: 0 0% 18%;
     --chart-5: 0 0% 50%;
 
     --sidebar: 0 0% 100%;
 
-    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --font-sans: Inter, Cairo, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+
+    --font-display: Poppins, Cairo, ui-sans-serif, system-ui, 'Segoe UI', Arial, sans-serif;
+
+    --font-script: Caveat, 'Segoe Script', 'Brush Script MT', cursive;
 
     --font-serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
 
@@ -106,7 +116,7 @@ Klovers brand palette — website concept board, September 2026:
     --klovers-yellow: 60 100% 50%;
     --mint: 140 30% 40%;
     --mint-foreground: 0 0% 100%;
-    --ivory: 41 100% 96%;
+    --ivory: 41 100% 96.3%;
     --charcoal: 0 0% 18%;
     --peach: 14 60% 62%;
     --peach-foreground: 0 0% 12%;
@@ -172,10 +182,21 @@ Klovers brand palette — website concept board, September 2026:
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Headings carry the display face everywhere, so a page that was never
+     touched by hand still reads as the same brand. Anything that should NOT
+     be Poppins overrides with font-sans on the element itself. */
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
 }
 
 
-/* Black outline for neon-yellow text — improves legibility on any background */
+/* Black outline for neon-yellow text — improves legibility on any background.
+   DEPRECATED: the concept board and the creative-direction deck both rule that
+   yellow is a surface, never a text colour on a light background. Do not add
+   new call sites; existing ones are being migrated to a yellow marker behind
+   charcoal text, as in HeroSection.tsx. */
 @layer utilities {
   .text-outlined {
     text-shadow:
