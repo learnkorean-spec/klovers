@@ -168,9 +168,31 @@ export default {
   				'Arial',
   				'sans-serif'
   			],
-  			/* Handwritten accent — one line at a time, never a paragraph. */
+  			/*
+  			 * Handwritten accent — one line at a time, never a paragraph.
+  			 *
+  			 * THREE FACES, ONE STACK. Caveat carries no Arabic and no Hangul,
+  			 * so until 20 Sep 2026 every handwritten line on this site fell
+  			 * back to Cairo the moment an Arabic reader loaded it - the hero's
+  			 * script line included - and rendered as an ordinary sentence.
+  			 *
+  			 * Font fallback is per CHARACTER, not per element, so listing the
+  			 * three scripts' hands in one stack resolves each one correctly
+  			 * with no per-language branching in any component:
+  			 *
+  			 *   Caveat            Latin
+  			 *   Nanum Pen Script  Hangul
+  			 *   Aref Ruqaa        Arabic - ruq'ah is the everyday Arabic hand,
+  			 *                     which is what Caveat is for Latin
+  			 *
+  			 * Order matters only where two faces cover the same character.
+  			 * They do not overlap here, so this order is also the priority for
+  			 * punctuation and digits: Latin first.
+  			 */
   			script: [
   				'Caveat',
+  				'Nanum Pen Script',
+  				'Aref Ruqaa',
   				'Segoe Script',
   				'Brush Script MT',
   				'cursive'
