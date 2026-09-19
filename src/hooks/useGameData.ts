@@ -39,19 +39,22 @@ export function useGameData(lessonId?: number) {
       if (ids.length > 0) lessonIds = ids;
     }
 
-    const applyFilter = (query: any) =>
-      lessonIds ? query.in("lesson_id", lessonIds) : query;
+    // Structurally typed so it works across the two differently-shaped
+    // query builders below without an `any` escape hatch.
+    const applyFilter = <T extends { in: (column: string, values: number[]) => T }>(
+      query: T
+    ): T => (lessonIds ? query.in("lesson_id", lessonIds) : query);
 
     const [vocabRes, exRes] = await Promise.all([
       applyFilter(
-        (supabase as any)
+        supabase
           .from("lesson_vocabulary")
           .select("korean, romanization, meaning")
           .order("sort_order")
           .limit(120)
       ),
       applyFilter(
-        (supabase as any)
+        supabase
           .from("lesson_exercises")
           .select("question, options, correct_index, explanation")
           .order("sort_order")
@@ -61,7 +64,7 @@ export function useGameData(lessonId?: number) {
 
     setVocab(vocabRes.data || []);
     setExercises(
-      (exRes.data || []).map((e: any) => ({
+      (exRes.data || []).map((e) => ({
         question: e.question,
         options: Array.isArray(e.options) ? e.options : [],
         correct_index: e.correct_index,
