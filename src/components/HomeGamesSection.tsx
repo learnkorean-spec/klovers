@@ -21,22 +21,26 @@ const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
 /** Purely decorative wash per card, cycled by position so adding a game to
  *  HOMEPAGE_GAME_IDS never requires hand-picking a new colour.
  *
- *  These were six hexes from no palette at all — peach, baby blue, pink,
- *  lilac, green, cyan. They now cycle the concept board's three supporting
- *  tones: Mint #CDEBD7, Peach #FFB7A1 and the pale yellow tint. Written as
- *  whole literal class strings on purpose: Tailwind's scanner only keeps
- *  what it can see, so these must never be assembled from fragments. */
+ *  History, because it explains the shape: six hexes from no palette at all
+ *  (peach, baby blue, pink, lilac, green, cyan) → six palette hexes, which
+ *  went stale the moment Mint and Peach were tuned → theme colours. And as of
+ *  20 Sep the pink washes are gone with them: pink is a rare accent on this
+ *  site now, not a fill. Green and pale Yellow alternate instead. Whole
+ *  literal class strings on purpose: Tailwind's scanner only keeps what it
+ *  can see. */
 const CARD_STYLES = [
-  { color: "from-[#CDEBD7]/70 to-[#CDEBD7]/20", border: "hover:border-[#CDEBD7]" },
-  { color: "from-[#FFB7A1]/60 to-[#FFB7A1]/15", border: "hover:border-[#FFB7A1]" },
-  { color: "from-[#FFFAC4]/80 to-[#FFFAC4]/25", border: "hover:border-[#FFFAC4]" },
-  { color: "from-[#CDEBD7]/70 to-[#CDEBD7]/20", border: "hover:border-[#CDEBD7]" },
-  { color: "from-[#FFB7A1]/60 to-[#FFB7A1]/15", border: "hover:border-[#FFB7A1]" },
-  { color: "from-[#FFFAC4]/80 to-[#FFFAC4]/25", border: "hover:border-[#FFFAC4]" },
+  { color: "from-mint/80 to-mint/20", border: "hover:border-mint-strong" },
+  { color: "from-amber-100 to-amber-50", border: "hover:border-klovers-yellow" },
+  { color: "from-mint/80 to-mint/20", border: "hover:border-mint-strong" },
+  { color: "from-amber-100 to-amber-50", border: "hover:border-klovers-yellow" },
+  { color: "from-mint/80 to-mint/20", border: "hover:border-mint-strong" },
+  { color: "from-amber-100 to-amber-50", border: "hover:border-klovers-yellow" },
 ];
 
 /** Small marketing accent — not part of the shared catalog on purpose,
- *  since "hot" is a homepage presentation choice, not a fact about the game. */
+ *  since "hot" is a homepage presentation choice, not a fact about the game.
+ *  This badge is ONE of the two places pink is still allowed: it has to read
+ *  as unlike anything else on the card, and two of six is rare. */
 const HOT_GAME_IDS = new Set(["match", "kdrama"]);
 
 const HomeGamesSection = () => {
@@ -72,7 +76,7 @@ const HomeGamesSection = () => {
     <section ref={sectionRef} className="py-20 md:py-28 px-4 relative overflow-hidden bg-muted/20">
       {/* Background blobs */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-mint/40 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-72 h-72 bg-peach/30 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-72 h-72 bg-klovers-yellow/15 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl mx-auto relative z-10">
 
@@ -124,7 +128,7 @@ const HomeGamesSection = () => {
                 className={`group relative rounded-2xl bg-gradient-to-br ${style.color} border border-border ${style.border} hover:shadow-lg transition-all duration-200 p-4 text-left cursor-pointer`}
               >
                 {HOT_GAME_IDS.has(game.id) && (
-                  <span className="absolute top-2 right-2 text-[10px] bg-peach text-charcoal font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="absolute top-2 right-2 text-[10px] bg-peach-strong text-charcoal font-bold px-1.5 py-0.5 rounded-full">
                     🔥
                   </span>
                 )}
@@ -161,7 +165,7 @@ const HomeGamesSection = () => {
 
         {/* XP banner */}
         <div
-          className={`bg-gradient-to-r from-mint/60 via-klovers-yellow/15 to-peach/40 border border-border rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 transition-all duration-700 delay-300 ${
+          className={`bg-gradient-to-r from-mint/70 via-klovers-yellow/15 to-mint/40 border border-border rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 transition-all duration-700 delay-300 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >

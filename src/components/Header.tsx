@@ -16,6 +16,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+/** The "Free" chip beside Games. Mint, not Tailwind green: the homepage owns
+ *  five colours and a measurement on 20 Sep found this was the last stray. */
+const FREE_BADGE = "text-[10px] bg-mint text-charcoal border border-charcoal/10 px-1.5 py-0.5 rounded-full font-semibold leading-none";
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { t, language, toggleLanguage } = useLanguage();
@@ -98,7 +102,7 @@ const Header = () => {
               >
                 {link.label}
                 {link.badge && (
-                  <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded-full font-semibold leading-none">
+                  <span className={FREE_BADGE}>
                     {link.badge}
                   </span>
                 )}
@@ -132,12 +136,13 @@ const Header = () => {
             </Button>
 
             {!user && (
-              <Button size="sm" variant="outline" asChild className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10">
+              <Button size="sm" variant="outline" asChild className="gap-1.5 border-charcoal/30 text-foreground hover:bg-mint">
                 <Link
                   to="/free-trial"
                   onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "header_free_trial" }); } catch {} }}
                 >
-                  🎁 {isAr ? "حصة مجانية" : "Free Trial"}
+                  <Gift className="h-3.5 w-3.5" />
+                  {isAr ? "حصة مجانية" : "Free Trial"}
                 </Link>
               </Button>
             )}
@@ -196,7 +201,7 @@ const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button size="sm" asChild>
+              <Button size="sm" asChild className="rounded-full">
                 <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
                   {isAr ? "تسجيل الدخول" : "Sign In"}
                 </Link>
@@ -229,7 +234,7 @@ const Header = () => {
                 >
                   {link.label}
                   {"badge" in link && link.badge && (
-                    <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded-full font-semibold leading-none">
+                    <span className={FREE_BADGE}>
                       {link.badge as React.ReactNode}
                     </span>
                   )}
@@ -268,7 +273,7 @@ const Header = () => {
                   </Button>
                 </>
               ) : (
-                <Button asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                <Button asChild className="w-full rounded-full" onClick={() => setIsMenuOpen(false)}>
                   <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
                     {isAr ? "تسجيل الدخول" : "Sign In"}
                   </Link>

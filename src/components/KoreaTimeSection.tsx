@@ -6,7 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * "A journey through Korea's time" — the two blocks from the Klovers concept
  * board: four eras over a timeline, then five places.
  *
- * Palette only, per the board: Mint, Peach, Klovers Yellow, Charcoal, Ivory.
+ * Palette only: Green (soft and strong), Klovers Yellow, Charcoal, Ivory.
  * The photographs are files already in public/assets/blog, so this adds no
  * new assets; swap any `image` path for a better shot and nothing else has
  * to change.
@@ -64,11 +64,11 @@ const ERAS = [
   },
 ];
 
-/** The four stops under the era cards. Mint → Yellow → Peach → Charcoal. */
+/** The four stops under the era cards. Green → Yellow → Charcoal. */
 const STOPS = [
   { dot: "bg-mint", topEn: "Past", topAr: "الماضي", subEn: "Roots", subAr: "جذور" },
-  { dot: "bg-klovers-yellow", topEn: "Tradition", topAr: "التقليد", subEn: "Identity", subAr: "هوية" },
-  { dot: "bg-peach", topEn: "Modernity", topAr: "الحداثة", subEn: "Change", subAr: "تغيير" },
+  { dot: "bg-mint-strong", topEn: "Tradition", topAr: "التقليد", subEn: "Identity", subAr: "هوية" },
+  { dot: "bg-klovers-yellow", topEn: "Modernity", topAr: "الحداثة", subEn: "Change", subAr: "تغيير" },
   { dot: "bg-charcoal", topEn: "Your", topAr: "دورك", subEn: "Tomorrow", subAr: "غداً" },
 ];
 

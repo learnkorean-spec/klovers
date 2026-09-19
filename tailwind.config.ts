@@ -22,16 +22,19 @@ export default {
   			ring: 'hsl(var(--ring))',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
-  			/* Klovers brand palette — concept board, Sep 2026 */
+  			/* Klovers brand palette — concept board, tuned 20 Sep 2026.
+  			   Soft fill + strong accent per support colour; see src/index.css. */
   			ivory: 'hsl(var(--ivory))',
   			charcoal: 'hsl(var(--charcoal))',
   			'klovers-yellow': 'hsl(var(--klovers-yellow))',
   			mint: {
   				DEFAULT: 'hsl(var(--mint))',
+  				strong: 'hsl(var(--mint-strong))',
   				foreground: 'hsl(var(--mint-foreground))'
   			},
   			peach: {
   				DEFAULT: 'hsl(var(--peach))',
+  				strong: 'hsl(var(--peach-strong))',
   				foreground: 'hsl(var(--peach-foreground))'
   			},
   			/*

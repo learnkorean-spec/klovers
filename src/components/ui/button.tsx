@@ -4,12 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * The default variant is the brand's one action: Klovers Yellow with Charcoal
+ * type on it.
+ *
+ * Its edge used to be `border-black/40`. Measured on the rendered homepage on
+ * 20 Sep 2026, that single line was every pure-black pixel on the page — 16
+ * borders — on a brand whose darkest colour is Charcoal #2E2E2E. The hover
+ * tone was a hardcoded #E6E600 for the same reason nothing else was: nobody
+ * had a token to reach for.
+ */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-[#E6E600] border border-black/40 shadow-sm",
+        default: "bg-primary text-primary-foreground hover:bg-primary/85 border border-charcoal/30 shadow-sm",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",

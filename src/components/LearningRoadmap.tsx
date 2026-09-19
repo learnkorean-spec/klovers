@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, BookOpen, MessageCircle, Zap, Star, Trophy, Flame, GraduationCap, ArrowRight } from "lucide-react";
+import { ChevronDown, BookOpen, MessageCircle, Zap, Star, Trophy, Flame, GraduationCap, ArrowRight, Clock, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -19,42 +19,55 @@ import { LEVEL_KEYS } from "@/constants/levels";
  * The roadmap and the levels grid are the same content in two shapes; they
  * should not be able to disagree.
  *
- * The section heading, subtitle and CTA still come from translations — those
- * carry no level claims.
+ * 2026-09-20 — it looks like a journey now, not a stack of identical cards.
+ * A rail runs down the side with one node per level, and the full-colour
+ * emoji are gone: every one of them brought its own palette to a page that
+ * owns three, and a lucide icon in Charcoal says the same thing in the
+ * brand's.
  */
 
 /**
  * Per-level ornament. Keyed by canonical level key, so adding a level cannot
  * shift the palette, and a renamed badge string cannot silently blank it.
+ * Literal class strings, because Tailwind's scanner only keeps what it sees.
  *
- * The dots used to be five hand-mixed yellows (hsl 60 100% 85% → 60 80% 25%).
- * They now climb the concept board's ramp — Mint, Yellow, Peach, Charcoal —
- * which is the same ladder PlacementTestCTA draws, so the two agree. Written
- * as literal class strings, because Tailwind's scanner only keeps what it can
- * see.
+ * The ramp is Green → Yellow, and Level 6 is the single Pink on this page
+ * besides the games' "hot" badge. That is the point of it: the end of the
+ * path should not look like another step on it.
  */
-const LEVEL_META: Record<string, { icon: React.ElementType; emoji: string; dot: string }> = {
-  hangul: { icon: BookOpen, emoji: "🇰🇷", dot: "bg-mint" },
-  l1: { icon: MessageCircle, emoji: "🌱", dot: "bg-mint" },
-  l2: { icon: Zap, emoji: "⚡", dot: "bg-klovers-yellow" },
-  l3: { icon: Star, emoji: "🔥", dot: "bg-klovers-yellow" },
-  l4: { icon: Flame, emoji: "💪", dot: "bg-peach" },
-  l5: { icon: Trophy, emoji: "🏅", dot: "bg-peach" },
-  l6: { icon: GraduationCap, emoji: "🏆", dot: "bg-charcoal" },
+const LEVEL_META: Record<string, { icon: React.ElementType; tile: string }> = {
+  hangul: { icon: BookOpen, tile: "bg-mint" },
+  l1: { icon: MessageCircle, tile: "bg-mint" },
+  l2: { icon: Zap, tile: "bg-mint-strong" },
+  l3: { icon: Star, tile: "bg-mint-strong" },
+  l4: { icon: Flame, tile: "bg-klovers-yellow" },
+  l5: { icon: Trophy, tile: "bg-klovers-yellow" },
+  l6: { icon: GraduationCap, tile: "bg-peach-strong" },
 };
 
 const getMeta = (key: string) =>
-  LEVEL_META[key] ?? { icon: Star, emoji: "⭐", dot: "bg-mint" };
+  LEVEL_META[key] ?? { icon: Star, tile: "bg-mint" };
 
 /** The ladder only — the two special tracks are not steps on it. */
 const STAGES = COURSE_CARDS.filter((c) => (LEVEL_KEYS as string[]).includes(c.key));
+
+/**
+ * The eyebrow is generated in courseCards.ts as "24 classes · 6 months" (or
+ * "4 حصص · تمهيدي (Pre-A1)"), derived from levels.ts so it cannot drift. Split
+ * on the separator and each half becomes its own chip — no new fields, and
+ * nothing here can contradict the levels grid.
+ */
+const chipsFrom = (eyebrow: string): string[] =>
+  eyebrow.split("·").map((s) => s.trim()).filter(Boolean);
+
+const chipIcons = [CalendarDays, Clock];
 
 const LearningRoadmap = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
@@ -81,119 +94,118 @@ const LearningRoadmap = () => {
   return (
     <section className="py-20 md:py-28 bg-background">
       <div className="container mx-auto px-4">
+
         {/* Header */}
         <div className="text-center mb-14">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-mint text-charcoal text-xs font-semibold uppercase tracking-widest mb-4 border border-charcoal/15 shadow-sm">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-mint text-charcoal text-xs font-semibold uppercase tracking-widest mb-4 border border-charcoal/10">
             {isAr ? "رحلتك" : "Your Journey"}
           </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground">
             {t("roadmap", "title")}
           </h2>
+          {/* Yellow as a mark under the heading, never as the heading. */}
+          <span aria-hidden="true" className="mx-auto mt-3 mb-4 block h-2 w-24 rounded-full bg-klovers-yellow" />
           <p className="text-muted-foreground max-w-xl mx-auto text-base md:text-lg">
             {t("roadmap", "subtitle")}
           </p>
         </div>
 
-        {/* Roadmap cards — centered stack, no timeline line */}
-        <div className="max-w-xl mx-auto space-y-3">
+        {/* The rail */}
+        <ol className="max-w-2xl mx-auto">
           {STAGES.map((stage, index) => {
             const isActive = activeStep === index;
             const isVisible = visibleItems.has(index);
             const meta = getMeta(stage.key);
             const Icon = meta.icon;
             const isLast = index === STAGES.length - 1;
+            const chips = chipsFrom(isAr ? stage.eyebrow_ar : stage.eyebrow_en);
 
             return (
-              <div
+              <li
                 key={stage.key}
                 ref={(el) => { itemRefs.current[index] = el; }}
-                style={{ transitionDelay: `${index * 80}ms` }}
-                className={`transition-all duration-700 ease-out ${
-                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                style={{ transitionDelay: `${index * 70}ms` }}
+                className={`flex gap-4 transition-all duration-700 ease-out ${
+                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
                 }`}
               >
-                {/* Card */}
-                <div
-                  onClick={() => toggle(index)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && toggle(index)}
-                  className={`relative rounded-2xl p-5 md:p-6 cursor-pointer transition-all duration-300 border overflow-hidden group ${
-                    isActive
-                      ? "border-primary shadow-lg ring-1 ring-inset ring-primary"
-                      : "border-border hover:border-primary/30 hover:shadow-md"
-                  }`}
-                >
-                  {/* Subtle wash when active */}
-                  {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 pointer-events-none" />
+                {/* Node column — the rail lives here, so it never crosses a card */}
+                <div className="relative flex w-12 shrink-0 flex-col items-center">
+                  {!isLast && (
+                    <span aria-hidden="true" className="absolute top-12 bottom-0 w-[2px] bg-charcoal/15" />
                   )}
-
-                  {/* Top row */}
-                  <div className="relative flex items-center gap-4">
-                    {/* Step number + emoji */}
-                    <div className={`relative flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                      isActive ? "bg-primary/15 shadow-md" : "bg-muted/50 group-hover:bg-muted"
-                    }`}>
-                      <span className="text-2xl">{meta.emoji}</span>
-                      <span className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-background ${
-                        isActive ? "bg-primary text-charcoal" : "bg-muted text-muted-foreground"
-                      }`}>
-                        {index + 1}
-                      </span>
-                    </div>
-
-                    {/* Text */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ring-1 ring-foreground/25 ${meta.dot}`} />
-                        <Icon className={`w-3.5 h-3.5 ${isActive ? "text-foreground" : "text-muted-foreground"} transition-colors`} />
-                        <span className={`text-[11px] font-bold tracking-wide ${
-                          isActive ? "text-foreground" : "text-muted-foreground"
-                        } transition-colors`}>
-                          {isAr ? stage.eyebrow_ar : stage.eyebrow_en}
-                        </span>
-                      </div>
-                      <h3 className="text-base md:text-lg font-bold text-foreground leading-tight">
-                        {isAr ? stage.title_ar : stage.title_en}
-                      </h3>
-                    </div>
-
-                    {/* Chevron */}
-                    <ChevronDown
-                      className={`w-5 h-5 flex-shrink-0 transition-all duration-300 ${
-                        isActive ? "rotate-180 text-foreground" : "text-muted-foreground"
-                      }`}
-                    />
-                  </div>
-
-                  {/* Expandable description */}
-                  <div
-                    className={`relative overflow-hidden transition-all duration-400 ease-in-out ${
-                      isActive ? "max-h-52 mt-4 opacity-100" : "max-h-0 opacity-0"
+                  <span
+                    className={`relative z-10 grid h-12 w-12 place-items-center rounded-2xl border border-charcoal/10 transition-transform duration-300 ${meta.tile} ${
+                      isActive ? "scale-110 shadow-md" : ""
                     }`}
                   >
-                    <p className={`text-sm text-muted-foreground leading-relaxed ${isAr ? "pr-[72px]" : "pl-[72px]"}`}>
-                      {isAr ? stage.blurb_ar : stage.blurb_en}
-                    </p>
-                  </div>
+                    <Icon className="h-5 w-5 text-charcoal" aria-hidden="true" />
+                  </span>
+                  <span className="relative z-10 mt-1.5 text-[11px] font-bold text-charcoal/45">
+                    {index + 1}
+                  </span>
                 </div>
 
-                {/* Connector line between cards */}
-                {!isLast && (
-                  <div className="flex justify-center py-1">
-                    <div className={`w-0.5 h-3 rounded-full transition-colors duration-300 ${
-                      isActive || activeStep === index + 1 ? "bg-primary/60" : "bg-border"
-                    }`} />
+                {/* Card */}
+                <div className="flex-1 pb-5">
+                  <div
+                    onClick={() => toggle(index)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && toggle(index)}
+                    className={`cursor-pointer rounded-2xl border bg-card p-5 transition-all duration-300 ${
+                      isActive
+                        ? "border-primary shadow-lg"
+                        : "border-border hover:border-primary/40 hover:shadow-md"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <h3 className="min-w-0 flex-1 text-base md:text-lg font-bold text-foreground leading-tight">
+                        {isAr ? stage.title_ar : stage.title_en}
+                      </h3>
+                      <ChevronDown
+                        className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
+                          isActive ? "rotate-180 text-foreground" : "text-muted-foreground"
+                        }`}
+                        aria-hidden="true"
+                      />
+                    </div>
+
+                    {/* Chips — the two facts a visitor actually weighs */}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {chips.map((chip, i) => {
+                        const ChipIcon = chipIcons[i] ?? CalendarDays;
+                        return (
+                          <span
+                            key={chip}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                          >
+                            <ChipIcon className="h-3 w-3" aria-hidden="true" />
+                            {chip}
+                          </span>
+                        );
+                      })}
+                    </div>
+
+                    {/* Expandable description */}
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        isActive ? "mt-3 max-h-60 opacity-100" : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {isAr ? stage.blurb_ar : stage.blurb_en}
+                      </p>
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              </li>
             );
           })}
-        </div>
+        </ol>
 
         {/* CTA */}
-        <div className="text-center mt-12">
+        <div className="text-center mt-10">
           <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8 rounded-full">
             <Link to="/placement-test">
               {t("roadmap", "cta")}

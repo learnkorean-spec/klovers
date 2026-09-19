@@ -66,23 +66,28 @@ const koreanWord: Record<string, string> = {
 };
 
 /**
- * Back-face rule colour — the concept board's palette, nothing else.
+ * Back-face rule colour — the palette, read from the tokens.
  *
- * This used to be two values from one saturated hue per card (#0A4DA6,
- * #0B6E52, #B3122E, #7B1E6A and a slate fallback): four colours the brand
- * does not own, on a page whose rule is five colours total. The hue was
- * decorative - it told the reader nothing - so it is now simply one of the
- * five, and the ICON takes the foreground token instead, which is the only
- * thing that keeps it readable on both the ivory and the dark back panel.
+ * This was two values from one saturated hue per card (#0A4DA6, #0B6E52,
+ * #B3122E, #7B1E6A and a slate fallback): four colours the brand does not
+ * own. It then briefly held palette HEXES, which went stale the moment Mint
+ * and Peach were tuned on 20 Sep. Tokens cannot go stale.
+ *
+ * No pink here either, as of the three-colour decision: pink is spent on the
+ * roadmap's final level and the games' "hot" badge, and nowhere else.
+ *
+ * The hue is decorative — it tells the reader nothing — which is why the
+ * ICON takes the foreground token instead: that is the only thing that stays
+ * readable on both the Ivory and the dark back panel.
  */
 const tones: Record<string, string> = {
-  study: "#FFFF00",   // Klovers Yellow
-  career: "#CDEBD7",  // Mint
-  travel: "#FFB7A1",  // Peach
-  culture: "#2E2E2E", // Charcoal
+  study: "hsl(var(--klovers-yellow))",
+  career: "hsl(var(--mint-strong))",
+  travel: "hsl(var(--charcoal))",
+  culture: "hsl(var(--mint))",
 };
 
-const fallbackTone = "#2E2E2E";
+const fallbackTone = "hsl(var(--charcoal))";
 
 /**
  * Photographs, keyed by icon. Empty: there are none in this repo, and putting

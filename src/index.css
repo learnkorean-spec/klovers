@@ -6,14 +6,21 @@
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 
-Klovers brand palette — website concept board, September 2026.
-The decimals matter: each value below round-trips to the board's exact hex.
+Klovers brand palette — concept board, September 2026, tuned 20 Sep.
+The decimals matter: each value below round-trips to its exact hex.
 
-  Klovers Yellow  #FFFF00  60 100% 50%      main highlight / CTA
-  Mint Green      #CDEBD7  140 42.9% 86.3%  support colour
-  Ivory           #FFF9EC  41 100% 96.3%    background
-  Charcoal        #2E2E2E  0 0% 18%         text / primary
-  Peach           #FFB7A1  14 100% 81.6%    accent colour
+  Klovers Yellow  #FFFF00  60 100% 50%       one action per screen
+  Mint            #BFF0D9  152 62% 84.5%     soft green fill
+  Mint strong     #3ED598  156 64% 54%       green accent, dots, rules
+  Blush           #FFC8D6  345 100% 89%      soft pink fill
+  Rose            #FF5C8A  343 100% 68%      pink accent
+  Ivory           #FFF9EC  41 100% 96.3%     page ground
+  Charcoal        #2E2E2E  0 0% 18%          text, and every strong surface
+
+Why the pairs: a 43%-saturated mint and a salmon peach both went grey
+beside a 100%-saturated yellow. A soft fill for surfaces and a saturated
+sibling for accents keeps the page calm AND lets the supports hold their own.
+Text on the strong tones is Charcoal, never white (Charcoal on Rose: 5.2:1).
 
 Type, from the same board (loaded in index.html):
   Poppins  display / headings      Inter   body and UI (Latin)
@@ -24,11 +31,13 @@ Type, from the same board (loaded in index.html):
   :root {
     /* Brand palette — raw tokens */
     --klovers-yellow: 60 100% 50%;
-    --mint: 140 42.9% 86.3%;
+    --mint: 152 62% 84.5%;
+    --mint-strong: 156 64% 54%;
     --mint-foreground: 0 0% 18%;
     --ivory: 41 100% 96.3%;
     --charcoal: 0 0% 18%;
-    --peach: 14 100% 81.6%;
+    --peach: 345 100% 89%;
+    --peach-strong: 343 100% 68%;
     --peach-foreground: 0 0% 18%;
 
     /* Semantic tokens */
@@ -50,7 +59,7 @@ Type, from the same board (loaded in index.html):
     --muted: 41 60% 93%;
     --muted-foreground: 0 0% 35%;
 
-    --accent: 140 42.9% 86.3%;
+    --accent: 152 62% 84.5%;
     --accent-foreground: 0 0% 18%;
 
     --destructive: 0 72% 50%;
@@ -66,14 +75,14 @@ Type, from the same board (loaded in index.html):
     --sidebar-foreground: 0 0% 18%;
     --sidebar-primary: 60 100% 50%;
     --sidebar-primary-foreground: 0 0% 18%;
-    --sidebar-accent: 140 42.9% 86.3%;
+    --sidebar-accent: 152 62% 84.5%;
     --sidebar-accent-foreground: 0 0% 18%;
     --sidebar-border: 40 25% 88%;
     --sidebar-ring: 60 100% 50%;
 
     --chart-1: 60 100% 50%;
-    --chart-2: 140 42.9% 86.3%;
-    --chart-3: 14 100% 81.6%;
+    --chart-2: 156 64% 54%;
+    --chart-3: 343 100% 68%;
     --chart-4: 0 0% 18%;
     --chart-5: 0 0% 50%;
 
@@ -114,12 +123,14 @@ Type, from the same board (loaded in index.html):
   .dark {
     /* Brand palette — raw tokens */
     --klovers-yellow: 60 100% 50%;
-    --mint: 140 30% 40%;
-    --mint-foreground: 0 0% 100%;
+    --mint: 152 62% 84.5%;
+    --mint-strong: 156 64% 44%;
+    --mint-foreground: 0 0% 18%;
     --ivory: 41 100% 96.3%;
     --charcoal: 0 0% 18%;
-    --peach: 14 60% 62%;
-    --peach-foreground: 0 0% 12%;
+    --peach: 345 100% 89%;
+    --peach-strong: 343 75% 58%;
+    --peach-foreground: 0 0% 18%;
 
     --background: 0 0% 10%;
     --foreground: 0 0% 100%;
@@ -139,7 +150,7 @@ Type, from the same board (loaded in index.html):
     --muted: 0 0% 22%;
     --muted-foreground: 0 0% 72%;
 
-    --accent: 140 30% 40%;
+    --accent: 156 64% 44%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -152,13 +163,13 @@ Type, from the same board (loaded in index.html):
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 60 100% 50%;
     --sidebar-primary-foreground: 0 0% 18%;
-    --sidebar-accent: 140 30% 40%;
+    --sidebar-accent: 156 64% 44%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 25%;
     --sidebar-ring: 60 100% 50%;
     --chart-1: 60 100% 50%;
-    --chart-2: 140 30% 40%;
-    --chart-3: 14 60% 62%;
+    --chart-2: 156 64% 44%;
+    --chart-3: 343 75% 58%;
     --chart-4: 0 0% 80%;
     --chart-5: 0 0% 50%;
     --sidebar: 0 0% 14%;

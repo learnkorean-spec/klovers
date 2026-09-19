@@ -26,17 +26,17 @@ const TYPE_LABEL: Record<string, string> = { howto: "How-To", listicle: "Listicl
 const TYPE_LABEL_AR: Record<string, string> = { howto: "كيفية", listicle: "قائمة", longform: "مقال", news: "أخبار", review: "مراجعة" };
 
 /**
- * Five article types, five chips, five colours — all of them from the board.
+ * Five article types, five chips, and not one colour the brand doesn't own.
  *
- * These were blue / green / purple / red / orange, the default Tailwind
- * palette standing in for a brand that owns exactly five colours. The types
- * are still told apart at a glance; they are just told apart in Klovers'
- * colours now. Each pairs Charcoal text with a pale ground, except `news`,
- * which inverts.
+ * These were blue / green / purple / red / orange — Tailwind's defaults
+ * standing in for a brand that owns three colours. They are told apart by
+ * weight now rather than by hue: two greens, Ivory, white, and one inverted
+ * Charcoal chip. Pink is not among them; on this page it is a rare accent,
+ * spent on the roadmap's final level and the games' "hot" badge.
  */
 const TYPE_COLOR: Record<string, string> = {
   howto: "bg-mint text-charcoal border-charcoal/10",
-  listicle: "bg-peach text-charcoal border-charcoal/10",
+  listicle: "bg-mint/50 text-charcoal border-charcoal/10",
   longform: "bg-ivory text-charcoal border-charcoal/20",
   news: "bg-charcoal text-white border-charcoal",
   review: "bg-white text-charcoal border-charcoal/25",
@@ -136,8 +136,7 @@ const HomeBlogSection = () => {
                       </span>
                     )}
                     {/* Was bg-primary/10 text-primary: brand yellow as text on a
-                        10% yellow chip, which the board rules out. Mint is the
-                        board's support tone for exactly this job. */}
+                        10% yellow chip, which the board rules out. */}
                     {idx > 0 && (post.seo_score ?? 0) >= 80 && (
                       <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-mint text-charcoal border border-charcoal/10">
                         ✨ {isAr ? "موصى به" : "Top Pick"}
