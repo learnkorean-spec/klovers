@@ -61,10 +61,20 @@
 
     <!--
       Fonts — the brand type system from the Klovers concept board:
-        Poppins  display / headings
-        Inter    body and UI (Latin)
-        Cairo    body and UI (Arabic; Inter ships no Arabic)
-        Caveat   handwritten accent, one line at a time
+        Poppins           display / headings
+        Inter             body and UI (Latin)
+        Cairo             body and UI (Arabic; Inter ships no Arabic)
+        Caveat            handwritten accent, Latin
+        Nanum Pen Script  handwritten accent, Hangul
+        Aref Ruqaa        handwritten accent, Arabic
+
+      THE LAST TWO ARE NOT DECORATION. Caveat carries no Arabic and no
+      Hangul, so every handwritten line on this site fell back to Cairo for
+      an Arabic reader and rendered as an ordinary sentence. Font fallback
+      is per character, so the three hands sit in one stack in
+      tailwind.config.ts and each script resolves to its own face. Remove
+      either of these and the Arabic or Korean handwriting silently
+      degrades again — silently, because nothing errors.
 
       Loaded with media="print" + onload swap so the stylesheet is fetched at
       low priority and never blocks first paint. The system stack stays as the
@@ -75,14 +85,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Caveat:wght@600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Caveat:wght@600;700&family=Nanum+Pen+Script&family=Aref+Ruqaa:wght@400;700&display=swap"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Caveat:wght@600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Caveat:wght@600;700&family=Nanum+Pen+Script&family=Aref+Ruqaa:wght@400;700&display=swap"
       />
     </noscript>
 
