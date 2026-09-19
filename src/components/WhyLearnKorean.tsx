@@ -1,221 +1,258 @@
-import { useState } from "react";
-import { BookOpen, Briefcase, Plane, Music } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BookOpen, Briefcase, Plane, Music, ArrowRight, Sprout } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { scenery } from "./whyLearnKoreanScenes";
 
 /**
- * P0-4 of claude/WEBSITE_UX_CRO_ACTION_PLAN_2026-09-07.md.
+ * P0-4 of claude/WEBSITE_UX_CRO_ACTION_PLAN_2026-09-07.md, finally closed.
  *
- * These four cards used to be plain <div>s carrying hover:shadow-xl,
+ * THE ORIGINAL FAULT: four plain <div>s carrying hover:shadow-xl,
  * hover:-translate-y-1 and a border change - the complete vocabulary of a
  * link - with no href and no onClick. A visitor interested enough to click
- * got nothing. There is no Travel page to point them at, so the card itself
- * is the payoff: front is a Korean scene, back is the explanation.
+ * got nothing.
  *
- * THE FRONT, IN FOUR PASSES
- * -------------------------
- * 1. Tailwind's -900 steps: desaturated, near-identical in value, four
- *    motivations reading as one grey-blue smear.
- * 2. Deep dancheong (단청) temple colours, then hanbok pastels.
- * 3. Re asked for pictures of Korea, so the colour became artwork - see
- *    whyLearnKoreanScenes.tsx.
- * 4. The layout itself, which was the part still wrong: three things centred
- *    in a 288px card that held about 110px of content, leaving a third of it
- *    empty at the top and the bottom, with a 56px slab of pure yellow as the
- *    loudest element on a card whose message is its title.
+ * The first repair made the card itself the payoff: a flip card, scene on
+ * the front, explanation on the back. That worked, but it answered the
+ * question by removing the affordance rather than by earning it.
  *
- * SO THE FRONT IS NOW COMPOSED, not centred. Korean word at the top, title
- * at the bottom, scene running the full height between them. The card is
- * full, and among the things a reader can actually parse the title comes
- * first. The yellow is a 32px rule and the icon's stroke - present, brand,
- * and no longer the first thing the eye lands on.
+ * 2026-09-20 - Re sent a mockup of this section and this is it: a dark band,
+ * a photograph per card, a coloured badge on the corner of each, the copy
+ * underneath, and an arrow. The arrow is the whole point of the change. It
+ * is real now:
  *
- * THE TEXT FOLLOWS THE BACKGROUND, EVERY TIME. On the pastels white was
- * 1.4:1 and every label had to go dark. On artwork it inverts: the scenes
- * run from a bright spring sky to a night sky, so no single text colour
- * clears all four alone. The scrim is what makes white safe on every card -
- * it is not a darkening effect for taste. Change a scene's brightness and
- * you change whether its title is readable; check it.
+ *   travel   jeju-travel.jpg        -> korean-transportation-guide-seoul
+ *   career   korean-business.jpg    -> korean-job-interview-phrases
+ *   study    korean-study-desk.jpg  -> learn-korean-3-months-study-method
+ *   culture  korean-music.jpg       -> learn-korean-through-kpop-bts-blackpink
  *
- * THE BACK stays theme-aware, so it cannot wear the artwork: a pale panel on
- * a dark page is a white blob. It carries one palette colour as a rule along
- * its top edge, and the foreground token as the icon.
+ * Each photograph is the hero_image of a PUBLISHED post, and each card goes
+ * to that post in the reader's own language. There is no flip any more
+ * because there is nothing left to flip to - the description is on the
+ * front, where it should always have been.
+ *
+ * ON THE IMAGES. This file shipped for months with `IMAGES = {}` and a
+ * comment: "putting images of unchecked provenance on the homepage is not a
+ * thing to do quietly." That comment was right and it has now been answered
+ * rather than ignored. The four below were checked against blog_posts: each
+ * is the hero of a published ar/en pair, which is exactly the standard
+ * CultureHeritageSection already meets. If you add a fifth card, check its
+ * image the same way before you add it.
+ *
+ * ON CONTRAST. The scrim and the white-text rules that governed the old
+ * SVG scenes are gone with them: nothing is written over a photograph here.
+ * Titles are Ivory on Charcoal (12.3:1) and the badge icons are Charcoal on
+ * four pale tints (all above 9:1). If a future version puts text back on
+ * top of the image, the scrim has to come back with it.
+ *
+ * ── THREE DEPARTURES FROM THE MOCKUP ──────────────────────────────────────
+ *
+ * 1. NO "+10,000 LEARNERS" AND NO AVATAR CLUSTER. The mockup's band carries
+ *    "+10,000 من متعلمي كلوفرز" over three faces. The site's own figure, in
+ *    its own hero, is 200+ students in 13 years, and the faces are not
+ *    Klovers students. This is the same thing the five invented leaderboard
+ *    players were deleted for rather than scaled up (see
+ *    claude/BRAND_SEO_GAMES_RUN_2026-09-07.md). The band carries the offer
+ *    and nothing else. Real proof - the Google rating, a student photo with
+ *    consent - can go in the moment it exists.
+ *
+ * 2. NO HANDWRITTEN MARGIN NOTES. Caveat has no Arabic and no Hangul
+ *    glyphs, so "من أجل نسخة أفضل منك" and "더 나은 너를 위해" would both have
+ *    fallen back to Cairo and rendered as ordinary sentences floating in the
+ *    margin - the charm is entirely in the face. Adding an Arabic
+ *    handwriting face is a deliberate change of its own, with its own cost
+ *    on a page whose LCP is already poor.
+ *
+ * 3. CHARCOAL, NOT BLACK. The mockup's ground is around #0D0D12 and its
+ *    backdrop is a cherry-blossom photograph. Both are outside the palette,
+ *    so this is Charcoal #2E2E2E with the brand's yellow glow behind it -
+ *    the same device the hero uses.
  */
 
-const iconMap: Record<string, React.ReactNode> = {
-  study: <BookOpen className="h-6 w-6" />,
-  career: <Briefcase className="h-6 w-6" />,
-  travel: <Plane className="h-6 w-6" />,
-  culture: <Music className="h-6 w-6" />,
-};
-
-/** Larger on the back, where it is the only mark on a plain panel. */
-const backIconMap: Record<string, React.ReactNode> = {
-  study: <BookOpen className="h-8 w-8" />,
-  career: <Briefcase className="h-8 w-8" />,
-  travel: <Plane className="h-8 w-8" />,
-  culture: <Music className="h-8 w-8" />,
-};
-
-/** The word itself, in the language being sold. */
-const koreanWord: Record<string, string> = {
-  study: "학업",
-  career: "경력",
-  travel: "여행",
-  culture: "문화",
+/**
+ * One row per card, keyed by the `icon` string the translations already use.
+ *
+ * `href` is a pair because the blog is a pair: every published article has an
+ * `-ar` twin, and sending an Arabic reader to the English post is worse than
+ * sending them nowhere. Slugs verified against blog_posts on 20 Sep 2026.
+ *
+ * `badge` is a literal class string - Tailwind's scanner only keeps what it
+ * can see, so these must never be assembled from fragments.
+ *
+ * Blush (`bg-peach`), not Rose (`bg-peach-strong`), on culture. The strong
+ * pink is still spent on the roadmap's final level and the games' hot badge,
+ * and that is the whole reason it reads as an ending.
+ */
+const CARDS: Record<
+  string,
+  { image: string; badge: string; Icon: React.ElementType; href: { ar: string; en: string } }
+> = {
+  travel: {
+    image: "/assets/blog/jeju-travel.jpg",
+    badge: "bg-ivory",
+    Icon: Plane,
+    href: {
+      ar: "/blog/korean-transportation-guide-seoul-ar",
+      en: "/blog/korean-transportation-guide-seoul",
+    },
+  },
+  career: {
+    image: "/assets/blog/korean-business.jpg",
+    badge: "bg-mint",
+    Icon: Briefcase,
+    href: {
+      ar: "/blog/korean-job-interview-phrases-ar",
+      en: "/blog/korean-job-interview-phrases",
+    },
+  },
+  study: {
+    image: "/assets/blog/korean-study-desk.jpg",
+    badge: "bg-klovers-yellow",
+    Icon: BookOpen,
+    href: {
+      ar: "/blog/learn-korean-3-months-study-method-ar",
+      en: "/blog/learn-korean-3-months-study-method",
+    },
+  },
+  culture: {
+    image: "/assets/blog/korean-music.jpg",
+    badge: "bg-peach",
+    Icon: Music,
+    href: {
+      ar: "/blog/learn-korean-through-kpop-bts-blackpink-ar",
+      en: "/blog/learn-korean-through-kpop-bts-blackpink",
+    },
+  },
 };
 
 /**
- * Back-face rule colour — the palette, read from the tokens.
+ * The framing line and the closing band, in Re's own words from the mockup.
  *
- * This was two values from one saturated hue per card (#0A4DA6, #0B6E52,
- * #B3122E, #7B1E6A and a slate fallback): four colours the brand does not
- * own. It then briefly held palette HEXES, which went stale the moment Mint
- * and Peach were tuned on 20 Sep. Tokens cannot go stale.
- *
- * No pink here either, as of the three-colour decision: pink is spent on the
- * roadmap's final level and the games' "hot" badge, and nowhere else.
- *
- * The hue is decorative — it tells the reader nothing — which is why the
- * ICON takes the foreground token instead: that is the only thing that stays
- * readable on both the Ivory and the dark back panel.
+ * These are in the component rather than in translations.ts for the same
+ * reason `koreanWord` always was: that file is 230KB and the tooling here can
+ * only replace a file whole. A session with real git access should move them.
  */
-const tones: Record<string, string> = {
-  study: "hsl(var(--klovers-yellow))",
-  career: "hsl(var(--mint-strong))",
-  travel: "hsl(var(--charcoal))",
-  culture: "hsl(var(--mint))",
+const COPY = {
+  ar: {
+    eyebrow: "لغة جديدة ← آفاق أوسع",
+    bandTitle: "ابدأ رحلتك في تعلم الكورية اليوم",
+    bandSub: "اختر مستواك، واكتشف طريقك مع Klovers",
+    bandCta: "ابدأ الآن",
+    more: "اقرأ المقال",
+  },
+  en: {
+    eyebrow: "A new language → a wider world",
+    bandTitle: "Start your Korean journey today",
+    bandSub: "Find your level, and your path, with Klovers",
+    bandCta: "Start now",
+    more: "Read the article",
+  },
 };
-
-const fallbackTone = "hsl(var(--charcoal))";
-
-/**
- * Photographs, keyed by icon. Empty: there are none in this repo, and putting
- * images of unchecked provenance on the homepage is not a thing to do quietly.
- * Add one and it renders instead of that card's drawing - nothing else needs
- * to change, the scrim and the white text already assume a picture.
- */
-const IMAGES: Record<string, string> = {};
 
 const WhyLearnKorean = () => {
-  const { tArray, t } = useLanguage();
+  const { tArray, t, language } = useLanguage();
   const items = tArray("whyLearn", "items") as { title: string; description: string; icon: string }[];
-
-  // Touch devices have no hover, so the flip is also a real toggle. Keyboard
-  // users get the same control for free by it being a <button>.
-  const [flipped, setFlipped] = useState<number | null>(null);
+  const isAr = language === "ar";
+  const lang = isAr ? "ar" : "en";
+  const copy = COPY[lang];
 
   return (
-    <section className="py-20 md:py-28 bg-card">
-      <div className="container mx-auto px-4">
+    <section className="relative overflow-hidden bg-charcoal py-20 md:py-28">
+      {/* The brand's glow, standing in for the mockup's photographic backdrop.
+          A gradient is a backgroundImage, so it will not show up in a
+          computed-style colour audit — that is expected, not a stray. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-28 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full"
+        style={{
+          backgroundImage: "radial-gradient(circle, hsl(var(--klovers-yellow) / 0.16), transparent 70%)",
+        }}
+      />
 
-        <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-tight">
+      <div className="container relative mx-auto px-4">
+
+        <div className="mb-14 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full bg-mint px-4 py-1.5 text-xs font-bold text-charcoal md:text-sm">
+            <Sprout className="h-4 w-4" aria-hidden="true" />
+            {copy.eyebrow}
+          </span>
+
+          <h2 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-ivory md:text-5xl lg:text-6xl">
             {t("whyLearn", "title")}
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
+
+          {/* Yellow as a mark under the heading, never as the heading. The
+              mockup underlines one word; the heading is a single translated
+              string, so it cannot be split without touching translations.ts. */}
+          <span aria-hidden="true" className="mx-auto mt-4 block h-2 w-28 rounded-full bg-klovers-yellow" />
+
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-ivory/70 md:text-lg">
             {t("whyLearn", "subtitle")}
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-5xl mx-auto">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((item, index) => {
-            const isFlipped = flipped === index;
-            const image = IMAGES[item.icon];
-            const tone = tones[item.icon] || fallbackTone;
+            const card = CARDS[item.icon];
+            if (!card) return null;
+            const { Icon } = card;
 
             return (
-              <button
+              <Link
                 key={index}
-                type="button"
-                aria-expanded={isFlipped}
-                onClick={() => setFlipped(isFlipped ? null : index)}
-                className="group relative h-56 md:h-72 w-full rounded-3xl text-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card [perspective:1200px]"
+                to={card.href[lang]}
+                className="group block rounded-3xl border border-ivory/10 bg-ivory/[0.06] p-3 transition-colors duration-300 hover:border-klovers-yellow/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
               >
-                <div
-                  className={`relative h-full w-full transition-transform duration-500 [transform-style:preserve-3d] motion-reduce:transition-none ${
-                    isFlipped ? "[transform:rotateY(180deg)]" : "md:group-hover:[transform:rotateY(180deg)]"
-                  }`}
-                >
-                  {/* Front */}
-                  <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-lg [backface-visibility:hidden]">
-                    {image ? (
-                      <img src={image} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
-                    ) : (
-                      // `slice` so the scene fills the card at any aspect and is
-                      // cropped rather than letterboxed; each is composed with
-                      // its subject low and centred to survive that crop.
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 200 240"
-                        preserveAspectRatio="xMidYMid slice"
-                        className="absolute inset-0 h-full w-full"
-                      >
-                        {scenery[item.icon]}
-                      </svg>
-                    )}
-
-                    {/* The scrim. Not decoration: it is the only reason white
-                        text clears 4.5:1 on the bright spring card as well as
-                        the night one. Weighted to the bottom, where the title
-                        now sits over the busiest part of every scene. */}
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage:
-                          "linear-gradient(to bottom, rgba(46,46,46,0.10) 0%, rgba(46,46,46,0.22) 38%, rgba(46,46,46,0.82) 100%)",
-                      }}
-                    />
-
-                    {/* Composed, not centred: word at the top, title at the
-                        bottom, scene filling everything between. */}
-                    <div className="relative h-full flex flex-col justify-between p-4 pb-5 md:p-5 md:pb-6">
-                      <span
-                        aria-hidden="true"
-                        className="text-3xl md:text-[40px] font-extrabold leading-none select-none text-ivory/[0.34]"
-                      >
-                        {koreanWord[item.icon] || "한국"}
-                      </span>
-
-                      <div className="flex flex-col items-start gap-2 md:gap-2.5">
-                        <span aria-hidden="true" className="block w-8 h-[3px] rounded-full bg-primary" />
-                        <span aria-hidden="true" className="block text-primary">
-                          {iconMap[item.icon] || <BookOpen className="h-6 w-6" />}
-                        </span>
-                        <h3
-                          className="font-bold text-ivory text-lg md:text-xl leading-snug"
-                          style={{ textShadow: "0 1px 6px rgba(46,46,46,0.6)" }}
-                        >
-                          {item.title}
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Back */}
-                  <div className="absolute inset-0 rounded-3xl border border-border bg-background overflow-hidden shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-x-0 top-0 h-1.5"
-                      style={{ backgroundColor: tone }}
-                    />
-                    <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-5">
-                      <span aria-hidden="true" className="text-foreground">
-                        {backIconMap[item.icon] || <BookOpen className="h-8 w-8" />}
-                      </span>
-                      <h3 className="font-bold text-foreground text-sm md:text-base leading-tight">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
+                <div className="relative">
+                  <img
+                    src={card.image}
+                    alt=""
+                    aria-hidden="true"
+                    width={400}
+                    height={500}
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-[4/5] w-full rounded-2xl object-cover"
+                  />
+                  {/* The badge sits on the corner of the photograph, half over
+                      it — which is why the padding below starts at pt-8. */}
+                  <span
+                    aria-hidden="true"
+                    className={`absolute -bottom-5 start-2 grid h-12 w-12 place-items-center rounded-full shadow-md ${card.badge}`}
+                  >
+                    <Icon className="h-5 w-5 text-charcoal" />
+                  </span>
                 </div>
-              </button>
+
+                <div className="px-2 pb-2 pt-8">
+                  <h3 className="text-lg font-bold leading-snug text-ivory">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-ivory/65">{item.description}</p>
+
+                  <span
+                    className="mt-4 inline-grid h-10 w-10 place-items-center rounded-full bg-ivory/10 text-ivory transition-colors duration-300 group-hover:bg-klovers-yellow group-hover:text-charcoal"
+                    aria-label={copy.more}
+                  >
+                    <ArrowRight className={`h-4 w-4 ${isAr ? "rotate-180" : ""}`} aria-hidden="true" />
+                  </span>
+                </div>
+              </Link>
             );
           })}
+        </div>
+
+        {/* The closing band. The mockup's "+10,000 learners" and its three
+            faces are deliberately absent — see departure 1 at the top of this
+            file. Do not add a number here that the site cannot stand behind. */}
+        <div className="mx-auto mt-12 flex max-w-4xl flex-col items-center justify-between gap-5 rounded-3xl border border-ivory/10 bg-ivory/[0.06] p-6 text-center md:mt-16 md:flex-row md:text-start">
+          <div>
+            <p className="text-lg font-bold text-ivory md:text-xl">{copy.bandTitle}</p>
+            <p className="mt-1 text-sm text-ivory/65">{copy.bandSub}</p>
+          </div>
+          <Button size="lg" asChild className="h-12 shrink-0 gap-2 rounded-full px-8 text-base font-bold">
+            <Link to="/placement-test">
+              {copy.bandCta}
+              <ArrowRight className={`h-5 w-5 ${isAr ? "rotate-180" : ""}`} aria-hidden="true" />
+            </Link>
+          </Button>
         </div>
 
       </div>
