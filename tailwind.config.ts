@@ -112,7 +112,10 @@ export default {
   			'2xl': 'var(--shadow-2xl)'
   		},
   		fontFamily: {
+  			/* Body — Inter for Latin, Cairo for Arabic (Inter has no Arabic). */
   			sans: [
+  				'Inter',
+  				'Cairo',
   				'ui-sans-serif',
   				'system-ui',
   				'-apple-system',
@@ -123,6 +126,23 @@ export default {
   				'Arial',
   				'Noto Sans',
   				'sans-serif'
+  			],
+  			/* Display — headings and campaign lines. */
+  			display: [
+  				'Poppins',
+  				'Cairo',
+  				'ui-sans-serif',
+  				'system-ui',
+  				'Segoe UI',
+  				'Arial',
+  				'sans-serif'
+  			],
+  			/* Handwritten accent — one line at a time, never a paragraph. */
+  			script: [
+  				'Caveat',
+  				'Segoe Script',
+  				'Brush Script MT',
+  				'cursive'
   			],
   			serif: [
   				'ui-serif',
