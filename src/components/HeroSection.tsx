@@ -107,7 +107,14 @@ const HeroSection = () => {
     { icon: Globe, display: "A1–C2", label: isAr ? "جميع المستويات" : "All Levels" },
   ];
 
-  /** The board's four promise cards, in the board's colour order. */
+  /**
+   * The board's four promise cards.
+   *
+   * The board alternated Mint / white / Peach / Mint. Pink is a rare accent
+   * on this site as of 20 Sep - two places on the whole page, neither of them
+   * here - so the row alternates Green and white instead. The rhythm is what
+   * the board was after; the third colour was not carrying meaning.
+   */
   const cards = [
     {
       icon: BookOpen,
@@ -123,13 +130,13 @@ const HeroSection = () => {
     },
     {
       icon: Globe,
-      tone: "bg-peach",
+      tone: "bg-mint",
       title: isAr ? "كورية حقيقية" : "Real-life Korean",
       body: isAr ? "لغة تستعملها فعلاً" : "Useful, practical, cultural",
     },
     {
       icon: Star,
-      tone: "bg-mint",
+      tone: "bg-white",
       title: isAr ? "نسخة أفضل منك" : "A brighter you",
       body: isAr ? "ثقة أكبر، وعالم أوسع" : "More confidence. A bigger world.",
     },
