@@ -28,8 +28,7 @@ import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
  * SO THE FRONT IS NOW COMPOSED, not centred. Korean word at the top, title
  * at the bottom, scene running the full height between them. The card is
  * full, and among the things a reader can actually parse the title comes
- * first. The yellow is a 32px rule and the icon's stroke - present, brand,
- * and no longer the first thing the eye lands on.
+ * first.
  *
  * THE TEXT FOLLOWS THE BACKGROUND, EVERY TIME. On the pastels white was
  * 1.4:1 and every label had to go dark. On artwork it inverts: the scenes
@@ -109,7 +108,7 @@ const PORTRAIT: Record<"girl" | "boy", string> = {
  * language on the back, because a beginner cannot read the front yet and a
  * bubble they cannot read explains nothing.
  *
- * Short on purpose. These sit in a 150px-wide card on a phone.
+ * Short on purpose. These sit in a 167px-wide card on a phone.
  */
 const SCRIPT: Record<string, { ko: string; ar: string; en: string }> = {
   culture: {
@@ -251,7 +250,8 @@ const WhyLearnKorean = () => {
 
                     {/* The character. A ringed medallion in the bottom corner,
                         not a figure in the scene — see the note at the top of
-                        this file about why they cannot be cut out. */}
+                        this file about why they cannot be cut out. 44px inset
+                        12px, which is what the pe-14 below is reserving. */}
                     {portrait && (
                       <img
                         src={portrait}
@@ -284,11 +284,18 @@ const WhyLearnKorean = () => {
                         )}
                       </div>
 
-                      <div className="flex flex-col items-start gap-2 md:gap-2.5 pe-12 md:pe-16">
+                      <div className="flex flex-col items-start gap-2 md:gap-2.5 pe-14 md:pe-20">
                         {line && (
+                          // dir="ltr" is load-bearing, not tidiness: Korean in
+                          // an RTL page is a neutral run, so without it the
+                          // trailing "!" and "." jump to the front of the
+                          // bubble — "!혼자 읽었어". nowrap because the phone
+                          // card is 167px and the browser will otherwise break
+                          // Korean mid-word, between syllables of one verb.
                           <span
                             lang="ko"
-                            className="relative inline-block rounded-2xl bg-ivory px-2.5 py-1 text-[11px] md:text-xs font-bold text-charcoal shadow-sm"
+                            dir="ltr"
+                            className="relative inline-block whitespace-nowrap rounded-2xl bg-ivory px-2.5 py-1 text-[10px] md:text-xs font-bold text-charcoal shadow-sm"
                           >
                             {line.ko}
                             {/* Tail, pointing down toward the medallion. */}
@@ -298,7 +305,12 @@ const WhyLearnKorean = () => {
                             />
                           </span>
                         )}
-                        <span aria-hidden="true" className="block w-8 h-[3px] rounded-full bg-primary" />
+                        {/* The 32px yellow rule that used to sit here is gone.
+                            It was the brand's only mark on the card when the
+                            card had one; now the step chip, the medallion ring
+                            and the icon are all yellow, and on a 224px phone
+                            card its 11px of height was pushing the title down
+                            into the medallion. */}
                         <span aria-hidden="true" className="block text-primary">
                           {iconMap[item.icon] || <BookOpen className="h-6 w-6" />}
                         </span>
