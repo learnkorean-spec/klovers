@@ -12,20 +12,21 @@ const PlacementTestCTA = () => {
   const [activeLevel, setActiveLevel] = useState(0);
 
   /**
-   * The ladder climbs Mint → Yellow → Peach → Charcoal.
+   * The ladder climbs Green → Yellow → Charcoal.
    *
-   * It used to be blue, cyan, green, amber, orange, rose — six hues from
-   * Tailwind's default palette on a brand that owns five colours. The reader
-   * never needed the hue to tell the levels apart (the bar's LENGTH does
-   * that); it only needed to feel like a progression, which a warm ramp
-   * ending in the darkest tone does.
+   * It was blue, cyan, green, amber, orange, rose — six hues from Tailwind's
+   * default palette on a brand that owns three colours. The reader never
+   * needed the hue to tell the levels apart (the bar's LENGTH does that); it
+   * only needed to feel like a progression. Pink is not in this ramp on
+   * purpose: on this site it is a rare accent, and the one ladder that ends
+   * in it is the learning roadmap.
    */
   const LEVELS = [
     { label: t("placementCta.levelA1"),  color: "bg-mint",            width: "w-[15%]" },
     { label: t("placementCta.levelA2"),  color: "bg-mint",            width: "w-[30%]" },
-    { label: t("placementCta.levelB1"),  color: "bg-klovers-yellow",  width: "w-[50%]" },
-    { label: t("placementCta.levelB2"),  color: "bg-klovers-yellow",  width: "w-[65%]" },
-    { label: t("placementCta.levelC1"),  color: "bg-peach",           width: "w-[80%]" },
+    { label: t("placementCta.levelB1"),  color: "bg-mint-strong",     width: "w-[50%]" },
+    { label: t("placementCta.levelB2"),  color: "bg-mint-strong",     width: "w-[65%]" },
+    { label: t("placementCta.levelC1"),  color: "bg-klovers-yellow",  width: "w-[80%]" },
     { label: t("placementCta.levelC2"),  color: "bg-charcoal",        width: "w-[100%]" },
   ];
 
@@ -65,7 +66,7 @@ const PlacementTestCTA = () => {
     >
       {/* Background blobs */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-mint/40 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-80 h-80 bg-peach/30 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-klovers-yellow/15 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
 
       {/* Floating Korean characters */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden>
@@ -189,7 +190,7 @@ const PlacementTestCTA = () => {
               </div>
 
               {/* Floating badge */}
-              <div className="absolute -top-3 -right-3 bg-peach text-charcoal text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+              <div className="absolute -top-3 -right-3 bg-mint-strong text-charcoal text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                 {t("placementCta.instant")}
               </div>
             </div>

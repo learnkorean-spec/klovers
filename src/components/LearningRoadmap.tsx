@@ -20,25 +20,28 @@ import { LEVEL_KEYS } from "@/constants/levels";
  * should not be able to disagree.
  *
  * 2026-09-20 — it looks like a journey now, not a stack of identical cards.
- * A rail runs down the side with one node per level; the nodes climb the
- * palette Mint → Leaf → Yellow → Blush → Rose, the same ramp the placement
- * card draws. The full-colour emoji are gone: every one of them brought its
- * own palette to a page that owns five colours, and a lucide icon in Charcoal
- * says the same thing in the brand's.
+ * A rail runs down the side with one node per level, and the full-colour
+ * emoji are gone: every one of them brought its own palette to a page that
+ * owns three, and a lucide icon in Charcoal says the same thing in the
+ * brand's.
  */
 
 /**
  * Per-level ornament. Keyed by canonical level key, so adding a level cannot
  * shift the palette, and a renamed badge string cannot silently blank it.
  * Literal class strings, because Tailwind's scanner only keeps what it sees.
+ *
+ * The ramp is Green → Yellow, and Level 6 is the single Pink on this page
+ * besides the games' "hot" badge. That is the point of it: the end of the
+ * path should not look like another step on it.
  */
 const LEVEL_META: Record<string, { icon: React.ElementType; tile: string }> = {
   hangul: { icon: BookOpen, tile: "bg-mint" },
   l1: { icon: MessageCircle, tile: "bg-mint" },
   l2: { icon: Zap, tile: "bg-mint-strong" },
-  l3: { icon: Star, tile: "bg-klovers-yellow" },
+  l3: { icon: Star, tile: "bg-mint-strong" },
   l4: { icon: Flame, tile: "bg-klovers-yellow" },
-  l5: { icon: Trophy, tile: "bg-peach" },
+  l5: { icon: Trophy, tile: "bg-klovers-yellow" },
   l6: { icon: GraduationCap, tile: "bg-peach-strong" },
 };
 
