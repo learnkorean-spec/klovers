@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BookOpen, Briefcase, Plane, Music } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { scenery } from "./whyLearnKoreanScenes";
+import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
 
 /**
  * P0-4 of claude/WEBSITE_UX_CRO_ACTION_PLAN_2026-09-07.md.
@@ -39,7 +40,33 @@ import { scenery } from "./whyLearnKoreanScenes";
  *
  * THE BACK stays theme-aware, so it cannot wear the artwork: a pale panel on
  * a dark page is a white blob. It carries one palette colour as a rule along
- * its top edge, and the foreground token as the icon.
+ * its top edge.
+ *
+ * ── 20 Sep 2026: FOUR REASONS BECAME ONE STORY ────────────────────────────
+ *
+ * Re asked for the Klovers characters here, "to make story sense". The four
+ * cards were four unrelated nouns - culture, study, career, travel - each
+ * true, none of them leading anywhere. Read in the order they already sat
+ * in, they are a life: you fall for the culture, so you study, the studying
+ * becomes work, and the work takes you there. The cards now say that out
+ * loud. Each one is a numbered stop, and a character stands in it saying the
+ * one sentence a learner earns at that stop.
+ *
+ * THE CHARACTERS ARE BUSTS WITH THEIR OWN BACKGROUND and cannot be cut out -
+ * see the note in src/assets/characters.ts, where four background-removal
+ * passes each lost a hand, the trousers or the skirt. So they appear as
+ * ringed medallions, which is a frame the artwork survives, rather than as
+ * figures standing in the scene, which it does not. If transparent full-body
+ * poses ever arrive, that is the change to make here.
+ *
+ * The girl opens and closes (she is waving in both directions); the boy,
+ * hands clasped and calm, carries the two working stops in the middle.
+ *
+ * WHY THIS COPY IS IN THE COMPONENT AND NOT IN translations.ts: that file is
+ * 230KB, and the tooling this was written with can only replace a file whole.
+ * `koreanWord` below has sat here for the same reason. A session with real
+ * git access should move SCRIPT and STORY into translations.ts under
+ * `whyLearn`; nothing else has to change when it does.
  */
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -49,20 +76,68 @@ const iconMap: Record<string, React.ReactNode> = {
   culture: <Music className="h-6 w-6" />,
 };
 
-/** Larger on the back, where it is the only mark on a plain panel. */
-const backIconMap: Record<string, React.ReactNode> = {
-  study: <BookOpen className="h-8 w-8" />,
-  career: <Briefcase className="h-8 w-8" />,
-  travel: <Plane className="h-8 w-8" />,
-  culture: <Music className="h-8 w-8" />,
-};
-
 /** The word itself, in the language being sold. */
 const koreanWord: Record<string, string> = {
   study: "학업",
   career: "경력",
   travel: "여행",
   culture: "문화",
+};
+
+/**
+ * The story order, and who is standing in each stop.
+ *
+ * `step` is not decoration — it is the claim the section is making, that
+ * these four are sequential rather than a menu. Keep them 1-4 and keep them
+ * in the order the translated `items` array already uses.
+ */
+const STORY: Record<string, { step: number; who: "girl" | "boy" }> = {
+  culture: { step: 1, who: "girl" },
+  study: { step: 2, who: "boy" },
+  career: { step: 3, who: "boy" },
+  travel: { step: 4, who: "girl" },
+};
+
+const PORTRAIT: Record<"girl" | "boy", string> = {
+  girl: CHARACTER_GIRL,
+  boy: CHARACTER_BOY,
+};
+
+/**
+ * What the character says at each stop: the Korean on the front, because
+ * this is a Korean school and the sentence is the product; the reader's own
+ * language on the back, because a beginner cannot read the front yet and a
+ * bubble they cannot read explains nothing.
+ *
+ * Short on purpose. These sit in a 150px-wide card on a phone.
+ */
+const SCRIPT: Record<string, { ko: string; ar: string; en: string }> = {
+  culture: {
+    ko: "가사가 들려!",
+    ar: "بقيت أفهم كلمات الأغاني!",
+    en: "I can hear the lyrics now!",
+  },
+  study: {
+    ko: "혼자 읽었어!",
+    ar: "قريتها لوحدي!",
+    en: "I read it on my own!",
+  },
+  career: {
+    ko: "면접은 한국어로.",
+    ar: "المقابلة بالكوري.",
+    en: "The interview — in Korean.",
+  },
+  travel: {
+    ko: "서울에서 만나!",
+    ar: "نتقابل في سيول!",
+    en: "See you in Seoul!",
+  },
+};
+
+/** The section's own framing line, above the translated heading. */
+const EYEBROW = {
+  ar: "قصة واحدة · أربع محطات",
+  en: "One story · four stops",
 };
 
 /**
@@ -77,8 +152,7 @@ const koreanWord: Record<string, string> = {
  * roadmap's final level and the games' "hot" badge, and nowhere else.
  *
  * The hue is decorative — it tells the reader nothing — which is why the
- * ICON takes the foreground token instead: that is the only thing that stays
- * readable on both the Ivory and the dark back panel.
+ * character, not a coloured icon, is the mark on the back panel now.
  */
 const tones: Record<string, string> = {
   study: "hsl(var(--klovers-yellow))",
@@ -98,8 +172,9 @@ const fallbackTone = "hsl(var(--charcoal))";
 const IMAGES: Record<string, string> = {};
 
 const WhyLearnKorean = () => {
-  const { tArray, t } = useLanguage();
+  const { tArray, t, language } = useLanguage();
   const items = tArray("whyLearn", "items") as { title: string; description: string; icon: string }[];
+  const lang = language === "ar" ? "ar" : "en";
 
   // Touch devices have no hover, so the flip is also a real toggle. Keyboard
   // users get the same control for free by it being a <button>.
@@ -110,6 +185,9 @@ const WhyLearnKorean = () => {
       <div className="container mx-auto px-4">
 
         <div className="text-center mb-16 space-y-4">
+          <span className="inline-block rounded-full bg-mint px-4 py-1.5 text-xs md:text-sm font-bold text-mint-foreground">
+            {EYEBROW[lang]}
+          </span>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight leading-tight">
             {t("whyLearn", "title")}
           </h2>
@@ -123,6 +201,9 @@ const WhyLearnKorean = () => {
             const isFlipped = flipped === index;
             const image = IMAGES[item.icon];
             const tone = tones[item.icon] || fallbackTone;
+            const story = STORY[item.icon];
+            const line = SCRIPT[item.icon];
+            const portrait = story ? PORTRAIT[story.who] : null;
 
             return (
               <button
@@ -168,17 +249,55 @@ const WhyLearnKorean = () => {
                       }}
                     />
 
-                    {/* Composed, not centred: word at the top, title at the
-                        bottom, scene filling everything between. */}
-                    <div className="relative h-full flex flex-col justify-between p-4 pb-5 md:p-5 md:pb-6">
-                      <span
+                    {/* The character. A ringed medallion in the bottom corner,
+                        not a figure in the scene — see the note at the top of
+                        this file about why they cannot be cut out. */}
+                    {portrait && (
+                      <img
+                        src={portrait}
+                        alt=""
                         aria-hidden="true"
-                        className="text-3xl md:text-[40px] font-extrabold leading-none select-none text-ivory/[0.34]"
-                      >
-                        {koreanWord[item.icon] || "한국"}
-                      </span>
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute bottom-4 end-3 md:bottom-5 md:end-4 h-11 w-11 md:h-14 md:w-14 rounded-full object-cover ring-2 ring-klovers-yellow shadow-md"
+                      />
+                    )}
 
-                      <div className="flex flex-col items-start gap-2 md:gap-2.5">
+                    {/* Composed, not centred: word and step at the top, the
+                        character's line and the title at the bottom, scene
+                        filling everything between. */}
+                    <div className="relative h-full flex flex-col justify-between p-4 pb-5 md:p-5 md:pb-6">
+                      <div className="flex items-start justify-between gap-2">
+                        <span
+                          aria-hidden="true"
+                          className="text-3xl md:text-[40px] font-extrabold leading-none select-none text-ivory/[0.34]"
+                        >
+                          {koreanWord[item.icon] || "한국"}
+                        </span>
+                        {story && (
+                          <span
+                            aria-hidden="true"
+                            className="shrink-0 grid h-6 w-6 md:h-7 md:w-7 place-items-center rounded-full bg-klovers-yellow text-charcoal text-[11px] md:text-xs font-extrabold"
+                          >
+                            {story.step}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col items-start gap-2 md:gap-2.5 pe-12 md:pe-16">
+                        {line && (
+                          <span
+                            lang="ko"
+                            className="relative inline-block rounded-2xl bg-ivory px-2.5 py-1 text-[11px] md:text-xs font-bold text-charcoal shadow-sm"
+                          >
+                            {line.ko}
+                            {/* Tail, pointing down toward the medallion. */}
+                            <span
+                              aria-hidden="true"
+                              className="absolute -bottom-1 end-3 h-2.5 w-2.5 rotate-45 rounded-[2px] bg-ivory"
+                            />
+                          </span>
+                        )}
                         <span aria-hidden="true" className="block w-8 h-[3px] rounded-full bg-primary" />
                         <span aria-hidden="true" className="block text-primary">
                           {iconMap[item.icon] || <BookOpen className="h-6 w-6" />}
@@ -200,16 +319,32 @@ const WhyLearnKorean = () => {
                       className="absolute inset-x-0 top-0 h-1.5"
                       style={{ backgroundColor: tone }}
                     />
-                    <div className="h-full flex flex-col items-center justify-center text-center gap-3 p-5">
-                      <span aria-hidden="true" className="text-foreground">
-                        {backIconMap[item.icon] || <BookOpen className="h-8 w-8" />}
-                      </span>
+                    <div className="h-full flex flex-col items-center justify-center text-center gap-2.5 p-5">
+                      {portrait ? (
+                        <img
+                          src={portrait}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          decoding="async"
+                          className="h-12 w-12 md:h-14 md:w-14 rounded-full object-cover ring-2 ring-border"
+                        />
+                      ) : (
+                        <span aria-hidden="true" className="text-foreground">
+                          {iconMap[item.icon] || <BookOpen className="h-6 w-6" />}
+                        </span>
+                      )}
                       <h3 className="font-bold text-foreground text-sm md:text-base leading-tight">
                         {item.title}
                       </h3>
                       <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
                         {item.description}
                       </p>
+                      {line && (
+                        <p className="text-xs md:text-sm font-bold text-foreground leading-snug">
+                          {`"${line[lang]}"`}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
