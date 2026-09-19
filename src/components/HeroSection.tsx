@@ -22,9 +22,10 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  *    line stays Klovers Yellow: yellow as TYPE is endorsed on a dark ground
  *    and ruled out only on a light one.
  *
- * 2. THE CARD ROW. The board's four promise cards sit at the foot of its
- *    hero, overlapping the image. They do the same here, on Ivory, raised on
- *    a shadow. The cover gives up a sliver of height (94svh) to make room.
+ * 2. THE CARD ROW. On the board these sit at the foot of the hero, half on
+ *    the image. They lift 48px on phones and 80px from sm up to do the same
+ *    here, and the row carries no background of its own - what shows under
+ *    them is the page's own Ivory, so there is no band and no seam.
  *
  * Numbers are static. A count-up renders every intermediate value as a
  * finished claim - "17+ students" is wrong for a moment too.
@@ -366,24 +367,21 @@ const HeroSection = () => {
         </div>
       </section>
 
-      {/* ── The board's four promise cards, overlapping the cover ───────────
-          On the board these sit at the foot of the hero, half on the image and
-          half off it. -mt-10 reproduces that overlap; the shadow is what makes
-          them read as floating rather than as a new band. */}
-      <div className="relative z-20 bg-ivory pb-14">
-        <div className="mx-auto max-w-6xl px-4 -mt-10">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {cards.map(({ icon: Icon, tone, title, body }) => (
-              <div
-                key={title}
-                className={`rounded-2xl border border-charcoal/10 p-5 ${tone} shadow-[0_18px_40px_-24px_rgba(46,46,46,0.75)]`}
-              >
-                <Icon className="mb-3 h-6 w-6 text-charcoal" aria-hidden="true" />
-                <h2 className="font-display text-base font-bold text-charcoal">{title}</h2>
-                <p className="mt-1 text-sm leading-relaxed text-charcoal/65">{body}</p>
-              </div>
-            ))}
-          </div>
+      {/* ── The board's four promise cards, lifted onto the cover ──────────
+          No background of its own: the cards overlap the photo and the page's
+          Ivory carries the rest, so there is no band and no seam. */}
+      <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {cards.map(({ icon: Icon, tone, title, body }) => (
+            <div
+              key={title}
+              className={`rounded-2xl border border-charcoal/10 p-5 ${tone} shadow-[0_18px_40px_-24px_rgba(46,46,46,0.75)]`}
+            >
+              <Icon className="mb-3 h-6 w-6 text-charcoal" aria-hidden="true" />
+              <h2 className="font-display text-base font-bold text-charcoal">{title}</h2>
+              <p className="mt-1 text-sm leading-relaxed text-charcoal/65">{body}</p>
+            </div>
+          ))}
         </div>
       </div>
     </>
