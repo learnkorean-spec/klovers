@@ -59,7 +59,32 @@
     <!-- LCP hero image — preloaded from stable public path to avoid render-blocking discovery -->
     <link rel="preload" as="image" href="/hero-korean.jpg" fetchpriority="high" />
 
-    <!-- Fonts: system font stack used globally; marketing fonts loaded on-demand by Creator Hub -->
+    <!--
+      Fonts — the brand type system from the Klovers concept board:
+        Poppins  display / headings
+        Inter    body and UI (Latin)
+        Cairo    body and UI (Arabic; Inter ships no Arabic)
+        Caveat   handwritten accent, one line at a time
+
+      Loaded with media="print" + onload swap so the stylesheet is fetched at
+      low priority and never blocks first paint. The system stack stays as the
+      fallback in tailwind.config.ts, so if Google Fonts is blocked or slow the
+      page renders in system fonts instead of waiting on it.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Caveat:wght@600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Caveat:wght@600;700&display=swap"
+      />
+    </noscript>
 
     <!--
       Analytics run on the real site only.
