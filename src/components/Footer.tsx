@@ -1,4 +1,4 @@
-import { MessageCircle, Facebook, Phone, Mail, Youtube, Instagram } from "lucide-react";
+import { MessageCircle, Facebook, Phone, Mail } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import { CONTACT_EMAIL } from "@/lib/siteConfig";
@@ -21,10 +21,17 @@ const Footer = () => {
     ? [{ to: "/courses", label: "الدورات" }, { to: "/pricing", label: "الأسعار" }, { to: "/about", label: "من نحن" }, { to: "/blog", label: "المدونة" }, { to: "/contact", label: "تواصل معنا" }, { to: "/faq", label: "الأسئلة الشائعة" }]
     : [{ to: "/courses", label: "Courses" }, { to: "/pricing", label: "Pricing" }, { to: "/about", label: "About" }, { to: "/blog", label: "Blog" }, { to: "/contact", label: "Contact" }, { to: "/faq", label: "FAQ" }];
 
+  /**
+   * One hover for all three, and it is the brand's.
+   *
+   * These used to light up in Telegram blue, pure black and Facebook blue —
+   * three colours Klovers does not own, on the one surface where the brand
+   * signs its name. The ICON already says which platform each button is.
+   */
   const social = [
-    { href: "https://t.me/+Fu5T7d4wLMsxNDY9", Icon: MessageCircle, label: "Telegram", color: "hover:bg-blue-500 hover:border-blue-500" },
-    { href: "https://www.tiktok.com/@kloversegy", Icon: TiktokIcon, label: "TikTok", color: "hover:bg-black hover:border-black" },
-    { href: "https://www.facebook.com/kloversegy", Icon: Facebook, label: "Facebook", color: "hover:bg-blue-600 hover:border-blue-600" },
+    { href: "https://t.me/+Fu5T7d4wLMsxNDY9", Icon: MessageCircle, label: "Telegram" },
+    { href: "https://www.tiktok.com/@kloversegy", Icon: TiktokIcon, label: "TikTok" },
+    { href: "https://www.facebook.com/kloversegy", Icon: Facebook, label: "Facebook" },
   ];
 
   return (
@@ -87,14 +94,14 @@ const Footer = () => {
               {isAr ? "انضم لمجتمعنا وتواصل مع متعلمي اللغة الكورية حول العالم." : "Join our community and connect with Korean learners worldwide."}
             </p>
             <div className="flex gap-2 flex-wrap">
-              {social.map(({ href, Icon, label, color }) => (
+              {social.map(({ href, Icon, label }) => (
                 <a
                   key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className={`h-9 w-9 rounded-lg border border-background/25 flex items-center justify-center text-background/70 hover:text-background transition-all ${color}`}
+                  className="h-9 w-9 rounded-lg border border-background/25 flex items-center justify-center text-background/70 transition-all hover:bg-klovers-yellow hover:border-klovers-yellow hover:text-charcoal"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
