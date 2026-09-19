@@ -5,53 +5,70 @@
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
+
+Klovers brand palette — website concept board, September 2026:
+  Klovers Yellow  #FFFF00  main highlight / CTA
+  Mint Green      #CDEBD7  support colour
+  Ivory           #FFF9EC  background
+  Charcoal        #2E2E2E  text / primary
+  Peach           #FFB7A1  accent colour
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    /* Brand palette — raw tokens */
+    --klovers-yellow: 60 100% 50%;
+    --mint: 140 43% 86%;
+    --mint-foreground: 0 0% 18%;
+    --ivory: 41 100% 96%;
+    --charcoal: 0 0% 18%;
+    --peach: 14 100% 82%;
+    --peach-foreground: 0 0% 18%;
+
+    /* Semantic tokens */
+    --background: 41 100% 96%;
+    --foreground: 0 0% 18%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card-foreground: 0 0% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 0 0% 18%;
 
     --primary: 60 100% 50%;
-    --primary-foreground: 0 0% 0%;
+    --primary-foreground: 0 0% 18%;
 
-    --secondary: 0 0% 10%;
+    --secondary: 0 0% 18%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 33.3%;
+    --muted: 41 60% 93%;
+    --muted-foreground: 0 0% 35%;
 
-    --accent: 60 60% 88%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 140 43% 86%;
+    --accent-foreground: 0 0% 18%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 86.7%;
-    --input: 0 0% 86.7%;
+    --border: 40 25% 88%;
+    --input: 40 25% 88%;
     --ring: 60 100% 50%;
 
     --radius: 1rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 0%;
+    --sidebar-foreground: 0 0% 18%;
     --sidebar-primary: 60 100% 50%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 60 60% 88%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 86.7%;
+    --sidebar-primary-foreground: 0 0% 18%;
+    --sidebar-accent: 140 43% 86%;
+    --sidebar-accent-foreground: 0 0% 18%;
+    --sidebar-border: 40 25% 88%;
     --sidebar-ring: 60 100% 50%;
 
     --chart-1: 60 100% 50%;
-    --chart-2: 60 100% 60%;
-    --chart-3: 60 100% 40%;
-    --chart-4: 0 0% 20%;
+    --chart-2: 140 43% 86%;
+    --chart-3: 14 100% 82%;
+    --chart-4: 0 0% 18%;
     --chart-5: 0 0% 50%;
 
     --sidebar: 0 0% 100%;
@@ -85,26 +102,35 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 0 0% 5%;
+    /* Brand palette — raw tokens */
+    --klovers-yellow: 60 100% 50%;
+    --mint: 140 30% 40%;
+    --mint-foreground: 0 0% 100%;
+    --ivory: 41 100% 96%;
+    --charcoal: 0 0% 18%;
+    --peach: 14 60% 62%;
+    --peach-foreground: 0 0% 12%;
+
+    --background: 0 0% 10%;
     --foreground: 0 0% 100%;
 
-    --card: 0 0% 10%;
+    --card: 0 0% 14%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 10%;
+    --popover: 0 0% 14%;
     --popover-foreground: 0 0% 100%;
 
     --primary: 60 100% 50%;
-    --primary-foreground: 0 0% 0%;
+    --primary-foreground: 0 0% 18%;
 
     --secondary: 0 0% 90%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary-foreground: 0 0% 18%;
 
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 0 0% 22%;
+    --muted-foreground: 0 0% 72%;
 
-    --accent: 60 100% 20%;
-    --accent-foreground: 60 100% 50%;
+    --accent: 140 30% 40%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -112,20 +138,20 @@ All colors MUST be HSL.
     --border: 0 0% 25%;
     --input: 0 0% 25%;
     --ring: 60 100% 50%;
-    --sidebar-background: 0 0% 5%;
+    --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 60 100% 50%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 60 100% 20%;
-    --sidebar-accent-foreground: 60 100% 50%;
+    --sidebar-primary-foreground: 0 0% 18%;
+    --sidebar-accent: 140 30% 40%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 25%;
     --sidebar-ring: 60 100% 50%;
     --chart-1: 60 100% 50%;
-    --chart-2: 60 100% 60%;
-    --chart-3: 60 100% 40%;
+    --chart-2: 140 30% 40%;
+    --chart-3: 14 60% 62%;
     --chart-4: 0 0% 80%;
     --chart-5: 0 0% 50%;
-    --sidebar: 0 0% 10%;
+    --sidebar: 0 0% 14%;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
