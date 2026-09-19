@@ -1,6 +1,7 @@
 /**
- * The teaching week on one screen: every trial, every Hangul cohort, and the
- * hours the teacher is not free, laid out on a 7-day grid.
+ * The teaching week on one screen: every trial, every Hangul cohort, the hours
+ * the teacher is not free, and — since 19 Sep 2026 — the room each class is
+ * actually held in.
  *
  * WHY THIS SCREEN EXISTS
  * ----------------------
@@ -10,22 +11,31 @@
  * top of a private lesson — both caught by hand, days apart, after the rows
  * were already live.
  *
+ * WHY THE LINKS ARE HERE NOW
+ * --------------------------
+ * `meeting_url` lived on two tables and appeared on one card, sorted by whether
+ * it was missing (CLASS ROOMS on /admin/today). But the question "where is this
+ * class held?" is asked while looking at the week, not while looking at a list —
+ * and the answer to "which class has no room yet?" is only alarming when it is
+ * next to the hour that class occupies. Both now read from the same rows as the
+ * grid, so a link shown here cannot disagree with the link a student was sent.
+ *
  * NOTHING HERE IS HARDCODED
  * -------------------------
  * Every block is read from the row that governs it, so this cannot drift from
  * what the booking guards enforce:
  *
- *   trial_slots                 the free 30-minute sessions
+ *   trial_slots                 the free 30-minute sessions, and their rooms
  *   schedule_packages           the paid cohorts (inactive ones shown dashed)
- *   pkg_groups                  the only place a cohort's LANGUAGE is recorded
+ *   pkg_groups                  a cohort's LANGUAGE and its room
  *   teacher_availability_rules  kind='blocked' — the teacher's private lessons
  *
  * THE TIMEZONE PROBLEM THIS SOLVES
  * --------------------------------
  * Rows do not share a clock. Klovers rows are anchored to Africa/Cairo; the
- * teacher's own commitments are stored against Asia/Bangkok or Cairo. Egypt
- * leaves summer time on 30 October 2026 and the gap between the two widens by an
- * hour, so a pair that does not overlap today can overlap in November.
+ * teacher's own commitments are stored against Asia/Bangkok. Egypt leaves
+ * summer time on 30 October 2026 and the gap between the two widens by an hour,
+ * so a pair that does not overlap today can overlap in November.
  *
  * Rather than hardcode "+4 now, +5 later" — which is the kind of constant that is
  * right until it silently is not — each block is resolved to a real instant on a
@@ -37,7 +47,8 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Copy, Link2, Video } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 type Kind = "trial" | "cohort" | "cohort-closed" | "blocked";
 
@@ -49,6 +60,9 @@ interface Block {
   kind: Kind;
   title: string;
   sub?: string;
+  /** The room this class is held in. Null on a private lesson, and on any
+   *  class that has not been given one — which is the thing worth seeing. */
+  link?: string | null;
 }
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -128,11 +142,15 @@ const label = (min: number) => {
   return m ? `${h12}:${String(m).padStart(2, "0")}${ampm}` : `${h12}${ampm}`;
 };
 
+/** meet.google.com/abc-defg-hij — the part worth reading at a glance. */
+const roomCode = (url: string) => url.replace(/^https?:\/\//, "").replace(/^meet\.google\.com\//, "");
+
 /* ── data ─────────────────────────────────────────────────────────────────── */
 
 interface RawRow {
   id: string; weekday: number; start: string; minutes: number;
   tz: string; kind: Kind; title: string; sub?: string;
+  link?: string | null;
   /**
    * Only `teacher_availability_rules` carries these. A rule is drawn on the
    * week being viewed only while it is in effect there — see `inEffect`.
@@ -169,21 +187,30 @@ function useScheduleRows() {
     queryFn: async () => {
       const [slots, packages, groups, rules] = await Promise.all([
         supabase.from("trial_slots")
-          .select("id, day_of_week, start_time, duration_min, timezone, class_language, capacity")
+          .select("id, day_of_week, start_time, duration_min, timezone, class_language, capacity, meeting_url")
           .eq("is_active", true),
         supabase.from("schedule_packages")
           .select("id, day_of_week, start_time, duration_min, timezone, level, capacity, is_active")
           .eq("course_type", "group"),
-        supabase.from("pkg_groups").select("package_id, name"),
+        supabase.from("pkg_groups").select("package_id, name, meeting_url"),
         supabase.from("teacher_availability_rules")
           .select("id, weekday, start_time, end_time, timezone, note, effective_from, effective_to")
           .eq("kind", "blocked"),
       ]);
       for (const r of [slots, packages, groups, rules]) if (r.error) throw r.error;
 
+      // A package can own more than one group row. The name is the same either
+      // way, but the room is not: taking the first row seen would report a live
+      // class as roomless whenever a closed duplicate came back first. So the
+      // first row that actually HOLDS a link wins.
       const groupName = new Map<string, string>();
+      const groupLink = new Map<string, string | null>();
       for (const g of groups.data ?? []) {
-        if (!groupName.has(g.package_id as string)) groupName.set(g.package_id as string, g.name as string);
+        const pid = g.package_id as string;
+        const url = (g.meeting_url as string | null) ?? null;
+        if (!groupName.has(pid)) groupName.set(pid, g.name as string);
+        if (url && !groupLink.get(pid)) groupLink.set(pid, url);
+        else if (!groupLink.has(pid)) groupLink.set(pid, null);
       }
 
       const out: RawRow[] = [];
@@ -198,6 +225,7 @@ function useScheduleRows() {
           kind: "trial",
           title: "Trial",
           sub: `${s.class_language === "arabic" ? "Arabic" : "English"} · ${s.capacity ?? "?"} seats`,
+          link: (s.meeting_url as string | null) ?? null,
         });
       }
 
@@ -216,6 +244,7 @@ function useScheduleRows() {
           title: `${String(p.level ?? "").replace(/^\w/, c => c.toUpperCase())} course`,
           sub: [lang, p.is_active ? `${p.capacity ?? "?"} seats` : "not open yet"]
             .filter(Boolean).join(" · "),
+          link: groupLink.get(p.id as string) ?? null,
         });
       }
 
@@ -295,7 +324,7 @@ const WeekTimetable = () => {
       if (!inEffect(r, date)) return [];
       const at = readIn(instantOf(date, r.start, r.tz), tz);
       return [{
-        id: r.id, kind: r.kind, title: r.title, sub: r.sub,
+        id: r.id, kind: r.kind, title: r.title, sub: r.sub, link: r.link ?? null,
         weekday: at.weekday,
         start: at.minutes,
         // Clip anything running past midnight so it cannot draw outside the grid.
@@ -303,6 +332,35 @@ const WeekTimetable = () => {
       }];
     });
   }, [rows, view, period]);
+
+  /**
+   * The rooms list under the grid. Rooms that are MISSING sort first — the one
+   * row that needs an action should not be buried under the nine that do not.
+   * Same ordering as the CLASS ROOMS card on /admin/today, for the same reason:
+   * a class can be created, seated and emailed about without ever having a room.
+   */
+  const rooms = useMemo(
+    () =>
+      blocks
+        .filter(b => b.kind !== "blocked")
+        .sort(
+          (a, b) =>
+            Number(Boolean(a.link)) - Number(Boolean(b.link)) ||
+            a.weekday - b.weekday ||
+            a.start - b.start,
+        ),
+    [blocks],
+  );
+  const missingRooms = rooms.filter(r => !r.link).length;
+
+  const copy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Room link copied", description: roomCode(url) });
+    } catch {
+      toast({ title: "Couldn't copy it", description: url, variant: "destructive" });
+    }
+  };
 
   const bounds = useMemo(() => {
     if (!blocks.length) return { lo: 480, hi: 1320 };
@@ -335,9 +393,9 @@ const WeekTimetable = () => {
       <div>
         <h2 className="text-lg font-bold tracking-tight">The teaching week</h2>
         <p className="mt-0.5 max-w-2xl text-sm text-muted-foreground">
-          Trials, Hangul cohorts and blocked hours on one grid, read live from the rows that
-          govern them. Klovers classes are anchored to Cairo; private lessons are not —
-          so the two sets move apart when Egypt leaves summer time on 30&nbsp;October.
+          Trials, Hangul cohorts, blocked hours and the room each class is held in, read live
+          from the rows that govern them. Klovers classes are anchored to Cairo; private lessons
+          are not — so the two sets move apart when Egypt leaves summer time on 30&nbsp;October.
         </p>
       </div>
 
@@ -367,6 +425,7 @@ const WeekTimetable = () => {
             <span className={`h-3 w-3 shrink-0 rounded-sm ${DOT[k]}`} />{t}
           </span>
         ))}
+        <span className="flex items-center gap-2"><Link2 className="h-3 w-3 shrink-0" />Has a room</span>
       </div>
 
       <div className="overflow-x-auto rounded-xl border bg-card">
@@ -415,12 +474,31 @@ const WeekTimetable = () => {
                         left: `calc(${b.lane * w}% + 3px)`,
                         right: `calc(${(b.lanes - 1 - b.lane) * w}% + 3px)`,
                       }}
-                      title={`${b.title}${b.sub ? ` — ${b.sub}` : ""} · ${label(b.start)}–${label(b.start + b.minutes)}`}
+                      title={
+                        `${b.title}${b.sub ? ` — ${b.sub}` : ""} · ${label(b.start)}–${label(b.start + b.minutes)}` +
+                        (b.kind === "blocked" ? "" : b.link ? ` · ${roomCode(b.link)}` : " · no room yet")
+                      }
                     >
                       <span className="block text-[9.5px] font-semibold tabular-nums opacity-80">
                         {label(b.start)}–{label(b.start + b.minutes)}
                       </span>
-                      <span className="block font-semibold">{b.title}</span>
+                      <span className="flex items-center gap-1 font-semibold">
+                        {b.kind !== "blocked" &&
+                          (b.link ? (
+                            <a
+                              href={b.link}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="shrink-0 hover:opacity-70"
+                              aria-label={`Open the room for ${b.title}`}
+                            >
+                              <Link2 className="h-2.5 w-2.5" />
+                            </a>
+                          ) : (
+                            <AlertTriangle className="h-2.5 w-2.5 shrink-0" aria-label="No room yet" />
+                          ))}
+                        <span className="truncate">{b.title}</span>
+                      </span>
                       {b.sub && <span className="block opacity-80">{b.sub}</span>}
                     </div>
                   );
@@ -431,13 +509,75 @@ const WeekTimetable = () => {
         </div>
       </div>
 
+      {/* ROOMS — the same rows as the grid, in a shape that can be clicked and
+          copied. A 2.5px anchor inside a 28px block is findable, not usable. */}
+      {rooms.length > 0 && (
+        <div className="rounded-xl border bg-card p-4">
+          <h3 className="flex items-center gap-2 text-sm font-bold tracking-tight">
+            <Video className="h-4 w-4 text-muted-foreground" />
+            Rooms this week
+            {missingRooms > 0 && (
+              <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                {missingRooms} with no room
+              </span>
+            )}
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            One permanent room per class, read from the same row the invitation reads. Moving or
+            renaming the calendar event does not change the link — deleting the event does kill it.
+          </p>
+          <ul className="mt-3 divide-y">
+            {rooms.map(r => (
+              <li key={`room-${r.id}`} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">
+                    {r.title}
+                    {r.sub && <span className="font-normal text-muted-foreground"> · {r.sub}</span>}
+                  </p>
+                  <p className="text-xs tabular-nums text-muted-foreground">
+                    {SHORT[r.weekday]} {label(r.start)}–{label(r.start + r.minutes)} ·{" "}
+                    {view === "cairo" ? "Cairo" : "Thailand"}
+                  </p>
+                </div>
+                {r.link ? (
+                  <div className="flex items-center gap-2">
+                    <code className="hidden rounded bg-muted px-2 py-1 text-[11px] sm:inline">
+                      {roomCode(r.link)}
+                    </code>
+                    <a
+                      href={r.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+                    >
+                      Open
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => copy(r.link as string)}
+                      className="flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+                    >
+                      <Copy className="h-3 w-3" /> Copy
+                    </button>
+                  </div>
+                ) : (
+                  <span className="rounded-md bg-destructive/10 px-2.5 py-1 text-xs font-semibold text-destructive">
+                    No room yet
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <p className="flex items-start gap-2 text-xs text-muted-foreground">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         <span>
           Blocks drawn side by side in one day are <strong className="font-semibold text-foreground">overlapping</strong>,
-          not adjacent. Private lessons are stored against Cairo time even though they are
-          really fixed to the teacher's own clock — so check them again after 30&nbsp;October
-          rather than trusting this view alone for them.
+          not adjacent. Private lessons are stored against the teacher's own clock
+          (Asia/Bangkok) and Klovers classes against Cairo, so read the week in
+          both periods before moving anything — not only the one you are in.
         </span>
       </p>
     </div>
