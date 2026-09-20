@@ -4,7 +4,7 @@ import { X, ArrowRight } from "lucide-react";
 import { logLeadEvent } from "@/lib/leadTracking";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBottomSlot } from "@/lib/bottomLayer";
-import KloverIcon from "@/components/KloverIcon";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 
 /**
  * StickyEnrollBar — appears after the user scrolls past the hero CTA buttons.
@@ -48,24 +48,30 @@ const StickyEnrollBar = () => {
       role="complementary"
       aria-label={t("stickyBar.ariaLabel")}
     >
-      <div className="bg-black border-t border-primary/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 max-w-4xl mx-auto">
+      <div className="relative bg-black border-t border-primary/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 max-w-4xl mx-auto">
+        {/* The cast stands ON the bar's top edge and jumps in place: squash on
+            landing, stretch on take-off, a full turn in the air (perspective
+            on the row makes the turn read as 3D), and a soft shadow on the
+            edge that shrinks as they rise. No discs: they are the drawings
+            themselves, with a thin white sticker edge so the outline still
+            shows over dark sections of the page. Klobi alone below sm. */}
+        <div className="pointer-events-none absolute bottom-full start-4 flex items-end gap-1 [perspective:500px]" aria-hidden="true">
+          {[
+            { name: "klobi-headphones", delay: "0s", cls: "" },
+            { name: "student-girl-heart", delay: "0.35s", cls: "hidden sm:block" },
+            { name: "student-boy-thumbsup", delay: "0.7s", cls: "hidden sm:block" },
+          ].map(({ name, delay, cls }) => (
+            <div key={name} className={`relative h-14 w-14 ${cls}`}>
+              <span className="animate-bar-shadow absolute -bottom-1 left-1/2 h-2 w-9 -translate-x-1/2 rounded-full bg-black/40 blur-[2px]" style={{ animationDelay: delay }} />
+              <div className="animate-bar-jump h-full w-full origin-bottom" style={{ animationDelay: delay }}>
+                <KloverIcon name={name as KloverIconName} className="h-full w-full [filter:drop-shadow(0_0_1px_#fff)_drop-shadow(0_0_1px_#fff)]" />
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* Left: text */}
         <div className="flex items-center gap-3 min-w-0">
-          {/* The cast. Each one hops on its own beat (bar-hop, index.css) and
-              stands on an Ivory dome so its outline survives the dark bar.
-              Two on phones' worth of width would crowd the tagline, so only
-              Klobi shows below sm. */}
-          <div className="flex flex-shrink-0 items-end -space-x-2 rtl:space-x-reverse" aria-hidden="true">
-            <span className="animate-bar-hop grid h-9 w-9 place-items-center rounded-full bg-ivory ring-2 ring-black" style={{ animationDelay: "0s" }}>
-              <KloverIcon name="klobi-headphones" className="h-7 w-7" />
-            </span>
-            <span className="animate-bar-hop hidden h-9 w-9 place-items-center rounded-full bg-ivory ring-2 ring-black sm:grid" style={{ animationDelay: "0.25s" }}>
-              <KloverIcon name="student-girl-heart" className="h-7 w-7" />
-            </span>
-            <span className="animate-bar-hop hidden h-9 w-9 place-items-center rounded-full bg-ivory ring-2 ring-black sm:grid" style={{ animationDelay: "0.5s" }}>
-              <KloverIcon name="student-boy-thumbsup" className="h-7 w-7" />
-            </span>
-          </div>
           <p className="text-white text-sm font-medium truncate">
             <span className="text-primary font-bold">Klovers</span> — {t("stickyBar.tagline")}
           </p>

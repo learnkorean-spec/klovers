@@ -494,13 +494,23 @@ Type, from the same board (loaded in index.html):
   display: none;
 }
 
-/* StickyEnrollBar cast: a small hop, staggered per character by an inline
-   animation-delay. Stops for anyone who asked their device for less motion. */
-@keyframes bar-hop {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-5px); }
+/* StickyEnrollBar cast: jump in place, on the bar's top edge. Squash on the
+   ground, stretch off it, one full turn in the air, then a rest before the
+   next hop. Delays are set inline so the three never land together. Stops for
+   anyone who asked their device for less motion. */
+@keyframes bar-jump {
+  0%   { transform: translateY(0) scale(1.1, 0.88) rotateY(0deg); }
+  14%  { transform: translateY(-6px) scale(0.95, 1.09) rotateY(0deg); }
+  42%  { transform: translateY(-24px) scale(1, 1) rotateY(180deg); }
+  70%  { transform: translateY(0) scale(1.1, 0.88) rotateY(360deg); }
+  100% { transform: translateY(0) scale(1.1, 0.88) rotateY(360deg); }
 }
-.animate-bar-hop { animation: bar-hop 1.8s ease-in-out infinite; }
+@keyframes bar-shadow {
+  0%, 70%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
+  42% { transform: translateX(-50%) scale(0.5); opacity: 0.4; }
+}
+.animate-bar-jump { animation: bar-jump 2.4s ease-in-out infinite; }
+.animate-bar-shadow { animation: bar-shadow 2.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .animate-bar-hop { animation: none; }
+  .animate-bar-jump, .animate-bar-shadow { animation: none; }
 }
