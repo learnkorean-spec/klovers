@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { CalendarClock, CheckCircle2 } from "lucide-react";
+import { CalendarClock, CheckCircle2, Pencil, UserPlus } from "lucide-react";
+import { normalizeLevel } from "@/constants/levels";
 
 /**
  * Starting a group — the one action nothing in the UI could do.
@@ -32,16 +35,47 @@ import { CalendarClock, CheckCircle2 } from "lucide-react";
  * The confirm step is not ceremony. If the date chosen is today or tomorrow,
  * letter one goes out at the next :20 past the hour — a real letter, to a real
  * student, about money. The button says so before it does it.
+ *
+ * --- 2026-09-21 additions ---
+ *
+ * `activate_pkg_group` never checked capacity — starting a half-empty group
+ * has always been legal at the database layer. The thing actually missing was
+ * that this screen only ever loaded `is_active = true` groups, so a group
+ * created inactive (no room assigned yet, or created by hand) never showed up
+ * here to be started at all. Groups now load regardless of `is_active`; the
+ * button already both activates and starts them, so nothing else changed.
+ *
+ * Two more gaps closed at the same time: the day/time a group meets was fixed
+ * once its `schedule_packages` row was created, and there was no way to seat
+ * a specific student into a specific group by hand — only the auto-matcher's
+ * package-driven assignment, which picks (or creates) a group itself and does
+ * the wrong thing for a group that isn't active yet. Both are additive; the
+ * existing package_id -> single group mapping (checked before shipping this)
+ * makes editing a package's day/time here safe — it only ever affects the one
+ * group.
  */
+
+type Candidate = {
+  enrollmentId: string;
+  userId: string;
+  name: string;
+  email: string;
+  level: string | null;
+};
 
 type GroupRow = {
   id: string;
+  packageId: string | null;
   title: string;
   /** "Monday 15:00 Cairo" — empty when the NAME already says it. */
   when: string;
   language: string;
+  level: string | null;
   dayOfWeek: number | null;
+  startTime: string | null;
   startDate: string | null;
+  isActive: boolean;
+  capacity: number | null;
   /** Active members — everyone in the room. */
   members: number;
   /** Members linked to an enrolment. Only these can be given a date. */
@@ -100,26 +134,50 @@ function prettyDate(iso: string | null): string {
 
 export default function GroupsToStart() {
   const [groups, setGroups] = useState<GroupRow[] | null>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [dates, setDates] = useState<Record<string, string>>({});
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // Inline "edit day/time" state — at most one card open at once.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDay, setEditDay] = useState<string>("");
+  const [editTime, setEditTime] = useState<string>("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // Inline "add student" state — at most one card open at once.
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const [addFilter, setAddFilter] = useState("");
+  const [addingBusy, setAddingBusy] = useState(false);
+
   const load = useCallback(async () => {
     try {
-      const [groupsRes, membersRes, pkgRes] = await Promise.all([
+      const [groupsRes, membersRes, pkgRes, enrollRes] = await Promise.all([
+        // No `.eq("is_active", true)` here on purpose — see the 2026-09-21
+        // note above. A group that was never activated still needs to be
+        // seen and started from this screen, not just the already-active
+        // ones.
         (supabase as any)
           .from("pkg_groups")
-          .select("id, name, package_id, start_date, capacity")
-          .eq("is_active", true),
+          .select("id, name, package_id, start_date, capacity, is_active"),
         supabase
           .from("pkg_group_members")
           .select("group_id, enrollment_id")
           .eq("member_status", "active"),
         supabase
           .from("schedule_packages")
-          .select("id, level, day_of_week, start_time, class_language")
-          .eq("is_active", true),
+          .select("id, level, day_of_week, start_time, class_language"),
+        // The pool a student can be added from by hand: approved, not yet
+        // matched to any group, not slot-rejected. Same definition the
+        // auto-matcher (GroupMatcher.tsx) uses for its own unmatched list.
+        supabase
+          .from("enrollments")
+          .select("id, user_id, level")
+          .eq("approval_status", "APPROVED")
+          .eq("plan_type", "group")
+          .is("matched_at", null)
+          .is("slot_rejection_reason", null),
       ]);
 
       // Thrown, not swallowed. A failed read here would render "every group is
@@ -128,6 +186,7 @@ export default function GroupsToStart() {
       if (groupsRes.error) throw groupsRes.error;
       if (membersRes.error) throw membersRes.error;
       if (pkgRes.error) throw pkgRes.error;
+      if (enrollRes.error) throw enrollRes.error;
 
       const members = new Map<string, { members: number; seated: number }>();
       for (const m of (membersRes.data ?? []) as Array<{ group_id: string; enrollment_id: string | null }>) {
@@ -146,6 +205,7 @@ export default function GroupsToStart() {
 
       const rows: GroupRow[] = ((groupsRes.data ?? []) as Array<{
         id: string; name: string | null; package_id: string | null; start_date: string | null;
+        capacity: number | null; is_active: boolean;
       }>).map(g => {
         const p = g.package_id ? packages.get(g.package_id) : undefined;
         const count = members.get(g.id) ?? { members: 0, seated: 0 };
@@ -159,11 +219,16 @@ export default function GroupsToStart() {
           : "";
         return {
           id: g.id,
+          packageId: g.package_id,
           title,
           when,
           language: p?.class_language === "english" ? "English" : "Arabic",
+          level: p?.level ?? null,
           dayOfWeek: dow,
+          startTime: p?.start_time ?? null,
           startDate: g.start_date,
+          isActive: g.is_active,
+          capacity: g.capacity,
           members: count.members,
           seated: count.seated,
         };
@@ -185,6 +250,31 @@ export default function GroupsToStart() {
         return next;
       });
       setGroups(rows);
+
+      // Enrich the add-student pool with names/emails in one extra query.
+      const enrollRows = (enrollRes.data ?? []) as Array<{ id: string; user_id: string; level: string | null }>;
+      const userIds = [...new Set(enrollRows.map(e => e.user_id))];
+      let profileMap = new Map<string, { name: string; email: string }>();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, name, email")
+          .in("user_id", userIds);
+        profileMap = new Map(
+          ((profiles ?? []) as Array<{ user_id: string; name: string | null; email: string | null }>)
+            .map(p => [p.user_id, { name: p.name || "Unnamed", email: p.email || "" }]),
+        );
+      }
+      setCandidates(
+        enrollRows.map(e => ({
+          enrollmentId: e.id,
+          userId: e.user_id,
+          level: e.level,
+          name: profileMap.get(e.user_id)?.name ?? "Unnamed",
+          email: profileMap.get(e.user_id)?.email ?? "",
+        })),
+      );
+
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load the groups.");
@@ -227,6 +317,90 @@ export default function GroupsToStart() {
     }
   };
 
+  const openEdit = (g: GroupRow) => {
+    setEditingId(g.id);
+    setEditDay(g.dayOfWeek != null ? String(g.dayOfWeek) : "");
+    setEditTime(hhmm(g.startTime) || "15:00");
+  };
+
+  const saveEdit = async (g: GroupRow) => {
+    if (!g.packageId) {
+      toast({ title: "No schedule to edit", description: "This group has no linked schedule package.", variant: "destructive" });
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const { error: updErr } = await supabase
+        .from("schedule_packages")
+        .update({ day_of_week: Number(editDay), start_time: `${editTime}:00` })
+        .eq("id", g.packageId);
+      if (updErr) throw updErr;
+      toast({ title: "Day and time updated", description: `${g.title} now meets ${DAY_NAMES[Number(editDay)]} ${editTime} Cairo.` });
+      setEditingId(null);
+      // The chosen start date was picked against the old weekday — drop it so
+      // it recomputes against the new one instead of silently staying wrong.
+      setDates(prev => {
+        const next = { ...prev };
+        delete next[g.id];
+        return next;
+      });
+      await load();
+    } catch (e: any) {
+      toast({ title: "Could not update the schedule", description: e?.message ?? String(e), variant: "destructive" });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const addStudent = async (g: GroupRow, c: Candidate) => {
+    setAddingBusy(true);
+    try {
+      // Direct insert, not the auto-matcher's assign_student_to_group RPC:
+      // that RPC picks (or silently creates) a group for a package, which is
+      // exactly wrong here — the admin already chose this exact group,
+      // active or not.
+      const { error: insErr } = await supabase
+        .from("pkg_group_members")
+        .upsert(
+          { group_id: g.id, user_id: c.userId, enrollment_id: c.enrollmentId, member_status: "active" },
+          { onConflict: "group_id,user_id" },
+        );
+      if (insErr) throw insErr;
+
+      const { error: enrollErr } = await supabase
+        .from("enrollments")
+        .update({ matched_at: new Date().toISOString(), slot_id: g.packageId })
+        .eq("id", c.enrollmentId);
+      if (enrollErr) throw enrollErr;
+
+      toast({ title: `${c.name} added to ${g.title}` });
+      setAddingId(null);
+      setAddFilter("");
+      await load();
+    } catch (e: any) {
+      toast({ title: "Could not add that student", description: e?.message ?? String(e), variant: "destructive" });
+    } finally {
+      setAddingBusy(false);
+    }
+  };
+
+  const candidatesFor = useMemo(() => {
+    return (g: GroupRow) => {
+      const wantLevel = g.level ? normalizeLevel(g.level) : null;
+      const q = addFilter.trim().toLowerCase();
+      return candidates
+        .filter(c => !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q))
+        .sort((a, b) => {
+          // Same-level candidates first; alphabetical within each group.
+          const aMatch = wantLevel && normalizeLevel(a.level ?? "") === wantLevel ? 0 : 1;
+          const bMatch = wantLevel && normalizeLevel(b.level ?? "") === wantLevel ? 0 : 1;
+          if (aMatch !== bMatch) return aMatch - bMatch;
+          return a.name.localeCompare(b.name);
+        })
+        .slice(0, 25);
+    };
+  }, [candidates, addFilter]);
+
   if (error) {
     return (
       <Card className="border-destructive">
@@ -250,7 +424,7 @@ export default function GroupsToStart() {
     return (
       <Card>
         <CardContent className="p-5 text-sm text-muted-foreground">
-          No active groups.
+          No groups.
         </CardContent>
       </Card>
     );
@@ -268,9 +442,10 @@ export default function GroupsToStart() {
             {waiting.length} group{waiting.length === 1 ? "" : "s"} ha{waiting.length === 1 ? "s" : "ve"} no start date.
           </span>{" "}
           Until a group starts, nobody in it has a first class date and no payment letter can reach them.
+          Starting is allowed at any headcount — nothing here waits for the group to fill up.
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">Every active group has a start date.</p>
+        <p className="text-sm text-muted-foreground">Every group has a start date.</p>
       )}
 
       <div className="grid gap-2 sm:grid-cols-2">
@@ -278,6 +453,8 @@ export default function GroupsToStart() {
           const date = dates[g.id] ?? "";
           const imminent = date !== "" && date <= addDaysISO(today, 1);
           const confirming = confirmId === g.id;
+          const editing = editingId === g.id;
+          const adding = addingId === g.id;
           return (
             <Card key={g.id}>
               <CardContent className="p-4 space-y-2.5">
@@ -285,6 +462,11 @@ export default function GroupsToStart() {
                   <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span className="text-sm font-semibold">{g.title}</span>
                   <Badge variant="secondary" className="text-[10px]">{g.language}</Badge>
+                  {!g.isActive && (
+                    <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">
+                      not active yet
+                    </Badge>
+                  )}
                 </div>
 
                 <p className="text-[11px] text-muted-foreground">
@@ -292,6 +474,7 @@ export default function GroupsToStart() {
                   {g.seated > 0
                     ? `${g.seated} of ${g.members} member${g.members === 1 ? "" : "s"} linked to an enrolment`
                     : `${g.members} member${g.members === 1 ? "" : "s"}, none linked to an enrolment`}
+                  {g.capacity != null && <span> · capacity {g.capacity}</span>}
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -320,6 +503,28 @@ export default function GroupsToStart() {
                         ? "Confirm — this dates students"
                         : "Start this group"}
                   </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    onClick={() => (editing ? setEditingId(null) : openEdit(g))}
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-1" /> Day & time
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    onClick={() => {
+                      if (adding) { setAddingId(null); return; }
+                      setAddingId(g.id);
+                      setAddFilter("");
+                    }}
+                  >
+                    <UserPlus className="h-3.5 w-3.5 mr-1" /> Add student
+                  </Button>
                 </div>
 
                 {confirming && (
@@ -331,6 +536,73 @@ export default function GroupsToStart() {
                         ? " The payment letter goes out within the hour."
                         : " The payment letter goes out the day before the class."}
                   </p>
+                )}
+
+                {editing && (
+                  <div className="flex flex-wrap items-center gap-2 rounded-md border border-input bg-muted/30 p-2">
+                    <Select value={editDay} onValueChange={setEditDay}>
+                      <SelectTrigger className="h-8 w-[130px] text-xs">
+                        <SelectValue placeholder="Day" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DAY_NAMES.map((d, i) => (
+                          <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <input
+                      type="time"
+                      value={editTime}
+                      onChange={e => setEditTime(e.target.value)}
+                      className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                      aria-label={`Class time for ${g.title}`}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8"
+                      disabled={savingEdit || !editDay || !editTime}
+                      onClick={() => void saveEdit(g)}
+                    >
+                      {savingEdit ? "Saving…" : "Save"}
+                    </Button>
+                    <p className="w-full text-[10px] text-muted-foreground">
+                      Changes only this group's slot. Existing members and their dates aren't touched.
+                    </p>
+                  </div>
+                )}
+
+                {adding && (
+                  <div className="space-y-1.5 rounded-md border border-input bg-muted/30 p-2">
+                    <Input
+                      value={addFilter}
+                      onChange={e => setAddFilter(e.target.value)}
+                      placeholder="Filter by name or email…"
+                      className="h-8 text-xs"
+                      autoFocus
+                    />
+                    <div className="max-h-40 overflow-y-auto space-y-0.5">
+                      {candidatesFor(g).length === 0 && (
+                        <p className="px-1 py-1 text-[11px] text-muted-foreground">
+                          No unmatched student{addFilter ? " matches that filter" : "s waiting"}.
+                        </p>
+                      )}
+                      {candidatesFor(g).map(c => (
+                        <button
+                          key={c.enrollmentId}
+                          type="button"
+                          disabled={addingBusy}
+                          onClick={() => void addStudent(g, c)}
+                          className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs hover:bg-accent disabled:opacity-50"
+                        >
+                          <span className="truncate">{c.name} <span className="text-muted-foreground">· {c.email}</span></span>
+                          {g.level && normalizeLevel(c.level ?? "") === normalizeLevel(g.level) && (
+                            <Badge variant="secondary" className="ml-2 shrink-0 text-[9px]">level match</Badge>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
