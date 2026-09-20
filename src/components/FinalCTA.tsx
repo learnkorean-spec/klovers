@@ -83,7 +83,7 @@ const FinalCTA = () => {
             className="absolute text-5xl md:text-7xl font-extrabold text-charcoal/[0.06]"
             style={{
               top: `${8 + (i % 3) * 32}%`,
-              left: `${3 + i * 16}%`,
+              left: `${3 + i * 12}%`,
               transform: `rotate(${-18 + i * 8}deg)`,
             }}
           >
