@@ -26,6 +26,13 @@ Text on the strong tones is Charcoal, never white:
   Charcoal on #FF13F0   4.3:1   large or bold only — no small text on pink
 The accents are accents: a handful of call sites each, never a page ground.
 
+DECISION 20 Sep 2026 (Re): the brand is three colours, Yellow / Charcoal / Ivory.
+Yellow stays the ground. Mint, Blush and the two neons are being retired from
+decorative use: neon green survives only as the dark-theme "correct" colour and
+neon pink only as "wrong" graphics (see --correct / --wrong below). --mint,
+--peach and their -strong siblings stay defined until every call site has moved
+off them; do not add new uses.
+
 Type, from the same board (loaded in index.html):
   Poppins  display / headings      Inter   body and UI (Latin)
   Cairo    body and UI (Arabic)    Caveat  handwritten accent
@@ -71,7 +78,26 @@ Type, from the same board (loaded in index.html):
 
     --border: 40 25% 88%;
     --input: 40 25% 88%;
-    --ring: 60 100% 50%;
+    /* Focus ring is Charcoal in light: a yellow ring is invisible on both the
+       ivory page and every yellow surface (Charcoal on #FFFF00 = 12.6:1). */
+    --ring: 0 0% 18%;
+
+    /* Status colours — FUNCTIONAL, not brand. They appear for a moment inside
+       games and the placement test, and never count toward the three brand
+       colours (same idea as --destructive).
+         correct   #0E7A4F  on ivory 5.1:1   (dark theme: #39FF14, 13.6:1 on ground)
+         wrong     #B800AB  text on white 5.8:1, on --wrong-surface 4.9:1
+         wrong-surface #FFE4FB
+         wrong-graphic #FF13F0  border / x mark / flash ONLY. It sits in a dead
+                   zone: white on it is 3.2:1 and Charcoal 4.3:1, so no text is
+                   ever set on it. Always pair status colour with a check or x
+                   shape, never colour alone. */
+    --correct: 156.1 79.4% 26.7%;
+    --correct-foreground: 0 0% 100%;
+    --wrong: 304.2 100% 36.1%;
+    --wrong-foreground: 0 0% 100%;
+    --wrong-surface: 308.9 100% 94.7%;
+    --wrong-graphic: 303.8 100% 53.7%;
 
     --radius: 1rem;
 
@@ -131,52 +157,69 @@ Type, from the same board (loaded in index.html):
     --mint-strong: 110.6 100% 42%;
     --mint-foreground: 0 0% 18%;
     --ivory: 41 100% 96.3%;
-    --charcoal: 0 0% 18%;
+    --charcoal: 60 8.7% 20.2%;
     --peach: 345 100% 89%;
     --peach-strong: 303.8 85% 48%;
     --peach-foreground: 0 0% 18%;
 
-    --background: 0 0% 10%;
-    --foreground: 0 0% 100%;
+    /* Dark theme — the roles swap, the colours don't.
+         ground   #14140F  warm near-black
+         text     #F2EEE3  (15.9:1 on ground)
+         raised   #23231C  (13.6:1 for text on it)
+         action   #FFFF00  yellow becomes the action colour (17.2:1 on ground)
+       Charcoal was 0 0% 18% here, only 1.28:1 against the old #1A1A1A ground,
+       so every bg-charcoal section vanished into the page. It is lifted to
+       #38382F (1.56:1 against the ground, 10.2:1 for ivory text on it). */
+    --background: 60 14.3% 6.9%;
+    --foreground: 44 36.6% 92%;
 
-    --card: 0 0% 14%;
-    --card-foreground: 0 0% 100%;
+    --card: 60 11.1% 12.4%;
+    --card-foreground: 44 36.6% 92%;
 
-    --popover: 0 0% 14%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 60 11.1% 12.4%;
+    --popover-foreground: 44 36.6% 92%;
 
     --primary: 60 100% 50%;
-    --primary-foreground: 0 0% 18%;
+    --primary-foreground: 60 14.3% 6.9%;
 
-    --secondary: 0 0% 90%;
-    --secondary-foreground: 0 0% 18%;
+    --secondary: 44 36.6% 92%;
+    --secondary-foreground: 60 14.3% 6.9%;
 
-    --muted: 0 0% 22%;
-    --muted-foreground: 0 0% 72%;
+    --muted: 60 10% 15.5%;
+    --muted-foreground: 47.4 11.9% 68.8%;
 
-    --accent: 110.6 100% 42%;
-    --accent-foreground: 0 0% 18%;
+    /* Was neon green: every menu hover and highlight lit up green in dark. */
+    --accent: 60 12.2% 16.1%;
+    --accent-foreground: 44 36.6% 92%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 25%;
-    --input: 0 0% 25%;
+    --border: 60 9.4% 20.8%;
+    --input: 60 9.4% 20.8%;
     --ring: 60 100% 50%;
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 100%;
+
+    --correct: 110.6 100% 53.9%;
+    --correct-foreground: 60 14.3% 6.9%;
+    --wrong: 44 36.6% 92%;
+    --wrong-foreground: 60 14.3% 6.9%;
+    --wrong-surface: 307.8 36.5% 12.4%;
+    --wrong-graphic: 303.8 100% 53.7%;
+
+    --sidebar-background: 60 14.3% 6.9%;
+    --sidebar-foreground: 44 36.6% 92%;
     --sidebar-primary: 60 100% 50%;
-    --sidebar-primary-foreground: 0 0% 18%;
-    --sidebar-accent: 110.6 100% 42%;
-    --sidebar-accent-foreground: 0 0% 18%;
-    --sidebar-border: 0 0% 25%;
+    --sidebar-primary-foreground: 60 14.3% 6.9%;
+    --sidebar-accent: 60 12.2% 16.1%;
+    --sidebar-accent-foreground: 44 36.6% 92%;
+    --sidebar-border: 60 9.4% 20.8%;
     --sidebar-ring: 60 100% 50%;
     --chart-1: 60 100% 50%;
     --chart-2: 110.6 100% 42%;
     --chart-3: 303.8 85% 48%;
     --chart-4: 0 0% 80%;
     --chart-5: 0 0% 50%;
-    --sidebar: 0 0% 14%;
+    --sidebar: 60 11.1% 12.4%;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
@@ -206,6 +249,20 @@ Type, from the same board (loaded in index.html):
   }
 }
 
+
+/* Card on a yellow ground. Ivory on #FFFF00 is 1.02:1 by luminance, so the
+   card is told apart by a hard Charcoal edge and an offset shadow (no blur).
+   In dark the surface is already distinct, so it drops to a soft light edge. */
+@layer utilities {
+  .card-edge {
+    border: 2px solid hsl(var(--charcoal));
+    box-shadow: 4px 4px 0 hsl(var(--charcoal));
+  }
+  .dark .card-edge {
+    border: 1px solid hsl(var(--border));
+    box-shadow: none;
+  }
+}
 
 /* Black outline for neon-yellow text — improves legibility on any background.
    DEPRECATED: the concept board and the creative-direction deck both rule that

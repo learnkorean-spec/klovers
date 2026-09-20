@@ -37,6 +37,17 @@ export default {
   				strong: 'hsl(var(--peach-strong))',
   				foreground: 'hsl(var(--peach-foreground))'
   			},
+  			/* Status colours: functional, outside the three-colour brand palette. */
+  			correct: {
+  				DEFAULT: 'hsl(var(--correct))',
+  				foreground: 'hsl(var(--correct-foreground))'
+  			},
+  			wrong: {
+  				DEFAULT: 'hsl(var(--wrong))',
+  				foreground: 'hsl(var(--wrong-foreground))',
+  				surface: 'hsl(var(--wrong-surface))',
+  				graphic: 'hsl(var(--wrong-graphic))'
+  			},
   			/*
   			 * amber — RETUNED, not Tailwind's default.
   			 *
