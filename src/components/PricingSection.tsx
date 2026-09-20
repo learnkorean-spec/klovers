@@ -72,6 +72,11 @@ const discountCountries: Partial<Record<TierKey, string>> = {
   regional: "Malaysia",
 };
 
+/** Flat, squared tags. The shared Badge is a puffy pill with a border and a
+ *  shadow; three of them in a row read as a string of bubbles. */
+const TAG =
+  "whitespace-nowrap rounded-md border-0 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide shadow-none";
+
 const tierKeys: TierKey[] = ["local", "regional", "global"];
 
 const allCountries = tierKeys.flatMap((key) =>
@@ -248,31 +253,41 @@ const PricingSection = () => {
                     : "border-border hover:border-primary/50 hover:shadow-lg"
                 }`}
               >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-2">
-                  <Badge
-                    className={
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground"
-                    }
-                  >
-                    {tierT("tagline") || tierKey}
-                  </Badge>
-                  {/* Most Popular: on local for discounted countries, on regional globally */}
-                  {isDiscountedCountry && (
-                    <Badge className="bg-amber-500 text-white">⭐ Most Popular</Badge>
-                  )}
-                  {isDiscountedCountry && (
-                    <Badge className="bg-green-500 text-white">
-                      <Sparkles className="h-3 w-3 mr-1" /> Discount!
+                <CardHeader className="text-center pt-6 pb-2">
+                  {/* Badges live IN the header flow, not floated over the card's
+                      top edge: three of them are wider than a card, so the old
+                      absolute row wrapped "Most Popular" onto two lines and
+                      spilled it over the tier icon. Here they wrap onto a second
+                      centred row and push the icon down instead. Every badge is
+                      whitespace-nowrap so no label ever breaks mid-phrase.
+                      Text colours are checked: charcoal on yellow 15:1, white on
+                      the --correct green 5.6:1 (the old green-500 was 2.3:1). */}
+                  <div className="flex flex-wrap justify-center gap-1.5 mb-4">
+                    <Badge
+                      className={`${TAG} ${
+                        isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {tierT("tagline") || tierKey}
                     </Badge>
-                  )}
-                  {tierKey === "regional" && !isDiscountedCountry && isActive && (
-                    <Badge className="bg-amber-500 text-white">⭐ Most Popular</Badge>
-                  )}
-                </div>
+                    {/* Most Popular: on local for discounted countries, on regional globally */}
+                    {isDiscountedCountry && (
+                      <Badge className={`${TAG} bg-foreground text-background`}>
+                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> Most Popular
+                      </Badge>
+                    )}
+                    {isDiscountedCountry && (
+                      <Badge className={`${TAG} bg-correct text-correct-foreground`}>
+                        <Sparkles className="h-3 w-3 mr-1" aria-hidden="true" /> Discount!
+                      </Badge>
+                    )}
+                    {tierKey === "regional" && !isDiscountedCountry && isActive && (
+                      <Badge className={`${TAG} bg-foreground text-background`}>
+                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> Most Popular
+                      </Badge>
+                    )}
+                  </div>
 
-                <CardHeader className="text-center pt-8 pb-2">
                   <div className="flex justify-center mb-3">
                     <div
                       className={`p-3 rounded-full ${
@@ -311,7 +326,7 @@ const PricingSection = () => {
                           className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
                             isActive && isBestValue
                               ? "bg-primary/15 border border-primary/40 ring-1 ring-primary/20"
-                              : isActive ? "bg-accent" : "bg-muted/50"
+                              : isActive ? "bg-correct/10 border border-correct/25" : "bg-muted/50"
                           }`}
                         >
                           <div>
@@ -320,7 +335,7 @@ const PricingSection = () => {
                                 {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
                               </p>
                               {isActive && isBestValue && (
-                                <span className="text-[10px] font-bold text-primary bg-primary/10 border border-primary/30 px-1.5 py-0.5 rounded-full leading-none">Best Value</span>
+                                <span className="text-[10px] font-bold text-primary-foreground bg-primary border border-charcoal/40 px-1.5 py-0.5 rounded-full leading-none">Best Value</span>
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground">
@@ -332,7 +347,7 @@ const PricingSection = () => {
                               {price.local ? `${price.local.toLocaleString()} ${price.currency}` : `$${price.usd}`}
                             </p>
                             {derivePerMonth(price) && (
-                              <p className="text-[11px] text-green-600 dark:text-green-400 font-semibold">
+                              <p className="text-[11px] text-correct font-semibold">
                                 {derivePerMonth(price)}
                               </p>
                             )}
@@ -349,7 +364,7 @@ const PricingSection = () => {
                           className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
                             isActive && isBestValue
                               ? "bg-primary/15 border border-primary/40 ring-1 ring-primary/20"
-                              : isActive ? "bg-accent" : "bg-muted/50"
+                              : isActive ? "bg-correct/10 border border-correct/25" : "bg-muted/50"
                           }`}
                         >
                           <div>
@@ -358,7 +373,7 @@ const PricingSection = () => {
                                 {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
                               </p>
                               {isActive && isBestValue && (
-                                <span className="text-[10px] font-bold text-primary bg-primary/10 border border-primary/30 px-1.5 py-0.5 rounded-full leading-none">Best Value</span>
+                                <span className="text-[10px] font-bold text-primary-foreground bg-primary border border-charcoal/40 px-1.5 py-0.5 rounded-full leading-none">Best Value</span>
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground">
@@ -370,7 +385,7 @@ const PricingSection = () => {
                               {price.local ? `${price.local.toLocaleString()} ${price.currency}` : `$${price.usd}`}
                             </p>
                             {derivePerMonth(price) && (
-                              <p className="text-[11px] text-green-600 dark:text-green-400 font-semibold">
+                              <p className="text-[11px] text-correct font-semibold">
                                 {derivePerMonth(price)}
                               </p>
                             )}

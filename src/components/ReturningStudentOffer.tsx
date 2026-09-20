@@ -40,12 +40,11 @@ import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
  * `border-border`), which are Charcoal-on-Ivory in light mode - byte for byte
  * what this section rendered before - and Ivory-on-near-black in dark mode.
  *
- * The neon pair earns its keep here: Neon green (#39FF14) on the tick marks,
- * the step icons and the card edge that separates the dark hero card from the
- * dark page behind it; Neon pink (#FF13F0) on the third reward tile. Both are
- * accents - a handful of call sites, never a ground - and text over them stays
- * Charcoal, per `claude/BRAND_PALETTE_REFERENCE.md`. Neon green is a
- * dark-ground colour, so on the white cards light mode keeps the charcoal.
+ * 2026-09-20 (d): the brand is three colours (Yellow, Charcoal, Ivory), so the
+ * neon pair that used to live here is gone. In dark mode the tick marks, the
+ * step icons and the edge that separates the hero card from the page are now
+ * Klovers Yellow; the reward tiles are Yellow and Ivory. On the white cards
+ * light mode keeps the Charcoal.
  *
  * WHAT MOVED, AND WHY IT MATTERS MORE THAN THE PAINT
  *
@@ -79,12 +78,12 @@ import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
 const STEP_ICONS = [ClipboardCheck, Route, GraduationCap];
 
 /** Reward tiles: icon plus its tint. Literal class strings for the scanner.
- *  These sit on the Charcoal card in both themes, so the neon pair is safe
- *  here - Charcoal on #39FF14 is 10.0:1, on #FF13F0 4.3:1 (icon-size only). */
+ *  These sit on the Charcoal card in both themes; the icon on each is Charcoal
+ *  (12.6:1 on Yellow, 14:1 on Ivory). */
 const REFERRAL_META = [
   { Icon: UserPlus, tint: "bg-klovers-yellow" },
-  { Icon: Share2, tint: "bg-mint-strong" },
-  { Icon: Shield, tint: "bg-peach-strong" },
+  { Icon: Share2, tint: "bg-klovers-yellow" },
+  { Icon: Shield, tint: "bg-ivory" },
 ];
 
 const ReturningStudentOffer = () => {
@@ -133,7 +132,7 @@ const ReturningStudentOffer = () => {
           would be a pale fog, so the dark theme swaps in the neon sibling at
           low alpha - a glow rather than a cloud. */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute -start-20 -top-20 h-72 w-72 rounded-full bg-mint/50 blur-3xl dark:bg-mint-strong/20" />
+        <div className="absolute -start-20 -top-20 h-72 w-72 rounded-full bg-klovers-yellow/50 blur-3xl dark:bg-klovers-yellow/15" />
         <div className="absolute -bottom-20 -end-20 h-64 w-64 rounded-full bg-klovers-yellow/15 blur-3xl dark:bg-klovers-yellow/10" />
       </div>
 
@@ -174,13 +173,13 @@ const ReturningStudentOffer = () => {
             surface. In dark mode that surface and the page behind it are both
             near-black, so the card gets a neon-green edge to keep its shape. */}
         <div
-          className={`mb-12 overflow-hidden rounded-3xl border border-transparent bg-charcoal shadow-lg transition-all delay-200 duration-700 dark:border-mint-strong/35 ${
+          className={`mb-12 overflow-hidden rounded-3xl border border-transparent bg-charcoal shadow-lg transition-all delay-200 duration-700 dark:border-klovers-yellow/35 ${
             visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
           <div className="grid md:grid-cols-2">
             {/* Two friends: the Klovers characters, overlapping. */}
-            <div className="relative flex min-h-[15rem] items-center justify-center overflow-hidden bg-mint p-8 sm:min-h-[19rem]">
+            <div className="relative flex min-h-[15rem] items-center justify-center overflow-hidden bg-klovers-yellow p-8 sm:min-h-[19rem]">
               <div
                 aria-hidden="true"
                 className="absolute inset-0"
@@ -285,7 +284,7 @@ const ReturningStudentOffer = () => {
                   <li key={i} className="flex items-start gap-3">
                     {/* Neon green is a dark-ground accent: on the white card it
                         would wash out, so light mode keeps the charcoal tick. */}
-                    <Check className="mt-0.5 h-5 w-5 shrink-0 text-charcoal/45 dark:text-mint-strong" />
+                    <Check className="mt-0.5 h-5 w-5 shrink-0 text-charcoal/45 dark:text-klovers-yellow" />
                     <span className="text-sm text-muted-foreground">{item as string}</span>
                   </li>
                 ))}
@@ -304,7 +303,7 @@ const ReturningStudentOffer = () => {
                   <li key={i} className="flex gap-4">
                     <div className="relative flex w-11 shrink-0 flex-col items-center">
                       {!isLast && (
-                        <span aria-hidden="true" className="absolute bottom-0 top-11 w-0 border-s-2 border-dashed border-mint-strong/40" />
+                        <span aria-hidden="true" className="absolute bottom-0 top-11 w-0 border-s-2 border-dashed border-klovers-yellow/60" />
                       )}
                       <span className="relative z-10 grid h-11 w-11 place-items-center rounded-full bg-klovers-yellow text-sm font-bold text-charcoal ring-4 ring-background">
                         {i + 1}
@@ -312,7 +311,7 @@ const ReturningStudentOffer = () => {
                     </div>
                     <div className="pb-6 pt-2">
                       <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                        <Icon className="h-4 w-4 text-charcoal dark:text-mint-strong" aria-hidden="true" />
+                        <Icon className="h-4 w-4 text-charcoal dark:text-klovers-yellow" aria-hidden="true" />
                         {step.title}
                       </p>
                       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
@@ -337,7 +336,7 @@ const ReturningStudentOffer = () => {
                 <div key={i} className="overflow-hidden rounded-2xl border border-border bg-card">
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-foreground transition-colors hover:bg-mint/40 dark:hover:bg-mint-strong/10"
+                    className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-foreground transition-colors hover:bg-klovers-yellow/40 dark:hover:bg-klovers-yellow/10"
                   >
                     {faq.question}
                     <ChevronDown

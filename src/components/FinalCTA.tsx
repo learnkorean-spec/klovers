@@ -48,7 +48,8 @@ const SOCIAL_PROOF = [
   { icon: Globe, value: "A1–C2", en: "All Levels", ar: "جميع المستويات" },
 ];
 
-// Floating Korean characters for visual texture
+// Big ghost Korean words behind the ticket, for texture. Charcoal at 6% on the
+// yellow ground: present, never competing with type.
 const KR_CHARS = ["안녕", "한국어", "공부", "화이팅", "수업", "최고"];
 
 const FinalCTA = () => {
@@ -66,161 +67,159 @@ const FinalCTA = () => {
     return () => obs.disconnect();
   }, []);
 
+  const reveal = (delay: string) =>
+    `transition-all duration-700 ${delay} ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`;
+
   return (
     <section
       ref={sectionRef}
       className="py-20 md:py-28 relative overflow-hidden bg-primary border-y border-charcoal/25"
     >
-      {/* Top edge gradient for depth */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent" />
-
-      {/* Background texture */}
+      {/* Ghost Korean words */}
       <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden>
         {KR_CHARS.map((char, i) => (
           <span
             key={char}
-            className="absolute text-4xl md:text-6xl font-extrabold text-primary-foreground/5"
+            className="absolute text-5xl md:text-7xl font-extrabold text-charcoal/[0.06]"
             style={{
-              top: `${10 + (i % 3) * 30}%`,
-              left: `${5 + i * 15}%`,
-              transform: `rotate(${-20 + i * 10}deg)`,
+              top: `${8 + (i % 3) * 32}%`,
+              left: `${3 + i * 16}%`,
+              transform: `rotate(${-18 + i * 8}deg)`,
             }}
           >
             {char}
           </span>
         ))}
-        {/* Gradient blobs */}
-        <div className="absolute top-0 left-0 w-80 h-80 bg-primary-foreground/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-64 h-64 bg-primary-foreground/5 rounded-full translate-x-1/3 translate-y-1/3" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary-foreground/5 rounded-full" />
       </div>
 
-      <div className="container mx-auto px-4 text-center relative z-10">
+      <div className="container mx-auto px-4 relative z-10">
 
-        {/* Label pill */}
-        <div
-          className={`inline-flex items-center gap-2 bg-primary-foreground/15 border border-primary-foreground/25 text-primary-foreground px-4 py-1.5 rounded-full text-sm font-semibold mb-6 transition-all duration-700 ${
-            visible ? "opacity-100 scale-100" : "opacity-0 scale-90"
-          }`}
-        >
-          <Sparkles className="h-4 w-4" />
-          {isAr ? "ابدأ رحلتك الكورية اليوم" : "Start Your Korean Journey Today"}
-        </div>
+        {/* ── THE TICKET ─────────────────────────────────────────────────
+            The offer is one free class, so the block is drawn as a ticket to
+            it: a yellow stub with the number that matters, a perforation with
+            a notch top and bottom, and the pitch on the Charcoal body. It
+            replaces a flat yellow page of olive-grey small print (Charcoal at
+            60-80% on Yellow reads as mud); every line of type here is either
+            full Charcoal on Yellow or Ivory on Charcoal. */}
+        <div className={`relative mx-auto max-w-4xl ${reveal("")}`}>
+          <div className="card-edge relative grid overflow-hidden rounded-3xl bg-charcoal md:grid-cols-[13rem_1fr]">
 
-        {/* Headline */}
-        <h2
-          className={`text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-5 leading-tight transition-all duration-700 delay-100 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
-          {t("finalCta", "title")}
-        </h2>
-
-        <p
-          className={`text-primary-foreground/80 max-w-2xl mx-auto mb-8 text-base md:text-lg leading-relaxed transition-all duration-700 delay-200 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
-        >
-          {t("finalCta", "subtitle")}
-        </p>
-
-        {/* Social proof — static, see the block comment above */}
-        <div
-          className={`flex items-center justify-center gap-4 flex-wrap mb-10 transition-all duration-700 delay-300 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
-        >
-          {SOCIAL_PROOF.map(({ icon: Icon, value, en, ar }) => {
-            const label = isAr ? ar : en;
-            return (
-              <div key={en} className="flex items-center gap-2 bg-primary-foreground/10 border border-primary-foreground/15 rounded-xl px-4 py-2.5">
-                <Icon className="h-5 w-5 text-primary-foreground/70" />
-                <div className="text-start">
-                  <p className="font-bold text-primary-foreground text-sm leading-none">{value}</p>
-                  <p className="text-[11px] text-primary-foreground/60">{label}</p>
-                </div>
+            {/* Stub */}
+            <div className="relative flex flex-row items-center justify-center gap-4 bg-klovers-yellow px-6 py-6 text-charcoal md:flex-col md:gap-1 md:py-10">
+              <Sparkles className="h-6 w-6 shrink-0" aria-hidden="true" />
+              <p className="font-display text-6xl font-extrabold leading-none md:text-7xl">{isAr ? "٣٠" : "30"}</p>
+              <div className="text-start md:text-center">
+                <p className="text-sm font-extrabold uppercase tracking-wide">{isAr ? "دقيقة" : "minutes"}</p>
+                <p className="text-xs font-bold uppercase tracking-wide">{isAr ? "حصة مجانية" : "free class"}</p>
               </div>
-            );
-          })}
-        </div>
 
-        {/* ONE action.
+              {/* Perforation and its two notches, in the section's own colour
+                  so they read as bites out of the ticket. */}
+              <span aria-hidden="true" className="absolute inset-x-6 bottom-0 border-b-2 border-dashed border-charcoal/40 md:inset-x-auto md:inset-y-6 md:end-0 md:border-b-0 md:border-e-2" />
+              <span aria-hidden="true" className="absolute -bottom-3 start-[-0.75rem] h-6 w-6 rounded-full bg-primary md:bottom-auto md:start-auto md:-top-3 md:end-[-0.75rem]" />
+              <span aria-hidden="true" className="absolute -bottom-3 end-[-0.75rem] h-6 w-6 rounded-full bg-primary md:-bottom-3 md:end-[-0.75rem]" />
+            </div>
 
-            This row used to hold three equally sized buttons - free trial,
-            placement test, and a WhatsApp button in its own brand green on a
-            yellow ground. Three primary-looking choices is the choice
-            paralysis the board and the direction deck both rule out, and the
-            green on yellow was the loudest colour pairing on the page.
+            {/* Body */}
+            <div className="px-6 py-8 text-center md:px-10 md:py-10 md:text-start">
+              <h2 className="text-3xl font-extrabold leading-tight text-ivory md:text-4xl lg:text-5xl">
+                {t("finalCta", "title")}
+              </h2>
+              <p className="mt-3 max-w-xl text-base leading-relaxed text-ivory/75 md:text-lg">
+                {t("finalCta", "subtitle")}
+              </p>
 
-            The other two are still here, as links. Same destinations, same
-            cta_labels, so nothing tracked changes. */}
-        <div
-          className={`flex flex-col items-center gap-5 mb-6 transition-all duration-700 delay-400 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
-        >
-          <Button
-            size="lg"
-            variant="secondary"
-            asChild
-            className="gap-2 h-13 px-10 text-base shadow-xl min-w-[240px] font-bold rounded-full"
-            onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "final_cta_free_trial" }); } catch {} }}
-          >
-            <Link to="/free-trial">
-              {t("hero", "startNow")}
-              <ArrowRight className="h-5 w-5 rtl:rotate-180" />
-            </Link>
-          </Button>
+              {/* Social proof — static, see the block comment above */}
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start">
+                {SOCIAL_PROOF.map(({ icon: Icon, value, en, ar }) => (
+                  <div key={en} className="flex items-center gap-2">
+                    <Icon className="h-5 w-5 text-klovers-yellow" aria-hidden="true" />
+                    <div className="text-start">
+                      <p className="text-sm font-extrabold leading-none text-ivory">{value}</p>
+                      <p className="mt-0.5 text-[11px] text-ivory/65">{isAr ? ar : en}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <Link
-              to="/placement-test"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-foreground/80 underline decoration-primary-foreground/30 underline-offset-4 transition-colors hover:text-primary-foreground hover:decoration-primary-foreground/60"
-            >
-              <ClipboardCheck className="h-4 w-4" />
-              {isAr ? "أو حدد مستواك مجانًا" : "or take the free placement test"}
-            </Link>
-            <a
-              href={WHATSAPP_BASE}
-              onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "final_cta_homepage" }); }}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-foreground/80 underline decoration-primary-foreground/30 underline-offset-4 transition-colors hover:text-primary-foreground hover:decoration-primary-foreground/60"
-            >
-              <MessageCircle className="h-4 w-4" />
-              {isAr ? "أو كلّمنا على واتساب" : "or talk to us on WhatsApp"}
-            </a>
+              {/* ONE action.
+
+                  This row used to hold three equally sized buttons - free
+                  trial, placement test, and a WhatsApp button in its own brand
+                  green on a yellow ground. Three primary-looking choices is the
+                  choice paralysis the board and the direction deck both rule
+                  out. The other two are links; same destinations, same
+                  cta_labels, so nothing tracked changes. */}
+              <div className="mt-7 flex flex-col items-center gap-4 md:items-start">
+                <Button
+                  size="lg"
+                  asChild
+                  className="h-13 min-w-[240px] gap-2 rounded-full px-10 text-base font-bold"
+                  onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "final_cta_free_trial" }); } catch {} }}
+                >
+                  <Link to="/free-trial">
+                    {t("hero", "startNow")}
+                    <ArrowRight className="h-5 w-5 rtl:rotate-180" />
+                  </Link>
+                </Button>
+
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 md:justify-start">
+                  <Link
+                    to="/placement-test"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-ivory/85 underline decoration-ivory/30 underline-offset-4 transition-colors hover:text-ivory hover:decoration-ivory/60"
+                  >
+                    <ClipboardCheck className="h-4 w-4" />
+                    {isAr ? "أو حدد مستواك مجانًا" : "or take the free placement test"}
+                  </Link>
+                  <a
+                    href={WHATSAPP_BASE}
+                    onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "final_cta_homepage" }); }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-ivory/85 underline decoration-ivory/30 underline-offset-4 transition-colors hover:text-ivory hover:decoration-ivory/60"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    {isAr ? "أو كلّمنا على واتساب" : "or talk to us on WhatsApp"}
+                  </a>
+                </div>
+
+                <p className="text-xs text-ivory/60">
+                  {isAr ? "لا بطاقة ائتمان · ٣٠ دقيقة · معلمة حقيقية · نرد خلال دقائق" : "No credit card · 30 minutes · Real teacher · We reply in minutes"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <p className="text-primary-foreground/60 text-xs mb-6">
-          {isAr ? "لا بطاقة ائتمان · ٣٠ دقيقة · معلمة حقيقية · نرد خلال دقائق" : "No credit card · 30 minutes · Real teacher · We reply in minutes"}
-        </p>
+        {/* ── Under the ticket: the guarantee, and the community ─────── */}
+        <div className={`mx-auto mt-8 grid max-w-4xl gap-4 md:grid-cols-2 ${reveal("delay-300")}`}>
+          <div className="flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory px-5 py-4 text-start">
+            <span className="text-3xl" aria-hidden="true">🛡️</span>
+            <div>
+              <p className="text-sm font-extrabold leading-tight text-charcoal">
+                {isAr ? "ضمان الرضا الكامل" : "Satisfaction Guarantee"}
+              </p>
+              <p className="mt-0.5 text-xs text-charcoal/75">
+                {isAr ? "إذا ما عجبتكش الحصة الأولى — هنرجعلك فلوسك أو نعيد الحجز." : "If your first class isn't great, we refund or rebook — no questions asked."}
+              </p>
+            </div>
+          </div>
 
-        {/* Community proof — FOLLOWERS, not students, which is why it does not
-            contradict the 200+ tile above it.
+          {/* Community proof — FOLLOWERS, not students, which is why it does not
+              contradict the 200+ tile above it.
 
-            Removed earlier on 2026-09-18 on the understanding that the real
-            figure was 200, then restored the same day after checking the
-            platforms: the Facebook page shows 2.4K followers and Google lists
-            it at 4K+, so 2,000+ across Telegram and Facebook is conservative.
-            If it is ever raised, raise it against a number someone has just
-            looked at. */}
-        <p className="text-primary-foreground/60 text-xs mb-4">
-          {isAr
-            ? "🌍 انضم لأكثر من ٢٠٠٠ متعلم في مجتمعنا على تيليجرام وفيسبوك"
-            : "🌍 Join 2,000+ Korean learners in our Telegram & Facebook community"}
-        </p>
-
-        {/* Guarantee badge */}
-        <div className="inline-flex items-center gap-3 bg-primary-foreground/10 border border-primary-foreground/20 rounded-2xl px-5 py-3">
-          <span className="text-2xl" aria-hidden="true">🛡️</span>
-          <div className="text-start">
-            <p className="text-primary-foreground font-bold text-sm leading-tight">
-              {isAr ? "ضمان الرضا الكامل" : "Satisfaction Guarantee"}
-            </p>
-            <p className="text-primary-foreground/70 text-xs mt-0.5">
-              {isAr ? "إذا ما عجبتكش الحصة الأولى — هنرجعلك فلوسك أو نعيد الحجز." : "If your first class isn't great, we refund or rebook — no questions asked."}
+              Removed earlier on 2026-09-18 on the understanding that the real
+              figure was 200, then restored the same day after checking the
+              platforms: the Facebook page shows 2.4K followers and Google lists
+              it at 4K+, so 2,000+ across Telegram and Facebook is conservative.
+              If it is ever raised, raise it against a number someone has just
+              looked at. */}
+          <div className="flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory px-5 py-4 text-start">
+            <span className="text-3xl" aria-hidden="true">🌍</span>
+            <p className="text-sm font-bold leading-snug text-charcoal">
+              {isAr
+                ? "انضم لأكثر من ٢٠٠٠ متعلم في مجتمعنا على تيليجرام وفيسبوك"
+                : "Join 2,000+ Korean learners in our Telegram & Facebook community"}
             </p>
           </div>
         </div>

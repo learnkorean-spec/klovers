@@ -84,7 +84,7 @@ const HowItWorks = () => {
               "Your teacher identifies your level and maps out your next steps",
             ]).map((item) => (
               <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-charcoal/45 shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-4 w-4 text-foreground/45 shrink-0 mt-0.5" />
                 <span>{item}</span>
               </li>
             ))}

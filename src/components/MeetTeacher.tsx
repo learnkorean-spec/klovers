@@ -18,7 +18,7 @@ const MeetTeacher = () => {
 
         {/* Section header */}
         <div className="text-center mb-16">
-          <span className="inline-block bg-mint text-charcoal text-xs font-bold tracking-[0.2em] uppercase px-5 py-2 rounded-full mb-5 border border-charcoal/10 shadow-sm">
+          <span className="inline-block bg-klovers-yellow text-charcoal text-xs font-bold tracking-[0.2em] uppercase px-5 py-2 rounded-full mb-5 border border-charcoal/10 shadow-sm">
             {isAr ? "معلمونا" : "Our Educators"}
           </span>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight">
@@ -32,8 +32,8 @@ const MeetTeacher = () => {
           {/* Photo column */}
           <div className="flex justify-center lg:justify-end">
             <div className="relative">
-              {/* Subtle mint glow backdrop */}
-              <div className="absolute -inset-6 rounded-3xl bg-mint/50 blur-3xl" />
+              {/* Subtle yellow glow backdrop */}
+              <div className="absolute -inset-6 rounded-3xl bg-klovers-yellow/50 blur-3xl" />
               {/* Decorative border offset — yellow as an edge, not as type */}
               <div className="absolute -bottom-4 -right-4 w-full h-full rounded-3xl border-2 border-klovers-yellow" />
               {/* Photo card */}
@@ -74,9 +74,9 @@ const MeetTeacher = () => {
                 return (
                   <div
                     key={index}
-                    className="group flex flex-col items-center text-center bg-card hover:bg-mint/40 border border-border hover:border-mint rounded-2xl p-4 md:p-5 transition-all duration-300"
+                    className="group flex flex-col items-center text-center bg-card hover:bg-klovers-yellow/40 border border-border hover:border-klovers-yellow rounded-2xl p-4 md:p-5 transition-all duration-300"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-mint group-hover:bg-mint/80 flex items-center justify-center mb-3 transition-colors border border-charcoal/10">
+                    <div className="w-10 h-10 rounded-xl bg-klovers-yellow group-hover:bg-klovers-yellow/80 flex items-center justify-center mb-3 transition-colors border border-charcoal/10">
                       <Icon className="h-5 w-5 text-charcoal" />
                     </div>
                     <span className="text-foreground font-extrabold text-lg md:text-xl leading-none">
@@ -118,7 +118,7 @@ const MeetTeacher = () => {
                       <div className="w-3 h-3 rounded-full bg-primary border-2 border-background shrink-0" />
                       <div className={`h-px flex-1 bg-border ${i === arr.length - 1 ? "opacity-0" : ""}`} />
                     </div>
-                    <p className="text-[10px] font-bold text-charcoal/75">{m}</p>
+                    <p className="text-[10px] font-bold text-foreground/75">{m}</p>
                     <p className="text-[10px] text-muted-foreground leading-tight">{desc}</p>
                   </div>
                 ))}
