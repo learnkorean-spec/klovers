@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, ArrowRight, Zap, Trophy, Unlock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import HangulMiniGame from "./HangulMiniGame";
+import { GameScene, type GameSceneKind } from "./roadmapScenery";
 import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 
 /**
@@ -21,14 +22,23 @@ const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
   .map((id) => GAMES_CATALOG.find((g) => g.id === id))
   .filter((g): g is NonNullable<typeof g> => Boolean(g));
 
+/** Which drawn scene each game wears - see GameScene in roadmapScenery.tsx. */
+const SCENE_FOR: Record<string, GameSceneKind> = {
+  match: "match",
+  kdrama: "kdrama",
+  sentence: "sentence",
+  numbers: "numbers",
+  colors: "colors",
+};
+
 /** Per-tile surface and tilt, by position. Whole literal class strings on
  *  purpose: Tailwind's scanner only keeps what it can see. The tilt is a
  *  sticker-on-a-desk lean; hover straightens and lifts it. */
 const TILE_LOOK = [
-  "bg-klovers-yellow md:-rotate-1",
-  "bg-card md:rotate-1",
+  "bg-card md:-rotate-1",
   "bg-ivory dark:bg-card md:rotate-1",
-  "bg-klovers-yellow/45 dark:bg-card md:-rotate-1",
+  "bg-card md:rotate-1",
+  "bg-ivory dark:bg-card md:-rotate-1",
   "bg-card md:rotate-1",
 ];
 
@@ -155,29 +165,32 @@ const HomeGamesSection = () => {
               <button
                 key={game.id}
                 onClick={() => navigate("/games")}
-                className={`group card-edge relative flex flex-col justify-between rounded-2xl p-4 text-start transition-transform duration-200 hover:!rotate-0 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                className={`group card-edge relative flex flex-col overflow-hidden rounded-2xl text-start transition-transform duration-200 hover:!rotate-0 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                   TILE_LOOK[i % TILE_LOOK.length]
                 } ${i === HOMEPAGE_GAMES.length - 1 ? "col-span-2 lg:col-span-1" : "col-span-1"}`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  {/* The emoji as a sticker: a yellow disc that spins a little on hover */}
-                  <span className="grid h-14 w-14 place-items-center rounded-full border-2 border-charcoal bg-klovers-yellow text-3xl transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110 dark:border-border">
-                    {game.emoji}
-                  </span>
+                {/* The picture: a drawn scene in the journey map's hand */}
+                <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-t-[0.9rem] border-b-2 border-charcoal bg-ivory dark:border-border dark:bg-muted sm:h-28">
+                  <GameScene kind={SCENE_FOR[game.id] ?? "match"} />
                   {HOT_GAME_IDS.has(game.id) ? (
-                    <span className="rounded-md bg-charcoal px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory">
+                    <span className="absolute end-2 top-2 rounded-md bg-charcoal px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory">
                       {tr("Hot", "رائج")} 🔥
                     </span>
                   ) : isFree ? (
-                    <span className="rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground">
+                    <span className="absolute end-2 top-2 rounded-md bg-charcoal px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory">
                       {tr("Free", "مجاني")}
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-4">
+
+                <div className="relative flex flex-1 flex-col px-4 pb-4 pt-9">
+                  {/* The emoji as a sticker on the picture's lower edge */}
+                  <span className="absolute -top-7 start-4 grid h-14 w-14 place-items-center rounded-full border-2 border-charcoal bg-klovers-yellow text-3xl transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110 dark:border-border">
+                    {game.emoji}
+                  </span>
                   <h3 className="text-base font-extrabold leading-tight text-foreground">{t(game.titleKey)}</h3>
                   <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/70">{t(game.descKey)}</p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-extrabold text-foreground">
+                  <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-extrabold text-foreground">
                     {tr("Play", "العب")}
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
                   </span>
