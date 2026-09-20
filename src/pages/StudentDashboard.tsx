@@ -634,25 +634,31 @@ const StudentDashboard = () => {
           {/* ── Hero greeting ── */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 px-5 py-5">
             <div className="flex items-center gap-4">
-              {profileComplete ? (
-                <div
-                  className="h-12 w-12 rounded-full bg-[#39ff14] text-[#062b00] flex items-center justify-center font-bold text-xl shrink-0 select-none ring-2 ring-[#39ff14]/60 shadow-[0_0_14px_2px_rgba(57,255,20,0.7)]"
-                  title={profileBadgeHint}
-                  aria-label={profileBadgeHint}
-                >
-                  {displayName?.[0]?.toUpperCase() ?? "K"}
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleProfileBadgeClick}
-                  title={profileBadgeHint}
-                  aria-label={profileBadgeHint}
-                  className="h-12 w-12 rounded-full bg-[#b0245f] text-white flex items-center justify-center font-bold text-xl shrink-0 select-none ring-2 ring-[#b0245f]/40 shadow-[0_0_10px_2px_rgba(176,36,95,0.55)] animate-pulse motion-reduce:animate-none cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#b0245f]/60"
-                >
-                  {displayName?.[0]?.toUpperCase() ?? "K"}
-                </button>
-              )}
+              {(() => {
+                const initial = displayName?.[0]?.toUpperCase() ?? "K";
+                const inner = avatarUrl
+                  ? <img src={avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
+                  : initial;
+                return profileComplete ? (
+                  <div
+                    className="h-14 w-14 rounded-full overflow-hidden bg-[#39ff14] text-[#062b00] flex items-center justify-center font-bold text-xl shrink-0 select-none ring-4 ring-[#39ff14] shadow-[0_0_16px_3px_rgba(57,255,20,0.75)]"
+                    title={profileBadgeHint}
+                    aria-label={profileBadgeHint}
+                  >
+                    {inner}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleProfileBadgeClick}
+                    title={profileBadgeHint}
+                    aria-label={profileBadgeHint}
+                    className="h-14 w-14 rounded-full overflow-hidden bg-[#b0245f] text-white flex items-center justify-center font-bold text-xl shrink-0 select-none ring-4 ring-[#b0245f] shadow-[0_0_14px_3px_rgba(176,36,95,0.6)] animate-pulse motion-reduce:animate-none cursor-pointer focus-visible:outline-none focus-visible:ring-[#b0245f]/70"
+                  >
+                    {inner}
+                  </button>
+                );
+              })()}
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-muted-foreground leading-tight">{todayStr}</p>
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight break-words">{greeting}{language === "ar" ? "، " : ", "}<bdi>{displayName.split(" ")[0]}</bdi> 👋</h1>
