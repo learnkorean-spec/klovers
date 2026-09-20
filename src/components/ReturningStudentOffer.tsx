@@ -27,6 +27,26 @@ import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
  * 2026-09-20 (b): it asked people to invite a friend and showed them three
  * icons. It shows two friends now.
  *
+ * 2026-09-20 (c): THE SECTION WAS UNREADABLE IN DARK MODE. Every surface and
+ * every line of type here was pinned to a literal brand token - `text-charcoal`
+ * for the heading, `bg-white` for the cards, `border-charcoal/10` for their
+ * edges. Charcoal is `0 0% 18%` in BOTH themes by design: it is the palette's
+ * dark surface, not a text colour that flips. So on the dark ground the
+ * heading was 18% grey on 10% grey - the screenshot Re sent shows "Welcome
+ * Back to Klovers" as a shadow with a yellow underline floating beneath it.
+ *
+ * The fix is not new colours, it is the right layer: type and surfaces now use
+ * the semantic tokens (`text-foreground`, `text-muted-foreground`, `bg-card`,
+ * `border-border`), which are Charcoal-on-Ivory in light mode - byte for byte
+ * what this section rendered before - and Ivory-on-near-black in dark mode.
+ *
+ * The neon pair earns its keep here: Neon green (#39FF14) on the tick marks,
+ * the step icons and the card edge that separates the dark hero card from the
+ * dark page behind it; Neon pink (#FF13F0) on the third reward tile. Both are
+ * accents - a handful of call sites, never a ground - and text over them stays
+ * Charcoal, per `claude/BRAND_PALETTE_REFERENCE.md`. Neon green is a
+ * dark-ground colour, so on the white cards light mode keeps the charcoal.
+ *
  * WHAT MOVED, AND WHY IT MATTERS MORE THAN THE PAINT
  *
  * The promo code used to sit in the second column, beneath the offer list,
@@ -58,11 +78,13 @@ import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
 
 const STEP_ICONS = [ClipboardCheck, Route, GraduationCap];
 
-/** Reward tiles: icon plus its tint. Literal class strings for the scanner. */
+/** Reward tiles: icon plus its tint. Literal class strings for the scanner.
+ *  These sit on the Charcoal card in both themes, so the neon pair is safe
+ *  here - Charcoal on #39FF14 is 10.0:1, on #FF13F0 4.3:1 (icon-size only). */
 const REFERRAL_META = [
   { Icon: UserPlus, tint: "bg-klovers-yellow" },
-  { Icon: Share2, tint: "bg-mint" },
-  { Icon: Shield, tint: "bg-peach" },
+  { Icon: Share2, tint: "bg-mint-strong" },
+  { Icon: Shield, tint: "bg-peach-strong" },
 ];
 
 const ReturningStudentOffer = () => {
@@ -107,10 +129,12 @@ const ReturningStudentOffer = () => {
       ref={sectionRef}
       className="relative overflow-hidden bg-background px-4 py-16 md:py-24"
     >
-      {/* Decorative blobs */}
+      {/* Decorative blobs. Soft Mint reads on Ivory; on the dark ground it
+          would be a pale fog, so the dark theme swaps in the neon sibling at
+          low alpha - a glow rather than a cloud. */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute -start-20 -top-20 h-72 w-72 rounded-full bg-mint/50 blur-3xl" />
-        <div className="absolute -bottom-20 -end-20 h-64 w-64 rounded-full bg-klovers-yellow/15 blur-3xl" />
+        <div className="absolute -start-20 -top-20 h-72 w-72 rounded-full bg-mint/50 blur-3xl dark:bg-mint-strong/20" />
+        <div className="absolute -bottom-20 -end-20 h-64 w-64 rounded-full bg-klovers-yellow/15 blur-3xl dark:bg-klovers-yellow/10" />
       </div>
 
       <div className="container relative z-10 mx-auto max-w-6xl">
@@ -118,7 +142,7 @@ const ReturningStudentOffer = () => {
         <div className="mb-12 text-center">
           <Badge
             variant="outline"
-            className={`mb-4 border-charcoal/20 bg-white text-charcoal transition-all duration-700 ${
+            className={`mb-4 border-border bg-card text-foreground transition-all duration-700 ${
               visible ? "scale-100 opacity-100" : "scale-90 opacity-0"
             }`}
           >
@@ -126,7 +150,7 @@ const ReturningStudentOffer = () => {
             {t("returningStudents.section.badge")}
           </Badge>
           <h2
-            className={`text-3xl font-extrabold text-charcoal transition-all delay-100 duration-700 md:text-4xl lg:text-5xl ${
+            className={`text-3xl font-extrabold text-foreground transition-all delay-100 duration-700 md:text-4xl lg:text-5xl ${
               visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
             }`}
           >
@@ -137,7 +161,7 @@ const ReturningStudentOffer = () => {
             <path d="M7 12C60 4 134 3 197 8c14 1 27 3 36 2" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
           </svg>
           <p
-            className={`mx-auto max-w-2xl text-base text-charcoal/70 transition-all delay-200 duration-700 md:text-lg ${
+            className={`mx-auto max-w-2xl text-base text-muted-foreground transition-all delay-200 duration-700 md:text-lg ${
               visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
             }`}
           >
@@ -145,9 +169,12 @@ const ReturningStudentOffer = () => {
           </p>
         </div>
 
-        {/* HERO: the referral offer, with faces and the code in one card. */}
+        {/* HERO: the referral offer, with faces and the code in one card.
+            Charcoal is the card here on purpose - it is the palette's strong
+            surface. In dark mode that surface and the page behind it are both
+            near-black, so the card gets a neon-green edge to keep its shape. */}
         <div
-          className={`mb-12 overflow-hidden rounded-3xl bg-charcoal shadow-lg transition-all delay-200 duration-700 ${
+          className={`mb-12 overflow-hidden rounded-3xl border border-transparent bg-charcoal shadow-lg transition-all delay-200 duration-700 dark:border-mint-strong/35 ${
             visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
@@ -245,9 +272,9 @@ const ReturningStudentOffer = () => {
             visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
-          <Card className="border-charcoal/10 bg-white">
+          <Card className="border-border bg-card">
             <CardContent className="pt-6">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-charcoal">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-klovers-yellow text-charcoal">
                   <GraduationCap className="h-4 w-4" />
                 </span>
@@ -256,8 +283,10 @@ const ReturningStudentOffer = () => {
               <ul className="space-y-3">
                 {offerItems.map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <Check className="mt-0.5 h-5 w-5 shrink-0 text-charcoal/45" />
-                    <span className="text-sm text-charcoal/70">{item as string}</span>
+                    {/* Neon green is a dark-ground accent: on the white card it
+                        would wash out, so light mode keeps the charcoal tick. */}
+                    <Check className="mt-0.5 h-5 w-5 shrink-0 text-charcoal/45 dark:text-mint-strong" />
+                    <span className="text-sm text-muted-foreground">{item as string}</span>
                   </li>
                 ))}
               </ul>
@@ -266,7 +295,7 @@ const ReturningStudentOffer = () => {
 
           {/* Steps — same round node and dashed rail as the roadmap. */}
           <div>
-            <h3 className="mb-5 text-lg font-bold text-charcoal">{t("returningStudents.section.stepsTitle")}</h3>
+            <h3 className="mb-5 text-lg font-bold text-foreground">{t("returningStudents.section.stepsTitle")}</h3>
             <ol className="space-y-1">
               {steps.map((step, i) => {
                 const Icon = STEP_ICONS[i] ?? ClipboardCheck;
@@ -282,11 +311,11 @@ const ReturningStudentOffer = () => {
                       </span>
                     </div>
                     <div className="pb-6 pt-2">
-                      <p className="flex items-center gap-2 text-sm font-semibold text-charcoal">
-                        <Icon className="h-4 w-4 text-charcoal" aria-hidden="true" />
+                      <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Icon className="h-4 w-4 text-charcoal dark:text-mint-strong" aria-hidden="true" />
                         {step.title}
                       </p>
-                      <p className="mt-1 text-sm leading-relaxed text-charcoal/65">{step.description}</p>
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
                     </div>
                   </li>
                 );
@@ -302,24 +331,24 @@ const ReturningStudentOffer = () => {
               visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
             }`}
           >
-            <h3 className="mb-4 text-center text-lg font-bold text-charcoal">{t("returningStudents.section.faqTitle")}</h3>
+            <h3 className="mb-4 text-center text-lg font-bold text-foreground">{t("returningStudents.section.faqTitle")}</h3>
             <div className="space-y-2">
               {faqs.map((faq, i) => (
-                <div key={i} className="overflow-hidden rounded-2xl border border-charcoal/10 bg-white">
+                <div key={i} className="overflow-hidden rounded-2xl border border-border bg-card">
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-charcoal transition-colors hover:bg-mint/40"
+                    className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-foreground transition-colors hover:bg-mint/40 dark:hover:bg-mint-strong/10"
                   >
                     {faq.question}
                     <ChevronDown
-                      className={`ms-2 h-4 w-4 shrink-0 text-charcoal/50 transition-transform duration-200 ${
+                      className={`ms-2 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${
                         openFaq === i ? "rotate-180" : ""
                       }`}
                     />
                   </button>
                   <div
-                    className={`overflow-hidden px-4 text-sm text-charcoal/65 transition-all duration-200 ${
-                      openFaq === i ? "border-t border-charcoal/10 py-3" : "max-h-0 py-0"
+                    className={`overflow-hidden px-4 text-sm text-muted-foreground transition-all duration-200 ${
+                      openFaq === i ? "border-t border-border py-3" : "max-h-0 py-0"
                     }`}
                   >
                     {faq.answer}
