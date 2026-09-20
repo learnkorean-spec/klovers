@@ -59,9 +59,14 @@ import { normalizeLevel } from "@/constants/levels";
  *   - the date box refused anything before "today", which blocked recording a
  *     class that had already happened by the time anyone opened this screen;
  *   - and there was no way to move a student who was already seated
- *     somewhere into a different group — "Remove" below unseats her and
- *     reopens her enrolment (if she has one) so she's pickable again from
- *     whatever group she actually belongs in.
+ *     somewhere into a different group — "Remove" below still unseats her by
+ *     hand, but "Add student" now also shows every already-seated lead
+ *     (badged with wherever she currently sits) instead of hiding anyone not
+ *     free, and picking her there moves her in one step: unseated from the
+ *     old group, seated in this one. The two-step remove-then-add still
+ *     works and is what "Remove" alone does, but a real class change no
+ *     longer needs it — Aya, seated in Hangul · Friday, was invisible from
+ *     every other group's "Add student" for exactly this reason.
  */
 
 type Candidate = {
@@ -73,6 +78,11 @@ type Candidate = {
   name: string;
   email: string;
   level: string | null;
+  /** Set when she's already seated in some other group. Adding her from a
+   * different group's list is then a move, not a fresh seat — see
+   * `addStudent` below. Null means she isn't seated anywhere yet. */
+  currentGroupId: string | null;
+  currentGroupTitle: string | null;
 };
 
 type Member = {
@@ -277,7 +287,6 @@ export default function GroupsToStart() {
 
       const membersByGroup = new Map<string, Member[]>();
       const seatedCountByGroup = new Map<string, number>();
-      const seatedUserIds = new Set<string>();
       for (const m of memberRows) {
         const list = membersByGroup.get(m.group_id) ?? [];
         list.push({
@@ -288,7 +297,6 @@ export default function GroupsToStart() {
         });
         membersByGroup.set(m.group_id, list);
         if (m.enrollment_id) seatedCountByGroup.set(m.group_id, (seatedCountByGroup.get(m.group_id) ?? 0) + 1);
-        seatedUserIds.add(m.user_id);
       }
 
       const packages = new Map(
@@ -297,6 +305,15 @@ export default function GroupsToStart() {
           start_time: string | null; class_language: string | null;
         }>).map(p => [p.id, p]),
       );
+
+      // Which group (if any) each user is currently seated in, and that
+      // group's display title — used to mark and move already-seated
+      // candidates rather than hide them (see the 2026-09-21 note below).
+      const groupTitleById = new Map(
+        ((groupsRes.data ?? []) as Array<{ id: string; name: string | null }>).map(g => [g.id, g.name || "Group"]),
+      );
+      const groupIdByUserId = new Map<string, string>();
+      for (const m of memberRows) if (!groupIdByUserId.has(m.user_id)) groupIdByUserId.set(m.user_id, m.group_id);
 
       const rows: GroupRow[] = ((groupsRes.data ?? []) as Array<{
         id: string; name: string | null; package_id: string | null; start_date: string | null;
@@ -359,28 +376,42 @@ export default function GroupsToStart() {
             .map(p => [p.user_id, { name: p.name || "Unnamed", email: p.email || "" }]),
         );
       }
-      const fromEnrollments: Candidate[] = enrollRows.map(e => ({
-        enrollmentId: e.id,
-        userId: e.user_id,
-        level: e.level,
-        name: enrollProfileMap.get(e.user_id)?.name ?? "Unnamed",
-        email: enrollProfileMap.get(e.user_id)?.email ?? "",
-      }));
+      const fromEnrollments: Candidate[] = enrollRows.map(e => {
+        const currentGroupId = groupIdByUserId.get(e.user_id) ?? null;
+        return {
+          enrollmentId: e.id,
+          userId: e.user_id,
+          level: e.level,
+          name: enrollProfileMap.get(e.user_id)?.name ?? "Unnamed",
+          email: enrollProfileMap.get(e.user_id)?.email ?? "",
+          currentGroupId,
+          currentGroupTitle: currentGroupId ? groupTitleById.get(currentGroupId) ?? "another group" : null,
+        };
+      });
 
-      // Pool two: accounts with no enrolment at all, and not already seated
-      // anywhere. This is what makes someone like Aya findable here.
-      const alreadyCovered = new Set([...seatedUserIds, ...fromEnrollments.map(c => c.userId)]);
+      // Pool two: every other account, including ones already seated
+      // somewhere — a seated lead is marked (badge below) and picking her
+      // moves her rather than being hidden, which is what made someone like
+      // Aya, already seated in her real group, invisible from every other
+      // group's "Add student" list. Only excluded here: anyone already
+      // covered by pool one, to avoid listing her twice.
+      const enrollmentUserIds = new Set(fromEnrollments.map(c => c.userId));
       const fromProfiles: Candidate[] = ((profilesRes.data ?? []) as Array<{
         user_id: string; name: string | null; email: string | null; course_level_key: string | null;
       }>)
-        .filter(p => !alreadyCovered.has(p.user_id))
-        .map(p => ({
-          enrollmentId: null,
-          userId: p.user_id,
-          level: p.course_level_key,
-          name: p.name || "Unnamed",
-          email: p.email || "",
-        }));
+        .filter(p => !enrollmentUserIds.has(p.user_id))
+        .map(p => {
+          const currentGroupId = groupIdByUserId.get(p.user_id) ?? null;
+          return {
+            enrollmentId: null,
+            userId: p.user_id,
+            level: p.course_level_key,
+            name: p.name || "Unnamed",
+            email: p.email || "",
+            currentGroupId,
+            currentGroupTitle: currentGroupId ? groupTitleById.get(currentGroupId) ?? "another group" : null,
+          };
+        });
 
       setCandidates([...fromEnrollments, ...fromProfiles]);
       setError(null);
@@ -463,6 +494,19 @@ export default function GroupsToStart() {
   const addStudent = async (g: GroupRow, c: Candidate) => {
     setAddingBusy(true);
     try {
+      // If she's already seated somewhere else, unseat her there first — this
+      // is the one-step "move" that a real class change needs. Her old
+      // enrolment link isn't cleared to null here the way a plain Remove does
+      // it, because the very next statement points it at this group instead.
+      if (c.currentGroupId && c.currentGroupId !== g.id) {
+        const { error: delErr } = await supabase
+          .from("pkg_group_members")
+          .delete()
+          .eq("group_id", c.currentGroupId)
+          .eq("user_id", c.userId);
+        if (delErr) throw delErr;
+      }
+
       // Direct insert, not the auto-matcher's assign_student_to_group RPC:
       // that RPC picks (or silently creates) a group for a package, which is
       // exactly wrong here — the admin already chose this exact group,
@@ -486,11 +530,14 @@ export default function GroupsToStart() {
         if (enrollErr) throw enrollErr;
       }
 
+      const moved = c.currentGroupId && c.currentGroupId !== g.id;
       toast({
-        title: `${c.name} added to ${g.title}`,
-        description: c.enrollmentId
-          ? undefined
-          : "She has no enrolment yet, so starting the group won't date or bill her until one exists.",
+        title: moved ? `${c.name} moved to ${g.title}` : `${c.name} added to ${g.title}`,
+        description: moved
+          ? `Unseated from ${c.currentGroupTitle} and seated here instead.`
+          : c.enrollmentId
+            ? undefined
+            : "She has no enrolment yet, so starting the group won't date or bill her until one exists.",
       });
       setAddingId(null);
       setAddFilter("");
@@ -546,6 +593,8 @@ export default function GroupsToStart() {
       const wantLevel = g.level ? normalizeLevel(g.level) : null;
       const q = addFilter.trim().toLowerCase();
       return candidates
+        // Already a member of this exact group — nothing to add.
+        .filter(c => c.currentGroupId !== g.id)
         .filter(c => !q || c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q))
         .sort((a, b) => {
           // Same-level candidates first; alphabetical within each group.
@@ -775,7 +824,7 @@ export default function GroupsToStart() {
                     <div className="max-h-40 overflow-y-auto space-y-0.5">
                       {candidatesFor(g).length === 0 && (
                         <p className="px-1 py-1 text-[11px] text-muted-foreground">
-                          No student{addFilter ? " matches that filter" : " available to add — everyone with an account is already seated somewhere"}.
+                          No student{addFilter ? " matches that filter" : " to add"}.
                         </p>
                       )}
                       {candidatesFor(g).map(c => (
@@ -790,6 +839,11 @@ export default function GroupsToStart() {
                           <span className="ml-2 flex shrink-0 gap-1">
                             {g.level && normalizeLevel(c.level ?? "") === normalizeLevel(g.level) && (
                               <Badge variant="secondary" className="text-[9px]">level match</Badge>
+                            )}
+                            {c.currentGroupId && (
+                              <Badge variant="outline" className="text-[9px] text-blue-600 border-blue-300">
+                                in {c.currentGroupTitle} · click to move
+                              </Badge>
                             )}
                             {!c.enrollmentId && (
                               <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-300">
@@ -829,8 +883,9 @@ export default function GroupsToStart() {
                       </div>
                     ))}
                     <p className="pt-1 text-[10px] text-muted-foreground">
-                      Removing unseats her here and reopens her enrolment, so she's immediately findable from
-                      "Add student" on whichever group she's actually moving to — that's how a class change is done.
+                      Removing just unseats her — to move her to a specific group, it's usually quicker to open
+                      that group's "Add student" instead and pick her straight from there; she'll show up badged
+                      with wherever she currently sits.
                     </p>
                   </div>
                 )}
