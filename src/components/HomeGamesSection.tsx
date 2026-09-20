@@ -3,39 +3,33 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, ArrowRight, Zap, Trophy, Unlock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import HangulMiniGame from "./HangulMiniGame";
 import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 
 /**
- * The six games teased on the homepage. Picked by id, not "first N of the
- * catalog" — GAMES_CATALOG is ordered by curriculum progression, and this
- * row is a marketing highlight reel, so it keeps its own curated order.
- * Titles/descriptions/free-status still come from the shared catalog, so
- * they can never drift from what /games actually shows.
+ * The games teased on the homepage, in the order they sit around the arcade
+ * cabinet. Picked by id, not "first N of the catalog" - GAMES_CATALOG is
+ * ordered by curriculum progression, and this is a highlight reel, so it keeps
+ * its own curated order. Titles, descriptions and free-status still come from
+ * the shared catalog, so they can never drift from what /games shows.
+ *
+ * "hangul" is not in the list on purpose: it is the game the cabinet PLAYS
+ * (see HangulMiniGame), so a second card for it would be the same game twice.
  */
-const HOMEPAGE_GAME_IDS = ["match", "hangul", "kdrama", "sentence", "numbers", "colors"];
+const HOMEPAGE_GAME_IDS = ["match", "kdrama", "sentence", "numbers", "colors"];
 const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
   .map((id) => GAMES_CATALOG.find((g) => g.id === id))
   .filter((g): g is NonNullable<typeof g> => Boolean(g));
 
-/** The layout of the six tiles, by position in HOMEPAGE_GAME_IDS.
- *
- *  20 Sep: the row of five equal cards left two orphans on a second line and
- *  a hole to the right of them. It is a bento now: the first game is a big
- *  yellow tile (2x2 on desktop), the next four are small, the sixth runs the
- *  full width of its row, and the "See all" tile beside it makes the last row
- *  exactly four columns wide. Seven pieces, no gap - if a game is added to or
- *  removed from HOMEPAGE_GAME_IDS the packing has to be redone.
- *
- *  Edges are `card-edge`: 2px Charcoal and a hard offset shadow on the light
- *  theme, a plain border on dark. Whole literal class strings on purpose:
- *  Tailwind's scanner only keeps what it can see. */
-const TILES = [
-  { span: "col-span-2 lg:row-span-2", bg: "bg-klovers-yellow", big: true },
-  { span: "col-span-1", bg: "bg-card", big: false },
-  { span: "col-span-1", bg: "bg-ivory dark:bg-card", big: false },
-  { span: "col-span-1", bg: "bg-ivory dark:bg-card", big: false },
-  { span: "col-span-1", bg: "bg-card", big: false },
-  { span: "col-span-2", bg: "bg-klovers-yellow/40 dark:bg-card", big: false },
+/** Per-tile surface and tilt, by position. Whole literal class strings on
+ *  purpose: Tailwind's scanner only keeps what it can see. The tilt is a
+ *  sticker-on-a-desk lean; hover straightens and lifts it. */
+const TILE_LOOK = [
+  "bg-klovers-yellow md:-rotate-1",
+  "bg-card md:rotate-1",
+  "bg-ivory dark:bg-card md:rotate-1",
+  "bg-klovers-yellow/45 dark:bg-card md:-rotate-1",
+  "bg-card md:rotate-1",
 ];
 
 /** Small marketing accent — not part of the shared catalog on purpose,
@@ -114,62 +108,100 @@ const HomeGamesSection = () => {
           </div>
         </div>
 
-        {/* Games — a bento, see TILES */}
+        {/* THE TICKER: every game in the catalog, scrolling past. The count in
+            the stats row says "20"; this is what 20 looks like. Paused on
+            hover, and still (scrollable) when the visitor asks for less
+            motion. dir=ltr so the loop direction is the same in both scripts. */}
+        <style>{`
+          @keyframes k-marquee { to { transform: translateX(-50%); } }
+          .k-marquee { animation: k-marquee 55s linear infinite; }
+          .k-marquee:hover { animation-play-state: paused; }
+          @media (prefers-reduced-motion: reduce) { .k-marquee { animation: none; } }
+        `}</style>
         <div
-          className={`grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 transition-all duration-700 delay-150 ${
+          dir="ltr"
+          aria-hidden="true"
+          className="-mx-4 mb-10 overflow-hidden py-1 motion-reduce:overflow-x-auto sm:mx-0"
+          style={{ maskImage: "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)" }}
+        >
+          <div className="k-marquee flex w-max gap-3">
+            {[...GAMES_CATALOG, ...GAMES_CATALOG].map((g, n) => (
+              <span
+                key={`${g.id}-${n}`}
+                className="inline-flex shrink-0 items-center gap-2 rounded-full border-2 border-charcoal bg-card px-4 py-2 text-sm font-bold text-foreground dark:border-border"
+              >
+                <span className="text-lg">{g.emoji}</span>
+                {t(g.titleKey)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* THE FLOOR: a playable cabinet, four sticker tiles, then the last tile
+            and "see all". 2x2 + 4 + 1 + 3 = twelve cells, three rows of four:
+            change HOMEPAGE_GAME_IDS and the packing has to be redone. */}
+        <div
+          className={`grid grid-cols-2 gap-4 lg:grid-cols-4 mb-10 transition-all duration-700 delay-150 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
+          <div className="col-span-2 lg:row-span-2">
+            <HangulMiniGame totalGames={totalGames} />
+          </div>
+
           {HOMEPAGE_GAMES.map((game, i) => {
-            const tile = TILES[i % TILES.length];
+            const isFree = FREE_GAME_IDS.includes(game.id);
             return (
               <button
                 key={game.id}
                 onClick={() => navigate("/games")}
-                className={`group card-edge relative flex flex-col rounded-2xl ${tile.bg} ${tile.span} text-start cursor-pointer transition-transform duration-200 hover:-translate-y-1 hover:-rotate-[0.6deg] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                  tile.big ? "p-6 sm:p-8 justify-between min-h-[15rem]" : "p-4"
-                }`}
+                className={`group card-edge relative flex flex-col justify-between rounded-2xl p-4 text-start transition-transform duration-200 hover:!rotate-0 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                  TILE_LOOK[i % TILE_LOOK.length]
+                } ${i === HOMEPAGE_GAMES.length - 1 ? "col-span-2 lg:col-span-1" : "col-span-1"}`}
               >
-                {HOT_GAME_IDS.has(game.id) && (
-                  <span className="absolute top-3 end-3 rounded-md bg-charcoal px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory">
-                    {tr("Hot", "رائج")} 🔥
+                <div className="flex items-start justify-between gap-2">
+                  {/* The emoji as a sticker: a yellow disc that spins a little on hover */}
+                  <span className="grid h-14 w-14 place-items-center rounded-full border-2 border-charcoal bg-klovers-yellow text-3xl transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110 dark:border-border">
+                    {game.emoji}
                   </span>
-                )}
-                <div className={tile.big ? "text-7xl sm:text-8xl" : "text-3xl mb-2"}>{game.emoji}</div>
-                <div>
-                  <h3 className={`font-extrabold text-foreground leading-tight ${tile.big ? "text-2xl sm:text-3xl mb-2" : "text-sm mb-1"}`}>
-                    {t(game.titleKey)}
-                  </h3>
-                  <p className={`text-foreground/70 leading-relaxed ${tile.big ? "text-base max-w-xs" : "text-xs line-clamp-2"}`}>
-                    {t(game.descKey)}
-                  </p>
-                  {tile.big && (
-                    <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-charcoal px-4 py-2 text-sm font-bold text-ivory">
-                      {tr("Play now", "العب الآن")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  {HOT_GAME_IDS.has(game.id) ? (
+                    <span className="rounded-md bg-charcoal px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory">
+                      {tr("Hot", "رائج")} 🔥
                     </span>
-                  )}
+                  ) : isFree ? (
+                    <span className="rounded-md bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-foreground">
+                      {tr("Free", "مجاني")}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-base font-extrabold leading-tight text-foreground">{t(game.titleKey)}</h3>
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/70">{t(game.descKey)}</p>
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-extrabold text-foreground">
+                    {tr("Play", "العب")}
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+                  </span>
                 </div>
               </button>
             );
           })}
 
-          {/* "See all" — Charcoal, so the section's one yellow action stays the
-              button underneath. It is the seventh piece of the bento: two
-              columns wide, next to the sixth tile. */}
+          {/* "See all" - Charcoal, so the section's one yellow action stays the
+              button underneath. */}
           <button
             onClick={() => navigate("/games")}
-            className="group card-edge col-span-2 flex items-center justify-between gap-4 rounded-2xl bg-charcoal p-5 text-start cursor-pointer transition-transform duration-200 hover:-translate-y-1 dark:bg-klovers-yellow"
+            className="group card-edge col-span-2 flex items-center justify-between gap-4 rounded-2xl bg-charcoal p-5 text-start transition-transform duration-200 hover:-translate-y-1 lg:col-span-3 dark:bg-klovers-yellow"
           >
             <div>
               <span className="inline-block rounded-md bg-ivory/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory dark:bg-charcoal/15 dark:text-charcoal">
-                {tr("All Free", "الكل مجاني")}
+                {tr("All free to try", "كلها مجانية للتجربة")}
               </span>
-              <p className="mt-2 text-lg font-extrabold leading-tight text-ivory dark:text-charcoal">
+              <p className="mt-2 text-2xl font-extrabold leading-tight text-ivory md:text-3xl dark:text-charcoal">
                 {tr(`See all ${totalGames} games`, `شاهد كل الألعاب الـ ${totalGames}`)}
               </p>
             </div>
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-klovers-yellow text-charcoal transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 dark:bg-charcoal dark:text-klovers-yellow">
-              <ArrowRight className="h-5 w-5 rtl:rotate-180" />
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-klovers-yellow text-charcoal transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 dark:bg-charcoal dark:text-klovers-yellow">
+              <ArrowRight className="h-6 w-6 rtl:rotate-180" />
             </span>
           </button>
         </div>
