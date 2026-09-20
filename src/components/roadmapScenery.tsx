@@ -69,7 +69,7 @@ const ROAD =
 const PETAL_ANGLES = [0, 72, 144, 216, 288];
 
 /** One five-petal blossom, Ivory with a yellow centre. */
-const Blossom = ({ x, y, s = 1, o = 0.8 }: { x: number; y: number; s?: number; o?: number }) => (
+export const Blossom = ({ x, y, s = 1, o = 0.8 }: { x: number; y: number; s?: number; o?: number }) => (
   <g transform={`translate(${x} ${y}) scale(${s})`} opacity={o}>
     {PETAL_ANGLES.map((a) => (
       <circle
@@ -85,7 +85,7 @@ const Blossom = ({ x, y, s = 1, o = 0.8 }: { x: number; y: number; s?: number; o
 );
 
 /** A cherry tree. Origin is the foot of the trunk, so it stands on a hill. */
-const Tree = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
+export const Tree = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
   <g transform={`translate(${x} ${y}) scale(${s})`}>
     <path d="M0 0v-20" stroke="hsl(var(--charcoal))" strokeWidth="3" strokeLinecap="round" opacity="0.38" />
     <path d="M0-13l-7-6M0-17l6-5" stroke="hsl(var(--charcoal))" strokeWidth="2" strokeLinecap="round" opacity="0.3" />
@@ -105,7 +105,7 @@ const Tree = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
  * the roof; it stands about 29 units tall. A silhouette, not an illustration -
  * it must not compete with the node sitting beside it.
  */
-const Gate = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
+export const Gate = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
   <g transform={`translate(${x} ${y}) scale(${s})`}>
     <path d="M-30 0C-18-13 18-13 30 0l-5 4C14-4-14-4-25 4Z" fill="hsl(var(--charcoal))" opacity="0.4" />
     <rect x="-26" y="3" width="52" height="4" rx="2" fill="hsl(var(--ivory))" opacity="0.8" />
@@ -115,7 +115,7 @@ const Gate = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
 );
 
 /** Namsan tower. Origin is the observation deck. */
-const NamsanTower = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
+export const NamsanTower = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
   <g transform={`translate(${x} ${y}) scale(${s})`} opacity="0.32">
     <path d="M0-34V-9" stroke="hsl(var(--charcoal))" strokeWidth="2.5" strokeLinecap="round" />
     <ellipse cy="-6" rx="12" ry="5" fill="hsl(var(--charcoal))" />
@@ -223,7 +223,7 @@ export const JOURNEY_WIDE_STOPS = [
   { x: 780, y: 205 },
 ];
 
-export const JOURNEY_WIDE_SUMMIT = { x: 858, y: 62 };
+export const JOURNEY_WIDE_SUMMIT = { x: 842, y: 62 };
 
 const ROAD_WIDE =
   "M60 205 C120 205 120 120 180 120 " +
@@ -232,7 +232,7 @@ const ROAD_WIDE =
   "C480 120 480 205 540 205 " +
   "C600 205 600 120 660 120 " +
   "C720 120 720 205 780 205 " +
-  "C822 205 832 116 858 90";
+  "C818 205 826 116 842 90";
 
 export const JourneySceneWide = ({ flip = false }: { flip?: boolean }) => (
   <svg
@@ -256,7 +256,7 @@ export const JourneySceneWide = ({ flip = false }: { flip?: boolean }) => (
 
       <NamsanTower x={360} y={20} s={0.8} />
       <Gate x={26} y={228} s={0.8} />
-      <Gate x={800} y={22} s={0.9} />
+      <Gate x={760} y={24} s={0.9} />
 
       <Tree x={110} y={282} s={0.9} />
       <Tree x={250} y={276} s={0.75} />
@@ -272,6 +272,90 @@ export const JourneySceneWide = ({ flip = false }: { flip?: boolean }) => (
     <path d={ROAD_WIDE} stroke="hsl(var(--charcoal))" strokeWidth="28" strokeLinecap="round" opacity="0.07" />
     <path d={ROAD_WIDE} stroke="hsl(var(--muted))" strokeWidth="24" strokeLinecap="round" />
     <path d={ROAD_WIDE} stroke="hsl(var(--charcoal))" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="7 11" opacity="0.6" />
+  </svg>
+);
+
+/* ── GAME PICTURES ────────────────────────────────────────────────────────
+ * The homepage game tiles used to be an emoji on a plain card. They now carry
+ * a small drawn scene of their own, in the same hand as the journey map: the
+ * same three yellow hills, the same blossoms, gate, tower and cherry trees,
+ * every fill a palette token, no photograph and no HTTP request.
+ *
+ * One scene per game, chosen so the five tiles read as five places in the
+ * same country rather than five copies of one picture. `slice` crops rather
+ * than letterboxes, so the banner fills whatever width its tile is given.
+ */
+export type GameSceneKind = "match" | "kdrama" | "sentence" | "numbers" | "colors";
+
+const Cloud = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
+  <g transform={`translate(${x} ${y}) scale(${s})`} fill="hsl(var(--klovers-yellow))" opacity="0.45">
+    <ellipse rx="26" ry="9" />
+    <ellipse cx="20" cy="-7" rx="16" ry="8" />
+  </g>
+);
+
+export const GameScene = ({ kind }: { kind: GameSceneKind }) => (
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 300 120"
+    preserveAspectRatio="xMidYMid slice"
+    fill="none"
+    className="absolute inset-0 h-full w-full"
+  >
+    <g className="dark:opacity-60">
+      <path d="M0 120V76c50-20 100 6 150-6s100-12 150 2v48Z" fill="hsl(var(--klovers-yellow))" opacity="0.35" />
+      <path d="M0 120V96c60-14 110 4 170-6s90-4 130 2v28Z" fill="hsl(var(--klovers-yellow))" opacity="0.55" />
+      <path d="M0 120V110c80-8 160 4 300-4v14Z" fill="hsl(var(--klovers-yellow))" opacity="0.3" />
+
+      {kind === "match" && (
+        <>
+          <Cloud x={70} y={26} />
+          <Gate x={210} y={60} s={1.05} />
+          <Blossom x={60} y={82} s={0.9} o={0.7} />
+          <Blossom x={130} y={98} s={0.7} o={0.6} />
+          <Blossom x={270} y={90} s={0.8} o={0.65} />
+        </>
+      )}
+      {kind === "kdrama" && (
+        <>
+          <Cloud x={70} y={30} />
+          <Cloud x={250} y={22} s={0.8} />
+          <NamsanTower x={170} y={8} s={0.95} />
+          <Tree x={60} y={100} s={0.9} />
+          <Tree x={266} y={102} s={0.75} />
+        </>
+      )}
+      {kind === "sentence" && (
+        <>
+          <path d="M-10 104C70 84 150 112 310 86" stroke="hsl(var(--muted))" strokeWidth="14" strokeLinecap="round" />
+          <path d="M-10 104C70 84 150 112 310 86" stroke="hsl(var(--charcoal))" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="6 9" opacity="0.55" />
+          <Cloud x={220} y={26} />
+          <Tree x={46} y={88} s={1} />
+          <Tree x={250} y={80} s={0.8} />
+          <Blossom x={140} y={50} s={0.7} o={0.55} />
+        </>
+      )}
+      {kind === "numbers" && (
+        <>
+          <Cloud x={230} y={28} s={0.9} />
+          <Gate x={80} y={58} s={0.95} />
+          <Blossom x={170} y={86} s={0.85} o={0.7} />
+          <Blossom x={205} y={96} s={0.75} o={0.65} />
+          <Blossom x={240} y={84} s={0.8} o={0.7} />
+        </>
+      )}
+      {kind === "colors" && (
+        <>
+          <Cloud x={60} y={28} s={0.9} />
+          <Tree x={70} y={100} s={1.1} />
+          <Tree x={150} y={104} s={0.85} />
+          <Tree x={236} y={100} s={1} />
+          <Blossom x={110} y={54} s={0.8} o={0.6} />
+          <Blossom x={200} y={46} s={0.7} o={0.55} />
+          <Blossom x={270} y={64} s={0.85} o={0.6} />
+        </>
+      )}
+    </g>
   </svg>
 );
 
