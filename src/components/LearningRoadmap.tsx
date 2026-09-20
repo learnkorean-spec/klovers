@@ -160,7 +160,7 @@ const LearningRoadmap = () => {
         className={`absolute -translate-x-1/2 -translate-y-1/2 transition-opacity duration-700 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ ...place(view, summit, flip), transitionDelay: "560ms" }}
       >
-        <span className="flex flex-col items-center gap-0.5 rounded-2xl bg-charcoal px-3 py-2 text-center text-[11px] font-bold leading-tight text-ivory shadow-md">
+        <span className="flex flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl bg-charcoal px-3 py-2 text-center text-[11px] font-bold leading-tight text-ivory shadow-md">
           <Star className="h-3.5 w-3.5 text-klovers-yellow" fill="currentColor" aria-hidden="true" />
           <span>{isAr ? "TOPIK ٦" : "TOPIK 6"}</span>
           <span className="font-medium text-ivory/70">{isAr ? "وما بعده" : "and beyond"}</span>
