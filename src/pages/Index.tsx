@@ -9,7 +9,6 @@ import CommunityBand from "@/components/CommunityBand";
 import Footer from "@/components/Footer";
 import StickyEnrollBar from "@/components/StickyEnrollBar";
 import ReturningStudentBanner from "@/components/ReturningStudentBanner";
-import InterviewBannerChip from "@/components/InterviewBannerChip";
 import HomeExitNudge from "@/components/HomeExitNudge";
 
 // Lazy-load below-fold sections for faster initial paint
@@ -180,8 +179,9 @@ const Index = () => {
 
         {/* Returning students promotional banner */}
         <ReturningStudentBanner />
-        {/* Interview training chip — non-intrusive floating, dismissible */}
-        <InterviewBannerChip />
+        {/* Interview training chip — pulled 2026-09-21 at Re's request.
+            AI interview-prep feature isn't ready yet; component kept in
+            src/components for when work resumes in ~2 weeks. */}
 
         {/* Interest — immediately answer "how does this work?" */}
         <div id="how-it-works" style={{ minHeight: 480 }}>
