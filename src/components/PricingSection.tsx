@@ -72,6 +72,11 @@ const discountCountries: Partial<Record<TierKey, string>> = {
   regional: "Malaysia",
 };
 
+/** Flat, squared tags. The shared Badge is a puffy pill with a border and a
+ *  shadow; three of them in a row read as a string of bubbles. */
+const TAG =
+  "whitespace-nowrap rounded-md border-0 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide shadow-none";
+
 const tierKeys: TierKey[] = ["local", "regional", "global"];
 
 const allCountries = tierKeys.flatMap((key) =>
@@ -257,29 +262,27 @@ const PricingSection = () => {
                       whitespace-nowrap so no label ever breaks mid-phrase.
                       Text colours are checked: charcoal on yellow 15:1, white on
                       the --correct green 5.6:1 (the old green-500 was 2.3:1). */}
-                  <div className="flex flex-wrap justify-center gap-2 mb-4">
+                  <div className="flex flex-wrap justify-center gap-1.5 mb-4">
                     <Badge
-                      className={`whitespace-nowrap ${
-                        isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-secondary-foreground"
+                      className={`${TAG} ${
+                        isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {tierT("tagline") || tierKey}
                     </Badge>
                     {/* Most Popular: on local for discounted countries, on regional globally */}
                     {isDiscountedCountry && (
-                      <Badge className="whitespace-nowrap border border-charcoal bg-ivory text-charcoal">
+                      <Badge className={`${TAG} bg-foreground text-background`}>
                         <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> Most Popular
                       </Badge>
                     )}
                     {isDiscountedCountry && (
-                      <Badge className="whitespace-nowrap bg-correct text-correct-foreground">
+                      <Badge className={`${TAG} bg-correct text-correct-foreground`}>
                         <Sparkles className="h-3 w-3 mr-1" aria-hidden="true" /> Discount!
                       </Badge>
                     )}
                     {tierKey === "regional" && !isDiscountedCountry && isActive && (
-                      <Badge className="whitespace-nowrap border border-charcoal bg-ivory text-charcoal">
+                      <Badge className={`${TAG} bg-foreground text-background`}>
                         <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> Most Popular
                       </Badge>
                     )}
