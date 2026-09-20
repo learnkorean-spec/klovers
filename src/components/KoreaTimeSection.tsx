@@ -64,12 +64,12 @@ const ERAS = [
   },
 ];
 
-/** The four stops under the era cards. Green → Yellow → Charcoal. */
+/** The four stops under the era cards. pale Yellow → Yellow → Charcoal. */
 const STOPS = [
-  { dot: "bg-mint", topEn: "Past", topAr: "الماضي", subEn: "Roots", subAr: "جذور" },
-  { dot: "bg-mint-strong", topEn: "Tradition", topAr: "التقليد", subEn: "Identity", subAr: "هوية" },
+  { dot: "bg-amber-100", topEn: "Past", topAr: "الماضي", subEn: "Roots", subAr: "جذور" },
+  { dot: "bg-amber-300", topEn: "Tradition", topAr: "التقليد", subEn: "Identity", subAr: "هوية" },
   { dot: "bg-klovers-yellow", topEn: "Modernity", topAr: "الحداثة", subEn: "Change", subAr: "تغيير" },
-  { dot: "bg-charcoal", topEn: "Your", topAr: "دورك", subEn: "Tomorrow", subAr: "غداً" },
+  { dot: "bg-foreground", topEn: "Your", topAr: "دورك", subEn: "Tomorrow", subAr: "غداً" },
 ];
 
 const PLACES = [
@@ -130,7 +130,7 @@ const KoreaTimeSection = () => {
 
         {/* ── Header ─────────────────────────────────────── */}
         <div className="text-center mb-12 max-w-2xl mx-auto">
-          <span className="inline-block bg-mint text-charcoal text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full border border-charcoal/10 mb-4">
+          <span className="inline-block bg-klovers-yellow text-charcoal text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full border border-charcoal/10 mb-4">
             {isAr ? "رحلة عبر الزمن" : "A journey through Korea's time"}
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground tracking-tight leading-tight">
@@ -148,7 +148,7 @@ const KoreaTimeSection = () => {
           {ERAS.map((era) => (
             <div
               key={era.titleEn}
-              className="rounded-2xl overflow-hidden bg-card border border-charcoal/10 shadow-[0_14px_36px_-28px_rgba(46,46,46,0.8)]"
+              className="rounded-2xl overflow-hidden bg-card border border-border shadow-[0_14px_36px_-28px_rgba(46,46,46,0.8)]"
             >
               <div className="aspect-[4/3] overflow-hidden bg-muted">
                 <img
@@ -176,7 +176,7 @@ const KoreaTimeSection = () => {
 
         {/* ── The timeline under them ───────────────────────────── */}
         <div className="relative max-w-5xl mx-auto mt-10 px-2">
-          <div aria-hidden="true" className="absolute inset-x-8 top-[7px] border-t-2 border-dashed border-charcoal/20" />
+          <div aria-hidden="true" className="absolute inset-x-8 top-[7px] border-t-2 border-dashed border-foreground/20" />
           <div className="relative grid grid-cols-4 gap-2">
             {STOPS.map((stop) => (
               <div key={stop.topEn} className="flex flex-col items-center text-center gap-1.5">
@@ -198,14 +198,14 @@ const KoreaTimeSection = () => {
             <h3 className="font-display text-2xl md:text-3xl font-extrabold text-foreground leading-tight">
               {isAr ? "ورحلتك عبر مدنها" : "And your journey through its places"}
             </h3>
-            <p className="font-script text-2xl md:text-3xl text-charcoal/70">
+            <p className="font-script text-2xl md:text-3xl text-foreground/70">
               {isAr ? "أماكن مختلفة، ونفس الشخص الرائع" : "Different places, same amazing you"}
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
             {PLACES.map((place) => (
-              <div key={place.nameEn} className="rounded-2xl overflow-hidden bg-card border border-charcoal/10">
+              <div key={place.nameEn} className="rounded-2xl overflow-hidden bg-card border border-border">
                 <div className="aspect-[3/4] overflow-hidden bg-muted">
                   <img
                     src={place.image}
@@ -230,7 +230,7 @@ const KoreaTimeSection = () => {
           <div className="text-center mt-8">
             <Link
               to="/blog"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-foreground underline decoration-charcoal/25 underline-offset-4 transition-colors hover:decoration-charcoal/60"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-foreground underline decoration-foreground/25 underline-offset-4 transition-colors hover:decoration-foreground/60"
             >
               {isAr ? "اقرأ عن تاريخ كوريا وثقافتها" : "Read more about Korea's history and culture"}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />

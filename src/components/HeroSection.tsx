@@ -118,7 +118,7 @@ const HeroSection = () => {
   const cards = [
     {
       icon: BookOpen,
-      tone: "bg-mint",
+      tone: "bg-klovers-yellow",
       title: isAr ? "دروس مرتّبة" : "Structured lessons",
       body: isAr ? "من الهانغول إلى المحادثة" : "From basics to real conversations",
     },
@@ -130,7 +130,7 @@ const HeroSection = () => {
     },
     {
       icon: Globe,
-      tone: "bg-mint",
+      tone: "bg-klovers-yellow",
       title: isAr ? "كورية حقيقية" : "Real-life Korean",
       body: isAr ? "لغة تستعملها فعلاً" : "Useful, practical, cultural",
     },
@@ -238,10 +238,10 @@ const HeroSection = () => {
             {/* Next-class chip — rendered only when there is a real class to
                 name; Mint is the board's "live and calm" tone. */}
             {nextDay && (
-              <div className="inline-flex items-center gap-2 bg-mint/20 border border-mint/45 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-mint">
+              <div className="inline-flex items-center gap-2 bg-klovers-yellow/20 border border-klovers-yellow/45 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-klovers-yellow">
                 <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-mint" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-klovers-yellow opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-klovers-yellow" />
                 </span>
                 {isAr
                   ? `الحصة التالية: ${nextDay.ar} — سجّل دلوقتي`
@@ -331,7 +331,7 @@ const HeroSection = () => {
             <div className="flex flex-wrap gap-2 justify-center">
               {pills.map((p) => (
                 <div key={p.key} className="inline-flex items-center gap-1.5 bg-ivory/10 border border-ivory/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-ivory/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-mint shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-klovers-yellow shrink-0" />
                   {p.label}
                 </div>
               ))}

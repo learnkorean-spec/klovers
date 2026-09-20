@@ -56,12 +56,15 @@ const CommunityBand = () => {
   const isAr = language === "ar";
 
   return (
-    <section className="border-y border-charcoal/10 bg-mint/60 py-6 md:py-8">
+    <section className="border-y border-charcoal/10 bg-primary py-6 md:py-8 dark:bg-[#E8E000]">
       <div className="container mx-auto px-4">
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-5 text-center md:flex-row md:justify-between md:gap-10 md:text-start">
 
           {/* The three of them, standing on the band. */}
-          <div className="flex shrink-0 items-end" aria-hidden="true">
+          <div className="relative flex shrink-0 items-end px-3" aria-hidden="true">
+            {/* Ivory dome behind them: their outfits are a warmer yellow than the
+                band, and only the outline separates them from it. */}
+            <span className="absolute inset-x-0 bottom-0 top-2 rounded-t-full bg-ivory" />
             {CAST.map((c, i) => (
               <img
                 key={i}
@@ -69,7 +72,7 @@ const CommunityBand = () => {
                 alt=""
                 loading="lazy"
                 decoding="async"
-                className={`w-auto ${c.cls}`}
+                className={`relative w-auto ${c.cls}`}
               />
             ))}
           </div>

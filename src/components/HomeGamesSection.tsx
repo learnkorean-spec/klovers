@@ -29,11 +29,11 @@ const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
  *  literal class strings on purpose: Tailwind's scanner only keeps what it
  *  can see. */
 const CARD_STYLES = [
-  { color: "from-mint/80 to-mint/20", border: "hover:border-mint-strong" },
+  { color: "from-klovers-yellow/80 to-klovers-yellow/20", border: "hover:border-foreground" },
   { color: "from-amber-100 to-amber-50", border: "hover:border-klovers-yellow" },
-  { color: "from-mint/80 to-mint/20", border: "hover:border-mint-strong" },
+  { color: "from-klovers-yellow/80 to-klovers-yellow/20", border: "hover:border-foreground" },
   { color: "from-amber-100 to-amber-50", border: "hover:border-klovers-yellow" },
-  { color: "from-mint/80 to-mint/20", border: "hover:border-mint-strong" },
+  { color: "from-klovers-yellow/80 to-klovers-yellow/20", border: "hover:border-foreground" },
   { color: "from-amber-100 to-amber-50", border: "hover:border-klovers-yellow" },
 ];
 
@@ -75,7 +75,7 @@ const HomeGamesSection = () => {
   return (
     <section ref={sectionRef} className="py-20 md:py-28 px-4 relative overflow-hidden bg-muted/20">
       {/* Background blobs */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-mint/40 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-klovers-yellow/40 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-72 h-72 bg-klovers-yellow/15 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl mx-auto relative z-10">
@@ -86,7 +86,7 @@ const HomeGamesSection = () => {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          <div className="inline-flex items-center gap-2 bg-mint text-charcoal px-4 py-2 rounded-full text-sm font-semibold mb-4 border border-charcoal/10 shadow-sm">
+          <div className="inline-flex items-center gap-2 bg-klovers-yellow text-charcoal px-4 py-2 rounded-full text-sm font-semibold mb-4 border border-charcoal/10 shadow-sm">
             <Gamepad2 className="h-4 w-4" />
             {t("games.learnPlay")}
           </div>
@@ -101,7 +101,7 @@ const HomeGamesSection = () => {
           <div className="flex items-center justify-center gap-4 flex-wrap">
             {STATS.map(({ icon: Icon, value, label }) => (
               <div key={label} className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 shadow-sm">
-                <div className="h-7 w-7 rounded-lg bg-mint border border-charcoal/10 flex items-center justify-center">
+                <div className="h-7 w-7 rounded-lg bg-klovers-yellow border border-charcoal/10 flex items-center justify-center">
                   <Icon className="h-3.5 w-3.5 text-foreground" />
                 </div>
                 <div className="text-left">
@@ -128,14 +128,14 @@ const HomeGamesSection = () => {
                 className={`group relative rounded-2xl bg-gradient-to-br ${style.color} border border-border ${style.border} hover:shadow-lg transition-all duration-200 p-4 text-left cursor-pointer`}
               >
                 {HOT_GAME_IDS.has(game.id) && (
-                  <span className="absolute top-2 right-2 text-[10px] bg-peach-strong text-charcoal font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="absolute top-2 right-2 text-[10px] bg-klovers-yellow text-charcoal font-bold px-1.5 py-0.5 rounded-full">
                     🔥
                   </span>
                 )}
                 <div className="text-3xl mb-2">{game.emoji}</div>
                 <h3 className="font-bold text-foreground text-sm leading-tight mb-1">{t(game.titleKey)}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{t(game.descKey)}</p>
-                <div className="mt-2 flex items-center gap-1 text-[11px] text-charcoal/70 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-2 flex items-center gap-1 text-[11px] text-foreground/70 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                   {tr("Play now", "العب الآن")} <ArrowRight className="h-3 w-3 rtl:rotate-180" />
                 </div>
               </button>
@@ -165,7 +165,7 @@ const HomeGamesSection = () => {
 
         {/* XP banner */}
         <div
-          className={`bg-gradient-to-r from-mint/70 via-klovers-yellow/15 to-mint/40 border border-border rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 transition-all duration-700 delay-300 ${
+          className={`bg-gradient-to-r from-klovers-yellow/70 via-klovers-yellow/15 to-klovers-yellow/40 border border-border rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 transition-all duration-700 delay-300 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >

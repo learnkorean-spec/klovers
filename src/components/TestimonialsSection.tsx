@@ -174,7 +174,7 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-mint flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-charcoal/10">
+          <div className="w-10 h-10 rounded-full bg-klovers-yellow flex items-center justify-center text-charcoal font-bold text-sm flex-shrink-0 border border-charcoal/10">
             {initials}
           </div>
           <div className="min-w-0">
@@ -254,7 +254,7 @@ const TestimonialsSection = () => {
           href="https://www.facebook.com/kloversegy/reviews"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-mint border border-charcoal/10 rounded-full px-4 py-1.5 mb-5 hover:bg-mint/80 transition-colors"
+          className="inline-flex items-center gap-2 bg-klovers-yellow border border-charcoal/10 rounded-full px-4 py-1.5 mb-5 hover:bg-klovers-yellow/80 transition-colors"
         >
           <Facebook className="h-4 w-4 text-charcoal" />
           <span className="text-sm font-semibold text-charcoal">

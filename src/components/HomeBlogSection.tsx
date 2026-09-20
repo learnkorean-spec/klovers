@@ -35,8 +35,8 @@ const TYPE_LABEL_AR: Record<string, string> = { howto: "كيفية", listicle: "
  * spent on the roadmap's final level and the games' "hot" badge.
  */
 const TYPE_COLOR: Record<string, string> = {
-  howto: "bg-mint text-charcoal border-charcoal/10",
-  listicle: "bg-mint/50 text-charcoal border-charcoal/10",
+  howto: "bg-klovers-yellow text-charcoal border-charcoal/10",
+  listicle: "bg-klovers-yellow/50 text-charcoal border-charcoal/10",
   longform: "bg-ivory text-charcoal border-charcoal/20",
   news: "bg-charcoal text-white border-charcoal",
   review: "bg-white text-charcoal border-charcoal/25",
@@ -118,8 +118,8 @@ const HomeBlogSection = () => {
                       />
                     </div>
                   ) : (
-                    <div className="aspect-video bg-gradient-to-br from-mint/60 to-mint/20 flex items-center justify-center">
-                      <BookOpen className="h-10 w-10 text-charcoal/30" />
+                    <div className="aspect-video bg-gradient-to-br from-klovers-yellow/60 to-klovers-yellow/20 flex items-center justify-center">
+                      <BookOpen className="h-10 w-10 text-foreground/30" />
                     </div>
                   )}
 
@@ -138,7 +138,7 @@ const HomeBlogSection = () => {
                     {/* Was bg-primary/10 text-primary: brand yellow as text on a
                         10% yellow chip, which the board rules out. */}
                     {idx > 0 && (post.seo_score ?? 0) >= 80 && (
-                      <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-mint text-charcoal border border-charcoal/10">
+                      <span className="ml-2 inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-klovers-yellow text-charcoal border border-charcoal/10">
                         ✨ {isAr ? "موصى به" : "Top Pick"}
                       </span>
                     )}

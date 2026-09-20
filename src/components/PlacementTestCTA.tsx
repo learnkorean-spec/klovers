@@ -22,12 +22,12 @@ const PlacementTestCTA = () => {
    * in it is the learning roadmap.
    */
   const LEVELS = [
-    { label: t("placementCta.levelA1"),  color: "bg-mint",            width: "w-[15%]" },
-    { label: t("placementCta.levelA2"),  color: "bg-mint",            width: "w-[30%]" },
-    { label: t("placementCta.levelB1"),  color: "bg-mint-strong",     width: "w-[50%]" },
-    { label: t("placementCta.levelB2"),  color: "bg-mint-strong",     width: "w-[65%]" },
+    { label: t("placementCta.levelA1"),  color: "bg-klovers-yellow/35", width: "w-[15%]" },
+    { label: t("placementCta.levelA2"),  color: "bg-klovers-yellow/55", width: "w-[30%]" },
+    { label: t("placementCta.levelB1"),  color: "bg-klovers-yellow/75", width: "w-[50%]" },
+    { label: t("placementCta.levelB2"),  color: "bg-klovers-yellow/90", width: "w-[65%]" },
     { label: t("placementCta.levelC1"),  color: "bg-klovers-yellow",  width: "w-[80%]" },
-    { label: t("placementCta.levelC2"),  color: "bg-charcoal",        width: "w-[100%]" },
+    { label: t("placementCta.levelC2"),  color: "bg-foreground",      width: "w-[100%]" },
   ];
 
   const FEATURES = [
@@ -65,7 +65,7 @@ const PlacementTestCTA = () => {
       className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/40"
     >
       {/* Background blobs */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-mint/40 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-klovers-yellow/40 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-klovers-yellow/15 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
 
       {/* Floating Korean characters */}
@@ -90,7 +90,7 @@ const PlacementTestCTA = () => {
               visible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"
             }`}
           >
-            <div className="inline-flex items-center gap-2 bg-mint border border-charcoal/10 px-4 py-2 rounded-full text-sm font-semibold text-charcoal">
+            <div className="inline-flex items-center gap-2 bg-klovers-yellow border border-charcoal/10 px-4 py-2 rounded-full text-sm font-semibold text-charcoal">
               <Sparkles className="h-4 w-4" />
               {t("placementCta.badge")}
             </div>
@@ -163,7 +163,7 @@ const PlacementTestCTA = () => {
                           {lvl.label}
                         </span>
                         {idx === activeLevel && (
-                          <span className="text-[10px] bg-mint text-charcoal px-2 py-0.5 rounded-full font-medium animate-pulse border border-charcoal/10">
+                          <span className="text-[10px] bg-klovers-yellow text-charcoal px-2 py-0.5 rounded-full font-medium animate-pulse border border-charcoal/10">
                             {t("placementCta.detecting")}
                           </span>
                         )}
@@ -190,7 +190,7 @@ const PlacementTestCTA = () => {
               </div>
 
               {/* Floating badge */}
-              <div className="absolute -top-3 -right-3 bg-mint-strong text-charcoal text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+              <div className="absolute -top-3 -right-3 bg-klovers-yellow text-charcoal text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                 {t("placementCta.instant")}
               </div>
             </div>
