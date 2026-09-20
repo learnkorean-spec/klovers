@@ -212,7 +212,16 @@ const HeroSection = () => {
         </span>
 
         {/* ── Hero text content ────────────────────────────── */}
-        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-44">
+        {/* pb-44 is tuned for typical phone/desktop heights. On short
+            viewports (iPad landscape, most laptops with a shallow browser
+            window) the section's min-height doesn't leave enough room below
+            this block for the proof strip's pinned-to-bottom stats — the
+            "Free Hangul starter sheet" link was overlapping the "5.0 ★"
+            stat. The max-height query adds extra clearance only when the
+            viewport is short enough for that to matter; normal-height
+            phones/desktops are untouched. See the "Proof strip" comment
+            below for why the strip is pinned to the section's bottom at all. */}
+        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-44 [@media(max-height:900px)]:pb-64">
           <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
             {/* Teacher chip — the one thing on this page no competitor has. */}
@@ -328,7 +337,7 @@ const HeroSection = () => {
             {/* Hangul sheet — reciprocity trigger */}
             <Link
               to="/hangul-starter"
-              className="inline-flex items-center gap-2 text-ivory/70 hover:text-ivory transition-colors text-xs underline underline-offset-4 decoration-ivory/30 hover:decoration-ivory/60"
+              className="inline-flex min-h-11 items-center gap-2 text-ivory/70 hover:text-ivory transition-colors text-xs underline underline-offset-4 decoration-ivory/30 hover:decoration-ivory/60"
               onClick={() => { try { logLeadEvent({ source_type: "free_resource", cta_label: "hero_hangul_sheet" }); } catch {} }}
             >
               <BookOpen className="h-3.5 w-3.5 shrink-0" />
