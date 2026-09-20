@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, BookOpen, MessageCircle, Zap, Star, Trophy, Flame, GraduationCap, ArrowRight, Clock, CalendarDays } from "lucide-react";
+import { BookOpen, MessageCircle, Zap, Star, Trophy, Flame, GraduationCap, ArrowRight, Clock, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { COURSE_CARDS } from "@/constants/courseCards";
 import { LEVEL_KEYS } from "@/constants/levels";
-import { RoadmapScenery } from "./roadmapScenery";
+import { JourneyScene, JOURNEY_STOPS, JOURNEY_VIEW, JOURNEY_SUMMIT } from "./roadmapScenery";
 
 /**
- * The homepage "your journey" ladder.
+ * The homepage "your journey" map.
  *
  * It used to read `translations.roadmap.stages` — a second hand-written copy
  * of the level ladder, which had drifted exactly as the courses array did. It
@@ -27,20 +27,41 @@ import { RoadmapScenery } from "./roadmapScenery";
  * 2026-09-20 (b) — Re's mockup: the ladder now stands in a scene, the nodes
  * are round on a dashed rail, and the cards sit on a soft shadow.
  *
- * THE MOCKUP'S HANDWRITTEN MARGIN NOTES WERE BUILT AND THEN REMOVED. Five of
- * them, in the gutters. In English, set in Caveat, they worked. In Arabic
- * there is no Caveat — the face carries no Arabic glyphs — and the best
- * available substitute, Aref Ruqaa, is a calligraphic naskh that reads beside
- * these cards as a thin formal serif rather than as a hand. Re saw it
- * rendered and cut it. Do not re-propose margin notes on this site until
- * there is an Arabic face that actually looks handwritten at 20px; the
- * feature is only as good as its weakest script, and Arabic is the majority
- * script here.
+ * 2026-09-20 (c) — RE'S SECOND MOCKUP REPLACED THE LADDER ENTIRELY. It is a
+ * map now: a road climbs from a hanok gate at the bottom-left to a summit
+ * banner at the top, past Namsan tower and cherry trees, and each level is a
+ * stop on it. Seven stops, one per level key, drawn in `roadmapScenery.tsx`
+ * from the same coordinates this file places its nodes at.
  *
- * THE CARDS KEEP border-border EVEN THOUGH THE MOCKUP'S ARE BORDERLESS. A
- * shadow is an edge on Ivory and nothing at all on the dark theme, where the
- * borderless version left every card without an outline. Check both themes
- * with the header toggle before touching the card chrome.
+ * WHAT THE MOCKUP SHOWED AND THIS DOES NOT: A PADLOCK ON EVERY STOP. In the
+ * mockup only "Start Hangeul" is lit and the other six are locked. On a page
+ * whose job is to make a stranger book a free trial, six padlocks read as a
+ * paywall — "you cannot have this" — and Klovers does not gate levels that
+ * way. Re chose the open path: every stop shows its own icon, and locks are
+ * for the signed-in student's real progress, not for a visitor. If that lands
+ * later, lock from the student's level, never from zero.
+ *
+ * ALSO NOT COPIED: THE MOCKUP'S LEVEL NAMES. It reads "Beginner 1 / Beginner 2
+ * / Intermediate / Advanced / TOPIK". The canonical names are Hangul
+ * Foundation and Levels 1-6 (`constants/levels.ts`); "TOPIK" as a level name
+ * is the exact equation — level = band — that the certificate and the old
+ * roadmap were fixed to stop making. The summit banner says "toward TOPIK 6
+ * and beyond", which is a destination, not a claim.
+ *
+ * THE MOCKUP'S HANDWRITTEN MARGIN NOTE ("Same Curiosity, Brighter Tomorrows")
+ * IS NOT BUILT, for the same reason it was cut in (b): in English, set in
+ * Caveat, it works. In Arabic there is no Caveat — the face carries no Arabic
+ * glyphs — and the best available substitute, Aref Ruqaa, reads as a thin
+ * formal serif rather than as a hand. Re saw it rendered and cut it. Do not
+ * re-propose handwriting on this site until there is an Arabic face that
+ * actually looks handwritten at 20px; the feature is only as good as its
+ * weakest script, and Arabic is the majority script here.
+ *
+ * THE MAP IS PHONE-SHAPED ON PURPOSE. Its aspect ratio is fixed to the scene's
+ * viewBox so the nodes stay on the road at every width, which means width and
+ * height move together — a card wide enough for a desktop column would be
+ * nearly a metre tall. It is capped at 26rem and centred instead, exactly as
+ * the mockup is drawn.
  */
 
 /**
@@ -51,10 +72,6 @@ import { RoadmapScenery } from "./roadmapScenery";
  * The ramp is Green → Yellow, and Level 6 is the single Pink on this page
  * besides the games' "hot" badge. That is the point of it: the end of the
  * path should not look like another step on it.
- *
- * The mockup draws every node Mint. It was drawn before the neon accents
- * merged (#530) — this ramp is the one Re approved, so only the SHAPE of the
- * node changed with the redesign, not its colour.
  */
 const LEVEL_META: Record<string, { icon: React.ElementType; tile: string }> = {
   hangul: { icon: BookOpen, tile: "bg-mint" },
@@ -69,7 +86,7 @@ const LEVEL_META: Record<string, { icon: React.ElementType; tile: string }> = {
 const getMeta = (key: string) =>
   LEVEL_META[key] ?? { icon: Star, tile: "bg-mint" };
 
-/** The ladder only — the two special tracks are not steps on it. */
+/** The ladder only — the two special tracks are not stops on the road. */
 const STAGES = COURSE_CARDS.filter((c) => (LEVEL_KEYS as string[]).includes(c.key));
 
 /**
@@ -83,177 +100,177 @@ const chipsFrom = (eyebrow: string): string[] =>
 
 const chipIcons = [CalendarDays, Clock];
 
+/** Scene units → a physical percentage. Physical, not logical: see the note on
+ *  direction in `roadmapScenery.tsx`. */
+const pctX = (x: number) => `${(x / JOURNEY_VIEW.w) * 100}%`;
+const pctY = (y: number) => `${(y / JOURNEY_VIEW.h) * 100}%`;
+
 const LearningRoadmap = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
-  const [activeStep, setActiveStep] = useState<number | null>(null);
-  const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
-  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const [activeStep, setActiveStep] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const observers: IntersectionObserver[] = [];
-    itemRefs.current.forEach((el, i) => {
-      if (!el) return;
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setVisibleItems((prev) => new Set(prev).add(i));
-            obs.disconnect();
-          }
-        },
-        { threshold: 0.1 }
-      );
-      obs.observe(el);
-      observers.push(obs);
-    });
-    return () => observers.forEach((o) => o.disconnect());
+    const el = mapRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
 
-  const toggle = (index: number) =>
-    setActiveStep((prev) => (prev === index ? null : index));
+  const active = STAGES[activeStep] ?? STAGES[0];
+  const activeMeta = getMeta(active.key);
+  const ActiveIcon = activeMeta.icon;
+  const activeChips = chipsFrom(isAr ? active.eyebrow_ar : active.eyebrow_en);
 
   return (
-    <section className="relative overflow-hidden bg-background py-20 md:py-28">
-      <RoadmapScenery />
+    <section className="relative bg-background py-20 md:py-28">
+      <div className="container mx-auto px-4">
 
-      <div className="container relative mx-auto px-4">
+        {/* The whole journey is one card, as in the mockup: heading, map and
+            the open stop's detail read as a single object. */}
+        <div className="mx-auto w-full max-w-[26rem] overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
 
-        {/* Header */}
-        <div className="relative mb-14 text-center">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-mint text-charcoal text-xs font-semibold uppercase tracking-widest mb-4 border border-charcoal/10">
-            {isAr ? "رحلتك" : "Your Journey"}
-          </span>
+          {/* Heading, inside the card and set to the start edge */}
+          <div className="px-5 pb-1 pt-6 text-start sm:px-6">
+            <h2 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
+              {t("roadmap", "title")}
+            </h2>
 
-          {/* A spark beside the heading, as in the mockup. */}
-          <span aria-hidden="true" className="pointer-events-none absolute top-6 end-[16%] hidden text-klovers-yellow md:block">
-            <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" className="h-8 w-8">
-              <path d="M20 4v9M33 11l-6 6M8 13l6 5" />
+            {/* Yellow as a mark under the heading, never as the heading. */}
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 240 18"
+              fill="none"
+              className="mb-2 mt-1.5 h-3 w-36 text-klovers-yellow"
+            >
+              <path d="M7 12C60 4 134 3 197 8c14 1 27 3 36 2" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
             </svg>
-          </span>
 
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground">
-            {t("roadmap", "title")}
-          </h2>
+            <p className="text-sm text-muted-foreground">
+              {t("roadmap", "subtitle")}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground/80">
+              {isAr ? "اضغط على أي محطة في الطريق لتفاصيلها" : "Tap any stop on the path for its details"}
+            </p>
+          </div>
 
-          {/* Yellow as a mark under the heading, never as the heading. A brush
-              stroke rather than the old 96px bar — same rule, better hand. */}
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 240 18"
-            fill="none"
-            className="mx-auto mb-4 mt-2 h-4 w-52 text-klovers-yellow md:w-64"
+          {/* The map. Its aspect ratio is the scene's viewBox, so a node placed
+              at a percentage of these two numbers lands on the road at every
+              width. Do not change one without the other. */}
+          <div
+            ref={mapRef}
+            className="relative mt-3 w-full"
+            style={{ aspectRatio: `${JOURNEY_VIEW.w} / ${JOURNEY_VIEW.h}` }}
           >
-            <path d="M7 12C60 4 134 3 197 8c14 1 27 3 36 2" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
-          </svg>
+            <JourneyScene />
 
-          <p className="text-muted-foreground max-w-xl mx-auto text-base md:text-lg">
-            {t("roadmap", "subtitle")}
-          </p>
-        </div>
+            {/* Summit banner — a destination, not a level. */}
+            <div
+              className={`absolute -translate-x-1/2 -translate-y-1/2 transition-opacity duration-700 ${visible ? "opacity-100" : "opacity-0"}`}
+              style={{ left: pctX(JOURNEY_SUMMIT.x), top: pctY(JOURNEY_SUMMIT.y), transitionDelay: "560ms" }}
+            >
+              <span className="flex flex-col items-center gap-0.5 rounded-2xl bg-charcoal px-3 py-2 text-center text-[11px] font-bold leading-tight text-ivory shadow-md">
+                <Star className="h-3.5 w-3.5 text-klovers-yellow" fill="currentColor" aria-hidden="true" />
+                <span>{isAr ? "TOPIK ٦" : "TOPIK 6"}</span>
+                <span className="font-medium text-ivory/70">{isAr ? "وما بعده" : "and beyond"}</span>
+              </span>
+            </div>
 
-        {/* The rail */}
-        <ol className="mx-auto max-w-2xl">
-          {STAGES.map((stage, index) => {
-            const isActive = activeStep === index;
-            const isVisible = visibleItems.has(index);
-            const meta = getMeta(stage.key);
-            const Icon = meta.icon;
-            const isLast = index === STAGES.length - 1;
-            const chips = chipsFrom(isAr ? stage.eyebrow_ar : stage.eyebrow_en);
+            {/* One node per stop */}
+            {STAGES.map((stage, i) => {
+              const stop = JOURNEY_STOPS[i];
+              if (!stop) return null;
+              const meta = getMeta(stage.key);
+              const Icon = meta.icon;
+              const isActive = i === activeStep;
+              const isStart = i === 0;
+              const label = isAr ? stage.title_ar : stage.title_en;
 
-            return (
-              <li
-                key={stage.key}
-                ref={(el) => { itemRefs.current[index] = el; }}
-                style={{ transitionDelay: `${index * 70}ms` }}
-                className={`flex gap-4 transition-all duration-700 ease-out ${
-                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-                }`}
-              >
-                {/* Node column — the rail lives here, so it never crosses a card */}
-                <div className="relative flex w-14 shrink-0 flex-col items-center">
-                  {!isLast && (
-                    <span aria-hidden="true" className="absolute bottom-0 top-14 w-0 border-s-2 border-dashed border-mint-strong/40" />
+              return (
+                <button
+                  key={stage.key}
+                  type="button"
+                  onClick={() => setActiveStep(i)}
+                  aria-pressed={isActive}
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity duration-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+                    visible ? "opacity-100" : "opacity-0"
+                  }`}
+                  style={{ left: pctX(stop.x), top: pctY(stop.y), transitionDelay: `${i * 80}ms` }}
+                >
+                  {/* The first stop carries a soft yellow halo — the mockup's
+                      "start here", without the six padlocks. */}
+                  {isStart && (
+                    <span aria-hidden="true" className="absolute -inset-1.5 animate-pulse rounded-full bg-klovers-yellow/35" />
                   )}
                   <span
-                    className={`relative z-10 grid h-14 w-14 place-items-center rounded-full ring-4 ring-background transition-transform duration-300 ${meta.tile} ${
+                    className={`relative grid h-11 w-11 place-items-center rounded-full ring-4 ring-card transition-transform duration-300 sm:h-14 sm:w-14 ${meta.tile} ${
                       isActive ? "scale-110 shadow-md" : "shadow-sm"
                     }`}
                   >
-                    <Icon className="h-6 w-6 text-charcoal" aria-hidden="true" />
+                    <Icon className="h-5 w-5 text-charcoal sm:h-6 sm:w-6" aria-hidden="true" />
                   </span>
-                  <span className="relative z-10 mt-1.5 text-[11px] font-bold text-charcoal/45">
-                    {index + 1}
-                  </span>
-                </div>
-
-                {/* Card */}
-                <div className="flex-1 pb-5">
-                  <div
-                    onClick={() => toggle(index)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === "Enter" && toggle(index)}
-                    className={`cursor-pointer rounded-3xl border bg-card p-5 transition-all duration-300 ${
-                      isActive
-                        ? "border-klovers-yellow shadow-lg ring-1 ring-klovers-yellow"
-                        : "border-border shadow-sm hover:shadow-md"
+                  <span
+                    className={`absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm backdrop-blur-[2px] transition-colors sm:text-xs ${
+                      isActive ? "bg-charcoal text-ivory" : "bg-card/85 text-foreground"
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <h3 className="min-w-0 flex-1 text-base md:text-lg font-bold text-foreground leading-tight">
-                        {isAr ? stage.title_ar : stage.title_en}
-                      </h3>
-                      <ChevronDown
-                        className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
-                          isActive ? "rotate-180 text-foreground" : "text-muted-foreground"
-                        }`}
-                        aria-hidden="true"
-                      />
-                    </div>
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-                    {/* Chips — the two facts a visitor actually weighs */}
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {chips.map((chip, i) => {
-                        const ChipIcon = chipIcons[i] ?? CalendarDays;
-                        return (
-                          <span
-                            key={chip}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
-                          >
-                            <ChipIcon className="h-3 w-3" aria-hidden="true" />
-                            {chip}
-                          </span>
-                        );
-                      })}
-                    </div>
+          {/* The open stop */}
+          <div className="border-t border-border p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${activeMeta.tile}`}>
+                <ActiveIcon className="h-5 w-5 text-charcoal" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-bold leading-tight text-foreground sm:text-lg">
+                  {isAr ? active.title_ar : active.title_en}
+                </h3>
 
-                    {/* Expandable description */}
-                    <div
-                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                        isActive ? "mt-3 max-h-60 opacity-100" : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {isAr ? stage.blurb_ar : stage.blurb_en}
-                      </p>
-                    </div>
-                  </div>
+                {/* Chips — the two facts a visitor actually weighs */}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {activeChips.map((chip, i) => {
+                    const ChipIcon = chipIcons[i] ?? CalendarDays;
+                    return (
+                      <span
+                        key={chip}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground"
+                      >
+                        <ChipIcon className="h-3 w-3" aria-hidden="true" />
+                        {chip}
+                      </span>
+                    );
+                  })}
                 </div>
-              </li>
-            );
-          })}
-        </ol>
+
+                <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
+                  {isAr ? active.blurb_ar : active.blurb_en}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* CTA */}
-        <div className="text-center mt-10">
-          <Button size="lg" asChild className="gap-2 text-base font-bold h-12 px-8 rounded-full">
+        <div className="mt-10 text-center">
+          <Button size="lg" asChild className="h-12 gap-2 rounded-full px-8 text-base font-bold">
             <Link to="/placement-test">
               {t("roadmap", "cta")}
               <ArrowRight className={`h-5 w-5 ${isAr ? "rotate-180" : ""}`} />
             </Link>
           </Button>
-          <p className="text-sm text-muted-foreground mt-3">{t("roadmap", "ctaSub")}</p>
+          <p className="mt-3 text-sm text-muted-foreground">{t("roadmap", "ctaSub")}</p>
         </div>
       </div>
     </section>
