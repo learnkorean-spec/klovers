@@ -493,3 +493,14 @@ Type, from the same board (loaded in index.html):
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* StickyEnrollBar cast: a small hop, staggered per character by an inline
+   animation-delay. Stops for anyone who asked their device for less motion. */
+@keyframes bar-hop {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-5px); }
+}
+.animate-bar-hop { animation: bar-hop 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-bar-hop { animation: none; }
+}
