@@ -271,19 +271,6 @@ const HeroSection = () => {
               </span>
             </h1>
 
-            {/* Subtitle — lives in src/i18n/translations.ts (`hero.subtitle`). */}
-            <p
-              className="text-base sm:text-xl md:text-2xl text-ivory/85 max-w-xl mx-auto leading-relaxed text-pretty"
-              style={{ textShadow: "0 2px 16px rgba(20,20,18,0.9)" }}
-            >
-              {t("hero", "subtitle")}
-            </p>
-
-            {/* The board's handwritten accent — one line, never a paragraph. */}
-            <p className="font-script text-2xl sm:text-3xl text-klovers-yellow -mt-2">
-              {isAr ? "خطوات صغيرة، آفاق أوسع" : "Small steps, bigger horizons"}
-            </p>
-
             {/* CTA Buttons — 2 max to eliminate choice paralysis */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-sm sm:max-w-none mx-auto">
               <Button
