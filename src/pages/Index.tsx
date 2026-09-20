@@ -1,11 +1,11 @@
 import { lazy, Suspense, useEffect } from "react";
-import { logLeadEvent, logEngagementEvent } from "@/lib/leadTracking";
+import { logEngagementEvent } from "@/lib/leadTracking";
 import { CONTACT_EMAIL } from "@/lib/siteConfig";
 import { useSEO } from "@/hooks/useSEO";
-import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import WhyLearnKorean from "@/components/WhyLearnKorean";
+import CommunityBand from "@/components/CommunityBand";
 import Footer from "@/components/Footer";
 import StickyEnrollBar from "@/components/StickyEnrollBar";
 import ReturningStudentBanner from "@/components/ReturningStudentBanner";
@@ -24,58 +24,6 @@ const PlacementTestCTA = lazy(() => import("@/components/PlacementTestCTA"));
 const HomeGamesSection = lazy(() => import("@/components/HomeGamesSection"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 const ReturningStudentOffer = lazy(() => import("@/components/ReturningStudentOffer"));
-
-const CommunityBand = () => {
-  const { language } = useLanguage();
-  const isAr = language === "ar";
-  return (
-    <section className="py-10 bg-mint/60 border-y border-charcoal/10">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-center sm:text-start">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl" aria-hidden="true">🌍</span>
-            <div>
-              <p className="font-extrabold text-charcoal text-lg leading-tight">
-                {isAr ? "انضم لأكثر من ٢٠٠٠+ متعلم" : "Join 2,000+ Korean Learners"}
-              </p>
-              <p className="text-charcoal/65 text-sm">
-                {isAr ? "في مجتمعنا على تيليغرام وفيسبوك" : "in our Telegram & Facebook community"}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            {/* These two stay on logLeadEvent: clicking through to the community
-                is something a person chose to do, which is what a Lead is.
-
-                They used to wear Telegram's blue and Facebook's blue. Neither
-                is a Klovers colour, and the brand owns exactly five; the icon
-                in each button already names its platform. */}
-            <a
-              href="https://t.me/+Fu5T7d4wLMsxNDY9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-charcoal hover:bg-charcoal/90 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
-              onClick={() => { try { logLeadEvent({ source_type: "community", cta_label: "community_band_telegram" }); } catch {} }}
-            >
-              <span aria-hidden="true">✈️</span>
-              {isAr ? "تيليغرام" : "Telegram"}
-            </a>
-            <a
-              href="https://www.facebook.com/kloversegy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-charcoal hover:bg-charcoal/90 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
-              onClick={() => { try { logLeadEvent({ source_type: "community", cta_label: "community_band_facebook" }); } catch {} }}
-            >
-              <span aria-hidden="true">📘</span>
-              {isAr ? "فيسبوك" : "Facebook"}
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
 
 const SectionFallback = () => (
   <div className="py-20 px-4">
@@ -254,7 +202,8 @@ const Index = () => {
             <TestimonialsSection />
           </Suspense>
         </div>
-        {/* Community social proof band */}
+        {/* The community band — see CommunityBand.tsx for why it no longer
+            claims a member count. */}
         <CommunityBand />
         {/* Interest — the culture/history hook, real published content,
             placed right before WhyLearnKorean's "K-Culture" reason card */}
