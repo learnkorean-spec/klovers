@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { CalendarClock, CheckCircle2, Pencil, UserPlus } from "lucide-react";
+import { CalendarClock, CheckCircle2, Pencil, UserPlus, UserMinus, Users } from "lucide-react";
 import { normalizeLevel } from "@/constants/levels";
 
 /**
@@ -45,14 +45,23 @@ import { normalizeLevel } from "@/constants/levels";
  * here to be started at all. Groups now load regardless of `is_active`; the
  * button already both activates and starts them, so nothing else changed.
  *
- * Two more gaps closed at the same time: the day/time a group meets was fixed
- * once its `schedule_packages` row was created, and there was no way to seat
- * a specific student into a specific group by hand — only the auto-matcher's
- * package-driven assignment, which picks (or creates) a group itself and does
- * the wrong thing for a group that isn't active yet. Both are additive; the
- * existing package_id -> single group mapping (checked before shipping this)
- * makes editing a package's day/time here safe — it only ever affects the one
- * group.
+ * Four more gaps closed at the same time:
+ *   - the day/time a group meets was fixed once its `schedule_packages` row
+ *     was created — now editable per group (safe: every package maps to
+ *     exactly one group, checked before shipping this);
+ *   - there was no way to seat a specific student into a specific group by
+ *     hand — only the auto-matcher's package-driven assignment, which picks
+ *     or creates a group itself and does the wrong thing for one that isn't
+ *     active yet;
+ *   - the add-student pool only covered enrolments, so a real student with an
+ *     account but no enrolment (e.g. marked active straight from a trial)
+ *     couldn't be found at all;
+ *   - the date box refused anything before "today", which blocked recording a
+ *     class that had already happened by the time anyone opened this screen;
+ *   - and there was no way to move a student who was already seated
+ *     somewhere into a different group — "Remove" below unseats her and
+ *     reopens her enrolment (if she has one) so she's pickable again from
+ *     whatever group she actually belongs in.
  */
 
 type Candidate = {
@@ -64,6 +73,13 @@ type Candidate = {
   name: string;
   email: string;
   level: string | null;
+};
+
+type Member = {
+  userId: string;
+  enrollmentId: string | null;
+  name: string;
+  email: string;
 };
 
 type GroupRow = {
@@ -79,8 +95,7 @@ type GroupRow = {
   startDate: string | null;
   isActive: boolean;
   capacity: number | null;
-  /** Active members — everyone in the room. */
-  members: number;
+  members: Member[];
   /** Members linked to an enrolment. Only these can be given a date. */
   seated: number;
 };
@@ -135,6 +150,42 @@ function prettyDate(iso: string | null): string {
   });
 }
 
+/**
+ * Offset of a timezone from UTC, in minutes, on a specific instant — DST
+ * safe. `Intl` won't hand you an offset directly, so this reads it back out
+ * of a formatted "GMT+3" string.
+ */
+function tzOffsetMinutes(date: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "shortOffset" }).formatToParts(date);
+  const raw = parts.find(p => p.type === "timeZoneName")?.value ?? "GMT+0";
+  const m = raw.match(/GMT([+-]\d+)(?::(\d+))?/);
+  if (!m) return 0;
+  const h = parseInt(m[1], 10);
+  const min = m[2] ? parseInt(m[2], 10) : 0;
+  return h * 60 + (h < 0 ? -min : min);
+}
+
+/**
+ * A class's day/time is always entered and stored as Cairo wall-clock time
+ * (every `schedule_packages` row is timezone Africa/Cairo). The teacher
+ * scheduling it works from Thailand, so the same instant is shown back in
+ * Asia/Bangkok — accounting for Cairo's DST (Egypt resumed it in 2023),
+ * which Bangkok never observes, so the gap isn't a fixed number of hours
+ * year-round.
+ */
+function cairoToBangkok(dayOfWeek: number | null, hhmmStr: string): { day: string; time: string } | null {
+  if (dayOfWeek == null || !hhmmStr) return null;
+  const isoDate = nextWeekdayISO(dayOfWeek);
+  const guessUTC = new Date(`${isoDate}T${hhmmStr}:00Z`);
+  const cairoOffset = tzOffsetMinutes(guessUTC, "Africa/Cairo");
+  const actualUTC = new Date(guessUTC.getTime() - cairoOffset * 60000);
+  const day = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", weekday: "long" }).format(actualUTC);
+  const time = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Bangkok", hour: "numeric", minute: "2-digit", hour12: true,
+  }).format(actualUTC);
+  return { day, time };
+}
+
 export default function GroupsToStart() {
   const [groups, setGroups] = useState<GroupRow[] | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -153,6 +204,10 @@ export default function GroupsToStart() {
   const [addingId, setAddingId] = useState<string | null>(null);
   const [addFilter, setAddFilter] = useState("");
   const [addingBusy, setAddingBusy] = useState(false);
+
+  // Inline "members / remove" state — at most one card open at once.
+  const [membersOpenId, setMembersOpenId] = useState<string | null>(null);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -202,13 +257,37 @@ export default function GroupsToStart() {
       if (enrollRes.error) throw enrollRes.error;
       if (profilesRes.error) throw profilesRes.error;
 
-      const members = new Map<string, { members: number; seated: number }>();
+      // Names/emails for whoever is already seated somewhere — used both for
+      // this group's own member list and to exclude them from candidate pools
+      // built further down.
+      const memberRows = (membersRes.data ?? []) as Array<{ group_id: string; user_id: string; enrollment_id: string | null }>;
+      const memberUserIds = [...new Set(memberRows.map(m => m.user_id))];
+      let memberProfileMap = new Map<string, { name: string; email: string }>();
+      if (memberUserIds.length > 0) {
+        const { data: memberProfiles, error: memberProfilesErr } = await supabase
+          .from("profiles")
+          .select("user_id, name, email")
+          .in("user_id", memberUserIds);
+        if (memberProfilesErr) throw memberProfilesErr;
+        memberProfileMap = new Map(
+          ((memberProfiles ?? []) as Array<{ user_id: string; name: string | null; email: string | null }>)
+            .map(p => [p.user_id, { name: p.name || "Unnamed", email: p.email || "" }]),
+        );
+      }
+
+      const membersByGroup = new Map<string, Member[]>();
+      const seatedCountByGroup = new Map<string, number>();
       const seatedUserIds = new Set<string>();
-      for (const m of (membersRes.data ?? []) as Array<{ group_id: string; user_id: string; enrollment_id: string | null }>) {
-        const t = members.get(m.group_id) ?? { members: 0, seated: 0 };
-        t.members += 1;
-        if (m.enrollment_id) t.seated += 1;
-        members.set(m.group_id, t);
+      for (const m of memberRows) {
+        const list = membersByGroup.get(m.group_id) ?? [];
+        list.push({
+          userId: m.user_id,
+          enrollmentId: m.enrollment_id,
+          name: memberProfileMap.get(m.user_id)?.name ?? "Unnamed",
+          email: memberProfileMap.get(m.user_id)?.email ?? "",
+        });
+        membersByGroup.set(m.group_id, list);
+        if (m.enrollment_id) seatedCountByGroup.set(m.group_id, (seatedCountByGroup.get(m.group_id) ?? 0) + 1);
         seatedUserIds.add(m.user_id);
       }
 
@@ -224,7 +303,6 @@ export default function GroupsToStart() {
         capacity: number | null; is_active: boolean;
       }>).map(g => {
         const p = g.package_id ? packages.get(g.package_id) : undefined;
-        const count = members.get(g.id) ?? { members: 0, seated: 0 };
         const title = g.name || "Group";
         // Every group is already named for its slot — "Level 1 · Monday 15:00
         // Cairo" — so repeating the schedule underneath said the same words
@@ -245,8 +323,8 @@ export default function GroupsToStart() {
           startDate: g.start_date,
           isActive: g.is_active,
           capacity: g.capacity,
-          members: count.members,
-          seated: count.seated,
+          members: membersByGroup.get(g.id) ?? [],
+          seated: seatedCountByGroup.get(g.id) ?? 0,
         };
       });
 
@@ -270,13 +348,13 @@ export default function GroupsToStart() {
       // Enrich pool one (enrolments) with names/emails.
       const enrollRows = (enrollRes.data ?? []) as Array<{ id: string; user_id: string; level: string | null }>;
       const enrollUserIds = [...new Set(enrollRows.map(e => e.user_id))];
-      let profileMap = new Map<string, { name: string; email: string }>();
+      let enrollProfileMap = new Map<string, { name: string; email: string }>();
       if (enrollUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, name, email")
           .in("user_id", enrollUserIds);
-        profileMap = new Map(
+        enrollProfileMap = new Map(
           ((profiles ?? []) as Array<{ user_id: string; name: string | null; email: string | null }>)
             .map(p => [p.user_id, { name: p.name || "Unnamed", email: p.email || "" }]),
         );
@@ -285,8 +363,8 @@ export default function GroupsToStart() {
         enrollmentId: e.id,
         userId: e.user_id,
         level: e.level,
-        name: profileMap.get(e.user_id)?.name ?? "Unnamed",
-        email: profileMap.get(e.user_id)?.email ?? "",
+        name: enrollProfileMap.get(e.user_id)?.name ?? "Unnamed",
+        email: enrollProfileMap.get(e.user_id)?.email ?? "",
       }));
 
       // Pool two: accounts with no enrolment at all, and not already seated
@@ -305,7 +383,6 @@ export default function GroupsToStart() {
         }));
 
       setCandidates([...fromEnrollments, ...fromProfiles]);
-
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load the groups.");
@@ -425,6 +502,45 @@ export default function GroupsToStart() {
     }
   };
 
+  /**
+   * Unseats a student from this group. If she's enrolment-backed, that
+   * enrolment is reopened (`matched_at`/`slot_id` cleared) so she reappears in
+   * pool one and is immediately pickable via "Add student" on whatever group
+   * she's actually moving to — this plus a subsequent add is how "move a
+   * student to a different group" works, since a class change is common
+   * enough that a straight remove-then-add beats a dedicated move dialog for
+   * how rarely each half is used alone.
+   */
+  const removeMember = async (g: GroupRow, m: Member) => {
+    setRemovingUserId(m.userId);
+    try {
+      const { error: delErr } = await supabase
+        .from("pkg_group_members")
+        .delete()
+        .eq("group_id", g.id)
+        .eq("user_id", m.userId);
+      if (delErr) throw delErr;
+
+      if (m.enrollmentId) {
+        const { error: enrollErr } = await supabase
+          .from("enrollments")
+          .update({ matched_at: null, slot_id: null })
+          .eq("id", m.enrollmentId);
+        if (enrollErr) throw enrollErr;
+      }
+
+      toast({
+        title: `${m.name} removed from ${g.title}`,
+        description: "She's now unseated and can be added to a different group from its own \"Add student\" list.",
+      });
+      await load();
+    } catch (e: any) {
+      toast({ title: "Could not remove that student", description: e?.message ?? String(e), variant: "destructive" });
+    } finally {
+      setRemovingUserId(null);
+    }
+  };
+
   const candidatesFor = useMemo(() => {
     return (g: GroupRow) => {
       const wantLevel = g.level ? normalizeLevel(g.level) : null;
@@ -497,6 +613,7 @@ export default function GroupsToStart() {
           const confirming = confirmId === g.id;
           const editing = editingId === g.id;
           const adding = addingId === g.id;
+          const membersOpen = membersOpenId === g.id;
           return (
             <Card key={g.id}>
               <CardContent className="p-4 space-y-2.5">
@@ -513,9 +630,13 @@ export default function GroupsToStart() {
 
                 <p className="text-[11px] text-muted-foreground">
                   {g.when && <span>{g.when} · </span>}
+                  {(() => {
+                    const bkk = cairoToBangkok(g.dayOfWeek, hhmm(g.startTime));
+                    return bkk ? <span>{bkk.day} {bkk.time} Bangkok for you · </span> : null;
+                  })()}
                   {g.seated > 0
-                    ? `${g.seated} of ${g.members} member${g.members === 1 ? "" : "s"} linked to an enrolment`
-                    : `${g.members} member${g.members === 1 ? "" : "s"}, none linked to an enrolment`}
+                    ? `${g.seated} of ${g.members.length} member${g.members.length === 1 ? "" : "s"} linked to an enrolment`
+                    : `${g.members.length} member${g.members.length === 1 ? "" : "s"}, none linked to an enrolment`}
                   {g.capacity != null && <span> · capacity {g.capacity}</span>}
                 </p>
 
@@ -572,6 +693,17 @@ export default function GroupsToStart() {
                   >
                     <UserPlus className="h-3.5 w-3.5 mr-1" /> Add student
                   </Button>
+                  {g.members.length > 0 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8"
+                      onClick={() => setMembersOpenId(membersOpen ? null : g.id)}
+                    >
+                      <Users className="h-3.5 w-3.5 mr-1" /> Members ({g.members.length})
+                    </Button>
+                  )}
                 </div>
 
                 {confirming && (
@@ -616,8 +748,17 @@ export default function GroupsToStart() {
                     >
                       {savingEdit ? "Saving…" : "Save"}
                     </Button>
+                    {editDay && editTime && (() => {
+                      const bkk = cairoToBangkok(Number(editDay), editTime);
+                      return bkk ? (
+                        <p className="w-full text-[11px] font-medium text-foreground">
+                          = {bkk.day} {bkk.time} for you in Bangkok
+                        </p>
+                      ) : null;
+                    })()}
                     <p className="w-full text-[10px] text-muted-foreground">
-                      Changes only this group's slot. Existing members and their dates aren't touched.
+                      Time above is Cairo, same as the rest of the schedule. Changes only this group's slot —
+                      existing members and their dates aren't touched.
                     </p>
                   </div>
                 )}
@@ -659,6 +800,38 @@ export default function GroupsToStart() {
                         </button>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {membersOpen && (
+                  <div className="space-y-0.5 rounded-md border border-input bg-muted/30 p-2">
+                    {g.members.map(m => (
+                      <div key={m.userId} className="flex items-center justify-between gap-2 rounded px-2 py-1 text-xs">
+                        <span className="truncate">
+                          {m.name} <span className="text-muted-foreground">· {m.email}</span>
+                          {!m.enrollmentId && (
+                            <Badge variant="outline" className="ml-2 text-[9px] text-amber-600 border-amber-300">
+                              no enrolment
+                            </Badge>
+                          )}
+                        </span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 shrink-0 px-2 text-[11px] text-destructive hover:text-destructive"
+                          disabled={removingUserId === m.userId}
+                          onClick={() => void removeMember(g, m)}
+                        >
+                          <UserMinus className="h-3 w-3 mr-1" />
+                          {removingUserId === m.userId ? "Removing…" : "Remove"}
+                        </Button>
+                      </div>
+                    ))}
+                    <p className="pt-1 text-[10px] text-muted-foreground">
+                      Removing unseats her here and reopens her enrolment, so she's immediately findable from
+                      "Add student" on whichever group she's actually moving to — that's how a class change is done.
+                    </p>
                   </div>
                 )}
               </CardContent>
