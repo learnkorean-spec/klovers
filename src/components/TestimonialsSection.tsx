@@ -15,19 +15,33 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * Recommendations in 2018 — so not one of these reviewers was ever shown a
  * five-point scale to rate anything on. Each card now carries what Facebook
  * itself displays beside the name, "👍 Recommends", which is the endorsement
- * they actually gave. The summary above the cards quotes Facebook's own
- * metric for the same reason (100% recommend, from 20 reviews); the star
- * rating on this site belongs to the Google Business Profile and is shown in
- * the hero strip, where it is labelled as Google's.
+ * they actually gave.
  *
- * 2026-09-20: the section no longer borrows Facebook's blue, or the green
+ * 2026-09-20 (a): the section no longer borrows Facebook's blue, or the green
  * ticks. Klovers owns five colours and this page uses only those; the
  * Facebook icon is what names the platform, not the paint.
+ *
+ * 2026-09-20 (b): ONE ROW, IN THE READER'S OWN LANGUAGE. Two rows of twelve
+ * cards was too much section, and the half of it a given visitor could not
+ * read was the half doing no work: an Arabic visitor watched six English
+ * cards slide past, an English visitor six Arabic ones. Filtering by language
+ * halves the height and makes every remaining card legible at the same time.
+ *
+ * NO REVIEW WAS DELETED to achieve that. All twelve are still here, still
+ * real, still unedited; the other language's six are simply not rendered to
+ * someone who cannot read them. If you add a review, add it with its `lang`
+ * and it appears for that audience.
+ *
+ * 2026-09-20 (c): ONE COUNT, IN ONE PLACE. The badge read "100% Recommend ·
+ * 16 Facebook Reviews" while the line directly beneath it read "from 20
+ * reviews on Facebook" — both on screen at once, on the section whose whole
+ * job is to be believed. The badge has stopped counting; it is the link to
+ * the reviews page and nothing else.
  */
 const reviews = [
   {
     name: "Nada Tamer",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "en",
     text: "Very professional and fun at the same time! Makes learning very easy and enjoyable. I highly recommend it to anyone ❤️",
     date: "Dec 2021",
@@ -36,7 +50,7 @@ const reviews = [
   },
   {
     name: "Ayaya Salah",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "en",
     text: "The course is absolutely entertaining. I enjoy every second of it — educational, not boring and I can already see progress. Highly recommend it!",
     date: "Dec 2021",
@@ -45,7 +59,7 @@ const reviews = [
   },
   {
     name: "Maged M. Aziz",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "en",
     text: "Very effective. Reham is soo awesome and I learnt a lot from her. I give her 10/10. Thank you for making things easier! 👊👊",
     date: "Jul 2023",
@@ -54,7 +68,7 @@ const reviews = [
   },
   {
     name: "Nami Waka",
-    flag: "🌍",
+    flag: "\u{1F30D}",
     lang: "en",
     text: "Reham is a wonderful teacher. She has a really nice smile. I'm looking forward to having her teach me Korean from now on.",
     date: "Jul 2024",
@@ -63,7 +77,7 @@ const reviews = [
   },
   {
     name: "Kholoud Al-Bahay",
-    flag: "🇸🇦",
+    flag: "\u{1F1F8}\u{1F1E6}",
     lang: "en",
     text: "One of the best courses I've ever enrolled in ❤️❤️❤️ How much I love how she strives and cares for us and our learning process. Highly recommend!",
     date: "Aug 2022",
@@ -72,7 +86,7 @@ const reviews = [
   },
   {
     name: "Jomana Azouz",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "en",
     text: "She is amazing and really a good teacher. She simplifies everything to make it understandable, and doing the homework you will notice the development in your accent!",
     date: "Jul 2023",
@@ -81,7 +95,7 @@ const reviews = [
   },
   {
     name: "حياة مصطفى",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "ar",
     text: "ميرسي جداً على تعليمنا اللغة الكورية 😍 متشكرة جداً على المستويات اللي وصلنالها من الصفر — تعليم الحروف والكتابة والقراءة والكلام. الكلام ده مايوصفش جهدك وصبرك 선생님 감사합니다",
     date: "Jul 2023",
@@ -90,7 +104,7 @@ const reviews = [
   },
   {
     name: "يمنى دراهم",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "ar",
     text: "من الكورسات اللذيذة والممتعة جداً! طريقتها حلوة جداً وبتوضح الحاجة بصورة بسيطة وسهلة، دا غير شخصيتها العسولة وأنها هتساعدك في أي وقت 💕💕💕",
     date: "Jul 2023",
@@ -99,7 +113,7 @@ const reviews = [
   },
   {
     name: "سامة آدم",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "ar",
     text: "بجد أحلى سونتسينيم في الدنيا 😍 الكورس خفيف وبستمتع بيه جداً. قربت أكمل سنة وبجد اتحسنت كتير في الكوري والجرامر بتسهله جداً علينا ❤️❤️❤️",
     date: "Nov 2022",
@@ -108,7 +122,7 @@ const reviews = [
   },
   {
     name: "مريم ميرا",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "ar",
     text: "بجد يستفاد كتير في الكورس ده ويتعلم أكتر. ممكن اني أكتب جملة كاملة بالكوري رغم اني مكنتش أعرف أقرأ أو أكتب كوري من قبل! 선생님 감사합니다 ❤️",
     date: "Nov 2022",
@@ -117,7 +131,7 @@ const reviews = [
   },
   {
     name: "بوسي محمد",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "ar",
     text: "تعلمت الحروف والأرقام وأبدأت أحس بالفرق! بالصدفة شوفت البوست وكنت فخورة جداً. أجرب وحقيقي انا من أوائل المحاضرين حسيت بفرق جامد ❤️❤️",
     date: "Nov 2022",
@@ -126,7 +140,7 @@ const reviews = [
   },
   {
     name: "نهال أشرف",
-    flag: "🇪🇬",
+    flag: "\u{1F1EA}\u{1F1EC}",
     lang: "ar",
     text: "استفدت حلو أوي وبجد المستوى هايل ❤️",
     date: "Nov 2022",
@@ -135,9 +149,15 @@ const reviews = [
   },
 ];
 
-// Split into two rows for opposite-direction scroll
-const row1 = reviews.slice(0, 6);
-const row2 = reviews.slice(6);
+/**
+ * The reviews this visitor can read. Falls back to all of them rather than
+ * render a thin rail if a language ever has fewer than three — six and six
+ * today, so the fallback never fires.
+ */
+const reviewsFor = (lang: string) => {
+  const mine = reviews.filter((r) => r.lang === lang);
+  return mine.length >= 3 ? mine : reviews;
+};
 
 const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boolean }) => {
   const initials = review.name
@@ -222,10 +242,14 @@ const ScrollRow = ({
 const TestimonialsSection = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
+  const shown = reviewsFor(isAr ? "ar" : "en");
+
   return (
     <section className="py-20 md:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4 mb-10 text-center">
-        {/* Badge */}
+        {/* The badge is the LINK, not a second scoreboard. It used to read
+            "100% Recommend · 16 Facebook Reviews" from translations.ts while
+            the summary below said 20 — see note (c) at the top of this file. */}
         <a
           href="https://www.facebook.com/kloversegy/reviews"
           target="_blank"
@@ -234,7 +258,7 @@ const TestimonialsSection = () => {
         >
           <Facebook className="h-4 w-4 text-charcoal" />
           <span className="text-sm font-semibold text-charcoal">
-            {t("testimonialsSection.badge")}
+            {isAr ? "المراجعات على فيسبوك" : "Reviews on Facebook"}
           </span>
         </a>
 
@@ -245,7 +269,8 @@ const TestimonialsSection = () => {
           {t("testimonialsSection.subtitle")}
         </p>
 
-        {/* Summary — Facebook's own words, because this is the Facebook section.
+        {/* Summary — Facebook's own words, because this is the Facebook section,
+            and now the ONLY place on this section carrying a count.
 
             It read "★★★★★ 4.9 / 5.0 · 200+ students" (translations.ts,
             `testimonialsSection.ratingSuffix`). Checked against the page on
@@ -263,8 +288,8 @@ const TestimonialsSection = () => {
             Written inline rather than through the dictionary because these
             two strings are a measurement with a date attached, like the hero
             stats beside them, and both need to change together the day either
-            platform's number moves. `ratingSuffix` is left in translations.ts,
-            unused. */}
+            platform's number moves. `ratingSuffix` and `badge` are left in
+            translations.ts, unused. */}
         <div className="flex items-center justify-center gap-2 mt-4">
           <ThumbsUp className="h-5 w-5 text-foreground/70 shrink-0" aria-hidden="true" />
           <span className="text-lg font-bold text-foreground">
@@ -276,11 +301,8 @@ const TestimonialsSection = () => {
         </div>
       </div>
 
-      {/* Scrolling rows */}
-      <div className="space-y-4">
-        <ScrollRow items={row1} direction="left" isAr={isAr} />
-        <ScrollRow items={row2} direction="right" isAr={isAr} />
-      </div>
+      {/* One rail, in the reader's language. */}
+      <ScrollRow items={shown} direction="left" isAr={isAr} />
     </section>
   );
 };
