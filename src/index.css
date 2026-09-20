@@ -514,3 +514,20 @@ Type, from the same board (loaded in index.html):
 @media (prefers-reduced-motion: reduce) {
   .animate-bar-jump, .animate-bar-shadow { animation: none; }
 }
+
+/* FinalCTA: the FREE stamp wobbles, the sparkles drift. Both stop for anyone
+   who asked their device for less motion. */
+@keyframes stamp-wobble {
+  0%, 100% { transform: rotate(12deg) scale(1); }
+  50% { transform: rotate(5deg) scale(1.07); }
+}
+@keyframes drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(25deg); }
+}
+.animate-stamp { animation: stamp-wobble 3s ease-in-out infinite; }
+.animate-drift { animation: drift 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-stamp { animation: none; transform: rotate(12deg); }
+  .animate-drift { animation: none; }
+}
