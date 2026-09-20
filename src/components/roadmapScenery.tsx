@@ -14,7 +14,7 @@
  *
  * DRAWN, NOT PHOTOGRAPHED. Every fill is a palette token, so the map gains a
  * setting without gaining a colour, an HTTP request, or a provenance question.
- * Retune Mint and this retunes with it. Re's mockup was a rendered image with
+ * Retune Yellow or Ivory and this retunes with it. Re's mockup was a rendered image with
  * English baked into the pixels - it could never have carried the Arabic side
  * of this site, which is the majority script here.
  *
@@ -68,7 +68,7 @@ const ROAD =
 
 const PETAL_ANGLES = [0, 72, 144, 216, 288];
 
-/** One five-petal blossom, Blush with a yellow centre. */
+/** One five-petal blossom, Ivory with a yellow centre. */
 const Blossom = ({ x, y, s = 1, o = 0.8 }: { x: number; y: number; s?: number; o?: number }) => (
   <g transform={`translate(${x} ${y}) scale(${s})`} opacity={o}>
     {PETAL_ANGLES.map((a) => (
@@ -77,7 +77,7 @@ const Blossom = ({ x, y, s = 1, o = 0.8 }: { x: number; y: number; s?: number; o
         cx={Math.cos((a * Math.PI) / 180) * 5.6}
         cy={Math.sin((a * Math.PI) / 180) * 5.6}
         r="4.4"
-        fill="hsl(var(--peach))"
+        fill="hsl(var(--ivory))"
       />
     ))}
     <circle r="2.2" fill="hsl(var(--klovers-yellow))" />
@@ -90,10 +90,10 @@ const Tree = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
     <path d="M0 0v-20" stroke="hsl(var(--charcoal))" strokeWidth="3" strokeLinecap="round" opacity="0.38" />
     <path d="M0-13l-7-6M0-17l6-5" stroke="hsl(var(--charcoal))" strokeWidth="2" strokeLinecap="round" opacity="0.3" />
     <g opacity="0.8">
-      <circle cx="-8" cy="-25" r="9" fill="hsl(var(--peach))" />
-      <circle cx="7" cy="-27" r="10" fill="hsl(var(--peach))" />
-      <circle cx="0" cy="-34" r="8.5" fill="hsl(var(--peach))" />
-      <circle cx="-2" cy="-21" r="7" fill="hsl(var(--peach))" />
+      <circle cx="-8" cy="-25" r="9" fill="hsl(var(--ivory))" />
+      <circle cx="7" cy="-27" r="10" fill="hsl(var(--ivory))" />
+      <circle cx="0" cy="-34" r="8.5" fill="hsl(var(--ivory))" />
+      <circle cx="-2" cy="-21" r="7" fill="hsl(var(--ivory))" />
       <circle cx="4" cy="-32" r="2" fill="hsl(var(--klovers-yellow))" />
       <circle cx="-7" cy="-27" r="1.8" fill="hsl(var(--klovers-yellow))" />
     </g>
@@ -108,7 +108,7 @@ const Tree = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
 const Gate = ({ x, y, s = 1 }: { x: number; y: number; s?: number }) => (
   <g transform={`translate(${x} ${y}) scale(${s})`}>
     <path d="M-30 0C-18-13 18-13 30 0l-5 4C14-4-14-4-25 4Z" fill="hsl(var(--charcoal))" opacity="0.4" />
-    <rect x="-26" y="3" width="52" height="4" rx="2" fill="hsl(var(--peach))" opacity="0.8" />
+    <rect x="-26" y="3" width="52" height="4" rx="2" fill="hsl(var(--ivory))" opacity="0.8" />
     <rect x="-19" y="7" width="6" height="22" rx="2" fill="hsl(var(--charcoal))" opacity="0.32" />
     <rect x="13" y="7" width="6" height="22" rx="2" fill="hsl(var(--charcoal))" opacity="0.32" />
   </g>
@@ -134,27 +134,27 @@ export const JourneyScene = () => (
     {/* Scenery. Dimmed on the dark theme - see the file header. */}
     <g className="dark:opacity-50">
       {/* Three hill layers, so the ridge reads as depth rather than one flat
-          shape. The near hill is the neon sibling at low alpha: on Ivory it is
+          shape. The near hill is a stronger Yellow at low alpha: on Ivory it is
           a sunlit slope, on black it is the only thing that keeps the lower
           half of the map from going featureless. */}
       <path
         d="M0 560V270c50-30 110-2 170-20s130-6 190-24v334Z"
-        fill="hsl(var(--mint))"
+        fill="hsl(var(--klovers-yellow))"
         opacity="0.32"
       />
       <path
         d="M0 560V370c70-30 130 2 200-18s120-8 160-22v230Z"
-        fill="hsl(var(--mint))"
+        fill="hsl(var(--klovers-yellow))"
         opacity="0.5"
       />
       <path
         d="M0 560V470c80-22 160 6 240-12 60-13 90-6 120-12v114Z"
-        fill="hsl(var(--mint-strong))"
-        opacity="0.16"
+        fill="hsl(var(--klovers-yellow))"
+        opacity="0.22"
       />
 
       {/* A cloud in the sky, on the start side. */}
-      <g fill="hsl(var(--peach))" opacity="0.3">
+      <g fill="hsl(var(--klovers-yellow))" opacity="0.4">
         <ellipse cx="66" cy="120" rx="40" ry="15" />
         <ellipse cx="100" cy="110" rx="26" ry="12" />
       </g>
@@ -179,9 +179,9 @@ export const JourneyScene = () => (
       <Blossom x={246} y={352} s={0.9} o={0.6} />
       <Blossom x={72} y={246} s={0.8} o={0.55} />
       <Blossom x={324} y={510} s={0.85} o={0.5} />
-      <ellipse cx="238" cy="404" rx="5" ry="3" fill="hsl(var(--peach))" opacity="0.5" transform="rotate(24 238 404)" />
-      <ellipse cx="86" cy="182" rx="4.4" ry="2.6" fill="hsl(var(--peach))" opacity="0.45" transform="rotate(-18 86 182)" />
-      <ellipse cx="316" cy="268" rx="4" ry="2.4" fill="hsl(var(--peach))" opacity="0.4" transform="rotate(38 316 268)" />
+      <ellipse cx="238" cy="404" rx="5" ry="3" fill="hsl(var(--ivory))" opacity="0.5" transform="rotate(24 238 404)" />
+      <ellipse cx="86" cy="182" rx="4.4" ry="2.6" fill="hsl(var(--ivory))" opacity="0.45" transform="rotate(-18 86 182)" />
+      <ellipse cx="316" cy="268" rx="4" ry="2.4" fill="hsl(var(--ivory))" opacity="0.4" transform="rotate(38 316 268)" />
     </g>
 
     {/* The road. Structure, not scenery: full opacity in both themes. */}
@@ -189,7 +189,7 @@ export const JourneyScene = () => (
     <path d={ROAD} stroke="hsl(var(--muted))" strokeWidth="24" strokeLinecap="round" />
     <path
       d={ROAD}
-      stroke="hsl(var(--mint-strong))"
+      stroke="hsl(var(--charcoal))"
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeDasharray="7 11"

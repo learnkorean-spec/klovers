@@ -18,7 +18,7 @@ import {
 
 /** The "Free" chip beside Games. Mint, not Tailwind green: the homepage owns
  *  five colours and a measurement on 20 Sep found this was the last stray. */
-const FREE_BADGE = "text-[10px] bg-mint text-charcoal border border-charcoal/10 px-1.5 py-0.5 rounded-full font-semibold leading-none";
+const FREE_BADGE = "text-[10px] bg-klovers-yellow text-charcoal border border-charcoal/10 px-1.5 py-0.5 rounded-full font-semibold leading-none";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -136,7 +136,7 @@ const Header = () => {
             </Button>
 
             {!user && (
-              <Button size="sm" variant="outline" asChild className="gap-1.5 border-charcoal/30 text-foreground hover:bg-mint">
+              <Button size="sm" variant="outline" asChild className="gap-1.5 border-foreground/30 text-foreground hover:bg-klovers-yellow hover:text-charcoal">
                 <Link
                   to="/free-trial"
                   onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "header_free_trial" }); } catch {} }}

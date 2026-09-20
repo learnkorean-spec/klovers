@@ -69,22 +69,23 @@ import { JourneyScene, JOURNEY_STOPS, JOURNEY_VIEW, JOURNEY_SUMMIT } from "./roa
  * shift the palette, and a renamed badge string cannot silently blank it.
  * Literal class strings, because Tailwind's scanner only keeps what it sees.
  *
- * The ramp is Green → Yellow, and Level 6 is the single Pink on this page
- * besides the games' "hot" badge. That is the point of it: the end of the
- * path should not look like another step on it.
+ * The ramp is one colour getting stronger: pale yellow at Hangul up to full
+ * Klovers Yellow at Level 4, and Level 6 - the end of the path - is full yellow
+ * with a Charcoal ring, so it does not look like another step on it.
+ * (Was Mint -> Neon green -> Yellow -> Pink; the brand is three colours.)
  */
 const LEVEL_META: Record<string, { icon: React.ElementType; tile: string }> = {
-  hangul: { icon: BookOpen, tile: "bg-mint" },
-  l1: { icon: MessageCircle, tile: "bg-mint" },
-  l2: { icon: Zap, tile: "bg-mint-strong" },
-  l3: { icon: Star, tile: "bg-mint-strong" },
+  hangul: { icon: BookOpen, tile: "bg-amber-100" },
+  l1: { icon: MessageCircle, tile: "bg-amber-200" },
+  l2: { icon: Zap, tile: "bg-amber-300" },
+  l3: { icon: Star, tile: "bg-amber-400" },
   l4: { icon: Flame, tile: "bg-klovers-yellow" },
   l5: { icon: Trophy, tile: "bg-klovers-yellow" },
-  l6: { icon: GraduationCap, tile: "bg-peach-strong" },
+  l6: { icon: GraduationCap, tile: "bg-klovers-yellow ring-2 ring-charcoal" },
 };
 
 const getMeta = (key: string) =>
-  LEVEL_META[key] ?? { icon: Star, tile: "bg-mint" };
+  LEVEL_META[key] ?? { icon: Star, tile: "bg-amber-100" };
 
 /** The ladder only — the two special tracks are not stops on the road. */
 const STAGES = COURSE_CARDS.filter((c) => (LEVEL_KEYS as string[]).includes(c.key));

@@ -89,9 +89,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * `badge` is a literal class string - Tailwind's scanner only keeps what it
  * can see, so these must never be assembled from fragments.
  *
- * Blush (`bg-peach`), not Rose (`bg-peach-strong`), on culture. The strong
- * pink is still spent on the roadmap's final level and the games' hot badge,
- * and that is the whole reason it reads as an ending.
+ * Badges alternate Ivory and Yellow. The brand is three colours (20 Sep
+ * decision), so the Mint and Blush fills that used to sit here are gone.
  */
 const CARDS: Record<
   string,
@@ -108,7 +107,7 @@ const CARDS: Record<
   },
   career: {
     image: "/assets/blog/korean-business.jpg",
-    badge: "bg-mint",
+    badge: "bg-klovers-yellow",
     Icon: Briefcase,
     href: {
       ar: "/blog/korean-job-interview-phrases-ar",
@@ -126,7 +125,7 @@ const CARDS: Record<
   },
   culture: {
     image: "/assets/blog/korean-listening.jpg",
-    badge: "bg-peach",
+    badge: "bg-ivory",
     Icon: Music,
     href: {
       ar: "/blog/best-kdrama-learn-korean-difficulty-ranked-ar",
@@ -182,7 +181,7 @@ const WhyLearnKorean = () => {
       <div className="container relative mx-auto px-4">
 
         <div className="mb-14 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full bg-mint px-4 py-1.5 text-xs font-bold text-charcoal md:text-sm">
+          <span className="inline-flex items-center gap-2 rounded-full bg-klovers-yellow px-4 py-1.5 text-xs font-bold text-charcoal md:text-sm">
             <Sprout className="h-4 w-4" aria-hidden="true" />
             {copy.eyebrow}
           </span>
