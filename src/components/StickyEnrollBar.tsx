@@ -4,6 +4,7 @@ import { X, ArrowRight } from "lucide-react";
 import { logLeadEvent } from "@/lib/leadTracking";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBottomSlot } from "@/lib/bottomLayer";
+import KloverIcon from "@/components/KloverIcon";
 
 /**
  * StickyEnrollBar — appears after the user scrolls past the hero CTA buttons.
@@ -50,7 +51,21 @@ const StickyEnrollBar = () => {
       <div className="bg-black border-t border-primary/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 max-w-4xl mx-auto">
         {/* Left: text */}
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-primary text-lg flex-shrink-0">🇰🇷</span>
+          {/* The cast. Each one hops on its own beat (bar-hop, index.css) and
+              stands on an Ivory dome so its outline survives the dark bar.
+              Two on phones' worth of width would crowd the tagline, so only
+              Klobi shows below sm. */}
+          <div className="flex flex-shrink-0 items-end -space-x-2 rtl:space-x-reverse" aria-hidden="true">
+            <span className="animate-bar-hop grid h-9 w-9 place-items-center rounded-full bg-ivory ring-2 ring-black" style={{ animationDelay: "0s" }}>
+              <KloverIcon name="klobi-headphones" className="h-7 w-7" />
+            </span>
+            <span className="animate-bar-hop hidden h-9 w-9 place-items-center rounded-full bg-ivory ring-2 ring-black sm:grid" style={{ animationDelay: "0.25s" }}>
+              <KloverIcon name="student-girl-heart" className="h-7 w-7" />
+            </span>
+            <span className="animate-bar-hop hidden h-9 w-9 place-items-center rounded-full bg-ivory ring-2 ring-black sm:grid" style={{ animationDelay: "0.5s" }}>
+              <KloverIcon name="student-boy-thumbsup" className="h-7 w-7" />
+            </span>
+          </div>
           <p className="text-white text-sm font-medium truncate">
             <span className="text-primary font-bold">Klovers</span> — {t("stickyBar.tagline")}
           </p>
