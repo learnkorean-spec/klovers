@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 
 /**
  * The same three facts as the hero strip, and for the same reason.
@@ -50,6 +51,15 @@ const SOCIAL_PROOF = [
 
 // Big ghost Korean words behind the ticket, for texture. Charcoal at 6% on the
 // yellow ground: present, never competing with type.
+// The cast that welcomes people to the ticket. Klobi and the girl stand on the
+// ticket's top edge, each on an Ivory dome (their outlines vanish on Yellow, so
+// they never stand on it directly), and hop on staggered beats.
+const CAST: { name: KloverIconName; delay: string; cls: string }[] = [
+  { name: "student-girl-heart", delay: "0.4s", cls: "" },
+  { name: "klobi-headphones", delay: "0s", cls: "" },
+  { name: "student-boy-thumbsup", delay: "0.8s", cls: "hidden sm:block" },
+];
+
 const KR_CHARS = ["안녕", "한국어", "공부", "화이팅", "수업", "최고"];
 
 const FinalCTA = () => {
@@ -101,12 +111,40 @@ const FinalCTA = () => {
             replaces a flat yellow page of olive-grey small print (Charcoal at
             60-80% on Yellow reads as mud); every line of type here is either
             full Charcoal on Yellow or Ivory on Charcoal. */}
-        <div className={`relative mx-auto max-w-4xl ${reveal("")}`}>
-          <div className="card-edge relative grid overflow-hidden rounded-3xl bg-charcoal md:grid-cols-[13rem_1fr]">
+        <div className={`relative mx-auto max-w-4xl pt-24 md:pt-28 ${reveal("")}`}>
+
+          {/* Drifting sparkles: small, Charcoal at low strength, decorative. */}
+          <div className="pointer-events-none absolute inset-0 select-none" aria-hidden="true">
+            <Sparkles className="animate-drift absolute start-2 top-10 h-5 w-5 text-charcoal/30" style={{ animationDelay: "0s" }} />
+            <Sparkles className="animate-drift absolute end-1/3 top-2 h-4 w-4 text-charcoal/25" style={{ animationDelay: "1.1s" }} />
+            <Sparkles className="animate-drift absolute -end-1 bottom-24 h-6 w-6 text-charcoal/25" style={{ animationDelay: "0.6s" }} />
+          </div>
+
+          {/* The cast, standing on the ticket's top edge */}
+          <div className="pointer-events-none absolute start-6 top-0 z-10 flex items-end gap-2 [perspective:500px] md:start-10" aria-hidden="true">
+            {CAST.map(({ name, delay, cls }) => (
+              <div key={name} className={`relative h-24 w-24 md:h-28 md:w-28 ${cls}`}>
+                <span className="absolute inset-x-1 bottom-0 h-1/2 rounded-t-full border-2 border-b-0 border-charcoal bg-ivory" />
+                <div className="animate-bar-jump absolute inset-0 origin-bottom" style={{ animationDelay: delay }}>
+                  <KloverIcon name={name} className="h-full w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* The stamp: FREE, slightly crooked and wobbling, on the ticket's corner */}
+          <div className="animate-stamp absolute -end-2 top-14 z-20 grid h-20 w-20 place-items-center rounded-full border-2 border-dashed border-klovers-yellow bg-charcoal text-center shadow-lg md:-end-5 md:top-16 md:h-24 md:w-24" aria-hidden="true">
+            <span>
+              <span className="block text-xl font-extrabold leading-none text-klovers-yellow md:text-2xl">{isAr ? "مجاناً" : "FREE"}</span>
+              <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-widest text-ivory">{isAr ? "أول حصة" : "1st class"}</span>
+            </span>
+          </div>
+
+          <div className="card-edge relative grid overflow-hidden rounded-3xl bg-charcoal transition-transform duration-300 md:grid-cols-[13rem_1fr] md:hover:-rotate-[0.6deg]">
 
             {/* Stub */}
             <div className="relative flex flex-row items-center justify-center gap-4 bg-klovers-yellow px-6 py-6 text-charcoal md:flex-col md:gap-1 md:py-10">
-              <Sparkles className="h-6 w-6 shrink-0" aria-hidden="true" />
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] md:mb-1">{isAr ? "تذكرة دخول" : "Admit one"}</p>
               <p className="font-display text-6xl font-extrabold leading-none md:text-7xl">{isAr ? "٣٠" : "30"}</p>
               <div className="text-start md:text-center">
                 <p className="text-sm font-extrabold uppercase tracking-wide">{isAr ? "دقيقة" : "minutes"}</p>
