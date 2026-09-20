@@ -25,8 +25,7 @@ import { RoadmapScenery } from "./roadmapScenery";
  * emoji are gone.
  *
  * 2026-09-20 (b) — Re's mockup: the ladder now stands in a scene, the nodes
- * are round on a dashed rail, and the cards lost their borders for a soft
- * shadow.
+ * are round on a dashed rail, and the cards sit on a soft shadow.
  *
  * THE MOCKUP'S HANDWRITTEN MARGIN NOTES WERE BUILT AND THEN REMOVED. Five of
  * them, in the gutters. In English, set in Caveat, they worked. In Arabic
@@ -37,6 +36,11 @@ import { RoadmapScenery } from "./roadmapScenery";
  * there is an Arabic face that actually looks handwritten at 20px; the
  * feature is only as good as its weakest script, and Arabic is the majority
  * script here.
+ *
+ * THE CARDS KEEP border-border EVEN THOUGH THE MOCKUP'S ARE BORDERLESS. A
+ * shadow is an edge on Ivory and nothing at all on the dark theme, where the
+ * borderless version left every card without an outline. Check both themes
+ * with the header toggle before touching the card chrome.
  */
 
 /**
@@ -190,10 +194,10 @@ const LearningRoadmap = () => {
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => e.key === "Enter" && toggle(index)}
-                    className={`cursor-pointer rounded-3xl bg-card p-5 transition-all duration-300 ${
+                    className={`cursor-pointer rounded-3xl border bg-card p-5 transition-all duration-300 ${
                       isActive
-                        ? "shadow-lg ring-2 ring-klovers-yellow"
-                        : "shadow-sm hover:shadow-md"
+                        ? "border-klovers-yellow shadow-lg ring-1 ring-klovers-yellow"
+                        : "border-border shadow-sm hover:shadow-md"
                     }`}
                   >
                     <div className="flex items-start gap-3">
