@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, ArrowRight, Zap, Trophy, Unlock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -18,23 +17,25 @@ const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
   .map((id) => GAMES_CATALOG.find((g) => g.id === id))
   .filter((g): g is NonNullable<typeof g> => Boolean(g));
 
-/** Purely decorative wash per card, cycled by position so adding a game to
- *  HOMEPAGE_GAME_IDS never requires hand-picking a new colour.
+/** The layout of the six tiles, by position in HOMEPAGE_GAME_IDS.
  *
- *  History, because it explains the shape: six hexes from no palette at all
- *  (peach, baby blue, pink, lilac, green, cyan) → six palette hexes, which
- *  went stale the moment Mint and Peach were tuned → theme colours. And as of
- *  20 Sep the pink washes are gone with them: pink is a rare accent on this
- *  site now, not a fill. Green and pale Yellow alternate instead. Whole
- *  literal class strings on purpose: Tailwind's scanner only keeps what it
- *  can see. */
-const CARD_STYLES = [
-  { color: "from-klovers-yellow/80 to-klovers-yellow/20", border: "hover:border-foreground" },
-  { color: "from-amber-100 to-amber-50", border: "hover:border-klovers-yellow" },
-  { color: "from-klovers-yellow/80 to-klovers-yellow/20", border: "hover:border-foreground" },
-  { color: "from-amber-100 to-amber-50", border: "hover:border-klovers-yellow" },
-  { color: "from-klovers-yellow/80 to-klovers-yellow/20", border: "hover:border-foreground" },
-  { color: "from-amber-100 to-amber-50", border: "hover:border-klovers-yellow" },
+ *  20 Sep: the row of five equal cards left two orphans on a second line and
+ *  a hole to the right of them. It is a bento now: the first game is a big
+ *  yellow tile (2x2 on desktop), the next four are small, the sixth runs the
+ *  full width of its row, and the "See all" tile beside it makes the last row
+ *  exactly four columns wide. Seven pieces, no gap - if a game is added to or
+ *  removed from HOMEPAGE_GAME_IDS the packing has to be redone.
+ *
+ *  Edges are `card-edge`: 2px Charcoal and a hard offset shadow on the light
+ *  theme, a plain border on dark. Whole literal class strings on purpose:
+ *  Tailwind's scanner only keeps what it can see. */
+const TILES = [
+  { span: "col-span-2 lg:row-span-2", bg: "bg-klovers-yellow", big: true },
+  { span: "col-span-1", bg: "bg-card", big: false },
+  { span: "col-span-1", bg: "bg-ivory dark:bg-card", big: false },
+  { span: "col-span-1", bg: "bg-ivory dark:bg-card", big: false },
+  { span: "col-span-1", bg: "bg-card", big: false },
+  { span: "col-span-2", bg: "bg-klovers-yellow/40 dark:bg-card", big: false },
 ];
 
 /** Small marketing accent — not part of the shared catalog on purpose,
@@ -113,59 +114,69 @@ const HomeGamesSection = () => {
           </div>
         </div>
 
-        {/* Games grid */}
+        {/* Games — a bento, see TILES */}
         <div
-          className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-8 transition-all duration-700 delay-150 ${
+          className={`grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 transition-all duration-700 delay-150 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
           {HOMEPAGE_GAMES.map((game, i) => {
-            const style = CARD_STYLES[i % CARD_STYLES.length];
+            const tile = TILES[i % TILES.length];
             return (
               <button
                 key={game.id}
                 onClick={() => navigate("/games")}
-                className={`group relative rounded-2xl bg-gradient-to-br ${style.color} border border-border ${style.border} hover:shadow-lg transition-all duration-200 p-4 text-left cursor-pointer`}
+                className={`group card-edge relative flex flex-col rounded-2xl ${tile.bg} ${tile.span} text-start cursor-pointer transition-transform duration-200 hover:-translate-y-1 hover:-rotate-[0.6deg] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                  tile.big ? "p-6 sm:p-8 justify-between min-h-[15rem]" : "p-4"
+                }`}
               >
                 {HOT_GAME_IDS.has(game.id) && (
-                  <span className="absolute top-2 right-2 text-[10px] bg-klovers-yellow text-charcoal font-bold px-1.5 py-0.5 rounded-full">
-                    🔥
+                  <span className="absolute top-3 end-3 rounded-md bg-charcoal px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory">
+                    {tr("Hot", "رائج")} 🔥
                   </span>
                 )}
-                <div className="text-3xl mb-2">{game.emoji}</div>
-                <h3 className="font-bold text-foreground text-sm leading-tight mb-1">{t(game.titleKey)}</h3>
-                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{t(game.descKey)}</p>
-                <div className="mt-2 flex items-center gap-1 text-[11px] text-foreground/70 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  {tr("Play now", "العب الآن")} <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                <div className={tile.big ? "text-7xl sm:text-8xl" : "text-3xl mb-2"}>{game.emoji}</div>
+                <div>
+                  <h3 className={`font-extrabold text-foreground leading-tight ${tile.big ? "text-2xl sm:text-3xl mb-2" : "text-sm mb-1"}`}>
+                    {t(game.titleKey)}
+                  </h3>
+                  <p className={`text-foreground/70 leading-relaxed ${tile.big ? "text-base max-w-xs" : "text-xs line-clamp-2"}`}>
+                    {t(game.descKey)}
+                  </p>
+                  {tile.big && (
+                    <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-charcoal px-4 py-2 text-sm font-bold text-ivory">
+                      {tr("Play now", "العب الآن")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                    </span>
+                  )}
                 </div>
               </button>
             );
           })}
 
-          {/* "Play All" card. It used to be a full-yellow gradient, a few
-              hundred pixels above this section's yellow CTA — two primary
-              actions on one screen, which the board rules out. Charcoal keeps
-              it prominent without spending the yellow twice. */}
+          {/* "See all" — Charcoal, so the section's one yellow action stays the
+              button underneath. It is the seventh piece of the bento: two
+              columns wide, next to the sixth tile. */}
           <button
             onClick={() => navigate("/games")}
-            className="group rounded-2xl bg-charcoal hover:bg-charcoal/90 transition-all duration-200 p-4 text-left cursor-pointer flex flex-col justify-between shadow-lg"
+            className="group card-edge col-span-2 flex items-center justify-between gap-4 rounded-2xl bg-charcoal p-5 text-start cursor-pointer transition-transform duration-200 hover:-translate-y-1 dark:bg-klovers-yellow"
           >
-            <Badge className="bg-white/15 text-white hover:bg-white/25 border-0 text-[10px] w-fit mb-2">
-              {tr("All Free", "الكل مجاني")}
-            </Badge>
             <div>
-              <p className="font-bold text-white text-sm leading-tight">{tr(`See All ${totalGames} Games`, `شاهد كل الألعاب الـ ${totalGames}`)}</p>
-              <div className="flex items-center gap-1 mt-1.5">
-                <span className="text-xs text-white/80">{tr("Start now", "ابدأ الآن")}</span>
-                <ArrowRight className="h-3 w-3 text-white/80 group-hover:translate-x-0.5 transition-transform rtl:rotate-180" />
-              </div>
+              <span className="inline-block rounded-md bg-ivory/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory dark:bg-charcoal/15 dark:text-charcoal">
+                {tr("All Free", "الكل مجاني")}
+              </span>
+              <p className="mt-2 text-lg font-extrabold leading-tight text-ivory dark:text-charcoal">
+                {tr(`See all ${totalGames} games`, `شاهد كل الألعاب الـ ${totalGames}`)}
+              </p>
             </div>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-klovers-yellow text-charcoal transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 dark:bg-charcoal dark:text-klovers-yellow">
+              <ArrowRight className="h-5 w-5 rtl:rotate-180" />
+            </span>
           </button>
         </div>
 
         {/* XP banner */}
         <div
-          className={`bg-gradient-to-r from-klovers-yellow/70 via-klovers-yellow/15 to-klovers-yellow/40 border border-border rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 transition-all duration-700 delay-300 ${
+          className={`card-edge bg-card rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 transition-all duration-700 delay-300 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
@@ -175,7 +186,7 @@ const HomeGamesSection = () => {
           </div>
           <div className="flex gap-2 text-xs shrink-0">
             {[tr("🥇 Top Learner", "🥇 الأفضل"), tr("🔥 On Fire", "🔥 مندفع"), tr("📚 Scholar", "📚 باحث")].map((b) => (
-              <span key={b} className="bg-card border border-border rounded-full px-2.5 py-1 font-medium text-foreground">{b}</span>
+              <span key={b} className="rounded-md bg-klovers-yellow px-2.5 py-1 font-bold text-charcoal">{b}</span>
             ))}
           </div>
         </div>

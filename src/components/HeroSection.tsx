@@ -211,7 +211,7 @@ const HeroSection = () => {
         </span>
 
         {/* ── Hero text content ────────────────────────────── */}
-        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-44">
+        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center py-10">
           <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
             {/* Teacher chip — the one thing on this page no competitor has. */}
@@ -350,10 +350,14 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* ── Proof strip — pinned above the card overlap ─────────────
-            pb-24/pb-32 is not spacing taste: it is exactly the room the cards
-            below take out of this section when they lift onto the photo. */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 pb-24 sm:pb-32 px-4">
+        {/* ── Proof strip — IN the flow, under the text ──────────────
+            It used to be absolutely pinned to the bottom, with the text column
+            padded to make room. On a short window the text simply outgrew the
+            padding and the Hangul-sheet link printed over the numbers. In the
+            flow, the section grows instead and the two can never touch.
+            pb-24/pb-32 is still the room the cards below take out of this
+            section when they lift onto the photo. */}
+        <div className="relative z-10 w-full pb-24 sm:pb-32 px-4">
           <div className="max-w-3xl mx-auto">
             <div className="w-full h-px bg-gradient-to-r from-transparent via-ivory/25 to-transparent mb-6" />
             <div className="grid grid-cols-3 gap-4 md:gap-8">

@@ -130,16 +130,25 @@ const LearningRoadmap = () => {
   const activeChips = chipsFrom(isAr ? active.eyebrow_ar : active.eyebrow_en);
 
   return (
-    <section className="relative bg-background py-20 md:py-28">
-      <div className="container mx-auto px-4">
+    <section className="relative overflow-hidden bg-background py-20 md:py-28">
+      {/* A wash of yellow behind the map. On a wide screen the journey used to
+          float as one narrow card in a big empty field; the wash and the
+          two-column layout below are what fill it. Decorative only. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 top-1/2 hidden h-[34rem] w-[34rem] -translate-y-1/2 rounded-full bg-klovers-yellow/25 blur-3xl lg:block"
+      />
 
-        {/* The whole journey is one card, as in the mockup: heading, map and
-            the open stop's detail read as a single object. */}
-        <div className="mx-auto w-full max-w-[26rem] overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+      <div className="container relative mx-auto px-4">
+        {/* Mobile: heading, map, stop, button, in that order. Desktop: the words
+            on the start side, the map on the other, spanning all three rows. */}
+        <div className="mx-auto grid max-w-5xl items-center gap-x-16 gap-y-8 lg:grid-cols-2 lg:grid-rows-[auto_auto_auto]">
 
-          {/* Heading, inside the card and set to the start edge */}
-          <div className="px-5 pb-1 pt-6 text-start sm:px-6">
-            <h2 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
+          <div className="text-start lg:col-start-1 lg:row-start-1 lg:self-end">
+            <span className="inline-block rounded-md bg-charcoal px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-ivory">
+              {isAr ? "7 محطات · A1 ← C2" : "7 stops · A1 → C2"}
+            </span>
+            <h2 className="mt-4 text-4xl font-extrabold leading-tight text-foreground md:text-5xl">
               {t("roadmap", "title")}
             </h2>
 
@@ -148,19 +157,20 @@ const LearningRoadmap = () => {
               aria-hidden="true"
               viewBox="0 0 240 18"
               fill="none"
-              className="mb-2 mt-1.5 h-3 w-36 text-klovers-yellow"
+              className="mb-3 mt-2 h-4 w-48 text-klovers-yellow"
             >
               <path d="M7 12C60 4 134 3 197 8c14 1 27 3 36 2" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
             </svg>
 
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base text-muted-foreground md:text-lg">
               {t("roadmap", "subtitle")}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground/80">
+            <p className="mt-1 text-sm text-muted-foreground/80">
               {isAr ? "اضغط على أي محطة في الطريق لتفاصيلها" : "Tap any stop on the path for its details"}
             </p>
           </div>
 
+          <div className="mx-auto w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-charcoal bg-card lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:justify-self-center dark:border-border">
           {/* The map. Its aspect ratio is the scene's viewBox, so a node placed
               at a percentage of these two numbers lands on the road at every
               width. Do not change one without the other. */}
@@ -227,9 +237,11 @@ const LearningRoadmap = () => {
               );
             })}
           </div>
+          </div>
 
-          {/* The open stop */}
-          <div className="border-t border-border p-5 sm:p-6">
+          {/* The open stop — its own card now, beside the map on desktop. */}
+          <div className="w-full rounded-3xl border border-border bg-card lg:col-start-1 lg:row-start-2">
+          <div className="p-5 sm:p-6">
             <div className="flex items-start gap-3">
               <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${activeMeta.tile}`}>
                 <ActiveIcon className="h-5 w-5 text-charcoal" aria-hidden="true" />
@@ -261,10 +273,10 @@ const LearningRoadmap = () => {
               </div>
             </div>
           </div>
-        </div>
+          </div>
 
-        {/* CTA */}
-        <div className="mt-10 text-center">
+          {/* CTA */}
+          <div className="text-center lg:col-start-1 lg:row-start-3 lg:self-start lg:text-start">
           <Button size="lg" asChild className="h-12 gap-2 rounded-full px-8 text-base font-bold">
             <Link to="/placement-test">
               {t("roadmap", "cta")}
@@ -272,6 +284,8 @@ const LearningRoadmap = () => {
             </Link>
           </Button>
           <p className="mt-3 text-sm text-muted-foreground">{t("roadmap", "ctaSub")}</p>
+          </div>
+
         </div>
       </div>
     </section>
