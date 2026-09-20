@@ -1,6 +1,9 @@
 import { Send, Facebook } from "lucide-react";
 import { logLeadEvent } from "@/lib/leadTracking";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { GIRL_WAVE } from "@/assets/band/girlWave";
+import { BOY_WAVE } from "@/assets/band/boyWave";
+import { KLOBI_WAVE } from "@/assets/band/klobiWave";
 
 /**
  * The community band: Telegram and Facebook, between the testimonials and the
@@ -16,49 +19,60 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * verified count Klovers has is 200+ students in 13 years, it lives in the
  * hero, and it counts STUDENTS - not community members, which nobody has
  * measured. A band that asks people to join a community does not need to
- * claim its size.
+ * claim its size. Same call as the referral card's invented "+10,000" and
+ * the five invented leaderboard players that were deleted rather than scaled
+ * up. If the platforms' own member counts are ever pulled, a real number can
+ * come back here with its source.
  *
- * This is the same call as the referral card's invented "+10,000" and the
- * five invented leaderboard players that were deleted rather than scaled up.
- * If the Telegram and Facebook member counts are ever pulled from the
- * platforms themselves, a real number can come back here with its source.
+ * 2026-09-20 (c): THREE CUTOUTS, NOT ONE PICTURE. Re first supplied a single
+ * composite illustration of the three characters with speech bubbles. It was
+ * lovely and it is the wrong shape for a band: a composite bakes in the
+ * arrangement, the spacing and the background it was drawn on. These three
+ * transparent cutouts stand on the Mint itself, so the band's colour shows
+ * between them; they can be re-ordered or re-spaced; and they shrink
+ * independently on a phone instead of becoming one unreadable strip.
  *
- * 2026-09-20 (c): THE CHARACTERS. Re supplied the artwork - the girl, the boy
- * and Klobi the dragon, greeting the reader in Korean with English glosses,
- * and "Same Journey, New Friend" lettered into the picture. That line is the
- * band's whole argument, so the copy beside it does not repeat it.
+ * Klobi is SHORTER IN HIS OWN FILE rather than scaled down here, so
+ * `items-end` alone puts the three at the right relative heights. Do not
+ * "fix" that by giving all three the same height class.
  *
- * The image is decorative: the speech bubbles inside it are pictures of
- * words, not text a screen reader can reach, and the band's meaning is
- * carried by the heading and the two links. Hence the empty alt. If it ever
- * becomes the only place something is said, that has to change.
+ * They are decoration: the band's meaning is the heading and the two links,
+ * so every one of them is alt="" and aria-hidden.
  */
 
 /**
- * Lives in public/, not inlined as a data URI like src/assets/characters.ts.
- * That file explains the rule it was breaking: above roughly 20KB an image
- * belongs in public/ as a real file, and this one is ~47KB.
+ * The cast, in the order they stand: Klobi between the two of them, as on the
+ * brand sheet. Literal class strings - Tailwind's scanner only keeps what it
+ * can see, so these must never be assembled from fragments.
  */
-const CHARACTERS_IMAGE = "/assets/klovers-characters.webp";
+const CAST = [
+  { src: GIRL_WAVE, cls: "h-[92px] sm:h-[120px]" },
+  { src: KLOBI_WAVE, cls: "-ms-2 h-[58px] sm:h-[76px]" },
+  { src: BOY_WAVE, cls: "-ms-2 h-[92px] sm:h-[120px]" },
+];
 
 const CommunityBand = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
 
   return (
-    <section className="border-y border-charcoal/10 bg-mint/60 py-8 md:py-10">
+    <section className="border-y border-charcoal/10 bg-mint/60 py-6 md:py-8">
       <div className="container mx-auto px-4">
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center md:flex-row md:justify-between md:gap-10 md:text-start">
-          <img
-            src={CHARACTERS_IMAGE}
-            alt=""
-            aria-hidden="true"
-            width={537}
-            height={432}
-            loading="lazy"
-            decoding="async"
-            className="w-56 shrink-0 rounded-2xl shadow-sm sm:w-64 md:w-72"
-          />
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-5 text-center md:flex-row md:justify-between md:gap-10 md:text-start">
+
+          {/* The three of them, standing on the band. */}
+          <div className="flex shrink-0 items-end" aria-hidden="true">
+            {CAST.map((c, i) => (
+              <img
+                key={i}
+                src={c.src}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className={`w-auto ${c.cls}`}
+              />
+            ))}
+          </div>
 
           <div className="md:flex-1">
             <p className="text-xl font-extrabold leading-tight text-charcoal md:text-2xl">
@@ -97,6 +111,7 @@ const CommunityBand = () => {
               </a>
             </div>
           </div>
+
         </div>
       </div>
     </section>
