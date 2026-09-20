@@ -43,6 +43,8 @@ const SpeedReadGame = lazy(() => import("@/components/games/SpeedReadGame"));
 const ReadingChoiceGame = lazy(() => import("@/components/games/ReadingChoiceGame"));
 const SentenceReadGame = lazy(() => import("@/components/games/SentenceReadGame"));
 const PhonicsReadGame = lazy(() => import("@/components/games/PhonicsReadGame"));
+const ConversationOrderGame = lazy(() => import("@/components/games/ConversationOrderGame"));
+const StoryGapGame = lazy(() => import("@/components/games/StoryGapGame"));
 
 /**
  * A guest who finishes a game is asked to sign up — once per browser session.
@@ -383,6 +385,8 @@ const GamesPage = () => {
       case "readingchoice": return <Suspense fallback={<GameFallback />}><ReadingChoiceGame onGameComplete={onComplete} /></Suspense>;
       case "sentenceread": return <Suspense fallback={<GameFallback />}><SentenceReadGame onGameComplete={onComplete} /></Suspense>;
       case "phonics": return <Suspense fallback={<GameFallback />}><PhonicsReadGame onGameComplete={onComplete} /></Suspense>;
+      case "conversation": return <Suspense fallback={<GameFallback />}><ConversationOrderGame onGameComplete={onComplete} /></Suspense>;
+      case "storygap": return <Suspense fallback={<GameFallback />}><StoryGapGame onGameComplete={onComplete} /></Suspense>;
       default: return null;
     }
   };

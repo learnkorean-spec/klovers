@@ -3,6 +3,7 @@ import {
   Layers, Brain, PenLine, Hash, Palette, BookOpen, MessageCircle,
   ArrowLeftRight, Shuffle, Calculator, Tv, Clock, Keyboard, Volume2,
   CreditCard, Zap, MousePointerClick, BookOpenCheck, Headphones,
+  ListOrdered, BookText,
 } from "lucide-react";
 
 export type GameDifficulty = "beginner" | "intermediate";
@@ -65,6 +66,14 @@ export const GAMES_CATALOG: GameCatalogEntry[] = [
   { id: "readingchoice", titleKey: "games.readingchoiceTitle", descKey: "games.readingchoiceDesc", icon: MousePointerClick, emoji: "👆", difficulty: "beginner", free: false },
   { id: "sentenceread", titleKey: "games.sentencereadTitle", descKey: "games.sentencereadDesc", icon: BookOpenCheck, emoji: "📖", difficulty: "intermediate", free: false },
   { id: "phonics", titleKey: "games.phonicsTitle", descKey: "games.phonicsDesc", icon: Headphones, emoji: "🎧", difficulty: "beginner", free: false },
+  // Added 2026-09-20: two mechanics that already existed as complete,
+  // unused components in this same folder (see the games-system-review
+  // handover) — a drag/reorder game and a multi-blank story game, neither
+  // of which is "another 4-option quiz with different words" like most of
+  // the catalog above. Gated (free: false), consistent with the other
+  // longer-form/intermediate entries.
+  { id: "conversation", titleKey: "games.conversationTitle", descKey: "games.conversationDesc", icon: ListOrdered, emoji: "💬", difficulty: "intermediate", free: false },
+  { id: "storygap", titleKey: "games.storygapTitle", descKey: "games.storygapDesc", icon: BookText, emoji: "📔", difficulty: "intermediate", free: false },
 ];
 
 /** Derived, not hand-maintained — see the `free` field doc above. */
