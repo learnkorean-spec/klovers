@@ -313,7 +313,15 @@ export default function GroupsToStart() {
         ((groupsRes.data ?? []) as Array<{ id: string; name: string | null }>).map(g => [g.id, g.name || "Group"]),
       );
       const groupIdByUserId = new Map<string, string>();
-      for (const m of memberRows) if (!groupIdByUserId.has(m.user_id)) groupIdByUserId.set(m.user_id, m.group_id);
+      // A DB guard (`enforce_group_membership_guard`) requires every active
+      // membership row to carry a real, approved+paid enrolment — so moving
+      // someone who already has one must carry it forward, never null it out
+      // by treating her as a fresh account-only lead.
+      const enrollmentIdByUserId = new Map<string, string | null>();
+      for (const m of memberRows) {
+        if (!groupIdByUserId.has(m.user_id)) groupIdByUserId.set(m.user_id, m.group_id);
+        if (!enrollmentIdByUserId.has(m.user_id)) enrollmentIdByUserId.set(m.user_id, m.enrollment_id);
+      }
 
       const rows: GroupRow[] = ((groupsRes.data ?? []) as Array<{
         id: string; name: string | null; package_id: string | null; start_date: string | null;
@@ -403,7 +411,10 @@ export default function GroupsToStart() {
         .map(p => {
           const currentGroupId = groupIdByUserId.get(p.user_id) ?? null;
           return {
-            enrollmentId: null,
+            // Already seated? Carry over her real enrolment link (may itself
+            // be null, if she was seated without one) — only a lead who was
+            // never seated anywhere is genuinely enrolment-less.
+            enrollmentId: currentGroupId ? enrollmentIdByUserId.get(p.user_id) ?? null : null,
             userId: p.user_id,
             level: p.course_level_key,
             name: p.name || "Unnamed",
@@ -494,10 +505,24 @@ export default function GroupsToStart() {
   const addStudent = async (g: GroupRow, c: Candidate) => {
     setAddingBusy(true);
     try {
-      // If she's already seated somewhere else, unseat her there first — this
-      // is the one-step "move" that a real class change needs. Her old
-      // enrolment link isn't cleared to null here the way a plain Remove does
-      // it, because the very next statement points it at this group instead.
+      // Seat her in the new group FIRST, before touching her old seat. A DB
+      // guard (`enforce_group_membership_guard`) can reject this insert —
+      // group not active, enrolment not approved/paid, or full — and if that
+      // happens after she'd already been unseated from her old group, she'd
+      // be left seated nowhere. Direct insert, not the auto-matcher's
+      // assign_student_to_group RPC: that RPC picks (or silently creates) a
+      // group for a package, which is exactly wrong here — the admin already
+      // chose this exact group, active or not.
+      const { error: insErr } = await supabase
+        .from("pkg_group_members")
+        .upsert(
+          { group_id: g.id, user_id: c.userId, enrollment_id: c.enrollmentId, member_status: "active" },
+          { onConflict: "group_id,user_id" },
+        );
+      if (insErr) throw insErr;
+
+      // Only now unseat her from wherever she was — the new seat is already
+      // confirmed to have taken.
       if (c.currentGroupId && c.currentGroupId !== g.id) {
         const { error: delErr } = await supabase
           .from("pkg_group_members")
@@ -506,18 +531,6 @@ export default function GroupsToStart() {
           .eq("user_id", c.userId);
         if (delErr) throw delErr;
       }
-
-      // Direct insert, not the auto-matcher's assign_student_to_group RPC:
-      // that RPC picks (or silently creates) a group for a package, which is
-      // exactly wrong here — the admin already chose this exact group,
-      // active or not.
-      const { error: insErr } = await supabase
-        .from("pkg_group_members")
-        .upsert(
-          { group_id: g.id, user_id: c.userId, enrollment_id: c.enrollmentId, member_status: "active" },
-          { onConflict: "group_id,user_id" },
-        );
-      if (insErr) throw insErr;
 
       // Only an enrolment-backed add touches `enrollments` — someone with no
       // enrolment (an account-only candidate) has no row here to update, and
@@ -543,7 +556,21 @@ export default function GroupsToStart() {
       setAddFilter("");
       await load();
     } catch (e: any) {
-      toast({ title: "Could not add that student", description: e?.message ?? String(e), variant: "destructive" });
+      const msg = e?.message ?? String(e);
+      // A DB guard (`enforce_group_membership_guard`) blocks this insert for
+      // reasons an admin should read in plain terms, not as raw Postgres text.
+      const friendly = msg.includes("no enrollment is linked")
+        ? "She has no approved enrolment to seat her against — this group requires one (unlike a group with no capacity limit reached yet)."
+        : msg.includes("is not active")
+          ? "That group isn't active yet — start it first, then add her."
+          : msg.includes("neither paid nor confirmed")
+            ? "Her enrolment isn't paid or confirmed yet, so this group can't seat her until it is."
+            : msg.includes("is not approved")
+              ? "Her enrolment isn't approved yet, so this group can't seat her until it is."
+              : msg.includes("group is full")
+                ? "That group is already at capacity."
+                : msg;
+      toast({ title: "Could not add that student", description: friendly, variant: "destructive" });
     } finally {
       setAddingBusy(false);
     }
