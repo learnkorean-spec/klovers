@@ -492,6 +492,7 @@ export default function GroupsToStart() {
       <div className="grid gap-2 sm:grid-cols-2">
         {waiting.map(g => {
           const date = dates[g.id] ?? "";
+          const isPast = date !== "" && date < today;
           const imminent = date !== "" && date <= addDaysISO(today, 1);
           const confirming = confirmId === g.id;
           const editing = editingId === g.id;
@@ -522,7 +523,12 @@ export default function GroupsToStart() {
                   <input
                     type="date"
                     value={date}
-                    min={today}
+                    // No `min` here on purpose: a class that already met — the
+                    // trial or first session happened before anyone got round
+                    // to starting the group in this screen — needs to be
+                    // dated for when it actually happened, not forced into the
+                    // future. Backdating just means `due_at` (3 days after)
+                    // may itself already be past, which is correct, not a bug.
                     onChange={e => {
                       setConfirmId(null);
                       setDates(prev => ({ ...prev, [g.id]: e.target.value }));
@@ -570,12 +576,15 @@ export default function GroupsToStart() {
 
                 {confirming && (
                   <p className="text-[11px] text-muted-foreground">
-                    First class {prettyDate(date)}. Payment due 23:00 Cairo on {prettyDate(addDaysISO(date, 3))}.
+                    {isPast ? "Recording a class that already happened: " : "First class "}
+                    {prettyDate(date)}. Payment due 23:00 Cairo on {prettyDate(addDaysISO(date, 3))}.
                     {g.seated === 0
                       ? " Nobody here is linked to an enrolment, so no letter goes out."
-                      : imminent
-                        ? " The payment letter goes out within the hour."
-                        : " The payment letter goes out the day before the class."}
+                      : isPast
+                        ? " That deadline may already be past — the payment letter goes out on the next run after this is saved."
+                        : imminent
+                          ? " The payment letter goes out within the hour."
+                          : " The payment letter goes out the day before the class."}
                   </p>
                 )}
 
