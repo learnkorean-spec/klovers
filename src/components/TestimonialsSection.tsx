@@ -15,10 +15,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * Recommendations in 2018 — so not one of these reviewers was ever shown a
  * five-point scale to rate anything on. Each card now carries what Facebook
  * itself displays beside the name, "👍 Recommends", which is the endorsement
- * they actually gave. The summary above the cards quotes Facebook's own
- * metric for the same reason (100% recommend, from 20 reviews); the star
- * rating on this site belongs to the Google Business Profile and is shown in
- * the hero strip, where it is labelled as Google's.
+ * they actually gave.
  *
  * 2026-09-20 (a): the section no longer borrows Facebook's blue, or the green
  * ticks. Klovers owns five colours and this page uses only those; the
@@ -34,6 +31,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * real, still unedited; the other language's six are simply not rendered to
  * someone who cannot read them. If you add a review, add it with its `lang`
  * and it appears for that audience.
+ *
+ * 2026-09-20 (c): ONE COUNT, IN ONE PLACE. The badge read "100% Recommend ·
+ * 16 Facebook Reviews" while the line directly beneath it read "from 20
+ * reviews on Facebook" — both on screen at once, on the section whose whole
+ * job is to be believed. The badge has stopped counting; it is the link to
+ * the reviews page and nothing else.
  */
 const reviews = [
   {
@@ -244,7 +247,9 @@ const TestimonialsSection = () => {
   return (
     <section className="py-20 md:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4 mb-10 text-center">
-        {/* Badge */}
+        {/* The badge is the LINK, not a second scoreboard. It used to read
+            "100% Recommend · 16 Facebook Reviews" from translations.ts while
+            the summary below said 20 — see note (c) at the top of this file. */}
         <a
           href="https://www.facebook.com/kloversegy/reviews"
           target="_blank"
@@ -253,7 +258,7 @@ const TestimonialsSection = () => {
         >
           <Facebook className="h-4 w-4 text-charcoal" />
           <span className="text-sm font-semibold text-charcoal">
-            {t("testimonialsSection.badge")}
+            {isAr ? "المراجعات على فيسبوك" : "Reviews on Facebook"}
           </span>
         </a>
 
@@ -264,7 +269,8 @@ const TestimonialsSection = () => {
           {t("testimonialsSection.subtitle")}
         </p>
 
-        {/* Summary — Facebook's own words, because this is the Facebook section.
+        {/* Summary — Facebook's own words, because this is the Facebook section,
+            and now the ONLY place on this section carrying a count.
 
             It read "★★★★★ 4.9 / 5.0 · 200+ students" (translations.ts,
             `testimonialsSection.ratingSuffix`). Checked against the page on
@@ -282,8 +288,8 @@ const TestimonialsSection = () => {
             Written inline rather than through the dictionary because these
             two strings are a measurement with a date attached, like the hero
             stats beside them, and both need to change together the day either
-            platform's number moves. `ratingSuffix` is left in translations.ts,
-            unused. */}
+            platform's number moves. `ratingSuffix` and `badge` are left in
+            translations.ts, unused. */}
         <div className="flex items-center justify-center gap-2 mt-4">
           <ThumbsUp className="h-5 w-5 text-foreground/70 shrink-0" aria-hidden="true" />
           <span className="text-lg font-bold text-foreground">
