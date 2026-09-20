@@ -52,7 +52,8 @@ const StreakCalendar = lazy(() =>
 const DailyBonusCard = lazy(() =>
   import("@/components/DailyBonusCard").then(m => ({ default: m.DailyBonusCard }))
 );
-import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, CalendarDays, Users, CreditCard, BookOpen, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Trophy, Zap, Pencil, Check, X, FlameIcon, Download, Copy, Gift, FileText, Award } from "lucide-react";
+import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, CalendarDays, Users, CreditCard, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Pencil, Check, X, Download, Copy } from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { Input } from "@/components/ui/input";
 import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -476,17 +477,17 @@ const StudentDashboard = () => {
   const streakCountUp = useCountUp(gamification.streak.current_streak, 800);
 
   const quickStats = useMemo(() => [
-    { id: "totalXp", label: t("dashboardPage.totalXp"), rawValue: gamification.totalXp, sub: weeklyXp > 0 ? tInterpolate(t("dashboardPage.thisWeekXp"), { count: weeklyXp }) : undefined, icon: Zap, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30 border border-black/10 ring-1 ring-black/5" },
-    { id: "streak", label: t("dashboardPage.dayStreakLabel"), rawValue: gamification.streak.current_streak, sub: tInterpolate(t("dashboardPage.bestStreakSub"), { count: gamification.streak.longest_streak }), icon: FlameIcon, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
-    { id: "lessons", label: t("dashboardPage.lessonsDone"), rawValue: lessonsCompleted, icon: BookOpen, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
-    { id: "league", label: t("dashboardPage.leagueLabel"), rawValue: -1, icon: Trophy, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
+    { id: "totalXp", label: t("dashboardPage.totalXp"), rawValue: gamification.totalXp, sub: weeklyXp > 0 ? tInterpolate(t("dashboardPage.thisWeekXp"), { count: weeklyXp }) : undefined, art: "badge-blossom" as KloverIconName, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30 border border-black/10 ring-1 ring-black/5" },
+    { id: "streak", label: t("dashboardPage.dayStreakLabel"), rawValue: gamification.streak.current_streak, sub: tInterpolate(t("dashboardPage.bestStreakSub"), { count: gamification.streak.longest_streak }), art: "calendar-check" as KloverIconName, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
+    { id: "lessons", label: t("dashboardPage.lessonsDone"), rawValue: lessonsCompleted, art: "books-stack" as KloverIconName, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
+    { id: "league", label: t("dashboardPage.leagueLabel"), rawValue: -1, art: "growth-chart" as KloverIconName, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
   ], [t, tInterpolate, gamification.totalXp, gamification.streak.current_streak, gamification.streak.longest_streak, lessonsCompleted, weeklyXp]);
 
   const quickActions = useMemo(() => [
-    { label: t("dashboardPage.qaTextbook"), desc: t("dashboardPage.qaTextbookDesc"), emoji: "📚", path: "/textbook", bg: "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-blue-500/25" },
-    { label: t("dashboardPage.qaQuiz"), desc: t("dashboardPage.qaQuizDesc"), emoji: "⚡", path: "/daily-quiz", bg: "bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 shadow-orange-500/25" },
-    { label: t("dashboardPage.qaGames"), desc: t("dashboardPage.qaGamesDesc"), emoji: "🎮", path: "/games", bg: "bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-green-500/25" },
-    { label: t("dashboardPage.qaVocab"), desc: t("dashboardPage.qaVocabDesc"), emoji: "🧠", path: "/review", bg: "bg-gradient-to-br from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 shadow-violet-500/25" },
+    { label: t("dashboardPage.qaTextbook"), desc: t("dashboardPage.qaTextbookDesc"), art: "books-stack" as KloverIconName, path: "/textbook", bg: "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-blue-500/25" },
+    { label: t("dashboardPage.qaQuiz"), desc: t("dashboardPage.qaQuizDesc"), art: "lightbulb-sprout" as KloverIconName, path: "/daily-quiz", bg: "bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 shadow-orange-500/25" },
+    { label: t("dashboardPage.qaGames"), desc: t("dashboardPage.qaGamesDesc"), art: "klobi-headphones" as KloverIconName, path: "/games", bg: "bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-green-500/25" },
+    { label: t("dashboardPage.qaVocab"), desc: t("dashboardPage.qaVocabDesc"), art: "flashcard-ga" as KloverIconName, path: "/review", bg: "bg-gradient-to-br from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 shadow-violet-500/25" },
   ], [t]);
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -622,6 +623,7 @@ const StudentDashboard = () => {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight break-words">{greeting}{language === "ar" ? "، " : ", "}<bdi>{displayName.split(" ")[0]}</bdi> 👋</h1>
                 <p className="text-xs text-muted-foreground mt-1">{t("dashboardPage.subtitle")}</p>
               </div>
+              <KloverIcon name="klobi-headphones" className="hidden sm:block h-16 w-16 shrink-0" />
               <Button variant="outline" size="sm" onClick={handleExportProgress} aria-label={t("dashboardPage.exportAria")} className="min-h-11 min-w-11 gap-1.5 shrink-0 bg-background/80">
                 <Download className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("dashboardPage.export")}</span>
@@ -731,9 +733,7 @@ const StudentDashboard = () => {
               <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent ring-1 ring-black/10">
                 <CardContent className="pt-6 pb-6 space-y-4">
                   <div className="flex items-start gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0 border border-black/10">
-                      <GraduationCap className="h-6 w-6 text-amber-600" />
-                    </div>
+                    <KloverIcon name="klobi-reading" className="h-12 w-12 sm:h-14 sm:w-14" />
                     <div>
                       <h2 className="text-lg font-bold text-foreground">{t("dashboardPage.startJourneyTitle")}</h2>
                       <p className="text-sm text-muted-foreground mt-1">{t("dashboardPage.startJourneyBody")}</p>
@@ -770,7 +770,7 @@ const StudentDashboard = () => {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" /> {t("dashboardPage.koreanLevel")}
+                    <KloverIcon name="growth-chart" className="h-7 w-7" /> {t("dashboardPage.koreanLevel")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -805,7 +805,7 @@ const StudentDashboard = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2"><Trophy className="h-5 w-5" /> {t("dashboardPage.myLeague")}</CardTitle>
+                    <CardTitle className="text-lg flex items-center gap-2"><KloverIcon name="badge-blossom" className="h-7 w-7" /> {t("dashboardPage.myLeague")}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <LeagueProgressBar totalXp={gamification.totalXp} />
@@ -847,7 +847,7 @@ const StudentDashboard = () => {
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <GraduationCap className="h-5 w-5" /> {t("dashboardPage.koreanLevel")}
+                      <KloverIcon name="growth-chart" className="h-7 w-7" /> {t("dashboardPage.koreanLevel")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -956,7 +956,7 @@ const StudentDashboard = () => {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Trophy className="h-5 w-5" /> {t("dashboardPage.myLeague")}
+                    <KloverIcon name="badge-blossom" className="h-7 w-7" /> {t("dashboardPage.myLeague")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1046,9 +1046,7 @@ const StudentDashboard = () => {
                   onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank', 'noopener,noreferrer')}
                   className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center border border-black/10">
-                    <FileText className="h-5 w-5 text-amber-600" />
-                  </div>
+                  <KloverIcon name="growth-chart" className="h-10 w-10 sm:h-12 sm:w-12" />
                   <span className="text-sm font-semibold text-foreground">{t("dashboardPage.progressReport")}</span>
                   <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPdf")}</span>
                 </button>
@@ -1056,9 +1054,7 @@ const StudentDashboard = () => {
                   onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank', 'noopener,noreferrer')}
                   className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center border border-black/10">
-                    <Award className="h-5 w-5 text-amber-600" />
-                  </div>
+                  <KloverIcon name="badge-blossom" className="h-10 w-10 sm:h-12 sm:w-12" />
                   <span className="text-sm font-semibold text-foreground">{t("dashboardPage.certificate")}</span>
                   <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPng")}</span>
                 </button>
@@ -1071,7 +1067,7 @@ const StudentDashboard = () => {
           {/* ── Stats row + Weekly Goal side-by-side ── */}
           <div className="grid lg:grid-cols-5 gap-4">
             <div className="lg:col-span-3 grid grid-cols-2 gap-3">
-              {quickStats.map(({ id, label, rawValue, sub, icon: Icon, color }, idx) => {
+              {quickStats.map(({ id, label, rawValue, sub, art, color }, idx) => {
                 let displayValue: string;
                 if (id === "totalXp") displayValue = xpCountUp.toLocaleString();
                 else if (id === "streak") displayValue = tInterpolate(t("dashboardPage.streakDaysShort"), { count: streakCountUp });
@@ -1081,11 +1077,13 @@ const StudentDashboard = () => {
                 return (
                   <Card key={id} className={`border-border/60 ${isXP ? "bg-gradient-to-br from-yellow-50/60 to-transparent dark:from-yellow-950/20 border-yellow-200/60 dark:border-yellow-800/40" : ""}`}>
                     <CardContent className="pt-4 pb-3">
-                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center mb-2 ${color}`}>
-                        {id === "league" && league?.emoji
-                          ? <span className="text-base leading-none">{league.emoji}</span>
-                          : <Icon className="h-3.5 w-3.5" />}
-                      </div>
+                      {id === "league" && league?.emoji ? (
+                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center mb-2 ${color}`}>
+                          <span className="text-xl leading-none">{league.emoji}</span>
+                        </div>
+                      ) : (
+                        <KloverIcon name={art} className="h-10 w-10 mb-2" />
+                      )}
                       <p className={`font-extrabold text-foreground ${id === "league" ? "text-base leading-tight break-words" : `leading-none truncate ${isXP ? "text-2xl" : "text-xl"}`}`}>{displayValue}</p>
                       <p className="text-[11px] text-muted-foreground mt-1">{label}</p>
                       {sub && <p className={`text-[10px] font-medium mt-0.5 ${isXP ? "text-yellow-600 dark:text-yellow-400" : "text-muted-foreground"}`}>{sub}</p>}
@@ -1172,10 +1170,10 @@ const StudentDashboard = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {quickActions.filter(({ path }) => hasNoData || path !== "/textbook").map(({ label, desc, emoji, path }) => (
+              {quickActions.filter(({ path }) => hasNoData || path !== "/textbook").map(({ label, desc, art, path }) => (
                 <button key={label} onClick={() => navigate(path)} aria-label={`${label}: ${desc}`}
                   className="min-w-0 rounded-xl border bg-card p-3 text-start transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <div className="text-xl mb-1">{emoji}</div>
+                  <KloverIcon name={art} className="h-10 w-10 mb-1" />
                   <p className="font-semibold text-foreground text-sm">{label}</p>
                   <p className="text-muted-foreground text-xs">{desc}</p>
                 </button>
@@ -1224,7 +1222,7 @@ const StudentDashboard = () => {
             const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
             return (
               <div className="flex flex-wrap items-center gap-3 bg-violet-50/80 dark:bg-violet-950/20 border border-violet-200/50 dark:border-violet-800/40 rounded-xl px-4 py-2.5">
-                <Gift className="h-4 w-4 text-violet-500 shrink-0" />
+                <KloverIcon name="student-girl-heart" className="h-8 w-8 sm:h-9 sm:w-9" />
                 <span className="flex-1 text-sm text-muted-foreground min-w-0 break-words">
                   <strong className="text-foreground">{t("dashboardPage.referTitle")}</strong> · {t("dashboardPage.referEarn")}
                   {referralCount > 0 && <> · <span className="text-violet-600 font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}

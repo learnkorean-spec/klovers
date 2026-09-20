@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Phone,
 } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
 import { getUserTimezone } from "@/lib/viewerTimezone";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
@@ -173,9 +174,7 @@ export const StudentPrimaryAction = ({
       <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent ring-1 ring-black/10">
         <CardContent className="pt-6 pb-6 space-y-4">
           <div className="flex items-start gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0 border border-black/10">
-              <GraduationCap className="h-6 w-6 text-amber-600" />
-            </div>
+            <KloverIcon name="klobi-reading" className="h-12 w-12 sm:h-14 sm:w-14" />
             <div>
               <h2 className="text-lg font-bold text-foreground">{t("dashboardPage.startJourneyTitle")}</h2>
               <p className="text-sm text-muted-foreground mt-1">

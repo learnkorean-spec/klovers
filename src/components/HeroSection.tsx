@@ -1,7 +1,8 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen, MessagesSquare } from "lucide-react";
+import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 const heroPoster = "/hero-korean.jpg";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -117,25 +118,25 @@ const HeroSection = () => {
    */
   const cards = [
     {
-      icon: BookOpen,
+      icon: "klobi-reading" as KloverIconName,
       tone: "bg-mint",
       title: isAr ? "دروس مرتّبة" : "Structured lessons",
       body: isAr ? "من الهانغول إلى المحادثة" : "From basics to real conversations",
     },
     {
-      icon: MessagesSquare,
+      icon: "chat-annyeong" as KloverIconName,
       tone: "bg-white",
       title: isAr ? "تتدرّب مع ناس" : "Practice together",
       body: isAr ? "مجموعات صغيرة مباشرة" : "Learn with a supportive community",
     },
     {
-      icon: Globe,
+      icon: "globe-plane" as KloverIconName,
       tone: "bg-mint",
       title: isAr ? "كورية حقيقية" : "Real-life Korean",
       body: isAr ? "لغة تستعملها فعلاً" : "Useful, practical, cultural",
     },
     {
-      icon: Star,
+      icon: "namsan-tower" as KloverIconName,
       tone: "bg-white",
       title: isAr ? "نسخة أفضل منك" : "A brighter you",
       body: isAr ? "ثقة أكبر، وعالم أوسع" : "More confidence. A bigger world.",
@@ -383,12 +384,12 @@ const HeroSection = () => {
           Ivory carries the rest, so there is no band and no seam. */}
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {cards.map(({ icon: Icon, tone, title, body }) => (
+          {cards.map(({ icon, tone, title, body }) => (
             <div
               key={title}
               className={`rounded-2xl border border-charcoal/10 p-5 ${tone} shadow-[0_18px_40px_-24px_rgba(46,46,46,0.75)]`}
             >
-              <Icon className="mb-3 h-6 w-6 text-charcoal" aria-hidden="true" />
+              <KloverIcon name={icon} className="mb-3 h-14 w-14" />
               <h2 className="font-display text-base font-bold text-charcoal">{title}</h2>
               <p className="mt-1 text-sm leading-relaxed text-charcoal/65">{body}</p>
             </div>
