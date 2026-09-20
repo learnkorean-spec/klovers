@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import HangulMiniGame from "./HangulMiniGame";
 import { GameScene, type GameSceneKind } from "./roadmapScenery";
 import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
+import GameIcon from "@/components/GameIcon";
 
 /**
  * The games teased on the homepage, in the order they sit around the arcade
@@ -140,7 +141,7 @@ const HomeGamesSection = () => {
                 key={`${g.id}-${n}`}
                 className="inline-flex shrink-0 items-center gap-2 rounded-full border-2 border-charcoal bg-card px-4 py-2 text-sm font-bold text-foreground dark:border-border"
               >
-                <span className="text-lg">{g.emoji}</span>
+                <GameIcon id={g.id} className="h-7 w-7" />
                 {t(g.titleKey)}
               </span>
             ))}
@@ -184,10 +185,9 @@ const HomeGamesSection = () => {
                 </div>
 
                 <div className="relative flex flex-1 flex-col px-4 pb-4 pt-9">
-                  {/* The emoji as a sticker on the picture's lower edge */}
-                  <span className="absolute -top-7 start-4 grid h-14 w-14 place-items-center rounded-full border-2 border-charcoal bg-klovers-yellow text-3xl transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110 dark:border-border">
-                    {game.emoji}
-                  </span>
+                  {/* The game's icon as a sticker on the picture's lower edge
+                      (GameIcon draws its own Yellow disc and Charcoal ring) */}
+                  <GameIcon id={game.id} className="absolute -top-7 start-4 h-14 w-14 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
                   <h3 className="text-base font-extrabold leading-tight text-foreground">{t(game.titleKey)}</h3>
                   <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/70">{t(game.descKey)}</p>
                   <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-extrabold text-foreground">

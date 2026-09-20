@@ -21,6 +21,7 @@ import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
 import { logGameEvent } from "@/lib/leadTracking";
+import GameIcon from "@/components/GameIcon";
 // The two brand characters, inlined. See src/assets/characters.ts for why
 // they are data URIs and why they are busts rather than full-body poses.
 import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
@@ -339,7 +340,7 @@ const GamesPage = () => {
             <Lock className="h-7 w-7 text-muted-foreground" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-foreground">{game?.emoji} {game?.title} {isAr ? "للأعضاء فقط" : "is for members"}</h3>
+            <h3 className="text-xl font-bold text-foreground">{game && <GameIcon id={game.id} className="mr-2 inline-block h-7 w-7 align-middle" />}{game?.title} {isAr ? "للأعضاء فقط" : "is for members"}</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
               {isAr ? `أنشئ حساباً مجانياً لفتح جميع الألعاب الـ ${games.length}، حفظ XP الخاص بك، وبناء سلسلتك اليومية.` : `Create a free account to unlock all ${games.length} games, save your XP, and build your daily streak.`}
             </p>
@@ -483,9 +484,7 @@ const GamesPage = () => {
                         </div>
                       )}
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-xl shrink-0">
-                          {game.emoji}
-                        </div>
+                        <GameIcon id={game.id} className="h-10 w-10" />
                         <div className="space-y-0.5 min-w-0">
                           <div className="flex items-center gap-2">
                             <h3 className="font-bold text-foreground text-sm">{game.title}</h3>
