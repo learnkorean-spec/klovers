@@ -198,4 +198,81 @@ export const JourneyScene = () => (
   </svg>
 );
 
+/* ── THE WIDE MAP ─────────────────────────────────────────────────────────
+ * 20 Sep, second pass. On a desktop the tall phone-shaped map left a canvas of
+ * empty page on both sides of it. From the `lg` breakpoint up the same journey
+ * is drawn LYING DOWN: one road winding across the page, the seven stops
+ * alternating low and high along it, the summit at the far end.
+ *
+ * The coordinates below are written left-to-right. The reader's script decides
+ * which end is the START: in Arabic the whole thing is mirrored (the component
+ * flips both the stops' x and this SVG), so the road begins at the right edge
+ * and runs to the left. Nothing in the scene is text, so mirroring it is safe -
+ * the old "never mirror" rule was about a road that runs bottom-to-top, which
+ * reads the same both ways; a road that runs sideways does not.
+ */
+export const JOURNEY_WIDE_VIEW = { w: 900, h: 300 };
+
+export const JOURNEY_WIDE_STOPS = [
+  { x: 60, y: 205 },
+  { x: 180, y: 120 },
+  { x: 300, y: 205 },
+  { x: 420, y: 120 },
+  { x: 540, y: 205 },
+  { x: 660, y: 120 },
+  { x: 780, y: 205 },
+];
+
+export const JOURNEY_WIDE_SUMMIT = { x: 858, y: 62 };
+
+const ROAD_WIDE =
+  "M60 205 C120 205 120 120 180 120 " +
+  "C240 120 240 205 300 205 " +
+  "C360 205 360 120 420 120 " +
+  "C480 120 480 205 540 205 " +
+  "C600 205 600 120 660 120 " +
+  "C720 120 720 205 780 205 " +
+  "C822 205 832 116 858 90";
+
+export const JourneySceneWide = ({ flip = false }: { flip?: boolean }) => (
+  <svg
+    aria-hidden="true"
+    viewBox={`0 0 ${JOURNEY_WIDE_VIEW.w} ${JOURNEY_WIDE_VIEW.h}`}
+    fill="none"
+    className={`absolute inset-0 h-full w-full ${flip ? "-scale-x-100" : ""}`}
+  >
+    <g className="dark:opacity-50">
+      {/* Three hill layers along the bottom, as in the tall map. */}
+      <path d="M0 300V232c110-34 220 8 330-8s220-26 330-4 170 8 240-6v86Z" fill="hsl(var(--klovers-yellow))" opacity="0.3" />
+      <path d="M0 300V260c120-26 230 6 350-10s230-8 320 2 150 4 230-8v56Z" fill="hsl(var(--klovers-yellow))" opacity="0.5" />
+      <path d="M0 300V284c150-16 300 8 450-4s300-6 450-2v22Z" fill="hsl(var(--klovers-yellow))" opacity="0.25" />
+
+      <g fill="hsl(var(--klovers-yellow))" opacity="0.4">
+        <ellipse cx="150" cy="44" rx="40" ry="14" />
+        <ellipse cx="184" cy="35" rx="26" ry="11" />
+        <ellipse cx="640" cy="36" rx="34" ry="12" />
+        <ellipse cx="668" cy="28" rx="22" ry="10" />
+      </g>
+
+      <NamsanTower x={360} y={20} s={0.8} />
+      <Gate x={26} y={228} s={0.8} />
+      <Gate x={800} y={22} s={0.9} />
+
+      <Tree x={110} y={282} s={0.9} />
+      <Tree x={250} y={276} s={0.75} />
+      <Tree x={480} y={284} s={1} />
+      <Tree x={610} y={274} s={0.8} />
+      <Tree x={730} y={284} s={0.95} />
+      <Tree x={868} y={280} s={0.8} />
+      <Blossom x={390} y={262} s={0.8} o={0.6} />
+      <Blossom x={560} y={50} s={0.7} o={0.5} />
+      <Blossom x={100} y={100} s={0.75} o={0.55} />
+    </g>
+
+    <path d={ROAD_WIDE} stroke="hsl(var(--charcoal))" strokeWidth="28" strokeLinecap="round" opacity="0.07" />
+    <path d={ROAD_WIDE} stroke="hsl(var(--muted))" strokeWidth="24" strokeLinecap="round" />
+    <path d={ROAD_WIDE} stroke="hsl(var(--charcoal))" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="7 11" opacity="0.6" />
+  </svg>
+);
+
 export default JourneyScene;
