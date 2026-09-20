@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -66,7 +67,7 @@ export default function DashboardLearningCard({ userId }: { userId: string }) {
     <section aria-labelledby="continue-learning-title" className="min-w-0 rounded-2xl border bg-card p-4 sm:p-5">
       <div className="flex h-full flex-col justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3">
-          <BookOpen className="h-6 w-6 shrink-0 text-foreground" aria-hidden="true" />
+          <KloverIcon name="books-stack" className="h-10 w-10 sm:h-12 sm:w-12" />
           <div className="min-w-0">
             <h2 id="continue-learning-title" className="text-lg font-bold">{t("dashboardPage.learningLibrary")}</h2>
             <p className="text-sm text-muted-foreground">{t("dashboardPage.libraryDesc")}</p>

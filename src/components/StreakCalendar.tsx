@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Flame } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -122,7 +122,7 @@ export function StreakCalendar() {
       <CardHeader className="pb-2">
         <CardTitle className="flex flex-wrap items-center justify-between gap-2">
           <span className="flex items-center gap-2">
-            <Flame className="h-5 w-5 text-orange-500 dark:text-orange-400" />
+            <KloverIcon name="calendar-blossom" className="h-7 w-7" />
             {tr("Activity Calendar", "تقويم النشاط")}
           </span>
           <div className="flex items-center gap-2">

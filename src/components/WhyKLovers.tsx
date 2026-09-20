@@ -1,15 +1,18 @@
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  GraduationCap,
-  Users,
-  MessageCircle,
-  Award,
-  Heart,
-  Percent,
-} from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const icons = [GraduationCap, Users, MessageCircle, Award, Heart, Percent];
+// Same order as `why.features` in translations.ts:
+// Structured Levels, Flexible Classes, Speaking-Focused, TOPIK Prep,
+// Supportive Community, Special Discounts.
+const icons: KloverIconName[] = [
+  "books-stack",
+  "calendar-check",
+  "chat-annyeonghaseyo",
+  "badge-blossom",
+  "klobi-headphones",
+  "lightbulb-sprout",
+];
 
 const WhyKLovers = () => {
   const { t, tArray } = useLanguage();
@@ -32,15 +35,18 @@ const WhyKLovers = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => {
-            const Icon = icons[index];
+            const icon = icons[index];
             return (
               <Card
                 key={index}
                 className="group hover:shadow-md transition-all duration-200 border-border hover:border-primary/50"
               >
                 <CardContent className="p-6 flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-black/25 shadow-sm">
-                    <Icon className="h-6 w-6 text-primary-foreground transition-colors" />
+                  {/* Ivory dome, not the yellow tile: the drawings need a light
+                      surface to keep their outline. On dark they stand directly
+                      on the card (palette rule, 2026-09-20). */}
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-ivory dark:bg-transparent flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-charcoal/15 dark:border-transparent">
+                    {icon && <KloverIcon name={icon} className="h-10 w-10" />}
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">

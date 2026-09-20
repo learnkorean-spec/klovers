@@ -2,16 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useMilestones } from "@/hooks/useMilestones";
-import { Crown, Trophy, Target, Flame } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const MILESTONE_ICONS: Record<string, React.ReactNode> = {
-  lessons_completed: <Trophy className="h-5 w-5 text-amber-500" />,
-  vocabulary_mastered: <Target className="h-5 w-5 text-blue-500" />,
-  xp_earned: <Crown className="h-5 w-5 text-yellow-500" />,
-  streak_days: <Flame className="h-5 w-5 text-red-500" />,
+  lessons_completed: <KloverIcon name="books-stack" className="h-7 w-7 sm:h-8 sm:w-8" />,
+  vocabulary_mastered: <KloverIcon name="flashcard-ga" className="h-7 w-7 sm:h-8 sm:w-8" />,
+  xp_earned: <KloverIcon name="badge-blossom" className="h-7 w-7 sm:h-8 sm:w-8" />,
+  streak_days: <KloverIcon name="calendar-check" className="h-7 w-7 sm:h-8 sm:w-8" />,
 };
 
 const TIER_COLORS: Record<number, string> = {
@@ -56,7 +56,7 @@ export function AchievementMilestoneCard() {
     return (
       <Card className="border-dashed">
         <CardContent className="pt-6 pb-6 text-center space-y-2">
-          <Trophy className="h-9 w-9 mx-auto text-muted-foreground/30" />
+          <KloverIcon name="klobi-reading" className="h-14 w-14 sm:h-16 sm:w-16 mx-auto" />
           <p className="font-semibold text-sm text-foreground">{tr("No milestones yet", "لا توجد إنجازات بعد")}</p>
           <p className="text-xs text-muted-foreground">{tr("Complete lessons and earn XP to unlock milestone rewards.", "أكمل الدروس واكسب نقاط الخبرة لفتح مكافآت الإنجازات.")}</p>
         </CardContent>
@@ -83,7 +83,7 @@ export function AchievementMilestoneCard() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-600" />
+              <KloverIcon name="badge-blossom" className="h-7 w-7" />
               {tr("Milestone Progress", "تقدّم الإنجازات")}
             </span>
             <Badge variant="outline">{completionPercentage}%</Badge>

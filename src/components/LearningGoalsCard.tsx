@@ -19,7 +19,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useLearningGoals } from "@/hooks/useLearningGoals";
-import { Target, Plus, Trash2, Clock } from "lucide-react";
+import { Plus, Trash2, Clock } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -80,7 +81,7 @@ export function LearningGoalsCard() {
       <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-900">
         <CardContent className="pt-6">
           <div className="text-center space-y-3">
-            <Target className="h-8 w-8 mx-auto text-blue-600" />
+            <KloverIcon name="lightbulb-sprout" className="h-14 w-14 mx-auto" />
             <p className="font-medium text-foreground">{tr("No Learning Goals Yet", "لا توجد أهداف تعلّم بعد")}</p>
             <p className="text-sm text-muted-foreground">
               {tr("Create a goal to stay motivated and track progress", "أنشئ هدفًا لتبقى متحفزًا وتتابع تقدّمك")}
@@ -165,7 +166,7 @@ export function LearningGoalsCard() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
-          <Target className="h-5 w-5 text-blue-600" />
+          <KloverIcon name="lightbulb-sprout" className="h-7 w-7" />
           {tr("Learning Goals", "أهداف التعلّم")}
         </CardTitle>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>

@@ -1,7 +1,8 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen, MessagesSquare } from "lucide-react";
+import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 const heroPoster = "/hero-korean.jpg";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -117,25 +118,25 @@ const HeroSection = () => {
    */
   const cards = [
     {
-      icon: BookOpen,
-      tone: "bg-klovers-yellow",
+      icon: "klobi-reading" as KloverIconName,
+      tone: "bg-mint",
       title: isAr ? "دروس مرتّبة" : "Structured lessons",
       body: isAr ? "من الهانغول إلى المحادثة" : "From basics to real conversations",
     },
     {
-      icon: MessagesSquare,
+      icon: "chat-annyeong" as KloverIconName,
       tone: "bg-white",
       title: isAr ? "تتدرّب مع ناس" : "Practice together",
       body: isAr ? "مجموعات صغيرة مباشرة" : "Learn with a supportive community",
     },
     {
-      icon: Globe,
-      tone: "bg-klovers-yellow",
+      icon: "globe-plane" as KloverIconName,
+      tone: "bg-mint",
       title: isAr ? "كورية حقيقية" : "Real-life Korean",
       body: isAr ? "لغة تستعملها فعلاً" : "Useful, practical, cultural",
     },
     {
-      icon: Star,
+      icon: "namsan-tower" as KloverIconName,
       tone: "bg-white",
       title: isAr ? "نسخة أفضل منك" : "A brighter you",
       body: isAr ? "ثقة أكبر، وعالم أوسع" : "More confidence. A bigger world.",
@@ -211,7 +212,7 @@ const HeroSection = () => {
         </span>
 
         {/* ── Hero text content ────────────────────────────── */}
-        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center py-10">
+        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-44">
           <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
             {/* Teacher chip — the one thing on this page no competitor has. */}
@@ -238,10 +239,10 @@ const HeroSection = () => {
             {/* Next-class chip — rendered only when there is a real class to
                 name; Mint is the board's "live and calm" tone. */}
             {nextDay && (
-              <div className="inline-flex items-center gap-2 bg-klovers-yellow/20 border border-klovers-yellow/45 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-klovers-yellow">
+              <div className="inline-flex items-center gap-2 bg-mint/20 border border-mint/45 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-mint">
                 <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-klovers-yellow opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-klovers-yellow" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-mint" />
                 </span>
                 {isAr
                   ? `الحصة التالية: ${nextDay.ar} — سجّل دلوقتي`
@@ -331,7 +332,7 @@ const HeroSection = () => {
             <div className="flex flex-wrap gap-2 justify-center">
               {pills.map((p) => (
                 <div key={p.key} className="inline-flex items-center gap-1.5 bg-ivory/10 border border-ivory/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-ivory/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-klovers-yellow shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-mint shrink-0" />
                   {p.label}
                 </div>
               ))}
@@ -350,14 +351,10 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* ── Proof strip — IN the flow, under the text ──────────────
-            It used to be absolutely pinned to the bottom, with the text column
-            padded to make room. On a short window the text simply outgrew the
-            padding and the Hangul-sheet link printed over the numbers. In the
-            flow, the section grows instead and the two can never touch.
-            pb-24/pb-32 is still the room the cards below take out of this
-            section when they lift onto the photo. */}
-        <div className="relative z-10 w-full pb-24 sm:pb-32 px-4">
+        {/* ── Proof strip — pinned above the card overlap ─────────────
+            pb-24/pb-32 is not spacing taste: it is exactly the room the cards
+            below take out of this section when they lift onto the photo. */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 pb-24 sm:pb-32 px-4">
           <div className="max-w-3xl mx-auto">
             <div className="w-full h-px bg-gradient-to-r from-transparent via-ivory/25 to-transparent mb-6" />
             <div className="grid grid-cols-3 gap-4 md:gap-8">
@@ -387,12 +384,12 @@ const HeroSection = () => {
           Ivory carries the rest, so there is no band and no seam. */}
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {cards.map(({ icon: Icon, tone, title, body }) => (
+          {cards.map(({ icon, tone, title, body }) => (
             <div
               key={title}
               className={`rounded-2xl border border-charcoal/10 p-5 ${tone} shadow-[0_18px_40px_-24px_rgba(46,46,46,0.75)]`}
             >
-              <Icon className="mb-3 h-6 w-6 text-charcoal" aria-hidden="true" />
+              <KloverIcon name={icon} className="mb-3 h-14 w-14" />
               <h2 className="font-display text-base font-bold text-charcoal">{title}</h2>
               <p className="mt-1 text-sm leading-relaxed text-charcoal/65">{body}</p>
             </div>
