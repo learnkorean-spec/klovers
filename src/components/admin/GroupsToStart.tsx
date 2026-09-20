@@ -56,7 +56,10 @@ import { normalizeLevel } from "@/constants/levels";
  */
 
 type Candidate = {
-  enrollmentId: string;
+  /** Null for someone who only has an account (profiles row) — no enrolment
+   * to hang a payment date on yet. She can still be seated in the group; she
+   * just won't get dated/billed until an enrolment exists for her. */
+  enrollmentId: string | null;
   userId: string;
   name: string;
   email: string;
@@ -153,7 +156,7 @@ export default function GroupsToStart() {
 
   const load = useCallback(async () => {
     try {
-      const [groupsRes, membersRes, pkgRes, enrollRes] = await Promise.all([
+      const [groupsRes, membersRes, pkgRes, enrollRes, profilesRes] = await Promise.all([
         // No `.eq("is_active", true)` here on purpose — see the 2026-09-21
         // note above. A group that was never activated still needs to be
         // seen and started from this screen, not just the already-active
@@ -163,14 +166,15 @@ export default function GroupsToStart() {
           .select("id, name, package_id, start_date, capacity, is_active"),
         supabase
           .from("pkg_group_members")
-          .select("group_id, enrollment_id")
+          .select("group_id, user_id, enrollment_id")
           .eq("member_status", "active"),
         supabase
           .from("schedule_packages")
           .select("id, level, day_of_week, start_time, class_language"),
-        // The pool a student can be added from by hand: approved, not yet
-        // matched to any group, not slot-rejected. Same definition the
-        // auto-matcher (GroupMatcher.tsx) uses for its own unmatched list.
+        // Pool one: approved, not yet matched to any group, not slot-rejected.
+        // Same definition the auto-matcher (GroupMatcher.tsx) uses for its own
+        // unmatched list. Adding one of these also updates her enrolment, so
+        // she gets dated/billed when the group starts.
         supabase
           .from("enrollments")
           .select("id, user_id, level")
@@ -178,6 +182,15 @@ export default function GroupsToStart() {
           .eq("plan_type", "group")
           .is("matched_at", null)
           .is("slot_rejection_reason", null),
+        // Pool two: everyone who has an account at all (profiles), for a
+        // student like Aya who took a trial and was marked active without any
+        // enrolment ever being created for her — the `enrollments` pool above
+        // can't see her, but she's a real student and needs to be seatable.
+        // Filtered down to "not already in a group" below, once we know who
+        // that is.
+        supabase
+          .from("profiles")
+          .select("user_id, name, email, course_level_key"),
       ]);
 
       // Thrown, not swallowed. A failed read here would render "every group is
@@ -187,13 +200,16 @@ export default function GroupsToStart() {
       if (membersRes.error) throw membersRes.error;
       if (pkgRes.error) throw pkgRes.error;
       if (enrollRes.error) throw enrollRes.error;
+      if (profilesRes.error) throw profilesRes.error;
 
       const members = new Map<string, { members: number; seated: number }>();
-      for (const m of (membersRes.data ?? []) as Array<{ group_id: string; enrollment_id: string | null }>) {
+      const seatedUserIds = new Set<string>();
+      for (const m of (membersRes.data ?? []) as Array<{ group_id: string; user_id: string; enrollment_id: string | null }>) {
         const t = members.get(m.group_id) ?? { members: 0, seated: 0 };
         t.members += 1;
         if (m.enrollment_id) t.seated += 1;
         members.set(m.group_id, t);
+        seatedUserIds.add(m.user_id);
       }
 
       const packages = new Map(
@@ -251,29 +267,44 @@ export default function GroupsToStart() {
       });
       setGroups(rows);
 
-      // Enrich the add-student pool with names/emails in one extra query.
+      // Enrich pool one (enrolments) with names/emails.
       const enrollRows = (enrollRes.data ?? []) as Array<{ id: string; user_id: string; level: string | null }>;
-      const userIds = [...new Set(enrollRows.map(e => e.user_id))];
+      const enrollUserIds = [...new Set(enrollRows.map(e => e.user_id))];
       let profileMap = new Map<string, { name: string; email: string }>();
-      if (userIds.length > 0) {
+      if (enrollUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, name, email")
-          .in("user_id", userIds);
+          .in("user_id", enrollUserIds);
         profileMap = new Map(
           ((profiles ?? []) as Array<{ user_id: string; name: string | null; email: string | null }>)
             .map(p => [p.user_id, { name: p.name || "Unnamed", email: p.email || "" }]),
         );
       }
-      setCandidates(
-        enrollRows.map(e => ({
-          enrollmentId: e.id,
-          userId: e.user_id,
-          level: e.level,
-          name: profileMap.get(e.user_id)?.name ?? "Unnamed",
-          email: profileMap.get(e.user_id)?.email ?? "",
-        })),
-      );
+      const fromEnrollments: Candidate[] = enrollRows.map(e => ({
+        enrollmentId: e.id,
+        userId: e.user_id,
+        level: e.level,
+        name: profileMap.get(e.user_id)?.name ?? "Unnamed",
+        email: profileMap.get(e.user_id)?.email ?? "",
+      }));
+
+      // Pool two: accounts with no enrolment at all, and not already seated
+      // anywhere. This is what makes someone like Aya findable here.
+      const alreadyCovered = new Set([...seatedUserIds, ...fromEnrollments.map(c => c.userId)]);
+      const fromProfiles: Candidate[] = ((profilesRes.data ?? []) as Array<{
+        user_id: string; name: string | null; email: string | null; course_level_key: string | null;
+      }>)
+        .filter(p => !alreadyCovered.has(p.user_id))
+        .map(p => ({
+          enrollmentId: null,
+          userId: p.user_id,
+          level: p.course_level_key,
+          name: p.name || "Unnamed",
+          email: p.email || "",
+        }));
+
+      setCandidates([...fromEnrollments, ...fromProfiles]);
 
       setError(null);
     } catch (e) {
@@ -367,13 +398,23 @@ export default function GroupsToStart() {
         );
       if (insErr) throw insErr;
 
-      const { error: enrollErr } = await supabase
-        .from("enrollments")
-        .update({ matched_at: new Date().toISOString(), slot_id: g.packageId })
-        .eq("id", c.enrollmentId);
-      if (enrollErr) throw enrollErr;
+      // Only an enrolment-backed add touches `enrollments` — someone with no
+      // enrolment (an account-only candidate) has no row here to update, and
+      // stays undated until an enrolment is created for her separately.
+      if (c.enrollmentId) {
+        const { error: enrollErr } = await supabase
+          .from("enrollments")
+          .update({ matched_at: new Date().toISOString(), slot_id: g.packageId })
+          .eq("id", c.enrollmentId);
+        if (enrollErr) throw enrollErr;
+      }
 
-      toast({ title: `${c.name} added to ${g.title}` });
+      toast({
+        title: `${c.name} added to ${g.title}`,
+        description: c.enrollmentId
+          ? undefined
+          : "She has no enrolment yet, so starting the group won't date or bill her until one exists.",
+      });
       setAddingId(null);
       setAddFilter("");
       await load();
@@ -584,21 +625,28 @@ export default function GroupsToStart() {
                     <div className="max-h-40 overflow-y-auto space-y-0.5">
                       {candidatesFor(g).length === 0 && (
                         <p className="px-1 py-1 text-[11px] text-muted-foreground">
-                          No unmatched student{addFilter ? " matches that filter" : "s waiting"}.
+                          No student{addFilter ? " matches that filter" : " available to add — everyone with an account is already seated somewhere"}.
                         </p>
                       )}
                       {candidatesFor(g).map(c => (
                         <button
-                          key={c.enrollmentId}
+                          key={c.userId}
                           type="button"
                           disabled={addingBusy}
                           onClick={() => void addStudent(g, c)}
                           className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs hover:bg-accent disabled:opacity-50"
                         >
                           <span className="truncate">{c.name} <span className="text-muted-foreground">· {c.email}</span></span>
-                          {g.level && normalizeLevel(c.level ?? "") === normalizeLevel(g.level) && (
-                            <Badge variant="secondary" className="ml-2 shrink-0 text-[9px]">level match</Badge>
-                          )}
+                          <span className="ml-2 flex shrink-0 gap-1">
+                            {g.level && normalizeLevel(c.level ?? "") === normalizeLevel(g.level) && (
+                              <Badge variant="secondary" className="text-[9px]">level match</Badge>
+                            )}
+                            {!c.enrollmentId && (
+                              <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-300">
+                                no enrolment
+                              </Badge>
+                            )}
+                          </span>
                         </button>
                       ))}
                     </div>
