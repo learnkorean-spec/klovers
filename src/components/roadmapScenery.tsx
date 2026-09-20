@@ -11,6 +11,12 @@
  * a provenance question. It is also the only way this survives a palette
  * change: retune Mint and this retunes with it.
  *
+ * THE OPACITIES ARE TUNED FOR IVORY, NOT FOR BOTH GROUNDS. On the dark theme
+ * the same tints stop reading as a scene and start reading as stains - the
+ * Blush cloud becomes a brown smear, the Mint hills a murky band. Hence the
+ * dark:opacity-25 on the wrapper. If you add a layer, check both themes with
+ * the header's toggle; it is not a detail you can reason your way to.
+ *
  * Everything is aria-hidden and pointer-events-none. If you add to it, keep
  * opacities under ~0.5 - a card has to stay readable on top of it.
  */
@@ -34,7 +40,10 @@ const Blossom = ({ x, y, s = 1, o = 0.8 }: { x: number; y: number; s?: number; o
 );
 
 export const RoadmapScenery = () => (
-  <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+  <div
+    aria-hidden="true"
+    className="pointer-events-none absolute inset-0 overflow-hidden dark:opacity-25"
+  >
     {/* Hills, low on the start side. Two layers so the ridge reads as depth
         rather than as one flat shape. */}
     <svg
@@ -63,7 +72,7 @@ export const RoadmapScenery = () => (
     </svg>
 
     {/* Hanok eave and blossom branch, high on the end side. The roof is
-        Charcoal at 14% rather than a colour of its own - a silhouette, not
+        Charcoal at 13% rather than a colour of its own - a silhouette, not
         an illustration competing with the cards. */}
     <svg
       viewBox="0 0 300 240"
