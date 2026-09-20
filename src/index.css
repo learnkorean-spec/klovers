@@ -237,6 +237,16 @@ Type, from the same board (loaded in index.html):
     @apply border-border;
   }
 
+  /* Phones: decorative pieces (rotated ghost words, blurred blobs) that hang
+     past the edge must never widen the page. iOS ignores overflow-hidden on
+     some transformed children and then shrinks the whole page to fit, which
+     shows up as a strip of empty background on the right. `clip` (unlike
+     `hidden`) does not create a scroll container, so sticky headers keep
+     working. */
+  html, body {
+    overflow-x: clip;
+  }
+
   body {
     @apply bg-background text-foreground;
   }
