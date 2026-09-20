@@ -168,7 +168,21 @@ export default {
   				'Arial',
   				'sans-serif'
   			],
-  			/* Handwritten accent — one line at a time, never a paragraph. */
+  			/*
+  			 * Handwritten accent — one line at a time, never a paragraph.
+  			 *
+  			 * LATIN ONLY, AND THAT IS A KNOWN GAP. Caveat carries no Arabic and
+  			 * no Hangul, so every handwritten line on this site renders in Cairo
+  			 * for an Arabic reader - the hero's script line included - and looks
+  			 * like an ordinary sentence rather than a hand.
+  			 *
+  			 * Aref Ruqaa was added for this on 20 Sep 2026 and removed the same
+  			 * day: it is a calligraphic naskh and reads as a thin formal serif
+  			 * at these sizes, not as handwriting. Closing the gap needs a face
+  			 * that genuinely looks handwritten in Arabic at ~20px. Until then,
+  			 * do not add handwritten decoration that the Arabic side cannot
+  			 * render - it is the majority script on this site.
+  			 */
   			script: [
   				'Caveat',
   				'Segoe Script',

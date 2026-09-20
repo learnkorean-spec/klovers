@@ -66,6 +66,14 @@
         Cairo    body and UI (Arabic; Inter ships no Arabic)
         Caveat   handwritten accent, one line at a time
 
+      CAVEAT IS LATIN-ONLY, and that is a known gap rather than an oversight:
+      it carries no Arabic and no Hangul, so every handwritten line on this
+      site renders in Cairo for an Arabic reader and reads as an ordinary
+      sentence. Aref Ruqaa and Nanum Pen Script were added here on 20 Sep 2026
+      to close it and removed the same day - Ruqaa is a calligraphic naskh and
+      looked like a thin formal serif at 20px, not like a hand. Closing the
+      gap needs a face that genuinely looks handwritten in Arabic.
+
       Loaded with media="print" + onload swap so the stylesheet is fetched at
       low priority and never blocks first paint. The system stack stays as the
       fallback in tailwind.config.ts, so if Google Fonts is blocked or slow the
