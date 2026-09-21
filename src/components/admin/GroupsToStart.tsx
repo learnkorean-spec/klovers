@@ -67,6 +67,22 @@ import { normalizeLevel } from "@/constants/levels";
  *     works and is what "Remove" alone does, but a real class change no
  *     longer needs it — Aya, seated in Hangul · Friday, was invisible from
  *     every other group's "Add student" for exactly this reason.
+ *
+ * --- 2026-09-21, later the same day ---
+ *
+ * Saving a day/time took the whole of /admin/today down with "Something went
+ * wrong / Invalid time value". The save deletes that group's chosen start date
+ * on purpose, so it recomputes against the new weekday — but it left
+ * `confirmId` pointing at the same card, and the confirm paragraph then ran
+ * `addDaysISO("")`, where `new Date(Date.UTC(NaN, …)).toISOString()` throws.
+ * Guarded in three places below (`addDaysISO`, `saveEdit`, `confirming`), so
+ * no ordering of those two states can throw again.
+ *
+ * The seat itself is no longer this file's problem: since migration
+ * `group_membership_guard_resolves_enrolment` the database resolves a missing
+ * `enrollment_id` from the student's own approved enrolment instead of
+ * refusing the insert, so the accounts-only pool below can seat a real
+ * student even when the enrolment pool cannot see her.
  */
 
 type Candidate = {
@@ -124,8 +140,18 @@ function cairoTodayISO(): string {
   }).format(new Date());
 }
 
+/**
+ * Adds days to a YYYY-MM-DD date.
+ *
+ * Returns the input untouched when it is not a date it can parse — "" above
+ * all, which is what a cleared or not-yet-recomputed date box holds.
+ * `Date.UTC(NaN, …)` is an Invalid Date and `.toISOString()` on one throws
+ * "Invalid time value", which is not caught anywhere between here and the
+ * error boundary: one empty string used to blank the entire page.
+ */
 function addDaysISO(iso: string, days: number): string {
-  const [y, m, d] = iso.split("-").map(Number);
+  const [y, m, d] = (iso ?? "").split("-").map(Number);
+  if (!y || !m || !d) return iso;
   const dt = new Date(Date.UTC(y, m - 1, d + days));
   return dt.toISOString().slice(0, 10);
 }
@@ -187,6 +213,7 @@ function cairoToBangkok(dayOfWeek: number | null, hhmmStr: string): { day: strin
   if (dayOfWeek == null || !hhmmStr) return null;
   const isoDate = nextWeekdayISO(dayOfWeek);
   const guessUTC = new Date(`${isoDate}T${hhmmStr}:00Z`);
+  if (Number.isNaN(guessUTC.getTime())) return null;
   const cairoOffset = tzOffsetMinutes(guessUTC, "Africa/Cairo");
   const actualUTC = new Date(guessUTC.getTime() - cairoOffset * 60000);
   const day = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", weekday: "long" }).format(actualUTC);
@@ -478,6 +505,10 @@ export default function GroupsToStart() {
       setEditingId(null);
       // The chosen start date was picked against the old weekday — drop it so
       // it recomputes against the new one instead of silently staying wrong.
+      // The confirm step goes with it: it quotes that date and the deadline
+      // three days after it, and leaving it open over a date that no longer
+      // exists is what took this whole screen down on 21 Sep.
+      setConfirmId(prev => (prev === g.id ? null : prev));
       setDates(prev => {
         const next = { ...prev };
         delete next[g.id];
@@ -511,6 +542,11 @@ export default function GroupsToStart() {
       // that RPC picks (or silently creates) a group for a package, which is
       // exactly wrong here — the admin already chose this exact group,
       // active or not.
+      //
+      // A null enrollment_id is no longer fatal: the membership guard resolves
+      // the student's own approved enrolment itself (migration
+      // group_membership_guard_resolves_enrolment, 21 Sep). It still refuses
+      // when she genuinely has none, and says so in words.
       const { error: insErr } = await supabase
         .from("pkg_group_members")
         .upsert(
@@ -659,7 +695,10 @@ export default function GroupsToStart() {
           const date = dates[g.id] ?? "";
           const isPast = date !== "" && date < today;
           const imminent = date !== "" && date <= addDaysISO(today, 1);
-          const confirming = confirmId === g.id;
+          // `date` is part of the condition, not just of what's rendered: the
+          // paragraph below quotes the date and the deadline three days after
+          // it, and there is no honest thing for it to say without one.
+          const confirming = confirmId === g.id && date !== "";
           const editing = editingId === g.id;
           const adding = addingId === g.id;
           const membersOpen = membersOpenId === g.id;
