@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { CalendarClock, CheckCircle2, Pencil, UserPlus, UserMinus, Users } from "lucide-react";
-import { normalizeLevel } from "@/constants/levels";
+import { LEVELS, getLevelShortLabel, normalizeLevel } from "@/constants/levels";
 
 /**
  * Starting a group — the one action nothing in the UI could do.
@@ -67,12 +67,56 @@ import { normalizeLevel } from "@/constants/levels";
  *     works and is what "Remove" alone does, but a real class change no
  *     longer needs it — Aya, seated in Hangul · Friday, was invisible from
  *     every other group's "Add student" for exactly this reason.
+ *
+ * --- 2026-09-21, later the same day ---
+ *
+ * Seating anyone into one of those inactive groups still failed outright:
+ * `enforce_group_membership_guard` refused any group with `is_active = false`,
+ * so "Add student" on "Hangul · Arabic track · Wednesday 15:00 Cairo" threw
+ * "this group is not active" — a group this screen lists on purpose, for a
+ * button that would have activated it. Migration
+ * 20260921140000_seat_into_unstarted_groups narrows that refusal to a group
+ * that ran and was THEN switched off; a group that has never started is one
+ * being filled, which is what this screen is for.
+ *
+ * Two things here changed with it.
+ *
+ * The enrolment a candidate carries is now RESOLVED, not assumed. Pool one
+ * below is deliberately only the unmatched enrolments — that is the
+ * auto-matcher's queue — so anyone already matched fell through to the
+ * profiles pool and arrived with `enrollmentId: null` and a "no enrolment"
+ * badge. Aya is the case in hand: a live PAID, APPROVED, group enrolment,
+ * matched to her Friday package. Moving her would have written
+ * `enrollment_id = null` on the new seat, and that column is the entire link
+ * `activate_pkg_group` walks to set `first_class_date` and `due_at`. She
+ * would have looked seated and been unreachable by either payment letter.
+ * The pool now looks up any live, approved, payable group enrolment for the
+ * user, and failing that reuses whatever her current seat is already linked
+ * to. Genuinely enrolment-less accounts still show the badge, and it is now
+ * true when it shows.
+ *
+ * And the edit panel covers the group, not just its clock: level, track,
+ * capacity, meeting link and the group's own name, alongside day and time.
+ * The name is free text because the existing ones do not share a format, with
+ * a button that rebuilds it from the schedule so a group renamed by hand
+ * cannot keep claiming a Wednesday it no longer meets on.
+ *
+ * One wrinkle worth knowing about the level dropdown. `constants/levels`
+ * says never to write legacy keys, and every `schedule_packages` row on
+ * production stores exactly those (`level_1`, `level_2`, …) with `hangul` the
+ * only canonical one. Writing `l1` into a table where the other nine rows say
+ * `level_1` would put two vocabularies in one column for no gain — every
+ * reader normalises anyway. So an edit writes back in the vocabulary that row
+ * already uses: legacy stays legacy, canonical stays canonical, and nothing
+ * here converts a column it was not asked to convert.
  */
 
 type Candidate = {
-  /** Null for someone who only has an account (profiles row) — no enrolment
-   * to hang a payment date on yet. She can still be seated in the group; she
-   * just won't get dated/billed until an enrolment exists for her. */
+  /** Her live enrolment, resolved (see the 2026-09-21 note above) — the
+   * matched ones included, because a move must carry the link across.
+   * Null only when she really has no enrolment: an account made from a
+   * trial, say. She can still be seated; she just won't be dated or billed
+   * until an enrolment exists. */
   enrollmentId: string | null;
   userId: string;
   name: string;
@@ -99,12 +143,16 @@ type GroupRow = {
   /** "Monday 15:00 Cairo" — empty when the NAME already says it. */
   when: string;
   language: string;
+  /** Raw `class_language` as stored — what the track dropdown edits. */
+  languageKey: string;
+  /** Raw `schedule_packages.level` as stored, legacy spelling and all. */
   level: string | null;
   dayOfWeek: number | null;
   startTime: string | null;
   startDate: string | null;
   isActive: boolean;
   capacity: number | null;
+  meetingUrl: string | null;
   members: Member[];
   /** Members linked to an enrolment. Only these can be given a date. */
   seated: number;
@@ -113,6 +161,24 @@ type GroupRow = {
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const hhmm = (t: string | null | undefined) => (t ?? "").slice(0, 5);
+
+/**
+ * A level key in the vocabulary the row already uses — see the note at the
+ * top. `hangul` is the same word either way.
+ */
+function levelForWrite(canonicalKey: string, current: string | null): string {
+  if (canonicalKey === "hangul") return "hangul";
+  const isLegacy = !!current && /^level_[0-9]$/.test(current.trim().toLowerCase());
+  return isLegacy ? `level_${canonicalKey.replace(/^l/, "")}` : canonicalKey;
+}
+
+/** "Level 1 · Arabic track · Monday 15:00 Cairo" — a suggestion, not a rule. */
+function suggestName(levelKey: string, day: string, time: string, language: string): string {
+  const label = getLevelShortLabel(levelKey) || "Group";
+  const track = language === "english" ? "English track" : "Arabic track";
+  const dayName = day !== "" ? DAY_NAMES[Number(day)] : "";
+  return [label, track, `${dayName} ${time} Cairo`.trim()].filter(Boolean).join(" · ");
+}
 
 /** Today in Cairo as YYYY-MM-DD. The admin may be anywhere; the school is not. */
 function cairoTodayISO(): string {
@@ -204,10 +270,15 @@ export default function GroupsToStart() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  // Inline "edit day/time" state — at most one card open at once.
+  // Inline "edit group" state — at most one card open at once.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDay, setEditDay] = useState<string>("");
   const [editTime, setEditTime] = useState<string>("");
+  const [editLevel, setEditLevel] = useState<string>("");
+  const [editLanguage, setEditLanguage] = useState<string>("arabic");
+  const [editCapacity, setEditCapacity] = useState<string>("8");
+  const [editMeetingUrl, setEditMeetingUrl] = useState<string>("");
+  const [editName, setEditName] = useState<string>("");
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Inline "add student" state — at most one card open at once.
@@ -228,7 +299,7 @@ export default function GroupsToStart() {
         // ones.
         (supabase as any)
           .from("pkg_groups")
-          .select("id, name, package_id, start_date, capacity, is_active"),
+          .select("id, name, package_id, start_date, capacity, is_active, meeting_url"),
         supabase
           .from("pkg_group_members")
           .select("group_id, user_id, enrollment_id")
@@ -236,23 +307,25 @@ export default function GroupsToStart() {
         supabase
           .from("schedule_packages")
           .select("id, level, day_of_week, start_time, class_language"),
-        // Pool one: approved, not yet matched to any group, not slot-rejected.
-        // Same definition the auto-matcher (GroupMatcher.tsx) uses for its own
-        // unmatched list. Adding one of these also updates her enrolment, so
-        // she gets dated/billed when the group starts.
+        // Every enrolment the membership guard would accept a seat against:
+        // live, approved, group, and either paid or confirmed-unpaid. NOT
+        // filtered to `matched_at is null` any more — that is the
+        // auto-matcher's queue, and using it as the enrolment lookup is what
+        // made an already-matched student like Aya arrive here looking like
+        // she had no enrolment at all. The unmatched subset is still taken
+        // out of this below, for the "free to seat" pool.
         supabase
           .from("enrollments")
-          .select("id, user_id, level")
+          .select("id, user_id, level, matched_at, created_at")
           .eq("approval_status", "APPROVED")
           .eq("plan_type", "group")
-          .is("matched_at", null)
-          .is("slot_rejection_reason", null),
-        // Pool two: everyone who has an account at all (profiles), for a
-        // student like Aya who took a trial and was marked active without any
-        // enrolment ever being created for her — the `enrollments` pool above
-        // can't see her, but she's a real student and needs to be seatable.
-        // Filtered down to "not already in a group" below, once we know who
-        // that is.
+          .is("deleted_at", null)
+          .is("slot_rejection_reason", null)
+          .in("payment_status", ["PAID", "PENDING_PAYMENT"]),
+        // Everyone who has an account at all (profiles), for a student who
+        // took a trial and was marked active without any enrolment ever
+        // being created for her. Enriched with the enrolment map above where
+        // one exists.
         supabase
           .from("profiles")
           .select("user_id, name, email, course_level_key"),
@@ -287,6 +360,10 @@ export default function GroupsToStart() {
 
       const membersByGroup = new Map<string, Member[]>();
       const seatedCountByGroup = new Map<string, number>();
+      // What her CURRENT seat is linked to — the last-resort fallback when no
+      // enrolment row is found for her, so a move never downgrades a seat
+      // that already had a link.
+      const seatEnrollmentByUser = new Map<string, string>();
       for (const m of memberRows) {
         const list = membersByGroup.get(m.group_id) ?? [];
         list.push({
@@ -296,7 +373,10 @@ export default function GroupsToStart() {
           email: memberProfileMap.get(m.user_id)?.email ?? "",
         });
         membersByGroup.set(m.group_id, list);
-        if (m.enrollment_id) seatedCountByGroup.set(m.group_id, (seatedCountByGroup.get(m.group_id) ?? 0) + 1);
+        if (m.enrollment_id) {
+          seatedCountByGroup.set(m.group_id, (seatedCountByGroup.get(m.group_id) ?? 0) + 1);
+          if (!seatEnrollmentByUser.has(m.user_id)) seatEnrollmentByUser.set(m.user_id, m.enrollment_id);
+        }
       }
 
       const packages = new Map(
@@ -317,7 +397,7 @@ export default function GroupsToStart() {
 
       const rows: GroupRow[] = ((groupsRes.data ?? []) as Array<{
         id: string; name: string | null; package_id: string | null; start_date: string | null;
-        capacity: number | null; is_active: boolean;
+        capacity: number | null; is_active: boolean; meeting_url: string | null;
       }>).map(g => {
         const p = g.package_id ? packages.get(g.package_id) : undefined;
         const title = g.name || "Group";
@@ -334,12 +414,14 @@ export default function GroupsToStart() {
           title,
           when,
           language: p?.class_language === "english" ? "English" : "Arabic",
+          languageKey: p?.class_language === "english" ? "english" : "arabic",
           level: p?.level ?? null,
           dayOfWeek: dow,
           startTime: p?.start_time ?? null,
           startDate: g.start_date,
           isActive: g.is_active,
           capacity: g.capacity,
+          meetingUrl: g.meeting_url,
           members: membersByGroup.get(g.id) ?? [],
           seated: seatedCountByGroup.get(g.id) ?? 0,
         };
@@ -362,21 +444,36 @@ export default function GroupsToStart() {
       });
       setGroups(rows);
 
-      // Enrich pool one (enrolments) with names/emails.
-      const enrollRows = (enrollRes.data ?? []) as Array<{ id: string; user_id: string; level: string | null }>;
-      const enrollUserIds = [...new Set(enrollRows.map(e => e.user_id))];
+      const enrollRows = (enrollRes.data ?? []) as Array<{
+        id: string; user_id: string; level: string | null; matched_at: string | null; created_at: string | null;
+      }>;
+
+      // One live enrolment per user, newest first. This is the lookup that
+      // makes a candidate's `enrollmentId` real rather than a side effect of
+      // which pool she happened to come through.
+      const liveEnrollmentByUser = new Map<string, { id: string; level: string | null }>();
+      for (const e of [...enrollRows].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))) {
+        if (!liveEnrollmentByUser.has(e.user_id)) liveEnrollmentByUser.set(e.user_id, { id: e.id, level: e.level });
+      }
+
+      // Pool one: approved and not yet matched to any group — the
+      // auto-matcher's own unmatched list (GroupMatcher.tsx). Adding one of
+      // these also updates her enrolment, so she gets dated/billed when the
+      // group starts.
+      const unmatched = enrollRows.filter(e => e.matched_at == null);
+      const unmatchedUserIds = [...new Set(unmatched.map(e => e.user_id))];
       let enrollProfileMap = new Map<string, { name: string; email: string }>();
-      if (enrollUserIds.length > 0) {
+      if (unmatchedUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, name, email")
-          .in("user_id", enrollUserIds);
+          .in("user_id", unmatchedUserIds);
         enrollProfileMap = new Map(
           ((profiles ?? []) as Array<{ user_id: string; name: string | null; email: string | null }>)
             .map(p => [p.user_id, { name: p.name || "Unnamed", email: p.email || "" }]),
         );
       }
-      const fromEnrollments: Candidate[] = enrollRows.map(e => {
+      const fromEnrollments: Candidate[] = unmatched.map(e => {
         const currentGroupId = groupIdByUserId.get(e.user_id) ?? null;
         return {
           enrollmentId: e.id,
@@ -394,7 +491,9 @@ export default function GroupsToStart() {
       // moves her rather than being hidden, which is what made someone like
       // Aya, already seated in her real group, invisible from every other
       // group's "Add student" list. Only excluded here: anyone already
-      // covered by pool one, to avoid listing her twice.
+      // covered by pool one, to avoid listing her twice. Her enrolment is
+      // looked up rather than assumed absent — that assumption is what would
+      // have unlinked Aya's seat on a move.
       const enrollmentUserIds = new Set(fromEnrollments.map(c => c.userId));
       const fromProfiles: Candidate[] = ((profilesRes.data ?? []) as Array<{
         user_id: string; name: string | null; email: string | null; course_level_key: string | null;
@@ -402,10 +501,11 @@ export default function GroupsToStart() {
         .filter(p => !enrollmentUserIds.has(p.user_id))
         .map(p => {
           const currentGroupId = groupIdByUserId.get(p.user_id) ?? null;
+          const live = liveEnrollmentByUser.get(p.user_id) ?? null;
           return {
-            enrollmentId: null,
+            enrollmentId: live?.id ?? seatEnrollmentByUser.get(p.user_id) ?? null,
             userId: p.user_id,
-            level: p.course_level_key,
+            level: live?.level ?? p.course_level_key,
             name: p.name || "Unnamed",
             email: p.email || "",
             currentGroupId,
@@ -460,21 +560,65 @@ export default function GroupsToStart() {
     setEditingId(g.id);
     setEditDay(g.dayOfWeek != null ? String(g.dayOfWeek) : "");
     setEditTime(hhmm(g.startTime) || "15:00");
+    setEditLevel(g.level ? normalizeLevel(g.level) : "");
+    setEditLanguage(g.languageKey);
+    setEditCapacity(String(g.capacity ?? 8));
+    setEditMeetingUrl(g.meetingUrl ?? "");
+    setEditName(g.title);
   };
 
   const saveEdit = async (g: GroupRow) => {
-    if (!g.packageId) {
-      toast({ title: "No schedule to edit", description: "This group has no linked schedule package.", variant: "destructive" });
+    const capacity = Number(editCapacity);
+    if (!Number.isFinite(capacity) || capacity < 1) {
+      toast({ title: "Capacity must be at least 1", variant: "destructive" });
       return;
     }
+    // A capacity below the people already in the room is not a setting, it is
+    // a group that is over capacity the moment it saves — and the membership
+    // guard would then refuse the next seat with a confusing message.
+    if (capacity < g.members.length) {
+      toast({
+        title: "Capacity is below the headcount",
+        description: `${g.members.length} student${g.members.length === 1 ? " is" : "s are"} already in this group. Remove someone first, or set capacity to ${g.members.length} or more.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSavingEdit(true);
     try {
-      const { error: updErr } = await supabase
-        .from("schedule_packages")
-        .update({ day_of_week: Number(editDay), start_time: `${editTime}:00` })
-        .eq("id", g.packageId);
-      if (updErr) throw updErr;
-      toast({ title: "Day and time updated", description: `${g.title} now meets ${DAY_NAMES[Number(editDay)]} ${editTime} Cairo.` });
+      if (g.packageId) {
+        const { error: updErr } = await supabase
+          .from("schedule_packages")
+          .update({
+            day_of_week: Number(editDay),
+            start_time: `${editTime}:00`,
+            // Same vocabulary the row already stores — see the note at the top.
+            ...(editLevel ? { level: levelForWrite(editLevel, g.level) } : {}),
+            class_language: editLanguage,
+            capacity,
+          })
+          .eq("id", g.packageId);
+        if (updErr) throw updErr;
+      }
+
+      const { error: grpErr } = await supabase
+        .from("pkg_groups")
+        .update({
+          name: editName.trim() || g.title,
+          capacity,
+          meeting_url: editMeetingUrl.trim() || null,
+        })
+        .eq("id", g.id);
+      if (grpErr) throw grpErr;
+
+      toast({
+        title: "Group updated",
+        description: g.packageId
+          ? `${editName.trim() || g.title} now meets ${DAY_NAMES[Number(editDay)]} ${editTime} Cairo, capacity ${capacity}.`
+          : `Saved. This group has no linked schedule package, so its day, time, level and track could not be changed here.`,
+        variant: g.packageId ? undefined : "destructive",
+      });
       setEditingId(null);
       // The chosen start date was picked against the old weekday — drop it so
       // it recomputes against the new one instead of silently staying wrong.
@@ -485,7 +629,7 @@ export default function GroupsToStart() {
       });
       await load();
     } catch (e: any) {
-      toast({ title: "Could not update the schedule", description: e?.message ?? String(e), variant: "destructive" });
+      toast({ title: "Could not update the group", description: e?.message ?? String(e), variant: "destructive" });
     } finally {
       setSavingEdit(false);
     }
@@ -727,7 +871,7 @@ export default function GroupsToStart() {
                     className="h-8"
                     onClick={() => (editing ? setEditingId(null) : openEdit(g))}
                   >
-                    <Pencil className="h-3.5 w-3.5 mr-1" /> Day & time
+                    <Pencil className="h-3.5 w-3.5 mr-1" /> Edit group
                   </Button>
                   <Button
                     type="button"
@@ -770,44 +914,107 @@ export default function GroupsToStart() {
                 )}
 
                 {editing && (
-                  <div className="flex flex-wrap items-center gap-2 rounded-md border border-input bg-muted/30 p-2">
-                    <Select value={editDay} onValueChange={setEditDay}>
-                      <SelectTrigger className="h-8 w-[130px] text-xs">
-                        <SelectValue placeholder="Day" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DAY_NAMES.map((d, i) => (
-                          <SelectItem key={i} value={String(i)}>{d}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <input
-                      type="time"
-                      value={editTime}
-                      onChange={e => setEditTime(e.target.value)}
-                      className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                      aria-label={`Class time for ${g.title}`}
+                  <div className="space-y-2 rounded-md border border-input bg-muted/30 p-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Select value={editDay} onValueChange={setEditDay}>
+                        <SelectTrigger className="h-8 w-[130px] text-xs">
+                          <SelectValue placeholder="Day" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DAY_NAMES.map((d, i) => (
+                            <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <input
+                        type="time"
+                        value={editTime}
+                        onChange={e => setEditTime(e.target.value)}
+                        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                        aria-label={`Class time for ${g.title}`}
+                      />
+                      <Select value={editLevel} onValueChange={setEditLevel}>
+                        <SelectTrigger className="h-8 w-[130px] text-xs">
+                          <SelectValue placeholder="Level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LEVELS.map(l => (
+                            <SelectItem key={l.key} value={l.key}>{l.shortLabel}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={editLanguage} onValueChange={setEditLanguage}>
+                        <SelectTrigger className="h-8 w-[130px] text-xs">
+                          <SelectValue placeholder="Track" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="arabic">Arabic track</SelectItem>
+                          <SelectItem value="english">English track</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={editCapacity}
+                        onChange={e => setEditCapacity(e.target.value)}
+                        className="h-8 w-[90px] text-xs"
+                        aria-label={`Capacity for ${g.title}`}
+                        placeholder="Capacity"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Input
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        className="h-8 min-w-[240px] flex-1 text-xs"
+                        aria-label={`Name for ${g.title}`}
+                        placeholder="Group name"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-[11px]"
+                        disabled={!editLevel || editDay === "" || !editTime}
+                        onClick={() => setEditName(suggestName(editLevel, editDay, editTime, editLanguage))}
+                      >
+                        Name from schedule
+                      </Button>
+                    </div>
+
+                    <Input
+                      value={editMeetingUrl}
+                      onChange={e => setEditMeetingUrl(e.target.value)}
+                      className="h-8 text-xs"
+                      aria-label={`Meeting link for ${g.title}`}
+                      placeholder="Meeting link (optional)"
                     />
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="h-8"
-                      disabled={savingEdit || !editDay || !editTime}
-                      onClick={() => void saveEdit(g)}
-                    >
-                      {savingEdit ? "Saving…" : "Save"}
-                    </Button>
-                    {editDay && editTime && (() => {
-                      const bkk = cairoToBangkok(Number(editDay), editTime);
-                      return bkk ? (
-                        <p className="w-full text-[11px] font-medium text-foreground">
-                          = {bkk.day} {bkk.time} for you in Bangkok
-                        </p>
-                      ) : null;
-                    })()}
-                    <p className="w-full text-[10px] text-muted-foreground">
-                      Time above is Cairo, same as the rest of the schedule. Changes only this group's slot —
-                      existing members and their dates aren't touched.
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-8"
+                        disabled={savingEdit || editDay === "" || !editTime}
+                        onClick={() => void saveEdit(g)}
+                      >
+                        {savingEdit ? "Saving…" : "Save"}
+                      </Button>
+                      {editDay !== "" && editTime && (() => {
+                        const bkk = cairoToBangkok(Number(editDay), editTime);
+                        return bkk ? (
+                          <p className="text-[11px] font-medium text-foreground">
+                            = {bkk.day} {bkk.time} for you in Bangkok
+                          </p>
+                        ) : null;
+                      })()}
+                    </div>
+
+                    <p className="text-[10px] text-muted-foreground">
+                      Time above is Cairo, same as the rest of the schedule. Day, time, level and track live on this
+                      group's own schedule slot; name, capacity and the meeting link live on the group. Existing
+                      members and their dates aren't touched.
                     </p>
                   </div>
                 )}
