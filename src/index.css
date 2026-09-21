@@ -262,15 +262,16 @@ Type, from the same board (loaded in index.html):
 
 /* Card on a yellow ground. Ivory on #FFFF00 is 1.02:1 by luminance, so the
    card is told apart by a hard Charcoal edge and an offset shadow (no blur).
-   In dark the surface is already distinct, so it drops to a soft light edge. */
+   In dark the surface is already distinct, so the edge becomes a thin neon-green
+   line with a faint glow (neon lives on dark grounds; it fades on white). */
 @layer utilities {
   .card-edge {
     border: 2px solid hsl(var(--charcoal));
     box-shadow: 4px 4px 0 hsl(var(--charcoal));
   }
   .dark .card-edge {
-    border: 1px solid hsl(var(--border));
-    box-shadow: none;
+    border: 1px solid hsl(var(--correct) / 0.6);
+    box-shadow: 0 0 14px hsl(var(--correct) / 0.18);
   }
 }
 

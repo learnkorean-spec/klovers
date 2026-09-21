@@ -22,7 +22,7 @@ import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
 /**
  * 2026-09-20 (a): this section was painted in Tailwind `green-*` - ground,
  * blobs, badge, hero card, referral tiles, tick marks. A different green from
- * the brand's, one screen away from the brand's. It is Mint now.
+ * the brand's, one screen away from the brand's. It is on brand tokens now.
  *
  * 2026-09-20 (b): it asked people to invite a friend and showed them three
  * icons. It shows two friends now.
@@ -128,9 +128,8 @@ const ReturningStudentOffer = () => {
       ref={sectionRef}
       className="relative overflow-hidden bg-background px-4 py-16 md:py-24"
     >
-      {/* Decorative blobs. Soft Mint reads on Ivory; on the dark ground it
-          would be a pale fog, so the dark theme swaps in the neon sibling at
-          low alpha - a glow rather than a cloud. */}
+      {/* Decorative blobs. Soft Yellow reads on Ivory; on the dark ground the
+          same blobs drop to low alpha - a glow rather than a cloud. */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute -start-20 -top-20 h-72 w-72 rounded-full bg-klovers-yellow/50 blur-3xl dark:bg-klovers-yellow/15" />
         <div className="absolute -bottom-20 -end-20 h-64 w-64 rounded-full bg-klovers-yellow/15 blur-3xl dark:bg-klovers-yellow/10" />

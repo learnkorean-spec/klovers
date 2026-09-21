@@ -16,8 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-/** The "Free" chip beside Games. Mint, not Tailwind green: the homepage owns
- *  five colours and a measurement on 20 Sep found this was the last stray. */
+/** The "Free" chip beside Games. Brand Yellow with Charcoal type, not Tailwind
+ *  green: the homepage owns three colours and this was the last stray. */
 const FREE_BADGE = "text-[10px] bg-klovers-yellow text-charcoal border border-charcoal/10 px-1.5 py-0.5 rounded-full font-semibold leading-none";
 
 const Header = () => {

@@ -90,7 +90,7 @@ const FinalCTA = () => {
         {KR_CHARS.map((char, i) => (
           <span
             key={char}
-            className="absolute text-5xl md:text-7xl font-extrabold text-charcoal/[0.06]"
+            className="absolute font-ko-hand text-5xl md:text-7xl font-normal text-charcoal/[0.06]"
             style={{
               top: `${8 + (i % 3) * 32}%`,
               left: `${3 + i * 12}%`,

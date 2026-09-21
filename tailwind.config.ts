@@ -200,6 +200,11 @@ export default {
   				'Brush Script MT',
   				'cursive'
   			],
+  			/* Korean. Noto Sans KR for readable Hangul (lessons, the Hangul game);
+  			 * Hi Melody for large decorative Korean words. Both carry Hangul only,
+  			 * so put dir="ltr" lang="ko" on the element. */
+  			ko: ['Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'sans-serif'],
+  			'ko-hand': ['Hi Melody', 'Noto Sans KR', 'Malgun Gothic', 'cursive'],
   			serif: [
   				'ui-serif',
   				'Georgia',

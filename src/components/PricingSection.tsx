@@ -503,7 +503,7 @@ const PricingSection = () => {
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">🛡️</span>
             <p className="text-sm font-semibold text-foreground">{tr("First Class Guarantee", "ضمان الحصة الأولى")}</p>
-            <p className="text-xs text-muted-foreground">{tr("Not happy? Full refund after trial.", "لو ما عجبتكش، هنرجّعلك فلوسك بعد الحصة التجريبية.")}</p>
+            <p className="text-xs text-muted-foreground">{tr("Not happy? Refund or rebook.", "لو ما عجبتكش، هنرجّعلك فلوسك أو نعيد الحجز.")}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">⭐</span>
