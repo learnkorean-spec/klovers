@@ -23,6 +23,23 @@ import { Copy, Video, VideoOff } from "lucide-react";
  * A count alone ("1 seated") does not say WHO is let down by a missing link,
  * and a trial room read 0 forever because bookings were never counted at all.
  * So each room now carries its people by name.
+ *
+ * --- 2026-09-21: confirmed, not booked ---
+ *
+ * The trial badge counted every live booking on the slot. On 25 Sep that read
+ * "booked 16" while three people had actually said they were coming, and the
+ * other thirteen had answered nothing at all. A booking is a ceiling, not a
+ * turnout, and this card is read to decide how much a missing link costs and
+ * whether a session is worth running — both of which are questions about who
+ * confirmed.
+ *
+ * So the badge is the confirmed count. Bookings stay next to it in muted
+ * text, because the gap between the two numbers is itself worth seeing: 3 of
+ * 16 is a session that needs chasing, 3 of 3 is a small session. A slot
+ * nobody has confirmed says so in words rather than showing a confident 16.
+ *
+ * Group classes are unchanged: a seat is a commitment already, so "seated" is
+ * both numbers at once.
  */
 
 type Person = {
@@ -38,12 +55,16 @@ type Room = {
   /** "Group class" or "Trial · 18 Sep". */
   kind: string;
   meetingUrl: string | null;
-  /** How many people would be let down if this link is missing. */
+  /** How many people are on this room's list at all. */
   people: number;
+  /** How many of them said they are coming. Equals `people` for a group. */
+  confirmed: number;
   /** Who they are. Confirmed first, so the four that show are the four that matter. */
   names: Person[];
-  /** "seated" for a group, "booked" for a trial. */
+  /** "seated" for a group, "confirmed" for a trial. */
   countWord: string;
+  /** Trials only: bookings are a ceiling, so the badge shows the gap. */
+  showsBookedToo: boolean;
   /** Where to go and fix it. */
   fixHref: string;
 };
@@ -133,7 +154,7 @@ export default function ClassRooms() {
           slotIds.length
             ? supabase
                 .from("trial_bookings")
-                .select("slot_id, name, email, status")
+                .select("slot_id, name, email, status, attendance_response")
                 .in("slot_id", slotIds)
                 .neq("status", "cancelled")
             : Promise.resolve({ data: [], error: null } as any),
@@ -153,20 +174,24 @@ export default function ClassRooms() {
           const list = seated.get(m.group_id) ?? [];
           list.push({
             name: (m.user_id && profileName.get(m.user_id)) || "no name yet",
-            confirmed: false,
+            confirmed: true,
           });
           seated.set(m.group_id, list);
         }
 
         const booked = new Map<string, Person[]>();
         for (const b of (bookingsRes.data ?? []) as Array<{
-          slot_id: string | null; name: string | null; email: string | null; status: string | null;
+          slot_id: string | null; name: string | null; email: string | null;
+          status: string | null; attendance_response: string | null;
         }>) {
           if (!b.slot_id) continue;
           const list = booked.get(b.slot_id) ?? [];
           list.push({
             name: personName(b.name, b.email),
-            confirmed: b.status === "confirmed_attendance",
+            // Two ways the same yes is recorded: the status the confirmation
+            // flow writes, and the answer she gave to the attendance letter.
+            // Either one is a person saying she is coming.
+            confirmed: b.status === "confirmed_attendance" || b.attendance_response === "yes",
           });
           booked.set(b.slot_id, list);
         }
@@ -204,8 +229,10 @@ export default function ClassRooms() {
             kind: when ? `Group class · ${when} Cairo · taught in ${lang}` : `Group class · taught in ${lang}`,
             meetingUrl: g.meeting_url,
             people: people.length,
+            confirmed: people.length,
             names: people,
             countWord: "seated",
+            showsBookedToo: false,
             fixHref: "/admin?tab=groups",
           };
         });
@@ -221,18 +248,23 @@ export default function ClassRooms() {
             kind: `Trial session · ${s.class_language ?? "any language"}`,
             meetingUrl: s.meeting_url,
             people: people.length,
+            confirmed: people.filter(p => p.confirmed).length,
             names: people,
-            countWord: "booked",
+            countWord: "confirmed",
+            showsBookedToo: true,
             fixHref: "/admin?tab=trials",
           };
         });
 
-        // Missing links first, and within those the ones with people in them.
-        // Sorting alphabetically would bury the only row that needs an action.
+        // Missing links first, and within those the ones people have actually
+        // committed to. Sorting alphabetically would bury the only row that
+        // needs an action; sorting by bookings would put a session nobody
+        // confirmed above one four people are coming to.
         const all = [...groupRooms, ...trialRooms].sort((a, b) => {
           const aMissing = a.meetingUrl ? 1 : 0;
           const bMissing = b.meetingUrl ? 1 : 0;
           if (aMissing !== bMissing) return aMissing - bMissing;
+          if (a.confirmed !== b.confirmed) return b.confirmed - a.confirmed;
           if (a.people !== b.people) return b.people - a.people;
           return a.title.localeCompare(b.title);
         });
@@ -303,8 +335,11 @@ export default function ClassRooms() {
 
       <div className="grid gap-2 sm:grid-cols-2">
         {rooms.map(r => {
-          const shown = r.names.slice(0, NAMES_SHOWN);
-          const rest = r.people - shown.length;
+          // Only the people who said yes carry the card. The rest are a
+          // number, not names: they have answered nothing.
+          const shown = (r.showsBookedToo ? r.names.filter(p => p.confirmed) : r.names).slice(0, NAMES_SHOWN);
+          const rest = (r.showsBookedToo ? r.confirmed : r.people) - shown.length;
+          const unanswered = r.people - r.confirmed;
 
           return (
             <Card key={r.key} className={r.meetingUrl ? undefined : "border-destructive"}>
@@ -316,24 +351,33 @@ export default function ClassRooms() {
                 <div className="min-w-0 flex-1 space-y-0.5">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-sm font-semibold text-foreground">{r.title}</span>
-                    {r.people > 0 && (
+                    {r.confirmed > 0 && (
                       <Badge variant="secondary" className="text-[10px]">
-                        {r.people} {r.countWord}
+                        {r.confirmed} {r.countWord}
                       </Badge>
+                    )}
+                    {/* A booking is a ceiling, not a turnout. The gap between
+                        the two numbers is the thing worth acting on. */}
+                    {r.showsBookedToo && unanswered > 0 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {r.confirmed === 0
+                          ? `nobody has confirmed yet · ${r.people} booked`
+                          : `of ${r.people} booked · ${unanswered} no reply`}
+                      </span>
                     )}
                   </div>
                   <p className="text-[11px] text-muted-foreground">{r.kind}</p>
 
-                  {r.people > 0 && (
-                    // The names, not just the number. A confirmed attendee is
-                    // marked, because on a trial the two facts Re acts on are
-                    // "how many" and "which of them actually said yes".
+                  {shown.length > 0 && (
+                    // The names, not just the number — and on a trial only the
+                    // ones who said yes, because those are the people a missing
+                    // link would actually let down.
                     <p className="text-[11px] text-foreground/80">
                       {shown.map((p, i) => (
                         <span key={`${p.name}-${i}`}>
                           {i > 0 && <span className="text-muted-foreground">, </span>}
                           <span className={p.confirmed ? "font-semibold" : undefined}>{p.name}</span>
-                          {p.confirmed && <span className="text-muted-foreground"> ✓</span>}
+                          {r.showsBookedToo && p.confirmed && <span className="text-muted-foreground"> ✓</span>}
                         </span>
                       ))}
                       {rest > 0 && (
