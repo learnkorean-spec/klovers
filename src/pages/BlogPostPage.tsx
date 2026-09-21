@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -14,6 +14,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
+import { stripHtmlComments } from "@/lib/markdownContent";
 import { buildFaqJsonLd } from "../../scripts/lib/faq-parser.mjs";
 
 interface BlogPost {
@@ -361,6 +362,13 @@ const BlogPostPage = () => {
   const readingTime = post?.content ? Math.max(1, Math.ceil(post.content.split(/\s+/).length / 200)) : null;
   const isRtl = post?.lang === "ar";
 
+  // The stored markdown carries the `<!-- klovers:related:start -->` /
+  // `<!-- klovers:related:end -->` delimiters that let the internal-links
+  // script rewrite its own block. react-markdown renders raw HTML nodes as
+  // literal text when rehype-raw is absent, so without this the two comments
+  // are printed to the reader above and below the Related Articles list.
+  const articleMarkdown = useMemo(() => stripHtmlComments(post?.content ?? ""), [post?.content]);
+
   if (fetchError) {
     return (
       <div className="min-h-screen bg-background">
@@ -529,7 +537,7 @@ const BlogPostPage = () => {
             ${isRtl ? "text-right" : ""}
           `}>
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {post.content}
+              {articleMarkdown}
             </ReactMarkdown>
           </div>
 
