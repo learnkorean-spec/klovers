@@ -32,13 +32,18 @@ import { useStudentOverview, buildOverviewByEmail } from "@/hooks/admin/useStude
 import { useScheduleWeekdays } from "@/hooks/admin/useScheduleWeekdays";
 import type { Lead } from "@/types/admin";
 
-const STATUS_OPTIONS = ["new", "trial_booked", "contacted", "enrolled", "rejected", "lost"];
+// "churned" sits after "enrolled" because that is the order it happens in: a
+// student who paid, attended and then stopped. It is NOT "lost", which in
+// every other row means a prospect who never enrolled at all — filing the two
+// together is what would send a win-back campaign to people who were never
+// students, and miss the ones who were.
+const STATUS_OPTIONS = ["new", "trial_booked", "contacted", "enrolled", "churned", "rejected", "lost"];
 
 const LeadsPanel: React.FC = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
 
-  // ── Data hooks ────────────────────────────────────────────────────────────
+  // ── Data hooks ───────────────────────────────────────────────────
   const { data: overviewRows = [] } = useStudentOverview();
   const overviewByEmail = useMemo(() => buildOverviewByEmail(overviewRows), [overviewRows]);
   const { data: leads = [], isLoading: leadsLoading, error: leadsQueryError } = useLeads({ overviewByEmail });
@@ -46,7 +51,7 @@ const LeadsPanel: React.FC = () => {
 
   const leadsError = leadsQueryError?.message ?? null;
 
-  // ── Local UI state ────────────────────────────────────────────────────────
+  // ── Local UI state ───────────────────────────────────────────────
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("confirmed");
   const [planFilter, setPlanFilter] = useState("all");
@@ -91,7 +96,7 @@ const LeadsPanel: React.FC = () => {
     return () => { cancelled = true; };
   }, []);
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────
 
   const updateLeadViaFn = useCallback(async (id: string, fields: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke("admin-update-lead", {
@@ -101,7 +106,7 @@ const LeadsPanel: React.FC = () => {
     if (data?.error) throw new Error(data.error);
   }, []);
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  // ── Handlers ───────────────────────────────────────────────────
 
   const handleStatusChange = useCallback(async (id: string, newStatus: string) => {
     try {
@@ -231,7 +236,7 @@ const LeadsPanel: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: ["admin"] });
   }, [leads, updateLeadViaFn, queryClient]);
 
-  // ── Trial approve / reject ────────────────────────────────────────────────
+  // ── Trial approve / reject ─────────────────────────────────────────
 
   const [approvingTrialId, setApprovingTrialId] = useState<string | null>(null);
 
@@ -296,7 +301,7 @@ const LeadsPanel: React.FC = () => {
     }
   }, [updateLeadViaFn, queryClient]);
 
-  // ── Computed values ───────────────────────────────────────────────────────
+  // ── Computed values ──────────────────────────────────────────────
 
   const confirmedEmails = useMemo(() => {
     const emails = new Set<string>();
@@ -355,7 +360,7 @@ const LeadsPanel: React.FC = () => {
     exportCSVUtil(headers, rows, "leads");
   }, [sortedLeads]);
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────
 
   return (
     <Card className="rounded-2xl">
@@ -404,7 +409,7 @@ const LeadsPanel: React.FC = () => {
           </Button>
           <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={handleSendNameCollectionEmails} disabled={sendingNameEmails}>
             <Mail className="h-4 w-4" />
-            {!isMobile && <span className="ml-1">{sendingNameEmails ? "Sending\u2026" : "Request Names"}</span>}
+            {!isMobile && <span className="ml-1">{sendingNameEmails ? "Sending…" : "Request Names"}</span>}
           </Button>
           <Button variant="outline" size={isMobile ? "icon" : "sm"} onClick={exportCSV}>
             <Download className="h-4 w-4" />
@@ -528,7 +533,7 @@ const LeadsPanel: React.FC = () => {
                 {abandoned.map(l => {
                   const hoursAgo = Math.round((Date.now() - new Date(l.created_at).getTime()) / 3600000);
                   const timeLabel = hoursAgo < 24 ? `${hoursAgo}h ago` : `${Math.round(hoursAgo / 24)}d ago`;
-                  const waMsg = encodeURIComponent(`Hi ${(l.name || "").split(" ")[0]}! \u{1F44B} We noticed you were almost done enrolling in Klovers Korean. Your spot is still available \u2014 would you like to complete your ${l.plan_type} class enrollment? \u{1F1F0}\u{1F1F7}`);
+                  const waMsg = encodeURIComponent(`Hi ${(l.name || "").split(" ")[0]}! \u{1F44B} We noticed you were almost done enrolling in Klovers Korean. Your spot is still available — would you like to complete your ${l.plan_type} class enrollment? \u{1F1F0}\u{1F1F7}`);
                   const waLink = `https://wa.me/?text=${waMsg}`;
                   return (
                     <div key={l.id} className="flex items-center justify-between bg-white dark:bg-background border border-amber-100 dark:border-amber-900/40 rounded-lg px-3 py-2 gap-3">
@@ -543,7 +548,7 @@ const LeadsPanel: React.FC = () => {
                       <div className="flex gap-1.5 shrink-0">
                         <Button size="sm" variant="outline" className={`h-7 px-2 text-xs ${contactedLeadIds.has(l.id) && copiedLeadId !== l.id ? "border-green-400 text-green-700 dark:text-green-400" : ""}`}
                           onClick={() => {
-                            navigator.clipboard.writeText(`Hi ${(l.name || "").split(" ")[0]}! \u{1F44B} We noticed you were almost done enrolling. Your spot is still available \u2014 complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`);
+                            navigator.clipboard.writeText(`Hi ${(l.name || "").split(" ")[0]}! \u{1F44B} We noticed you were almost done enrolling. Your spot is still available — complete your ${l.plan_type} class enrollment: https://kloversegy.com/enroll-now`);
                             toast({ title: "Copied!", description: "Follow-up message copied to clipboard" });
                             setContactedLeadIds(prev => new Set(prev).add(l.id));
                             setCopiedLeadId(l.id);
@@ -654,12 +659,12 @@ const LeadsPanel: React.FC = () => {
                   <TableHead
                     className="py-3 px-3 font-semibold cursor-pointer select-none hover:text-primary"
                     onClick={() => setLeadsSort(s => ({ col: "name", dir: s.col === "name" && s.dir === "asc" ? "desc" : "asc" }))}
-                  >Name {leadsSort.col === "name" ? (leadsSort.dir === "asc" ? "\u2191" : "\u2193") : "\u2195"}</TableHead>
+                  >Name {leadsSort.col === "name" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
                   <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
                   <TableHead
                     className="py-3 px-3 hidden md:table-cell font-semibold cursor-pointer select-none hover:text-primary"
                     onClick={() => setLeadsSort(s => ({ col: "country", dir: s.col === "country" && s.dir === "asc" ? "desc" : "asc" }))}
-                  >Country {leadsSort.col === "country" ? (leadsSort.dir === "asc" ? "\u2191" : "\u2193") : "\u2195"}</TableHead>
+                  >Country {leadsSort.col === "country" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
                   <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Plan</TableHead>
                   <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Duration</TableHead>
                   <TableHead className="py-3 px-3 hidden lg:table-cell font-semibold">Schedule</TableHead>
@@ -669,7 +674,7 @@ const LeadsPanel: React.FC = () => {
                   <TableHead
                     className="py-3 px-3 hidden sm:table-cell font-semibold cursor-pointer select-none hover:text-primary"
                     onClick={() => setLeadsSort(s => ({ col: "created_at", dir: s.col === "created_at" && s.dir === "asc" ? "desc" : "asc" }))}
-                  >Date {leadsSort.col === "created_at" ? (leadsSort.dir === "asc" ? "\u2191" : "\u2193") : "\u2195"}</TableHead>
+                  >Date {leadsSort.col === "created_at" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
                   <TableHead className="py-3 px-3 w-10"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -700,7 +705,7 @@ const LeadsPanel: React.FC = () => {
                     <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">
                       {editingLeadId === lead.id ? (
                         <Input value={editForm.country || ""} onChange={(e) => setEditForm(f => ({ ...f, country: e.target.value }))} className="h-8 text-sm" />
-                      ) : lead.country || "\u2014"}
+                      ) : lead.country || "—"}
                     </TableCell>
                     <TableCell className="py-3 px-3 hidden md:table-cell">
                       {editingLeadId === lead.id ? (
@@ -711,12 +716,12 @@ const LeadsPanel: React.FC = () => {
                             <SelectItem value="private">private</SelectItem>
                           </SelectContent>
                         </Select>
-                      ) : lead.plan_type ? <Badge variant={lead.plan_type === "private" ? "default" : "secondary"} className="text-xs capitalize">{lead.plan_type}</Badge> : "\u2014"}
+                      ) : lead.plan_type ? <Badge variant={lead.plan_type === "private" ? "default" : "secondary"} className="text-xs capitalize">{lead.plan_type}</Badge> : "—"}
                     </TableCell>
                     <TableCell className="py-3 px-3 hidden md:table-cell text-muted-foreground">
                       {editingLeadId === lead.id ? (
                         <Input value={editForm.duration || ""} onChange={(e) => setEditForm(f => ({ ...f, duration: e.target.value }))} className="h-8 text-sm w-20" />
-                      ) : lead.duration || "\u2014"}
+                      ) : lead.duration || "—"}
                     </TableCell>
                     <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground">
                       {editingLeadId === lead.id ? (
@@ -740,10 +745,10 @@ const LeadsPanel: React.FC = () => {
                             );
                           })}
                         </div>
-                      ) : lead.schedule || "\u2014"}
+                      ) : lead.schedule || "—"}
                     </TableCell>
                     <TableCell className="py-3 px-3 hidden lg:table-cell text-xs text-muted-foreground max-w-[120px] truncate">
-                      {lead.goal || "\u2014"}
+                      {lead.goal || "—"}
                     </TableCell>
                     <TableCell className="py-3 px-3">
                       {editingLeadId === lead.id ? (
