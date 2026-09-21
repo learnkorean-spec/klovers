@@ -164,6 +164,15 @@ import { LEVELS, getLevelShortLabel, normalizeLevel } from "@/constants/levels";
  * The two axes stay separate on purpose: the border is the lifecycle, the
  * tint and glow are the clock. A live class is a green-bordered card with the
  * mint wash on top. A paused class is never "live" whatever its slot says.
+ *
+ * --- 2026-09-21, unassign from anywhere ---
+ *
+ * "Remove" lives inside the Members panel, which can only be opened on the
+ * group the student is actually in — so taking someone out meant finding that
+ * card first, and a paused one sorts to the bottom. Every other group's "Add
+ * student" already lists her, badged with where she sits, because clicking
+ * her there MOVES her. The Unassign button on that same row is the other
+ * half: it takes her out of her current group without seating her anywhere.
  */
 
 type Candidate = {
@@ -918,6 +927,50 @@ export default function GroupsToStart() {
     }
   };
 
+  /**
+   * Take a student out of whatever group she is sitting in, from any card.
+   *
+   * "Remove" inside Members can only be reached from the group she is
+   * actually in — so unseating someone meant finding that card first, and if
+   * it was paused and sorted to the bottom, hunting for it. The same student
+   * is already listed in every other group's "Add student" (badged with where
+   * she sits, so she can be moved in one click); this is the other half of
+   * that: take her out without putting her anywhere.
+   *
+   * Her enrolment is reopened exactly as Remove does it, so she goes straight
+   * back into the free-to-seat pool.
+   */
+  const unassign = async (c: Candidate) => {
+    if (!c.currentGroupId) return;
+    setRemovingUserId(c.userId);
+    try {
+      const { error: delErr } = await supabase
+        .from("pkg_group_members")
+        .delete()
+        .eq("group_id", c.currentGroupId)
+        .eq("user_id", c.userId);
+      if (delErr) throw delErr;
+
+      if (c.enrollmentId) {
+        const { error: enrollErr } = await supabase
+          .from("enrollments")
+          .update({ matched_at: null, slot_id: null })
+          .eq("id", c.enrollmentId);
+        if (enrollErr) throw enrollErr;
+      }
+
+      toast({
+        title: `${c.name} taken out of ${c.currentGroupTitle}`,
+        description: "She is not in any group now, and shows up unbadged in every group's Add student list.",
+      });
+      await load();
+    } catch (e: any) {
+      toast({ title: "Could not unassign that student", description: e?.message ?? String(e), variant: "destructive" });
+    } finally {
+      setRemovingUserId(null);
+    }
+  };
+
   const candidatesFor = useMemo(() => {
     return (g: GroupRow) => {
       const wantLevel = g.level ? normalizeLevel(g.level) : null;
@@ -1393,30 +1446,52 @@ export default function GroupsToStart() {
                         </p>
                       )}
                       {candidatesFor(g).map(c => (
-                        <button
+                        <div
                           key={c.userId}
-                          type="button"
-                          disabled={addingBusy}
-                          onClick={() => void addStudent(g, c)}
-                          className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-xs hover:bg-accent disabled:opacity-50"
+                          className="flex w-full items-center gap-1 rounded px-2 py-1 text-xs hover:bg-accent"
                         >
-                          <span className="truncate">{c.name} <span className="text-muted-foreground">· {c.email}</span></span>
-                          <span className="ml-2 flex shrink-0 gap-1">
-                            {g.level && normalizeLevel(c.level ?? "") === normalizeLevel(g.level) && (
-                              <Badge variant="secondary" className="text-[9px]">level match</Badge>
-                            )}
-                            {c.currentGroupId && (
-                              <Badge variant="outline" className="text-[9px] text-blue-600 border-blue-300">
-                                in {c.currentGroupTitle} · click to move
-                              </Badge>
-                            )}
-                            {!c.enrollmentId && (
-                              <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-300">
-                                no enrolment
-                              </Badge>
-                            )}
-                          </span>
-                        </button>
+                          {/* Clicking the row seats her here (or moves her here
+                              if she is sitting somewhere else). The unassign
+                              button beside it is the opposite action, so it
+                              cannot be nested inside this one. */}
+                          <button
+                            type="button"
+                            disabled={addingBusy}
+                            onClick={() => void addStudent(g, c)}
+                            className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left disabled:opacity-50"
+                          >
+                            <span className="truncate">{c.name} <span className="text-muted-foreground">· {c.email}</span></span>
+                            <span className="flex shrink-0 gap-1">
+                              {g.level && normalizeLevel(c.level ?? "") === normalizeLevel(g.level) && (
+                                <Badge variant="secondary" className="text-[9px]">level match</Badge>
+                              )}
+                              {c.currentGroupId && (
+                                <Badge variant="outline" className="text-[9px] text-blue-600 border-blue-300">
+                                  in {c.currentGroupTitle} · click to move
+                                </Badge>
+                              )}
+                              {!c.enrollmentId && (
+                                <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-300">
+                                  no enrolment
+                                </Badge>
+                              )}
+                            </span>
+                          </button>
+                          {c.currentGroupId && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 shrink-0 px-1.5 text-[10px] text-destructive hover:text-destructive"
+                              disabled={removingUserId === c.userId}
+                              title={`Take ${c.name} out of ${c.currentGroupTitle} without seating her here`}
+                              onClick={() => void unassign(c)}
+                            >
+                              <UserMinus className="h-3 w-3 mr-0.5" />
+                              {removingUserId === c.userId ? "…" : "Unassign"}
+                            </Button>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -1450,7 +1525,7 @@ export default function GroupsToStart() {
                     <p className="pt-1 text-[10px] text-muted-foreground">
                       Removing just unseats her — to move her to a specific group, it's usually quicker to open
                       that group's "Add student" instead and pick her straight from there; she'll show up badged
-                      with wherever she currently sits.
+                      with wherever she currently sits, with an Unassign beside her if you only want her out.
                     </p>
                   </div>
                 )}
