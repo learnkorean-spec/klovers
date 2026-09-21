@@ -25,6 +25,17 @@
 -- Everything else in the guard is untouched: the enrolment must still exist,
 -- be APPROVED, be PAID or PENDING_PAYMENT, and the group must still have a
 -- free seat.
+--
+-- One thing is ADDED, at the end. `enrollments.slot_id` is the enrolment's
+-- record of which schedule slot it belongs to, and only the admin UI ever
+-- wrote it -- and only when the client already knew the enrolment id. The
+-- guard's own lookup above resolves an enrolment the client did not know
+-- about, so a seat could be created correctly while the enrolment went on
+-- naming the slot she left. Aya, moved from Hangul - Friday to Hangul -
+-- Arabic track - Wednesday, was in exactly that state: seated on Wednesday,
+-- enrolment still pointing at Friday's package. Whoever writes the seat, the
+-- enrolment now follows it. The backfill at the bottom fixes the rows that
+-- already drifted.
 
 create or replace function public.enforce_group_membership_guard()
 returns trigger
@@ -109,6 +120,23 @@ begin
     raise exception 'Cannot assign student to "%": group is full (%/% seats taken).', coalesce(_group.name, _group.id::text), _active_count, _capacity;
   end if;
 
+  -- The seat is the truth; the enrolment follows it. See the note at the top.
+  update public.enrollments
+     set slot_id    = _group.package_id,
+         matched_at = coalesce(matched_at, now())
+   where id = new.enrollment_id
+     and (slot_id is distinct from _group.package_id or matched_at is null);
+
   return new;
 end;
 $function$;
+
+-- Backfill: every live seat whose enrolment names a different slot.
+update public.enrollments e
+   set slot_id    = g.package_id,
+       matched_at = coalesce(e.matched_at, now())
+  from public.pkg_group_members m
+  join public.pkg_groups g on g.id = m.group_id
+ where m.enrollment_id = e.id
+   and m.member_status = 'active'
+   and e.slot_id is distinct from g.package_id;
