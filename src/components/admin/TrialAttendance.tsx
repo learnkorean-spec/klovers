@@ -228,7 +228,7 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
 
   const setMark = useMutation({
     mutationFn: async ({ id, mark }: { id: string; mark: Mark }) => {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await supabase.auth.getUser(); // supabase-error-check-ignore: only supplies the audit id; if it fails the stamp is null and the write below reports its own error
       const attended = mark === "yes" ? true : mark === "no" ? false : null;
       const patch: Record<string, unknown> = {
         attended,
@@ -273,7 +273,7 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
         if (error) throw error;
         return;
       }
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await supabase.auth.getUser(); // supabase-error-check-ignore: only supplies the audit id; if it fails the stamp is null and the write below reports its own error
       const { error } = await table.insert({
         trial_date: date,
         start_time: time ?? "",

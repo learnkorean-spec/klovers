@@ -136,12 +136,13 @@ const BlogPostPage = () => {
           // Track view — fire-and-forget, non-blocking
           (supabase as any).rpc("increment_blog_view", { post_slug: slug }).then(() => {});
         } else if (language === "ar" && !slug.endsWith("-ar")) {
-          const { data: arData } = await supabase
+          const { data: arData, error: arError } = await supabase
             .from("blog_posts")
             .select("*")
             .eq("slug", `${slug}-ar`)
             .eq("published", true)
             .maybeSingle();
+          if (arError) throw arError;
           setPost(arData as BlogPost | null);
         } else {
           setPost(null);
@@ -175,12 +176,14 @@ const BlogPostPage = () => {
       const { slugs } = extractRelatedBlock(post.content);
 
       if (slugs.length) {
-        const { data } = await supabase
+        const { data, error: curatedError } = await supabase
           .from("blog_posts")
           .select(CARD_COLUMNS)
           .in("slug", slugs)
           .eq("published", true);
         if (cancelled) return;
+        // Related links are decoration: fall through to the next step, but say so.
+        if (curatedError) console.error("BlogPostPage: curated related lookup failed", curatedError);
         if (data && data.length) {
           // `.in()` does not preserve argument order, and the block's order is
           // its relevance ranking — restore it rather than showing whatever
@@ -197,7 +200,7 @@ const BlogPostPage = () => {
         }
       }
 
-      const { data: sameType } = await supabase
+      const { data: sameType, error: sameTypeError } = await supabase
         .from("blog_posts")
         .select(CARD_COLUMNS)
         .eq("published", true)
@@ -207,13 +210,14 @@ const BlogPostPage = () => {
         .order("published_at", { ascending: false })
         .limit(CARD_LIMIT);
       if (cancelled) return;
+      if (sameTypeError) console.error("BlogPostPage: same-type related lookup failed", sameTypeError);
       if (sameType && sameType.length) {
         setRelatedPosts(sameType as RelatedCard[]);
         setRelatedIsCurated(false);
         return;
       }
 
-      const { data: recent } = await supabase
+      const { data: recent, error: recentError } = await supabase
         .from("blog_posts")
         .select(CARD_COLUMNS)
         .eq("published", true)
@@ -222,6 +226,7 @@ const BlogPostPage = () => {
         .order("published_at", { ascending: false })
         .limit(CARD_LIMIT);
       if (cancelled) return;
+      if (recentError) console.error("BlogPostPage: recent related lookup failed", recentError);
       setRelatedPosts((recent as RelatedCard[]) || []);
       setRelatedIsCurated(false);
     })();
@@ -240,12 +245,13 @@ const BlogPostPage = () => {
     const candidates = post.lang === "ar" ? [base] : [`${base}-ar`, `ar-${base}`];
 
     (async () => {
-      const { data } = await supabase
+      const { data, error: partnerError } = await supabase
         .from("blog_posts")
         .select("slug")
         .in("slug", candidates)
         .eq("published", true)
         .limit(1);
+      if (partnerError) console.error("BlogPostPage: partner-slug lookup failed", partnerError);
       if (!cancelled) setPartnerSlug(data?.[0]?.slug ?? null);
     })();
 

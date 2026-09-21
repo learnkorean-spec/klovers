@@ -662,10 +662,13 @@ export default function GroupsToStart() {
       const unmatchedUserIds = [...new Set(unmatched.map(e => e.user_id))];
       let enrollProfileMap = new Map<string, { name: string; email: string }>();
       if (unmatchedUserIds.length > 0) {
-        const { data: profiles } = await supabase
+        const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select("user_id, name, email")
           .in("user_id", unmatchedUserIds);
+        // Names are a convenience: on failure the candidates still list, as
+        // "Unnamed", but the failure is no longer silent.
+        if (profilesError) console.error("GroupsToStart: profile lookup failed", profilesError);
         enrollProfileMap = new Map(
           ((profiles ?? []) as Array<{ user_id: string; name: string | null; email: string | null }>)
             .map(p => [p.user_id, { name: p.name || "Unnamed", email: p.email || "" }]),
