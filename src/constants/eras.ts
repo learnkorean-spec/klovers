@@ -14,9 +14,11 @@
  *  - Related articles are ONLY posts already verified live in `blog_posts`
  *    (the same set CultureHeritageSection.tsx uses). Do not add a slug here
  *    that has not been checked against the database in both EN and AR.
- *  - Images are only files already used elsewhere on the site. The
- *    "before-korea" era deliberately has none: its local candidates
- *    (dangun-myth.jpg) are unvetted, see the 18 Sep hero/culture handover.
+ *  - Images are files already used elsewhere on the site, with one exception:
+ *    "before-korea" uses an original illustration
+ *    (/assets/eras/gojoseon.svg: Mount Paektu at dawn and a dolmen), because
+ *    its local candidate (dangun-myth.jpg) is unvetted, see the 18 Sep
+ *    hero/culture handover.
  *
  * Sources for the facts: Wikipedia pages Gojoseon, Four Commanderies of Han,
  * Three Kingdoms of Korea, Silla, Joseon, Hanok, Korean wave (opened
@@ -182,9 +184,10 @@ const POSTS: Record<
 export const ERAS: Era[] = [
   {
     id: "before-korea",
+    image: "/assets/eras/gojoseon.svg",
     glyph: "고조선",
-    altEn: "Gojoseon, the first Korean kingdom",
-    altAr: "غوجوسون، أول مملكة كورية",
+    altEn: "Mount Paektu at dawn, with an ancient stone dolmen in the foreground",
+    altAr: "جبل بايكدو عند الفجر، وأمامه دولمن حجري قديم",
     titleEn: "Before Korea",
     titleAr: "قبل كوريا",
     datesEn: "Legend, to the 4th century CE",
