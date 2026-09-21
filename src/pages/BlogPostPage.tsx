@@ -14,7 +14,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
-import { stripHtmlComments } from "@/lib/markdownContent";
+import { extractRelatedBlock } from "@/lib/markdownContent";
 import { buildFaqJsonLd } from "../../scripts/lib/faq-parser.mjs";
 
 interface BlogPost {
@@ -39,6 +39,21 @@ interface BlogPost {
   created_at: string;
   updated_at: string | null;
 }
+
+type RelatedCard = Pick<
+  BlogPost,
+  "id" | "title" | "slug" | "description" | "hero_image" | "hero_alt" | "article_type" | "author" | "published_at" | "created_at"
+>;
+
+/** Columns the related-article cards need. One list, so the curated lookup and
+ * the fallback query can never select different shapes. */
+const CARD_COLUMNS =
+  "id, title, slug, description, hero_image, hero_alt, article_type, author, published_at, created_at";
+
+/** The card grid is three across. Links past the third are not dropped — they
+ * are listed as text below, because they are internal links that were chosen
+ * deliberately and throwing them away would undo part of the link graph. */
+const CARD_LIMIT = 3;
 
 const TYPE_LABEL: Record<string, string> = {
   howto: "How-To",
@@ -72,7 +87,10 @@ const BlogPostPage = () => {
   const [copied, setCopied] = useState(false);
   // Slug of the EN<->AR partner post, or null when this post has no partner.
   const [partnerSlug, setPartnerSlug] = useState<string | null>(null);
-  const [relatedPosts, setRelatedPosts] = useState<Pick<BlogPost, "id"|"title"|"slug"|"description"|"hero_image"|"hero_alt"|"article_type"|"author"|"published_at"|"created_at">[]>([]);
+  const [relatedPosts, setRelatedPosts] = useState<RelatedCard[]>([]);
+  // True when the cards came from the article's own related-links block rather
+  // than from the article_type fallback. Only the heading depends on it.
+  const [relatedIsCurated, setRelatedIsCurated] = useState(false);
   const { language } = useLanguage();
   const isAr = language === "ar";
 
@@ -104,57 +122,31 @@ const BlogPostPage = () => {
       setLoading(true);
       setFetchError(null);
       try {
-      const { data, error } = await supabase
-        .from("blog_posts")
-        .select("*")
-        .eq("slug", slug)
-        .eq("published", true)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        setPost(data as BlogPost);
-        // Track view — fire-and-forget, non-blocking
-        (supabase as any).rpc("increment_blog_view", { post_slug: slug }).then(() => {});
-        // Fetch related posts: same article_type, exclude current
-        supabase
-          .from("blog_posts")
-          .select("id, title, slug, description, hero_image, hero_alt, article_type, author, published_at, created_at")
-          .eq("published", true)
-          .eq("lang", data.lang || "en")
-          .eq("article_type", data.article_type)
-          .neq("slug", slug)
-          .order("published_at", { ascending: false })
-          .limit(3)
-          .then(({ data: rel }) => {
-            if (rel && rel.length > 0) {
-              setRelatedPosts(rel as any);
-            } else {
-              // Fallback: any recent posts in same lang
-              supabase
-                .from("blog_posts")
-                .select("id, title, slug, description, hero_image, hero_alt, article_type, author, published_at, created_at")
-                .eq("published", true)
-                .eq("lang", data.lang || "en")
-                .neq("slug", slug)
-                .order("published_at", { ascending: false })
-                .limit(3)
-                .then(({ data: fallback }) => setRelatedPosts((fallback as any) || []));
-            }
-          });
-      } else if (language === "ar" && !slug.endsWith("-ar")) {
-        const { data: arData } = await supabase
+        const { data, error } = await supabase
           .from("blog_posts")
           .select("*")
-          .eq("slug", `${slug}-ar`)
+          .eq("slug", slug)
           .eq("published", true)
           .maybeSingle();
-        setPost(arData as BlogPost | null);
-      } else {
-        setPost(null);
-      }
-      setLoading(false);
+
+        if (error) throw error;
+
+        if (data) {
+          setPost(data as BlogPost);
+          // Track view — fire-and-forget, non-blocking
+          (supabase as any).rpc("increment_blog_view", { post_slug: slug }).then(() => {});
+        } else if (language === "ar" && !slug.endsWith("-ar")) {
+          const { data: arData } = await supabase
+            .from("blog_posts")
+            .select("*")
+            .eq("slug", `${slug}-ar`)
+            .eq("published", true)
+            .maybeSingle();
+          setPost(arData as BlogPost | null);
+        } else {
+          setPost(null);
+        }
+        setLoading(false);
       } catch (err) {
         setFetchError(err instanceof Error ? err.message : "Failed to load article");
         setLoading(false);
@@ -162,6 +154,82 @@ const BlogPostPage = () => {
     };
     fetchPost();
   }, [slug, language]);
+
+  // Related articles, in order of preference:
+  //   1. the slugs in the article's own related-links block — picked by shared
+  //      keywords weighted by term rarity, and the only set that is language-
+  //      safe and retired-slug-safe by construction;
+  //   2. same article_type, most recent first;
+  //   3. any recent article in the same language.
+  // Steps 2 and 3 are the behaviour this page has always had; step 1 is new,
+  // so an article with no block renders exactly what it rendered before.
+  useEffect(() => {
+    if (!post) {
+      setRelatedPosts([]);
+      setRelatedIsCurated(false);
+      return;
+    }
+    let cancelled = false;
+
+    (async () => {
+      const { slugs } = extractRelatedBlock(post.content);
+
+      if (slugs.length) {
+        const { data } = await supabase
+          .from("blog_posts")
+          .select(CARD_COLUMNS)
+          .in("slug", slugs)
+          .eq("published", true);
+        if (cancelled) return;
+        if (data && data.length) {
+          // `.in()` does not preserve argument order, and the block's order is
+          // its relevance ranking — restore it rather than showing whatever
+          // order Postgres returned.
+          const bySlug = new Map((data as RelatedCard[]).map((row) => [row.slug, row]));
+          const ordered = slugs
+            .map((s) => bySlug.get(s))
+            .filter((row): row is RelatedCard => Boolean(row));
+          if (ordered.length) {
+            setRelatedPosts(ordered);
+            setRelatedIsCurated(true);
+            return;
+          }
+        }
+      }
+
+      const { data: sameType } = await supabase
+        .from("blog_posts")
+        .select(CARD_COLUMNS)
+        .eq("published", true)
+        .eq("lang", post.lang || "en")
+        .eq("article_type", post.article_type)
+        .neq("slug", post.slug)
+        .order("published_at", { ascending: false })
+        .limit(CARD_LIMIT);
+      if (cancelled) return;
+      if (sameType && sameType.length) {
+        setRelatedPosts(sameType as RelatedCard[]);
+        setRelatedIsCurated(false);
+        return;
+      }
+
+      const { data: recent } = await supabase
+        .from("blog_posts")
+        .select(CARD_COLUMNS)
+        .eq("published", true)
+        .eq("lang", post.lang || "en")
+        .neq("slug", post.slug)
+        .order("published_at", { ascending: false })
+        .limit(CARD_LIMIT);
+      if (cancelled) return;
+      setRelatedPosts((recent as RelatedCard[]) || []);
+      setRelatedIsCurated(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [post]);
 
   // Resolve the EN<->AR partner post, so hreflang is only emitted for a pair
   // that really exists. Arabic slugs use a `-ar` suffix or a legacy `ar-` prefix.
@@ -362,12 +430,15 @@ const BlogPostPage = () => {
   const readingTime = post?.content ? Math.max(1, Math.ceil(post.content.split(/\s+/).length / 200)) : null;
   const isRtl = post?.lang === "ar";
 
-  // The stored markdown carries the `<!-- klovers:related:start -->` /
-  // `<!-- klovers:related:end -->` delimiters that let the internal-links
-  // script rewrite its own block. react-markdown renders raw HTML nodes as
-  // literal text when rehype-raw is absent, so without this the two comments
-  // are printed to the reader above and below the Related Articles list.
-  const articleMarkdown = useMemo(() => stripHtmlComments(post?.content ?? ""), [post?.content]);
+  // The stored markdown carries the `<!-- klovers:related:start -->` markers
+  // and, between them, a bullet list of the same links the cards below now
+  // show. react-markdown renders raw HTML nodes as literal text when rehype-raw
+  // is absent, so without this the comments print to the reader — and the
+  // links would appear twice.
+  const articleMarkdown = useMemo(() => extractRelatedBlock(post?.content ?? "").body, [post?.content]);
+
+  const cards = relatedPosts.slice(0, CARD_LIMIT);
+  const extraLinks = relatedPosts.slice(CARD_LIMIT);
 
   if (fetchError) {
     return (
@@ -620,15 +691,22 @@ const BlogPostPage = () => {
             </Button>
           </div>
 
-          {/* Comments */}
-          <BlogComments postId={post.id} isAr={isAr} />
-
-          {/* Related posts */}
-          {relatedPosts.length > 0 && (
+          {/* Related posts — the curated block when the article has one, the
+              article_type suggestions otherwise. Placed before the comments:
+              a reader who has just finished the article is looking for what to
+              read next before they are looking for a comment box. */}
+          {cards.length > 0 && (
             <div className="mt-14 pt-10 border-t border-border">
-              <h2 className="text-lg font-bold text-foreground mb-5">{isAr ? "قد يعجبك أيضاً" : "You might also like"}</h2>
+              <h2 className="text-lg font-bold text-foreground mb-1">
+                {relatedIsCurated
+                  ? (isAr ? "اقرأ بعد كده" : "Read this next")
+                  : (isAr ? "قد يعجبك أيضاً" : "You might also like")}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-5">
+                {isAr ? "مقالات على نفس الموضوع" : "More on the same topic"}
+              </p>
               <div className="grid sm:grid-cols-3 gap-4">
-                {relatedPosts.map((rp) => (
+                {cards.map((rp) => (
                   <Link
                     key={rp.id}
                     to={`/blog/${rp.slug}`}
@@ -649,7 +727,10 @@ const BlogPostPage = () => {
                       <h3 className="text-sm font-semibold text-foreground mt-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                         {rp.title}
                       </h3>
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                        {rp.description}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                         <CalendarDays className="h-3 w-3" />
                         {new Date(rp.published_at || rp.created_at).toLocaleDateString(isAr ? "ar-EG" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </p>
@@ -657,8 +738,28 @@ const BlogPostPage = () => {
                   </Link>
                 ))}
               </div>
+
+              {extraLinks.length > 0 && (
+                <div className="mt-5 flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {isAr ? "كمان في نفس الموضوع" : "Also worth reading"}
+                  </span>
+                  {extraLinks.map((rp) => (
+                    <Link
+                      key={rp.id}
+                      to={`/blog/${rp.slug}`}
+                      className="text-sm text-blue-700 dark:text-blue-400 underline underline-offset-2 hover:text-blue-900 dark:hover:text-blue-300"
+                    >
+                      {rp.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           )}
+
+          {/* Comments */}
+          <BlogComments postId={post.id} isAr={isAr} />
 
           {/* Back to blog */}
           <div className="mt-8">
