@@ -30,7 +30,9 @@ const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
 
 /**
  * Per-card look, by position - the game-card sheet's rhythm: mostly white, one
- * full-Yellow highlight, a couple of Mint. Whole literal class strings on
+ * full-Yellow highlight, a couple of Ivory (the sheet used Mint for those;
+ * the brand is three colours since 20 Sep, so Ivory stands in). Whole literal
+ * class strings on
  * purpose: Tailwind's scanner only keeps what it can see.
  *
  * On the Yellow card the drawing gets an Ivory ring (`ring`) and the text is
@@ -39,12 +41,12 @@ const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
  */
 const CARD_LOOK = [
   { surface: "bg-klovers-yellow", ink: "text-charcoal", sub: "text-charcoal/75", badge: "bg-ivory text-charcoal", ring: true, play: "border-2 border-charcoal bg-transparent" },
-  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-mint text-mint-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
-  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-mint text-mint-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
-  { surface: "bg-mint dark:bg-card", ink: "text-mint-foreground dark:text-foreground", sub: "text-mint-foreground/75 dark:text-foreground/70", badge: "bg-card text-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
-  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-mint text-mint-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
-  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-mint text-mint-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
-  { surface: "bg-mint dark:bg-card", ink: "text-mint-foreground dark:text-foreground", sub: "text-mint-foreground/75 dark:text-foreground/70", badge: "bg-card text-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-klovers-yellow text-charcoal", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-klovers-yellow text-charcoal", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-ivory dark:bg-card", ink: "text-charcoal dark:text-foreground", sub: "text-charcoal/75 dark:text-foreground/70", badge: "bg-klovers-yellow text-charcoal", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-klovers-yellow text-charcoal", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-klovers-yellow text-charcoal", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-ivory dark:bg-card", ink: "text-charcoal dark:text-foreground", sub: "text-charcoal/75 dark:text-foreground/70", badge: "bg-klovers-yellow text-charcoal", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
 ];
 
 /** Small marketing accent — not part of the shared catalog on purpose,
