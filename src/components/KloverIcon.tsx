@@ -38,7 +38,28 @@ export type KloverIconName =
   | "palace-blossoms"
   | "sprout"
   | "student-boy-thumbsup"
-  | "student-girl-heart";
+  | "student-girl-heart"
+  // Disc-and-drawing set for the games (each stands on its own pastel disc):
+  | "game-chat-smile"
+  | "game-checklist-pencil"
+  | "game-crown"
+  | "game-flashcard-han"
+  | "game-flashcards-love"
+  | "game-hanbok"
+  | "game-hangeul-spelling"
+  | "game-hanok-cloud"
+  | "game-headphones-music"
+  | "game-hello-bubble"
+  | "game-klobi-han"
+  | "game-klobi-thumbsup"
+  | "game-korea-map"
+  | "game-lucky-bag"
+  | "game-map-tower"
+  | "game-particle-puzzle"
+  | "game-subway"
+  | "game-time-dates"
+  | "game-topik-sheet"
+  | "game-virtual-korea";
 
 interface KloverIconProps {
   name: KloverIconName;

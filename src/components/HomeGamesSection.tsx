@@ -4,9 +4,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Gamepad2, ArrowRight, Zap, Trophy, Unlock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import HangulMiniGame from "./HangulMiniGame";
-import { GameScene, type GameSceneKind } from "./roadmapScenery";
+import KloverIcon from "@/components/KloverIcon";
 import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
-import GameIcon from "@/components/GameIcon";
+import { gameIconName } from "@/constants/gameIcons";
 
 /**
  * The games teased on the homepage, in the order they sit around the arcade
@@ -17,36 +17,40 @@ import GameIcon from "@/components/GameIcon";
  *
  * "hangul" is not in the list on purpose: it is the game the cabinet PLAYS
  * (see HangulMiniGame), so a second card for it would be the same game twice.
+ *
+ * Seven cards + the "see all" card fill the grid exactly: the cabinet is 2x2,
+ * the next four cards sit beside it, and the last row is 3 cards + "see all"
+ * = twelve cells, three rows of four. Change the count and the packing has to
+ * be redone.
  */
-const HOMEPAGE_GAME_IDS = ["match", "kdrama", "sentence", "numbers", "colors"];
+const HOMEPAGE_GAME_IDS = ["match", "kdrama", "sentence", "numbers", "colors", "time", "greetings"];
 const HOMEPAGE_GAMES = HOMEPAGE_GAME_IDS
   .map((id) => GAMES_CATALOG.find((g) => g.id === id))
   .filter((g): g is NonNullable<typeof g> => Boolean(g));
 
-/** Which drawn scene each game wears - see GameScene in roadmapScenery.tsx. */
-const SCENE_FOR: Record<string, GameSceneKind> = {
-  match: "match",
-  kdrama: "kdrama",
-  sentence: "sentence",
-  numbers: "numbers",
-  colors: "colors",
-};
-
-/** Per-tile surface and tilt, by position. Whole literal class strings on
- *  purpose: Tailwind's scanner only keeps what it can see. The tilt is a
- *  sticker-on-a-desk lean; hover straightens and lifts it. */
-const TILE_LOOK = [
-  "bg-card md:-rotate-1",
-  "bg-ivory dark:bg-card md:rotate-1",
-  "bg-card md:rotate-1",
-  "bg-ivory dark:bg-card md:-rotate-1",
-  "bg-card md:rotate-1",
+/**
+ * Per-card look, by position - the game-card sheet's rhythm: mostly white, one
+ * full-Yellow highlight, a couple of Mint. Whole literal class strings on
+ * purpose: Tailwind's scanner only keeps what it can see.
+ *
+ * On the Yellow card the drawing gets an Ivory ring (`ring`) and the text is
+ * pinned to Charcoal: the drawings' own pastel discs are close to Yellow, and
+ * `text-foreground` flips to light in dark mode, which would vanish on Yellow.
+ */
+const CARD_LOOK = [
+  { surface: "bg-klovers-yellow", ink: "text-charcoal", sub: "text-charcoal/75", badge: "bg-ivory text-charcoal", ring: true, play: "border-2 border-charcoal bg-transparent" },
+  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-mint text-mint-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-mint text-mint-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-mint dark:bg-card", ink: "text-mint-foreground dark:text-foreground", sub: "text-mint-foreground/75 dark:text-foreground/70", badge: "bg-card text-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-mint text-mint-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-card", ink: "text-foreground", sub: "text-foreground/70", badge: "bg-mint text-mint-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
+  { surface: "bg-mint dark:bg-card", ink: "text-mint-foreground dark:text-foreground", sub: "text-mint-foreground/75 dark:text-foreground/70", badge: "bg-card text-foreground", ring: false, play: "border border-charcoal/15 bg-klovers-yellow" },
 ];
 
 /** Small marketing accent — not part of the shared catalog on purpose,
  *  since "hot" is a homepage presentation choice, not a fact about the game.
  *  This badge is ONE of the two places pink is still allowed: it has to read
- *  as unlike anything else on the card, and two of six is rare. */
+ *  as unlike anything else on the card, and two of seven is rare. */
 const HOT_GAME_IDS = new Set(["match", "kdrama"]);
 
 const HomeGamesSection = () => {
@@ -120,9 +124,10 @@ const HomeGamesSection = () => {
         </div>
 
         {/* THE TICKER: every game in the catalog, scrolling past. The count in
-            the stats row says "20"; this is what 20 looks like. Paused on
-            hover, and still (scrollable) when the visitor asks for less
-            motion. dir=ltr so the loop direction is the same in both scripts. */}
+            the stats row says "22"; this is what 22 looks like. Each chip wears
+            the same drawing its card wears (GAME_ICON). Paused on hover, and
+            still (scrollable) when the visitor asks for less motion. dir=ltr so
+            the loop direction is the same in both scripts. */}
         <style>{`
           @keyframes k-marquee { to { transform: translateX(-50%); } }
           .k-marquee { animation: k-marquee 55s linear infinite; }
@@ -139,20 +144,19 @@ const HomeGamesSection = () => {
             {[...GAMES_CATALOG, ...GAMES_CATALOG].map((g, n) => (
               <span
                 key={`${g.id}-${n}`}
-                className="inline-flex shrink-0 items-center gap-2 rounded-full border-2 border-charcoal bg-card px-4 py-2 text-sm font-bold text-foreground dark:border-border"
+                className="inline-flex shrink-0 items-center gap-2 rounded-full border-2 border-charcoal bg-card py-1 ps-1.5 pe-4 text-sm font-bold text-foreground dark:border-border"
               >
-                <GameIcon id={g.id} className="h-7 w-7" />
+                <KloverIcon name={gameIconName(g.id)} className="h-8 w-8" />
                 {t(g.titleKey)}
               </span>
             ))}
           </div>
         </div>
 
-        {/* THE FLOOR: a playable cabinet, four sticker tiles, then the last tile
-            and "see all". 2x2 + 4 + 1 + 3 = twelve cells, three rows of four:
-            change HOMEPAGE_GAME_IDS and the packing has to be redone. */}
+        {/* THE FLOOR: a playable cabinet, seven game cards, and "see all".
+            Two columns on a phone, four from lg. */}
         <div
-          className={`grid grid-cols-2 gap-4 lg:grid-cols-4 mb-10 transition-all duration-700 delay-150 ${
+          className={`grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 mb-10 transition-all duration-700 delay-150 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
@@ -162,39 +166,40 @@ const HomeGamesSection = () => {
 
           {HOMEPAGE_GAMES.map((game, i) => {
             const isFree = FREE_GAME_IDS.includes(game.id);
+            const look = CARD_LOOK[i % CARD_LOOK.length];
             return (
               <button
                 key={game.id}
                 onClick={() => navigate("/games")}
-                className={`group card-edge relative flex flex-col overflow-hidden rounded-2xl text-start transition-transform duration-200 hover:!rotate-0 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                  TILE_LOOK[i % TILE_LOOK.length]
-                } ${i === HOMEPAGE_GAMES.length - 1 ? "col-span-2 lg:col-span-1" : "col-span-1"}`}
+                className={`group card-edge relative flex flex-col rounded-2xl p-3.5 text-start transition-transform duration-200 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:p-4 ${look.surface}`}
               >
-                {/* The picture: a drawn scene in the journey map's hand */}
-                <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-t-[0.9rem] border-b-2 border-charcoal bg-ivory dark:border-border dark:bg-muted sm:h-28">
-                  <GameScene kind={SCENE_FOR[game.id] ?? "match"} />
-                  {HOT_GAME_IDS.has(game.id) ? (
-                    <span className="absolute end-2 top-2 rounded-md bg-charcoal px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory">
-                      {tr("Hot", "رائج")} 🔥
-                    </span>
-                  ) : isFree ? (
-                    <span className="absolute end-2 top-2 rounded-md bg-charcoal px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory">
-                      {tr("Free", "مجاني")}
-                    </span>
-                  ) : null}
-                </div>
-
-                <div className="relative flex flex-1 flex-col px-4 pb-4 pt-9">
-                  {/* The game's icon as a sticker on the picture's lower edge
-                      (GameIcon draws its own Yellow disc and Charcoal ring) */}
-                  <GameIcon id={game.id} className="absolute -top-7 start-4 h-14 w-14 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
-                  <h3 className="text-base font-extrabold leading-tight text-foreground">{t(game.titleKey)}</h3>
-                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/70">{t(game.descKey)}</p>
-                  <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-extrabold text-foreground">
-                    {tr("Play", "العب")}
-                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+                {/* Badge: Hot (charcoal) or Free. Top corner, opposite the drawing. */}
+                {HOT_GAME_IDS.has(game.id) ? (
+                  <span className="absolute end-3 top-3 rounded-full bg-charcoal px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-ivory">
+                    {tr("Hot", "رائج")} 🔥
                   </span>
-                </div>
+                ) : isFree ? (
+                  <span className={`absolute end-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide ${look.badge}`}>
+                    {tr("Free", "مجاني")}
+                  </span>
+                ) : null}
+
+                {/* The drawing stands on its own pastel disc. On the Yellow card
+                    it gets an Ivory ring so it keeps its edge. */}
+                <span className={`inline-flex shrink-0 self-start ${look.ring ? "rounded-full bg-ivory p-0.5" : ""}`}>
+                  <KloverIcon
+                    name={gameIconName(game.id)}
+                    className="h-20 w-20 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110 sm:h-24 sm:w-24"
+                  />
+                </span>
+
+                <h3 className={`mt-3 text-base font-extrabold leading-tight ${look.ink}`}>{t(game.titleKey)}</h3>
+                <p className={`mt-1 line-clamp-2 text-xs leading-relaxed ${look.sub}`}>{t(game.descKey)}</p>
+
+                <span className={`mt-auto inline-flex w-fit items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-extrabold text-charcoal ${look.play}`}>
+                  {tr("Play", "العب")}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+                </span>
               </button>
             );
           })}
@@ -203,18 +208,19 @@ const HomeGamesSection = () => {
               button underneath. */}
           <button
             onClick={() => navigate("/games")}
-            className="group card-edge col-span-2 flex items-center justify-between gap-4 rounded-2xl bg-charcoal p-5 text-start transition-transform duration-200 hover:-translate-y-1 lg:col-span-3 dark:bg-klovers-yellow"
+            className="group card-edge flex flex-col justify-between gap-3 rounded-2xl bg-charcoal p-3.5 text-start transition-transform duration-200 hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:p-4 dark:bg-card"
           >
-            <div>
-              <span className="inline-block rounded-md bg-ivory/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ivory dark:bg-charcoal/15 dark:text-charcoal">
-                {tr("All free to try", "كلها مجانية للتجربة")}
+            <span className="inline-flex w-fit rounded-full bg-ivory/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-ivory">
+              {tr("All free to try", "كلها مجانية للتجربة")}
+            </span>
+            <span className="block">
+              <span className="block text-4xl font-extrabold leading-none text-ivory md:text-5xl">{totalGames}</span>
+              <span className="mt-1 block text-sm font-bold leading-tight text-ivory/85">
+                {tr("games waiting", "لعبة في انتظارك")}
               </span>
-              <p className="mt-2 text-2xl font-extrabold leading-tight text-ivory md:text-3xl dark:text-charcoal">
-                {tr(`See all ${totalGames} games`, `شاهد كل الألعاب الـ ${totalGames}`)}
-              </p>
-            </div>
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-klovers-yellow text-charcoal transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1 dark:bg-charcoal dark:text-klovers-yellow">
-              <ArrowRight className="h-6 w-6 rtl:rotate-180" />
+            </span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center self-end rounded-full bg-klovers-yellow text-charcoal transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1">
+              <ArrowRight className="h-5 w-5 rtl:rotate-180" />
             </span>
           </button>
         </div>
@@ -225,9 +231,12 @@ const HomeGamesSection = () => {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
-          <div className="text-center sm:text-left">
-            <p className="font-bold text-foreground text-sm">{tr("🏆 Earn XP with every game you play", "🏆 اكسب نقاط خبرة مع كل لعبة تلعبها")}</p>
-            <p className="text-xs text-muted-foreground">{tr("Climb the leaderboard · Unlock badges · Show off your streak", "تصدّر الترتيب · افتح الأوسمة · أظهر سلسلتك")}</p>
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <KloverIcon name="game-crown" className="hidden h-14 w-14 sm:block" />
+            <div>
+              <p className="font-bold text-foreground text-sm">{tr("Earn XP with every game you play", "اكسب نقاط خبرة مع كل لعبة تلعبها")}</p>
+              <p className="text-xs text-muted-foreground">{tr("Climb the leaderboard · Unlock badges · Show off your streak", "تصدّر الترتيب · افتح الأوسمة · أظهر سلسلتك")}</p>
+            </div>
           </div>
           <div className="flex gap-2 text-xs shrink-0">
             {[tr("🥇 Top Learner", "🥇 الأفضل"), tr("🔥 On Fire", "🔥 مندفع"), tr("📚 Scholar", "📚 باحث")].map((b) => (
