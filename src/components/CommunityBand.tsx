@@ -28,7 +28,7 @@ import { KLOBI_WAVE } from "@/assets/band/klobiWave";
  * composite illustration of the three characters with speech bubbles. It was
  * lovely and it is the wrong shape for a band: a composite bakes in the
  * arrangement, the spacing and the background it was drawn on. These three
- * transparent cutouts stand on the Mint itself, so the band's colour shows
+ * transparent cutouts stand on the yellow band itself, so the band's colour shows
  * between them; they can be re-ordered or re-spaced; and they shrink
  * independently on a phone instead of becoming one unreadable strip.
  *

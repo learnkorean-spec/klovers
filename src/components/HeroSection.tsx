@@ -19,7 +19,7 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  * 1. THE COVER. Photo/video wall, giant centred headline, proof strip pinned
  *    to the bottom. Repainted on the board - Charcoal #2E2E2E ground and
  *    scrims instead of pure black, Ivory #FFF9EC text instead of pure white,
- *    Mint on the live-class chip and the slot pills. The headline's second
+ *    neon green on the live-class chip and the slot pills. The headline's second
  *    line stays Klovers Yellow: yellow as TYPE is endorsed on a dark ground
  *    and ruled out only on a light one.
  *
@@ -111,15 +111,14 @@ const HeroSection = () => {
   /**
    * The board's four promise cards.
    *
-   * The board alternated Mint / white / Peach / Mint. Pink is a rare accent
-   * on this site as of 20 Sep - two places on the whole page, neither of them
-   * here - so the row alternates Green and white instead. The rhythm is what
+   * The board alternated Mint / white / Peach / Mint. Pale Mint is retired as a
+   * surface and pink is a rare accent, so the row alternates Yellow and white. The rhythm is what
    * the board was after; the third colour was not carrying meaning.
    */
   const cards = [
     {
       icon: "klobi-reading" as KloverIconName,
-      tone: "bg-mint",
+      tone: "bg-klovers-yellow",
       title: isAr ? "دروس مرتّبة" : "Structured lessons",
       body: isAr ? "من الهانغول إلى المحادثة" : "From basics to real conversations",
     },
@@ -131,7 +130,7 @@ const HeroSection = () => {
     },
     {
       icon: "globe-plane" as KloverIconName,
-      tone: "bg-mint",
+      tone: "bg-klovers-yellow",
       title: isAr ? "كورية حقيقية" : "Real-life Korean",
       body: isAr ? "لغة تستعملها فعلاً" : "Useful, practical, cultural",
     },
@@ -198,10 +197,10 @@ const HeroSection = () => {
         {/* ── Decorative large Korean text (backdrop) ───────────── */}
         <span
           aria-hidden="true"
-          className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
+          className="absolute inset-0 flex items-center justify-center pointer-events-none select-none font-ko-hand"
           style={{
             fontSize: "clamp(180px, 30vw, 420px)",
-            fontWeight: 900,
+            fontWeight: 400,
             color: "rgba(255, 255, 0, 0.035)",
             letterSpacing: "-0.02em",
             lineHeight: 1,
@@ -246,12 +245,12 @@ const HeroSection = () => {
             </div>
 
             {/* Next-class chip — rendered only when there is a real class to
-                name; Mint is the board's "live and calm" tone. */}
+                name; neon green is the "live" tone on this dark ground. */}
             {nextDay && (
-              <div className="inline-flex items-center gap-2 bg-mint/20 border border-mint/45 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-mint">
+              <div className="inline-flex items-center gap-2 bg-mint-strong/15 border border-mint-strong/50 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-mint-strong">
                 <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-mint" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint-strong opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-mint-strong" />
                 </span>
                 {isAr
                   ? `الحصة التالية: ${nextDay.ar} — سجّل دلوقتي`
@@ -328,7 +327,7 @@ const HeroSection = () => {
             <div className="flex flex-wrap gap-2 justify-center">
               {pills.map((p) => (
                 <div key={p.key} className="inline-flex items-center gap-1.5 bg-ivory/10 border border-ivory/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-ivory/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-mint shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-mint-strong shrink-0" />
                   {p.label}
                 </div>
               ))}

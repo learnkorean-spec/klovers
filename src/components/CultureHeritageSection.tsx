@@ -165,7 +165,7 @@ const CultureHeritageSection = () => {
           so this section reads as part of the same visual system. */}
       <span
         aria-hidden="true"
-        className="absolute -top-10 -right-10 select-none pointer-events-none font-black leading-none"
+        className="absolute -top-10 -right-10 select-none pointer-events-none font-ko-hand font-normal leading-none"
         style={{ fontSize: "clamp(140px, 22vw, 320px)", color: "rgba(255,255,0,0.03)" }}
       >
         문화
