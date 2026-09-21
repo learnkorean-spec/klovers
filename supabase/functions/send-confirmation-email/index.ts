@@ -68,6 +68,11 @@ import { buildTrialReminderEmail } from "./templates/trialReminder.ts";
 // student does not have, so before this one nothing in the system could tell
 // her what she owed. Seventh slug absent from that union.
 import { buildPrivateBundlePaymentEmail } from "./templates/privateBundlePayment.ts";
+// The course welcome, since 2026-09-21. Sent by hand from the admin Groups
+// screen to every seated student of one group: where and when the class is,
+// the book, and what the dashboard answers (schedule, attendance, payments).
+// Eighth slug absent from that union.
+import { buildCourseWelcomeEmail } from "./templates/courseWelcome.ts";
 import {
   buildWelcomeEmail, buildEnrollmentEmail, buildGroupMatchEmail,
   buildSlotConfirmedEmail, buildApprovalEmail, buildPendingReviewEmail,
@@ -267,6 +272,20 @@ serve(async (req) => {
         });
       }
     }
+    // The welcome letter's whole job is to tell a student where her class is
+    // and where her book is. The book is optional here - a group can genuinely
+    // not have one yet, and the admin screen is what insists on the link
+    // before it will send - but a group name is not: without it the letter
+    // welcomes her to nothing in particular.
+    if ((template as string) === "course_welcome") {
+      const groupName = (payload!.group_name || "").trim();
+      if (!groupName) {
+        return new Response(JSON.stringify({ error: "group_name is required for the course_welcome template" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     // Same rule for the trial-day reminder, whose room arrives as
     // `meeting_url` (the column the booking carries) rather than
     // `class_link_url`. Its book link is optional on purpose: the letter is a
@@ -333,10 +352,11 @@ serve(async (req) => {
     // `admin_message` is here for exactly the reason given above, and is the
     // second key deliberately absent from that union. `trial_guide` is the
     // third, `trial_reask` the fourth, `class_reminder` the fifth,
-    // `trial_reminder` the sixth and `private_bundle_payment` the seventh;
-    // their only callers are the send-trial-guide cron, the send-trial-reask
-    // endpoint, the send-class-reminders cron, the send-trial-reminder cron
-    // and the admin_send_bundle_payment_ask database function.
+    // `trial_reminder` the sixth, `private_bundle_payment` the seventh and
+    // `course_welcome` the eighth; their only callers are the send-trial-guide
+    // cron, the send-trial-reask endpoint, the send-class-reminders cron, the
+    // send-trial-reminder cron, the admin_send_bundle_payment_ask database
+    // function and the admin Groups screen.
     if ((template as string) === "admin_message") {
       const adminMessage = buildAdminMessageEmail(payload!);
       subject = adminMessage.subject;
@@ -357,6 +377,10 @@ serve(async (req) => {
       const classReminder = buildClassReminderEmail(payload!);
       subject = classReminder.subject;
       html = classReminder.html;
+    } else if ((template as string) === "course_welcome") {
+      const courseWelcome = buildCourseWelcomeEmail(payload!);
+      subject = courseWelcome.subject;
+      html = courseWelcome.html;
     } else if ((template as string) === "trial_reminder") {
       const trialReminder = buildTrialReminderEmail(payload!);
       subject = trialReminder.subject;
@@ -470,8 +494,9 @@ serve(async (req) => {
     // what scopes this correctly without a list of template names to keep in
     // step: the senders that write to a list (trial followups, the second ask,
     // the trial-day reminder) resolve a token and pass it, while the
-    // transactional letters — booking confirmed, payment, class link — do not,
-    // and must not. You do not get to opt out of being told your class moved.
+    // transactional letters — booking confirmed, payment, class link, the
+    // course welcome — do not, and must not. You do not get to opt out of
+    // being told your class moved.
     const unsubscribeUrl = listUnsubscribeUrl(
       (payload! as { unsubscribe_token?: string }).unsubscribe_token,
       language === "ar",
