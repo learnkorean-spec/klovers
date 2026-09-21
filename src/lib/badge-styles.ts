@@ -14,6 +14,11 @@ export function getLeadStatusBadgeClass(status: string): string {
     case "rejected":
     case "lost":
       return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800";
+    // A student who enrolled and then stopped. Deliberately NOT the red above:
+    // "lost" is a prospect who never came, and treating the two as one colour
+    // is what hid Marina and Salma among leads who had never been students.
+    case "churned":
+      return "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800";
     case "contacted":
       return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800";
     case "new":
