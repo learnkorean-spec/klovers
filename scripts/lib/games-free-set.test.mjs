@@ -90,12 +90,12 @@ const gamesPageCopy = stripComments(gamesPageSrc);
 /** Number words the copy uses, so a written-out count is checked too. */
 const NUMBER_WORDS = {
   two: 2, three: 3, four: 4, five: 5, six: 6,
-  seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, twenty: 20,
+  seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, twenty: 20, "twenty-two": 22,
 };
 
 describe("the games array", () => {
-  it("holds 20 games", () => {
-    expect(GAME_IDS.length).toBe(20);
+  it("holds 22 games", () => {
+    expect(GAME_IDS.length).toBe(22);
   });
 
   it("has no duplicate ids", () => {
@@ -272,7 +272,7 @@ describe("published counts agree with the arrays", () => {
     // Static HTML published at /games and read by non-JS crawlers. Nothing in
     // the app corrects it, so it goes false the moment the gate changes.
     const m = prerenderSrc.match(
-      /no sign-up is needed to start: (\w+) of the (\w+) games are open to everyone/
+      /no sign-up is needed to start: ([\w-]+) of the ([\w-]+) games are open to everyone/
     );
     expect(m).not.toBeNull();
     const [, freeWord, totalWord] = m;
