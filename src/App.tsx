@@ -49,6 +49,7 @@ const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
+const EraPage = lazy(() => import("./pages/EraPage"));
 const MySchedulePage = lazy(() => import("./pages/MySchedulePage"));
 const ResubmitSchedulePage = lazy(() => import("./pages/ResubmitSchedulePage"));
 const AdminResetPage = lazy(() => import("./pages/AdminResetPage"));
@@ -193,6 +194,7 @@ const App = () => (
                 <Route path="/pay/:enrollmentId" element={<AuthProtectedRoute><EgyptPaymentPage /></AuthProtectedRoute>} />
                 <Route path="/blog" element={<BlogPage />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/journey/:eraId" element={<EraPage />} />
                 <Route path="/dashboard/schedule" element={<AuthProtectedRoute><MySchedulePage /></AuthProtectedRoute>} />
                 <Route path="/resubmit-schedule" element={<AuthProtectedRoute><ResubmitSchedulePage /></AuthProtectedRoute>} />
                 {/* One placement test, answered as a TOPIK grade. Public on
