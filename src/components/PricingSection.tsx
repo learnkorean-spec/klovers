@@ -111,7 +111,13 @@ const PricingSection = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>(() => seedCountry());
   const [activeTier, setActiveTier] = useState<TierKey | null>(() => tierForCountry(seedCountry()));
   const [classType, setClassType] = useState<ClassType>("group");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
+  // The badge and trust-strip strings below were English-only on a site whose
+  // main script is Arabic. They live here rather than in translations.ts for
+  // the same reason WhyLearnKorean's copy does: that file is too large to edit
+  // in place with the tooling available. Move them when there is git access.
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
   // Once she has picked a country herself, a late-arriving profile must not
   // yank the page out from under her.
   const pickedByVisitor = useRef(false);
@@ -273,17 +279,17 @@ const PricingSection = () => {
                     {/* Most Popular: on local for discounted countries, on regional globally */}
                     {isDiscountedCountry && (
                       <Badge className={`${TAG} bg-foreground text-background`}>
-                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> Most Popular
+                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> {tr("Most Popular", "الأكثر طلباً")}
                       </Badge>
                     )}
                     {isDiscountedCountry && (
                       <Badge className={`${TAG} bg-correct text-correct-foreground`}>
-                        <Sparkles className="h-3 w-3 mr-1" aria-hidden="true" /> Discount!
+                        <Sparkles className="h-3 w-3 mr-1" aria-hidden="true" /> {tr("Discount!", "خصم!")}
                       </Badge>
                     )}
                     {tierKey === "regional" && !isDiscountedCountry && isActive && (
                       <Badge className={`${TAG} bg-foreground text-background`}>
-                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> Most Popular
+                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> {tr("Most Popular", "الأكثر طلباً")}
                       </Badge>
                     )}
                   </div>
@@ -335,7 +341,7 @@ const PricingSection = () => {
                                 {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
                               </p>
                               {isActive && isBestValue && (
-                                <span className="text-[10px] font-bold text-primary-foreground bg-primary border border-charcoal/40 px-1.5 py-0.5 rounded-full leading-none">Best Value</span>
+                                <span className="text-[10px] font-bold text-primary-foreground bg-primary border border-charcoal/40 px-1.5 py-0.5 rounded-full leading-none">{tr("Best Value", "أفضل قيمة")}</span>
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground">
@@ -373,7 +379,7 @@ const PricingSection = () => {
                                 {t("pricing", `durations.${price.duration}`) !== `durations.${price.duration}` ? t("pricing", `durations.${price.duration}`) : price.duration}
                               </p>
                               {isActive && isBestValue && (
-                                <span className="text-[10px] font-bold text-primary-foreground bg-primary border border-charcoal/40 px-1.5 py-0.5 rounded-full leading-none">Best Value</span>
+                                <span className="text-[10px] font-bold text-primary-foreground bg-primary border border-charcoal/40 px-1.5 py-0.5 rounded-full leading-none">{tr("Best Value", "أفضل قيمة")}</span>
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground">
@@ -455,7 +461,7 @@ const PricingSection = () => {
                     {isActive && (
                       <div className="flex items-center justify-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 font-medium bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg py-2">
                         <Users className="h-3.5 w-3.5" />
-                        <span>Limited spots this intake — enroll to reserve yours</span>
+                        <span>{tr("Limited spots this intake — enroll to reserve yours", "أماكن محدودة في هذه الدفعة — سجّل عشان تحجز مكانك")}</span>
                       </div>
                     )}
                     <Button
@@ -483,7 +489,7 @@ const PricingSection = () => {
                       className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground py-1 transition-colors"
                     >
                       <MessageCircle className="h-3 w-3" />
-                      Flexible / installment payment? Chat with us
+                      {tr("Flexible / installment payment? Chat with us", "عايز تدفع بالتقسيط أو بمرونة؟ كلّمنا")}
                     </button>
                   </div>
                 </CardContent>
@@ -496,23 +502,23 @@ const PricingSection = () => {
         <div className="mt-12 flex flex-wrap justify-center gap-6 text-center">
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">🛡️</span>
-            <p className="text-sm font-semibold text-foreground">First Class Guarantee</p>
-            <p className="text-xs text-muted-foreground">Not happy? Full refund after trial.</p>
+            <p className="text-sm font-semibold text-foreground">{tr("First Class Guarantee", "ضمان الحصة الأولى")}</p>
+            <p className="text-xs text-muted-foreground">{tr("Not happy? Full refund after trial.", "لو ما عجبتكش، هنرجّعلك فلوسك بعد الحصة التجريبية.")}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">⭐</span>
-            <p className="text-sm font-semibold text-foreground">4.9 / 5.0 Rating</p>
-            <p className="text-xs text-muted-foreground">From 200+ verified student reviews</p>
+            <p className="text-sm font-semibold text-foreground">{tr("5.0 ★ Google rating", "5.0 ★ تقييم جوجل")}</p>
+            <p className="text-xs text-muted-foreground">{tr("From 7 Google reviews", "من ٧ مراجعات جوجل")}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">🇰🇷</span>
-            <p className="text-sm font-semibold text-foreground">Teaches in Arabic</p>
-            <p className="text-xs text-muted-foreground">Certified Korean teacher · 5+ years</p>
+            <p className="text-sm font-semibold text-foreground">{tr("Teaches in Arabic", "بندرّس بالعربي")}</p>
+            <p className="text-xs text-muted-foreground">{tr("TOPIK-certified · 13 years teaching", "معلمة معتمدة TOPIK · ١٣ سنة تدريس")}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">🔒</span>
-            <p className="text-sm font-semibold text-foreground">Secure Checkout</p>
-            <p className="text-xs text-muted-foreground">Manual review · No auto-charge</p>
+            <p className="text-sm font-semibold text-foreground">{tr("Secure Checkout", "دفع آمن")}</p>
+            <p className="text-xs text-muted-foreground">{tr("Manual review · No auto-charge", "مراجعة يدوية · من غير خصم تلقائي")}</p>
           </div>
         </div>
       </div>
