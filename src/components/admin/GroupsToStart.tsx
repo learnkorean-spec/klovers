@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { CalendarClock, CheckCircle2, Pencil, UserPlus, UserMinus, Users } from "lucide-react";
+import { CalendarClock, CheckCircle2, Pencil, Radio, UserPlus, UserMinus, Users, Video } from "lucide-react";
 import { LEVELS, getLevelShortLabel, normalizeLevel } from "@/constants/levels";
 
 /**
@@ -109,6 +109,32 @@ import { LEVELS, getLevelShortLabel, normalizeLevel } from "@/constants/levels";
  * reader normalises anyway. So an edit writes back in the vocabulary that row
  * already uses: legacy stays legacy, canonical stays canonical, and nothing
  * here converts a column it was not asked to convert.
+ *
+ * --- 2026-09-21, evening: the running classes are here too ---
+ *
+ * The section was called GROUPS TO START and behaved like it: a group with a
+ * start date dropped out of the grid and became a grey one-line footnote.
+ * Which meant the classes that actually RUN — the ones with students in them,
+ * the ones whose room link or headcount you might need at 3pm — were the
+ * groups this screen said the least about. No members list, no Add student,
+ * no Edit group, no room.
+ *
+ * Now every group is a card. A started one shows when it started and when it
+ * next meets where an unstarted one shows the date box and the Start button;
+ * the rest of the card is identical, so seating a student or fixing a link is
+ * the same two clicks whichever kind it is.
+ *
+ * And the card reads the clock, in Cairo wall-clock time, recomputed every
+ * 30 seconds:
+ *
+ *   - IN CLASS NOW  — mint-strong ring, and a button straight into the room
+ *                     when the group has a link;
+ *   - later today   — mint tint and the hours left;
+ *   - anything else — a plain card.
+ *
+ * Cards sort by that: live first, then today, then groups still waiting for a
+ * start date, then the rest. The green is `mint-strong` (#3ED598) from the
+ * brand palette, not a new colour — see claude/BRAND_PALETTE_REFERENCE.md.
  */
 
 type Candidate = {
@@ -149,6 +175,8 @@ type GroupRow = {
   level: string | null;
   dayOfWeek: number | null;
   startTime: string | null;
+  /** How long the class runs, for deciding whether it is on RIGHT NOW. */
+  durationMin: number | null;
   startDate: string | null;
   isActive: boolean;
   capacity: number | null;
@@ -158,9 +186,22 @@ type GroupRow = {
   seated: number;
 };
 
+/** Where a group sits relative to the clock, in Cairo. */
+type ClassState = "live" | "today" | "later";
+
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const hhmm = (t: string | null | undefined) => (t ?? "").slice(0, 5);
+
+/** "15:00" / "15:00:00" -> 900 minutes past midnight. Null when unparseable. */
+function minutesOfDay(t: string | null | undefined): number | null {
+  const m = (t ?? "").match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (!Number.isFinite(h) || !Number.isFinite(min)) return null;
+  return (h % 24) * 60 + min;
+}
 
 /**
  * A level key in the vocabulary the row already uses — see the note at the
@@ -190,8 +231,36 @@ function cairoTodayISO(): string {
   }).format(new Date());
 }
 
+/**
+ * The weekday (0–6) and minutes-past-midnight it is RIGHT NOW in Cairo.
+ *
+ * The admin is in Bangkok, five or six hours ahead depending on Cairo's DST,
+ * so "is this class on now" cannot be asked of the local clock: for most of
+ * her evening it is still the previous Cairo day.
+ */
+function cairoNowParts(now: Date): { dow: number; minutes: number } {
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: "Africa/Cairo", weekday: "long" }).format(now);
+  const clock = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Cairo", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).format(now);
+  return {
+    dow: Math.max(0, DAY_NAMES.indexOf(weekday)),
+    minutes: minutesOfDay(clock) ?? 0,
+  };
+}
+
+/**
+ * Adds days to a YYYY-MM-DD date.
+ *
+ * Returns the input untouched when it is not a date it can parse — "" above
+ * all, which is what a cleared or not-yet-recomputed date box holds.
+ * `Date.UTC(NaN, …)` is an Invalid Date and `.toISOString()` on one throws
+ * "Invalid time value", which is not caught anywhere between here and the
+ * error boundary: on 21 Sep one empty string blanked the entire page.
+ */
 function addDaysISO(iso: string, days: number): string {
-  const [y, m, d] = iso.split("-").map(Number);
+  const [y, m, d] = (iso ?? "").split("-").map(Number);
+  if (!y || !m || !d) return iso;
   const dt = new Date(Date.UTC(y, m - 1, d + days));
   return dt.toISOString().slice(0, 10);
 }
@@ -253,6 +322,7 @@ function cairoToBangkok(dayOfWeek: number | null, hhmmStr: string): { day: strin
   if (dayOfWeek == null || !hhmmStr) return null;
   const isoDate = nextWeekdayISO(dayOfWeek);
   const guessUTC = new Date(`${isoDate}T${hhmmStr}:00Z`);
+  if (Number.isNaN(guessUTC.getTime())) return null;
   const cairoOffset = tzOffsetMinutes(guessUTC, "Africa/Cairo");
   const actualUTC = new Date(guessUTC.getTime() - cairoOffset * 60000);
   const day = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", weekday: "long" }).format(actualUTC);
@@ -262,6 +332,14 @@ function cairoToBangkok(dayOfWeek: number | null, hhmmStr: string): { day: strin
   return { day, time };
 }
 
+/** "in 3h 20m" / "in 45m" — how long until this class starts. */
+function untilLabel(minutes: number): string {
+  if (minutes <= 0) return "now";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
+}
+
 export default function GroupsToStart() {
   const [groups, setGroups] = useState<GroupRow[] | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -269,6 +347,15 @@ export default function GroupsToStart() {
   const [dates, setDates] = useState<Record<string, string>>({});
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  // The clock the live/today highlight is read against. Ticked rather than
+  // read once at render: this screen is left open for hours, and a card that
+  // says "in 5m" forever is worse than no card at all.
+  const [now, setNow] = useState<Date>(() => new Date());
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(new Date()), 30000);
+    return () => window.clearInterval(t);
+  }, []);
 
   // Inline "edit group" state — at most one card open at once.
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -306,7 +393,7 @@ export default function GroupsToStart() {
           .eq("member_status", "active"),
         supabase
           .from("schedule_packages")
-          .select("id, level, day_of_week, start_time, class_language"),
+          .select("id, level, day_of_week, start_time, duration_min, class_language"),
         // Every enrolment the membership guard would accept a seat against:
         // live, approved, group, and either paid or confirmed-unpaid. NOT
         // filtered to `matched_at is null` any more — that is the
@@ -382,7 +469,7 @@ export default function GroupsToStart() {
       const packages = new Map(
         ((pkgRes.data ?? []) as Array<{
           id: string; level: string | null; day_of_week: number | null;
-          start_time: string | null; class_language: string | null;
+          start_time: string | null; duration_min: number | null; class_language: string | null;
         }>).map(p => [p.id, p]),
       );
 
@@ -418,6 +505,7 @@ export default function GroupsToStart() {
           level: p?.level ?? null,
           dayOfWeek: dow,
           startTime: p?.start_time ?? null,
+          durationMin: p?.duration_min ?? null,
           startDate: g.start_date,
           isActive: g.is_active,
           capacity: g.capacity,
@@ -425,16 +513,6 @@ export default function GroupsToStart() {
           members: membersByGroup.get(g.id) ?? [],
           seated: seatedCountByGroup.get(g.id) ?? 0,
         };
-      });
-
-      // Not started first, and within those the fullest — the group with people
-      // waiting in it is the one worth starting.
-      rows.sort((a, b) => {
-        const aStarted = a.startDate ? 1 : 0;
-        const bStarted = b.startDate ? 1 : 0;
-        if (aStarted !== bStarted) return aStarted - bStarted;
-        if (a.seated !== b.seated) return b.seated - a.seated;
-        return a.title.localeCompare(b.title);
       });
 
       setDates(prev => {
@@ -622,6 +700,10 @@ export default function GroupsToStart() {
       setEditingId(null);
       // The chosen start date was picked against the old weekday — drop it so
       // it recomputes against the new one instead of silently staying wrong.
+      // The confirm step goes with it: it quotes that date and the deadline
+      // three days after it, and leaving it open over a date that no longer
+      // exists is what took this whole screen down on 21 Sep.
+      setConfirmId(prev => (prev === g.id ? null : prev));
       setDates(prev => {
         const next = { ...prev };
         delete next[g.id];
@@ -751,6 +833,33 @@ export default function GroupsToStart() {
     };
   }, [candidates, addFilter]);
 
+  /**
+   * Where each group sits against the Cairo clock, and how far off its next
+   * class is. Only a STARTED group can be in class — an unstarted one meets
+   * on paper only, whatever its slot says.
+   */
+  const clockFor = useMemo(() => {
+    const nowParts = cairoNowParts(now);
+    return (g: GroupRow): { state: ClassState; minutesUntil: number | null; nextISO: string | null } => {
+      const startMin = minutesOfDay(g.startTime);
+      if (g.dayOfWeek == null || startMin == null) {
+        return { state: "later", minutesUntil: null, nextISO: null };
+      }
+      const endMin = startMin + (g.durationMin ?? 60);
+      const isToday = nowParts.dow === g.dayOfWeek;
+      const nextISO = isToday && nowParts.minutes < endMin ? cairoTodayISO() : nextWeekdayISO(g.dayOfWeek);
+
+      if (!g.startDate) return { state: "later", minutesUntil: null, nextISO };
+      if (isToday && nowParts.minutes >= startMin && nowParts.minutes < endMin) {
+        return { state: "live", minutesUntil: 0, nextISO };
+      }
+      if (isToday && nowParts.minutes < startMin) {
+        return { state: "today", minutesUntil: startMin - nowParts.minutes, nextISO };
+      }
+      return { state: "later", minutesUntil: null, nextISO };
+    };
+  }, [now]);
+
   if (error) {
     return (
       <Card className="border-destructive">
@@ -780,40 +889,96 @@ export default function GroupsToStart() {
     );
   }
 
-  const waiting = groups.filter(g => !g.startDate);
-  const started = groups.filter(g => g.startDate);
   const today = cairoTodayISO();
+  const waitingCount = groups.filter(g => !g.startDate).length;
+  const liveCount = groups.filter(g => clockFor(g).state === "live").length;
+  const todayCount = groups.filter(g => clockFor(g).state === "today").length;
+
+  // What is happening soonest, first. Within a band: the fullest group, then
+  // by name, exactly as before.
+  const rank = (g: GroupRow) => {
+    const s = clockFor(g).state;
+    if (s === "live") return 0;
+    if (s === "today") return 1;
+    return g.startDate ? 3 : 2;
+  };
+  const ordered = [...groups].sort((a, b) => {
+    const ra = rank(a);
+    const rb = rank(b);
+    if (ra !== rb) return ra - rb;
+    if (a.seated !== b.seated) return b.seated - a.seated;
+    return a.title.localeCompare(b.title);
+  });
 
   return (
     <div className="space-y-3">
-      {waiting.length > 0 ? (
-        <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
+        {liveCount > 0 && (
           <span className="font-semibold text-foreground">
-            {waiting.length} group{waiting.length === 1 ? "" : "s"} ha{waiting.length === 1 ? "s" : "ve"} no start date.
-          </span>{" "}
-          Until a group starts, nobody in it has a first class date and no payment letter can reach them.
-          Starting is allowed at any headcount — nothing here waits for the group to fill up.
-        </p>
-      ) : (
-        <p className="text-sm text-muted-foreground">Every group has a start date.</p>
-      )}
+            {liveCount} class{liveCount === 1 ? " is" : "es are"} on right now.{" "}
+          </span>
+        )}
+        {liveCount === 0 && todayCount > 0 && (
+          <span className="font-semibold text-foreground">
+            {todayCount} class{todayCount === 1 ? "" : "es"} later today.{" "}
+          </span>
+        )}
+        {waitingCount > 0 ? (
+          <>
+            <span className="font-semibold text-foreground">
+              {waitingCount} group{waitingCount === 1 ? "" : "s"} ha{waitingCount === 1 ? "s" : "ve"} no start date.
+            </span>{" "}
+            Until a group starts, nobody in it has a first class date and no payment letter can reach them.
+            Starting is allowed at any headcount — nothing here waits for the group to fill up.
+          </>
+        ) : (
+          <>Every group has a start date. Running ones are listed here too — same card, same buttons.</>
+        )}
+      </p>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        {waiting.map(g => {
+        {ordered.map(g => {
+          const clock = clockFor(g);
+          const live = clock.state === "live";
+          const soon = clock.state === "today";
           const date = dates[g.id] ?? "";
           const isPast = date !== "" && date < today;
           const imminent = date !== "" && date <= addDaysISO(today, 1);
-          const confirming = confirmId === g.id;
+          // `date` is part of the condition, not just of what's rendered: the
+          // paragraph below quotes the date and the deadline three days after
+          // it, and there is no honest thing for it to say without one.
+          const confirming = confirmId === g.id && date !== "";
           const editing = editingId === g.id;
           const adding = addingId === g.id;
           const membersOpen = membersOpenId === g.id;
           return (
-            <Card key={g.id}>
+            <Card
+              key={g.id}
+              className={
+                live
+                  ? "border-2 border-mint-strong bg-mint/20 shadow-[0_0_0_4px_hsl(var(--mint-strong)/0.25)]"
+                  : soon
+                    ? "border-mint-strong/60 bg-mint/10"
+                    : undefined
+              }
+            >
               <CardContent className="p-4 space-y-2.5">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  {live
+                    ? <Radio className="h-4 w-4 shrink-0 text-mint-strong" />
+                    : <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />}
                   <span className="text-sm font-semibold">{g.title}</span>
                   <Badge variant="secondary" className="text-[10px]">{g.language}</Badge>
+                  {live && (
+                    <Badge className="bg-mint-strong text-charcoal hover:bg-mint-strong text-[10px]">
+                      in class now
+                    </Badge>
+                  )}
+                  {soon && (
+                    <Badge variant="outline" className="border-mint-strong text-[10px] text-charcoal">
+                      today · {untilLabel(clock.minutesUntil ?? 0)}
+                    </Badge>
+                  )}
                   {!g.isActive && (
                     <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">
                       not active yet
@@ -833,37 +998,64 @@ export default function GroupsToStart() {
                   {g.capacity != null && <span> · capacity {g.capacity}</span>}
                 </p>
 
+                {g.startDate && (
+                  <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-mint-strong" />
+                    <span>started {prettyDate(g.startDate)}</span>
+                    {clock.nextISO && (
+                      <span>
+                        · {live ? "on now until the hour is up" : `next class ${prettyDate(clock.nextISO)}`}
+                      </span>
+                    )}
+                    {!g.meetingUrl && <span className="text-amber-600">· no room link</span>}
+                  </p>
+                )}
+
                 <div className="flex flex-wrap items-center gap-2">
-                  <input
-                    type="date"
-                    value={date}
-                    // No `min` here on purpose: a class that already met — the
-                    // trial or first session happened before anyone got round
-                    // to starting the group in this screen — needs to be
-                    // dated for when it actually happened, not forced into the
-                    // future. Backdating just means `due_at` (3 days after)
-                    // may itself already be past, which is correct, not a bug.
-                    onChange={e => {
-                      setConfirmId(null);
-                      setDates(prev => ({ ...prev, [g.id]: e.target.value }));
-                    }}
-                    className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                    aria-label={`First class date for ${g.title}`}
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={confirming ? "destructive" : "default"}
-                    className="h-8"
-                    disabled={busyId === g.id || !date}
-                    onClick={() => (confirming ? void start(g) : setConfirmId(g.id))}
-                  >
-                    {busyId === g.id
-                      ? "Starting…"
-                      : confirming
-                        ? "Confirm — this dates students"
-                        : "Start this group"}
-                  </Button>
+                  {/* A started group has no date box: its first class is
+                      already on record, and re-running activate_pkg_group
+                      would re-date students who are past that question. */}
+                  {!g.startDate && (
+                    <>
+                      <input
+                        type="date"
+                        value={date}
+                        // No `min` here on purpose: a class that already met — the
+                        // trial or first session happened before anyone got round
+                        // to starting the group in this screen — needs to be
+                        // dated for when it actually happened, not forced into the
+                        // future. Backdating just means `due_at` (3 days after)
+                        // may itself already be past, which is correct, not a bug.
+                        onChange={e => {
+                          setConfirmId(null);
+                          setDates(prev => ({ ...prev, [g.id]: e.target.value }));
+                        }}
+                        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                        aria-label={`First class date for ${g.title}`}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={confirming ? "destructive" : "default"}
+                        className="h-8"
+                        disabled={busyId === g.id || !date}
+                        onClick={() => (confirming ? void start(g) : setConfirmId(g.id))}
+                      >
+                        {busyId === g.id
+                          ? "Starting…"
+                          : confirming
+                            ? "Confirm — this dates students"
+                            : "Start this group"}
+                      </Button>
+                    </>
+                  )}
+                  {live && g.meetingUrl && (
+                    <Button asChild size="sm" className="h-8 bg-mint-strong text-charcoal hover:bg-mint-strong/90">
+                      <a href={g.meetingUrl} target="_blank" rel="noreferrer">
+                        <Video className="h-3.5 w-3.5 mr-1" /> Open the room
+                      </a>
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     size="sm"
@@ -1101,18 +1293,6 @@ export default function GroupsToStart() {
           );
         })}
       </div>
-
-      {started.length > 0 && (
-        <div className="space-y-1 pt-1">
-          {started.map(g => (
-            <p key={g.id} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-              <span className="font-semibold text-foreground">{g.title}</span>
-              <span>started {prettyDate(g.startDate)}</span>
-            </p>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
