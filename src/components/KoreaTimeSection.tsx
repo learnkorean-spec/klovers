@@ -1,71 +1,28 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ERAS } from "@/constants/eras";
 
 /**
  * "A journey through Korea's time" — the two blocks from the Klovers concept
- * board: four eras over a timeline, then five places.
+ * board: five eras over a timeline, then five places.
  *
  * Palette only: Green (soft and strong), Klovers Yellow, Charcoal, Ivory.
  * The photographs are files already in public/assets/blog, so this adds no
  * new assets; swap any `image` path for a better shot and nothing else has
  * to change.
  *
- * Every card is a plain block, not a link. The section sells the reason to
- * learn, and there is no per-era page to send anyone to — a card dressed as a
- * link with nowhere to go is the exact fault WhyLearnKorean.tsx was rebuilt
- * to remove. One real link, to the blog, closes the section.
+ * Each era card links to its own page at /journey/:eraId (EraPage.tsx). The
+ * era data, including the photographs, lives in src/constants/eras.ts and is
+ * shared with that page. The section used to hold plain blocks because no
+ * per-era page existed; a card dressed as a link with nowhere to go is the
+ * exact fault WhyLearnKorean.tsx was rebuilt to remove, so keep every card
+ * pointing at a real page.
  */
 
-const ERAS = [
-  {
-    image: "/assets/blog/buddhist-temple.jpg",
-    titleEn: "Ancient Korea",
-    titleAr: "كوريا القديمة",
-    datesEn: "Silla · 57 BC – 935",
-    datesAr: "مملكة شيلا · ٥٧ ق.م – ٩٣٥",
-    lineEn: "Temples and invention",
-    lineAr: "معابد وابتكار",
-    altEn: "A Korean Buddhist temple among trees",
-    altAr: "معبد بوذي كوري وسط الأشجار",
-  },
-  {
-    image: "/assets/blog/joseon-dynasty.jpg",
-    titleEn: "The Joseon Era",
-    titleAr: "عصر جوسون",
-    datesEn: "1392 – 1897",
-    datesAr: "١٣٩٢ – ١٨٩٧",
-    lineEn: "Royal culture, and Hangul",
-    lineAr: "ثقافة ملكية، ومولد الهانغول",
-    altEn: "A Joseon-era palace courtyard",
-    altAr: "فناء قصر من عصر جوسون",
-  },
-  {
-    image: "/assets/blog/korean-tea.jpg",
-    titleEn: "Traditional Life",
-    titleAr: "الحياة التقليدية",
-    datesEn: "Hanok villages",
-    datesAr: "قرى الهانوك",
-    lineEn: "Tea, manners, timeless beauty",
-    lineAr: "شاي، آداب، وجمال لا يقدم",
-    altEn: "A traditional Korean tea setting",
-    altAr: "طقم شاي كوري تقليدي",
-  },
-  {
-    image: "/assets/blog/hallyu-wave.jpg",
-    titleEn: "Modern Korea",
-    titleAr: "كوريا الحديثة",
-    datesEn: "1950s – today",
-    datesAr: "الخمسينيات – اليوم",
-    lineEn: "A dynamic tomorrow",
-    lineAr: "غدٌ متجدد",
-    altEn: "Modern Korean pop culture",
-    altAr: "ثقافة كورية معاصرة",
-  },
-];
-
-/** The four stops under the era cards. pale Yellow → Yellow → Charcoal. */
+/** The five stops under the era cards. pale → pale Yellow → Yellow → Charcoal. */
 const STOPS = [
+  { dot: "bg-stone-200", topEn: "Origins", topAr: "الأصول", subEn: "Legend", subAr: "أسطورة" },
   { dot: "bg-amber-100", topEn: "Past", topAr: "الماضي", subEn: "Roots", subAr: "جذور" },
   { dot: "bg-amber-300", topEn: "Tradition", topAr: "التقليد", subEn: "Identity", subAr: "هوية" },
   { dot: "bg-klovers-yellow", topEn: "Modernity", topAr: "الحداثة", subEn: "Change", subAr: "تغيير" },
@@ -143,21 +100,36 @@ const KoreaTimeSection = () => {
           </p>
         </div>
 
-        {/* ── Four eras ──────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
-          {ERAS.map((era) => (
-            <div
-              key={era.titleEn}
-              className="rounded-2xl overflow-hidden bg-card border border-border shadow-[0_14px_36px_-28px_rgba(46,46,46,0.8)]"
+        {/* ── Five eras ──────────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
+          {ERAS.map((era, i) => (
+            <Link
+              key={era.id}
+              to={`/journey/${era.id}`}
+              className={`group rounded-2xl overflow-hidden bg-card border border-border shadow-[0_14px_36px_-28px_rgba(46,46,46,0.8)] transition-colors hover:border-foreground/40 ${
+                i === 0 ? "col-span-2 lg:col-span-1" : ""
+              }`}
             >
               <div className="aspect-[4/3] overflow-hidden bg-muted">
-                <img
-                  src={era.image}
-                  alt={isAr ? era.altAr : era.altEn}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-full w-full object-cover"
-                />
+                {era.image ? (
+                  <img
+                    src={era.image}
+                    alt={isAr ? era.altAr : era.altEn}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div
+                    role="img"
+                    aria-label={isAr ? era.altAr : era.altEn}
+                    className="h-full w-full bg-foreground text-background flex items-center justify-center"
+                  >
+                    <span lang="ko" className="font-display text-3xl font-extrabold">
+                      {era.glyph}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="p-4">
                 <h3 className="font-display font-bold text-foreground text-sm md:text-base leading-tight">
@@ -169,15 +141,19 @@ const KoreaTimeSection = () => {
                 <p className="text-xs md:text-sm text-muted-foreground mt-2 leading-relaxed">
                   {isAr ? era.lineAr : era.lineEn}
                 </p>
+                <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-foreground">
+                  {isAr ? "استكشف" : "Explore"}
+                  <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
         {/* ── The timeline under them ───────────────────────────── */}
-        <div className="relative max-w-5xl mx-auto mt-10 px-2">
+        <div className="relative max-w-6xl mx-auto mt-10 px-2">
           <div aria-hidden="true" className="absolute inset-x-8 top-[7px] border-t-2 border-dashed border-foreground/20" />
-          <div className="relative grid grid-cols-4 gap-2">
+          <div className="relative grid grid-cols-5 gap-2">
             {STOPS.map((stop) => (
               <div key={stop.topEn} className="flex flex-col items-center text-center gap-1.5">
                 <span className={`h-4 w-4 rounded-full ring-4 ring-background ${stop.dot}`} />
