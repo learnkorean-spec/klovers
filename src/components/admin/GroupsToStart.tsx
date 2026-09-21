@@ -7,8 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { CalendarClock, CheckCircle2, PauseCircle, Pencil, PlayCircle, Radio, UserPlus, UserMinus, Users, Video } from "lucide-react";
+import { CalendarClock, CheckCircle2, Mail, PauseCircle, Pencil, PlayCircle, Radio, UserPlus, UserMinus, Users, Video } from "lucide-react";
 import { LEVELS, getLevelShortLabel, normalizeLevel } from "@/constants/levels";
+// The welcome letter lives in its own file: see the note on welcomeOpenId.
+import GroupWelcomeSender from "./GroupWelcomeSender";
 
 /**
  * Starting a group — the one action nothing in the UI could do.
@@ -173,6 +175,14 @@ import { LEVELS, getLevelShortLabel, normalizeLevel } from "@/constants/levels";
  * student" already lists her, badged with where she sits, because clicking
  * her there MOVES her. The Unassign button on that same row is the other
  * half: it takes her out of her current group without seating her anywhere.
+ *
+ * --- 2026-09-21, the welcome letter ---
+ *
+ * "Send welcome" writes to everyone seated in the group at once: the class
+ * time and room, the book, and what the dashboard answers for her. The panel,
+ * the book field and the send loop are in GroupWelcomeSender.tsx, not here —
+ * this file is 68 KB and the only write path to it is a whole-file rewrite,
+ * which is exactly how it lost work in #571. Put new UI in its own file.
  */
 
 type Candidate = {
@@ -198,6 +208,8 @@ type Member = {
   enrollmentId: string | null;
   name: string;
   email: string;
+  /** When the course welcome letter was sent for THIS seat. Null = never. */
+  welcomeSentAt: string | null;
 };
 
 type GroupRow = {
@@ -221,6 +233,8 @@ type GroupRow = {
   /** Seats needed before the class is worth running. Decides "waiting". */
   minToRun: number;
   meetingUrl: string | null;
+  /** The book link that goes in the welcome letter. Typed once per group. */
+  bookUrl: string | null;
   members: Member[];
   /** Members linked to an enrolment. Only these can be given a date. */
   seated: number;
@@ -419,6 +433,25 @@ function untilLabel(minutes: number): string {
   return h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
 }
 
+const DAY_NAMES_AR = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+
+/**
+ * "Wednesday · 15:00 Cairo" — the class time as the welcome letter prints it.
+ *
+ * Written here rather than in the template because the template is handed one
+ * string: the day and hour live on the group's schedule slot, which this
+ * screen has and the mailer does not. Arabic for an Arabic-track class, since
+ * the whole letter is in the class language.
+ */
+function whenLabel(g: { dayOfWeek: number | null; startTime: string | null; languageKey: string }): string {
+  if (g.dayOfWeek == null) return "";
+  const isAr = g.languageKey !== "english";
+  const day = isAr ? DAY_NAMES_AR[g.dayOfWeek] : DAY_NAMES[g.dayOfWeek];
+  const t = hhmm(g.startTime);
+  if (!t) return day;
+  return isAr ? `${day} · ${t} بتوقيت القاهرة` : `${day} · ${t} Cairo`;
+}
+
 export default function GroupsToStart() {
   const [groups, setGroups] = useState<GroupRow[] | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -456,6 +489,11 @@ export default function GroupsToStart() {
   const [membersOpenId, setMembersOpenId] = useState<string | null>(null);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
 
+  // Which card has the welcome sender open. The sender itself is a separate
+  // component: this file is already 68 KB and the only write path to it is a
+  // whole-file rewrite, so anything that can live outside it should.
+  const [welcomeOpenId, setWelcomeOpenId] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     try {
       const [groupsRes, membersRes, pkgRes, enrollRes, profilesRes] = await Promise.all([
@@ -465,10 +503,10 @@ export default function GroupsToStart() {
         // ones.
         (supabase as any)
           .from("pkg_groups")
-          .select("id, name, package_id, start_date, capacity, min_to_run, is_active, meeting_url"),
+          .select("id, name, package_id, start_date, capacity, min_to_run, is_active, meeting_url, book_url"),
         supabase
           .from("pkg_group_members")
-          .select("group_id, user_id, enrollment_id")
+          .select("group_id, user_id, enrollment_id, welcome_email_sent_at")
           .eq("member_status", "active"),
         supabase
           .from("schedule_packages")
@@ -509,7 +547,7 @@ export default function GroupsToStart() {
       // Names/emails for whoever is already seated somewhere — used both for
       // this group's own member list and to exclude them from candidate pools
       // built further down.
-      const memberRows = (membersRes.data ?? []) as Array<{ group_id: string; user_id: string; enrollment_id: string | null }>;
+      const memberRows = (membersRes.data ?? []) as Array<{ group_id: string; user_id: string; enrollment_id: string | null; welcome_email_sent_at: string | null }>;
       const memberUserIds = [...new Set(memberRows.map(m => m.user_id))];
       let memberProfileMap = new Map<string, { name: string; email: string }>();
       if (memberUserIds.length > 0) {
@@ -537,6 +575,7 @@ export default function GroupsToStart() {
           enrollmentId: m.enrollment_id,
           name: memberProfileMap.get(m.user_id)?.name ?? "Unnamed",
           email: memberProfileMap.get(m.user_id)?.email ?? "",
+          welcomeSentAt: m.welcome_email_sent_at,
         });
         membersByGroup.set(m.group_id, list);
         if (m.enrollment_id) {
@@ -563,7 +602,7 @@ export default function GroupsToStart() {
 
       const rows: GroupRow[] = ((groupsRes.data ?? []) as Array<{
         id: string; name: string | null; package_id: string | null; start_date: string | null;
-        capacity: number | null; min_to_run: number | null; is_active: boolean; meeting_url: string | null;
+        capacity: number | null; min_to_run: number | null; is_active: boolean; meeting_url: string | null; book_url: string | null;
       }>).map(g => {
         const p = g.package_id ? packages.get(g.package_id) : undefined;
         const title = g.name || "Group";
@@ -590,6 +629,7 @@ export default function GroupsToStart() {
           capacity: g.capacity,
           minToRun: g.min_to_run ?? 3,
           meetingUrl: g.meeting_url,
+          bookUrl: g.book_url,
           members: membersByGroup.get(g.id) ?? [],
           seated: seatedCountByGroup.get(g.id) ?? 0,
         };
@@ -1275,6 +1315,17 @@ export default function GroupsToStart() {
                       <Users className="h-3.5 w-3.5 mr-1" /> Members ({g.members.length})
                     </Button>
                   )}
+                  {g.members.length > 0 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8"
+                      onClick={() => setWelcomeOpenId(welcomeOpenId === g.id ? null : g.id)}
+                    >
+                      <Mail className="h-3.5 w-3.5 mr-1" /> Send welcome
+                    </Button>
+                  )}
                   {phase === "running" && (
                     <Button
                       type="button"
@@ -1495,6 +1546,22 @@ export default function GroupsToStart() {
                       ))}
                     </div>
                   </div>
+                )}
+
+                {welcomeOpenId === g.id && (
+                  <GroupWelcomeSender
+                    group={{
+                      id: g.id,
+                      title: g.title,
+                      level: g.level,
+                      languageKey: g.languageKey,
+                      meetingUrl: g.meetingUrl,
+                      bookUrl: g.bookUrl,
+                      whenLabel: whenLabel(g),
+                    }}
+                    members={g.members}
+                    onSent={() => { setWelcomeOpenId(null); void load(); }}
+                  />
                 )}
 
                 {membersOpen && (
