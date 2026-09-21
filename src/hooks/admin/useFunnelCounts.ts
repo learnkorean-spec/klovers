@@ -5,7 +5,7 @@
  *
  * 1. "Leads" was the wrong population. It counted profiles with no paid
  *    enrollment (derived_status = 'LEAD'), while the Leads screen beside it
- *    listed the `leads` CRM table. Same word, two meanings, one screen —
+ *    listed the `leads` CRM table. Same word, two meanings, one screen --
  *    100 against 124.
  *
  *    Verified on production: zero profiles have no matching lead by email.
@@ -25,11 +25,22 @@
  *    transfers no rows at all. It cannot be capped, cannot skip, and does not
  *    grow more expensive as the tables do.
  *
+ * 3. The student stages counted `admin_student_overview`, which derives its
+ *    status purely from `enrollments` -- the online group-enrolment flow.
+ *    Students who enrolled by contacting the school directly live in
+ *    `teacher_students` and never reach that view, so Enrolled and Active
+ *    both read 2 while six people were studying. Those stages now read
+ *    `admin_funnel_overview`, which is the same view plus the active private
+ *    students (including ones with no platform account). Everything else that
+ *    depends on `admin_student_overview` -- billing, the students table, the
+ *    payment screens -- is untouched.
+ *
  * STAGE DEFINITIONS
- *   leads       every row in `leads` — matches what the Leads screen lists
+ *   leads       every row in `leads` -- matches what the Leads screen lists
  *   registered  every profile
- *   enrolled    ACTIVE + COMPLETED + LOCKED — paid and approved at some point
- *   active      ACTIVE — currently has sessions left
+ *   enrolled    ACTIVE + COMPLETED + LOCKED -- paid and approved at some
+ *               point, or studying privately
+ *   active      ACTIVE -- currently has sessions left, or studying privately
  *   completed   COMPLETED only
  *
  * `completed` deliberately excludes LOCKED. LOCKED means a student overdrew
@@ -49,7 +60,7 @@ export interface FunnelCounts {
 
 /** Count rows without transferring any. */
 async function countRows(
-  table: "leads" | "profiles" | "admin_student_overview",
+  table: "leads" | "profiles" | "admin_funnel_overview",
   status?: string[],
 ): Promise<number> {
   let q = supabase.from(table).select("*", { count: "exact", head: true });
@@ -64,9 +75,9 @@ export async function fetchFunnelCounts(): Promise<FunnelCounts> {
   const [leads, registered, enrolled, active, completed] = await Promise.all([
     countRows("leads"),
     countRows("profiles"),
-    countRows("admin_student_overview", ["ACTIVE", "COMPLETED", "LOCKED"]),
-    countRows("admin_student_overview", ["ACTIVE"]),
-    countRows("admin_student_overview", ["COMPLETED"]),
+    countRows("admin_funnel_overview", ["ACTIVE", "COMPLETED", "LOCKED"]),
+    countRows("admin_funnel_overview", ["ACTIVE"]),
+    countRows("admin_funnel_overview", ["COMPLETED"]),
   ]);
 
   return { leads, registered, enrolled, active, completed };
