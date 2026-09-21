@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { CalendarClock, CheckCircle2, Pencil, UserPlus, UserMinus, Users } from "lucide-react";
+import { CalendarClock, CheckCircle2, PauseCircle, Pencil, PlayCircle, Radio, UserPlus, UserMinus, Users, Video } from "lucide-react";
 import { LEVELS, getLevelShortLabel, normalizeLevel } from "@/constants/levels";
 
 /**
@@ -110,29 +110,60 @@ import { LEVELS, getLevelShortLabel, normalizeLevel } from "@/constants/levels";
  * already uses: legacy stays legacy, canonical stays canonical, and nothing
  * here converts a column it was not asked to convert.
  *
- * --- 2026-09-21, the state board ---
+ * --- 2026-09-21, evening: the running classes are here too ---
  *
- * The screen showed unstarted groups as cards and reduced the started ones to
- * a line of grey text at the bottom. The classes that are actually teaching —
- * the only ones earning anything — were the least visible thing on it, and
- * there was no single place to see all ten and what each is doing.
+ * The section was called GROUPS TO START and behaved like it: a group with a
+ * start date dropped out of the grid and became a grey one-line footnote.
+ * Which meant the classes that actually RUN — the ones with students in them,
+ * the ones whose room link or headcount you might need at 3pm — were the
+ * groups this screen said the least about. No members list, no Add student,
+ * no Edit group, no room.
  *
- * Every class is a card now, running ones first, each carrying one of four
- * states:
+ * Now every group is a card. A started one shows when it started and when it
+ * next meets where an unstarted one shows the date box and the Start button;
+ * the rest of the card is identical, so seating a student or fixing a link is
+ * the same two clicks whichever kind it is.
  *
- *   RUNNING         started, and someone is in it. Green with a neon ring,
- *                   because this is the state the whole screen exists to
- *                   produce.
- *   STARTED, EMPTY  started, nobody seated. Red, not grey: Hangul · Friday
- *                   started on 20 Sep with zero students, which means a
- *                   class on the calendar that nobody attends and no letter
- *                   can be sent about — and nothing on the screen said so.
- *   READY TO START  at or above min_to_run, waiting only on the button.
- *   ON HOLD         below min_to_run, with how many more it needs.
+ * And the card reads the clock, in Cairo wall-clock time, recomputed every
+ * 30 seconds:
  *
- * The progress bar runs to `min_to_run`, not `capacity`: three is what
- * decides whether a class runs at all, eight is only the ceiling. Measuring
- * against eight would show a class that is ready to go as 38% full.
+ *   - IN CLASS NOW  — mint-strong ring, and a button straight into the room
+ *                     when the group has a link;
+ *   - later today   — mint tint and the hours left;
+ *   - anything else — a plain card.
+ *
+ * Cards sort by that: live first, then today, then groups still waiting for a
+ * start date, then the rest. The green is `mint-strong` (#3ED598) from the
+ * brand palette, not a new colour — see claude/BRAND_PALETTE_REFERENCE.md.
+ *
+ * --- 2026-09-21, the whole card says what the class is ---
+ *
+ * Restored note first, because this file lost work and should not lose it
+ * twice: PR #571 rewrote this file wholesale from a pre-#569 copy and dropped
+ * the live/today clock, the room button and the addDaysISO crash fix from
+ * #567. This version is #569 with the state work applied ON TOP of it, not
+ * instead of it. Edit this file in place; do not regenerate it from an older
+ * copy.
+ *
+ * The clock highlight answers "is this class on right now". It does not
+ * answer the question the screen is actually opened for, which is what is
+ * running, what is still filling up, and what has stopped. Those are three
+ * states of the class itself, and they now colour the whole card border:
+ *
+ *   RUNNING  green (mint-strong). Started and switched on.
+ *   WAITING  amber. No start date yet, with how many more students it needs
+ *            to reach `min_to_run`.
+ *   PAUSED   pink, with a neon glow. It ran, and was switched off.
+ *
+ * Paused is a real state, not a deletion: `is_active` goes false and NOTHING
+ * else moves — the start date, the members and their `first_class_date` /
+ * `due_at` all stay. That is what makes Resume one button. It also means the
+ * membership guard (inactive AND started) refuses new seats into it, which is
+ * the correct behaviour for a class that is not meeting.
+ *
+ * The two axes stay separate on purpose: the border is the lifecycle, the
+ * tint and glow are the clock. A live class is a green-bordered card with the
+ * mint wash on top. A paused class is never "live" whatever its slot says.
  */
 
 type Candidate = {
@@ -173,10 +204,12 @@ type GroupRow = {
   level: string | null;
   dayOfWeek: number | null;
   startTime: string | null;
+  /** How long the class runs, for deciding whether it is on RIGHT NOW. */
+  durationMin: number | null;
   startDate: string | null;
   isActive: boolean;
   capacity: number | null;
-  /** Seats needed before the class is worth running. Decides the state. */
+  /** Seats needed before the class is worth running. Decides "waiting". */
   minToRun: number;
   meetingUrl: string | null;
   members: Member[];
@@ -184,45 +217,61 @@ type GroupRow = {
   seated: number;
 };
 
-type ClassState = "running" | "started_empty" | "ready" | "hold";
+/** Where a group sits relative to the clock, in Cairo. */
+type ClassState = "live" | "today" | "later";
+
+/**
+ * What the class IS, as opposed to where the clock has got to.
+ *
+ *   running  started and switched on — the class is teaching
+ *   waiting  no start date yet — still filling up
+ *   paused   it ran, and was then switched off. Not deleted: the group, its
+ *            members and its slot are all still there, so it can be resumed
+ *            with one button.
+ *
+ * `is_active` on its own never meant "has started" — eight groups are active
+ * with no start date — so the pair of columns is what decides this, not
+ * either one alone.
+ */
+type Lifecycle = "running" | "waiting" | "paused";
+
+function lifecycleOf(g: { startDate: string | null; isActive: boolean }): Lifecycle {
+  if (!g.startDate) return "waiting";
+  return g.isActive ? "running" : "paused";
+}
+
+/**
+ * The whole card is coloured by lifecycle, because that is the question this
+ * screen is opened to answer: what is running, what is still filling up, what
+ * has stopped. Green is `mint-strong` (#3ED598) from the brand palette; the
+ * pink is kept for paused alone, so a stopped class cannot be mistaken for
+ * anything else on the page.
+ */
+const LIFECYCLE_CARD: Record<Lifecycle, string> = {
+  running: "border-2 border-mint-strong",
+  waiting: "border-2 border-amber-400 dark:border-amber-500",
+  paused: "border-2 border-pink-400 dark:border-pink-500 shadow-[0_0_16px_rgba(244,114,182,0.55)] dark:shadow-[0_0_20px_rgba(244,114,182,0.4)]",
+};
+
+const LIFECYCLE_BADGE: Record<Lifecycle, string> = {
+  running: "bg-mint-strong text-charcoal hover:bg-mint-strong",
+  waiting: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-400",
+  paused: "bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border border-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.6)]",
+};
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const hhmm = (t: string | null | undefined) => (t ?? "").slice(0, 5);
 
-/** Which of the four states a class is in. See the board note at the top. */
-function classStateOf(g: GroupRow): ClassState {
-  if (g.startDate) return g.members.length > 0 ? "running" : "started_empty";
-  return g.members.length >= g.minToRun ? "ready" : "hold";
+/** "15:00" / "15:00:00" -> 900 minutes past midnight. Null when unparseable. */
+function minutesOfDay(t: string | null | undefined): number | null {
+  const m = (t ?? "").match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (!Number.isFinite(h) || !Number.isFinite(min)) return null;
+  return (h % 24) * 60 + min;
 }
-
-/**
- * Card and badge styling per state. The neon ring is deliberate and only on
- * `running`: it is the one state that means money is coming in, and it should
- * be findable on the page without reading a word.
- */
-const STATE_STYLE: Record<ClassState, { card: string; badge: string; label: string }> = {
-  running: {
-    card: "border-green-400 dark:border-green-500 ring-2 ring-green-400/70 shadow-[0_0_16px_rgba(74,222,128,0.55)] dark:shadow-[0_0_20px_rgba(74,222,128,0.4)]",
-    badge: "bg-green-500/15 text-green-700 dark:text-green-300 border-green-400 shadow-[0_0_10px_rgba(74,222,128,0.6)]",
-    label: "Running",
-  },
-  started_empty: {
-    card: "border-red-300 dark:border-red-800",
-    badge: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-300 dark:border-red-800",
-    label: "Started · empty",
-  },
-  ready: {
-    card: "border-emerald-300 dark:border-emerald-800",
-    badge: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800",
-    label: "Ready to start",
-  },
-  hold: {
-    card: "",
-    badge: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800",
-    label: "On hold",
-  },
-};
 
 /**
  * A level key in the vocabulary the row already uses — see the note at the
@@ -252,8 +301,36 @@ function cairoTodayISO(): string {
   }).format(new Date());
 }
 
+/**
+ * The weekday (0–6) and minutes-past-midnight it is RIGHT NOW in Cairo.
+ *
+ * The admin is in Bangkok, five or six hours ahead depending on Cairo's DST,
+ * so "is this class on now" cannot be asked of the local clock: for most of
+ * her evening it is still the previous Cairo day.
+ */
+function cairoNowParts(now: Date): { dow: number; minutes: number } {
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: "Africa/Cairo", weekday: "long" }).format(now);
+  const clock = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Cairo", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).format(now);
+  return {
+    dow: Math.max(0, DAY_NAMES.indexOf(weekday)),
+    minutes: minutesOfDay(clock) ?? 0,
+  };
+}
+
+/**
+ * Adds days to a YYYY-MM-DD date.
+ *
+ * Returns the input untouched when it is not a date it can parse — "" above
+ * all, which is what a cleared or not-yet-recomputed date box holds.
+ * `Date.UTC(NaN, …)` is an Invalid Date and `.toISOString()` on one throws
+ * "Invalid time value", which is not caught anywhere between here and the
+ * error boundary: on 21 Sep one empty string blanked the entire page.
+ */
 function addDaysISO(iso: string, days: number): string {
-  const [y, m, d] = iso.split("-").map(Number);
+  const [y, m, d] = (iso ?? "").split("-").map(Number);
+  if (!y || !m || !d) return iso;
   const dt = new Date(Date.UTC(y, m - 1, d + days));
   return dt.toISOString().slice(0, 10);
 }
@@ -315,6 +392,7 @@ function cairoToBangkok(dayOfWeek: number | null, hhmmStr: string): { day: strin
   if (dayOfWeek == null || !hhmmStr) return null;
   const isoDate = nextWeekdayISO(dayOfWeek);
   const guessUTC = new Date(`${isoDate}T${hhmmStr}:00Z`);
+  if (Number.isNaN(guessUTC.getTime())) return null;
   const cairoOffset = tzOffsetMinutes(guessUTC, "Africa/Cairo");
   const actualUTC = new Date(guessUTC.getTime() - cairoOffset * 60000);
   const day = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", weekday: "long" }).format(actualUTC);
@@ -324,6 +402,14 @@ function cairoToBangkok(dayOfWeek: number | null, hhmmStr: string): { day: strin
   return { day, time };
 }
 
+/** "in 3h 20m" / "in 45m" — how long until this class starts. */
+function untilLabel(minutes: number): string {
+  if (minutes <= 0) return "now";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
+}
+
 export default function GroupsToStart() {
   const [groups, setGroups] = useState<GroupRow[] | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -331,6 +417,15 @@ export default function GroupsToStart() {
   const [dates, setDates] = useState<Record<string, string>>({});
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  // The clock the live/today highlight is read against. Ticked rather than
+  // read once at render: this screen is left open for hours, and a card that
+  // says "in 5m" forever is worse than no card at all.
+  const [now, setNow] = useState<Date>(() => new Date());
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(new Date()), 30000);
+    return () => window.clearInterval(t);
+  }, []);
 
   // Inline "edit group" state — at most one card open at once.
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -368,7 +463,7 @@ export default function GroupsToStart() {
           .eq("member_status", "active"),
         supabase
           .from("schedule_packages")
-          .select("id, level, day_of_week, start_time, class_language"),
+          .select("id, level, day_of_week, start_time, duration_min, class_language"),
         // Every enrolment the membership guard would accept a seat against:
         // live, approved, group, and either paid or confirmed-unpaid. NOT
         // filtered to `matched_at is null` any more — that is the
@@ -444,7 +539,7 @@ export default function GroupsToStart() {
       const packages = new Map(
         ((pkgRes.data ?? []) as Array<{
           id: string; level: string | null; day_of_week: number | null;
-          start_time: string | null; class_language: string | null;
+          start_time: string | null; duration_min: number | null; class_language: string | null;
         }>).map(p => [p.id, p]),
       );
 
@@ -480,6 +575,7 @@ export default function GroupsToStart() {
           level: p?.level ?? null,
           dayOfWeek: dow,
           startTime: p?.start_time ?? null,
+          durationMin: p?.duration_min ?? null,
           startDate: g.start_date,
           isActive: g.is_active,
           capacity: g.capacity,
@@ -488,17 +584,6 @@ export default function GroupsToStart() {
           members: membersByGroup.get(g.id) ?? [],
           seated: seatedCountByGroup.get(g.id) ?? 0,
         };
-      });
-
-      // Running first — the classes that are teaching are the ones worth
-      // seeing without scrolling. Then the ones closest to running, so the
-      // next action is near the top.
-      const ORDER: Record<ClassState, number> = { running: 0, started_empty: 1, ready: 2, hold: 3 };
-      rows.sort((a, b) => {
-        const byState = ORDER[classStateOf(a)] - ORDER[classStateOf(b)];
-        if (byState !== 0) return byState;
-        if (a.members.length !== b.members.length) return b.members.length - a.members.length;
-        return a.title.localeCompare(b.title);
       });
 
       setDates(prev => {
@@ -620,6 +705,39 @@ export default function GroupsToStart() {
     }
   };
 
+  /**
+   * Pause a running class, or bring a paused one back.
+   *
+   * Only `is_active` moves. `start_date`, the members and their
+   * `first_class_date`/`due_at` are all left exactly where they are, which is
+   * what makes resuming a one-click operation rather than a re-setup: a
+   * paused class is a class that stopped meeting, not one that never
+   * happened. Pausing also stops new students being seated into it — the
+   * membership guard refuses a group that is inactive AND has a start date,
+   * which is precisely this state.
+   */
+  const setPaused = async (g: GroupRow, paused: boolean) => {
+    setBusyId(g.id);
+    try {
+      const { error: updErr } = await supabase
+        .from("pkg_groups")
+        .update({ is_active: !paused })
+        .eq("id", g.id);
+      if (updErr) throw updErr;
+      toast({
+        title: paused ? `${g.title} paused` : `${g.title} resumed`,
+        description: paused
+          ? "It keeps its start date, its students and their payment dates. Nobody new can be seated into it while it is paused."
+          : "Back to running, with everyone who was in it.",
+      });
+      await load();
+    } catch (e: any) {
+      toast({ title: paused ? "Could not pause it" : "Could not resume it", description: e?.message ?? String(e), variant: "destructive" });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const openEdit = (g: GroupRow) => {
     setEditingId(g.id);
     setEditDay(g.dayOfWeek != null ? String(g.dayOfWeek) : "");
@@ -686,6 +804,10 @@ export default function GroupsToStart() {
       setEditingId(null);
       // The chosen start date was picked against the old weekday — drop it so
       // it recomputes against the new one instead of silently staying wrong.
+      // The confirm step goes with it: it quotes that date and the deadline
+      // three days after it, and leaving it open over a date that no longer
+      // exists is what took this whole screen down on 21 Sep.
+      setConfirmId(prev => (prev === g.id ? null : prev));
       setDates(prev => {
         const next = { ...prev };
         delete next[g.id];
@@ -815,6 +937,33 @@ export default function GroupsToStart() {
     };
   }, [candidates, addFilter]);
 
+  /**
+   * Where each group sits against the Cairo clock, and how far off its next
+   * class is. Only a STARTED group can be in class — an unstarted one meets
+   * on paper only, whatever its slot says.
+   */
+  const clockFor = useMemo(() => {
+    const nowParts = cairoNowParts(now);
+    return (g: GroupRow): { state: ClassState; minutesUntil: number | null; nextISO: string | null } => {
+      const startMin = minutesOfDay(g.startTime);
+      if (g.dayOfWeek == null || startMin == null) {
+        return { state: "later", minutesUntil: null, nextISO: null };
+      }
+      const endMin = startMin + (g.durationMin ?? 60);
+      const isToday = nowParts.dow === g.dayOfWeek;
+      const nextISO = isToday && nowParts.minutes < endMin ? cairoTodayISO() : nextWeekdayISO(g.dayOfWeek);
+
+      if (!g.startDate) return { state: "later", minutesUntil: null, nextISO };
+      if (isToday && nowParts.minutes >= startMin && nowParts.minutes < endMin) {
+        return { state: "live", minutesUntil: 0, nextISO };
+      }
+      if (isToday && nowParts.minutes < startMin) {
+        return { state: "today", minutesUntil: startMin - nowParts.minutes, nextISO };
+      }
+      return { state: "later", minutesUntil: null, nextISO };
+    };
+  }, [now]);
+
   if (error) {
     return (
       <Card className="border-destructive">
@@ -845,68 +994,125 @@ export default function GroupsToStart() {
   }
 
   const today = cairoTodayISO();
-  const counts = groups.reduce((acc, g) => {
-    const s = classStateOf(g);
-    acc[s] = (acc[s] ?? 0) + 1;
-    return acc;
-  }, {} as Record<ClassState, number>);
+  const runningCount = groups.filter(g => lifecycleOf(g) === "running").length;
+  const pausedCount = groups.filter(g => lifecycleOf(g) === "paused").length;
+  const waitingCount = groups.filter(g => !g.startDate).length;
+  const liveCount = groups.filter(g => clockFor(g).state === "live").length;
+  const todayCount = groups.filter(g => clockFor(g).state === "today").length;
+
+  // What is happening soonest, first. Within a band: the fullest group, then
+  // by name, exactly as before.
+  const rank = (g: GroupRow) => {
+    // A paused class is nobody's next action, so it sits at the bottom
+    // whatever its slot says about today.
+    if (lifecycleOf(g) === "paused") return 4;
+    const s = clockFor(g).state;
+    if (s === "live") return 0;
+    if (s === "today") return 1;
+    return g.startDate ? 3 : 2;
+  };
+  const ordered = [...groups].sort((a, b) => {
+    const ra = rank(a);
+    const rb = rank(b);
+    if (ra !== rb) return ra - rb;
+    if (a.seated !== b.seated) return b.seated - a.seated;
+    return a.title.localeCompare(b.title);
+  });
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-        <span className="font-semibold text-foreground">{groups.length} classes</span>
-        <span className="inline-flex items-center gap-1.5 text-[12px]">
-          <span className="h-2 w-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]" />
-          <span className="text-muted-foreground">{counts.running ?? 0} running</span>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px]">
+        <span className="text-sm font-semibold text-foreground">{groups.length} classes</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm border-2 border-mint-strong" />
+          <span className="text-muted-foreground">{runningCount} running</span>
         </span>
-        {(counts.started_empty ?? 0) > 0 && (
-          <span className="inline-flex items-center gap-1.5 text-[12px]">
-            <span className="h-2 w-2 rounded-full bg-red-500" />
-            <span className="text-muted-foreground">{counts.started_empty} started but empty</span>
-          </span>
-        )}
-        {(counts.ready ?? 0) > 0 && (
-          <span className="inline-flex items-center gap-1.5 text-[12px]">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-muted-foreground">{counts.ready} ready to start</span>
-          </span>
-        )}
-        <span className="inline-flex items-center gap-1.5 text-[12px]">
-          <span className="h-2 w-2 rounded-full bg-amber-400" />
-          <span className="text-muted-foreground">{counts.hold ?? 0} on hold</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm border-2 border-amber-400" />
+          <span className="text-muted-foreground">{waitingCount} waiting to fill</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm border-2 border-pink-400 shadow-[0_0_8px_rgba(244,114,182,0.8)]" />
+          <span className="text-muted-foreground">{pausedCount} paused</span>
         </span>
       </div>
 
-      <p className="text-[11px] text-muted-foreground">
-        A class on hold has nobody dated and no payment letter can reach anyone in it. Starting is allowed at any
-        headcount — the hold is a judgement, not a lock.
+      <p className="text-sm text-muted-foreground">
+        {liveCount > 0 && (
+          <span className="font-semibold text-foreground">
+            {liveCount} class{liveCount === 1 ? " is" : "es are"} on right now.{" "}
+          </span>
+        )}
+        {liveCount === 0 && todayCount > 0 && (
+          <span className="font-semibold text-foreground">
+            {todayCount} class{todayCount === 1 ? "" : "es"} later today.{" "}
+          </span>
+        )}
+        {waitingCount > 0 ? (
+          <>
+            <span className="font-semibold text-foreground">
+              {waitingCount} group{waitingCount === 1 ? "" : "s"} ha{waitingCount === 1 ? "s" : "ve"} no start date.
+            </span>{" "}
+            Until a group starts, nobody in it has a first class date and no payment letter can reach them.
+            Starting is allowed at any headcount — nothing here waits for the group to fill up.
+          </>
+        ) : (
+          <>Every group has a start date. Running ones are listed here too — same card, same buttons.</>
+        )}
       </p>
 
       <div className="grid gap-2 sm:grid-cols-2">
-        {groups.map(g => {
-          const state = classStateOf(g);
-          const style = STATE_STYLE[state];
+        {ordered.map(g => {
+          const clock = clockFor(g);
+          const phase = lifecycleOf(g);
+          const needed = Math.max(0, g.minToRun - g.members.length);
+          // A paused class is not "on now" whatever the clock says — it is
+          // not meeting at all.
+          const live = phase === "running" && clock.state === "live";
+          const soon = phase === "running" && clock.state === "today";
           const date = dates[g.id] ?? "";
           const isPast = date !== "" && date < today;
           const imminent = date !== "" && date <= addDaysISO(today, 1);
-          const confirming = confirmId === g.id;
+          // `date` is part of the condition, not just of what's rendered: the
+          // paragraph below quotes the date and the deadline three days after
+          // it, and there is no honest thing for it to say without one.
+          const confirming = confirmId === g.id && date !== "";
           const editing = editingId === g.id;
           const adding = addingId === g.id;
           const membersOpen = membersOpenId === g.id;
-          const needed = Math.max(0, g.minToRun - g.members.length);
-          const progress = Math.min(100, Math.round((g.members.length / Math.max(1, g.minToRun)) * 100));
           return (
-            <Card key={g.id} className={style.card}>
+            <Card
+              key={g.id}
+              // The border says what the class IS; the tint and glow say
+              // where the clock has got to. A live class keeps the stronger
+              // mint treatment on top of its running border.
+              className={[
+                LIFECYCLE_CARD[phase],
+                live ? "bg-mint/20 shadow-[0_0_0_4px_hsl(var(--mint-strong)/0.25)]" : soon ? "bg-mint/10" : "",
+              ].filter(Boolean).join(" ")}
+            >
               <CardContent className="p-4 space-y-2.5">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  {live
+                    ? <Radio className="h-4 w-4 shrink-0 text-mint-strong" />
+                    : <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" />}
                   <span className="text-sm font-semibold">{g.title}</span>
-                  <Badge variant="outline" className={`text-[10px] border ${style.badge}`}>
-                    {style.label}
-                    {state === "hold" && needed > 0 && ` · needs ${needed} more`}
+                  <Badge className={`text-[10px] ${LIFECYCLE_BADGE[phase]}`}>
+                    {phase === "running" ? "Running" : phase === "paused" ? "Paused" : "Waiting"}
+                    {phase === "waiting" && needed > 0 && ` · needs ${needed} more`}
                   </Badge>
                   <Badge variant="secondary" className="text-[10px]">{g.language}</Badge>
-                  {!g.isActive && (
+                  {live && (
+                    <Badge className="bg-mint-strong text-charcoal hover:bg-mint-strong text-[10px]">
+                      in class now
+                    </Badge>
+                  )}
+                  {soon && (
+                    <Badge variant="outline" className="border-mint-strong text-[10px] text-charcoal">
+                      today · {untilLabel(clock.minutesUntil ?? 0)}
+                    </Badge>
+                  )}
+                  {phase === "waiting" && !g.isActive && (
                     <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">
                       not active yet
                     </Badge>
@@ -919,38 +1125,29 @@ export default function GroupsToStart() {
                     const bkk = cairoToBangkok(g.dayOfWeek, hhmm(g.startTime));
                     return bkk ? <span>{bkk.day} {bkk.time} Bangkok for you · </span> : null;
                   })()}
-                  {g.startDate
-                    ? <span className="font-medium text-foreground">started {prettyDate(g.startDate)}</span>
-                    : <span>not started</span>}
+                  {g.seated > 0
+                    ? `${g.seated} of ${g.members.length} member${g.members.length === 1 ? "" : "s"} linked to an enrolment`
+                    : `${g.members.length} member${g.members.length === 1 ? "" : "s"}, none linked to an enrolment`}
+                  {g.capacity != null && <span> · capacity {g.capacity}</span>}
                 </p>
 
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span>
-                      {g.members.length} of {g.minToRun} needed
-                      {g.capacity != null && <span> · capacity {g.capacity}</span>}
-                    </span>
-                    <span>
-                      {g.seated > 0
-                        ? `${g.seated} linked to an enrolment`
-                        : g.members.length > 0 ? "none linked to an enrolment" : "—"}
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${
-                        state === "running"
-                          ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]"
-                          : state === "started_empty"
-                            ? "bg-red-500"
-                            : state === "ready" ? "bg-emerald-500" : "bg-amber-400"
-                      }`}
-                      style={{ width: `${Math.max(progress, g.members.length > 0 ? 8 : 0)}%` }}
-                    />
-                  </div>
-                </div>
+                {g.startDate && (
+                  <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-mint-strong" />
+                    <span>started {prettyDate(g.startDate)}</span>
+                    {clock.nextISO && (
+                      <span>
+                        · {live ? "on now until the hour is up" : `next class ${prettyDate(clock.nextISO)}`}
+                      </span>
+                    )}
+                    {!g.meetingUrl && <span className="text-amber-600">· no room link</span>}
+                  </p>
+                )}
 
                 <div className="flex flex-wrap items-center gap-2">
+                  {/* A started group has no date box: its first class is
+                      already on record, and re-running activate_pkg_group
+                      would re-date students who are past that question. */}
                   {!g.startDate && (
                     <>
                       <input
@@ -985,6 +1182,13 @@ export default function GroupsToStart() {
                       </Button>
                     </>
                   )}
+                  {live && g.meetingUrl && (
+                    <Button asChild size="sm" className="h-8 bg-mint-strong text-charcoal hover:bg-mint-strong/90">
+                      <a href={g.meetingUrl} target="_blank" rel="noreferrer">
+                        <Video className="h-3.5 w-3.5 mr-1" /> Open the room
+                      </a>
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     size="sm"
@@ -1018,17 +1222,38 @@ export default function GroupsToStart() {
                       <Users className="h-3.5 w-3.5 mr-1" /> Members ({g.members.length})
                     </Button>
                   )}
-                  {state === "running" && (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-600 dark:text-green-400">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> teaching
-                    </span>
+                  {phase === "running" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 border-pink-300 text-pink-700 hover:text-pink-700 dark:text-pink-300"
+                      disabled={busyId === g.id}
+                      onClick={() => void setPaused(g, true)}
+                    >
+                      <PauseCircle className="h-3.5 w-3.5 mr-1" />
+                      {busyId === g.id ? "Pausing…" : "Pause"}
+                    </Button>
+                  )}
+                  {phase === "paused" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 bg-mint-strong text-charcoal hover:bg-mint-strong/90"
+                      disabled={busyId === g.id}
+                      onClick={() => void setPaused(g, false)}
+                    >
+                      <PlayCircle className="h-3.5 w-3.5 mr-1" />
+                      {busyId === g.id ? "Resuming…" : "Resume"}
+                    </Button>
                   )}
                 </div>
 
-                {state === "started_empty" && (
-                  <p className="text-[11px] text-red-600 dark:text-red-400">
-                    This class has a start date but nobody in it — it is on the calendar and no one attends. Seat a
-                    student, or change the class from "Edit group".
+                {phase === "paused" && (
+                  <p className="text-[11px] text-pink-700 dark:text-pink-300">
+                    Paused — it is not meeting, and nobody new can be seated into it. Its start date, its
+                    {" "}{g.members.length} student{g.members.length === 1 ? "" : "s"} and their payment dates are all
+                    kept, so Resume puts it straight back.
                   </p>
                 )}
 
