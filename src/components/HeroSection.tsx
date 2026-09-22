@@ -1,4 +1,4 @@
-﻿import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -10,7 +10,6 @@ import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialSlots";
 import { useAnyBottomSlotActive } from "@/lib/bottomLayer";
-import { useAnyBottomSlotActive } from "@/lib/bottomLayer";
 
 /**
  * The first screen: the full-bleed cover Re picked, fused with the concept
@@ -19,18 +18,6 @@ import { useAnyBottomSlotActive } from "@/lib/bottomLayer";
  * Two halves, deliberately:
  *
  * 1. THE COVER. Photo/video wall, giant centred headline, proof strip pinned
-<<<<<<< HEAD
- * to the bottom. Repainted on the board - Charcoal #2E2E2E ground and
- * scrims instead of pure black, Ivory #FFF9EC text instead of pure white.
- * The next-class chip and the slot pills carry live-bright, the "happening
- * now" status colour for dark grounds. The headline's second line stays
- * Klovers Yellow: yellow as TYPE is endorsed on a dark ground and ruled out
- * only on a light one.
- *
- * NOTE this section is dark in BOTH themes - it is a photo under a charcoal
- * scrim, not a themed surface. That is why it uses live-bright and the
- * ivory/charcoal literals rather than the theme's foreground tokens.
-=======
  *    to the bottom. Repainted on the board - Charcoal #2E2E2E ground and
  *    scrims instead of pure black, Ivory #FFF9EC text instead of pure white.
  *    The next-class chip and the slot pills carry live-bright, the "happening
@@ -41,7 +28,6 @@ import { useAnyBottomSlotActive } from "@/lib/bottomLayer";
  *    NOTE this section is dark in BOTH themes - it is a photo under a charcoal
  *    scrim, not a themed surface. That is why it uses live-bright and the
  *    ivory/charcoal literals rather than the theme's foreground tokens.
->>>>>>> 56d741e59b388f6f6833c9b71a985804ec59cb60
  *
  * 2. THE CARD ROW. On the board these sit at the foot of the hero, half on
  * the image. They lift 48px on phones and 80px from sm up to do the same
@@ -67,12 +53,6 @@ const HeroSection = () => {
   // the screen, an active overlay was painting straight over the stats.
   const bottomOverlayActive = useAnyBottomSlotActive();
 
-  // Whether HomeExitNudge / StickyEnrollBar / InstallPrompt / InterviewChip
-  // currently hold the bottom of the viewport (src/lib/bottomLayer.ts). That
-  // layer is fixed to the VIEWPORT, while the proof strip below is pinned to
-  // the bottom of this SECTION â€” on a short viewport where the hero still
-  // fills the screen, the overlay was painting straight over the stats.
-  const bottomOverlayActive = useAnyBottomSlotActive();
 
   /**
    * The weekday of the next class, or null when there isn't one to name.
@@ -149,11 +129,7 @@ const HeroSection = () => {
    * The board's four promise cards.
    *
    * The board alternated Mint / white / Peach / Mint. The brand is three
-<<<<<<< HEAD
-   * colours now â€” Yellow, Charcoal, Ivory â€” so the row alternates Yellow and
-=======
    * colours now — Yellow, Charcoal, Ivory — so the row alternates Yellow and
->>>>>>> 56d741e59b388f6f6833c9b71a985804ec59cb60
    * white. The rhythm is what the board was after; the extra colours were not
    * carrying meaning.
    */
@@ -252,11 +228,7 @@ const HeroSection = () => {
           í•œêµ­ì–´
         </span>
 
-<<<<<<< HEAD
-        {/* â”€â”€ Hero text content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-=======
         {/* ── Hero text content ───────────────────────────── */}
->>>>>>> 56d741e59b388f6f6833c9b71a985804ec59cb60
         {/* pb-44 is tuned for typical phone/desktop heights. On short
             viewports (iPad landscape, most laptops with a shallow browser
             window) the section's min-height doesn't leave enough room below
@@ -290,11 +262,7 @@ const HeroSection = () => {
               </span>
             </div>
 
-<<<<<<< HEAD
-            {/* Next-class chip â€” rendered only when there is a real class to
-=======
             {/* Next-class chip — rendered only when there is a real class to
->>>>>>> 56d741e59b388f6f6833c9b71a985804ec59cb60
                 name. live-bright is the "happening now" status colour for dark
                 grounds; the light-theme --live would vanish against this scrim. */}
             {nextDay && (
