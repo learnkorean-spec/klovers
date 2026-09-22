@@ -339,6 +339,9 @@ const HeroSection = () => {
             <p className="text-ivory/60 text-xs" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
               {isAr ? "âœ“ Ø¨Ø¯ÙˆÙ† Ø¨Ø·Ø§Ù‚Ø© Ø¨Ù†ÙƒÙŠØ© Â· âœ“ Ø±Ø¯ Ø®Ù„Ø§Ù„ Ø¯Ù‚Ø§Ø¦Ù‚" : "âœ“ No credit card Â· âœ“ Reply in minutes"}
             </p>
+  <p className="text-ivory/70 text-xs font-medium mt-1" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
+    {isAr ? "حصص أونلاين مباشرة، بحد أقصى 8 طلاب في المجموعة" : "Live online classes, max 8 students per group"}
+  </p>
 
             {/* Upcoming class sessions â€” live from trial_slots, in the visitor's
                 own timezone. Capped to 3 (see `pills` above) so a busy schedule
