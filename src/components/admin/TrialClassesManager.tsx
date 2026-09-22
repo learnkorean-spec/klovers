@@ -1163,30 +1163,11 @@ const TrialClassesManager = () => {
               <SelectItem value="english">English only</SelectItem>
             </SelectContent>
           </Select>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                size="sm"
-                variant="default"
-                disabled={bulkBusy || pendingCount === 0}
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Accept all pending ({pendingCount})
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Accept all pending bookings?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Mark {pendingCount} pending booking{pendingCount === 1 ? "" : "s"} as confirmed. No emails will be sent.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleAcceptAllPending}>Confirm {pendingCount}</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {/* "Accept all pending" used to live here. The admin guide lists it
+              in red under the buttons never to press: it confirms every
+              pending booking at once without a date and without a letter.
+              A booking is confirmed one row at a time, against a chosen
+              class date, by the Confirm button in that row. */}
           <Button variant="outline" size="sm" onClick={fetchData}>
             <RefreshCw className="h-4 w-4 mr-1" /> Refresh
           </Button>
@@ -1387,10 +1368,14 @@ const TrialClassesManager = () => {
                 <div className="rounded-md border overflow-auto">
                   <Table>
                     <TableHeader>
+                      {/* Six columns, not ten. Name and goal are one student
+                          cell, email and phone are one contact cell, and the
+                          three date columns (booked / changed / cancelled)
+                          are one history cell, because only one of them ever
+                          has anything to say about a given row. */}
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Phone</TableHead>
+                        <TableHead>Student</TableHead>
+                        <TableHead>Contact</TableHead>
                         <TableHead>Level</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>
@@ -1404,9 +1389,6 @@ const TrialClassesManager = () => {
                             {bookedSort === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                           </button>
                         </TableHead>
-                        <TableHead>Changed</TableHead>
-                        <TableHead>Cancelled</TableHead>
-                        <TableHead>Notes</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1419,22 +1401,34 @@ const TrialClassesManager = () => {
                         )
                         .map((b) => (
                         <TableRow key={b.id}>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium align-top">
                             <div className="flex items-center gap-1 flex-wrap">
                               <span>{b.name || "—"}</span>
                               {isRepeat(b) && (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">repeat</Badge>
                               )}
                             </div>
+                            {b.goal && (
+                              <div
+                                className="text-[11px] font-normal text-muted-foreground max-w-[220px] truncate"
+                                title={b.goal}
+                              >
+                                {b.goal}
+                              </div>
+                            )}
                           </TableCell>
-                          <TableCell className="text-xs">{b.email || "—"}</TableCell>
-                          <TableCell className="text-xs">{b.phone || "—"}</TableCell>
-                          <TableCell className="text-xs">
+                          <TableCell className="text-xs align-top">
+                            <div className="truncate max-w-[220px]" title={b.email || ""}>{b.email || "—"}</div>
+                            {b.phone && (
+                              <div className="text-[11px] text-muted-foreground whitespace-nowrap">{b.phone}</div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs align-top">
                             {b.level ? (getLevelShortLabel(b.level) || b.level) : "—"}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="align-top">
                             <div className="flex flex-col gap-0.5">
-                              <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[b.status] || "bg-gray-100 text-gray-600"}`}>
+                              <span className={`inline-flex w-fit px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[b.status] || "bg-gray-100 text-gray-600"}`}>
                                 {STATUS_LABELS[b.status] || (b.status || "unknown")}
                               </span>
                               {b.status === "confirmed_attendance" && b.attendance_confirmed_at && (
@@ -1444,22 +1438,24 @@ const TrialClassesManager = () => {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                            {new Date(b.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                            {formatDateTime(b.changed_at)}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                            <div>{formatDateTime(b.cancelled_at)}</div>
-                            {b.cancel_reason && (
-                              <div className="text-[10px] text-muted-foreground/80">{b.cancel_reason.replace(/_/g, " ")}</div>
+                          {/* Signed up on, and then only whatever else actually
+                              happened to this booking. An empty dash in its own
+                              column told nobody anything. */}
+                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap align-top">
+                            <div>{new Date(b.created_at).toLocaleDateString()}</div>
+                            {b.changed_at && (
+                              <div className="text-[10px] text-muted-foreground/80">
+                                moved {formatDateTime(b.changed_at)}
+                              </div>
+                            )}
+                            {b.cancelled_at && (
+                              <div className="text-[10px] text-destructive/90">
+                                cancelled {formatDateTime(b.cancelled_at)}
+                                {b.cancel_reason ? ` · ${b.cancel_reason.replace(/_/g, " ")}` : ""}
+                              </div>
                             )}
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground max-w-[220px] truncate" title={b.goal || ""}>
-                            {b.goal || "—"}
-                          </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right align-top">
                             <div className="flex gap-1 justify-end items-center flex-wrap">
                               {isTbaSession && (
                                 <>
