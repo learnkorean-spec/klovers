@@ -22,11 +22,16 @@ export default {
   			ring: 'hsl(var(--ring))',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
-  			/* Klovers brand palette — concept board, tuned 20 Sep 2026.
-  			   Soft fill + strong accent per support colour; see src/index.css. */
+  			/* Klovers brand palette — three colours. See src/index.css. */
   			ivory: 'hsl(var(--ivory))',
   			charcoal: 'hsl(var(--charcoal))',
   			'klovers-yellow': 'hsl(var(--klovers-yellow))',
+  			/*
+  			 * DEPRECATED — retired brand colours. mint/mint-strong now resolve to
+  			 * the live tokens (see src/index.css); peach has no sanctioned use
+  			 * left. They stay registered only so the large admin screens keep
+  			 * compiling. Do not add new call sites.
+  			 */
   			mint: {
   				DEFAULT: 'hsl(var(--mint))',
   				strong: 'hsl(var(--mint-strong))',
@@ -47,6 +52,21 @@ export default {
   				foreground: 'hsl(var(--wrong-foreground))',
   				surface: 'hsl(var(--wrong-surface))',
   				graphic: 'hsl(var(--wrong-graphic))'
+  			},
+  			/*
+  			 * live — "happening now". A state, like correct/wrong.
+  			 *
+  			 * live-bright is for DARK GROUNDS ONLY (the hero sits on a charcoal
+  			 * scrim in both themes). On a light surface it measures 1.7:1.
+  			 * Text on live-surface is charcoal via live-surface-foreground, never
+  			 * text-live — that pairing is 4.26:1 and fails small text.
+  			 */
+  			live: {
+  				DEFAULT: 'hsl(var(--live))',
+  				foreground: 'hsl(var(--live-foreground))',
+  				surface: 'hsl(var(--live-surface))',
+  				'surface-foreground': 'hsl(var(--live-surface-foreground))',
+  				bright: 'hsl(var(--live-bright))'
   			},
   			/*
   			 * amber — RETUNED, not Tailwind's default.

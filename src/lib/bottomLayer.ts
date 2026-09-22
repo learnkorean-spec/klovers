@@ -117,3 +117,32 @@ export const useAnyBottomSlotActive = (): boolean => {
 
   return active;
 };
+
+
+/**
+ * True whenever ANY bottom slot currently holds the floor, regardless of
+ * which one. For consumers that are not themselves one of the four slots but
+ * still need to react to "something is pinned to the bottom of the screen
+ * right now" -- e.g. HeroSection's proof strip, which is positioned relative
+ * to the hero section rather than the viewport and so has no way to detect a
+ * fixed, viewport-pinned overlay like HomeExitNudge without this.
+ *
+ * Added 22 Sep 2026 after exactly that: on a short viewport where the hero
+ * still fills the screen, HomeExitNudge (fixed bottom-0 of the viewport)
+ * painted straight over the hero's stats strip (absolute bottom-0 of the
+ * section) -- the two had no way to know about each other.
+ */
+export const useAnyBottomSlotActive = (): boolean => {
+  const [active, setActive] = useState<boolean>(() => winner() !== null);
+
+  useEffect(() => {
+    const listener = () => setActive(winner() !== null);
+    listeners.add(listener);
+    listener();
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+
+  return active;
+};
