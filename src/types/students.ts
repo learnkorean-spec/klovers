@@ -294,9 +294,13 @@ function daysBetween(fromKey: string, toKey: string): number {
  * a lesson that was merely put on the calendar and then let past its date keeps
  * asking to be answered instead of quietly reading as done.
  *
- * Only looks backwards, and never past today: a class that has not happened yet
- * cannot be marked as done. `now` is injected so this is testable without
- * mocking the clock.
+ * Only looks backwards, and never past a class that is not OVER yet: a class
+ * that has not finished cannot be marked as done. It used to compare against
+ * the START time, which offered a lesson that was still in progress — and the
+ * database now refuses to count one anyway (migration
+ * 20260922180000_no_counting_a_class_before_it_ends), so offering it here
+ * could only ever have produced an error toast. `now` is injected so this is
+ * testable without mocking the clock.
  */
 export function buildExpectedSessions(
   classes: StudentClassSchedule[],
@@ -328,12 +332,18 @@ export function buildExpectedSessions(
       if (c.effective_to && dateKey > c.effective_to) continue;
 
       const start = c.start_time.slice(0, 5);
-      // Today's later classes have not happened yet.
-      if (dateKey === localDateKey(now, timeZone)) {
+      // Today's classes are only answerable once they have ENDED. A lesson
+      // still in progress has not happened yet in the only sense that
+      // matters here, and the database refuses to count it.
+      //
+      // A class that runs past midnight has an end beyond 1440, so it is
+      // skipped on its own date and appears the following day instead —
+      // which is the first day it is genuinely over.
+      if (dateKey === todayKey) {
         const nowHM = new Intl.DateTimeFormat("en-GB", {
           timeZone, hour: "2-digit", minute: "2-digit", hour12: false,
         }).format(now);
-        if (start > nowHM) continue;
+        if (timeToMinutes(start) + c.duration_minutes > timeToMinutes(nowHM)) continue;
       }
 
       const row = bySlot.get(`${dateKey}|${start}`) ?? null;
