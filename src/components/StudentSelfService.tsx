@@ -29,6 +29,12 @@
  *
  * It renders nothing at all for a student who has no roster row, so it is safe
  * to mount beside the group card for everyone.
+ *
+ * VISUAL PASS (22 Sep 2026): the "Payment" card was restyled to the current
+ * brand palette (see reference/BRAND_PALETTE_REFERENCE.md — yellow #FFFF00,
+ * charcoal #2E2E2E, ivory #FFF9EC, plus the functional correct/wrong tokens).
+ * Nothing about the data flow, RPCs or state below changed — only className
+ * and icon treatment in the render.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,7 +43,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle2, Clock, Loader2, Paperclip, Wallet } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Loader2, Paperclip, Wallet, XCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props {
@@ -107,6 +113,17 @@ function receiptKey(userId: string, file: File): string {
   return `${userId}/receipt-${Date.now()}.${ext || "jpg"}`;
 }
 
+/** Icon + colour + label for one claim's status — never colour alone (brand rule). */
+function claimStatusMeta(status: string, tr: (en: string, ar: string) => string) {
+  if (status === "approved") {
+    return { Icon: CheckCircle2, label: tr("Confirmed", "مؤكَّد"), cls: "border-correct/30 bg-correct/10 text-correct" };
+  }
+  if (status === "rejected") {
+    return { Icon: XCircle, label: tr("Not found", "لم يُعثر عليه"), cls: "border-wrong/30 bg-wrong-surface text-wrong" };
+  }
+  return { Icon: Clock, label: tr("Waiting", "بانتظار التأكيد"), cls: "border-border bg-muted text-muted-foreground" };
+}
+
 const StudentSelfService = ({ userId }: Props) => {
   const { language } = useLanguage();
   const isAr = language === "ar";
@@ -141,7 +158,7 @@ const StudentSelfService = ({ userId }: Props) => {
             setLoading(false);
             return;
     }
-    
+
     if (!roster?.id) {
       setStudentId(null);
       setLoading(false);
@@ -338,7 +355,10 @@ const StudentSelfService = ({ userId }: Props) => {
                   </p>
                 </div>
                 {s.student_confirmed_at ? (
-                  <Badge variant="secondary">{tr("Waiting", "بانتظار التأكيد")}</Badge>
+                  <Badge variant="secondary" className="gap-1">
+                    <Clock className="h-3 w-3" aria-hidden="true" />
+                    {tr("Waiting", "بانتظار التأكيد")}
+                  </Badge>
                 ) : (
                   <Button size="sm" disabled={busy === s.id} onClick={() => void confirmSession(s.id)}>
                     {busy === s.id ? <Loader2 className="h-4 w-4 animate-spin" /> : tr("I attended", "حضرت")}
@@ -382,22 +402,36 @@ const StudentSelfService = ({ userId }: Props) => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Wallet className="h-5 w-5" />
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-klovers-yellow text-charcoal">
+              <Wallet className="h-4 w-4" aria-hidden="true" />
+            </span>
             {tr("Payment", "الدفع")}
           </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Due / received — always paired with an icon, never colour alone. */}
           {bundle && (
-            <p className="text-sm text-muted-foreground">
-              {bundle.paid_on
-                ? tr("Received — thank you.", "تم الاستلام — شكرًا لك.")
-                : tr(
+            owes ? (
+              <div className="card-edge flex items-start gap-2 rounded-lg bg-klovers-yellow p-3 text-charcoal dark:bg-card dark:text-foreground">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <p className="text-sm font-medium">
+                  {tr(
                     `${bundle.total_price} ${bundle.currency ?? ""} due for this package.`,
                     `المستحق: ${bundle.total_price} ${bundle.currency ?? ""}`,
                   )}
-            </p>
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-lg border border-correct/30 bg-correct/10 p-3 text-correct">
+                <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <p className="text-sm font-medium">
+                  {tr("Received — thank you.", "تم الاستلام — شكرًا لك.")}
+                </p>
+              </div>
+            )
           )}
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="rounded-lg border p-3 text-sm">
+
+          <div className="rounded-lg border bg-ivory p-3 text-sm text-charcoal dark:bg-card dark:text-foreground">
             <p className="font-medium">{tr("How to pay", "طريقة الدفع")}</p>
             <p className="text-muted-foreground">
               {tr("Vodafone Cash or Fawry on", "فودافون كاش أو فوري على الرقم")}{" "}
@@ -419,7 +453,7 @@ const StudentSelfService = ({ userId }: Props) => {
               {tr("I have paid — upload the receipt", "دفعت — ارفعي صورة الإيصال")}
             </Button>
           ) : (
-            <div className="space-y-2 rounded-lg border p-3">
+            <div className="space-y-2 rounded-lg border bg-ivory p-3 dark:bg-card">
               <div className="grid gap-2 sm:grid-cols-2">
                 <label className="text-xs">
                   {tr("Amount", "المبلغ")}
@@ -470,7 +504,7 @@ const StudentSelfService = ({ userId }: Props) => {
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={e => setReceipt(e.target.files?.[0] ?? null)}
-                  className="mt-1 w-full rounded-lg border bg-background px-2 py-1 text-sm file:me-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-0.5 file:text-xs"
+                  className="mt-1 w-full rounded-lg border bg-background px-2 py-1 text-sm file:me-2 file:rounded file:border-0 file:bg-klovers-yellow file:px-2 file:py-0.5 file:text-xs file:font-medium file:text-charcoal"
                 />
                 {receipt && (
                   <span className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -509,23 +543,23 @@ const StudentSelfService = ({ userId }: Props) => {
 
           {claims.length > 0 && (
             <div className="space-y-1 pt-1">
-              {claims.map(c => (
-                <div key={c.id} className="flex items-center justify-between gap-2 text-xs">
-                  <span className="truncate text-muted-foreground">
-                    {c.amount} {c.currency} · {formatDate(c.paid_on, isAr)} · {methodLabel(c.method)}
-                    {c.receipt_path && (
-                      <Paperclip className="ms-1 inline h-3 w-3" aria-hidden="true" />
-                    )}
-                  </span>
-                  <Badge variant={c.status === "approved" ? "default" : c.status === "rejected" ? "destructive" : "secondary"} className="shrink-0">
-                    {c.status === "approved"
-                      ? tr("Confirmed", "مؤكَّد")
-                      : c.status === "rejected"
-                        ? tr("Not found", "لم يُعثر عليه")
-                        : tr("Waiting", "بانتظار التأكيد")}
-                  </Badge>
-                </div>
-              ))}
+              {claims.map(c => {
+                const { Icon, label, cls } = claimStatusMeta(c.status, tr);
+                return (
+                  <div key={c.id} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="truncate text-muted-foreground">
+                      {c.amount} {c.currency} · {formatDate(c.paid_on, isAr)} · {methodLabel(c.method)}
+                      {c.receipt_path && (
+                        <Paperclip className="ms-1 inline h-3 w-3" aria-hidden="true" />
+                      )}
+                    </span>
+                    <span className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-0.5 font-medium ${cls}`}>
+                      <Icon className="h-3 w-3" aria-hidden="true" />
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
