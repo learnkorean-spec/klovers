@@ -1,0 +1,31 @@
+-- Stop emailing on every single admin_notifications insert.
+--
+-- Re, 22 Sep 2026: "this email is unnecessary, stop it, and only send on the
+-- weekend Saturday with the week report — who signed up and important
+-- information related to the website."
+--
+-- Since 20260321035000_fix_admin_notification_url.sql, every row inserted
+-- into admin_notifications (every signup via notify_new_registration, every
+-- payment via notify_payment_received, every trial booking via
+-- notify_new_trial_booking, the once-a-day daily_summary row, and every
+-- system alert type) fired trg_notify_admin_email, which called the
+-- notify-admin-email edge function and sent an immediate "KLovers Admin
+-- Alert" email to admin@kloversegy.com, reham.elshrkawy@gmail.com and
+-- learnkorean@kloversegy.com. That is the flood Re is asking to stop — one
+-- email per event, all day, for months.
+--
+-- This drops that trigger (and the function behind it, which has no other
+-- caller) so admin_notifications keeps being written to exactly as before —
+-- the in-app notification center in AdminDashboard.tsx is unaffected — but
+-- inserting a row no longer sends mail on its own. The replacement is
+-- supabase/functions/send-weekly-report, scheduled by
+-- 20260922100100_weekly_report_cron.sql to send once a week, Saturday
+-- morning Cairo time, covering the same signups plus a rollup of whatever
+-- system alerts landed in admin_notifications that week.
+--
+-- notify-admin-email/index.ts itself is left in place (see the comment added
+-- there) rather than deleted, in case a future feature wants an instant
+-- single-event email again and can reattach the trigger deliberately.
+
+DROP TRIGGER IF EXISTS trg_notify_admin_email ON public.admin_notifications;
+DROP FUNCTION IF EXISTS public.notify_admin_on_new_notification();

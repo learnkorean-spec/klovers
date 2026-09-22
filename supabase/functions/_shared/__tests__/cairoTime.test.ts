@@ -6,7 +6,7 @@
  * fixed +2 got wrong for the entire duration of the bug.
  */
 import { describe, it, expect } from "vitest";
-import { cairoDateKey, cairoHour, shiftDateKey, zonedMidnightUtc } from "../cairoTime.ts";
+import { cairoDateKey, cairoHour, cairoWeekday, shiftDateKey, zonedMidnightUtc } from "../cairoTime.ts";
 
 describe("cairoHour / cairoDateKey — DST boundary", () => {
   it("resolves EET (UTC+2) in winter", () => {
@@ -38,13 +38,19 @@ describe("cairoHour / cairoDateKey — DST boundary", () => {
   });
 });
 
-describe("zonedMidnightUtc — DST boundary", () => {
-  it("winter local midnight is 22:00 UTC the previous day (UTC+2)", () => {
-    expect(zonedMidnightUtc("2026-01-15").toISOString()).toBe("2026-01-14T22:00:00.000Z");
+describe("cairoWeekday — DST boundary and midnight rollover", () => {
+  it("2026-09-05 12:00 UTC (Saturday 15:00 Cairo, EEST) is Saturday", () => {
+    expect(cairoWeekday(new Date("2026-09-05T12:00:00Z"))).toBe(6);
   });
 
-  it("summer local midnight is 21:00 UTC the previous day (UTC+3)", () => {
-    expect(zonedMidnightUtc("2026-09-05").toISOString()).toBe("2026-09-04T21:00:00.000Z");
+  it("2026-09-05 21:30 UTC rolls to Sunday in Cairo before UTC does", () => {
+    // 21:30 UTC Saturday is already 00:30 Sunday in Cairo (UTC+3) — the exact
+    // near-midnight case that a plain `at.getUTCDay()` would get wrong.
+    expect(cairoWeekday(new Date("2026-09-05T21:30:00Z"))).toBe(0);
+  });
+
+  it("2026-01-16 22:30 UTC (Friday) rolls to Saturday in Cairo (UTC+2, winter)", () => {
+    expect(cairoWeekday(new Date("2026-01-16T22:30:00Z"))).toBe(6);
   });
 });
 
@@ -60,5 +66,15 @@ describe("shiftDateKey", () => {
     // must not perturb it by an hour or a day.
     expect(shiftDateKey("2026-10-28", 1)).toBe("2026-10-29");
     expect(shiftDateKey("2026-10-28", 2)).toBe("2026-10-30");
+  });
+});
+
+describe("zonedMidnightUtc — DST boundary", () => {
+  it("winter local midnight is 22:00 UTC the previous day (UTC+2)", () => {
+    expect(zonedMidnightUtc("2026-01-15").toISOString()).toBe("2026-01-14T22:00:00.000Z");
+  });
+
+  it("summer local midnight is 21:00 UTC the previous day (UTC+3)", () => {
+    expect(zonedMidnightUtc("2026-09-05").toISOString()).toBe("2026-09-04T21:00:00.000Z");
   });
 });

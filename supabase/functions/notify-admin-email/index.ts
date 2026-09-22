@@ -1,3 +1,19 @@
+// ⚠️ DISABLED as of 20260922100000_stop_admin_notification_emails.sql.
+//
+// Nothing calls this anymore. It used to be invoked by trg_notify_admin_email
+// on EVERY insert into admin_notifications — every signup, every payment,
+// every trial booking, every system alert — which meant one immediate email
+// per event, all day. Re asked (22 Sep 2026) for that to stop and be
+// replaced by a single weekly report instead; see
+// supabase/functions/send-weekly-report and
+// supabase/migrations/20260922100000_stop_admin_notification_emails.sql /
+// 20260922100100_weekly_report_cron.sql.
+//
+// Left in place rather than deleted in case a future feature wants an
+// instant single-event email again (e.g. a genuinely urgent alert type) and
+// can reattach a trigger to it deliberately — don't resurrect the old
+// fire-on-every-insert trigger by accident.
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { adminRecipients } from "../_shared/adminRecipients.ts";
 import { FROM_EMAIL, REPLY_TO_EMAIL } from "../_shared/sender.ts";

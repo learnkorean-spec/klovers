@@ -19,6 +19,7 @@ import {
   BarChart3,
   CalendarDays,
   Wrench,
+  Send,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -315,6 +316,7 @@ const AdminNotifications = () => {
   const [category, setCategory] = useState<Category>("update");
   const [tabUnread, setTabUnread] = useState<Record<Category, number>>({ update: 0, system: 0 });
   const [createdGroups, setCreatedGroups] = useState<Record<string, string>>({});
+  const [sendingReport, setSendingReport] = useState(false);
 
   /** The bell reads the same rows from its own query — keep the two in step. */
   const refreshBell = useCallback(() => {
@@ -394,6 +396,35 @@ const AdminNotifications = () => {
     refreshBell();
   };
 
+  /**
+   * Manual trigger for supabase/functions/send-weekly-report — the email that
+   * replaced the old "email on every admin_notifications insert" flood (see
+   * 20260922100000_stop_admin_notification_emails.sql). It normally only
+   * sends once, Saturday 08:00 Cairo; ?force=1 bypasses that so this button
+   * can send it on demand — useful the first time it ships, or any time
+   * someone wants this week's numbers without waiting for Saturday.
+   *
+   * The function authorises the call itself (isCronOrAdmin, in
+   * supabase/functions/_shared/cronAuth.ts) against the admin's own session,
+   * which `invoke` sends automatically — no separate secret needed here.
+   */
+  const handleSendReportNow = async () => {
+    setSendingReport(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-weekly-report?force=1");
+      if (error) throw error;
+      if (data?.ok === false) throw new Error(data.error || "Unknown error");
+      toast({
+        title: "Weekly report sent",
+        description: `${data?.signupsTotal ?? 0} signup(s) this week · sent to ${(data?.to ?? []).join(", ")}.`,
+      });
+    } catch (err: any) {
+      toast({ title: "Could not send the weekly report", description: err.message, variant: "destructive" });
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
   const handleGroupCreated = (notifId: string, groupName: string) => {
     setCreatedGroups((prev) => ({ ...prev, [notifId]: groupName }));
     setNotifications((prev) => prev.map((n) => n.id === notifId ? { ...n, read: true } : n));
@@ -442,6 +473,20 @@ const AdminNotifications = () => {
               <Check className="h-4 w-4 mr-1" /> Mark all read
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSendReportNow}
+            disabled={sendingReport}
+            title="Normally sends itself Saturday morning — this sends it right now instead."
+          >
+            {sendingReport ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4 mr-1" />
+            )}
+            Send weekly report now
+          </Button>
         </div>
       </div>
 

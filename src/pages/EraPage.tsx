@@ -6,6 +6,14 @@ import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ERAS, getEra } from "@/constants/eras";
 
+// Social scrapers (WhatsApp, Facebook, Twitter) don't reliably render SVG, so
+// the one era whose on-page image is an SVG (before-korea) gets a PNG here
+// instead. Kept in step with the "image" field of the /journey/before-korea
+// entry in scripts/prerender-meta.mjs's MARKETING_ROUTES.
+const OG_IMAGE_OVERRIDES: Partial<Record<string, string>> = {
+  "before-korea": "https://kloversegy.com/assets/eras/gojoseon-og.png",
+};
+
 /**
  * One station of the "journey through Korea's time" — /journey/:eraId.
  *
@@ -33,6 +41,9 @@ const EraPage = () => {
     title: era ? (isAr ? era.titleAr : era.titleEn) : "Journey through Korea's time",
     description: era ? (isAr ? era.metaDescAr : era.metaDescEn) : "A journey through Korea's history and culture, one era at a time.",
     canonical: era ? `https://kloversegy.com/journey/${era.id}` : undefined,
+    ogImage: era
+      ? OG_IMAGE_OVERRIDES[era.id] ?? (era.image ? `https://kloversegy.com${era.image}` : undefined)
+      : undefined,
   });
 
   if (!era) return <Navigate to="/" replace />;

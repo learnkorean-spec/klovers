@@ -31,6 +31,24 @@ export function cairoHour(at: Date = new Date()): number {
 }
 
 /**
+ * The day of the week of a given instant, in Africa/Cairo — 0 (Sunday)
+ * through 6 (Saturday), matching `Date.prototype.getDay`. Needed by anything
+ * that only fires on a specific weekday (the Saturday weekly report), for the
+ * same reason `cairoHour` exists rather than `at.getUTCHours()`: the local
+ * calendar day can differ from the UTC one, and near-midnight instants are
+ * exactly where a naive check would pick the wrong day.
+ */
+const WEEKDAY_INDEX: Record<string, number> = {
+  Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+};
+
+export function cairoWeekday(at: Date = new Date()): number {
+  const parts = partsInZone(at, CAIRO_TZ, { weekday: "short" });
+  const short = parts.find((p) => p.type === "weekday")!.value;
+  return WEEKDAY_INDEX[short];
+}
+
+/**
  * `dateKey` (YYYY-MM-DD) shifted by `days` calendar days. Pure calendar
  * arithmetic on the already-correct Cairo date, not a second timezone
  * conversion — once "today in Cairo" is known, "N days from today" needs no

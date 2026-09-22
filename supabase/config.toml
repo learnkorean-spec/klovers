@@ -147,6 +147,14 @@ verify_jwt = false
 [functions.send-trial-reask]
 verify_jwt = false
 
+# Weekly signups + system-alerts report (trigger_weekly_report, Saturday
+# 08:00 Cairo). Same rule as send-trial-guide above: this one authorises
+# itself with isCronOrAdmin (cron secret via Vault, or an admin's own JWT —
+# the AdminNotifications.tsx "Send now" button), so the gateway must not
+# second-guess it with its own JWT check.
+[functions.send-weekly-report]
+verify_jwt = false
+
 # --- Disabled orphan CV/AI edge functions (reversible: remove this block to re-enable) ---
 
 [functions.analyze-cv]

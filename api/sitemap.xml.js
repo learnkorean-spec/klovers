@@ -44,6 +44,14 @@ const STATIC_PAGES = [
   { loc: "/interview-training", priority: "0.8", changefreq: "monthly" },
   { loc: "/welcome-back", priority: "0.7", changefreq: "monthly" },
   { loc: "/hangul-starter", priority: "0.8", changefreq: "monthly" },
+  // "Journey through Korea's time" — five era pages, added 2026-09-22.
+  // Content and IDs live in src/constants/eras.ts; keep this list in step
+  // with ERAS there and with MARKETING_ROUTES in scripts/prerender-meta.mjs.
+  { loc: "/journey/before-korea", priority: "0.6", changefreq: "monthly" },
+  { loc: "/journey/ancient-korea", priority: "0.6", changefreq: "monthly" },
+  { loc: "/journey/joseon", priority: "0.6", changefreq: "monthly" },
+  { loc: "/journey/traditional-life", priority: "0.6", changefreq: "monthly" },
+  { loc: "/journey/modern-korea", priority: "0.6", changefreq: "monthly" },
 ];
 
 const xmlEscape = (s) =>

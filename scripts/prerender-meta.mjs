@@ -142,6 +142,169 @@ const GAMES_BODY_HTML = `<div id="games-prerendered" lang="en" dir="ltr">
       <p>Prefer to read first? The <a href="/blog">Klovers Korean blog</a> covers Hangul, grammar, TOPIK preparation and Korean culture, and the <a href="/courses">Korean courses</a> take you from the alphabet to real conversation with a certified teacher.</p>
     </div>`;
 
+// ── "Journey through Korea's time" body fragments ───────────────────────────
+//
+// Five era pages at /journey/:eraId (src/pages/EraPage.tsx), added 2026-09-22.
+// Same tradeoff as GAMES_BODY_HTML above: this text is DUPLICATED from
+// src/constants/eras.ts (the storyEn/milestones/words for each era) rather
+// than imported, for the same reason — this script runs under plain node
+// after `vite build` and must not depend on the client bundle compiling.
+// English only: prerendering has no language context and the document
+// declares itself English (the live page still serves both languages via
+// useLanguage on the client). If you edit an era's English copy in
+// eras.ts, mirror the change here or this text will drift from the page a
+// visitor actually sees.
+const ERA_BEFORE_KOREA_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
+      <h1>Before Korea</h1>
+      <p>Legend, to the 4th century CE · Legend, China, and the first kingdoms</p>
+      <p>Every country tells a story about where it came from. Korea's begins on a mountain, with a bear who wanted to become a woman.</p>
+      <h2>This era at a glance</h2>
+      <ul>
+        <li><strong>2333 BCE</strong> — Dangun founds Gojoseon, in the legend</li>
+        <li><strong>108 BCE</strong> — Han China conquers Wiman Joseon</li>
+        <li><strong>313 CE</strong> — Goguryeo conquers Lelang</li>
+      </ul>
+      <h2>The story</h2>
+      <p>According to the Samguk Yusa, legends written down in the 13th century, a bear and a tiger asked Hwanung, a son of the Lord of Heaven, to make them human. The tiger gave up. The bear endured a hundred days away from the sun, became a woman, and gave birth to Dangun, who founded Gojoseon in 2333 BCE. Historians treat that date as legend, not documented fact.</p>
+      <p>What is documented: a state called Joseon existed in the north of the peninsula by the 4th century BCE. In 194 BCE Wi Man, a refugee from the Chinese state of Yan, took its throne. In 108 BCE the Han emperor Wu conquered it and set up four commanderies in the north.</p>
+      <p>For about four centuries, part of the north was governed from China. The largest commandery, Lelang, lasted until 313 CE, when the Korean kingdom of Goguryeo conquered it. Beside it, new kingdoms had grown up: Goguryeo in the north, Baekje in the southwest and Silla in the southeast. This is the Three Kingdoms period.</p>
+      <p>Korea borrowed heavily from China. Buddhism arrived in Goguryeo in 372 CE, in Baekje in 384 and in Silla in 528. Chinese characters, Hanja, became the language of government, and Confucian ideas shaped how people thought about family and study. A large share of Korean vocabulary is still Sino-Korean. But Koreans kept their spoken language, their customs and their own states, and roughly a thousand years later gave Korean its own alphabet.</p>
+      <h2>Words from this era</h2>
+      <ul>
+        <li>곰 (gom) — bear</li>
+        <li>호랑이 (horangi) — tiger</li>
+        <li>단군 (Dangun) — the legendary founder</li>
+        <li>고조선 (Gojoseon) — Old Joseon, the first kingdom</li>
+        <li>한자 (Hanja) — Chinese characters</li>
+        <li>중국 (Jungguk) — China</li>
+      </ul>
+      <p>Next station: <a href="/journey/ancient-korea">Ancient Korea</a>.</p>
+    </div>`;
+
+const ERA_ANCIENT_KOREA_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
+      <h1>Ancient Korea</h1>
+      <p>Silla · 57 BC – 935 · Temples and invention</p>
+      <p>In the southeast of the peninsula, a kingdom grew around a city called Seorabeol, which we now know as Gyeongju.</p>
+      <h2>This era at a glance</h2>
+      <ul>
+        <li><strong>57 BCE</strong> — Silla is founded, by Korean records</li>
+        <li><strong>528 CE</strong> — Buddhism becomes the state religion</li>
+        <li><strong>935 CE</strong> — The last king submits to Goryeo</li>
+      </ul>
+      <h2>The story</h2>
+      <p>Korean records date the founding of Silla to 57 BCE, and it lasted until 935 CE, nearly a thousand years. Its tombs have given us elaborate gold crowns and jewelry, and its capital had an astronomical observatory, Cheomseongdae, a stone tower built to watch the stars.</p>
+      <p>In 528 CE Silla adopted Buddhism as its state religion, and temples became part of the landscape. That is why this station is called temples and invention.</p>
+      <p>Silla also had the Hwarang, elite young men. They began as a social group for aristocratic youth, but constant wars turned many of them into soldiers and commanders, and they helped in the campaigns that brought down Goguryeo.</p>
+      <p>Silla won its wars with its neighbors and with its former ally Tang China, and unified most of the peninsula. The Silla-Tang War ran from 670 to 676. In 935 the last king, Gyeongsun, submitted to Goryeo, and Silla came to an end.</p>
+      <h2>Words from this era</h2>
+      <ul>
+        <li>신라 (Silla) — the kingdom of Silla</li>
+        <li>금 (geum) — gold</li>
+        <li>왕관 (wanggwan) — crown</li>
+        <li>절 (jeol) — temple</li>
+        <li>별 (byeol) — star</li>
+        <li>화랑 (Hwarang) — young aristocratic warriors</li>
+      </ul>
+      <p>Previous station: <a href="/journey/before-korea">Before Korea</a>. Next station: <a href="/journey/joseon">The Joseon Era</a>.</p>
+    </div>`;
+
+const ERA_JOSEON_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
+      <h1>The Joseon Era</h1>
+      <p>1392 – 1897 · Royal culture, and Hangul</p>
+      <p>In 1392 a general named Yi Seong-gye took power and founded the Joseon dynasty, which would rule for more than five centuries.</p>
+      <h2>This era at a glance</h2>
+      <ul>
+        <li><strong>1392</strong> — Joseon is founded</li>
+        <li><strong>1446</strong> — Hangul is promulgated on October 9</li>
+        <li><strong>1897</strong> — The Korean Empire is proclaimed</li>
+      </ul>
+      <h2>The story</h2>
+      <p>In 1393 the capital moved to Hanseong, which is modern Seoul. The state ran on Neo-Confucian ideas. Government jobs went to men who passed the gwageo, exams on Confucian learning, and the educated elite who held those jobs were called the yangban. By 1800 the yangban may have made up as much as 30 percent of the population. Buddhism, which had thrived in Silla, was discouraged.</p>
+      <p>The most famous king, Sejong, oversaw the creation of Hangul. Before it, writing meant Chinese characters, which took years to learn. Hangul was made to be learned quickly. It was promulgated on October 9, 1446, a date Koreans still celebrate as Hangul Day. But the scholarly elite rejected it at the time, and it took centuries to become the everyday script.</p>
+      <p>In 1897 the Korean Empire was proclaimed, which formally ended the Joseon period. The dynasty continued to rule until Japan annexed Korea in 1910.</p>
+      <h2>Words from this era</h2>
+      <ul>
+        <li>조선 (Joseon) — the Joseon dynasty</li>
+        <li>한글 (Hangul) — the Korean alphabet</li>
+        <li>궁 (gung) — palace</li>
+        <li>양반 (yangban) — the educated noble class</li>
+        <li>시험 (siheom) — exam</li>
+        <li>학자 (hakja) — scholar</li>
+      </ul>
+      <h2>Read about this era</h2>
+      <ul>
+        <li><a href="/blog/learn-korean-alphabet-hangul-guide">Hangul: Built to Be Learned in a Day</a></li>
+        <li><a href="/blog/korean-speech-levels-honorifics-guide">Why Korean Has 7 Speech Levels</a></li>
+      </ul>
+      <p>Previous station: <a href="/journey/ancient-korea">Ancient Korea</a>. Next station: <a href="/journey/traditional-life">Traditional Life</a>.</p>
+    </div>`;
+
+const ERA_TRADITIONAL_LIFE_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
+      <h1>Traditional Life</h1>
+      <p>Hanok villages · Tea, manners, timeless beauty</p>
+      <p>A hanok is a traditional Korean house that listens to the land: where you build it matters as much as how.</p>
+      <h2>This era at a glance</h2>
+      <ul>
+        <li><strong>Baesanimsu</strong> — A mountain behind, a river in front</li>
+        <li><strong>Ondol</strong> — Heat under the floor for cold winters</li>
+        <li><strong>Maru</strong> — A cool wooden hall for summer</li>
+      </ul>
+      <h2>The story</h2>
+      <p>A hanok is a traditional Korean house. Its roots go back to pit houses from around 6,000 BCE, and its classic form was completed in the late Joseon period. The ideal site is baesanimsu: a mountain behind the house and a river in front, with the land and seasons in mind.</p>
+      <p>It is built for comfort in both extremes. For winter there is ondol, an under-floor heating system devised long ago to help Koreans survive the cold, still used in many homes today. For summer there is the maru, a cool wooden-floor hall that blocks the summer sun and lets air move through.</p>
+      <p>Hanok are built from timber for beams and posts, clay roof tiles called giwa, and stone foundations. Windows and doors use hanji, Korean paper treated with bean oil so it resists water. Northern hanok are square to keep heat in, southern ones are open and L-shaped for ventilation, and central regions combine both.</p>
+      <p>You can still walk through them in Bukchon Hanok Village in central Seoul. As in most Korean homes, shoes come off at the door.</p>
+      <h2>Words from this era</h2>
+      <ul>
+        <li>한옥 (hanok) — traditional Korean house</li>
+        <li>온돌 (ondol) — under-floor heating</li>
+        <li>마루 (maru) — wooden-floor hall</li>
+        <li>기와 (giwa) — clay roof tile</li>
+        <li>한지 (hanji) — Korean paper</li>
+        <li>마을 (maeul) — village</li>
+      </ul>
+      <h2>Read about this era</h2>
+      <ul>
+        <li><a href="/blog/hanbok-korean-traditional-clothing">Hanbok, Korea's Traditional Dress</a></li>
+        <li><a href="/blog/korean-traditional-holidays-chuseok-seollal">Seollal &amp; Chuseok</a></li>
+        <li><a href="/blog/korean-wedding-traditions-guide">Inside a Korean Wedding</a></li>
+        <li><a href="/blog/korean-zodiac-fortune-telling-guide">Korean Zodiac &amp; Fortune-Telling</a></li>
+      </ul>
+      <p>Previous station: <a href="/journey/joseon">The Joseon Era</a>. Next station: <a href="/journey/modern-korea">Modern Korea</a>.</p>
+    </div>`;
+
+const ERA_MODERN_KOREA_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
+      <h1>Modern Korea</h1>
+      <p>1950s – today · A dynamic tomorrow</p>
+      <p>For a long time Korean culture was mostly something Koreans shared with each other. Then, in the 1990s, it began to travel.</p>
+      <h2>This era at a glance</h2>
+      <ul>
+        <li><strong>1999</strong> — Chinese journalists coin the term Hallyu</li>
+        <li><strong>2012</strong> — Gangnam Style hits one billion YouTube views</li>
+        <li><strong>2020</strong> — Parasite wins Best Picture at the Oscars</li>
+      </ul>
+      <h2>The story</h2>
+      <p>The word for this is Hallyu, the Korean wave. It joins han, meaning Korean, and ryu, meaning flow or wave. Two things helped it start: the end of military censorship over the entertainment industry, and the recovery from the 1997 Asian financial crisis. Chinese journalists began using the term in 1999.</p>
+      <p>In 2003 and 2004 the romance drama Winter Sonata became a huge hit, especially in Japan, and boosted tourism to Korea. In 2012 Psy's Gangnam Style became the first YouTube video to reach one billion views. BTS and Blackpink then found audiences around the world.</p>
+      <p>In 2020 the film Parasite won Best Picture at the Academy Awards, the first non-English-language film to do so. In 2021 Netflix released Squid Game, and the Oxford English Dictionary added both hallyu and Korean wave.</p>
+      <p>This is why so many people begin learning Korean today: they hear a song or watch a drama and want to understand it without subtitles.</p>
+      <h2>Words from this era</h2>
+      <ul>
+        <li>한류 (hallyu) — the Korean wave</li>
+        <li>서울 (Seoul) — Seoul</li>
+        <li>드라마 (deurama) — drama</li>
+        <li>영화 (yeonghwa) — movie</li>
+        <li>노래 (norae) — song</li>
+        <li>팬 (paen) — fan</li>
+      </ul>
+      <h2>Read about this era</h2>
+      <ul>
+        <li><a href="/blog/learn-korean-through-kpop-bts-blackpink">Learning Korean Through K-Pop</a></li>
+        <li><a href="/blog/korean-street-food-guide">A Taste of Korean Street Food</a></li>
+      </ul>
+      <p>Previous station: <a href="/journey/traditional-life">Traditional Life</a>.</p>
+    </div>`;
+
 // ── Marketing routes ────────────────────────────────────────────────────────
 // Hand-maintained on purpose: these are static pages, not database rows.
 //
@@ -284,6 +447,64 @@ const MARKETING_ROUTES = [
     title: "Free Hangul Starter Sheet — Korean Alphabet | Klovers",
     description:
       "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide — explained simply. Printable.",
+  },
+  // "Journey through Korea's time" — five era pages, added 2026-09-22. IDs and
+  // all copy come from src/constants/eras.ts (ERAS); keep this list in step
+  // with it and with STATIC_PAGES in api/sitemap.xml.js. `image` and `body`
+  // are additive fields buildHeadTags/the emit loop only read for routes that
+  // set them, so this cannot change behavior for any of the routes above.
+  {
+    path: "/journey/before-korea",
+    title: "Before Korea",
+    description:
+      "The legend of Dangun, the first kingdom of Gojoseon, four centuries of Chinese rule in the north, and the Three Kingdoms: where Korea's story begins.",
+    // A drawn illustration, not a photo (docs note: dangun-myth.jpg is
+    // unvetted). PNG, 1200x630, for Open Graph/Twitter — social scrapers do
+    // not reliably render SVG, unlike the on-page hero at era.image.
+    image: "/assets/eras/gojoseon-og.png",
+    body: ERA_BEFORE_KOREA_BODY,
+    breadcrumb: [{ name: "Home", item: BASE_URL }],
+    articleLd: true,
+  },
+  {
+    path: "/journey/ancient-korea",
+    title: "Ancient Korea",
+    description:
+      "Silla, the kingdom of gold crowns, star-watching towers and Buddhist temples that lasted almost a thousand years, from 57 BCE to 935 CE.",
+    image: "/assets/blog/buddhist-temple.jpg",
+    body: ERA_ANCIENT_KOREA_BODY,
+    breadcrumb: [{ name: "Home", item: BASE_URL }],
+    articleLd: true,
+  },
+  {
+    path: "/journey/joseon",
+    title: "The Joseon Era",
+    description:
+      "The Joseon dynasty, 1392 to 1897: kings, Confucian scholars, the yangban class, and King Sejong's invention of Hangul.",
+    image: "/assets/blog/joseon-dynasty.jpg",
+    body: ERA_JOSEON_BODY,
+    breadcrumb: [{ name: "Home", item: BASE_URL }],
+    articleLd: true,
+  },
+  {
+    path: "/journey/traditional-life",
+    title: "Traditional Life",
+    description:
+      "Inside the hanok, the traditional Korean house: mountain-and-river placement, ondol floor heating, the cool maru hall, and clay tile roofs.",
+    image: "/assets/blog/korean-tea.jpg",
+    body: ERA_TRADITIONAL_LIFE_BODY,
+    breadcrumb: [{ name: "Home", item: BASE_URL }],
+    articleLd: true,
+  },
+  {
+    path: "/journey/modern-korea",
+    title: "Modern Korea",
+    description:
+      "Hallyu, the Korean wave: from the 1990s to Winter Sonata, Gangnam Style, Parasite and Squid Game, and why so many people now learn Korean.",
+    image: "/assets/blog/hallyu-wave.jpg",
+    body: ERA_MODERN_KOREA_BODY,
+    breadcrumb: [{ name: "Home", item: BASE_URL }],
+    articleLd: true,
   },
 ];
 
@@ -589,7 +810,10 @@ function buildHeadTags(route) {
     ? route.title
     : `${route.title} | ${SITE_NAME}`;
   const description = route.description || "";
-  const image = absoluteUrl(isPost ? route.post.heroImage : null);
+  // route.image is opt-in (only the /journey/:eraId routes set it so far) and
+  // falls back to the same DEFAULT_IMAGE every other marketing route already
+  // got, so this changes nothing for a route that does not set it.
+  const image = absoluteUrl(isPost ? route.post.heroImage : route.image || null);
   const imageAlt = isPost && route.post.heroAlt ? route.post.heroAlt : SITE_NAME;
 
   // The document's own language, which is also what the <html> element and the
@@ -666,6 +890,48 @@ function buildHeadTags(route) {
           { "@type": "ListItem", position: 2, name: "Blog", item: `${BASE_URL}/blog` },
           { "@type": "ListItem", position: 3, name: route.title, item: url },
         ],
+      })
+    );
+  }
+
+  // Opt-in JSON-LD for non-post marketing routes. Both fields are additive —
+  // a marketing route that does not set them (all of them except the five
+  // /journey/:eraId era pages, so far) gets exactly the tags it got before
+  // this block existed.
+  if (!isPost && route.articleLd) {
+    tags.push(
+      jsonLd({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "@id": url,
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        headline: route.title,
+        description,
+        image: [image],
+        inLanguage: "en",
+        author: { "@type": "Organization", name: SITE_NAME, url: BASE_URL },
+        publisher: {
+          "@type": "Organization",
+          name: SITE_NAME,
+          url: BASE_URL,
+          logo: { "@type": "ImageObject", url: DEFAULT_IMAGE },
+        },
+      })
+    );
+  }
+
+  if (!isPost && route.breadcrumb) {
+    const trail = [...route.breadcrumb, { name: route.title, item: url }];
+    tags.push(
+      jsonLd({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: trail.map((crumb, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: crumb.name,
+          item: crumb.item,
+        })),
       })
     );
   }
