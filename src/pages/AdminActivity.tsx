@@ -24,6 +24,19 @@
  * request. Everything else stays open: a weekly review that hides its own
  * findings is not a review.
  *
+ * WHAT THE SYSTEM SAID IS GONE (22 Sep 2026)
+ * ------------------------------------------
+ * It reprinted every notification of the week here — cron-health warnings,
+ * self-check failures, and TO-DO notes one session had left for another,
+ * complete with file paths and branch names. Re, looking at it: "no need for
+ * this here." She is right twice over. None of it is what happened in the
+ * business this week, which is the one question this page exists to answer;
+ * and it has a home already — Notifications, System tab, which the category
+ * router now files everything technical into by default (20260922210000).
+ *
+ * `useWeekReview` still returns `warnings`. It is left in the hook on purpose:
+ * the Notifications screen is where that data belongs, not deleted outright.
+ *
  * A route of its own, not a `?tab=` deep link, for the same reason Today and
  * The week are: it is not a screen inside AdminDashboard.tsx.
  */
@@ -36,7 +49,7 @@ import { Button } from "@/components/ui/button";
 import AdminShell from "@/components/admin/AdminShell";
 import { useWeekReview, WEEK_DAYS } from "@/hooks/admin/useWeekReview";
 import {
-  UserPlus, CalendarCheck, Wallet, GraduationCap, ShieldAlert, ArrowRight, ChevronDown,
+  UserPlus, CalendarCheck, Wallet, GraduationCap, ArrowRight, ChevronDown,
 } from "lucide-react";
 
 /** "13 Sep, 20:38" in whatever zone the person reading this is actually in. */
@@ -116,9 +129,6 @@ const AdminActivity = () => {
   const totalAsked = (data?.sessions ?? []).reduce((n, s) => n + s.asked, 0);
   const totalAnswered = (data?.sessions ?? []).reduce((n, s) => n + s.yes + s.no, 0);
   const totalEmails = (data?.emails ?? []).reduce((n, e) => n + e.count, 0);
-  const problems = (data?.warnings ?? []).filter(
-    w => w.type === "self_verification" || w.type === "cron_health" || w.type === "pgnet_failure",
-  );
 
   /**
    * The audit log, as a shape you can read in one second: what KIND of thing
@@ -423,39 +433,6 @@ const AdminActivity = () => {
                           ))}
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                )}
-              </Section>
-
-              {/* SYSTEM */}
-              <Section
-                title="WHAT THE SYSTEM SAID"
-                note={
-                  problems.length > 0
-                    ? "These repeat every day until somebody fixes the cause. A warning that reappears unchanged is not new information — it is the same fault, still there."
-                    : "Everything the system reported this week."
-                }
-                action={{ to: "/admin?tab=notifications", label: "Notifications" }}
-              >
-                {data.warnings.length === 0 ? (
-                  <Empty>The system said nothing this week.</Empty>
-                ) : (
-                  <Card>
-                    <CardContent className="p-0 divide-y">
-                      {data.warnings.map(w => (
-                        <div key={w.id} className="flex flex-wrap items-start justify-between gap-2 px-4 py-3 text-sm">
-                          <div className="min-w-0 flex-1">
-                            <p className="flex items-center gap-1.5">
-                              {(w.type === "self_verification" || w.type === "cron_health" || w.type === "pgnet_failure") && (
-                                <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-destructive" />
-                              )}
-                              <span className="truncate">{w.message}</span>
-                            </p>
-                          </div>
-                          <span className="shrink-0 text-xs text-muted-foreground">{when(w.created_at)}</span>
-                        </div>
-                      ))}
                     </CardContent>
                   </Card>
                 )}
