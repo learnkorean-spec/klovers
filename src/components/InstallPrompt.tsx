@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X, Download } from "lucide-react";
 import { capture } from "@/lib/analytics";
 import { useBottomSlot } from "@/lib/bottomLayer";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * PWA install prompt — shows a non-intrusive banner when the browser fires
@@ -25,6 +26,8 @@ interface BeforeInstallPromptEvent extends Event {
 export default function InstallPrompt() {
   const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
+  const { language } = useLanguage();
+  const isAr = language === "ar";
 
   useEffect(() => {
     // Don't show if already installed or dismissed
@@ -67,7 +70,7 @@ export default function InstallPrompt() {
   return (
     <div
       role="dialog"
-      aria-label="Install Klovers app"
+      aria-label={isAr ? "تثبيت تطبيق Klovers" : "Install Klovers app"}
       aria-modal="false"
       className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:w-80 z-[200] bg-card border border-border rounded-xl shadow-xl p-4 flex items-start gap-3 animate-in slide-in-from-bottom-4 duration-300"
     >
@@ -76,24 +79,20 @@ export default function InstallPrompt() {
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-foreground leading-tight">
-          Install Klovers App
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Study offline, get streak reminders, faster access.
-        </p>
+        <p className="font-semibold text-sm text-foreground leading-tight">{isAr ? "ثبّت تطبيق Klovers" : "Install Klovers App"}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{isAr ? "ذاكر بدون إنترنت� واستلم تذكيرات السلسلة� ودخول أسرع." : "Study offline, get streak reminders, faster access."}</p>
         <button
           onClick={handleInstall}
           className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:bg-primary/90 transition-colors"
         >
           <Download className="w-3 h-3" aria-hidden="true" />
-          Add to Home Screen
+          {isAr ? "أضف إلى الشاشة الرئيسية" : "Add to Home Screen"}
         </button>
       </div>
 
       <button
         onClick={handleDismiss}
-        aria-label="Dismiss install prompt"
+        aria-label={isAr ? "إغلاق نافذة التثبيت" : "Dismiss install prompt"}
         className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
       >
         <X className="w-4 h-4" />
