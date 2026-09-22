@@ -15,7 +15,7 @@ import Korean from "@/components/Korean";
 import { KLOBI_WAVE } from "@/assets/band/klobiWave";
 import { cn } from "@/lib/utils";
 import { BLOG_LEARNING_META } from "@/constants/blogLearningMeta";
-import { STAGE_CATEGORY, stageForSlug, type KlobiPose, type StageId } from "@/constants/blogJourney";
+import { STAGE_BY_ID, STAGE_CATEGORY, stageForSlug, type KlobiPose, type StageId } from "@/constants/blogJourney";
 import { articleLevel, baseSlug, LEVEL_LABEL, readingMinutes, type ArticleLevel } from "@/lib/articleVocab";
 import { journey, useJourneyProgress } from "@/lib/journeyProgress";
 import { trackJourney } from "@/lib/journeyAnalytics";
@@ -249,6 +249,35 @@ export function BookmarkButton({ slug, title, isAr, className }: { slug: string;
   );
 }
 
+/* ───────────────────────────── Cover fallback ───────────────────────────── */
+
+const STAGE_KO: Record<StageId, string> = {
+  discover: "문화",
+  understand: "언어",
+  experience: "생활",
+  drama: "드라마",
+  speak: "대화",
+  test: "시험",
+};
+
+/**
+ * What a card shows when its photo is missing or fails to load (34 of 76
+ * published hero images are hot-linked Unsplash URLs; see the 2026-09-23
+ * handover). The stop's own illustration on a yellow disc, with the stop's
+ * Korean word as texture — branded, never the 📖 emoji.
+ */
+export function CoverFallback({ stage }: { stage: StageId }) {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center overflow-hidden bg-muted">
+      <span aria-hidden="true" lang="ko" className="pointer-events-none absolute -bottom-3 end-3 select-none font-ko-hand text-[4.5rem] leading-none text-foreground/[0.08] sm:text-[5.5rem]">
+        {STAGE_KO[stage]}
+      </span>
+      <span aria-hidden="true" className="absolute h-24 w-24 rounded-full bg-primary/30 sm:h-28 sm:w-28" />
+      <KloverIcon name={STAGE_BY_ID[stage].icon} className="relative h-14 w-14 sm:h-16 sm:w-16" />
+    </div>
+  );
+}
+
 /* ───────────────────────────── Article card ───────────────────────────── */
 
 type CardVariant = "featured" | "standard" | "compact" | "postcard";
@@ -268,6 +297,7 @@ export function ArticleCard({
   isAr,
   priority = false,
   headingLevel = 3,
+  stacked = false,
   className,
 }: {
   post: JournalPost;
@@ -275,6 +305,8 @@ export function ArticleCard({
   isAr: boolean;
   priority?: boolean;
   headingLevel?: 2 | 3;
+  /** featured only: image above text at every width (for narrow columns). */
+  stacked?: boolean;
   className?: string;
 }) {
   const learning = learningFor(post);
@@ -292,7 +324,7 @@ export function ArticleCard({
     return (
       <article className={cn("group relative flex gap-3 rounded-2xl p-2 transition-colors hover:bg-card", className)}>
         <div className="w-24 shrink-0 sm:w-28 overflow-hidden rounded-xl">
-          <OptimizedImage src={post.hero_image} alt={post.hero_alt || post.title} variant="card" sizes="112px" className="!aspect-[4/3]" />
+          <OptimizedImage src={post.hero_image} alt={post.hero_alt || post.title} variant="card" sizes="112px" className="!aspect-[4/3]" fallback={<CoverFallback stage={learning.stage} />} />
         </div>
         <div className="min-w-0 flex-1 py-0.5">
           <div className="mb-1 flex flex-wrap items-center gap-1.5">
@@ -316,6 +348,7 @@ export function ArticleCard({
         <OptimizedImage
           src={post.hero_image}
           alt={post.hero_alt || post.title}
+          fallback={<CoverFallback stage={learning.stage} />}
           variant="card"
           className="!aspect-[4/5] !rounded-none transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
         />
@@ -342,21 +375,22 @@ export function ArticleCard({
     if (learning.stage === "discover" || learning.stage === "experience" || learning.stage === "understand")
       outcome.push(isAr ? "مفهوم ثقافي واحد" : "1 cultural insight");
     return (
-      <article className={cn("group relative grid overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm lg:grid-cols-[1.25fr_1fr]", className)}>
+      <article className={cn("group relative grid overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm", !stacked && "lg:grid-cols-[1.25fr_1fr]", className)}>
         <div className="relative">
           <OptimizedImage
             src={post.hero_image}
             alt={post.hero_alt || post.title}
+          fallback={<CoverFallback stage={learning.stage} />}
             variant="card"
             priority={priority}
             sizes="(max-width: 1024px) 100vw, 640px"
-            className="!aspect-[16/10] lg:!aspect-auto lg:h-full !rounded-none"
+            className={cn("!aspect-[16/10] !rounded-none", !stacked && "lg:!aspect-auto lg:h-full")}
           />
           <span className="absolute top-4 start-4 rounded-full bg-primary px-3 py-1 text-xs font-extrabold text-charcoal shadow-sm">
             {isAr ? "القصة المختارة" : "Featured story"}
           </span>
         </div>
-        <div className="flex flex-col gap-4 p-6 sm:p-8 lg:p-10">
+        <div className={cn("flex flex-col gap-4 p-6 sm:p-8", !stacked && "lg:p-10")}>
           <div className="flex flex-wrap items-center gap-2">
             <CategoryChip stage={learning.stage} isAr={isAr} />
             {doneBadge}
@@ -398,6 +432,7 @@ export function ArticleCard({
       <OptimizedImage
         src={post.hero_image}
         alt={post.hero_alt || post.title}
+          fallback={<CoverFallback stage={learning.stage} />}
         variant="card"
         priority={priority}
         className="!rounded-none transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"

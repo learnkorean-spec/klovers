@@ -54,16 +54,16 @@ export default function JournalHero({
                 <>
                   اكتشف كوريا{" "}
                   <span className="relative inline-block">
-                    <span className="relative z-10">خطوة بخطوة</span>
-                    <span aria-hidden="true" className="absolute inset-x-0 bottom-1 -z-0 h-3 rounded-sm bg-primary sm:h-4" />
+                    <span className="relative z-10 dark:text-primary">خطوة بخطوة</span>
+                    <span aria-hidden="true" className="absolute inset-x-0 bottom-1 h-3 rounded-sm bg-primary dark:hidden sm:h-4" />
                   </span>
                 </>
               ) : (
                 <>
                   Discover Korea,{" "}
                   <span className="relative inline-block">
-                    <span className="relative z-10">step by step</span>
-                    <span aria-hidden="true" className="absolute inset-x-0 bottom-1 h-3 rounded-sm bg-primary sm:h-4" />
+                    <span className="relative z-10 dark:text-primary">step by step</span>
+                    <span aria-hidden="true" className="absolute inset-x-0 bottom-1 h-3 rounded-sm bg-primary dark:hidden sm:h-4" />
                   </span>
                 </>
               )}

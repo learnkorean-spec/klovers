@@ -19,7 +19,7 @@ import { STAGE_BY_ID, type StageId } from "@/constants/blogJourney";
 import { LEVEL_LABEL, PURE_HANGUL, type ArticleLevel, type VocabItem } from "@/lib/articleVocab";
 import { journey, useJourneyProgress } from "@/lib/journeyProgress";
 import { trackJourney } from "@/lib/journeyAnalytics";
-import { KlobiFigure, Ko, LearningMeta, learningFor, minutesLabel, num, useInView, wordsLabel } from "./shared";
+import { CoverFallback, KlobiFigure, Ko, LearningMeta, learningFor, minutesLabel, num, useInView, wordsLabel } from "./shared";
 
 const CULTURAL: StageId[] = ["discover", "experience", "understand"];
 
@@ -272,7 +272,7 @@ export function NextStop({ post, isAr, fromSlug }: { post: NextStopPost; isAr: b
         onClick={() => trackJourney("next_stop_clicked", { from: fromSlug, to: post.slug })}
         className="group grid overflow-hidden rounded-[2rem] border border-border bg-card transition-shadow hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[1fr_1.2fr]"
       >
-        <OptimizedImage src={post.hero_image} alt={post.hero_alt || post.title} variant="card" sizes="(max-width: 640px) 100vw, 320px" className="!rounded-none sm:!aspect-auto sm:h-full" />
+        <OptimizedImage src={post.hero_image} alt={post.hero_alt || post.title} variant="card" sizes="(max-width: 640px) 100vw, 320px" className="!rounded-none sm:!aspect-auto sm:h-full" fallback={<CoverFallback stage={learning.stage} />} />
         <div className="flex flex-col gap-3 p-5 sm:p-6">
           <span className="w-fit rounded-full bg-primary px-3 py-1 text-xs font-extrabold text-charcoal">
             {isAr ? `المحطة ${num(Number(stage.num), true)} · ${stage.title.ar}` : `Stop ${stage.num} · ${stage.title.en}`}
