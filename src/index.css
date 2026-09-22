@@ -6,50 +6,42 @@
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 
-Klovers brand palette — concept board, September 2026, tuned 20 Sep.
-The decimals matter: each value below round-trips to its exact hex.
+KLOVERS PALETTE — this file is the source of truth. The prose copy lives in
+claude/BRAND_PALETTE_REFERENCE.md and follows this file, never the reverse.
 
-  Klovers Yellow  #FFFF00  60 100% 50%       one action per screen
-  Mint            #BFF0D9  152 62% 84.5%     soft green fill
-  Neon green      #39FF14  110.6 100% 53.9%  green accent, dots, rules
-  Blush           #FFC8D6  345 100% 89%      soft pink fill
-  Neon pink       #FF13F0  303.8 100% 53.7%  pink accent
-  Ivory           #FFF9EC  41 100% 96.3%     page ground
-  Charcoal        #2E2E2E  0 0% 18%          text, and every strong surface
+THE BRAND IS THREE COLOURS (Re, 20 Sep 2026):
 
-Why the pairs: a soft fill for surfaces and a saturated sibling for accents
-keeps the page calm AND lets the supports hold their own. The two accents are
-fully saturated on purpose — anything less goes grey beside #FFFF00.
+  Klovers Yellow  #FFFF00  60 100% 50%      the ground, not a button
+  Charcoal        #2E2E2E  0 0% 18%         text, and every strong surface
+  Ivory           #FFF9EC  41 100% 96.3%    the surface the eye rests on
 
-Text on the strong tones is Charcoal, never white:
-  Charcoal on #39FF14  10.0:1   any size
-  Charcoal on #FF13F0   4.3:1   large or bold only — no small text on pink
-The accents are accents: a handful of call sites each, never a page ground.
+Yellow is the field, and that forces the rest: white on #FFFF00 is 1.07:1 and
+cannot be read, so the second colour has to be dark. Charcoal on Yellow and
+Yellow on Charcoal are both 12.7:1, which is why the dark theme below needs no
+third colour to work — the two swap roles and keep full strength.
 
-DECISION 20 Sep 2026 (Re): the brand is three colours, Yellow / Charcoal / Ivory.
-Yellow stays the ground. Mint, Blush and the two neons are being retired from
-decorative use: neon green survives only as the dark-theme "correct" colour and
-neon pink only as "wrong" graphics (see --correct / --wrong below). --mint,
---peach and their -strong siblings stay defined until every call site has moved
-off them; do not add new uses.
+STATUS COLOURS ARE NOT BRAND COLOURS. correct / wrong / live appear for a
+moment inside games, the placement test and the admin screens, and never count
+toward the three — same standing as --destructive. They are defined with the
+semantic tokens below.
 
-Type, from the same board (loaded in index.html):
+RETIRED: Mint, Blush and the two neons are gone from decorative use. --mint and
+--mint-strong survive only as deprecated aliases of the live tokens, so the big
+admin screens keep rendering the sanctioned green without a rewrite; --peach and
+--peach-strong have no sanctioned use left at all. Do not add new call sites for
+any of the four.
+
+Type, loaded in index.html:
   Poppins  display / headings      Inter   body and UI (Latin)
-  Cairo    body and UI (Arabic)    Caveat  handwritten accent
+  Cairo    body and UI (Arabic)    Caveat  handwritten accent (Latin only)
 */
 
 @layer base {
   :root {
     /* Brand palette — raw tokens */
     --klovers-yellow: 60 100% 50%;
-    --mint: 152 62% 84.5%;
-    --mint-strong: 110.6 100% 53.9%;
-    --mint-foreground: 0 0% 18%;
     --ivory: 41 100% 96.3%;
     --charcoal: 0 0% 18%;
-    --peach: 345 100% 89%;
-    --peach-strong: 303.8 100% 53.7%;
-    --peach-foreground: 0 0% 18%;
 
     /* Semantic tokens */
     --background: 41 100% 96.3%;
@@ -83,8 +75,8 @@ Type, from the same board (loaded in index.html):
     --ring: 0 0% 18%;
 
     /* Status colours — FUNCTIONAL, not brand. They appear for a moment inside
-       games and the placement test, and never count toward the three brand
-       colours (same idea as --destructive).
+       games, the placement test and the admin screens, and never count toward
+       the three brand colours (same idea as --destructive).
          correct   #0E7A4F  on ivory 5.1:1   (dark theme: #39FF14, 13.6:1 on ground)
          wrong     #B800AB  text on white 5.8:1, on --wrong-surface 4.9:1
          wrong-surface #FFE4FB
@@ -99,6 +91,32 @@ Type, from the same board (loaded in index.html):
     --wrong-surface: 308.9 100% 94.7%;
     --wrong-graphic: 303.8 100% 53.7%;
 
+    /* LIVE — "happening now": the hero's next-class chip, the admin group card
+       that is mid-class. A state, not decoration, which is why it is a token
+       and not a borrowed brand colour.
+         live          #0E7A4F  white on it 5.4:1, it on white 5.4:1
+         live-surface  #BFF0D9  the calm "today, later" panel
+         live-bright   #39FF14  DARK GROUNDS ONLY — the hero sits on a charcoal
+                       scrim in both themes, where #0E7A4F would disappear.
+                       On a light surface this one measures 1.7:1. Never there.
+       Text on --live-surface is Charcoal, NEVER --live: #0E7A4F on #BFF0D9 is
+       4.26:1 and fails small text. That is what --live-surface-foreground is
+       for. */
+    --live: 156.1 79.4% 26.7%;
+    --live-foreground: 0 0% 100%;
+    --live-surface: 152 62% 84.5%;
+    --live-surface-foreground: 0 0% 18%;
+    --live-bright: 110.6 100% 53.9%;
+
+    /* DEPRECATED aliases — retired brand colours pointed at the live tokens so
+       the large admin screens keep rendering the sanctioned green. No new uses. */
+    --mint: var(--live-surface);
+    --mint-strong: var(--live);
+    --mint-foreground: var(--live-surface-foreground);
+    --peach: 345 100% 89%;
+    --peach-strong: 303.8 100% 53.7%;
+    --peach-foreground: 0 0% 18%;
+
     --radius: 1rem;
 
     --sidebar-background: 0 0% 100%;
@@ -111,8 +129,8 @@ Type, from the same board (loaded in index.html):
     --sidebar-ring: 60 100% 50%;
 
     --chart-1: 60 100% 50%;
-    --chart-2: 110.6 100% 53.9%;
-    --chart-3: 303.8 100% 53.7%;
+    --chart-2: 156.1 79.4% 26.7%;
+    --chart-3: 304.2 100% 36.1%;
     --chart-4: 0 0% 18%;
     --chart-5: 0 0% 50%;
 
@@ -151,25 +169,21 @@ Type, from the same board (loaded in index.html):
   }
 
   .dark {
-    /* Brand palette — raw tokens */
+    /* Brand palette — raw tokens.
+       Charcoal was 0 0% 18% here, only 1.28:1 against the old #1A1A1A ground,
+       so every bg-charcoal section vanished into the page. It is lifted to
+       #38382F (1.56:1 against the ground, 10.2:1 for ivory text on it). */
     --klovers-yellow: 60 100% 50%;
-    --mint: 152 62% 84.5%;
-    --mint-strong: 110.6 100% 42%;
-    --mint-foreground: 0 0% 18%;
     --ivory: 41 100% 96.3%;
     --charcoal: 60 8.7% 20.2%;
-    --peach: 345 100% 89%;
-    --peach-strong: 303.8 85% 48%;
-    --peach-foreground: 0 0% 18%;
 
     /* Dark theme — the roles swap, the colours don't.
          ground   #14140F  warm near-black
          text     #F2EEE3  (15.9:1 on ground)
          raised   #23231C  (13.6:1 for text on it)
          action   #FFFF00  yellow becomes the action colour (17.2:1 on ground)
-       Charcoal was 0 0% 18% here, only 1.28:1 against the old #1A1A1A ground,
-       so every bg-charcoal section vanished into the page. It is lifted to
-       #38382F (1.56:1 against the ground, 10.2:1 for ivory text on it). */
+       A large yellow FIELD glares on a dark ground — keep pure #FFFF00 for
+       small marks and buttons, and dim a big fill to #E8E000 (13.3:1). */
     --background: 60 14.3% 6.9%;
     --foreground: 44 36.6% 92%;
 
@@ -206,6 +220,23 @@ Type, from the same board (loaded in index.html):
     --wrong-surface: 307.8 36.5% 12.4%;
     --wrong-graphic: 303.8 100% 53.7%;
 
+    /* On a dark ground the deep green disappears, so live IS the bright one
+       here (13.6:1 on the ground). live-surface becomes a deep green panel
+       (#153227) that ivory text reads on at 11.9:1. */
+    --live: 110.6 100% 53.9%;
+    --live-foreground: 60 14.3% 6.9%;
+    --live-surface: 156 40% 14%;
+    --live-surface-foreground: 44 36.6% 92%;
+    --live-bright: 110.6 100% 53.9%;
+
+    /* DEPRECATED aliases — see the light block. */
+    --mint: var(--live-surface);
+    --mint-strong: var(--live);
+    --mint-foreground: var(--live-surface-foreground);
+    --peach: 345 100% 89%;
+    --peach-strong: 303.8 85% 48%;
+    --peach-foreground: 0 0% 18%;
+
     --sidebar-background: 60 14.3% 6.9%;
     --sidebar-foreground: 44 36.6% 92%;
     --sidebar-primary: 60 100% 50%;
@@ -215,7 +246,7 @@ Type, from the same board (loaded in index.html):
     --sidebar-border: 60 9.4% 20.8%;
     --sidebar-ring: 60 100% 50%;
     --chart-1: 60 100% 50%;
-    --chart-2: 110.6 100% 42%;
+    --chart-2: 110.6 100% 53.9%;
     --chart-3: 303.8 85% 48%;
     --chart-4: 0 0% 80%;
     --chart-5: 0 0% 50%;
