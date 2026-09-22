@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { GraduationCap, ArrowRight, AlertTriangle, Link2, Link2Off, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMyStudents, useBundleBalances } from "@/hooks/admin/useMyStudents";
+import PrivateStudentPause from "@/components/admin/PrivateStudentPause";
 import {
   formatMoney,
   formatWeeklySummary,
@@ -64,6 +65,15 @@ import {
  * half the rows, and the question "how many private, how many in classes" is
  * one Re asks constantly. The count in the title is the total, because that
  * is the number she was missing.
+ *
+ * AND WHY PAUSED STUDENTS ARE LISTED, NOT HIDDEN (2026-09-23)
+ * -----------------------------------------------------------
+ * This list filtered on status === "active". The moment a private student
+ * could be paused, that filter would have made Pause look like Delete — press
+ * it and she disappears from the only card that says who you teach. A frozen
+ * student is still a student; she is shown, said to be paused, and given the
+ * button back. She is not amber either: amber means something needs doing, and
+ * a deliberate freeze is the opposite of that.
  */
 
 interface Props {
@@ -102,12 +112,16 @@ const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frid
  * on it is simply running, and saying so in amber would train the eye to ignore
  * the colour.
  *
- * A missing account is deliberately NOT one of them. It is worth knowing and it
- * is shown, but it is not a fault: a private student who never signed up on the
- * site is a perfectly ordinary student, and colouring her amber every week for
- * it would be the fastest way to stop reading the amber.
+ * A paused student is never amber. Everything amber would say about her — her
+ * bundle is finished, she is past it — is true and deliberate: Re froze her.
+ *
+ * A missing account is deliberately NOT one of them either. It is worth knowing
+ * and it is shown, but it is not a fault: a private student who never signed up
+ * on the site is a perfectly ordinary student, and colouring her amber every
+ * week for it would be the fastest way to stop reading the amber.
  */
 function attentionReason(row: Row): string | null {
+  if (row.student.status === "paused") return null;
   if (!row.balance) return "No bundle recorded — nothing has been paid for yet";
   if (row.balance.remaining_classes < 0) {
     return `${Math.abs(row.balance.remaining_classes)} class${
@@ -225,13 +239,21 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
     return () => { alive = false; };
   }, []);
 
+  // Paused students are listed. See the note at the top of this file: hiding
+  // them would turn Pause into Delete. 'inactive' — stopped for good — stays
+  // out, which is what that status is for.
   const rows = useMemo<Row[]>(() => {
     const students = studentsQ.data ?? [];
     const balances = balancesQ.data;
     return students
-      .filter((s) => s.status === "active")
+      .filter((s) => s.status === "active" || s.status === "paused")
       .map((student) => ({ student, balance: balances?.get(student.id) }));
   }, [studentsQ.data, balancesQ.data]);
+
+  function reload() {
+    void studentsQ.refetch();
+    void balancesQ.refetch();
+  }
 
   const groupRows = groupStudents ?? [];
   const total = rows.length + groupRows.length;
@@ -241,6 +263,7 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
   if (!studentsQ.isLoading && total === 0) return null;
 
   const needsAttention = rows.filter((r) => attentionReason(r) !== null).length;
+  const pausedCount = rows.filter((r) => r.student.status === "paused").length;
   const unlinked = accounts
     ? rows.filter(r => !accounts.get(r.student.id)).length
     : 0;
@@ -260,6 +283,11 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                 {needsAttention} need{needsAttention === 1 ? "s" : ""} attention
               </Badge>
             )}
+            {pausedCount > 0 && (
+              <Badge variant="outline" className="text-[10px] border-pink-400 text-pink-600">
+                {pausedCount} paused
+              </Badge>
+            )}
           </CardTitle>
           <Button
             type="button"
@@ -275,7 +303,8 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
         <p className="text-xs text-muted-foreground">
           Everyone currently studying — {rows.length} private and {groupRows.length} in a class.
           Private students say whether they are also an account on the site, which is what decides
-          whether a letter or a payment reminder can reach them. Edit private students in Student
+          whether a letter or a payment reminder can reach them. Pause freezes a private student:
+          nothing automatic happens to her and everything is kept. Edit private students in Student
           Admin; class seats are managed on the group's card.
           {accounts && unlinked > 0 && (
             <>
@@ -302,21 +331,29 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                   {rows.map(({ student, balance }) => {
                     const reason = attentionReason({ student, balance });
                     const account = accounts?.get(student.id);
+                    const paused = student.status === "paused";
                     return (
                       <li
                         key={student.id}
                         className={
                           "rounded-xl border px-3 py-2 space-y-1 " +
-                          (reason
-                            ? "border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20"
-                            : "bg-muted/30")
+                          (paused
+                            ? "border-pink-400 bg-pink-50/40 dark:bg-pink-950/10"
+                            : reason
+                              ? "border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20"
+                              : "bg-muted/30")
                         }
                       >
-                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="text-sm font-medium text-foreground">{student.full_name}</span>
                           <span className="text-xs text-muted-foreground">
                             {SUBJECT_LABEL[student.subject]}
                           </span>
+                          {paused && (
+                            <Badge variant="outline" className="text-[10px] border-pink-400 text-pink-600">
+                              Paused
+                            </Badge>
+                          )}
                           {balance && (
                             <span className="text-xs text-muted-foreground">
                               {balance.label} · {balance.used_classes} of {balance.total_classes} used ·{" "}
@@ -326,6 +363,11 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                               · {formatMoney(balance.total_price, balance.currency)}
                             </span>
                           )}
+                          <PrivateStudentPause
+                            student={student}
+                            onChanged={reload}
+                            className="ms-auto"
+                          />
                         </div>
 
                         <p className="text-[11px] text-muted-foreground/80">
@@ -348,12 +390,18 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                           )
                         )}
 
-                        {reason && (
+                        {paused ? (
+                          <p className="text-[11px] text-pink-600 dark:text-pink-400">
+                            Paused — no lessons go on her calendar, her package does not renew, and no
+                            payment letter is sent. Her package, her counted lessons and her balance are
+                            all kept, so Resume puts her straight back.
+                          </p>
+                        ) : reason ? (
                           <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400 flex items-center gap-1">
                             <AlertTriangle className="h-3 w-3 shrink-0" />
                             {reason}
                           </p>
-                        )}
+                        ) : null}
                       </li>
                     );
                   })}
