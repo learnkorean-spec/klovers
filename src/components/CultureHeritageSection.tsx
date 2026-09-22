@@ -5,28 +5,28 @@ import { logEngagementEvent } from "@/lib/leadTracking";
 import OptimizedImage from "@/components/OptimizedImage";
 
 /**
- * CultureHeritageSection â€” "Korean isn't just grammar, it's a whole culture."
+ * CultureHeritageSection — "Korean isn't just grammar, it's a whole culture."
  *
- * Every tile here is a real, already-published Klovers blog post â€” verified
+ * Every tile here is a real, already-published Klovers blog post — verified
  * live in `blog_posts` (Supabase) before this was written, both EN and AR
  * versions, `published = true`. That matters because a sibling component,
  * WhyLearnKorean.tsx, deliberately ships with an empty image map and a
  * comment explaining why: "putting images of unchecked provenance on the
- * homepage is not a thing to do quietly." These images aren't unchecked â€”
+ * homepage is not a thing to do quietly." These images aren't unchecked —
  * they're the same photos already live on kloversegy.com/blog, just given a
  * second, better-lit home on the page that's supposed to hook a new visitor.
  *
  * Deliberately NOT used here: the older local files in public/assets/blog
  * (gyeongbokgung.jpg, joseon-dynasty.jpg, dangun-myth.jpg, hwarang-warriors.jpg
  * and a few others) that would have made a richer "history" set. They don't
- * appear as `hero_image` on any published post â€” the two posts that cover
+ * appear as `hero_image` on any published post — the two posts that cover
  * that ground (Gumiho, Dokkaebi) actually serve their images from Supabase
  * Storage instead, which is a strong signal these particular local files are
  * orphaned from an earlier content pipeline, not vetted for this. Same
  * standard as WhyLearnKorean: don't add unverified images quietly. If Re
  * confirms where they're from, they're a natural follow-up to this section.
  *
- * Placement: after CommunityBand, before WhyLearnKorean â€” "Interest" band in
+ * Placement: after CommunityBand, before WhyLearnKorean — "Interest" band in
  * the page's existing AIDA ordering (see comments in Index.tsx), deepening
  * the "K-Culture" motivation card right before it's presented as a reason.
  *
@@ -37,7 +37,7 @@ import OptimizedImage from "@/components/OptimizedImage";
  * "culture_section", not even a member of the LeadSource union), mirroring
  * every click to the Meta Pixel / GA4 as a `Lead` conversion. Browsing a
  * culture blog post from the homepage is curiosity, not the same intent
- * signal as booking a trial â€” at tile-click volume this quietly dilutes real
+ * signal as booking a trial — at tile-click volume this quietly dilutes real
  * ad-optimisation data. Switched to logEngagementEvent, which still writes
  * to lead_events for funnel analysis but fires no pixel. See leadTracking.ts.
  */
@@ -60,106 +60,106 @@ const TILES: Tile[] = [
   {
     image: "/assets/blog/hangul-science.jpg",
     kickerEn: "Est. 1443",
-    kickerAr: "Ù…Ù†Ø° Ù¡Ù¤Ù¤Ù£",
+    kickerAr: "منذ ١٤٤٣",
     titleEn: "Hangul: Built to Be Learned in a Day",
-    titleAr: "Ø§Ù„Ù‡Ø§Ù†ØºÙˆÙ„: Ø£Ø¨Ø¬Ø¯ÙŠØ© ØµÙÙ…Ù…Øª Ù„ØªÙØªØ¹Ù„Ù‘Ù… ÙÙŠ ÙŠÙˆÙ…",
+    titleAr: "الهانغول: أبجدية صُممت لتُتعلّم في يوم",
     blurbEn: "King Sejong commissioned it so ordinary people, not just scholars, could read and write.",
-    blurbAr: "Ø£Ù…Ø± Ø¨Ù‡Ø§ Ø§Ù„Ù…Ù„Ùƒ Ø³ÙŠØ¬ÙˆÙ†Øº Ø¹Ø´Ø§Ù† Ø§Ù„Ù†Ø§Ø³ Ø§Ù„Ø¹Ø§Ø¯ÙŠÙŠÙ†ØŒ Ù…Ø´ Ø¨Ø³ Ø§Ù„Ø¹Ù„Ù…Ø§Ø¡ØŒ ÙŠÙ‚Ø¯Ø±ÙˆØ§ ÙŠÙ‚Ø±Ø£ÙˆØ§ ÙˆÙŠÙƒØªØ¨ÙˆØ§.",
+    blurbAr: "أمر بها الملك سيجونغ عشان الناس العاديين، مش بس العلماء، يقدروا يقرأوا ويكتبوا.",
     slugEn: "learn-korean-alphabet-hangul-guide",
     slugAr: "learn-korean-alphabet-hangul-guide-ar",
     altEn: "Korean Hangul characters written on paper",
-    altAr: "Ø­Ø±ÙˆÙ Ø§Ù„Ù‡Ø§Ù†ØºÙˆÙ„ Ù…ÙƒØªÙˆØ¨Ø© Ø¹Ù„Ù‰ ÙˆØ±Ù‚Ø©",
+    altAr: "حروف الهانغول مكتوبة على ورقة",
   },
   {
     image: "/assets/blog/hanbok-fashion.jpg",
     kickerEn: "Tradition",
-    kickerAr: "ØªÙ‚Ù„ÙŠØ¯",
+    kickerAr: "تقليد",
     titleEn: "Hanbok, Korea's Traditional Dress",
-    titleAr: "Ø§Ù„Ù‡Ø§Ù†Ø¨ÙˆÙƒ: Ø§Ù„Ø²ÙŠ Ø§Ù„ÙƒÙˆØ±ÙŠ Ø§Ù„ØªÙ‚Ù„ÙŠØ¯ÙŠ",
+    titleAr: "الهانبوك: الزي الكوري التقليدي",
     blurbEn: "How it went from everyday wear to the outfit worn at every major celebration today.",
-    blurbAr: "Ù‚ØµØ© ØªØ­ÙˆÙ‘Ù„Ù‡ Ù…Ù† Ù„Ø¨Ø§Ø³ ÙŠÙˆÙ…ÙŠ Ø¥Ù„Ù‰ Ø§Ù„Ø²ÙŠ Ø§Ù„Ù„ÙŠ Ø¨ÙŠØªÙ„Ø¨Ø³ ÙÙŠ ÙƒÙ„ Ù…Ù†Ø§Ø³Ø¨Ø© ÙƒØ¨ÙŠØ±Ø©.",
+    blurbAr: "قصة تحوّله من لباس يومي إلى الزي اللي بيتلبس في كل مناسبة كبيرة.",
     slugEn: "hanbok-korean-traditional-clothing",
     slugAr: "hanbok-korean-traditional-clothing-ar",
     altEn: "Traditional Korean Hanbok dress",
-    altAr: "Ø§Ù„Ø²ÙŠ Ø§Ù„ØªÙ‚Ù„ÙŠØ¯ÙŠ Ø§Ù„ÙƒÙˆØ±ÙŠ Ø§Ù„Ù‡Ø§Ù†Ø¨ÙˆÙƒ",
+    altAr: "الزي التقليدي الكوري الهانبوك",
   },
   {
     image: "/assets/blog/seollal-new-year.jpg",
     kickerEn: "Holidays",
-    kickerAr: "Ø£Ø¹ÙŠØ§Ø¯",
+    kickerAr: "أعياد",
     titleEn: "Seollal & Chuseok",
-    titleAr: "Ø³ÙˆÙ„Ø§Ù„ ÙˆØªØ´ÙˆØ³ÙˆÙƒ",
-    blurbEn: "Korea's two biggest holidays â€” the rituals, the foods, and the words every learner should know.",
-    blurbAr: "Ø£Ù‡Ù… Ø¹ÙŠØ¯ÙŠÙ† ÙÙŠ Ø§Ù„Ø«Ù‚Ø§ÙØ© Ø§Ù„ÙƒÙˆØ±ÙŠØ©: Ø·Ù‚ÙˆØ³Ù‡Ù…Ø§ ÙˆØ£Ø·Ø¨Ø§Ù‚Ù‡Ù…Ø§ Ø§Ù„Ø®Ø§ØµØ©.",
+    titleAr: "سولال وتشوسوك",
+    blurbEn: "Korea's two biggest holidays — the rituals, the foods, and the words every learner should know.",
+    blurbAr: "أهم عيدين في الثقافة الكورية: طقوسهما وأطباقهما الخاصة.",
     slugEn: "korean-traditional-holidays-chuseok-seollal",
     slugAr: "korean-traditional-holidays-chuseok-seollal-ar",
     altEn: "Colorful Korean traditional Chuseok harvest festival table with rice cakes and fruit",
-    altAr: "Ù…Ø§Ø¦Ø¯Ø© Ø¹ÙŠØ¯ ØªØ´ÙˆØ³ÙˆÙƒ Ø§Ù„ÙƒÙˆØ±ÙŠ Ø§Ù„ØªÙ‚Ù„ÙŠØ¯ÙŠ Ù…Ø¹ ÙƒØ¹Ùƒ Ø§Ù„Ø£Ø±Ø² ÙˆØ§Ù„ÙÙˆØ§ÙƒÙ‡ Ø§Ù„Ù…Ù„ÙˆÙ†Ø©",
+    altAr: "مائدة عيد تشوسوك الكوري التقليدي مع كعك الأرز والفواكه الملونة",
   },
   {
     image: "/assets/blog/korean-wedding.jpg",
     kickerEn: "Ceremony",
-    kickerAr: "Ø·Ù‚ÙˆØ³",
+    kickerAr: "طقوس",
     titleEn: "Inside a Korean Wedding",
-    titleAr: "Ø¯Ø§Ø®Ù„ Ø­ÙÙ„ Ø²ÙØ§Ù ÙƒÙˆØ±ÙŠ",
+    titleAr: "داخل حفل زفاف كوري",
     blurbEn: "From the modern Western-style ceremony to the traditional Pyebaek ritual.",
-    blurbAr: "Ù…Ù† Ø§Ù„Ø­ÙÙ„ Ø§Ù„Ø­Ø¯ÙŠØ« Ø¨Ø§Ù„Ø·Ø±Ø§Ø² Ø§Ù„ØºØ±Ø¨ÙŠ Ø¥Ù„Ù‰ Ø·Ù‚Ø³ Ø§Ù„Ø¨ÙŠÙŠØ¨Ø§Ùƒ Ø§Ù„ØªÙ‚Ù„ÙŠØ¯ÙŠ.",
+    blurbAr: "من الحفل الحديث بالطراز الغربي إلى طقس البييباك التقليدي.",
     slugEn: "korean-wedding-traditions-guide",
     slugAr: "korean-wedding-traditions-guide-ar",
     altEn: "Traditional Korean wedding hanbok and pyebaek ceremony setting",
-    altAr: "Ù‡Ø§Ù†Ø¨ÙˆÙƒ Ø²ÙØ§Ù ÙƒÙˆØ±ÙŠ ØªÙ‚Ù„ÙŠØ¯ÙŠ ÙˆØ·Ù‚Ø³ Ø§Ù„Ø¨ÙŠÙŠØ¨Ø§Ùƒ",
+    altAr: "هانبوك زفاف كوري تقليدي وطقس البييباك",
   },
   {
     image: "/assets/blog/korean-honorifics.jpg",
     kickerEn: "Language & Respect",
-    kickerAr: "Ø§Ù„Ù„ØºØ© ÙˆØ§Ù„Ø§Ø­ØªØ±Ø§Ù…",
+    kickerAr: "اللغة والاحترام",
     titleEn: "Why Korean Has 7 Speech Levels",
-    titleAr: "Ù„Ù…Ø§Ø°Ø§ Ù„Ù„ÙƒÙˆØ±ÙŠØ© Ù§ Ù…Ø³ØªÙˆÙŠØ§Øª ÙƒÙ„Ø§Ù…ØŸ",
-    blurbEn: "Formal, polite, casual â€” how the language itself encodes who you're speaking to.",
-    blurbAr: "Ø§Ù„Ø±Ø³Ù…ÙŠ ÙˆØ§Ù„Ù…Ù‡Ø°Ø¨ ÙˆØ§Ù„Ø¹Ø§Ø¯ÙŠ: ÙƒÙŠÙ ØªØ¹ÙƒØ³ Ø§Ù„Ù„ØºØ© Ù†ÙØ³Ù‡Ø§ Ø¹Ù„Ø§Ù‚ØªÙƒ Ø¨Ù…Ù† ØªØªØ­Ø¯Ø« Ù…Ø¹Ù‡.",
+    titleAr: "لماذا للكورية ٧ مستويات كلام؟",
+    blurbEn: "Formal, polite, casual — how the language itself encodes who you're speaking to.",
+    blurbAr: "الرسمي والمهذب والعادي: كيف تعكس اللغة نفسها علاقتك بمن تتحدث معه.",
     slugEn: "korean-speech-levels-honorifics-guide",
     slugAr: "korean-speech-levels-honorifics-guide-ar",
     altEn: "Korean business professionals bowing respectfully showing formal speech level usage",
-    altAr: "Ù…Ø­ØªØ±ÙÙˆÙ† ÙƒÙˆØ±ÙŠÙˆÙ† ÙŠÙ†Ø­Ù†ÙˆÙ† Ø¨Ø§Ø­ØªØ±Ø§Ù… ÙŠØ¸Ù‡Ø±ÙˆÙ† Ù…Ø³ØªÙˆÙŠØ§Øª Ø§Ù„ÙƒÙ„Ø§Ù… Ø§Ù„Ø±Ø³Ù…ÙŠ",
+    altAr: "محترفون كوريون ينحنون باحترام يظهرون مستويات الكلام الرسمي",
   },
   {
     image: "/assets/blog/korean-music.jpg",
     kickerEn: "Hallyu",
-    kickerAr: "Ø§Ù„Ù…ÙˆØ¬Ø© Ø§Ù„ÙƒÙˆØ±ÙŠØ©",
+    kickerAr: "الموجة الكورية",
     titleEn: "Learning Korean Through K-Pop",
-    titleAr: "ØªØ¹Ù„Ù‘Ù… Ø§Ù„ÙƒÙˆØ±ÙŠØ© Ø¹Ø¨Ø± Ø§Ù„ÙƒÙŠØ¨ÙˆØ¨",
-    blurbEn: "Millions of fans are already absorbing Korean by accident â€” how to turn that into real fluency.",
-    blurbAr: "Ù…Ù„Ø§ÙŠÙŠÙ† Ø§Ù„Ù…Ø¹Ø¬Ø¨ÙŠÙ† Ø¨ÙŠØªØ¹Ù„Ù…ÙˆØ§ ÙƒÙˆØ±ÙŠØ© Ù…Ù† ØºÙŠØ± Ù…Ø§ ÙŠØ­Ø³ÙˆØ§ â€” Ø¥Ø²Ø§ÙŠ ØªØ­ÙˆÙ‘Ù„Ù‡Ø§ Ù„Ø·Ù„Ø§Ù‚Ø© Ø­Ù‚ÙŠÙ‚ÙŠØ©.",
+    titleAr: "تعلّم الكورية عبر الكيبوب",
+    blurbEn: "Millions of fans are already absorbing Korean by accident — how to turn that into real fluency.",
+    blurbAr: "ملايين المعجبين بيتعلموا كورية من غير ما يحسوا — إزاي تحوّلها لطلاقة حقيقية.",
     slugEn: "learn-korean-through-kpop-bts-blackpink",
     slugAr: "learn-korean-through-kpop-bts-blackpink-ar",
     altEn: "Concert stage with colorful lights and a massive crowd of fans",
-    altAr: "Ù…ÙŠÙƒØ±ÙˆÙÙˆÙ† Ø¹Ù„Ù‰ Ù…Ø³Ø±Ø­ Ø­ÙÙ„ Ù…ÙˆØ³ÙŠÙ‚Ù‰ ÙƒÙŠØ¨ÙˆØ¨ Ù…Ø¹ Ø£Ø¶ÙˆØ§Ø¡ Ù…Ù„ÙˆÙ†Ø©",
+    altAr: "ميكروفون على مسرح حفل موسيقى كيبوب مع أضواء ملونة",
   },
   {
     image: "/assets/blog/korean-superstitions.jpg",
     kickerEn: "Folklore",
-    kickerAr: "ÙÙˆÙ„ÙƒÙ„ÙˆØ±",
+    kickerAr: "فولكلور",
     titleEn: "Korean Zodiac & Fortune-Telling",
-    titleAr: "Ø§Ù„Ø£Ø¨Ø±Ø§Ø¬ ÙˆØ§Ù„ØªÙ†Ø¬ÙŠÙ… Ø§Ù„ÙƒÙˆØ±ÙŠ",
-    blurbEn: "Saju, the 12 animal signs, and gunghap compatibility readings â€” still very much alive today.",
-    blurbAr: "Ø§Ù„Ø³Ø§Ø¬ÙˆØŒ ÙˆØ§Ù„Ø­ÙŠÙˆØ§Ù†Ø§Øª Ø§Ù„Ø§Ø«Ù†ÙŠ Ø¹Ø´Ø±ÙŠØ©ØŒ ÙˆÙ‚Ø±Ø§Ø¡Ø§Øª Ø§Ù„ØªÙˆØ§ÙÙ‚ â€” ØªÙ‚Ù„ÙŠØ¯ Ù…Ø§ Ø²Ø§Ù„ Ø­Ø§Ø¶Ø±Ù‹Ø§ Ø§Ù„ÙŠÙˆÙ….",
+    titleAr: "الأبراج والتنجيم الكوري",
+    blurbEn: "Saju, the 12 animal signs, and gunghap compatibility readings — still very much alive today.",
+    blurbAr: "الساجو، والحيوانات الاثني عشرية، وقراءات التوافق — تقليد ما زال حاضرًا اليوم.",
     slugEn: "korean-zodiac-fortune-telling-guide",
     slugAr: "korean-zodiac-fortune-telling-guide-ar",
     altEn: "Traditional Korean zodiac animal illustrations representing fortune telling",
-    altAr: "Ø±Ø³ÙˆÙ… Ø­ÙŠÙˆØ§Ù†Ø§Øª Ø§Ù„Ø£Ø¨Ø±Ø§Ø¬ Ø§Ù„ÙƒÙˆØ±ÙŠØ© Ø§Ù„ØªÙ‚Ù„ÙŠØ¯ÙŠØ© ØªØ±Ù…Ø² Ù„Ù„ØªÙ†Ø¬ÙŠÙ…",
+    altAr: "رسوم حيوانات الأبراج الكورية التقليدية ترمز للتنجيم",
   },
   {
     image: "/assets/blog/tteokbokki.jpg",
     kickerEn: "Street Food",
-    kickerAr: "Ø£ÙƒÙ„ Ø§Ù„Ø´Ø§Ø±Ø¹",
+    kickerAr: "أكل الشارع",
     titleEn: "A Taste of Korean Street Food",
-    titleAr: "Ø·Ø¹Ù… Ø£ÙƒÙ„ Ø§Ù„Ø´Ø§Ø±Ø¹ Ø§Ù„ÙƒÙˆØ±ÙŠ",
-    blurbEn: "From tteokbokki to hotteok â€” the dishes, the carts, and the words to order with confidence.",
-    blurbAr: "Ù…Ù† Ø§Ù„ØªÙˆÙƒØ¨ÙˆÙƒÙŠ Ø¥Ù„Ù‰ Ø§Ù„Ù‡ÙˆØªÙˆÙƒ: Ø§Ù„Ø£Ø·Ø¨Ø§Ù‚ ÙˆØ§Ù„Ù…ÙØ±Ø¯Ø§Øª Ø§Ù„Ù„ÙŠ ØªØ­ØªØ§Ø¬Ù‡Ø§ ØªØ·Ù„Ø¨ Ø¨Ø«Ù‚Ø©.",
+    titleAr: "طعم أكل الشارع الكوري",
+    blurbEn: "From tteokbokki to hotteok — the dishes, the carts, and the words to order with confidence.",
+    blurbAr: "من التوكبوكي إلى الهوتوك: الأطباق والمفردات اللي تحتاجها تطلب بثقة.",
     slugEn: "korean-street-food-guide",
     slugAr: "korean-street-food-guide-ar",
     altEn: "Korean street food stall with tteokbokki and skewers",
-    altAr: "Ø¹Ø±Ø¨Ø© Ø£ÙƒÙ„ Ø´Ø§Ø±Ø¹ ÙƒÙˆØ±ÙŠØ© ØªØ¹Ø±Ø¶ Ø§Ù„ØªÙˆÙƒØ¨ÙˆÙƒÙŠ ÙˆØ§Ù„Ø£Ø³ÙŠØ§Ø®",
+    altAr: "عربة أكل شارع كورية تعرض التوكبوكي والأسياخ",
   },
   {
     image: "/assets/blog/dokkaebi-goblin.jpg",
@@ -201,22 +201,22 @@ const CultureHeritageSection = () => {
         className="absolute -top-10 -right-10 select-none pointer-events-none font-ko-hand font-normal leading-none"
         style={{ fontSize: "clamp(140px, 22vw, 320px)", color: "rgba(255,255,0,0.03)" }}
       >
-        ë¬¸í™”
+        문화
       </span>
 
       <div className="container mx-auto px-4 relative">
         <div className="text-center mb-12 md:mb-16 space-y-4 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-ivory/10 border border-ivory/15 px-4 py-2 rounded-full text-sm font-medium text-ivory">
             <Landmark className="h-4 w-4 text-klovers-yellow" />
-            {isAr ? "Ø«Ù‚Ø§ÙØ© ÙˆØªØ§Ø±ÙŠØ®" : "Culture & History"}
+            {isAr ? "ثقافة وتاريخ" : "Culture & History"}
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-ivory tracking-tight leading-tight">
-            {isAr ? "Ù„ØºØ© ØªÙØªØ­ Ù„Ùƒ Ø«Ù‚Ø§ÙØ© ÙƒØ§Ù…Ù„Ø©" : "A Language Opens a Culture"}
+            {isAr ? "لغة تفتح لك ثقافة كاملة" : "A Language Opens a Culture"}
           </h2>
           <p className="text-ivory/70 text-base md:text-lg leading-relaxed">
             {isAr
-              ? "Ø§Ù„ÙƒÙˆØ±ÙŠØ© Ù…Ø´ Ù…Ø¬Ø±Ø¯ Ù‚ÙˆØ§Ø¹Ø¯ ÙˆÙ…ÙØ±Ø¯Ø§ØªØŒ Ù‡ÙŠ ØªØ§Ø±ÙŠØ® Ù…Ù…ØªØ¯ ÙˆØªÙ‚Ø§Ù„ÙŠØ¯ Ø­ÙŠØ© ÙˆØ«Ù‚Ø§ÙØ© Ø¨ÙŠØ­Ø¨Ù‡Ø§ Ù…Ù„Ø§ÙŠÙŠÙ† Ø­ÙˆÙ„ Ø§Ù„Ø¹Ø§Ù„Ù…. ÙƒÙ„ Ø¯Ø±Ø³ Ù‡Ù†Ø§ Ø¨ÙŠÙˆØµÙ‘Ù„Ùƒ Ø¨Ø­Ø§Ø¬Ø© Ø­Ù‚ÙŠÙ‚ÙŠØ©."
-              : "Korean isn't just grammar and vocabulary â€” it's centuries of history, living traditions, and a culture millions of people are falling for. Every lesson here touches something real."}
+              ? "الكورية مش مجرد قواعد ومفردات، هي تاريخ ممتد وتقاليد حية وثقافة بيحبها ملايين حول العالم. كل درس هنا بيوصّلك بحاجة حقيقية."
+              : "Korean isn't just grammar and vocabulary — it's centuries of history, living traditions, and a culture millions of people are falling for. Every lesson here touches something real."}
           </p>
         </div>
 
@@ -276,7 +276,7 @@ const CultureHeritageSection = () => {
             to="/blog"
             className="inline-flex items-center gap-2 text-ivory/80 hover:text-ivory text-sm font-semibold underline underline-offset-4 decoration-ivory/30 hover:decoration-ivory/60 transition-colors"
           >
-            {isAr ? "Ø§ÙƒØªØ´Ù Ø§Ù„Ù…Ø²ÙŠØ¯ Ø¹Ù† Ø«Ù‚Ø§ÙØ© ÙƒÙˆØ±ÙŠØ§" : "Discover more of Korean culture"}
+            {isAr ? "اكتشف المزيد عن ثقافة كوريا" : "Discover more of Korean culture"}
             <ArrowRight className="h-4 w-4 rtl:rotate-180" />
           </Link>
         </div>
