@@ -47,6 +47,36 @@ interface BundlePaymentFields {
 }
 
 /**
+ * "16 حصة", not "16 حصص".
+ *
+ * This letter used `n === 1 ? "حصة" : "حصص"` — the English rule wearing
+ * Arabic words — and so told Solafa she had "15 حصص" left. Arabic counts in
+ * bands, and the one that catches everybody is the last: from eleven up the
+ * noun goes back to the SINGULAR. A package of 16 is "16 حصة".
+ *
+ *   0        لا حصص
+ *   1        حصة واحدة
+ *   2        حصتان        (dual — not "2 حصة", which is not a thing)
+ *   3–10     ٣ حصص        (plural)
+ *   11+      ١٦ حصة       (singular again)
+ *
+ * The count itself carries no number for 0, 1 and 2, because Arabic does not
+ * say it: "حصة واحدة" already means one.
+ */
+function arClasses(n: number): string {
+  if (n === 0) return "لا حصص";
+  if (n === 1) return "حصة واحدة";
+  if (n === 2) return "حصتان";
+  if (n <= 10) return `${n} حصص`;
+  return `${n} حصة`;
+}
+
+/** The same idea in English, where one rule covers everything but 1. */
+function enClasses(n: number): string {
+  return `${n} class${n === 1 ? "" : "es"}`;
+}
+
+/**
  * "2026-09-18" -> "الجمعة 18 سبتمبر" / "Fri 18 Sep".
  *
  * Parsed as a plain date in UTC, never as a local instant: a session_date is a
@@ -96,14 +126,14 @@ export function buildPrivateBundlePaymentEmail(p: EmailPayload) {
       subject: "باقتك في Klovers — حصصك والمتبقي",
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحبًا ${p.name}،</h1>
-        <p>ده ملخص باقتك الحالية (${total} حصص):</p>
+        <p>ده ملخص باقتك الحالية (${arClasses(total)}):</p>
 
-        <p style="margin-bottom: 4px;"><strong>اللي اتعمل — ${done.length} ${done.length === 1 ? "حصة" : "حصص"}</strong></p>
+        <p style="margin-bottom: 4px;"><strong>اللي اتعمل — ${arClasses(done.length)}</strong></p>
         ${done.length
           ? `<ul style="margin-top: 0; padding-inline-start: 20px;">${listDays(done, true)}</ul>`
           : `<p style="color: ${BRAND_MUTED};">لسه مافيش حصص محسوبة.</p>`}
 
-        <p style="margin-bottom: 4px;"><strong>الباقي — ${remaining} ${remaining === 1 ? "حصة" : "حصص"}</strong></p>
+        <p style="margin-bottom: 4px;"><strong>الباقي — ${arClasses(remaining)}</strong></p>
 
         <p><strong>المبلغ:</strong> ${amount} ${currency} للباقة كاملة.</p>
 
@@ -126,14 +156,14 @@ export function buildPrivateBundlePaymentEmail(p: EmailPayload) {
     subject: "Your Klovers package — classes and balance",
     html: brandWrapper(`
       <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Hi ${p.name},</h1>
-      <p>Here is where your package stands (${total} classes):</p>
+      <p>Here is where your package stands (${enClasses(total)}):</p>
 
-      <p style="margin-bottom: 4px;"><strong>Taught — ${done.length} ${done.length === 1 ? "class" : "classes"}</strong></p>
+      <p style="margin-bottom: 4px;"><strong>Taught — ${enClasses(done.length)}</strong></p>
       ${done.length
         ? `<ul style="margin-top: 0; padding-inline-start: 20px;">${listDays(done, false)}</ul>`
         : `<p style="color: ${BRAND_MUTED};">No classes counted yet.</p>`}
 
-      <p style="margin-bottom: 4px;"><strong>Left — ${remaining} ${remaining === 1 ? "class" : "classes"}</strong></p>
+      <p style="margin-bottom: 4px;"><strong>Left — ${enClasses(remaining)}</strong></p>
 
       <p><strong>Amount:</strong> ${amount} ${currency} for the whole package.</p>
 
