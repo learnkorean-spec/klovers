@@ -96,9 +96,11 @@ Type, loaded in index.html:
        and not a borrowed brand colour.
          live          #0E7A4F  white on it 5.4:1, it on white 5.4:1
          live-surface  #BFF0D9  the calm "today, later" panel
-         live-bright   #39FF14  DARK GROUNDS ONLY — the hero sits on a charcoal
-                       scrim in both themes, where #0E7A4F would disappear.
-                       On a light surface this one measures 1.7:1. Never there.
+         live-bright   #39FF14  the neon. It is a FILL and an EDGE colour, not
+                       a text colour: Charcoal on it is 13.6:1, while the neon
+                       itself on a white card is 1.7:1. The hero chip, and the
+                       running group card's border, badges and buttons, carry
+                       it; text and icons never do in the light theme.
        Text on --live-surface is Charcoal, NEVER --live: #0E7A4F on #BFF0D9 is
        4.26:1 and fails small text. That is what --live-surface-foreground is
        for. */
@@ -109,9 +111,13 @@ Type, loaded in index.html:
     --live-bright: 110.6 100% 53.9%;
 
     /* DEPRECATED aliases — retired brand colours pointed at the live tokens so
-       the large admin screens keep rendering the sanctioned green. No new uses. */
+       the large admin screens keep rendering the sanctioned green. No new uses.
+       --mint-strong is the NEON here (Re, 22 Sep 2026: the deep green on the
+       running group card read as almost black). Every call site of it is a
+       background, a border or a ring; the one text/icon use is pinned back to
+       the deep green by the .text-mint-strong rule further down. */
     --mint: var(--live-surface);
-    --mint-strong: var(--live);
+    --mint-strong: var(--live-bright);
     --mint-foreground: var(--live-surface-foreground);
     --peach: 345 100% 89%;
     --peach-strong: 303.8 100% 53.7%;
@@ -229,9 +235,10 @@ Type, loaded in index.html:
     --live-surface-foreground: 44 36.6% 92%;
     --live-bright: 110.6 100% 53.9%;
 
-    /* DEPRECATED aliases — see the light block. */
+    /* DEPRECATED aliases — see the light block. Both greens are the neon here,
+       so nothing changes in the dark theme. */
     --mint: var(--live-surface);
-    --mint-strong: var(--live);
+    --mint-strong: var(--live-bright);
     --mint-foreground: var(--live-surface-foreground);
     --peach: 345 100% 89%;
     --peach-strong: 303.8 85% 48%;
@@ -290,6 +297,15 @@ Type, loaded in index.html:
   }
 }
 
+/* The neon is a fill and an edge, never a letter or an icon on a light card:
+   #39FF14 on white measures 1.7:1. --mint-strong points at it so the running
+   group card's border, badges and buttons light up, and this rule pins the
+   handful of TEXT uses back to the deep green (#0E7A4F, 5.4:1 on white). In
+   dark, --live is itself the neon, so the text turns neon there as before.
+   The doubled class only buys specificity over the generated utility. */
+.text-mint-strong.text-mint-strong {
+  color: hsl(var(--live));
+}
 
 /* Card on a yellow ground. Ivory on #FFFF00 is 1.02:1 by luminance, so the
    card is told apart by a hard Charcoal edge and an offset shadow (no blur).
