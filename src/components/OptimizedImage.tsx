@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { AlertCircle } from "lucide-react";
 
 const SRCSET_WIDTHS = [320, 480, 640, 828, 1080, 1200, 1920];
@@ -32,6 +32,12 @@ interface OptimizedImageProps {
   priority?: boolean;
   sizes?: string;
   quality?: number;
+  /**
+   * Rendered inside the reserved box instead of the emoji/"Image unavailable"
+   * placeholder when there is no usable src or the image fails to load.
+   * Same box, so no layout shift either way.
+   */
+  fallback?: ReactNode;
 }
 
 const DEFAULT_SIZES_HERO = "(max-width: 768px) 100vw, 720px";
@@ -49,6 +55,7 @@ const OptimizedImage = ({
   priority = false,
   sizes,
   quality = 75,
+  fallback,
 }: OptimizedImageProps) => {
   const [imgError, setImgError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,7 +93,9 @@ const OptimizedImage = ({
 
   const mediaBox = (
     <div className={`relative overflow-hidden w-full ${aspectClass} ${roundedClass} ${className}`}>
-      {showFallback ? (
+      {showFallback && fallback ? (
+        fallback
+      ) : showFallback ? (
         <div
           className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${
             effectiveIsHero ? "from-muted/60 to-muted/30 border border-border" : "from-muted/50 to-muted/20"
