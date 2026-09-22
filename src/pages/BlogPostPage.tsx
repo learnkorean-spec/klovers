@@ -16,6 +16,15 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { extractRelatedBlock } from "@/lib/markdownContent";
 import { buildFaqJsonLd } from "../../scripts/lib/faq-parser.mjs";
+import { extractArticleVocab, articleLevel } from "@/lib/articleVocab";
+import { stageForSlug } from "@/constants/blogJourney";
+import {
+  ArticleEndSentinel,
+  ArticleLearnedToday,
+  ArticleLearningIntro,
+  NextStop,
+  useMemoVocabComponents,
+} from "@/components/journal/ArticleJourney";
 
 interface BlogPost {
   id: string;
@@ -446,6 +455,13 @@ const BlogPostPage = () => {
   const cards = relatedPosts.slice(0, CARD_LIMIT);
   const extraLinks = relatedPosts.slice(CARD_LIMIT);
 
+  // Learning layer (Klovers Journal): read from the article's own vocabulary
+  // tables. Empty for articles that have none, and then nothing extra renders.
+  const vocab = useMemo(() => extractArticleVocab(post?.content), [post?.content]);
+  const mdComponents = useMemoVocabComponents(vocab, post?.slug ?? "", post?.lang === "ar");
+  // The first related card becomes "your next stop"; the rest stay a grid.
+  const [nextStop, ...nearbyCards] = cards;
+
   if (fetchError) {
     return (
       <div className="min-h-screen bg-background">
@@ -524,11 +540,11 @@ const BlogPostPage = () => {
               <li>
                 <Link to="/" className="hover:text-foreground transition-colors">{isAr ? "الرئيسية" : "Home"}</Link>
               </li>
-              <li><ChevronRight className="h-3.5 w-3.5" /></li>
+              <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" /></li>
               <li>
                 <Link to="/blog" className="hover:text-foreground transition-colors">{isAr ? "المدونة" : "Blog"}</Link>
               </li>
-              <li><ChevronRight className="h-3.5 w-3.5" /></li>
+              <li aria-hidden="true"><ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" /></li>
               <li className="text-foreground font-medium truncate max-w-[260px]" aria-current="page">
                 {post.title}
               </li>
@@ -572,6 +588,14 @@ const BlogPostPage = () => {
             )}
           </div>
 
+          <ArticleLearningIntro
+            vocabCount={vocab.length}
+            minutes={readingTime}
+            level={articleLevel(post.slug)}
+            stage={stageForSlug(post.slug)}
+            isAr={isRtl}
+          />
+
           {/* Hero Image 1 */}
           <OptimizedImage
             src={post.hero_image}
@@ -613,10 +637,13 @@ const BlogPostPage = () => {
             prose-table:w-full prose-th:bg-muted/60 prose-th:text-foreground prose-th:font-semibold prose-td:text-foreground/80 prose-td:border-border prose-th:border-border
             ${isRtl ? "text-right" : ""}
           `}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
               {articleMarkdown}
             </ReactMarkdown>
           </div>
+          <ArticleEndSentinel slug={post.slug} />
+
+          <ArticleLearnedToday vocab={vocab} slug={post.slug} isAr={isRtl} hasNextStop={Boolean(nextStop)} />
 
           {/* CTA block — custom if set, default otherwise.
               200+, not 500+: this fallback renders on every article that has no
@@ -701,18 +728,24 @@ const BlogPostPage = () => {
               article_type suggestions otherwise. Placed before the comments:
               a reader who has just finished the article is looking for what to
               read next before they are looking for a comment box. */}
-          {cards.length > 0 && (
+          {nextStop && (
             <div className="mt-14 pt-10 border-t border-border">
-              <h2 className="text-lg font-bold text-foreground mb-1">
+              {/* "Your next stop" replaces a bare "related articles" heading:
+                  the top pick (the curated block's first link when there is
+                  one) is framed as the next step of the journey. */}
+              <NextStop post={nextStop} isAr={isAr} fromSlug={post.slug} />
+              {nearbyCards.length > 0 && (
+              <>
+              <h2 className="text-lg font-bold text-foreground mb-1 mt-10">
                 {relatedIsCurated
-                  ? (isAr ? "اقرأ بعد كده" : "Read this next")
+                  ? (isAr ? "محطات قريبة" : "Nearby stops")
                   : (isAr ? "قد يعجبك أيضاً" : "You might also like")}
               </h2>
               <p className="text-sm text-muted-foreground mb-5">
                 {isAr ? "مقالات على نفس الموضوع" : "More on the same topic"}
               </p>
-              <div className="grid sm:grid-cols-3 gap-4">
-                {cards.map((rp) => (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {nearbyCards.map((rp) => (
                   <Link
                     key={rp.id}
                     to={`/blog/${rp.slug}`}
@@ -744,6 +777,8 @@ const BlogPostPage = () => {
                   </Link>
                 ))}
               </div>
+              </>
+              )}
 
               {extraLinks.length > 0 && (
                 <div className="mt-5 flex flex-wrap items-baseline gap-x-4 gap-y-2">

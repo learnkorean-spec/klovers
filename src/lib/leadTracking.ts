@@ -67,8 +67,14 @@ export type GameEventType =
  *
  * The rows are still written to lead_events â€” the signal is genuinely useful
  * for funnel analysis. What they are not is conversions.
+ *
+ * "blog_journey" added 23 Sep 2026 for the /blog journey (journey started,
+ * path chosen, stop viewed, word saved, quiz answered, next stop clicked…).
+ * The specific event rides in `cta_label`; see src/lib/journeyAnalytics.ts.
+ * Reading and quizzing are learning, not buying intent — no pixel, same as
+ * the culture tiles.
  */
-export type EngagementEventType = "homepage" | "culture_section";
+export type EngagementEventType = "homepage" | "culture_section" | "blog_journey";
 
 interface EventOpts<T extends string> {
   source_type: T;

@@ -1,95 +1,96 @@
-import { useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
-import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import FinalCTA from "@/components/FinalCTA";
-import OptimizedImage from "@/components/OptimizedImage";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, User, ArrowRight, Clock, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  DRAMA_LINES,
+  FEATURED_PREFERENCE,
+  QUIZ,
+  SPEAK_PHRASES,
+  UNTRANSLATABLE,
+  stageForSlug,
+  type StageId,
+} from "@/constants/blogJourney";
+import { baseSlug } from "@/lib/articleVocab";
+import JournalHero from "@/components/journal/JournalHero";
+import MyJourney from "@/components/journal/MyJourney";
+import JourneyStage from "@/components/journal/JourneyStage";
+import { WordStories, DramaLines, SpeakPhrases, EraStrip } from "@/components/journal/StageBlocks";
+import MiniQuiz from "@/components/journal/MiniQuiz";
+import AllArticles, { type ArticleFilter } from "@/components/journal/AllArticles";
+import JourneyMilestone from "@/components/journal/JourneyMilestone";
+import { ArticleCard, Reveal, type JournalPost } from "@/components/journal/shared";
 
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  description: string;
-  keywords: string[];
-  article_type: string;
-  hero_image: string;
-  hero_alt: string;
-  author: string;
-  lang: string;
-  published_at: string | null;
-  created_at: string;
-  seo_score: number | null;
-}
+/**
+ * /blog — the Klovers Journal.
+ *
+ * Same data as before (published blog_posts in the reader's language, one
+ * query), laid out as a journey: hero + featured story → My Korea journey →
+ * six numbered stops → the full library → FinalCTA. The journey is a
+ * discovery layer on top of the library, never a replacement for it: every
+ * article is still one search or one filter away in "The journey library".
+ *
+ * SEO is unchanged in kind: the canonical, the BreadcrumbList, and the
+ * prerendered crawlable article list (scripts/prerender-meta.mjs writes it
+ * into #root; createRoot replaces it on mount) all still apply.
+ */
 
-const TYPE_LABEL: Record<string, string> = {
-  howto: "How-To",
-  listicle: "Listicle",
-  longform: "Article",
-  news: "News",
-  review: "Review",
-};
+const COLUMNS =
+  "id, title, slug, description, keywords, article_type, hero_image, hero_alt, lang, published_at, created_at, featured";
 
-const TYPE_COLOR: Record<string, string> = {
-  howto: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
-  listicle: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
-  longform: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800",
-  news: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
-  review: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
-};
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 const BlogPage = () => {
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+
   useSEO({
-    title: "Korean Language Blog",
-    description: "Explore Klovers blog for Korean language tips, culture insights, grammar guides, and study resources.",
+    title: isAr ? "مجلة Klovers: اكتشف كوريا وتعلّم الكورية" : "Klovers Journal: Discover Korea, Learn Korean",
+    description: isAr
+      ? "مقالات وكلمات وقصص وتجارب عن كوريا واللغة الكورية بالعربي — رحلة من ست محطات مع Klovers."
+      : "Articles, words, stories and experiences about Korea and the Korean language — a six-stop journey with Klovers.",
     canonical: "https://kloversegy.com/blog",
   });
 
-  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [posts, setPosts] = useState<JournalPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [activeType, setActiveType] = useState<string | null>(null);
-  const { language } = useLanguage();
-
-  const typeOptions = useMemo(() => {
-    const seen = new Set<string>();
-    posts.forEach(p => { if (p.article_type) seen.add(p.article_type.toLowerCase()); });
-    return Array.from(seen);
-  }, [posts]);
-
-  const filteredPosts = useMemo(() =>
-    activeType ? posts.filter(p => p.article_type?.toLowerCase() === activeType) : posts,
-  [posts, activeType]);
+  const [filter, setFilter] = useState<ArticleFilter>("all");
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
       const { data, error } = await supabase
         .from("blog_posts")
-        .select("id, title, slug, description, keywords, article_type, hero_image, hero_alt, author, lang, published_at, created_at, seo_score")
+        .select(COLUMNS)
         .eq("published", true)
         .eq("lang", language)
-        .order("seo_score", { ascending: false, nullsFirst: false })
         .order("published_at", { ascending: false })
-        .limit(60);
+        .limit(300);
+      if (cancelled) return;
       if (error) {
         setFetchError(error.message);
-        setLoading(false);
-        return;
+      } else {
+        setFetchError(null);
+        setPosts((data as JournalPost[]) || []);
       }
-      setPosts((data as BlogPost[]) || []);
       setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
     };
-    fetchPosts();
   }, [language]);
 
-  // BreadcrumbList JSON-LD for the listing page
+  // BreadcrumbList JSON-LD for the listing page (unchanged).
   useEffect(() => {
     const el = document.createElement("script");
     el.id = "blog-list-jsonld";
@@ -103,179 +104,197 @@ const BlogPage = () => {
       ],
     });
     document.head.appendChild(el);
-    return () => { el.remove(); };
+    return () => {
+      el.remove();
+    };
   }, []);
+
+  const bySlugBase = useMemo(() => new Map(posts.map((p) => [baseSlug(p.slug), p])), [posts]);
+  const resolve = useCallback((base: string) => bySlugBase.get(base)?.slug ?? null, [bySlugBase]);
+
+  const featured = useMemo(() => {
+    for (const b of FEATURED_PREFERENCE) {
+      const p = bySlugBase.get(b);
+      if (p) return p;
+    }
+    return posts.find((p) => p.featured) ?? posts[0] ?? null;
+  }, [posts, bySlugBase]);
+
+  const byStage = useMemo(() => {
+    const m: Record<StageId, JournalPost[]> = { discover: [], understand: [], experience: [], drama: [], speak: [], test: [] };
+    posts.forEach((p) => m[stageForSlug(p.slug)].push(p));
+    return m;
+  }, [posts]);
+  const pick = (id: StageId, n: number) => byStage[id].filter((p) => p.id !== featured?.id).slice(0, n);
+
+  const scrollToId = useCallback((elId: string) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+    // Move focus with the view, so keyboard and screen-reader users land there too.
+    const heading = el.querySelector<HTMLElement>("h2");
+    if (heading) {
+      heading.setAttribute("tabindex", "-1");
+      heading.focus({ preventScroll: true });
+    }
+  }, []);
+  const goToStage = useCallback((id: StageId) => scrollToId(`stage-${id}`), [scrollToId]);
+  const seeAll = useCallback(
+    (id: StageId) => {
+      setFilter(id);
+      scrollToId("all-articles");
+    },
+    [scrollToId],
+  );
+
+  // Deep links from articles ("/blog#stage-test") land on their stop once the
+  // posts, and so the stage content, are on the page.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (loading || !hash) return;
+    const id = decodeURIComponent(hash.slice(1));
+    if (!/^(stage-[a-z]+|all-articles|my-journey)$/.test(id)) return;
+    const t = window.setTimeout(() => scrollToId(id), 50);
+    return () => window.clearTimeout(t);
+  }, [loading, hash, scrollToId]);
+
+  const discover = pick("discover", 5);
+  const understand = pick("understand", 3);
+  const experience = pick("experience", 4);
+  const drama = pick("drama", 3);
+  const speak = pick("speak", 3);
+  const study = pick("test", 3);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main id="main-content" className="pt-24 pb-16">
-        <div className="container mx-auto px-4 max-w-6xl">
-
-          {/* Page header */}
-          <div className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4 text-sm px-3 py-1">
-              {language === "ar" ? "📝 المدونة" : "📝 Blog"}
-            </Badge>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
-              {language === "ar" ? "مدونة Klovers" : "Klovers Blog"}
-            </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
-              {language === "ar"
-                ? "نصائح وأدلة ورؤى لرحلتك في تعلم اللغة الكورية."
-                : "Tips, guides, and insights for your Korean learning journey."}
-            </p>
+      <main id="main-content">
+        {fetchError ? (
+          <div className="flex flex-col items-center justify-center space-y-4 px-4 pb-20 pt-32 text-center">
+            <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden="true" />
+            <h1 className="font-semibold text-foreground">{isAr ? "تعذّر تحميل المقالات" : "Couldn't load articles"}</h1>
+            <p className="max-w-xs text-sm text-muted-foreground">{fetchError}</p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              {isAr ? "حاول مرة أخرى" : "Try again"}
+            </Button>
           </div>
+        ) : (
+          <>
+            <JournalHero
+              isAr={isAr}
+              featured={featured}
+              totalPosts={posts.length}
+              loading={loading}
+              onStart={() => goToStage("discover")}
+              onBrowse={() => scrollToId("all-articles")}
+            />
 
-          {/* Type filter pills + count */}
-          {!loading && posts.length > 0 && (
-            <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-              <Button
-                size="sm"
-                variant={activeType === null ? "default" : "outline"}
-                onClick={() => setActiveType(null)}
-              >
-                All <span className="ml-1.5 text-xs opacity-70">({posts.length})</span>
-              </Button>
-              {typeOptions.map(type => (
-                <Button
-                  key={type}
-                  size="sm"
-                  variant={activeType === type ? "default" : "outline"}
-                  onClick={() => setActiveType(type)}
-                  className={activeType !== type ? (TYPE_COLOR[type] ? `border ${TYPE_COLOR[type].split(" ")[2]} hover:opacity-80` : "") : ""}
-                >
-                  <span className={activeType !== type ? TYPE_COLOR[type]?.split(" ").slice(0, 2).join(" ") : ""}>
-                    {TYPE_LABEL[type] || type}
-                  </span>
-                  <span className="ml-1.5 text-xs opacity-70">({posts.filter(p => p.article_type?.toLowerCase() === type).length})</span>
-                </Button>
-              ))}
-            </div>
-          )}
+            <MyJourney isAr={isAr} posts={posts} onGoToStage={goToStage} />
 
-          {/* Error state */}
-          {fetchError && (
-            <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
-              <AlertTriangle className="h-10 w-10 text-destructive" />
-              <h2 className="font-semibold text-foreground">
-                {language === "ar" ? "تعذّر تحميل المقالات" : "Couldn't load articles"}
-              </h2>
-              <p className="text-sm text-muted-foreground max-w-xs">{fetchError}</p>
-              <Button onClick={() => window.location.reload()} variant="outline">
-                {language === "ar" ? "حاول مرة أخرى" : "Try again"}
-              </Button>
-            </div>
-          )}
-
-          {/* Card grid */}
-          {!fetchError && loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="rounded-2xl border border-border overflow-hidden">
-                  <Skeleton className="aspect-video w-full" />
-                  <div className="p-5 space-y-3">
-                    <Skeleton className="h-4 w-20 rounded-full" />
-                    <Skeleton className="h-6 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </div>
+            {/* 01 · Discover — photo mosaic: one lead, four compact. */}
+            <JourneyStage id="discover" isAr={isAr} count={byStage.discover.length} onSeeAll={seeAll}>
+              {discover.length > 0 && (
+                <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
+                  <Reveal>
+                    <ArticleCard post={discover[0]} isAr={isAr} />
+                  </Reveal>
+                  <ul className="grid content-start gap-2">
+                    {discover.slice(1).map((p, i) => (
+                      <li key={p.id}>
+                        <Reveal delay={i * 60}>
+                          <ArticleCard post={p} variant="compact" isAr={isAr} />
+                        </Reveal>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
-            </div>
-          ) : filteredPosts.length === 0 ? (
-            <p className="text-center text-muted-foreground py-16 text-lg">
-              {posts.length === 0
-                ? (language === "ar" ? "لا توجد مقالات منشورة بعد. تحقق قريباً!" : "No articles published yet. Check back soon!")
-                : "No articles in this category."}
-            </p>
-          ) : (
-            <ol className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" role="list">
-              {filteredPosts.map((post, idx) => {
-                const readingTime = Math.max(1, Math.ceil((post.description?.split(/\s+/).length || 0) * 8 / 200));
-                return (
-                <li key={post.id} role="listitem">
-                  <Link to={`/blog/${post.slug}`} className="group block h-full">
-                    <article className="h-full rounded-2xl border border-border bg-card overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 flex flex-col">
+              )}
+              <EraStrip isAr={isAr} />
+            </JourneyStage>
 
-                      {/* Thumbnail */}
-                      <div className="aspect-video overflow-hidden bg-muted group-hover:bg-muted/80 transition-colors">
-                        <OptimizedImage
-                          src={post.hero_image}
-                          alt={post.hero_alt || post.title}
-                          variant="card"
-                          priority={idx < 3}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      </div>
+            {/* 02 · Understand — the untranslatable words, on Charcoal. */}
+            <JourneyStage id="understand" isAr={isAr} tone="dark" count={byStage.understand.length} onSeeAll={seeAll}>
+              <WordStories words={UNTRANSLATABLE} isAr={isAr} resolve={resolve} />
+              {understand.length > 0 && (
+                <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {understand.map((p) => (
+                    <li key={p.id}>
+                      <ArticleCard post={p} isAr={isAr} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </JourneyStage>
 
-                      <div className="p-5 flex flex-col flex-1">
-                        {/* Type badge + attraction badges */}
-                        <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${TYPE_COLOR[post.article_type] || "bg-muted text-muted-foreground border-border"}`}>
-                            {TYPE_LABEL[post.article_type] || post.article_type}
-                          </span>
-                          {idx === 0 && (
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-                              ⭐ {language === "ar" ? "مميز" : "Featured"}
-                            </span>
-                          )}
-                          {(post.seo_priority ?? 0) >= 88 && idx > 0 && (
-                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
-                              ✨ {language === "ar" ? "موصى به" : "Top Pick"}
-                            </span>
-                          )}
-                        </div>
+            {/* 03 · Experience — postcards from an ordinary day. */}
+            <JourneyStage id="experience" isAr={isAr} count={byStage.experience.length} onSeeAll={seeAll}>
+              {experience.length > 0 && (
+                <ul className="grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-4">
+                  {experience.map((p, i) => (
+                    <li key={p.id} className={i % 2 ? "lg:mt-10" : ""}>
+                      <Reveal delay={i * 60}>
+                        <ArticleCard post={p} variant="postcard" isAr={isAr} />
+                      </Reveal>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </JourneyStage>
 
-                        {/* Title */}
-                        <h2 className="text-lg font-bold text-foreground line-clamp-2 leading-snug mb-2">
-                          {post.title}
-                        </h2>
+            {/* 04 · Drama — scenes with subtitles, on Charcoal. */}
+            <JourneyStage id="drama" isAr={isAr} tone="dark" count={byStage.drama.length} onSeeAll={seeAll}>
+              <DramaLines lines={DRAMA_LINES} isAr={isAr} resolve={resolve} />
+              {drama.length > 0 && (
+                <ul className="mt-8 grid gap-2 rounded-3xl bg-card p-2 md:grid-cols-3">
+                  {drama.map((p) => (
+                    <li key={p.id}>
+                      <ArticleCard post={p} variant="compact" isAr={isAr} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </JourneyStage>
 
-                        {/* Description */}
-                        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed flex-1 mb-4">
-                          {post.description}
-                        </p>
+            {/* 05 · Speak — a conversation. */}
+            <JourneyStage id="speak" isAr={isAr} tone="muted" count={byStage.speak.length} onSeeAll={seeAll}>
+              <SpeakPhrases phrases={SPEAK_PHRASES} isAr={isAr} resolve={resolve} />
+              {speak.length > 0 && (
+                <ul className="mt-8 grid gap-2 rounded-3xl border border-border bg-background p-2 md:grid-cols-3">
+                  {speak.map((p) => (
+                    <li key={p.id}>
+                      <ArticleCard post={p} variant="compact" isAr={isAr} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </JourneyStage>
 
-                        {/* Footer: author / date / reading time */}
-                        <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-3 mt-auto flex-wrap gap-1">
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {post.author}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {readingTime} min
-                            </span>
-                            <time
-                              dateTime={post.published_at || post.created_at}
-                              className="flex items-center gap-1"
-                            >
-                              <CalendarDays className="h-3 w-3" />
-                              {new Date(post.published_at || post.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-                            </time>
-                          </div>
-                        </div>
+            {/* 06 · Test yourself — the quiz, with study guides beside it. */}
+            <JourneyStage id="test" isAr={isAr} count={byStage.test.length} onSeeAll={seeAll}>
+              <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+                <MiniQuiz questions={QUIZ} isAr={isAr} />
+                {study.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-sm font-bold text-charcoal/70">{isAr ? "استعد للخطوة التالية" : "Ready for the next step"}</h3>
+                    <ul className="grid gap-2">
+                      {study.map((p) => (
+                        <li key={p.id}>
+                          <ArticleCard post={p} variant="compact" isAr={isAr} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </JourneyStage>
 
-                        {/* Read more */}
-                        <div className="flex items-center gap-1 text-primary text-outlined text-sm font-semibold mt-3 group-hover:gap-2 transition-all">
-                          {language === "ar" ? "اقرأ المزيد" : "Read article"}
-                          <ArrowRight className="h-4 w-4" />
-                        </div>
-                      </div>
-                    </article>
-                  </Link>
-                </li>
-                );
-              })}
-            </ol>
-          )}
-        </div>
+            <AllArticles posts={posts} loading={loading} isAr={isAr} filter={filter} onFilter={setFilter} />
 
-        <div className="mt-20">
-          <FinalCTA />
-        </div>
+            <JourneyMilestone isAr={isAr} onGoToStage={goToStage} />
+
+            <FinalCTA />
+          </>
+        )}
       </main>
       <Footer />
       <ScrollToTop />
