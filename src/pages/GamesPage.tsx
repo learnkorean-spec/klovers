@@ -16,12 +16,13 @@ import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation, PerfectScoreOverlay } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, Trophy, Zap, Flame, Lock, X } from "lucide-react";
+import { Trophy, Lock, X } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
 import { logGameEvent } from "@/lib/leadTracking";
 import GameIcon from "@/components/GameIcon";
+import GameWorldsHub from "@/components/games/GameWorldsHub";
 // The two brand characters, inlined. See src/assets/characters.ts for why
 // they are data URIs and why they are busts rather than full-body poses.
 import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
@@ -396,66 +397,24 @@ const GamesPage = () => {
     <div className="min-h-screen">
       <Header />
       <main id="main-content" className="pt-20">
-        {/* Hero */}
-        <section className="relative overflow-hidden py-16 px-4 bg-muted/30">
-          <div className="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full translate-x-1/3 -translate-y-1/3" />
-          <div className="absolute bottom-0 left-0 w-60 h-60 bg-primary/5 rounded-full -translate-x-1/3 translate-y-1/3" />
-          <div className="absolute top-1/2 left-1/3 w-3 h-3 bg-primary/20 rounded-full animate-pulse" />
-          <div className="absolute top-1/4 right-1/4 w-4 h-4 bg-primary/15 rounded-full animate-pulse delay-500" />
-          <div className="absolute bottom-1/3 right-1/3 w-2 h-2 bg-primary/25 rounded-full animate-pulse delay-300" />
-
-          <div className="max-w-4xl mx-auto text-center relative z-10 space-y-4">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-foreground border border-border px-4 py-2 rounded-full text-sm font-medium">
-              <Gamepad2 className="h-4 w-4" />
-              {t("games.learnPlay")}
-            </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground">
-              {t("games.title")}
-            </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-base md:text-lg">
-              {t("games.subtitle").replace("{count}", String(games.length))}
-            </p>
-
-            <div className="flex justify-center gap-4 pt-2" aria-hidden="true">
-              {["가", "나", "다", "라", "마"].map((ch, i) => (
-                <span key={ch} className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-card border border-border shadow-sm text-xl font-bold text-foreground animate-bounce select-none"
-                  style={{ animationDelay: `${i * 200}ms`, animationDuration: "2.5s" }}>{ch}</span>
-              ))}
-            </div>
-
-            {/* Guest banner */}
-            {!isLoggedIn && (
-              <div className="inline-flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 text-sm text-muted-foreground shadow-sm">
-                <span>{isAr ? `🎮 ${FREE_GAME_IDS.length} ألعاب مجانية · ` : `🎮 ${FREE_GAME_IDS.length} free games · `}</span>
-                <a href="/signup" className="text-amber-700 font-semibold hover:underline">{isAr ? `سجّل لفتح جميع الألعاب الـ ${games.length}` : `Sign up to unlock all ${games.length} games`}</a>
-              </div>
-            )}
-
-            {/* Live user stats strip */}
-            {isLoggedIn && progress.totalXp > 0 && (
-              <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
-                <div className="inline-flex items-center gap-1.5 bg-card border border-border rounded-full px-3 py-1 text-xs font-medium text-foreground shadow-sm">
-                  <span>{league.emoji}</span>
-                  <span>{league.name}</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-full px-3 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-200 ring-1 ring-black/10">
-                  <Zap className="h-3.5 w-3.5" />
-                  <span>{progress.totalXp.toLocaleString()} XP</span>
-                </div>
-                {progress.streak.current_streak > 0 && (
-                  <div className="inline-flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-full px-3 py-1 text-xs font-medium text-orange-700 dark:text-orange-200">
-                    <Flame className="h-3.5 w-3.5" />
-                    <span>{progress.streak.current_streak} {isAr ? "يوم متتالي" : "day streak"}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+        {/* Game Worlds hub — hero, journey, worlds, Cluby teaser. */}
+        <section className="pt-8 pb-4">
+          <GameWorldsHub
+            title={t("games.title")}
+            isLoggedIn={isLoggedIn}
+            isAr={isAr}
+            totalXp={progress.totalXp}
+            streak={progress.streak.current_streak}
+            onPlay={selectGame}
+          />
         </section>
 
         {/* Game selector */}
         <section className="py-10 px-4">
           <div className="max-w-5xl mx-auto">
+            <h2 className="text-lg font-bold text-foreground mb-4">
+              {isAr ? `كل الألعاب (${games.length})` : `All games (${games.length})`}
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
               {games.map((game) => {
                 const isActive = activeGame === game.id;
