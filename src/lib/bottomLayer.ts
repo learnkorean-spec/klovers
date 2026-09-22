@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 
 /**
  * One bottom-anchored overlay at a time.
@@ -18,10 +18,10 @@ import { useEffect, useState } from "react";
  * intended maximum: WhatsApp, plus whichever of these wins.
  *
  * Priority is the array below, highest first:
- *   1. exitNudge     - the visitor is leaving; this is the last ask.
- *   2. stickyBar     - the standing ask while they read.
- *   3. installPrompt - useful, but it is not why anyone came to the page.
- *   4. interviewChip - a feature promo, and the one to sacrifice.
+ * 1. exitNudge - the visitor is leaving; this is the last ask.
+ * 2. stickyBar - the standing ask while they read.
+ * 3. installPrompt - useful, but it is not why anyone came to the page.
+ * 4. interviewChip - a feature promo, and the one to sacrifice.
  *
  * In practice the chip now appears only once the enrol bar has been
  * dismissed. That is the intended trade, not an oversight: if the chip should
@@ -58,8 +58,8 @@ const notify = () => listeners.forEach((l) => l());
  *
  * Call it unconditionally, like any hook, and gate the render on the result:
  *
- *   const allowed = useBottomSlot("stickyBar", visible && !dismissed);
- *   if (!allowed) return null;
+ * const allowed = useBottomSlot("stickyBar", visible && !dismissed);
+ * if (!allowed) return null;
  */
 export const useBottomSlot = (slot: BottomSlot, wantsToShow: boolean): boolean => {
   const [active, setActive] = useState<BottomSlot | null>(winner);
@@ -88,4 +88,32 @@ export const useBottomSlot = (slot: BottomSlot, wantsToShow: boolean): boolean =
   }, [slot, wantsToShow]);
 
   return wantsToShow && active === slot;
+};
+
+/**
+ * True whenever ANY bottom slot currently holds the floor, regardless of
+ * which one. For consumers that are not themselves one of the four slots but
+ * still need to react to "something is pinned to the bottom of the screen
+ * right now" â€” e.g. HeroSection's proof strip, which is positioned relative
+ * to the hero section rather than the viewport and so has no way to detect a
+ * fixed, viewport-pinned overlay like HomeExitNudge without this.
+ *
+ * Added 22 Sep 2026 after exactly that: on a short viewport where the hero
+ * still fills the screen, HomeExitNudge (fixed bottom-0 of the viewport)
+ * painted straight over the hero's stats strip (absolute bottom-0 of the
+ * section) â€” the two had no way to know about each other.
+ */
+export const useAnyBottomSlotActive = (): boolean => {
+  const [active, setActive] = useState<boolean>(() => winner() !== null);
+
+  useEffect(() => {
+    const listener = () => setActive(winner() !== null);
+    listeners.add(listener);
+    listener();
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+
+  return active;
 };

@@ -1,4 +1,4 @@
-// Unified lead-event logger. Persists every interest signal to lead_events
+﻿// Unified lead-event logger. Persists every interest signal to lead_events
 // and mirrors to Meta Pixel / GA4 via the existing `track` helper.
 import { supabase } from "@/integrations/supabase/client";
 import { getSessionId, getAttribution } from "@/lib/leadSession";
@@ -29,14 +29,14 @@ export type LeadSource =
  *
  * Deliberately a SEPARATE type from LeadSource, and it must stay separate.
  * `logLeadEvent` mirrors every call to the Meta Pixel as a `Lead` conversion
- * and to GA4 as `generate_lead` — both live, both feeding ad optimisation
+ * and to GA4 as `generate_lead` â€” both live, both feeding ad optimisation
  * that real money is spent against. Game events fire orders of magnitude
  * more often than a trial signup: routing them through `logLeadEvent` would
  * inject hundreds of fake conversions and corrupt that data silently.
  *
  * Use `logGameEvent` below, which never touches a pixel. The type split is
  * what makes the mistake impossible to write rather than merely discouraged
- * — `logLeadEvent({ source_type: "game_opened" })` does not compile.
+ * â€” `logLeadEvent({ source_type: "game_opened" })` does not compile.
  */
 export type GameEventType =
   | "games_page_view"
@@ -45,9 +45,10 @@ export type GameEventType =
   | "game_completed";
 
 /**
- * Automatic engagement signals — things that happen TO a visitor rather than
+ * Automatic engagement signals â€” things that happen TO a visitor rather than
  * things they choose to do. Scroll depth, a section entering the viewport, a
- * modal appearing.
+ * modal appearing, or a low-intent content click (browsing a culture tile is
+ * curiosity, not the same signal as booking a trial).
  *
  * These were going through `logLeadEvent`, which is the same mistake the
  * GameEventType note above exists to prevent, and it was live on the busiest
@@ -57,10 +58,17 @@ export type GameEventType =
  * Measured in GA4 Realtime on 18 Sep 2026: 11 `generate_lead` against 6
  * `page_view`, from one session that clicked nothing at all.
  *
- * The rows are still written to lead_events — the signal is genuinely useful
+ * "culture_section" added 22 Sep 2026: CultureHeritageSection.tsx's tile
+ * clicks were calling `logLeadEvent({ source_type: "culture_section" })`,
+ * which (a) doesn't compile against the LeadSource union above and (b) at
+ * blog-tile click volume would dilute real ad-optimisation data the same
+ * way the scroll milestones did. Browsing a culture blog post is genuine
+ * interest, not the same intent signal as booking a trial.
+ *
+ * The rows are still written to lead_events â€” the signal is genuinely useful
  * for funnel analysis. What they are not is conversions.
  */
-export type EngagementEventType = "homepage";
+export type EngagementEventType = "homepage" | "culture_section";
 
 interface EventOpts<T extends string> {
   source_type: T;
@@ -71,7 +79,7 @@ interface EventOpts<T extends string> {
 type LogOpts = EventOpts<LeadSource>;
 
 /**
- * Build the row and insert it. Pixel-free by construction — every mirror to
+ * Build the row and insert it. Pixel-free by construction â€” every mirror to
  * an external analytics product lives in the caller, so that adding one is a
  * visible edit at a call site rather than an invisible side effect here.
  */
@@ -98,19 +106,19 @@ async function insertEventRow(opts: EventOpts<string>): Promise<void> {
   await supabase.from("lead_events").insert(row);
 }
 
-/** Insert a row into lead_events. Never throws — tracking must not break user flow. */
+/** Insert a row into lead_events. Never throws â€” tracking must not break user flow. */
 export async function logLeadEvent(opts: LogOpts): Promise<void> {
   try {
     // Mirror to Meta Pixel / GA4 (existing infra).
     track.lead({ content_name: opts.source_type });
     await insertEventRow(opts);
   } catch {
-    /* swallow — never block UI */
+    /* swallow â€” never block UI */
   }
 }
 
 /**
- * G0c game telemetry. Writes to lead_events and fires NO pixel of any kind —
+ * G0c game telemetry. Writes to lead_events and fires NO pixel of any kind â€”
  * not `fbq`, not `gtag`. See the GameEventType note above for why that is a
  * correctness requirement and not a preference. Guarded by
  * `leadTracking.pixel.test.ts`.
@@ -119,12 +127,12 @@ export async function logGameEvent(opts: EventOpts<GameEventType>): Promise<void
   try {
     await insertEventRow(opts);
   } catch {
-    /* swallow — never block UI */
+    /* swallow â€” never block UI */
   }
 }
 
 /**
- * Automatic engagement signals. Writes to lead_events and fires NO pixel —
+ * Automatic engagement signals. Writes to lead_events and fires NO pixel â€”
  * same guarantee as logGameEvent, for the same reason. See
  * EngagementEventType above.
  */
@@ -132,7 +140,7 @@ export async function logEngagementEvent(opts: EventOpts<EngagementEventType>): 
   try {
     await insertEventRow(opts);
   } catch {
-    /* swallow — never block UI */
+    /* swallow â€” never block UI */
   }
 }
 
