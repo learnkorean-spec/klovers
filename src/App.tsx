@@ -34,6 +34,7 @@ const AdminToday = lazy(() => import("./pages/AdminToday"));
 const AdminWeek = lazy(() => import("./pages/AdminWeek"));
 const AdminEmail = lazy(() => import("./pages/AdminEmail"));
 const AdminActivity = lazy(() => import("./pages/AdminActivity"));
+const AdminTrials = lazy(() => import("./pages/AdminTrials"));
 const AdminMessage = lazy(() => import("./pages/AdminMessage"));
 const SignUpPage = lazy(() => import("./pages/SignUpPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -243,6 +244,11 @@ const App = () => (
                     route for the same reason Today and The week are — it is not
                     a screen inside AdminDashboard.tsx. */}
                 <Route path="/admin/activity" element={<ProtectedRoute><AdminActivity /></ProtectedRoute>} />
+                {/* The trial sessions, answering only the three questions Re
+                    asks of them: who is coming, accept the new ones, find one
+                    person. Its own route for the same reason as the rest — and
+                    so it keeps working when the 89 KB dashboard page does not. */}
+                <Route path="/admin/trials" element={<ProtectedRoute><AdminTrials /></ProtectedRoute>} />
                 {/* Free text to one student, from the Klovers address. A route
                     of its own for the same reason as the three above. */}
                 <Route path="/admin/message" element={<ProtectedRoute><AdminMessage /></ProtectedRoute>} />
