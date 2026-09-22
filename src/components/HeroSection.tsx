@@ -18,10 +18,15 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  *
  * 1. THE COVER. Photo/video wall, giant centred headline, proof strip pinned
  *    to the bottom. Repainted on the board - Charcoal #2E2E2E ground and
- *    scrims instead of pure black, Ivory #FFF9EC text instead of pure white,
- *    neon green on the live-class chip and the slot pills. The headline's second
- *    line stays Klovers Yellow: yellow as TYPE is endorsed on a dark ground
- *    and ruled out only on a light one.
+ *    scrims instead of pure black, Ivory #FFF9EC text instead of pure white.
+ *    The next-class chip and the slot pills carry live-bright, the "happening
+ *    now" status colour for dark grounds. The headline's second line stays
+ *    Klovers Yellow: yellow as TYPE is endorsed on a dark ground and ruled out
+ *    only on a light one.
+ *
+ *    NOTE this section is dark in BOTH themes - it is a photo under a charcoal
+ *    scrim, not a themed surface. That is why it uses live-bright and the
+ *    ivory/charcoal literals rather than the theme's foreground tokens.
  *
  * 2. THE CARD ROW. On the board these sit at the foot of the hero, half on
  *    the image. They lift 48px on phones and 80px from sm up to do the same
@@ -111,9 +116,10 @@ const HeroSection = () => {
   /**
    * The board's four promise cards.
    *
-   * The board alternated Mint / white / Peach / Mint. Pale Mint is retired as a
-   * surface and pink is a rare accent, so the row alternates Yellow and white. The rhythm is what
-   * the board was after; the third colour was not carrying meaning.
+   * The board alternated Mint / white / Peach / Mint. The brand is three
+   * colours now — Yellow, Charcoal, Ivory — so the row alternates Yellow and
+   * white. The rhythm is what the board was after; the extra colours were not
+   * carrying meaning.
    */
   const cards = [
     {
@@ -210,7 +216,7 @@ const HeroSection = () => {
           한국어
         </span>
 
-        {/* ── Hero text content ────────────────────────────── */}
+        {/* ── Hero text content ───────────────────────────── */}
         {/* pb-44 is tuned for typical phone/desktop heights. On short
             viewports (iPad landscape, most laptops with a shallow browser
             window) the section's min-height doesn't leave enough room below
@@ -245,12 +251,13 @@ const HeroSection = () => {
             </div>
 
             {/* Next-class chip — rendered only when there is a real class to
-                name; neon green is the "live" tone on this dark ground. */}
+                name. live-bright is the "happening now" status colour for dark
+                grounds; the light-theme --live would vanish against this scrim. */}
             {nextDay && (
-              <div className="inline-flex items-center gap-2 bg-mint-strong/15 border border-mint-strong/50 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-mint-strong">
+              <div className="inline-flex items-center gap-2 bg-live-bright/15 border border-live-bright/50 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs font-semibold text-live-bright">
                 <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint-strong opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-mint-strong" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-bright opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-live-bright" />
                 </span>
                 {isAr
                   ? `الحصة التالية: ${nextDay.ar} — سجّل دلوقتي`
@@ -327,7 +334,7 @@ const HeroSection = () => {
             <div className="flex flex-wrap gap-2 justify-center">
               {pills.map((p) => (
                 <div key={p.key} className="inline-flex items-center gap-1.5 bg-ivory/10 border border-ivory/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-ivory/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-mint-strong shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-live-bright shrink-0" />
                   {p.label}
                 </div>
               ))}
