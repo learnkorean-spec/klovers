@@ -57,8 +57,8 @@ const HeroSection = () => {
   /**
    * The weekday of the next class, or null when there isn't one to name.
    *
-   * Null covers two cases on purpose â€” still loading, and genuinely nothing
-   * upcoming â€” because the honest rendering is the same for both: say nothing.
+   * Null covers two cases on purpose — still loading, and genuinely nothing
+   * upcoming — because the honest rendering is the same for both: say nothing.
    */
   const nextDay = useMemo(() => {
     const next = slots[0];
@@ -79,7 +79,7 @@ const HeroSection = () => {
     const locale = isAr ? "ar-EG" : "en-US";
     return slots.slice(0, 3).map((s) => ({
       key: `${s.date}-${s.startTime}`,
-      label: `${s.startsAt.toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric", timeZone: tz })} Â· ${s.startsAt.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz })}`,
+      label: `${s.startsAt.toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric", timeZone: tz })} · ${s.startsAt.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz })}`,
     }));
   }, [slots, isAr]);
 
@@ -110,19 +110,19 @@ const HeroSection = () => {
    * Measured on production, 2026-09-08: 102 rows in `profiles`, 76 trial
    * bookings, 25 enrolments. "500+ Students Taught" was not a rounding of
    * anything. Re's call: the 200+ figure is real, but it counts every student
-   * she has taught across 13 years â€” not this platform. A number is only
+   * she has taught across 13 years — not this platform. A number is only
    * honest with the sentence that scopes it, so the LABEL carries "in 13
    * years" and is part of the claim, not decoration.
    *
    * The stars belong to the GOOGLE Business Profile, which shows 5.0 from 7
-   * reviews â€” checked signed-in as the owner. Facebook replaced star ratings
+   * reviews — checked signed-in as the owner. Facebook replaced star ratings
    * with Recommendations in 2018, so its "100% recommend" lives in the
    * testimonials summary instead and the two are never averaged.
    */
   const stats = [
-    { icon: Users, display: "200+", label: isAr ? "Ø·Ø§Ù„Ø¨ Ø®Ù„Ø§Ù„ Ù¡Ù£ Ø¹Ø§Ù…Ø§Ù‹" : "Students in 13 years" },
-    { icon: Star, display: "5.0 â˜…", label: isAr ? "Ù…Ù† Ù§ Ù…Ø±Ø§Ø¬Ø¹Ø§Øª Ø¬ÙˆØ¬Ù„" : "From 7 Google reviews" },
-    { icon: Globe, display: "A1â€“C2", label: isAr ? "Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ø³ØªÙˆÙŠØ§Øª" : "All Levels" },
+    { icon: Users, display: "200+", label: isAr ? "طالب خلال ١٣ عاماً" : "Students in 13 years" },
+    { icon: Star, display: "5.0 ★", label: isAr ? "من ٧ مراجعات جوجل" : "From 7 Google reviews" },
+    { icon: Globe, display: "A1–C2", label: isAr ? "جميع المستويات" : "All Levels" },
   ];
 
   /**
@@ -137,26 +137,26 @@ const HeroSection = () => {
     {
       icon: "klobi-reading" as KloverIconName,
       tone: "bg-klovers-yellow",
-      title: isAr ? "Ø¯Ø±ÙˆØ³ Ù…Ø±ØªÙ‘Ø¨Ø©" : "Structured lessons",
-      body: isAr ? "Ù…Ù† Ø§Ù„Ù‡Ø§Ù†ØºÙˆÙ„ Ø¥Ù„Ù‰ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø©" : "From basics to real conversations",
+      title: isAr ? "دروس مرتّبة" : "Structured lessons",
+      body: isAr ? "من الهانغول إلى المحادثة" : "From basics to real conversations",
     },
     {
       icon: "chat-annyeong" as KloverIconName,
       tone: "bg-white",
-      title: isAr ? "ØªØªØ¯Ø±Ù‘Ø¨ Ù…Ø¹ Ù†Ø§Ø³" : "Practice together",
-      body: isAr ? "Ù…Ø¬Ù…ÙˆØ¹Ø§Øª ØµØºÙŠØ±Ø© Ù…Ø¨Ø§Ø´Ø±Ø©" : "Learn with a supportive community",
+      title: isAr ? "تتدرّب مع ناس" : "Practice together",
+      body: isAr ? "مجموعات صغيرة مباشرة" : "Learn with a supportive community",
     },
     {
       icon: "globe-plane" as KloverIconName,
       tone: "bg-klovers-yellow",
-      title: isAr ? "ÙƒÙˆØ±ÙŠØ© Ø­Ù‚ÙŠÙ‚ÙŠØ©" : "Real-life Korean",
-      body: isAr ? "Ù„ØºØ© ØªØ³ØªØ¹Ù…Ù„Ù‡Ø§ ÙØ¹Ù„Ø§Ù‹" : "Useful, practical, cultural",
+      title: isAr ? "كورية حقيقية" : "Real-life Korean",
+      body: isAr ? "لغة تستعملها فعلاً" : "Useful, practical, cultural",
     },
     {
       icon: "namsan-tower" as KloverIconName,
       tone: "bg-white",
-      title: isAr ? "Ù†Ø³Ø®Ø© Ø£ÙØ¶Ù„ Ù…Ù†Ùƒ" : "A brighter you",
-      body: isAr ? "Ø«Ù‚Ø© Ø£ÙƒØ¨Ø±ØŒ ÙˆØ¹Ø§Ù„Ù… Ø£ÙˆØ³Ø¹" : "More confidence. A bigger world.",
+      title: isAr ? "نسخة أفضل منك" : "A brighter you",
+      body: isAr ? "ثقة أكبر، وعالم أوسع" : "More confidence. A bigger world.",
     },
   ];
 
@@ -166,7 +166,7 @@ const HeroSection = () => {
         id="home"
         className="relative min-h-[94svh] flex flex-col items-center justify-center pt-16 overflow-hidden bg-charcoal"
       >
-        {/* â”€â”€ Background layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Background layer ─────────────────────────── */}
         <img
           src={heroPoster}
           alt=""
@@ -194,7 +194,7 @@ const HeroSection = () => {
           />
         )}
 
-        {/* Cinematic scrim â€” Charcoal rather than pure black, so the photo keeps
+        {/* Cinematic scrim — Charcoal rather than pure black, so the photo keeps
             its warmth and the section belongs to the same palette as the rest
             of the page. Enough density for text contrast, no more. */}
         <div
@@ -212,7 +212,7 @@ const HeroSection = () => {
           style={{ background: "radial-gradient(ellipse, hsl(60 100% 50% / 0.18) 0%, transparent 70%)" }}
         />
 
-        {/* â”€â”€ Decorative large Korean text (backdrop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Decorative large Korean text (backdrop) ───────────── */}
         <span
           aria-hidden="true"
           className="absolute inset-0 flex items-center justify-center pointer-events-none select-none font-ko-hand"
@@ -225,15 +225,15 @@ const HeroSection = () => {
             userSelect: "none",
           }}
         >
-          í•œêµ­ì–´
+          한국어
         </span>
 
         {/* ── Hero text content ───────────────────────────── */}
         {/* pb-44 is tuned for typical phone/desktop heights. On short
             viewports (iPad landscape, most laptops with a shallow browser
             window) the section's min-height doesn't leave enough room below
-            this block for the proof strip's pinned-to-bottom stats â€” the
-            "Free Hangul starter sheet" link was overlapping the "5.0 â˜…"
+            this block for the proof strip's pinned-to-bottom stats — the
+            "Free Hangul starter sheet" link was overlapping the "5.0 ★"
             stat. The max-height query adds extra clearance only when the
             viewport is short enough for that to matter; normal-height
             phones/desktops are untouched. See the "Proof strip" comment
@@ -241,7 +241,7 @@ const HeroSection = () => {
         <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-44 [@media(max-height:900px)]:pb-64">
           <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
 
-            {/* Teacher chip â€” the one thing on this page no competitor has. */}
+            {/* Teacher chip — the one thing on this page no competitor has. */}
             <div className="inline-flex items-center gap-3 bg-charcoal/55 border border-ivory/20 backdrop-blur-md rounded-full py-1.5 ps-1.5 pe-5 shadow-xl">
               <img
                 src={rehamPhoto}
@@ -254,10 +254,10 @@ const HeroSection = () => {
               />
               <span className="text-start leading-tight">
                 <span className="block text-ivory text-xs font-bold">
-                  {isAr ? "ØªØ¯Ø±Ù‘Ø³Ù‡Ø§ Ø±ÙŠÙ‡Ø§Ù… Ø§Ù„Ø´Ø±Ù‚Ø§ÙˆÙŠ" : "Taught by Reham Elshrkawy"}
+                  {isAr ? "تدرّسها ريهام الشرقاوي" : "Taught by Reham Elshrkawy"}
                 </span>
                 <span className="block text-ivory/65 text-[11px] mt-0.5">
-                  {isAr ? "Ù…Ø¹Ù„Ù…Ø© Ù…Ø¹ØªÙ…Ø¯Ø© TOPIK Â· Ù¡Ù£ Ø³Ù†Ø© ØªØ¯Ø±ÙŠØ³" : "TOPIK-certified Â· 13 years teaching"}
+                  {isAr ? "معلمة معتمدة TOPIK · ١٣ سنة تدريس" : "TOPIK-certified · 13 years teaching"}
                 </span>
               </span>
             </div>
@@ -272,8 +272,8 @@ const HeroSection = () => {
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-live-bright" />
                 </span>
                 {isAr
-                  ? `Ø§Ù„Ø­ØµØ© Ø§Ù„ØªØ§Ù„ÙŠØ©: ${nextDay.ar} â€” Ø³Ø¬Ù‘Ù„ Ø¯Ù„ÙˆÙ‚ØªÙŠ`
-                  : `Next class: ${nextDay.en} â€” spots filling fast`}
+                  ? `الحصة التالية: ${nextDay.ar} — سجّل دلوقتي`
+                  : `Next class: ${nextDay.en} — spots filling fast`}
               </div>
             )}
 
@@ -298,7 +298,7 @@ const HeroSection = () => {
               </span>
             </h1>
 
-            {/* CTA Buttons â€” 2 max to eliminate choice paralysis */}
+            {/* CTA Buttons — 2 max to eliminate choice paralysis */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-sm sm:max-w-none mx-auto">
               <Button
                 size="lg"
@@ -331,19 +331,16 @@ const HeroSection = () => {
                   rel="noopener noreferrer"
                 >
                   <MessageCircle className="h-5 w-5 text-[#25D366]" />
-                  {isAr ? "ÙˆØ§ØªØ³Ø§Ø¨" : "WhatsApp Us"}
+                  {isAr ? "واتساب" : "WhatsApp Us"}
                 </a>
               </Button>
             </div>
 
             <p className="text-ivory/60 text-xs" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
-              {isAr ? "âœ“ Ø¨Ø¯ÙˆÙ† Ø¨Ø·Ø§Ù‚Ø© Ø¨Ù†ÙƒÙŠØ© Â· âœ“ Ø±Ø¯ Ø®Ù„Ø§Ù„ Ø¯Ù‚Ø§Ø¦Ù‚" : "âœ“ No credit card Â· âœ“ Reply in minutes"}
+              {isAr ? "✓ بدون بطاقة بنكية · ✓ رد خلال دقائق" : "✓ No credit card · ✓ Reply in minutes"}
             </p>
-  <p className="text-ivory/70 text-xs font-medium mt-1" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
-    {isAr ? "حصص أونلاين مباشرة، بحد أقصى 8 طلاب في المجموعة" : "Live online classes, max 8 students per group"}
-  </p>
 
-            {/* Upcoming class sessions â€” live from trial_slots, in the visitor's
+            {/* Upcoming class sessions — live from trial_slots, in the visitor's
                 own timezone. Capped to 3 (see `pills` above) so a busy schedule
                 can't wrap unpredictably. Renders nothing while loading or when
                 there is genuinely no upcoming slot, which is honest either way. */}
@@ -356,26 +353,26 @@ const HeroSection = () => {
               ))}
             </div>
 
-            {/* Hangul sheet â€” reciprocity trigger */}
+            {/* Hangul sheet — reciprocity trigger */}
             <Link
               to="/hangul-starter"
               className="inline-flex min-h-11 items-center gap-2 text-ivory/70 hover:text-ivory transition-colors text-xs underline underline-offset-4 decoration-ivory/30 hover:decoration-ivory/60"
               onClick={() => { try { logLeadEvent({ source_type: "free_resource", cta_label: "hero_hangul_sheet" }); } catch {} }}
             >
               <BookOpen className="h-3.5 w-3.5 shrink-0" />
-              {isAr ? "Ø§Ø­ØµÙ„ Ø¹Ù„Ù‰ ÙˆØ±Ù‚Ø© Ù‡Ø§Ù†ØºÙˆÙ„ Ø§Ù„Ù…Ø¬Ø§Ù†ÙŠØ© â†" : "Free Hangul starter sheet â†’"}
+              {isAr ? "احصل على ورقة هانغول المجانية ←" : "Free Hangul starter sheet →"}
             </Link>
 
           </div>
         </div>
 
-        {/* â”€â”€ Proof strip â€” pinned above the card overlap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        {/* ── Proof strip — pinned above the card overlap ─────────────
             pb-24/pb-32 is not spacing taste: it is exactly the room the cards
             below take out of this section when they lift onto the photo.
 
             22 Sep 2026: this strip is `absolute bottom-0` of the SECTION,
             while HomeExitNudge / StickyEnrollBar / etc. are `fixed bottom-0`
-            of the VIEWPORT (src/lib/bottomLayer.ts) â€” two layers with no
+            of the VIEWPORT (src/lib/bottomLayer.ts) — two layers with no
             knowledge of each other. On a short viewport where the hero still
             fills the screen, the overlay painted straight over these numbers.
             bottomOverlayActive adds enough extra clearance to lift the strip
@@ -410,7 +407,7 @@ const HeroSection = () => {
         </div>
       </section>
 
-      {/* â”€â”€ The board's four promise cards, lifted onto the cover â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      {/* ── The board's four promise cards, lifted onto the cover ──────────
           No background of its own: the cards overlap the photo and the page's
           Ivory carries the rest, so there is no band and no seam. */}
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
