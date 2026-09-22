@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Landmark, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logEngagementEvent } from "@/lib/leadTracking";
@@ -161,7 +161,32 @@ const TILES: Tile[] = [
     altEn: "Korean street food stall with tteokbokki and skewers",
     altAr: "Ø¹Ø±Ø¨Ø© Ø£ÙƒÙ„ Ø´Ø§Ø±Ø¹ ÙƒÙˆØ±ÙŠØ© ØªØ¹Ø±Ø¶ Ø§Ù„ØªÙˆÙƒØ¨ÙˆÙƒÙŠ ÙˆØ§Ù„Ø£Ø³ÙŠØ§Ø®",
   },
-];
+  {
+    image: "/assets/blog/dokkaebi-goblin.jpg",
+    kickerEn: "K-Drama Icon",
+    kickerAr: "أيقونة درامية",
+    titleEn: "Dokkaebi: The Korean Goblin Myth",
+    titleAr: "دوكايبي: أسطورة العفريت الكوري",
+    blurbEn: "Origins, powers, and how the 2016 K-drama Goblin made this folklore figure a global icon.",
+    blurbAr: "أصل الأسطورة وقدراتها، وكيف حوّلها مسلسل ٢٠١٦ إلى أيقونة عالمية.",
+    slugEn: "dokkaebi-korean-goblin-myth-kdrama",
+    slugAr: "dokkaebi-korean-goblin-myth-kdrama-ar",
+    altEn: "Dokkaebi Korean goblin from folklore",
+    altAr: "عفريت Dokkaebi الكوري من الفولكلور",
+  },
+  {
+    image: "/assets/blog/gumiho-legend.jpg",
+    kickerEn: "1,000-Year Myth",
+    kickerAr: "أسطورة ألفية",
+    titleEn: "Gumiho: The Nine-Tailed Fox",
+    titleAr: "الغوميهو: الثعلب ذو الذيول التسعة",
+    blurbEn: "The legend behind Korea's most iconic shapeshifter, and why K-dramas still return to her.",
+    blurbAr: "أسطورة عمرها ألف عام وراء أشهر كائن متحوّل في الفولكلور الكوري.",
+    slugEn: "gumiho-nine-tailed-fox-korean-folklore",
+    slugAr: "gumiho-nine-tailed-fox-korean-folklore-ar",
+    altEn: "Gumiho nine-tailed fox in Korean folklore",
+    altAr: "غوميهو ثعلب ذو تسعة ذيول في الفولكلور الكوري",
+  },];
 
 const CultureHeritageSection = () => {
   const { language } = useLanguage();
