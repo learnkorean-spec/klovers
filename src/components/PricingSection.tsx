@@ -72,6 +72,13 @@ const discountCountries: Partial<Record<TierKey, string>> = {
   regional: "Malaysia",
 };
 
+/**
+ * The sentence in the Regional tier's translated description that promises a
+ * Malaysia discount, in both languages. It is removed for every other country:
+ * a visitor from Vietnam was being told about a discount that is not theirs.
+ */
+const MALAYSIA_DISCOUNT_SENTENCE = /\s*(Special discount for Malaysia students!|خصم خاص لطلاب ماليزيا!)\s*$/;
+
 /** Flat, squared tags. The shared Badge is a puffy pill with a border and a
  *  shadow; three of them in a row read as a string of bubbles. */
 const TAG =
@@ -247,6 +254,18 @@ const PricingSection = () => {
               const val = t("pricing", `tiers.${tierKey}.${key}`);
               return val !== `tiers.${tierKey}.${key}` ? val : "";
             };
+            // The Regional copy promises a Malaysia discount; only Malaysia
+            // should read it.
+            const description =
+              tierKey === "regional" && selectedCountry !== discountCountries.regional
+                ? tierT("description").replace(MALAYSIA_DISCOUNT_SENTENCE, "")
+                : tierT("description");
+            // Local currency belongs to the visitor's own tier only. Before
+            // 23 Sep 2026 every card read the selected country's row, so a
+            // visitor from Vietnam saw 1,016,000 VND on Local, Regional and
+            // Global alike. The other two cards show their own USD price.
+            const localRows =
+              tierForCountry(selectedCountry) === tierKey ? countryLocalPrices[selectedCountry] : undefined;
 
             return (
               <Card
@@ -309,7 +328,7 @@ const PricingSection = () => {
                     {tierT("name") || tierKey}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground mt-2">
-                    {tierT("description")}
+                    {description}
                   </p>
                 </CardHeader>
 
@@ -324,7 +343,7 @@ const PricingSection = () => {
 
                   <div className="space-y-3 mb-6">
                     {classType === "group" ? (
-                      (countryLocalPrices[selectedCountry]?.group ?? tierPrices[tierKey]).map((price: any) => {
+                      (localRows?.group ?? tierPrices[tierKey]).map((price: any) => {
                         const isBestValue = price.duration === "3 Months";
                         return (
                         <div
@@ -362,7 +381,7 @@ const PricingSection = () => {
                         );
                       })
                     ) : (
-                      (countryLocalPrices[selectedCountry]?.private ?? privatePrices[tierKey]).map((price: any) => {
+                      (localRows?.private ?? privatePrices[tierKey]).map((price: any) => {
                         const isBestValue = price.duration === "3 Months";
                         return (
                         <div
@@ -512,8 +531,10 @@ const PricingSection = () => {
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">🇰🇷</span>
-            <p className="text-sm font-semibold text-foreground">{tr("Teaches in Arabic", "بندرّس بالعربي")}</p>
-            <p className="text-xs text-muted-foreground">{tr("TOPIK-certified · 13 years teaching", "معلمة معتمدة TOPIK · ١٣ سنة تدريس")}</p>
+            {/* Verified facts only, the same ones MeetTeacher states. The old
+                line claimed "TOPIK-certified", which is not one of them. */}
+            <p className="text-sm font-semibold text-foreground">{tr("Taught in English & Arabic", "بندرّس بالإنجليزي والعربي")}</p>
+            <p className="text-xs text-muted-foreground">{tr("Al-Alsun Korean graduate · 13 years teaching", "خريجة ألسن قسم كوري · ١٣ سنة تدريس")}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">🔒</span>
