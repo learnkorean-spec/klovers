@@ -22,10 +22,17 @@ export default {
   			ring: 'hsl(var(--ring))',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
-  			/* Klovers brand palette — three colours. See src/index.css. */
+  			/* Klovers brand palette. See src/index.css. */
   			ivory: 'hsl(var(--ivory))',
   			charcoal: 'hsl(var(--charcoal))',
   			'klovers-yellow': 'hsl(var(--klovers-yellow))',
+  			/*
+  			 * klovers-green — Re, 24 Sep 2026: the neon partner to #FFFF00, the
+  			 * same value as live-bright (#39FF14). Yellow leads (buttons,
+  			 * highlights); green means progress, correct and done. Always a FILL
+  			 * with charcoal on it - never green text on a light surface (1.7:1).
+  			 */
+  			'klovers-green': 'hsl(var(--live-bright))',
   			/*
   			 * DEPRECATED — retired brand colours. mint/mint-strong now resolve to
   			 * the live tokens (see src/index.css); peach has no sanctioned use
