@@ -51,18 +51,20 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  *
  * 24 Sep 2026 (d): the round Chuseok crop became a full standing figure -
  * "i want it like this but in hanbok", pointing at cluby-wave.webp's
- * full-body cutout style. cluby-hanbok.webp is a hand-traced transparent
- * cutout (automated background removal kept grabbing the glowing moon behind
- * Cluby in the source art, since their colors overlap too closely). The
- * jump-wrapper box below is now portrait (~0.71 aspect) to match it instead
- * of the old square badge box.
+ * full-body cutout style. cluby-hanbok.webp started as a hand-traced
+ * transparent cutout (automated background removal kept grabbing the
+ * glowing moon behind Cluby in the source art, since their colors overlap
+ * too closely), then Re sent a cleaner version of the same cutout
+ * ("better quality") which replaced it - same file name, no jagged edges.
+ * The jump-wrapper box below is portrait (~0.77 aspect, matching the
+ * current asset's 980x1274) instead of the old square badge box.
  */
 
 /** This week's Cluby image on the hero card. Swap this one line per occasion. */
 const CLUBY_BADGE = {
   src: "/assets/cluby/cluby-hanbok.webp",
-  width: 794,
-  height: 1117,
+  width: 980,
+  height: 1274,
 };
 
 const HeroSection = () => {
@@ -283,10 +285,10 @@ const HeroSection = () => {
             card and peeking up into the hero. Decorative: the cards carry
             the meaning. See CLUBY_BADGE above to swap it. A real jump loop
             (bar-jump/bar-shadow, both motion-safe) - squash, launch, turn,
-            land, rest - not just a static badge. Portrait box (~0.71
+            land, rest - not just a static badge. Portrait box (~0.77
             aspect) to match the full-body cutout instead of a square crop. */}
         <div
-          className="pointer-events-none absolute bottom-full end-8 z-10 h-[84px] w-[60px] select-none md:end-10 md:h-[120px] md:w-[85px]"
+          className="pointer-events-none absolute bottom-full end-8 z-10 h-[84px] w-[65px] select-none md:end-10 md:h-[120px] md:w-[92px]"
         >
           {/* Ground shadow: shrinks and fades as Cluby leaves the ground. */}
           <div
