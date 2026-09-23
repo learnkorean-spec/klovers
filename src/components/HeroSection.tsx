@@ -35,7 +35,20 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  * edge of the end-side promise card (the last card on desktop, the end card of
  * the top row on phones, where standing on the last card would cover the card
  * above it). The first card's flat Klobi became books-stack.
+ *
+ * 24 Sep 2026 (b): CLUBY'S CLOSET. The same spot now carries a seasonal badge
+ * instead of the plain standing cutout - starting with Chuseok (24-26 Sep).
+ * Swap CLUBY_BADGE below for the next occasion, or back to cluby-wave.webp
+ * for a plain week. See claude/CLUBY_CLOSET_AND_CHUSEOK_2026-09-24.md.
  */
+
+/** This week's Cluby image on the hero card. Swap this one line per occasion. */
+const CLUBY_BADGE = {
+  src: "/assets/cluby/cluby-chuseok.webp",
+  width: 800,
+  height: 800,
+};
+
 const HeroSection = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
@@ -250,18 +263,19 @@ const HeroSection = () => {
 
       {/* ── The board's four promise cards, lifted onto the cover ── */}
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
-        {/* 3D Cluby, standing on the top edge of the end-side card and peeking
-            up into the hero. Decorative: the cards carry the meaning. */}
+        {/* This week's Cluby badge, sitting on the top edge of the end-side
+            card and peeking up into the hero. Decorative: the cards carry
+            the meaning. See CLUBY_BADGE above to swap it. */}
         <img
-          src="/assets/cluby/cluby-wave.webp"
+          src={CLUBY_BADGE.src}
           alt=""
           aria-hidden="true"
-          width={314}
-          height={440}
+          width={CLUBY_BADGE.width}
+          height={CLUBY_BADGE.height}
           loading="lazy"
           decoding="async"
           draggable={false}
-          className="pointer-events-none absolute bottom-full end-8 z-10 h-auto w-[72px] translate-y-3 select-none drop-shadow-[0_10px_14px_rgba(46,46,46,0.4)] md:end-10 md:w-[104px]"
+          className="pointer-events-none absolute bottom-full end-8 z-10 h-auto w-[84px] translate-y-4 select-none drop-shadow-[0_10px_14px_rgba(46,46,46,0.4)] md:end-10 md:w-[120px]"
         />
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {cards.map(({ icon, tone, title, body }) => (
