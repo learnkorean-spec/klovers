@@ -17,6 +17,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * The section also no longer starts at opacity 0 waiting for an observer: the
  * text is visible on first paint (crawlers, screenshots, fast scrolls). Only
  * the level bars still animate, and they are decoration.
+ *
+ * 24 Sep 2026: the 3D Cluby, holding a gold star, perches on the end-side top
+ * corner of the test card. The "instant" badge moved to the start-side corner
+ * so the two do not sit on top of each other.
  */
 const PlacementTestCTA = () => {
   const { t, language } = useLanguage();
@@ -136,8 +140,21 @@ const PlacementTestCTA = () => {
           </div>
 
           {/* ── Right: Animated Level Card (decorative) ── */}
-          <div className="flex justify-center">
+          {/* Top padding leaves room for Cluby above the card when stacked. */}
+          <div className="flex justify-center pt-24 md:pt-20">
             <div className="relative w-full max-w-sm">
+              {/* 3D Cluby with a gold star, perched on the card's top corner. */}
+              <img
+                src="/assets/cluby/cluby-star.webp"
+                alt={isAr ? "كلوبي ماسك نجمة ذهبية" : "Cluby holding a gold star"}
+                width={333}
+                height={440}
+                loading="lazy"
+                decoding="async"
+                draggable={false}
+                className="pointer-events-none absolute bottom-full -end-2 z-20 h-auto w-24 translate-y-4 select-none drop-shadow-[0_12px_16px_rgba(46,46,46,0.35)] sm:w-28"
+              />
+
               <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
                 <div className="bg-charcoal px-5 py-4 flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center">
@@ -182,7 +199,7 @@ const PlacementTestCTA = () => {
                 </div>
               </div>
 
-              <div className="absolute -top-3 -right-3 bg-klovers-yellow text-charcoal text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+              <div className="absolute -top-3 -start-3 bg-klovers-yellow text-charcoal text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                 {t("placementCta.instant")}
               </div>
             </div>

@@ -1,9 +1,6 @@
 import { Send, Facebook } from "lucide-react";
 import { logLeadEvent } from "@/lib/leadTracking";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { GIRL_WAVE } from "@/assets/band/girlWave";
-import { BOY_WAVE } from "@/assets/band/boyWave";
-import { KLOBI_WAVE } from "@/assets/band/klobiWave";
 
 /**
  * The community band: Telegram and Facebook, between the testimonials and the
@@ -22,57 +19,64 @@ import { KLOBI_WAVE } from "@/assets/band/klobiWave";
  * contradiction when one was called "students" and the other "learners". This
  * band says "on social media", so it counts followers, never students.
  *
- * 2026-09-20 (c): THREE CUTOUTS, NOT ONE PICTURE. These three transparent
- * cutouts stand on the yellow band itself, so the band's colour shows between
- * them; they can be re-ordered or re-spaced; and they shrink independently on
- * a phone instead of becoming one unreadable strip.
- *
- * Klobi is SHORTER IN HIS OWN FILE rather than scaled down here, so
- * `items-end` alone puts the three at the right relative heights. Do not
- * "fix" that by giving all three the same height class.
- *
- * They are decoration: the band's meaning is the heading and the two links,
- * so every one of them is alt="" and aria-hidden.
+ * 2026-09-24: ONE PAINTED SCENE, NOT CUT-OUTS. The flat girl / Klobi / boy
+ * cut-outs and their ivory dome are gone (the 3D Cluby is the only mascot).
+ * The picnic scene fills the start half of the band and dissolves into the
+ * yellow through a CSS mask, so the band's own colour is what it fades into
+ * in both themes. On phones it sits on top and fades downward. Two <img>
+ * elements carry the two mask directions (the mask cannot be responsive
+ * inline); they share one file, and the hidden one is never fetched.
  */
 
-/**
- * The cast, in the order they stand: Klobi between the two of them, as on the
- * brand sheet. Literal class strings - Tailwind's scanner only keeps what it
- * can see, so these must never be assembled from fragments.
- */
-const CAST = [
-  { src: GIRL_WAVE, cls: "h-[92px] sm:h-[120px]" },
-  { src: KLOBI_WAVE, cls: "-ms-2 h-[58px] sm:h-[76px]" },
-  { src: BOY_WAVE, cls: "-ms-2 h-[92px] sm:h-[120px]" },
-];
+const FADE_DOWN = {
+  WebkitMaskImage: "linear-gradient(to bottom, #000 55%, transparent 100%)",
+  maskImage: "linear-gradient(to bottom, #000 55%, transparent 100%)",
+};
+const FADE_RIGHT = {
+  WebkitMaskImage: "linear-gradient(to right, #000 55%, transparent 100%)",
+  maskImage: "linear-gradient(to right, #000 55%, transparent 100%)",
+};
+const FADE_LEFT = {
+  WebkitMaskImage: "linear-gradient(to left, #000 55%, transparent 100%)",
+  maskImage: "linear-gradient(to left, #000 55%, transparent 100%)",
+};
 
 const CommunityBand = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
+  const alt = isAr
+    ? "صديقان مع كلوبي في نزهة على ضفاف نهر الهان"
+    : "Two friends and Cluby at a picnic by the Han river";
 
   return (
-    <section className="border-y border-charcoal/10 bg-primary py-6 md:py-8 dark:bg-[#E8E000]">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-5 text-center md:flex-row md:justify-between md:gap-10 md:text-start">
+    <section className="relative overflow-hidden border-y border-charcoal/10 bg-primary dark:bg-[#E8E000]">
+      {/* The picnic scene: on top on phones, the start half of the band on md+. */}
+      <div className="md:absolute md:inset-y-0 md:start-0 md:w-1/2">
+        <img
+          src="/assets/cluby/picnic.webp"
+          alt={alt}
+          width={1600}
+          height={900}
+          loading="lazy"
+          decoding="async"
+          className="block h-56 w-full object-cover sm:h-72 md:hidden"
+          style={FADE_DOWN}
+        />
+        <img
+          src="/assets/cluby/picnic.webp"
+          alt={alt}
+          width={1600}
+          height={900}
+          loading="lazy"
+          decoding="async"
+          className="hidden h-full w-full object-cover md:block"
+          style={isAr ? FADE_LEFT : FADE_RIGHT}
+        />
+      </div>
 
-          {/* The three of them, standing on the band. */}
-          <div className="relative flex shrink-0 items-end px-3" aria-hidden="true">
-            {/* Ivory dome behind them: their outfits are a warmer yellow than the
-                band, and only the outline separates them from it. */}
-            <span className="absolute inset-x-0 bottom-0 top-2 rounded-t-full bg-ivory" />
-            {CAST.map((c, i) => (
-              <img
-                key={i}
-                src={c.src}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className={`relative w-auto ${c.cls}`}
-              />
-            ))}
-          </div>
-
-          <div className="md:flex-1">
+      <div className="container relative mx-auto px-4">
+        <div className="mx-auto flex max-w-5xl md:min-h-[320px] md:items-center md:justify-end lg:min-h-[380px]">
+          <div className="w-full pb-7 pt-1 text-center md:w-1/2 md:py-12 md:ps-10 md:text-start">
             <p className="text-xl font-extrabold leading-tight text-charcoal md:text-2xl">
               {isAr ? "انضم لأكثر من ٢٠٠٠ متابع في مجتمع كلوفرز" : "Join 2,000+ people in the Klovers community"}
             </p>
@@ -109,7 +113,6 @@ const CommunityBand = () => {
               </a>
             </div>
           </div>
-
         </div>
       </div>
     </section>

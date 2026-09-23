@@ -19,6 +19,10 @@ import PriceTeaser from "@/components/PriceTeaser";
  *
  * 23 Sep 2026 (mobile): two cards per row on phones. Stacked one per row the
  * section measured 1,803px at 375px wide.
+ *
+ * 24 Sep 2026: no flat characters on the homepage - the step icons are
+ * objects only, and the first-class box carries the painted café scene with
+ * Cluby, its edges dissolved by a radial mask so it meets the page.
  */
 const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] }[] = [
   {
@@ -27,12 +31,12 @@ const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] 
     ar: ["شرح واضح", "كل نقطة تتشرح ببساطة، بالعربي أو الإنجليزي، علشان تفهم مش تحفظ."],
   },
   {
-    icon: "student-girl-heart",
+    icon: "chat-annyeong",
     en: ["Max 8 Students", "Small enough that you speak in every class and get real personal attention."],
     ar: ["بحد أقصى 8 طلاب", "مجموعة صغيرة، فتتكلم في كل حصة وتاخد اهتمام حقيقي."],
   },
   {
-    icon: "student-boy-thumbsup",
+    icon: "lightbulb-sprout",
     en: ["Instant Feedback", "Your pronunciation and sentences are corrected live, during the class."],
     ar: ["تصحيح فوري", "نطقك وجملك بتتصحح مباشرة، وانت في الحصة."],
   },
@@ -42,6 +46,12 @@ const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] 
     ar: ["مسار واضح", "الهانغول الأول، وبعدين المستويات من 1 لحد 6. دايمًا عارف الخطوة الجاية."],
   },
 ];
+
+/** Soft radial edge: inset images dissolve into the surface they sit on. */
+const SOFT_EDGE = {
+  WebkitMaskImage: "radial-gradient(ellipse 50% 50% at 50% 50%, #000 58%, transparent 100%)",
+  maskImage: "radial-gradient(ellipse 50% 50% at 50% 50%, #000 58%, transparent 100%)",
+};
 
 const HowItWorks = () => {
   const { t, language } = useLanguage();
@@ -87,31 +97,44 @@ const HowItWorks = () => {
           })}
         </div>
 
-        {/* "What your first class looks like" — pedagogy + trust. */}
-        <div className="max-w-2xl mx-auto mt-10 md:mt-12 bg-background border border-border rounded-2xl p-5 sm:p-6">
+        {/* "What your first class looks like" — pedagogy + trust. The café
+            scene sits on the start side on lg+, above the bullets on phones. */}
+        <div className="max-w-4xl mx-auto mt-10 md:mt-12 bg-background border border-border rounded-2xl p-5 sm:p-6">
           <p className="text-center mb-4">
             <span className="inline-block bg-klovers-yellow text-charcoal text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full">
               {isAr ? "إيه اللي بيحصل في أول حصة" : "What your first class looks like"}
             </span>
           </p>
-          <ul className="space-y-2.5">
-            {(isAr ? [
-              "تقدّم نفسك بالكورية — حتى لو ما تعرفش ولا حرف",
-              "تقرأ أول 10 حروف هانغول وتعرف تنطقها صح",
-              "محادثة قصيرة مباشرة مع باقي الطلاب",
-              "المعلمة تحدّد مستواك وتشرحلك الخطوة الجاية",
-            ] : [
-              "Introduce yourself in Korean — even if you know zero right now",
-              "Read your first 10 Hangul characters with correct pronunciation",
-              "Have a short live exchange with other students",
-              "Your teacher identifies your level and maps out your next steps",
-            ]).map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-foreground/45 shrink-0 mt-0.5" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-6">
+            <img
+              src="/assets/cluby/cafe.webp"
+              alt={isAr ? "صديقان مع كلوبي بيذاكروا الكورية على ترابيزة في كافيه" : "Two friends and Cluby studying Korean together at a café table"}
+              width={1200}
+              height={800}
+              loading="lazy"
+              decoding="async"
+              className="mx-auto h-auto w-full max-w-md lg:max-w-none"
+              style={SOFT_EDGE}
+            />
+            <ul className="space-y-2.5">
+              {(isAr ? [
+                "تقدّم نفسك بالكورية — حتى لو ما تعرفش ولا حرف",
+                "تقرأ أول 10 حروف هانغول وتعرف تنطقها صح",
+                "محادثة قصيرة مباشرة مع باقي الطلاب",
+                "المعلمة تحدّد مستواك وتشرحلك الخطوة الجاية",
+              ] : [
+                "Introduce yourself in Korean — even if you know zero right now",
+                "Read your first 10 Hangul characters with correct pronunciation",
+                "Have a short live exchange with other students",
+                "Your teacher identifies your level and maps out your next steps",
+              ]).map((item) => (
+                <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-foreground/45 shrink-0 mt-0.5" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Price, then the CTA - so the visitor meets the cost before the ask,

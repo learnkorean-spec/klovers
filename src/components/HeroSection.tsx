@@ -30,6 +30,11 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  *
  * The section is dark in BOTH themes (photo under a charcoal scrim), which is
  * why it uses live-bright and ivory/charcoal literals.
+ *
+ * 24 Sep 2026: the 3D plush Cluby is the only mascot. He waves from the top
+ * edge of the end-side promise card (the last card on desktop, the end card of
+ * the top row on phones, where standing on the last card would cover the card
+ * above it). The first card's flat Klobi became books-stack.
  */
 const HeroSection = () => {
   const { language } = useLanguage();
@@ -83,7 +88,7 @@ const HeroSection = () => {
   /** The board's four promise cards, under the photo. */
   const cards = [
     {
-      icon: "klobi-reading" as KloverIconName,
+      icon: "books-stack" as KloverIconName,
       tone: "bg-klovers-yellow",
       title: isAr ? "دروس مرتّبة" : "Structured lessons",
       body: isAr ? "من الهانغول إلى المحادثة" : "From Hangul to real conversations",
@@ -245,6 +250,19 @@ const HeroSection = () => {
 
       {/* ── The board's four promise cards, lifted onto the cover ── */}
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
+        {/* 3D Cluby, standing on the top edge of the end-side card and peeking
+            up into the hero. Decorative: the cards carry the meaning. */}
+        <img
+          src="/assets/cluby/cluby-wave.webp"
+          alt=""
+          aria-hidden="true"
+          width={314}
+          height={440}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="pointer-events-none absolute bottom-full end-8 z-10 h-auto w-[72px] translate-y-3 select-none drop-shadow-[0_10px_14px_rgba(46,46,46,0.4)] md:end-10 md:w-[104px]"
+        />
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {cards.map(({ icon, tone, title, body }) => (
             <div

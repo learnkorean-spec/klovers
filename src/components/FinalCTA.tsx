@@ -1,11 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Users, Star, Globe, MessageCircle, ClipboardCheck } from "lucide-react";
+import { ArrowRight, Users, Star, Globe, MessageCircle, ClipboardCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
-import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import PriceTeaser from "@/components/PriceTeaser";
 
 /**
@@ -24,6 +23,14 @@ import PriceTeaser from "@/components/PriceTeaser";
  *    Re's call, not a copy edit.
  *  - The two quiet links are 44px tap targets (they measured 20px at 375px).
  *
+ * 24 Sep 2026: THE SCENE. The yellow band, the three bouncing flat characters
+ * and the handwritten texture gave way to one painted scene: Cluby on a hill
+ * pointing at the Seoul skyline at sunset. The picture meets the page at both
+ * edges (gradients from and to the page background), the heading sits in the
+ * empty sky, and the ticket overlaps the bottom fade. The phone gets its own
+ * 4:5 crop with more sky. The aspect ratio is fixed per breakpoint so the
+ * heading's percentage offset lands in the sky before the image loads.
+ *
  * Numbers are static on purpose: a count-up renders every intermediate value
  * as a finished claim.
  */
@@ -32,14 +39,6 @@ const SOCIAL_PROOF = [
   { icon: Star, value: "5.0 ★", en: "From 7 Google reviews", ar: "من ٧ مراجعات جوجل" },
   { icon: Globe, value: "EN · AR", en: "Classes in English or Arabic", ar: "حصص بالعربي أو الإنجليزي" },
 ];
-
-const CAST: { name: KloverIconName; delay: string; cls: string }[] = [
-  { name: "student-girl-heart", delay: "0.4s", cls: "" },
-  { name: "klobi-headphones", delay: "0s", cls: "" },
-  { name: "student-boy-thumbsup", delay: "0.8s", cls: "hidden sm:block" },
-];
-
-const KR_CHARS = ["안녕", "한국어", "공부", "화이팅", "수업", "최고"];
 
 const QUIET_LINK =
   "inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-ivory/85 underline decoration-ivory/30 underline-offset-4 transition-colors hover:text-ivory hover:decoration-ivory/60";
@@ -66,53 +65,57 @@ const FinalCTA = () => {
   return (
     <section
       ref={sectionRef}
-      className="py-20 md:py-28 relative overflow-hidden bg-primary border-y border-charcoal/25"
+      className="relative overflow-hidden bg-background pb-20 md:pb-28"
     >
-      <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden>
-        {KR_CHARS.map((char, i) => (
-          <span
-            key={char}
-            className="absolute font-ko-hand text-5xl md:text-7xl font-normal text-charcoal/[0.06]"
-            style={{
-              top: `${8 + (i % 3) * 32}%`,
-              left: `${3 + i * 12}%`,
-              transform: `rotate(${-18 + i * 8}deg)`,
-            }}
+      {/* ── The scene: Cluby pointing at Seoul, heading in the sky ── */}
+      <div className="relative">
+        <picture>
+          <source media="(max-width: 767px)" srcSet="/assets/cluby/cta-mobile.webp" />
+          <img
+            src="/assets/cluby/cta.webp"
+            alt={isAr ? "كلوبي على تلّة بيشاور على أفق سيول وقت الغروب" : "Cluby on a hill pointing at the Seoul skyline at sunset"}
+            width={1600}
+            height={900}
+            loading="lazy"
+            decoding="async"
+            className="block aspect-[4/5] w-full object-cover md:aspect-[16/9]"
+          />
+        </picture>
+
+        {/* The page flows into the sky, and the hill flows back into the page. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[12%] bg-gradient-to-b from-background to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-background to-transparent" />
+
+        <div className={`absolute inset-x-0 top-[11%] px-4 text-center md:top-[8%] ${reveal("")}`}>
+          <h2
+            className="mx-auto max-w-3xl text-[1.75rem] font-extrabold leading-tight text-charcoal sm:text-3xl lg:text-5xl"
+            style={{ textShadow: "0 1px 14px rgba(255,249,236,0.65)" }}
           >
-            {char}
-          </span>
-        ))}
+            {isAr ? "جاهز تبدأ رحلتك مع الكورية؟" : "Ready to Start Your Korean Journey?"}
+          </h2>
+          <p
+            className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-charcoal/80 lg:text-lg"
+            style={{ textShadow: "0 1px 10px rgba(255,249,236,0.6)" }}
+          >
+            {isAr
+              ? "أول حصة مجانية. اتعرّف على معلمتك، وشوف الحصة ماشية إزاي، وبعدين قرّر إذا كانت كلوفرز مناسبة ليك."
+              : "Your first class is free. Meet your teacher, see how the class works, and decide if Klovers is right for you."}
+          </p>
+        </div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container relative z-10 mx-auto -mt-12 px-4 sm:-mt-20 md:-mt-28 lg:-mt-32">
 
-        <div className={`relative mx-auto max-w-4xl pt-24 md:pt-28 ${reveal("")}`}>
+        <div className={`relative mx-auto max-w-4xl ${reveal("")}`}>
 
-          <div className="pointer-events-none absolute inset-0 select-none" aria-hidden="true">
-            <Sparkles className="animate-drift absolute start-2 top-10 h-5 w-5 text-charcoal/30" style={{ animationDelay: "0s" }} />
-            <Sparkles className="animate-drift absolute end-1/3 top-2 h-4 w-4 text-charcoal/25" style={{ animationDelay: "1.1s" }} />
-            <Sparkles className="animate-drift absolute -end-1 bottom-24 h-6 w-6 text-charcoal/25" style={{ animationDelay: "0.6s" }} />
-          </div>
-
-          <div className="pointer-events-none absolute start-6 top-0 z-10 flex items-end gap-2 [perspective:500px] md:start-10" aria-hidden="true">
-            {CAST.map(({ name, delay, cls }) => (
-              <div key={name} className={`relative h-24 w-24 md:h-28 md:w-28 ${cls}`}>
-                <span className="absolute inset-x-1 bottom-0 h-1/2 rounded-t-full border-2 border-b-0 border-charcoal bg-ivory" />
-                <div className="animate-bar-jump absolute inset-0 origin-bottom" style={{ animationDelay: delay }}>
-                  <KloverIcon name={name} className="h-full w-full" />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="animate-stamp absolute -end-2 top-14 z-20 grid h-20 w-20 place-items-center rounded-full border-2 border-dashed border-klovers-yellow bg-charcoal text-center shadow-lg md:-end-5 md:top-16 md:h-24 md:w-24" aria-hidden="true">
+          <div className="animate-stamp absolute -end-2 -top-8 z-20 grid h-20 w-20 place-items-center rounded-full border-2 border-dashed border-klovers-yellow bg-charcoal text-center shadow-lg md:-end-5 md:-top-10 md:h-24 md:w-24" aria-hidden="true">
             <span>
               <span className="block text-xl font-extrabold leading-none text-klovers-yellow md:text-2xl">{isAr ? "مجاناً" : "FREE"}</span>
               <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-widest text-ivory">{isAr ? "أول حصة" : "1st class"}</span>
             </span>
           </div>
 
-          <div className="card-edge relative grid overflow-hidden rounded-3xl bg-charcoal transition-transform duration-300 md:grid-cols-[13rem_1fr] md:hover:-rotate-[0.6deg]">
+          <div className="card-edge relative grid overflow-hidden rounded-3xl bg-charcoal shadow-[0_24px_60px_-30px_rgba(46,46,46,0.8)] transition-transform duration-300 md:grid-cols-[13rem_1fr] md:hover:-rotate-[0.6deg]">
 
             {/* Stub */}
             <div className="relative flex flex-row items-center justify-center gap-4 bg-klovers-yellow px-6 py-6 text-charcoal md:flex-col md:gap-1 md:py-10">
@@ -124,22 +127,13 @@ const FinalCTA = () => {
               </div>
 
               <span aria-hidden="true" className="absolute inset-x-6 bottom-0 border-b-2 border-dashed border-charcoal/40 md:inset-x-auto md:inset-y-6 md:end-0 md:border-b-0 md:border-e-2" />
-              <span aria-hidden="true" className="absolute -bottom-3 start-[-0.75rem] h-6 w-6 rounded-full bg-primary md:bottom-auto md:start-auto md:-top-3 md:end-[-0.75rem]" />
-              <span aria-hidden="true" className="absolute -bottom-3 end-[-0.75rem] h-6 w-6 rounded-full bg-primary md:-bottom-3 md:end-[-0.75rem]" />
+              <span aria-hidden="true" className="absolute -bottom-3 start-[-0.75rem] h-6 w-6 rounded-full bg-background md:bottom-auto md:start-auto md:-top-3 md:end-[-0.75rem]" />
+              <span aria-hidden="true" className="absolute -bottom-3 end-[-0.75rem] h-6 w-6 rounded-full bg-background md:-bottom-3 md:end-[-0.75rem]" />
             </div>
 
             {/* Body */}
             <div className="px-6 py-8 text-center md:px-10 md:py-10 md:text-start">
-              <h2 className="text-3xl font-extrabold leading-tight text-ivory md:text-4xl lg:text-5xl">
-                {isAr ? "جاهز تبدأ رحلتك مع الكورية؟" : "Ready to Start Your Korean Journey?"}
-              </h2>
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-ivory/75 md:text-lg">
-                {isAr
-                  ? "أول حصة مجانية. اتعرّف على معلمتك، وشوف الحصة ماشية إزاي، وبعدين قرّر إذا كانت كلوفرز مناسبة ليك."
-                  : "Your first class is free. Meet your teacher, see how the class works, and decide if Klovers is right for you."}
-              </p>
-
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start">
+              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start">
                 {SOCIAL_PROOF.map(({ icon: Icon, value, en, ar }) => (
                   <div key={en} className="flex items-center gap-2">
                     <Icon className="h-5 w-5 text-klovers-yellow" aria-hidden="true" />
