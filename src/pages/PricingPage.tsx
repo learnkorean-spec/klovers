@@ -10,7 +10,7 @@ import StickyEnrollBar from "@/components/StickyEnrollBar";
 import { ChevronDown, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
-import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
+import { trackAndOpenWhatsApp, logLeadEvent, logEngagementEvent } from "@/lib/leadTracking";
 import { track } from "@/lib/tracking";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -102,7 +102,9 @@ const ExitNudge = () => {
       if (!shownLogged.current) {
         shownLogged.current = true;
         track.custom("exit_intent_shown", { page: "pricing" });
-        logLeadEvent({ source_type: "pricing", cta_label: "exit_intent_shown" });
+        // The sheet appearing is something that happened TO the visitor, not
+        // a choice - engagement, not a lead (23 Sep 2026).
+        logEngagementEvent({ source_type: "pricing_page", cta_label: "exit_intent_shown" });
       }
     };
 
@@ -188,7 +190,12 @@ const ExitNudge = () => {
 const PricingPage = () => {
   useSEO({ title: "Pricing & Plans", description: "Affordable Korean language learning plans at Klovers. Choose the right course for your budget and learning goals.", canonical: "https://kloversegy.com/pricing" });
 
-  useEffect(() => { logLeadEvent({ source_type: "pricing", cta_label: "page_view" }); }, []);
+  // Viewing pricing is interest, not a conversion (23 Sep 2026): the row is
+  // kept in lead_events and GA4 gets `pricing_viewed`, but no Lead fires.
+  useEffect(() => {
+    track.ga("pricing_viewed", { language: document.documentElement.lang || undefined });
+    logEngagementEvent({ source_type: "pricing_page", cta_label: "page_view" });
+  }, []);
 
   useEffect(() => {
     const el = document.createElement("script");
