@@ -150,13 +150,13 @@ const UpcomingSessionsCard = ({ sessions: sessionsProp, zoomUrl: zoomUrlProp, sh
         <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
           <div className="flex flex-wrap-reverse items-end justify-between gap-3 sm:flex-nowrap sm:items-start">
             <div className="flex-1 min-w-[12rem]">
-              <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">{t("dashboardPage.nextClass")}</p>
+              <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider mb-1">{t("dashboardPage.nextClass")}</p>
               <p className="font-bold text-foreground text-lg">{formatDate(nextLocal.dateStr, language, t)}</p>
               <p className="text-sm text-muted-foreground flex flex-wrap items-center gap-1 mt-1 break-words">
                 <Clock className="h-3.5 w-3.5 shrink-0" />
                 <span dir="ltr">{localizeClock(nextLocal.timeFormatted, language)}</span> · {next.duration_min} {t("dashboardPage.minutesShort")} · <span dir="ltr">{userTz.replace(/_/g, " ")}</span>
               </p>
-              <p className="text-[11px] text-muted-foreground/70 break-words">({formatDate(next.session_date, language, t)} <span dir="ltr">{localizeClock(formatTime(next.start_time), language)}</span> <span dir="ltr">{(next.timezone || "Africa/Cairo").replace(/_/g, " ")}</span>)</p>
+              <p className="text-[11px] text-muted-foreground break-words">({formatDate(next.session_date, language, t)} <span dir="ltr">{localizeClock(formatTime(next.start_time), language)}</span> <span dir="ltr">{(next.timezone || "Africa/Cairo").replace(/_/g, " ")}</span>)</p>
               <p className="text-xs text-muted-foreground mt-1">{next.group_name} · {getLevelShortLabel(next.level, language) || next.level}</p>
 
               {/* Join Class button */}
