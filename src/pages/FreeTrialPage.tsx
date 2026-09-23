@@ -374,7 +374,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── TESTIMONIALS ────────────────────────────────────── */}
+        {/* ── TESTIMONIALS ──────────────────────────────────── */}
         <section className="py-16 bg-muted/40 border-b border-border">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl font-black text-foreground text-center mb-8">
@@ -400,7 +400,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── WHAT TO EXPECT — dark ───────────────────────── */}
+        {/* ── WHAT TO EXPECT — dark ─────────────────────────── */}
         <section className="py-20 bg-foreground">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-black text-background text-center mb-12">
@@ -422,7 +422,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── SCHEDULE — ticket style ─────────────────────── */}
+        {/* ── SCHEDULE — ticket style ───────────────────────── */}
         <section className="py-20 pb-28">
           <div className="container mx-auto px-4 max-w-xl">
 
