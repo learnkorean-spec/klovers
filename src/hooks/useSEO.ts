@@ -11,8 +11,18 @@ interface SEOProps {
    * Pass an Arabic-language URL when this page has an Arabic equivalent.
    * Emits hreflang="ar" + hreflang="x-default" link tags for Google.
    * If omitted, no hreflang tags are emitted (correct for pages with no AR pair).
+   *
+   * Prefer `alternates`: this older option always names the CURRENT page as
+   * the English one, which is wrong when the current page is the Arabic side.
    */
   hreflangAr?: string;
+  /**
+   * The full translation pair, as absolute URLs. Emits the same en / ar /
+   * x-default cluster on both pages, which is what Google requires: every
+   * member names every member, itself included. Added 24 Sep 2026 for the
+   * homepage pair "/" and "/ar".
+   */
+  alternates?: { en: string; ar: string };
 }
 
 const BASE_URL = "https://kloversegy.com";
@@ -42,7 +52,11 @@ export const useSEO = ({
   type = "website",
   noindex = false,
   hreflangAr,
+  alternates,
 }: SEOProps) => {
+  const altEn = alternates?.en;
+  const altAr = alternates?.ar;
+
   useEffect(() => {
     const fullTitle = withBrand(title);
 
@@ -92,17 +106,23 @@ export const useSEO = ({
     // og:url always matches canonical
     setMeta('meta[property="og:url"]', "content", canonicalHref);
 
-    // hreflang — emit only when an Arabic pair URL is provided
+    // hreflang. The prerendered HTML may already carry the same cluster, so
+    // clear any existing alternates first rather than doubling them.
     const hreflangEls: HTMLLinkElement[] = [];
-    if (hreflangAr) {
-      const createHreflang = (lang: string, href: string) => {
-        const el = document.createElement("link");
-        el.rel = "alternate";
-        el.setAttribute("hreflang", lang);
-        el.href = href;
-        document.head.appendChild(el);
-        hreflangEls.push(el);
-      };
+    const createHreflang = (lang: string, href: string) => {
+      const el = document.createElement("link");
+      el.rel = "alternate";
+      el.setAttribute("hreflang", lang);
+      el.href = href;
+      document.head.appendChild(el);
+      hreflangEls.push(el);
+    };
+    if (altEn && altAr) {
+      document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((el) => el.remove());
+      createHreflang("en", altEn);
+      createHreflang("ar", altAr);
+      createHreflang("x-default", altEn);
+    } else if (hreflangAr) {
       createHreflang("en", canonicalHref);
       createHreflang("ar", hreflangAr);
       createHreflang("x-default", canonicalHref);
@@ -114,5 +134,5 @@ export const useSEO = ({
       setMeta('meta[name="description"]', "content", DEFAULT_DESC);
       hreflangEls.forEach(el => el.remove());
     };
-  }, [title, description, canonical, ogImage, type, hreflangAr]);
+  }, [title, description, canonical, ogImage, type, hreflangAr, altEn, altAr]);
 };
