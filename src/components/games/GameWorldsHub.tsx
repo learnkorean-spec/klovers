@@ -46,7 +46,11 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
     }
     let cancelled = false;
     (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("GameWorldsHub: could not read the session", sessionError);
+        return;
+      }
       const uid = session?.user?.id;
       if (!uid) return;
       const { data, error } = await supabase
@@ -54,6 +58,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         .select("activity_type")
         .eq("user_id", uid)
         .like("activity_type", "game_%");
+      if (error) console.error("GameWorldsHub: could not read played games", error);
       if (cancelled || error || !data) return;
       setPlayed(new Set(data.map((r: { activity_type: string | null }) => (r.activity_type ?? "").replace(/^game_/, ""))));
     })();
