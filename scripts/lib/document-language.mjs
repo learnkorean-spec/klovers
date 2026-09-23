@@ -52,11 +52,14 @@ export const HTML_TAG_PATTERN = /<html\b[^>]*>/i;
 /**
  * The language a route's document should declare.
  *
- * Marketing routes have no `post` and are English — there is no Arabic URL for
- * any of them (docs/RENDERING_DECISION_2026-08.md §5), so English is not a
- * default-by-omission here, it is the correct answer.
+ * A blog post says so in its `lang` column. A marketing route is English
+ * unless it declares `lang: "ar"` itself — since 24 Sep 2026 exactly one does,
+ * the Arabic homepage at /ar. Every other marketing page still has no Arabic
+ * URL (docs/RENDERING_DECISION_2026-08.md §5), so English is the correct
+ * answer for them, not a default-by-omission.
  */
 export function languageOf(route) {
+  if (route?.lang === "ar") return "ar";
   return route?.post?.lang === "ar" ? "ar" : "en";
 }
 
