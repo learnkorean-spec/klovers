@@ -14,9 +14,10 @@ import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { type ClassType, type Duration, getTierForCountry, normalizeCountry, getPriceFor, formatMoney, DURATION_CLASSES } from "@/lib/stripePrices";
 import { track } from "@/lib/tracking";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { trustCopy } from "@/lib/trustFigures";
 
 const EnrollPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   useSEO({ title: "Enroll Now", description: "Start learning Korean today. Enroll in a Klovers course — choose your level, schedule, and teacher.", canonical: "https://kloversegy.com/enroll" });
   const [planType, setPlanType] = useState<ClassType | "">("");
   const [duration, setDuration] = useState<string>("");
@@ -133,14 +134,15 @@ const EnrollPage = () => {
       <main id="main-content" className="pt-24 pb-16 flex items-center justify-center px-4">
         <div className="w-full max-w-lg space-y-4">
 
-          {/* Header */}
+          {/* Header. The rating and student count come from @/lib/trustFigures
+              (they were "5.0 rated" with no source and a bare "200+ students"). */}
           <div className="text-center space-y-1">
             <h1 className="text-2xl font-bold text-foreground">{t("enrollForm.completeEnrollment")}</h1>
             <p className="text-muted-foreground text-sm">{t("enrollForm.chooseSubmit")}</p>
             <div className="flex items-center justify-center gap-3 flex-wrap pt-1 text-xs text-muted-foreground">
-              <span>{t("enrollForm.rated")}</span>
+              <span>⭐ {trustCopy(language).ratingShort}</span>
               <span className="text-border">·</span>
-              <span>{t("enrollForm.studentsCount")}</span>
+              <span>👥 {trustCopy(language).studentsShort}</span>
               <span className="text-border">·</span>
               <span>{t("enrollForm.levels")}</span>
             </div>

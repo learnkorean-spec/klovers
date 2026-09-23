@@ -20,6 +20,7 @@ import { track } from "@/lib/tracking";
 import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
 import { countryFromTimezone } from "@/lib/stripePrices";
+import { trustCopy } from "@/lib/trustFigures";
 
 const SignUpPage = () => {
   useSEO({ title: "Sign Up | Klovers Korean Academy", description: "Create your free Klovers account and start learning Korean with live interactive classes today.", noindex: true });
@@ -42,6 +43,7 @@ const SignUpPage = () => {
   }
   const { t, language } = useLanguage();
   const isAr = language === "ar";
+  const trust = trustCopy(language);
 
   // Remember where this signup was heading as soon as the page opens, not only
   // after a successful signup. A student who arrived from the trial email and
@@ -186,14 +188,13 @@ const SignUpPage = () => {
       <Header />
       <main id="main-content" className="pt-24 pb-16 flex flex-col items-center justify-center px-4 gap-4">
 
-        {/* Social proof strip — 200+, not 500+. Same figure as the hero strip
-            (HeroSection.tsx) and the testimonials stats: every student taught
-            across 13 years, which is the only student number on this site that
-            anything supports. */}
+        {/* Social proof strip — figures from @/lib/trustFigures. 200+ is every
+            student Reham has taught across 13 years, so it says "taught"; the
+            rating is the sourced Google one (it used to read "4.9 rated"). */}
         <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5 font-medium text-foreground">{isAr ? "⭐ تقييم 4.9" : "⭐ 4.9 rated"}</span>
+          <span className="flex items-center gap-1.5 font-medium text-foreground">⭐ {trust.ratingShort}</span>
           <span className="text-border">·</span>
-          <span>{isAr ? "👥 +200 طالب" : "👥 200+ students"}</span>
+          <span>👥 {trust.studentsShort}</span>
           <span className="text-border">·</span>
           <span>{isAr ? "🌍 +15 دولة" : "🌍 15+ countries"}</span>
           <span className="text-border">·</span>
