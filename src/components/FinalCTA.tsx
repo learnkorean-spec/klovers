@@ -13,10 +13,8 @@ import PriceTeaser from "@/components/PriceTeaser";
  *
  * 23 Sep 2026, CRO pass:
  *  - The heading was "One Free Class. That's All We Ask." (translations.ts
- *    `finalCta.title`) - an obligation frame: it tells the visitor they owe
- *    something. It is an invitation now, written here in both languages:
- *    "Ready to Start Your Korean Journey?" and a subline that says what the
- *    free class actually is and that the decision stays theirs.
+ *    `finalCta.title`) - an obligation frame. It is an invitation now,
+ *    written here in both languages.
  *  - The three facts use the same labels as the rest of the page: 200+ is the
  *    students Reham has taught herself; the Google rating keeps its source.
  *  - The community tile says "social media community", matching the band -
@@ -24,6 +22,7 @@ import PriceTeaser from "@/components/PriceTeaser";
  *  - The real price teaser sits under the button (PriceTeaser.tsx).
  *  - The satisfaction-guarantee wording is unchanged: wording a policy is
  *    Re's call, not a copy edit.
+ *  - The two quiet links are 44px tap targets (they measured 20px at 375px).
  *
  * Numbers are static on purpose: a count-up renders every intermediate value
  * as a finished claim.
@@ -34,8 +33,6 @@ const SOCIAL_PROOF = [
   { icon: Globe, value: "EN · AR", en: "Classes in English or Arabic", ar: "حصص بالعربي أو الإنجليزي" },
 ];
 
-// The cast that welcomes people to the ticket. Klobi and the girl stand on the
-// ticket's top edge, each on an Ivory dome, and hop on staggered beats.
 const CAST: { name: KloverIconName; delay: string; cls: string }[] = [
   { name: "student-girl-heart", delay: "0.4s", cls: "" },
   { name: "klobi-headphones", delay: "0s", cls: "" },
@@ -44,14 +41,16 @@ const CAST: { name: KloverIconName; delay: string; cls: string }[] = [
 
 const KR_CHARS = ["안녕", "한국어", "공부", "화이팅", "수업", "최고"];
 
+const QUIET_LINK =
+  "inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-ivory/85 underline decoration-ivory/30 underline-offset-4 transition-colors hover:text-ivory hover:decoration-ivory/60";
+
 const FinalCTA = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
   const sectionRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(true);
 
-  // Starts visible: the heading and the button must never wait on an
-  // observer.
+  // Starts visible: the heading and the button must never wait on an observer.
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setVisible(true); },
@@ -69,7 +68,6 @@ const FinalCTA = () => {
       ref={sectionRef}
       className="py-20 md:py-28 relative overflow-hidden bg-primary border-y border-charcoal/25"
     >
-      {/* Ghost Korean words */}
       <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden>
         {KR_CHARS.map((char, i) => (
           <span
@@ -88,7 +86,6 @@ const FinalCTA = () => {
 
       <div className="container mx-auto px-4 relative z-10">
 
-        {/* ── THE TICKET ── */}
         <div className={`relative mx-auto max-w-4xl pt-24 md:pt-28 ${reveal("")}`}>
 
           <div className="pointer-events-none absolute inset-0 select-none" aria-hidden="true">
@@ -97,7 +94,6 @@ const FinalCTA = () => {
             <Sparkles className="animate-drift absolute -end-1 bottom-24 h-6 w-6 text-charcoal/25" style={{ animationDelay: "0.6s" }} />
           </div>
 
-          {/* The cast, standing on the ticket's top edge */}
           <div className="pointer-events-none absolute start-6 top-0 z-10 flex items-end gap-2 [perspective:500px] md:start-10" aria-hidden="true">
             {CAST.map(({ name, delay, cls }) => (
               <div key={name} className={`relative h-24 w-24 md:h-28 md:w-28 ${cls}`}>
@@ -109,7 +105,6 @@ const FinalCTA = () => {
             ))}
           </div>
 
-          {/* The stamp: FREE, on the ticket's corner */}
           <div className="animate-stamp absolute -end-2 top-14 z-20 grid h-20 w-20 place-items-center rounded-full border-2 border-dashed border-klovers-yellow bg-charcoal text-center shadow-lg md:-end-5 md:top-16 md:h-24 md:w-24" aria-hidden="true">
             <span>
               <span className="block text-xl font-extrabold leading-none text-klovers-yellow md:text-2xl">{isAr ? "مجاناً" : "FREE"}</span>
@@ -144,7 +139,6 @@ const FinalCTA = () => {
                   : "Your first class is free. Meet your teacher, see how the class works, and decide if Klovers is right for you."}
               </p>
 
-              {/* Social proof — static */}
               <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start">
                 {SOCIAL_PROOF.map(({ icon: Icon, value, en, ar }) => (
                   <div key={en} className="flex items-center gap-2">
@@ -157,7 +151,6 @@ const FinalCTA = () => {
                 ))}
               </div>
 
-              {/* ONE action; the placement test and WhatsApp are quiet links. */}
               <div className="mt-7 flex flex-col items-center gap-4 md:items-start">
                 <Button
                   size="lg"
@@ -173,11 +166,8 @@ const FinalCTA = () => {
 
                 <PriceTeaser source="final_cta" className="!text-ivory/70 [&_strong]:!text-ivory [&_a]:!text-ivory [&_a]:!decoration-ivory/40" />
 
-                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 md:justify-start">
-                  <Link
-                    to="/placement-test"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-ivory/85 underline decoration-ivory/30 underline-offset-4 transition-colors hover:text-ivory hover:decoration-ivory/60"
-                  >
+                <div className="flex flex-wrap items-center justify-center gap-x-6 md:justify-start">
+                  <Link to="/placement-test" className={QUIET_LINK}>
                     <ClipboardCheck className="h-4 w-4" />
                     {isAr ? "أو حدّد مستواك مجانًا" : "or take the free placement test"}
                   </Link>
@@ -186,7 +176,7 @@ const FinalCTA = () => {
                     onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "final_cta_homepage" }); }}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-ivory/85 underline decoration-ivory/30 underline-offset-4 transition-colors hover:text-ivory hover:decoration-ivory/60"
+                    className={QUIET_LINK}
                   >
                     <MessageCircle className="h-4 w-4" />
                     {isAr ? "أو كلّمنا على واتساب" : "or message us on WhatsApp"}
@@ -194,14 +184,13 @@ const FinalCTA = () => {
                 </div>
 
                 <p className="text-xs text-ivory/60">
-                  {isAr ? "بدون بطاقة بنكية · 30 دقيقة · معلمة حقيقية" : "No credit card · 30 minutes · A real teacher"}
+                  {isAr ? "بدون بطاقة بنكية · ٣٠ دقيقة · معلمة حقيقية" : "No credit card · 30 minutes · A real teacher"}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── Under the ticket: the guarantee, and the community ── */}
         <div className={`mx-auto mt-8 grid max-w-4xl gap-4 md:grid-cols-2 ${reveal("delay-300")}`}>
           <div className="flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory px-5 py-4 text-start">
             <span className="text-3xl" aria-hidden="true">🛡️</span>
@@ -215,7 +204,6 @@ const FinalCTA = () => {
             </div>
           </div>
 
-          {/* Community — FOLLOWERS across social media, not students. */}
           <div className="flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory px-5 py-4 text-start">
             <span className="text-3xl" aria-hidden="true">🌍</span>
             <p className="text-sm font-bold leading-snug text-charcoal">
