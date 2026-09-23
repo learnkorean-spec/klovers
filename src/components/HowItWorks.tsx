@@ -16,6 +16,9 @@ import PriceTeaser from "@/components/PriceTeaser";
  * large to edit safely with the tooling available, so the homepage copy lives
  * with the component (same approach as PricingSection's `tr`). The key is left
  * in translations.ts for any other page that reads it.
+ *
+ * 23 Sep 2026 (mobile): two cards per row on phones. Stacked one per row the
+ * section measured 1,803px at 375px wide.
  */
 const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] }[] = [
   {
@@ -45,9 +48,9 @@ const HowItWorks = () => {
   const isAr = language === "ar";
 
   return (
-    <section className="py-20 md:py-28 bg-card">
+    <section className="py-16 md:py-28 bg-card">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div className="text-center mb-10 md:mb-12">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-3">
             {t("howItWorks", "title")}
           </h2>
@@ -57,7 +60,7 @@ const HowItWorks = () => {
         </div>
 
         {/* dir="ltr" keeps step order 1→4 left-to-right even in RTL locales */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto" dir="ltr">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto" dir="ltr">
           {STEPS.map((step, index) => {
             const [title, description] = isAr ? step.ar : step.en;
             return (
@@ -69,14 +72,14 @@ const HowItWorks = () => {
                   </span>
                 </div>
                 <Card className="group hover:shadow-md transition-all duration-300 border-border hover:border-primary/40 text-center h-full">
-                  <CardContent className="pt-8 pb-6 px-4">
+                  <CardContent className="pt-7 pb-4 px-3 sm:pt-8 sm:pb-6 sm:px-4">
                     {/* Ivory dome: the drawings need a light surface to keep their
                         outline; on dark they stand on the card directly. */}
-                    <div className="w-16 h-16 rounded-2xl bg-ivory dark:bg-transparent border border-charcoal/15 dark:border-transparent flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
-                      <KloverIcon name={step.icon} className="h-12 w-12" />
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-ivory dark:bg-transparent border border-charcoal/15 dark:border-transparent flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-105 transition-transform">
+                      <KloverIcon name={step.icon} className="h-9 w-9 sm:h-12 sm:w-12" />
                     </div>
-                    <h3 className="font-semibold text-foreground mb-2 text-sm md:text-base" dir={isAr ? "rtl" : "ltr"}>{title}</h3>
-                    <p className="text-sm md:text-base text-muted-foreground leading-relaxed" dir={isAr ? "rtl" : "ltr"}>{description}</p>
+                    <h3 className="font-semibold text-foreground mb-1.5 sm:mb-2 text-sm md:text-base" dir={isAr ? "rtl" : "ltr"}>{title}</h3>
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed" dir={isAr ? "rtl" : "ltr"}>{description}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -85,7 +88,7 @@ const HowItWorks = () => {
         </div>
 
         {/* "What your first class looks like" — pedagogy + trust. */}
-        <div className="max-w-2xl mx-auto mt-12 bg-background border border-border rounded-2xl p-6">
+        <div className="max-w-2xl mx-auto mt-10 md:mt-12 bg-background border border-border rounded-2xl p-5 sm:p-6">
           <p className="text-center mb-4">
             <span className="inline-block bg-klovers-yellow text-charcoal text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full">
               {isAr ? "إيه اللي بيحصل في أول حصة" : "What your first class looks like"}

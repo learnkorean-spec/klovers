@@ -4,93 +4,36 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
- * P0-4 of claude/WEBSITE_UX_CRO_ACTION_PLAN_2026-09-07.md, finally closed.
+ * "Why learn Korean?" - four cards, each a photograph and a link to a
+ * published article in the reader's own language.
  *
- * THE ORIGINAL FAULT: four plain <div>s carrying hover:shadow-xl,
- * hover:-translate-y-1 and a border change - the complete vocabulary of a
- * link - with no href and no onClick. A visitor interested enough to click
- * got nothing.
+ * History worth keeping (full notes in git history of this file):
+ *  - The cards were once dead <div>s dressed as links; every card is a real
+ *    link to a published article now, and each photograph is that article's
+ *    own hero.
+ *  - PROVENANCE IS ONLY HALF THE CHECK: korean-study-desk.jpg,
+ *    kdrama-vocabulary.jpg, korean-reading.jpg and topik-test.jpg all carry
+ *    AI-generated gibberish Hangul inside the picture. LOOK AT THE IMAGE, not
+ *    only at where it came from.
+ *  - korean-education.jpg (school-age students under a card about
+ *    universities) is a known compromise; a real photograph would beat it.
+ *  - No "+10,000 learners" and no avatar cluster from the mockup: the site
+ *    does not stand behind that number, and the faces are not students.
+ *  - No handwritten margin notes: no Arabic or Hangul handwriting face.
+ *  - Charcoal, not black; the brand's yellow glow instead of a photo backdrop.
+ *  - Nothing is written over a photograph, so no scrim is needed. If text
+ *    ever goes back on top of an image, the scrim comes back with it.
  *
- * The first repair made the card itself the payoff: a flip card, scene on
- * the front, explanation on the back. That worked, but it answered the
- * question by removing the affordance rather than by earning it.
- *
- * 2026-09-20 - Re sent a mockup of this section and this is it: a dark band,
- * a photograph per card, a coloured badge on the corner of each, the copy
- * underneath, and an arrow. The arrow is the whole point of the change. It
- * is real now: each card goes to a published article, in the reader's own
- * language, and each photograph is that article's own hero.
- *
- * There is no flip any more because there is nothing left to flip to - the
- * description is on the front, where it should always have been.
- *
- * ── ON CHOOSING THE PHOTOGRAPHS ───────────────────────────────────────
- *
- * This file shipped for months with `IMAGES = {}` and a comment: "putting
- * images of unchecked provenance on the homepage is not a thing to do
- * quietly." That was right, and it has been answered rather than ignored -
- * every image below is the hero_image of a PUBLISHED post, the same standard
- * CultureHeritageSection meets.
- *
- * BUT PROVENANCE IS ONLY HALF THE CHECK. The first version of this section
- * shipped korean-study-desk.jpg and kdrama-vocabulary.jpg, both properly
- * published, both carrying AI-generated gibberish Hangul printed inside the
- * picture - "로니 헐치 지", "믹새긴깅", "Heraye 루·착힐 차뭔으럼." On a homepage
- * that teaches people to read Hangul, that is read by every visitor who has
- * finished lesson one. korean-reading.jpg and topik-test.jpg carry the same
- * fault. LOOK AT THE IMAGE, not only at where it came from.
- *
- * Known compromise: korean-education.jpg is a classroom of school-age
- * students under a card about universities and scholarships, where the
- * audience is adults. It is the best text-free published option in the repo.
- * A real photograph would beat it.
- *
- * ON CONTRAST. The scrim and the white-text rules that governed the old SVG
- * scenes are gone with them: nothing is written over a photograph here.
- * Titles are Ivory on Charcoal (12.3:1) and the badge icons are Charcoal on
- * four pale tints (all above 9:1). If a future version puts text back on top
- * of the image, the scrim has to come back with it.
- *
- * ── THREE DEPARTURES FROM THE MOCKUP ──────────────────────────────────────
- *
- * 1. NO "+10,000 LEARNERS" AND NO AVATAR CLUSTER. The mockup's band carries
- *    "+10,000 من متعلمي كلوفرز" over three faces. The site's own figure, in
- *    its own hero, is 200+ students in 13 years, and the faces are not
- *    Klovers students. This is the same thing the five invented leaderboard
- *    players were deleted for rather than scaled up (see
- *    claude/BRAND_SEO_GAMES_RUN_2026-09-07.md). The band carries the offer
- *    and nothing else. Real proof - the Google rating, a student photo with
- *    consent - can go in the moment it exists.
- *
- * 2. NO HANDWRITTEN MARGIN NOTES. Caveat has no Arabic and no Hangul
- *    glyphs, so "من أجل نسخة أفضل منك" and "더 나은 너를 위해" would both have
- *    fallen back to Cairo and rendered as ordinary sentences floating in the
- *    margin - the charm is entirely in the face. Adding an Arabic
- *    handwriting face is a deliberate change of its own, with its own cost
- *    on a page whose LCP is already poor.
- *
- * 3. CHARCOAL, NOT BLACK. The mockup's ground is around #0D0D12 and its
- *    backdrop is a cherry-blossom photograph. Both are outside the palette,
- *    so this is Charcoal #2E2E2E with the brand's yellow glow behind it -
- *    the same device the hero uses.
+ * 23 Sep 2026 (mobile): two cards per row on phones, with 4:3 photos instead
+ * of 4:5 and smaller type. Stacked one per row, this section measured 3,023px
+ * at 375px wide - the longest thing on the homepage. From sm up it is
+ * unchanged.
  */
 
 /**
  * One row per card, keyed by the `icon` string the translations already use.
- *
- * `href` is a pair because the blog is a pair: every published article has an
- * `-ar` twin, and sending an Arabic reader to the English post is worse than
- * sending them nowhere. All four destinations were chosen partly BECAUSE they
- * are clean pairs - exactly one ar row and one en row - so none of them runs
- * into the duplicate-slug problem recorded in docs/ARTICLE_SEO_PLAN.md, where
- * an image can have both a `-ar` original and a newer `ar-` copy with no
- * views. If you swap a destination, check that first.
- *
- * `badge` is a literal class string - Tailwind's scanner only keeps what it
- * can see, so these must never be assembled from fragments.
- *
- * Badges alternate Ivory and Yellow. The brand is three colours (20 Sep
- * decision), so the Mint and Blush fills that used to sit here are gone.
+ * `href` is a pair because the blog is a pair (every article has an `-ar`
+ * twin). `badge` is a literal class string for Tailwind's scanner.
  */
 const CARDS: Record<
   string,
@@ -134,13 +77,7 @@ const CARDS: Record<
   },
 };
 
-/**
- * The framing line and the closing band, in Re's own words from the mockup.
- *
- * These are in the component rather than in translations.ts for the same
- * reason `koreanWord` always was: that file is 230KB and the tooling here can
- * only replace a file whole. A session with real git access should move them.
- */
+/** The framing line and the closing band, in Re's own words from the mockup. */
 const COPY = {
   ar: {
     eyebrow: "لغة جديدة ← آفاق أوسع",
@@ -166,10 +103,7 @@ const WhyLearnKorean = () => {
   const copy = COPY[lang];
 
   return (
-    <section className="relative overflow-hidden bg-charcoal py-20 md:py-28">
-      {/* The brand's glow, standing in for the mockup's photographic backdrop.
-          A gradient is a backgroundImage, so it will not show up in a
-          computed-style colour audit — that is expected, not a stray. */}
+    <section className="relative overflow-hidden bg-charcoal py-16 md:py-28">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-28 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full"
@@ -180,19 +114,17 @@ const WhyLearnKorean = () => {
 
       <div className="container relative mx-auto px-4">
 
-        <div className="mb-14 text-center">
+        <div className="mb-10 text-center md:mb-14">
           <span className="inline-flex items-center gap-2 rounded-full bg-klovers-yellow px-4 py-1.5 text-xs font-bold text-charcoal md:text-sm">
             <Sprout className="h-4 w-4" aria-hidden="true" />
             {copy.eyebrow}
           </span>
 
-          <h2 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-ivory md:text-5xl lg:text-6xl">
+          <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-ivory sm:text-4xl md:text-5xl lg:text-6xl">
             {t("whyLearn", "title")}
           </h2>
 
-          {/* Yellow as a mark under the heading, never as the heading. The
-              mockup underlines one word; the heading is a single translated
-              string, so it cannot be split without touching translations.ts. */}
+          {/* Yellow as a mark under the heading, never as the heading. */}
           <span aria-hidden="true" className="mx-auto mt-4 block h-2 w-28 rounded-full bg-klovers-yellow" />
 
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-ivory/70 md:text-lg">
@@ -200,7 +132,7 @@ const WhyLearnKorean = () => {
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           {items.map((item, index) => {
             const card = CARDS[item.icon];
             if (!card) return null;
@@ -210,7 +142,8 @@ const WhyLearnKorean = () => {
               <Link
                 key={index}
                 to={card.href[lang]}
-                className="group block rounded-3xl border border-ivory/10 bg-ivory/[0.06] p-3 transition-colors duration-300 hover:border-klovers-yellow/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
+                aria-label={`${item.title} — ${copy.more}`}
+                className="group block rounded-2xl sm:rounded-3xl border border-ivory/10 bg-ivory/[0.06] p-2 sm:p-3 transition-colors duration-300 hover:border-klovers-yellow/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
               >
                 <div className="relative">
                   <img
@@ -221,25 +154,24 @@ const WhyLearnKorean = () => {
                     height={500}
                     loading="lazy"
                     decoding="async"
-                    className="aspect-[4/5] w-full rounded-2xl object-cover"
+                    className="aspect-[4/3] w-full rounded-xl object-cover sm:aspect-[4/5] sm:rounded-2xl"
                   />
-                  {/* The badge sits on the corner of the photograph, half over
-                      it — which is why the padding below starts at pt-8. */}
+                  {/* The badge sits on the corner of the photograph, half over it. */}
                   <span
                     aria-hidden="true"
-                    className={`absolute -bottom-5 start-2 grid h-12 w-12 place-items-center rounded-full shadow-md ${card.badge}`}
+                    className={`absolute -bottom-4 start-2 grid h-9 w-9 place-items-center rounded-full shadow-md sm:-bottom-5 sm:h-12 sm:w-12 ${card.badge}`}
                   >
-                    <Icon className="h-5 w-5 text-charcoal" />
+                    <Icon className="h-4 w-4 text-charcoal sm:h-5 sm:w-5" />
                   </span>
                 </div>
 
-                <div className="px-2 pb-2 pt-8">
-                  <h3 className="text-lg font-bold leading-snug text-ivory">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ivory/65">{item.description}</p>
+                <div className="px-1.5 pb-1.5 pt-6 sm:px-2 sm:pb-2 sm:pt-8">
+                  <h3 className="text-sm font-bold leading-snug text-ivory sm:text-lg">{item.title}</h3>
+                  <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-ivory/65 sm:mt-2 sm:line-clamp-none sm:text-sm">{item.description}</p>
 
                   <span
-                    className="mt-4 inline-grid h-10 w-10 place-items-center rounded-full bg-ivory/10 text-ivory transition-colors duration-300 group-hover:bg-klovers-yellow group-hover:text-charcoal"
-                    aria-label={copy.more}
+                    className="mt-3 hidden h-10 w-10 place-items-center rounded-full bg-ivory/10 text-ivory transition-colors duration-300 group-hover:bg-klovers-yellow group-hover:text-charcoal sm:mt-4 sm:inline-grid"
+                    aria-hidden="true"
                   >
                     <ArrowRight className={`h-4 w-4 ${isAr ? "rotate-180" : ""}`} aria-hidden="true" />
                   </span>
@@ -249,10 +181,8 @@ const WhyLearnKorean = () => {
           })}
         </div>
 
-        {/* The closing band. The mockup's "+10,000 learners" and its three
-            faces are deliberately absent — see departure 1 at the top of this
-            file. Do not add a number here that the site cannot stand behind. */}
-        <div className="mx-auto mt-12 flex max-w-4xl flex-col items-center justify-between gap-5 rounded-3xl border border-ivory/10 bg-ivory/[0.06] p-6 text-center md:mt-16 md:flex-row md:text-start">
+        {/* The closing band. Do not add a number here that the site cannot stand behind. */}
+        <div className="mx-auto mt-10 flex max-w-4xl flex-col items-center justify-between gap-5 rounded-3xl border border-ivory/10 bg-ivory/[0.06] p-6 text-center md:mt-16 md:flex-row md:text-start">
           <div>
             <p className="text-lg font-bold text-ivory md:text-xl">{copy.bandTitle}</p>
             <p className="mt-1 text-sm text-ivory/65">{copy.bandSub}</p>
