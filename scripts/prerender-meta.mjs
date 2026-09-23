@@ -305,6 +305,30 @@ const ERA_MODERN_KOREA_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
       <p>Previous station: <a href="/journey/traditional-life">Traditional Life</a>.</p>
     </div>`;
 
+// ── Homepage body for crawlers without JavaScript ───────────────────────────
+// Same tradeoff as GAMES_BODY_HTML: this text is DUPLICATED from the app
+// (HeroSection, HowItWorks, MeetTeacher, MoreThanAClass). createRoot replaces
+// it on boot, so visitors never see it; it exists so the raw HTML says what
+// the page says. Keep it short and true - exactly one <h1>.
+const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
+      <h1>Learn Korean online with Klovers</h1>
+      <p>Klovers Korean Academy (كلوفرز) teaches live online Korean classes in English and in Arabic, from the Hangul alphabet to advanced conversation. Classes are small groups of up to 8 students, or private one-to-one lessons, taught by Reham Elshrkawy, who has taught Korean for 13 years and more than 200 students.</p>
+      <p><a href="/free-trial">Book a free 30-minute trial class</a> or <a href="/placement-test">take the free placement test</a> to find your level.</p>
+      <h2>How it works</h2>
+      <ul>
+        <li>Take the free placement test or book a free trial class.</li>
+        <li>Join a live class in English or Arabic at a time that suits you.</li>
+        <li>Move from Hangul through Levels 1 to 6, with a textbook, homework and games between classes.</li>
+      </ul>
+      <h2>More than a class</h2>
+      <ul>
+        <li><a href="/games">Korean learning games</a> — free practice for Hangul, vocabulary and grammar.</li>
+        <li><a href="/journey/before-korea">Korea's story</a> — five eras, from the first legend to today.</li>
+        <li><a href="/blog">The Journal</a> — articles on Korean culture and study tips in English and Arabic.</li>
+      </ul>
+      <p><a href="/courses">Courses</a> · <a href="/pricing">Pricing</a> · <a href="/about">About</a> · <a href="/faq">FAQ</a> · <a href="/contact">Contact</a></p>
+    </div>`;
+
 // ── Marketing routes ────────────────────────────────────────────────────────
 // Hand-maintained on purpose: these are static pages, not database rows.
 //
@@ -333,10 +357,20 @@ const MARKETING_ROUTES = [
     //
     // No " | Klovers" suffix is appended to this one: the emit loop only adds
     // it when the title does not already contain SITE_NAME, and this does.
+    //
+    // 23 Sep 2026: two equal markets now, English and Arabic speakers, so the
+    // title no longer says "in Arabic" only. Title and description are
+    // CHARACTER-FOR-CHARACTER the ones src/pages/Index.tsx hands to useSEO
+    // (HOME_TITLE + " | Klovers", HOME_DESCRIPTION) - the review found the raw
+    // HTML and the rendered page disagreeing. Change both or neither.
+    //
+    // `body` gives crawlers that never run JavaScript the page's real text
+    // (the review measured 76 characters of body text in the raw HTML).
     path: "/",
-    title: "Klovers Korean Academy — Learn Korean in Arabic",
+    title: "Learn Korean Online — Live Classes in English and Arabic | Klovers",
     description:
-      "Klovers (كلوفرز — أكاديمية محبي الكورية): interactive online Korean lessons, a free placement test, and gamified learning for all levels.",
+      "Klovers (كلوفرز): live online Korean classes in English and Arabic, from Hangul to advanced. Small groups or private lessons, a free trial class and a free placement test.",
+    body: HOME_BODY_HTML,
   },
   {
     path: "/courses",
