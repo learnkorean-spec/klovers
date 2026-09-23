@@ -4,7 +4,7 @@
 //   Navigation (HTML)             → Network-First with offline fallback
 //   Supabase API / edge functions → Network-Only (never cache auth/data)
 
-const CACHE_NAME = "klovers-v1";
+const CACHE_NAME = "klovers-v2";
 const OFFLINE_URL = "/";
 
 // Assets to pre-cache on install (shell)
@@ -54,6 +54,16 @@ self.addEventListener("fetch", (event) => {
     url.hostname.includes("supabase.co") ||
     url.pathname.startsWith("/api/")
   ) {
+    return;
+  }
+
+  // Cross-origin requests (Google Fonts files on fonts.gstatic.com, analytics)
+  // are left to the browser. Handling them here would make the worker fetch
+  // them itself, and a worker's fetch() is governed by the CSP's connect-src,
+  // which does not list fonts.gstatic.com - so every web font failed with the
+  // page's own font-src allowing it. That is why Poppins / Inter / Cairo /
+  // Kalam still did not load after the CSP fix (PR #612).
+  if (url.origin !== self.location.origin) {
     return;
   }
 
