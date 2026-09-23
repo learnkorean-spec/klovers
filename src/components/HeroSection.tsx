@@ -12,38 +12,24 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
 /**
  * The first screen.
  *
- * 23 Sep 2026, CRO pass: FIVE THINGS, NO MORE. The hero had grown to about
- * ten competing elements - teacher chip, next-class chip, headline, subline,
- * two buttons, a reassurance line, three date chips, the Hangul sheet link and
- * a three-number stats strip. A visitor has about five seconds to learn WHAT
- * this is (live Korean classes), WHY Klovers (real teacher, small groups, a
- * clear path) and WHAT TO DO (book the free class). So the hero now carries:
+ * 23 Sep 2026, CRO pass: FIVE THINGS, NO MORE - headline, one paragraph, one
+ * primary action (Book a Free Class), one proof line, and at most ONE
+ * next-class line from real trial_slots data in the visitor's own time zone.
+ * The teacher is its own section; the full schedule lives on /free-trial; the
+ * Hangul sheet is linked from MoreThanAClass. WhatsApp is the secondary button
+ * in Arabic only.
  *
- *   1. the headline
- *   2. one supporting paragraph
- *   3. one primary action - Book a Free Class
- *   4. one proof line
- *   5. at most ONE next-class line, from real trial_slots data, in the
- *      visitor's own time zone
+ * HEADLINE SIZE, measured at 375px: at 32px the English headline wrapped to
+ * four lines. Phones use clamp(1.625rem, 7vw, 2.25rem), which sets each half
+ * on one line; from md up it is clamp(2.25rem, 5vw, 3.75rem) as before. The
+ * headline column (5xl) is wider than the paragraph's (2xl) so the halves
+ * stay on one line at desktop width too.
  *
- * Where the rest went: the teacher is its own section (MeetTeacher); the full
- * schedule lives on /free-trial; the Hangul starter sheet is linked from
- * MoreThanAClass; the numbers are in MeetTeacher and the community band.
+ * NUMERALS: the Arabic hero uses Arabic-Indic numerals throughout, because the
+ * next-class date line (ar-EG locale) does; it used to mix "8" with "٢٥".
  *
- * WhatsApp: Arabic visitors get it as the secondary button - it is how that
- * market expects to ask a question. English visitors get the booking action
- * alone; the floating WhatsApp bubble is still there for them as support.
- *
- * The headline column is wider than the paragraph's (5xl vs 2xl) so each
- * half of the headline sets on one line at desktop width; at 3xl it broke
- * into four ragged lines.
- *
- * The section is dark in BOTH themes - it is a photo under a charcoal scrim,
- * not a themed surface - which is why it uses live-bright and the
- * ivory/charcoal literals rather than the theme's foreground tokens.
- *
- * The four promise cards below the photo lift 48px / 80px onto it; the
- * content column's bottom padding is the room they take.
+ * The section is dark in BOTH themes (photo under a charcoal scrim), which is
+ * why it uses live-bright and ivory/charcoal literals.
  */
 const HeroSection = () => {
   const { language } = useLanguage();
@@ -51,10 +37,9 @@ const HeroSection = () => {
   const { slots } = useUpcomingTrialSlots();
 
   /**
-   * ONE next class. Prefer a slot taught in the visitor's language (the trial
-   * pools are Arabic and English); fall back to the soonest slot of any
-   * language. Null while loading or when nothing is scheduled - the honest
-   * rendering of both is to say nothing.
+   * ONE next class. Prefer a slot taught in the visitor's language; fall back
+   * to the soonest slot of any language. Null while loading or when nothing
+   * is scheduled - the honest rendering of both is to say nothing.
    */
   const nextClass = useMemo(() => {
     const want = isAr ? "ar" : "en";
@@ -65,8 +50,6 @@ const HeroSection = () => {
     const locale = isAr ? "ar-EG" : "en-US";
     const day = next.startsAt.toLocaleDateString(locale, { weekday: "long", month: "short", day: "numeric", timeZone: tz });
     const time = next.startsAt.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz });
-    // The zone's short name ("EDT", "GMT+3") after "your time", so the line is
-    // unambiguous even when read over someone's shoulder.
     let zoneName = "";
     try {
       zoneName = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
@@ -97,10 +80,7 @@ const HeroSection = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  /**
-   * The board's four promise cards, under the photo. Yellow and white
-   * alternate. h3: four short promises inside the hero, not page sections.
-   */
+  /** The board's four promise cards, under the photo. */
   const cards = [
     {
       icon: "klobi-reading" as KloverIconName,
@@ -128,13 +108,14 @@ const HeroSection = () => {
     },
   ];
 
+  const headlineSize = "text-[clamp(1.625rem,7vw,2.25rem)] md:text-[clamp(2.25rem,5vw,3.75rem)]";
+
   return (
     <>
       <section
         id="home"
         className="relative min-h-[86svh] flex flex-col items-center justify-center pt-16 overflow-hidden bg-charcoal"
       >
-        {/* ── Background layer ─────────────────────────── */}
         <img
           src={heroPoster}
           alt=""
@@ -162,38 +143,29 @@ const HeroSection = () => {
           />
         )}
 
-        {/* Cinematic scrim — Charcoal rather than pure black. */}
         <div
           className="absolute inset-0"
           style={{ background: "linear-gradient(to bottom, rgba(46,46,46,0.6) 0%, rgba(46,46,46,0.35) 45%, rgba(46,46,46,0.65) 100%)" }}
         />
-
-        {/* Brand-yellow glow behind the headline */}
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] max-w-full rounded-full pointer-events-none"
           style={{ background: "radial-gradient(ellipse, hsl(60 100% 50% / 0.16) 0%, transparent 70%)" }}
         />
 
-        {/* ── Hero content ────────────────────────────────────────── */}
         <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pt-8 pb-24 sm:pb-32">
           <div className="max-w-5xl mx-auto flex flex-col items-center gap-5 sm:gap-6">
 
-            {/* 1. Headline. Yellow as TYPE is correct here and only here: a
-                dark photo under a scrim, not a light ground. */}
+            {/* 1. Headline. Yellow as TYPE is correct here and only here. */}
             <h1
               className="font-display font-extrabold text-ivory leading-[1.08] tracking-tight w-full"
               style={{ textShadow: "0 4px 40px rgba(20,20,18,0.9), 0 2px 8px rgba(20,20,18,0.8)" }}
             >
-              <span className="block" style={{ fontSize: "clamp(2rem, 5vw, 3.75rem)" }}>
+              <span className={`block ${headlineSize}`}>
                 {isAr ? "ابدأ التحدث بالكورية" : "Start Speaking Korean"}
               </span>
               <span
-                className="block mt-1"
-                style={{
-                  fontSize: "clamp(2rem, 5vw, 3.75rem)",
-                  color: "#FFFF00",
-                  textShadow: "0 0 60px rgba(255, 255, 0, 0.35), 0 4px 24px rgba(20,20,18,0.7)",
-                }}
+                className={`block mt-1 ${headlineSize}`}
+                style={{ color: "#FFFF00", textShadow: "0 0 60px rgba(255, 255, 0, 0.35), 0 4px 24px rgba(20,20,18,0.7)" }}
               >
                 {isAr ? "من حصتك الأولى" : "From Your First Live Class"}
               </span>
@@ -205,12 +177,11 @@ const HeroSection = () => {
               style={{ textShadow: "0 1px 10px rgba(20,20,18,0.85)" }}
             >
               {isAr
-                ? "حصص كورية مباشرة أونلاين مع معلمة حقيقية، في مجموعات صغيرة بحد أقصى 8 طلاب، ومسار واضح من البداية حتى التحدث بثقة."
+                ? "حصص كورية مباشرة أونلاين مع معلمة حقيقية، في مجموعات صغيرة بحد أقصى ٨ طلاب، ومسار واضح من البداية حتى التحدث بثقة."
                 : "Live online Korean classes with a real teacher, small groups of up to 8, and a clear path from beginner to confident conversation."}
             </p>
 
-            {/* 3. The action. Arabic adds WhatsApp as a clearly secondary
-                outline button; English has the one button. */}
+            {/* 3. The action. */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-xs sm:max-w-none mx-auto">
               <Button
                 size="lg"
@@ -250,7 +221,7 @@ const HeroSection = () => {
             {/* 4. Proof line. */}
             <p className="text-ivory/80 text-sm font-medium" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
               {isAr
-                ? "بحد أقصى 8 طلاب · بالعربي أو الإنجليزي · مناسب للمبتدئين"
+                ? "بحد أقصى ٨ طلاب · بالعربي أو الإنجليزي · مناسب للمبتدئين"
                 : "Max 8 students · English & Arabic · Beginner friendly"}
             </p>
 
@@ -272,7 +243,7 @@ const HeroSection = () => {
         </div>
       </section>
 
-      {/* ── The board's four promise cards, lifted onto the cover ────────── */}
+      {/* ── The board's four promise cards, lifted onto the cover ── */}
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {cards.map(({ icon, tone, title, body }) => (
