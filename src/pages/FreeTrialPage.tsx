@@ -236,7 +236,7 @@ const FreeTrialPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="pt-16">
+      <main id="main-content" className="pt-16">
 
         {/* ── HERO ──────────────────────────────────────────── */}
         <section className="py-16 md:py-24 border-b border-border overflow-hidden">
@@ -392,7 +392,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── WHAT TO EXPECT — dark ─────────────────────────── */}
+        {/* ── WHAT TO EXPECT — dark ───────────────────────── */}
         <section className="py-20 bg-foreground">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-black text-background text-center mb-12">
@@ -414,7 +414,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── SCHEDULE — ticket style ───────────────────────── */}
+        {/* ── SCHEDULE — ticket style ─────────────────────── */}
         <section className="py-20 pb-28">
           <div className="container mx-auto px-4 max-w-xl">
 

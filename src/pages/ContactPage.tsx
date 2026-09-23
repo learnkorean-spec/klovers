@@ -92,10 +92,13 @@ const ContactPage = () => {
                   <CardContent className="p-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-1 block">
+                        <label htmlFor="contact-name" className="text-sm font-medium text-foreground mb-1 block">
                           {t("contactPage", "form.name")}
                         </label>
                         <Input
+                          id="contact-name"
+                          name="name"
+                          autoComplete="name"
                           placeholder={t("contactPage", "form.namePlaceholder")}
                           value={form.name}
                           onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -103,11 +106,14 @@ const ContactPage = () => {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-1 block">
+                        <label htmlFor="contact-email" className="text-sm font-medium text-foreground mb-1 block">
                           {t("contactPage", "form.email")}
                         </label>
                         <Input
+                          id="contact-email"
+                          name="email"
                           type="email"
+                          autoComplete="email"
                           placeholder={t("contactPage", "form.emailPlaceholder")}
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -115,10 +121,13 @@ const ContactPage = () => {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-1 block">
+                        <label htmlFor="contact-subject" className="text-sm font-medium text-foreground mb-1 block">
                           {t("contactPage", "form.subject")}
                         </label>
                         <Input
+                          id="contact-subject"
+                          name="subject"
+                          autoComplete="off"
                           placeholder={t("contactPage", "form.subjectPlaceholder")}
                           value={form.subject}
                           onChange={(e) => setForm({ ...form, subject: e.target.value })}
@@ -126,10 +135,12 @@ const ContactPage = () => {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-foreground mb-1 block">
+                        <label htmlFor="contact-message" className="text-sm font-medium text-foreground mb-1 block">
                           {t("contactPage", "form.message")}
                         </label>
                         <Textarea
+                          id="contact-message"
+                          name="message"
                           placeholder={t("contactPage", "form.messagePlaceholder")}
                           value={form.message}
                           onChange={(e) => setForm({ ...form, message: e.target.value })}

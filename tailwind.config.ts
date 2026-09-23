@@ -10,8 +10,19 @@ export default {
   	container: {
   		center: true,
   		padding: '2rem',
+  		/*
+  		 * ONLY '2xl' here (24 Sep 2026). These screens are the breakpoints
+  		 * .container uses for its max-width, and nothing else. An `xs: '400px'`
+  		 * entry used to sit here: it made .container max-width:400px from
+  		 * 400px wide all the way to 1399px, so on every laptop the page
+  		 * content shrank to a ~336px column while lg:grid-cols-3 still split it
+  		 * into three ~107px cards (one word per line, "Hangul Foundat..."), and
+  		 * the header nav spilled off the right edge. Phones (<400px) and
+  		 * screens >=1400px looked fine, which hid it. Do not add a small
+  		 * screen here; if an `xs:` variant is wanted, add it to
+  		 * theme.extend.screens instead.
+  		 */
   		screens: {
-  			xs: '400px',
   			'2xl': '1400px'
   		}
   	},
