@@ -14,6 +14,11 @@ const WA_NUMBER = WHATSAPP_NUMBER;
  * character cluster covering card text on every screen. With this, only one
  * floating element is ever up at a time; the sticky bar carries its own
  * WhatsApp icon, so support stays one tap away the whole time.
+ *
+ * 24 Sep 2026: the accessible name is written inline, in both languages. It
+ * was read from a dictionary key (whatsappFab.ariaLabel) that the audit found
+ * resolving to nothing, which left an icon-only button with no name on
+ * /pricing and /enroll-now.
  */
 const WhatsAppButton = () => {
   const { t, language } = useLanguage();
@@ -27,7 +32,7 @@ const WhatsAppButton = () => {
     <button
       type="button"
       onClick={() => trackAndOpenWhatsApp(waUrl, { cta_label: "floating_fab" })}
-      aria-label={t("whatsappFab.ariaLabel")}
+      aria-label={isAr ? "تواصل معنا على واتساب" : "Chat with us on WhatsApp"}
       className="group fixed bottom-6 right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] shadow-lg hover:bg-[#1ebe5d] hover:scale-105 active:scale-95 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
     >
       {/* Tooltip label — desktop only */}
