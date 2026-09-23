@@ -4,23 +4,28 @@ import { ClipboardCheck, Brain, Target, Sparkles, Clock, CheckCircle2, ChevronRi
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+/**
+ * The free placement test.
+ *
+ * 23 Sep 2026: four strings read from translations.ts said TOPIK ("Our free
+ * TOPIK-aligned test...", "TOPIK-Based", "TOPIK Placement Test", "20
+ * questions · TOPIK-aligned"). TOPIK is off the homepage, so those four are
+ * written here in both languages instead; every other string still comes from
+ * translations.ts. The heading's middle line used to leave a double space
+ * before "stand?" - it is one span now.
+ *
+ * The section also no longer starts at opacity 0 waiting for an observer: the
+ * text is visible on first paint (crawlers, screenshots, fast scrolls). Only
+ * the level bars still animate, and they are decoration.
+ */
 const PlacementTestCTA = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   const navigate = useNavigate();
   const sectionRef = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [animate, setAnimate] = useState(false);
   const [activeLevel, setActiveLevel] = useState(0);
 
-  /**
-   * The ladder climbs Green → Yellow → Charcoal.
-   *
-   * It was blue, cyan, green, amber, orange, rose — six hues from Tailwind's
-   * default palette on a brand that owns three colours. The reader never
-   * needed the hue to tell the levels apart (the bar's LENGTH does that); it
-   * only needed to feel like a progression. Pink is not in this ramp on
-   * purpose: on this site it is a rare accent, and the one ladder that ends
-   * in it is the learning roadmap.
-   */
   const LEVELS = [
     { label: t("placementCta.levelA1"),  color: "bg-klovers-yellow/35", width: "w-[15%]" },
     { label: t("placementCta.levelA2"),  color: "bg-klovers-yellow/55", width: "w-[30%]" },
@@ -33,23 +38,22 @@ const PlacementTestCTA = () => {
   const FEATURES = [
     { icon: ClipboardCheck, label: t("placementCta.feature20Q") },
     { icon: Clock,          label: t("placementCta.feature5Min") },
-    { icon: Target,         label: t("placementCta.featureTopik") },
+    { icon: Target,         label: isAr ? "حسب مستويات كلوفرز" : "Matched to our levels" },
     { icon: Brain,          label: t("placementCta.featureInstant") },
   ];
 
-  // Scroll-triggered entrance
+  // Scroll-triggered bar animation only
   useEffect(() => {
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      ([entry]) => { if (entry.isIntersecting) setAnimate(true); },
       { threshold: 0.15 }
     );
     if (sectionRef.current) obs.observe(sectionRef.current);
     return () => obs.disconnect();
   }, []);
 
-  // Animate through levels once visible
   useEffect(() => {
-    if (!visible) return;
+    if (!animate) return;
     let i = 0;
     const id = setInterval(() => {
       i++;
@@ -57,7 +61,7 @@ const PlacementTestCTA = () => {
       setActiveLevel(i);
     }, 400);
     return () => clearInterval(id);
-  }, [visible, LEVELS.length]);
+  }, [animate, LEVELS.length]);
 
   return (
     <section
@@ -85,28 +89,26 @@ const PlacementTestCTA = () => {
         <div className="grid md:grid-cols-2 gap-12 items-center">
 
           {/* ── Left: Copy ── */}
-          <div
-            className={`space-y-6 text-center md:text-start transition-all duration-700 ${
-              visible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"
-            }`}
-          >
+          <div className="space-y-6 text-center md:text-start">
             <div className="inline-flex items-center gap-2 bg-klovers-yellow border border-charcoal/10 px-4 py-2 rounded-full text-sm font-semibold text-charcoal">
               <Sparkles className="h-4 w-4" />
               {t("placementCta.badge")}
             </div>
 
             <h2 className="text-3xl md:text-4xl font-extrabold text-foreground leading-tight">
-              {t("placementCta.titleLine1")}<br />
+              {t("placementCta.titleLine1").trim()}<br />
               {/* Yellow as a marker behind the words, never as the words. */}
               <span className="relative inline-block">
-                <span className="relative z-10">{t("placementCta.titleMiddle")}</span>
+                <span className="relative z-10">{t("placementCta.titleMiddle").trim()}</span>
                 <span aria-hidden="true" className="absolute bottom-1 left-0 w-full h-3 bg-klovers-yellow rounded-sm -z-0" />
-              </span>{" "}
-              {t("placementCta.titleEnd")}
+              </span>
+              {" " + t("placementCta.titleEnd").trim()}
             </h2>
 
             <p className="text-muted-foreground text-lg leading-relaxed">
-              {t("placementCta.subtitle")}
+              {isAr
+                ? "اختبار مجاني من 20 سؤال بيحدد مستواك في أقل من 5 دقايق، وبيقولك تبدأ منين معانا."
+                : "A free 20-question test that finds your level in under 5 minutes and tells you exactly where to start with us."}
             </p>
 
             {/* Feature pills */}
@@ -133,28 +135,20 @@ const PlacementTestCTA = () => {
             </p>
           </div>
 
-          {/* ── Right: Animated Level Card ── */}
-          <div
-            className={`flex justify-center transition-all duration-700 delay-200 ${
-              visible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"
-            }`}
-          >
+          {/* ── Right: Animated Level Card (decorative) ── */}
+          <div className="flex justify-center">
             <div className="relative w-full max-w-sm">
-              {/* Card */}
               <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
-                {/* Card header. Charcoal, not yellow: the button on the left is
-                    this section's one yellow action. */}
                 <div className="bg-charcoal px-5 py-4 flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center">
                     <ClipboardCheck className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-white font-bold text-sm">{t("placementCta.cardTitle")}</p>
-                    <p className="text-white/70 text-xs">{t("placementCta.cardSubtitle")}</p>
+                    <p className="text-white font-bold text-sm">{isAr ? "اختبار تحديد المستوى" : "Korean Placement Test"}</p>
+                    <p className="text-white/70 text-xs">{t("placementCta.cardSubtitle").includes("TOPIK") ? (isAr ? "أكاديمية كلوفرز" : "Klovers Korean Academy") : t("placementCta.cardSubtitle")}</p>
                   </div>
                 </div>
 
-                {/* Levels list */}
                 <div className="px-5 py-4 space-y-3">
                   {LEVELS.map((lvl, idx) => (
                     <div key={lvl.label} className="space-y-1">
@@ -182,14 +176,12 @@ const PlacementTestCTA = () => {
                   ))}
                 </div>
 
-                {/* Card footer */}
                 <div className="px-5 py-3 bg-muted/50 border-t border-border flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{t("placementCta.cardFooter")}</span>
+                  <span className="text-xs text-muted-foreground">{isAr ? "20 سؤال · حوالي 5 دقايق" : "20 questions · about 5 minutes"}</span>
                   <span className="text-xs font-bold text-foreground">{t("placementCta.free")}</span>
                 </div>
               </div>
 
-              {/* Floating badge */}
               <div className="absolute -top-3 -right-3 bg-klovers-yellow text-charcoal text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                 {t("placementCta.instant")}
               </div>
