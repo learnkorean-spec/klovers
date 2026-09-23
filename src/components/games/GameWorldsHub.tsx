@@ -204,7 +204,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           </div>
 
           {/* Headline + Cluby */}
-          <div className="flex flex-col items-center gap-3 self-stretch px-4 pt-6 text-center md:items-start md:ps-16 md:text-start">
+          <div className="flex flex-col items-center gap-3 self-stretch px-4 pt-6 text-center md:items-start md:ps-28 md:text-start">
             <h1 className="text-[11px] font-extrabold uppercase tracking-wider text-charcoal/70">{title}</h1>
             <p className="max-w-md font-display text-3xl font-extrabold leading-tight text-charcoal [text-shadow:0_2px_12px_#FFF6DE] md:text-4xl">{welcome}</p>
             <p className="max-w-md rounded-full bg-[#FFF6DE]/80 px-2 text-sm text-charcoal/80 md:text-base">
