@@ -49,12 +49,12 @@ export default defineConfig(() => ({
           "vendor-markdown": ["react-markdown", "remark-gfm"],
           // NO charting chunk here, on purpose (24 Sep 2026).
           //
-          // A "vendor-charts" entry used to sit here. The object form of
+          // A vendor charts entry used to sit here. The object form of
           // manualChunks moves the listed package AND every dependency of it
           // into the named chunk - and the charting library depends on clsx,
           // which cn() in src/lib/utils.ts uses on every page. So the entry
-          // chunk imported vendor-charts to get clsx, and every marketing page
-          // modulepreloaded ~411 KB of charts it never draws (Lighthouse
+          // chunk imported the charts chunk to get clsx, and every marketing
+          // page modulepreloaded ~411 KB of charts it never draws (Lighthouse
           // mobile 42-60, LCP 5.9-10.2 s in the 23 Sep audit).
           //
           // Left to Rollup, the charting code lands in a lazy chunk shared by
