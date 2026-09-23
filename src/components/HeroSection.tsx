@@ -40,6 +40,12 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  * instead of the plain standing cutout - starting with Chuseok (24-26 Sep).
  * Swap CLUBY_BADGE below for the next occasion, or back to cluby-wave.webp
  * for a plain week. See claude/CLUBY_CLOSET_AND_CHUSEOK_2026-09-24.md.
+ *
+ * 24 Sep 2026 (c): the badge idles with a slow bob (motion-safe:animate-
+ * mascot-bounce, defined in src/index.css) so it reads as "alive" rather than
+ * a static sticker - Re wanted Cluby "moving, not just a picture." No video/
+ * animation generation tool is available in this workspace, so this is a
+ * CSS loop on the existing badge image, not a generated video.
  */
 
 /** This week's Cluby image on the hero card. Swap this one line per occasion. */
@@ -265,7 +271,8 @@ const HeroSection = () => {
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
         {/* This week's Cluby badge, sitting on the top edge of the end-side
             card and peeking up into the hero. Decorative: the cards carry
-            the meaning. See CLUBY_BADGE above to swap it. */}
+            the meaning. See CLUBY_BADGE above to swap it. Idles with a slow
+            bob (motion-safe only) so it reads as alive, not a sticker. */}
         <img
           src={CLUBY_BADGE.src}
           alt=""
@@ -275,7 +282,7 @@ const HeroSection = () => {
           loading="lazy"
           decoding="async"
           draggable={false}
-          className="pointer-events-none absolute bottom-full end-8 z-10 h-auto w-[84px] translate-y-4 select-none drop-shadow-[0_10px_14px_rgba(46,46,46,0.4)] md:end-10 md:w-[120px]"
+          className="pointer-events-none absolute bottom-full end-8 z-10 h-auto w-[84px] translate-y-4 select-none drop-shadow-[0_10px_14px_rgba(46,46,46,0.4)] motion-safe:animate-mascot-bounce md:end-10 md:w-[120px]"
         />
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {cards.map(({ icon, tone, title, body }) => (
