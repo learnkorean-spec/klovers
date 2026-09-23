@@ -85,25 +85,31 @@ const Header = () => {
    * scrolling underneath and disappeared over the dark and yellow ones. A
    * solid background is the reliable fix - the shadow marks the scrolled
    * state instead.
+   *
+   * FITS AT 1024px (24 Sep 2026). The desktop nav appears at lg (1024px),
+   * the narrowest laptop width, so between lg and xl the links and actions
+   * use slightly tighter padding/gaps and the "Free" chip beside Games waits
+   * for xl. That keeps the row inside the viewport in Arabic and when signed
+   * in (avatar + name). Colours and type are unchanged.
    */
   return (
     <>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium focus:shadow-lg">Skip to main content</a>
     <header className={`fixed top-0 left-0 right-0 z-50 bg-background transition-shadow duration-300 ${scrolled ? "shadow-sm" : ""} border-b border-border`}>
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between gap-2 h-16">
           <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="Klovers homepage">
             <img src={kloversLogo} alt="Klovers" className="h-9 w-9 rounded-full object-cover" loading="eager" />
             <span className="font-bold text-lg text-foreground">Klovers</span>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 min-w-0">
             {primaryLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
+                className={`px-2 xl:px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors inline-flex items-center gap-1.5 ${
                   isActive(link.href)
                     ? "text-foreground bg-accent"
                     : "text-foreground/75 hover:text-foreground hover:bg-accent/50"
@@ -111,7 +117,7 @@ const Header = () => {
               >
                 {link.label}
                 {link.badge && (
-                  <span className={FREE_BADGE}>
+                  <span className={`${FREE_BADGE} hidden xl:inline`}>
                     {link.badge}
                   </span>
                 )}
@@ -120,7 +126,7 @@ const Header = () => {
 
             {/* More dropdown */}
             <DropdownMenu>
-              <DropdownMenuTrigger className="px-3 py-2 rounded-md text-sm font-medium text-foreground/75 hover:text-foreground hover:bg-accent/50 transition-colors inline-flex items-center gap-1">
+              <DropdownMenuTrigger className="px-2 xl:px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap text-foreground/75 hover:text-foreground hover:bg-accent/50 transition-colors inline-flex items-center gap-1">
                 {isAr ? "المزيد" : "More"}
                 <ChevronDown className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
@@ -135,17 +141,17 @@ const Header = () => {
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8" aria-label="Toggle dark mode">
+          <div className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8" aria-label={isAr ? "تبديل الوضع الليلي" : "Toggle dark mode"}>
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-1.5 text-xs">
+            <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-1.5 text-xs px-2 xl:px-3">
               <Globe className="h-3.5 w-3.5" />
               {t("header", "langToggle")}
             </Button>
 
             {!user && (
-              <Button size="sm" variant="outline" asChild className="gap-1.5 border-foreground/30 text-foreground hover:bg-klovers-yellow hover:text-charcoal">
+              <Button size="sm" variant="outline" asChild className="gap-1.5 px-2.5 xl:px-3 border-foreground/30 text-foreground hover:bg-klovers-yellow hover:text-charcoal">
                 <Link
                   to="/free-trial"
                   onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "header_free_trial" }); } catch {} }}
@@ -223,6 +229,7 @@ const Header = () => {
             className="lg:hidden p-2 rounded-md hover:bg-accent transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? <X className="h-5 w-5 text-foreground" /> : <Menu className="h-5 w-5 text-foreground" />}
           </button>
