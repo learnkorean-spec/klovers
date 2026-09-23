@@ -86,6 +86,8 @@ const EnrollmentStatusPage = lazy(() => import("./pages/EnrollmentStatusPage"));
 const HangulStarterPage = lazy(() => import("./pages/HangulStarterPage"));
 const RsvpConfirmationPage = lazy(() => import("./pages/RsvpConfirmationPage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -185,6 +187,12 @@ const App = () => (
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                {/* Legal pages (24 Sep 2026). The footer and the cookie banner
+                    linked to these while both rendered NotFound (audit, 23 Sep).
+                    /privacy is a convenience alias for the short form people type. */}
+                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/privacy" element={<Navigate to="/privacy-policy" replace />} />
+                <Route path="/terms" element={<TermsPage />} />
                 <Route path="/signup" element={<SignUpPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />

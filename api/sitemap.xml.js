@@ -60,6 +60,10 @@ const STATIC_PAGES = [
   { loc: "/journey/joseon", priority: "0.6", changefreq: "monthly" },
   { loc: "/journey/traditional-life", priority: "0.6", changefreq: "monthly" },
   { loc: "/journey/modern-korea", priority: "0.6", changefreq: "monthly" },
+  // Legal pages, added 2026-09-24. Keep in step with MARKETING_ROUTES in
+  // scripts/prerender-meta.mjs.
+  { loc: "/privacy-policy", priority: "0.3", changefreq: "yearly" },
+  { loc: "/terms", priority: "0.3", changefreq: "yearly" },
 ];
 
 const xmlEscape = (s) =>
