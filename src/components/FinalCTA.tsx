@@ -22,6 +22,8 @@ import PriceTeaser from "@/components/PriceTeaser";
  *  - The community tile says "social media community", matching the band -
  *    2,000+ counts followers, never students.
  *  - The real price teaser sits under the button (PriceTeaser.tsx).
+ *  - The satisfaction-guarantee wording is unchanged: wording a policy is
+ *    Re's call, not a copy edit.
  *
  * Numbers are static on purpose: a count-up renders every intermediate value
  * as a finished claim.
@@ -49,8 +51,7 @@ const FinalCTA = () => {
   const [visible, setVisible] = useState(true);
 
   // Starts visible: the heading and the button must never wait on an
-  // observer. The observer is kept only so the entrance can replay if a
-  // future change wants it.
+  // observer.
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) setVisible(true); },
@@ -206,10 +207,10 @@ const FinalCTA = () => {
             <span className="text-3xl" aria-hidden="true">🛡️</span>
             <div>
               <p className="text-sm font-extrabold leading-tight text-charcoal">
-                {isAr ? "ضمان الرضا" : "Satisfaction guarantee"}
+                {isAr ? "ضمان الرضا الكامل" : "Satisfaction Guarantee"}
               </p>
               <p className="mt-0.5 text-xs text-charcoal/75">
-                {isAr ? "لو أول حصة مدفوعة ما عجبتكش، هنرجّعلك فلوسك أو نعيد الحجز." : "If your first paid class isn't right for you, we refund or rebook."}
+                {isAr ? "إذا ما عجبتكش الحصة الأولى — هنرجعلك فلوسك أو نعيد الحجز." : "If your first class isn't great, we refund or rebook — no questions asked."}
               </p>
             </div>
           </div>
