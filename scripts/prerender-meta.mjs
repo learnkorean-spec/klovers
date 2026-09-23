@@ -334,6 +334,41 @@ const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
       <p><a href="/courses">Courses</a> · <a href="/pricing">Pricing</a> · <a href="/about">About</a> · <a href="/faq">FAQ</a> · <a href="/contact">Contact</a></p>
     </div>`;
 
+// The Arabic homepage at /ar (24 Sep 2026). The same page as HOME_BODY_HTML,
+// said in Arabic, in the Egyptian register the site already uses. Same rules:
+// duplicated from the app on purpose, verified facts only, exactly one <h1>.
+const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
+      <h1>ابدأ تتكلم كوري من أول حصة مباشرة</h1>
+      <p>حصص لغة كورية أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة حتى ٨ طلاب، ومسار واضح من المبتدئ لحد ما تتكلم بثقة. الحصص بالعربي أو بالإنجليزي.</p>
+      <p><a href="/free-trial">احجز حصة مجانية</a> أو <a href="/placement-test">اعمل اختبار تحديد المستوى المجاني</a> عشان تعرف مستواك. أسعار المجموعات حسب بلدك - <a href="/pricing">شوف الأسعار</a>.</p>
+      <h2>إزاي بندرّس</h2>
+      <ul>
+        <li><strong>شرح واضح</strong> - كل نقطة بتتشرح ببساطة، بالعربي أو بالإنجليزي.</li>
+        <li><strong>٨ طلاب بحد أقصى</strong> - بتتكلم في كل حصة.</li>
+        <li><strong>تصحيح فوري</strong> - النطق بيتصحح لايف.</li>
+        <li><strong>مسار واضح</strong> - الهانغول الأول، وبعدها المستويات من ١ لـ ٦.</li>
+      </ul>
+      <h2>تعرّف على معلمتك</h2>
+      <p>رهام الشرقاوي بتدرّس كوري من ١٣ سنة، ودرّست بنفسها أكتر من ٢٠٠ طالب. درست اللغة الكورية وآدابها في كلية الألسن.</p>
+      <h2>أكتر من مجرد حصص</h2>
+      <ul>
+        <li><a href="/review">تدريب</a> - مراجعة الكلمات بين الحصص.</li>
+        <li><a href="/games">ألعاب لتعلم الكوري</a> - تدريب مجاني على الهانغول والكلمات والقواعد.</li>
+        <li><a href="/journey/before-korea">الثقافة</a> - حكاية كوريا من أول أسطورة لحد النهارده.</li>
+        <li><a href="/courses">مسار التعلم</a> - الهانغول، وبعدها المستويات من ١ لـ ٦.</li>
+        <li><a href="/blog">المجلة</a> - مقالات عن الثقافة الكورية ونصايح المذاكرة بالعربي والإنجليزي.</li>
+      </ul>
+      <p><a href="/courses">الكورسات</a> · <a href="/pricing">الأسعار</a> · <a href="/about">عننا</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/contact">تواصل معانا</a></p>
+    </div>`;
+
+/**
+ * The homepage has a real translation: "/" (English) and "/ar" (Arabic). Both
+ * routes carry this pair and buildHeadTags emits the same reciprocal hreflang
+ * cluster on each - every member names every member, itself included.
+ * api/sitemap.xml.js carries the same pair; keep the two in step.
+ */
+const HOME_ALTERNATES = { en: "/", ar: "/ar" };
+
 // ── Marketing routes ────────────────────────────────────────────────────────
 // Hand-maintained on purpose: these are static pages, not database rows.
 //
@@ -366,7 +401,8 @@ const MARKETING_ROUTES = [
     // 23 Sep 2026 (CRO pass): the English head says what is sold - live
     // online classes, small groups, a real teacher - with no Arabic
     // positioning; the Arabic brand name stays in the JSON-LD alternateName in
-    // index.html. Arabic has no URL of its own yet, so it has no head here.
+    // index.html. (Superseded 24 Sep 2026: Arabic now has its own URL, /ar,
+    // below, with its own head and a reciprocal hreflang pair.)
     //
     // 23 Sep 2026: two equal markets now, English and Arabic speakers, so the
     // title no longer says "in Arabic" only. Later the same day the title went
@@ -381,6 +417,29 @@ const MARKETING_ROUTES = [
     description:
       "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups of up to 8. Free trial class, free placement test and gamified practice.",
     body: HOME_BODY_HTML,
+    alternates: HOME_ALTERNATES,
+  },
+  {
+    // The Arabic homepage (24 Sep 2026) - the "/ar" half of the pair above,
+    // and the end of docs/DECISIONS.md 2026-08-19 (hreflang, Option B) for the
+    // homepage: Arabic finally has a URL of its own, so it can have a head, a
+    // canonical and hreflang instead of a ?lang=ar query on the English page.
+    //
+    // `lang: "ar"` makes the document itself Arabic (<html lang="ar"
+    // dir="rtl">, og:locale ar_AR) via languageOf in document-language.mjs.
+    // `homeTwin` keeps the Organization JSON-LD and the hero preload that the
+    // emit loop otherwise keeps for "/" only - it is the same page.
+    //
+    // The title names Klovers, so no " | Klovers" suffix is appended, and it
+    // leads with the Arabic brand for the reason the "/" comment gives.
+    path: "/ar",
+    lang: "ar",
+    homeTwin: true,
+    title: "كلوفرز Klovers — حصص كوري أونلاين مباشرة في مجموعات صغيرة",
+    description:
+      "كلوفرز (Klovers): حصص كوري أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة حتى ٨ طلاب، بالعربي أو بالإنجليزي. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
+    body: HOME_BODY_HTML_AR,
+    alternates: HOME_ALTERNATES,
   },
   {
     path: "/courses",
@@ -876,6 +935,21 @@ function buildHeadTags(route) {
     `  <meta name="twitter:image" content="${attr(image)}" />`,
   ];
 
+  // A marketing route with a real translation - today only the homepage pair,
+  // "/" and "/ar". Same rules as the blog clusters below: the tags are
+  // identical on both members, each names both itself and its partner, and
+  // x-default is the English page.
+  if (!isPost && route.alternates) {
+    const en = `${BASE_URL}${route.alternates.en}`;
+    const ar = `${BASE_URL}${route.alternates.ar}`;
+    tags.push(`  <link rel="alternate" hreflang="en" href="${attr(en)}" />`);
+    tags.push(`  <link rel="alternate" hreflang="ar" href="${attr(ar)}" />`);
+    tags.push(`  <link rel="alternate" hreflang="x-default" href="${attr(en)}" />`);
+    tags.push(
+      `  <meta property="og:locale:alternate" content="${ogLocaleOf(otherLanguage(lang))}" />`
+    );
+  }
+
   if (isPost) {
     const p = route.post;
     if (p.publishedAt)
@@ -1046,8 +1120,11 @@ for (const route of routes) {
     ? route.title
     : `${route.title} | ${SITE_NAME}`;
   const description = route.description || "";
+  // "/ar" is the homepage in Arabic: it keeps what "/" keeps (the Organization
+  // JSON-LD and the hero preload) but is written to dist/ar/index.html.
+  const isHomeTwin = isHome || route.homeTwin === true;
 
-  let html = isHome ? baseHTML : baseWithoutOrgJsonLd;
+  let html = isHomeTwin ? baseHTML : baseWithoutOrgJsonLd;
 
   // The document element. index.html ships `<html lang="en">` with no `dir`,
   // and this loop copies that document to every route — so all 100 published
@@ -1100,7 +1177,7 @@ for (const route of routes) {
   // they never render, competing with the one they do. The homepage keeps its
   // own tag; an article gets its own hero; anything else loses the tag, because
   // a preload aimed at the wrong file is worse than none at all.
-  if (!isHome) {
+  if (!isHomeTwin) {
     PRELOAD_PATTERN.lastIndex = 0;
     const replacement = preloadTagFor(
       { isHome: false, heroImage: route.post?.heroImage || null },
