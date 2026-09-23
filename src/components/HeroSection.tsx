@@ -34,6 +34,10 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  * market expects to ask a question. English visitors get the booking action
  * alone; the floating WhatsApp bubble is still there for them as support.
  *
+ * The headline column is wider than the paragraph's (5xl vs 2xl) so each
+ * half of the headline sets on one line at desktop width; at 3xl it broke
+ * into four ragged lines.
+ *
  * The section is dark in BOTH themes - it is a photo under a charcoal scrim,
  * not a themed surface - which is why it uses live-bright and the
  * ivory/charcoal literals rather than the theme's foreground tokens.
@@ -158,9 +162,7 @@ const HeroSection = () => {
           />
         )}
 
-        {/* Cinematic scrim — Charcoal rather than pure black. A little denser
-            than before in the middle, because the paragraph now carries the
-            pitch and has to read at a glance. */}
+        {/* Cinematic scrim — Charcoal rather than pure black. */}
         <div
           className="absolute inset-0"
           style={{ background: "linear-gradient(to bottom, rgba(46,46,46,0.6) 0%, rgba(46,46,46,0.35) 45%, rgba(46,46,46,0.65) 100%)" }}
@@ -174,7 +176,7 @@ const HeroSection = () => {
 
         {/* ── Hero content ────────────────────────────────────────── */}
         <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pt-8 pb-24 sm:pb-32">
-          <div className="max-w-3xl mx-auto flex flex-col items-center gap-5 sm:gap-6">
+          <div className="max-w-5xl mx-auto flex flex-col items-center gap-5 sm:gap-6">
 
             {/* 1. Headline. Yellow as TYPE is correct here and only here: a
                 dark photo under a scrim, not a light ground. */}
@@ -182,13 +184,13 @@ const HeroSection = () => {
               className="font-display font-extrabold text-ivory leading-[1.08] tracking-tight w-full"
               style={{ textShadow: "0 4px 40px rgba(20,20,18,0.9), 0 2px 8px rgba(20,20,18,0.8)" }}
             >
-              <span className="block" style={{ fontSize: "clamp(2rem, 5.6vw, 4.25rem)" }}>
+              <span className="block" style={{ fontSize: "clamp(2rem, 5vw, 3.75rem)" }}>
                 {isAr ? "ابدأ التحدث بالكورية" : "Start Speaking Korean"}
               </span>
               <span
                 className="block mt-1"
                 style={{
-                  fontSize: "clamp(2rem, 5.6vw, 4.25rem)",
+                  fontSize: "clamp(2rem, 5vw, 3.75rem)",
                   color: "#FFFF00",
                   textShadow: "0 0 60px rgba(255, 255, 0, 0.35), 0 4px 24px rgba(20,20,18,0.7)",
                 }}
