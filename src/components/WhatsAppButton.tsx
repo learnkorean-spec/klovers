@@ -1,19 +1,34 @@
 import { WHATSAPP_NUMBER } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAnyBottomSlotActive } from "@/lib/bottomLayer";
 
 const WA_NUMBER = WHATSAPP_NUMBER;
 
+/**
+ * The floating WhatsApp bubble.
+ *
+ * 23 Sep 2026: it steps aside while any bottom bar holds the floor
+ * (StickyEnrollBar, HomeExitNudge, InstallPrompt - src/lib/bottomLayer.ts).
+ * The homepage review found the bubble, the sticky bar and the bar's
+ * character cluster covering card text on every screen. With this, only one
+ * floating element is ever up at a time; the sticky bar carries its own
+ * WhatsApp icon, so support stays one tap away the whole time.
+ */
 const WhatsAppButton = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
+  const bottomBarUp = useAnyBottomSlotActive();
   const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(t("whatsappFab.message"))}`;
+
+  if (bottomBarUp) return null;
+
   return (
     <button
       type="button"
       onClick={() => trackAndOpenWhatsApp(waUrl, { cta_label: "floating_fab" })}
       aria-label={t("whatsappFab.ariaLabel")}
-      className="group fixed bottom-24 right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] shadow-lg hover:bg-[#1ebe5d] hover:scale-105 active:scale-95 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+      className="group fixed bottom-6 right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] shadow-lg hover:bg-[#1ebe5d] hover:scale-105 active:scale-95 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
     >
       {/* Tooltip label — desktop only */}
       <span

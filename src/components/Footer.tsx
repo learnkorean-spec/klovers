@@ -111,11 +111,16 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Bottom bar */}
+      {/* Bottom bar.
+          The name is written here rather than read from translations'
+          footer.copyright, which still says "Klovers Korean Courses": the
+          23 Sep review found the brand named "Academy" everywhere else and
+          "Korean Courses" only here. */}
       <div className="border-t border-background/15">
         <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-background/45 text-xs">
-            © {new Date().getFullYear()} {t("footer", "copyright")}
+            © {new Date().getFullYear()}{" "}
+            {isAr ? "كلوفرز — أكاديمية محبي الكورية. جميع الحقوق محفوظة." : "Klovers Korean Academy. All rights reserved."}
           </p>
           <div className="flex items-center gap-4">
             <Link to="/privacy-policy" className="text-background/45 hover:text-background/70 text-xs transition-colors">
