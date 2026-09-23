@@ -224,22 +224,37 @@ const SignUpPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignUp} className="space-y-4">
+              {/* Labels are visually hidden: the design shows the placeholder
+                  only, but a placeholder is not an accessible name and
+                  disappears as soon as she types. */}
+              <label htmlFor="signup-name" className="sr-only">{t("auth.fullName") || "Full Name"}</label>
               <Input
+                id="signup-name"
+                name="name"
                 type="text"
+                autoComplete="name"
                 placeholder={t("auth.fullName") || "Full Name"}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
               />
+              <label htmlFor="signup-email" className="sr-only">{t("auth.email") || "Email"}</label>
               <Input
+                id="signup-email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 placeholder={t("auth.email") || "Email"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
+              <label htmlFor="signup-password" className="sr-only">{t("auth.password") || "Password"}</label>
               <Input
+                id="signup-password"
+                name="password"
                 type="password"
+                autoComplete="new-password"
                 placeholder={t("auth.password") || "Password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -269,7 +284,7 @@ const SignUpPage = () => {
               })()}
               {redirectTo !== "/trial-booking" && (
                 <Select value={level} onValueChange={setLevel}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label={isAr ? "مستوى اللغة الكورية (اختياري)" : "Korean level (optional)"}>
                     <SelectValue placeholder={isAr ? "مستوى اللغة الكورية (اختياري)" : "Korean level (optional)"} />
                   </SelectTrigger>
                   <SelectContent>

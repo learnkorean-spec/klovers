@@ -206,9 +206,9 @@ const PricingSection = () => {
 
           <div className="max-w-sm mx-auto">
             <Select value={selectedCountry} onValueChange={handleCountryChange}>
-              <SelectTrigger className="w-full text-base">
+              <SelectTrigger className="w-full text-base" aria-label={t("pricing", "selectCountry")}>
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <SelectValue placeholder={t("pricing", "selectCountry")} />
                 </div>
               </SelectTrigger>
