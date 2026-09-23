@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import { useSearchParams } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +84,8 @@ const EnrollNowPage = () => {
   useEffect(() => { track.pageView(); }, []);
 
   const [searchParams] = useSearchParams();
-  const { t, tArray } = useLanguage();
+  const { t, tArray, language } = useLanguage();
+  const isAr = language === "ar";
   const localDayNames: string[] = tArray("enrollNow", "dayNames").length === 7
     ? tArray("enrollNow", "dayNames") as string[]
     : DAY_NAMES;
@@ -740,7 +741,7 @@ const EnrollNowPage = () => {
         {step === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">{t("enrollNow.chooseYourPlan")}</CardTitle>
+              <h1 className="text-2xl font-semibold leading-none tracking-tight">{t("enrollNow.chooseYourPlan")}</h1>
               <p className="text-muted-foreground">{t("enrollNow.chooseYourPlanDesc")}</p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -775,7 +776,7 @@ const EnrollNowPage = () => {
               <div className="space-y-2">
                 <Label>{t("enrollNow.yourCountry")}</Label>
                 <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label={t("enrollNow.yourCountry")}>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <SelectValue placeholder={t("enrollNow.selectCountry")} />
@@ -842,13 +843,13 @@ const EnrollNowPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(1)}>
-                  <ArrowLeft className="h-4 w-4" />
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(1)} aria-label={isAr ? "رجوع للخطوة السابقة" : "Back to previous step"}>
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 <div>
-                  <CardTitle className="text-2xl flex items-center gap-2">
-                    <CalendarDays className="h-6 w-6" /> {t("enrollNow.schedulePreferences")}
-                  </CardTitle>
+                  <h1 className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
+                    <CalendarDays className="h-6 w-6" aria-hidden="true" /> {t("enrollNow.schedulePreferences")}
+                  </h1>
                   <p className="text-muted-foreground text-sm">{t("enrollNow.schedulePreferencesDesc")}</p>
                 </div>
               </div>
@@ -858,7 +859,7 @@ const EnrollNowPage = () => {
               <div className="space-y-2">
                 <Label>{t("enrollNow.koreanLevel")}</Label>
                 <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                  <SelectTrigger><SelectValue placeholder={t("enrollNow.selectLevel")} /></SelectTrigger>
+                  <SelectTrigger aria-label={t("enrollNow.koreanLevel")}><SelectValue placeholder={t("enrollNow.selectLevel")} /></SelectTrigger>
                   <SelectContent>
                     {LEVEL_SELECT_OPTIONS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
                   </SelectContent>
@@ -869,7 +870,7 @@ const EnrollNowPage = () => {
               <div className="space-y-2">
                 <Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> {t("enrollNow.timezone")}</Label>
                 <Select value={timezone} onValueChange={(tz) => { setTimezone(tz); setUserTimezone(tz); }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger aria-label={t("enrollNow.timezone")}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {(Intl as any).supportedValuesOf("timeZone").map((tz: string) => (
                       <SelectItem key={tz} value={tz}>{tz.replace(/_/g, " ")}</SelectItem>
@@ -992,11 +993,11 @@ const EnrollNowPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(2)}>
-                  <ArrowLeft className="h-4 w-4" />
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(2)} aria-label={isAr ? "رجوع للخطوة السابقة" : "Back to previous step"}>
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 <div>
-                  <CardTitle className="text-2xl">{t("enrollNow.reviewPay")}</CardTitle>
+                  <h1 className="text-2xl font-semibold leading-none tracking-tight">{t("enrollNow.reviewPay")}</h1>
                   <p className="text-muted-foreground text-sm">
                     {classType === "group" ? t("enrollNow.group") : t("enrollNow.private")} · {selectedCountry}
                   </p>
@@ -1100,6 +1101,7 @@ const EnrollNowPage = () => {
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Promo code"
+                        aria-label={isAr ? "كود الخصم" : "Promo code"}
                         value={promoInput}
                         onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
                         onKeyDown={e => e.key === "Enter" && applyPromo()}
