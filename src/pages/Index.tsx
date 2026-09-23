@@ -19,26 +19,27 @@ const LearningRoadmap = lazy(() => import("@/components/LearningRoadmap"));
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
 const PlacementTestCTA = lazy(() => import("@/components/PlacementTestCTA"));
 const MoreThanAClass = lazy(() => import("@/components/MoreThanAClass"));
+const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 
 /**
  * THE HOMEPAGE TITLE AND DESCRIPTION.
  *
  * English: scripts/prerender-meta.mjs writes the SAME two strings into the raw
- * HTML for "/" (useSEO appends " | Klovers"; the prerender entry already
- * carries it). Change both or neither.
+ * HTML for "/". The title already names Klovers, so neither useSEO nor the
+ * prerender emit loop appends a suffix. Change both or neither -
+ * scripts/lib/brand-identity.test.mjs guards the prerender side (brand first,
+ * كلوفرز in the description).
  *
- * 23 Sep 2026, CRO pass: the English strings say what is sold - live online
- * classes, small groups, a real teacher - and carry no Arabic positioning. The
- * Arabic strings are used when the visitor has switched to Arabic. They are
+ * The Arabic strings are used when the visitor has switched to Arabic. They are
  * client-side only: Arabic has no URL of its own yet (?lang=ar is not a
  * route), so crawlers only ever see the English head. A real /ar route, and the
  * reciprocal hreflang that comes with it, is the remaining SEO blocker - see
  * docs/DECISIONS.md 2026-08-19 (hreflang, Option B).
  */
-export const HOME_TITLE = "Live Online Korean Classes — Small Groups, Real Teachers";
+export const HOME_TITLE = "Klovers — Live Online Korean Classes in Small Groups";
 export const HOME_DESCRIPTION =
-  "Live online Korean classes with a real teacher, small groups of up to 8, and a clear learning path. Book a free class with Klovers.";
+  "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups of up to 8. Free trial class, free placement test and gamified practice.";
 const HOME_TITLE_AR = "تعلم اللغة الكورية أونلاين — حصص مباشرة";
 const HOME_DESCRIPTION_AR =
   "تعلم الكورية أونلاين في حصص مباشرة ومجموعات صغيرة، مع مسار واضح من المبتدئ حتى التحدث بثقة. احجز حصتك المجانية.";
@@ -238,6 +239,10 @@ const Index = () => {
         {/* Why Klovers — the ecosystem, one compact section */}
         <Suspense fallback={<SectionFallback />}>
           <MoreThanAClass />
+        </Suspense>
+        {/* Objections — the four questions asked before a first booking */}
+        <Suspense fallback={<SectionFallback />}>
+          <HomeFAQ />
         </Suspense>
         {/* Action — final, low-pressure invitation */}
         <div id="final-cta">

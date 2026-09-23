@@ -25,6 +25,15 @@ const DEFAULT_IMAGE = `${BASE_URL}/og-seoul-skyline.jpg`;
 const DEFAULT_DESC =
   "Learn Korean online with Klovers — Korean Lovers Academy. Interactive lessons, games, placement tests, and certified instructors.";
 
+/**
+ * The same rule scripts/prerender-meta.mjs applies to the raw HTML: append the
+ * brand only when the title does not already name it. Before 23 Sep 2026 this
+ * always appended, so a title that led with the brand (the homepage's) read
+ * one way in the raw HTML and another in the browser.
+ */
+export const withBrand = (title: string): string =>
+  title.includes("Klovers") ? title : `${title} | Klovers`;
+
 export const useSEO = ({
   title,
   description = DEFAULT_DESC,
@@ -35,7 +44,7 @@ export const useSEO = ({
   hreflangAr,
 }: SEOProps) => {
   useEffect(() => {
-    const fullTitle = `${title} | Klovers`;
+    const fullTitle = withBrand(title);
 
     // Title
     document.title = fullTitle;
