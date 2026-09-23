@@ -1,21 +1,24 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { readConsent, saveConsent, type ConsentChoice } from "@/lib/consent";
 
-const STORAGE_KEY = "cookie_consent";
-
+/**
+ * 24 Sep 2026: a real choice. Analytics (GA4 Consent Mode v2, Meta Pixel)
+ * stay off until Accept; Decline is offered at the same size and weight.
+ * There is no close button any more - closing used to count as accepting.
+ */
 const CookieBanner = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) setShow(true);
+    if (readConsent() === null) setShow(true);
   }, []);
 
-  const accept = () => {
-    localStorage.setItem(STORAGE_KEY, "accepted");
+  const choose = (choice: ConsentChoice) => {
+    saveConsent(choice);
     setShow(false);
   };
 
@@ -31,24 +34,29 @@ const CookieBanner = () => {
       <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl shadow-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 pointer-events-auto">
         <p className="text-sm text-muted-foreground flex-1 leading-relaxed">
           {isAr
-            ? "بنستخدم كوكيز لتحسين تجربتك. باستمرارك في استخدام الموقع، بتوافق على "
-            : "We use cookies to improve your experience. By continuing, you agree to our "}
+            ? "بنستخدم كوكيز التحليلات عشان نحسّن تجربتك. تقدر توافق أو ترفض، والموقع هيشتغل عادي في الحالتين. اعرف أكتر في "
+            : "We use analytics cookies to improve your experience. You can accept or decline; the site works the same either way. See our "}
           <a href="/privacy-policy" className="underline hover:text-foreground transition-colors">
             {isAr ? "سياسة الخصوصية" : "Privacy Policy"}
           </a>
           {isAr ? "." : "."}
         </p>
         <div className="flex items-center gap-2 shrink-0">
-          <Button size="sm" onClick={accept} className="h-8 text-xs font-semibold">
-            {isAr ? "موافق" : "Got it"}
-          </Button>
-          <button
-            onClick={accept}
-            aria-label={isAr ? "إغلاق" : "Dismiss"}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => choose("denied")}
+            className="h-8 min-w-[5.5rem] text-xs font-semibold"
           >
-            <X className="h-4 w-4" />
-          </button>
+            {isAr ? "رفض" : "Decline"}
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => choose("granted")}
+            className="h-8 min-w-[5.5rem] text-xs font-semibold"
+          >
+            {isAr ? "موافق" : "Accept"}
+          </Button>
         </div>
       </div>
     </div>

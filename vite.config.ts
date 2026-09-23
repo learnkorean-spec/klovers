@@ -47,10 +47,19 @@ export default defineConfig(() => ({
           "vendor-supabase": ["@supabase/supabase-js"],
           // Markdown rendering (only used on blog post pages)
           "vendor-markdown": ["react-markdown", "remark-gfm"],
-          // Charting — heavy (~400 kB) and only needed inside admin
-          // Sales/Analytics surfaces. Named so the chunk hash stays
-          // stable across deploys when unrelated admin code changes.
-          "vendor-charts": ["recharts"],
+          // NO charting chunk here, on purpose (24 Sep 2026).
+          //
+          // A "vendor-charts" entry used to sit here. The object form of
+          // manualChunks moves the listed package AND every dependency of it
+          // into the named chunk - and the charting library depends on clsx,
+          // which cn() in src/lib/utils.ts uses on every page. So the entry
+          // chunk imported vendor-charts to get clsx, and every marketing page
+          // modulepreloaded ~411 KB of charts it never draws (Lighthouse
+          // mobile 42-60, LCP 5.9-10.2 s in the 23 Sep audit).
+          //
+          // Left to Rollup, the charting code lands in a lazy chunk shared by
+          // the dashboard/admin routes that actually render charts.
+          // Guarded by scripts/lib/vite-chunks.test.mjs.
         },
       },
     },
