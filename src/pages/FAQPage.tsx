@@ -28,7 +28,8 @@ const FAQSchemaScript = ({ schema }: { schema: object }) => {
 
 const FAQPage = () => {
   useSEO({ title: "FAQ", description: "Got questions about learning Korean with Klovers? Find answers about courses, teachers, scheduling, and payments.", canonical: "https://kloversegy.com/faq" });
-  const { t, tArray } = useLanguage();
+  const { t, tArray, language } = useLanguage();
+  const isAr = language === "ar";
   const rawFaqs = tArray("faqPage", "items") as { question: string; answer: string; category?: string }[];
   // The TOPIK answer in translations.ts claims "high pass rates"; nothing
   // measures that. The answer (and the FAQPage JSON-LD built from it) keeps
@@ -102,8 +103,10 @@ const FAQPage = () => {
 
             {/* Search */}
             <div className="relative max-w-md mx-auto mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
               <Input
+                type="search"
+                aria-label={isAr ? "ابحث في الأسئلة" : "Search questions"}
                 placeholder="Search questions..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -111,10 +114,12 @@ const FAQPage = () => {
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => setSearchQuery("")}
+                  aria-label={isAr ? "مسح البحث" : "Clear search"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </button>
               )}
             </div>
