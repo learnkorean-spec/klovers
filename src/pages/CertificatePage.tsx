@@ -107,6 +107,11 @@ const CertificatePage = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Canvas text only uses a web font that is already loaded, so wait for the
+    // brand faces (Poppins / Inter / Noto Sans KR) before drawing. If a face
+    // fails to load, draw anyway with the fallback rather than never.
+    let cancelled = false;
+    const draw = () => {
     const W = 1200, H = 850;
     canvas.width = W;
     canvas.height = H;
@@ -141,19 +146,19 @@ const CertificatePage = () => {
     ctx.fill();
 
     ctx.fillStyle = "#000";
-    ctx.font = "bold 40px serif";
+    ctx.font = "800 40px Poppins, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("K", W / 2, 126);
 
     // Title
     ctx.fillStyle = "#FFFF00";
-    ctx.font = "bold 15px sans-serif";
+    ctx.font = "700 15px Poppins, sans-serif";
     ctx.letterSpacing = "4px";
     ctx.fillText("K L O V E R S   K O R E A N   A C A D E M Y", W / 2, 186);
 
     ctx.letterSpacing = "0px";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.font = "13px sans-serif";
+    ctx.font = "13px Inter, sans-serif";
     ctx.fillText("CERTIFICATE OF COMPLETION", W / 2, 210);
 
     // Divider
@@ -170,12 +175,12 @@ const CertificatePage = () => {
 
     // "This certifies that"
     ctx.fillStyle = "rgba(255,255,255,0.6)";
-    ctx.font = "italic 18px Georgia, serif";
+    ctx.font = "italic 18px Inter, sans-serif";
     ctx.fillText("This is to certify that", W / 2, 285);
 
     // Student name
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = `bold ${name.length > 20 ? 44 : 56}px Georgia, serif`;
+    ctx.font = `800 ${name.length > 20 ? 44 : 56}px Poppins, sans-serif`;
     ctx.fillText(name, W / 2, 360);
 
     // Underline name
@@ -189,7 +194,7 @@ const CertificatePage = () => {
 
     // Completion — a course, at this academy. Not a band, not an award.
     ctx.fillStyle = "rgba(255,255,255,0.6)";
-    ctx.font = "italic 18px Georgia, serif";
+    ctx.font = "italic 18px Inter, sans-serif";
     ctx.fillText("has successfully completed, at KLovers Korean Academy,", W / 2, 428);
 
     // Level badge background — manual rounded rect (roundRect not supported in older Safari/Firefox)
@@ -209,7 +214,7 @@ const CertificatePage = () => {
 
     // Measure before drawing: "Hangul Foundation · 4 classes" is a good deal
     // wider than "Level 1", and a fixed 320px badge clipped it.
-    ctx.font = "bold 22px sans-serif";
+    ctx.font = "700 22px Poppins, sans-serif";
     const badgeW = Math.max(320, ctx.measureText(courseLine).width + 72);
     ctx.fillStyle = "#FFFF00";
     rr(W / 2 - badgeW / 2, 462, badgeW, 64, 12);
@@ -222,7 +227,7 @@ const CertificatePage = () => {
     // in the quieter style, because it is context, not the award.
     if (preparesLine) {
       ctx.fillStyle = "rgba(255,255,255,0.6)";
-      ctx.font = "italic 17px Georgia, serif";
+      ctx.font = "italic 17px Inter, sans-serif";
       ctx.fillText(preparesLine, W / 2, 556);
     }
 
@@ -237,7 +242,7 @@ const CertificatePage = () => {
     // Date + signature area
     const dateStr = new Date().toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
     ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.font = "14px sans-serif";
+    ctx.font = "14px Inter, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(`Issued: ${dateStr}`, 120, 632);
 
@@ -254,18 +259,18 @@ const CertificatePage = () => {
     ctx.stroke();
 
     ctx.fillStyle = "rgba(255,255,255,0.9)";
-    ctx.font = "bold 16px sans-serif";
+    ctx.font = "700 16px Poppins, sans-serif";
     ctx.fillText("Reham", W / 2, 712);
 
     ctx.fillStyle = "rgba(255,255,255,0.4)";
-    ctx.font = "12px sans-serif";
+    ctx.font = "12px Inter, sans-serif";
     ctx.fillText("Founder & Lead Instructor · KLovers Academy", W / 2, 730);
 
     // Says the quiet part out loud. This PNG will be forwarded to people who
     // never saw the page it came from, and it must not be mistaken for a TOPIK
     // result awarded by NIIED.
     ctx.fillStyle = "rgba(255,255,255,0.32)";
-    ctx.font = "11px sans-serif";
+    ctx.font = "11px Inter, sans-serif";
     ctx.fillText(
       "Certifies completion of a Klovers course. It is not a TOPIK result — TOPIK is awarded by NIIED.",
       W / 2,
@@ -276,10 +281,23 @@ const CertificatePage = () => {
     ctx.save();
     ctx.globalAlpha = 0.04;
     ctx.fillStyle = "#FFFF00";
-    ctx.font = "bold 200px sans-serif";
+    ctx.font = "700 200px 'Noto Sans KR', sans-serif";
     ctx.fillText("한국어", W / 2, H / 2 + 60);
     ctx.restore();
+    };
 
+    Promise.allSettled([
+      document.fonts.load("800 56px Poppins"),
+      document.fonts.load("700 22px Poppins"),
+      document.fonts.load("14px Inter"),
+      document.fonts.load("italic 18px Inter"),
+      document.fonts.load("700 200px 'Noto Sans KR'", "한국어"),
+    ]).then(() => {
+      if (!cancelled) draw();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [loading, name, courseLine, preparesLine]);
 
   const download = () => {

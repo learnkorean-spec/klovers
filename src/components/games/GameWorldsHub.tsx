@@ -164,10 +164,18 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           </div>
         </div>
 
-        <div className="relative h-44 md:h-auto md:min-h-[240px] justify-self-end w-64 md:w-full" aria-hidden="true">
+        <div className="relative h-44 md:h-auto md:min-h-[240px] justify-self-end w-64 md:w-full">
+          {/* Cluby's own voice: handwriting (.cluby-note), never a button. */}
+          <p
+            className="cluby-bubble cluby-note absolute start-3 bottom-[8.25rem] md:bottom-[10.75rem] z-10"
+            lang={isAr ? "ar" : "en"}
+          >
+            {isAr ? "دوّر عليّا النهارده!" : "Find me today!"}
+          </p>
           <img
             src={`${ASSET}/cluby-hanbok.webp`}
             alt=""
+            aria-hidden="true"
             width={230}
             height={286}
             decoding="async"
@@ -176,6 +184,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           <img
             src={`${ASSET}/girl-hanbok.webp`}
             alt=""
+            aria-hidden="true"
             width={204}
             height={460}
             decoding="async"
@@ -188,7 +197,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
       <section>
         <div className="flex items-baseline justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold text-foreground">{isAr ? "رحلتك الكورية" : "Your Korean Journey"}</h2>
-          <span className="text-xs text-muted-foreground">{isAr ? "Cluby بيوريك إنت فين" : "Cluby marks where you are"}</span>
+          <span className="text-xs text-muted-foreground">{isAr ? "كلوبي بيوريك إنت فين" : "Cluby marks where you are"}</span>
         </div>
         <ol className="grid grid-cols-3 pt-6">
           {stats.map((s, i) => {
@@ -298,7 +307,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
       {/* Cluby collection — announced, not live */}
       <section>
         <div className="flex items-baseline justify-between gap-3 mb-4">
-          <h2 className="text-lg font-bold text-foreground">{isAr ? "Clubys بتوعي" : "My Clubys"}</h2>
+          <h2 className="text-lg font-bold text-foreground">{isAr ? "مجموعة كلوبي" : "My Clubys"}</h2>
           <span className="text-xs font-bold rounded bg-klovers-yellow text-charcoal px-2 py-0.5">
             {isAr ? "قريبًا" : "Coming soon"}
           </span>
@@ -327,7 +336,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         </div>
         <p className="text-xs text-muted-foreground mt-3">
           {isAr
-            ? "قريب هتقدر تجمع Cluby بلبس جديد مع كل عالم تخلّصه."
+            ? "قريب هتقدر تجمع كلوبي بلبس جديد مع كل عالم تخلّصه."
             : "Soon you'll collect a new Cluby outfit for every world you finish."}
         </p>
       </section>

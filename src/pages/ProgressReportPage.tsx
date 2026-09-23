@@ -87,7 +87,7 @@ const ProgressReportPage = () => {
 
       {/* Report card — uses inline styles for print/PDF compatibility */}
       <div ref={reportRef} className="max-w-2xl mx-auto bg-white shadow-xl print:shadow-none print:max-w-none"
-        style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" }}>
+        style={{ fontFamily: "Inter, Cairo, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" }}>
 
         {/* Header */}
         <div style={{ background: "#000", padding: "32px 40px", textAlign: "center" }}>

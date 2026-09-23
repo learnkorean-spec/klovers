@@ -154,7 +154,7 @@ export function DramaLines({ lines, isAr, resolve }: { lines: Expression[]; isAr
               <div className="relative flex aspect-[16/8] flex-col justify-end bg-[hsl(60_8%_12%)] px-5 pb-5 pt-10">
                 <span aria-hidden="true" className="absolute inset-x-0 top-0 h-3 bg-black/60" />
                 <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-3 bg-black/60" />
-                <span className="absolute top-5 start-5 rounded bg-ivory/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-ivory/70" dir="ltr">
+                <span className="absolute top-5 start-5 rounded bg-ivory/10 px-2 py-0.5 tabular-nums text-[11px] font-semibold text-ivory/70" dir="ltr">
                   SCENE {String(i + 1).padStart(2, "0")}
                 </span>
                 <div className="text-center">

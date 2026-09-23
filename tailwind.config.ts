@@ -202,10 +202,14 @@ export default {
   			/*
   			 * Handwritten accent — one line at a time, never a paragraph.
   			 *
-  			 * LATIN ONLY, AND THAT IS A KNOWN GAP. Caveat carries no Arabic and
-  			 * no Hangul, so every handwritten line on this site renders in Cairo
-  			 * for an Arabic reader - the hero's script line included - and looks
-  			 * like an ordinary sentence rather than a hand.
+  			 * CLUBY'S VOICE ONLY (Re, 23 Sep 2026): Cluby speech, short notes,
+  			 * journey annotations. Never nav, buttons, titles, numbers, forms,
+  			 * paragraphs or Arabic. Prefer the .cluby-note / .cluby-note-lg
+  			 * classes in src/index.css, which carry the size and line-height.
+  			 *
+  			 * Segoe Script first (Windows system font - never bundle it), Kalam
+  			 * (Google Fonts, index.html) as the cross-device fallback. Both are
+  			 * LATIN ONLY: .cluby-note switches Arabic to Cairo.
   			 *
   			 * Aref Ruqaa was added for this on 20 Sep 2026 and removed the same
   			 * day: it is a calligraphic naskh and reads as a thin formal serif
@@ -215,9 +219,10 @@ export default {
   			 * render - it is the majority script on this site.
   			 */
   			script: [
-  				'Caveat',
   				'Segoe Script',
-  				'Brush Script MT',
+  				'Kalam',
+  				'Apple Chancery',
+  				'Bradley Hand',
   				'cursive'
   			],
   			/* Korean. Noto Sans KR for readable Hangul (lessons, the Hangul game);

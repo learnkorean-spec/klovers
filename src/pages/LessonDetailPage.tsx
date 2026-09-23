@@ -577,7 +577,7 @@ const LessonDetailPage = () => {
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (
-                        <p className="text-sm font-mono text-foreground bg-amber-100 inline-block px-3 py-1.5 rounded-lg mb-3 border border-black/10">{g.structure}</p>
+                        <p className="text-sm font-semibold text-foreground bg-amber-100 inline-block px-3 py-1.5 rounded-lg mb-3 border border-black/10">{g.structure}</p>
                       )}
                       <p className="text-sm text-muted-foreground mb-4">{g.explanation}</p>
                       {g.examples?.length > 0 && (

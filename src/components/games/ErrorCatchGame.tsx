@@ -224,7 +224,7 @@ const ErrorCatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, t
       {/* Sentence */}
       <Card className="p-5 space-y-2">
         <p className="text-xs text-muted-foreground">
-          {isTrick ? "Is this sentence correct, or is there an error?" : `The underlined word is wrong. What should replace`} <span className="font-mono bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1 rounded">{q.error}</span>?
+          {isTrick ? "Is this sentence correct, or is there an error?" : `The underlined word is wrong. What should replace`} <span className="font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1 rounded">{q.error}</span>?
         </p>
         <p className="text-xl font-bold text-foreground leading-relaxed">
           {q.sentence.split(q.error).map((part, i, arr) => (

@@ -174,7 +174,7 @@ const KoreaTimeSection = () => {
             <h3 className="font-display text-2xl md:text-3xl font-extrabold text-foreground leading-tight">
               {isAr ? "ورحلتك عبر مدنها" : "And your journey through its places"}
             </h3>
-            <p className="font-script text-2xl md:text-3xl text-foreground/70">
+            <p className="cluby-note-lg text-foreground/70" lang={isAr ? "ar" : "en"}>
               {isAr ? "أماكن مختلفة، ونفس الشخص الرائع" : "Different places, same amazing you"}
             </p>
           </div>

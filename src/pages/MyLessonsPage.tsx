@@ -287,7 +287,7 @@ const MyLessonsPage = () => {
                   {classes.map((cl, i) => (
                     <li key={i} className="text-sm text-foreground">
                       <span className="font-medium">{DAY[cl.weekday]}</span>{" "}
-                      <span className="font-mono">{hhmm(cl.start_time)}</span>{" "}
+                      <span className="tabular-nums">{hhmm(cl.start_time)}</span>{" "}
                       <span className="text-xs text-muted-foreground">
                         · {cl.duration_minutes} {isAr ? "دقيقة" : "min"}
                       </span>
@@ -356,7 +356,7 @@ const MyLessonsPage = () => {
                     <li key={s.id} className="rounded-md bg-muted/30 px-3 py-2">
                       <p className="text-sm text-foreground">
                         <span className="font-medium">{s.session_date}</span>{" "}
-                        <span className="font-mono text-xs text-muted-foreground">
+                        <span className="tabular-nums text-xs text-muted-foreground">
                           {hhmm(s.start_time)}
                         </span>
                       </p>

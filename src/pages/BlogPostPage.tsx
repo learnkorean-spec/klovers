@@ -564,7 +564,7 @@ const BlogPostPage = () => {
           </h1>
 
           {/* Description / standfirst */}
-          <p className="text-lg text-foreground/70 mb-6 leading-relaxed font-serif">
+          <p className="text-lg text-foreground/70 mb-6 leading-relaxed font-sans">
             {post.description}
           </p>
 
@@ -617,7 +617,7 @@ const BlogPostPage = () => {
           )}
 
           {/* Article body */}
-          <div className={`prose prose-base max-w-none font-serif
+          <div className={`prose prose-base max-w-none font-sans
             prose-headings:font-sans prose-headings:font-bold prose-headings:text-foreground prose-headings:tracking-tight
             prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pt-6 prose-h2:border-t prose-h2:border-border
             prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
