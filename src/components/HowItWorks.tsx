@@ -5,20 +5,44 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent } from "@/lib/leadTracking";
+import PriceTeaser from "@/components/PriceTeaser";
 
-// Same order as `howItWorks.steps`: Clear Explanations, Max 8 Students,
-// Instant Feedback, TOPIK-Tracked Progress.
-const stepIcons: KloverIconName[] = [
-  "flashcard-ga",
-  "student-girl-heart",
-  "student-boy-thumbsup",
-  "growth-chart",
+/**
+ * "How we teach" - four steps.
+ *
+ * 23 Sep 2026: the steps are written here, not read from
+ * translations.ts `howItWorks.steps`. Step four there was "TOPIK-Tracked
+ * Progress", and TOPIK is off the homepage by decision; translations.ts is too
+ * large to edit safely with the tooling available, so the homepage copy lives
+ * with the component (same approach as PricingSection's `tr`). The key is left
+ * in translations.ts for any other page that reads it.
+ */
+const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] }[] = [
+  {
+    icon: "flashcard-ga",
+    en: ["Clear Explanations", "Every point explained simply, in English or Arabic, so you understand instead of memorizing."],
+    ar: ["شرح واضح", "كل نقطة تتشرح ببساطة، بالعربي أو الإنجليزي، علشان تفهم مش تحفظ."],
+  },
+  {
+    icon: "student-girl-heart",
+    en: ["Max 8 Students", "Small enough that you speak in every class and get real personal attention."],
+    ar: ["بحد أقصى 8 طلاب", "مجموعة صغيرة، فتتكلم في كل حصة وتاخد اهتمام حقيقي."],
+  },
+  {
+    icon: "student-boy-thumbsup",
+    en: ["Instant Feedback", "Your pronunciation and sentences are corrected live, during the class."],
+    ar: ["تصحيح فوري", "نطقك وجملك بتتصحح مباشرة، وانت في الحصة."],
+  },
+  {
+    icon: "growth-chart",
+    en: ["A Clear Path", "Hangul first, then Levels 1 to 6. You always know what comes next."],
+    ar: ["مسار واضح", "الهانغول الأول، وبعدين المستويات من 1 لحد 6. دايمًا عارف الخطوة الجاية."],
+  },
 ];
 
 const HowItWorks = () => {
-  const { t, tArray, language } = useLanguage();
+  const { t, language } = useLanguage();
   const isAr = language === "ar";
-  const steps = tArray("howItWorks", "steps") as { title: string; description: string }[];
 
   return (
     <section className="py-20 md:py-28 bg-card">
@@ -34,11 +58,11 @@ const HowItWorks = () => {
 
         {/* dir="ltr" keeps step order 1→4 left-to-right even in RTL locales */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto" dir="ltr">
-          {steps.map((step, index) => {
-            const icon = stepIcons[index];
+          {STEPS.map((step, index) => {
+            const [title, description] = isAr ? step.ar : step.en;
             return (
               // Wrapper carries the relative context so the badge is NOT clipped by the Card
-              <div key={index} className="relative pt-3">
+              <div key={step.icon} className="relative pt-3">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
                   <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm border border-charcoal/25">
                     {index + 1}
@@ -49,11 +73,10 @@ const HowItWorks = () => {
                     {/* Ivory dome: the drawings need a light surface to keep their
                         outline; on dark they stand on the card directly. */}
                     <div className="w-16 h-16 rounded-2xl bg-ivory dark:bg-transparent border border-charcoal/15 dark:border-transparent flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
-                      {icon && <KloverIcon name={icon} className="h-12 w-12" />}
+                      <KloverIcon name={step.icon} className="h-12 w-12" />
                     </div>
-                    {/* dir="auto" lets each card's text flow in the document's language direction */}
-                    <h3 className="font-semibold text-foreground mb-2 text-sm md:text-base" dir="auto">{step.title}</h3>
-                    <p className="text-sm md:text-base text-muted-foreground leading-relaxed" dir="auto">{step.description}</p>
+                    <h3 className="font-semibold text-foreground mb-2 text-sm md:text-base" dir={isAr ? "rtl" : "ltr"}>{title}</h3>
+                    <p className="text-sm md:text-base text-muted-foreground leading-relaxed" dir={isAr ? "rtl" : "ltr"}>{description}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -61,22 +84,19 @@ const HowItWorks = () => {
           })}
         </div>
 
-        {/* "What your first class looks like" — pedagogy + trust.
-            The kicker used to be text-primary: brand yellow as TEXT on a light
-            card, which the concept board rules out and which measured under
-            2:1. Yellow is a surface here instead — the marker chip. */}
+        {/* "What your first class looks like" — pedagogy + trust. */}
         <div className="max-w-2xl mx-auto mt-12 bg-background border border-border rounded-2xl p-6">
           <p className="text-center mb-4">
             <span className="inline-block bg-klovers-yellow text-charcoal text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full">
-              {isAr ? "ماذا يحدث في أول حصة" : "What your first class looks like"}
+              {isAr ? "إيه اللي بيحصل في أول حصة" : "What your first class looks like"}
             </span>
           </p>
           <ul className="space-y-2.5">
             {(isAr ? [
-              "تقديم نفسك بالكورية — حتى لو مبتعرفش حرف واحد",
-              "تقرأ أول ١٠ أحرف هانغل وتعرف كيف تلفظها",
-              "محادثة قصيرة مع باقي الطلاب",
-              "المعلمة تحدد مستواك وتشرحلك الخطوة الجاية",
+              "تقدّم نفسك بالكورية — حتى لو ما تعرفش ولا حرف",
+              "تقرأ أول 10 حروف هانغول وتعرف تنطقها صح",
+              "محادثة قصيرة مباشرة مع باقي الطلاب",
+              "المعلمة تحدّد مستواك وتشرحلك الخطوة الجاية",
             ] : [
               "Introduce yourself in Korean — even if you know zero right now",
               "Read your first 10 Hangul characters with correct pronunciation",
@@ -91,20 +111,18 @@ const HowItWorks = () => {
           </ul>
         </div>
 
-        {/* CTA — one wording for this ask across the page.
-            `howItWorks.cta` said "Try It Free — First Class on Us", one of six
-            different labels for the same button; they now all render
-            hero.startNow. The key stays in translations.ts, unused, rather than
-            deleted — an unused key costs nothing and other pages may want it. */}
-        <div className="text-center mt-8">
+        {/* Price, then the CTA - so the visitor meets the cost before the ask,
+            not after it. The number is read from the real price table. */}
+        <div className="text-center mt-8 space-y-4">
+          <PriceTeaser source="how_it_works" />
           <Button
             size="lg"
             asChild
             className="gap-2 text-base font-bold h-12 px-8 rounded-full"
-            onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "how_it_works_cta" }); } catch {} }}
+            onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "how_it_works_cta", metadata: { language } }); } catch {} }}
           >
             <Link to="/free-trial">
-              {t("hero", "startNow")}
+              {isAr ? "احجز حصتك المجانية" : "Book a Free Class"}
               <ArrowRight className="h-5 w-5 rtl:rotate-180" />
             </Link>
           </Button>

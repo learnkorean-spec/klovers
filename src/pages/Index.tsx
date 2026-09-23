@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { logEngagementEvent } from "@/lib/leadTracking";
 import { CONTACT_EMAIL } from "@/lib/siteConfig";
 import { useSEO } from "@/hooks/useSEO";
+import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import WhyLearnKorean from "@/components/WhyLearnKorean";
@@ -21,19 +22,26 @@ const MoreThanAClass = lazy(() => import("@/components/MoreThanAClass"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 
 /**
- * THE HOMEPAGE TITLE AND DESCRIPTION. scripts/prerender-meta.mjs writes the
- * SAME two strings into the raw HTML for "/" (useSEO appends " | Klovers" to
- * the title; the prerender entry already carries it). The 23 Sep 2026 review
- * found the server HTML and the rendered page disagreeing - change both or
- * neither.
+ * THE HOMEPAGE TITLE AND DESCRIPTION.
  *
- * Two equal markets now - English speakers and Arabic speakers - so the title
- * no longer says "in Arabic" only. The Arabic brand name stays in the
- * description so crawlers bind the two names to one entity.
+ * English: scripts/prerender-meta.mjs writes the SAME two strings into the raw
+ * HTML for "/" (useSEO appends " | Klovers"; the prerender entry already
+ * carries it). Change both or neither.
+ *
+ * 23 Sep 2026, CRO pass: the English strings say what is sold - live online
+ * classes, small groups, a real teacher - and carry no Arabic positioning. The
+ * Arabic strings are used when the visitor has switched to Arabic. They are
+ * client-side only: Arabic has no URL of its own yet (?lang=ar is not a
+ * route), so crawlers only ever see the English head. A real /ar route, and the
+ * reciprocal hreflang that comes with it, is the remaining SEO blocker - see
+ * docs/DECISIONS.md 2026-08-19 (hreflang, Option B).
  */
-export const HOME_TITLE = "Learn Korean Online — Live Classes in English and Arabic";
+export const HOME_TITLE = "Live Online Korean Classes — Small Groups, Real Teachers";
 export const HOME_DESCRIPTION =
-  "Klovers (كلوفرز): live online Korean classes in English and Arabic, from Hangul to advanced. Small groups or private lessons, a free trial class and a free placement test.";
+  "Live online Korean classes with a real teacher, small groups of up to 8, and a clear learning path. Book a free class with Klovers.";
+const HOME_TITLE_AR = "تعلم اللغة الكورية أونلاين — حصص مباشرة";
+const HOME_DESCRIPTION_AR =
+  "تعلم الكورية أونلاين في حصص مباشرة ومجموعات صغيرة، مع مسار واضح من المبتدئ حتى التحدث بثقة. احجز حصتك المجانية.";
 
 const SectionFallback = () => (
   <div className="py-20 px-4">
@@ -48,7 +56,13 @@ const SectionFallback = () => (
 );
 
 const Index = () => {
-  useSEO({ title: HOME_TITLE, description: HOME_DESCRIPTION, canonical: "https://kloversegy.com/" });
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  useSEO({
+    title: isAr ? HOME_TITLE_AR : HOME_TITLE,
+    description: isAr ? HOME_DESCRIPTION_AR : HOME_DESCRIPTION,
+    canonical: "https://kloversegy.com/",
+  });
 
   // No hreflang on the homepage: ?lang=ar is a query parameter on the same
   // document, not an Arabic URL, and it canonicalises back to / - which
@@ -61,7 +75,7 @@ const Index = () => {
       "@context": "https://schema.org",
       "@type": "ItemList",
       name: "Korean Language Courses at Klovers",
-      description: "Online Korean language courses for all levels — from A1 beginner to C2 advanced.",
+      description: "Live online Korean classes for all levels, from Hangul to Level 6.",
       url: "https://kloversegy.com/pricing",
       itemListElement: [
         {
@@ -70,7 +84,7 @@ const Index = () => {
           item: {
             "@type": "Course",
             name: "Group Korean Classes",
-            description: "Live online group Korean classes for A1–C2 levels. Small groups, expert teachers, flexible schedule.",
+            description: "Live online group Korean classes, up to 8 students, taught in English or Arabic.",
             provider: { "@type": "Organization", name: "Klovers Korean Academy", url: "https://kloversegy.com" },
             url: "https://kloversegy.com/enroll-now?classType=group",
             educationalLevel: "Beginner to Advanced",
@@ -106,7 +120,7 @@ const Index = () => {
       name: "Klovers Korean Academy",
       url: "https://kloversegy.com",
       logo: "https://kloversegy.com/klovers-logo.jpg",
-      description: "Online Korean language school. Live classes in English and Arabic, small groups or private, A1–C2 levels.",
+      description: "Online Korean language school. Live classes in English and Arabic, small groups or private, from Hangul to Level 6.",
       email: CONTACT_EMAIL,
       telephone: "+201010003084",
       sameAs: [
@@ -137,11 +151,9 @@ const Index = () => {
   //
   // logEngagementEvent, NOT logLeadEvent. Both of these effects fire without
   // the visitor choosing anything, and logLeadEvent mirrors every call to the
-  // Meta Pixel as a `Lead` and to GA4 as `generate_lead`. Between them they
-  // raise up to nine events per visit — 4 scroll milestones and 5 sections —
-  // so routing them through logLeadEvent meant one person scrolling to the
-  // bottom of this page counted as nine conversions. Measured in GA4 Realtime
-  // on 18 Sep 2026: 11 generate_lead against 6 page_view, nothing clicked.
+  // Meta Pixel as a `Lead` and to GA4 as `generate_lead`. Routing them through
+  // logLeadEvent meant one person scrolling to the bottom of this page counted
+  // as nine conversions (GA4 Realtime, 18 Sep 2026).
   useEffect(() => {
     const milestones = new Set<number>();
     const onScroll = () => {
@@ -181,45 +193,29 @@ const Index = () => {
     return () => observers.forEach(o => o.disconnect());
   }, []);
 
-  /*
-   * 23 Sep 2026 review: 16 H2s, ~16,100px, the culture story told three
-   * times. Taken off this page (components kept in the repo):
-   *  - ReturningStudentOffer ("Welcome Back to Klovers"): it printed the
-   *    returning-student promo code to every visitor, and its scroll-reveal
-   *    left ~900px of blank cream until it fired. Returning students get the
-   *    code on /welcome-back, and ReturningStudentBanner below still links
-   *    signed-in returning students there.
-   *  - CultureHeritageSection, KoreaTimeSection, HomeGamesSection,
-   *    HomeBlogSection: replaced by MoreThanAClass, one compact section with
-   *    a door to each (/games, /journey, /blog).
-   */
   return (
     <div className="min-h-screen">
       <Header />
       <main id="main-content">
-        {/* Attention — strong hook, CTA, social proof stats */}
+        {/* Attention — what, why, one action */}
         <HeroSection />
 
         {/* Returning students promotional banner (signed-in returning students only) */}
         <ReturningStudentBanner />
-        {/* Interview training chip — pulled 2026-09-21 at Re's request.
-            AI interview-prep feature isn't ready yet; component kept in
-            src/components for when work resumes in ~2 weeks. */}
 
-        {/* Interest — immediately answer "how does this work?" */}
+        {/* Interest — how the classes work, with the real starting price */}
         <div id="how-it-works" style={{ minHeight: 480 }}>
           <Suspense fallback={<SectionFallback />}>
             <HowItWorks />
           </Suspense>
         </div>
-        {/* Action — low-friction free CTA (no payment). Placed high because
-            placement-test takers convert 5x more than bounced visitors. */}
+        {/* Action — low-friction free placement test */}
         <div id="placement-cta" style={{ minHeight: 400 }}>
           <Suspense fallback={<SectionFallback />}>
             <PlacementTestCTA />
           </Suspense>
         </div>
-        {/* Desire — social proof builds trust early */}
+        {/* Desire — real reviews, in the reader's language */}
         <div id="testimonials" style={{ minHeight: 400 }}>
           <Suspense fallback={<SectionFallback />}>
             <TestimonialsSection />
@@ -229,7 +225,7 @@ const Index = () => {
         <CommunityBand />
         {/* Desire — reinforces motivation after seeing proof */}
         <WhyLearnKorean />
-        {/* Desire — humanize the brand, build connection */}
+        {/* Desire — the teacher, verified facts only */}
         <div id="meet-teacher" style={{ minHeight: 400 }}>
           <Suspense fallback={<SectionFallback />}>
             <MeetTeacher />
@@ -239,11 +235,11 @@ const Index = () => {
         <Suspense fallback={<SectionFallback />}>
           <LearningRoadmap />
         </Suspense>
-        {/* Interest — games, Cluby, Korea's story, the Journal: one section */}
+        {/* Why Klovers — the ecosystem, one compact section */}
         <Suspense fallback={<SectionFallback />}>
           <MoreThanAClass />
         </Suspense>
-        {/* Action — final conversion push */}
+        {/* Action — final, low-pressure invitation */}
         <div id="final-cta">
           <Suspense fallback={<SectionFallback />}>
             <FinalCTA />

@@ -19,83 +19,39 @@ import {
 /**
  * The homepage "your journey" map.
  *
- * It used to read `translations.roadmap.stages` — a second hand-written copy
- * of the level ladder, which had drifted exactly as the courses array did. It
- * badged the cards "A0" (not a CEFR band) and "TOPIK 1 / A1" (a level does not
- * equal a band), and it described Hangul as what you do "before entering TOPIK
- * Levels", i.e. a gate — when Hangul is optional and four classes long.
+ * It derives from `COURSE_CARDS`, which derives from `constants/levels`. The
+ * roadmap and the levels grid are the same content in two shapes; they should
+ * not be able to disagree.
  *
- * Now it derives from `COURSE_CARDS`, which derives from `constants/levels`.
- * The roadmap and the levels grid are the same content in two shapes; they
- * should not be able to disagree.
+ * 2026-09-20 (c) — Re's second mockup: a road climbs from a hanok gate at the
+ * bottom-left to a summit banner at the top, past Namsan tower and cherry
+ * trees, and each level is a stop on it. Seven stops, one per level key, drawn
+ * in `roadmapScenery.tsx` from the same coordinates this file places its nodes
+ * at.
  *
- * 2026-09-20 (a) — it looks like a journey, not a stack of identical cards.
- * A rail runs down the side with one node per level, and the full-colour
- * emoji are gone.
+ * NO PADLOCKS: on a page whose job is to make a stranger book a free trial,
+ * six padlocks read as a paywall. Every stop shows its own icon.
  *
- * 2026-09-20 (b) — Re's mockup: the ladder now stands in a scene, the nodes
- * are round on a dashed rail, and the cards sit on a soft shadow.
+ * LEVEL NAMES are the canonical ones (Hangul Foundation, Levels 1-6), not the
+ * mockup's "Beginner / Intermediate / TOPIK".
  *
- * 2026-09-20 (c) — RE'S SECOND MOCKUP REPLACED THE LADDER ENTIRELY. It is a
- * map now: a road climbs from a hanok gate at the bottom-left to a summit
- * banner at the top, past Namsan tower and cherry trees, and each level is a
- * stop on it. Seven stops, one per level key, drawn in `roadmapScenery.tsx`
- * from the same coordinates this file places its nodes at.
+ * NO HANDWRITTEN MARGIN NOTE: there is no Arabic face that looks handwritten
+ * at 20px, and Arabic is the majority script here.
  *
- * WHAT THE MOCKUP SHOWED AND THIS DOES NOT: A PADLOCK ON EVERY STOP. In the
- * mockup only "Start Hangeul" is lit and the other six are locked. On a page
- * whose job is to make a stranger book a free trial, six padlocks read as a
- * paywall — "you cannot have this" — and Klovers does not gate levels that
- * way. Re chose the open path: every stop shows its own icon, and locks are
- * for the signed-in student's real progress, not for a visitor. If that lands
- * later, lock from the student's level, never from zero.
+ * 2026-09-20 (d) - TWO MAPS, ONE DATA SET: tall below `lg`, wide from `lg` up
+ * (mirrored in Arabic). Both share `renderStops`.
  *
- * ALSO NOT COPIED: THE MOCKUP'S LEVEL NAMES. It reads "Beginner 1 / Beginner 2
- * / Intermediate / Advanced / TOPIK". The canonical names are Hangul
- * Foundation and Levels 1-6 (`constants/levels.ts`); "TOPIK" as a level name
- * is the exact equation — level = band — that the certificate and the old
- * roadmap were fixed to stop making. The summit banner says "toward TOPIK 6
- * and beyond", which is a destination, not a claim.
+ * 2026-09-23 (a) - THE STOPS START VISIBLE, so the map is never caught empty.
  *
- * THE MOCKUP'S HANDWRITTEN MARGIN NOTE ("Same Curiosity, Brighter Tomorrows")
- * IS NOT BUILT, for the same reason it was cut in (b): in English, set in
- * Caveat, it works. In Arabic there is no Caveat — the face carries no Arabic
- * glyphs — and the best available substitute, Aref Ruqaa, reads as a thin
- * formal serif rather than as a hand. Re saw it rendered and cut it. Do not
- * re-propose handwriting on this site until there is an Arabic face that
- * actually looks handwritten at 20px; the feature is only as good as its
- * weakest script, and Arabic is the majority script here.
- *
- * 2026-09-20 (d) - TWO MAPS, ONE DATA SET. Below `lg` the map is the tall
- * phone-shaped one described next. From `lg` up it is lying down: the same
- * seven stops on a road winding sideways across the page (`JourneySceneWide`),
- * which is what removes the empty page either side of a narrow card. In Arabic
- * the wide map is mirrored so the journey starts at the right and runs left.
- * Both share `renderStops` below - one place decides what a stop looks like.
- *
- * THE TALL MAP IS PHONE-SHAPED ON PURPOSE. Its aspect ratio is fixed to the scene's
- * viewBox so the nodes stay on the road at every width, which means width and
- * height move together — a card wide enough for a desktop column would be
- * nearly a metre tall. It is capped at 26rem and centred instead, exactly as
- * the mockup is drawn.
- *
- * 2026-09-23 - THE STOPS START VISIBLE. They used to begin at opacity 0 and
- * wait for an IntersectionObserver to fade them in. A fast scroll, a
- * screenshot, or a browser that throttles observers caught the map as a bare
- * road with nothing on it - the homepage review reported the illustration as
- * "mostly empty". `visible` now starts true, so the map is complete on first
- * paint; the observer stays only as a harmless no-op.
+ * 2026-09-23 (b) - THE SUMMIT SAYS "LEVEL 6 AND BEYOND". It said "TOPIK 6";
+ * TOPIK is off the homepage by decision, and Level 6 is the site's own name
+ * for the top of the ladder.
  */
 
 /**
- * Per-level ornament. Keyed by canonical level key, so adding a level cannot
- * shift the palette, and a renamed badge string cannot silently blank it.
- * Literal class strings, because Tailwind's scanner only keeps what it sees.
- *
- * The ramp is one colour getting stronger: pale yellow at Hangul up to full
- * Klovers Yellow at Level 4, and Level 6 - the end of the path - is full yellow
- * with a Charcoal ring, so it does not look like another step on it.
- * (Was Mint -> Neon green -> Yellow -> Pink; the brand is three colours.)
+ * Per-level ornament. Keyed by canonical level key. Literal class strings,
+ * because Tailwind's scanner only keeps what it sees. One colour getting
+ * stronger, with Level 6 ringed in Charcoal as the end of the path.
  */
 const LEVEL_META: Record<string, { icon: React.ElementType; tile: string }> = {
   hangul: { icon: BookOpen, tile: "bg-amber-100" },
@@ -113,12 +69,7 @@ const getMeta = (key: string) =>
 /** The ladder only — the two special tracks are not stops on the road. */
 const STAGES = COURSE_CARDS.filter((c) => (LEVEL_KEYS as string[]).includes(c.key));
 
-/**
- * The eyebrow is generated in courseCards.ts as "24 classes · 6 months" (or
- * "4 حصص · تمهيدي (Pre-A1)"), derived from levels.ts so it cannot drift. Split
- * on the separator and each half becomes its own chip — no new fields, and
- * nothing here can contradict the levels grid.
- */
+/** Split the courseCards eyebrow ("24 classes · 6 months") into chips. */
 const chipsFrom = (eyebrow: string): string[] =>
   eyebrow.split("·").map((s) => s.trim()).filter(Boolean);
 
@@ -131,13 +82,12 @@ const LearningRoadmap = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
   const [activeStep, setActiveStep] = useState(0);
-  // Starts true on purpose - see the 2026-09-23 note above.
+  // Starts true on purpose - see the 2026-09-23 (a) note above.
   const [visible, setVisible] = useState(true);
   const mapRef = useRef<HTMLDivElement>(null);
   const wideRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Whichever map is on screen is the one that has to trigger the reveal.
     const els = [mapRef.current, wideRef.current].filter(Boolean) as HTMLElement[];
     if (!els.length) return;
     const obs = new IntersectionObserver(
@@ -153,9 +103,7 @@ const LearningRoadmap = () => {
   const ActiveIcon = activeMeta.icon;
   const activeChips = chipsFrom(isAr ? active.eyebrow_ar : active.eyebrow_en);
 
-  /** Scene units -> a physical percentage. Physical, not logical: see the note
-   *  on direction in `roadmapScenery.tsx`. `flip` mirrors x for the wide map in
-   *  Arabic. */
+  /** Scene units -> a physical percentage. `flip` mirrors x for the wide map in Arabic. */
   const place = (view: View, p: Pt, flip: boolean) => ({
     left: `${(((flip ? view.w - p.x : p.x) / view.w) * 100)}%`,
     top: `${(p.y / view.h) * 100}%`,
@@ -170,7 +118,7 @@ const LearningRoadmap = () => {
       >
         <span className="flex flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl bg-charcoal px-3 py-2 text-center text-[11px] font-bold leading-tight text-ivory shadow-md">
           <Star className="h-3.5 w-3.5 text-klovers-yellow" fill="currentColor" aria-hidden="true" />
-          <span>{isAr ? "TOPIK ٦" : "TOPIK 6"}</span>
+          <span>{isAr ? "المستوى ٦" : "Level 6"}</span>
           <span className="font-medium text-ivory/70">{isAr ? "وما بعده" : "and beyond"}</span>
         </span>
       </div>
@@ -195,8 +143,6 @@ const LearningRoadmap = () => {
             }`}
             style={{ ...place(view, stop, flip), transitionDelay: `${i * 80}ms` }}
           >
-            {/* The first stop carries a soft yellow halo - "start here",
-                without the six padlocks. */}
             {isStart && (
               <span aria-hidden="true" className="absolute -inset-1.5 animate-pulse rounded-full bg-klovers-yellow/35" />
             )}
@@ -222,7 +168,6 @@ const LearningRoadmap = () => {
 
   return (
     <section className="relative overflow-hidden bg-background py-20 md:py-28">
-      {/* A wash of yellow behind the map, decorative only. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[30rem] w-[60rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-klovers-yellow/20 blur-3xl lg:block"
@@ -231,16 +176,14 @@ const LearningRoadmap = () => {
       <div className="container relative mx-auto px-4">
         <div className="mx-auto grid max-w-5xl gap-8">
 
-          {/* Heading: start-aligned on a phone, centred over the wide map */}
           <div className="mx-auto w-full max-w-[26rem] text-start lg:max-w-none lg:text-center">
             <span className="inline-block rounded-md bg-charcoal px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-ivory">
-              {isAr ? "7 محطات · A1 ← C2" : "7 stops · A1 → C2"}
+              {isAr ? "7 محطات · من الهانغول للمستوى ٦" : "7 stops · Hangul → Level 6"}
             </span>
             <h2 className="mt-4 text-4xl font-extrabold leading-tight text-foreground md:text-5xl">
               {t("roadmap", "title")}
             </h2>
 
-            {/* Yellow as a mark under the heading, never as the heading. */}
             <svg
               aria-hidden="true"
               viewBox="0 0 240 18"
@@ -258,9 +201,6 @@ const LearningRoadmap = () => {
             </p>
           </div>
 
-          {/* THE MAP CARD. Tall on a phone, wide from lg up. Each map's aspect
-              ratio is its own viewBox, so a node placed at a percentage of the
-              two numbers lands on the road at every width. */}
           <div className="mx-auto w-full max-w-[26rem] overflow-hidden rounded-3xl border-2 border-charcoal bg-card lg:max-w-none dark:border-border">
             <div
               ref={mapRef}
@@ -281,7 +221,6 @@ const LearningRoadmap = () => {
             </div>
           </div>
 
-          {/* The open stop, and the way in. Side by side on desktop. */}
           <div className="mx-auto grid w-full max-w-[26rem] gap-6 lg:max-w-none lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
             <div className="rounded-3xl border border-border bg-card p-5 sm:p-6">
               <div className="flex items-start gap-3">
@@ -293,7 +232,6 @@ const LearningRoadmap = () => {
                     {isAr ? active.title_ar : active.title_en}
                   </h3>
 
-                  {/* Chips - the two facts a visitor actually weighs */}
                   <div className="mt-2 flex flex-wrap gap-2">
                     {activeChips.map((chip, i) => {
                       const ChipIcon = chipIcons[i] ?? CalendarDays;
@@ -316,7 +254,6 @@ const LearningRoadmap = () => {
               </div>
             </div>
 
-            {/* CTA */}
             <div className="text-center">
               <Button size="lg" asChild className="h-12 gap-2 rounded-full px-8 text-base font-bold">
                 <Link to="/placement-test">
