@@ -21,9 +21,17 @@ const SUPABASE_KEY =
 
 const BASE = "https://kloversegy.com";
 
+/**
+ * The homepage's translation pair (24 Sep 2026). Same pair as HOME_ALTERNATES in
+ * scripts/prerender-meta.mjs; keep the two in step. Both members list both,
+ * themselves included, or Google ignores the cluster.
+ */
+const HOME_ALTERNATES = { en: "/", ar: "/ar" };
+
 // Keep in step with MARKETING_ROUTES in scripts/prerender-meta.mjs.
 const STATIC_PAGES = [
-  { loc: "/", priority: "1.0", changefreq: "weekly" },
+  { loc: "/", priority: "1.0", changefreq: "weekly", alternates: HOME_ALTERNATES },
+  { loc: "/ar", priority: "1.0", changefreq: "weekly", alternates: HOME_ALTERNATES },
   { loc: "/courses", priority: "0.9", changefreq: "weekly" },
   { loc: "/pricing", priority: "0.9", changefreq: "monthly" },
   { loc: "/about", priority: "0.8", changefreq: "monthly" },
@@ -127,14 +135,20 @@ export function buildSitemap(posts, today) {
   const { pairs, duplicateArabic } = pairPosts(live);
   const demoted = new Set(duplicateArabic);
 
-  const staticTags = STATIC_PAGES.map(
-    (p) => `  <url>
+  const staticTags = STATIC_PAGES.map((p) => {
+    const alts = p.alternates
+      ? `
+    <xhtml:link rel="alternate" hreflang="en" href="${xmlEscape(`${BASE}${p.alternates.en}`)}" />
+    <xhtml:link rel="alternate" hreflang="ar" href="${xmlEscape(`${BASE}${p.alternates.ar}`)}" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(`${BASE}${p.alternates.en}`)}" />`
+      : "";
+    return `  <url>
     <loc>${BASE}${p.loc}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
-    <priority>${p.priority}</priority>
-  </url>`
-  );
+    <priority>${p.priority}</priority>${alts}
+  </url>`;
+  });
 
   const postTags = live.map((p) => {
     const lastmod = (p.updated_at || p.published_at || today).split("T")[0];

@@ -176,6 +176,10 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
+                {/* The Arabic homepage (24 Sep 2026): the same page, its own
+                    URL, so Arabic can be indexed and paired with hreflang.
+                    LanguageContext opens it in Arabic. */}
+                <Route path="/ar" element={<Index />} />
                 <Route path="/courses" element={<CoursesPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/about" element={<AboutPage />} />

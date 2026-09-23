@@ -4,6 +4,29 @@ import { track } from "@/lib/tracking";
 
 type Language = "en" | "ar";
 
+/**
+ * The Arabic homepage (24 Sep 2026). The one URL whose language is fixed by
+ * the URL itself: /ar is always Arabic, and switching language on the
+ * homepage moves between "/" and "/ar" rather than re-dressing one document -
+ * so each language has its own URL that search engines can index and pair
+ * with hreflang. Every other page still follows the visitor's saved choice.
+ */
+const AR_HOME = "/ar";
+const EN_HOME = "/";
+
+const onArabicHome = (): boolean =>
+  typeof window !== "undefined" && window.location.pathname === AR_HOME;
+
+/**
+ * Move between the two homepage URLs without a reload. The LanguageProvider
+ * sits outside BrowserRouter, so it cannot use navigate(); pushState plus a
+ * popstate event is what BrowserRouter listens to, so the router follows.
+ */
+const goTo = (path: string) => {
+  window.history.pushState({}, "", path + window.location.search + window.location.hash);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+};
+
 /** CLDR plural categories (subset used in this app) */
 type PluralCategory = "zero" | "one" | "two" | "few" | "many" | "other";
 
@@ -100,6 +123,9 @@ const rememberSynced = (stamp: string): void => {
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>(() => {
+    // /ar is Arabic whatever was saved: the URL is the promise made to the
+    // search result the visitor clicked.
+    if (onArabicHome()) return "ar";
     const saved = localStorage.getItem("k-lovers-lang");
     return (saved === "ar" ? "ar" : "en") as Language;
   });
@@ -111,6 +137,15 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     // 23 Sep 2026: lets every GA4 report be split English / Arabic.
     window.gtag?.("set", "user_properties", { site_language: language });
   }, [language]);
+
+  // Back/forward onto /ar keeps the page Arabic.
+  useEffect(() => {
+    const onPop = () => {
+      if (onArabicHome()) setLanguage("ar");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   // The language the website is displayed in IS the language this person reads
   // Klovers in, so it is the language Klovers writes to them in. Nothing else
@@ -166,11 +201,15 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   }, [language]);
 
   // 23 Sep 2026: a switch is recorded in GA4 only (not an ad signal).
+  // 24 Sep 2026: on the homepage the switch also moves between "/" and "/ar".
   const toggleLanguage = () => {
     const from = language;
     const to: Language = from === "en" ? "ar" : "en";
-    track.ga("language_switched", { from, to, page: window.location.pathname });
+    const path = window.location.pathname;
+    track.ga("language_switched", { from, to, page: path });
     setLanguage(to);
+    if (to === "ar" && path === EN_HOME) goTo(AR_HOME);
+    else if (to === "en" && path === AR_HOME) goTo(EN_HOME);
   };
 
   const resolve = (sectionOrPath: string, key?: string): any => {
