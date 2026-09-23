@@ -18,12 +18,18 @@ import { logLeadEvent } from "@/lib/leadTracking";
  * the hero so it no longer competes with Book a Free Class) and the Journal
  * are linked underneath.
  *
+ * 24 Sep 2026: no flat characters. Games uses the headphones drawing, the
+ * Cluby door shows the 3D Cluby himself, and the hanok-alley scene stands
+ * beside the grid on lg+ with softly dissolved edges.
+ *
  * Palette: Yellow, Charcoal, Ivory, white cards.
  */
 
 type Door = {
   to: string;
-  icon: KloverIconName;
+  /** A painted object icon, or - for the Cluby door only - the 3D Cluby. */
+  icon?: KloverIconName;
+  cluby?: boolean;
   tone: string;
   titleEn: string;
   titleAr: string;
@@ -52,7 +58,7 @@ const DOORS: Door[] = [
   },
   {
     to: "/games",
-    icon: "klobi-headphones",
+    icon: "game-headphones-music",
     tone: "bg-white",
     titleEn: "Games",
     titleAr: "الألعاب",
@@ -61,7 +67,7 @@ const DOORS: Door[] = [
   },
   {
     to: "/games",
-    icon: "klobi-reading",
+    cluby: true,
     tone: "bg-klovers-yellow",
     titleEn: "Cluby",
     titleAr: "كلوبي",
@@ -88,6 +94,12 @@ const DOORS: Door[] = [
   },
 ];
 
+/** Soft radial edge: inset images dissolve into the surface they sit on. */
+const SOFT_EDGE = {
+  WebkitMaskImage: "radial-gradient(ellipse 50% 50% at 50% 50%, #000 58%, transparent 100%)",
+  maskImage: "radial-gradient(ellipse 50% 50% at 50% 50%, #000 58%, transparent 100%)",
+};
+
 const MoreThanAClass = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
@@ -109,21 +121,49 @@ const MoreThanAClass = () => {
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
-          {DOORS.map((d) => (
-            <Link
-              key={d.titleEn}
-              to={d.to}
-              className={`group flex flex-col rounded-2xl border border-charcoal/10 p-4 sm:p-5 text-charcoal shadow-[0_18px_40px_-28px_rgba(46,46,46,0.75)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-charcoal ${d.tone}`}
-            >
-              <KloverIcon name={d.icon} className="mb-2 h-11 w-11 sm:h-12 sm:w-12" />
-              <h3 className="flex items-center gap-1 font-display text-base font-bold">
-                {isAr ? d.titleAr : d.titleEn}
-                <ArrowRight className="h-4 w-4 opacity-60 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" aria-hidden="true" />
-              </h3>
-              <p className="mt-1 text-xs sm:text-sm leading-relaxed text-charcoal/70">{isAr ? d.bodyAr : d.bodyEn}</p>
-            </Link>
-          ))}
+        <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center lg:gap-8">
+          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+            {DOORS.map((d) => (
+              <Link
+                key={d.titleEn}
+                to={d.to}
+                className={`group flex flex-col rounded-2xl border border-charcoal/10 p-4 sm:p-5 text-charcoal shadow-[0_18px_40px_-28px_rgba(46,46,46,0.75)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-charcoal ${d.tone}`}
+              >
+                {d.cluby ? (
+                  <img
+                    src="/assets/cluby/cluby-wave.webp"
+                    alt=""
+                    aria-hidden="true"
+                    width={314}
+                    height={440}
+                    loading="lazy"
+                    decoding="async"
+                    draggable={false}
+                    className="mb-2 h-11 w-auto shrink-0 select-none self-start object-contain drop-shadow-[0_4px_6px_rgba(46,46,46,0.3)] sm:h-12"
+                  />
+                ) : d.icon ? (
+                  <KloverIcon name={d.icon} className="mb-2 h-11 w-11 sm:h-12 sm:w-12" />
+                ) : null}
+                <h3 className="flex items-center gap-1 font-display text-base font-bold">
+                  {isAr ? d.titleAr : d.titleEn}
+                  <ArrowRight className="h-4 w-4 opacity-60 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" aria-hidden="true" />
+                </h3>
+                <p className="mt-1 text-xs sm:text-sm leading-relaxed text-charcoal/70">{isAr ? d.bodyAr : d.bodyEn}</p>
+              </Link>
+            ))}
+          </div>
+
+          {/* The hanok-alley scene, end side, large screens only. */}
+          <img
+            src="/assets/cluby/scene-hanok.webp"
+            alt={isAr ? "طالب مع كلوبي في زقاق بيوت هانوك تقليدية" : "A learner and Cluby in a hanok alley"}
+            width={1080}
+            height={1350}
+            loading="lazy"
+            decoding="async"
+            className="hidden h-auto w-full lg:block"
+            style={SOFT_EDGE}
+          />
         </div>
 
         <p className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
