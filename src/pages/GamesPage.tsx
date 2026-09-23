@@ -6,7 +6,6 @@ import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import KoreanMatchGame from "@/components/KoreanMatchGame";
 import HangulQuizGame from "@/components/HangulQuizGame";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useGamification } from "@/hooks/useGamification";
@@ -21,7 +20,10 @@ import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
 import { logGameEvent } from "@/lib/leadTracking";
-import GameIcon from "@/components/GameIcon";
+import KloverIcon from "@/components/KloverIcon";
+import { gameIconName } from "@/constants/gameIcons";
+import { gameWorlds } from "@/constants/gameWorlds";
+import { cn } from "@/lib/utils";
 import GameWorldsHub from "@/components/games/GameWorldsHub";
 // The two brand characters, inlined. See src/assets/characters.ts for why
 // they are data URIs and why they are busts rather than full-body poses.
@@ -341,7 +343,7 @@ const GamesPage = () => {
             <Lock className="h-7 w-7 text-muted-foreground" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-foreground">{game && <GameIcon id={game.id} className="mr-2 inline-block h-7 w-7 align-middle" />}{game?.title} {isAr ? "للأعضاء فقط" : "is for members"}</h3>
+            <h3 className="text-xl font-bold text-foreground">{game && <KloverIcon name={gameIconName(game.id)} className="me-2 inline-block h-9 w-9 align-middle" />}{game?.title} {isAr ? "للأعضاء فقط" : "is for members"}</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
               {isAr ? `أنشئ حساباً مجانياً لفتح جميع الألعاب الـ ${games.length}، حفظ XP الخاص بك، وبناء سلسلتك اليومية.` : `Create a free account to unlock all ${games.length} games, save your XP, and build your daily streak.`}
             </p>
@@ -415,50 +417,81 @@ const GamesPage = () => {
             <h2 className="text-lg font-bold text-foreground mb-4">
               {isAr ? `كل الألعاب (${games.length})` : `All games (${games.length})`}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
-              {games.map((game) => {
-                const isActive = activeGame === game.id;
-                // Derived, not stored. The padlock, the FREE badge and the play
-                // gate in renderGame() now all read the same array, so a card
-                // cannot advertise FREE and then refuse to open.
-                const isFree = FREE_GAME_IDS.includes(game.id);
-                const isLocked = !isLoggedIn && !isFree;
+            {/* Grouped by world, in journey order. Same catalog, same gate:
+                every id comes from gameWorlds(), which is GAMES_CATALOG grouped
+                (the test in constants/__tests__/gameWorlds.test.ts keeps the
+                two in step), and the free/locked logic below is unchanged. */}
+            <div className="space-y-8">
+              {gameWorlds().map((world) => {
+                const worldGames = world.gameIds
+                  .map((id) => games.find((g) => g.id === id))
+                  .filter((g): g is (typeof games)[number] => Boolean(g));
                 return (
-                  <button key={game.id} onClick={() => selectGame(game.id)} className="text-left">
-                    <Card className={`p-4 transition-all duration-200 border-2 cursor-pointer h-full relative ${
-                      isActive
-                        ? "border-primary/50 bg-primary/5 shadow-md"
-                        : isLocked
-                        ? "border-border opacity-60 hover:opacity-80 hover:shadow-sm"
-                        : "border-border hover:border-foreground/20 hover:shadow-sm"
-                    }`}>
-                      {isLocked && (
-                        <div className="absolute top-2 right-2">
-                          <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                        </div>
-                      )}
-                      {isFree && !isLoggedIn && (
-                        <div className="absolute top-2 right-2">
-                          <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded-full font-medium">{isAr ? "مجاني" : "FREE"}</span>
-                        </div>
-                      )}
-                      <div className="flex items-start gap-3">
-                        <GameIcon id={game.id} className="h-10 w-10" />
-                        <div className="space-y-0.5 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-foreground text-sm">{game.title}</h3>
-                            {isActive && (
-                              <span className="text-[10px] bg-primary/20 text-foreground px-1.5 py-0.5 rounded-full font-medium">{t("games.playing")}</span>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2">{game.description}</p>
-                          <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full mt-1 ${
-                            game.difficulty === t("games.intermediate") ? "bg-primary/10 text-foreground" : "bg-muted text-muted-foreground"
-                          }`}>{game.difficulty}</span>
-                        </div>
-                      </div>
-                    </Card>
-                  </button>
+                  <div key={world.key}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <KloverIcon name={world.icon} className="h-9 w-9" />
+                      <h3 className="text-base md:text-lg font-bold text-foreground">{isAr ? world.nameAr : world.name}</h3>
+                      <span className="text-xs text-muted-foreground">
+                        {isAr ? `${worldGames.length} ألعاب` : `${worldGames.length} games`}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {worldGames.map((game) => {
+                        const isActive = activeGame === game.id;
+                        // Derived, not stored. The padlock, the FREE badge and the play
+                        // gate in renderGame() now all read the same array, so a card
+                        // cannot advertise FREE and then refuse to open.
+                        const isFree = FREE_GAME_IDS.includes(game.id);
+                        const isLocked = !isLoggedIn && !isFree;
+                        return (
+                          <button
+                            key={game.id}
+                            type="button"
+                            onClick={() => selectGame(game.id)}
+                            aria-pressed={isActive}
+                            className="text-start rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                          >
+                            <div
+                              className={cn(
+                                "relative h-full rounded-2xl border-2 bg-card p-4 transition-shadow",
+                                isActive
+                                  ? "border-charcoal ring-4 ring-klovers-yellow dark:border-live-bright"
+                                  : isLocked
+                                    ? "border-border opacity-70 hover:opacity-90"
+                                    : "border-charcoal dark:border-border hover:shadow-[4px_4px_0_hsl(var(--charcoal))]",
+                              )}
+                            >
+                              {isLocked && (
+                                <div className="absolute top-3 end-3">
+                                  <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                                </div>
+                              )}
+                              {isFree && !isLoggedIn && (
+                                <div className="absolute top-3 end-3">
+                                  <span className="rounded bg-klovers-yellow text-charcoal border border-charcoal px-1.5 py-0.5 text-[10px] font-extrabold">{isAr ? "مجاني" : "FREE"}</span>
+                                </div>
+                              )}
+                              <div className="flex items-start gap-3">
+                                <KloverIcon name={gameIconName(game.id)} className="h-12 w-12 sm:h-14 sm:w-14" />
+                                <div className="min-w-0 flex-1 pe-10">
+                                  <h4 className="font-display font-bold text-foreground text-sm leading-tight">{game.title}</h4>
+                                  <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{game.description}</p>
+                                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                    <span className="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground">{game.difficulty}</span>
+                                    {isActive ? (
+                                      <span className="text-[11px] font-bold rounded-full bg-charcoal text-klovers-yellow px-2.5 py-0.5">{t("games.playing")}</span>
+                                    ) : !isLocked ? (
+                                      <span className="text-[11px] font-bold rounded-full bg-klovers-yellow text-charcoal border-2 border-charcoal px-2.5 py-0.5">{isAr ? "العب" : "Play"}</span>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
             </div>
