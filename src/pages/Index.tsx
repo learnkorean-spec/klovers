@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { logEngagementEvent } from "@/lib/leadTracking";
 import { CONTACT_EMAIL } from "@/lib/siteConfig";
 import { useSEO } from "@/hooks/useSEO";
@@ -31,18 +32,23 @@ const FinalCTA = lazy(() => import("@/components/FinalCTA"));
  * scripts/lib/brand-identity.test.mjs guards the prerender side (brand first,
  * كلوفرز in the description).
  *
- * The Arabic strings are used when the visitor has switched to Arabic. They are
- * client-side only: Arabic has no URL of its own yet (?lang=ar is not a
- * route), so crawlers only ever see the English head. A real /ar route, and the
- * reciprocal hreflang that comes with it, is the remaining SEO blocker - see
- * docs/DECISIONS.md 2026-08-19 (hreflang, Option B).
+ * Arabic: since 24 Sep 2026 the Arabic homepage has its own URL, /ar, and
+ * these are the SAME strings the prerender writes into dist/ar/index.html.
+ * Both pages declare the same reciprocal hreflang pair (HOME_ALTERNATES), and
+ * each is its own canonical. Change both or neither -
+ * scripts/lib/arabic-home-route.test.mjs guards the pair.
  */
 export const HOME_TITLE = "Klovers — Live Online Korean Classes in Small Groups";
 export const HOME_DESCRIPTION =
   "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups of up to 8. Free trial class, free placement test and gamified practice.";
-const HOME_TITLE_AR = "تعلم اللغة الكورية أونلاين — حصص مباشرة";
+const HOME_TITLE_AR = "كلوفرز Klovers — حصص كوري أونلاين مباشرة في مجموعات صغيرة";
 const HOME_DESCRIPTION_AR =
-  "تعلم الكورية أونلاين في حصص مباشرة ومجموعات صغيرة، مع مسار واضح من المبتدئ حتى التحدث بثقة. احجز حصتك المجانية.";
+  "كلوفرز (Klovers): حصص كوري أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة حتى ٨ طلاب، بالعربي أو بالإنجليزي. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.";
+
+/** The homepage translation pair. Same as HOME_ALTERNATES in prerender-meta.mjs. */
+const HOME_URL_EN = "https://kloversegy.com/";
+const HOME_URL_AR = "https://kloversegy.com/ar";
+const HOME_ALTERNATES = { en: "https://kloversegy.com/", ar: "https://kloversegy.com/ar" };
 
 const SectionFallback = () => (
   <div className="py-20 px-4">
@@ -58,18 +64,16 @@ const SectionFallback = () => (
 
 const Index = () => {
   const { language } = useLanguage();
+  const { pathname } = useLocation();
+  const onArabicUrl = pathname === "/ar";
   const isAr = language === "ar";
   useSEO({
     title: isAr ? HOME_TITLE_AR : HOME_TITLE,
     description: isAr ? HOME_DESCRIPTION_AR : HOME_DESCRIPTION,
-    canonical: "https://kloversegy.com/",
+    // Each language is its own canonical; neither points at the other.
+    canonical: onArabicUrl ? HOME_URL_AR : HOME_URL_EN,
+    alternates: HOME_ALTERNATES,
   });
-
-  // No hreflang on the homepage: ?lang=ar is a query parameter on the same
-  // document, not an Arabic URL, and it canonicalises back to / - which
-  // invalidates the whole annotation cluster. Marketing pages get hreflang
-  // once Arabic has real URLs of its own (Option B).
-  // See docs/DECISIONS.md 2026-08-19 (hreflang).
 
   useEffect(() => {
     const schema = {
