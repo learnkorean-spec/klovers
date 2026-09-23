@@ -31,6 +31,13 @@ import { join, relative } from "path";
  * comment to get green — the wrong incentive. Stripping comments first also
  * means the assertion cannot be SATISFIED by deleting a comment: comments are
  * simply not part of what it looks at.
+ *
+ * WHERE THE BOARD LIVES (23 Sep 2026)
+ *
+ * The leaderboard moved out of GamesPage.tsx into
+ * src/components/games/GamesLeaderboard.tsx (the podium redesign). The checks
+ * below read both files, and one asserts that GamesPage still renders the
+ * component, so the guard cannot pass on a file the page no longer uses.
  */
 
 const repoRoot = process.cwd();
@@ -77,6 +84,7 @@ const files = walk(SRC).map((p) => ({
 
 const byPath = (p) => files.find((f) => f.path === p);
 const gamesPage = byPath("src/pages/GamesPage.tsx");
+const leaderboard = byPath("src/components/games/GamesLeaderboard.tsx");
 const hook = byPath("src/hooks/useLeaderboard.ts");
 
 /**
@@ -100,12 +108,17 @@ for (const f of files) {
 }
 
 describe("the source files this test depends on exist", () => {
-  it("found GamesPage.tsx and useLeaderboard.ts", () => {
+  it("found GamesPage.tsx, GamesLeaderboard.tsx and useLeaderboard.ts", () => {
     // Guards against the walk silently matching nothing, which would make
     // every assertion below vacuously true.
     expect(gamesPage).toBeDefined();
+    expect(leaderboard).toBeDefined();
     expect(hook).toBeDefined();
     expect(files.length).toBeGreaterThan(0);
+  });
+
+  it("GamesPage still renders the leaderboard component these checks read", () => {
+    expect(stripComments(gamesPage.text)).toContain("<GamesLeaderboard");
   });
 });
 
@@ -125,9 +138,10 @@ describe("no invented people in src/", () => {
     ).toEqual([]);
   });
 
-  it("the games page carries none of them at all", () => {
+  it("the games page and its leaderboard carry none of them at all", () => {
     for (const name of FABRICATED_NAMES) {
       expect(gamesPage.text).not.toContain(name);
+      expect(leaderboard.text).not.toContain(name);
     }
   });
 
@@ -148,7 +162,9 @@ describe("no invented people in src/", () => {
 });
 
 describe("the guest leaderboard invents no numbers", () => {
-  const copy = stripComments(gamesPage.text);
+  // The page and the component together: the board is rendered by
+  // GamesLeaderboard, the data is fetched by GamesPage.
+  const copy = stripComments(gamesPage.text) + "\n" + stripComments(leaderboard.text);
 
   it("has no hardcoded leaderboard rows", () => {
     // The exact shape that was there: { rank: 1, name: "…", xp: 1840, … }
@@ -181,9 +197,9 @@ describe("the guest leaderboard invents no numbers", () => {
 
   it("still renders the real board for signed-in students", () => {
     // The signed-in path is explicitly out of scope for this change; assert it
-    // survived rather than trusting that it did.
-    expect(copy).toContain("xpLeaderboard.slice(0, 10).map");
-    expect(copy).toContain("p.value.toLocaleString()");
+    // survived rather than trusting that it did. Top ten, from data.
+    expect(stripComments(leaderboard.text)).toMatch(/\.slice\(0, 10\)/);
+    expect(stripComments(leaderboard.text)).toContain("p.value.toLocaleString()");
   });
 });
 
