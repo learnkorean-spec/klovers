@@ -40,13 +40,29 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  * instead of the plain standing cutout - starting with Chuseok (24-26 Sep).
  * Swap CLUBY_BADGE below for the next occasion, or back to cluby-wave.webp
  * for a plain week. See claude/CLUBY_CLOSET_AND_CHUSEOK_2026-09-24.md.
+ *
+ * 24 Sep 2026 (c): the badge actually jumps - Re wanted Cluby "moving, not
+ * just a picture", then "a jumping figure" when a small idle bob wasn't
+ * enough. Reuses animate-bar-jump/animate-bar-shadow from src/index.css (the
+ * cast animation already written for StickyEnrollBar but unused until now):
+ * squash, launch, a turn in the air, land, rest, repeat. No video/animation
+ * generation tool is available in this workspace, so this is CSS motion on
+ * the existing badge image, not a generated video/GIF.
+ *
+ * 24 Sep 2026 (d): the round Chuseok crop became a full standing figure -
+ * "i want it like this but in hanbok", pointing at cluby-wave.webp's
+ * full-body cutout style. cluby-hanbok.webp is a hand-traced transparent
+ * cutout (automated background removal kept grabbing the glowing moon behind
+ * Cluby in the source art, since their colors overlap too closely). The
+ * jump-wrapper box below is now portrait (~0.71 aspect) to match it instead
+ * of the old square badge box.
  */
 
 /** This week's Cluby image on the hero card. Swap this one line per occasion. */
 const CLUBY_BADGE = {
-  src: "/assets/cluby/cluby-chuseok.webp",
-  width: 800,
-  height: 800,
+  src: "/assets/cluby/cluby-hanbok.webp",
+  width: 794,
+  height: 1117,
 };
 
 const HeroSection = () => {
@@ -265,18 +281,30 @@ const HeroSection = () => {
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
         {/* This week's Cluby badge, sitting on the top edge of the end-side
             card and peeking up into the hero. Decorative: the cards carry
-            the meaning. See CLUBY_BADGE above to swap it. */}
-        <img
-          src={CLUBY_BADGE.src}
-          alt=""
-          aria-hidden="true"
-          width={CLUBY_BADGE.width}
-          height={CLUBY_BADGE.height}
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-          className="pointer-events-none absolute bottom-full end-8 z-10 h-auto w-[84px] translate-y-4 select-none drop-shadow-[0_10px_14px_rgba(46,46,46,0.4)] md:end-10 md:w-[120px]"
-        />
+            the meaning. See CLUBY_BADGE above to swap it. A real jump loop
+            (bar-jump/bar-shadow, both motion-safe) - squash, launch, turn,
+            land, rest - not just a static badge. Portrait box (~0.71
+            aspect) to match the full-body cutout instead of a square crop. */}
+        <div
+          className="pointer-events-none absolute bottom-full end-8 z-10 h-[84px] w-[60px] select-none md:end-10 md:h-[120px] md:w-[85px]"
+        >
+          {/* Ground shadow: shrinks and fades as Cluby leaves the ground. */}
+          <div
+            aria-hidden="true"
+            className="absolute bottom-0 start-1/2 h-[14px] w-[60%] -translate-x-1/2 rounded-full bg-charcoal/45 blur-[3px] motion-safe:animate-bar-shadow rtl:translate-x-1/2"
+          />
+          <img
+            src={CLUBY_BADGE.src}
+            alt=""
+            aria-hidden="true"
+            width={CLUBY_BADGE.width}
+            height={CLUBY_BADGE.height}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="relative h-full w-full select-none object-contain object-bottom drop-shadow-[0_10px_14px_rgba(46,46,46,0.4)] motion-safe:animate-bar-jump"
+          />
+        </div>
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {cards.map(({ icon, tone, title, body }) => (
             <div
