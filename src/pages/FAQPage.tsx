@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { HelpCircle, MessageCircle, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
+import { withoutUnsupportedClaims } from "@/lib/trustFigures";
 
 // Inject JSON-LD into document head
 const FAQSchemaScript = ({ schema }: { schema: object }) => {
@@ -28,7 +29,14 @@ const FAQSchemaScript = ({ schema }: { schema: object }) => {
 const FAQPage = () => {
   useSEO({ title: "FAQ", description: "Got questions about learning Korean with Klovers? Find answers about courses, teachers, scheduling, and payments.", canonical: "https://kloversegy.com/faq" });
   const { t, tArray } = useLanguage();
-  const faqs = tArray("faqPage", "items") as { question: string; answer: string; category?: string }[];
+  const rawFaqs = tArray("faqPage", "items") as { question: string; answer: string; category?: string }[];
+  // The TOPIK answer in translations.ts claims "high pass rates"; nothing
+  // measures that. The answer (and the FAQPage JSON-LD built from it) keeps
+  // the TOPIK-prep wording and drops the claim - see withoutUnsupportedClaims.
+  const faqs = useMemo(
+    () => rawFaqs.map((f) => ({ ...f, answer: withoutUnsupportedClaims(f.answer) })),
+    [rawFaqs],
+  );
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 

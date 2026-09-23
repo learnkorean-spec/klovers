@@ -11,11 +11,12 @@ import { DollarSign, Users, Link as LinkIcon, TrendingUp, CheckCircle } from "lu
 import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getAttribution } from "@/lib/leadSession";
+import { STUDENTS_TAUGHT, trustCopy } from "@/lib/trustFigures";
 
 const COMMISSION_RATE = 20; // %
 
 export default function AffiliatePage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   useSEO({
     title: "Affiliate Program — Earn 20% Commission",
     description: "Join the Klovers affiliate program. Earn 20% commission for every student you refer to our Korean language courses. Simple, transparent, and rewarding.",
@@ -92,13 +93,14 @@ export default function AffiliatePage() {
           </div>
         </section>
 
-        {/* Stats */}
+        {/* Stats. The student tile was "500+ Active Students"; the figure is
+            200+ students Reham has taught over 13 years (@/lib/trustFigures). */}
         <section className="py-14 bg-muted/40">
           <div className="max-w-4xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
               { icon: DollarSign, label: t("affiliate.statCommission"), value: `${COMMISSION_RATE}%` },
               { icon: TrendingUp, label: t("affiliate.statAvgOrder"), value: "~$120" },
-              { icon: Users, label: t("affiliate.statActiveStudents"), value: "500+" },
+              { icon: Users, label: trustCopy(language).studentsTaughtLabel, value: STUDENTS_TAUGHT },
               { icon: LinkIcon, label: t("affiliate.statCookieDuration"), value: "30 days" },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="bg-card border rounded-2xl p-6 flex flex-col items-center gap-2 shadow-sm">

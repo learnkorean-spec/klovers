@@ -10,11 +10,21 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import rehamKorea1 from "@/assets/reham-korea-1.jpg";
 import rehamKorea2 from "@/assets/reham-korea-2.jpg";
+import {
+  RATING,
+  STUDENTS_TAUGHT,
+  TEACHING_YEARS,
+  TEACHING_YEARS_COUNT,
+  withoutUnsupportedClaims,
+} from "@/lib/trustFigures";
 
+// Figures come from @/lib/trustFigures. This strip used to say 12+ years,
+// 500+ students and a 4.9 rating with no source - three numbers no other page
+// agreed with (audit, 23 Sep 2026).
 const TRUST_STATS = [
-  { value: "12+", label: "Years Teaching" },
-  { value: "500+", label: "Students Taught" },
-  { value: "4.9 ★", label: "Average Rating" },
+  { value: TEACHING_YEARS, label: "Years Teaching" },
+  { value: STUDENTS_TAUGHT, label: "Students Taught" },
+  { value: `${RATING.value} ★`, label: `From ${RATING.count} ${RATING.source} reviews` },
   { value: "15+", label: "Countries" },
   { value: "A1–C2", label: "All Levels" },
 ];
@@ -39,7 +49,10 @@ const AboutPage = () => {
   }, []);
 
   const { t, tArray } = useLanguage();
-  const experienceItems = tArray("aboutPage", "experience.items") as string[];
+  // The experience list still comes from translations.ts, which carries a
+  // "high student pass rates" bullet nothing measures. It renders as plain
+  // TOPIK exam preparation instead - see withoutUnsupportedClaims.
+  const experienceItems = (tArray("aboutPage", "experience.items") as string[]).map(withoutUnsupportedClaims);
 
   return (
     <div className="min-h-screen">
@@ -119,8 +132,11 @@ const AboutPage = () => {
         <section className="py-16 bg-card border-y border-border">
           <div className="container mx-auto px-4 text-center max-w-xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Ready to start?</p>
+            {/* Was "Join thousands of students learning Korean". The figure is
+                200+, and it counts students Reham has taught, not a crowd on
+                this site. */}
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Join thousands of students learning Korean
+              Learn with a teacher who has taught {STUDENTS_TAUGHT} students over {TEACHING_YEARS_COUNT} years
             </h2>
             <p className="text-muted-foreground mb-8 text-sm">
               Not sure where to begin? Take our free placement test and discover your level in minutes.
