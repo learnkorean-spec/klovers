@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Gift, Users, Star, Globe, MessageCircle, BookOpen } from "lucide-react";
+import { ArrowRight, Gift, Users, Star, MessageCircle, BookOpen, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 const heroPoster = "/hero-korean.jpg";
@@ -9,7 +9,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialSlots";
-import { useAnyBottomSlotActive } from "@/lib/bottomLayer";
 
 /**
  * The first screen: the full-bleed cover Re picked, fused with the concept
@@ -17,24 +16,29 @@ import { useAnyBottomSlotActive } from "@/lib/bottomLayer";
  *
  * Two halves, deliberately:
  *
- * 1. THE COVER. Photo/video wall, giant centred headline, proof strip pinned
- *    to the bottom. Repainted on the board - Charcoal #2E2E2E ground and
- *    scrims instead of pure black, Ivory #FFF9EC text instead of pure white.
- *    The next-class chip and the slot pills carry live-bright, the "happening
- *    now" status colour for dark grounds. The headline's second line stays
- *    Klovers Yellow: yellow as TYPE is endorsed on a dark ground and ruled out
- *    only on a light one.
+ * 1. THE COVER. Photo/video wall, giant centred headline, proof strip under
+ *    the actions. Charcoal #2E2E2E ground and scrims instead of pure black,
+ *    Ivory #FFF9EC text instead of pure white. The next-class chip and the
+ *    slot pills carry live-bright, the "happening now" status colour for dark
+ *    grounds. The headline's second line stays Klovers Yellow: yellow as TYPE
+ *    is endorsed on a dark ground and ruled out only on a light one.
  *
  *    NOTE this section is dark in BOTH themes - it is a photo under a charcoal
  *    scrim, not a themed surface. That is why it uses live-bright and the
  *    ivory/charcoal literals rather than the theme's foreground tokens.
  *
  * 2. THE CARD ROW. On the board these sit at the foot of the hero, half on
- * the image. They lift 48px on phones and 80px from sm up to do the same
- * here, and the row carries no background of its own - what shows under
- * them is the page's own Ivory, so there is no band and no seam. The proof
- * strip clears that overlap by the same amount; if you change one, change
- * the other, or the cards cover the numbers.
+ *    the image. They lift 48px on phones and 80px from sm up to do the same
+ *    here. The content column's bottom padding (pb-24 / sm:pb-32) is the room
+ *    they take out of the photo; change one, change the other.
+ *
+ * THE PROOF STRIP IS IN NORMAL FLOW (23 Sep 2026). It used to be
+ * `absolute bottom-0` of the section while the text column grew above it -
+ * two layers with no knowledge of each other. Every extra line (a date chip,
+ * the Hangul link, a translation that wrapped) pushed the column into the
+ * strip, and three rounds of padding tweaks (pb-44, a max-height query, an
+ * overlay-aware pb-40) each fixed one viewport and missed the next. In flow,
+ * the strip simply comes after the content, so nothing can land on it.
  *
  * Numbers are static. A count-up renders every intermediate value as a
  * finished claim - "17+ students" is wrong for a moment too.
@@ -46,13 +50,6 @@ const HeroSection = () => {
   // arrays had accumulated across the site, none agreeing with another and
   // every one of them already in the past.
   const { slots } = useUpcomingTrialSlots();
-
-  // HomeExitNudge / StickyEnrollBar / etc. are fixed to the VIEWPORT
-  // (src/lib/bottomLayer.ts); the proof strip below is pinned to this
-  // SECTION's own bottom. On a short viewport where the hero still fills
-  // the screen, an active overlay was painting straight over the stats.
-  const bottomOverlayActive = useAnyBottomSlotActive();
-
 
   /**
    * The weekday of the next class, or null when there isn't one to name.
@@ -74,12 +71,16 @@ const HeroSection = () => {
   // row can hold on narrow screens, wrapping unpredictably. Three keeps it a
   // single tidy row on every breakpoint we support; there is no next/more
   // affordance because the full list is one click away on /free-trial.
+  //
+  // The time carries the viewer's own zone name (timeZoneName: "short" -
+  // "EDT", "GMT+3", ...). A bare "7:00 PM" read as Cairo time to some
+  // visitors and as their own to others; the 23 Sep review flagged it.
   const pills = useMemo(() => {
     const tz = viewerTimezone();
     const locale = isAr ? "ar-EG" : "en-US";
     return slots.slice(0, 3).map((s) => ({
       key: `${s.date}-${s.startTime}`,
-      label: `${s.startsAt.toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric", timeZone: tz })} · ${s.startsAt.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz })}`,
+      label: `${s.startsAt.toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric", timeZone: tz })} · ${s.startsAt.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz, timeZoneName: "short" })}`,
     }));
   }, [slots, isAr]);
 
@@ -105,24 +106,25 @@ const HeroSection = () => {
   }, []);
 
   /**
-   * THE TWO LARGEST NUMBERS ON THE SITE. Both were once unsupported.
+   * THE THREE NUMBERS, AND WHAT EACH ONE COUNTS (Re, 23 Sep 2026).
    *
-   * Measured on production, 2026-09-08: 102 rows in `profiles`, 76 trial
-   * bookings, 25 enrolments. "500+ Students Taught" was not a rounding of
-   * anything. Re's call: the 200+ figure is real, but it counts every student
-   * she has taught across 13 years — not this platform. A number is only
-   * honest with the sentence that scopes it, so the LABEL carries "in 13
-   * years" and is part of the claim, not decoration.
+   * - 200+ is the students Reham has taught herself, across 13 years - not
+   *   accounts on this platform.
+   * - 2,000+ is the Klovers community on social media (Facebook, Telegram and
+   *   the rest) - followers, not students. The review read the two as
+   *   contradicting each other because one said "students" and the other
+   *   "community" in different places; side by side, each with its own label,
+   *   they don't.
+   * - The stars belong to the GOOGLE Business Profile: 5.0 from 7 reviews.
+   *   Facebook's "100% recommend" lives in the testimonials summary, labelled
+   *   as Facebook, and the two are never averaged.
    *
-   * The stars belong to the GOOGLE Business Profile, which shows 5.0 from 7
-   * reviews — checked signed-in as the owner. Facebook replaced star ratings
-   * with Recommendations in 2018, so its "100% recommend" lives in the
-   * testimonials summary instead and the two are never averaged.
+   * FinalCTA.tsx shows the same three; if one changes, change both.
    */
   const stats = [
-    { icon: Users, display: "200+", label: isAr ? "طالب خلال ١٣ عاماً" : "Students in 13 years" },
+    { icon: Users, display: "200+", label: isAr ? "طالب درّستهم ريهام" : "Students taught by Reham" },
+    { icon: Heart, display: "2,000+", label: isAr ? "متابع في مجتمعنا على السوشيال" : "In our social media community" },
     { icon: Star, display: "5.0 ★", label: isAr ? "من ٧ مراجعات جوجل" : "From 7 Google reviews" },
-    { icon: Globe, display: "A1–C2", label: isAr ? "جميع المستويات" : "All Levels" },
   ];
 
   /**
@@ -132,6 +134,10 @@ const HeroSection = () => {
    * colours now — Yellow, Charcoal, Ivory — so the row alternates Yellow and
    * white. The rhythm is what the board was after; the extra colours were not
    * carrying meaning.
+   *
+   * h3, not h2: these are four short promises inside the hero, not four
+   * sections of the page. As h2s they made the outline read like sixteen
+   * sections.
    */
   const cards = [
     {
@@ -228,18 +234,11 @@ const HeroSection = () => {
           한국어
         </span>
 
-        {/* ── Hero text content ───────────────────────────── */}
-        {/* pb-44 is tuned for typical phone/desktop heights. On short
-            viewports (iPad landscape, most laptops with a shallow browser
-            window) the section's min-height doesn't leave enough room below
-            this block for the proof strip's pinned-to-bottom stats — the
-            "Free Hangul starter sheet" link was overlapping the "5.0 ★"
-            stat. The max-height query adds extra clearance only when the
-            viewport is short enough for that to matter; normal-height
-            phones/desktops are untouched. See the "Proof strip" comment
-            below for why the strip is pinned to the section's bottom at all. */}
-        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pb-44 [@media(max-height:900px)]:pb-64">
-          <div className="max-w-4xl mx-auto flex flex-col items-center gap-6 sm:gap-8">
+        {/* ── Hero text content ─────────────────────────────
+            pt-8 gives the teacher chip air under the header; pb-24/sm:pb-32 is
+            the room the promise cards take when they lift onto the photo. */}
+        <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pt-8 pb-24 sm:pb-32">
+          <div className="max-w-4xl mx-auto flex flex-col items-center gap-5 sm:gap-7">
 
             {/* Teacher chip — the one thing on this page no competitor has. */}
             <div className="inline-flex items-center gap-3 bg-charcoal/55 border border-ivory/20 backdrop-blur-md rounded-full py-1.5 ps-1.5 pe-5 shadow-xl">
@@ -257,7 +256,7 @@ const HeroSection = () => {
                   {isAr ? "تدرّسها ريهام الشرقاوي" : "Taught by Reham Elshrkawy"}
                 </span>
                 <span className="block text-ivory/65 text-[11px] mt-0.5">
-                  {isAr ? "معلمة معتمدة TOPIK · ١٣ سنة تدريس" : "TOPIK-certified · 13 years teaching"}
+                  {isAr ? "١٣ سنة في تدريس الكورية" : "13 years teaching Korean"}
                 </span>
               </span>
             </div>
@@ -297,6 +296,12 @@ const HeroSection = () => {
                 {t("hero", "title2")}
               </span>
             </h1>
+
+            <p className="text-ivory/85 text-sm sm:text-base font-medium max-w-xl" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
+              {isAr
+                ? "حصص أونلاين مباشرة بالعربي أو الإنجليزي، بحد أقصى 8 طلاب في المجموعة"
+                : "Live online classes in English or Arabic, max 8 students per group"}
+            </p>
 
             {/* CTA Buttons — 2 max to eliminate choice paralysis */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-sm sm:max-w-none mx-auto">
@@ -339,22 +344,21 @@ const HeroSection = () => {
             <p className="text-ivory/60 text-xs" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
               {isAr ? "✓ بدون بطاقة بنكية · ✓ رد خلال دقائق" : "✓ No credit card · ✓ Reply in minutes"}
             </p>
-            <p className="text-ivory/70 text-xs font-medium mt-1" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
-              {isAr ? "حصص أونلاين مباشرة، بحد أقصى 8 طلاب في المجموعة" : "Live online classes, max 8 students per group"}
-            </p>
 
             {/* Upcoming class sessions — live from trial_slots, in the visitor's
-                own timezone. Capped to 3 (see `pills` above) so a busy schedule
-                can't wrap unpredictably. Renders nothing while loading or when
-                there is genuinely no upcoming slot, which is honest either way. */}
-            <div className="flex flex-wrap gap-2 justify-center">
-              {pills.map((p) => (
-                <div key={p.key} className="inline-flex items-center gap-1.5 bg-ivory/10 border border-ivory/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-ivory/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-live-bright shrink-0" />
-                  {p.label}
-                </div>
-              ))}
-            </div>
+                own timezone, with the zone named. Capped to 3 (see `pills`).
+                Renders nothing while loading or when there is genuinely no
+                upcoming slot, which is honest either way. */}
+            {pills.length > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center">
+                {pills.map((p) => (
+                  <div key={p.key} className="inline-flex items-center gap-1.5 bg-ivory/10 border border-ivory/20 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-ivory/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-live-bright shrink-0" />
+                    {p.label}
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Hangul sheet — reciprocity trigger */}
             <Link
@@ -366,46 +370,29 @@ const HeroSection = () => {
               {isAr ? "احصل على ورقة هانغول المجانية ←" : "Free Hangul starter sheet →"}
             </Link>
 
-          </div>
-        </div>
-
-        {/* ── Proof strip — pinned above the card overlap ─────────────
-            pb-24/pb-32 is not spacing taste: it is exactly the room the cards
-            below take out of this section when they lift onto the photo.
-
-            22 Sep 2026: this strip is `absolute bottom-0` of the SECTION,
-            while HomeExitNudge / StickyEnrollBar / etc. are `fixed bottom-0`
-            of the VIEWPORT (src/lib/bottomLayer.ts) — two layers with no
-            knowledge of each other. On a short viewport where the hero still
-            fills the screen, the overlay painted straight over these numbers.
-            bottomOverlayActive adds enough extra clearance to lift the strip
-            above whichever one is currently up; it reverts the moment that
-            overlay is dismissed. */}
-        <div
-          className={`absolute bottom-0 left-0 right-0 z-10 px-4 transition-[padding] duration-300 ${
-            bottomOverlayActive ? "pb-40 sm:pb-48" : "pb-24 sm:pb-32"
-          }`}
-        >
-          <div className="max-w-3xl mx-auto">
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-ivory/25 to-transparent mb-6" />
-            <div className="grid grid-cols-3 gap-4 md:gap-8">
-              {stats.map(({ icon: Icon, display, label }) => (
-                <div key={label} className="flex flex-col items-center gap-1 text-center">
-                  <div className="flex items-center gap-1.5">
-                    <Icon className="h-4 w-4 text-klovers-yellow hidden sm:block" />
-                    <span
-                      className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-ivory"
-                      style={{ textShadow: "0 2px 16px rgba(20,20,18,0.8)" }}
-                    >
-                      {display}
+            {/* ── Proof strip — in flow, after everything above it ───────── */}
+            <div className="w-full max-w-3xl mx-auto pt-2">
+              <div className="w-full h-px bg-gradient-to-r from-transparent via-ivory/25 to-transparent mb-5" />
+              <div className="grid grid-cols-3 gap-3 md:gap-8">
+                {stats.map(({ icon: Icon, display, label }) => (
+                  <div key={display} className="flex flex-col items-center gap-1 text-center">
+                    <div className="flex items-center gap-1.5">
+                      <Icon className="h-4 w-4 text-klovers-yellow hidden sm:block" aria-hidden="true" />
+                      <span
+                        className="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold text-ivory"
+                        style={{ textShadow: "0 2px 16px rgba(20,20,18,0.8)" }}
+                      >
+                        {display}
+                      </span>
+                    </div>
+                    <span className="text-ivory/90 text-xs sm:text-sm font-medium tracking-wide">
+                      {label}
                     </span>
                   </div>
-                  <span className="text-ivory/90 text-xs sm:text-sm font-medium tracking-wide">
-                    {label}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
           </div>
         </div>
       </section>
@@ -421,7 +408,7 @@ const HeroSection = () => {
               className={`rounded-2xl border border-charcoal/10 p-5 ${tone} shadow-[0_18px_40px_-24px_rgba(46,46,46,0.75)]`}
             >
               <KloverIcon name={icon} className="mb-3 h-14 w-14" />
-              <h2 className="font-display text-base font-bold text-charcoal">{title}</h2>
+              <h3 className="font-display text-base font-bold text-charcoal">{title}</h3>
               <p className="mt-1 text-sm leading-relaxed text-charcoal/65">{body}</p>
             </div>
           ))}
