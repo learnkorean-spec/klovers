@@ -88,11 +88,18 @@ describe("logGameEvent never fires a pixel", () => {
   // The control: the lead path is SUPPOSED to mirror. If this ever stops
   // passing, the shared row builder has been wired up wrongly and real
   // conversion tracking is broken — the opposite failure, equally silent.
+  //
+  // 23 Sep 2026: GA4's generate_lead now carries parameters so a click and a
+  // booking can be told apart. The Meta payload is deliberately unchanged.
   it("logLeadEvent DOES still mirror to the pixel", async () => {
     await logLeadEvent({ source_type: "whatsapp", cta_label: "floating_fab" });
 
     expect(fbq()).toHaveBeenCalledWith("track", "Lead", { content_name: "whatsapp" });
-    expect(gtag()).toHaveBeenCalledWith("event", "generate_lead");
+    expect(gtag()).toHaveBeenCalledWith(
+      "event",
+      "generate_lead",
+      expect.objectContaining({ lead_source: "whatsapp", cta_label: "floating_fab" }),
+    );
     expect(insert).toHaveBeenCalledTimes(1);
   });
 });
@@ -132,6 +139,18 @@ describe("logEngagementEvent never fires a pixel", () => {
     expect(gtag()).not.toHaveBeenCalled();
     expect(insert).toHaveBeenCalledTimes(1);
   });
+
+  // 23 Sep 2026: /pricing's page view and exit-sheet impression moved here.
+  it.each(["page_view", "exit_intent_shown"])(
+    "pricing_page %s calls neither fbq nor gtag",
+    async (cta_label) => {
+      await logEngagementEvent({ source_type: "pricing_page", cta_label });
+
+      expect(fbq()).not.toHaveBeenCalled();
+      expect(gtag()).not.toHaveBeenCalled();
+      expect(insert).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it("a whole homepage scroll raises zero conversions", async () => {
     // The exact sequence Index.tsx produces on one full scroll, plus the

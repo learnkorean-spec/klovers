@@ -15,10 +15,34 @@ export const track = {
     window.fbq?.("track", "PageView");
   },
 
-  /** Free trial form submitted */
-  lead(data?: { content_name?: string }) {
+  /**
+   * A lead: something the visitor chose to do (see LeadSource in
+   * leadTracking.ts).
+   *
+   * 23 Sep 2026: GA4 used to receive a bare `generate_lead` with no
+   * parameters for EVERY lead - a hero click, a WhatsApp tap and a completed
+   * trial booking were indistinguishable in GA4. It now receives `gaParams`
+   * (lead_source, cta_label, language, page_path from logLeadEvent), or at
+   * least the lead_source taken from `content_name`.
+   *
+   * The Meta Pixel payload is unchanged - `data` goes to fbq exactly as before.
+   *
+   * A completed trial booking (content_name "trial_booked", sent by
+   * TrialBookingPage's success screen) also raises `booking_completed`, so the
+   * funnel's last step is its own GA4 event rather than one more
+   * generate_lead.
+   */
+  lead(data?: Record<string, unknown>, gaParams?: Record<string, unknown>) {
     window.fbq?.("track", "Lead", data);
-    window.gtag?.("event", "generate_lead");
+    const params = gaParams ?? (data?.content_name ? { lead_source: data.content_name } : undefined);
+    if (params) window.gtag?.("event", "generate_lead", params);
+    else window.gtag?.("event", "generate_lead");
+    if (data?.content_name === "trial_booked") {
+      window.gtag?.("event", "booking_completed", {
+        language: typeof document !== "undefined" ? document.documentElement.lang || undefined : undefined,
+        trial_date: data.trial_date,
+      });
+    }
   },
 
   /** User created an account */
@@ -51,6 +75,15 @@ export const track = {
   /** Custom funnel events (Meta: trackCustom, GA4: event) */
   custom(eventName: string, params?: Record<string, unknown>) {
     window.fbq?.("trackCustom", eventName, params);
+    window.gtag?.("event", eventName, params);
+  },
+
+  /**
+   * GA4-only event. For things worth measuring that are not ad signals -
+   * a language switch, a pricing page view - so Meta's optimisation is not
+   * fed events it would read as intent.
+   */
+  ga(eventName: string, params?: Record<string, unknown>) {
     window.gtag?.("event", eventName, params);
   },
 };
