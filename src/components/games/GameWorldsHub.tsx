@@ -206,8 +206,8 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           {/* Headline + Cluby */}
           <div className="flex flex-col items-center gap-3 self-stretch px-4 pt-6 text-center md:items-start md:ps-16 md:text-start">
             <h1 className="text-[11px] font-extrabold uppercase tracking-wider text-charcoal/70">{title}</h1>
-            <p className="font-display text-3xl font-extrabold leading-tight text-charcoal md:text-5xl">{welcome}</p>
-            <p className="text-sm text-charcoal/80 md:text-base">
+            <p className="max-w-md font-display text-3xl font-extrabold leading-tight text-charcoal [text-shadow:0_2px_12px_#FFF6DE] md:text-4xl">{welcome}</p>
+            <p className="max-w-md rounded-full bg-[#FFF6DE]/80 px-2 text-sm text-charcoal/80 md:text-base">
               {isAr ? "العب، اتعلم، وقرّب أكتر من كوريا!" : "Let's play, learn, and get closer to Korea!"}
             </p>
             <div className="mt-auto flex items-end gap-3">
@@ -483,7 +483,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
       </section>
 
       {/* ── 4. World cards + Cluby's quote ────────────────────────────── */}
-      <section className="grid gap-4 lg:grid-cols-[repeat(3,minmax(0,1fr))_13rem]">
+      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_12rem]">
         {stats.map((s, i) => {
           const Scene = WORLD_SCENES[s.world.key];
           const preview = s.world.gameIds.slice(0, PREVIEW_COUNT);
@@ -533,18 +533,18 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                           onClick={() => onPlay(id)}
                           className="flex w-full items-center gap-3 rounded-xl border border-border bg-background/60 p-2 text-start transition-colors hover:border-charcoal/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                         >
-                          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted">
-                            <KloverIcon name={gameIconName(id)} className="h-8 w-8" />
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-muted">
+                            <KloverIcon name={gameIconName(id)} className="h-7 w-7" />
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="flex items-center gap-1 truncate text-sm font-bold text-foreground">
+                            <span className="flex items-center gap-1 text-sm font-bold leading-tight text-foreground">
                               {entry ? t(entry.titleKey) : id}
                               {done && <Check className="h-3.5 w-3.5 shrink-0 text-[#4CC38A]" strokeWidth={3} aria-label={isAr ? "لعبتها" : "Played"} />}
                             </span>
                             <span className="block truncate text-[11px] text-muted-foreground">{entry ? t(entry.descKey) : ""}</span>
                           </span>
                           {open ? (
-                            <span className="shrink-0 rounded-full bg-klovers-yellow px-3 py-1 text-xs font-bold text-charcoal">
+                            <span className="shrink-0 rounded-full bg-klovers-yellow px-2.5 py-1 text-xs font-bold text-charcoal">
                               {isAr ? "العب" : "Play"}
                             </span>
                           ) : (
@@ -572,7 +572,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         })}
 
         {/* Cluby's quote */}
-        <aside className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-[#FFF8EA] p-4 dark:bg-card md:flex-row lg:flex-col">
+        <aside className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border bg-[#FFF8EA] p-4 dark:bg-card sm:flex-row md:col-span-3 xl:col-span-1 xl:flex-col xl:items-stretch">
           <p className="cluby-note text-base leading-snug text-charcoal dark:text-foreground" lang={lang}>
             {isAr ? "“كل لعبة بتقرّبك من حلمك الكوري.”" : "“Every game brings you closer to your Korean dream.”"}
             <span className="mt-1 block text-sm">— {isAr ? "كلوبي" : "Cluby"}</span>
