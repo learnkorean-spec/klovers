@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Klovers Brand Sheet</title>
+<!--
+  Klovers character & colour sheet (Re, 24 Sep 2026).
+  A static reference page, served from public/ so it uses the real character
+  and icon files in /assets. Not linked from the app; noindex.
+  Palette: #FFFF00 main, #2E2E2E charcoal, #FFF9EC ivory, #39FF14 green
+  (progress / correct / done, always a fill with charcoal on it), #B800AB wrong.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@500;700&family=Kalam:wght@400;700&family=Cairo:wght@500;700&display=swap">
+<style>
+  :root{
+    --yellow:#FFFF00; --charcoal:#2E2E2E; --ivory:#FFF9EC; --green:#39FF14; --wrong:#B800AB;
+    --paper:#FFFFFF; --line:#E9E1CC; --muted:#6B665A; --ink-soft:#4A4740;
+    --display:"Poppins","Cairo",system-ui,sans-serif;
+    --body:"Inter","Cairo",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --ko:"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    --hand:"Segoe Script","Kalam","Bradley Hand",cursive;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--ivory);color:var(--charcoal)}
+  body{font:15px/1.55 var(--body);padding-inline:16px;padding-block:24px 56px}
+  img{max-width:100%;height:auto;display:block}
+  .wrap{max-width:1120px;margin:0 auto;display:grid;gap:28px}
+  h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.15}
+  h2{font-size:22px;font-weight:800;display:flex;align-items:center;gap:10px}
+  h2 .tag{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;background:var(--charcoal);color:var(--yellow);padding:5px 8px;border-radius:999px}
+  h3{font-size:15px;font-weight:700}
+  p{margin:0}
+  .lede{color:var(--muted);max-width:62ch;margin-top:6px}
+  .ko{font-family:var(--ko)}
+  .hand{font-family:var(--hand)}
+  section{background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:24px;display:grid;gap:18px}
+
+  /* ---------- Hero ---------- */
+  .hero{background:var(--charcoal);color:var(--ivory);border-radius:28px;padding:28px 24px 0;display:grid;grid-template-columns:1.1fr 1fr;gap:12px;overflow:hidden;position:relative}
+  .hero .mark{display:inline-flex;align-items:center;gap:10px;font:800 13px/1 var(--display);letter-spacing:.14em;color:var(--charcoal);background:var(--yellow);padding:8px 12px;border-radius:999px;width:max-content}
+  .hero h1{font-size:clamp(30px,5vw,50px);font-weight:800;margin-top:16px}
+  .hero h1 em{font-style:normal;color:var(--yellow)}
+  .hero .sub{color:#D9D3C3;margin-top:10px;max-width:46ch}
+  .hero .chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 28px}
+  .chip{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 var(--body);padding:7px 10px;border-radius:999px}
+  .chip.y{background:var(--yellow);color:var(--charcoal)}
+  .chip.g{background:var(--green);color:var(--charcoal)}
+  .chip.o{border:1px solid #5A5750;color:var(--ivory)}
+  .cast{display:flex;align-items:flex-end;justify-content:center;gap:4px;position:relative}
+  .cast::before{content:"";position:absolute;inset:auto 6% 0 6%;height:44%;background:var(--yellow);border-radius:50% 50% 0 0/100% 100% 0 0}
+  .cast img{position:relative}
+  .cast .boy{height:190px;width:auto}
+  .cast .cluby{height:170px;width:auto}
+  .cast .girl{height:200px;width:auto}
+  .bubble{position:absolute;background:var(--ivory);color:var(--charcoal);font:700 16px/1.2 var(--hand);padding:8px 12px;border-radius:14px;box-shadow:0 6px 0 rgba(0,0,0,.25);white-space:nowrap}
+  .bubble::after{content:"";position:absolute;bottom:-7px;left:22px;border:7px solid transparent;border-top-color:var(--ivory);border-bottom:0}
+  .bubble.b1{top:4px;left:4%}
+  .bubble.b2{top:26px;right:2%}
+
+  /* ---------- Palette ---------- */
+  .palette{display:grid;grid-template-columns:2.2fr 1.3fr 1.3fr 1.6fr 1fr;gap:12px}
+  .sw{border-radius:18px;padding:16px;min-height:170px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;border:1px solid var(--line)}
+  .sw .name{font:800 16px/1.2 var(--display)}
+  .sw .hex{font:600 13px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.02em}
+  .sw .role{font-size:12.5px;line-height:1.4}
+  .sw .pct{font:800 30px/1 var(--display)}
+  .sw.y{background:var(--yellow)}
+  .sw.c{background:var(--charcoal);color:var(--ivory);border-color:var(--charcoal)}
+  .sw.i{background:var(--ivory)}
+  .sw.g{background:var(--green)}
+  .sw.w{background:var(--wrong);color:#fff;border-color:var(--wrong)}
+  .ratio{display:flex;height:18px;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+  .ratio span{display:block}
+  .ratio-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted)}
+  .ratio-legend b{color:var(--charcoal)}
+
+  /* ---------- UI examples ---------- */
+  .ui{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{border:1px solid var(--line);border-radius:20px;padding:16px;display:grid;gap:12px;background:var(--paper);align-content:start}
+  .card .top{display:flex;align-items:center;gap:12px}
+  .tile{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;flex:none}
+  .tile img{width:40px;height:40px;object-fit:contain}
+  .tile.y{background:var(--yellow)}
+  .tile.c{background:var(--charcoal)}
+  .tile.i{background:var(--ivory);border:1px solid var(--line)}
+  .kicker{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .bar{height:12px;border-radius:999px;background:#EFE9D8;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--green);border-radius:999px}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px}
+  .btn{font:700 14px/1 var(--body);border-radius:999px;padding:12px 18px;border:2px solid var(--charcoal);display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:default}
+  .btn.primary{background:var(--yellow);color:var(--charcoal);box-shadow:0 4px 0 var(--charcoal)}
+  .btn.dark{background:var(--charcoal);color:var(--yellow)}
+  .btn.ghost{background:transparent;color:var(--charcoal)}
+  .btns{display:flex;flex-wrap:wrap;gap:10px}
+  .answer{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;padding:12px 14px;font-weight:600;border:2px solid var(--line)}
+  .answer.ok{background:var(--green);border-color:var(--charcoal)}
+  .answer.no{background:#FBE6F9;border-color:var(--wrong);color:var(--wrong)}
+  .answer .ko{font-size:18px;font-weight:700}
+  .pill{font:800 11px/1 var(--body);padding:6px 9px;border-radius:999px}
+  .pill.g{background:var(--green);color:var(--charcoal)}
+  .pill.y{background:var(--yellow);color:var(--charcoal)}
+  .pill.c{background:var(--charcoal);color:var(--yellow)}
+  .pill.w{background:var(--wrong);color:#fff}
+  .live{display:inline-flex;align-items:center;gap:6px}
+  .live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--charcoal)}
+  .audio{display:flex;align-items:center;gap:12px;background:var(--charcoal);color:var(--ivory);border-radius:16px;padding:12px}
+  .play{width:40px;height:40px;border-radius:50%;background:var(--yellow);display:grid;place-items:center;flex:none}
+  .play::before{content:"";border-left:12px solid var(--charcoal);border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px}
+  .wave{flex:1;display:flex;align-items:center;gap:3px;height:28px}
+  .wave i{flex:1;background:#6A665C;border-radius:2px}
+  .wave i.on{background:var(--green)}
+  .steps{display:flex;gap:6px}
+  .steps i{flex:1;height:10px;border-radius:999px;background:#EFE9D8}
+  .steps i.done{background:var(--green)}
+  .steps i.now{background:var(--yellow);outline:2px solid var(--charcoal);outline-offset:-2px}
+  .xp{display:flex;align-items:baseline;gap:6px}
+  .xp b{font:800 28px/1 var(--display)}
+  .note{font-size:12.5px;color:var(--muted)}
+
+  /* ---------- Icons ---------- */
+  .icon-groups{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .group{border:1px solid var(--line);border-radius:20px;padding:16px;display:grid;gap:12px}
+  .group header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px}
+  .ic{display:grid;justify-items:center;gap:6px;text-align:center}
+  .ic .tile{width:72px;height:72px;border-radius:18px}
+  .ic .tile img{width:56px;height:56px}
+  .ic span{font-size:11px;color:var(--muted);line-height:1.25;word-break:break-word}
+
+  /* ---------- Rules ---------- */
+  .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .rule{display:grid;gap:10px;border-radius:18px;padding:16px;border:1px solid var(--line)}
+  .rule .demo{border-radius:12px;height:64px;display:grid;place-items:center;font:700 14px/1 var(--body)}
+  .verdict{font:800 12px/1 var(--body);letter-spacing:.06em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px}
+  .verdict.do{color:var(--charcoal)}
+  .verdict.do::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--green);box-shadow:inset 0 0 0 2px var(--charcoal)}
+  .verdict.dont{color:var(--wrong)}
+  .verdict.dont::before{content:"×";width:14px;height:14px;border-radius:50%;background:var(--wrong);color:#fff;display:grid;place-items:center;font-size:12px;line-height:1}
+  .contrast{width:100%;border-collapse:collapse;font-size:13px}
+  .contrast td,.contrast th{padding:9px 10px;border-bottom:1px solid var(--line);text-align:start}
+  .contrast th{font:600 11px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .contrast .sample{display:inline-block;padding:5px 10px;border-radius:8px;font-weight:700}
+  .contrast td.num{font-variant-numeric:tabular-nums;font-weight:700}
+  .table-wrap{overflow-x:auto}
+
+  /* ---------- Characters ---------- */
+  .people{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .person{border:1px solid var(--line);border-radius:20px;padding:16px;display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:end}
+  .person .fig{height:140px;display:flex;align-items:flex-end;justify-content:center;background:var(--ivory);border-radius:14px;padding-top:8px;overflow:hidden}
+  .person .fig img{max-height:132px;width:auto}
+  .person ul{margin:6px 0 0;padding-inline-start:18px;font-size:13px;color:var(--ink-soft)}
+  .outfits{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .outfit{display:grid;gap:6px;justify-items:center;text-align:center;border-radius:18px;padding:12px 8px;background:var(--ivory)}
+  .outfit img{height:110px;width:auto}
+  .outfit b{font:700 13px/1.2 var(--display)}
+  .outfit span{font-size:11.5px;color:var(--muted);line-height:1.3}
+
+  /* ---------- Quotes ---------- */
+  .quotes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .q{background:var(--yellow);border-radius:18px 18px 18px 4px;padding:14px 16px;font:700 18px/1.3 var(--hand);border:2px solid var(--charcoal)}
+  .q small{display:block;font:500 12px/1.4 var(--body);margin-top:8px}
+  .q.dark{background:var(--charcoal);color:var(--yellow)}
+  .q.dark small{color:#D9D3C3}
+  .q.green{background:var(--green)}
+  .q.ivory{background:var(--ivory)}
+
+  footer{font-size:12.5px;color:var(--muted);text-align:center}
+
+  @media (max-width:960px){
+    .palette{grid-template-columns:repeat(2,1fr)}
+    .sw.y{grid-column:1/-1}
+    .ui,.rules,.people{grid-template-columns:1fr 1fr}
+    .quotes,.outfits{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:720px){
+    .hero{grid-template-columns:1fr;padding-bottom:0}
+    .icon-groups,.ui,.rules,.people{grid-template-columns:1fr}
+    .cast .boy{height:150px}.cast .cluby{height:130px}.cast .girl{height:160px}
+    .bubble{font-size:14px}
+  }
+  @media (max-width:420px){
+    .palette{grid-template-columns:1fr}
+    .quotes{grid-template-columns:1fr}
+    section{padding:18px}
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div>
+      <span class="mark">KLOVERS · 클로버스</span>
+      <h1>Characters &amp; <em>colour</em>, one small step at a time.</h1>
+      <p class="sub">The Klovers brand sheet: four colours, three friends, and one icon family. Everything on the site is built from these pieces.</p>
+      <div class="chips">
+        <span class="chip y">#FFFF00 main</span>
+        <span class="chip g">#39FF14 progress</span>
+        <span class="chip o">#2E2E2E · #FFF9EC</span>
+      </div>
+    </div>
+    <div class="cast" aria-label="The boy, Cluby and the girl">
+      <span class="bubble b1">안녕! Let's play</span>
+      <span class="bubble b2">화이팅!</span>
+      <img class="boy" src="/assets/icons/student-boy-thumbsup@2x.webp" alt="The boy, thumbs up">
+      <img class="cluby" src="/assets/characters/cluby-hanbok.webp" alt="Cluby in a hanbok">
+      <img class="girl" src="/assets/characters/girl-hanbok.webp" alt="The girl in a hanbok">
+    </div>
+  </header>
+
+  <!-- PALETTE -->
+  <section id="palette">
+    <div>
+      <h2><span class="tag">01</span> The palette</h2>
+      <p class="lede">Yellow leads. Green only ever means “you did it”. Charcoal and ivory carry everything else so the two brights stay special.</p>
+    </div>
+    <div class="palette">
+      <div class="sw y">
+        <div><div class="name">Klovers Yellow</div><div class="hex">#FFFF00</div></div>
+        <div class="role"><b>Main.</b> Primary buttons, highlights, the “you are here” marker, badges on charcoal.</div>
+        <div class="pct">10%</div>
+      </div>
+      <div class="sw c">
+        <div><div class="name">Charcoal</div><div class="hex">#2E2E2E</div></div>
+        <div class="role">All text, outlines, dark cards. The only colour allowed on top of yellow or green.</div>
+        <div class="pct">25%</div>
+      </div>
+      <div class="sw i">
+        <div><div class="name">Ivory</div><div class="hex">#FFF9EC</div></div>
+        <div class="role">Page ground and soft panels. Warmer than white, so the yellow glows.</div>
+        <div class="pct">60%</div>
+      </div>
+      <div class="sw g">
+        <div><div class="name">Klovers Green</div><div class="hex">#39FF14</div></div>
+        <div class="role"><b>Progress only.</b> XP bars, correct answers, done ticks, live dots. Always a fill.</div>
+        <div class="pct">5%</div>
+      </div>
+      <div class="sw w">
+        <div><div class="name">Wrong</div><div class="hex">#B800AB</div></div>
+        <div class="role">Mistakes only. Functional, not brand.</div>
+        <div class="pct">&lt;1%</div>
+      </div>
+    </div>
+    <div class="ratio" aria-hidden="true">
+      <span style="width:60%;background:var(--ivory)"></span>
+      <span style="width:25%;background:var(--charcoal)"></span>
+      <span style="width:10%;background:var(--yellow)"></span>
+      <span style="width:5%;background:var(--green)"></span>
+    </div>
+    <div class="ratio-legend">
+      <span><b>60</b> ivory</span><span><b>25</b> charcoal</span><span><b>10</b> yellow</span><span><b>5</b> green</span>
+      <span>— if a screen looks loud, there is too much bright. Swap one bright for charcoal.</span>
+    </div>
+  </section>
+
+  <!-- UI -->
+  <section id="ui">
+    <div>
+      <h2><span class="tag">02</span> How it looks in the app</h2>
+      <p class="lede">The same colour always does the same job, so a student learns the code without being told: yellow = tap me, green = done.</p>
+    </div>
+    <div class="ui">
+
+      <article class="card">
+        <div class="top">
+          <div class="tile y"><img src="/assets/icons/books-stack.webp" alt=""></div>
+          <div><div class="kicker">Today's learning</div><h3>Lesson 4 · Greetings</h3></div>
+        </div>
+        <div class="steps" aria-label="Step 3 of 5"><i class="done"></i><i class="done"></i><i class="now"></i><i></i><i></i></div>
+        <div class="row"><span>3 of 5 steps</span><span class="pill g">2 done</span></div>
+        <div class="btns"><span class="btn primary">Continue</span><span class="btn ghost">Review</span></div>
+      </article>
+
+      <article class="card">
+        <div class="top">
+          <div class="tile c"><img src="/assets/icons/game-flashcard-han.webp" alt=""></div>
+          <div><div class="kicker">Quiz · question 6</div><h3>How do you say “thank you”?</h3></div>
+        </div>
+        <div class="answer ok"><span class="ko">감사합니다</span><span class="pill c">Correct! +10 XP</span></div>
+        <div class="answer no"><span class="ko">안녕하세요</span><span class="pill w">Try again</span></div>
+        <p class="note">Correct = green fill, charcoal text. Wrong = soft magenta, never red.</p>
+      </article>
+
+      <article class="card">
+        <div class="top">
+          <div class="tile y"><img src="/assets/icons/game-headphones-music.webp" alt=""></div>
+          <div><div class="kicker">Listening</div><h3>Say it like Cluby</h3></div>
+        </div>
+        <div class="audio">
+          <span class="play" aria-hidden="true"></span>
+          <div class="wave" aria-hidden="true">
+            <i class="on" style="height:40%"></i><i class="on" style="height:80%"></i><i class="on" style="height:55%"></i><i class="on" style="height:95%"></i><i class="on" style="height:60%"></i><i style="height:35%"></i><i style="height:70%"></i><i style="height:45%"></i><i style="height:85%"></i><i style="height:30%"></i><i style="height:60%"></i><i style="height:40%"></i>
+          </div>
+          <span class="ko" style="font-weight:700">사랑해요</span>
+        </div>
+        <div class="row"><span class="pill g live">Live class now</span><span class="note">Live dot = charcoal on green</span></div>
+      </article>
+
+      <article class="card">
+        <div class="top">
+          <div class="tile i"><img src="/assets/icons/growth-chart.webp" alt=""></div>
+          <div><div class="kicker">Your progress</div><h3>Level 3 · Hangul Village</h3></div>
+        </div>
+        <div class="xp"><b>1,240</b><span>XP</span><span class="pill y" style="margin-inline-start:auto">6-day streak</span></div>
+        <div class="bar" aria-label="72 percent to level 4"><i style="width:72%"></i></div>
+        <div class="row note"><span>72% to Level 4</span><span>360 XP to go</span></div>
+      </article>
+
+      <article class="card">
+        <div class="top">
+          <div class="tile c"><img src="/assets/icons/game-crown.webp" alt=""></div>
+          <div><div class="kicker">Buttons</div><h3>Three, and only three</h3></div>
+        </div>
+        <div class="btns">
+          <span class="btn primary">Start quiz</span>
+          <span class="btn dark">View results</span>
+          <span class="btn ghost">Later</span>
+        </div>
+        <p class="note">One yellow button per screen. It is the thing you most want them to tap.</p>
+      </article>
+
+      <article class="card">
+        <div class="top">
+          <div class="tile y"><img src="/assets/icons/calendar-check.webp" alt=""></div>
+          <div><div class="kicker">Status chips</div><h3>States at a glance</h3></div>
+        </div>
+        <div class="btns">
+          <span class="pill g">Done</span>
+          <span class="pill y">New</span>
+          <span class="pill c">Locked</span>
+          <span class="pill w">Missed</span>
+          <span class="pill g live">Live</span>
+        </div>
+        <p class="note">Every chip carries charcoal or white text. Colour never works alone — the word is always there too.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ICONS -->
+  <section id="icons">
+    <div>
+      <h2><span class="tag">03</span> Icon system</h2>
+      <p class="lede">Your painted icons, grouped by the job they do. Each sits on a rounded tile; the tile colour tells you the role.</p>
+    </div>
+    <div class="icon-groups">
+      <div class="group">
+        <header><h3>Learn</h3><span class="pill y">yellow tile</span></header>
+        <div class="icons">
+          <div class="ic"><div class="tile y"><img src="/assets/icons/books-stack.webp" alt=""></div><span>books-stack</span></div>
+          <div class="ic"><div class="tile y"><img src="/assets/icons/flashcard-ga.webp" alt=""></div><span>flashcard-ga</span></div>
+          <div class="ic"><div class="tile y"><img src="/assets/icons/chat-annyeong.webp" alt=""></div><span>chat-annyeong</span></div>
+          <div class="ic"><div class="tile y"><img src="/assets/icons/lightbulb-sprout.webp" alt=""></div><span>lightbulb-sprout</span></div>
+          <div class="ic"><div class="tile y"><img src="/assets/icons/klobi-reading.webp" alt=""></div><span>klobi-reading</span></div>
+          <div class="ic"><div class="tile y"><img src="/assets/icons/game-topik-sheet.webp" alt=""></div><span>game-topik-sheet</span></div>
+        </div>
+      </div>
+      <div class="group">
+        <header><h3>Play</h3><span class="pill c">charcoal tile</span></header>
+        <div class="icons">
+          <div class="ic"><div class="tile c"><img src="/assets/icons/game-flashcard-han.webp" alt=""></div><span>game-flashcard-han</span></div>
+          <div class="ic"><div class="tile c"><img src="/assets/icons/game-headphones-music.webp" alt=""></div><span>game-headphones-music</span></div>
+          <div class="ic"><div class="tile c"><img src="/assets/icons/game-particle-puzzle.webp" alt=""></div><span>game-particle-puzzle</span></div>
+          <div class="ic"><div class="tile c"><img src="/assets/icons/game-subway.webp" alt=""></div><span>game-subway</span></div>
+          <div class="ic"><div class="tile c"><img src="/assets/icons/game-lucky-bag.webp" alt=""></div><span>game-lucky-bag</span></div>
+          <div class="ic"><div class="tile c"><img src="/assets/icons/game-crown.webp" alt=""></div><span>game-crown</span></div>
+        </div>
+      </div>
+      <div class="group">
+        <header><h3>Korea &amp; culture</h3><span class="pill" style="background:var(--ivory);border:1px solid var(--line)">ivory tile</span></header>
+        <div class="icons">
+          <div class="ic"><div class="tile i"><img src="/assets/icons/namsan-tower.webp" alt=""></div><span>namsan-tower</span></div>
+          <div class="ic"><div class="tile i"><img src="/assets/icons/palace-blossoms.webp" alt=""></div><span>palace-blossoms</span></div>
+          <div class="ic"><div class="tile i"><img src="/assets/icons/hanok-cherry-tree.webp" alt=""></div><span>hanok-cherry-tree</span></div>
+          <div class="ic"><div class="tile i"><img src="/assets/icons/bibimbap.webp" alt=""></div><span>bibimbap</span></div>
+          <div class="ic"><div class="tile i"><img src="/assets/icons/flag-korea.webp" alt=""></div><span>flag-korea</span></div>
+          <div class="ic"><div class="tile i"><img src="/assets/icons/game-hanbok.webp" alt=""></div><span>game-hanbok</span></div>
+        </div>
+      </div>
+      <div class="group">
+        <header><h3>Progress &amp; rewards</h3><span class="pill g">green tile</span></header>
+        <div class="icons">
+          <div class="ic"><div class="tile" style="background:var(--green)"><img src="/assets/icons/sprout.webp" alt=""></div><span>sprout</span></div>
+          <div class="ic"><div class="tile" style="background:var(--green)"><img src="/assets/icons/growth-chart.webp" alt=""></div><span>growth-chart</span></div>
+          <div class="ic"><div class="tile" style="background:var(--green)"><img src="/assets/icons/calendar-check.webp" alt=""></div><span>calendar-check</span></div>
+          <div class="ic"><div class="tile" style="background:var(--green)"><img src="/assets/icons/badge-blossom.webp" alt=""></div><span>badge-blossom</span></div>
+          <div class="ic"><div class="tile" style="background:var(--green)"><img src="/assets/icons/diploma-scroll.webp" alt=""></div><span>diploma-scroll</span></div>
+          <div class="ic"><div class="tile" style="background:var(--green)"><img src="/assets/icons/game-klobi-thumbsup.webp" alt=""></div><span>game-klobi-thumbsup</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RULES -->
+  <section id="rules">
+    <div>
+      <h2><span class="tag">04</span> Colour &amp; icon rules</h2>
+      <p class="lede">Both brights are so light that nothing but charcoal can sit on them. That one fact explains most of these rules.</p>
+    </div>
+    <div class="rules">
+      <div class="rule">
+        <div class="demo" style="background:var(--green);color:var(--charcoal)">+10 XP</div>
+        <span class="verdict do">Do</span><p>Green as a <b>fill</b>, charcoal on top.</p>
+      </div>
+      <div class="rule">
+        <div class="demo" style="background:var(--ivory);color:var(--green)">+10 XP</div>
+        <span class="verdict dont">Don't</span><p>Green text on ivory or white — it disappears (1.3:1).</p>
+      </div>
+      <div class="rule">
+        <div class="demo" style="background:var(--yellow);color:var(--green)">Done</div>
+        <span class="verdict dont">Don't</span><p>Yellow and green touching. They blur into one colour; put charcoal between them.</p>
+      </div>
+      <div class="rule">
+        <div class="demo" style="background:var(--charcoal);color:var(--yellow)">Level up!</div>
+        <span class="verdict do">Do</span><p>Yellow on charcoal for badges and the dark “royal” moments.</p>
+      </div>
+      <div class="rule">
+        <div class="demo" style="background:var(--ivory);gap:10px;display:flex;justify-content:center"><span class="tile y" style="width:44px;height:44px"><img src="/assets/icons/sprout.webp" alt="" style="width:34px;height:34px"></span><span class="tile y" style="width:44px;height:44px"><img src="/assets/icons/bibimbap.webp" alt="" style="width:34px;height:34px"></span></div>
+        <span class="verdict do">Do</span><p>Icons always on a tile, 80% of the tile, same corner radius in a row.</p>
+      </div>
+      <div class="rule">
+        <div class="demo" style="background:var(--ivory)"><img src="/assets/icons/sprout.webp" alt="" style="width:26px;height:26px;filter:grayscale(1) opacity(.5)"></div>
+        <span class="verdict dont">Don't</span><p>Recolour, grey out or shrink painted icons below 32px. For “locked”, use a charcoal tile + lock chip.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="contrast">
+        <thead><tr><th>Pair</th><th>Sample</th><th>Contrast</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr><td>Charcoal on Yellow</td><td><span class="sample" style="background:#FFFF00;color:#2E2E2E">Start quiz</span></td><td class="num">12.6 : 1</td><td>Buttons, highlights ✓</td></tr>
+          <tr><td>Charcoal on Green</td><td><span class="sample" style="background:#39FF14;color:#2E2E2E">Correct!</span></td><td class="num">10.0 : 1</td><td>Progress, correct ✓</td></tr>
+          <tr><td>Yellow on Charcoal</td><td><span class="sample" style="background:#2E2E2E;color:#FFFF00">Level 3</span></td><td class="num">12.6 : 1</td><td>Badges, tabs ✓</td></tr>
+          <tr><td>Charcoal on Ivory</td><td><span class="sample" style="background:#FFF9EC;color:#2E2E2E;border:1px solid #E9E1CC">Body text</span></td><td class="num">12.9 : 1</td><td>Everything you read ✓</td></tr>
+          <tr><td>Wrong on Ivory</td><td><span class="sample" style="background:#FFF9EC;color:#B800AB;border:1px solid #E9E1CC">Try again</span></td><td class="num">5.5 : 1</td><td>Error text ✓</td></tr>
+          <tr><td>Green on Ivory</td><td><span class="sample" style="background:#FFF9EC;color:#39FF14;border:1px solid #E9E1CC">Done</span></td><td class="num">1.3 : 1</td><td>Never ✗</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CHARACTERS -->
+  <section id="characters">
+    <div>
+      <h2><span class="tag">05</span> The cast</h2>
+      <p class="lede">Two students and Cluby. The students are the learner's mirror; Cluby is the guide who hides, cheers and dresses up for every world.</p>
+    </div>
+    <div class="people">
+      <div class="person">
+        <div class="fig"><img src="/assets/icons/student-boy-thumbsup@2x.webp" alt="The boy"></div>
+        <div><h3>The boy</h3><ul><li>Welcomes and waves</li><li>Starts things: “Let's play”</li><li>Top-left of banners</li></ul></div>
+      </div>
+      <div class="person">
+        <div class="fig"><img src="/assets/characters/cluby-scholar.webp" alt="Cluby"></div>
+        <div><h3>Cluby</h3><ul><li>The guide &amp; mascot</li><li>Speaks in handwriting only</li><li>Chest-height next to the students</li></ul></div>
+      </div>
+      <div class="person">
+        <div class="fig"><img src="/assets/characters/girl-hanbok.webp" alt="The girl"></div>
+        <div><h3>The girl</h3><ul><li>Encourages: “화이팅!”</li><li>Appears on progress &amp; wins</li><li>Right side of banners</li></ul></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:6px">Cluby's wardrobe — one outfit per job</h3>
+    <div class="outfits">
+      <div class="outfit"><img src="/assets/characters/cluby-scholar.webp" alt=""><b>Scholar</b><span>Hangul Village</span></div>
+      <div class="outfit"><img src="/assets/characters/cluby-market.webp" alt=""><b>Market</b><span>Vocabulary Market</span></div>
+      <div class="outfit"><img src="/assets/characters/cluby-cafe.webp" alt=""><b>Café</b><span>Conversation Café</span></div>
+      <div class="outfit"><img src="/assets/characters/cluby-royal.webp" alt=""><b>Royal</b><span>Leaderboard &amp; crowns</span></div>
+      <div class="outfit"><img src="/assets/characters/cluby-hanbok.webp" alt=""><b>Hanbok</b><span>Hide-and-seek, banners</span></div>
+      <div class="outfit"><img src="/assets/characters/cluby-traveller.webp" alt=""><b>Traveller</b><span>Journey map, new world unlocked</span></div>
+      <div class="outfit"><img src="/assets/characters/cluby-taekwondo.webp" alt=""><b>Taekwondo</b><span>Streaks &amp; challenges</span></div>
+      <div class="outfit"><img src="/assets/characters/cluby-winter.webp" alt=""><b>Winter</b><span>Seasonal events</span></div>
+    </div>
+  </section>
+
+  <!-- QUOTES -->
+  <section id="voice">
+    <div>
+      <h2><span class="tag">06</span> Cluby's voice</h2>
+      <p class="lede">Short, warm, one line. Handwritten font for Latin only; Arabic lines use Cairo so they stay readable.</p>
+    </div>
+    <div class="quotes">
+      <div class="q">I'm hiding somewhere today!<small>Banner · daily hide-and-seek</small></div>
+      <div class="q green">You got it! 잘했어요!<small>Correct answer · on green</small></div>
+      <div class="q dark">Same small steps, a bigger you ♡<small>Journey map · on charcoal</small></div>
+      <div class="q ivory">Oops — let's try once more.<small>Wrong answer · never scolds</small></div>
+    </div>
+  </section>
+
+  <footer>Klovers brand sheet · updated 24 Sep 2026 · #FFFF00 · #2E2E2E · #FFF9EC · #39FF14</footer>
+</main>
+</body>
+</html>
