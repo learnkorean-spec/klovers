@@ -311,20 +311,25 @@ const ERA_MODERN_KOREA_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
 // it on boot, so visitors never see it; it exists so the raw HTML says what
 // the page says. Keep it short and true - exactly one <h1>.
 const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
-      <h1>Learn Korean online with Klovers</h1>
-      <p>Klovers Korean Academy (كلوفرز) teaches live online Korean classes in English and in Arabic, from the Hangul alphabet to advanced conversation. Classes are small groups of up to 8 students, or private one-to-one lessons, taught by Reham Elshrkawy, who has taught Korean for 13 years and more than 200 students.</p>
-      <p><a href="/free-trial">Book a free 30-minute trial class</a> or <a href="/placement-test">take the free placement test</a> to find your level.</p>
-      <h2>How it works</h2>
+      <h1>Start Speaking Korean From Your First Live Class</h1>
+      <p>Live online Korean classes with a real teacher, small groups of up to 8, and a clear path from beginner to confident conversation. Classes are taught in English or in Arabic.</p>
+      <p><a href="/free-trial">Book a free class</a> or <a href="/placement-test">take the free placement test</a> to find your level. Group classes are priced by country - <a href="/pricing">see pricing</a>.</p>
+      <h2>How we teach</h2>
       <ul>
-        <li>Take the free placement test or book a free trial class.</li>
-        <li>Join a live class in English or Arabic at a time that suits you.</li>
-        <li>Move from Hangul through Levels 1 to 6, with a textbook, homework and games between classes.</li>
+        <li><strong>Clear explanations</strong> - every point explained simply, in English or Arabic.</li>
+        <li><strong>Max 8 students</strong> - you speak in every class.</li>
+        <li><strong>Instant feedback</strong> - pronunciation corrected live.</li>
+        <li><strong>A clear path</strong> - Hangul first, then Levels 1 to 6.</li>
       </ul>
-      <h2>More than a class</h2>
+      <h2>Meet your teacher</h2>
+      <p>Reham Elshrkawy has taught Korean for 13 years and has taught more than 200 students herself. She studied Korean language and literature at the Faculty of Al-Alsun.</p>
+      <h2>More than live classes</h2>
       <ul>
-        <li><a href="/games">Korean learning games</a> — free practice for Hangul, vocabulary and grammar.</li>
-        <li><a href="/journey/before-korea">Korea's story</a> — five eras, from the first legend to today.</li>
-        <li><a href="/blog">The Journal</a> — articles on Korean culture and study tips in English and Arabic.</li>
+        <li><a href="/review">Practice</a> - vocabulary review between classes.</li>
+        <li><a href="/games">Korean learning games</a> - free practice for Hangul, vocabulary and grammar.</li>
+        <li><a href="/journey/before-korea">Culture</a> - Korea's story, from the first legend to today.</li>
+        <li><a href="/courses">Learning path</a> - Hangul, then Levels 1 to 6.</li>
+        <li><a href="/blog">The Journal</a> - articles on Korean culture and study tips in English and Arabic.</li>
       </ul>
       <p><a href="/courses">Courses</a> · <a href="/pricing">Pricing</a> · <a href="/about">About</a> · <a href="/faq">FAQ</a> · <a href="/contact">Contact</a></p>
     </div>`;
@@ -358,6 +363,11 @@ const MARKETING_ROUTES = [
     // No " | Klovers" suffix is appended to this one: the emit loop only adds
     // it when the title does not already contain SITE_NAME, and this does.
     //
+    // 23 Sep 2026 (CRO pass): the English head says what is sold - live
+    // online classes, small groups, a real teacher - with no Arabic
+    // positioning; the Arabic brand name stays in the JSON-LD alternateName in
+    // index.html. Arabic has no URL of its own yet, so it has no head here.
+    //
     // 23 Sep 2026: two equal markets now, English and Arabic speakers, so the
     // title no longer says "in Arabic" only. Title and description are
     // CHARACTER-FOR-CHARACTER the ones src/pages/Index.tsx hands to useSEO
@@ -367,9 +377,9 @@ const MARKETING_ROUTES = [
     // `body` gives crawlers that never run JavaScript the page's real text
     // (the review measured 76 characters of body text in the raw HTML).
     path: "/",
-    title: "Learn Korean Online — Live Classes in English and Arabic | Klovers",
+    title: "Live Online Korean Classes — Small Groups, Real Teachers | Klovers",
     description:
-      "Klovers (كلوفرز): live online Korean classes in English and Arabic, from Hangul to advanced. Small groups or private lessons, a free trial class and a free placement test.",
+      "Live online Korean classes with a real teacher, small groups of up to 8, and a clear learning path. Book a free class with Klovers.",
     body: HOME_BODY_HTML,
   },
   {
