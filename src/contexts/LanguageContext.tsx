@@ -172,11 +172,17 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   // every page of the site. No session is the normal anonymous state, not an
   // error. getSession() reads the stored session without a network call; the
   // UPDATE below is still checked server-side by RLS against the JWT.
+  // getSession() only returns an error on a real failure (e.g. a refresh that
+  // could not complete), never for a guest, so that one is still logged.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const { data } = await supabase.auth.getSession();
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.warn("language: could not read the stored session:", sessionError.message);
+          return;
+        }
         const userId = data.session?.user?.id;
         if (!userId || cancelled) return;
 
