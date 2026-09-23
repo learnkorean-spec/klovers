@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/tracking";
 
 type Language = "en" | "ar";
 
@@ -107,6 +108,8 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = language;
     localStorage.setItem("k-lovers-lang", language);
+    // 23 Sep 2026: lets every GA4 report be split English / Arabic.
+    window.gtag?.("set", "user_properties", { site_language: language });
   }, [language]);
 
   // The language the website is displayed in IS the language this person reads
@@ -162,7 +165,13 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [language]);
 
-  const toggleLanguage = () => setLanguage((prev) => (prev === "en" ? "ar" : "en"));
+  // 23 Sep 2026: a switch is recorded in GA4 only (not an ad signal).
+  const toggleLanguage = () => {
+    const from = language;
+    const to: Language = from === "en" ? "ar" : "en";
+    track.ga("language_switched", { from, to, page: window.location.pathname });
+    setLanguage(to);
+  };
 
   const resolve = (sectionOrPath: string, key?: string): any => {
     let allKeys: string[];
