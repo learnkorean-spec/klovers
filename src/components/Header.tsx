@@ -77,10 +77,19 @@ const Header = () => {
 
   const isActive = (href: string) => location.pathname === href;
 
+  /*
+   * SOLID, NOT GLASS (23 Sep 2026). The scrolled state was
+   * `bg-background/98`, and 98 is not a step in Tailwind's opacity scale, so
+   * the class compiled to nothing: production computed the header background
+   * as rgba(0,0,0,0). The links sat directly on whatever section was
+   * scrolling underneath and disappeared over the dark and yellow ones. A
+   * solid background is the reliable fix - the shadow marks the scrolled
+   * state instead.
+   */
   return (
     <>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium focus:shadow-lg">Skip to main content</a>
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-background/98 backdrop-blur-md shadow-sm" : "bg-background/95 backdrop-blur-sm"} border-b border-border`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 bg-background transition-shadow duration-300 ${scrolled ? "shadow-sm" : ""} border-b border-border`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="Klovers homepage">
@@ -97,7 +106,7 @@ const Header = () => {
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
                   isActive(link.href)
                     ? "text-foreground bg-accent"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    : "text-foreground/75 hover:text-foreground hover:bg-accent/50"
                 }`}
               >
                 {link.label}
@@ -111,7 +120,7 @@ const Header = () => {
 
             {/* More dropdown */}
             <DropdownMenu>
-              <DropdownMenuTrigger className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors inline-flex items-center gap-1">
+              <DropdownMenuTrigger className="px-3 py-2 rounded-md text-sm font-medium text-foreground/75 hover:text-foreground hover:bg-accent/50 transition-colors inline-flex items-center gap-1">
                 {isAr ? "المزيد" : "More"}
                 <ChevronDown className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
@@ -228,7 +237,7 @@ const Header = () => {
                   key={link.href}
                   to={link.href}
                   className={`px-3 py-2.5 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2 ${
-                    isActive(link.href) ? "text-foreground bg-accent" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    isActive(link.href) ? "text-foreground bg-accent" : "text-foreground/75 hover:text-foreground hover:bg-accent/50"
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >

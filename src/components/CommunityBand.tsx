@@ -7,30 +7,25 @@ import { KLOBI_WAVE } from "@/assets/band/klobiWave";
 
 /**
  * The community band: Telegram and Facebook, between the testimonials and the
- * culture block.
+ * "why learn Korean" block.
  *
  * 2026-09-20 (a): it was painted in Telegram's blue and Facebook's blue.
- * Neither is a Klovers colour and the brand owns exactly five; the icon in
- * each button already names its platform, so the buttons went Charcoal.
+ * Neither is a Klovers colour; the icon in each button already names its
+ * platform, so the buttons went Charcoal.
  *
- * 2026-09-20 (b): THE NUMBER IS GONE. It read "Join 2,000+ Korean Learners"
- * and, in Arabic, "انضم لأكثر من ٢٠٠٠+ متعلم" - a figure nothing on this site
- * supports, hedged twice over in the Arabic ("more than 2,000+"). The one
- * verified count Klovers has is 200+ students in 13 years, it lives in the
- * hero, and it counts STUDENTS - not community members, which nobody has
- * measured. A band that asks people to join a community does not need to
- * claim its size. Same call as the referral card's invented "+10,000" and
- * the five invented leaderboard players that were deleted rather than scaled
- * up. If the platforms' own member counts are ever pulled, a real number can
- * come back here with its source.
+ * 2026-09-20 (b): the number was removed as unsupported.
  *
- * 2026-09-20 (c): THREE CUTOUTS, NOT ONE PICTURE. Re first supplied a single
- * composite illustration of the three characters with speech bubbles. It was
- * lovely and it is the wrong shape for a band: a composite bakes in the
- * arrangement, the spacing and the background it was drawn on. These three
- * transparent cutouts stand on the yellow band itself, so the band's colour shows
- * between them; they can be re-ordered or re-spaced; and they shrink
- * independently on a phone instead of becoming one unreadable strip.
+ * 2026-09-23: THE NUMBER IS BACK, WITH ITS SCOPE. Re confirmed the two
+ * figures: 200+ is the students she has taught herself (hero), and 2,000+ is
+ * the Klovers community across social media (the Facebook page alone showed
+ * 2.4K followers when FinalCTA checked it on 18 Sep). They only looked like a
+ * contradiction when one was called "students" and the other "learners". This
+ * band says "on social media", so it counts followers, never students.
+ *
+ * 2026-09-20 (c): THREE CUTOUTS, NOT ONE PICTURE. These three transparent
+ * cutouts stand on the yellow band itself, so the band's colour shows between
+ * them; they can be re-ordered or re-spaced; and they shrink independently on
+ * a phone instead of becoming one unreadable strip.
  *
  * Klobi is SHORTER IN HIS OWN FILE rather than scaled down here, so
  * `items-end` alone puts the three at the right relative heights. Do not
@@ -79,12 +74,12 @@ const CommunityBand = () => {
 
           <div className="md:flex-1">
             <p className="text-xl font-extrabold leading-tight text-charcoal md:text-2xl">
-              {isAr ? "انضم لمجتمع كلوفرز" : "Join the Klovers community"}
+              {isAr ? "انضم لأكثر من ٢٠٠٠ متابع في مجتمع كلوفرز" : "Join 2,000+ people in the Klovers community"}
             </p>
             <p className="mt-1 text-sm text-charcoal/65 md:text-base">
               {isAr
-                ? "على تيليغرام وفيسبوك — أسئلة، تدريب، وناس بتتعلم معاك"
-                : "On Telegram and Facebook — questions, practice, and people learning alongside you"}
+                ? "متابعونا على السوشيال ميديا — أسئلة، تدريب، وناس بتتعلم معاك"
+                : "Our followers across social media — questions, practice, and people learning alongside you"}
             </p>
 
             {/* These two stay on logLeadEvent: clicking through to the

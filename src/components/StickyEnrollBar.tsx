@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { X, ArrowRight } from "lucide-react";
-import { logLeadEvent } from "@/lib/leadTracking";
+import { X, ArrowRight, MessageCircle } from "lucide-react";
+import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useBottomSlot } from "@/lib/bottomLayer";
-import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 
 /**
  * StickyEnrollBar — appears after the user scrolls past the hero CTA buttons.
@@ -14,9 +14,17 @@ import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
  * Yields to HomeExitNudge, which occupies the same bottom-0 strip at a higher
  * z-index — see src/lib/bottomLayer.ts. Hiding is the point: being painted
  * over is what produced the half-cut bar under the nudge card.
+ *
+ * 23 Sep 2026: the jumping cast (Klobi and the two students) that stood on
+ * the bar's top edge is gone. It stood 56px ABOVE the bar, outside its box,
+ * so it covered whatever card text was scrolling past on every screen - the
+ * review listed it with the bar and the WhatsApp bubble as the three things
+ * sitting on content. The floating WhatsApp bubble now hides while this bar
+ * is up (WhatsAppButton.tsx), so the bar carries a WhatsApp icon of its own.
  */
 const StickyEnrollBar = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -49,27 +57,6 @@ const StickyEnrollBar = () => {
       aria-label={t("stickyBar.ariaLabel")}
     >
       <div className="relative bg-black border-t border-primary/40 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 max-w-4xl mx-auto">
-        {/* The cast stands ON the bar's top edge and jumps in place: squash on
-            landing, stretch on take-off, a full turn in the air (perspective
-            on the row makes the turn read as 3D), and a soft shadow on the
-            edge that shrinks as they rise. No discs: they are the drawings
-            themselves, with a thin white sticker edge so the outline still
-            shows over dark sections of the page. Klobi alone below sm. */}
-        <div className="pointer-events-none absolute bottom-full start-4 flex items-end gap-1 [perspective:500px]" aria-hidden="true">
-          {[
-            { name: "klobi-headphones", delay: "0s", cls: "" },
-            { name: "student-girl-heart", delay: "0.35s", cls: "hidden sm:block" },
-            { name: "student-boy-thumbsup", delay: "0.7s", cls: "hidden sm:block" },
-          ].map(({ name, delay, cls }) => (
-            <div key={name} className={`relative h-14 w-14 ${cls}`}>
-              <span className="animate-bar-shadow absolute -bottom-1 left-1/2 h-2 w-9 -translate-x-1/2 rounded-full bg-black/40 blur-[2px]" style={{ animationDelay: delay }} />
-              <div className="animate-bar-jump h-full w-full origin-bottom" style={{ animationDelay: delay }}>
-                <KloverIcon name={name as KloverIconName} className="h-full w-full [filter:drop-shadow(0_0_1px_#fff)_drop-shadow(0_0_1px_#fff)]" />
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* Left: text */}
         <div className="flex items-center gap-3 min-w-0">
           <p className="text-white text-sm font-medium truncate">
@@ -85,6 +72,16 @@ const StickyEnrollBar = () => {
             wordings around it. Enroll Now is the lighter secondary link,
             same as it would be on any other section of the page. */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          <a
+            href={WHATSAPP_BASE}
+            onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "sticky_bar_whatsapp" }); }}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={isAr ? "تواصل معنا على واتساب" : "Chat with us on WhatsApp"}
+            className="grid h-8 w-8 place-items-center rounded-lg text-[#25D366] hover:bg-white/10 transition-colors"
+          >
+            <MessageCircle className="h-4 w-4" />
+          </a>
           <Link
             to="/enroll-now"
             onClick={() => { try { logLeadEvent({ source_type: "enroll", cta_label: "sticky_bar_enroll_now" }); } catch {} }}
@@ -97,12 +94,12 @@ const StickyEnrollBar = () => {
             onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "sticky_bar_free_trial" }); } catch {} }}
             className="flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity border border-black/25"
           >
-            {t("stickyBar.freeTrial")} <ArrowRight className="h-3.5 w-3.5" />
+            {t("stickyBar.freeTrial")} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
           </Link>
           <button
             onClick={dismiss}
             aria-label={t("stickyBar.dismiss")}
-            className="text-white/60 hover:text-white/90 transition-colors ml-1"
+            className="text-white/60 hover:text-white/90 transition-colors ms-1"
           >
             <X className="h-4 w-4" />
           </button>

@@ -12,17 +12,28 @@ import ReturningStudentBanner from "@/components/ReturningStudentBanner";
 import HomeExitNudge from "@/components/HomeExitNudge";
 
 // Lazy-load below-fold sections for faster initial paint
-const CultureHeritageSection = lazy(() => import("@/components/CultureHeritageSection"));
-const KoreaTimeSection = lazy(() => import("@/components/KoreaTimeSection"));
 const MeetTeacher = lazy(() => import("@/components/MeetTeacher"));
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const LearningRoadmap = lazy(() => import("@/components/LearningRoadmap"));
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
-const HomeBlogSection = lazy(() => import("@/components/HomeBlogSection"));
 const PlacementTestCTA = lazy(() => import("@/components/PlacementTestCTA"));
-const HomeGamesSection = lazy(() => import("@/components/HomeGamesSection"));
+const MoreThanAClass = lazy(() => import("@/components/MoreThanAClass"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
-const ReturningStudentOffer = lazy(() => import("@/components/ReturningStudentOffer"));
+
+/**
+ * THE HOMEPAGE TITLE AND DESCRIPTION. scripts/prerender-meta.mjs writes the
+ * SAME two strings into the raw HTML for "/" (useSEO appends " | Klovers" to
+ * the title; the prerender entry already carries it). The 23 Sep 2026 review
+ * found the server HTML and the rendered page disagreeing - change both or
+ * neither.
+ *
+ * Two equal markets now - English speakers and Arabic speakers - so the title
+ * no longer says "in Arabic" only. The Arabic brand name stays in the
+ * description so crawlers bind the two names to one entity.
+ */
+export const HOME_TITLE = "Learn Korean Online — Live Classes in English and Arabic";
+export const HOME_DESCRIPTION =
+  "Klovers (كلوفرز): live online Korean classes in English and Arabic, from Hangul to advanced. Small groups or private lessons, a free trial class and a free placement test.";
 
 const SectionFallback = () => (
   <div className="py-20 px-4">
@@ -37,7 +48,7 @@ const SectionFallback = () => (
 );
 
 const Index = () => {
-  useSEO({ title: "Korean Classes in Arabic | Klovers Academy", description: "Join Klovers Korean Lovers Academy. Interactive online Korean lessons, placement tests, and gamified learning for all levels.", canonical: "https://kloversegy.com/" });
+  useSEO({ title: HOME_TITLE, description: HOME_DESCRIPTION, canonical: "https://kloversegy.com/" });
 
   // No hreflang on the homepage: ?lang=ar is a query parameter on the same
   // document, not an Arabic URL, and it canonicalises back to / - which
@@ -95,7 +106,7 @@ const Index = () => {
       name: "Klovers Korean Academy",
       url: "https://kloversegy.com",
       logo: "https://kloversegy.com/klovers-logo.jpg",
-      description: "Online Korean language school teaching Arabic speakers. Live classes, small groups, A1–C2 levels.",
+      description: "Online Korean language school. Live classes in English and Arabic, small groups or private, A1–C2 levels.",
       email: CONTACT_EMAIL,
       telephone: "+201010003084",
       sameAs: [
@@ -170,6 +181,18 @@ const Index = () => {
     return () => observers.forEach(o => o.disconnect());
   }, []);
 
+  /*
+   * 23 Sep 2026 review: 16 H2s, ~16,100px, the culture story told three
+   * times. Taken off this page (components kept in the repo):
+   *  - ReturningStudentOffer ("Welcome Back to Klovers"): it printed the
+   *    returning-student promo code to every visitor, and its scroll-reveal
+   *    left ~900px of blank cream until it fired. Returning students get the
+   *    code on /welcome-back, and ReturningStudentBanner below still links
+   *    signed-in returning students there.
+   *  - CultureHeritageSection, KoreaTimeSection, HomeGamesSection,
+   *    HomeBlogSection: replaced by MoreThanAClass, one compact section with
+   *    a door to each (/games, /journey, /blog).
+   */
   return (
     <div className="min-h-screen">
       <Header />
@@ -177,7 +200,7 @@ const Index = () => {
         {/* Attention — strong hook, CTA, social proof stats */}
         <HeroSection />
 
-        {/* Returning students promotional banner */}
+        {/* Returning students promotional banner (signed-in returning students only) */}
         <ReturningStudentBanner />
         {/* Interview training chip — pulled 2026-09-21 at Re's request.
             AI interview-prep feature isn't ready yet; component kept in
@@ -202,20 +225,8 @@ const Index = () => {
             <TestimonialsSection />
           </Suspense>
         </div>
-        {/* The community band — see CommunityBand.tsx for why it no longer
-            claims a member count. */}
+        {/* The community band — 2,000+ on social media (see CommunityBand.tsx). */}
         <CommunityBand />
-        {/* Interest — the culture/history hook, real published content,
-            placed right before WhyLearnKorean's "K-Culture" reason card */}
-        <Suspense fallback={<SectionFallback />}>
-          <CultureHeritageSection />
-        </Suspense>
-        {/* Interest — the concept board's "journey through Korea's time":
-            four eras, a timeline, five places. Sits with the culture block
-            because it is the same hook seen from a different angle. */}
-        <Suspense fallback={<SectionFallback />}>
-          <KoreaTimeSection />
-        </Suspense>
         {/* Desire — reinforces motivation after seeing proof */}
         <WhyLearnKorean />
         {/* Desire — humanize the brand, build connection */}
@@ -228,17 +239,9 @@ const Index = () => {
         <Suspense fallback={<SectionFallback />}>
           <LearningRoadmap />
         </Suspense>
-        {/* Returning student offer — capitalize on roadmap motivation */}
+        {/* Interest — games, Cluby, Korea's story, the Journal: one section */}
         <Suspense fallback={<SectionFallback />}>
-          <ReturningStudentOffer />
-        </Suspense>
-        {/* Interest — fun differentiator */}
-        <Suspense fallback={<SectionFallback />}>
-          <HomeGamesSection />
-        </Suspense>
-        {/* Interest — content authority */}
-        <Suspense fallback={<SectionFallback />}>
-          <HomeBlogSection />
+          <MoreThanAClass />
         </Suspense>
         {/* Action — final conversion push */}
         <div id="final-cta">
