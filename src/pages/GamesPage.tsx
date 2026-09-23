@@ -15,7 +15,7 @@ import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation, PerfectScoreOverlay } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Trophy, Lock, X } from "lucide-react";
+import { Lock, X } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
@@ -25,6 +25,7 @@ import { gameIconName } from "@/constants/gameIcons";
 import { gameWorlds } from "@/constants/gameWorlds";
 import { cn } from "@/lib/utils";
 import GameWorldsHub from "@/components/games/GameWorldsHub";
+import GamesLeaderboard from "@/components/games/GamesLeaderboard";
 // The two brand characters, inlined. See src/assets/characters.ts for why
 // they are data URIs and why they are busts rather than full-body poses.
 import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
@@ -132,17 +133,10 @@ const GamesPage = () => {
   const { awardGameXp, progress, league, leaguePromotion, newBadges, streakCelebration, clearLeaguePromotion, clearNewBadges, clearStreakCelebration } = useGamification();
   const [xpFloat, setXpFloat] = useState<number | null>(null);
   const [showPerfectScore, setShowPerfectScore] = useState<{ score: number; total: number } | null>(null);
-  const { xpLeaderboard, loading: lbLoading } = useLeaderboard();
+  const { xpLeaderboard, weeklyLeaderboard, currentUserXpRank, loading: lbLoading } = useLeaderboard();
   const { t, language } = useLanguage();
   const isAr = language === "ar";
   const { toast } = useToast();
-
-  // "Top Players" names a board that has players on it. A signed-out visitor
-  // is now shown an invitation rather than a board, so for them the heading
-  // names the feature instead of claiming an occupied ranking.
-  const leaderboardHeading = isLoggedIn
-    ? (isAr ? "أفضل اللاعبين" : "Top Players")
-    : (isAr ? "الترتيب" : "Leaderboard");
 
   // A round with no rounds in it, or none recorded, is not a failure worth
   // consoling — default to the cheer.
@@ -513,59 +507,16 @@ const GamesPage = () => {
             Nothing replaces it with a different number. There is no honest
             "N players" to show at this volume, and the empty state does not
             need one to ask for a signup. */}
-        <section className="py-8 px-4 bg-muted/20 border-t border-border">
-          <div className="max-w-md mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-foreground flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-amber-500" /> {leaderboardHeading}
-              </h2>
-              {!isLoggedIn && (
-                <a href="/signup" className="text-xs text-amber-700 font-semibold hover:underline">{isAr ? "سجّل للانضمام ←" : "Sign up to join →"}</a>
-              )}
-            </div>
-            <div className="rounded-2xl overflow-hidden border border-border bg-card">
-              {isLoggedIn ? (
-                <div className="divide-y divide-border">
-                  {lbLoading ? (
-                    <div className="py-8 text-center text-sm text-muted-foreground">{isAr ? "جارٍ تحميل الترتيب..." : "Loading leaderboard…"}</div>
-                  ) : xpLeaderboard.length === 0 ? (
-                    <div className="py-8 text-center text-sm text-muted-foreground">{isAr ? "لا توجد بيانات بعد. العب لكسب XP!" : "No data yet. Play games to earn XP!"}</div>
-                  ) : (
-                    xpLeaderboard.slice(0, 10).map((p, idx) => {
-                      const rankEmojis = ["🥇", "🥈", "🥉"];
-                      const emoji = idx < 3 ? rankEmojis[idx] : `${idx + 1}`;
-                      return (
-                        <div key={p.user_id} className={`flex items-center gap-3 px-4 py-2.5 ${p.isCurrentUser ? "bg-amber-50" : ""}`}>
-                          <span className="text-base w-6 text-center font-bold">{emoji}</span>
-                          <span className={`flex-1 text-sm font-medium ${p.isCurrentUser ? "text-amber-700 font-bold" : "text-foreground"}`}>
-                            {p.name}{p.isCurrentUser ? (isAr ? " (أنت)" : " (you)") : ""}
-                          </span>
-                          <span className="text-xs text-yellow-700 dark:text-yellow-200 font-semibold bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-2 py-0.5 rounded-full ring-1 ring-black/10">
-                            {p.value.toLocaleString()} XP
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              ) : (
-                <div className="py-8 px-6 flex flex-col items-center gap-3 text-center">
-                  <p className="text-sm text-muted-foreground max-w-xs">
-                    {isAr
-                      ? "سجّل عشان تبدأ تجمع نقط وتدخل الترتيب."
-                      : "Sign up to start earning XP and take your place on the leaderboard."}
-                  </p>
-                  <a
-                    href="/signup"
-                    className="text-xs bg-amber-500 text-white px-4 py-1.5 rounded-full font-semibold hover:bg-amber-600 transition-colors shadow-md border border-black/15"
-                  >
-                    {isAr ? "🏆 سجّل لرؤية ترتيبك" : "🏆 Sign up to see your rank"}
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
+        {/* Podium for the top three, then 4-10 with a bar against the leader.
+            All time / This week tabs. See GamesLeaderboard.tsx. */}
+        <GamesLeaderboard
+          isLoggedIn={isLoggedIn}
+          isAr={isAr}
+          loading={lbLoading}
+          allTime={xpLeaderboard}
+          weekly={weeklyLeaderboard}
+          myRank={currentUserXpRank}
+        />
 
         {/* Active game.
 
