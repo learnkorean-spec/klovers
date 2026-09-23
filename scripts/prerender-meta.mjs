@@ -1161,7 +1161,7 @@ function buildHeadTags(route) {
   return tags.join("\n");
 }
 
-// ── Emit ──────────────────────────────────────────────────────────────────────
+// ── Emit ────────────────────────────────────────────────────────────────────
 
 const baseHTML = readFileSync(join(DIST, "index.html"), "utf-8");
 
