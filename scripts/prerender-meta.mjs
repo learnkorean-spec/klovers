@@ -361,6 +361,93 @@ const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
       <p><a href="/courses">الكورسات</a> · <a href="/pricing">الأسعار</a> · <a href="/about">عننا</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/contact">تواصل معانا</a></p>
     </div>`;
 
+// ── Legal page body fragments ───────────────────────────────────────────────
+//
+// /privacy-policy and /terms (src/pages/PrivacyPolicyPage.tsx, TermsPage.tsx),
+// added 2026-09-24. Same tradeoff as GAMES_BODY_HTML: the English text is
+// DUPLICATED from those page files so a crawler that runs no JavaScript still
+// reads the real policy, not an empty mount point. English only, as with the
+// era pages - the live page serves Arabic on the client. If you edit the
+// wording in either page file, mirror it here. Ampersands are escaped by hand.
+const PRIVACY_BODY_HTML = `<div id="legal-prerendered" lang="en" dir="ltr">
+      <h1>Privacy Policy</h1>
+      <p>Last updated: 24 September 2026</p>
+      <p>This policy explains what personal information Klovers collects when you use kloversegy.com and our classes, why we collect it, who we share it with, and the choices you have.</p>
+      <h2>Who we are</h2>
+      <p>Klovers Korean Academy is an online Korean academy operated from Egypt. You can reach us by email at kloversegy@gmail.com or on WhatsApp at +201010003084.</p>
+      <h2>What we collect</h2>
+      <ul>
+        <li>Account details: your name, email address and password (the password is handled by our authentication provider), your site language, and optionally your Korean level. Your browser's time zone, and the country it indicates, are saved to your profile.</li>
+        <li>Trial class bookings: your name, email, phone (WhatsApp) number, country, level, learning goal, the time slot you choose and your time zone.</li>
+        <li>Enrolment and payment: the plan and schedule you choose and your country of residence. For manual payments, the payment method, payment date, the receipt you upload and any transaction reference. Card payments are made on Stripe's checkout page; we do not receive your card number.</li>
+        <li>Learning activity: placement test answers and results, lesson progress, games and quiz scores, and class attendance.</li>
+        <li>Interview-practice tools: the job title, experience and other details you enter.</li>
+        <li>Messages: what you send us by email, WhatsApp or Telegram.</li>
+        <li>Usage data: pages you visit and buttons you click on the site, the link or campaign that brought you (for example UTM tags and the referring page), and a random session identifier.</li>
+      </ul>
+      <h2>Why we use it</h2>
+      <ul>
+        <li>To run your classes and your account, and to give you access to lessons and practice tools.</li>
+        <li>To manage trial bookings and send confirmations and class reminders.</li>
+        <li>To review payments and activate your enrolment.</li>
+        <li>To answer your questions and support you.</li>
+        <li>To understand how the site is used and improve it, and to measure our advertising.</li>
+        <li>To send occasional news about classes. Every such email has an unsubscribe link.</li>
+      </ul>
+      <h2>Cookies and analytics</h2>
+      <p>On kloversegy.com we use Google Analytics 4 and the Meta Pixel to measure visits and the results of our advertising. These tools use cookies and similar technologies.</p>
+      <p>The site also keeps a few small items in your browser's local storage: to keep you signed in, to remember your language and your answer to the cookie notice, and to link a visit to a later booking.</p>
+      <p>You can block or delete cookies and local storage in your browser settings. Blocking them may sign you out or reset your preferences.</p>
+      <h2>Who we share it with</h2>
+      <p>We do not sell your personal information. We share it only with the service providers that run the site for us, and only for the purposes above:</p>
+      <ul>
+        <li>Supabase — accounts, database, file storage (such as payment receipts) and server functions.</li>
+        <li>Vercel — website hosting.</li>
+        <li>Google — Google Analytics 4, and Google Fonts, which loads the site's typefaces.</li>
+        <li>Meta — the Meta Pixel, for measuring advertising.</li>
+        <li>Resend — sending our emails.</li>
+        <li>Stripe — card payments made through our checkout.</li>
+        <li>An AI model provider, reached through an AI gateway — only the details you type into the interview-practice tools, to generate questions and feedback.</li>
+        <li>WhatsApp and Telegram — when you choose to contact us there, those services' own policies apply.</li>
+      </ul>
+      <h2>How long we keep it</h2>
+      <p>We keep your information while your account is active. You can ask us to delete it at any time and we will do so, except where we must keep a record, for example of a payment.</p>
+      <h2>Your rights</h2>
+      <p>You can ask to see the personal information we hold about you, to correct it, or to delete it. Email us at kloversegy@gmail.com and we will reply.</p>
+      <h2>Children</h2>
+      <p>Learners under 18 need the consent of a parent or guardian to create an account or join classes.</p>
+      <h2>Changes to this policy</h2>
+      <p>If we change this policy, we will post the new version on this page and update the date at the top.</p>
+      <h2>Contact</h2>
+      <p>Questions about your privacy? Email kloversegy@gmail.com or message us on WhatsApp at +201010003084. See also our <a href="/terms">Terms of Service</a>.</p>
+    </div>`;
+
+const TERMS_BODY_HTML = `<div id="legal-prerendered" lang="en" dir="ltr">
+      <h1>Terms of Service</h1>
+      <p>Last updated: 24 September 2026</p>
+      <p>These terms apply when you use kloversegy.com or take classes with Klovers Korean Academy. By creating an account or booking a class, you agree to them.</p>
+      <h2>The service</h2>
+      <p>Klovers teaches live online classes with a teacher, in groups or privately. The first trial class is free. The site also offers learning materials, a placement test and practice games.</p>
+      <h2>Your account</h2>
+      <p>Please give accurate details and keep your password private. You are responsible for what happens under your account. Learners under 18 need the consent of a parent or guardian.</p>
+      <h2>Payments</h2>
+      <p>We accept bank transfer, Vodafone Cash and InstaPay (Egypt), as well as international card or PayPal.</p>
+      <p>All payments are manually reviewed by our team before your enrolment is activated. There are no automatic charges.</p>
+      <h2>First class guarantee and refunds</h2>
+      <p>If you are not satisfied after your first class, we will refund you or rebook you — no questions asked.</p>
+      <p>After that, refunds are prorated for unused sessions.</p>
+      <h2>Missed classes</h2>
+      <p>Group classes are recorded and shared with enrolled students. Private students can reschedule with 24 hours' notice.</p>
+      <h2>Conduct</h2>
+      <p>Please be respectful to teachers and other students. We may remove anyone from a class, or close an account, for harassment, abuse or disruptive behaviour.</p>
+      <h2>Course materials</h2>
+      <p>Lessons, recordings, textbooks and other materials are for your personal learning only. Please do not share, sell or republish them.</p>
+      <h2>Changes to these terms</h2>
+      <p>We may update these terms. The current version is always on this page, with the date it was last updated at the top.</p>
+      <h2>Contact</h2>
+      <p>Questions about these terms? Email kloversegy@gmail.com or message us on WhatsApp at +201010003084. See also our <a href="/privacy-policy">Privacy Policy</a>.</p>
+    </div>`;
+
 /**
  * The homepage has a real translation: "/" (English) and "/ar" (Arabic). Both
  * routes carry this pair and buildHeadTags emits the same reciprocal hreflang
@@ -608,6 +695,23 @@ const MARKETING_ROUTES = [
     body: ERA_MODERN_KOREA_BODY,
     breadcrumb: [{ name: "Home", item: BASE_URL }],
     articleLd: true,
+  },
+  // Legal pages, added 2026-09-24. The footer and the cookie banner linked to
+  // both while neither route existed. Keep in step with STATIC_PAGES in
+  // api/sitemap.xml.js.
+  {
+    path: "/privacy-policy",
+    title: "Privacy Policy",
+    description:
+      "How Klovers Korean Academy collects, uses and protects your personal information, which services we share it with, and how to access or delete it.",
+    body: PRIVACY_BODY_HTML,
+  },
+  {
+    path: "/terms",
+    title: "Terms of Service",
+    description:
+      "The terms for Klovers Korean Academy's live online Korean classes: accounts, payments, the first class guarantee, refunds, missed classes and conduct.",
+    body: TERMS_BODY_HTML,
   },
 ];
 

@@ -1,0 +1,216 @@
+import { useSEO } from "@/hooks/useSEO";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { CONTACT_EMAIL, WHATSAPP_NUMBER } from "@/lib/siteConfig";
+import LegalDocument, { type LegalContent } from "@/components/LegalDocument";
+
+/**
+ * /privacy-policy — linked from the footer and the cookie banner.
+ *
+ * Every processor named here was checked against the code on 24 Sep 2026:
+ * Supabase (auth, database, file storage, edge functions), Vercel (hosting),
+ * Google Analytics 4 and the Meta Pixel (index.html, production host only),
+ * Google Fonts (index.html), Resend (email, supabase/functions), Stripe
+ * (create-checkout) and the AI gateway used by the interview-practice tools
+ * (generate-korean-interview). If a service is added or removed, update this
+ * list and the matching fragment in scripts/prerender-meta.mjs.
+ */
+
+const WHATSAPP = `+${WHATSAPP_NUMBER}`;
+
+const EN: LegalContent = {
+  title: "Privacy Policy",
+  updated: "Last updated: 24 September 2026",
+  intro:
+    "This policy explains what personal information Klovers collects when you use kloversegy.com and our classes, why we collect it, who we share it with, and the choices you have.",
+  sections: [
+    {
+      heading: "Who we are",
+      paragraphs: [
+        `Klovers Korean Academy is an online Korean academy operated from Egypt. You can reach us by email at ${CONTACT_EMAIL} or on WhatsApp at ${WHATSAPP}.`,
+      ],
+    },
+    {
+      heading: "What we collect",
+      bullets: [
+        "Account details: your name, email address and password (the password is handled by our authentication provider), your site language, and optionally your Korean level. Your browser's time zone, and the country it indicates, are saved to your profile.",
+        "Trial class bookings: your name, email, phone (WhatsApp) number, country, level, learning goal, the time slot you choose and your time zone.",
+        "Enrolment and payment: the plan and schedule you choose and your country of residence. For manual payments, the payment method, payment date, the receipt you upload and any transaction reference. Card payments are made on Stripe's checkout page; we do not receive your card number.",
+        "Learning activity: placement test answers and results, lesson progress, games and quiz scores, and class attendance.",
+        "Interview-practice tools: the job title, experience and other details you enter.",
+        "Messages: what you send us by email, WhatsApp or Telegram.",
+        "Usage data: pages you visit and buttons you click on the site, the link or campaign that brought you (for example UTM tags and the referring page), and a random session identifier.",
+      ],
+    },
+    {
+      heading: "Why we use it",
+      bullets: [
+        "To run your classes and your account, and to give you access to lessons and practice tools.",
+        "To manage trial bookings and send confirmations and class reminders.",
+        "To review payments and activate your enrolment.",
+        "To answer your questions and support you.",
+        "To understand how the site is used and improve it, and to measure our advertising.",
+        "To send occasional news about classes. Every such email has an unsubscribe link.",
+      ],
+    },
+    {
+      heading: "Cookies and analytics",
+      paragraphs: [
+        "On kloversegy.com we use Google Analytics 4 and the Meta Pixel to measure visits and the results of our advertising. These tools use cookies and similar technologies.",
+        "The site also keeps a few small items in your browser's local storage: to keep you signed in, to remember your language and your answer to the cookie notice, and to link a visit to a later booking.",
+        "You can block or delete cookies and local storage in your browser settings. Blocking them may sign you out or reset your preferences.",
+      ],
+    },
+    {
+      heading: "Who we share it with",
+      paragraphs: [
+        "We do not sell your personal information. We share it only with the service providers that run the site for us, and only for the purposes above:",
+      ],
+      bullets: [
+        "Supabase — accounts, database, file storage (such as payment receipts) and server functions.",
+        "Vercel — website hosting.",
+        "Google — Google Analytics 4, and Google Fonts, which loads the site's typefaces.",
+        "Meta — the Meta Pixel, for measuring advertising.",
+        "Resend — sending our emails.",
+        "Stripe — card payments made through our checkout.",
+        "An AI model provider, reached through an AI gateway — only the details you type into the interview-practice tools, to generate questions and feedback.",
+        "WhatsApp and Telegram — when you choose to contact us there, those services' own policies apply.",
+      ],
+    },
+    {
+      heading: "How long we keep it",
+      paragraphs: [
+        "We keep your information while your account is active. You can ask us to delete it at any time and we will do so, except where we must keep a record, for example of a payment.",
+      ],
+    },
+    {
+      heading: "Your rights",
+      paragraphs: [
+        `You can ask to see the personal information we hold about you, to correct it, or to delete it. Email us at ${CONTACT_EMAIL} and we will reply.`,
+      ],
+    },
+    {
+      heading: "Children",
+      paragraphs: [
+        "Learners under 18 need the consent of a parent or guardian to create an account or join classes.",
+      ],
+    },
+    {
+      heading: "Changes to this policy",
+      paragraphs: [
+        "If we change this policy, we will post the new version on this page and update the date at the top.",
+      ],
+    },
+    {
+      heading: "Contact",
+      paragraphs: [
+        `Questions about your privacy? Email ${CONTACT_EMAIL} or message us on WhatsApp at ${WHATSAPP}.`,
+      ],
+    },
+  ],
+};
+
+const AR: LegalContent = {
+  title: "سياسة الخصوصية",
+  updated: "آخر تحديث: 24 سبتمبر 2026",
+  intro:
+    "توضح هذه السياسة المعلومات الشخصية التي تجمعها كلوفرز عند استخدامك موقع kloversegy.com وحصصنا، وسبب جمعها، والجهات التي نشاركها معها، والخيارات المتاحة لك.",
+  sections: [
+    {
+      heading: "من نحن",
+      paragraphs: [
+        `كلوفرز — أكاديمية محبي الكورية، أكاديمية لتعليم اللغة الكورية عبر الإنترنت تُدار من مصر. يمكنك التواصل معنا عبر البريد الإلكتروني ${CONTACT_EMAIL} أو عبر واتساب على الرقم ${WHATSAPP}.`,
+      ],
+    },
+    {
+      heading: "المعلومات التي نجمعها",
+      bullets: [
+        "بيانات الحساب: اسمك وبريدك الإلكتروني وكلمة المرور (يتولى مزوّد خدمة تسجيل الدخول معالجتها)، ولغة الموقع التي تستخدمها، ومستواك في الكورية إن أردت إضافته. كما تُحفظ في ملفك المنطقة الزمنية لمتصفحك والدولة التي تدل عليها.",
+        "حجز الحصة التجريبية: اسمك وبريدك الإلكتروني ورقم هاتفك (واتساب) ودولتك ومستواك وهدفك من التعلم والموعد الذي تختاره ومنطقتك الزمنية.",
+        "التسجيل والدفع: الباقة والمواعيد التي تختارها ودولة إقامتك. وفي حالة الدفع اليدوي: طريقة الدفع وتاريخه والإيصال الذي ترفعه وأي رقم مرجعي للمعاملة. أما الدفع بالبطاقة فيتم على صفحة الدفع الخاصة بـ Stripe، ولا نتلقى رقم بطاقتك.",
+        "نشاط التعلم: إجابات اختبار تحديد المستوى ونتائجه، وتقدمك في الدروس، ونتائج الألعاب والاختبارات، وحضور الحصص.",
+        "أدوات التدريب على المقابلات: المسمى الوظيفي والخبرة وغيرها من التفاصيل التي تُدخلها.",
+        "الرسائل: ما ترسله إلينا عبر البريد الإلكتروني أو واتساب أو تيليجرام.",
+        "بيانات الاستخدام: الصفحات التي تزورها والأزرار التي تضغطها في الموقع، والرابط أو الحملة التي أوصلتك إلينا (مثل وسوم UTM والصفحة المُحيلة)، ومعرّف جلسة عشوائي.",
+      ],
+    },
+    {
+      heading: "لماذا نستخدمها",
+      bullets: [
+        "لتقديم حصصك وإدارة حسابك، ولإتاحة الدروس وأدوات التدريب لك.",
+        "لإدارة حجوزات الحصص التجريبية وإرسال التأكيدات وتذكيرات الحصص.",
+        "لمراجعة المدفوعات وتفعيل اشتراكك.",
+        "للرد على أسئلتك ومساعدتك.",
+        "لفهم طريقة استخدام الموقع وتحسينه، ولقياس نتائج إعلاناتنا.",
+        "لإرسال أخبار عن الحصص من حين لآخر. وتحتوي كل رسالة من هذا النوع على رابط لإلغاء الاشتراك.",
+      ],
+    },
+    {
+      heading: "ملفات تعريف الارتباط والتحليلات",
+      paragraphs: [
+        "نستخدم في موقع kloversegy.com خدمة Google Analytics 4 وبكسل Meta لقياس الزيارات ونتائج إعلاناتنا. وتستخدم هذه الأدوات ملفات تعريف الارتباط وتقنيات مشابهة.",
+        "كما يحفظ الموقع بعض البيانات الصغيرة في التخزين المحلي لمتصفحك: لإبقائك مسجلًا للدخول، ولتذكّر لغتك وردّك على إشعار ملفات تعريف الارتباط، ولربط الزيارة بحجز لاحق.",
+        "يمكنك حظر ملفات تعريف الارتباط والتخزين المحلي أو حذفها من إعدادات متصفحك. وقد يؤدي ذلك إلى تسجيل خروجك أو إعادة ضبط تفضيلاتك.",
+      ],
+    },
+    {
+      heading: "الجهات التي نشارك معها بياناتك",
+      paragraphs: [
+        "لا نبيع معلوماتك الشخصية. ونشاركها فقط مع مزوّدي الخدمات الذين يشغّلون الموقع لصالحنا، وللأغراض المذكورة أعلاه فقط:",
+      ],
+      bullets: [
+        "Supabase — الحسابات وقاعدة البيانات وتخزين الملفات (مثل إيصالات الدفع) ووظائف الخادم.",
+        "Vercel — استضافة الموقع.",
+        "Google — خدمة Google Analytics 4، وخدمة Google Fonts التي تُحمِّل خطوط الموقع.",
+        "Meta — بكسل Meta لقياس الإعلانات.",
+        "Resend — إرسال رسائل البريد الإلكتروني.",
+        "Stripe — المدفوعات بالبطاقة عبر صفحة الدفع.",
+        "مزوّد نماذج ذكاء اصطناعي عبر بوابة ذكاء اصطناعي — ويقتصر ذلك على التفاصيل التي تكتبها في أدوات التدريب على المقابلات، لإنشاء الأسئلة والملاحظات.",
+        "واتساب وتيليجرام — عندما تختار التواصل معنا عبرهما، تسري سياسات هاتين الخدمتين.",
+      ],
+    },
+    {
+      heading: "مدة الاحتفاظ بالبيانات",
+      paragraphs: [
+        "نحتفظ بمعلوماتك ما دام حسابك نشطًا. ويمكنك أن تطلب منا حذفها في أي وقت وسنقوم بذلك، إلا ما يلزمنا الاحتفاظ به من سجلات، مثل سجلات المدفوعات.",
+      ],
+    },
+    {
+      heading: "حقوقك",
+      paragraphs: [
+        `يحق لك أن تطلب الاطلاع على معلوماتك الشخصية التي نحتفظ بها، أو تصحيحها، أو حذفها. راسلنا على ${CONTACT_EMAIL} وسنرد عليك.`,
+      ],
+    },
+    {
+      heading: "الأطفال",
+      paragraphs: [
+        "يحتاج المتعلمون دون سن 18 عامًا إلى موافقة أحد الوالدين أو الوصي لإنشاء حساب أو الانضمام إلى الحصص.",
+      ],
+    },
+    {
+      heading: "التغييرات على هذه السياسة",
+      paragraphs: [
+        "إذا غيّرنا هذه السياسة، فسننشر النسخة الجديدة في هذه الصفحة ونحدّث التاريخ في أعلاها.",
+      ],
+    },
+    {
+      heading: "التواصل معنا",
+      paragraphs: [
+        `لديك سؤال عن خصوصيتك؟ راسلنا على ${CONTACT_EMAIL} أو تواصل معنا عبر واتساب على الرقم ${WHATSAPP}.`,
+      ],
+    },
+  ],
+};
+
+const PrivacyPolicyPage = () => {
+  useSEO({
+    title: "Privacy Policy",
+    description:
+      "How Klovers Korean Academy collects, uses and protects your personal information, which services we share it with, and how to access or delete it.",
+    canonical: "https://kloversegy.com/privacy-policy",
+  });
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  return <LegalDocument content={isAr ? AR : EN} isAr={isAr} />;
+};
+
+export default PrivacyPolicyPage;
