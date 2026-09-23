@@ -10,12 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, MapPin, Star, Crown, Globe, Sparkles, Users, MessageCircle } from "lucide-react";
+import { Check, MapPin, Star, Crown, Globe, Sparkles, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { buildCountryLocalPrices, normalizeCountry, tierCountries } from "@/lib/stripePrices";
+import { RATING, toArabicDigits } from "@/lib/trustFigures";
 import { supabase } from "@/integrations/supabase/client";
 
 type TierKey = "local" | "regional" | "global";
@@ -477,12 +478,10 @@ const PricingSection = () => {
                   </div>
 
                   <div className="space-y-2">
-                    {isActive && (
-                      <div className="flex items-center justify-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 font-medium bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg py-2">
-                        <Users className="h-3.5 w-3.5" />
-                        <span>{tr("Limited spots this intake — enroll to reserve yours", "أماكن محدودة في هذه الدفعة — سجّل عشان تحجز مكانك")}</span>
-                      </div>
-                    )}
+                    {/* 24 Sep 2026: the "Limited spots this intake — enroll to
+                        reserve yours" banner that sat here on the active tier is
+                        gone. Nothing counts spots per intake, so it was urgency
+                        with no fact under it. */}
                     <Button
                       className="w-full"
                       variant={isActive ? "default" : "outline"}
@@ -526,8 +525,8 @@ const PricingSection = () => {
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">⭐</span>
-            <p className="text-sm font-semibold text-foreground">{tr("5.0 ★ Google rating", "5.0 ★ تقييم جوجل")}</p>
-            <p className="text-xs text-muted-foreground">{tr("From 7 Google reviews", "من ٧ مراجعات جوجل")}</p>
+            <p className="text-sm font-semibold text-foreground">{tr(`${RATING.value} ★ Google rating`, `${RATING.value} ★ تقييم جوجل`)}</p>
+            <p className="text-xs text-muted-foreground">{tr(`From ${RATING.count} Google reviews`, `من ${toArabicDigits(RATING.count)} مراجعات جوجل`)}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-2xl">🇰🇷</span>
