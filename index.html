@@ -114,10 +114,35 @@
       window.__klIsProdHost = /(^|\.)kloversegy\.com$/.test(window.location.hostname);
     </script>
 
+    <!--
+      Cookie consent (24 Sep 2026). Both tags below start with consent DENIED
+      unless this browser already pressed Accept on the cookie banner
+      (localStorage cookie_consent = "granted"). The banner updates both tags
+      when the visitor chooses - see src/lib/consent.ts, which uses the same key.
+    -->
+    <script>
+      window.__klConsent = (function () {
+        try {
+          var v = localStorage.getItem('cookie_consent');
+          return v === 'granted' || v === 'denied' ? v : null;
+        } catch (e) {
+          return null;
+        }
+      })();
+    </script>
+
     <!-- Google Analytics (GA4) — deferred to avoid blocking render -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      // Google Consent Mode v2: set BEFORE any config call.
+      var _klConsentState = window.__klConsent === 'granted' ? 'granted' : 'denied';
+      gtag('consent', 'default', {
+        analytics_storage: _klConsentState,
+        ad_storage: _klConsentState,
+        ad_user_data: _klConsentState,
+        ad_personalization: _klConsentState
+      });
       var _loadGA = function() {
         var s = document.createElement('script');
         s.src = 'https://www.googletagmanager.com/gtag/js?id=G-L4JG9ZP7HL';
@@ -140,6 +165,8 @@
         n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
         t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
         document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        // Consent before init: revoked until the visitor presses Accept.
+        fbq('consent', window.__klConsent === 'granted' ? 'grant' : 'revoke');
         var _pixelId = '%VITE_META_PIXEL_ID%';
         if (_pixelId && _pixelId !== '%VITE_META_PIXEL_ID%') {
           fbq('init', _pixelId);

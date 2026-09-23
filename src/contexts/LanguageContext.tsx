@@ -165,18 +165,19 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   // 2026-09-18: and nothing at all when the value has not changed either. This
   // effect runs on mount too, so it was issuing a PATCH on every page load to
   // write what was already stored. See LANG_SYNCED_KEY above.
+  //
+  // 2026-09-24: "is anyone signed in?" is answered with getSession(), not
+  // getUser(). For an anonymous visitor getUser() returns an
+  // AuthSessionMissingError, which this effect logged with console.error on
+  // every page of the site. No session is the normal anonymous state, not an
+  // error. getSession() reads the stored session without a network call; the
+  // UPDATE below is still checked server-side by RLS against the JWT.
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        const { data, error: userError } = await supabase.auth.getUser();
-        if (userError) {
-          // Signed out is not an error here, but a real auth failure is worth
-          // seeing rather than silently reading as "nobody is logged in".
-          console.error("language: could not read the session:", userError.message);
-          return;
-        }
-        const userId = data.user?.id;
+        const { data } = await supabase.auth.getSession();
+        const userId = data.session?.user?.id;
         if (!userId || cancelled) return;
 
         const stamp = `${userId}:${language}`;
