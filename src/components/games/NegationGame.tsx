@@ -187,7 +187,7 @@ const NegationGame = ({ onGameComplete }: { onGameComplete?: (score: number, tot
 
       <Card className="p-5 space-y-3">
         <Badge className={TYPE_COLORS[q.negationType]}>{q.typeLabel}</Badge>
-        <p className="text-xs text-muted-foreground">Negate this sentence using <span className="font-mono font-bold">{q.negationType}</span>:</p>
+        <p className="text-xs text-muted-foreground">Negate this sentence using <span className="font-bold">{q.negationType}</span>:</p>
         <div>
           <p className="text-xl font-bold text-foreground">{q.positive}</p>
           <p className="text-sm text-muted-foreground italic">"{q.english}"</p>

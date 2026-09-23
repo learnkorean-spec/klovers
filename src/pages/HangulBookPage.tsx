@@ -621,7 +621,7 @@ function Page({ children, dir = "ltr", chapter, bgColor = "#FFF5F5" }: { childre
         position:"relative",
         pageBreakAfter:"always", breakAfter:"page",
         direction: dir,
-        fontFamily:"'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+        fontFamily:"Inter, Cairo, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
       }}
     >
       {/* Running header — editorial black/yellow brand */}
@@ -1369,13 +1369,13 @@ function EdCover({ lang }: { lang: "ar" | "en" }) {
         <div style={{
           fontSize:"26px", fontWeight:900, color:BK,
           letterSpacing:"3px", textAlign:"center", marginBottom:"3mm",
-          fontFamily:"'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+          fontFamily:"Inter, Cairo, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
         }}>KLOVERS HANGUL</div>
 
         <div style={{
           fontSize:"12px", color:BK, textAlign:"center",
           marginBottom:"5mm", fontWeight:500,
-          fontFamily:"'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+          fontFamily:"Inter, Cairo, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
         }}>{subtitle}</div>
 
         {/* — ● — divider */}
@@ -1392,7 +1392,7 @@ function EdCover({ lang }: { lang: "ar" | "en" }) {
         padding:"10mm 14mm 8mm",
         display:"flex", flexDirection:"column",
         direction: isAr ? "rtl" : "ltr",
-        fontFamily:"'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+        fontFamily:"Inter, Cairo, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
       }}>
         <div style={{ width:"32px", height:"4px", background:Y, marginBottom:"6mm" }} />
 
@@ -1433,13 +1433,13 @@ function Spine() {
         writingMode:"vertical-rl", transform:"rotate(180deg)",
         fontSize:"16px", fontWeight:900, color:BK,
         letterSpacing:"4px", textTransform:"uppercase",
-        fontFamily:"'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+        fontFamily:"Inter, Cairo, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
       }}>KLOVERS HANGUL</div>
       <div style={{
         writingMode:"vertical-rl", transform:"rotate(180deg)",
         fontSize:"10px", fontWeight:600, color:BK,
         letterSpacing:"3px", textTransform:"uppercase",
-        fontFamily:"'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+        fontFamily:"Inter, Cairo, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
       }}>REHAM ELSHRKAWY</div>
     </div>
   );

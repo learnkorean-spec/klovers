@@ -844,7 +844,7 @@ const PlacementTestPage = () => {
               {/* Korean phrase */}
               <div className="space-y-1">
                 <p className="text-3xl font-bold tracking-wide leading-relaxed">{currentPrompt.korean}</p>
-                <p className="text-xs text-muted-foreground font-mono">{currentPrompt.romanisation}</p>
+                <p className="text-xs text-muted-foreground">{currentPrompt.romanisation}</p>
               </div>
 
               {/* Hear model pronunciation */}

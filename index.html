@@ -64,14 +64,15 @@
         Poppins  display / headings
         Inter    body and UI (Latin)
         Cairo    body and UI (Arabic; Inter ships no Arabic)
-        Caveat   handwritten accent, one line at a time
+        Segoe Script / Kalam   Cluby's handwritten voice (see --font-script)
         Noto Sans KR  Hangul in lessons and the Hangul game
         Hi Melody     decorative Korean words (hero, culture, final CTA)
 
-      CAVEAT IS LATIN-ONLY, and that is a known gap rather than an oversight:
-      it carries no Arabic and no Hangul, so every handwritten line on this
-      site renders in Cairo for an Arabic reader and reads as an ordinary
-      sentence. Aref Ruqaa and Nanum Pen Script were added here on 20 Sep 2026
+      HANDWRITING: Segoe Script is the preferred face and is NOT loaded here -
+      it is a Windows system font (Microsoft-licensed, never bundle its files).
+      Kalam is loaded as the cross-device fallback (Mac, iPhone, Android).
+      Both are Latin-only: Arabic handwriting lines use Cairo instead (see
+      .cluby-note in src/index.css). Aref Ruqaa and Nanum Pen Script were added here on 20 Sep 2026
       to close it and removed the same day - Ruqaa is a calligraphic naskh and
       looked like a thin formal serif at 20px, not like a hand. Closing the
       gap needs a face that genuinely looks handwritten in Arabic.
@@ -85,14 +86,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Caveat:wght@600;700&family=Noto+Sans+KR:wght@400;700;800&family=Hi+Melody&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Kalam:wght@400;700&family=Noto+Sans+KR:wght@400;700;800&family=Hi+Melody&display=swap"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Caveat:wght@600;700&family=Noto+Sans+KR:wght@400;700;800&family=Hi+Melody&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;600;700;800&family=Kalam:wght@400;700&family=Noto+Sans+KR:wght@400;700;800&family=Hi+Melody&display=swap"
       />
     </noscript>
 

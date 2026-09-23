@@ -309,7 +309,7 @@ const GrammarPatternGame = ({ onGameComplete }: { onGameComplete?: (score: numbe
       {/* Pattern banner */}
       <Card className="p-3 bg-primary/5 border-primary/20">
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="outline" className="font-mono">{q.pattern}</Badge>
+          <Badge variant="outline" className="font-semibold">{q.pattern}</Badge>
           <span className="text-sm text-muted-foreground">{q.patternMeaning}</span>
         </div>
         <p className="text-xs text-muted-foreground mt-1">{level.description}</p>

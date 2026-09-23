@@ -281,7 +281,7 @@ const KDramaLearningPage = () => {
             <div className="mt-8 p-6 rounded-lg bg-amber-50 dark:bg-amber-950/10 border border-amber-200 dark:border-amber-800">
               <p className="font-bold mb-2">{t("kdrama.journalTitle")}</p>
               <p className="text-sm text-foreground/70 mb-4">{t("kdrama.journalIntro")}</p>
-              <div className="bg-white dark:bg-slate-900 p-4 rounded text-sm font-mono text-foreground/70">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded text-sm text-foreground/70">
                 <p>{t("kdrama.journalPhrase")}</p>
                 <p>{t("kdrama.journalContext")}</p>
                 <p>{t("kdrama.journalMySentence")}</p>
