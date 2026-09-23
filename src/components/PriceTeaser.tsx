@@ -20,6 +20,9 @@ import { logLeadEvent } from "@/lib/leadTracking";
  *
  * Currency follows /pricing: the country's own currency where the table has a
  * local row (EGP, SAR, AED...), otherwise the USD tier price.
+ *
+ * The "View pricing" link is a 44px tap target (inline-flex min-h-11): at
+ * 375px it measured 20px tall.
  */
 
 const ZONE_COUNTRY: Record<string, string> = {
@@ -130,7 +133,7 @@ const PriceTeaser = ({ className = "", source }: { className?: string; source: s
       <Link
         to="/pricing"
         onClick={() => { try { logLeadEvent({ source_type: "pricing", cta_label: `${source}_view_pricing`, metadata: { language } }); } catch {} }}
-        className="inline-flex items-center gap-1 font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/70"
+        className="inline-flex min-h-11 items-center gap-1 align-middle font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/70"
       >
         {isAr ? "شوف الأسعار" : "View pricing"}
         <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
