@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import { logLeadEvent } from "@/lib/leadTracking";
+import { STUDENTS_TAUGHT, TEACHING_YEARS } from "@/lib/trustFigures";
 
 /**
  * The teacher.
@@ -30,11 +31,12 @@ import { logLeadEvent } from "@/lib/leadTracking";
  *
  * Copy lives here rather than in translations.ts for the same reason as
  * HowItWorks: that file cannot be edited safely with the tooling available.
+ * The two figures come from @/lib/trustFigures, like every other page's.
  */
 
 const HIGHLIGHTS = [
-  { Icon: Users, value: "200+", en: "Students taught", ar: "طالب درّستهم" },
-  { Icon: BookOpen, value: "13", en: "Years teaching Korean", ar: "سنة تدريس كوري" },
+  { Icon: Users, value: STUDENTS_TAUGHT, en: "Students taught", ar: "طالب درّستهم" },
+  { Icon: BookOpen, value: TEACHING_YEARS, en: "Years teaching Korean", ar: "سنة تدريس كوري" },
   { Icon: Languages, value: "EN · AR", en: "Classes in English or Arabic", ar: "حصص بالعربي أو الإنجليزي" },
 ];
 

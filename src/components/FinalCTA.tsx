@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
+import { COMMUNITY, RATING, STUDENTS_TAUGHT, toArabicDigits } from "@/lib/trustFigures";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import PriceTeaser from "@/components/PriceTeaser";
 
@@ -25,11 +26,12 @@ import PriceTeaser from "@/components/PriceTeaser";
  *  - The two quiet links are 44px tap targets (they measured 20px at 375px).
  *
  * Numbers are static on purpose: a count-up renders every intermediate value
- * as a finished claim.
+ * as a finished claim. They come from @/lib/trustFigures, the one place every
+ * page reads them from.
  */
 const SOCIAL_PROOF = [
-  { icon: Users, value: "200+", en: "Students taught by Reham", ar: "طالب درّستهم ريهام" },
-  { icon: Star, value: "5.0 ★", en: "From 7 Google reviews", ar: "من ٧ مراجعات جوجل" },
+  { icon: Users, value: STUDENTS_TAUGHT, en: "Students taught by Reham", ar: "طالب درّستهم ريهام" },
+  { icon: Star, value: `${RATING.value} ★`, en: `From ${RATING.count} Google reviews`, ar: `من ${toArabicDigits(RATING.count)} مراجعات جوجل` },
   { icon: Globe, value: "EN · AR", en: "Classes in English or Arabic", ar: "حصص بالعربي أو الإنجليزي" },
 ];
 
@@ -208,8 +210,8 @@ const FinalCTA = () => {
             <span className="text-3xl" aria-hidden="true">🌍</span>
             <p className="text-sm font-bold leading-snug text-charcoal">
               {isAr
-                ? "انضم لأكثر من ٢٠٠٠ متابع في مجتمعنا على السوشيال ميديا"
-                : "Join 2,000+ people in our social media community"}
+                ? `انضم لأكثر من ${toArabicDigits(COMMUNITY.replace(/[^0-9]/g, ""))} متابع في مجتمعنا على السوشيال ميديا`
+                : `Join ${COMMUNITY} people in our social media community`}
             </p>
           </div>
         </div>
