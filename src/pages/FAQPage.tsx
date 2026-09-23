@@ -28,18 +28,19 @@ const FAQSchemaScript = ({ schema }: { schema: object }) => {
 
 const FAQPage = () => {
   useSEO({ title: "FAQ", description: "Got questions about learning Korean with Klovers? Find answers about courses, teachers, scheduling, and payments.", canonical: "https://kloversegy.com/faq" });
-  const { t, tArray, language } = useLanguage();
-  const isAr = language === "ar";
-  const rawFaqs = tArray("faqPage", "items") as { question: string; answer: string; category?: string }[];
-  // The TOPIK answer in translations.ts claims "high pass rates"; nothing
-  // measures that. The answer (and the FAQPage JSON-LD built from it) keeps
-  // the TOPIK-prep wording and drops the claim - see withoutUnsupportedClaims.
-  const faqs = useMemo(
-    () => rawFaqs.map((f) => ({ ...f, answer: withoutUnsupportedClaims(f.answer) })),
-    [rawFaqs],
-  );
+  const { t, tArray } = useLanguage();
+  const faqs = tArray("faqPage", "items") as { question: string; answer: string; category?: string }[];
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // The TOPIK answer in translations.ts claims "high pass rates"; nothing
+  // measures that. The answers shown (and the FAQPage JSON-LD built from
+  // them) keep the TOPIK-prep wording and drop the claim - see
+  // withoutUnsupportedClaims in @/lib/trustFigures.
+  const shownFaqs = useMemo(
+    () => faqs.map((f) => ({ ...f, answer: withoutUnsupportedClaims(f.answer) })),
+    [faqs],
+  );
 
   const categories = useMemo(() => {
     const cats = new Map<string, string>();
@@ -49,28 +50,28 @@ const FAQPage = () => {
       payment: t("faqPage", "categories.payment") || "Payment",
       progress: t("faqPage", "categories.progress") || "Progress",
     };
-    faqs.forEach(f => {
+    shownFaqs.forEach(f => {
       if (f.category && !cats.has(f.category)) {
         cats.set(f.category, catLabels[f.category] || f.category);
       }
     });
     return cats;
-  }, [faqs, t]);
+  }, [shownFaqs, t]);
 
   const filteredFaqs = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return faqs.filter(f => {
+    return shownFaqs.filter(f => {
       if (activeCategory && f.category !== activeCategory) return false;
       if (!q) return true;
       return f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q);
     });
-  }, [faqs, activeCategory, searchQuery]);
+  }, [shownFaqs, activeCategory, searchQuery]);
 
   // JSON-LD FAQ Schema
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqs.map(faq => ({
+    mainEntity: shownFaqs.map(faq => ({
       "@type": "Question",
       name: faq.question,
       acceptedAnswer: {
@@ -103,10 +104,8 @@ const FAQPage = () => {
 
             {/* Search */}
             <div className="relative max-w-md mx-auto mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
-                type="search"
-                aria-label={isAr ? "ابحث في الأسئلة" : "Search questions"}
                 placeholder="Search questions..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -114,12 +113,10 @@ const FAQPage = () => {
               />
               {searchQuery && (
                 <button
-                  type="button"
                   onClick={() => setSearchQuery("")}
-                  aria-label={isAr ? "مسح البحث" : "Clear search"}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-4 w-4" aria-hidden="true" />
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
