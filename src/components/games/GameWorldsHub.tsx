@@ -1,25 +1,35 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Lock } from "lucide-react";
+import { Check, Lock, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import KloverIcon from "@/components/KloverIcon";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { LEAGUES, getLeague } from "@/constants/gamification";
-import { FREE_GAME_IDS } from "@/constants/gamesList";
-import { gameWorlds, CLUBY_OUTFITS } from "@/constants/gameWorlds";
+import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
+import { gameIconName } from "@/constants/gameIcons";
+import { gameWorlds, CLUBY_OUTFITS, type GameWorld } from "@/constants/gameWorlds";
+import { PalaceScene, WORLD_SCENES } from "@/components/games/WorldScenes";
 
 /**
- * Top of /games: the Game Worlds concept, phase 1.
+ * Top of /games: the Game Worlds hub.
  *
- * Everything shown is real data or plainly marked as not-yet:
- *  - XP and league come from useGamification (passed in by GamesPage).
- *  - "Played" per world is read from student_xp rows whose activity_type is
- *    `game_<id>` — the same rows the award RPC writes. No new table.
- *  - The Cluby collection is a "coming soon" strip. Collecting needs its own
- *    migration PR (CLAUDE.md: never in a feature PR), so nothing here pretends
- *    a student owns one.
+ * 23 Sep 2026 redesign - the painted version:
+ *  - HERO: a yellow text column beside a painted palace courtyard (inline SVG,
+ *    see WorldScenes.tsx) with the girl in hanbok standing in it. Cluby stands
+ *    in the yellow column with his handwritten bubble ABOVE his head, so the
+ *    bubble never sits on the headline. The chip on the scene states the real
+ *    counts (worlds and games), interpolated, never typed.
+ *  - JOURNEY: the three stops joined by a dashed road; Cluby stands over
+ *    "You are here".
+ *  - WORLD CARDS: each opens on its own painted scene with Cluby in that
+ *    world's outfit, then the first four games with Play or a padlock, then
+ *    "See all", which scrolls to the full grid below.
+ *  - A short Cluby note closes the worlds: "Every game brings you closer to
+ *    Korea".
  *
- * Palette: brand yellow is the hero surface with charcoal text; neon green
- * (live-bright) only ever sits on a charcoal track, never on a light card.
+ * Data is unchanged from phase 1: XP and league from useGamification (via
+ * GamesPage), "played" from student_xp rows whose activity_type is
+ * `game_<id>`, and the free/locked state from FREE_GAME_IDS only.
  */
 
 interface Props {
@@ -34,7 +44,17 @@ interface Props {
 
 const ASSET = "/assets/characters";
 
+/** Which Cluby stands in which world's scene. */
+const WORLD_CLUBY: Record<GameWorld["key"], string> = {
+  hangul_village: "cluby-scholar",
+  vocabulary_market: "cluby-market",
+  conversation_cafe: "cluby-cafe",
+};
+
+const PREVIEW_COUNT = 4;
+
 const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Props) => {
+  const { t } = useLanguage();
   const worlds = useMemo(() => gameWorlds(), []);
   const [played, setPlayed] = useState<Set<string>>(new Set());
 
@@ -68,6 +88,10 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
   }, [isLoggedIn, totalXp]);
 
   const canPlay = (id: string) => isLoggedIn || FREE_GAME_IDS.includes(id);
+  const gameTitle = (id: string) => {
+    const g = GAMES_CATALOG.find((x) => x.id === id);
+    return g ? t(g.titleKey) : id;
+  };
 
   const stats = worlds.map((w) => {
     const done = w.gameIds.filter((id) => played.has(id)).length;
@@ -75,6 +99,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
   });
   const currentIdx = Math.max(0, stats.findIndex((s) => !s.complete));
   const allComplete = stats.every((s) => s.complete);
+  const totalGames = worlds.reduce((n, w) => n + w.gameIds.length, 0);
 
   const nextGameIn = (idx: number) => {
     const ids = worlds[idx]?.gameIds ?? [];
@@ -89,13 +114,17 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
 
   const continueGame = nextGameIn(allComplete ? 0 : currentIdx);
 
+  const seeAll = () => {
+    document.getElementById("all-games")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 space-y-10">
-      {/* Hero — yellow surface, charcoal type, hard edge */}
-      <section className="card-edge rounded-3xl bg-klovers-yellow text-charcoal overflow-hidden grid md:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="p-6 md:p-8 space-y-4">
+      {/* ── Hero: yellow column + painted palace ─────────────────────── */}
+      <section className="card-edge rounded-3xl overflow-hidden border-2 border-charcoal grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+        <div className="relative bg-klovers-yellow text-charcoal p-6 md:p-8 flex flex-col gap-4">
           <h1 className="text-xs font-extrabold uppercase tracking-wider">{title}</h1>
-          <p className="text-2xl md:text-3xl font-extrabold font-display leading-tight">
+          <p className="text-3xl md:text-4xl font-extrabold font-display leading-tight">
             {isLoggedIn ? (isAr ? "أهلًا بيك تاني!" : "Welcome back!") : (isAr ? "العب واتعلم كوري" : "Play your way into Korean")}
           </p>
           <p className="text-sm md:text-base">
@@ -162,25 +191,29 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               </a>
             )}
           </div>
+
+          {/* Cluby, bubble above his head. Handwriting (.cluby-note): his voice, never a button. */}
+          <div className="mt-auto flex flex-col items-end self-end pt-2">
+            <p className="cluby-bubble cluby-note mb-2" lang={isAr ? "ar" : "en"}>
+              {isAr ? "دوّر عليّا النهارده!" : "Find me today!"}
+            </p>
+            <img
+              src={`${ASSET}/cluby-hanbok.webp`}
+              alt=""
+              aria-hidden="true"
+              width={230}
+              height={286}
+              decoding="async"
+              className="h-24 md:h-28 w-auto"
+            />
+          </div>
         </div>
 
-        <div className="relative h-44 md:h-auto md:min-h-[240px] justify-self-end w-64 md:w-full">
-          {/* Cluby's own voice: handwriting (.cluby-note), never a button. */}
-          <p
-            className="cluby-bubble cluby-note absolute start-3 bottom-[8.25rem] md:bottom-[10.75rem] z-10"
-            lang={isAr ? "ar" : "en"}
-          >
-            {isAr ? "دوّر عليّا النهارده!" : "Find me today!"}
-          </p>
-          <img
-            src={`${ASSET}/cluby-hanbok.webp`}
-            alt=""
-            aria-hidden="true"
-            width={230}
-            height={286}
-            decoding="async"
-            className="absolute bottom-0 start-6 h-32 md:h-40 w-auto"
-          />
+        <div className="relative min-h-[240px] md:min-h-[340px] bg-[#FFD0B8]">
+          <PalaceScene className="absolute inset-0 h-full w-full" />
+          <span className="absolute top-4 start-4 rounded-full bg-ivory/95 border-2 border-charcoal text-charcoal text-xs font-extrabold px-3 py-1 shadow-sm">
+            {isAr ? `${worlds.length} عوالم · ${totalGames} لعبة` : `${worlds.length} worlds · ${totalGames} games`}
+          </span>
           <img
             src={`${ASSET}/girl-hanbok.webp`}
             alt=""
@@ -188,18 +221,18 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             width={204}
             height={460}
             decoding="async"
-            className="absolute bottom-0 end-4 h-44 md:h-60 w-auto"
+            className="absolute bottom-0 end-6 md:end-10 h-48 md:h-64 w-auto drop-shadow-[0_6px_10px_rgba(46,46,46,0.25)]"
           />
         </div>
       </section>
 
-      {/* Journey */}
+      {/* ── Journey ───────────────────────────────────────────────────── */}
       <section>
         <div className="flex items-baseline justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold text-foreground">{isAr ? "رحلتك الكورية" : "Your Korean Journey"}</h2>
           <span className="text-xs text-muted-foreground">{isAr ? "كلوبي بيوريك إنت فين" : "Cluby marks where you are"}</span>
         </div>
-        <ol className="grid grid-cols-3 pt-6">
+        <ol className="grid grid-cols-3 pt-8">
           {stats.map((s, i) => {
             const state = s.complete ? "done" : i === currentIdx ? "current" : "next";
             return (
@@ -208,12 +241,10 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                   <span
                     aria-hidden="true"
                     className={cn(
-                      "absolute top-[30px] -start-1/2 w-full h-1.5 rounded-full",
-                      stats[i - 1].complete ? "bg-charcoal" : "bg-border",
+                      "absolute top-[31px] -start-1/2 w-full border-t-[3px] border-dashed",
+                      stats[i - 1].complete ? "border-charcoal dark:border-live-bright" : "border-charcoal/35 dark:border-border",
                     )}
-                  >
-                    {stats[i - 1].complete && <span className="block mx-auto mt-[2px] h-0.5 w-full bg-live-bright" />}
-                  </span>
+                  />
                 )}
                 <button
                   type="button"
@@ -239,12 +270,12 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                     )}
                     {state === "current" && (
                       <img
-                        src={`${ASSET}/cluby-market.webp`}
+                        src={`${ASSET}/cluby-hanbok.webp`}
                         alt=""
                         aria-hidden="true"
                         width={230}
                         height={286}
-                        className="absolute -top-8 -end-5 h-11 w-auto"
+                        className="absolute -top-10 left-1/2 -translate-x-1/2 h-10 w-auto"
                       />
                     )}
                   </span>
@@ -270,41 +301,113 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         </ol>
       </section>
 
-      {/* World cards */}
+      {/* ── World cards ───────────────────────────────────────────────── */}
       <section>
         <div className="flex items-baseline justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold text-foreground">{isAr ? "عوالم الألعاب" : "Game Worlds"}</h2>
-          <span className="text-xs text-muted-foreground">{isAr ? "المرحلة الأولى — ٣ عوالم" : "Phase 1 — 3 worlds"}</span>
+          <span className="text-xs text-muted-foreground">
+            {isAr ? `${worlds.length} عوالم · ${totalGames} لعبة` : `${worlds.length} worlds · ${totalGames} games`}
+          </span>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {stats.map((s, i) => (
-            <button
-              key={s.world.key}
-              type="button"
-              onClick={() => {
-                const g = nextGameIn(i);
-                if (g) onPlay(g);
-              }}
-              className={cn(
-                "text-start rounded-2xl bg-card border-2 border-charcoal dark:border-border p-4 hover:shadow-[4px_4px_0_hsl(var(--charcoal))] transition-shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
-                i === stats.length - 1 && stats.length % 2 === 1 && "sm:col-span-2",
-              )}
-            >
-              <KloverIcon name={s.world.icon} className="h-12 w-12 mb-2" />
-              <h3 className="font-bold text-foreground">{isAr ? s.world.nameAr : s.world.name}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5 mb-3">{isAr ? s.world.descriptionAr : s.world.description}</p>
-              <div className="h-2.5 rounded-full bg-charcoal border-2 border-charcoal overflow-hidden">
-                <div className="h-full bg-live-bright" style={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} />
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                {isAr ? `${s.done} / ${s.total} ألعاب` : `${s.done} / ${s.total} games`}
-              </p>
-            </button>
-          ))}
+        <div className="grid gap-4 md:grid-cols-3">
+          {stats.map((s) => {
+            const Scene = WORLD_SCENES[s.world.key];
+            const preview = s.world.gameIds.slice(0, PREVIEW_COUNT);
+            return (
+              <article
+                key={s.world.key}
+                className="flex flex-col rounded-2xl bg-card border-2 border-charcoal dark:border-border overflow-hidden"
+              >
+                <div className="relative h-32 border-b-2 border-charcoal dark:border-border">
+                  <Scene className="absolute inset-0 h-full w-full" />
+                  <img
+                    src={`${ASSET}/${WORLD_CLUBY[s.world.key]}.webp`}
+                    alt=""
+                    aria-hidden="true"
+                    width={230}
+                    height={286}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute bottom-1 left-1/2 -translate-x-1/2 h-24 w-auto drop-shadow-[0_4px_6px_rgba(46,46,46,0.3)]"
+                  />
+                </div>
+
+                <div className="flex flex-1 flex-col p-4">
+                  <div className="flex items-center gap-2">
+                    <KloverIcon name={s.world.icon} className="h-9 w-9 shrink-0" />
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-foreground leading-tight">{isAr ? s.world.nameAr : s.world.name}</h3>
+                      <p className="text-xs text-muted-foreground">{isAr ? s.world.descriptionAr : s.world.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 h-2.5 rounded-full bg-charcoal border-2 border-charcoal overflow-hidden">
+                    <div className="h-full bg-live-bright" style={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {isAr ? `${s.done} / ${s.total} ألعاب` : `${s.done} / ${s.total} games`}
+                  </p>
+
+                  <ul className="mt-3 space-y-1.5">
+                    {preview.map((id) => {
+                      const open = canPlay(id);
+                      const done = played.has(id);
+                      return (
+                        <li key={id}>
+                          <button
+                            type="button"
+                            onClick={() => onPlay(id)}
+                            className="w-full flex items-center gap-2 rounded-xl border border-border bg-background/60 px-2 py-1.5 text-start hover:border-charcoal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                          >
+                            <KloverIcon name={gameIconName(id)} className="h-7 w-7 shrink-0" />
+                            <span className="flex-1 min-w-0 truncate text-sm font-semibold text-foreground">{gameTitle(id)}</span>
+                            {done && <Check className="h-3.5 w-3.5 text-foreground shrink-0" strokeWidth={3} aria-label={isAr ? "لعبتها" : "Played"} />}
+                            {open ? (
+                              <span className="shrink-0 rounded-full bg-klovers-yellow text-charcoal border-2 border-charcoal px-2.5 py-0.5 text-[11px] font-bold">
+                                {isAr ? "العب" : "Play"}
+                              </span>
+                            ) : (
+                              <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" aria-label={isAr ? "للأعضاء" : "Members only"} />
+                            )}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  <button
+                    type="button"
+                    onClick={seeAll}
+                    className="mt-3 self-start inline-flex items-center gap-1 text-sm font-bold text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground rounded"
+                  >
+                    {isAr ? `شوف الكل (${s.total})` : `See all (${s.total})`}
+                    <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* Cluby's note - his handwriting, closing the worlds. */}
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <img
+            src={`${ASSET}/cluby-traveller.webp`}
+            alt=""
+            aria-hidden="true"
+            width={230}
+            height={286}
+            loading="lazy"
+            decoding="async"
+            className="h-14 w-auto"
+          />
+          <p className="cluby-bubble cluby-note" lang={isAr ? "ar" : "en"}>
+            {isAr ? "كل لعبة بتقرّبك من كوريا" : "Every game brings you closer to Korea"}
+          </p>
         </div>
       </section>
 
-      {/* Cluby collection — announced, not live */}
+      {/* ── Cluby collection — announced, not live ────────────────────── */}
       <section>
         <div className="flex items-baseline justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold text-foreground">{isAr ? "مجموعة كلوبي" : "My Clubys"}</h2>
@@ -340,6 +443,9 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             : "Soon you'll collect a new Cluby outfit for every world you finish."}
         </p>
       </section>
+
+      {/* "See all" lands here: GamesPage renders the full grid right after the hub. */}
+      <div id="all-games" className="scroll-mt-24" aria-hidden="true" />
     </div>
   );
 };
