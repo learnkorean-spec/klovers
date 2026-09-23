@@ -369,17 +369,17 @@ const MARKETING_ROUTES = [
     // index.html. Arabic has no URL of its own yet, so it has no head here.
     //
     // 23 Sep 2026: two equal markets now, English and Arabic speakers, so the
-    // title no longer says "in Arabic" only. Title and description are
-    // CHARACTER-FOR-CHARACTER the ones src/pages/Index.tsx hands to useSEO
-    // (HOME_TITLE + " | Klovers", HOME_DESCRIPTION) - the review found the raw
-    // HTML and the rendered page disagreeing. Change both or neither.
+    // title no longer says "in Arabic" only. Later the same day the title went
+    // back to leading with the brand and the description to carrying كلوفرز
+    // in prose, because scripts/lib/brand-identity.test.mjs guards exactly
+    // that and the CRO pass had broken it.
     //
     // `body` gives crawlers that never run JavaScript the page's real text
     // (the review measured 76 characters of body text in the raw HTML).
     path: "/",
-    title: "Live Online Korean Classes — Small Groups, Real Teachers | Klovers",
+    title: "Klovers — Live Online Korean Classes in Small Groups",
     description:
-      "Live online Korean classes with a real teacher, small groups of up to 8, and a clear learning path. Book a free class with Klovers.",
+      "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups of up to 8. Free trial class, free placement test and gamified practice.",
     body: HOME_BODY_HTML,
   },
   {
