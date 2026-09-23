@@ -78,6 +78,13 @@ import {
  * height move together — a card wide enough for a desktop column would be
  * nearly a metre tall. It is capped at 26rem and centred instead, exactly as
  * the mockup is drawn.
+ *
+ * 2026-09-23 - THE STOPS START VISIBLE. They used to begin at opacity 0 and
+ * wait for an IntersectionObserver to fade them in. A fast scroll, a
+ * screenshot, or a browser that throttles observers caught the map as a bare
+ * road with nothing on it - the homepage review reported the illustration as
+ * "mostly empty". `visible` now starts true, so the map is complete on first
+ * paint; the observer stays only as a harmless no-op.
  */
 
 /**
@@ -124,7 +131,8 @@ const LearningRoadmap = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
   const [activeStep, setActiveStep] = useState(0);
-  const [visible, setVisible] = useState(false);
+  // Starts true on purpose - see the 2026-09-23 note above.
+  const [visible, setVisible] = useState(true);
   const mapRef = useRef<HTMLDivElement>(null);
   const wideRef = useRef<HTMLDivElement>(null);
 
