@@ -57,16 +57,16 @@ const WORLD_CLUBY: Record<WorldKey, string> = {
   conversation_cafe: "cluby-cafe",
 };
 
-/** Progress colour per world, as in the mockup: yellow, green, purple. */
+/** Progress is always Klovers green (#39FF14): green means progress. */
 const WORLD_BAR: Record<WorldKey, string> = {
-  hangul_village: "bg-klovers-yellow",
-  vocabulary_market: "bg-[#4CC38A]",
-  conversation_cafe: "bg-[#9B8CF2]",
+  hangul_village: "bg-klovers-green",
+  vocabulary_market: "bg-klovers-green",
+  conversation_cafe: "bg-klovers-green",
 };
 const WORLD_BADGE: Record<WorldKey, string> = {
   hangul_village: "bg-klovers-yellow text-charcoal",
-  vocabulary_market: "bg-[#4CC38A] text-white",
-  conversation_cafe: "bg-[#9B8CF2] text-white",
+  vocabulary_market: "bg-klovers-green text-charcoal",
+  conversation_cafe: "bg-charcoal text-klovers-yellow",
 };
 
 const PREVIEW_COUNT = 4;
@@ -249,7 +249,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                   aria-valuemax={100}
                   aria-label={isAr ? "التقدّم للّيج الجاي" : "Progress to next league"}
                 >
-                  <div className="h-full rounded-full bg-klovers-yellow" style={{ width: `${pct}%` }} />
+                  <div className="h-full rounded-full bg-klovers-green" style={{ width: `${pct}%` }} />
                 </div>
                 <p className="mt-1.5 text-[11px] text-charcoal/70">
                   {totalXp.toLocaleString()} XP
@@ -324,7 +324,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             </p>
             <div className="mt-2 flex gap-1">
               {(current?.world.gameIds ?? []).map((id) => (
-                <span key={id} className={cn("h-2 flex-1 rounded-full", played.has(id) ? "bg-klovers-yellow" : "bg-muted")} />
+                <span key={id} className={cn("h-2 flex-1 rounded-full", played.has(id) ? "bg-klovers-green" : "bg-muted")} />
               ))}
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
@@ -345,10 +345,10 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                 <span
                   className={cn(
                     "grid h-5 w-5 shrink-0 place-items-center rounded-full border-2",
-                    m.done ? "border-[#4CC38A] bg-[#4CC38A]" : "border-border",
+                    m.done ? "border-charcoal bg-klovers-green" : "border-border",
                   )}
                 >
-                  {m.done && <Check className="h-3 w-3 text-white" strokeWidth={3} aria-label={isAr ? "خلصت" : "Done"} />}
+                  {m.done && <Check className="h-3 w-3 text-charcoal" strokeWidth={3} aria-label={isAr ? "خلصت" : "Done"} />}
                 </span>
                 {m.label}
               </li>
@@ -434,7 +434,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                         />
                       )}
                       {state === "done" && (
-                        <span className="absolute top-0 end-0 grid h-6 w-6 place-items-center rounded-full border-2 border-charcoal bg-live-bright">
+                        <span className="absolute top-0 end-0 grid h-6 w-6 place-items-center rounded-full border-2 border-charcoal bg-klovers-green">
                           <Check className="h-3.5 w-3.5 text-charcoal" strokeWidth={3} />
                         </span>
                       )}
@@ -539,7 +539,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                           <span className="min-w-0 flex-1">
                             <span className="flex items-center gap-1 text-sm font-bold leading-tight text-foreground">
                               {entry ? t(entry.titleKey) : id}
-                              {done && <Check className="h-3.5 w-3.5 shrink-0 text-[#4CC38A]" strokeWidth={3} aria-label={isAr ? "لعبتها" : "Played"} />}
+                              {done && <Check className="h-4 w-4 shrink-0 rounded-full bg-klovers-green p-0.5 text-charcoal" strokeWidth={3} aria-label={isAr ? "لعبتها" : "Played"} />}
                             </span>
                             <span className="block truncate text-[11px] text-muted-foreground">{entry ? t(entry.descKey) : ""}</span>
                           </span>

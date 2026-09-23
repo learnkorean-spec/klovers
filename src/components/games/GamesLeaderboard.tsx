@@ -191,7 +191,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                           )}
                         </p>
                         <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-                          <div className="h-full rounded-full bg-klovers-yellow" style={{ width: `${Math.max(4, (p.value / leaderXp) * 100)}%` }} />
+                          <div className="h-full rounded-full bg-klovers-green" style={{ width: `${Math.max(4, (p.value / leaderXp) * 100)}%` }} />
                         </div>
                       </div>
                       <span className="shrink-0 text-sm font-extrabold tabular-nums text-foreground">
