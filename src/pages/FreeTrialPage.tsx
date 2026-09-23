@@ -9,7 +9,8 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
 import { supabase } from "@/integrations/supabase/client";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
-import { Gift, Users, Clock, Star, ArrowRight, Video, ClipboardList, Sparkles, CalendarDays, AlertCircle, MessageCircle } from "lucide-react";
+import { trustCopy } from "@/lib/trustFigures";
+import { Gift, Users, Clock, Star, ArrowRight, Video, ClipboardList, Sparkles, CalendarDays, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AvatarInitials from "@/components/AvatarInitials";
 
@@ -267,10 +268,12 @@ const FreeTrialPage = () => {
                   {t("freeTrial.heroSubtitleEmotional")}
                 </p>
 
-                {/* Star rating */}
+                {/* Star rating — the sourced Google figure from @/lib/trustFigures.
+                    It read "5.0 · Rated by 200+ students" (freeTrial.ratingText):
+                    200 students did not review anything; 7 people did, on Google. */}
                 <div className="flex items-center gap-2 justify-center md:justify-start mb-8">
                   <Stars />
-                  <span className="text-sm font-semibold text-foreground">{t("freeTrial.ratingText")}</span>
+                  <span className="text-sm font-semibold text-foreground">{trustCopy(language).rating}</span>
                 </div>
 
                 {/* CTA */}
@@ -315,7 +318,12 @@ const FreeTrialPage = () => {
                     </p>
                   )}
 
-                  {/* Live availability chips */}
+                  {/* Live availability chips. Both are computed, not copy: the
+                      spots figure is capacity minus booked_count summed over
+                      get_trial_availability, and the deadline is the earliest
+                      next_trial_date minus the 1-day booking cutoff the slot
+                      query enforces. That is why "Booking closes ..." stays
+                      while the static scarcity line further down went. */}
                   {(spotsRemaining !== null || daysToDeadline !== null) && (
                     <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start" aria-live="polite" aria-atomic="false">
                       {spotsRemaining !== null && spotsRemaining <= 15 && (
@@ -366,7 +374,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── TESTIMONIALS ──────────────────────────────────── */}
+        {/* ── TESTIMONIALS ────────────────────────────────────── */}
         <section className="py-16 bg-muted/40 border-b border-border">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl font-black text-foreground text-center mb-8">
@@ -392,7 +400,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── WHAT TO EXPECT — dark ─────────────────────────── */}
+        {/* ── WHAT TO EXPECT — dark ───────────────────────── */}
         <section className="py-20 bg-foreground">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-black text-background text-center mb-12">
@@ -414,7 +422,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── SCHEDULE — ticket style ───────────────────────── */}
+        {/* ── SCHEDULE — ticket style ─────────────────────── */}
         <section className="py-20 pb-28">
           <div className="container mx-auto px-4 max-w-xl">
 
@@ -484,11 +492,10 @@ const FreeTrialPage = () => {
               </div>
             )}
 
-            {/* Urgency */}
-            <div className="flex items-center justify-center gap-1.5 mb-5 text-xs font-semibold text-orange-600 dark:text-orange-400">
-              <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
-              {t("freeTrial.urgency")}
-            </div>
+            {/* 24 Sep 2026: the orange "Spots are limited — classes fill up
+                fast" line (freeTrial.urgency) that sat here is gone. It was
+                static copy shown whatever the slots held; the live "N spots
+                left" chip in the hero is the true version of it. */}
 
             <Button
               size="lg"
