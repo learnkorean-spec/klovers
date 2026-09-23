@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { BookOpen, MessageCircle, Zap, Star, Trophy, Flame, GraduationCap, ArrowRight, Clock, CalendarDays } from "lucide-react";
+import { Star, ArrowRight, Clock, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { COURSE_CARDS } from "@/constants/courseCards";
 import { LEVEL_KEYS } from "@/constants/levels";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import {
   JourneyScene,
   JourneySceneWide,
@@ -46,6 +47,10 @@ import {
  * 2026-09-23 (b) - THE SUMMIT SAYS "LEVEL 6 AND BEYOND". It said "TOPIK 6";
  * TOPIK is off the homepage by decision, and Level 6 is the site's own name
  * for the top of the ladder.
+ *
+ * 2026-09-24 - PAINTED ICON LIBRARY, not lucide line-icons: the seven stops
+ * now use the same KloverIcon set as the rest of the homepage (HowItWorks,
+ * MoreThanAClass), so the roadmap doesn't look like a different product.
  */
 
 /**
@@ -53,18 +58,18 @@ import {
  * because Tailwind's scanner only keeps what it sees. One colour getting
  * stronger, with Level 6 ringed in Charcoal as the end of the path.
  */
-const LEVEL_META: Record<string, { icon: React.ElementType; tile: string }> = {
-  hangul: { icon: BookOpen, tile: "bg-amber-100" },
-  l1: { icon: MessageCircle, tile: "bg-amber-200" },
-  l2: { icon: Zap, tile: "bg-amber-300" },
-  l3: { icon: Star, tile: "bg-amber-400" },
-  l4: { icon: Flame, tile: "bg-klovers-yellow" },
-  l5: { icon: Trophy, tile: "bg-klovers-yellow" },
-  l6: { icon: GraduationCap, tile: "bg-klovers-yellow ring-2 ring-charcoal" },
+const LEVEL_META: Record<string, { icon: KloverIconName; tile: string }> = {
+  hangul: { icon: "flashcard-ga", tile: "bg-amber-100" },
+  l1: { icon: "chat-annyeong", tile: "bg-amber-200" },
+  l2: { icon: "lightbulb-sprout", tile: "bg-amber-300" },
+  l3: { icon: "badge-blossom", tile: "bg-amber-400" },
+  l4: { icon: "growth-chart", tile: "bg-klovers-yellow" },
+  l5: { icon: "books-stack", tile: "bg-klovers-yellow" },
+  l6: { icon: "diploma-scroll", tile: "bg-klovers-yellow ring-2 ring-charcoal" },
 };
 
 const getMeta = (key: string) =>
-  LEVEL_META[key] ?? { icon: Star, tile: "bg-amber-100" };
+  LEVEL_META[key] ?? { icon: "badge-blossom" as KloverIconName, tile: "bg-amber-100" };
 
 /** The ladder only — the two special tracks are not stops on the road. */
 const STAGES = COURSE_CARDS.filter((c) => (LEVEL_KEYS as string[]).includes(c.key));
@@ -100,7 +105,6 @@ const LearningRoadmap = () => {
 
   const active = STAGES[activeStep] ?? STAGES[0];
   const activeMeta = getMeta(active.key);
-  const ActiveIcon = activeMeta.icon;
   const activeChips = chipsFrom(isAr ? active.eyebrow_ar : active.eyebrow_en);
 
   /** Scene units -> a physical percentage. `flip` mirrors x for the wide map in Arabic. */
@@ -127,7 +131,6 @@ const LearningRoadmap = () => {
         const stop = stops[i];
         if (!stop) return null;
         const meta = getMeta(stage.key);
-        const Icon = meta.icon;
         const isActive = i === activeStep;
         const isStart = i === 0;
         const label = isAr ? stage.title_ar : stage.title_en;
@@ -151,7 +154,7 @@ const LearningRoadmap = () => {
                 isActive ? "scale-110 shadow-md" : "shadow-sm"
               }`}
             >
-              <Icon className="h-5 w-5 text-charcoal sm:h-6 sm:w-6" aria-hidden="true" />
+              <KloverIcon name={meta.icon} className="h-7 w-7 sm:h-9 sm:w-9" />
             </span>
             <span
               className={`absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm backdrop-blur-[2px] transition-colors sm:text-xs ${
@@ -225,7 +228,7 @@ const LearningRoadmap = () => {
             <div className="rounded-3xl border border-border bg-card p-5 sm:p-6">
               <div className="flex items-start gap-3">
                 <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${activeMeta.tile}`}>
-                  <ActiveIcon className="h-5 w-5 text-charcoal" aria-hidden="true" />
+                  <KloverIcon name={activeMeta.icon} className="h-7 w-7" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-base font-bold leading-tight text-foreground sm:text-lg">
