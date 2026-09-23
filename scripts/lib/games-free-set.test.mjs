@@ -62,6 +62,11 @@ import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 const repoRoot = process.cwd();
 const gamesPageSrc = readFileSync(join(repoRoot, "src/pages/GamesPage.tsx"), "utf-8");
 const prerenderSrc = readFileSync(join(repoRoot, "scripts/prerender-meta.mjs"), "utf-8");
+// The /games hero (and its free-game count) moved into the Game Worlds hub in
+// PR #609. The count assertions below read both files, so the copy can live in
+// either without the guarantee going away.
+const hubSrc = readFileSync(join(repoRoot, "src/components/games/GameWorldsHub.tsx"), "utf-8");
+const gamesCopySrc = gamesPageSrc + "\n" + hubSrc;
 
 /** The `case "id":` labels in renderGame's switch — what can actually render. */
 function parseRenderableIds(src) {
@@ -256,8 +261,8 @@ describe("published counts agree with the arrays", () => {
   });
 
   it("interpolates games.length for the total and FREE_GAME_IDS.length for the free count", () => {
-    expect(gamesPageSrc).toMatch(/\$\{games\.length\}/);
-    expect(gamesPageSrc).toMatch(/\$\{FREE_GAME_IDS\.length\}/);
+    expect(gamesCopySrc).toMatch(/\$\{games\.length\}/);
+    expect(gamesCopySrc).toMatch(/\$\{FREE_GAME_IDS\.length\}/);
   });
 
   it("no longer uses the Arabic dual for the free-game count", () => {
@@ -265,7 +270,7 @@ describe("published counts agree with the arrays", () => {
     // swapping a numeral would have left it saying "two" in Arabic. For 3-10
     // Arabic takes the plural, "ألعاب".
     expect(gamesPageCopy).not.toContain("لعبتان");
-    expect(gamesPageSrc).toMatch(/\$\{FREE_GAME_IDS\.length\} ألعاب مجانية/);
+    expect(gamesCopySrc).toMatch(/\$\{FREE_GAME_IDS\.length\} ألعاب مجانية/);
   });
 
   it("the prerendered /games copy states the real free and total counts", () => {
