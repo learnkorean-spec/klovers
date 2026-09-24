@@ -6,8 +6,9 @@ import { track } from "@/lib/tracking";
  *
  * Events: dashboard_view, continue_learning_click, mission_completed,
  * journey_node_clicked, reward_progress_viewed, class_opened.
- * game_started / game_completed live on the games pages (not changed here);
- * cluby_unlocked has no backing data yet (see PR notes).
+ * cluby_unlocked (Cluby hatches — derived from real lesson progress, see
+ * eggStatus in dashboardProgress.ts).
+ * game_started / game_completed live on the games pages (not changed here).
  */
 export type DashboardEvent =
   | { name: "dashboard_view"; enrolled: boolean; level: string | null; xp_level: number }
@@ -15,7 +16,8 @@ export type DashboardEvent =
   | { name: "mission_completed"; mission: string }
   | { name: "journey_node_clicked"; node: string; state: string }
   | { name: "reward_progress_viewed"; milestone: string | null; badges: number }
-  | { name: "class_opened"; source: string };
+  | { name: "class_opened"; source: string }
+  | { name: "cluby_unlocked"; recent: boolean };
 
 export function dashEvent(e: DashboardEvent): void {
   const { name, ...params } = e;
