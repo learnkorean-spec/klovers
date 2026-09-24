@@ -80,6 +80,20 @@ import {
  * sure it reads clearly, not to replace it with any of these new images.
  * REVEAL_IMAGES below is ordered to match CLUES: calm egg → cracking egg →
  * Cluby hatching, so the popup visually escalates in step with the text.
+ *
+ * 24 Sep 2026 (mobile crop fix): on narrow/mobile viewports the section is
+ * nearly square (h-[380px] against a ~390px-wide screen), while the photo
+ * is a wide 16:9 shot. object-cover in that near-square box only crops the
+ * SIDES and keeps the photo's full height (moon/rooftops down to the stone
+ * base), squeezing the couple and the egg down to a small, hazy-looking
+ * strip in the middle — the tap hotspot ends up floating over indistinct
+ * background bokeh instead of a recognizable egg (Re: "looks weird here").
+ * Fix: scale the image up (scale-[1.7]) on mobile only (md:scale-100 resets
+ * it on desktop, where the crop already reads fine) so it crops tighter
+ * around the egg/couple instead of showing the whole frame shrunk down.
+ * The egg sits close to the image's vertical center, and scale transforms
+ * anchor from the center by default, so the tap hotspot's position
+ * (top-[57%]) didn't need to move.
  */
 
 const CLUES = [
@@ -149,7 +163,7 @@ const EggTeaser = () => {
           }
           loading="lazy"
           decoding="async"
-          className="h-full w-full object-cover"
+          className="h-full w-full scale-[1.7] object-cover object-center md:scale-100"
         />
         <div
           aria-hidden="true"
