@@ -6,6 +6,7 @@ import type { StreakState, XpStatus } from "@/lib/dashboardProgress";
 import { dashEvent } from "@/lib/dashboardEvents";
 import { useDashCopy, fmt, arCount } from "./copy";
 import { BrandIcon, ClubyNote, ProgressBar } from "./primitives";
+import { MyBooksCard } from "./MyBooksCard";
 
 export interface HeroProps {
   firstName: string;
@@ -26,6 +27,10 @@ export interface HeroProps {
 /**
  * A. Compact hero — where am I, how close is the next level, one action.
  * No other CTA lives here; export and account links moved to the bottom.
+ *
+ * The book gift card ("A gift for joining our course") renders directly under
+ * the hero, as the second thing on the page. It renders nothing for a student
+ * without a book.
  */
 export function DashboardHero(p: HeroProps) {
   const { c, lang } = useDashCopy();
@@ -43,6 +48,7 @@ export function DashboardHero(p: HeroProps) {
   const streakText = p.streak > 0 ? c("streakDays", { n: p.streak, days: arCount(p.streak, "days") }) : c("streakNone");
 
   return (
+    <>
     <section aria-labelledby="dash-hero-title" className="relative overflow-hidden rounded-3xl border border-foreground/10 bg-card px-5 py-5 sm:px-7 sm:py-6">
       {/* One quiet brand stroke: the yellow edge, not a yellow block. */}
       <span aria-hidden="true" className="absolute inset-y-0 start-0 w-1.5 bg-primary" />
@@ -114,5 +120,7 @@ export function DashboardHero(p: HeroProps) {
         )}
       </div>
     </section>
+    <MyBooksCard />
+    </>
   );
 }
