@@ -19,8 +19,14 @@ import {
  * dormant → small crack → glow — with the same egg images the student
  * dashboard uses (public/assets/story/egg-0/1/2.webp), but it never hatches
  * here: hatching happens on the student dashboard, from the student's real
- * learning (Re, 24 Sep 2026). Cluby stays excluded from this beat
- * (homepageNarrative slot 7, explicitlyExclude: ["cluby"]).
+ * learning (Re, 24 Sep 2026). Cluby is not drawn in this beat
+ * (homepageNarrative slot 7), though Re allows him on public pages
+ * before he hatches (25 Sep 2026).
+ *
+ * 25 Sep 2026 (Arabic voice): Re chose Modern Standard Arabic, neutral in
+ * gender. No verb here is aimed at "you" as male or female: buttons are
+ * verbal nouns (مصدر) and the text speaks about the egg and the account.
+ * Keep that rule when adding a line.
  * Palette: klovers-yellow / charcoal / ivory only.
  * Tap count is visual-only — a real per-student count lives in the
  * logged-in product.
@@ -47,15 +53,15 @@ import {
 const CLUES = [
   {
     en: "The shell is warm to the touch, though no one has ever seen it move.",
-    ar: "القشرة دافية لما تلمسها، مع إن حد ما شافهاش اتحركت خالص.",
+    ar: "القشرة دافئة عند لمسها، مع أن أحدًا لم يرها تتحرك قط.",
   },
   {
     en: "The mark on the shell matches a symbol carved above the oldest gate in the courtyard.",
-    ar: "العلامة على القشرة شبه رمز محفور فوق أقدم باب في الحديقة.",
+    ar: "العلامة على القشرة تطابق رمزًا محفورًا فوق أقدم بوابة في الفناء.",
   },
   {
     en: "Every learner who finds it swears the story changes slightly the second time.",
-    ar: "كل طالب لقاها بيقسم إن القصة بتتغيّر شوية لما يسمعها تاني.",
+    ar: "كل من وجدها من المتعلّمين يُقسم أن القصة تتغيّر قليلًا في المرة الثانية.",
   },
 ];
 
@@ -64,21 +70,21 @@ const CLUES = [
 const EGG_IMAGES = [
   {
     src: "/assets/story/egg-0.webp",
-    alt: { en: "A dormant ivory egg with a small clover mark", ar: "بيضة عاجية نايمة عليها علامة كلوفر صغيرة" },
+    alt: { en: "A dormant ivory egg with a small clover mark", ar: "بيضة عاجية ساكنة عليها علامة برسيم صغيرة" },
   },
   {
     src: "/assets/story/egg-1.webp",
-    alt: { en: "The egg with a small crack in its shell", ar: "البيضة وفي قشرتها شرخ صغير" },
+    alt: { en: "The egg with a small crack in its shell", ar: "البيضة وفي قشرتها شقّ صغير" },
   },
   {
     src: "/assets/story/egg-2.webp",
-    alt: { en: "The egg glowing softly from within", ar: "البيضة بتنوّر بهدوء من جواها" },
+    alt: { en: "The egg glowing softly from within", ar: "البيضة تتوهّج بهدوء من داخلها" },
   },
 ];
 
 const FEATURES = [
-  { icon: Search, en: "Reveal a clue", ar: "اكشفي عن دليل" },
-  { icon: UserPlus, en: "Hatch it in your free account", ar: "فقّسيها في حسابك المجاني" },
+  { icon: Search, en: "Reveal a clue", ar: "كشف دليل جديد" },
+  { icon: UserPlus, en: "Hatch it in your free account", ar: "الفقس داخل الحساب المجاني" },
 ];
 
 const SIGNUP_HREF = `/signup?redirect=${encodeURIComponent("/dashboard")}`;
@@ -110,14 +116,14 @@ const EggTeaser = () => {
       <button
         type="button"
         onClick={revealClue}
-        aria-label={isAr ? "دوسي على البيضة" : "Tap the egg"}
+        aria-label={isAr ? "لمس البيضة" : "Tap the egg"}
         className="group relative block aspect-[4/3] max-h-[620px] w-full cursor-pointer overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-klovers-yellow md:aspect-[16/9]"
       >
         <img
           src="/assets/story/egg-teaser.webp"
           alt={
             isAr
-              ? "طالبة وطالب بيبصوا على بيضة عاجية متوهجة فوق حجر في حديقة هانوك بالليل"
+              ? "طالبة وطالب ينظران إلى بيضة عاجية متوهجة فوق حجر في فناء هانوك ليلًا"
               : "Two learners looking at a glowing ivory egg resting on a stone in a hanok courtyard at night"
           }
           loading="lazy"
@@ -147,14 +153,14 @@ const EggTeaser = () => {
             className="mt-3 text-2xl font-extrabold leading-tight text-ivory md:text-3xl"
           >
             {isAr ? (
-              <>حاجة غريبة مستنية <span className="text-klovers-yellow">في حديقة الهانوك</span></>
+              <>شيء غامض ينتظر <span className="text-klovers-yellow">في فناء الهانوك</span></>
             ) : (
               <>Something Is Waiting <span className="text-klovers-yellow">in the Hanok Courtyard</span></>
             )}
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-ivory/70 md:text-base">
             {isAr
-              ? "اتنين من طلابنا لقوا حاجة عمرها ما حد فسّرها — بيضة عاجية عليها علامة غريبة. البيضة بتصحى هنا، بس بتفقس جوه حسابك وإنتي بتتعلّمي."
+              ? "وجد اثنان من طلابنا شيئًا لم يفسّره أحد بعد: بيضة عاجية عليها علامة غريبة. تستيقظ البيضة هنا، لكنها لا تفقس إلا داخل الحساب الشخصي، مع التقدّم في التعلّم."
               : "Two of our learners found something no one has explained yet — an ivory egg with a strange mark. It stirs here, but it only hatches inside your own account, as you learn."}
           </p>
 
@@ -165,27 +171,27 @@ const EggTeaser = () => {
               onClick={revealClue}
               className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-klovers-yellow px-7 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
             >
-              {isAr ? "دوسي على البيضة" : "Tap the Egg"}
+              {isAr ? "لمس البيضة" : "Tap the Egg"}
               <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </button>
 
             {tapCount > 0 && (
               <p className="text-xs font-semibold text-ivory/50">
                 {isAr
-                  ? `دُست عليها ${tapCount === 1 ? "مرة" : `${tapCount} مرات`}`
+                  ? `عدد مرات اللمس: ${tapCount}`
                   : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}
               </p>
             )}
 
             {user ? (
               <Link to="/dashboard" className="text-xs font-semibold text-ivory/70 underline-offset-4 hover:text-klovers-yellow hover:underline">
-                {isAr ? "شوفي بيضتك في لوحة التحكم" : "See your egg on your dashboard"}
+                {isAr ? "عرض البيضة في لوحة التحكم" : "See your egg on your dashboard"}
               </Link>
             ) : (
               <p className="text-xs text-ivory/60">
-                {isAr ? "لسه ما عندكيش حساب؟ " : "No account yet? "}
+                {isAr ? "لا يوجد حساب بعد؟ " : "No account yet? "}
                 <Link to={SIGNUP_HREF} className="font-bold text-klovers-yellow underline-offset-4 hover:underline">
-                  {isAr ? "اعملي حساب مجاني — بيضتك مستنياكي" : "Create one free — your egg is waiting"}
+                  {isAr ? "إنشاء حساب مجاني — البيضة في الانتظار" : "Create one free — your egg is waiting"}
                 </Link>
               </p>
             )}
@@ -231,7 +237,7 @@ const EggTeaser = () => {
           <div className="flex flex-col items-center gap-3 pt-1">
             <p className="text-xs font-semibold text-ivory/50">
               {isAr
-                ? `دُست عليها ${tapCount === 1 ? "مرة" : `${tapCount} مرات`}`
+                ? `عدد مرات اللمس: ${tapCount}`
                 : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}
             </p>
             <button
@@ -239,18 +245,18 @@ const EggTeaser = () => {
               onClick={revealClue}
               className="inline-flex min-h-10 items-center gap-2 rounded-full border-2 border-klovers-yellow px-6 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
             >
-              {isAr ? "دلوقتي دليل تاني" : "Reveal another clue"}
+              {isAr ? "كشف دليل آخر" : "Reveal another clue"}
               <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </button>
 
             {/* The honest next step: the egg only hatches in an account. */}
             <div className="mt-2 w-full border-t border-ivory/10 pt-4 text-center">
               <p className="text-sm font-semibold text-ivory">
-                {isAr ? "البيضة مش هتفقس هنا…" : "It won't hatch here…"}
+                {isAr ? "لن تفقس البيضة هنا…" : "It won't hatch here…"}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-ivory/60">
                 {isAr
-                  ? "بتفقس في حسابك، مع كل درس بتخلّصيه."
+                  ? "تفقس داخل الحساب، مع كل درس يكتمل."
                   : "It hatches in your account, with every lesson you finish."}
               </p>
 
@@ -260,7 +266,7 @@ const EggTeaser = () => {
                   onClick={() => setOpen(false)}
                   className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-klovers-yellow px-6 text-sm font-bold text-charcoal transition-opacity hover:opacity-90"
                 >
-                  {isAr ? "شوفي بيضتك في لوحة التحكم" : "See your egg on your dashboard"}
+                  {isAr ? "عرض البيضة في لوحة التحكم" : "See your egg on your dashboard"}
                   <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
                 </Link>
               ) : (
@@ -271,16 +277,16 @@ const EggTeaser = () => {
                     className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-klovers-yellow px-6 text-sm font-bold text-charcoal transition-opacity hover:opacity-90"
                   >
                     <UserPlus className="h-4 w-4" aria-hidden="true" />
-                    {isAr ? "اعملي حساب مجاني" : "Create a free account"}
+                    {isAr ? "إنشاء حساب مجاني" : "Create a free account"}
                   </Link>
                   <p className="mt-2 text-xs text-ivory/60">
-                    {isAr ? "عندك حساب؟ " : "Already have one? "}
+                    {isAr ? "يوجد حساب بالفعل؟ " : "Already have one? "}
                     <Link
                       to={LOGIN_HREF}
                       onClick={() => setOpen(false)}
                       className="font-bold text-klovers-yellow underline-offset-4 hover:underline"
                     >
-                      {isAr ? "سجّلي دخول" : "Sign in"}
+                      {isAr ? "تسجيل الدخول" : "Sign in"}
                     </Link>
                   </p>
                 </>
