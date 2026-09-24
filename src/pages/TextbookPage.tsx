@@ -4,7 +4,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookOpen, Trophy, Flame, Map, LayoutGrid, ArrowLeft, Sun, Clapperboard, Brain } from "lucide-react";
+import { BookOpen, Trophy, Flame, Map, LayoutGrid, ArrowLeft, Sun, Clapperboard, Brain, Check, AlertCircle } from "lucide-react";
+import { bookWorld } from "@/constants/bookWorlds";
 import { useGamification } from "@/hooks/useGamification";
 import { LeagueProgressBar, LessonProgressDots, XpBadge } from "@/components/GamificationUI";
 import { isBossChallenge, isCheckpointLesson } from "@/constants/gamification";
@@ -35,18 +36,19 @@ interface Lesson {
   book?: string;
 }
 
-const BOOK_CONFIG: Record<string, { titleEn: string; titleAr: string; emoji: string; icon: typeof BookOpen; accent: string; accentBg: string; accentText: string }> = {
-  "korean-1": { titleEn: "Korean Textbook", titleAr: "كتاب الكورية", emoji: "📘", icon: BookOpen, accent: "text-amber-700", accentBg: "bg-amber-100 border border-amber-200 ring-1 ring-black/10", accentText: "text-amber-700" },
-  "daily-routine": { titleEn: "Daily Routine Korean", titleAr: "كورية الروتين اليومي", emoji: "☀️", icon: Sun, accent: "text-orange-600", accentBg: "bg-orange-100 border border-orange-200", accentText: "text-orange-700" },
-  "kdrama": { titleEn: "K-Drama Korean", titleAr: "كورية الدراما", emoji: "🎬", icon: Clapperboard, accent: "text-rose-600", accentBg: "bg-rose-100 border border-rose-200", accentText: "text-rose-700" },
-  "grammar-mastery": { titleEn: "Grammar Mastery", titleAr: "إتقان القواعد", emoji: "🧠", icon: Brain, accent: "text-violet-600", accentBg: "bg-violet-100 border border-violet-200", accentText: "text-violet-700" },
-  "picture-vocab": { titleEn: "Picture Vocabulary", titleAr: "المفردات بالصور", emoji: "🖼️", icon: BookOpen, accent: "text-blue-600", accentBg: "bg-blue-100 border border-blue-200", accentText: "text-blue-700" },
+const BOOK_CONFIG: Record<string, { titleEn: string; titleAr: string; icon: typeof BookOpen; accent: string; accentBg: string; accentText: string }> = {
+  "korean-1": { titleEn: "Korean Textbook", titleAr: "كتاب الكورية", icon: BookOpen, accent: "text-foreground", accentBg: "bg-klovers-yellow border border-charcoal/10", accentText: "text-charcoal" },
+  "daily-routine": { titleEn: "Daily Routine Korean", titleAr: "كورية الروتين اليومي", icon: Sun, accent: "text-foreground", accentBg: "bg-klovers-yellow border border-charcoal/10", accentText: "text-charcoal" },
+  "kdrama": { titleEn: "K-Drama Korean", titleAr: "كورية الدراما", icon: Clapperboard, accent: "text-foreground", accentBg: "bg-klovers-yellow border border-charcoal/10", accentText: "text-charcoal" },
+  "grammar-mastery": { titleEn: "Grammar Mastery", titleAr: "إتقان القواعد", icon: Brain, accent: "text-foreground", accentBg: "bg-klovers-yellow border border-charcoal/10", accentText: "text-charcoal" },
+  "picture-vocab": { titleEn: "Picture Vocabulary", titleAr: "المفردات بالصور", icon: BookOpen, accent: "text-foreground", accentBg: "bg-klovers-yellow border border-charcoal/10", accentText: "text-charcoal" },
 };
 
 const TextbookPage = () => {
   const { bookId } = useParams<{ bookId: string }>();
   const book = bookId || "korean-1";
   const config = BOOK_CONFIG[book] || BOOK_CONFIG["korean-1"];
+  const world = bookWorld(book);
 
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +99,7 @@ const TextbookPage = () => {
       <main id="main-content" className="pt-24 pb-16">
         {/* Back to library */}
         <section className="container mx-auto px-4 max-w-4xl mb-4">
-          <Link to="/textbook" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-amber-700 transition-colors">
+          <Link to="/textbook" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
             {isAr ? "العودة للمكتبة" : "Back to Library"}
           </Link>
@@ -105,9 +107,27 @@ const TextbookPage = () => {
 
         {/* Hero */}
         <section className="text-center mb-8 px-4">
-          <div className={cn("inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6", config.accentBg, config.accentText)}>
+          {/* World mode: each book opens onto its world (see constants/bookWorlds.ts). */}
+          <div className="relative mx-auto mb-5 h-28 max-w-4xl overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card md:h-44">
+            <img
+              src={world.image}
+              alt={isAr ? world.altAr : world.altEn}
+              width={1600}
+              height={900}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent" />
+            <p className="absolute inset-x-0 bottom-0 p-3 text-sm text-white md:p-4">
+              <span className="font-extrabold text-klovers-yellow">{isAr ? world.worldAr : world.worldEn}</span>
+              {" · "}
+              {isAr ? world.sceneAr : world.sceneEn}
+            </p>
+          </div>
+          <div className={cn("inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-4", config.accentBg, config.accentText)}>
             <config.icon className="h-4 w-4" />
-            {config.emoji} {isAr ? config.titleAr : config.titleEn}
+            {isAr ? config.titleAr : config.titleEn}
           </div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4">
             {isAr ? config.titleAr : config.titleEn}
@@ -134,11 +154,12 @@ const TextbookPage = () => {
                 <div className="flex items-center gap-4">
                   <XpBadge xp={progress.totalXp} className="text-sm px-3 py-1" />
                   <div className="flex items-center gap-1.5">
-                    <Flame className={cn("h-5 w-5", progress.streak.current_streak > 0 ? "text-orange-500" : "text-muted-foreground")} />
+                    <Flame className={cn("h-5 w-5", progress.streak.current_streak > 0 ? "fill-klovers-yellow text-charcoal dark:text-klovers-yellow" : "text-muted-foreground")} />
                     <span className="text-sm font-bold text-foreground">{progress.streak.current_streak} {t("textbook.dayStreak")}</span>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {league.emoji} {league.name}
+                    {/* needs Klovers icon: league badge (was league.emoji) */}
+                    <Trophy className="me-1 inline h-4 w-4 align-[-3px]" aria-hidden="true" />{league.name}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -196,8 +217,8 @@ const TextbookPage = () => {
               ))}
             </div>
           ) : fetchError ? (
-            <div className="text-center py-16 rounded-2xl border border-destructive/20 bg-destructive/5">
-              <p className="text-2xl mb-3">😕</p>
+            <div className="text-center py-16 rounded-2xl border border-[#FF4FD8]/40 bg-[#FF4FD8]/5">
+              <AlertCircle className="mx-auto mb-3 h-8 w-8 text-wrong dark:text-[#FF4FD8]" aria-hidden="true" />
               <p className="font-semibold text-foreground mb-1">{isAr ? "تعذّر تحميل الدروس" : "Failed to load lessons"}</p>
               <p className="text-sm text-muted-foreground mb-4">{isAr ? "يرجى التحقق من اتصالك والمحاولة مرة أخرى." : "Please check your connection and try again."}</p>
               <Button variant="outline" onClick={() => window.location.reload()}>
@@ -256,12 +277,13 @@ const TextbookPage = () => {
                     to={`/textbook/${book}/${lesson.sort_order}`}
                     className={cn(
                       "group block rounded-xl border p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5",
-                      completed ? "border-amber-300 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/30 ring-1 ring-black/10" : "border-border bg-card hover:border-amber-300/50"
+                      completed ? "border-klovers-green bg-klovers-green/10 dark:bg-klovers-green/5" : "border-border bg-card hover:border-klovers-yellow"
                     )}
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-3xl">{lesson.emoji}</span>
-                      {completed && <span className="text-amber-600 text-lg">✓</span>}
+                      {/* needs Klovers icon: per-lesson icon (lesson.emoji from the database is no longer drawn) */}
+                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-muted"><config.icon className="h-6 w-6 text-foreground" aria-hidden="true" /></span>
+                      {completed && <span className="grid h-6 w-6 place-items-center rounded-full bg-klovers-green text-charcoal"><Check className="h-4 w-4" strokeWidth={3} aria-label={isAr ? "مكتمل" : "Completed"} /></span>}
                     </div>
                     <p className={cn("text-xs font-semibold uppercase tracking-wide mb-1", config.accent)}>
                       {boss ? t("textbook.boss") : checkpoint ? t("textbook.checkpoint") : `${t("textbook.mission")} ${lesson.sort_order}`}
