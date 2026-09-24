@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { Search, BookOpen, Gift, ChevronRight } from "lucide-react";
+import { Search, BookOpen, Gift, ChevronRight, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 /**
  * Homepage narrative slot 7 — "egg-teaser" (src/config/klovers-world.ts,
@@ -28,8 +35,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * The "Tap the Egg" button is intentionally OUTLINED, not filled yellow:
  * FinalCTA sits directly below with a solid yellow "Book Your Free Class"
  * button, and the palette rule is never two solid-yellow buttons in one
- * view. Clicking it reveals one rotating clue line and bumps a small,
- * purely client-side tap counter — no persistence, no account, no league.
+ * view.
  *
  * 24 Sep 2026 (STORY CONFLICT, resolved): Re initially asked for taps to
  * count toward "their league." This page has no auth context and renders
@@ -39,6 +45,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * for now. A real counter tied to an actual student league is a separate,
  * bigger feature that belongs in the logged-in product if she wants it
  * later — not a homepage teaser.
+ *
+ * 24 Sep 2026: Re asked for the tap to "open something / a new pop up"
+ * instead of the clue just appearing inline below the button. Kept it a
+ * pure UI change — the dialog still shows the same rotating client-side
+ * clue + tap count, no backend, no league, no account, same as before.
+ * Uses the repo's existing shadcn Dialog primitive (src/components/ui/dialog.tsx)
+ * restyled to the brand palette: bg-charcoal, border-klovers-yellow/30,
+ * text-ivory — no green, no clover icons, matching the rest of this section.
  */
 
 const CLUES = [
@@ -65,12 +79,15 @@ const FEATURES = [
 const EggTeaser = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
-  const [clueIndex, setClueIndex] = useState<number | null>(null);
+  const [clueIndex, setClueIndex] = useState(0);
   const [tapCount, setTapCount] = useState(0);
+  const [open, setOpen] = useState(false);
 
   const revealClue = () => {
-    setTapCount((n) => n + 1);
-    setClueIndex((i) => (i === null ? 0 : (i + 1) % CLUES.length));
+    const next = tapCount + 1;
+    setTapCount(next);
+    setClueIndex((next - 1) % CLUES.length);
+    setOpen(true);
   };
 
   return (
@@ -124,7 +141,6 @@ const EggTeaser = () => {
             <button
               type="button"
               onClick={revealClue}
-              aria-describedby={tapCount > 0 ? "egg-tap-count" : undefined}
               className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-klovers-yellow px-7 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
             >
               {isAr ? "دوسي على البيضة" : "Tap the Egg"}
@@ -132,19 +148,13 @@ const EggTeaser = () => {
             </button>
 
             {tapCount > 0 && (
-              <p id="egg-tap-count" className="text-xs font-semibold text-ivory/50" aria-live="polite">
+              <p className="text-xs font-semibold text-ivory/50">
                 {isAr
                   ? `دُست عليها ${tapCount === 1 ? "مرة" : `${tapCount} مرات`}`
                   : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}
               </p>
             )}
           </div>
-
-          {clueIndex !== null && (
-            <p className="mx-auto mt-4 max-w-md text-sm italic leading-relaxed text-ivory/80">
-              {isAr ? CLUES[clueIndex].ar : CLUES[clueIndex].en}
-            </p>
-          )}
 
           {/* Feature row */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
@@ -157,6 +167,41 @@ const EggTeaser = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          className="max-w-sm border-2 border-klovers-yellow/30 bg-charcoal text-ivory sm:rounded-2xl"
+          dir={isAr ? "rtl" : "ltr"}
+        >
+          <DialogHeader>
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border-2 border-klovers-yellow">
+              <Sparkles className="h-5 w-5 text-klovers-yellow" aria-hidden="true" />
+            </div>
+            <DialogTitle className="text-center text-lg font-extrabold text-ivory">
+              {isAr ? "فصل مخفي" : "A hidden chapter"}
+            </DialogTitle>
+            <DialogDescription className="text-center text-sm italic leading-relaxed text-ivory/80">
+              {isAr ? CLUES[clueIndex].ar : CLUES[clueIndex].en}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col items-center gap-3 pt-1">
+            <p className="text-xs font-semibold text-ivory/50">
+              {isAr
+                ? `دُست عليها ${tapCount === 1 ? "مرة" : `${tapCount} مرات`}`
+                : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}
+            </p>
+            <button
+              type="button"
+              onClick={revealClue}
+              className="inline-flex min-h-10 items-center gap-2 rounded-full border-2 border-klovers-yellow px-6 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
+            >
+              {isAr ? "دلوقتي دليل تاني" : "Reveal another clue"}
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
