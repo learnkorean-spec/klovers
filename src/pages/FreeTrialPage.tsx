@@ -227,11 +227,9 @@ const FreeTrialPage = () => {
   const handleBookCta = () => {
     logLeadEvent({ source_type: "free_trial", cta_label: "free_trial_landing_primary" });
     if (loading) return;
-    if (user) {
-      navigate("/trial-booking");
-    } else {
-      navigate(`/signup?redirect=${encodeURIComponent("/trial-booking")}`);
-    }
+    // Everyone goes straight to the booking page (24 Sep 2026). A guest books
+    // there with name + email; no account or password first.
+    navigate("/trial-booking");
   };
 
   return (
