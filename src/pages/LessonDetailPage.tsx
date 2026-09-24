@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine, Gamepad2, RotateCcw, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Languages, MessageSquare, Lightbulb, FileText, CheckCircle2, Zap, Eye, EyeOff, Volume2, PenLine, Gamepad2, RotateCcw, AlertTriangle, Star, Check, X } from "lucide-react";
+import { bookWorld } from "@/constants/bookWorlds";
 import KoreanWritingTest from "@/components/KoreanWritingTest";
 import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
@@ -178,7 +179,7 @@ const LessonDetailPage = () => {
     }
 
     toast({
-      title: `+${xpMap[section]} XP earned! ⚡`,
+      title: `+${xpMap[section]} XP earned!`,
       description: getRandomMotivation(),
     });
   }, [lesson, userId, progress, markSectionDone, awardXp, awardBadge, exercises, correctCount, toast, t]);
@@ -241,7 +242,7 @@ const LessonDetailPage = () => {
         <Header />
         <main id="main-content" className="pt-24 pb-16 container mx-auto px-4 max-w-3xl text-center">
           <p className="text-muted-foreground text-lg">{t("textbook.lessonNotFound")}</p>
-          <Link to={`/textbook/${bookSlug}`} className="text-amber-700 underline mt-4 inline-block">{t("textbook.backToLessons")}</Link>
+          <Link to={`/textbook/${bookSlug}`} className="text-foreground underline decoration-klovers-yellow decoration-2 mt-4 inline-block">{t("textbook.backToLessons")}</Link>
         </main>
         <Footer />
       </div>
@@ -268,7 +269,7 @@ const LessonDetailPage = () => {
     if (!userId) {
       return (
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-amber-700 underline">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
+          <Link to={`/login?redirect=/textbook/${bookSlug}/${lessonNum}`} className="text-foreground underline decoration-klovers-yellow decoration-2">{t("textbook.signIn")}</Link> {t("textbook.signInToTrack")}
         </p>
       );
     }
@@ -319,7 +320,7 @@ const LessonDetailPage = () => {
             <ChevronLeft className="h-4 w-4" /> {t("textbook.allMissions")}
           </Link>
           <span className="text-muted-foreground">·</span>
-          <span className="text-sm text-muted-foreground">{world.emoji} {isAr ? world.nameAr : world.name}</span>
+          <span className="text-sm text-muted-foreground">{isAr ? world.nameAr : world.name}</span>
         </div>
 
         {/* Mission Start Banner */}
@@ -333,7 +334,22 @@ const LessonDetailPage = () => {
 
         {/* Lesson header */}
         <div className="flex items-start gap-4 mb-4">
-          <span className="text-5xl">{lesson.emoji}</span>
+          {/* World mode: the lesson carries its book's world (constants/bookWorlds.ts); replaces lesson.emoji. */}
+          {(() => {
+            const bw = bookWorld(bookSlug);
+            return (
+              <img
+                src={bw.image}
+                alt={isAr ? bw.altAr : bw.altEn}
+                title={isAr ? `${bw.worldAr} · ${bw.sceneAr}` : `${bw.worldEn} · ${bw.sceneEn}`}
+                width={1600}
+                height={900}
+                loading="lazy"
+                decoding="async"
+                className="mt-1 h-14 w-20 shrink-0 rounded-xl border border-border object-cover"
+              />
+            );
+          })()}
           <div className="flex-1">
             <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">{t("textbook.missionLabel")} {lesson.sort_order}</p>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">{isAr && lesson.title_ar ? lesson.title_ar : lesson.title_en}</h1>
@@ -347,7 +363,7 @@ const LessonDetailPage = () => {
             <div className="flex items-center justify-between gap-3 mb-3">
               <div className="flex items-center gap-3">
                 <XpBadge xp={progress.totalXp} />
-                <span className="text-xs text-muted-foreground">{league.emoji} {league.name}</span>
+                <span className="text-xs text-muted-foreground">{league.name}</span>
               </div>
               {lp && <LessonProgressDots progress={lp} />}
             </div>
@@ -355,14 +371,14 @@ const LessonDetailPage = () => {
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{sectionsDone}/6</span>
               <Progress value={sectionProgress} className="h-2 flex-1" />
-              {sectionProgress === 100 && <span className="text-sm">⭐</span>}
+              {sectionProgress === 100 && <Star className="h-4 w-4 fill-klovers-yellow text-charcoal dark:text-klovers-yellow" aria-hidden="true" />}
             </div>
           </div>
         )}
 
         {lp?.chapter_completed && (
-          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 mb-6 text-center ring-1 ring-black/10">
-            <span className="text-2xl">⭐</span>
+          <div className="rounded-xl border-2 border-klovers-green bg-klovers-green/10 dark:bg-klovers-green/5 p-4 mb-6 text-center">
+            <span className="mx-auto mb-1 grid h-9 w-9 place-items-center rounded-full bg-klovers-green text-charcoal"><Star className="h-5 w-5" aria-hidden="true" /></span>
             <p className="font-bold text-foreground">{t("textbook.missionComplete")}</p>
             <p className="text-sm text-muted-foreground">{getRandomMotivation()}</p>
           </div>
@@ -385,27 +401,27 @@ const LessonDetailPage = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-6 mb-8">
-            <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
+            <TabsTrigger value="vocab" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-klovers-yellow data-[state=active]:text-charcoal data-[state=active]:ring-1 data-[state=active]:ring-charcoal/15">
               <BookOpen className="h-4 w-4 hidden sm:block" /> {t("textbook.vocab")}
               {lp?.vocab_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="grammar" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
+            <TabsTrigger value="grammar" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-klovers-yellow data-[state=active]:text-charcoal data-[state=active]:ring-1 data-[state=active]:ring-charcoal/15">
               <Languages className="h-4 w-4 hidden sm:block" /> {t("textbook.grammar")}
               {lp?.grammar_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="dialogue" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
+            <TabsTrigger value="dialogue" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-klovers-yellow data-[state=active]:text-charcoal data-[state=active]:ring-1 data-[state=active]:ring-charcoal/15">
               <MessageSquare className="h-4 w-4 hidden sm:block" /> {t("textbook.dialogue")}
               {lp?.dialogue_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
+            <TabsTrigger value="exercises" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-klovers-yellow data-[state=active]:text-charcoal data-[state=active]:ring-1 data-[state=active]:ring-charcoal/15">
               <Lightbulb className="h-4 w-4 hidden sm:block" /> {t("textbook.exercises")}
               {lp?.exercises_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="reading" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
+            <TabsTrigger value="reading" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-klovers-yellow data-[state=active]:text-charcoal data-[state=active]:ring-1 data-[state=active]:ring-charcoal/15">
               <FileText className="h-4 w-4 hidden sm:block" /> {t("textbook.reading")}
               {lp?.reading_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
-            <TabsTrigger value="writing" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-black/15">
+            <TabsTrigger value="writing" className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-klovers-yellow data-[state=active]:text-charcoal data-[state=active]:ring-1 data-[state=active]:ring-charcoal/15">
               <PenLine className="h-4 w-4 hidden sm:block" /> {isAr ? "كتابة" : "Writing"}
               {(lp as any)?.writing_done && <CheckCircle2 className="h-3 w-3" />}
             </TabsTrigger>
@@ -416,7 +432,7 @@ const LessonDetailPage = () => {
             {/* Header row */}
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-amber-600" /> {t("textbook.vocabulary")}
+                <BookOpen className="h-5 w-5 text-foreground" /> {t("textbook.vocabulary")}
                 <span className="text-xs text-muted-foreground">+{XP_VALUES.vocab} XP</span>
               </h2>
               <div className="flex items-center gap-2">
@@ -483,10 +499,10 @@ const LessonDetailPage = () => {
                             style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                             className={cn(
                               "absolute inset-0 rounded-xl border flex flex-col items-center justify-center gap-2 p-4 overflow-hidden",
-                              isStudied ? "border-amber-300 bg-amber-50" : "border-border bg-card hover:border-amber-200 hover:shadow-md"
+                              isStudied ? "border-klovers-green bg-ivory dark:bg-card" : "border-border bg-card hover:border-klovers-yellow hover:shadow-md"
                             )}
                           >
-                            {isStudied && <span className="absolute top-2 right-2 text-amber-600 text-xs z-10">✓</span>}
+                            {isStudied && <span className="absolute top-2 right-2 z-10 grid h-5 w-5 place-items-center rounded-full bg-klovers-green text-charcoal"><Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true" /></span>}
                             {/* Image */}
                             {v.image_url && (
                               <img
@@ -510,9 +526,9 @@ const LessonDetailPage = () => {
                               title="Hear pronunciation"
                             >
                               <Volume2 className="h-3.5 w-3.5" />
-                              {isAr ? "استمع" : "Hear"}
+                              {isAr ? "استماع" : "Hear"}
                             </Button>
-                            <p className="text-xs text-muted-foreground mt-0.5">{isAr ? "اضغط للكشف" : "Tap to reveal"}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{isAr ? "الضغط للكشف" : "Tap to reveal"}</p>
                           </div>
                           {/* Back — Meaning */}
                           <div
@@ -521,11 +537,11 @@ const LessonDetailPage = () => {
                               WebkitBackfaceVisibility: 'hidden',
                               transform: 'rotateY(180deg)',
                             }}
-                            className="absolute inset-0 rounded-xl border border-amber-300 bg-amber-50 flex flex-col items-center justify-center gap-2 p-4 ring-1 ring-black/10"
+                            className="absolute inset-0 rounded-xl border-2 border-klovers-yellow bg-ivory dark:bg-card flex flex-col items-center justify-center gap-2 p-4"
                           >
                             <p className="text-lg font-bold text-foreground text-center">{v.meaning}</p>
                             <p className="text-sm italic text-muted-foreground">{v.romanization}</p>
-                            <p className="text-sm text-amber-700 font-medium mt-1 text-center">{v.korean}</p>
+                            <p className="text-sm text-foreground font-medium mt-1 text-center">{v.korean}</p>
                           </div>
                         </div>
                       </div>
@@ -536,18 +552,18 @@ const LessonDetailPage = () => {
                 {/* Practice with Games */}
                 <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
                   <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2 text-sm">
-                    <Gamepad2 className="h-4 w-4 text-amber-600" />
-                    {isAr ? "تدرب مع الألعاب" : "Practice with Games"}
+                    <Gamepad2 className="h-4 w-4 text-foreground" />
+                    {isAr ? "التدرّب بالألعاب" : "Practice with Games"}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs">
-                      <Link to="/games">🃏 {isAr ? "مطابقة" : "Memory Match"}</Link>
+                      <Link to="/games">{isAr ? "مطابقة" : "Memory Match"}</Link>
                     </Button>
                     <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs">
-                      <Link to="/games">🔤 {isAr ? "ترتيب الكلمات" : "Word Scramble"}</Link>
+                      <Link to="/games">{isAr ? "ترتيب الكلمات" : "Word Scramble"}</Link>
                     </Button>
                     <Button size="sm" variant="outline" asChild className="gap-1.5 text-xs">
-                      <Link to="/games">⚡ {isAr ? "كل الألعاب" : "All Games"}</Link>
+                      <Link to="/games">{isAr ? "كل الألعاب" : "All Games"}</Link>
                     </Button>
                   </div>
                 </div>
@@ -562,7 +578,7 @@ const LessonDetailPage = () => {
           {/* GRAMMAR */}
           <TabsContent value="grammar">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <Languages className="h-5 w-5 text-amber-600" /> {t("textbook.grammar")}
+              <Languages className="h-5 w-5 text-foreground" /> {t("textbook.grammar")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.grammar} XP</span>
             </h2>
             {grammar.length === 0 ? (
@@ -573,17 +589,17 @@ const LessonDetailPage = () => {
                   {grammar.map((g, gi) => (
                     <div key={g.id} className="rounded-xl border border-border bg-card p-5">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-500 text-white font-bold shadow-sm border border-black/15">{gi + 1}</span>
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-klovers-yellow text-charcoal font-bold shadow-sm border border-charcoal/15">{gi + 1}</span>
                         <h3 className="text-lg font-bold text-foreground">{g.title}</h3>
                       </div>
                       {g.structure && (
-                        <p className="text-sm font-semibold text-foreground bg-amber-100 inline-block px-3 py-1.5 rounded-lg mb-3 border border-black/10">{g.structure}</p>
+                        <p className="text-sm font-semibold text-foreground bg-ivory dark:bg-muted inline-block px-3 py-1.5 rounded-lg mb-3 border border-klovers-yellow">{g.structure}</p>
                       )}
                       <p className="text-sm text-muted-foreground mb-4">{g.explanation}</p>
                       {g.examples?.length > 0 && (
                         <div className="space-y-2 bg-muted/30 rounded-lg p-3">
                           {g.examples.map((ex, i) => (
-                            <div key={i} className="border-l-2 border-amber-300 pl-3">
+                            <div key={i} className="border-l-2 border-klovers-yellow pl-3">
                               <p className="text-sm font-medium text-foreground">{ex.korean}</p>
                               <p className="text-xs text-muted-foreground">{ex.english}</p>
                             </div>
@@ -601,7 +617,7 @@ const LessonDetailPage = () => {
           {/* DIALOGUE - Enhanced chat-style */}
           <TabsContent value="dialogue">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-amber-600" /> {t("textbook.dialogue")}
+              <MessageSquare className="h-5 w-5 text-foreground" /> {t("textbook.dialogue")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.dialogue} XP</span>
             </h2>
             {dialogue.length === 0 ? (
@@ -620,7 +636,7 @@ const LessonDetailPage = () => {
                           "max-w-[80%] rounded-2xl p-4",
                           isEven
                             ? "rounded-tl-sm bg-card border border-border"
-                            : "rounded-tr-sm bg-amber-100 border border-amber-200 ring-1 ring-black/10"
+                            : "rounded-tr-sm bg-ivory dark:bg-muted border border-klovers-yellow"
                         )}>
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <p className="text-xs font-bold text-foreground uppercase">{d.speaker}</p>
@@ -652,17 +668,17 @@ const LessonDetailPage = () => {
           <TabsContent value="exercises">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-amber-600" /> {t("textbook.exercises")}
+                <Lightbulb className="h-5 w-5 text-foreground" /> {t("textbook.exercises")}
                 <span className="text-xs text-muted-foreground">+{XP_VALUES.exercise} XP</span>
               </h2>
               {allAnswered && (
                 <div className={cn(
                   "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold border border-black/10",
-                  quizScore >= 80 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                    : quizScore >= 50 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                  quizScore >= 80 ? "bg-klovers-green text-charcoal"
+                    : quizScore >= 50 ? "bg-klovers-yellow text-charcoal"
+                    : "border border-charcoal/15 bg-ivory text-charcoal dark:bg-muted dark:text-foreground"
                 )}>
-                  {quizScore}% {quizScore >= 80 ? "🎉" : quizScore >= 50 ? "👍" : "📚"}
+                  {quizScore}%
                 </div>
               )}
             </div>
@@ -682,8 +698,8 @@ const LessonDetailPage = () => {
                       "rounded-xl border bg-card p-5 transition-all",
                       showResults[ex.id]
                         ? selectedAnswers[ex.id] === ex.correct_index
-                          ? "border-green-500/40"
-                          : "border-destructive/40"
+                          ? "border-klovers-green"
+                          : "border-[#FF4FD8]/60"
                         : "border-border"
                     )}>
                       <p className="font-medium text-foreground mb-3">{idx + 1}. {ex.question}</p>
@@ -699,9 +715,9 @@ const LessonDetailPage = () => {
                               disabled={revealed}
                               className={cn(
                                 "text-left px-4 py-3 rounded-lg border text-sm transition-all",
-                                revealed && isCorrect && "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400 font-medium",
-                                revealed && selected && !isCorrect && "border-destructive bg-destructive/10 text-destructive",
-                                !revealed && "border-border hover:border-amber-300 hover:bg-amber-50 text-foreground",
+                                revealed && isCorrect && "border-klovers-green bg-klovers-green/15 text-foreground font-medium",
+                                revealed && selected && !isCorrect && "border-[#FF4FD8] bg-[#FF4FD8]/10 text-foreground",
+                                !revealed && "border-border hover:border-klovers-yellow hover:bg-klovers-yellow/10 text-foreground",
                                 revealed && !selected && !isCorrect && "opacity-40"
                               )}
                             >
@@ -719,10 +735,12 @@ const LessonDetailPage = () => {
                         <div className={cn(
                           "mt-3 p-3 rounded-lg text-sm",
                           selectedAnswers[ex.id] === ex.correct_index
-                            ? "bg-green-500/5 text-green-700 dark:text-green-400"
-                            : "bg-destructive/5 text-destructive"
+                            ? "bg-klovers-green/10 text-foreground"
+                            : "bg-[#FF4FD8]/10 text-foreground"
                         )}>
-                          {selectedAnswers[ex.id] === ex.correct_index ? "✅ " : "❌ "}
+                          {selectedAnswers[ex.id] === ex.correct_index
+                            ? <Check className="me-1.5 inline h-4 w-4 rounded-full bg-klovers-green p-0.5 align-[-3px] text-charcoal" strokeWidth={3} aria-hidden="true" />
+                            : <X className="me-1.5 inline h-4 w-4 rounded-full bg-[#FF4FD8] p-0.5 align-[-3px] text-charcoal" strokeWidth={3} aria-hidden="true" />}
                           {ex.explanation}
                         </div>
                       )}
@@ -736,8 +754,8 @@ const LessonDetailPage = () => {
                     <p className="text-3xl font-bold text-foreground mb-1">{correctCount}/{quizTotal}</p>
                     <p className="text-sm text-muted-foreground mb-3">
                       {quizScore >= 80 ? (isAr ? "ممتاز! أداء رائع!" : "Excellent! Great job!") 
-                        : quizScore >= 50 ? (isAr ? "جيد! حاول مراجعة الأخطاء" : "Good! Review your mistakes") 
-                        : (isAr ? "حاول مرة أخرى بعد المراجعة" : "Review and try again")}
+                        : quizScore >= 50 ? (isAr ? "جيد! مراجعة الأخطاء تثبّت الدرس" : "Good! Review your mistakes") 
+                        : (isAr ? "مراجعة الدرس، ثم محاولة جديدة" : "Review and try again")}
                     </p>
                     <Button
                       variant="ghost"
@@ -748,7 +766,7 @@ const LessonDetailPage = () => {
                         setCorrectCount(0);
                       }}
                     >
-                      {isAr ? "أعد المحاولة" : "Retry Quiz"} 🔄
+                      <RotateCcw className="me-1 h-4 w-4" aria-hidden="true" />{isAr ? "إعادة المحاولة" : "Retry Quiz"}
                     </Button>
                   </div>
                 )}
@@ -761,7 +779,7 @@ const LessonDetailPage = () => {
           {/* READING */}
           <TabsContent value="reading">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-amber-600" /> {t("textbook.reading")}
+              <FileText className="h-5 w-5 text-foreground" /> {t("textbook.reading")}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.reading} XP</span>
             </h2>
             {reading.length === 0 ? (
@@ -785,12 +803,12 @@ const LessonDetailPage = () => {
           {/* WRITING - Korean Typing Test */}
           <TabsContent value="writing">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <PenLine className="h-5 w-5 text-amber-600" /> {isAr ? "تمرين الكتابة" : "Writing Practice"}
+              <PenLine className="h-5 w-5 text-foreground" /> {isAr ? "تمرين الكتابة" : "Writing Practice"}
               <span className="text-xs text-muted-foreground ml-auto">+{XP_VALUES.writing} XP</span>
             </h2>
             <p className="text-sm text-muted-foreground mb-6">
               {isAr
-                ? "اختبر مهاراتك في الكتابة بالكورية! اكتب الكلمات والجمل باستخدام لوحة المفاتيح الكورية."
+                ? "اختبار مهارات الكتابة بالكورية: كتابة الكلمات والجمل باستخدام لوحة المفاتيح الكورية."
                 : "Test your Korean typing skills! Type words and sentences using a Korean keyboard."}
             </p>
             <KoreanWritingTest
@@ -810,19 +828,19 @@ const LessonDetailPage = () => {
         {/* Games XP Banner */}
         <Link
           to="/games"
-          className="group flex items-center gap-4 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 p-4 mt-10 transition-all ring-1 ring-black/10"
+          className="group flex items-center gap-4 rounded-xl border-2 border-klovers-yellow bg-ivory hover:bg-klovers-yellow/20 dark:bg-card dark:hover:bg-klovers-yellow/10 p-4 mt-10 transition-all"
         >
-          <span className="text-3xl">🎮</span>
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-klovers-yellow text-charcoal"><Gamepad2 className="h-6 w-6" aria-hidden="true" /></span>
           <div className="flex-1">
             <p className="font-bold text-foreground">
-              {isAr ? "اكسب المزيد من النقاط!" : "Earn More XP!"}
+              {isAr ? "مزيد من النقاط" : "Earn More XP!"}
             </p>
             <p className="text-sm text-muted-foreground">
-              {isAr ? "العب ألعاب المفردات والهانغول لتعزيز تعلمك" : "Play vocab & Hangul games to boost your learning"}
+              {isAr ? "ألعاب المفردات والهانغول تعزّز التعلّم" : "Play vocab & Hangul games to boost your learning"}
             </p>
           </div>
-          <span className="text-amber-700 font-semibold text-sm group-hover:underline">
-            {isAr ? "العب الآن" : "Play Now →"}
+          <span className="text-foreground font-semibold text-sm group-hover:underline">
+            {isAr ? "اللعب الآن" : "Play Now →"}
           </span>
         </Link>
 
