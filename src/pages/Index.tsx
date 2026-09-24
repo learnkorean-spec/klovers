@@ -210,18 +210,34 @@ const Index = () => {
         {/* Returning students promotional banner (signed-in returning students only) */}
         <ReturningStudentBanner />
 
+        {/* Desire — the teacher, verified facts only */}
+        <div id="meet-teacher" style={{ minHeight: 400 }}>
+          <Suspense fallback={<SectionFallback />}>
+            <MeetTeacher />
+          </Suspense>
+        </div>
         {/* Interest — how the classes work, with the real starting price */}
         <div id="how-it-works" style={{ minHeight: 480 }}>
           <Suspense fallback={<SectionFallback />}>
             <HowItWorks />
           </Suspense>
         </div>
+        {/* Desire — show the clear path forward */}
+        <Suspense fallback={<SectionFallback />}>
+          <LearningRoadmap />
+        </Suspense>
         {/* Action — low-friction free placement test */}
         <div id="placement-cta" style={{ minHeight: 400 }}>
           <Suspense fallback={<SectionFallback />}>
             <PlacementTestCTA />
           </Suspense>
         </div>
+        {/* Why Klovers — the ecosystem, one compact section */}
+        <Suspense fallback={<SectionFallback />}>
+          <MoreThanAClass />
+        </Suspense>
+        {/* Desire — reinforces motivation after seeing proof */}
+        <WhyLearnKorean />
         {/* Desire — real reviews, in the reader's language */}
         <div id="testimonials" style={{ minHeight: 400 }}>
           <Suspense fallback={<SectionFallback />}>
@@ -230,22 +246,6 @@ const Index = () => {
         </div>
         {/* The community band — 2,000+ on social media (see CommunityBand.tsx). */}
         <CommunityBand />
-        {/* Desire — reinforces motivation after seeing proof */}
-        <WhyLearnKorean />
-        {/* Desire — the teacher, verified facts only */}
-        <div id="meet-teacher" style={{ minHeight: 400 }}>
-          <Suspense fallback={<SectionFallback />}>
-            <MeetTeacher />
-          </Suspense>
-        </div>
-        {/* Desire — show the clear path forward */}
-        <Suspense fallback={<SectionFallback />}>
-          <LearningRoadmap />
-        </Suspense>
-        {/* Why Klovers — the ecosystem, one compact section */}
-        <Suspense fallback={<SectionFallback />}>
-          <MoreThanAClass />
-        </Suspense>
         {/* Objections — the four questions asked before a first booking */}
         <Suspense fallback={<SectionFallback />}>
           <HomeFAQ />
