@@ -8,7 +8,9 @@ import fs from "node:fs";
 const P = "scripts/qa-patch/patches.json";
 const patches = JSON.parse(fs.readFileSync(P, "utf8"));
 const O = "scripts/qa-patch/overrides.json";
-const overrides = fs.existsSync(O) ? JSON.parse(fs.readFileSync(O, "utf8")).counts || {} : {};
+const ov = fs.existsSync(O) ? JSON.parse(fs.readFileSync(O, "utf8")) : {};
+const overrides = ov.counts || {};
+const skipFiles = new Set(ov.skipFiles || []);
 const files = new Map();
 const errors = [];
 const done = [];
@@ -22,6 +24,10 @@ const read = (f) => {
 };
 
 patches.forEach((p, i) => {
+  if (skipFiles.has(p.file)) {
+    done.push(`#${i} ${p.file} (skipped: file taken from main)`);
+    return;
+  }
   const src = read(p.file);
   if (src === null) {
     errors.push(`#${i} ${p.file}: file not found`);
