@@ -25,6 +25,19 @@ Grep for the symbol name, the UI string, and the column name before writing code
   used to squash-merge `claude/*` branches automatically; it is now permanently
   disabled (PR #91, 2026-08-24) because it silently left production undeployed
   on a real, measured fraction of its own merges — see below.
+- **2026-09-24 — Re's standing instruction: Claude may commit straight to
+  `main` itself**, no PR required, when working from a Claude session. Said
+  explicitly after Claude committed directly to `main` by mistake and
+  flagged it as a process break; Re's reply was "its ok always push to main
+  ur self." This does not touch the auto-merge ban above (that was about a
+  *bot* merging PRs unattended and silently leaving Vercel `BLOCKED` — a
+  different failure mode) — it only means a Claude session no longer needs
+  to open a PR and wait for manual review before a change reaches `main`.
+  Still true regardless: verify the resulting Vercel deployment actually
+  reaches `READY` on production (see "Merge safety net" below — author
+  metadata alone isn't a sufficient signal), and this repo's other rules
+  (migrations get their own PR, don't leave things half-verified, etc.)
+  still apply to what gets committed, just not to how it lands on `main`.
 - Vercel deploys `main` to kloversegy.com automatically, but **only from a
   commit authored by the `learnkorean-spec` GitHub account** (Vercel Hobby-plan
   constraint) — this is why the account distinction above isn't cosmetic.
