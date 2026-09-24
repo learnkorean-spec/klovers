@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { Check, Lock, ArrowRight, Flame, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -8,18 +8,19 @@ import { LEAGUES, getLeague } from "@/constants/gamification";
 import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 import { gameIconName } from "@/constants/gameIcons";
 import { gameWorlds, CLUBY_OUTFITS, type GameWorld } from "@/constants/gameWorlds";
-import { BannerScene, WORLD_SCENES, WORLD_STOPS } from "@/components/games/WorldScenes";
-import { BOY_WAVE } from "@/assets/band/boyWave";
+import { WORLD_SCENES, WORLD_STOPS } from "@/components/games/WorldScenes";
 import { isClubyAwake } from "@/lib/clubyAwake";
 
 /**
  * Top of /games: the Game Worlds hub, in the style of Re's 23 Sep 2026 mockup,
  * with Klovers' own characters (the boy, Cluby, the girl in hanbok).
  *
- *  1. BANNER - a painted Seoul scene (inline SVG, WorldScenes.tsx). The boy
- *     waves on the left, the headline and Cluby sit in the middle, the girl
- *     cheers on the right; each has a speech bubble. A white card on the
- *     banner holds the league, XP bar and streak - all real.
+ *  1. BANNER - one of the story scenes with Klovers' real characters (the
+ *     two learners and, once he has hatched, Cluby): before the hatch the
+ *     learners find the glowing clover egg (/assets/story/egg-teaser.webp),
+ *     after it the three of them picnic by the Han river
+ *     (/assets/cluby/picnic.webp). The headline sits over it and a white
+ *     strip underneath holds the league, XP bar and streak - all real.
  *  2. THREE CARDS - Next outfit, Today's Missions, Cluby's outfits.
  *  3. JOURNEY - the three worlds as their story paintings on a dashed road,
  *     with Cluby over "You are here" and the 더 배우기 / 더 꿈꾸기 / 더 나은 나 sign.
@@ -63,44 +64,11 @@ const ASSET = "/assets/characters";
 const CLUBY_3D = "/assets/cluby/cluby-hanbok.webp";
 const CLUBY_3D_WAVE = "/assets/cluby/cluby-wave.webp";
 
-/**
- * The dormant clover egg, drawn in the same flat storybook style as the rest
- * of this page (charcoal outline, soft fills) so it sits with the boy, the
- * girl and the painted scenery instead of looking like a pasted-in photo.
- */
-const PageEgg = ({ className, glow = false }: { className?: string; glow?: boolean }) => (
-  <svg viewBox="0 0 100 120" className={className} aria-hidden="true" focusable="false">
-    <defs>
-      <radialGradient id="pe-shell" cx="36%" cy="30%" r="80%">
-        <stop offset="0" stopColor="#FFFFFF" />
-        <stop offset="0.55" stopColor="#FFF9EC" />
-        <stop offset="1" stopColor="#F3E6C8" />
-      </radialGradient>
-    </defs>
-    {glow && <ellipse cx="50" cy="66" rx="46" ry="50" fill="#FFF000" opacity="0.18" />}
-    <ellipse cx="50" cy="112" rx="26" ry="5" fill="#2E2E2E" opacity="0.12" />
-    <path
-      d="M50 8 C72 8 86 42 86 70 C86 94 70 110 50 110 C30 110 14 94 14 70 C14 42 28 8 50 8 Z"
-      fill="url(#pe-shell)"
-      stroke="#2E2E2E"
-      strokeWidth="3"
-      strokeLinejoin="round"
-    />
-    <path d="M30 34 Q36 22 46 18" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" opacity="0.9" />
-    <g transform="translate(50 70)" stroke="#2E2E2E" strokeWidth="1.8">
-      <path d="M1 8 Q3 16 8 20" fill="none" strokeLinecap="round" />
-      <circle cx="-5.5" cy="-5.5" r="6" fill="#25D366" />
-      <circle cx="5.5" cy="-5.5" r="6" fill="#25D366" />
-      <circle cx="-5.5" cy="5.5" r="6" fill="#25D366" />
-      <circle cx="5.5" cy="5.5" r="6" fill="#25D366" />
-      <circle cx="0" cy="0" r="1.6" fill="#BEEFCB" stroke="none" />
-    </g>
-    <g fill="#FFF000" stroke="#2E2E2E" strokeWidth="1.2" strokeLinejoin="round">
-      <path d="M86 20 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z" />
-      <path d="M12 46 l1.4 3.4 3.4 1.4 -3.4 1.4 -1.4 3.4 -1.4 -3.4 -3.4 -1.4 3.4 -1.4 Z" />
-    </g>
-  </svg>
-);
+/** The clover egg in the story's own 3D style, shown where Cluby would be before he hatches. */
+const EGG = "/assets/story/egg-0.webp";
+/** Banner scenes with the real characters (story canon). */
+const BANNER_BEFORE_HATCH = "/assets/story/egg-teaser.webp";
+const BANNER_AFTER_HATCH = "/assets/cluby/picnic.webp";
 
 type WorldKey = GameWorld["key"];
 
@@ -160,28 +128,6 @@ const WORLD_BADGE: Record<WorldKey, string> = {
 };
 
 const PREVIEW_COUNT = 4;
-
-/** A white speech bubble with a small tail. Handwriting: it is a character talking. */
-const Bubble = ({ children, tail = "bottom", className, lang }: { children: ReactNode; tail?: "bottom" | "left" | "right"; className?: string; lang: string }) => (
-  <div
-    lang={lang}
-    className={cn(
-      "cluby-note relative rounded-[1.4rem] border-2 border-charcoal bg-white px-3 py-2 text-center text-[13px] leading-tight text-charcoal shadow-sm",
-      className,
-    )}
-  >
-    {children}
-    <span
-      aria-hidden="true"
-      className={cn(
-        "absolute h-3 w-3 rotate-45 border-charcoal bg-white",
-        tail === "bottom" && "-bottom-[7px] left-1/2 -translate-x-1/2 border-b-2 border-r-2",
-        tail === "left" && "top-1/2 -left-[7px] -translate-y-1/2 border-b-2 border-l-2",
-        tail === "right" && "top-1/2 -right-[7px] -translate-y-1/2 border-t-2 border-r-2",
-      )}
-    />
-  </div>
-);
 
 const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Props) => {
   const { t } = useLanguage();
@@ -282,70 +228,41 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
 
   return (
     <div className="max-w-6xl mx-auto px-4 space-y-6">
-      {/* ── 1. Banner ─────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl border border-charcoal/10 bg-[#FFF6DE] shadow-[0_18px_40px_-28px_rgba(46,46,46,0.6)]">
-        <BannerScene className="absolute inset-0 h-full w-full" />
-
-        <div className="relative grid min-h-[340px] grid-cols-[auto_minmax(0,1fr)_auto] items-end md:min-h-[360px]">
-          {/* The boy, waving */}
-          <div className="relative hidden self-end ps-4 sm:block md:ps-8">
-            <Bubble lang={lang} tail="left" className="absolute top-8 start-[92%] w-28 md:w-32">
-              {isAr ? "جاهز لتحدّي النهارده؟" : "Ready for today's challenge?"}
-            </Bubble>
-            <img src={BOY_WAVE} alt="" aria-hidden="true" width={71} height={200} decoding="async" className="h-56 w-auto md:h-72" />
-          </div>
-
-          {/* Headline + Cluby (or, before he hatches, his egg) */}
-          <div className="flex flex-col items-center gap-3 self-stretch px-4 pt-6 text-center md:items-start md:ps-28 md:text-start">
-            <h1 className="text-[11px] font-extrabold uppercase tracking-wider text-charcoal/70">{title}</h1>
-            <p className="max-w-md font-display text-3xl font-extrabold leading-tight text-charcoal [text-shadow:0_2px_12px_#FFF6DE] md:text-4xl">{welcome}</p>
-            <p className="max-w-md rounded-full bg-[#FFF6DE]/80 px-2 text-sm text-charcoal/80 md:text-base">
-              {isAr ? "العب، اتعلم، وقرّب أكتر من كوريا!" : "Let's play, learn, and get closer to Korea!"}
+      {/* ── 1. Banner: a story scene with the real characters ─────────── */}
+      <section className="overflow-hidden rounded-3xl border border-charcoal/10 bg-card shadow-[0_18px_40px_-28px_rgba(46,46,46,0.6)]">
+        <div className="relative min-h-[300px] md:min-h-[380px]">
+          <img
+            src={clubyAwake ? BANNER_AFTER_HATCH : BANNER_BEFORE_HATCH}
+            alt={clubyAwake
+              ? (isAr ? "الصديقين وكلوبي في نزهة على نهر الهان" : "The two friends and Cluby having a picnic by the Han river")
+              : (isAr ? "الصديقين بيكتشفوا بيضة البرسيم المنوّرة في ساحة هانوك" : "The two friends discovering the glowing clover egg in a hanok courtyard")}
+            width={1600}
+            height={900}
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover object-[center_65%]"
+          />
+          <div
+            aria-hidden="true"
+            className={cn(
+              "absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b to-transparent",
+              clubyAwake ? "from-[#FFF9EC]/90 via-[#FFF9EC]/50" : "from-charcoal/80 via-charcoal/40",
+            )}
+          />
+          <div className={cn("relative px-5 pt-6 text-center md:px-8 md:pt-8", clubyAwake ? "text-charcoal" : "text-white")}>
+            <h1 className={cn("text-[11px] font-extrabold uppercase tracking-wider", clubyAwake ? "text-charcoal/70" : "text-white/80")}>{title}</h1>
+            <p className="mt-2 font-display text-3xl font-extrabold leading-tight md:text-4xl">{welcome}</p>
+            <p className={cn("mt-1 text-sm md:text-base", clubyAwake ? "text-charcoal/80" : "text-white/90")}>
+              {clubyAwake
+                ? (isAr ? "العب، اتعلم، وقرّب أكتر من كوريا!" : "Let's play, learn, and get closer to Korea!")
+                : (isAr ? "بيضة البرسيم بتصحى كل ما تتعلّم كوري أكتر…" : "The clover egg stirs a little more with every Korean word you learn…")}
             </p>
-            <div className="mt-auto flex items-end gap-3">
-              {clubyAwake ? (
-                <>
-                  <img src={CLUBY_3D} alt="" aria-hidden="true" width={230} height={286} decoding="async" className="h-32 w-auto object-contain md:h-40" />
-                  <Bubble lang={lang} tail="left" className="mb-24 w-36 md:mb-28 md:w-40">
-                    {isAr ? "العب لعبة وسأتذكّر كل كلمة تتعلّمها!" : "Play a game and I'll remember every word you learn!"}
-                  </Bubble>
-                </>
-              ) : (
-                <>
-                  <PageEgg glow className="h-28 w-auto md:h-32" />
-                  <p
-                    lang={lang}
-                    className="relative mb-16 max-w-[10.5rem] rounded-[1.4rem] border-2 border-charcoal bg-white px-3 py-2 text-center text-[13px] font-semibold leading-tight text-charcoal shadow-sm md:mb-20"
-                  >
-                    {isAr ? "بيضة البرسيم بتصحى كل ما تتعلّم كوري أكتر…" : "The clover egg stirs a little more with every Korean word you learn…"}
-                    <span aria-hidden="true" className="absolute top-1/2 -left-[7px] h-3 w-3 -translate-y-1/2 rotate-45 border-b-2 border-l-2 border-charcoal bg-white" />
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* The girl, cheering */}
-          <div className="relative hidden self-end pe-4 md:block md:pe-8">
-            <Bubble lang={lang} tail="bottom" className="absolute -top-2 end-4 w-28">
-              {isAr ? "تقدر تعملها! 화이팅! ♥" : "You can do it! 화이팅! ♥"}
-            </Bubble>
-            <img
-              src={`${ASSET}/girl-hanbok.webp`}
-              alt=""
-              aria-hidden="true"
-              width={204}
-              height={460}
-              decoding="async"
-              className="mt-16 h-64 w-auto md:h-72"
-            />
           </div>
         </div>
 
-        {/* Stats card - on the banner from md up, under it on phones */}
-        <div className="relative mx-4 mb-4 rounded-2xl border border-charcoal/10 bg-white/95 p-4 text-charcoal shadow-lg md:absolute md:bottom-6 md:end-[13rem] md:mx-0 md:mb-0 md:w-[22rem]">
+        {/* Stats strip - under the scene so it never covers the characters */}
+        <div className="border-t border-charcoal/10 bg-white p-4 text-charcoal md:px-6">
           {isLoggedIn ? (
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4">
+            <div className="grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
               <div className="min-w-0">
                 <p className="text-sm font-extrabold">{league.emoji} {league.name}</p>
                 <div
@@ -365,7 +282,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                     : ` · ${(nextLeague.minXp - totalXp).toLocaleString()} XP to ${nextLeague.name}`)}
                 </p>
               </div>
-              <div className="border-s border-charcoal/10 ps-4">
+              <div className="sm:border-s sm:border-charcoal/10 sm:ps-4">
                 <p className="flex items-center gap-1 text-xl font-extrabold">
                   <Flame className="h-5 w-5 text-[#F26B3A]" aria-hidden="true" /> {streak}
                 </p>
@@ -375,14 +292,14 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                 <button
                   type="button"
                   onClick={() => onPlay(continueGame)}
-                  className="col-span-2 min-h-10 rounded-full bg-charcoal px-4 text-sm font-bold text-klovers-yellow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal"
+                  className="min-h-11 rounded-full bg-charcoal px-6 text-sm font-bold text-klovers-yellow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal"
                 >
                   {isAr ? "كمّل الرحلة" : "Continue Journey"}
                 </button>
               )}
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm font-extrabold">
                 {isAr
                   ? `${FREE_GAME_IDS.length} ألعاب مجانية من غير حساب`
@@ -413,7 +330,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         {!clubyAwake && (
           <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
             <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF1C2]">
-              <PageEgg className="h-16 w-auto" />
+              <img src={EGG} alt="" aria-hidden="true" width={512} height={512} loading="lazy" className="h-16 w-auto object-contain" />
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="font-bold text-foreground">{isAr ? "بيضة البرسيم" : "The clover egg"}</h2>
@@ -573,7 +490,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                             className="absolute -top-5 -end-4 h-14 w-auto object-contain drop-shadow md:h-16"
                           />
                         ) : (
-                          <PageEgg className="absolute -top-5 -end-3 h-12 w-auto drop-shadow md:h-14" />
+                          <img src={EGG} alt="" aria-hidden="true" width={512} height={512} className="absolute -top-5 -end-3 h-12 w-auto object-contain drop-shadow md:h-14" />
                         )
                       )}
                       {state === "done" && (
@@ -725,7 +642,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           {clubyAwake ? (
             <img src={CLUBY_3D_WAVE} alt="" aria-hidden="true" width={230} height={286} loading="lazy" className="h-28 w-auto self-end object-contain" />
           ) : (
-            <PageEgg className="h-20 w-auto self-end" />
+            <img src={EGG} alt="" aria-hidden="true" width={512} height={512} loading="lazy" className="h-20 w-auto self-end object-contain" />
           )}
           <button
             type="button"
