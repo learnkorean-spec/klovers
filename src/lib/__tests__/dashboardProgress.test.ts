@@ -140,6 +140,9 @@ describe("eggStatus follows the canon awakening from real rows only", () => {
     expect(eggStatus([P(1, { vocab_done: true })], [], []).stage).toBe(1);
     expect(eggStatus([], [], ["game_vocab_daily"]).stage).toBe(1);
   });
+  it("stays cracked on later days once the word of the day was ever claimed", () => {
+    expect(eggStatus([], [], [], true).stage).toBe(1);
+  });
   it("glows on the first sentence (grammar or writing step)", () => {
     expect(eggStatus([P(1, { vocab_done: true, grammar_done: true })], [], []).stage).toBe(2);
   });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, BookOpen, Gift, ChevronRight, Sparkles } from "lucide-react";
+import { Search, BookOpen, ChevronRight, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Dialog,
@@ -69,7 +69,8 @@ import {
  * "A hidden chapter" eyebrow text it originally overlapped), so it's
  * unmistakably an interactive spot instead of a subtle sparkle.
  *
- * 24 Sep 2026 (STORY CANON CHANGE): Re supplied 3 new illustrated images —
+ * 24 Sep 2026 (STORY CANON CHANGE, since superseded — see STORY ORDER FIX
+ * below): Re supplied 3 new illustrated images —
  * a calm egg with a clover mark, the same egg cracking with dramatic light,
  * and Cluby hatching out of it — and confirmed ("1 yes") they should appear
  * inside this popup, one per tap, alongside the existing clue text. This
@@ -94,6 +95,16 @@ import {
  * The egg sits close to the image's vertical center, and scale transforms
  * anchor from the center by default, so the tap hotspot's position
  * (top-[57%]) didn't need to move.
+ *
+ * 24 Sep 2026 (STORY ORDER FIX — supersedes the STORY CANON CHANGE note
+ * above): the homepage only TEASES. The popup shows the egg waking —
+ * dormant → small crack → glow — with the same egg images the student
+ * dashboard uses (public/assets/story/egg-0/1/2.webp), but it never
+ * hatches: hatching happens on the student dashboard, from the student's
+ * real learning (Re, 24 Sep 2026). Cluby stays excluded from this beat per
+ * canon (homepageNarrative slot 7, explicitlyExclude: ["cluby"]). The
+ * "Earn a surprise" feature item is gone too — it promised a reward that
+ * does not exist.
  */
 
 const CLUES = [
@@ -111,26 +122,26 @@ const CLUES = [
   },
 ];
 
-// Ordered to match CLUES: calm egg → cracking egg → Cluby hatching out of it.
-const REVEAL_IMAGES = [
+// The same egg images as the student dashboard. Tap 1 → dormant, tap 2 →
+// small crack, tap 3 and every later tap → glowing. It never hatches here.
+const EGG_IMAGES = [
   {
-    src: "/assets/story/egg-plain-clover.webp",
-    alt: { en: "An ivory egg with a faint clover mark", ar: "بيضة عاجية عليها علامة كلوفر خفيفة" },
+    src: "/assets/story/egg-0.webp",
+    alt: { en: "A dormant ivory egg with a small clover mark", ar: "بيضة عاجية نايمة عليها علامة كلوفر صغيرة" },
   },
   {
-    src: "/assets/story/egg-cracked-glow.webp",
-    alt: { en: "The egg cracking open, glowing from within", ar: "البيضة بتتكسر وبتضوي من جواها" },
+    src: "/assets/story/egg-1.webp",
+    alt: { en: "The egg with a small crack in its shell", ar: "البيضة وفي قشرتها شرخ صغير" },
   },
   {
-    src: "/assets/story/cluby-hatching.webp",
-    alt: { en: "Cluby hatching out of the egg", ar: "كلوبي بيفقس من البيضة" },
+    src: "/assets/story/egg-2.webp",
+    alt: { en: "The egg glowing softly from within", ar: "البيضة بتنوّر بهدوء من جواها" },
   },
 ];
 
 const FEATURES = [
   { icon: Search, en: "Reveal a clue", ar: "اكشفي عن دليل" },
   { icon: BookOpen, en: "Unlock a story piece", ar: "افتحي جزء من القصة" },
-  { icon: Gift, en: "Earn a surprise", ar: "احصلي على مفاجأة" },
 ];
 
 const EggTeaser = () => {
@@ -139,6 +150,7 @@ const EggTeaser = () => {
   const [clueIndex, setClueIndex] = useState(0);
   const [tapCount, setTapCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const eggImage = EGG_IMAGES[Math.min(Math.max(tapCount - 1, 0), EGG_IMAGES.length - 1)];
 
   const revealClue = () => {
     const next = tapCount + 1;
@@ -265,9 +277,9 @@ const EggTeaser = () => {
           <DialogHeader>
             <div className="mx-auto h-32 w-32 overflow-hidden rounded-2xl border-2 border-klovers-yellow bg-charcoal">
               <img
-                key={REVEAL_IMAGES[clueIndex].src}
-                src={REVEAL_IMAGES[clueIndex].src}
-                alt={isAr ? REVEAL_IMAGES[clueIndex].alt.ar : REVEAL_IMAGES[clueIndex].alt.en}
+                key={eggImage.src}
+                src={eggImage.src}
+                alt={isAr ? eggImage.alt.ar : eggImage.alt.en}
                 className="h-full w-full object-cover"
               />
             </div>

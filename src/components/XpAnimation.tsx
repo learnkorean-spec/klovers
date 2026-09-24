@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Zap, Star, Trophy, Flame, Check } from "lucide-react";
 import { getLeague, LEAGUES } from "@/constants/gamification";
+import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
+import { isClubyAwake } from "@/lib/clubyAwake";
 // The approved 3D Cluby (the old flat mascot art is retired).
+// Canon: Cluby only appears once his egg has hatched (the student dashboard
+// records that in lib/clubyAwake.ts); until then a neutral star icon shows.
 const mascotImg = "/assets/cluby/cluby-star.webp";
 
 // --- Floating XP animation ---
@@ -77,15 +81,19 @@ export function StreakCelebration({
           {/* Flame icon */}
           <div className="relative animate-mascot-bounce">
             <Flame className="absolute -top-6 left-1/2 -translate-x-1/2 h-16 w-16 text-primary animate-flame-flicker drop-shadow-lg" strokeWidth={2.5} />
-            <img
-              src={mascotImg}
-              alt="Cluby, your study companion"
-              width={333}
-              height={440}
-              loading="lazy"
-              decoding="async"
-              className="relative z-10 w-36 h-36 object-contain drop-shadow-2xl"
-            />
+            {isClubyAwake() ? (
+              <img
+                src={mascotImg}
+                alt="Cluby, your study companion"
+                width={333}
+                height={440}
+                loading="lazy"
+                decoding="async"
+                className="relative z-10 w-36 h-36 object-contain drop-shadow-2xl"
+              />
+            ) : (
+              <BrandIcon name="achievement-star" className="relative z-10 w-36 h-36 object-contain drop-shadow-2xl" />
+            )}
           </div>
         </div>
 
@@ -161,15 +169,19 @@ export function LeaguePromotionModal({
         <div className="relative flex justify-center mb-4">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 animate-pulse-glow rounded-full" />
           <div className="relative animate-mascot-bounce">
-            <img
-              src={mascotImg}
-              alt="Cluby celebrating with you"
-              width={333}
-              height={440}
-              loading="lazy"
-              decoding="async"
-              className="relative z-10 w-32 h-32 object-contain drop-shadow-2xl"
-            />
+            {isClubyAwake() ? (
+              <img
+                src={mascotImg}
+                alt="Cluby celebrating with you"
+                width={333}
+                height={440}
+                loading="lazy"
+                decoding="async"
+                className="relative z-10 w-32 h-32 object-contain drop-shadow-2xl"
+              />
+            ) : (
+              <BrandIcon name="achievement-star" className="relative z-10 w-32 h-32 object-contain drop-shadow-2xl" />
+            )}
           </div>
         </div>
 
@@ -238,15 +250,19 @@ export function MissionCompleteOverlay({ lessonTitle, xpEarned, onContinue }: {
         {/* Mascot */}
         <div className="relative flex justify-center mb-4">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-36 animate-pulse-glow rounded-full" />
-          <img
-            src={mascotImg}
-            alt="Cluby, your study companion"
-            width={333}
-            height={440}
-            loading="lazy"
-            decoding="async"
-            className="relative z-10 w-28 h-28 object-contain drop-shadow-2xl animate-mascot-bounce"
-          />
+          {isClubyAwake() ? (
+            <img
+              src={mascotImg}
+              alt="Cluby, your study companion"
+              width={333}
+              height={440}
+              loading="lazy"
+              decoding="async"
+              className="relative z-10 w-28 h-28 object-contain drop-shadow-2xl animate-mascot-bounce"
+            />
+          ) : (
+            <BrandIcon name="achievement-star" className="relative z-10 w-28 h-28 object-contain drop-shadow-2xl animate-mascot-bounce" />
+          )}
         </div>
 
         <div className="text-6xl mb-3 animate-count-pop">⭐</div>

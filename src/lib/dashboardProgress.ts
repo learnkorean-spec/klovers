@@ -306,13 +306,15 @@ export function journeyStops(levelKey: string | null | undefined): { stops: Jour
  * Canon awakening sequence (KLOVERS_WORLD.originStory.awakeningSequence),
  * read ONLY from the student's real rows — nothing is stored or granted:
  *  1 crack — first word:          a vocabulary step done (any lesson), or the
- *                                  word of the day claimed, or a vocabulary badge
+ *                                  word of the day claimed (today or on any
+ *                                  earlier day), or a vocabulary badge
  *  2 glow  — first sentence:       a grammar or writing step done
  *  3 hatch — first conversation:   a whole lesson completed (its dialogue
  *                                  included), or the conversation badge
  * Stages never go backwards: a later milestone implies the earlier ones, so
  * an experienced student simply arrives hatched ("you've already learned
- * enough to wake him").
+ * enough to wake him"). everClaimedWordOfDay keeps a crack that came only
+ * from the word of the day from undoing itself the next day.
  */
 export type EggStage = 0 | 1 | 2 | 3;
 
@@ -324,7 +326,7 @@ export interface EggStatus {
 
 const WORD_BADGES = new Set(["hangul_master", "first_100_words"]);
 
-export function eggStatus(progress: LessonProgressRow[], badges: EarnedBadge[], todayActivity: string[]): EggStatus {
+export function eggStatus(progress: LessonProgressRow[], badges: EarnedBadge[], todayActivity: string[], everClaimedWordOfDay = false): EggStatus {
   const badgeKeys = new Set(badges.map(b => b.badge_key));
   const completed = progress.filter(p => p.chapter_completed);
   const hatched = completed.length > 0 || badgeKeys.has("conversation_beginner");
@@ -332,6 +334,7 @@ export function eggStatus(progress: LessonProgressRow[], badges: EarnedBadge[], 
   const cracked = glowing
     || progress.some(p => p.vocab_done)
     || todayActivity.includes(WORD_OF_DAY_ACTIVITY)
+    || everClaimedWordOfDay
     || [...badgeKeys].some(k => WORD_BADGES.has(k));
   const stage: EggStage = hatched ? 3 : glowing ? 2 : cracked ? 1 : 0;
   const firstDone = completed.map(p => p.completed_at).filter((d): d is string => !!d).sort()[0] ?? null;
