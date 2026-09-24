@@ -19,6 +19,8 @@ import { track } from "@/lib/tracking";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
+import type { BrandIconName } from "@/lib/dashboardProgress";
 import {
   CheckCircle, ArrowRight, ArrowLeft, Share2,
   Download, RefreshCw, Mic, Square, Play, RotateCcw, PenLine, Loader2,
@@ -151,13 +153,23 @@ const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
  * the test saying it has run out of room — so listing it here would promise a
  * placement the result screen then refuses to make.
  */
-const LADDER: { ko: string; ar: string; en: string; emoji: string }[] = [
-  { ko: "한글 기초", ar: "تأسيس الهانغول", en: "Hangul", emoji: "🌱" },
-  { ko: "1급", ar: "المستوى الأول", en: "Level 1", emoji: "📗" },
-  { ko: "2급", ar: "المستوى الثاني", en: "Level 2", emoji: "📘" },
-  { ko: "3급", ar: "المستوى الثالث", en: "Level 3", emoji: "📙" },
-  { ko: "4급", ar: "المستوى الرابع", en: "Level 4", emoji: "📕" },
+const LADDER: { ko: string; ar: string; en: string; icon: BrandIconName }[] = [
+  { ko: "한글 기초", ar: "تأسيس الهانغول", en: "Hangul", icon: "hangul-card" },
+  { ko: "1급", ar: "المستوى الأول", en: "Level 1", icon: "flashcards" },
+  { ko: "2급", ar: "المستوى الثاني", en: "Level 2", icon: "conversation" },
+  { ko: "3급", ar: "المستوى الثالث", en: "Level 3", icon: "culture-fan" },
+  { ko: "4급", ar: "المستوى الرابع", en: "Level 4", icon: "passport" },
 ];
+
+/** Klovers library icon for each result (the UI never shows emoji). */
+const GRADE_ICON: Record<TopikGrade, BrandIconName> = {
+  pre1: "hangul-card",
+  g1: "flashcards",
+  g2: "conversation",
+  g3: "culture-fan",
+  g4: "passport",
+  above: "trophy",
+};
 
 /** The story world that matches each result, shown on the result screen. */
 const GRADE_WORLD: Record<TopikGrade, string> = {
@@ -167,6 +179,16 @@ const GRADE_WORLD: Record<TopikGrade, string> = {
   g3: "world-culture-street",
   g4: "world-seoul-journey",
   above: "world-seoul-journey",
+};
+
+/** World names (KLOVERS_WORLD.worlds) for the result's scene line. */
+const GRADE_WORLD_NAME: Record<TopikGrade, { en: string; ar: string }> = {
+  pre1: { en: "Hangul Village", ar: "قرية الهانغول" },
+  g1: { en: "Vocabulary Market", ar: "سوق المفردات" },
+  g2: { en: "Conversation Café", ar: "مقهى المحادثة" },
+  g3: { en: "Culture Street", ar: "شارع الثقافة" },
+  g4: { en: "Seoul Journey", ar: "رحلة سيول" },
+  above: { en: "Seoul Journey", ar: "رحلة سيول" },
 };
 
 const SECTION_IDS = EXAM_SECTIONS.map((s) => s.id);
@@ -303,7 +325,7 @@ const KoreanPlacementPage = () => {
           setStep(Math.min(Math.max(d.step ?? 0, 0), EXAM_SECTIONS.length - 1));
           setStartedAt(d.startedAt ?? Date.now());
           setPhase("test");
-          toast({ title: isAr ? "تم استئناف الاختبار" : "Test resumed", description: isAr ? "تم استعادة تقدمك السابق." : "Your previous progress has been restored." });
+          toast({ title: isAr ? "تم استئناف الاختبار" : "Test resumed", description: isAr ? "استُعيد التقدّم السابق." : "Your previous progress has been restored." });
         }
       }
     } catch { /* ignore */ }
@@ -342,7 +364,7 @@ const KoreanPlacementPage = () => {
     setMicError(null);
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setMicError(isAr
-        ? "المتصفح ده مش بيدعم التسجيل الصوتي. سيبي القسم ده والمدرّس هيقيّمه في الحصة."
+        ? "لا يدعم هذا المتصفح التسجيل الصوتي. يمكن تخطّي هذا القسم، وسيقيّمه المدرّس في الحصة."
         : "This browser cannot record audio. Skip this part — your teacher will assess it live.");
       return;
     }
@@ -360,7 +382,7 @@ const KoreanPlacementPage = () => {
       setRecordingId(promptId);
     } catch {
       setMicError(isAr
-        ? "مقدرناش نوصل للمايك. اسمحي للمتصفح باستخدامه، أو سيبي القسم ده."
+        ? "تعذّر الوصول إلى الميكروفون. يُرجى السماح للمتصفح باستخدامه، أو تخطّي هذا القسم."
         : "Microphone access was denied. Allow it, or skip this part.");
       setRecordingId(null);
     }
@@ -479,9 +501,9 @@ const KoreanPlacementPage = () => {
       setSectionsSeen(parked.sectionsSeen);
       setPhase("result");
       toast({
-        title: isAr ? "اتحفظت نتيجتك" : "Your result is saved",
+        title: isAr ? "حُفظت النتيجة" : "Your result is saved",
         description: isAr
-          ? "دي نتيجة الاختبار اللي عملتيه، واتسجّلت على حسابك."
+          ? "هذه نتيجة الاختبار الذي أُنجز للتو، وقد سُجّلت في الحساب."
           : "This is the test you just took, now on your account.",
       });
     })();
@@ -601,8 +623,8 @@ const KoreanPlacementPage = () => {
     const label = isAr ? info.labelAr : info.labelEn;
     const text = `I took the Klovers Korean Placement Test!\nMy level: ${label}\nFind yours → ${SITE_URL}/placement-test`;
     navigator.clipboard.writeText(text)
-      .then(() => toast({ title: isAr ? "تم النسخ!" : "Copied to clipboard!", description: isAr ? "شارك مستواك مع أصدقائك." : "Share your level with friends." }))
-      .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: isAr ? "انسخ الرابط لمشاركة نتيجتك." : "Copy the link to share your result." }));
+      .then(() => toast({ title: isAr ? "تم النسخ!" : "Copied to clipboard!", description: isAr ? "أصبحت مشاركة المستوى مع الأصدقاء متاحة." : "Share your level with friends." }))
+      .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: isAr ? "يمكن نسخ الرابط لمشاركة النتيجة." : "Copy the link to share your result." }));
   };
 
   const handleWhatsAppEnroll = (res: ExamResult) => {
@@ -626,7 +648,7 @@ const KoreanPlacementPage = () => {
     a.href = canvas.toDataURL("image/png");
     a.download = `klovers-${res.grade}.png`;
     a.click();
-    toast({ title: isAr ? "تم تحميل البطاقة!" : "Card downloaded!", description: isAr ? "شارك مستواك على مواقع التواصل." : "Share your level on social media." });
+    toast({ title: isAr ? "تم تحميل البطاقة!" : "Card downloaded!", description: isAr ? "يمكن مشاركة المستوى على مواقع التواصل." : "Share your level on social media." });
   };
 
   const handleDownloadCertificate = (res: ExamResult) => {
@@ -645,12 +667,12 @@ const KoreanPlacementPage = () => {
     a.href = canvas.toDataURL("image/png");
     a.download = `klovers-certificate-${res.grade}.png`;
     a.click();
-    toast({ title: isAr ? "تم تحميل الشهادة!" : "Certificate downloaded!", description: isAr ? "شارك إنجازك على LinkedIn أو سيرتك الذاتية." : "Share your achievement on LinkedIn or CV." });
+    toast({ title: isAr ? "تم تحميل الشهادة!" : "Certificate downloaded!", description: isAr ? "يمكن مشاركة الإنجاز على LinkedIn أو في السيرة الذاتية." : "Share your achievement on LinkedIn or CV." });
   };
 
   const handleLeadSubmit = async () => {
     if (!leadName.trim() || !leadEmail.trim()) {
-      toast({ title: isAr ? "يرجى إدخال اسمك وبريدك الإلكتروني." : "Please enter your name and email.", variant: "destructive" }); return;
+      toast({ title: isAr ? "يُرجى إدخال الاسم والبريد الإلكتروني." : "Please enter your name and email.", variant: "destructive" }); return;
     }
     setLeadSaving(true);
     const levelKey = result ? TOPIK_GRADES[result.grade].levelKey : "";
@@ -665,7 +687,7 @@ const KoreanPlacementPage = () => {
     });
     setLeadSaving(false);
     if (error) {
-      toast({ title: isAr ? "لم نستطع الحفظ. حاول مرة أخرى." : "We could not save that. Please try again.", variant: "destructive" });
+      toast({ title: isAr ? "تعذّر الحفظ. يُرجى المحاولة مرة أخرى." : "We could not save that. Please try again.", variant: "destructive" });
       return;
     }
     setLeadSaved(true);
@@ -718,7 +740,7 @@ const KoreanPlacementPage = () => {
 
     setSavingExtras(false);
     if (error) {
-      toast({ variant: "destructive", title: isAr ? "لم يتم الحفظ" : "Could not save", description: isAr ? "جرّب مرة أخرى." : "Please try again." });
+      toast({ variant: "destructive", title: isAr ? "لم يتم الحفظ" : "Could not save", description: isAr ? "يُرجى المحاولة مرة أخرى." : "Please try again." });
       return;
     }
     if (!attemptId) setAttemptId(id);
@@ -783,10 +805,10 @@ const KoreanPlacementPage = () => {
   // ---- intro ---------------------------------------------------------------
   if (phase === "intro") {
     const FEATURES = [
-      { icon: Target, text: t("بأسئلة على شكل امتحان TOPIK الحقيقي", "Questions in the real TOPIK reading formats") },
-      { icon: Clock,  text: t("٥٢ سؤال — وتقدر تنهيه بدري", `${EXAM_MAX} questions — and you can finish early`) },
-      { icon: Save,   text: t("اقفل وارجع — محفوظ", "Close it and come back — saved") },
-      { icon: Ban,    text: t("من غير قاموس ولا ترجمة", "No dictionary, no translator") },
+      { icon: Target, text: t("أسئلة بصيغ امتحان TOPIK الحقيقي", "Questions in the real TOPIK reading formats") },
+      { icon: Clock,  text: t("٥٢ سؤالًا، مع إمكانية الإنهاء مبكرًا", `${EXAM_MAX} questions — and you can finish early`) },
+      { icon: Save,   text: t("الإغلاق والعودة لاحقًا: التقدّم محفوظ", "Close it and come back — saved") },
+      { icon: Ban,    text: t("دون قاموس أو مترجم", "No dictionary, no translator") },
     ];
 
     return (
@@ -803,7 +825,7 @@ const KoreanPlacementPage = () => {
               {["한", "국", "어", "급"].map((char, i) => (
                 <span
                   key={char}
-                  className="absolute text-6xl font-bold text-amber-300/10 dark:text-amber-400/[0.07]"
+                  className="absolute text-6xl font-bold text-charcoal/[0.06] dark:text-klovers-yellow/[0.07]"
                   style={{ top: `${8 + i * 24}%`, left: `${4 + i * 24}%`, transform: `rotate(${-14 + i * 9}deg)` }}
                 >
                   {char}
@@ -826,17 +848,23 @@ const KoreanPlacementPage = () => {
               <CardContent className="pt-8 pb-7 space-y-7">
 
                 <div className="space-y-4 text-center">
-                  <div className="inline-flex items-center gap-2 bg-amber-100 dark:bg-amber-950/40 border border-black/10 dark:border-amber-800/40 px-4 py-1.5 rounded-full text-xs font-semibold text-amber-700 dark:text-amber-400">
+                  <div className="inline-flex items-center gap-2 bg-klovers-yellow border border-charcoal/15 px-4 py-1.5 rounded-full text-xs font-semibold text-charcoal">
                     <Sparkles className="h-3.5 w-3.5" />
-                    {t("مجاني · من غير تسجيل", "Free · no sign-up")}
+                    {t("قرية الهانغول · مجاني ودون تسجيل", "Hangul Village · free, no sign-up")}
                   </div>
 
                   <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">
-                    {t("اعرف مستواك في الكوري", "Find your Korean level")}
+                    {t("ما مستواك في اللغة الكورية؟", "Find your Korean level")}
                   </h1>
 
+                  {/* World mode: the test is the gate of Hangul Village. */}
+                  <p className="text-sm font-semibold text-foreground max-w-md mx-auto leading-relaxed">
+                    {t("عند بوابة قرية الهانغول، كلّ لافتة سؤال. ما يُقرأ منها يكشف أين تبدأ الرحلة.",
+                       "At the gate of Hangul Village, every signboard is a question. What you can read shows where your journey begins.")}
+                  </p>
+
                   <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
-                    {t("أسئلة قراءة على شكل امتحان TOPIK الحقيقي. اختبار واحد، ٥٢ سؤال، بيبدأ من الأسهل وبيغطّي من المستوى الأول للرابع — وأول ما الأسئلة تعدّي مستواك تقدر تنهيه بنفسك.",
+                    {t("أسئلة قراءة بصيغ امتحان TOPIK الحقيقي: اختبار واحد من ٥٢ سؤالًا، يبدأ بالأسهل ويغطّي المستويات من الأول إلى الرابع، ويمكن إنهاؤه في أي لحظة بعد أن تتجاوز الأسئلةُ المستوى الحالي.",
                        `Reading questions in the real TOPIK formats. One test of ${EXAM_MAX} questions, easiest first, covering levels 1 to 4 — and once the questions are past you, you can finish it yourself.`)}
                   </p>
                 </div>
@@ -845,7 +873,7 @@ const KoreanPlacementPage = () => {
                     named result is a clearer promise than "we'll tell you". */}
                 <div>
                   <p className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground text-center mb-3">
-                    {t("المستويات اللي الاختبار ده بيقيسها", "THE LEVELS THIS TEST MEASURES")}
+                    {t("المستويات التي يقيسها هذا الاختبار", "THE LEVELS THIS TEST MEASURES")}
                   </p>
                   {/* Three across on a phone and five once there is room: five
                       cells at phone width leave each one too narrow for
@@ -856,7 +884,7 @@ const KoreanPlacementPage = () => {
                         key={l.ko}
                         className="rounded-xl border border-border bg-muted/40 px-2 py-3 text-center space-y-1"
                       >
-                        <div className="text-xl leading-none">{l.emoji}</div>
+                        <BrandIcon name={l.icon} className="h-7 w-7 mx-auto" eager />
                         <div className="text-sm font-bold leading-tight" dir="ltr">{l.ko}</div>
                         <div className="text-[10px] text-muted-foreground leading-tight">
                           {isAr ? l.ar : l.en}
@@ -865,7 +893,7 @@ const KoreanPlacementPage = () => {
                     ))}
                   </div>
                   <p className="text-[11px] text-muted-foreground text-center mt-2">
-                    {t("بتجاوب اللي تقدر عليه ومجموعك هو اللي بيحدد مستواك، زي درجات القطع في TOPIK نفسه — مفيش قسم بينهي الاختبار في وشك.",
+                    {t("الإجابة عمّا يمكن الإجابة عنه، والمجموع هو ما يحدّد المستوى، تمامًا كدرجات القطع في TOPIK نفسه. لا يوجد قسم يُنهي الاختبار فجأة.",
                        "You answer what you can and your total decides the level, the way TOPIK's own cut scores work — no section ends the test on you.")}
                   </p>
                 </div>
@@ -873,7 +901,7 @@ const KoreanPlacementPage = () => {
                 <div className="grid sm:grid-cols-2 gap-2.5">
                   {FEATURES.map(({ icon: Icon, text }) => (
                     <div key={text} className="flex items-center gap-2.5 bg-muted/60 rounded-xl px-3 py-2.5 text-sm font-medium">
-                      <Icon className="h-4 w-4 text-amber-600 dark:text-amber-500 shrink-0" />
+                      <Icon className="h-4 w-4 text-charcoal dark:text-klovers-yellow shrink-0" />
                       <span className="leading-snug">{text}</span>
                     </div>
                   ))}
@@ -891,11 +919,11 @@ const KoreanPlacementPage = () => {
                     className="w-full text-start rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 hover:border-primary/60 transition-colors"
                   >
                     <span className="block text-sm font-bold leading-snug">
-                      {t("سجّل دخولك الأول عشان نتيجتك تتحفظ",
+                      {t("تسجيل الدخول أولًا لحفظ النتيجة",
                          "Sign in first so your result is saved")}
                     </span>
                     <span className="block text-xs text-muted-foreground leading-snug mt-0.5">
-                      {t("تقدر تبدأ من غير تسجيل، وهنسألك تاني في الآخر.",
+                      {t("يمكن البدء دون تسجيل، وسيظهر هذا الخيار مجددًا في النهاية.",
                          "You can start without it — we'll ask again at the end.")}
                     </span>
                   </button>
@@ -908,7 +936,7 @@ const KoreanPlacementPage = () => {
                     a competing option. */}
                 <div className="space-y-2.5 pt-1">
                   <Button size="lg" className="w-full font-semibold" onClick={startTest}>
-                    {t("ابدأ الاختبار", "Start the test")}
+                    {t("بدء الاختبار", "Start the test")}
                     <ArrowRight className={cn("h-4 w-4 ms-1.5", isAr && "rotate-180")} />
                   </Button>
 
@@ -918,11 +946,11 @@ const KoreanPlacementPage = () => {
                     className="w-full text-start rounded-xl border border-border bg-muted/40 px-4 py-3 hover:border-primary/60 transition-colors"
                   >
                     <span className="block text-sm font-bold leading-snug">
-                      {t("لسه مش عارف أقرا الهانغول — وريني مستواي",
+                      {t("لا أستطيع قراءة الهانغول بعد: عرض مستواي",
                          "I can't read Hangul yet — show me my level")}
                     </span>
                     <span className="block text-xs text-muted-foreground leading-snug mt-0.5">
-                      {t("من غير أسئلة — بنوديك لنتيجتك على طول.",
+                      {t("دون أسئلة: انتقال مباشر إلى النتيجة.",
                          "No questions — this takes you straight to your result.")}
                     </span>
                   </button>
@@ -948,15 +976,21 @@ const KoreanPlacementPage = () => {
           <Card dir={isAr ? "rtl" : "ltr"} className="overflow-hidden">
             <img
               src={`/assets/story/${GRADE_WORLD[result.grade]}.webp`}
-              alt={isAr ? "عالم القصة اللي بيبدأ منه مستواك" : "The story world where your level begins"}
+              alt={isAr ? "عالم القصة الذي يبدأ منه هذا المستوى" : "The story world where your level begins"}
               width={1600}
               height={900}
               decoding="async"
               className="w-full aspect-[16/6] object-cover"
             />
             <CardContent className="pt-6 space-y-5">
+              {/* World mode: one scene line naming the world this level opens. */}
+              <p className="text-sm font-semibold text-center text-foreground">
+                {isAr
+                  ? `يبدأ الطريق في عالم Klovers من ${GRADE_WORLD_NAME[result.grade].ar}.`
+                  : `Your road through the Klovers world begins in ${GRADE_WORLD_NAME[result.grade].en}.`}
+              </p>
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center space-y-2">
-                <p className="text-4xl">{GRADE_META[result.grade].emoji}</p>
+                <BrandIcon name={GRADE_ICON[result.grade]} className="h-12 w-12 mx-auto" eager />
                 <p className="text-sm text-muted-foreground">{t("مستواك", "Your level")}</p>
                 <p className="text-3xl font-bold" dir="ltr">{info.labelKo}</p>
                 <p className="text-sm font-medium">{isAr ? info.labelAr : info.labelEn}</p>
@@ -985,12 +1019,12 @@ const KoreanPlacementPage = () => {
                   </div>
                   {result.stoppedEarly && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      {t("انت اللي اخترت تنهي هنا، والمستوى ده متحسب على الأقسام اللي جاوبتها فعلًا.",
+                      {t("انتهى الاختبار هنا باختيارك، وحُسب هذا المستوى من الأقسام التي أُجيب عنها فعلًا.",
                          "You chose to finish here, and this level is worked out from the sections you actually answered.")}
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground mt-2">
-                    {t("مستواك اتحدد من مجموع درجاتك في الأقسام اللي شُفتها، بنفس طريقة TOPIK اللي بيقارن مجموعك بدرجة قطع.",
+                    {t("تحدّد المستوى من مجموع الدرجات في الأقسام المعروضة، بالطريقة نفسها التي يقارن بها TOPIK المجموعَ بدرجة القطع.",
                        "Your level comes from your total across the sections you were shown, the same way TOPIK measures a total against a cut score.")}
                   </p>
                 </div>
@@ -1008,16 +1042,16 @@ const KoreanPlacementPage = () => {
                   <div>
                     <p className="font-semibold text-sm flex items-center gap-2">
                       <Save className="h-4 w-4" />
-                      {t("احفظ نتيجتك", "Save your result")}
+                      {t("حفظ النتيجة", "Save your result")}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {t("سجّل دخولك والإجابات اللي جاوبتها دلوقتي هتتحفظ على حسابك على طول، وتقدر تختار ميعاد مجموعتك. من غير كده النتيجة دي مش بتتسجّل عندنا.",
+                      {t("بعد تسجيل الدخول تُحفظ هذه الإجابات في الحساب مباشرة، ويصبح اختيار موعد المجموعة متاحًا. ودون ذلك لا تُسجَّل هذه النتيجة لدينا.",
                          "Sign in and the answers you just gave are saved to your account, so you can pick your group time. Without it, this result is not recorded.")}
                     </p>
                   </div>
                   <Button className="w-full" size="sm"
                     onClick={() => navigate(`/login?redirect=${encodeURIComponent("/placement-test")}`)}>
-                    {t("سجّل دخولك واحفظ النتيجة", "Sign in and save my result")}
+                    {t("تسجيل الدخول وحفظ النتيجة", "Sign in and save my result")}
                   </Button>
                 </div>
               )}
@@ -1029,26 +1063,26 @@ const KoreanPlacementPage = () => {
                   {leadSaved ? (
                     <div className="text-center py-2 space-y-2">
                       <CheckCircle className="h-9 w-9 fill-klovers-green text-charcoal mx-auto" />
-                      <p className="font-semibold text-sm">{t("هنبعتلك خطتك قريب!", "We'll send your plan shortly!")}</p>
+                      <p className="font-semibold text-sm">{t("ستصل الخطة قريبًا.", "We'll send your plan shortly!")}</p>
                     </div>
                   ) : (
                     <>
                       <div>
                         <p className="font-semibold text-sm">
-                          {t("مش عايز تعمل حساب دلوقتي؟", "Not ready to make an account?")}
+                          {t("إنشاء الحساب ليس مناسبًا الآن؟", "Not ready to make an account?")}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {isAr
-                            ? `سيب اسمك وبريدك وهنبعتلك خطة مخصصة لمستوى ${info.labelAr}. (الإجابات نفسها مش هتتحفظ.)`
+                            ? `يكفي ترك الاسم والبريد الإلكتروني لتصل خطة مخصّصة لمستوى ${info.labelAr}. (الإجابات نفسها لن تُحفظ.)`
                             : `Leave your name and email and we'll send a plan built for ${info.labelEn}. (Your answers themselves are not saved.)`}
                         </p>
                       </div>
                       <div className="grid sm:grid-cols-2 gap-2">
-                        <Input placeholder={t("اسمك", "Your name")} value={leadName} onChange={e => setLeadName(e.target.value)} />
-                        <Input placeholder={t("بريدك الإلكتروني", "Your email")} type="email" value={leadEmail} onChange={e => setLeadEmail(e.target.value)} />
+                        <Input placeholder={t("الاسم", "Your name")} value={leadName} onChange={e => setLeadName(e.target.value)} />
+                        <Input placeholder={t("البريد الإلكتروني", "Your email")} type="email" value={leadEmail} onChange={e => setLeadEmail(e.target.value)} />
                       </div>
                       <Button className="w-full" size="sm" onClick={handleLeadSubmit} disabled={leadSaving}>
-                        {leadSaving ? t("جارٍ الإرسال...", "Sending…") : t("ابعتوا لي الخطة", "Send me the plan")}
+                        {leadSaving ? t("جارٍ الإرسال...", "Sending…") : t("إرسال الخطة", "Send me the plan")}
                       </Button>
                     </>
                   )}
@@ -1067,15 +1101,15 @@ const KoreanPlacementPage = () => {
                 {userId && (
                   <Button size="sm" onClick={() => navigate("/dashboard/schedule")}
                     className="flex-1 min-w-[9rem] font-semibold">
-                    {t("اختار ميعاد مجموعتك", "Pick your group time")}
+                    {t("اختيار موعد المجموعة", "Pick your group time")}
                   </Button>
                 )}
                 <Button size="sm" variant={userId ? "outline" : "default"} onClick={() => navigate("/free-trial")}
                   className="flex-1 min-w-[9rem] font-semibold">
-                  {t("احجز تجربتي المجانية", "Book My Free Trial")}
+                  {t("حجز الحصة التجريبية المجانية", "Book My Free Trial")}
                 </Button>
                 <Button size="sm" variant="outline" className="flex-1 min-w-[9rem]" onClick={() => handleWhatsAppEnroll(result)}>
-                  {t("تواصل واتساب", "WhatsApp us")}
+                  {t("التواصل عبر واتساب", "WhatsApp us")}
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1093,26 +1127,26 @@ const KoreanPlacementPage = () => {
                   </>
                 )}
                 <Button variant="ghost" size="sm" className="flex-1 text-xs gap-1.5" onClick={handleRetake}>
-                  <RefreshCw className="h-3.5 w-3.5" /> {t("إعادة", "Retake")}
+                  <RefreshCw className="h-3.5 w-3.5" /> {t("إعادة الاختبار", "Retake")}
                 </Button>
               </div>
 
               {userId && !extrasSaved && (
                 <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm space-y-2">
                   <p className="font-semibold flex items-center gap-2"><PenLine className="h-4 w-4" />
-                    {t("عايز تقييم أدق؟", "Want a sharper placement?")}</p>
+                    {t("تقييم أدق؟", "Want a sharper placement?")}</p>
                   <p className="text-muted-foreground">
-                    {t("أضف عيّنة كتابة وتسجيل صوتي قصير، والمدرّس يراجعهم قبل أول حصة. اختياري تمامًا.",
+                    {t("إضافة عيّنة كتابة وتسجيل صوتي قصير يراجعهما المدرّس قبل أول حصة. خطوة اختيارية تمامًا.",
                        "Add a short writing sample and a voice recording for your teacher to review before your first class. Entirely optional.")}
                   </p>
                   <Button size="sm" variant="outline" onClick={() => setPhase("extras")}>
-                    {t("أضف الكتابة والصوت", "Add writing and voice")}
+                    {t("إضافة الكتابة والصوت", "Add writing and voice")}
                   </Button>
                 </div>
               )}
               {extrasSaved && (
                 <p className="text-sm text-charcoal dark:text-foreground bg-klovers-green/15 border border-klovers-green rounded-lg p-3">
-                  {t("اتحفظت للمدرّس. شكرًا!", "Saved for your teacher. Thank you!")}
+                  {t("حُفظت للمدرّس. شكرًا.", "Saved for your teacher. Thank you!")}
                 </p>
               )}
             </CardContent>
@@ -1134,7 +1168,7 @@ const KoreanPlacementPage = () => {
             <CardContent className="pt-6 space-y-5">
               <h2 className="text-lg font-bold">{t("الكتابة والصوت — للمدرّس", "Writing and voice — for your teacher")}</h2>
               <p className="text-sm text-muted-foreground">
-                {t("مفيش تصحيح آلي هنا. المدرّس هو اللي يراجع.", "Nothing here is auto-graded. Your teacher reviews it.")}
+                {t("لا يوجد تصحيح آلي هنا؛ المدرّس هو من يراجع.", "Nothing here is auto-graded. Your teacher reviews it.")}
               </p>
 
               {SEJONG1_WRITING.map((p) => (
@@ -1149,7 +1183,7 @@ const KoreanPlacementPage = () => {
               ))}
 
               {micError && (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">{micError}</p>
+                <p className="text-sm text-charcoal dark:text-foreground bg-[#FF4FD8]/15 border border-[#FF4FD8] rounded-lg p-3">{micError}</p>
               )}
               {SEJONG1_SPEAKING.map((p) => {
                 const recorded = !!audio[p.id];
@@ -1163,7 +1197,7 @@ const KoreanPlacementPage = () => {
                         <Button type="button" size="sm" variant={recorded ? "outline" : "default"}
                           onClick={() => startRecording(p.id)} disabled={recordingId !== null}>
                           {recorded ? <RotateCcw className="h-3.5 w-3.5 me-1.5" /> : <Mic className="h-3.5 w-3.5 me-1.5" />}
-                          {recorded ? t("سجّل تاني", "Re-record") : t("سجّل", "Record")}
+                          {recorded ? t("إعادة التسجيل", "Re-record") : t("تسجيل", "Record")}
                         </Button>
                       ) : (
                         <Button type="button" size="sm" variant="destructive" onClick={stopRecording}>
@@ -1175,7 +1209,7 @@ const KoreanPlacementPage = () => {
                           <Play className="h-3.5 w-3.5 me-1.5" /> {t("تشغيل", "Play")}
                         </Button>
                       )}
-                      {recorded && <Badge variant="secondary" className="self-center">{t("متسجّل", "Recorded")}</Badge>}
+                      {recorded && <Badge variant="secondary" className="self-center">{t("مُسجَّل", "Recorded")}</Badge>}
                     </div>
                   </div>
                 );
@@ -1184,9 +1218,9 @@ const KoreanPlacementPage = () => {
               <div className="flex gap-2">
                 <Button onClick={saveExtras} disabled={savingExtras || recordingId !== null}>
                   {savingExtras && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
-                  {t("احفظ للمدرّس", "Save for my teacher")}
+                  {t("الحفظ للمدرّس", "Save for my teacher")}
                 </Button>
-                <Button variant="ghost" onClick={() => setPhase("result")}>{t("رجوع للنتيجة", "Back to result")}</Button>
+                <Button variant="ghost" onClick={() => setPhase("result")}>{t("العودة إلى النتيجة", "Back to result")}</Button>
               </div>
             </CardContent>
           </Card>
@@ -1223,7 +1257,7 @@ const KoreanPlacementPage = () => {
           </div>
           <Progress value={sectionQuestions.length ? (answeredHere / sectionQuestions.length) * 100 : 0} />
           <p className="text-xs text-muted-foreground">
-            {t(`جاوبت ${answeredHere} من ${sectionQuestions.length} في القسم ده`,
+            {t(`أُجيب عن ${answeredHere} من ${sectionQuestions.length} في هذا القسم`,
                `${answeredHere} of ${sectionQuestions.length} answered in this section`)}
           </p>
         </div>
@@ -1240,7 +1274,7 @@ const KoreanPlacementPage = () => {
 
             {step === 0 && (
               <p className="text-sm">
-                {t("جاوب اللي تقدر عليه. مفيش قسم بيوقف الاختبار — ومن القسم التالت وانت اللي تقرر تكمّل ولا تقف.",
+                {t("الإجابة عمّا يمكن الإجابة عنه. لا يوقف أي قسم الاختبار، وبدءًا من القسم الثالث يعود قرار المتابعة أو التوقف إليك.",
                    "Answer what you can. No section stops the test — and from the third section onward it is you who decides whether to carry on.")}
               </p>
             )}
@@ -1250,11 +1284,11 @@ const KoreanPlacementPage = () => {
             {section.id === "A" && (
               <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  {t("لسه مابتعرفش تقرا الحروف الكورية؟ ده مش رسوب — ده بالظبط المستوى اللي بنبدأ منه.",
+                  {t("قراءة الحروف الكورية غير ممكنة بعد؟ هذا ليس رسوبًا، بل هو بالضبط المستوى الذي نبدأ منه.",
                      "Cannot read the Korean alphabet yet? That is not a fail — it is exactly where we start.")}
                 </p>
                 <Button type="button" variant="outline" size="sm" onClick={handleCannotReadHangul}>
-                  {t("لسه مش عارف أقرا الهانغول — وريني مستواي", "I cannot read Hangul yet — show my level")}
+                  {t("لا أستطيع قراءة الهانغول بعد: عرض مستواي", "I cannot read Hangul yet — show my level")}
                 </Button>
               </div>
             )}
@@ -1276,7 +1310,7 @@ const KoreanPlacementPage = () => {
                 page is asking her to make. */}
             {section.mayStopAfter && (
               <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => stopHere(section.id)}>
-                {t("مش قادر أكمل أكتر من كده — وريني مستواي", "That's as far as I can go — show me my level")}
+                {t("هذا أقصى ما أستطيع: عرض مستواي", "That's as far as I can go — show me my level")}
               </Button>
             )}
             <Button onClick={nextSection}>
