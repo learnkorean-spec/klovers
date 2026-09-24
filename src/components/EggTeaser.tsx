@@ -53,15 +53,20 @@ import {
  *   - The photo is now a full-bleed background for the top of the section
  *     (edge-to-edge, no rounded corners) with a bottom gradient fading it
  *     straight into bg-charcoal, so there's no visible frame/seam.
- *   - A real, invisible tap target sits directly over the egg in the photo
- *     (~50% / 57%, eyeballed from the reference screenshot — may want a
- *     small nudge once seen live at different viewport widths) with an
- *     animated glow (ping + bounce) so the egg visibly "moves"/pulses to
- *     invite the tap. It calls the same revealClue() as the button below.
+ *   - A real tap target sits directly over the egg in the photo (~50% / 57%,
+ *     eyeballed from the reference screenshot). It calls the same
+ *     revealClue() as the button below.
  *   - Kept the labelled "Tap the Egg" button underneath too, since the
  *     on-photo hotspot alone isn't reliably discoverable (small target,
  *     motion-sensitive users, screen readers) — both trigger the same
  *     popup.
+ *
+ * 24 Sep 2026 (this pass, round 2): Re said the egg hotspot wasn't obvious
+ * ("the egg is not obvious, and where i go clicking there") - the fading
+ * ping-only glow read as decorative, not clickable. Made it a persistent
+ * ring (border-2 border-klovers-yellow, always visible, not just the
+ * animated pulse) plus a small "👆 Tap here" label right under it, so it's
+ * unmistakably an interactive spot instead of a subtle sparkle.
  */
 
 const CLUES = [
@@ -122,22 +127,32 @@ const EggTeaser = () => {
           className="absolute inset-0 bg-gradient-to-b from-charcoal/5 via-charcoal/60 to-charcoal"
         />
 
-        {/* Real tap target sitting directly on the egg in the photo — animated so it visibly moves/invites the tap */}
-        <button
-          type="button"
-          onClick={revealClue}
-          aria-label={isAr ? "دوسي على البيضة" : "Tap the egg"}
-          className="absolute left-1/2 top-[57%] flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full outline-none"
-        >
+        {/* Real tap target sitting directly on the egg in the photo. A persistent
+            ring (not just the fading ping pulse) plus a small "tap here" label
+            make it obvious this is clickable, not just decorative glow. */}
+        <div className="absolute left-1/2 top-[57%] -translate-x-1/2 -translate-y-1/2">
+          <button
+            type="button"
+            onClick={revealClue}
+            aria-label={isAr ? "دوسي على البيضة" : "Tap the egg"}
+            className="relative flex h-20 w-20 items-center justify-center rounded-full outline-none"
+          >
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 animate-ping rounded-full bg-klovers-yellow/30"
+            />
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 rounded-full border-2 border-klovers-yellow bg-klovers-yellow/10"
+            />
+          </button>
           <span
             aria-hidden="true"
-            className="absolute inset-0 animate-ping rounded-full bg-klovers-yellow/30"
-          />
-          <span
-            aria-hidden="true"
-            className="absolute inset-2 animate-bounce rounded-full bg-klovers-yellow/25 blur-[2px]"
-          />
-        </button>
+            className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full border border-klovers-yellow/50 bg-charcoal/90 px-3 py-1 text-xs font-bold text-klovers-yellow"
+          >
+            {isAr ? "👆 دوسي هنا" : "👆 Tap here"}
+          </span>
+        </div>
       </div>
 
       <div className="relative z-10 px-4 pb-16 pt-[260px] md:pb-20 md:pt-[360px]">
