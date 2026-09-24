@@ -765,3 +765,22 @@ Type, loaded in index.html:
 [class*="text-[#25D366]"] {
   color: hsl(var(--charcoal)) !important;
 }
+
+/* Dark violet/purple fills (25 Sep 2026). The violet and purple ramps were
+   remapped to the palette (500+ = charcoal), so text-primary-foreground or
+   text-foreground on them became charcoal-on-charcoal (e.g. the /affiliate
+   "Submit Application" button). Text on these fills is always ivory. */
+.bg-violet-500.bg-violet-500,
+.bg-violet-600.bg-violet-600,
+.bg-violet-700.bg-violet-700,
+.bg-violet-800.bg-violet-800,
+.bg-violet-900.bg-violet-900,
+.bg-violet-950.bg-violet-950,
+.bg-purple-500.bg-purple-500,
+.bg-purple-600.bg-purple-600,
+.bg-purple-700.bg-purple-700,
+.bg-purple-800.bg-purple-800,
+.bg-purple-900.bg-purple-900,
+.bg-purple-950.bg-purple-950 {
+  color: #FFF9EC;
+}
