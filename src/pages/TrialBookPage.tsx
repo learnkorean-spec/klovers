@@ -330,7 +330,7 @@ function TrialLevelsAr() {
 
       <div style={{ background:Y, borderRadius:"8px", padding:"8px 14px", marginTop:"8px", textAlign:"center" }}>
         <div style={{ fontSize:"10px", color:BK, fontWeight:800 }}>
-          ⏱️ كل مستوى: ٢٤ حصة · ٩٠ دقيقة لكل حصة · مجموعات صغيرة (٤–٨ طلاب)
+          ⏱️ كل مستوى: ٢٤ حصة · ٦٠ دقيقة لكل حصة · مجموعات صغيرة
         </div>
       </div>
     </Page>
@@ -515,7 +515,7 @@ function TrialTestimonialsAr() {
       <div style={{ background:Y, borderRadius:"10px", padding:"10px 16px", display:"flex", alignItems:"center", gap:"12px" }}>
         <MugunghwaIcon size={36} color={BK} />
         <div>
-          <div style={{ fontSize:"12px", fontWeight:900, color:BK }}>+٥٠٠ طالب</div>
+          <div style={{ fontSize:"12px", fontWeight:900, color:BK }}>+٢٠٠ طالب</div>
           <div style={{ fontSize:"10px", color:BK2 }}>انضموا لمجتمع Klovers من مصر والخليج والمغرب العربي</div>
         </div>
       </div>
@@ -761,7 +761,7 @@ function TrialLevelsEn() {
       </div>
       <div style={{ background:Y, borderRadius:"8px", padding:"8px 14px", marginTop:"8px", textAlign:"center" }}>
         <div style={{ fontSize:"10px", color:BK, fontWeight:800 }}>
-          ⏱️ Each level: 24 sessions · 90 min each · Small groups
+          ⏱️ Each level: 24 sessions · 60 min each · Small groups
         </div>
       </div>
     </Page>
