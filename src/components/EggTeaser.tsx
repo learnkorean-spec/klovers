@@ -28,8 +28,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * The "Tap the Egg" button is intentionally OUTLINED, not filled yellow:
  * FinalCTA sits directly below with a solid yellow "Book Your Free Class"
  * button, and the palette rule is never two solid-yellow buttons in one
- * view. Clicking it reveals one rotating clue line — still no explanation,
- * just a bit of texture, matching the "earn a surprise" feature row.
+ * view. Clicking it reveals one rotating clue line and bumps a small,
+ * purely client-side tap counter — no persistence, no account, no league.
+ *
+ * 24 Sep 2026 (STORY CONFLICT, resolved): Re initially asked for taps to
+ * count toward "their league." This page has no auth context and renders
+ * for logged-out visitors, so a real per-student count can't live here —
+ * canon says marketing teases, the logged-in product is where progress is
+ * real (CLAUDE.md KLOVERS STORY CANON). Re confirmed: visual-only counter
+ * for now. A real counter tied to an actual student league is a separate,
+ * bigger feature that belongs in the logged-in product if she wants it
+ * later — not a homepage teaser.
  */
 
 const CLUES = [
@@ -57,8 +66,12 @@ const EggTeaser = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
   const [clueIndex, setClueIndex] = useState<number | null>(null);
+  const [tapCount, setTapCount] = useState(0);
 
-  const revealClue = () => setClueIndex((i) => (i === null ? 0 : (i + 1) % CLUES.length));
+  const revealClue = () => {
+    setTapCount((n) => n + 1);
+    setClueIndex((i) => (i === null ? 0 : (i + 1) % CLUES.length));
+  };
 
   return (
     <section
@@ -107,14 +120,25 @@ const EggTeaser = () => {
           </p>
 
           {/* Tap the egg — outlined, not filled yellow (FinalCTA below already owns the solid-yellow button) */}
-          <button
-            type="button"
-            onClick={revealClue}
-            className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-klovers-yellow px-7 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
-          >
-            {isAr ? "دوسي على البيضة" : "Tap the Egg"}
-            <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-          </button>
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={revealClue}
+              aria-describedby={tapCount > 0 ? "egg-tap-count" : undefined}
+              className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-klovers-yellow px-7 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
+            >
+              {isAr ? "دوسي على البيضة" : "Tap the Egg"}
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+            </button>
+
+            {tapCount > 0 && (
+              <p id="egg-tap-count" className="text-xs font-semibold text-ivory/50" aria-live="polite">
+                {isAr
+                  ? `دُست عليها ${tapCount === 1 ? "مرة" : `${tapCount} مرات`}`
+                  : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}
+              </p>
+            )}
+          </div>
 
           {clueIndex !== null && (
             <p className="mx-auto mt-4 max-w-md text-sm italic leading-relaxed text-ivory/80">
