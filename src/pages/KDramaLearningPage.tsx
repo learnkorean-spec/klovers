@@ -1,107 +1,96 @@
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import OptimizedImage from "@/components/OptimizedImage";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Zap, Tv, Brain, BarChart3, Play, ArrowRight, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+/**
+ * /learn-korean-kdramas
+ *
+ * 25 Sep 2026 (QA pass): the copy is rewritten; the look from "Story style
+ * batch 1" (ivory hero with the painted culture-street scene, palette cards,
+ * charcoal final CTA) is kept.
+ *
+ * What went: claims nobody measured - "the secret method used by 500K+ K-drama
+ * fans", "40% faster than textbooks", "3x faster results", "your brain learns
+ * Korean automatically", "200-400 words per drama" - advice to take "Klovers
+ * lessons 3x per week" (classes are once a week), Squid Game recommended to
+ * A1 beginners, and a "drama journal template" that was never attached.
+ *
+ * What it says now: a plain, repeatable way to study one scene at a time, how
+ * to pick a drama, and where live classes fit. Copy is inline in both
+ * languages (translations.ts `kdrama.*` is no longer read).
+ */
+
+const STEPS: { en: [string, string]; ar: [string, string] }[] = [
+  {
+    en: ["Watch for the story", "First watch with subtitles in your language. Enjoy it — you need to know what happens before you can study how it is said."],
+    ar: ["اتفرج على القصة", "أول مرة اتفرج بترجمة بلغتك واستمتع — لازم تعرف اللي بيحصل قبل ما تذاكر إزاي بيتقال."],
+  },
+  {
+    en: ["Pick one short scene", "Choose two or three minutes you liked. Short enough to replay many times."],
+    ar: ["اختار مشهد قصير", "اختار دقيقتين أو تلاتة عجبوك. قصير كفاية إنك تعيده كذا مرة."],
+  },
+  {
+    en: ["Replay it with Korean subtitles", "Pause on each line. Write down the words and endings you recognise, and look up the rest."],
+    ar: ["عيده بترجمة كوري", "وقّف عند كل جملة. اكتب الكلمات والنهايات اللي عارفها، ودوّر على الباقي."],
+  },
+  {
+    en: ["Say the lines out loud", "Repeat each line after the actor, copying the rhythm. Then try the scene with no subtitles at all."],
+    ar: ["قول الجمل بصوت عالي", "كرر كل جملة بعد الممثل وقلّد الإيقاع. وبعدين جرّب المشهد من غير ترجمة خالص."],
+  },
+  {
+    en: ["Keep a phrase notebook", "One line per phrase: the Korean, what it means, the scene it came from, and one sentence of your own with it."],
+    ar: ["خلي عندك كشكول جمل", "سطر لكل جملة: الكوري، معناها، المشهد اللي جت منه، وجملة من عندك بيها."],
+  },
+];
+
 const KDramaLearningPage = () => {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
+
   useSEO({
-    title: "Learn Korean Through K-Dramas | Beginner to Advanced Method",
-    description: "Master Korean by watching K-dramas. Learn the best dramas for your level, proven learning methods, and how to progress from A1 to B2 through drama immersion.",
-    canonical: "https://kloversegy.com/learn-korean-kdramas"
+    title: "Learn Korean Through K-Dramas",
+    description:
+      "A simple, repeatable way to study Korean with K-dramas: one scene at a time, with Korean subtitles, shadowing and a phrase notebook, and how live classes fill in the grammar.",
+    canonical: "https://kloversegy.com/learn-korean-kdramas",
   });
-
-  useEffect(() => {
-    const faqSchema = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "Can you really learn Korean from K-dramas?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes, absolutely. Research shows that drama-based learning improves listening comprehension 40% faster than textbooks alone. You learn natural spoken Korean, cultural context, and emotional connections to words make them stick longer."
-          }
-        },
-        {
-          "@type": "Question",
-          name: "What's the best drama for beginners?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Squid Game (오징어 게임) or Descendants of the Sun. Both have clear speech, repetitive vocabulary, and engaging storylines. Avoid complex dramas like Mr. Sunshine or Hospital Playlist until you reach B1 level."
-          }
-        },
-        {
-          "@type": "Question",
-          name: "Should I watch with English or Korean subtitles?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Best method: Watch 1st time with English subtitles (enjoy the story), 2nd time with Korean subtitles (notice words), 3rd time with no subtitles (test listening). Don't jump to Korean subtitles immediately — your brain won't keep up."
-          }
-        },
-        {
-          "@type": "Question",
-          name: "How much do you learn from one K-drama?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "One full drama series (12-16 episodes): 200-400 new vocabulary words, 30-50 common phrases, natural pronunciation patterns, and cultural context. Combined with active study, one drama can boost you 0.5-1 full level."
-          }
-        },
-        {
-          "@type": "Question",
-          name: "Best K-dramas for learning specific skills?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "For vocabulary: Descendants of the Sun (medical), Itaewon Class (food/business). For listening: Squid Game, Crash Landing on You (clear actors). For grammar: Reply 1988 (slow, conversational). For advanced: Hospital Playlist, Mr. Sunshine."
-          }
-        }
-      ]
-    };
-
-    let faqLd = document.getElementById("faq-jsonld");
-    if (!faqLd) {
-      faqLd = document.createElement("script");
-      faqLd.id = "faq-jsonld";
-      faqLd.setAttribute("type", "application/ld+json");
-      document.head.appendChild(faqLd);
-    }
-    faqLd.textContent = JSON.stringify(faqSchema);
-
-    return () => faqLd?.remove();
-  }, []);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main id="main-content">
-        {/* Hero */}
-        <section className="pt-24 pb-16 bg-[#FFF9EC] dark:bg-muted/30">
+        {/* Hero - the painted culture street from Story style batch 1 */}
+        <section className="pt-24 pb-16 bg-ivory dark:bg-muted/30">
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="grid items-center gap-10 lg:grid-cols-2">
               <div>
-                <Badge className="mb-4 bg-klovers-yellow text-[#2E2E2E] border-foreground/15 hover:bg-klovers-yellow" variant="outline">{t("kdrama.badge")}</Badge>
-                <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-                  {t("kdrama.heroTitle")}
+                <span className="inline-block rounded-full bg-klovers-yellow px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-charcoal">
+                  {tr("K-dramas", "الدراما الكورية")}
+                </span>
+                <h1 className="mt-5 text-4xl md:text-5xl font-bold text-foreground leading-tight">
+                  {tr("Learn Korean from the dramas you already watch", "اتعلم كوري من المسلسلات اللي بتتفرج عليها")}
                 </h1>
-                <p className="text-xl text-foreground/70 mb-8 leading-relaxed">
-                  {t("kdrama.heroSubtitle")}
+                <p className="mt-5 text-lg md:text-xl text-foreground/70 leading-relaxed">
+                  {tr(
+                    "Watching alone will not teach you Korean, but studying one scene at a time will. Here is a way to do it that you can repeat with any show.",
+                    "الفرجة لوحدها مش هتعلمك كوري، لكن مذاكرة مشهد واحد في المرة هتعلمك. دي طريقة تقدر تكررها مع أي مسلسل.",
+                  )}
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button size="lg" asChild>
-                    <a href="/enroll-now">{t("kdrama.ctaStart")}</a>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <Button size="lg" asChild className="rounded-full font-bold">
+                    <Link to="/free-trial">
+                      {tr("Book a free class", "احجز حصة مجانية")}
+                      <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
+                    </Link>
                   </Button>
-                  <Button size="lg" variant="outline" asChild>
-                    <a href="/placement-test">{t("kdrama.ctaFindLevel")}</a>
+                  <Button size="lg" variant="outline" asChild className="rounded-full">
+                    <Link to="/placement-test">{tr("Find your level", "اعرف مستواك")}</Link>
                   </Button>
                 </div>
-                <p className="text-sm text-foreground/70 mt-6">{t("kdrama.ctaFooter")}</p>
               </div>
               <div className="overflow-hidden rounded-3xl border border-border shadow-xl bg-muted">
                 <img
@@ -122,292 +111,109 @@ const KDramaLearningPage = () => {
           </div>
         </section>
 
-        {/* Why K-Dramas Work */}
+        {/* Method */}
         <section className="py-16 border-b">
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-12 text-center">{t("kdrama.whyTitle")}</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              {[
-                {
-                  icon: <Tv className="h-6 w-6 text-[#2E2E2E]" />,
-                  title: t("kdrama.whyCard1Title"),
-                  desc: t("kdrama.whyCard1Desc")
-                },
-                {
-                  icon: <Brain className="h-6 w-6 text-[#2E2E2E]" />,
-                  title: t("kdrama.whyCard2Title"),
-                  desc: t("kdrama.whyCard2Desc")
-                },
-                {
-                  icon: <BarChart3 className="h-6 w-6 text-[#2E2E2E]" />,
-                  title: t("kdrama.whyCard3Title"),
-                  desc: t("kdrama.whyCard3Desc")
-                },
-                {
-                  icon: <Sparkles className="h-6 w-6 text-[#2E2E2E]" />,
-                  title: t("kdrama.whyCard4Title"),
-                  desc: t("kdrama.whyCard4Desc")
-                },
-                {
-                  icon: <Play className="h-6 w-6 text-[#2E2E2E]" />,
-                  title: t("kdrama.whyCard5Title"),
-                  desc: t("kdrama.whyCard5Desc")
-                },
-                {
-                  icon: <CheckCircle2 className="h-6 w-6 text-[#2E2E2E]" />,
-                  title: t("kdrama.whyCard6Title"),
-                  desc: t("kdrama.whyCard6Desc")
-                }
-              ].map((item, i) => (
-                <div key={i} className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-klovers-yellow border border-foreground/15">{item.icon}</div>
-                  <h3 className="font-bold text-lg mb-2">{item.title}</h3>
-                  <p className="text-foreground/70 text-sm">{item.desc}</p>
-                </div>
-              ))}
+            <h2 className="text-3xl font-bold mb-8">{tr("One scene at a time", "مشهد واحد في المرة")}</h2>
+            <ol className="space-y-4">
+              {STEPS.map((s, i) => {
+                const [title, body] = isAr ? s.ar : s.en;
+                return (
+                  <li key={s.en[0]} className="p-6 rounded-2xl border bg-card flex items-start gap-4">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-charcoal font-bold text-klovers-yellow">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <h3 className="font-bold text-lg text-foreground">{title}</h3>
+                      <p className="mt-1 text-foreground/70 leading-relaxed">{body}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            <div className="mt-8 p-6 rounded-2xl bg-card border-2 border-foreground/80">
+              <p className="font-bold mb-3">{tr("A notebook line looks like this", "سطر في الكشكول شكله كده")}</p>
+              <div className="bg-muted p-4 rounded-xl text-sm text-foreground/80 space-y-1">
+                <p lang="ko" className="font-bold text-foreground">정말이야?</p>
+                <p>{tr("\"Really?\" — a character hears surprising news.", "«بجد؟» — شخصية بتسمع خبر مفاجئ.")}</p>
+                <p>{tr("Mine: 정말이야? 내일 시험이야? (Really? The exam is tomorrow?)", "جملتي: 정말이야? 내일 시험이야؟ (بجد؟ الامتحان بكرة؟)")}</p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* The Framework */}
+        {/* Choosing a drama */}
         <section className="py-16 border-b bg-muted/40">
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-4">{t("kdrama.frameworkTitle")}</h2>
-            <p className="text-foreground/70 mb-12">{t("kdrama.frameworkSubtitle")}</p>
-
-            <div className="space-y-6">
-              {[
-                {
-                  num: "1",
-                  title: t("kdrama.watch1Title"),
-                  time: t("kdrama.watch1Time"),
-                  desc: t("kdrama.watch1Desc")
-                },
-                {
-                  num: "2",
-                  title: t("kdrama.watch2Title"),
-                  time: t("kdrama.watch2Time"),
-                  desc: t("kdrama.watch2Desc")
-                },
-                {
-                  num: "3",
-                  title: t("kdrama.watch3Title"),
-                  time: t("kdrama.watch3Time"),
-                  desc: t("kdrama.watch3Desc")
-                },
-                {
-                  num: "4",
-                  title: t("kdrama.watch4Title"),
-                  time: t("kdrama.watch4Time"),
-                  desc: t("kdrama.watch4Desc")
-                }
-              ].map((item, i) => (
-                <div key={i} className="p-6 rounded-2xl border bg-card">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-[#2E2E2E] text-klovers-yellow font-bold flex-shrink-0">
-                      {item.num}
-                    </div>
-                    <div className="flex-grow">
-                      <h3 className="font-bold text-lg">{item.title}</h3>
-                      <p className="inline-block text-xs font-semibold mt-1 px-2.5 py-0.5 rounded-full bg-klovers-yellow text-[#2E2E2E]">{item.time}</p>
-                    </div>
-                  </div>
-                  <p className="text-foreground/70 ms-14">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 p-6 rounded-2xl bg-klovers-green/10 border-2 border-klovers-green">
-              <p className="font-bold mb-2">{t("kdrama.expectedResults")}</p>
-              <p className="text-foreground/70">{t("kdrama.expectedResultsDesc")}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Dramas by Level */}
-        <section className="py-16 border-b">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-4">{t("kdrama.levelsTitle")}</h2>
-            <p className="text-foreground/70 mb-12">{t("kdrama.levelsSubtitle")}</p>
-
-            {[
-              {
-                level: t("kdrama.levelA1"),
-                dramas: [
-                  { name: t("kdrama.levelA1Drama1Name"), why: t("kdrama.levelA1Drama1Why") },
-                  { name: t("kdrama.levelA1Drama2Name"), why: t("kdrama.levelA1Drama2Why") }
-                ]
-              },
-              {
-                level: t("kdrama.levelA2"),
-                dramas: [
-                  { name: t("kdrama.levelA2Drama1Name"), why: t("kdrama.levelA2Drama1Why") },
-                  { name: t("kdrama.levelA2Drama2Name"), why: t("kdrama.levelA2Drama2Why") }
-                ]
-              },
-              {
-                level: t("kdrama.levelB1"),
-                dramas: [
-                  { name: t("kdrama.levelB1Drama1Name"), why: t("kdrama.levelB1Drama1Why") },
-                  { name: t("kdrama.levelB1Drama2Name"), why: t("kdrama.levelB1Drama2Why") }
-                ]
-              },
-              {
-                level: t("kdrama.levelB2"),
-                dramas: [
-                  { name: t("kdrama.levelB2Drama1Name"), why: t("kdrama.levelB2Drama1Why") },
-                  { name: t("kdrama.levelB2Drama2Name"), why: t("kdrama.levelB2Drama2Why") }
-                ]
-              }
-            ].map((section, i) => (
-              <div key={i} className="mb-8">
-                <h3 className="inline-block text-lg font-bold mb-4 px-4 py-1.5 rounded-full bg-[#2E2E2E] text-klovers-yellow">{section.level}</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {section.dramas.map((drama, j) => (
-                    <div key={j} className="p-4 rounded-2xl border bg-card">
-                      <p className="font-bold text-foreground mb-1">{drama.name}</p>
-                      <p className="text-sm text-foreground/70">{drama.why}</p>
-                    </div>
-                  ))}
-                </div>
+            <h2 className="text-3xl font-bold mb-8">{tr("Choosing a drama to study", "تختار مسلسل تذاكر بيه إزاي")}</h2>
+            <div className="grid md:grid-cols-2 gap-5">
+              <div className="p-6 rounded-2xl border bg-card">
+                <h3 className="inline-block text-sm font-bold mb-3 px-3 py-1 rounded-full bg-klovers-yellow text-charcoal">
+                  {tr("Easier to start with", "أسهل للبداية")}
+                </h3>
+                <p className="text-foreground/70 leading-relaxed">
+                  {tr(
+                    "Modern stories set at work, at school or at home, with standard Seoul speech and everyday conversation — romantic comedies and slice-of-life shows are a good fit.",
+                    "قصص حديثة في الشغل أو المدرسة أو البيت، بلهجة سيول العادية وكلام يومي — الكوميديا الرومانسية والمسلسلات الاجتماعية مناسبة.",
+                  )}
+                </p>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Study Habits */}
-        <section className="py-16 border-b bg-[#FFF9EC] dark:bg-muted/30">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-12 text-center">{t("kdrama.habitTitle")}</h2>
-
-            <div className="space-y-4">
-              {[
-                { day: t("kdrama.habitDay1"), goal: t("kdrama.habitGoal1"), habit: t("kdrama.habitTime1") },
-                { day: t("kdrama.habitDay2"), goal: t("kdrama.habitGoal2"), habit: t("kdrama.habitTime2") },
-                { day: t("kdrama.habitDay3"), goal: t("kdrama.habitGoal3"), habit: t("kdrama.habitTime3") },
-                { day: t("kdrama.habitDay4"), goal: t("kdrama.habitGoal4"), habit: t("kdrama.habitTime4") },
-                { day: t("kdrama.habitDay5"), goal: t("kdrama.habitGoal5"), habit: t("kdrama.habitTime5") }
-              ].map((item, i) => (
-                <div key={i} className="p-4 rounded-2xl border bg-card flex items-start gap-4">
-                  <div className="flex-shrink-0 font-bold text-sm min-w-fit px-3 py-1 rounded-full bg-klovers-yellow text-[#2E2E2E]">{item.day}</div>
-                  <div className="flex-grow">
-                    <p className="font-semibold text-foreground">{item.goal}</p>
-                    <p className="text-sm text-foreground/60 mt-1">{item.habit}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 p-6 rounded-2xl bg-card border-2 border-foreground/80">
-              <p className="font-bold mb-2">{t("kdrama.journalTitle")}</p>
-              <p className="text-sm text-foreground/70 mb-4">{t("kdrama.journalIntro")}</p>
-              <div className="bg-muted p-4 rounded-xl text-sm text-foreground/70">
-                <p>{t("kdrama.journalPhrase")}</p>
-                <p>{t("kdrama.journalContext")}</p>
-                <p>{t("kdrama.journalMySentence")}</p>
+              <div className="p-6 rounded-2xl border bg-card">
+                <h3 className="inline-block text-sm font-bold mb-3 px-3 py-1 rounded-full bg-charcoal text-klovers-yellow">
+                  {tr("Better saved for later", "أحسن تأجلها لبعدين")}
+                </h3>
+                <p className="text-foreground/70 leading-relaxed">
+                  {tr(
+                    "Historical dramas (old-fashioned speech), shows in strong regional dialects, and fast thrillers full of slang or technical words — medical, legal, military.",
+                    "المسلسلات التاريخية (لغة قديمة)، والمسلسلات بلهجات محلية قوية، والإثارة السريعة المليانة عامية أو مصطلحات — طبية أو قانونية أو عسكرية.",
+                  )}
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Why Klovers + Dramas */}
+        {/* Where classes fit */}
         <section className="py-16 border-b">
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-4">{t("kdrama.combineTitle")}</h2>
-            <p className="text-foreground/70 mb-12">{t("kdrama.combineSubtitle")}</p>
-
-            <div className="grid md:grid-cols-3 gap-6">
+            <h2 className="text-3xl font-bold mb-8">{tr("Where live classes fit", "الحصص المباشرة مكانها فين")}</h2>
+            <ul className="space-y-3">
               {[
-                {
-                  col: t("kdrama.combineCol1Title"),
-                  items: [t("kdrama.combineCol1Item1"), t("kdrama.combineCol1Item2"), t("kdrama.combineCol1Item3"), t("kdrama.combineCol1Item4"), t("kdrama.combineCol1Item5")]
-                },
-                {
-                  col: t("kdrama.combineCol2Title"),
-                  items: [t("kdrama.combineCol2Item1"), t("kdrama.combineCol2Item2"), t("kdrama.combineCol2Item3"), t("kdrama.combineCol2Item4"), t("kdrama.combineCol2Item5")],
-                  highlight: true
-                },
-                {
-                  col: t("kdrama.combineCol3Title"),
-                  items: [t("kdrama.combineCol3Item1"), t("kdrama.combineCol3Item2"), t("kdrama.combineCol3Item3"), t("kdrama.combineCol3Item4"), t("kdrama.combineCol3Item5")]
-                }
-              ].map((col, i) => (
-                <div key={i} className={`p-6 rounded-2xl border ${
-                  col.highlight ? "bg-klovers-yellow/15 border-2 border-[#2E2E2E] dark:border-klovers-yellow shadow-lg scale-105" : "bg-card"
-                }`}>
-                  <h3 className="font-bold text-lg mb-4">
-                    {col.highlight ? (
-                      <span className="inline-block px-3 py-1 rounded-full bg-[#2E2E2E] text-klovers-yellow">{col.col}</span>
-                    ) : col.col}
-                  </h3>
-                  <ul className="space-y-2">
-                    {col.items.map((item, j) => (
-                      <li key={j} className="flex items-start gap-2 text-sm">
-                        <span className={`font-bold mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs ${item.includes("✓") ? "bg-klovers-green text-[#2E2E2E]" : item.includes("❌") ? "bg-[#FF3131] text-white" : ""}`}>
-                          {item.includes("✓") ? "✓" : item.includes("❌") ? "✗" : "•"}
-                        </span>
-                        {item.replace(/[✓❌]/g, "")}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                tr("Dramas give you listening and real phrases. A class explains the grammar behind them.", "المسلسلات بتديك استماع وجمل حقيقية. الحصة بتشرح القواعد اللي وراها."),
+                tr("You can bring a line you did not understand and ask about it.", "تقدر تجيب جملة مفهمتهاش وتسأل عنها."),
+                tr("One live class a week, plus a scene or two between classes, is a pace most people can keep.", "حصة مباشرة في الأسبوع، ومشهد أو اتنين بين الحصص، ده إيقاع أغلب الناس تقدر تحافظ عليه."),
+              ].map((line) => (
+                <li key={line} className="flex items-start gap-3 text-foreground">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+                  <span className="leading-relaxed">{line}</span>
+                </li>
               ))}
-            </div>
-
-            <div className="mt-8 p-6 rounded-2xl bg-klovers-yellow/15 border-2 border-klovers-yellow">
-              <p className="font-bold mb-2">{t("kdrama.strategyTitle")}</p>
-              <p className="text-foreground/70">{t("kdrama.strategyDesc")}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section className="py-16 border-b">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-12 text-center">{t("kdrama.faqTitle")}</h2>
-            <div className="space-y-6">
-              {[
-                { q: t("kdrama.faq1Q"), a: t("kdrama.faq1A") },
-                { q: t("kdrama.faq2Q"), a: t("kdrama.faq2A") },
-                { q: t("kdrama.faq3Q"), a: t("kdrama.faq3A") },
-                { q: t("kdrama.faq4Q"), a: t("kdrama.faq4A") },
-                { q: t("kdrama.faq5Q"), a: t("kdrama.faq5A") }
-              ].map((item, i) => (
-                <details key={i} className="group p-6 rounded-2xl border bg-card cursor-pointer">
-                  <summary className="font-bold text-lg flex items-center justify-between">
-                    {item.q}
-                    <span className="transition group-open:rotate-180">
-                      <ArrowRight className="h-5 w-5" />
-                    </span>
-                  </summary>
-                  <p className="text-foreground/70 mt-4 pt-4 border-t">{item.a}</p>
-                </details>
-              ))}
-            </div>
+            </ul>
           </div>
         </section>
 
         {/* CTA */}
-        <section className="py-20 bg-[#2E2E2E] text-white">
+        <section className="py-20 bg-charcoal text-white">
           <div className="container mx-auto px-4 max-w-4xl text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">{t("kdrama.finalCtaTitle")}</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              {tr("Bring a scene to your first class", "هات مشهد معاك في أول حصة")}
+            </h2>
             <p className="text-lg mb-8 text-white/80 max-w-2xl mx-auto">
-              {t("kdrama.finalCtaDesc")}
+              {tr(
+                "The first class is free. Meet your teacher, try a real class, and ask about a line from the drama you are watching.",
+                "أول حصة مجانية. اتعرّف على معلمتك، وجرّب حصة حقيقية، واسأل عن جملة من المسلسل اللي بتتفرج عليه.",
+              )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" className="bg-klovers-yellow text-[#2E2E2E] hover:bg-klovers-yellow/90" asChild>
-                <a href="/enroll-now" className="flex items-center gap-2">
-                  {t("kdrama.finalCtaJoin")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                </a>
+              <Button size="lg" className="bg-klovers-yellow text-charcoal hover:bg-klovers-yellow/90 rounded-full font-bold" asChild>
+                <Link to="/free-trial" className="flex items-center gap-2">
+                  {tr("Book a free class", "احجز حصة مجانية")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="bg-transparent text-white border-white hover:bg-white/10 hover:text-white" asChild>
-                <a href="/placement-test">{t("kdrama.finalCtaLevel")}</a>
+              <Button size="lg" variant="outline" className="bg-transparent text-white border-white hover:bg-white/10 hover:text-white rounded-full" asChild>
+                <Link to="/blog/best-kdrama-learn-korean-difficulty-ranked">{tr("Drama picks by difficulty", "ترشيحات حسب الصعوبة")}</Link>
               </Button>
             </div>
-            <p className="text-sm text-white/80 mt-6">
-              <Tv className="h-4 w-4 inline me-2" />
-              {t("kdrama.finalCtaFooter")}
-            </p>
           </div>
         </section>
       </main>

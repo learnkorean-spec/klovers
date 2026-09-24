@@ -478,10 +478,10 @@ export const ERAS: Era[] = [
     ],
     words: [
       { ko: "한류", rom: "hallyu", romAr: "هاليو", en: "the Korean wave", ar: "الموجة الكورية" },
-      { ko: "서울", rom: "Seoul", romAr: "سيول", en: "Seoul", ar: "سيول" },
+      { ko: "서울", rom: "Seoul", romAr: "سوول", en: "Seoul, the capital", ar: "سيول، العاصمة" },
       { ko: "드라마", rom: "deurama", romAr: "دراما", en: "drama", ar: "مسلسل درامي" },
       { ko: "영화", rom: "yeonghwa", romAr: "يونغهوا", en: "movie", ar: "فيلم" },
-      { ko: "노래", rom: "norae", romAr: "نوراي", en: "song", ar: "أغنية" },
+      { ko: "노래", rom: "norae", romAr: "نوريه", en: "song", ar: "أغنية" },
       { ko: "팬", rom: "paen", romAr: "بان", en: "fan", ar: "معجب" },
     ],
     posts: [POSTS.kpop, POSTS.streetFood],

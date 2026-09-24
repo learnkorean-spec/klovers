@@ -279,7 +279,7 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
 
     const scoreBlock = !ladder ? "" : `
     <h2 style="color:${BRAND_DARK};font-size:16px;margin:0 0 8px;">ليه المستوى ده بالذات؟</h2>
-    <p style="margin:0 0 12px;color:${BRAND_MUTED};font-size:14px;">الاختبار ٢٥ سؤال مرتّبين من الأسهل للأصعب، وكل مستوى ليه خط ثابت لازم يتعدّى.</p>
+    <p style="margin:0 0 12px;color:${BRAND_MUTED};font-size:14px;">الاختبار ٥٢ سؤال مرتّبين من الأسهل للأصعب، وكل مستوى ليه خط ثابت لازم يتعدّى.</p>
     <table style="width:100%;border-collapse:collapse;margin:0 0 10px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
       ${row("الدرجة", num(payload.score as number, true))}
       ${row(`خط ${levelLabel(ladder.passed.key, lang)}`, `${num(ladder.passed.min, true)} — اتعدّى ✅`, !ladder.next)}
@@ -300,7 +300,7 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     <h2 style="color:${BRAND_DARK};font-size:16px;margin:26px 0 12px;">مواعيد المستوى</h2>
     <table style="width:100%;border-collapse:collapse;margin:0 0 8px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
       ${slotRows(true)}
-      ${row("المجموعة", "ساعة للحصة · ٨ طلاب بالكتير", true)}
+      ${row("المجموعة", "ساعة للحصة · مجموعة صغيرة", true)}
     </table>
     <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;"><strong>حصة واحدة في الأسبوع</strong> — المواعيد دي بدائل، واختيار واحد منهم بيتم من الحساب. والمجموعة صغيرة عن قصد — عشان يبقى فيه وقت لكل حد يتكلم.</p>
 
@@ -362,7 +362,7 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
     <h2 style="color:${BRAND_DARK};font-size:16px;margin:26px 0 12px;">Times at this level</h2>
     <table style="width:100%;border-collapse:collapse;margin:0 0 8px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
       ${slotRows(false)}
-      ${row("Group", "1 hour per class · 8 students max", true)}
+      ${row("Group", "1 hour per class · small group", true)}
     </table>
     <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;"><strong>One class a week</strong> — these are alternatives, and one of them is chosen from the account. The group is small on purpose, so there is room for everyone to speak.</p>
 

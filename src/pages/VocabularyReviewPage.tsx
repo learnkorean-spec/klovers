@@ -109,7 +109,7 @@ export function VocabularyReviewPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {[
                 { label: isAr ? "مطلوب اليوم" : "Due Today", value: filteredCards.length, sub: isAr ? "بطاقات جاهزة للمراجعة" : "cards ready to review" },
-                { label: isAr ? "الوقت المطلوب" : "Time Needed", value: Math.max(1, Math.ceil(filteredCards.length / 20)), sub: isAr ? "دقائق (~20 بطاقة/دقيقة)" : "minutes (~20 cards/min)" },
+                { label: isAr ? "الوقت المطلوب" : "Time Needed", value: Math.max(1, Math.ceil(filteredCards.length / 6)), sub: isAr ? "دقائق (حوالي ٦ بطاقات في الدقيقة)" : "minutes (about 6 cards a minute)" },
                 { label: isAr ? "XP متاحة" : "XP Available", value: `${filteredCards.length * 5}`, sub: isAr ? "5 XP لكل بطاقة" : "5 XP per card" },
               ].map(({ label, value, sub }) => (
                 <Card key={label}>
@@ -153,8 +153,8 @@ export function VocabularyReviewPage() {
                 <h2 className="text-2xl font-bold text-foreground mb-4">{isAr ? "مستعد للمراجعة؟" : "Ready to Review?"}</h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   {isAr
-                    ? <>لديك <strong>{filteredCards.length}</strong> مفردة جاهزة. ستستغرق هذه الجلسة حوالي {Math.max(1, Math.ceil(filteredCards.length / 20))} دقائق.</>
-                    : <>You have <strong>{filteredCards.length}</strong> vocabulary items ready. This session will take about {Math.max(1, Math.ceil(filteredCards.length / 20))} minutes.</>
+                    ? <>لديك <strong>{filteredCards.length}</strong> مفردة جاهزة. ستستغرق هذه الجلسة حوالي {Math.max(1, Math.ceil(filteredCards.length / 6))} دقائق.</>
+                    : <>You have <strong>{filteredCards.length}</strong> vocabulary items ready. This session will take about {Math.max(1, Math.ceil(filteredCards.length / 6))} minutes.</>
                   }
                 </p>
                 {lessonOptions.length > 1 && (

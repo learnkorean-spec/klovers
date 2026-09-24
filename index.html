@@ -4,6 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Klovers | Korean Lovers Academy</title>
+
+    <!--
+      Crawler-only prerendered body (25 Sep 2026). scripts/prerender-meta.mjs
+      writes plain HTML into #root for non-JS crawlers (#home-prerendered,
+      #article-prerendered, #era-prerendered ...). Unstyled, it flashed on
+      every reload as a raw text page before React replaced it (Re: "a text
+      code picture before loading"). It stays in the HTML - crawlers and
+      screen readers still read it - but is visually hidden. React's first
+      render replaces #root's children, so this never affects the real page.
+      Inline and in <head> on purpose: it must apply before any CSS file loads.
+    -->
+    <style>
+      #root > [id$="-prerendered"] {
+        position: absolute !important;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
     <meta name="description" content="Learn Korean online with Klovers — interactive lessons, certified teachers, placement tests, and gamified learning for all levels." />
     <meta name="author" content="Klovers" />
     <meta name="robots" content="index, follow" />
