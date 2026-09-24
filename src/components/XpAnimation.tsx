@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Zap, Star, Trophy, Flame, Check } from "lucide-react";
 import { getLeague, LEAGUES } from "@/constants/gamification";
-import mascotImg from "@/assets/klovers-mascot.png";
+// The approved 3D Cluby (the old flat mascot art is retired).
+const mascotImg = "/assets/cluby/cluby-star.webp";
 
 // --- Floating XP animation ---
 export function XpFloatAnimation({ xp, onComplete }: { xp: number; onComplete?: () => void }) {
@@ -78,7 +79,11 @@ export function StreakCelebration({
             <Flame className="absolute -top-6 left-1/2 -translate-x-1/2 h-16 w-16 text-primary animate-flame-flicker drop-shadow-lg" strokeWidth={2.5} />
             <img
               src={mascotImg}
-              alt="KLovers Mascot"
+              alt="Cluby, your study companion"
+              width={333}
+              height={440}
+              loading="lazy"
+              decoding="async"
               className="relative z-10 w-36 h-36 object-contain drop-shadow-2xl"
             />
           </div>
@@ -158,7 +163,11 @@ export function LeaguePromotionModal({
           <div className="relative animate-mascot-bounce">
             <img
               src={mascotImg}
-              alt="KLovers Mascot celebrating"
+              alt="Cluby celebrating with you"
+              width={333}
+              height={440}
+              loading="lazy"
+              decoding="async"
               className="relative z-10 w-32 h-32 object-contain drop-shadow-2xl"
             />
           </div>
@@ -231,7 +240,11 @@ export function MissionCompleteOverlay({ lessonTitle, xpEarned, onContinue }: {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-36 animate-pulse-glow rounded-full" />
           <img
             src={mascotImg}
-            alt="KLovers Mascot"
+            alt="Cluby, your study companion"
+            width={333}
+            height={440}
+            loading="lazy"
+            decoding="async"
             className="relative z-10 w-28 h-28 object-contain drop-shadow-2xl animate-mascot-bounce"
           />
         </div>

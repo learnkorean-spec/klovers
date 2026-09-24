@@ -5,12 +5,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 // Same order as `why.features` in translations.ts:
 // Structured Levels, Flexible Classes, Speaking-Focused, TOPIK Prep,
 // Supportive Community, Special Discounts.
-const icons: KloverIconName[] = [
+const icons: (KloverIconName | "cluby")[] = [
   "books-stack",
   "calendar-check",
   "chat-annyeonghaseyo",
   "badge-blossom",
-  "klobi-headphones",
+  "cluby",
   "lightbulb-sprout",
 ];
 
@@ -46,7 +46,21 @@ const WhyKLovers = () => {
                       surface to keep their outline. On dark they stand directly
                       on the card (palette rule, 2026-09-20). */}
                   <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-ivory dark:bg-transparent flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-charcoal/15 dark:border-transparent">
-                    {icon && <KloverIcon name={icon} className="h-10 w-10" />}
+                    {icon === "cluby" ? (
+                      <img
+                        src="/assets/cluby/cluby-wave.webp"
+                        alt=""
+                        aria-hidden="true"
+                        width={314}
+                        height={440}
+                        loading="lazy"
+                        decoding="async"
+                        draggable={false}
+                        className="h-10 w-10 shrink-0 select-none object-contain"
+                      />
+                    ) : (
+                      icon && <KloverIcon name={icon} className="h-10 w-10" />
+                    )}
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">

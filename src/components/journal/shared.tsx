@@ -10,9 +10,8 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from "rea
 import { Link } from "react-router-dom";
 import { Bookmark, BookmarkCheck, Clock, Languages } from "lucide-react";
 import OptimizedImage from "@/components/OptimizedImage";
-import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import KloverIcon from "@/components/KloverIcon";
 import Korean from "@/components/Korean";
-import { KLOBI_WAVE } from "@/assets/band/klobiWave";
 import { cn } from "@/lib/utils";
 import { BLOG_LEARNING_META } from "@/constants/blogLearningMeta";
 import { STAGE_BY_ID, STAGE_CATEGORY, stageForSlug, type KlobiPose, type StageId } from "@/constants/blogJourney";
@@ -92,28 +91,34 @@ export function Reveal({ children, className, delay = 0 }: { children: ReactNode
 
 /* ───────────────────────────── Klobi, the guide ───────────────────────────── */
 
-const POSE_ICON: Record<Exclude<KlobiPose, "wave">, KloverIconName> = {
-  reading: "klobi-reading",
-  cards: "game-klobi-han",
-  headphones: "klobi-headphones",
-  thumbsup: "game-klobi-thumbsup",
+// The approved 3D Cluby poses (public/assets/cluby). The old flat Klobi
+// drawings are retired; every pose now maps to a 3D plush Cluby.
+const CLUBY_WAVE = { src: "/assets/cluby/cluby-wave.webp", width: 314, height: 440 };
+const CLUBY_STAR = { src: "/assets/cluby/cluby-star.webp", width: 333, height: 440 };
+
+const POSE_ART: Record<KlobiPose, { src: string; width: number; height: number }> = {
+  wave: CLUBY_WAVE,
+  reading: CLUBY_STAR,
+  cards: CLUBY_STAR,
+  headphones: CLUBY_STAR,
+  thumbsup: CLUBY_STAR,
 };
 
 export function KlobiFigure({ pose, className }: { pose: KlobiPose; className?: string }) {
-  if (pose === "wave") {
-    return (
-      <img
-        src={KLOBI_WAVE}
-        alt=""
-        aria-hidden="true"
-        width={102}
-        height={127}
-        className={cn("shrink-0 select-none object-contain", className)}
-        draggable={false}
-      />
-    );
-  }
-  return <KloverIcon name={POSE_ICON[pose]} className={className} />;
+  const art = POSE_ART[pose];
+  return (
+    <img
+      src={art.src}
+      alt=""
+      aria-hidden="true"
+      width={art.width}
+      height={art.height}
+      loading="lazy"
+      decoding="async"
+      className={cn("shrink-0 select-none object-contain", className)}
+      draggable={false}
+    />
+  );
 }
 
 /**

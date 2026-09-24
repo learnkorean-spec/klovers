@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ClipboardCheck, Gamepad2, BookOpen, X, ChevronRight } from "lucide-react";
-import KloverIcon from "@/components/KloverIcon";
+import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const STEPS = [
@@ -100,10 +100,11 @@ const WelcomeModal = ({ open, onClose }: WelcomeModalProps) => {
             <X className="h-4 w-4 text-primary-foreground" />
           </button>
 
-          {/* Klobi stands on an Ivory dome: on the yellow header the drawing
-              needs a light surface to keep its outline (palette rule). */}
+          {/* A neutral icon on an Ivory dome: a brand-new student has not met
+              Cluby yet (he appears once his egg hatches), so no character here.
+              On the yellow header the drawing needs a light surface (palette rule). */}
           <div className="inline-flex h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-ivory border border-charcoal/20 items-center justify-center mb-2 sm:mb-3">
-            <KloverIcon name="klobi-reading" className="h-12 w-12 sm:h-16 sm:w-16" />
+            <BrandIcon name="open-book" className="h-12 w-12 sm:h-16 sm:w-16" />
           </div>
           <h2 className="text-xl font-extrabold text-primary-foreground mb-1">
             {isAr ? "مرحباً بك في Klovers! 🇰🇷" : "Welcome to Klovers! 🇰🇷"}

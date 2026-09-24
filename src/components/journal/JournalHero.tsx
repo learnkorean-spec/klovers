@@ -126,7 +126,7 @@ export default function JournalHero({
             </div>
             <div className="absolute -bottom-6 end-2 flex items-end gap-2 sm:end-6">
               <p className="mb-8 hidden max-w-[11rem] rounded-2xl rounded-ee-sm bg-card px-3.5 py-2 text-sm font-medium leading-snug text-foreground shadow-md sm:block">
-                {isAr ? "أنا كلوبي، رفيقك في الرحلة!" : "I'm Klobi — your guide on this trip!"}
+                {isAr ? "أنا كلوبي، رفيقك في الرحلة!" : "I'm Cluby — your companion on this trip!"}
               </p>
               <div className="rounded-full border border-border bg-card p-2 shadow-lg journal-klobi-enter">
                 <KlobiFigure pose="reading" className="h-20 w-20 sm:h-24 sm:w-24" />
