@@ -54,6 +54,36 @@ const CARD_ACCENT: Record<string, string> = {
   topik_prep: "bg-[hsl(0_0%_33%)]",
 };
 
+/**
+ * The painted story world at the top of each card (story canon,
+ * /assets/story/world-*.webp, 1600x900). Hangul -> the Hangul village,
+ * first words -> the vocabulary market, everyday talk -> the conversation
+ * café, culture -> culture street, Levels 4-6 -> the Seoul journey, anything
+ * else (TOPIK prep) -> the memory garden.
+ */
+type CourseWorld = { src: string; en: string; ar: string };
+const W = {
+  village: { src: "/assets/story/world-hangul-village.webp", en: "Painted hanok village where Hangul begins", ar: "قرية هانوك مرسومة حيث تبدأ الهانغول" },
+  market: { src: "/assets/story/world-vocabulary-market.webp", en: "Painted Korean market full of first words", ar: "سوق كوري مرسوم مليء بالكلمات الأولى" },
+  cafe: { src: "/assets/story/world-conversation-cafe.webp", en: "Painted Korean café for everyday conversation", ar: "كافيه كوري مرسوم للمحادثة اليومية" },
+  street: { src: "/assets/story/world-culture-street.webp", en: "Painted Seoul street of Korean culture", ar: "شارع مرسوم في سيول للثقافة الكورية" },
+  garden: { src: "/assets/story/world-memory-garden.webp", en: "Painted memory garden for review", ar: "حديقة الذاكرة المرسومة للمراجعة" },
+  seoul: { src: "/assets/story/world-seoul-journey.webp", en: "Painted journey to the Seoul skyline", ar: "رحلة مرسومة نحو أفق سيول" },
+} satisfies Record<string, CourseWorld>;
+
+const COURSE_WORLD: Record<string, CourseWorld> = {
+  // Unknown keys fall back to the memory garden (see below).
+  hangul: W.village,
+  l1: W.market,
+  l2: W.cafe,
+  l3: W.street,
+  l4: W.seoul,
+  l5: W.seoul,
+  l6: W.seoul,
+  reading_speaking: W.cafe,
+  topik_prep: W.garden,
+};
+
 const CoursesSection = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
@@ -85,12 +115,24 @@ const CoursesSection = () => {
             const features = isAr ? course.features_ar : course.features_en;
             const label = isAr ? course.cta_ar : course.cta_en;
             const arrow = <ArrowRight className={`h-4 w-4 ${isAr ? "rotate-180" : ""}`} />;
+            const world = COURSE_WORLD[course.key] ?? W.garden;
 
             return (
               <Card
                 key={course.key}
                 className="group flex flex-col hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 overflow-hidden border-border hover:border-primary/50"
               >
+                <div className="relative h-32 overflow-hidden bg-muted sm:h-36">
+                  <img
+                    src={world.src}
+                    alt={isAr ? world.ar : world.en}
+                    width={1600}
+                    height={900}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <span

@@ -89,7 +89,8 @@ const FAQ = () => {
 };
 
 const ExitNudge = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   const [visible, setVisible] = useState(false);
   const dismissed = useRef(false);
   const shownLogged = useRef(false);
@@ -149,12 +150,12 @@ const ExitNudge = () => {
   // read it. This version is a pinned bottom card with ONE primary CTA,
   // WhatsApp demoted to a footer link, bilingual via existing i18n keys.
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4 pointer-events-none animate-in slide-in-from-bottom-2 duration-300">
+    <div className="fixed bottom-0 inset-x-0 z-50 p-3 sm:p-4 pointer-events-none animate-in slide-in-from-bottom-2 duration-300">
       <div className="relative pointer-events-auto mx-auto max-w-lg bg-card border-2 border-primary/60 shadow-[0_20px_60px_rgba(0,0,0,0.25)] rounded-2xl overflow-hidden">
         <button
           onClick={() => setVisible(false)}
           aria-label={t("pricingPage.exitDismiss")}
-          className="absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-muted transition-colors z-10"
+          className="absolute top-2 end-2 text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-muted transition-colors z-10"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -163,8 +164,16 @@ const ExitNudge = () => {
           onClick={handleTrialClick}
           className="group flex items-center gap-4 p-4 hover:bg-primary/5 transition-colors"
         >
-          <div className="text-3xl flex-shrink-0">🎁</div>
-          <div className="flex-1 min-w-0 pr-6">
+          {/* Cluby holding his star, in place of the old gift emoji. */}
+          <img
+            src="/assets/cluby/cluby-star.webp"
+            alt={isAr ? "كلوبي ماسك نجمة" : "Cluby holding a star"}
+            width={333}
+            height={440}
+            decoding="async"
+            className="h-14 w-auto flex-shrink-0 object-contain drop-shadow-sm"
+          />
+          <div className="flex-1 min-w-0 pe-6">
             <p className="font-bold text-foreground text-sm leading-tight">
               {t("pricingPage.exitTitle")}
             </p>
@@ -183,6 +192,35 @@ const ExitNudge = () => {
           {t("pricingPage.exitChat")}
         </button>
       </div>
+    </div>
+  );
+};
+
+/**
+ * Story art above the tiers: the two friends and Cluby studying at a café
+ * (story canon, /assets/cluby/cafe.webp). Kept short on phones (h-28) so the
+ * tiers still start on the first screen.
+ */
+const PricingStory = () => {
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  return (
+    <div className="container mx-auto px-4 pt-6 md:pt-10">
+      <figure className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+        <img
+          src="/assets/cluby/cafe.webp"
+          alt={isAr ? "صديقان وكلوبي بيذاكروا كوري في كافيه" : "Two friends and Cluby studying Korean together at a café"}
+          width={1200}
+          height={800}
+          decoding="async"
+          className="h-28 w-full object-cover object-[center_45%] sm:h-40 md:h-56"
+        />
+        <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/85 via-charcoal/40 to-transparent px-4 pb-3 pt-10 text-start md:px-6 md:pb-4">
+          <span className="font-display text-sm font-extrabold text-ivory md:text-lg">
+            {isAr ? "صديقان، كافيه واحد، وكوري كل أسبوع." : "Two friends, one café, Korean every week."}
+          </span>
+        </figcaption>
+      </figure>
     </div>
   );
 };
@@ -255,6 +293,7 @@ const PricingPage = () => {
     <div className="min-h-screen">
       <Header />
       <main id="main-content" className="pt-16">
+        <PricingStory />
         <PricingSection />
         <TestimonialsSection />
         <FAQ />

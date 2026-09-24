@@ -21,6 +21,10 @@ import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
 import { countryFromTimezone } from "@/lib/stripePrices";
 import { trustCopy } from "@/lib/trustFigures";
+import { Star, Users, Globe, Gift, Target, Gamepad2, BookOpen } from "lucide-react";
+
+/** Icons for the three benefit pills, in the order of the pill labels. */
+const PILL_ICONS = [Target, Gamepad2, BookOpen];
 
 const SignUpPage = () => {
   useSEO({ title: "Sign Up | Klovers Korean Academy", description: "Create your free Klovers account and start learning Korean with live interactive classes today.", noindex: true });
@@ -186,17 +190,42 @@ const SignUpPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main id="main-content" className="pt-24 pb-16 flex flex-col items-center justify-center px-4 gap-4">
+      <main id="main-content" className="pt-24 pb-16 px-4">
+        <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-2 lg:items-center lg:gap-10">
+
+        {/* Story art: the two friends finding the glowing clover egg - where
+            every Klovers journey starts. A short strip on phones, a tall
+            panel beside the form from lg up. */}
+        <figure className="relative overflow-hidden rounded-3xl border border-border bg-charcoal shadow-sm">
+          <img
+            src="/assets/story/egg-teaser.webp"
+            alt={isAr ? "صديقان يكتشفان بيضة البرسيم المضيئة في الليل" : "Two friends discovering a glowing clover egg at night"}
+            width={1600}
+            height={900}
+            decoding="async"
+            className="h-28 w-full object-cover object-[center_60%] lg:h-[30rem]"
+          />
+          <figcaption className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-charcoal/90 via-charcoal/50 to-transparent p-6 pt-20 text-start lg:block">
+            <span className="block font-display text-2xl font-extrabold leading-tight text-ivory">
+              {isAr ? "كل رحلة تبدأ باكتشاف صغير." : "Every journey starts with one small discovery."}
+            </span>
+            <span className="mt-1 block text-sm text-ivory/80">
+              {isAr ? "أنشئ حسابك المجاني وابدأ رحلتك اليوم." : "Make your free account and start yours today."}
+            </span>
+          </figcaption>
+        </figure>
+
+        <div className="flex w-full flex-col items-center gap-4">
 
         {/* Social proof strip — figures from @/lib/trustFigures. 200+ is every
             student Reham has taught across 13 years, so it says "taught"; the
             rating is the sourced Google one (it used to read "4.9 rated"). */}
         <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5 font-medium text-foreground">⭐ {trust.ratingShort}</span>
+          <span className="flex items-center gap-1.5 font-medium text-foreground"><Star className="h-3.5 w-3.5 fill-klovers-yellow text-foreground" aria-hidden="true" /> {trust.ratingShort}</span>
           <span className="text-border">·</span>
-          <span>👥 {trust.studentsShort}</span>
+          <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" aria-hidden="true" /> {trust.studentsShort}</span>
           <span className="text-border">·</span>
-          <span>{isAr ? "🌍 +15 دولة" : "🌍 15+ countries"}</span>
+          <span className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5" aria-hidden="true" /> {isAr ? "+15 دولة" : "15+ countries"}</span>
           <span className="text-border">·</span>
           <span className="font-semibold text-foreground">{isAr ? "مجاني" : "Free to join"}</span>
         </div>
@@ -204,8 +233,8 @@ const SignUpPage = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             {redirectTo === "/trial-booking" && (
-              <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 mb-3 text-sm text-foreground">
-                <p className="font-black text-base mb-0.5">{isAr ? "🎁 خطوة واحدة لحصتك المجانية" : "🎁 One step from your free class"}</p>
+              <div className="bg-klovers-yellow/25 border border-charcoal/15 dark:border-klovers-yellow/30 dark:bg-klovers-yellow/10 rounded-xl px-4 py-3 mb-3 text-sm text-foreground">
+                <p className="font-black text-base mb-0.5 flex items-center justify-center gap-1.5"><Gift className="h-4 w-4 shrink-0" aria-hidden="true" />{isAr ? "خطوة واحدة لحصتك المجانية" : "One step from your free class"}</p>
                 <p className="text-muted-foreground text-xs">{isAr ? "أنشئ حسابًا مجانيًا في 30 ثانية، ثم اختر موعدك." : "Create a free account in 30 seconds, then pick your slot."}</p>
               </div>
             )}
@@ -215,11 +244,15 @@ const SignUpPage = () => {
             </p>
             {/* Benefit pills */}
             <div className="flex flex-wrap justify-center gap-2 pt-3">
-              {(isAr ? ["🎯 اختبار مستوى مجاني", "🎮 13 لعبة تعليمية", "📚 كتاب دراسي كامل"] : ["🎯 Free placement test", "🎮 13 learning games", "📚 Full textbook access"]).map((b) => (
-                <span key={b} className="text-[11px] bg-muted text-muted-foreground px-2.5 py-1 rounded-full font-medium">
-                  {b}
-                </span>
-              ))}
+              {(isAr ? ["اختبار مستوى مجاني", "13 لعبة تعليمية", "كتاب دراسي كامل"] : ["Free placement test", "13 learning games", "Full textbook access"]).map((b, i) => {
+                const PillIcon = PILL_ICONS[i] ?? Target;
+                return (
+                  <span key={b} className="inline-flex items-center gap-1 text-[11px] bg-muted text-muted-foreground px-2.5 py-1 rounded-full font-medium">
+                    <PillIcon className="h-3 w-3" aria-hidden="true" />
+                    {b}
+                  </span>
+                );
+              })}
             </div>
           </CardHeader>
           <CardContent>
@@ -325,6 +358,8 @@ const SignUpPage = () => {
         {/* 24 Sep 2026: the mini testimonial that sat here was removed.
             It matched no real review, and Klovers never invents reviews. */}
 
+        </div>
+        </div>
       </main>
       <Footer />
     </div>

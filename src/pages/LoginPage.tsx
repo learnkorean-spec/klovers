@@ -158,17 +158,38 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      <main id="main-content" className="pt-24 pb-16 flex flex-col items-center justify-center px-4 gap-4">
+      <main id="main-content" className="pt-24 pb-16 px-4">
+        <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-2 lg:items-center lg:gap-10">
 
-        {/* Welcome strip. The rating is the sourced one (Google, 5.0 from 7) -
-            it used to read "4.9 rated academy" with no source. */}
-        <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
-          <span>{isAr ? "🔥 حافظ على سلسلتك" : "🔥 Keep your streak"}</span>
-          <span className="text-border">·</span>
-          <span>⭐ {trustCopy(language).ratingShort}</span>
-          <span className="text-border">·</span>
-          <span>🇰🇷 A1–C2</span>
-        </div>
+        {/* Story art: the two friends and Cluby picnicking by the Han river.
+            A short strip on phones, a tall panel beside the form from lg up. */}
+        <figure className="relative overflow-hidden rounded-3xl border border-border bg-charcoal shadow-sm">
+          <img
+            src="/assets/cluby/picnic.webp"
+            alt={isAr ? "صديقان وكلوبي في نزهة على نهر الهان" : "Two friends and Cluby having a picnic by the Han river"}
+            width={1600}
+            height={900}
+            decoding="async"
+            className="h-28 w-full object-cover object-[center_60%] lg:h-[28rem]"
+          />
+          <figcaption className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-charcoal/90 via-charcoal/50 to-transparent p-6 pt-20 text-start lg:block">
+            <span className="block font-display text-2xl font-extrabold leading-tight text-ivory">
+              {isAr ? "أهلاً بعودتك." : "Welcome back."}
+            </span>
+            <span className="mt-1 block text-sm text-ivory/80">
+              {isAr ? "كمّل من حيث توقفت." : "Pick up right where you left off."}
+            </span>
+            <span className="mt-2 block text-xs font-semibold text-ivory/70">
+              {trustCopy(language).ratingShort}
+            </span>
+          </figcaption>
+        </figure>
+
+        <div className="flex w-full flex-col items-center gap-4">
+
+        {/* 25 Sep 2026: the emoji welcome strip that sat here was removed. The
+            sourced rating (Google, 5.0 from 7) now sits in the story panel's
+            caption. */}
 
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
@@ -196,12 +217,14 @@ const LoginPage = () => {
           {isAr ? "جديد في Klovers؟ " : "New to Klovers? "}
           <Link
             to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"}
-            className="text-primary font-semibold hover:underline"
+            className="text-foreground font-semibold underline underline-offset-2"
           >
             {isAr ? "أنشئ حساب مجاني ←" : "Create a free account →"}
           </Link>
         </p>
 
+        </div>
+        </div>
       </main>
       <Footer />
     </div>

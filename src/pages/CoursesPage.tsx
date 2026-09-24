@@ -81,7 +81,9 @@ const CoursesPage = () => {
                 return (
                   <Card key={index} className="text-center border-border">
                     <CardContent className="p-6">
-                      <Icon className="h-8 w-8 text-primary mx-auto mb-3" />
+                      <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-klovers-yellow">
+                        <Icon className="h-6 w-6 text-charcoal" aria-hidden="true" />
+                      </span>
                       <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
                       <p className="text-sm text-muted-foreground">{item.description}</p>
                     </CardContent>
