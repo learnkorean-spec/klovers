@@ -240,14 +240,14 @@ const FreeTrialPage = () => {
         {/* ── HERO ──────────────────────────────────────────── */}
         <section className="py-16 md:py-24 border-b border-border overflow-hidden">
           <div className="container mx-auto px-4 max-w-5xl">
-            <div className="grid md:grid-cols-[1fr_200px] gap-12 items-center">
+            <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] gap-12 items-center">
 
               {/* Text column */}
               <div className="text-center md:text-start">
 
                 {/* Live badge */}
                 <span className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 text-foreground text-xs font-black tracking-[0.15em] uppercase px-3 py-1.5 rounded-full mb-5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-klovers-green animate-pulse" />
                   {t("freeTrial.badge")}
                 </span>
 
@@ -321,17 +321,19 @@ const FreeTrialPage = () => {
                       get_trial_availability, and the deadline is the earliest
                       next_trial_date minus the 1-day booking cutoff the slot
                       query enforces. That is why "Booking closes ..." stays
-                      while the static scarcity line further down went. */}
+                      while the static scarcity line further down went.
+                      Colours are the Klovers palette: our red for spots left,
+                      charcoal + yellow for the deadline. */}
                   {(spotsRemaining !== null || daysToDeadline !== null) && (
                     <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start" aria-live="polite" aria-atomic="false">
                       {spotsRemaining !== null && spotsRemaining <= 15 && (
-                        <span className="inline-flex items-center gap-1 bg-red-100 dark:bg-red-950/40 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-400 text-[11px] font-bold px-2.5 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        <span className="inline-flex items-center gap-1 bg-[#FF3131] text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                           {spotsRemaining} {spotsRemaining === 1 ? "spot" : "spots"} left
                         </span>
                       )}
                       {daysToDeadline !== null && (
-                        <span className="inline-flex items-center gap-1 bg-orange-100 dark:bg-orange-950/40 border border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-400 text-[11px] font-bold px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 bg-foreground text-primary text-[11px] font-bold px-2.5 py-1 rounded-full">
                           <Clock className="h-3 w-3" />
                           {daysToDeadline === 0
                             ? "Booking closes today"
@@ -348,8 +350,8 @@ const FreeTrialPage = () => {
                 <div className="flex flex-wrap gap-2 mt-8 justify-center md:justify-start">
                   {PERKS.map(({ icon: Icon, text }) => (
                     <div key={text} className="flex items-center gap-1.5 bg-muted border border-border rounded-full px-3 py-1.5 text-xs font-semibold text-foreground">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-foreground/25 bg-background flex-shrink-0">
-                        <Icon className="h-3 w-3 text-primary" />
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary flex-shrink-0">
+                        <Icon className="h-3 w-3 text-foreground" />
                       </span>
                       {text}
                     </div>
@@ -357,14 +359,21 @@ const FreeTrialPage = () => {
                 </div>
               </div>
 
-              {/* Decorative card — desktop only */}
-              <div className="hidden md:flex justify-center">
-                <div className="relative w-44 h-56 bg-primary rounded-3xl shadow-2xl flex items-center justify-center rotate-6 hover:rotate-1 transition-transform duration-500 cursor-default select-none">
-                  <span className="text-8xl font-black leading-none" style={{ color: "rgba(0,0,0,0.1)" }}>한</span>
-                  <div className="absolute -bottom-5 -left-5 bg-foreground text-background rounded-2xl px-4 py-3 shadow-xl -rotate-3">
-                    <p className="text-[10px] font-bold text-background/60 uppercase tracking-wider">Free Trial</p>
-                    <p className="text-sm font-black leading-tight">No credit card</p>
-                  </div>
+              {/* The story scene: the two friends and Cluby studying Korean at a
+                  café table (the same art as the homepage's How it works), so
+                  this page speaks in the same style as the rest of Klovers. */}
+              <div className="relative mx-auto w-full max-w-sm md:max-w-none">
+                <img
+                  src="/assets/cluby/cafe.webp"
+                  alt={isAr ? "صديقان مع كلوبي بيذاكروا الكورية على ترابيزة في كافيه" : "Two friends and Cluby studying Korean together at a café table"}
+                  width={1200}
+                  height={800}
+                  decoding="async"
+                  className="aspect-[4/5] w-full rounded-3xl border border-foreground/10 object-cover shadow-[0_24px_50px_-30px_rgba(46,46,46,0.7)]"
+                />
+                <div className="absolute -bottom-4 start-4 rounded-2xl bg-foreground px-4 py-3 text-background shadow-xl">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">{isAr ? "حصة تجريبية" : "Free Trial"}</p>
+                  <p className="text-sm font-black leading-tight">{isAr ? "من غير كارت بنكي" : "No credit card"}</p>
                 </div>
               </div>
 
@@ -372,7 +381,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── TESTIMONIALS ──────────────────────────────────── */}
+        {/* ── TESTIMONIALS ────────────────────────────────── */}
         <section className="py-16 bg-muted/40 border-b border-border">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl font-black text-foreground text-center mb-8">
