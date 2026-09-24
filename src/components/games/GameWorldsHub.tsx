@@ -10,6 +10,7 @@ import { gameIconName } from "@/constants/gameIcons";
 import { gameWorlds, CLUBY_OUTFITS, type GameWorld } from "@/constants/gameWorlds";
 import { BannerScene, WORLD_SCENES, WORLD_STOPS } from "@/components/games/WorldScenes";
 import { BOY_WAVE } from "@/assets/band/boyWave";
+import { isClubyAwake } from "@/lib/clubyAwake";
 
 /**
  * Top of /games: the Game Worlds hub, in the style of Re's 23 Sep 2026 mockup,
@@ -38,6 +39,13 @@ import { BOY_WAVE } from "@/assets/band/boyWave";
  *    (activity_type `game_<id>`, created_at since local midnight);
  *  - there is no Special Reward card.
  * The free/locked state comes only from FREE_GAME_IDS.
+ *
+ * CLUBY FOLLOWS THE EGG (story canon, src/config/klovers-world.ts): nobody
+ * sees Cluby before his egg hatches. Until the student dashboard has marked
+ * him awake (lib/clubyAwake.ts) - and always for visitors who are not signed
+ * in - this page shows the clover egg instead: no Cluby picture, no Cluby
+ * outfits, no line in his voice. Once he is awake he appears in the 3D plush
+ * style from /assets/cluby/.
  */
 
 interface Props {
@@ -51,6 +59,11 @@ interface Props {
 }
 
 const ASSET = "/assets/characters";
+/** Cluby in the canon 3D plush style (only shown once he has hatched). */
+const CLUBY_3D = "/assets/cluby/cluby-hanbok.webp";
+const CLUBY_3D_WAVE = "/assets/cluby/cluby-wave.webp";
+/** The dormant clover egg, shown wherever Cluby would be before he hatches. */
+const EGG = "/assets/story/egg-0.webp";
 
 type WorldKey = GameWorld["key"];
 
@@ -140,6 +153,8 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
   const [played, setPlayed] = useState<Set<string>>(new Set());
   const [playedToday, setPlayedToday] = useState<string[]>([]);
   const [firstName, setFirstName] = useState<string>("");
+  // Visitors who are not signed in never meet Cluby here: the egg is the teaser.
+  const clubyAwake = useMemo(() => isLoggedIn && isClubyAwake(), [isLoggedIn]);
 
   // Re-read whenever XP moves: a finished game is exactly what changes it.
   useEffect(() => {
@@ -243,7 +258,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <img src={BOY_WAVE} alt="" aria-hidden="true" width={71} height={200} decoding="async" className="h-56 w-auto md:h-72" />
           </div>
 
-          {/* Headline + Cluby */}
+          {/* Headline + Cluby (or, before he hatches, his egg) */}
           <div className="flex flex-col items-center gap-3 self-stretch px-4 pt-6 text-center md:items-start md:ps-28 md:text-start">
             <h1 className="text-[11px] font-extrabold uppercase tracking-wider text-charcoal/70">{title}</h1>
             <p className="max-w-md font-display text-3xl font-extrabold leading-tight text-charcoal [text-shadow:0_2px_12px_#FFF6DE] md:text-4xl">{welcome}</p>
@@ -251,10 +266,21 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               {isAr ? "العب، اتعلم، وقرّب أكتر من كوريا!" : "Let's play, learn, and get closer to Korea!"}
             </p>
             <div className="mt-auto flex items-end gap-3">
-              <img src={`${ASSET}/cluby-hanbok.webp`} alt="" aria-hidden="true" width={230} height={286} decoding="async" className="h-32 w-auto md:h-40" />
-              <Bubble lang={lang} tail="left" className="mb-24 w-36 md:mb-28 md:w-40">
-                {isAr ? "العب لعبة وسأتذكّر كل كلمة تتعلّمها!" : "Play a game and I'll remember every word you learn!"}
-              </Bubble>
+              {clubyAwake ? (
+                <>
+                  <img src={CLUBY_3D} alt="" aria-hidden="true" width={230} height={286} decoding="async" className="h-32 w-auto object-contain md:h-40" />
+                  <Bubble lang={lang} tail="left" className="mb-24 w-36 md:mb-28 md:w-40">
+                    {isAr ? "العب لعبة وسأتذكّر كل كلمة تتعلّمها!" : "Play a game and I'll remember every word you learn!"}
+                  </Bubble>
+                </>
+              ) : (
+                <>
+                  <img src={EGG} alt="" aria-hidden="true" width={512} height={512} decoding="async" className="h-24 w-auto object-contain md:h-28" />
+                  <p lang={lang} className="mb-10 max-w-[11rem] rounded-2xl bg-white/85 px-3 py-2 text-start text-xs font-semibold leading-snug text-charcoal shadow-sm md:mb-12">
+                    {isAr ? "بيضة البرسيم بتصحى كل ما تتعلّم كوري أكتر…" : "The clover egg stirs a little more with every Korean word you learn…"}
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
@@ -341,8 +367,29 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
       </section>
 
       {/* ── 2. Next outfit · Today's Missions · Cluby's outfits ──────── */}
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className={cn("grid gap-4", clubyAwake ? "md:grid-cols-3" : "md:grid-cols-2")}>
+        {/* Before the hatch: the egg card stands where Cluby's outfit cards will be. */}
+        {!clubyAwake && (
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
+            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF9EC]">
+              <img src={EGG} alt="" aria-hidden="true" width={512} height={512} loading="lazy" className="h-16 w-auto object-contain" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-bold text-foreground">{isAr ? "بيضة البرسيم" : "The clover egg"}</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {isLoggedIn
+                  ? (isAr ? "تابع البيضة في لوحتك: أول كلمة، أول جملة، أول محادثة… وبعدين نشوف مين جوّه." : "Follow the egg on your dashboard: first word, first sentence, first conversation… then we'll see who's inside.")
+                  : (isAr ? "سجّل وابدأ تتعلّم علشان البيضة تصحى." : "Sign up and start learning to wake the egg.")}
+              </p>
+              <a href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-2 inline-block text-xs font-semibold text-foreground underline">
+                {isLoggedIn ? (isAr ? "روح للّوحة" : "Go to my dashboard") : (isAr ? "سجّل مجانًا" : "Sign up free")}
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* Next outfit */}
+        {clubyAwake && (
         <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
           <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF1C2]">
             <img
@@ -372,6 +419,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             </p>
           </div>
         </div>
+        )}
 
         {/* Today's Missions */}
         <div className="rounded-2xl border border-border bg-card p-4">
@@ -402,9 +450,10 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         </div>
 
         {/* Cluby's outfits */}
+        {clubyAwake && (
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-3">
-            <img src={`${ASSET}/cluby-hanbok.webp`} alt="" aria-hidden="true" width={230} height={286} loading="lazy" className="h-12 w-auto" />
+            <img src={CLUBY_3D} alt="" aria-hidden="true" width={230} height={286} loading="lazy" className="h-12 w-auto object-contain" />
             <div className="min-w-0 flex-1">
               <h2 className="font-bold text-foreground">{isAr ? "ملابس كلوبي" : "Cluby's outfits"}</h2>
               <p className="text-xs text-muted-foreground">
@@ -429,6 +478,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             ))}
           </div>
         </div>
+        )}
       </section>
 
       {/* ── 3. Journey ────────────────────────────────────────────────── */}
@@ -473,12 +523,12 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                       />
                       {state === "current" && (
                         <img
-                          src={`${ASSET}/cluby-hanbok.webp`}
+                          src={clubyAwake ? CLUBY_3D_WAVE : EGG}
                           alt=""
                           aria-hidden="true"
                           width={230}
                           height={286}
-                          className="absolute -top-5 -end-4 h-14 w-auto drop-shadow md:h-16"
+                          className="absolute -top-5 -end-4 h-14 w-auto object-contain drop-shadow md:h-16"
                         />
                       )}
                       {state === "done" && (
@@ -540,17 +590,19 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               <div className="relative h-36">
                 <WorldPainting worldKey={s.world.key} Fallback={Scene} lazy className="absolute inset-0 h-full w-full" />
                 <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent rtl:bg-gradient-to-l" />
-                <img
-                  src={`${ASSET}/${WORLD_CLUBY[s.world.key]}.webp`}
-                  alt=""
-                  aria-hidden="true"
-                  width={230}
-                  height={286}
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute bottom-1 end-3 h-24 w-auto drop-shadow-[0_4px_6px_rgba(46,46,46,0.3)]"
-                />
-                <div className="relative p-4 pe-28 text-charcoal">
+                {clubyAwake && (
+                  <img
+                    src={CLUBY_3D}
+                    alt=""
+                    aria-hidden="true"
+                    width={230}
+                    height={286}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute bottom-1 end-3 h-24 w-auto object-contain drop-shadow-[0_4px_6px_rgba(46,46,46,0.3)]"
+                  />
+                )}
+                <div className={cn("relative p-4 text-charcoal", clubyAwake && "pe-28")}>
                   <span className={cn("grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold", WORLD_BADGE[s.world.key])}>
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -619,13 +671,21 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           );
         })}
 
-        {/* Cluby's quote */}
+        {/* Cluby's quote (before he hatches: the same line, no signature, the egg) */}
         <aside className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border bg-[#FFF8EA] p-4 dark:bg-card sm:flex-row md:col-span-3 xl:col-span-1 xl:flex-col xl:items-stretch">
-          <p className="cluby-note text-base leading-snug text-charcoal dark:text-foreground" lang={lang}>
+          <p className={cn("text-base leading-snug text-charcoal dark:text-foreground", clubyAwake ? "cluby-note" : "font-semibold")} lang={lang}>
             {isAr ? "“كل لعبة بتقرّبك من حلمك الكوري.”" : "“Every game brings you closer to your Korean dream.”"}
-            <span className="mt-1 block text-sm">— {isAr ? "كلوبي" : "Cluby"}</span>
+            {clubyAwake && <span className="mt-1 block text-sm">— {isAr ? "كلوبي" : "Cluby"}</span>}
           </p>
-          <img src={`${ASSET}/cluby-traveller.webp`} alt="" aria-hidden="true" width={230} height={286} loading="lazy" className="h-28 w-auto self-end" />
+          <img
+            src={clubyAwake ? CLUBY_3D_WAVE : EGG}
+            alt=""
+            aria-hidden="true"
+            width={230}
+            height={286}
+            loading="lazy"
+            className={cn("w-auto self-end object-contain", clubyAwake ? "h-28" : "h-20")}
+          />
           <button
             type="button"
             onClick={seeAll}
