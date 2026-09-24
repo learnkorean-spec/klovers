@@ -751,8 +751,8 @@ export function buildTrialFollowupDay1Email(p: EmailPayload) {
         <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
           <p style="margin: 0 0 8px; font-weight: bold;">✨ ليه يسجّل الطلاب معانا:</p>
           <ul style="margin: 6px 0 0; padding-right: 20px; color: ${BRAND_TEXT}; line-height: 1.7;">
-            <li>مجموعات صغيرة (4–8 طلاب)</li>
-            <li>معلمين أصليين بخبرة TOPIK</li>
+            <li>مجموعات صغيرة، عشان كل واحد ياخد فرصته يتكلم</li>
+            <li>معلمة خريجة الألسن قسم اللغة الكورية، بتدرّس من ١٣ سنة</li>
             <li>استرداد كامل بعد أول حصة مدفوعة لو مش حبّيت</li>
           </ul>
         </div>
@@ -773,8 +773,8 @@ export function buildTrialFollowupDay1Email(p: EmailPayload) {
       <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid ${BRAND_YELLOW}; padding: 14px 18px; border-radius: 4px; margin: 16px 0;">
         <p style="margin: 0 0 8px; font-weight: bold;">✨ Why students stay with us:</p>
         <ul style="margin: 6px 0 0; padding-left: 20px; color: ${BRAND_TEXT}; line-height: 1.7;">
-          <li>Small groups (4–8 students)</li>
-          <li>Native teachers with TOPIK experience</li>
+          <li>Small groups, so everyone gets time to speak</li>
+          <li>Taught by an Al-Alsun Korean graduate with 13 years of teaching</li>
           <li>Full refund after your first paid class if you don't love it</li>
         </ul>
       </div>

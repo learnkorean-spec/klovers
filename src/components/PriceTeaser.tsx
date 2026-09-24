@@ -61,7 +61,8 @@ const ZONE_COUNTRY: Record<string, string> = {
   "Asia/Shanghai": "China",
   "Asia/Kuala_Lumpur": "Malaysia",
   "Asia/Jakarta": "Indonesia",
-  "Asia/Bangkok": "Thailand",
+  // Asia/Bangkok is left out on purpose: Thailand and parts of Vietnam and
+  // Laos share it, so it does not name one country.
   "Asia/Ho_Chi_Minh": "Vietnam",
   "Asia/Saigon": "Vietnam",
   "Asia/Manila": "Philippines",
