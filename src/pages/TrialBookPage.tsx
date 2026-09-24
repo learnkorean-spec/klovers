@@ -932,8 +932,8 @@ function TrialTestimonialsEn() {
       <div style={{ background:Y, borderRadius:"10px", padding:"10px 16px", display:"flex", alignItems:"center", gap:"12px" }}>
         <MugunghwaIcon size={36} color={BK} />
         <div>
-          <div style={{ fontSize:"12px", fontWeight:900, color:BK }}>500+ Students</div>
-          <div style={{ fontSize:"10px", color:BK2 }}>Joined the Klovers community from Egypt, the Gulf, and the Arab Maghreb</div>
+          <div style={{ fontSize:"12px", fontWeight:900, color:BK }}>200+ Students</div>
+          <div style={{ fontSize:"10px", color:BK2 }}>Taught by Reham over 13 years, from Egypt, the Gulf, and the Arab Maghreb</div>
         </div>
       </div>
     </Page>
