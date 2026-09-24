@@ -210,7 +210,7 @@ const SignUpPage = () => {
               {isAr ? "كل رحلة تبدأ باكتشاف صغير." : "Every journey starts with one small discovery."}
             </span>
             <span className="mt-1 block text-sm text-ivory/80">
-              {isAr ? "أنشئ حسابك المجاني وابدأ رحلتك اليوم." : "Make your free account and start yours today."}
+              {isAr ? "حساب مجاني واحد، ومن اليوم تبدأ الرحلة." : "One free account, and yours starts today."}
             </span>
           </figcaption>
         </figure>
@@ -233,9 +233,9 @@ const SignUpPage = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             {redirectTo === "/trial-booking" && (
-              <div className="bg-klovers-yellow/25 border border-charcoal/15 dark:border-klovers-yellow/30 dark:bg-klovers-yellow/10 rounded-xl px-4 py-3 mb-3 text-sm text-foreground">
+              <div className="bg-ivory border border-charcoal/15 dark:border-klovers-yellow/30 dark:bg-muted rounded-xl px-4 py-3 mb-3 text-sm text-foreground">
                 <p className="font-black text-base mb-0.5 flex items-center justify-center gap-1.5"><Gift className="h-4 w-4 shrink-0" aria-hidden="true" />{isAr ? "خطوة واحدة لحصتك المجانية" : "One step from your free class"}</p>
-                <p className="text-muted-foreground text-xs">{isAr ? "أنشئ حسابًا مجانيًا في 30 ثانية، ثم اختر موعدك." : "Create a free account in 30 seconds, then pick your slot."}</p>
+                <p className="text-muted-foreground text-xs">{isAr ? "إنشاء حساب مجاني في 30 ثانية، ثم اختيار الموعد." : "Create a free account in 30 seconds, then pick your slot."}</p>
               </div>
             )}
             <CardTitle className="text-2xl">{t("auth.createAccount") || "Create Account"}</CardTitle>
@@ -322,7 +322,7 @@ const SignUpPage = () => {
                     <SelectValue placeholder={isAr ? "مستوى اللغة الكورية (اختياري)" : "Korean level (optional)"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="not_sure">{isAr ? "لست متأكدًا" : "Not sure yet"}</SelectItem>
+                    <SelectItem value="not_sure">{isAr ? "غير محدد بعد" : "Not sure yet"}</SelectItem>
                     {LEVEL_SELECT_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
