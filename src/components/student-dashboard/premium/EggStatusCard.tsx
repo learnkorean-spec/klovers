@@ -47,7 +47,7 @@ export function EggStatusCard({ egg }: { egg: EggStatus }) {
     >
       <div className="relative grid h-20 w-20 shrink-0 place-items-center sm:h-24 sm:w-24">
         {hatched ? (
-          <img src="/assets/cluby/cluby-wave.webp" alt={c("clubyAlt")} width={96} height={96} className="h-full w-full object-contain" />
+          <img src="/assets/cluby/cluby-hatch.webp" alt={c("clubyAlt")} width={96} height={96} className="h-full w-full object-contain" />
         ) : (
           <EggArt stage={egg.stage} label={c("eggAria")} />
         )}
