@@ -98,7 +98,7 @@ const CHEER_THRESHOLD = 0.5;
 
 const GameFallback = () => (
   <div className="py-20 flex items-center justify-center">
-    <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+    <div className="w-8 h-8 border-2 border-klovers-yellow border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
@@ -271,7 +271,7 @@ const GamesPage = () => {
       const xp = await awardGameXp(gameId, score, totalRounds);
       if (xp && xp > 0) {
         setXpFloat(xp);
-        sonnerToast.success(`🎮 +${xp} XP!`, { description: `${league.emoji} ${league.name}` });
+        sonnerToast.success(`+${xp} XP`, { description: league.name });
       }
       // Show perfect score overlay
       if (score === totalRounds && totalRounds > 0) {
@@ -347,12 +347,12 @@ const GamesPage = () => {
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-foreground">{game && <KloverIcon name={gameIconName(game.id)} className="me-2 inline-block h-9 w-9 align-middle" />}{game?.title} {isAr ? "للأعضاء فقط" : "is for members"}</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
-              {isAr ? `أنشئ حساباً مجانياً لفتح جميع الألعاب الـ ${games.length}، حفظ XP الخاص بك، وبناء سلسلتك اليومية.` : `Create a free account to unlock all ${games.length} games, save your XP, and build your daily streak.`}
+              {isAr ? `حساب مجاني يفتح جميع الألعاب الـ ${games.length}، ويحفظ نقاط XP، ويبني السلسلة اليومية.` : `Create a free account to unlock all ${games.length} games, save your XP, and build your daily streak.`}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <Button size="lg" asChild>
-              <a href="/signup">{isAr ? "🚀 سجّل مجاناً" : "🚀 Sign Up Free"}</a>
+              <a href="/signup">{isAr ? "إنشاء حساب مجاني" : "Sign Up Free"}</a>
             </Button>
             <Button variant="outline" asChild>
               <a href="/login">{isAr ? "تسجيل الدخول" : "Log In"}</a>
@@ -483,7 +483,7 @@ const GamesPage = () => {
                                     {isActive ? (
                                       <span className="text-[11px] font-bold rounded-full bg-charcoal text-klovers-yellow px-2.5 py-0.5">{t("games.playing")}</span>
                                     ) : !isLocked ? (
-                                      <span className="text-[11px] font-bold rounded-full bg-klovers-yellow text-charcoal border-2 border-charcoal px-2.5 py-0.5">{isAr ? "العب" : "Play"}</span>
+                                      <span className="text-[11px] font-bold rounded-full bg-klovers-yellow text-charcoal border-2 border-charcoal px-2.5 py-0.5">{isAr ? "لعب" : "Play"}</span>
                                     ) : null}
                                   </div>
                                 </div>
@@ -552,7 +552,7 @@ const GamesPage = () => {
                 className="w-14 h-14 rounded-full border-[3px] border-klovers-yellow bg-ivory dark:bg-muted object-contain p-1 shadow-sm shrink-0"
               />
               <p className="bg-muted text-foreground rounded-2xl px-4 py-2.5 text-sm">
-                {isAr ? "يلا نشوف إنت فاكر إيه 👀" : "Let's see what you remember 👀"}
+                {isAr ? "لنرَ ما تحفظه الذاكرة." : "Let's see what you remember."}
               </p>
             </div>
           )}
@@ -620,16 +620,16 @@ const GamesPage = () => {
               <h2 className="text-xl font-bold text-foreground">
                 {cheered
                   ? (isAr ? "أحسنت! 잘했어요" : "Nice work! 잘했어요")
-                  : (isAr ? "قربت! جرّب تاني" : "So close — try again!")}
+                  : (isAr ? "قريب جدًا، والمحاولة التالية أقرب" : "So close — try again!")}
               </h2>
-              <p className="text-sm text-muted-foreground">{isAr ? `أنشئ حساباً مجانياً لحفظ تقدمك وفتح جميع الألعاب الـ ${games.length}.` : `Create a free account to save your progress and unlock all ${games.length} games.`}</p>
+              <p className="text-sm text-muted-foreground">{isAr ? `حساب مجاني يحفظ التقدّم ويفتح جميع الألعاب الـ ${games.length}.` : `Create a free account to save your progress and unlock all ${games.length} games.`}</p>
             </div>
 
             <div className="space-y-2">
               {[
-                { Icon: Star, text: isAr ? "احفظ XP وسلسلتك" : "Save your XP and streak" },
-                { Icon: Unlock, text: isAr ? `افتح جميع الألعاب الكورية الـ ${games.length}` : `Unlock all ${games.length} Korean games` },
-                { Icon: BarChart3, text: isAr ? "تتبع تقدمك في التعلّم" : "Track your learning progress" },
+                { Icon: Star, text: isAr ? "حفظ نقاط XP والسلسلة اليومية" : "Save your XP and streak" },
+                { Icon: Unlock, text: isAr ? `فتح جميع الألعاب الكورية الـ ${games.length}` : `Unlock all ${games.length} Korean games` },
+                { Icon: BarChart3, text: isAr ? "تتبّع التقدّم في التعلّم" : "Track your learning progress" },
               ].map(({ Icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">
                   <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-klovers-yellow">
@@ -642,10 +642,10 @@ const GamesPage = () => {
 
             <div className="space-y-2 pt-1">
               <Button className="w-full" size="lg" asChild>
-                <a href="/signup">{isAr ? "🚀 سجّل مجاناً" : "🚀 Sign Up Free"}</a>
+                <a href="/signup">{isAr ? "إنشاء حساب مجاني" : "Sign Up Free"}</a>
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <a href="/login">{isAr ? "لديك حساب بالفعل؟ سجّل الدخول" : "Already have an account? Log in"}</a>
+                <a href="/login">{isAr ? "حساب موجود بالفعل؟ تسجيل الدخول" : "Already have an account? Log in"}</a>
               </Button>
             </div>
 
@@ -653,7 +653,7 @@ const GamesPage = () => {
               onClick={() => setShowSignupNudge(false)}
               className="w-full text-xs text-muted-foreground hover:underline"
             >
-              {isAr ? "واصل اللعب كضيف" : "Continue playing as guest"}
+              {isAr ? "مواصلة اللعب كضيف" : "Continue playing as guest"}
             </button>
           </div>
         </div>
