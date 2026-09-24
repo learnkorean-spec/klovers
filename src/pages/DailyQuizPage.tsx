@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, ArrowLeft, Zap } from "lucide-react";
+import { CheckCircle, ArrowRight, ArrowLeft, Zap, Check, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { NextStepCard } from "@/components/NextStepCard";
@@ -39,7 +39,8 @@ interface QuizResult {
 }
 
 const DailyQuizPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   useSEO({
     title: "Daily Quiz - Klovers",
     description: "Test your vocabulary knowledge with our daily quiz.",
@@ -225,7 +226,7 @@ const DailyQuizPage = () => {
         <Header />
         <main id="main-content" className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-klovers-yellow mx-auto mb-4"></div>
             <p className="text-muted-foreground">{t("dailyQuiz.loading")}</p>
           </div>
         </main>
@@ -242,7 +243,8 @@ const DailyQuizPage = () => {
         <Header />
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <div className="text-center space-y-3 max-w-sm">
-            <p className="text-4xl">😕</p>
+            {/* needs Klovers icon: error state (was an emoji) */}
+            <AlertCircle className="mx-auto h-10 w-10 text-wrong dark:text-[#FF4FD8]" aria-hidden="true" />
             <h2 className="font-semibold text-foreground">{t("dailyQuiz.loadErrorTitle")}</h2>
             <p className="text-sm text-muted-foreground">{fetchError}</p>
             <button onClick={() => fetchDailyQuiz()} className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80">{t("dailyQuiz.tryAgainBtn")}</button>
@@ -259,8 +261,8 @@ const DailyQuizPage = () => {
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-                <CheckCircle className="h-8 w-8 text-blue-600" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-klovers-green">
+                <CheckCircle className="h-8 w-8 text-charcoal" />
               </div>
               <CardTitle className="text-2xl">{t("dailyQuiz.alreadyDoneTitle")}</CardTitle>
             </CardHeader>
@@ -305,8 +307,8 @@ const DailyQuizPage = () => {
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100 border border-black/10">
-                <Zap className="h-8 w-8 text-yellow-600" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-klovers-yellow border border-charcoal/10">
+                <Zap className="h-8 w-8 text-charcoal" />
               </div>
               <CardTitle className="text-2xl">{t("dailyQuiz.startLearningTitle")}</CardTitle>
             </CardHeader>
@@ -332,14 +334,31 @@ const DailyQuizPage = () => {
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <Card className="w-full max-w-md text-center">
             <CardHeader>
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100 border border-black/10">
-                <Zap className="h-8 w-8 text-yellow-600" />
+              {/* World mode: the daily quiz is a walk through the Vocabulary Market (lead: the two learners). */}
+              <div className="relative -mx-2 mb-3 h-28 overflow-hidden rounded-xl border border-border bg-ivory dark:bg-card sm:h-32">
+                <img
+                  src="/assets/story/world-vocabulary-market.webp"
+                  alt={isAr ? "سوق المفردات، بأكشاكه وفوانيسه في عالم كلوفرز" : "The Vocabulary Market, its stalls and lanterns, in the Klovers world"}
+                  width={1600}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent" />
+                <p className="absolute inset-x-0 bottom-0 p-3 text-start text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">
+                  <Zap className="me-1 inline h-3.5 w-3.5 fill-klovers-yellow align-[-2px]" aria-hidden="true" />
+                  {isAr ? "سوق المفردات" : "Vocabulary Market"}
+                </p>
               </div>
               <CardTitle className="text-2xl">{t("dailyQuiz.dailyChallengeTitle")}</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {isAr ? "الأكشاك مفتوحة، وكلمات اليوم معروضة من الدروس المكتملة." : "The stalls are open. Today's words are laid out from the lessons already finished."}
+              </p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-amber-700">{exercises.length}</p>
+                <p className="text-4xl font-bold text-foreground">{exercises.length}</p>
                 <p className="text-muted-foreground mt-1">{t("dailyQuiz.fromCompletedLessons")}</p>
               </div>
               <div className="pt-4 border-t">
@@ -372,13 +391,13 @@ const DailyQuizPage = () => {
               <div
                 className={cn(
                   "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full",
-                  result.passed ? "bg-green-100 dark:bg-green-900/30" : "bg-orange-100 dark:bg-orange-900/30"
+                  result.passed ? "bg-klovers-green" : "bg-klovers-yellow"
                 )}
               >
                 <CheckCircle
                   className={cn(
                     "h-8 w-8",
-                    result.passed ? "text-green-600" : "text-orange-600"
+                    result.passed ? "text-charcoal" : "text-charcoal"
                   )}
                 />
               </div>
@@ -386,7 +405,7 @@ const DailyQuizPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <p className="text-4xl font-bold text-amber-700">
+                <p className="text-4xl font-bold text-foreground">
                   {result.score}/{result.total}
                 </p>
                 <p className="text-muted-foreground mt-1">
@@ -397,7 +416,7 @@ const DailyQuizPage = () => {
               <div className="pt-4 border-t space-y-3">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">{t("dailyQuiz.xpEarnedLabel")}</p>
-                  <p className="text-2xl font-bold text-yellow-600">+{result.xpEarned} XP</p>
+                  <p className="inline-block rounded-full bg-klovers-yellow px-3 text-2xl font-bold text-charcoal">+{result.xpEarned} XP</p>
                 </div>
               </div>
 
@@ -474,9 +493,9 @@ const DailyQuizPage = () => {
                         key={idx}
                         className={cn(
                           "flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-all",
-                          showAnswer && isCorrect && "bg-green-50 dark:bg-green-900/20 border-green-500",
-                          showAnswer && selected && !isCorrect && "bg-red-50 dark:bg-red-900/20 border-red-500",
-                          !showAnswer && "hover:border-amber-300 hover:bg-amber-50"
+                          showAnswer && isCorrect && "bg-klovers-green/15 dark:bg-klovers-green/10 border-klovers-green",
+                          showAnswer && selected && !isCorrect && "bg-[#FF4FD8]/10 border-[#FF4FD8]",
+                          !showAnswer && "hover:border-klovers-yellow hover:bg-klovers-yellow/10"
                         )}
                       >
                         <RadioGroupItem
@@ -491,10 +510,10 @@ const DailyQuizPage = () => {
                           {option}
                         </Label>
                         {showAnswer && isCorrect && (
-                          <span className="text-green-600 text-sm font-bold">✓</span>
+                          <span className="grid h-6 w-6 place-items-center rounded-full bg-klovers-green text-charcoal"><Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" /></span>
                         )}
                         {showAnswer && selected && !isCorrect && (
-                          <span className="text-red-600 text-sm font-bold">✗</span>
+                          <span className="grid h-6 w-6 place-items-center rounded-full bg-[#FF4FD8] text-charcoal"><X className="h-4 w-4" strokeWidth={3} aria-hidden="true" /></span>
                         )}
                       </div>
                     );
@@ -504,9 +523,9 @@ const DailyQuizPage = () => {
 
               {/* Explanation shown immediately after a wrong answer */}
               {showResults[currentExercise.id] && answers[currentExercise.id] !== currentExercise.correct_index && currentExercise.explanation && (
-                <div className="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 ring-1 ring-black/10">
-                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-1">{t("dailyQuiz.explanation")}</p>
-                  <p className="text-sm text-amber-800 dark:text-amber-300">{currentExercise.explanation}</p>
+                <div className="mt-4 p-3 rounded-lg bg-ivory dark:bg-card border border-charcoal/15 dark:border-border">
+                  <p className="text-xs font-semibold text-foreground mb-1">{t("dailyQuiz.explanation")}</p>
+                  <p className="text-sm text-foreground/90">{currentExercise.explanation}</p>
                 </div>
               )}
             </CardContent>
