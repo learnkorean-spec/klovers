@@ -60,8 +60,7 @@ import {
  * Market, L2 → Conversation Café, L3 → Culture Street, L4–L6 → Seoul
  * Journey parts 1–3), read from lib/dashboardProgress so the homepage and
  * the student's own journey map can't disagree. The level names stay; the
- * world is a small extra line, with a small painting where one exists.
- * Hangul Village has no painting yet, so it shows none.
+ * world is a small extra line, with a small painting for each world.
  */
 
 /**
@@ -85,8 +84,9 @@ const getMeta = (key: string) =>
 /** Level key → its story world (+ part), from the same mapping the dashboard uses. */
 const LEVEL_WORLDS = new Map(journeyStops("").stops.map((s) => [s.key, s]));
 
-/** World paintings (1600×900). Hangul Village has none yet. */
+/** World paintings (1600×900), one per world on the road. */
 const WORLD_IMAGES: Partial<Record<WorldId, string>> = {
+  "hangul-village": "/assets/story/world-hangul-village.webp",
   "vocabulary-market": "/assets/story/world-vocabulary-market.webp",
   "conversation-cafe": "/assets/story/world-conversation-cafe.webp",
   "culture-street": "/assets/story/world-culture-street.webp",
