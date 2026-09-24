@@ -38,25 +38,25 @@ const DAY_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"
 const COPY = {
   ar: {
     title: "حصصي",
-    subtitle: "مواعيدك وباقتك في مكان واحد.",
-    weekly: "ميعادك الأسبوعي",
-    noWeekly: "لسه مافيش ميعاد أسبوعي مسجّل. كلّميني ونظبّطه.",
-    bundle: "باقتك",
-    noBundle: "مافيش باقة مسجّلة دلوقتي.",
-    used: "اتاخد",
-    left: "الباقي",
+    subtitle: "المواعيد والباقة في مكان واحد.",
+    weekly: "الموعد الأسبوعي",
+    noWeekly: "لا يوجد موعد أسبوعي مسجّل بعد. يمكن التواصل معي لتحديده.",
+    bundle: "الباقة",
+    noBundle: "لا توجد باقة مسجّلة حاليًا.",
+    used: "المستخدم",
+    left: "المتبقي",
     ofN: "من",
     classes: "حصة",
-    upcoming: "الحصص الجاية",
-    noUpcoming: "مافيش حصص محجوزة دلوقتي.",
-    join: "ادخل الحصة",
-    owes: "عليكي دفعة مستحقة",
-    pay: "ارفعي الإيصال",
-    lastCovered: "دي آخر حصة في باقتك — اللي بعدها بداية باقة جديدة.",
-    notPrivate: "الصفحة دي لطلبة الحصص الخاصة. حسابك مش مربوط بحصص خاصة.",
-    backToDashboard: "ارجع لحسابك",
-    loadFailed: "مقدرناش نحمّل بياناتك.",
-    refresh: "حاول تاني",
+    upcoming: "الحصص القادمة",
+    noUpcoming: "لا توجد حصص محجوزة حاليًا.",
+    join: "دخول الحصة",
+    owes: "توجد دفعة مستحقة",
+    pay: "رفع الإيصال",
+    lastCovered: "هذه آخر حصة في الباقة الحالية — وما بعدها بداية باقة جديدة.",
+    notPrivate: "هذه الصفحة مخصّصة لطلاب الحصص الخاصة، والحساب غير مرتبط بحصص خاصة.",
+    backToDashboard: "العودة إلى الحساب",
+    loadFailed: "تعذّر تحميل البيانات.",
+    refresh: "إعادة المحاولة",
   },
   en: {
     title: "My lessons",
@@ -217,7 +217,7 @@ const MyLessonsPage = () => {
         <Header />
         <main id="main-content" className="pt-24 flex items-center justify-center px-4">
           <div className="text-center space-y-3 max-w-sm">
-            <AlertTriangle className="h-10 w-10 mx-auto text-destructive" />
+            <AlertTriangle className="h-10 w-10 mx-auto text-wrong dark:text-[#FF4FD8]" />
             <p className="text-sm text-muted-foreground">{error}</p>
             <Button onClick={() => window.location.reload()}>{c.refresh}</Button>
           </div>
@@ -260,7 +260,7 @@ const MyLessonsPage = () => {
           </div>
 
           {dueEnrollmentId && (
-            <Card className="border-amber-300 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-700">
+            <Card className="border-2 border-[#FF4FD8] bg-[#FF4FD8]/10 dark:bg-card">
               <CardContent className="pt-5 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Wallet className="h-4 w-4 shrink-0" />
@@ -329,7 +329,7 @@ const MyLessonsPage = () => {
                   </p>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full bg-primary"
+                      className="h-full bg-klovers-green"
                       style={{
                         width: `${Math.min(100, Math.max(0,
                           (balance.used_classes / Math.max(1, balance.total_classes)) * 100))}%`,
@@ -361,7 +361,7 @@ const MyLessonsPage = () => {
                         </span>
                       </p>
                       {i === lastCoveredIndex && (
-                        <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">
+                        <p className="mt-1 border-s-2 border-klovers-yellow ps-2 text-[11px] font-medium text-foreground">
                           {c.lastCovered}
                         </p>
                       )}
