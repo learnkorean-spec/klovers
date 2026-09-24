@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck, LogIn, Tag, CheckCircle2, Loader2 } from "lucide-react";
 import SchedulePicker from "@/components/SchedulePicker";
+import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPrivateAvailability } from "@/lib/privateAvailability";
@@ -573,7 +574,7 @@ const EnrollNowPage = () => {
       return;
     }
     setPromoApplied({ code: data.code, discount_pct: data.discount_pct, discount_flat: data.discount_flat, currency: data.currency });
-    toast({ title: `Promo code "${code}" applied! 🎉` });
+    toast({ title: `Promo code "${code}" applied!` });
     setPromoLoading(false);
   };
 
@@ -705,11 +706,11 @@ const EnrollNowPage = () => {
 
         {/* Social proof banner */}
         <div className="flex items-center justify-center gap-3 flex-wrap mb-6 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">⭐ <strong className="text-foreground">5.0</strong> on Google (7 reviews)</span>
+          <span className="flex items-center gap-1"><strong className="text-foreground">5.0</strong> on Google (7 reviews)</span>
           <span className="text-border">·</span>
-          <span className="flex items-center gap-1">👥 <strong className="text-foreground">200+</strong> students taught over 13 years</span>
+          <span className="flex items-center gap-1"><strong className="text-foreground">200+</strong> students taught over 13 years</span>
           <span className="text-border">·</span>
-          <span className="flex items-center gap-1">🇰🇷 <strong className="text-foreground">A1–C2</strong> all levels</span>
+          <span className="flex items-center gap-1"><strong className="text-foreground">A1–C2</strong> all levels</span>
         </div>
 
         {/* Progress */}
@@ -718,7 +719,7 @@ const EnrollNowPage = () => {
             {stepLabels.map((label, i) => (
               <div key={i} className="flex flex-col items-center gap-1 flex-1">
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                  step > i + 1 ? "bg-green-500 text-white" :
+                  step > i + 1 ? "bg-klovers-green text-charcoal" :
                   step === i + 1 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30" :
                   "bg-muted text-muted-foreground"
                 }`}>
@@ -843,7 +844,7 @@ const EnrollNowPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(1)} aria-label={isAr ? "رجوع للخطوة السابقة" : "Back to previous step"}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(1)} aria-label={isAr ? "العودة إلى الخطوة السابقة" : "Back to previous step"}>
                   <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 <div>
@@ -891,7 +892,7 @@ const EnrollNowPage = () => {
                   <p className="text-sm text-muted-foreground italic">{t("enrollNow.selectLevelFirst")}</p>
                 ) : levelSlots.length === 0 && classType === "private" ? (
                   <div className="space-y-3">
-                    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
+                    <div className="bg-accent dark:bg-muted border border-charcoal/20 dark:border-border rounded-lg p-3 text-sm text-charcoal dark:text-foreground">
                       {t("enrollNow.noPrivateDays")}
                     </div>
                     <a
@@ -900,14 +901,14 @@ const EnrollNowPage = () => {
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-md bg-[#25D366] hover:bg-[#1fb855] text-white px-4 py-2 text-sm font-semibold transition-colors"
+                      className="inline-flex items-center gap-2 rounded-md bg-klovers-green hover:bg-klovers-green/90 text-charcoal px-4 py-2 text-sm font-semibold transition-colors"
                     >
                       Contact us on WhatsApp to arrange a private time
                     </a>
                   </div>
                 ) : levelSlots.length === 0 ? (
                   <div className="space-y-3">
-                    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200">
+                    <div className="bg-accent dark:bg-muted border border-charcoal/20 dark:border-border rounded-lg p-3 text-sm text-charcoal dark:text-foreground">
                       {t("enrollNow.noLiveSchedule")}
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -932,7 +933,7 @@ const EnrollNowPage = () => {
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-md bg-[#25D366] hover:bg-[#1fb855] text-white px-4 py-2 text-sm font-semibold transition-colors"
+                      className="inline-flex items-center gap-2 rounded-md bg-klovers-green hover:bg-klovers-green/90 text-charcoal px-4 py-2 text-sm font-semibold transition-colors"
                     >
                       Or contact us on WhatsApp to find a suitable time
                     </a>
@@ -993,7 +994,7 @@ const EnrollNowPage = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(2)} aria-label={isAr ? "رجوع للخطوة السابقة" : "Back to previous step"}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setStep(2)} aria-label={isAr ? "العودة إلى الخطوة السابقة" : "Back to previous step"}>
                   <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 <div>
@@ -1008,7 +1009,7 @@ const EnrollNowPage = () => {
               {/* Auth Gate: if not logged in, show sign-in CTA */}
               {!userId ? (
                 <div className="text-center space-y-4 py-6">
-                  <div className="w-16 h-16 mx-auto rounded-full bg-primary border border-black/25 flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto rounded-full bg-primary border border-charcoal/25 flex items-center justify-center">
                     <LogIn className="h-8 w-8 text-primary-foreground" />
                   </div>
                   <h3 className="text-lg font-semibold text-foreground">
@@ -1033,7 +1034,7 @@ const EnrollNowPage = () => {
                 <>
                   {/* Authenticated user info */}
                   <div className="bg-muted rounded-lg p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary border border-black/25 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-primary border border-charcoal/25 flex items-center justify-center">
                       <User className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <div>
@@ -1046,12 +1047,10 @@ const EnrollNowPage = () => {
               <div className="flex items-center gap-3 bg-muted/60 border border-border rounded-xl px-4 py-3">
                 <div className="relative flex-shrink-0">
                   <img src={rehamPhoto} alt="Reham 선생님" className="w-11 h-11 rounded-full object-cover object-top" />
-                  <span className="absolute -bottom-0.5 -right-0.5 text-sm leading-none">🇰🇷</span>
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-sm text-foreground">Reham 선생님 <span className="text-xs font-normal text-primary bg-primary/10 px-1.5 py-0.5 rounded-full ml-1">Certified</span></p>
-                  <p className="text-xs text-muted-foreground">5+ years · 300+ students · all levels</p>
-                  <div className="flex gap-0.5 mt-0.5">{"⭐⭐⭐⭐⭐".split("").map((s,i)=><span key={i} className="text-xs">{s}</span>)}</div>
+                  <p className="font-semibold text-sm text-foreground">Reham 선생님 <span className="text-xs font-semibold text-charcoal bg-klovers-yellow border border-charcoal px-1.5 py-0.5 rounded-full ms-1">Certified</span></p>
+                  <p className="text-xs text-muted-foreground">13+ years · 200+ students taught · all levels</p>
                 </div>
               </div>
 
@@ -1075,7 +1074,7 @@ const EnrollNowPage = () => {
                   )}
 
                   {promoApplied && promoDiscountAmount > 0 && (
-                    <div className="flex justify-between text-sm text-green-600">
+                    <div className="flex justify-between text-sm font-semibold text-foreground">
                       <span className="flex items-center gap-1"><Tag className="h-3.5 w-3.5" /> {promoApplied.code}</span>
                       <span className="font-bold">-{formatMoney(promoDiscountAmount, currency)}</span>
                     </div>
@@ -1101,7 +1100,7 @@ const EnrollNowPage = () => {
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Promo code"
-                        aria-label={isAr ? "كود الخصم" : "Promo code"}
+                        aria-label={isAr ? "رمز الخصم" : "Promo code"}
                         value={promoInput}
                         onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
                         onKeyDown={e => e.key === "Enter" && applyPromo()}
@@ -1120,10 +1119,10 @@ const EnrollNowPage = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2">
+                  <div className="flex items-center justify-between bg-klovers-green border border-charcoal rounded-lg px-3 py-2">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                      <CheckCircle2 className="h-4 w-4 text-charcoal" />
+                      <span className="text-sm font-medium text-charcoal">
                         {promoApplied.code} applied!
                         {promoApplied.discount_pct ? ` (${promoApplied.discount_pct}% off)` : promoApplied.discount_flat ? ` (${formatMoney(promoApplied.discount_flat, currency)} off)` : ""}
                       </span>
@@ -1153,9 +1152,9 @@ const EnrollNowPage = () => {
                   <p className="text-sm font-medium text-foreground">طريقة الدفع / Payment Method</p>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { value: "vodafone_cash", label: "Vodafone Cash", icon: "📱" },
-                      { value: "instapay",      label: "InstaPay",      icon: "💳" },
-                      { value: "bank_transfer", label: "Bank Transfer", icon: "🏦" },
+                      { value: "vodafone_cash", label: "Vodafone Cash" },
+                      { value: "instapay",      label: "InstaPay" },
+                      { value: "bank_transfer", label: "Bank Transfer" },
                     ].map((m) => (
                       <button
                         key={m.value}
@@ -1167,13 +1166,12 @@ const EnrollNowPage = () => {
                             : "border-border bg-muted/40 text-muted-foreground hover:border-foreground/30"
                         }`}
                       >
-                        <span className="text-xl">{m.icon}</span>
                         {m.label}
                       </button>
                     ))}
                   </div>
                   {!egyptPaymentMethod && (
-                    <p className="text-xs text-amber-600">Please select a payment method to continue</p>
+                    <p className="text-xs font-medium text-foreground">Please select a payment method to continue</p>
                   )}
                 </div>
               )}
@@ -1207,12 +1205,11 @@ const EnrollNowPage = () => {
               {/* Trust badges */}
               <div className="grid grid-cols-3 gap-2 pt-2">
                 {[
-                  { icon: "🔒", label: "Secure" },
-                  { icon: "✅", label: "Verified Academy" },
-                  { icon: "💬", label: "24h Support" },
-                ].map(({ icon, label }) => (
+                  { label: "Secure" },
+                  { label: "Verified Academy" },
+                  { label: "24h Support" },
+                ].map(({ label }) => (
                   <div key={label} className="flex flex-col items-center gap-1 bg-muted/50 rounded-lg p-2">
-                    <span className="text-lg">{icon}</span>
                     <span className="text-[10px] text-muted-foreground font-medium text-center">{label}</span>
                   </div>
                 ))}
@@ -1222,14 +1219,14 @@ const EnrollNowPage = () => {
               <div className="border border-border rounded-xl p-4 space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center">What happens next?</p>
                 {[
-                  { step: "1", icon: "✅", title: "Payment confirmed", desc: "You get an instant email receipt." },
-                  { step: "2", icon: "📅", title: "Schedule matched", desc: "We confirm your class slot within 24 h." },
-                  { step: "3", icon: "🎉", title: "First class!", desc: "We send your meeting link — ready to learn!" },
+                  { step: "1", icon: "game-checklist-pencil" as const, title: "Payment confirmed", desc: "You get an instant email receipt." },
+                  { step: "2", icon: "calendar-check" as const, title: "Schedule matched", desc: "We confirm your class slot within 24 h." },
+                  { step: "3", icon: "chat-annyeonghaseyo" as const, title: "First class!", desc: "We send your meeting link — ready to learn!" },
                 ].map(({ step: s, icon, title, desc }) => (
                   <div key={s} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-full bg-primary border border-black/25 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-foreground">{s}</div>
+                    <div className="w-7 h-7 rounded-full bg-primary border border-charcoal/25 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-foreground">{s}</div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{icon} {title}</p>
+                      <p className="flex items-center gap-2 text-sm font-semibold text-foreground"><KloverIcon name={icon} className="h-7 w-7" />{title}</p>
                       <p className="text-xs text-muted-foreground">{desc}</p>
                     </div>
                   </div>
@@ -1244,9 +1241,9 @@ const EnrollNowPage = () => {
                   onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "enroll_help" }); }}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-green-600 font-semibold hover:underline"
+                  className="text-foreground font-semibold underline underline-offset-2 hover:no-underline"
                 >
-                  💬 WhatsApp us
+                  WhatsApp us
                 </a>
               </p>
                 </>
@@ -1263,10 +1260,10 @@ const EnrollNowPage = () => {
         onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I have a question before enrolling in Klovers.")}`, { cta_label: "enroll_questions_pill" }); }}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-[#25D366] text-white text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg hover:bg-[#1ebe5d] transition-colors"
+        className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-klovers-green text-charcoal text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg hover:bg-klovers-green/90 transition-colors"
         aria-label="Chat on WhatsApp"
       >
-        💬 Questions?
+        Questions?
       </a>
     </div>
   );
