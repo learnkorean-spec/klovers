@@ -75,15 +75,17 @@ export function MyBooksCard({ clubyAwake = false }: { clubyAwake?: boolean }) {
     let alive = true;
     (async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        const { data } = await supabase
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) return;
+        const { data, error: rowsError } = await supabase
           .from("book_assignments")
           .select("id, book_id")
           .eq("user_id", user.id)
           .lte("available_from", new Date().toISOString())
           .order("assigned_at", { ascending: true });
         if (!alive) return;
+        // No card rather than a broken one; the book stays assigned.
+        if (rowsError) { console.warn("[MyBooksCard] book_assignments:", rowsError.message); return; }
         const list = ((data ?? []) as Row[]).filter((r) => r.book_id in BOOKS);
         setRows(list);
         setUserId(user.id);
