@@ -3,13 +3,10 @@ import { badgeText } from "@/lib/dashboardLocale";
 import { recentAchievements, type EarnedBadge } from "@/lib/dashboardProgress";
 import { useDashCopy } from "./copy";
 import { BrandIcon } from "./primitives";
-import { MyBooksCard } from "./MyBooksCard";
 
 /**
  * F. Recent achievements — at most three, tertiary weight, one link to the rest.
- *
- * "My books" renders just above it (nothing when the student has no book), so
- * the downloadable book sits in the same column as the next class.
+ * (The book gift card moved up under the hero — see DashboardHero.)
  */
 export function RecentAchievements({ earned }: { earned: EarnedBadge[] }) {
   const { c, lang } = useDashCopy();
@@ -17,8 +14,6 @@ export function RecentAchievements({ earned }: { earned: EarnedBadge[] }) {
   const dateFmt = new Intl.DateTimeFormat(lang === "ar" ? "ar-EG-u-nu-latn" : "en-GB", { day: "numeric", month: "short" });
 
   return (
-    <>
-    <MyBooksCard />
     <section aria-labelledby="dash-achievements-title" className="rounded-[20px] bg-muted/40 p-4 sm:p-5">
       <div className="flex items-center justify-between gap-3">
         <h2 id="dash-achievements-title" className="font-display text-base font-semibold text-foreground">{c("achievementsTitle")}</h2>
@@ -53,6 +48,5 @@ export function RecentAchievements({ earned }: { earned: EarnedBadge[] }) {
         </ul>
       )}
     </section>
-    </>
   );
 }
