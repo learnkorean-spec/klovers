@@ -10,9 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trustCopy } from "@/lib/trustFigures";
-import { Gift, Users, Clock, Star, ArrowRight, Video, ClipboardList, Sparkles, CalendarDays, MessageCircle, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AvatarInitials from "@/components/AvatarInitials";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 
 /**
  * Below this many completed trials the count is not shown at all — the whole
@@ -25,29 +25,57 @@ import AvatarInitials from "@/components/AvatarInitials";
  */
 const SOCIAL_PROOF_MIN_COUNT = 10;
 
-const Stars = ({ count = 5 }: { count?: number }) => (
-  <div className="flex gap-0.5" role="img" aria-label={`${count} out of 5 stars`}>
-    {Array.from({ length: count }).map((_, i) => (
-      <Star key={i} className="h-3.5 w-3.5 fill-primary text-primary" aria-hidden="true" />
-    ))}
-  </div>
-);
+/** Real student quotes keep their words; only the emoji go (brand rule: no emoji in Klovers UI). */
+const noEmoji = (text: string) => text.replace(/\p{Extended_Pictographic}|️/gu, "").replace(/\s{2,}/g, " ").trim();
 
 const FreeTrialPage = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
 
-  const PERKS = [
-    { icon: Gift,  text: t("freeTrial.perkFree") },
-    { icon: Users, text: t("freeTrial.perkLive") },
-    { icon: Clock, text: t("freeTrial.perkDuration") },
-    { icon: Star,  text: t("freeTrial.perkAssessment") },
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
+
+  // World mode (25 Sep 2026): /free-trial is the Conversation Café, the
+  // first stop in the Klovers world (src/config/klovers-world.ts). The copy
+  // is inline in both languages: Arabic in Modern Standard Arabic, neutral in
+  // gender (verbal nouns on buttons, no verb aimed at the reader as male or
+  // female). Icons are the Klovers illustrated set (KloverIcon), no generic
+  // icons or emoji. Every fact below is unchanged: 30 minutes, live, free,
+  // no card, once a month.
+  const PERKS: { icon: KloverIconName; text: string }[] = [
+    { icon: "chat-annyeong",  text: tr("Live, with a real teacher", "مباشرة مع معلمة حقيقية") },
+    { icon: "calendar-check", text: tr("30 minutes", "ثلاثون دقيقة") },
+    { icon: "growth-chart",   text: tr("Your level, found", "تحديد المستوى") },
+    { icon: "sprout",         text: tr("Free, no card", "مجانية دون بطاقة") },
   ];
 
-  const STEPS = [
-    { icon: Video,         num: "1", text: t("trialBooking.expectItem1") },
-    { icon: ClipboardList, num: "2", text: t("trialBooking.expectItem2") },
-    { icon: Sparkles,      num: "3", text: t("trialBooking.expectItem3") },
+  const STEPS: { icon: KloverIconName; num: string; title: string; text: string }[] = [
+    {
+      icon: "chat-annyeonghaseyo",
+      num: "1",
+      title: tr("The first words", "الكلمات الأولى"),
+      text: tr(
+        "A 30-minute live class with Reham, starting from 안녕하세요.",
+        "حصة مباشرة مدتها ثلاثون دقيقة مع ريهام، تبدأ من 안녕하세요.",
+      ),
+    },
+    {
+      icon: "growth-chart",
+      num: "2",
+      title: tr("The right table", "الطاولة المناسبة"),
+      text: tr(
+        "A short placement check, so the next class starts at the right level.",
+        "اختبار قصير لتحديد المستوى، لتبدأ الحصة التالية من المكان الصحيح.",
+      ),
+    },
+    {
+      icon: "books-stack",
+      num: "3",
+      title: tr("The next step", "الخطوة التالية"),
+      text: tr(
+        "A clear recommendation for what comes next, with no pressure to buy.",
+        "توصية واضحة بما يأتي بعد ذلك، دون أي ضغط للشراء.",
+      ),
+    },
   ];
 
   /** The real upcoming trial slots, straight from the database. */
@@ -64,12 +92,12 @@ const FreeTrialPage = () => {
 
   const TESTIMONIALS: { quote: string; name: string; role: string }[] = [
     {
-      quote: t("freeTrial.testimonial1Quote"),
+      quote: noEmoji(t("freeTrial.testimonial1Quote")),
       name:  t("freeTrial.testimonial1Name"),
       role:  t("freeTrial.testimonial1Role"),
     },
     {
-      quote: t("freeTrial.testimonial2Quote"),
+      quote: noEmoji(t("freeTrial.testimonial2Quote")),
       name:  t("freeTrial.testimonial2Name"),
       role:  t("freeTrial.testimonial2Role"),
     },
@@ -237,94 +265,69 @@ const FreeTrialPage = () => {
       <Header />
       <main id="main-content" className="pt-16">
 
-        {/* ── HERO ──────────────────────────────────────────── */}
-        <section className="py-16 md:py-24 border-b border-border overflow-hidden">
+        {/* ── HERO: the Conversation Café ── */}
+        <section className="py-16 md:py-24 border-b border-border overflow-hidden bg-ivory dark:bg-background">
           <div className="container mx-auto px-4 max-w-5xl">
             <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] gap-12 items-center">
 
               {/* Text column */}
               <div className="text-center md:text-start">
 
-                {/* Live badge */}
-                <span className="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 text-foreground text-xs font-black tracking-[0.15em] uppercase px-3 py-1.5 rounded-full mb-5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-klovers-green animate-pulse" />
-                  {t("freeTrial.badge")}
+                {/* World eyebrow, with the live dot: trials really are open */}
+                <span className="inline-flex items-center gap-2 bg-klovers-yellow border-2 border-charcoal text-charcoal text-xs font-black tracking-[0.15em] uppercase px-3 py-1.5 rounded-full mb-5">
+                  <span className="w-2 h-2 rounded-full bg-klovers-green animate-pulse" aria-hidden="true" />
+                  {tr("Conversation Café · the first stop", "مقهى المحادثة · المحطة الأولى")}
                 </span>
 
-                {/* Headline — "Free" in yellow with outline */}
-                <h1 className="text-6xl md:text-8xl font-black text-foreground leading-[0.88] tracking-tight mb-5">
-                  {t("freeTrial.heroTitle1")}
+                <h1 className="font-display text-5xl md:text-7xl font-black text-foreground leading-[0.95] tracking-tight mb-5">
+                  {tr("Your first Korean class,", "أول حصة كورية")}
                   <br />
-                  <span className="relative inline-block mt-1">
-                    <span className="absolute -inset-x-2 -inset-y-1 bg-primary -skew-x-2 rounded-lg" aria-hidden />
-                    <span className="relative text-primary text-outlined-lg">{t("freeTrial.heroTitleFree")}</span>
+                  <span className="relative inline-block mt-2">
+                    <span className="absolute -inset-x-2 -inset-y-1 bg-klovers-yellow -skew-x-2 rounded-lg" aria-hidden="true" />
+                    <span className="relative text-charcoal">{tr("free", "مجانًا")}</span>
                   </span>
                 </h1>
 
-                {/* Emotional subtitle */}
-                <p className="text-base md:text-xl text-muted-foreground max-w-md mb-6 mx-auto md:mx-0 leading-relaxed">
-                  {t("freeTrial.heroSubtitleEmotional")}
+                <p className="text-base md:text-xl text-muted-foreground max-w-md mb-4 mx-auto md:mx-0 leading-relaxed">
+                  {tr(
+                    "Two friends, one café table, and the first Korean word they ever said out loud. The first class is that same table: 30 minutes, live, with Reham.",
+                    "صديقان، وطاولة في مقهى، وأول كلمة كورية قيلت بصوتٍ مسموع. الحصة الأولى هي الطاولة نفسها: ثلاثون دقيقة مباشرة مع ريهام.",
+                  )}
                 </p>
 
-                {/* Star rating — the sourced Google figure from @/lib/trustFigures.
-                    It read "5.0 · Rated by 200+ students" (freeTrial.ratingText):
-                    200 students did not review anything; 7 people did, on Google. */}
-                <div className="flex items-center gap-2 justify-center md:justify-start mb-8">
-                  <Stars />
-                  <span className="text-sm font-semibold text-foreground">{trustCopy(language).rating}</span>
-                </div>
+                {/* Rating: the sourced Google figure from @/lib/trustFigures */}
+                <p className="text-sm font-semibold text-foreground mb-8">{trustCopy(language).rating}</p>
 
                 {/* CTA */}
                 <div className="flex flex-col items-center md:items-start gap-3 justify-center md:justify-start">
-                  {!user && (
-                    <p className="text-xs text-muted-foreground text-center md:text-start">
-                      {t("freeTrial.noteSignedOut")}
-                    </p>
-                  )}
                   <div className="flex flex-col sm:flex-row items-center md:items-start gap-4">
                     <Button
                       size="lg"
                       onClick={handleBookCta}
-                      className="gap-2 text-base font-bold h-14 px-8 shadow-xl hover:scale-[1.02] transition-transform"
-                      aria-label="Book your free Korean trial class"
+                      className="text-base font-bold h-14 px-8 shadow-xl hover:scale-[1.02] transition-transform"
+                      aria-label={tr("Book the free Korean trial class", "حجز الحصة التجريبية المجانية")}
                     >
-                      {t("freeTrial.cta")}
-                      <ArrowRight className="h-5 w-5" />
+                      {tr("Book the free class", "حجز الحصة المجانية")}
                     </Button>
 
-                    {/* Inline social proof — shown only when the live count
-                        supports it. See SOCIAL_PROOF_MIN_COUNT. */}
+                    {/* Social proof: shown only when the live count supports it.
+                        See SOCIAL_PROOF_MIN_COUNT. No invented avatars. */}
                     {bookedCount !== null && bookedCount >= SOCIAL_PROOF_MIN_COUNT && (
-                      <div className="flex items-center gap-2">
-                        <div className="flex -space-x-2">
-                          {["S","M","H","Y","A"].map((l) => (
-                            <div key={l} className="w-8 h-8 rounded-full bg-foreground border-2 border-background flex items-center justify-center text-[10px] font-black text-background">{l}</div>
-                          ))}
-                        </div>
-                        <div className="text-start">
-                          <p className="text-sm font-black text-foreground leading-tight">
-                            {`${bookedCount}+ students`}
-                          </p>
-                          <p className="text-xs text-muted-foreground leading-tight">{t("freeTrial.socialCountText")}</p>
-                        </div>
-                      </div>
+                      <p className="text-sm font-black text-foreground leading-tight self-center">
+                        {isAr ? `${bookedCount}+ حضروا الحصة التجريبية` : `${bookedCount}+ have taken the trial`}
+                      </p>
                     )}
                   </div>
-                  {user && (
-                    <p className="text-xs text-muted-foreground text-center md:text-start">
-                      {t("freeTrial.noteSignedIn")}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground text-center md:text-start">
+                    {user
+                      ? tr("Signed in. The dates are on the next page.", "تم تسجيل الدخول، والمواعيد في الصفحة التالية.")
+                      : tr("No account or card needed: a name and an email are enough.", "لا حاجة إلى حساب أو بطاقة، يكفي الاسم والبريد الإلكتروني.")}
+                  </p>
 
-                  {/* Live availability chips. Both are computed, not copy: the
-                      spots figure is capacity minus booked_count summed over
-                      get_trial_availability, and the deadline is the earliest
-                      next_trial_date minus the 1-day booking cutoff the slot
-                      query enforces. That is why "Booking closes ..." stays
-                      while the static scarcity line further down went.
-                      Spots left (25 Sep 2026, Re: "must be better colour"):
-                      a yellow chip with charcoal type and a neon-green live
-                      dot - palette colours, and green already means "live". */}
+                  {/* Live availability. Computed, not copy: capacity minus
+                      booked_count summed over get_trial_availability.
+                      Colours (Re, 25 Sep 2026): yellow chip, charcoal type,
+                      neon-green live dot. */}
                   {(spotsRemaining !== null || daysToDeadline !== null) && (
                     <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start" aria-live="polite" aria-atomic="false">
                       {spotsRemaining !== null && spotsRemaining <= 15 && (
@@ -335,42 +338,47 @@ const FreeTrialPage = () => {
                             : `${spotsRemaining} ${spotsRemaining === 1 ? "spot" : "spots"} left`}
                         </span>
                       )}
-                      {/* 25 Sep 2026 (QA): the "Booking closes ..." chip is gone. It was
-                          computed from the earliest row get_trial_availability returns,
-                          including a slot already in the past, so it read "Booking
-                          closes today" when nothing closed today - English only, too. */}
                     </div>
                   )}
                 </div>
 
-                {/* Perks chips */}
-                <div className="flex flex-wrap gap-2 mt-8 justify-center md:justify-start">
-                  {PERKS.map(({ icon: Icon, text }) => (
-                    <div key={text} className="flex items-center gap-1.5 bg-muted border border-border rounded-full px-3 py-1.5 text-xs font-semibold text-foreground">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary flex-shrink-0">
-                        <Icon className="h-3 w-3 text-foreground" />
+                {/* Perks, with the Klovers illustrated icons on ivory tiles */}
+                <ul className="flex flex-wrap gap-2 mt-8 justify-center md:justify-start">
+                  {PERKS.map(({ icon, text }) => (
+                    <li key={text} className="flex items-center gap-2 bg-card border border-border rounded-full ps-1.5 pe-3 py-1 text-xs font-semibold text-foreground">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-ivory">
+                        <KloverIcon name={icon} className="h-6 w-6" />
                       </span>
                       {text}
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
 
-              {/* The story scene: the two friends and Cluby studying Korean at a
-                  café table (the same art as the homepage's How it works), so
-                  this page speaks in the same style as the rest of Klovers. */}
+              {/* The story scene: the two friends and Cluby at the café table,
+                  with Cluby's note (his voice only, .cluby-note). */}
               <div className="relative mx-auto w-full max-w-sm md:max-w-none">
+                {/* Cluby's note sits above the picture, never on top of it. */}
+                <div className="mb-3 ms-auto w-fit max-w-[15rem] rounded-2xl border-2 border-charcoal bg-ivory px-4 py-2 text-charcoal shadow-md">
+                  <p className="cluby-note">
+                    <span lang="ko" dir="ltr" className="font-ko font-bold">안녕!</span>{" "}
+                    {tr("The seat next to me is still free.", "المقعد بجانبي ما زال فارغًا.")}
+                  </p>
+                </div>
                 <img
                   src="/assets/cluby/cafe.webp"
-                  alt={isAr ? "صديقان يدرسان الكورية مع كلوبي على طاولة في مقهى" : "Two friends and Cluby studying Korean together at a café table"}
+                  alt={tr(
+                    "Two friends and Cluby studying Korean together at a café table",
+                    "صديقان مع كلوبي يدرسون الكورية معًا على طاولة في مقهى",
+                  )}
                   width={1200}
                   height={800}
                   decoding="async"
                   className="aspect-[4/5] w-full rounded-3xl border border-foreground/10 object-cover shadow-[0_24px_50px_-30px_rgba(46,46,46,0.7)]"
                 />
-                <div className="absolute -bottom-4 start-4 rounded-2xl bg-foreground px-4 py-3 text-background shadow-xl">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">{isAr ? "حصة تجريبية" : "Free Trial"}</p>
-                  <p className="text-sm font-black leading-tight">{isAr ? "بلا بطاقة بنكية" : "No credit card"}</p>
+                <div className="absolute -bottom-4 start-4 rounded-2xl bg-charcoal px-4 py-3 text-ivory shadow-xl">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-klovers-yellow">{tr("Free trial", "حصة تجريبية")}</p>
+                  <p className="text-sm font-black leading-tight">{tr("No credit card", "دون بطاقة بنكية")}</p>
                 </div>
               </div>
 
@@ -378,70 +386,76 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── TESTIMONIALS ────────────────────────────────── */}
+        {/* ── WHAT HAPPENS AT THE TABLE ── */}
+        <section className="py-20 bg-charcoal">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <p className="text-center text-xs font-bold uppercase tracking-[0.25em] text-klovers-yellow mb-2">
+              {tr("30 minutes at the café", "ثلاثون دقيقة في المقهى")}
+            </p>
+            <h2 className="font-display text-3xl font-black text-ivory text-center mb-12">
+              {tr("Three moments at the table", "ثلاث لحظات على الطاولة")}
+            </h2>
+            <ol className="grid grid-cols-1 md:grid-cols-3 gap-px bg-ivory/10 border border-ivory/10 rounded-3xl overflow-hidden">
+              {STEPS.map(({ icon, num, title, text }) => (
+                <li key={num} className="flex flex-col items-start gap-4 bg-charcoal p-8">
+                  <div className="flex items-center gap-3">
+                    <span className="text-5xl font-black text-klovers-yellow leading-none">{num}</span>
+                    <span className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-ivory">
+                      <KloverIcon name={icon} className="h-10 w-10" />
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-ivory">{title}</h3>
+                  <p className="text-sm text-ivory/75 leading-relaxed">{text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ── HEARD AT THE CAFÉ: real student reviews, their own words ── */}
         <section className="py-16 bg-muted/40 border-b border-border">
           <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-2xl font-black text-foreground text-center mb-8">
-              {t("freeTrial.testimonialsTitle")}
+            <h2 className="font-display text-2xl font-black text-foreground text-center mb-8">
+              {tr("Heard at the café", "من أحاديث المقهى")}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {TESTIMONIALS.map((t_) => (
-                <div key={t_.name} className="bg-background border border-border rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-                  <Stars />
-                  <p className="text-sm text-foreground leading-relaxed flex-1">
+                <figure key={t_.name} className="bg-background border border-border rounded-2xl p-6 shadow-sm flex flex-col gap-4">
+                  <blockquote className="text-sm text-foreground leading-relaxed flex-1">
                     "{t_.quote}"
-                  </p>
-                  <div className="flex items-center gap-3 pt-2 border-t border-border">
+                  </blockquote>
+                  <figcaption className="flex items-center gap-3 pt-2 border-t border-border">
                     <AvatarInitials name={t_.name} size={36} />
                     <div>
                       <p className="text-sm font-bold text-foreground leading-tight">{t_.name}</p>
                       <p className="text-xs text-muted-foreground leading-tight">{t_.role}</p>
                     </div>
-                  </div>
-                </div>
+                  </figcaption>
+                </figure>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── WHAT TO EXPECT — dark ───────────────────── */}
-        <section className="py-20 bg-foreground">
-          <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-3xl font-black text-background text-center mb-12">
-              {t("freeTrial.whatToExpectTitle")}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-background/10 border border-background/10 rounded-3xl overflow-hidden">
-              {STEPS.map(({ icon: Icon, num, text }) => (
-                <div key={num} className="flex flex-col items-start gap-5 bg-foreground hover:bg-background/5 transition-colors p-8 group">
-                  <div className="flex items-center gap-3">
-                    <span className="text-5xl font-black text-primary leading-none">{num}</span>
-                    <div className="w-10 h-10 rounded-xl bg-background/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Icon className="h-5 w-5 text-background" />
-                    </div>
-                  </div>
-                  <p className="text-sm font-semibold text-background/75 leading-relaxed">{text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── SCHEDULE — ticket style ───────────────────── */}
+        {/* ── PICK A TABLE: the real upcoming slots ── */}
         <section className="py-20 pb-28">
           <div className="container mx-auto px-4 max-w-xl">
 
             <div className="text-center mb-10">
-              <div className="inline-flex items-center gap-2 mb-2">
-                <CalendarDays className="h-5 w-5 text-primary" />
-                <h2 className="text-3xl font-black text-foreground">{t("freeTrial.slotsTitle")}</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">{t("freeTrial.slotsSubtitle")}</p>
+              <KloverIcon name="calendar-blossom" className="mx-auto mb-3 h-14 w-14" />
+              <h2 className="font-display text-3xl font-black text-foreground mb-2">
+                {tr("Pick a table", "اختيار الموعد")}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {tr(
+                  "Trial classes open once a month, on the first Friday and Saturday. Times are shown in your own time zone.",
+                  "تُفتح الحصص التجريبية مرة كل شهر، في أول جمعة وسبت منه. والأوقات معروضة بالتوقيت المحلي.",
+                )}
+              </p>
             </div>
 
-            {/* Ticket cards — 1-col mobile, 2-col desktop. The list is empty
-                while the fetch is in flight, and empty again if trial_slots
-                genuinely has nothing upcoming. Neither case should render a
-                heading over a hole, which is what it did before. */}
+            {/* Ticket cards: 1 column on mobile, 2 on desktop. Skeleton while
+                loading; an honest empty state when nothing is open. */}
             {slotsLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8" aria-hidden="true">
                 {[0, 1].map((i) => (
@@ -454,20 +468,20 @@ const FreeTrialPage = () => {
             ) : SLOT_HIGHLIGHTS.length === 0 ? (
               <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center mb-8">
                 <p className="text-sm font-semibold text-foreground mb-1">
-                  {isAr ? "مواعيد الأسبوع القادم تُفتح تباعًا." : "Next week's sessions are still opening up."}
+                  {tr("The next month's tables are not open yet.", "مواعيد الشهر القادم لم تُفتح بعد.")}
                 </p>
                 <p className="text-xs text-muted-foreground mb-4">
-                  {isAr
-                    ? "يمكن التواصل عبر واتساب لحجز أول مقعد يُفتح."
-                    : "Message us on WhatsApp and we'll hold you the first seat that opens."}
+                  {tr(
+                    "A WhatsApp message is enough to hold the first seat that opens.",
+                    "رسالة على واتساب تكفي لحجز أول مقعد يُفتح.",
+                  )}
                 </p>
                 <Button
                   variant="outline"
-                  className="gap-2 font-bold"
+                  className="font-bold"
                   onClick={() => trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "free_trial_no_slots_whatsapp" })}
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  {isAr ? "التواصل عبر واتساب" : "WhatsApp Us"}
+                  {tr("Message on WhatsApp", "مراسلة على واتساب")}
                 </Button>
               </div>
             ) : (
@@ -475,19 +489,16 @@ const FreeTrialPage = () => {
                 {SLOT_HIGHLIGHTS.map((s, i) => (
                   <div
                     key={i}
-                    className="border-2 border-foreground rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_hsl(var(--foreground))] hover:shadow-[2px_2px_0px_0px_hsl(var(--foreground))] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-default"
+                    className="border-2 border-foreground rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_hsl(var(--charcoal))] dark:shadow-none"
                   >
-                    {/* Header */}
-                    <div className="bg-foreground py-2.5 px-4 text-center">
-                      <p className="text-xs font-black text-primary uppercase tracking-widest">{s.day}</p>
+                    <div className="bg-charcoal py-2.5 px-4 text-center">
+                      <p className="text-xs font-black text-klovers-yellow uppercase tracking-widest">{s.day}</p>
                     </div>
-                    {/* Perforated divider */}
                     <div className="relative flex items-center bg-background">
                       <div className="absolute -left-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
                       <div className="flex-1 border-t-2 border-dashed border-foreground/25 mx-1" />
                       <div className="absolute -right-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
                     </div>
-                    {/* Body */}
                     <div className="bg-background py-5 px-4 text-center">
                       <p className="text-2xl font-black text-foreground">{s.time}</p>
                     </div>
@@ -496,33 +507,23 @@ const FreeTrialPage = () => {
               </div>
             )}
 
-            {/* 24 Sep 2026: the orange "Spots are limited — classes fill up
-                fast" line (freeTrial.urgency) that sat here is gone. It was
-                static copy shown whatever the slots held; the live "N spots
-                left" chip in the hero is the true version of it. */}
-
             <Button
               size="lg"
               onClick={handleBookCta}
-              className="w-full gap-2 text-base font-bold h-14 shadow-xl hover:scale-[1.01] transition-transform"
-              aria-label="Book your free Korean trial class"
+              className="w-full text-base font-bold h-14 shadow-xl hover:scale-[1.01] transition-transform"
+              aria-label={tr("Book the free Korean trial class", "حجز الحصة التجريبية المجانية")}
             >
-              {t("freeTrial.ctaSecondary")}
-              <ArrowRight className="h-5 w-5" />
+              {tr("Save a seat at the table", "حجز مقعد على الطاولة")}
             </Button>
 
             <p className="text-xs text-muted-foreground text-center mt-3">
-              {user ? t("freeTrial.noteSignedIn") : t("freeTrial.noteSignedOut")}
+              {tr(
+                "The trial class is free: nothing to pay, no card needed.",
+                "الحصة التجريبية مجانية، دون دفع ودون بطاقة بنكية.",
+              )}
             </p>
-
-            {/* Trust guarantee */}
-            <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
-              <Check className="h-3.5 w-3.5 shrink-0 text-foreground" strokeWidth={3} aria-hidden="true" />
-              <span>{isAr ? "الحصة التجريبية مجانية، بلا دفع وبلا بطاقة بنكية." : "The trial class is free — nothing to pay, no card needed."}</span>
-            </div>
           </div>
         </section>
-
 
       </main>
       <Footer />
