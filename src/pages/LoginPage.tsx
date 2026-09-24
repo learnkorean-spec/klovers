@@ -141,7 +141,7 @@ const LoginPage = () => {
         localStorage.removeItem("enroll_redirect");
         toast({
           title: isAr ? "تسجيل الدخول عبر Google غير متاح" : "Google sign-in unavailable",
-          description: isAr ? "يرجى استخدام البريد الإلكتروني وكلمة المرور، أو تواصل مع الدعم." : "Please use email and password to log in, or contact support.",
+          description: isAr ? "يرجى استخدام البريد الإلكتروني وكلمة المرور، أو التواصل مع الدعم." : "Please use email and password to log in, or contact support.",
           variant: "destructive",
         });
       }
@@ -177,7 +177,7 @@ const LoginPage = () => {
               {isAr ? "أهلاً بعودتك." : "Welcome back."}
             </span>
             <span className="mt-1 block text-sm text-ivory/80">
-              {isAr ? "كمّل من حيث توقفت." : "Pick up right where you left off."}
+              {isAr ? "كل شيء محفوظ، والرحلة تُستأنف من حيث توقفت." : "Everything is saved. The journey picks up where it paused."}
             </span>
             <span className="mt-2 block text-xs font-semibold text-ivory/70">
               {trustCopy(language).ratingShort}
@@ -214,12 +214,12 @@ const LoginPage = () => {
         </Card>
 
         <p className="text-xs text-muted-foreground text-center">
-          {isAr ? "جديد في Klovers؟ " : "New to Klovers? "}
+          {isAr ? "أول زيارة إلى Klovers؟ " : "New to Klovers? "}
           <Link
             to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"}
             className="text-foreground font-semibold underline underline-offset-2"
           >
-            {isAr ? "أنشئ حساب مجاني ←" : "Create a free account →"}
+            {isAr ? "إنشاء حساب مجاني ←" : "Create a free account →"}
           </Link>
         </p>
 

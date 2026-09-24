@@ -167,7 +167,7 @@ const ExitNudge = () => {
           {/* Cluby holding his star, in place of the old gift emoji. */}
           <img
             src="/assets/cluby/cluby-star.webp"
-            alt={isAr ? "كلوبي ماسك نجمة" : "Cluby holding a star"}
+            alt={isAr ? "كلوبي يحمل نجمة" : "Cluby holding a star"}
             width={333}
             height={440}
             decoding="async"
@@ -209,7 +209,7 @@ const PricingStory = () => {
       <figure className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
         <img
           src="/assets/cluby/cafe.webp"
-          alt={isAr ? "صديقان وكلوبي بيذاكروا كوري في كافيه" : "Two friends and Cluby studying Korean together at a café"}
+          alt={isAr ? "صديقان يدرسان الكورية مع كلوبي في مقهى" : "Two friends and Cluby studying Korean together at a café"}
           width={1200}
           height={800}
           decoding="async"
@@ -217,7 +217,7 @@ const PricingStory = () => {
         />
         <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/85 via-charcoal/40 to-transparent px-4 pb-3 pt-10 text-start md:px-6 md:pb-4">
           <span className="font-display text-sm font-extrabold text-ivory md:text-lg">
-            {isAr ? "صديقان، كافيه واحد، وكوري كل أسبوع." : "Two friends, one café, Korean every week."}
+            {isAr ? "صديقان، وطاولة واحدة في المقهى، وقليل من الكورية كل أسبوع." : "Two friends, one café table, a little more Korean every week."}
           </span>
         </figcaption>
       </figure>
