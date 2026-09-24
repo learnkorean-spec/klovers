@@ -71,9 +71,10 @@ couple-style posing unless the canon is deliberately updated first.
 3. **Conversation Café** — turns vocabulary into real usable conversation
    (greetings, ordering, short exchanges). Lead: both learners, Cluby
    supporting. Unlocks at the conversation-readiness milestone.
-4. **Cluby's Memory Garden** — spaced repetition and review, reframed as
-   Cluby holding onto things the learner might be starting to forget. Lead:
-   Cluby alone. Unlocks once there's enough review data.
+4. **Cluby's Memory Garden** (حديقة ذاكرة كلوبي) — spaced repetition and
+   review, reframed as Cluby holding onto things the learner might be
+   starting to forget. Lead: Cluby alone. Unlocks once there's enough review
+   data. It is **not a level stop** on the journey map (see below).
 5. **Culture Street** — everyday Korean culture, etiquette, traditions. Lead:
    female learner + Cluby. Unlocks after the beginner language foundation is
    complete.
@@ -83,6 +84,23 @@ couple-style posing unless the canon is deliberately updated first.
 
 Each world's `unlockRule` and `narrativeEffect` are defined precisely in the
 code file — nothing here should be treated as looser than that.
+
+### Course levels on the journey map (`levelJourney`)
+
+Re's decision, 24 Sep 2026. The seven course levels walk through the worlds
+in order; the Memory Garden sits beside the journey as a review place.
+
+| Course level | World |
+|---|---|
+| Hangul | Hangul Village |
+| Level 1 | Vocabulary Market |
+| Level 2 | Conversation Café |
+| Level 3 | Culture Street |
+| Level 4 | Seoul Journey · Part 1 |
+| Level 5 | Seoul Journey · Part 2 |
+| Level 6 | Seoul Journey · Part 3 |
+
+Cluby's name: **Cluby** / **كلوبي** (Arabic spelling everywhere).
 
 ## 6. Future mystery
 
@@ -112,14 +130,18 @@ is deliberately very slow. Rules:
 
 ### Brand colours
 
-| Name | Hex |
-|---|---|
-| KLOVERS Yellow | `#FFF000` |
-| Charcoal | `#2E2E2E` |
-| Ivory | `#FFF9EC` |
-| Fresh Green | `#25D366` |
-| Soft Green | `#BEEFCB` |
-| Peach | `#FFB7A1` |
+Three brand colours plus one status colour (Re, Sep 2026; `src/index.css`
+is the source of truth).
+
+| Name | Hex | Use |
+|---|---|---|
+| KLOVERS Yellow | `#FFFF00` | brand ground, primary buttons |
+| Charcoal | `#2E2E2E` | text and every dark surface |
+| Ivory | `#FFF9EC` | calm surface |
+| Neon green | `#39FF14` | status only (progress, correct, live), a fill, never text or decoration |
+
+Retired, do not use: `#FFF000`, `#25D366`, `#BEEFCB` (soft green / mint),
+`#FFB7A1` (peach). WhatsApp's own green stays only on WhatsApp buttons.
 
 ### Typography
 
@@ -128,7 +150,7 @@ is deliberately very slow. Rules:
 | Headings | Poppins |
 | English UI | Inter |
 | Arabic UI | Cairo |
-| Cluby's handwritten notes only | Segoe Script (Windows), Kalam (fallback) |
+| Cluby's handwritten notes only | Caveat (Latin only; Arabic notes stay in Cairo) |
 
 Handwriting is for short Cluby notes and personal story messages only — never
 for buttons, navigation, metrics, or long copy.
