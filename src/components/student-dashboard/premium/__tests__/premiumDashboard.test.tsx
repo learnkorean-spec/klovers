@@ -7,6 +7,7 @@ import { TodaysMissions } from "../TodaysMissions";
 import { LearningJourneyMap } from "../LearningJourneyMap";
 import { DashboardHero } from "../DashboardHero";
 import { CollectionCard } from "../CollectionCard";
+import { EggStatusCard } from "../EggStatusCard";
 import { journeyStops, missionsFromActivity, xpStatus, type ContinueLesson } from "@/lib/dashboardProgress";
 
 vi.mock("@/lib/tracking", () => ({ track: { custom: vi.fn() } }));
@@ -76,7 +77,7 @@ describe("LearningJourneyMap", () => {
 
 describe("DashboardHero", () => {
   it("shows level, XP to next level, streak and exactly one action", () => {
-    wrap(<DashboardHero firstName="Roma" todayLabel="Thursday" xp={xpStatus(185)} streak={2} streakState="active_today" continueHref="/textbook/korean-1/12" continueBook="korean-1" continueLesson={12} hasStarted />);
+    wrap(<DashboardHero firstName="Roma" todayLabel="Thursday" xp={xpStatus(185)} streak={2} streakState="active_today" continueHref="/textbook/korean-1/12" continueBook="korean-1" continueLesson={12} hasStarted clubyAwake />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Roma");
     expect(screen.getByText("185 / 200")).toBeInTheDocument();
     expect(screen.getByText("15 XP to Hangul League")).toBeInTheDocument();
@@ -95,5 +96,32 @@ describe("CollectionCard", () => {
     expect(screen.getByText("1 / 20 badges")).toBeInTheDocument();
     expect(screen.getByText("Complete 5 lessons")).toBeInTheDocument();
     expect(screen.getByText("3 more to unlock")).toBeInTheDocument();
+  });
+});
+
+describe("Story: Cluby's egg and the worlds", () => {
+  it("hides Cluby in the hero until he has hatched", () => {
+    wrap(<DashboardHero firstName="Roma" todayLabel="Thursday" xp={xpStatus(185)} streak={0} streakState="none" continueHref="/x" continueBook={null} continueLesson={null} hasStarted={false} clubyAwake={false} />);
+    expect(screen.queryByAltText(/Cluby/)).not.toBeInTheDocument();
+  });
+  it("shows the egg stage with its three real milestones", () => {
+    wrap(<EggStatusCard egg={{ stage: 1, hatchedAt: null }} />);
+    expect(screen.getByRole("heading", { name: "The egg cracked!" })).toBeInTheDocument();
+    expect(screen.getByText("First word")).toBeInTheDocument();
+    expect(screen.getByText("First conversation")).toBeInTheDocument();
+  });
+  it("introduces a hatched Cluby once, then steps aside", () => {
+    wrap(<EggStatusCard egg={{ stage: 3, hatchedAt: "2020-01-01T00:00:00Z" }} />);
+    expect(screen.getByRole("heading", { name: "You've already learned enough to wake him" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("heading", { name: /wake him/ })).not.toBeInTheDocument();
+    expect(localStorage.getItem("kl_cluby_hatch_seen")).toBe("1");
+  });
+  it("names the journey stops after the story worlds, with the level underneath", () => {
+    const j = journeyStops("level_1");
+    wrap(<LearningJourneyMap stops={j.stops} currentIndex={j.currentIndex} continueHref="/x" />);
+    expect(screen.getByText("You're in Vocabulary Market")).toBeInTheDocument();
+    expect(screen.getAllByText("Conversation Café").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Memory Garden/)).not.toBeInTheDocument();
   });
 });
