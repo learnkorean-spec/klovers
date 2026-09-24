@@ -140,22 +140,6 @@ const JOURNEY_MESSAGES_AR: Record<string, string> = {
   l5:    "أنت متقدم بالفعل — صقّل كوريتك لشهادة TOPIK 5–6",
 };
 
-const SOCIAL_PROOF: Record<string, { quote: string; author: string }> = {
-  hangul: { quote: "Starting from zero was scary, but Klovers made Hangul so easy. Best decision I made!", author: "Yasmine H., Alexandria" },
-  l1:    { quote: "I could hold basic conversations in Korean after just 8 weeks. The classes are amazing!", author: "Ahmed K., Cairo" },
-  l2:    { quote: "My pronunciation improved so much — my K-drama friends say I sound like a native now.", author: "Nour M., Cairo" },
-  l3:    { quote: "I passed TOPIK II after studying with Klovers for 6 months. Highly recommend!", author: "Sara L., Giza" },
-  l5:    { quote: "The advanced class helped me land a job at a Korean company in Egypt. Life-changing!", author: "Omar F., Cairo" },
-};
-
-const SOCIAL_PROOF_AR: Record<string, { quote: string; author: string }> = {
-  hangul: { quote: "البدء من الصفر كان مخيفاً، لكن Klovers جعلت الهانغول سهلاً جداً. أفضل قرار اتخذته!", author: "ياسمين ح.، الإسكندرية" },
-  l1:    { quote: "استطعت إجراء محادثات بسيطة بالكورية بعد 8 أسابيع فقط. الحصص مذهلة!", author: "أحمد ك.، القاهرة" },
-  l2:    { quote: "نطقي تحسن كثيراً — أصدقائي يقولون أنني أبدو كأهل اللغة الآن.", author: "نور م.، القاهرة" },
-  l3:    { quote: "اجتزت TOPIK II بعد الدراسة مع Klovers لمدة 6 أشهر. أنصح بشدة!", author: "سارة ل.، الجيزة" },
-  l5:    { quote: "الصف المتقدم ساعدني في الحصول على وظيفة في شركة كورية في مصر. غيّر حياتي!", author: "عمر ف.، القاهرة" },
-};
-
 function subTestSummary(correct: number, total: number, skill: string, isAr = false): string {
   const pct = correct / total;
   if (isAr) {
@@ -1172,15 +1156,9 @@ const PlacementTestPage = () => {
           {/* CTA */}
           <Card>
             <CardContent className="pt-5 pb-5 space-y-3">
-              {/* Social proof block */}
-              {(isAr ? SOCIAL_PROOF_AR : SOCIAL_PROOF)[result.levelKey] && (
-                <div className="rounded-lg bg-muted/50 px-4 py-3 space-y-1.5 text-xs">
-                  <div className="text-amber-500 tracking-widest text-sm">★★★★★</div>
-                  <p className="text-foreground/80 italic leading-relaxed">"{(isAr ? SOCIAL_PROOF_AR : SOCIAL_PROOF)[result.levelKey].quote}"</p>
-                  <p className="text-muted-foreground font-medium">— {(isAr ? SOCIAL_PROOF_AR : SOCIAL_PROOF)[result.levelKey].author}</p>
-                  <p className="text-muted-foreground">{isAr ? "أكثر من 200 طالب على مدى 13 عامًا" : "200+ students taught over 13 years"}</p>
-                </div>
-              )}
+              {/* 24 Sep 2026: the per-level student quotes that sat here
+                  (SOCIAL_PROOF / SOCIAL_PROOF_AR) were removed. They matched
+                  no real review, and Klovers never invents reviews. */}
               <p className="text-sm font-semibold text-foreground text-center">{isAr ? "مستعد لبدء التعلّم؟" : "Ready to start learning?"}</p>
               <div className="flex gap-2">
                 <Button size="lg" className="flex-1" onClick={() => { track.custom("placement_recommendation_clicked", { level: result.levelKey, cta: "free_trial_bottom" }); logLeadEvent({ source_type: "placement", cta_label: "bottom_cta_free_trial", metadata: { level: result.levelKey } }); navigate("/free-trial"); }}>
