@@ -62,7 +62,8 @@ Type, loaded in index.html:
     --muted: 41 60% 93%;
     --muted-foreground: 0 0% 35%;
 
-    --accent: 152 62% 84.5%;
+    /* Pale brand-yellow tint (was mint, retired 25 Sep 2026). */
+    --accent: 60 100% 88%;
     --accent-foreground: 0 0% 18%;
 
     --destructive: 0 72% 50%;
@@ -80,16 +81,16 @@ Type, loaded in index.html:
          correct   #0E7A4F  on ivory 5.1:1   (dark theme: #39FF14, 13.6:1 on ground)
          wrong     #B800AB  text on white 5.8:1, on --wrong-surface 4.9:1
          wrong-surface #FFE4FB
-         wrong-graphic #FF13F0  border / x mark / flash ONLY. It sits in a dead
-                   zone: white on it is 3.2:1 and Charcoal 4.3:1, so no text is
-                   ever set on it. Always pair status colour with a check or x
+         wrong-graphic #FF4FD8  Klovers Pink (Re, 24-25 Sep 2026). Border / x
+                   mark / flash / fill ONLY - never pink text (2.8:1 on
+                   white). Charcoal on it is 4.76:1. Always pair status colour with a check or x
                    shape, never colour alone. */
     --correct: 156.1 79.4% 26.7%;
     --correct-foreground: 0 0% 100%;
     --wrong: 304.2 100% 36.1%;
     --wrong-foreground: 0 0% 100%;
     --wrong-surface: 308.9 100% 94.7%;
-    --wrong-graphic: 303.8 100% 53.7%;
+    --wrong-graphic: 313.3 100% 65.5%;
 
     /* LIVE — "happening now": the hero's next-class chip, the admin group card
        that is mid-class. A state, not decoration, which is why it is a token
@@ -120,7 +121,7 @@ Type, loaded in index.html:
     --mint-strong: var(--live-bright);
     --mint-foreground: var(--live-surface-foreground);
     --peach: 345 100% 89%;
-    --peach-strong: 303.8 100% 53.7%;
+    --peach-strong: 313.3 100% 65.5%;
     --peach-foreground: 0 0% 18%;
 
     --radius: 1rem;
@@ -129,14 +130,14 @@ Type, loaded in index.html:
     --sidebar-foreground: 0 0% 18%;
     --sidebar-primary: 60 100% 50%;
     --sidebar-primary-foreground: 0 0% 18%;
-    --sidebar-accent: 152 62% 84.5%;
+    --sidebar-accent: 60 100% 88%;
     --sidebar-accent-foreground: 0 0% 18%;
     --sidebar-border: 40 25% 88%;
     --sidebar-ring: 60 100% 50%;
 
     --chart-1: 60 100% 50%;
     --chart-2: 156.1 79.4% 26.7%;
-    --chart-3: 304.2 100% 36.1%;
+    --chart-3: 313.3 100% 65.5%;
     --chart-4: 0 0% 18%;
     --chart-5: 0 0% 50%;
 
@@ -224,7 +225,7 @@ Type, loaded in index.html:
     --wrong: 44 36.6% 92%;
     --wrong-foreground: 60 14.3% 6.9%;
     --wrong-surface: 307.8 36.5% 12.4%;
-    --wrong-graphic: 303.8 100% 53.7%;
+    --wrong-graphic: 313.3 100% 65.5%;
 
     /* On a dark ground the deep green disappears, so live IS the bright one
        here (13.6:1 on the ground). live-surface becomes a deep green panel
@@ -241,7 +242,7 @@ Type, loaded in index.html:
     --mint-strong: var(--live-bright);
     --mint-foreground: var(--live-surface-foreground);
     --peach: 345 100% 89%;
-    --peach-strong: 303.8 85% 48%;
+    --peach-strong: 313.3 100% 65.5%;
     --peach-foreground: 0 0% 18%;
 
     --sidebar-background: 60 14.3% 6.9%;
@@ -254,7 +255,7 @@ Type, loaded in index.html:
     --sidebar-ring: 60 100% 50%;
     --chart-1: 60 100% 50%;
     --chart-2: 110.6 100% 53.9%;
-    --chart-3: 303.8 85% 48%;
+    --chart-3: 313.3 100% 65.5%;
     --chart-4: 0 0% 80%;
     --chart-5: 0 0% 50%;
     --sidebar: 60 11.1% 12.4%;
@@ -712,4 +713,55 @@ Type, loaded in index.html:
 @keyframes journal-pop {
   from { opacity: 0; transform: scale(0.7); }
   to { opacity: 1; transform: scale(1); }
+}
+
+
+/* ── Contrast + palette guards (25 Sep 2026) ───────────────────────────────
+   The 23 Sep audit measured light text failing WCAG AA on almost every page:
+   footer links and copyright at text-background/45 (3.9:1), captions at
+   text-ivory/45-50 (3.9-4.0:1), text-charcoal/65 (4.4:1) and
+   text-muted-foreground/80 (4.1:1). Rather than hand-edit every call site,
+   these low-alpha text utilities are lifted here to values that pass 4.5:1
+   on their usual grounds. The doubled class only buys specificity over the
+   generated utility (same trick as .text-mint-strong above). Hover variants
+   are separate classes and are unaffected. */
+.text-background\/45.text-background\/45,
+.text-background\/50.text-background\/50,
+.text-background\/55.text-background\/55,
+.text-background\/60.text-background\/60 {
+  color: hsl(var(--background) / 0.78);
+}
+.text-ivory\/40.text-ivory\/40,
+.text-ivory\/45.text-ivory\/45,
+.text-ivory\/50.text-ivory\/50,
+.text-ivory\/55.text-ivory\/55,
+.text-ivory\/60.text-ivory\/60 {
+  color: hsl(var(--ivory) / 0.78);
+}
+.text-charcoal\/55.text-charcoal\/55,
+.text-charcoal\/60.text-charcoal\/60,
+.text-charcoal\/65.text-charcoal\/65,
+.text-charcoal\/70.text-charcoal\/70 {
+  color: hsl(var(--charcoal) / 0.8);
+}
+.text-muted-foreground\/60.text-muted-foreground\/60,
+.text-muted-foreground\/70.text-muted-foreground\/70,
+.text-muted-foreground\/80.text-muted-foreground\/80 {
+  color: hsl(var(--muted-foreground));
+}
+
+/* WhatsApp buttons: #25D366 is WhatsApp's green, not a Klovers colour, and
+   white on it measures 2.0:1. Thirteen files hard-code it, so it is mapped
+   here to the Klovers neon green (#39FF14) with charcoal text (13.6:1) - the
+   palette's green, which still reads as "WhatsApp". Re, 25 Sep 2026: any
+   colour outside the palette gets fixed. */
+[class*="bg-[#25D366]"]:not([class*="hover:bg-[#25D366]"]),
+[class*="hover:bg-[#1ebe5d]"]:hover,
+[class*="hover:bg-[#20bd5a]"]:hover,
+[class*="hover:bg-[#128C7E]"]:hover {
+  background-color: hsl(var(--live-bright)) !important;
+  color: hsl(var(--charcoal)) !important;
+}
+[class*="text-[#25D366]"] {
+  color: hsl(var(--charcoal)) !important;
 }

@@ -275,7 +275,7 @@ const PricingSection = () => {
                   isActive
                     ? "border-2 border-primary scale-105 shadow-xl ring-2 ring-primary/20"
                     : activeTier
-                    ? "opacity-60 border-border"
+                    ? "opacity-90 border-border"
                     : "border-border hover:border-primary/50 hover:shadow-lg"
                 }`}
               >

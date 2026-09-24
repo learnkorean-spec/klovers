@@ -114,6 +114,59 @@ export default {
   				900: '#3A3300',
   				950: '#231F00'
   			},
+  			/*
+  			 * violet / purple — RETUNED to the palette (25 Sep 2026, Re: any colour
+  			 * outside the Klovers palette gets fixed). Pale steps are ivory and yellow
+  			 * tints, strong steps are charcoal, so a violet hero becomes charcoal with
+  			 * pale-yellow text and a violet chip becomes a yellow tint with a charcoal
+  			 * icon. Same approach as amber above.
+  			 */
+  			violet: {
+  				50: '#FFF9EC',
+  				100: '#FFFAC4',
+  				200: '#FFF28F',
+  				300: '#FFE84D',
+  				400: '#EFD000',
+  				500: '#4A4A4A',
+  				600: '#2E2E2E',
+  				700: '#2E2E2E',
+  				800: '#242424',
+  				900: '#1A1A1A',
+  				950: '#111111'
+  			},
+  			/*
+  			 * Same ramp as violet above.
+  			 */
+  			purple: {
+  				50: '#FFF9EC',
+  				100: '#FFFAC4',
+  				200: '#FFF28F',
+  				300: '#FFE84D',
+  				400: '#EFD000',
+  				500: '#4A4A4A',
+  				600: '#2E2E2E',
+  				700: '#2E2E2E',
+  				800: '#242424',
+  				900: '#1A1A1A',
+  				950: '#111111'
+  			},
+  			/*
+  			 * orange — RETUNED to the amber ramp: orange urgency chips and banners
+  			 * become the brand yellow tint with dark-olive text (see amber).
+  			 */
+  			orange: {
+  				50: '#FFFEF0',
+  				100: '#FFFAC4',
+  				200: '#FFF28F',
+  				300: '#FFE84D',
+  				400: '#FFDE00',
+  				500: '#EFD000',
+  				600: '#7A6C00',
+  				700: '#6B5E00',
+  				800: '#4F4600',
+  				900: '#3A3300',
+  				950: '#231F00'
+  			},
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
   				foreground: 'hsl(var(--primary-foreground))'

@@ -361,6 +361,58 @@ const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
       <p><a href="/courses">الكورسات</a> · <a href="/pricing">الأسعار</a> · <a href="/about">عننا</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/contact">تواصل معانا</a></p>
     </div>`;
 
+// ── Courses / pricing / free-trial body fragments ─────────────────────────
+//
+// Added 25 Sep 2026 (audit 23 Sep, SEO1): the server HTML of these three
+// pages had no body text and no h1, so crawlers that run no JavaScript saw
+// empty pages. Same tradeoff as GAMES_BODY_HTML: the copy is DUPLICATED from
+// src/pages/CoursesPage.tsx, PricingPage.tsx and FreeTrialPage.tsx - if you
+// change those pages' facts, mirror them here. No prices on purpose: they
+// depend on the visitor's country tier and currency. Trust figures, if ever
+// added here, must match src/lib/trustFigures.ts.
+const COURSES_BODY_HTML = `<div id="courses-prerendered" lang="en" dir="ltr">
+      <h1>Korean Courses: from Hangul to Level 6</h1>
+      <p>Live online Korean classes with a real teacher, in English or Arabic. Every class is 60 minutes, once a week. A level is 24 classes over 6 months - except Hangul Foundation, which is 4 classes.</p>
+      <h2>Hangul Foundation (4 classes, Pre-A1)</h2>
+      <p>Read and write Korean from zero: the basic vowels and consonants and how a syllable is built; tense and aspirated consonants and combined vowels; the final consonant (batchim); pronunciation rules and your first sentences.</p>
+      <h2>Levels 1 to 6 (24 classes, 6 months each)</h2>
+      <ul>
+        <li><strong>Level 1</strong> - greetings, the present and past, everyday sentences. Toward TOPIK 1 (about CEFR A1).</li>
+        <li><strong>Level 2</strong> - longer sentences, enough to handle a day on your own in Korean. Toward TOPIK 2 (about CEFR A2).</li>
+        <li><strong>Level 3</strong> - real topics, more complex grammar, formal and casual speech. Toward TOPIK 3 (about CEFR B1).</li>
+        <li><strong>Level 4</strong> - discussion, abstract topics, longer listening, structured writing. Toward TOPIK 4 (about CEFR B2).</li>
+        <li><strong>Level 5</strong> - nuance: tone, politeness and implication. Toward TOPIK 5 (about CEFR C1).</li>
+        <li><strong>Level 6</strong> - near-native comprehension. Toward TOPIK 6 (about CEFR C2).</li>
+      </ul>
+      <h2>Also available</h2>
+      <p>Reading &amp; Speaking practice for students who already have the grammar, and TOPIK exam preparation for a test date you have already booked.</p>
+      <p><a href="/free-trial">Book a free trial class</a> · <a href="/placement-test">Take the free placement test</a> · <a href="/pricing">Pricing</a></p>
+    </div>`;
+
+const PRICING_BODY_HTML = `<div id="pricing-prerendered" lang="en" dir="ltr">
+      <h1>Klovers Pricing &amp; Plans</h1>
+      <p>Klovers prices are set by country tier and shown in your local currency on this page. Choose your country to see your tier and price.</p>
+      <h2>Group classes</h2>
+      <p>Small live groups, once a week, following the structured curriculum. Plans run for 1 month (4 classes), 3 months (12 classes) or 6 months (24 classes); longer plans cost less per month.</p>
+      <h2>Private classes</h2>
+      <p>One-to-one lessons with flexible scheduling, at your own pace.</p>
+      <h2>Payment and guarantee</h2>
+      <p>Pay by bank transfer, Vodafone Cash or InstaPay (Egypt), or by international card or PayPal. Every payment is reviewed by our team before activation - there are no automatic charges. If you are not happy after your first class, we refund or rebook you. Full terms are on the <a href="/terms">Terms of Service</a> page.</p>
+      <p><a href="/free-trial">Book a free trial class</a> · <a href="/courses">Courses</a> · <a href="/faq">FAQ</a></p>
+    </div>`;
+
+const FREE_TRIAL_BODY_HTML = `<div id="free-trial-prerendered" lang="en" dir="ltr">
+      <h1>Book Your Free Korean Class</h1>
+      <p>Try Korean for free: one live 30-minute class with our teacher, in English or Arabic. No credit card and no account needed - pick a session, add your name, email and WhatsApp number, and we email you the class link.</p>
+      <h2>What happens in your trial</h2>
+      <ol>
+        <li>A 30-minute sample class with our teacher</li>
+        <li>A placement check to find your level</li>
+        <li>Personal recommendations for your next step</li>
+      </ol>
+      <p><a href="/trial-booking">Pick your session</a> · <a href="/courses">Courses</a> · <a href="/pricing">Pricing</a></p>
+    </div>`;
+
 // ── Legal page body fragments ───────────────────────────────────────────────
 //
 // /privacy-policy and /terms (src/pages/PrivacyPolicyPage.tsx, TermsPage.tsx),
@@ -533,12 +585,14 @@ const MARKETING_ROUTES = [
     title: "Korean Courses",
     description:
       "Explore Klovers Korean language courses — Beginner to Advanced. Live classes, flexible schedules, and certified teachers.",
+    body: COURSES_BODY_HTML,
   },
   {
     path: "/pricing",
     title: "Pricing & Plans",
     description:
       "Affordable Korean language learning plans at Klovers. Choose the right course for your budget and learning goals.",
+    body: PRICING_BODY_HTML,
   },
   {
     path: "/about",
@@ -585,9 +639,12 @@ const MARKETING_ROUTES = [
   },
   {
     path: "/free-trial",
-    title: "Free Trial",
+    // Matches the title the page sets in the browser (the audit found the
+    // two differing). It names Klovers, so no " | Klovers" suffix is added.
+    title: "Book Your Free Korean Class | Klovers Academy",
     description:
-      "Try a free Korean lesson at Klovers. Experience interactive learning, certified teachers, and our gamified curriculum with no commitment.",
+      "Try a free 30-minute live Korean class at Klovers, in English or Arabic. No credit card and no account needed - pick a session and we email you the link.",
+    body: FREE_TRIAL_BODY_HTML,
   },
   {
     path: "/affiliate",
