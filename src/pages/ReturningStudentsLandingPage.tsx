@@ -54,11 +54,8 @@ const ReturningStudentsLandingPage = () => {
   useSEO({
     title: "Welcome Back — Returning Students Offer",
     description:
-      "Returning Klovers students: a discount on your next enrollment, and extra savings when friends join.",
+      "Returning Klovers students get 20% off. Enroll now, share with friends, and save up to 35%. No placement test required.",
     canonical: PAGE_URL,
-    // 25 Sep 2026 (QA): the page shows the returning-student promo code, so
-    // it is kept out of search results and out of sitemap.xml.
-    noindex: true,
   });
 
   useEffect(() => {
@@ -192,6 +189,18 @@ const ReturningStudentsLandingPage = () => {
               </p>
             </div>
 
+            {/* Story art: the two friends and Cluby picnicking by the Han river. */}
+            <figure className="mb-10 overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+              <img
+                src="/assets/cluby/picnic.webp"
+                alt={isAr ? "صديقان وكلوبي في نزهة على نهر الهان" : "Two friends and Cluby having a picnic by the Han river"}
+                width={1600}
+                height={900}
+                decoding="async"
+                className="h-40 w-full object-cover object-[center_60%] sm:h-56 md:h-72"
+              />
+            </figure>
+
             <div className="grid md:grid-cols-2 gap-8">
               {/* Referral tiers */}
               <Card className="border-border/60 bg-muted/50">
@@ -226,13 +235,14 @@ const ReturningStudentsLandingPage = () => {
 
                   {/* Referral progress (logged-in users only) */}
                   {referralStats && referralStats.bonusPercent > 0 && (
-                    <div className="rounded-lg border border-charcoal/15 bg-klovers-yellow/30 p-3 text-center">
-                      <p className="text-sm font-semibold text-foreground">
+                    <div className="rounded-lg border border-charcoal/15 bg-ivory dark:border-border dark:bg-muted p-3 text-center">
+                      <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-charcoal dark:text-foreground">
+                        <Check className="h-4 w-4 shrink-0 rounded-full bg-klovers-green p-0.5 text-charcoal" strokeWidth={3} aria-hidden="true" />
                         {isAr
                           ? `لقد حصلت على خصم إضافي ${referralStats.bonusPercent}%!`
                           : `You've earned +${referralStats.bonusPercent}% referral bonus!`}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-charcoal/70 dark:text-muted-foreground mt-1">
                         {isAr
                           ? `${referralStats.conversions} صديق انضم · ${Math.max(0, referralStats.clicks - referralStats.conversions)} شخص زار رابطك`
                           : `${referralStats.conversions} friend${referralStats.conversions !== 1 ? "s" : ""} enrolled · ${Math.max(0, referralStats.clicks - referralStats.conversions)} link visitor${Math.max(0, referralStats.clicks - referralStats.conversions) !== 1 ? "s" : ""}`}
@@ -359,7 +369,7 @@ const ReturningStudentsLandingPage = () => {
                   <ul className="space-y-3">
                     {offerItems.map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
+                        <Check className="h-5 w-5 shrink-0 mt-0.5 rounded-full bg-klovers-green p-0.5 text-charcoal" strokeWidth={3} />
                         <span className="text-sm text-muted-foreground">
                           {item as string}
                         </span>
@@ -557,7 +567,7 @@ const ReturningStudentsLandingPage = () => {
                 size="lg"
                 variant="outline"
                 asChild
-                className="gap-2 h-13 px-8 text-base font-medium border-white/40 text-white hover:bg-white/10"
+                className="gap-2 h-13 px-8 text-base font-medium bg-transparent border-charcoal/40 text-charcoal hover:bg-charcoal/10 hover:text-charcoal"
               >
                 <a
                   href={WHATSAPP_BASE}

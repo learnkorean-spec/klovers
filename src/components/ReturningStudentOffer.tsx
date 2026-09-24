@@ -17,7 +17,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { RETURNING_STUDENT_CODE } from "@/lib/siteConfig";
-import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
 
 /**
  * 2026-09-20 (a): this section was painted in Tailwind `green-*` - ground,
@@ -73,6 +72,10 @@ import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
  *
  * A real photograph of Klovers students, with consent, beats both. Ask for
  * that before running another stock search.
+ *
+ * 2026-09-25: the flat character busts are replaced by the story-canon
+ * painting of the two friends and Cluby at their study café
+ * (/assets/cluby/cafe.webp).
  */
 
 const STEP_ICONS = [ClipboardCheck, Route, GraduationCap];
@@ -177,34 +180,17 @@ const ReturningStudentOffer = () => {
           }`}
         >
           <div className="grid md:grid-cols-2">
-            {/* Two friends: the Klovers characters, overlapping. */}
-            <div className="relative flex min-h-[15rem] items-center justify-center overflow-hidden bg-klovers-yellow p-8 sm:min-h-[19rem]">
-              <div
-                aria-hidden="true"
-                className="absolute inset-0"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 50% 42%, hsl(var(--klovers-yellow) / 0.45), transparent 62%)",
-                }}
+            {/* Two friends and Cluby at the café: the story-canon scene. */}
+            <div className="relative min-h-[15rem] overflow-hidden bg-klovers-yellow sm:min-h-[19rem]">
+              <img
+                src="/assets/cluby/cafe.webp"
+                alt={isAr ? "صديقان وكلوبي بيذاكروا كوري في كافيه" : "Two friends and Cluby studying Korean together at a café"}
+                width={1200}
+                height={800}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="relative flex items-center">
-                <img
-                  src={CHARACTER_GIRL}
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  decoding="async"
-                  className="h-28 w-28 rounded-full object-cover shadow-lg ring-4 ring-ivory sm:h-36 sm:w-36"
-                />
-                <img
-                  src={CHARACTER_BOY}
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  decoding="async"
-                  className="-ms-8 h-28 w-28 rounded-full object-cover shadow-lg ring-4 ring-ivory sm:h-36 sm:w-36"
-                />
-              </div>
             </div>
 
             <div className="p-6 md:p-8">

@@ -26,6 +26,10 @@ import { isClubyAwake } from "@/lib/clubyAwake";
  *
  * Guests get an invitation, not a board: the RPCs are granted to
  * `authenticated` only, and no invented players are ever shown.
+ *
+ * Theme: surfaces and type use bg-card / text-foreground / border-border so
+ * the board follows dark mode; the ivory podium ground keeps a dark: variant.
+ * The yellow and charcoal steps and chips read the same in both themes.
  */
 
 interface Props {
@@ -49,13 +53,13 @@ const PLACE = {
     avatar: "h-20 w-20 text-3xl",
   },
   2: {
-    ring: "ring-charcoal",
-    chip: "bg-charcoal text-klovers-yellow",
-    step: "h-20 bg-charcoal text-klovers-yellow",
+    ring: "ring-charcoal dark:ring-ivory/70",
+    chip: "bg-charcoal text-klovers-yellow dark:ring-1 dark:ring-white/20",
+    step: "h-20 bg-charcoal text-klovers-yellow dark:ring-1 dark:ring-white/20",
     avatar: "h-14 w-14 text-xl",
   },
   3: {
-    ring: "ring-charcoal/25",
+    ring: "ring-charcoal/25 dark:ring-ivory/30",
     chip: "border border-charcoal/20 bg-[#FFF9EC] text-charcoal",
     step: "h-14 border-2 border-b-0 border-charcoal/15 bg-[#FFF9EC] text-charcoal",
     avatar: "h-14 w-14 text-xl",
@@ -114,7 +118,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
             </p>
           </div>
           {isLoggedIn && (
-            <div className="inline-flex rounded-full border border-charcoal/15 bg-white p-1" role="tablist">
+            <div className="inline-flex rounded-full border border-border bg-card p-1" role="tablist">
               {([
                 ["all", isAr ? "كل الوقت" : "All time"],
                 ["week", isAr ? "الأسبوع ده" : "This week"],
@@ -127,7 +131,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                   onClick={() => setTab(key)}
                   className={cn(
                     "min-h-9 rounded-full px-4 text-xs font-bold transition-colors",
-                    tab === key ? "bg-charcoal text-klovers-yellow" : "text-charcoal/70 hover:text-charcoal",
+                    tab === key ? "bg-charcoal text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {label}
@@ -137,18 +141,18 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
           )}
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-charcoal/10 bg-white shadow-[0_18px_40px_-30px_rgba(46,46,46,0.6)]">
+        <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_40px_-30px_rgba(46,46,46,0.6)]">
           {!isLoggedIn ? (
             <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
               <Mascot className="h-24" />
-              <p className="max-w-xs text-sm text-charcoal/75">
+              <p className="max-w-xs text-sm text-muted-foreground">
                 {isAr
                   ? "سجّل عشان تبدأ تجمع نقط وتدخل الترتيب."
                   : "Sign up to start earning XP and take your place on the leaderboard."}
               </p>
               <a
                 href="/signup"
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-charcoal px-6 text-sm font-bold text-klovers-yellow"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-charcoal px-6 text-sm font-bold text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
               >
                 <Trophy className="h-4 w-4" aria-hidden="true" />
                 {isAr ? "سجّل لرؤية ترتيبك" : "Sign up to see your rank"}
@@ -159,7 +163,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
           ) : board.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10 text-center">
               <Mascot className="h-20" />
-              <p className="text-sm text-charcoal/75">
+              <p className="text-sm text-muted-foreground">
                 {tab === "week"
                   ? (isAr ? "لسه محدش لعب الأسبوع ده. كن الأول!" : "No one has played this week yet. Be the first!")
                   : (isAr ? "لا توجد بيانات بعد. العب لكسب XP!" : "No data yet. Play games to earn XP!")}
@@ -181,12 +185,12 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                         <Avatar
                           p={p}
                           className={cn(
-                            "ring-4 ring-offset-2 ring-offset-[#FFF9EC]",
+                            "ring-4 ring-offset-2 ring-offset-[#FFF9EC] dark:ring-offset-card",
                             m.ring,
                             m.avatar,
                           )}
                         />
-                        <p className="mt-2 w-full truncate text-sm font-bold text-charcoal">
+                        <p className="mt-2 w-full truncate text-sm font-bold text-foreground">
                           {p.name}
                         </p>
                         {p.isCurrentUser && (
@@ -211,7 +215,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
 
               {/* 4-10 */}
               {rest.length > 0 && (
-                <ol className="divide-y divide-charcoal/10 border-t-2 border-charcoal">
+                <ol className="divide-y divide-border border-t-2 border-charcoal dark:border-border">
                   {rest.map((p, i) => (
                     <li
                       key={p.user_id}
@@ -223,25 +227,25 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                       <span
                         className={cn(
                           "grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-extrabold tabular-nums",
-                          p.isCurrentUser ? "bg-charcoal text-klovers-yellow" : "bg-[#FFF9EC] text-charcoal/70",
+                          p.isCurrentUser ? "bg-charcoal text-klovers-yellow" : "bg-muted text-muted-foreground",
                         )}
                       >
                         {i + 4}
                       </span>
-                      <Avatar p={p} className="h-9 w-9 border border-charcoal/10 text-sm" />
+                      <Avatar p={p} className="h-9 w-9 border border-border text-sm" />
                       <div className="min-w-0 flex-1">
-                        <p className="flex items-center gap-2 truncate text-sm font-semibold text-charcoal">
+                        <p className="flex items-center gap-2 truncate text-sm font-semibold text-foreground">
                           {p.name}
                           {p.isCurrentUser && (
                             <span className="rounded-full bg-charcoal px-2 py-0.5 text-[10px] font-extrabold text-klovers-yellow">{you}</span>
                           )}
                         </p>
-                        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-charcoal/10">
+                        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
                           <div className="h-full rounded-full bg-klovers-green" style={{ width: `${Math.max(4, (p.value / leaderXp) * 100)}%` }} />
                         </div>
                       </div>
-                      <span className="shrink-0 text-sm font-extrabold tabular-nums text-charcoal">
-                        {p.value.toLocaleString()} <span className="text-[11px] font-semibold text-charcoal/60">XP</span>
+                      <span className="shrink-0 text-sm font-extrabold tabular-nums text-foreground">
+                        {p.value.toLocaleString()} <span className="text-[11px] font-semibold text-muted-foreground">XP</span>
                       </span>
                     </li>
                   ))}
@@ -250,7 +254,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
 
               {/* Outside the top ten: the real rank, from the server */}
               {tab === "all" && !meInBoard && myRank !== null && (
-                <p className="border-t border-charcoal/10 bg-klovers-yellow/25 px-4 py-3 text-center text-sm font-semibold text-charcoal">
+                <p className="border-t border-border bg-klovers-yellow/25 px-4 py-3 text-center text-sm font-semibold text-foreground">
                   {isAr ? `ترتيبك الحالي: #${myRank} — كمّل لعب عشان تطلع فوق!` : `Your rank: #${myRank} — keep playing to climb!`}
                 </p>
               )}
