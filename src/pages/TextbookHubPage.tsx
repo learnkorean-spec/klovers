@@ -4,8 +4,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { BookOpen, Sun, Sparkles, Clapperboard, Brain, ImageIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { cn } from "@/lib/utils";
 
+/**
+ * Each book opens onto a painted world from the Klovers story, so the library
+ * reads like a map of places to visit rather than a row of emoji tiles.
+ */
 const BOOKS = [
   {
     key: "korean-1",
@@ -15,13 +18,10 @@ const BOOKS = [
     subtitleAr: "توبيك ١ و ٢ · ٧٥+ درس",
     descEn: "Master Korean from Hangul to advanced grammar through worlds and missions.",
     descAr: "أتقن الكورية من الهانغول إلى القواعد المتقدمة عبر العوالم والمهام.",
-    emoji: "📘",
     icon: BookOpen,
-    gradient: "from-amber-100 to-yellow-50",
-    border: "border-amber-200 hover:border-amber-400 ring-1 ring-black/10",
-    iconColor: "text-amber-600",
-    subtitleColor: "text-amber-700",
-    badgeBg: "bg-amber-100 text-amber-800 border border-black/10",
+    image: "/assets/story/world-hangul-village.webp",
+    altEn: "Painted Hangul Village, the first world of the Klovers story",
+    altAr: "قرية الهانغول المرسومة، أول عالم في قصة كلوفرز",
   },
   {
     key: "daily-routine",
@@ -31,13 +31,10 @@ const BOOKS = [
     subtitleAr: "٣٢ فئة حياتية يومية",
     descEn: "Learn Korean through everyday actions — sleeping, cooking, cleaning & more.",
     descAr: "تعلم الكورية من خلال الأفعال اليومية — النوم، الطبخ، التنظيف والمزيد.",
-    emoji: "☀️",
     icon: Sun,
-    gradient: "from-orange-100 to-amber-50",
-    border: "border-orange-200 hover:border-orange-400 ring-1 ring-black/10",
-    iconColor: "text-orange-500",
-    subtitleColor: "text-orange-700",
-    badgeBg: "bg-orange-100 text-orange-800 border border-black/10",
+    image: "/assets/story/world-conversation-cafe.webp",
+    altEn: "A cosy painted Korean café where everyday conversations happen",
+    altAr: "مقهى كوري دافئ مرسوم تدور فيه محادثات الحياة اليومية",
   },
   {
     key: "kdrama",
@@ -47,13 +44,10 @@ const BOOKS = [
     subtitleAr: "٣٠ درس من الدراما الكورية",
     descEn: "Learn Korean through iconic K-Drama dialogues, slang, and cultural context.",
     descAr: "تعلم الكورية من خلال حوارات الدراما الأيقونية والعامية والسياق الثقافي.",
-    emoji: "🎬",
     icon: Clapperboard,
-    gradient: "from-rose-100 to-pink-50",
-    border: "border-rose-200 hover:border-rose-400 ring-1 ring-black/10",
-    iconColor: "text-rose-500",
-    subtitleColor: "text-rose-700",
-    badgeBg: "bg-rose-100 text-rose-800 border border-black/10",
+    image: "/assets/story/world-culture-street.webp",
+    altEn: "A lively painted Korean culture street at dusk",
+    altAr: "شارع ثقافي كوري نابض بالحياة عند الغروب",
   },
   {
     key: "grammar-mastery",
@@ -63,13 +57,10 @@ const BOOKS = [
     subtitleAr: "٥٧ درسًا على الأنماط · جميع المستويات الست",
     descEn: "Deep-dive every Korean grammar pattern from basic particles to classical literary style.",
     descAr: "ادرس كل نمط قواعدي كوري بعمق — من الجسيمات الأساسية إلى الأسلوب الأدبي الكلاسيكي.",
-    emoji: "🧠",
     icon: Brain,
-    gradient: "from-violet-100 to-purple-50",
-    border: "border-violet-200 hover:border-violet-400 ring-1 ring-black/10",
-    iconColor: "text-violet-500",
-    subtitleColor: "text-violet-700",
-    badgeBg: "bg-violet-100 text-violet-800 border border-black/10",
+    image: "/assets/story/world-seoul-journey.webp",
+    altEn: "A painted journey across Seoul, from old gates to city lights",
+    altAr: "رحلة مرسومة عبر سيول من البوابات القديمة إلى أضواء المدينة",
     badge: "NEW",
   },
   {
@@ -80,16 +71,15 @@ const BOOKS = [
     subtitleAr: "١٥ درساً بالصور",
     descEn: "Learn Korean vocabulary through beautiful illustrated scenes — bedroom, café, park and more.",
     descAr: "تعلم مفردات الكورية من خلال مشاهد مصوّرة جميلة — غرفة النوم، الكافيه، الحديقة والمزيد.",
-    emoji: "🖼️",
     icon: ImageIcon,
-    gradient: "from-green-100 to-green-50",
-    border: "border-green-200 hover:border-green-400 ring-1 ring-black/10",
-    iconColor: "text-green-500",
-    subtitleColor: "text-green-700",
-    badgeBg: "bg-green-100 text-green-800 border border-black/10",
+    image: "/assets/story/world-vocabulary-market.webp",
+    altEn: "A colourful painted Korean market full of things to name",
+    altAr: "سوق كوري ملوّن مرسوم مليء بالأشياء التي نتعلم أسماءها",
     badge: "NEW",
   },
 ];
+
+const FALLBACK_IMAGE = "/assets/story/world-memory-garden.webp";
 
 const TextbookHubPage = () => {
   useSEO({ title: "Korean Textbooks", description: "Learn Korean with Klovers interactive digital textbooks. Vocabulary flashcards, grammar, dialogues, exercises and reading passages.", canonical: "https://kloversegy.com/textbook" });
@@ -100,19 +90,38 @@ const TextbookHubPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main id="main-content" className="pt-24 pb-16">
-        <section className="text-center mb-12 px-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-100 text-amber-700 text-sm font-medium mb-6 border border-black/10">
-            <Sparkles className="h-4 w-4" />
-            {isAr ? "مكتبة الكتب" : "Book Library"}
+        <section className="container mx-auto px-4 max-w-4xl mb-12">
+          <div className="grid items-center gap-8 md:grid-cols-2">
+            <div className="text-center md:text-start">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-klovers-yellow text-[#2E2E2E] text-sm font-bold mb-6 border border-foreground/15">
+                <Sparkles className="h-4 w-4" />
+                {isAr ? "مكتبة الكتب" : "Book Library"}
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+                {isAr ? "اختر كتابك" : "Choose Your Book"}
+              </h1>
+              <p className="text-muted-foreground max-w-xl mx-auto md:mx-0 text-lg">
+                {isAr
+                  ? "اختر كتاباً تعليمياً وابدأ رحلتك في تعلم الكورية"
+                  : "Pick a learning book and start your Korean journey"}
+              </p>
+            </div>
+            <div className="overflow-hidden rounded-3xl border border-border shadow-lg bg-muted">
+              <img
+                src="/assets/cluby/cafe.webp"
+                width={1200}
+                height={800}
+                alt={
+                  isAr
+                    ? "صديقان يذاكران الكورية مع كلوبي في مقهى"
+                    : "Two friends studying Korean with Cluby at a café"
+                }
+                className="h-full w-full object-cover aspect-[3/2]"
+                loading="eager"
+                decoding="async"
+              />
+            </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            {isAr ? "اختر كتابك" : "Choose Your Book"}
-          </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto text-lg">
-            {isAr
-              ? "اختر كتاباً تعليمياً وابدأ رحلتك في تعلم الكورية"
-              : "Pick a learning book and start your Korean journey"}
-          </p>
         </section>
 
         <section className="container mx-auto px-4 max-w-4xl">
@@ -124,30 +133,38 @@ const TextbookHubPage = () => {
                 <Link
                   key={book.key}
                   to={`/textbook/${book.key}`}
-                  className={cn(
-                    "group relative block rounded-2xl border-2 p-6 transition-all hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br",
-                    book.gradient,
-                    book.border
-                  )}
+                  className="group relative flex flex-col overflow-hidden rounded-3xl border-2 border-border bg-card transition-all hover:border-foreground hover:shadow-lg hover:-translate-y-1"
                 >
-                  {hasBadge && (
-                    <span className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full bg-violet-500 text-white">
-                      {(book as { badge?: string }).badge}
+                  <div className="relative h-36 overflow-hidden bg-muted">
+                    <img
+                      src={book.image || FALLBACK_IMAGE}
+                      width={1600}
+                      height={900}
+                      alt={isAr ? book.altAr : book.altEn}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    {hasBadge && (
+                      <span className="absolute top-3 end-3 text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#2E2E2E] text-klovers-yellow">
+                        {(book as { badge?: string }).badge}
+                      </span>
+                    )}
+                    <span className="absolute bottom-3 start-3 flex h-10 w-10 items-center justify-center rounded-full bg-klovers-yellow border-2 border-[#2E2E2E] shadow-md">
+                      <Icon className="h-5 w-5 text-[#2E2E2E]" />
                     </span>
-                  )}
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-5xl">{book.emoji}</span>
-                    <Icon className={cn("h-6 w-6 opacity-50", book.iconColor)} />
                   </div>
-                  <h2 className="text-xl font-bold text-foreground mb-1">
-                    {isAr ? book.titleAr : book.titleEn}
-                  </h2>
-                  <p className={cn("text-sm font-medium mb-2", book.subtitleColor)}>
-                    {isAr ? book.subtitleAr : book.subtitleEn}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {isAr ? book.descAr : book.descEn}
-                  </p>
+                  <div className="p-6">
+                    <h2 className="text-xl font-bold text-foreground mb-1">
+                      {isAr ? book.titleAr : book.titleEn}
+                    </h2>
+                    <p className="inline-block text-xs font-semibold mb-3 px-2.5 py-1 rounded-full bg-muted text-foreground border border-border">
+                      {isAr ? book.subtitleAr : book.subtitleEn}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {isAr ? book.descAr : book.descEn}
+                    </p>
+                  </div>
                 </Link>
               );
             })}

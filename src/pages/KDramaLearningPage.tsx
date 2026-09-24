@@ -9,7 +9,8 @@ import { CheckCircle2, Zap, Tv, Brain, BarChart3, Play, ArrowRight, Sparkles } f
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const KDramaLearningPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   useSEO({
     title: "Learn Korean Through K-Dramas | Beginner to Advanced Method",
     description: "Master Korean by watching K-dramas. Learn the best dramas for your level, proven learning methods, and how to progress from A1 to B2 through drama immersion.",
@@ -81,24 +82,43 @@ const KDramaLearningPage = () => {
       <Header />
       <main id="main-content">
         {/* Hero */}
-        <section className="pt-24 pb-16 bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-950/20 dark:to-purple-950/20">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <Badge className="mb-4" variant="outline">{t("kdrama.badge")}</Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-              {t("kdrama.heroTitle")}
-            </h1>
-            <p className="text-xl text-foreground/70 mb-8 leading-relaxed">
-              {t("kdrama.heroSubtitle")}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" asChild>
-                <a href="/enroll-now">{t("kdrama.ctaStart")}</a>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <a href="/placement-test">{t("kdrama.ctaFindLevel")}</a>
-              </Button>
+        <section className="pt-24 pb-16 bg-[#FFF9EC] dark:bg-muted/30">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="grid items-center gap-10 lg:grid-cols-2">
+              <div>
+                <Badge className="mb-4 bg-klovers-yellow text-[#2E2E2E] border-foreground/15 hover:bg-klovers-yellow" variant="outline">{t("kdrama.badge")}</Badge>
+                <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
+                  {t("kdrama.heroTitle")}
+                </h1>
+                <p className="text-xl text-foreground/70 mb-8 leading-relaxed">
+                  {t("kdrama.heroSubtitle")}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button size="lg" asChild>
+                    <a href="/enroll-now">{t("kdrama.ctaStart")}</a>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild>
+                    <a href="/placement-test">{t("kdrama.ctaFindLevel")}</a>
+                  </Button>
+                </div>
+                <p className="text-sm text-foreground/70 mt-6">{t("kdrama.ctaFooter")}</p>
+              </div>
+              <div className="overflow-hidden rounded-3xl border border-border shadow-xl bg-muted">
+                <img
+                  src="/assets/story/world-culture-street.webp"
+                  width={1600}
+                  height={900}
+                  alt={
+                    isAr
+                      ? "شارع ثقافي كوري مرسوم بألوان دافئة، كأنه مشهد من دراما"
+                      : "A painted Korean culture street glowing like a scene from a drama"
+                  }
+                  className="h-full w-full object-cover aspect-video"
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
             </div>
-            <p className="text-sm text-foreground/70 mt-6">{t("kdrama.ctaFooter")}</p>
           </div>
         </section>
 
@@ -109,38 +129,38 @@ const KDramaLearningPage = () => {
             <div className="grid md:grid-cols-2 gap-8">
               {[
                 {
-                  icon: <Tv className="h-8 w-8 text-pink-500" />,
+                  icon: <Tv className="h-6 w-6 text-[#2E2E2E]" />,
                   title: t("kdrama.whyCard1Title"),
                   desc: t("kdrama.whyCard1Desc")
                 },
                 {
-                  icon: <Brain className="h-8 w-8 text-purple-500" />,
+                  icon: <Brain className="h-6 w-6 text-[#2E2E2E]" />,
                   title: t("kdrama.whyCard2Title"),
                   desc: t("kdrama.whyCard2Desc")
                 },
                 {
-                  icon: <BarChart3 className="h-8 w-8 text-blue-500" />,
+                  icon: <BarChart3 className="h-6 w-6 text-[#2E2E2E]" />,
                   title: t("kdrama.whyCard3Title"),
                   desc: t("kdrama.whyCard3Desc")
                 },
                 {
-                  icon: <Sparkles className="h-8 w-8 text-amber-500" />,
+                  icon: <Sparkles className="h-6 w-6 text-[#2E2E2E]" />,
                   title: t("kdrama.whyCard4Title"),
                   desc: t("kdrama.whyCard4Desc")
                 },
                 {
-                  icon: <Play className="h-8 w-8 text-red-500" />,
+                  icon: <Play className="h-6 w-6 text-[#2E2E2E]" />,
                   title: t("kdrama.whyCard5Title"),
                   desc: t("kdrama.whyCard5Desc")
                 },
                 {
-                  icon: <CheckCircle2 className="h-8 w-8 text-green-500" />,
+                  icon: <CheckCircle2 className="h-6 w-6 text-[#2E2E2E]" />,
                   title: t("kdrama.whyCard6Title"),
                   desc: t("kdrama.whyCard6Desc")
                 }
               ].map((item, i) => (
-                <div key={i} className="p-6 rounded-lg border bg-slate-50/50 dark:bg-slate-900/50 hover:shadow-lg transition-shadow">
-                  <div className="mb-4">{item.icon}</div>
+                <div key={i} className="p-6 rounded-2xl border bg-card hover:shadow-lg transition-shadow">
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-klovers-yellow border border-foreground/15">{item.icon}</div>
                   <h3 className="font-bold text-lg mb-2">{item.title}</h3>
                   <p className="text-foreground/70 text-sm">{item.desc}</p>
                 </div>
@@ -150,7 +170,7 @@ const KDramaLearningPage = () => {
         </section>
 
         {/* The Framework */}
-        <section className="py-16 border-b bg-slate-50/50 dark:bg-slate-950/20">
+        <section className="py-16 border-b bg-muted/40">
           <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="text-3xl font-bold mb-4">{t("kdrama.frameworkTitle")}</h2>
             <p className="text-foreground/70 mb-12">{t("kdrama.frameworkSubtitle")}</p>
@@ -182,22 +202,22 @@ const KDramaLearningPage = () => {
                   desc: t("kdrama.watch4Desc")
                 }
               ].map((item, i) => (
-                <div key={i} className="p-6 rounded-lg border bg-white dark:bg-slate-900">
+                <div key={i} className="p-6 rounded-2xl border bg-card">
                   <div className="flex items-start gap-4 mb-4">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-pink-500 text-white font-bold flex-shrink-0">
+                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-[#2E2E2E] text-klovers-yellow font-bold flex-shrink-0">
                       {item.num}
                     </div>
                     <div className="flex-grow">
                       <h3 className="font-bold text-lg">{item.title}</h3>
-                      <p className="text-sm text-pink-600 font-semibold mt-1">{item.time}</p>
+                      <p className="inline-block text-xs font-semibold mt-1 px-2.5 py-0.5 rounded-full bg-klovers-yellow text-[#2E2E2E]">{item.time}</p>
                     </div>
                   </div>
-                  <p className="text-foreground/70 ml-14">{item.desc}</p>
+                  <p className="text-foreground/70 ms-14">{item.desc}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-8 p-6 rounded-lg bg-green-50 dark:bg-green-950/10 border border-green-200 dark:border-green-800">
+            <div className="mt-8 p-6 rounded-2xl bg-klovers-green/10 border-2 border-klovers-green">
               <p className="font-bold mb-2">{t("kdrama.expectedResults")}</p>
               <p className="text-foreground/70">{t("kdrama.expectedResultsDesc")}</p>
             </div>
@@ -241,10 +261,10 @@ const KDramaLearningPage = () => {
               }
             ].map((section, i) => (
               <div key={i} className="mb-8">
-                <h3 className="text-xl font-bold mb-4 text-pink-600">{section.level}</h3>
+                <h3 className="inline-block text-lg font-bold mb-4 px-4 py-1.5 rounded-full bg-[#2E2E2E] text-klovers-yellow">{section.level}</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   {section.dramas.map((drama, j) => (
-                    <div key={j} className="p-4 rounded-lg border bg-slate-50/50 dark:bg-slate-900/50">
+                    <div key={j} className="p-4 rounded-2xl border bg-card">
                       <p className="font-bold text-foreground mb-1">{drama.name}</p>
                       <p className="text-sm text-foreground/70">{drama.why}</p>
                     </div>
@@ -256,7 +276,7 @@ const KDramaLearningPage = () => {
         </section>
 
         {/* Study Habits */}
-        <section className="py-16 border-b bg-blue-50/50 dark:bg-blue-950/10">
+        <section className="py-16 border-b bg-[#FFF9EC] dark:bg-muted/30">
           <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="text-3xl font-bold mb-12 text-center">{t("kdrama.habitTitle")}</h2>
 
@@ -268,8 +288,8 @@ const KDramaLearningPage = () => {
                 { day: t("kdrama.habitDay4"), goal: t("kdrama.habitGoal4"), habit: t("kdrama.habitTime4") },
                 { day: t("kdrama.habitDay5"), goal: t("kdrama.habitGoal5"), habit: t("kdrama.habitTime5") }
               ].map((item, i) => (
-                <div key={i} className="p-4 rounded-lg border bg-white dark:bg-slate-900 flex items-start gap-4">
-                  <div className="flex-shrink-0 font-bold text-blue-600 min-w-fit">{item.day}</div>
+                <div key={i} className="p-4 rounded-2xl border bg-card flex items-start gap-4">
+                  <div className="flex-shrink-0 font-bold text-sm min-w-fit px-3 py-1 rounded-full bg-klovers-yellow text-[#2E2E2E]">{item.day}</div>
                   <div className="flex-grow">
                     <p className="font-semibold text-foreground">{item.goal}</p>
                     <p className="text-sm text-foreground/60 mt-1">{item.habit}</p>
@@ -278,10 +298,10 @@ const KDramaLearningPage = () => {
               ))}
             </div>
 
-            <div className="mt-8 p-6 rounded-lg bg-amber-50 dark:bg-amber-950/10 border border-amber-200 dark:border-amber-800">
+            <div className="mt-8 p-6 rounded-2xl bg-card border-2 border-foreground/80">
               <p className="font-bold mb-2">{t("kdrama.journalTitle")}</p>
               <p className="text-sm text-foreground/70 mb-4">{t("kdrama.journalIntro")}</p>
-              <div className="bg-white dark:bg-slate-900 p-4 rounded text-sm text-foreground/70">
+              <div className="bg-muted p-4 rounded-xl text-sm text-foreground/70">
                 <p>{t("kdrama.journalPhrase")}</p>
                 <p>{t("kdrama.journalContext")}</p>
                 <p>{t("kdrama.journalMySentence")}</p>
@@ -312,14 +332,18 @@ const KDramaLearningPage = () => {
                   items: [t("kdrama.combineCol3Item1"), t("kdrama.combineCol3Item2"), t("kdrama.combineCol3Item3"), t("kdrama.combineCol3Item4"), t("kdrama.combineCol3Item5")]
                 }
               ].map((col, i) => (
-                <div key={i} className={`p-6 rounded-lg border ${
-                  col.highlight ? "bg-pink-50 dark:bg-pink-950/10 border-pink-200 dark:border-pink-800 shadow-lg scale-105" : "bg-slate-50/50 dark:bg-slate-900/50"
+                <div key={i} className={`p-6 rounded-2xl border ${
+                  col.highlight ? "bg-klovers-yellow/15 border-2 border-[#2E2E2E] dark:border-klovers-yellow shadow-lg scale-105" : "bg-card"
                 }`}>
-                  <h3 className={`font-bold text-lg mb-4 ${col.highlight ? "text-pink-600" : ""}`}>{col.col}</h3>
+                  <h3 className="font-bold text-lg mb-4">
+                    {col.highlight ? (
+                      <span className="inline-block px-3 py-1 rounded-full bg-[#2E2E2E] text-klovers-yellow">{col.col}</span>
+                    ) : col.col}
+                  </h3>
                   <ul className="space-y-2">
                     {col.items.map((item, j) => (
                       <li key={j} className="flex items-start gap-2 text-sm">
-                        <span className={`font-bold mt-0.5 ${item.includes("✓") ? "text-green-500" : item.includes("❌") ? "text-red-500" : ""}`}>
+                        <span className={`font-bold mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs ${item.includes("✓") ? "bg-klovers-green text-[#2E2E2E]" : item.includes("❌") ? "bg-[#FF3131] text-white" : ""}`}>
                           {item.includes("✓") ? "✓" : item.includes("❌") ? "✗" : "•"}
                         </span>
                         {item.replace(/[✓❌]/g, "")}
@@ -330,7 +354,7 @@ const KDramaLearningPage = () => {
               ))}
             </div>
 
-            <div className="mt-8 p-6 rounded-lg bg-purple-50 dark:bg-purple-950/10 border border-purple-200 dark:border-purple-800">
+            <div className="mt-8 p-6 rounded-2xl bg-klovers-yellow/15 border-2 border-klovers-yellow">
               <p className="font-bold mb-2">{t("kdrama.strategyTitle")}</p>
               <p className="text-foreground/70">{t("kdrama.strategyDesc")}</p>
             </div>
@@ -349,7 +373,7 @@ const KDramaLearningPage = () => {
                 { q: t("kdrama.faq4Q"), a: t("kdrama.faq4A") },
                 { q: t("kdrama.faq5Q"), a: t("kdrama.faq5A") }
               ].map((item, i) => (
-                <details key={i} className="group p-6 rounded-lg border bg-slate-50/50 dark:bg-slate-900/50 cursor-pointer">
+                <details key={i} className="group p-6 rounded-2xl border bg-card cursor-pointer">
                   <summary className="font-bold text-lg flex items-center justify-between">
                     {item.q}
                     <span className="transition group-open:rotate-180">
@@ -364,24 +388,24 @@ const KDramaLearningPage = () => {
         </section>
 
         {/* CTA */}
-        <section className="py-20 bg-gradient-to-r from-pink-600 to-purple-600 text-white">
+        <section className="py-20 bg-[#2E2E2E] text-white">
           <div className="container mx-auto px-4 max-w-4xl text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">{t("kdrama.finalCtaTitle")}</h2>
-            <p className="text-lg mb-8 text-pink-100 max-w-2xl mx-auto">
+            <p className="text-lg mb-8 text-white/80 max-w-2xl mx-auto">
               {t("kdrama.finalCtaDesc")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" asChild>
+              <Button size="lg" variant="secondary" className="bg-klovers-yellow text-[#2E2E2E] hover:bg-klovers-yellow/90" asChild>
                 <a href="/enroll-now" className="flex items-center gap-2">
-                  {t("kdrama.finalCtaJoin")} <ArrowRight className="h-4 w-4" />
+                  {t("kdrama.finalCtaJoin")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </a>
               </Button>
-              <Button size="lg" variant="outline" className="text-foreground border-white hover:bg-white/10" asChild>
+              <Button size="lg" variant="outline" className="bg-transparent text-white border-white hover:bg-white/10 hover:text-white" asChild>
                 <a href="/placement-test">{t("kdrama.finalCtaLevel")}</a>
               </Button>
             </div>
-            <p className="text-sm text-pink-100 mt-6">
-              <Tv className="h-4 w-4 inline mr-2" />
+            <p className="text-sm text-white/80 mt-6">
+              <Tv className="h-4 w-4 inline me-2" />
               {t("kdrama.finalCtaFooter")}
             </p>
           </div>

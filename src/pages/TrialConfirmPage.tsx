@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { CalendarDays, CheckCircle2, Clock, Video, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
@@ -242,6 +243,11 @@ const OUTLINE_CLASS =
   "text-muted-foreground hover:bg-muted transition-colors";
 const QUIET_CLASS = "text-sm text-muted-foreground underline hover:text-foreground";
 
+/** Ivory info card for the facts a student needs on the day: when, and where. */
+const INFO_CARD_CLASS =
+  "bg-[#FFF9EC] dark:bg-muted text-[#2E2E2E] dark:text-foreground border border-foreground/10 " +
+  "rounded-2xl p-4 text-start";
+
 const TrialConfirmPage = () => {
   // Transactional page: real content for the signed-in user, nothing a
   // search result should land on. Mirrors the Disallow in robots.txt.
@@ -421,27 +427,27 @@ const TrialConfirmPage = () => {
   // not a choice, and showing a single locked radio would suggest otherwise.
   const canChoose = options.length > 1 && !booking?.is_tba;
 
-  // The black backdrop is the brand, not a leftover: BRAND_BLACK is #000000 and
-  // the wordmark is yellow on black wherever it appears. The card on top of it
-  // uses the card token, so it follows the theme like every other panel.
+  // The charcoal backdrop is the brand: the wordmark is yellow on dark wherever
+  // it appears. The card on top of it uses the card token, so it follows the
+  // theme like every other panel.
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#2E2E2E] flex items-center justify-center p-4">
       <div
         dir={t.dir}
         lang={t.lang}
-        className="bg-card text-card-foreground rounded-2xl shadow-xl max-w-md w-full p-8 text-center"
+        className="bg-card text-card-foreground rounded-3xl shadow-xl max-w-md w-full p-8 text-center"
       >
         {/* Logo / brand */}
         <div className="mb-6">
-          <span dir="ltr" className="text-4xl font-black tracking-tight text-foreground">
-            K<span className="text-primary">lovers</span>
+          <span dir="ltr" className="inline-block rounded-2xl bg-[#2E2E2E] px-4 py-1.5 text-4xl font-black tracking-tight text-white">
+            K<span className="text-klovers-yellow">lovers</span>
           </span>
-          <p className="text-muted-foreground text-sm mt-1">{t.tagline}</p>
+          <p className="text-muted-foreground text-sm mt-2">{t.tagline}</p>
         </div>
 
         {state === "loading" && (
           <div className="py-8">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-10 h-10 border-4 border-foreground border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-muted-foreground">{t.loading}</p>
           </div>
         )}
@@ -456,7 +462,7 @@ const TrialConfirmPage = () => {
             </p>
 
             {notice && (
-              <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 mb-5 text-sm text-foreground">
+              <div className="bg-[#2E2E2E] text-white border-s-4 border-klovers-yellow rounded-xl p-3 mb-5 text-sm text-start">
                 {notice}
               </div>
             )}
@@ -483,10 +489,10 @@ const TrialConfirmPage = () => {
                           t.dir === "rtl" ? "text-right" : "text-left"
                         } ${
                           selected
-                            ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                            ? "border-2 border-foreground bg-klovers-yellow/25"
                             : full
                               ? "border-border opacity-50 cursor-not-allowed"
-                              : "border-border hover:border-primary/50"
+                              : "border-border hover:border-foreground/50"
                         }`}
                       >
                         <span className="block text-sm font-bold text-foreground">
@@ -506,20 +512,20 @@ const TrialConfirmPage = () => {
               </div>
             ) : (
               <div
-                className={`bg-muted/50 rounded-xl p-4 mb-6 text-sm text-foreground space-y-1.5 ${
+                className={`${INFO_CARD_CLASS} mb-6 text-sm space-y-1.5 ${
                   t.dir === "rtl" ? "text-right" : "text-left"
                 }`}
               >
-                <p><span className="font-semibold text-foreground">{t.language}</span> {languageLabel}</p>
+                <p><span className="font-semibold">{t.language}</span> {languageLabel}</p>
                 <p>
-                  <span className="font-semibold text-foreground">{t.date}</span>{" "}
+                  <span className="font-semibold">{t.date}</span>{" "}
                   {booking.is_tba ? t.tba : when ? when.dateLabel : "—"}
                 </p>
                 {when && (
                   <p>
-                    <span className="font-semibold text-foreground">{t.time}</span> {when.timeLabel}
+                    <span className="font-semibold">{t.time}</span> {when.timeLabel}
                     {when.alsoLabel && (
-                      <span className="block text-xs text-muted-foreground/70 mt-0.5">
+                      <span className="block text-xs opacity-70 mt-0.5">
                         {t.forTeacher(when.alsoLabel)}
                       </span>
                     )}
@@ -539,7 +545,7 @@ const TrialConfirmPage = () => {
                 <button
                   type="button"
                   onClick={() => handleRespond("no")}
-                 
+
                   className={PRIMARY_CLASS}
                 >
                   {t.declineCta}
@@ -555,7 +561,7 @@ const TrialConfirmPage = () => {
                 <button
                   type="button"
                   onClick={() => handleRespond("yes")}
-                 
+
                   className={PRIMARY_CLASS}
                 >
                   {t.confirmCta}
@@ -572,7 +578,7 @@ const TrialConfirmPage = () => {
                   type="button"
                   onClick={() => handleRespond("yes")}
                   disabled={canChoose && !chosenSlot}
-                 
+
                   className={`${PRIMARY_CLASS} disabled:opacity-40`}
                 >
                   {t.confirmCta}
@@ -591,32 +597,66 @@ const TrialConfirmPage = () => {
 
         {state === "responding" && (
           <div className="py-8">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-10 h-10 border-4 border-foreground border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-muted-foreground">{answer === "no" ? t.declining : t.confirming}</p>
           </div>
         )}
 
         {(state === "success" || state === "already") && answer !== "no" && (
           <div className="py-4">
-            <div className="w-16 h-16 bg-primary/15 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">✅</span>
+            {/* Celebration: the two friends and Cluby at the Han river picnic. */}
+            <div className="relative -mx-2 mb-6">
+              <img
+                src="/assets/cluby/picnic.webp"
+                width={1600}
+                height={900}
+                alt={
+                  t.lang === "ar"
+                    ? "صديقان وكلوبي يحتفلون في نزهة على ضفاف نهر الهان"
+                    : "Two friends and Cluby celebrating at a Han river picnic"
+                }
+                className="w-full aspect-video object-cover rounded-2xl border border-border shadow-md"
+                loading="eager"
+                decoding="async"
+              />
+              <span className="absolute -bottom-4 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-klovers-green border-2 border-[#2E2E2E] shadow-md">
+                <CheckCircle2 className="h-5 w-5 text-[#2E2E2E]" />
+              </span>
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">{t.confirmedTitle}</h1>
-            <p className="text-muted-foreground mb-2">
+            <p className="text-muted-foreground mb-4">
               {state === "already" ? t.confirmedAlready : t.confirmedNew}
             </p>
             {when && (
-              <p className="text-sm text-muted-foreground mb-6">
-                {when.dateLabel} · {when.timeLabel}
-              </p>
+              <div className={`${INFO_CARD_CLASS} mb-3 space-y-2`}>
+                <p className="flex items-center gap-2 text-sm font-bold">
+                  <CalendarDays className="h-4 w-4 shrink-0" />
+                  {when.dateLabel}
+                </p>
+                <p className="flex items-center gap-2 text-sm">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  {when.timeLabel}
+                </p>
+              </div>
             )}
-            {!when && <div className="mb-6" />}
+            {classLink && (
+              <a
+                href={classLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-3 flex items-center justify-center gap-2 rounded-2xl bg-[#2E2E2E] text-klovers-yellow font-bold text-sm px-4 py-3 hover:opacity-90 transition-opacity"
+              >
+                <Video className="h-4 w-4 shrink-0" />
+                {t.joinMeet}
+              </a>
+            )}
+            <div className="mb-3" />
 
             {/* Offered only to a reader with no session, and only after they
                 have said they are coming. Before that it is one more thing
                 between them and the seat. */}
             {hasAccount === false && (
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
+              <div className="bg-muted/50 border border-border rounded-2xl p-4 mb-6">
                 <p className="font-semibold text-foreground text-sm mb-1">{t.accountTitle}</p>
                 <p className="text-muted-foreground text-sm mb-3">{t.accountBody}</p>
                 <a
@@ -642,16 +682,6 @@ const TrialConfirmPage = () => {
                 {t.pricing}
               </a>
             </div>
-            {classLink && (
-              <a
-                href={classLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-3 text-sm text-muted-foreground underline hover:text-foreground"
-              >
-                {t.joinMeet}
-              </a>
-            )}
           </div>
         )}
 
@@ -662,7 +692,7 @@ const TrialConfirmPage = () => {
         {(state === "success" || state === "already") && answer === "no" && (
           <div className="py-4">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">🗓️</span>
+              <CalendarDays className="h-8 w-8 text-foreground" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">{t.declinedTitle}</h1>
             <p className="text-muted-foreground mb-6">
@@ -680,8 +710,8 @@ const TrialConfirmPage = () => {
 
         {state === "error" && (
           <div className="py-4">
-            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">❌</span>
+            <div className="w-16 h-16 bg-[#FF3131]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="h-8 w-8 text-[#FF3131]" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">{t.errorTitle}</h1>
             <p className="text-muted-foreground mb-6">{t.errorBody}</p>
