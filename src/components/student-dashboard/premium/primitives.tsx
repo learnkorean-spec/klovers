@@ -3,7 +3,43 @@ import { cn } from "@/lib/utils";
 import type { BrandIconName } from "@/lib/dashboardProgress";
 
 /**
- * One icon from the Klovers icon library (public/assets/icons/library).
+ * Klovers icon library — the 20 1024px transparent PNGs Re uploaded to
+ * public/assets/icons/library (24 Sep 2026). Every name the dashboard uses
+ * maps onto one of them; several concepts share a drawing on purpose.
+ */
+const ICON_FILE: Record<BrandIconName, string> = {
+  cluby: "01-klubi",
+  "open-book": "02-learn", notebook: "14-practice", grammar: "14-practice",
+  conversation: "03-conversation",
+  flashcards: "04-flashcards", "hangul-card": "16-dictionary", vocabulary: "15-tips",
+  controller: "05-games", puzzle: "05-games",
+  "progress-path": "06-learning-path",
+  "achievement-star": "07-achievements", success: "07-achievements",
+  "reward-gift": "08-rewards", favourite: "08-rewards",
+  hanok: "09-worlds", namsan: "09-worlds", "korea-map": "09-worlds", bibimbap: "09-worlds",
+  hanbok: "09-worlds", subway: "09-worlds", "culture-fan": "09-worlds",
+  streak: "11-daily-streak", calendar: "11-daily-streak",
+  progress: "12-progress", placement: "12-progress",
+  trophy: "13-goals", challenge: "13-goals",
+  headphones: "17-listening", listening: "17-listening",
+  speaking: "18-speaking",
+  teacher: "19-live-classes", "small-group": "19-live-classes",
+  locked: "20-settings",
+};
+
+/**
+ * The source files are 1024px (~450 KB). In production they go through
+ * Vercel's image optimizer (vercel.json → images; 320 is the smallest size
+ * configured there) so each icon downloads as a small WebP/AVIF instead of
+ * the full PNG; in local dev the original file is used.
+ */
+function iconSrc(file: string) {
+  const path = `/assets/icons/library/${file}.png`;
+  return import.meta.env.PROD ? `/_vercel/image?url=${encodeURIComponent(path)}&w=320&q=75` : path;
+}
+
+/**
+ * One icon from the Klovers icon library.
  * Decorative by default — the text beside it carries the meaning. If a file
  * is missing the slot collapses instead of showing a broken-image glyph, so
  * the UI still reads correctly without any art (the "premium test").
@@ -13,10 +49,10 @@ export function BrandIcon({
 }: { name: BrandIconName; className?: string; label?: string; eager?: boolean }) {
   const [failed, setFailed] = useState(false);
   if (failed) return <span aria-hidden="true" className={cn("inline-block shrink-0", className)} />;
+  const file = ICON_FILE[name];
   return (
     <img
-      src={`/assets/icons/library/${name}.webp`}
-      srcSet={`/assets/icons/library/${name}@2x.webp 2x`}
+      src={iconSrc(file)}
       alt={label ?? ""}
       aria-hidden={label ? undefined : true}
       width={96}
