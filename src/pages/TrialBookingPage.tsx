@@ -626,12 +626,12 @@ const TrialBookingPage = () => {
           <div className="max-w-2xl mx-auto px-4 py-12">
             {/* Hero */}
             <div className="text-center mb-8">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
+              <div className="w-20 h-20 rounded-full bg-klovers-green border-2 border-foreground flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="h-10 w-10 text-[#2E2E2E]" />
               </div>
               <h1 className="text-3xl font-black text-foreground mb-3">{t("trialBooking.successTitle")}</h1>
-              <div className="inline-flex items-center gap-3 bg-card border border-border rounded-2xl px-5 py-3 text-left">
-                <CalendarPlus className="h-5 w-5 text-primary shrink-0" />
+              <div className="inline-flex items-center gap-3 bg-card border border-border rounded-2xl px-5 py-3 text-start">
+                <CalendarPlus className="h-5 w-5 text-foreground shrink-0" />
                 <div>
                   <p className="font-bold text-foreground">{localFormattedDate}</p>
                   <p className="text-sm text-muted-foreground">
@@ -663,7 +663,7 @@ const TrialBookingPage = () => {
                   disabled={cancelling}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 text-sm font-semibold text-foreground transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <CalendarClock className="h-4 w-4 text-primary" />
+                  <CalendarClock className="h-4 w-4 text-foreground" />
                   {t("trialBooking.changeDateBtn")}
                 </button>
                 <button
@@ -748,7 +748,7 @@ const TrialBookingPage = () => {
                     const url = `${WHATSAPP_BASE}?text=${encodeURIComponent(t("trialBooking.whatsappSuccessMsg"))}`;
                     trackAndOpenWhatsApp(url, { cta_label: "post_booking_whatsapp" });
                   }}
-                  className="w-full flex items-center gap-4 bg-green-50 dark:bg-green-950/30 border-2 border-green-400 rounded-xl p-4 text-left hover:bg-green-100 dark:hover:bg-green-950/50 hover:shadow-md transition-all group"
+                  className="w-full flex items-center gap-4 bg-klovers-green/10 dark:bg-klovers-green/10 border-2 border-klovers-green rounded-xl p-4 text-start hover:bg-klovers-green/20 hover:shadow-md transition-all group"
                 >
                   <div className="h-10 w-10 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
                     <MessageCircle className="h-5 w-5 text-white" />
@@ -757,7 +757,7 @@ const TrialBookingPage = () => {
                     <p className="font-bold text-sm text-foreground">{t("trialBooking.whatsappPromptTitle")}</p>
                     <p className="text-xs text-muted-foreground">{t("trialBooking.whatsappPromptDesc")}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-green-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-foreground rtl:rotate-180 group-hover:translate-x-0.5 transition-all shrink-0" />
                 </button>
 
                 {/* Placement test */}
@@ -767,16 +767,16 @@ const TrialBookingPage = () => {
                     logLeadEvent({ source_type: "free_trial", cta_label: "post_booking_placement_test" });
                     navigate("/placement-test");
                   }}
-                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-left hover:border-blue-400 hover:shadow-md transition-all group"
+                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
-                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-                    <GraduationCap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
+                    <GraduationCap className="h-5 w-5 text-[#2E2E2E]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">{t("trialBooking.findLevelTitle")}</p>
                     <p className="text-xs text-muted-foreground">{t("trialBooking.findLevelDesc")}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground rtl:rotate-180 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
                 </button>
 
                 {/* Pricing teaser */}
@@ -786,10 +786,10 @@ const TrialBookingPage = () => {
                     logLeadEvent({ source_type: "free_trial", cta_label: "post_booking_pricing" });
                     navigate("/pricing");
                   }}
-                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-left hover:border-purple-400 hover:shadow-md transition-all group"
+                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
-                  <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center shrink-0">
-                    <Tag className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
+                    <Tag className="h-5 w-5 text-[#2E2E2E]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">{t("trialBooking.peekPlansTitle")}</p>
@@ -799,7 +799,7 @@ const TrialBookingPage = () => {
                         : `Group classes from ${getStartingPrice(selectedCountry)} · small groups`}
                     </p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground rtl:rotate-180 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
                 </button>
 
                 {/* Referral / share */}
@@ -816,10 +816,10 @@ const TrialBookingPage = () => {
                       window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank", "noopener,noreferrer");
                     }
                   }}
-                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-left hover:border-orange-400 hover:shadow-md transition-all group"
+                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
-                  <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center shrink-0">
-                    <Share2 className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
+                    <Share2 className="h-5 w-5 text-[#2E2E2E]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">
@@ -829,7 +829,7 @@ const TrialBookingPage = () => {
                       {language === "ar" ? "خليهم يجربوا معاك — الحصة المجانية متاحة للكل" : "Invite a friend to join your free class"}
                     </p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-orange-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground rtl:rotate-180 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
                 </button>
               </div>
             </div>
@@ -837,7 +837,7 @@ const TrialBookingPage = () => {
             {/* Invite-a-friend card — referral growth loop */}
             <div className="border border-border rounded-2xl p-5 mb-4 bg-muted/30">
               <p className="text-sm font-bold text-foreground mb-1 flex items-center gap-1.5">
-                <Link2 className="h-4 w-4 text-primary" />
+                <Link2 className="h-4 w-4 text-foreground" />
                 Got a friend who loves K-dramas?
               </p>
               <p className="text-xs text-muted-foreground mb-3">
@@ -911,9 +911,20 @@ const TrialBookingPage = () => {
       <main className="pt-16">
         <section className="py-16 md:py-20 bg-gradient-to-b from-primary/10 via-background to-background">
           <div className="container mx-auto px-4 text-center max-w-3xl">
-            <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-3">
-              {profile?.name ? t("trialBooking.welcomeWithName").replace("{name}", profile.name.split(" ")[0]) : t("trialBooking.welcome")}
-            </h1>
+            <div className="flex items-center justify-center gap-3 md:gap-4 mb-3">
+              <img
+                src="/assets/cluby/cluby-wave.webp"
+                width={314}
+                height={440}
+                alt={language === "ar" ? "كلوبي يلوّح لك مرحبًا" : "Cluby waving hello"}
+                className="h-16 md:h-24 w-auto shrink-0 drop-shadow-md"
+                loading="eager"
+                decoding="async"
+              />
+              <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight text-start">
+                {profile?.name ? t("trialBooking.welcomeWithName").replace("{name}", profile.name.split(" ")[0]) : t("trialBooking.welcome")}
+              </h1>
+            </div>
             <p className="text-muted-foreground max-w-md mx-auto">
               {t("trialBooking.pickDayDesc")}
             </p>
