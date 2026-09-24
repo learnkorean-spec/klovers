@@ -124,8 +124,12 @@
       "destination": "/api/blog-not-found"
     },
     {
-      "source": "/((?!api|assets|videos|klovers-logo\\.jpg|klovers-mascot\\.svg|instagram-posts\\.html|favicon\\.ico|placeholder\\.svg|robots\\.txt|sitemap\\.xml|manifest\\.json|sw\\.js|app\\.html|8f8e25f6c4d7b10abab899f355a7e529\\.txt).*)",
+      "source": "/(ar|courses|pricing|about|faq|contact|privacy-policy|privacy|terms|signup|login|forgot-password|reset-password|enroll|enroll-now|my-lessons|pay/[^/]+|blog|journey/[^/]+|resubmit-schedule|placement-test|unit-placement|games|dashboard|dashboard/[^/]+|textbook|textbook/[^/]+|textbook/[^/]+/[^/]+|review|daily-quiz|profile|complete-profile|free-trial|rsvp|trial-booking|progress-report|certificate|affiliate|learn-korean-arabic-speakers|topik-exam-preparation|learn-korean-kdramas|interview-training|welcome-back|hangul-book|trial-book|trial-confirm|enrollment-status|hangul-starter|practice-interview|unsubscribe|admin|admin/[^/]+)",
       "destination": "/app.html"
+    },
+    {
+      "source": "/((?!api|assets|videos|klovers-logo\\.jpg|klovers-mascot\\.svg|instagram-posts\\.html|favicon\\.ico|placeholder\\.svg|robots\\.txt|sitemap\\.xml|manifest\\.json|sw\\.js|app\\.html|8f8e25f6c4d7b10abab899f355a7e529\\.txt).*)",
+      "destination": "/api/not-found"
     }
   ],
   "headers": [
