@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { Check, Lock, ArrowRight, Flame, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -20,10 +20,14 @@ import { BOY_WAVE } from "@/assets/band/boyWave";
  *     cheers on the right; each has a speech bubble. A white card on the
  *     banner holds the league, XP bar and streak - all real.
  *  2. THREE CARDS - Next outfit, Today's Missions, Cluby's outfits.
- *  3. JOURNEY - the three worlds as small buildings on a dashed road, with
- *     Cluby over "You are here" and the 더 배우기 / 더 꿈꾸기 / 더 나은 나 sign.
+ *  3. JOURNEY - the three worlds as their story paintings on a dashed road,
+ *     with Cluby over "You are here" and the 더 배우기 / 더 꿈꾸기 / 더 나은 나 sign.
  *  4. WORLD CARDS - painted header, number badge, games completed, the first
  *     four games with Play or Locked, and See all. Plus Cluby's quote card.
+ *
+ * The world paintings are the story-canon scenes in /assets/story/
+ * (the same ones the homepage roadmap uses). If one fails to load, the old
+ * inline-SVG building/scene is drawn instead, so nothing ever shows broken.
  *
  * NOTHING HERE IS INVENTED. The mockup shows a Cluby collection, clues and a
  * "collect 10 Clubys" reward; none of those exist yet, so:
@@ -55,6 +59,42 @@ const WORLD_CLUBY: Record<WorldKey, string> = {
   hangul_village: "cluby-scholar",
   vocabulary_market: "cluby-market",
   conversation_cafe: "cluby-cafe",
+};
+
+/** The story-canon painting for each world (same files as the homepage roadmap). */
+const WORLD_PAINTING: Record<WorldKey, string> = {
+  hangul_village: "/assets/story/world-hangul-village.webp",
+  vocabulary_market: "/assets/story/world-vocabulary-market.webp",
+  conversation_cafe: "/assets/story/world-conversation-cafe.webp",
+};
+
+/** A world's painting; falls back to the drawn SVG if the file can't load. */
+const WorldPainting = ({
+  worldKey,
+  Fallback,
+  className,
+  lazy = false,
+}: {
+  worldKey: WorldKey;
+  Fallback: ComponentType<{ className?: string }>;
+  className?: string;
+  lazy?: boolean;
+}) => {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <Fallback className={className} />;
+  return (
+    <img
+      src={WORLD_PAINTING[worldKey]}
+      alt=""
+      aria-hidden="true"
+      width={1600}
+      height={900}
+      loading={lazy ? "lazy" : undefined}
+      decoding="async"
+      onError={() => setFailed(true)}
+      className={cn("object-cover", className)}
+    />
+  );
 };
 
 /** Progress is always Klovers green (#39FF14): green means progress. */
@@ -403,7 +443,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             </p>
           </div>
 
-          <ol className="relative grid grid-cols-3">
+          <ol className="relative grid grid-cols-3 gap-2 sm:gap-4">
             {/* the dashed road behind the stops */}
             <svg className="pointer-events-none absolute inset-x-0 bottom-12 h-10 w-full" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true">
               <path d="M10 30 Q60 0 110 22 T210 18 T295 26" fill="none" stroke="#F2C94C" strokeWidth="2.5" strokeDasharray="6 6" />
@@ -419,10 +459,18 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                       const g = nextGameIn(i);
                       if (g) onPlay(g);
                     }}
-                    className="relative mx-auto flex flex-col items-center rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
+                    className="relative mx-auto flex w-full flex-col items-center rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
                   >
-                    <span className="relative">
-                      <Stop className={cn("h-20 w-28 md:h-24 md:w-32", state === "next" && "opacity-80")} />
+                    <span className="relative block w-full max-w-[13rem]">
+                      <WorldPainting
+                        worldKey={s.world.key}
+                        Fallback={Stop}
+                        className={cn(
+                          "aspect-[16/10] w-full rounded-2xl border-[3px] shadow-md",
+                          state === "current" ? "border-klovers-yellow" : "border-white",
+                          state === "next" && "opacity-80",
+                        )}
+                      />
                       {state === "current" && (
                         <img
                           src={`${ASSET}/cluby-hanbok.webp`}
@@ -430,16 +478,16 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                           aria-hidden="true"
                           width={230}
                           height={286}
-                          className="absolute -top-4 -end-6 h-14 w-auto md:h-16"
+                          className="absolute -top-5 -end-4 h-14 w-auto drop-shadow md:h-16"
                         />
                       )}
                       {state === "done" && (
-                        <span className="absolute top-0 end-0 grid h-6 w-6 place-items-center rounded-full border-2 border-charcoal bg-klovers-green">
+                        <span className="absolute top-2 end-2 grid h-7 w-7 place-items-center rounded-full border-2 border-charcoal bg-klovers-green">
                           <Check className="h-3.5 w-3.5 text-charcoal" strokeWidth={3} />
                         </span>
                       )}
                     </span>
-                    <span className="-mt-2 grid h-6 w-6 place-items-center rounded-full bg-charcoal text-[11px] font-extrabold text-white">
+                    <span className="-mt-3 relative grid h-6 w-6 place-items-center rounded-full bg-charcoal text-[11px] font-extrabold text-white">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="mt-1 text-xs font-extrabold text-charcoal dark:text-foreground sm:text-sm">
@@ -490,8 +538,8 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           return (
             <article key={s.world.key} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <div className="relative h-36">
-                <Scene className="absolute inset-0 h-full w-full" />
-                <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/40 to-transparent rtl:bg-gradient-to-l" />
+                <WorldPainting worldKey={s.world.key} Fallback={Scene} lazy className="absolute inset-0 h-full w-full" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent rtl:bg-gradient-to-l" />
                 <img
                   src={`${ASSET}/${WORLD_CLUBY[s.world.key]}.webp`}
                   alt=""
@@ -507,7 +555,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <h3 className="mt-2 font-display text-xl font-extrabold leading-tight">{isAr ? s.world.nameAr : s.world.name}</h3>
-                  <p className="text-xs text-charcoal/75">{isAr ? s.world.descriptionAr : s.world.description}</p>
+                  <p className="text-xs text-charcoal/80">{isAr ? s.world.descriptionAr : s.world.description}</p>
                 </div>
               </div>
 
