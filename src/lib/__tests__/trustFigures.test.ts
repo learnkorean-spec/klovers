@@ -65,18 +65,13 @@ const RULES: { name: string; re: RegExp; allow: string[] }[] = [
   {
     name: "500+ as a student count (the figure is 200+)",
     re: /500\+(?!\s*(?:vocabulary|words|كلمة|ساعة|hours))/,
-    allow: [
-      "src/pages/EnrollNowPage.tsx",
-      "src/pages/TrialBookPage.tsx",
-      "src/components/admin/CreatorHub.tsx",
-      "src/components/admin/RehamTrainingPanel.tsx",
-      "src/lib/marketingEngine.ts",
-    ],
+    // RehamTrainingPanel is Re's own interview practice, not site copy.
+    allow: ["src/components/admin/RehamTrainingPanel.tsx"],
   },
   {
     name: '"Rated by 200+ students" (200 students did not review anything)',
     re: /Rated by 200\+|تقييم أكثر من 200 طالب/i,
-    allow: ["src/i18n/translations.ts"],
+    allow: [],
   },
   {
     name: "12+ years (Re has taught for 13+)",
@@ -86,7 +81,7 @@ const RULES: { name: string; re: RegExp; allow: string[] }[] = [
   {
     name: "a count of 'Egyptian students'",
     re: /\d\+?\s*Egyptian students|\d+\s*طالب مصري|طالب مصري مسجل/,
-    allow: ["src/i18n/translations.ts", "src/pages/PlacementTestPage.tsx"],
+    allow: [],
   },
   {
     name: '"thousands of students"',
@@ -96,22 +91,17 @@ const RULES: { name: string; re: RegExp; allow: string[] }[] = [
   {
     name: "unverifiable scarcity copy",
     re: /limited spots|spots are limited|seats are limited|limited seats|أماكن محدودة|الأماكن محدودة/i,
-    allow: [
-      "src/i18n/translations.ts",
-      "src/components/admin/CreatorHub.tsx",
-      "src/components/admin/BulkEmailManager.tsx",
-      "src/lib/marketingEngine.ts",
-    ],
+    allow: [],
   },
   {
     name: "a TOPIK pass-rate claim with no data behind it",
     re: /pass rates?\b|نسب نجاح/i,
-    allow: ["src/i18n/translations.ts"],
+    allow: [],
   },
   {
     name: "a 4.9 rating (the sourced rating is Google's 5.0 from 7)",
     re: /4\.9\s*(?:★|rated)|4\.9<\/strong>\s*rated|تقييم 4\.9/,
-    allow: ["src/pages/EnrollNowPage.tsx", "src/components/admin/CreatorHub.tsx"],
+    allow: [],
   },
 ];
 
