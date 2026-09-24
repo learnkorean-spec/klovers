@@ -322,14 +322,17 @@ const FreeTrialPage = () => {
                       next_trial_date minus the 1-day booking cutoff the slot
                       query enforces. That is why "Booking closes ..." stays
                       while the static scarcity line further down went.
-                      Colours are the Klovers palette: our red for spots left,
-                      charcoal + yellow for the deadline. */}
+                      Spots left (25 Sep 2026, Re: "must be better colour"):
+                      a yellow chip with charcoal type and a neon-green live
+                      dot - palette colours, and green already means "live". */}
                   {(spotsRemaining !== null || daysToDeadline !== null) && (
                     <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start" aria-live="polite" aria-atomic="false">
                       {spotsRemaining !== null && spotsRemaining <= 15 && (
-                        <span className="inline-flex items-center gap-1 bg-charcoal text-ivory text-[11px] font-bold px-2.5 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                          {spotsRemaining} {spotsRemaining === 1 ? "spot" : "spots"} left
+                        <span className="inline-flex items-center gap-1.5 bg-klovers-yellow text-charcoal border-2 border-charcoal text-[11px] font-bold px-2.5 py-1 rounded-full">
+                          <span className="w-2 h-2 rounded-full bg-klovers-green animate-pulse" aria-hidden="true" />
+                          {isAr
+                            ? `الأماكن المتبقية: ${spotsRemaining}`
+                            : `${spotsRemaining} ${spotsRemaining === 1 ? "spot" : "spots"} left`}
                         </span>
                       )}
                       {/* 25 Sep 2026 (QA): the "Booking closes ..." chip is gone. It was
@@ -401,7 +404,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── WHAT TO EXPECT — dark ───────────────────────── */}
+        {/* ── WHAT TO EXPECT — dark ─────────────────────── */}
         <section className="py-20 bg-foreground">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-black text-background text-center mb-12">
@@ -423,7 +426,7 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── SCHEDULE — ticket style ─────────────────────── */}
+        {/* ── SCHEDULE — ticket style ───────────────────── */}
         <section className="py-20 pb-28">
           <div className="container mx-auto px-4 max-w-xl">
 
