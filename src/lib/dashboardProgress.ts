@@ -25,7 +25,7 @@ export type BrandIconName =
   | "listening" | "vocabulary" | "grammar" | "placement" | "bibimbap"
   | "hanbok" | "korea-map" | "subway" | "culture-fan" | "controller"
   | "puzzle" | "achievement-star" | "trophy" | "challenge" | "success"
-  | "locked" | "progress" | "streak" | "favourite";
+  | "locked" | "progress" | "streak" | "favourite" | "passport";
 
 // ── XP / level ──────────────────────────────────────────────────────────────
 export interface XpStatus {
@@ -226,45 +226,118 @@ export function pickContinueLesson(
   return atLevel ? make(atLevel, "start_at_level") : null;
 }
 
-// ── Learning journey (course levels) ────────────────────────────────────────
+// ── Learning journey (course levels → story worlds) ─────────────────────────
 export type JourneyState = "completed" | "current" | "locked";
+
+/**
+ * The story worlds the levels travel through (src/config/klovers-world.ts →
+ * KLOVERS_WORLD.worlds). Re's decision (24 Sep 2026): the seven course
+ * levels walk through five of the six worlds in order; Cluby's Memory
+ * Garden is NOT a level stop — canon unlocks it from review data, so it
+ * will live beside the journey as its own review place.
+ */
+export type WorldId = "hangul-village" | "vocabulary-market" | "conversation-cafe" | "culture-street" | "seoul-journey";
+
+export const WORLD_NAMES: Record<WorldId, { en: string; ar: string }> = {
+  "hangul-village": { en: "Hangul Village", ar: "قرية الهانغول" },
+  "vocabulary-market": { en: "Vocabulary Market", ar: "سوق المفردات" },
+  "conversation-cafe": { en: "Conversation Café", ar: "مقهى المحادثة" },
+  "culture-street": { en: "Culture Street", ar: "شارع الثقافة" },
+  "seoul-journey": { en: "Seoul Journey", ar: "رحلة سيول" },
+};
+
+/** level key → world (+ part number when one world spans several levels). */
+const LEVEL_WORLD: Record<string, { world: WorldId; part: number | null; icon: BrandIconName }> = {
+  hangul: { world: "hangul-village", part: null, icon: "hangul-card" },
+  l1: { world: "vocabulary-market", part: null, icon: "flashcards" },
+  l2: { world: "conversation-cafe", part: null, icon: "conversation" },
+  l3: { world: "culture-street", part: null, icon: "hanok" },
+  l4: { world: "seoul-journey", part: 1, icon: "passport" },
+  l5: { world: "seoul-journey", part: 2, icon: "passport" },
+  l6: { world: "seoul-journey", part: 3, icon: "passport" },
+};
 
 export interface JourneyStop {
   key: string;
   order: number;
+  /** Course level label ("Hangul", "Level 1" …) — shown under the world. */
   labelEn: string;
   labelAr: string;
+  world: WorldId;
+  /** 1–3 for the Seoul Journey stops, null otherwise. */
+  part: number | null;
   icon: BrandIconName;
   state: JourneyState;
-  /** Larger node for the milestone stops. */
+  /** Larger node where a new world begins. */
   milestone: boolean;
 }
 
-const JOURNEY_ICON: Record<string, BrandIconName> = {
-  hangul: "hangul-card",
-  l1: "conversation",
-  l2: "flashcards",
-  l3: "achievement-star",
-  l4: "streak",
-  l5: "trophy",
-  l6: "open-book",
-};
+/** "Seoul Journey · Part 2" / "رحلة سيول · الجزء 2". */
+export function worldLabel(stop: Pick<JourneyStop, "world" | "part">, lang: "en" | "ar"): string {
+  const name = WORLD_NAMES[stop.world][lang];
+  if (stop.part === null) return name;
+  return lang === "ar" ? `${name} · الجزء ${stop.part}` : `${name} · Part ${stop.part}`;
+}
 
 /** Seven stops = the seven course levels in constants/levels.ts. */
 export function journeyStops(levelKey: string | null | undefined): { stops: JourneyStop[]; currentIndex: number } {
   const key = normalizeLevel(levelKey || "");
   const ordered = [...LEVELS].sort((a, b) => a.order - b.order);
   const currentIndex = ordered.findIndex(l => l.key === key);
-  const stops = ordered.map((l, i) => ({
-    key: l.key,
-    order: i,
-    labelEn: l.shortLabel,
-    labelAr: l.shortLabel_ar,
-    icon: JOURNEY_ICON[l.key] ?? "progress-path",
-    state: (currentIndex < 0 ? "locked" : i < currentIndex ? "completed" : i === currentIndex ? "current" : "locked") as JourneyState,
-    milestone: l.key === "hangul" || l.key === "l3" || l.key === "l6",
-  }));
+  const stops = ordered.map((l, i) => {
+    const w = LEVEL_WORLD[l.key] ?? { world: "seoul-journey" as WorldId, part: null, icon: "progress-path" as BrandIconName };
+    return {
+      key: l.key,
+      order: i,
+      labelEn: l.shortLabel,
+      labelAr: l.shortLabel_ar,
+      world: w.world,
+      part: w.part,
+      icon: w.icon,
+      state: (currentIndex < 0 ? "locked" : i < currentIndex ? "completed" : i === currentIndex ? "current" : "locked") as JourneyState,
+      milestone: w.part === null || w.part === 1,
+    };
+  });
   return { stops, currentIndex };
+}
+
+// ── Cluby's clover egg ──────────────────────────────────────────────────────
+/**
+ * Canon awakening sequence (KLOVERS_WORLD.originStory.awakeningSequence),
+ * read ONLY from the student's real rows — nothing is stored or granted:
+ *  1 crack — first word:          a vocabulary step done (any lesson), or the
+ *                                  word of the day claimed, or a vocabulary badge
+ *  2 glow  — first sentence:       a grammar or writing step done
+ *  3 hatch — first conversation:   a whole lesson completed (its dialogue
+ *                                  included), or the conversation badge
+ * Stages never go backwards: a later milestone implies the earlier ones, so
+ * an experienced student simply arrives hatched ("you've already learned
+ * enough to wake him").
+ */
+export type EggStage = 0 | 1 | 2 | 3;
+
+export interface EggStatus {
+  stage: EggStage;
+  /** Earliest completed_at of a lesson that hatched him (for the "just hatched" moment). */
+  hatchedAt: string | null;
+}
+
+const WORD_BADGES = new Set(["hangul_master", "first_100_words"]);
+
+export function eggStatus(progress: LessonProgressRow[], badges: EarnedBadge[], todayActivity: string[]): EggStatus {
+  const badgeKeys = new Set(badges.map(b => b.badge_key));
+  const completed = progress.filter(p => p.chapter_completed);
+  const hatched = completed.length > 0 || badgeKeys.has("conversation_beginner");
+  const glowing = hatched || progress.some(p => p.grammar_done || p.writing_done);
+  const cracked = glowing
+    || progress.some(p => p.vocab_done)
+    || todayActivity.includes(WORD_OF_DAY_ACTIVITY)
+    || [...badgeKeys].some(k => WORD_BADGES.has(k));
+  const stage: EggStage = hatched ? 3 : glowing ? 2 : cracked ? 1 : 0;
+  const firstDone = completed.map(p => p.completed_at).filter((d): d is string => !!d).sort()[0] ?? null;
+  const badgeAt = badges.find(b => b.badge_key === "conversation_beginner")?.earned_at ?? null;
+  const hatchedAt = stage === 3 ? ([firstDone, badgeAt].filter((d): d is string => !!d).sort()[0] ?? null) : null;
+  return { stage, hatchedAt };
 }
 
 // ── Badges → collection ─────────────────────────────────────────────────────

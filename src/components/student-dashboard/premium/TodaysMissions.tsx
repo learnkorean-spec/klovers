@@ -27,10 +27,12 @@ export function wordOfDay(date = new Date()) {
  * backend actually grants for these activities.
  */
 export function TodaysMissions({
-  missions, loading, continueHref, claimLabel, claiming, onClaimWord,
+  missions, loading, continueHref, claimLabel, claiming, onClaimWord, clubyAwake = true,
 }: {
   missions: Mission[] | null; loading: boolean; continueHref: string;
   claimLabel: string; claiming: boolean; onClaimWord: () => void;
+  /** Canon: Cluby only appears once his egg has hatched. */
+  clubyAwake?: boolean;
 }) {
   const { c, lang } = useDashCopy();
   const word = wordOfDay();
@@ -119,7 +121,7 @@ export function TodaysMissions({
 
       <div className="mt-4 flex items-end justify-between gap-3">
         <p className="text-xs text-muted-foreground">{done === total && missions ? c("missionsAllDone") : c("missionsReward")}</p>
-        {missions && done === total && (
+        {missions && done === total && clubyAwake && (
           <ClubyNote
             text={c("clubyMissionsDone")}
             lang={lang}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   xpStatus, streakState, missionsFromActivity, pickContinueLesson, journeyStops,
-  recentAchievements, nextUnlock, levelToTopikBand, type LessonRow, type LessonProgressRow,
+  recentAchievements, nextUnlock, levelToTopikBand, eggStatus, worldLabel, type LessonRow, type LessonProgressRow,
 } from "../dashboardProgress";
 import { LEAGUES } from "@/constants/gamification";
 
@@ -83,7 +83,18 @@ describe("journeyStops", () => {
     const { stops, currentIndex } = journeyStops("level_2");
     expect(currentIndex).toBe(2);
     expect(stops.map(s => s.state)).toEqual(["completed", "completed", "current", "locked", "locked", "locked", "locked"]);
-    expect(stops.map(s => s.icon)).toEqual(["hangul-card", "conversation", "flashcards", "achievement-star", "streak", "trophy", "open-book"]);
+    expect(stops.map(s => s.icon)).toEqual(["hangul-card", "flashcards", "conversation", "hanok", "passport", "passport", "passport"]);
+  });
+  it("tells the levels as the story worlds; the Memory Garden is not a level stop", () => {
+    const { stops } = journeyStops("level_2");
+    expect(stops.map(s => s.world)).toEqual([
+      "hangul-village", "vocabulary-market", "conversation-cafe", "culture-street",
+      "seoul-journey", "seoul-journey", "seoul-journey",
+    ]);
+    expect(worldLabel(stops[2], "en")).toBe("Conversation Café");
+    expect(worldLabel(stops[5], "en")).toBe("Seoul Journey · Part 2");
+    expect(worldLabel(stops[1], "ar")).toBe("سوق المفردات");
+    expect(stops.filter(s => s.milestone).map(s => s.key)).toEqual(["hangul", "l1", "l2", "l3", "l4"]);
   });
   it("is all locked when no level is known", () => {
     expect(journeyStops("").stops.every(s => s.state === "locked")).toBe(true);
@@ -118,5 +129,25 @@ describe("achievements + next unlock", () => {
 describe("nextUnlock skips rows the server has not granted yet", () => {
   it("ignores progress >= target that is not achieved", () => {
     expect(nextUnlock([{ milestone_type: "streak_days", milestone_tier: 1, milestone_name: "7 Day Streak", target_value: 7, progress_value: 7, is_achieved: false }])).toBeNull();
+  });
+});
+
+describe("eggStatus follows the canon awakening from real rows only", () => {
+  it("is dormant with no learning", () => {
+    expect(eggStatus([], [], [])).toEqual({ stage: 0, hatchedAt: null });
+  });
+  it("cracks on the first word (vocab step or word of the day)", () => {
+    expect(eggStatus([P(1, { vocab_done: true })], [], []).stage).toBe(1);
+    expect(eggStatus([], [], ["game_vocab_daily"]).stage).toBe(1);
+  });
+  it("glows on the first sentence (grammar or writing step)", () => {
+    expect(eggStatus([P(1, { vocab_done: true, grammar_done: true })], [], []).stage).toBe(2);
+  });
+  it("hatches on the first whole lesson and never goes backwards", () => {
+    const e = eggStatus([P(1, { chapter_completed: true, completed_at: "2026-09-20T10:00:00Z" }), P(2, { chapter_completed: true, completed_at: "2026-09-01T10:00:00Z" })], [], []);
+    expect(e).toEqual({ stage: 3, hatchedAt: "2026-09-01T10:00:00Z" });
+  });
+  it("counts the conversation badge as hatched", () => {
+    expect(eggStatus([], [{ badge_key: "conversation_beginner", earned_at: "2026-08-01T00:00:00Z" }], []).stage).toBe(3);
   });
 });

@@ -27,8 +27,26 @@ const COPY = {
   clubyStreak: { en: "{n} days strong!", ar: "{days} من التعلّم!" },
   clubyAtRisk: { en: "Keep the streak alive!", ar: "حافظ على سلسلتك!" },
   clubyHello: { en: "Let's learn!", ar: "هيا نتعلّم!" },
-  clubyFound: { en: "You found me!", ar: "وجدتني!" },
-  clubyAlt: { en: "Cluby, the Klovers mascot", ar: "كلوبي، تميمة كلوفرز" },
+  // Canon: Cluby is the memory keeper — he remembers, he doesn't hide.
+  clubyFound: { en: "I'll remember this one!", ar: "سأتذكّر هذه!" },
+  clubyAlt: { en: "Cluby, your study companion", ar: "كلوبي، رفيقك في التعلّم" },
+
+  // Cluby's clover egg (canon awakening sequence, from real progress only)
+  eggAria: { en: "Cluby's clover egg", ar: "بيضة البرسيم" },
+  eggTitle0: { en: "A clover egg is waiting for you", ar: "بيضة البرسيم في انتظارك" },
+  eggBody0: { en: "It reacts to real learning. Learn your first Korean word and see what happens.", ar: "إنها تتفاعل مع تعلّمك الحقيقي. تعلّم أول كلمة كورية وانظر ماذا سيحدث." },
+  eggTitle1: { en: "The egg cracked!", ar: "تشقّقت البيضة!" },
+  eggBody1: { en: "Your first word woke it a little. Finish a grammar step to make it glow.", ar: "كلمتك الأولى أيقظتها قليلًا. أنجز خطوة قواعد لتجعلها تتوهّج." },
+  eggTitle2: { en: "The egg is glowing", ar: "البيضة تتوهّج" },
+  eggBody2: { en: "Your first sentence made it glow. Complete a whole lesson, dialogue included, to hatch it.", ar: "جملتك الأولى جعلتها تتوهّج. أكمل درسًا كاملًا بما فيه الحوار لتفقس." },
+  eggHatchedTitle: { en: "Cluby hatched!", ar: "فقس كلوبي!" },
+  eggHatchedBody: { en: "His first word was 안녕! From now on he learns alongside you.", ar: "أول كلمة قالها: 안녕! ومن الآن سيتعلّم معك." },
+  eggCatchUpTitle: { en: "You've already learned enough to wake him", ar: "لقد تعلّمت ما يكفي لإيقاظه بالفعل" },
+  eggCatchUpBody: { en: "Meet Cluby. His first word was 안녕! He'll remember what you learn.", ar: "تعرّف على كلوبي. أول كلمة قالها: 안녕! وسيتذكّر ما تتعلّمه." },
+  eggStep1: { en: "First word", ar: "أول كلمة" },
+  eggStep2: { en: "First sentence", ar: "أول جملة" },
+  eggStep3: { en: "First conversation", ar: "أول محادثة" },
+  eggDismiss: { en: "Close", ar: "إغلاق" },
 
   // Continue learning
   continueEyebrow: { en: "Continue learning", ar: "تابع التعلّم" },
@@ -62,6 +80,7 @@ const COPY = {
   // Journey
   journeyTitle: { en: "Your learning journey", ar: "رحلتك التعليمية" },
   journeyDone: { en: "{done} of {total} levels complete", ar: "أكملت {done} من {total} مستويات" },
+  journeyYouAreIn: { en: "You're in {world}", ar: "أنت الآن في {world}" },
   journeyUnknown: { en: "Take the placement test to place yourself on the map.", ar: "خُض اختبار تحديد المستوى لتعرف موقعك على الخريطة." },
   journeyFindLevel: { en: "Find my level", ar: "حدّد مستواي" },
   stateCompleted: { en: "completed", ar: "مكتمل" },

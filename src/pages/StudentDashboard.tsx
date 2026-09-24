@@ -61,7 +61,7 @@ import { leagueName, badgeText } from "@/lib/dashboardLocale";
 import { useDashboardLearning } from "@/hooks/useDashboardLearning";
 import {
   xpStatus, streakState as getStreakState, localDateKey, missionsFromActivity, pickContinueLesson,
-  journeyStops, WORD_OF_DAY_ACTIVITY, type BrandIconName,
+  journeyStops, eggStatus, WORD_OF_DAY_ACTIVITY, type BrandIconName,
 } from "@/lib/dashboardProgress";
 import { dashEvent, markMissionCompletedOnce } from "@/lib/dashboardEvents";
 import { studentCalendarDaysUntil } from "@/lib/studentDashboardDate";
@@ -72,6 +72,7 @@ import { ContinueLearningCard } from "@/components/student-dashboard/premium/Con
 import { TodaysMissions } from "@/components/student-dashboard/premium/TodaysMissions";
 import { LearningJourneyMap } from "@/components/student-dashboard/premium/LearningJourneyMap";
 import { CollectionCard } from "@/components/student-dashboard/premium/CollectionCard";
+import { EggStatusCard } from "@/components/student-dashboard/premium/EggStatusCard";
 import { RecentAchievements } from "@/components/student-dashboard/premium/RecentAchievements";
 import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
 import { useDashCopy } from "@/components/student-dashboard/premium/copy";
@@ -504,6 +505,12 @@ const StudentDashboard = () => {
   );
   const continueHref = nextLesson?.href ?? "/textbook";
   const journey = useMemo(() => journeyStops(profileLevel), [profileLevel]);
+  // Cluby's egg — read from real progress only (null until the rows load).
+  const egg = useMemo(
+    () => (learning.data ? eggStatus(learning.data.lessonProgress, learning.data.badges, learning.data.todayActivity) : null),
+    [learning.data],
+  );
+  const clubyAwake = egg?.stage === 3;
   const [claimingWord, setClaimingWord] = useState(false);
   const [insightsOpen, setInsightsOpen] = useState(false);
 
@@ -746,7 +753,7 @@ const StudentDashboard = () => {
       <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent ring-1 ring-black/10">
         <CardContent className="pt-6 pb-6 space-y-4">
           <div className="flex items-start gap-4">
-            <KloverIcon name="klobi-reading" className="h-12 w-12 sm:h-14 sm:w-14" />
+            <BrandIcon name="open-book" className="h-12 w-12 sm:h-14 sm:w-14" />
             <div>
               <h2 className="text-lg font-bold text-foreground">{t("dashboardPage.startJourneyTitle")}</h2>
               <p className="text-sm text-muted-foreground mt-1">{t("dashboardPage.startJourneyBody")}</p>
@@ -802,7 +809,11 @@ const StudentDashboard = () => {
             continueLesson={nextLesson?.lesson.sort_order ?? null}
             hasStarted={!!nextLesson && (nextLesson.stepsDone > 0 || nextLesson.reason !== "start_at_level")}
             avatarSlot={avatarSlot}
+            clubyAwake={clubyAwake}
           />
+
+          {/* Cluby's clover egg: crack → glow → hatch from real learning. */}
+          {egg && <EggStatusCard egg={egg} />}
 
           {/* Account alerts (package running low / pending review) — compact */}
           {(() => {
@@ -851,6 +862,7 @@ const StudentDashboard = () => {
                   claimLabel={t("dashboardPage.claimXp")}
                   claiming={claimingWord}
                   onClaimWord={handleClaimWord}
+                  clubyAwake={clubyAwake}
                 />
               </div>
             </div>
@@ -862,7 +874,7 @@ const StudentDashboard = () => {
           {/* E | G + F. Collection & next unlock; beside it the upcoming class,
               then recent achievements (tertiary). Mobile order: E, G, F. */}
           <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-            <CollectionCard earned={learning.data?.badges ?? []} milestones={learning.data?.milestones ?? []} />
+            <CollectionCard earned={learning.data?.badges ?? []} milestones={learning.data?.milestones ?? []} clubyAwake={clubyAwake} />
             <div className="space-y-4">
               {!classIsToday && classBlock}
               <RecentAchievements earned={learning.data?.badges ?? []} />
