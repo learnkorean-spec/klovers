@@ -65,8 +65,9 @@ import {
  * ("the egg is not obvious, and where i go clicking there") - the fading
  * ping-only glow read as decorative, not clickable. Made it a persistent
  * ring (border-2 border-klovers-yellow, always visible, not just the
- * animated pulse) plus a small "👆 Tap here" label right under it, so it's
- * unmistakably an interactive spot instead of a subtle sparkle.
+ * animated pulse) plus a small "👇 Tap here" label right above it (moved
+ * from below after it overlapped the "A hidden chapter" eyebrow text),
+ * so it's unmistakably an interactive spot instead of a subtle sparkle.
  */
 
 const CLUES = [
@@ -148,9 +149,9 @@ const EggTeaser = () => {
           </button>
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full border border-klovers-yellow/50 bg-charcoal/90 px-3 py-1 text-xs font-bold text-klovers-yellow"
+            className="pointer-events-none absolute left-1/2 bottom-full mb-2 -translate-x-1/2 whitespace-nowrap rounded-full border border-klovers-yellow/50 bg-charcoal/90 px-3 py-1 text-xs font-bold text-klovers-yellow"
           >
-            {isAr ? "👆 دوسي هنا" : "👆 Tap here"}
+            {isAr ? "👇 دوسي هنا" : "👇 Tap here"}
           </span>
         </div>
       </div>
