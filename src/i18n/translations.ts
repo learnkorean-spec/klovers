@@ -2868,7 +2868,7 @@ export const translations = {
       perkDuration: "جلسة مدتها 30 دقيقة",
       perkAssessment: "تقييم مستوى مخصص",
       heroSubtitleEmotional: "شاهدي مسلسلاتك الكورية بدون ترجمة — ابدئي بحصة واحدة مجانية.",
-      ratingText: "5.0 · تقييم أكثر من 200 طالب",
+      ratingText: "5.0 ★ من ٧ مراجعات على جوجل",
       socialCount: "+200",
       socialCountText: "طالب يتعلمون الآن",
       testimonial1Quote: "بجد يستفاد كتير في الكورس ده! ممكن اني أكتب جملة كاملة بالكوري رغم اني مكنتش أعرف أقرأ أو أكتب كوري من قبل! 선생님 감사합니다 ❤️",
