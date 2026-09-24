@@ -19,7 +19,7 @@ import { BOY_WAVE } from "@/assets/band/boyWave";
  *     waves on the left, the headline and Cluby sit in the middle, the girl
  *     cheers on the right; each has a speech bubble. A white card on the
  *     banner holds the league, XP bar and streak - all real.
- *  2. THREE CARDS - Next Cluby, Today's Missions, My Clubys.
+ *  2. THREE CARDS - Next outfit, Today's Missions, Cluby's outfits.
  *  3. JOURNEY - the three worlds as small buildings on a dashed road, with
  *     Cluby over "You are here" and the 더 배우기 / 더 꿈꾸기 / 더 나은 나 sign.
  *  4. WORLD CARDS - painted header, number badge, games completed, the first
@@ -27,9 +27,9 @@ import { BOY_WAVE } from "@/assets/band/boyWave";
  *
  * NOTHING HERE IS INVENTED. The mockup shows a Cluby collection, clues and a
  * "collect 10 Clubys" reward; none of those exist yet, so:
- *  - Next Cluby is the current world's REAL progress, and says collecting
- *    opens soon;
- *  - My Clubys shows every outfit locked, marked "Coming soon";
+ *  - Next outfit is the current world's REAL progress, and says the
+ *    outfit unlock is coming soon;
+ *  - Cluby's outfits shows every outfit locked, marked "Coming soon";
  *  - Today's Missions are counted from today's real student_xp rows
  *    (activity_type `game_<id>`, created_at since local midnight);
  *  - there is no Special Reward card.
@@ -213,7 +213,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <div className="mt-auto flex items-end gap-3">
               <img src={`${ASSET}/cluby-hanbok.webp`} alt="" aria-hidden="true" width={230} height={286} decoding="async" className="h-32 w-auto md:h-40" />
               <Bubble lang={lang} tail="left" className="mb-24 w-36 md:mb-28 md:w-40">
-                {isAr ? "أنا مستخبّي في حتة النهارده! تقدر تلاقيني؟ 👀" : "I'm hiding somewhere today! Can you find me? 👀"}
+                {isAr ? "العب لعبة وسأتذكّر كل كلمة تتعلّمها!" : "Play a game and I'll remember every word you learn!"}
               </Bubble>
             </div>
           </div>
@@ -300,9 +300,9 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         </div>
       </section>
 
-      {/* ── 2. Next Cluby · Today's Missions · My Clubys ─────────────── */}
+      {/* ── 2. Next outfit · Today's Missions · Cluby's outfits ──────── */}
       <section className="grid gap-4 md:grid-cols-3">
-        {/* Next Cluby */}
+        {/* Next outfit */}
         <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
           <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF1C2]">
             <img
@@ -316,7 +316,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="font-bold text-foreground">{isAr ? "كلوبي الجاي" : "Next Cluby"}</h2>
+            <h2 className="font-bold text-foreground">{isAr ? "الزي التالي" : "Next outfit"}</h2>
             <p className="text-xs text-muted-foreground">
               {current
                 ? (isAr ? `${current.done} / ${current.total} ألعاب في ${currentWorldName}` : `${current.done} / ${current.total} games in ${currentWorldName}`)
@@ -328,7 +328,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               ))}
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              {isAr ? "خلّص العالم ده عشان تقابل كلوبي الجاي — التجميع قريب." : "Finish this world to meet the next Cluby — collecting opens soon."}
+              {isAr ? "أنهِ هذا العالم لتفتح زي كلوبي التالي — قريبًا." : "Finish this world to unlock Cluby's next outfit — coming soon."}
             </p>
           </div>
         </div>
@@ -361,12 +361,12 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           )}
         </div>
 
-        {/* My Clubys */}
+        {/* Cluby's outfits */}
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-3">
             <img src={`${ASSET}/cluby-hanbok.webp`} alt="" aria-hidden="true" width={230} height={286} loading="lazy" className="h-12 w-auto" />
             <div className="min-w-0 flex-1">
-              <h2 className="font-bold text-foreground">{isAr ? "مجموعة كلوبي" : "My Clubys"}</h2>
+              <h2 className="font-bold text-foreground">{isAr ? "ملابس كلوبي" : "Cluby's outfits"}</h2>
               <p className="text-xs text-muted-foreground">
                 {isAr ? `${CLUBY_OUTFITS.length} أزياء` : `${CLUBY_OUTFITS.length} outfits`}
               </p>

@@ -35,7 +35,7 @@ export const GAME_WORLDS: GameWorld[] = [
   {
     key: "vocabulary_market",
     name: "Vocabulary Market",
-    nameAr: "سوق الكلمات",
+    nameAr: "سوق المفردات",
     description: "Learn useful words for real life.",
     descriptionAr: "اتعلم كلمات هتحتاجها في الحياة الحقيقية.",
     icon: "bibimbap",
@@ -44,7 +44,7 @@ export const GAME_WORLDS: GameWorld[] = [
   {
     key: "conversation_cafe",
     name: "Conversation Café",
-    nameAr: "كافيه المحادثة",
+    nameAr: "مقهى المحادثة",
     description: "Practice real Korean conversations.",
     descriptionAr: "اتمرّن على محادثات كورية حقيقية.",
     icon: "game-headphones-music",
@@ -58,7 +58,7 @@ const CATALOG_IDS = new Set(GAMES_CATALOG.map((g) => g.id));
 export const gameWorlds = (): GameWorld[] =>
   GAME_WORLDS.map((w) => ({ ...w, gameIds: w.gameIds.filter((id) => CATALOG_IDS.has(id)) }));
 
-/** Cluby outfits shown in the "coming soon" collection strip. Order is display order. */
+/** Cluby's outfits (one Cluby, many outfits) shown in the "coming soon" strip. Order is display order. */
 export const CLUBY_OUTFITS = [
   { key: "hanbok", name: "Hanbok", nameAr: "هانبوك" },
   { key: "scholar", name: "Scholar", nameAr: "الدارس" },
