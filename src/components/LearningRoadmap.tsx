@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { COURSE_CARDS } from "@/constants/courseCards";
 import { LEVEL_KEYS } from "@/constants/levels";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import { journeyStops, worldLabel, WORLD_NAMES, type WorldId } from "@/lib/dashboardProgress";
 import {
   JourneyScene,
   JourneySceneWide,
@@ -51,6 +52,16 @@ import {
  * 2026-09-24 - PAINTED ICON LIBRARY, not lucide line-icons: the seven stops
  * now use the same KloverIcon set as the rest of the homepage (HowItWorks,
  * MoreThanAClass), so the roadmap doesn't look like a different product.
+ *
+ * 2026-09-24 (story order) - THE LEVELS ARE THE STORY WORLDS (homepage
+ * narrative slot 4, "learning-journey"). Each level also names the canon
+ * world it travels through (KLOVERS_WORLD.levelJourney in
+ * src/config/klovers-world.ts: Hangul → Hangul Village, L1 → Vocabulary
+ * Market, L2 → Conversation Café, L3 → Culture Street, L4–L6 → Seoul
+ * Journey parts 1–3), read from lib/dashboardProgress so the homepage and
+ * the student's own journey map can't disagree. The level names stay; the
+ * world is a small extra line, with a small painting where one exists.
+ * Hangul Village has no painting yet, so it shows none.
  */
 
 /**
@@ -70,6 +81,17 @@ const LEVEL_META: Record<string, { icon: KloverIconName; tile: string }> = {
 
 const getMeta = (key: string) =>
   LEVEL_META[key] ?? { icon: "badge-blossom" as KloverIconName, tile: "bg-amber-100" };
+
+/** Level key → its story world (+ part), from the same mapping the dashboard uses. */
+const LEVEL_WORLDS = new Map(journeyStops("").stops.map((s) => [s.key, s]));
+
+/** World paintings (1600×900). Hangul Village has none yet. */
+const WORLD_IMAGES: Partial<Record<WorldId, string>> = {
+  "vocabulary-market": "/assets/story/world-vocabulary-market.webp",
+  "conversation-cafe": "/assets/story/world-conversation-cafe.webp",
+  "culture-street": "/assets/story/world-culture-street.webp",
+  "seoul-journey": "/assets/story/world-seoul-journey.webp",
+};
 
 /** The ladder only — the two special tracks are not stops on the road. */
 const STAGES = COURSE_CARDS.filter((c) => (LEVEL_KEYS as string[]).includes(c.key));
@@ -106,6 +128,8 @@ const LearningRoadmap = () => {
   const active = STAGES[activeStep] ?? STAGES[0];
   const activeMeta = getMeta(active.key);
   const activeChips = chipsFrom(isAr ? active.eyebrow_ar : active.eyebrow_en);
+  const activeWorld = LEVEL_WORLDS.get(active.key);
+  const activeWorldImg = activeWorld ? WORLD_IMAGES[activeWorld.world] : undefined;
 
   /** Scene units -> a physical percentage. `flip` mirrors x for the wide map in Arabic. */
   const place = (view: View, p: Pt, flip: boolean) => ({
@@ -234,6 +258,11 @@ const LearningRoadmap = () => {
                   <h3 className="text-base font-bold leading-tight text-foreground sm:text-lg">
                     {isAr ? active.title_ar : active.title_en}
                   </h3>
+                  {activeWorld && (
+                    <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                      {worldLabel(activeWorld, isAr ? "ar" : "en")}
+                    </p>
+                  )}
 
                   <div className="mt-2 flex flex-wrap gap-2">
                     {activeChips.map((chip, i) => {
@@ -253,6 +282,23 @@ const LearningRoadmap = () => {
                   <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
                     {isAr ? active.blurb_ar : active.blurb_en}
                   </p>
+
+                  {activeWorld && activeWorldImg && (
+                    <img
+                      key={activeWorldImg}
+                      src={activeWorldImg}
+                      alt={
+                        isAr
+                          ? `رسمة ${WORLD_NAMES[activeWorld.world].ar} من عالم كلوفرز`
+                          : `${WORLD_NAMES[activeWorld.world].en}, a painted scene from the Klovers world`
+                      }
+                      width={1600}
+                      height={900}
+                      loading="lazy"
+                      decoding="async"
+                      className="mt-3 h-20 w-36 max-w-full rounded-xl object-cover"
+                    />
+                  )}
                 </div>
               </div>
             </div>

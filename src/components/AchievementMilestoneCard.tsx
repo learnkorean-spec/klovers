@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useMilestones } from "@/hooks/useMilestones";
 import KloverIcon from "@/components/KloverIcon";
+import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -56,17 +57,8 @@ export function AchievementMilestoneCard() {
     return (
       <Card className="border-dashed">
         <CardContent className="pt-6 pb-6 text-center space-y-2">
-          <img
-            src="/assets/cluby/cluby-star.webp"
-            alt=""
-            aria-hidden="true"
-            width={333}
-            height={440}
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-            className="h-14 w-14 sm:h-16 sm:w-16 mx-auto shrink-0 select-none object-contain"
-          />
+          {/* A neutral icon, not Cluby: canon keeps him hidden until his egg hatches. */}
+          <BrandIcon name="achievement-star" className="h-14 w-14 sm:h-16 sm:w-16 mx-auto" />
           <p className="font-semibold text-sm text-foreground">{tr("No milestones yet", "لا توجد إنجازات بعد")}</p>
           <p className="text-xs text-muted-foreground">{tr("Complete lessons and earn XP to unlock milestone rewards.", "أكمل الدروس واكسب نقاط الخبرة لفتح مكافآت الإنجازات.")}</p>
         </CardContent>

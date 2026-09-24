@@ -5,6 +5,8 @@ import type { EarnedBadge, LessonProgressRow, LessonRow, MilestoneRow } from "@/
 export interface DashboardLearningData {
   /** activity_type of every student_xp row since local midnight. */
   todayActivity: string[];
+  /** True once the word of the day was claimed on ANY day (the egg's crack never undoes). */
+  everClaimedWordOfDay: boolean;
   lessons: LessonRow[];
   lessonProgress: LessonProgressRow[];
   badges: EarnedBadge[];
@@ -12,7 +14,7 @@ export interface DashboardLearningData {
 }
 
 /**
- * Read-only loader for the redesigned dashboard blocks. Five parallel reads
+ * Read-only loader for the redesigned dashboard blocks. Six parallel reads
  * of tables the app already writes; nothing is inserted or updated here.
  * A failed read degrades only its own block (the page keeps rendering).
  */
@@ -29,7 +31,7 @@ export function useDashboardLearning(userId: string) {
     midnight.setHours(0, 0, 0, 0);
     (async () => {
       try {
-        const [today, lessons, progress, badges, milestones] = await Promise.all([
+        const [today, lessons, progress, badges, milestones, everWord] = await Promise.all([
           supabase.from("student_xp").select("activity_type").eq("user_id", userId).gte("created_at", midnight.toISOString()),
           supabase.from("textbook_lessons").select("id, book, sort_order, title_en, title_ar, title_ko, topik_level").eq("is_published", true),
           supabase.from("student_lesson_progress")
@@ -39,11 +41,13 @@ export function useDashboardLearning(userId: string) {
           (supabase as any).from("achievement_milestones")
             .select("milestone_type, milestone_tier, milestone_name, target_value, progress_value, is_achieved")
             .eq("user_id", userId),
+          supabase.from("student_xp").select("id").eq("user_id", userId).eq("activity_type", "game_vocab_daily").limit(1),
         ]);
         if (lessons.error || progress.error) throw new Error("learning data unavailable");
         if (cancelled) return;
         setData({
           todayActivity: ((today.data ?? []) as { activity_type: string }[]).map(r => r.activity_type),
+          everClaimedWordOfDay: (everWord.data ?? []).length > 0,
           lessons: (lessons.data ?? []) as LessonRow[],
           lessonProgress: (progress.data ?? []) as LessonProgressRow[],
           badges: (badges.data ?? []) as EarnedBadge[],
