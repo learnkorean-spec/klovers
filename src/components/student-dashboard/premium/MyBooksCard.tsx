@@ -17,6 +17,9 @@ import { useDashCopy } from "./copy";
  * pops up once to tell her it is here. "Seen" is remembered per student and per
  * book in this browser, so a new book later gets its own announcement.
  *
+ * No emoji anywhere here: Klovers uses only its own 3D-plush icon library and
+ * Cluby art (Re, 25 Sep 2026).
+ *
  * Renders nothing when the student has no book yet — no empty card.
  */
 type Row = { id: string; book_id: string };
@@ -153,7 +156,7 @@ export function MyBooksCard() {
               {/* Cluby says it, in a speech bubble pointing down at him. */}
               <div className="relative mb-2 rounded-2xl border-2 border-foreground bg-card px-4 py-2.5 text-foreground shadow-sm">
                 <DialogTitle className={isAr ? "font-sans text-base font-bold leading-relaxed" : "font-display text-base font-bold leading-snug"}>
-                  {isAr ? "كتابك وصل! 📘" : "Your book is here! 📘"}
+                  {isAr ? "كتابك وصل!" : "Your book is here!"}
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-sm leading-relaxed text-foreground">
                   {isAr
