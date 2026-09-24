@@ -65,9 +65,21 @@ import {
  * ("the egg is not obvious, and where i go clicking there") - the fading
  * ping-only glow read as decorative, not clickable. Made it a persistent
  * ring (border-2 border-klovers-yellow, always visible, not just the
- * animated pulse) plus a small "👇 Tap here" label right above it (moved
- * from below after it overlapped the "A hidden chapter" eyebrow text),
- * so it's unmistakably an interactive spot instead of a subtle sparkle.
+ * animated pulse) plus a small "👇 Tap here" label above it (moved off the
+ * "A hidden chapter" eyebrow text it originally overlapped), so it's
+ * unmistakably an interactive spot instead of a subtle sparkle.
+ *
+ * 24 Sep 2026 (STORY CANON CHANGE): Re supplied 3 new illustrated images —
+ * a calm egg with a clover mark, the same egg cracking with dramatic light,
+ * and Cluby hatching out of it — and confirmed ("1 yes") they should appear
+ * inside this popup, one per tap, alongside the existing clue text. This
+ * OVERRIDES the canon rule at the top of this file ("Cluby is explicitly
+ * EXCLUDED from this beat"): Cluby now appears here, on the 3rd/hatching
+ * reveal only, as the payoff image. The background photo (girl + boy in the
+ * courtyard) is unchanged — Re explicitly said to keep it as-is, just make
+ * sure it reads clearly, not to replace it with any of these new images.
+ * REVEAL_IMAGES below is ordered to match CLUES: calm egg → cracking egg →
+ * Cluby hatching, so the popup visually escalates in step with the text.
  */
 
 const CLUES = [
@@ -82,6 +94,22 @@ const CLUES = [
   {
     en: "Every learner who finds it swears the story changes slightly the second time.",
     ar: "كل طالب لقاها بيقسم إن القصة بتتغيّر شوية لما يسمعها تاني.",
+  },
+];
+
+// Ordered to match CLUES: calm egg → cracking egg → Cluby hatching out of it.
+const REVEAL_IMAGES = [
+  {
+    src: "/assets/story/egg-plain-clover.webp",
+    alt: { en: "An ivory egg with a faint clover mark", ar: "بيضة عاجية عليها علامة كلوفر خفيفة" },
+  },
+  {
+    src: "/assets/story/egg-cracked-glow.webp",
+    alt: { en: "The egg cracking open, glowing from within", ar: "البيضة بتتكسر وبتضوي من جواها" },
+  },
+  {
+    src: "/assets/story/cluby-hatching.webp",
+    alt: { en: "Cluby hatching out of the egg", ar: "كلوبي بيفقس من البيضة" },
   },
 ];
 
@@ -221,8 +249,16 @@ const EggTeaser = () => {
           dir={isAr ? "rtl" : "ltr"}
         >
           <DialogHeader>
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border-2 border-klovers-yellow">
-              <Sparkles className="h-5 w-5 text-klovers-yellow" aria-hidden="true" />
+            <div className="mx-auto h-32 w-32 overflow-hidden rounded-2xl border-2 border-klovers-yellow bg-charcoal">
+              <img
+                key={REVEAL_IMAGES[clueIndex].src}
+                src={REVEAL_IMAGES[clueIndex].src}
+                alt={isAr ? REVEAL_IMAGES[clueIndex].alt.ar : REVEAL_IMAGES[clueIndex].alt.en}
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="mx-auto -mt-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-klovers-yellow bg-charcoal">
+              <Sparkles className="h-4 w-4 text-klovers-yellow" aria-hidden="true" />
             </div>
             <DialogTitle className="text-center text-lg font-extrabold text-ivory">
               {isAr ? "فصل مخفي" : "A hidden chapter"}
