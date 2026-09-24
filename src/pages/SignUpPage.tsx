@@ -321,7 +321,7 @@ const SignUpPage = () => {
           </CardContent>
         </Card>
 
-        {/* 24 Sep 2026: the "Sara M., Egypt" quote that sat here was removed.
+        {/* 24 Sep 2026: the mini testimonial that sat here was removed.
             It matched no real review, and Klovers never invents reviews. */}
 
       </main>
