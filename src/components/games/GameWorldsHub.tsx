@@ -62,8 +62,45 @@ const ASSET = "/assets/characters";
 /** Cluby in the canon 3D plush style (only shown once he has hatched). */
 const CLUBY_3D = "/assets/cluby/cluby-hanbok.webp";
 const CLUBY_3D_WAVE = "/assets/cluby/cluby-wave.webp";
-/** The dormant clover egg, shown wherever Cluby would be before he hatches. */
-const EGG = "/assets/story/egg-0.webp";
+
+/**
+ * The dormant clover egg, drawn in the same flat storybook style as the rest
+ * of this page (charcoal outline, soft fills) so it sits with the boy, the
+ * girl and the painted scenery instead of looking like a pasted-in photo.
+ */
+const PageEgg = ({ className, glow = false }: { className?: string; glow?: boolean }) => (
+  <svg viewBox="0 0 100 120" className={className} aria-hidden="true" focusable="false">
+    <defs>
+      <radialGradient id="pe-shell" cx="36%" cy="30%" r="80%">
+        <stop offset="0" stopColor="#FFFFFF" />
+        <stop offset="0.55" stopColor="#FFF9EC" />
+        <stop offset="1" stopColor="#F3E6C8" />
+      </radialGradient>
+    </defs>
+    {glow && <ellipse cx="50" cy="66" rx="46" ry="50" fill="#FFF000" opacity="0.18" />}
+    <ellipse cx="50" cy="112" rx="26" ry="5" fill="#2E2E2E" opacity="0.12" />
+    <path
+      d="M50 8 C72 8 86 42 86 70 C86 94 70 110 50 110 C30 110 14 94 14 70 C14 42 28 8 50 8 Z"
+      fill="url(#pe-shell)"
+      stroke="#2E2E2E"
+      strokeWidth="3"
+      strokeLinejoin="round"
+    />
+    <path d="M30 34 Q36 22 46 18" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" opacity="0.9" />
+    <g transform="translate(50 70)" stroke="#2E2E2E" strokeWidth="1.8">
+      <path d="M1 8 Q3 16 8 20" fill="none" strokeLinecap="round" />
+      <circle cx="-5.5" cy="-5.5" r="6" fill="#25D366" />
+      <circle cx="5.5" cy="-5.5" r="6" fill="#25D366" />
+      <circle cx="-5.5" cy="5.5" r="6" fill="#25D366" />
+      <circle cx="5.5" cy="5.5" r="6" fill="#25D366" />
+      <circle cx="0" cy="0" r="1.6" fill="#BEEFCB" stroke="none" />
+    </g>
+    <g fill="#FFF000" stroke="#2E2E2E" strokeWidth="1.2" strokeLinejoin="round">
+      <path d="M86 20 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z" />
+      <path d="M12 46 l1.4 3.4 3.4 1.4 -3.4 1.4 -1.4 3.4 -1.4 -3.4 -3.4 -1.4 3.4 -1.4 Z" />
+    </g>
+  </svg>
+);
 
 type WorldKey = GameWorld["key"];
 
@@ -275,9 +312,13 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                 </>
               ) : (
                 <>
-                  <img src={EGG} alt="" aria-hidden="true" width={512} height={512} decoding="async" className="h-24 w-auto object-contain md:h-28" />
-                  <p lang={lang} className="mb-10 max-w-[11rem] rounded-2xl bg-white/85 px-3 py-2 text-start text-xs font-semibold leading-snug text-charcoal shadow-sm md:mb-12">
+                  <PageEgg glow className="h-28 w-auto md:h-32" />
+                  <p
+                    lang={lang}
+                    className="relative mb-16 max-w-[10.5rem] rounded-[1.4rem] border-2 border-charcoal bg-white px-3 py-2 text-center text-[13px] font-semibold leading-tight text-charcoal shadow-sm md:mb-20"
+                  >
                     {isAr ? "بيضة البرسيم بتصحى كل ما تتعلّم كوري أكتر…" : "The clover egg stirs a little more with every Korean word you learn…"}
+                    <span aria-hidden="true" className="absolute top-1/2 -left-[7px] h-3 w-3 -translate-y-1/2 rotate-45 border-b-2 border-l-2 border-charcoal bg-white" />
                   </p>
                 </>
               )}
@@ -371,8 +412,8 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         {/* Before the hatch: the egg card stands where Cluby's outfit cards will be. */}
         {!clubyAwake && (
           <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
-            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF9EC]">
-              <img src={EGG} alt="" aria-hidden="true" width={512} height={512} loading="lazy" className="h-16 w-auto object-contain" />
+            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF1C2]">
+              <PageEgg className="h-16 w-auto" />
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="font-bold text-foreground">{isAr ? "بيضة البرسيم" : "The clover egg"}</h2>
@@ -522,14 +563,18 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                         )}
                       />
                       {state === "current" && (
-                        <img
-                          src={clubyAwake ? CLUBY_3D_WAVE : EGG}
-                          alt=""
-                          aria-hidden="true"
-                          width={230}
-                          height={286}
-                          className="absolute -top-5 -end-4 h-14 w-auto object-contain drop-shadow md:h-16"
-                        />
+                        clubyAwake ? (
+                          <img
+                            src={CLUBY_3D_WAVE}
+                            alt=""
+                            aria-hidden="true"
+                            width={230}
+                            height={286}
+                            className="absolute -top-5 -end-4 h-14 w-auto object-contain drop-shadow md:h-16"
+                          />
+                        ) : (
+                          <PageEgg className="absolute -top-5 -end-3 h-12 w-auto drop-shadow md:h-14" />
+                        )
                       )}
                       {state === "done" && (
                         <span className="absolute top-2 end-2 grid h-7 w-7 place-items-center rounded-full border-2 border-charcoal bg-klovers-green">
@@ -677,15 +722,11 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             {isAr ? "“كل لعبة بتقرّبك من حلمك الكوري.”" : "“Every game brings you closer to your Korean dream.”"}
             {clubyAwake && <span className="mt-1 block text-sm">— {isAr ? "كلوبي" : "Cluby"}</span>}
           </p>
-          <img
-            src={clubyAwake ? CLUBY_3D_WAVE : EGG}
-            alt=""
-            aria-hidden="true"
-            width={230}
-            height={286}
-            loading="lazy"
-            className={cn("w-auto self-end object-contain", clubyAwake ? "h-28" : "h-20")}
-          />
+          {clubyAwake ? (
+            <img src={CLUBY_3D_WAVE} alt="" aria-hidden="true" width={230} height={286} loading="lazy" className="h-28 w-auto self-end object-contain" />
+          ) : (
+            <PageEgg className="h-20 w-auto self-end" />
+          )}
           <button
             type="button"
             onClick={seeAll}
