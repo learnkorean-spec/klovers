@@ -108,7 +108,7 @@ const FAQPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
               <Input
                 type="search"
-                aria-label={isAr ? "ابحث في الأسئلة" : "Search questions"}
+                aria-label={isAr ? "البحث في الأسئلة" : "Search questions"}
                 placeholder="Search questions..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -178,7 +178,7 @@ const FAQPage = () => {
             <div className="max-w-2xl mx-auto mt-16 text-center p-8 rounded-2xl bg-card border">
               <img
                 src="/assets/cluby/cluby-wave.webp"
-                alt={isAr ? "كلوبي بيسلّم" : "Cluby waving hello"}
+                alt={isAr ? "كلوبي يلوّح بالتحية" : "Cluby waving hello"}
                 width={314}
                 height={440}
                 loading="lazy"

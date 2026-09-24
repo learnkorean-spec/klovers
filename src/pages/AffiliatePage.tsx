@@ -122,7 +122,7 @@ export default function AffiliatePage() {
                 programme is built on, in the Klovers story style. */}
             <img
               src="/assets/cluby/picnic.webp"
-              alt={language === "ar" ? "صحاب بيتشاركوا نزهة على نهر الهان مع كلوبي" : "Friends sharing a picnic by the Han river with Cluby"}
+              alt={language === "ar" ? "أصدقاء يتشاركون نزهة على ضفة نهر الهان مع كلوبي" : "Friends sharing a picnic by the Han river with Cluby"}
               width={1600}
               height={900}
               loading="lazy"

@@ -27,23 +27,23 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const STEPS: { en: [string, string]; ar: [string, string] }[] = [
   {
     en: ["Watch for the story", "First watch with subtitles in your language. Enjoy it — you need to know what happens before you can study how it is said."],
-    ar: ["اتفرج على القصة", "أول مرة اتفرج بترجمة بلغتك واستمتع — لازم تعرف اللي بيحصل قبل ما تذاكر إزاي بيتقال."],
+    ar: ["المشاهدة من أجل القصة", "المشاهدة الأولى بترجمة إلى لغتك، وللمتعة وحدها. فهم ما يحدث يسبق دراسة طريقة قوله."],
   },
   {
     en: ["Pick one short scene", "Choose two or three minutes you liked. Short enough to replay many times."],
-    ar: ["اختار مشهد قصير", "اختار دقيقتين أو تلاتة عجبوك. قصير كفاية إنك تعيده كذا مرة."],
+    ar: ["اختيار مشهد قصير", "دقيقتان أو ثلاث من مشهد أعجبك، قصير بما يكفي لإعادته مرات كثيرة."],
   },
   {
     en: ["Replay it with Korean subtitles", "Pause on each line. Write down the words and endings you recognise, and look up the rest."],
-    ar: ["عيده بترجمة كوري", "وقّف عند كل جملة. اكتب الكلمات والنهايات اللي عارفها، ودوّر على الباقي."],
+    ar: ["الإعادة بترجمة كورية", "التوقف عند كل جملة، وتدوين الكلمات والنهايات المألوفة، ثم البحث عن الباقي."],
   },
   {
     en: ["Say the lines out loud", "Repeat each line after the actor, copying the rhythm. Then try the scene with no subtitles at all."],
-    ar: ["قول الجمل بصوت عالي", "كرر كل جملة بعد الممثل وقلّد الإيقاع. وبعدين جرّب المشهد من غير ترجمة خالص."],
+    ar: ["نطق الجمل بصوت مسموع", "ترديد كل جملة بعد الممثل مع تقليد إيقاعها، ثم تجربة المشهد كاملًا بلا أي ترجمة."],
   },
   {
     en: ["Keep a phrase notebook", "One line per phrase: the Korean, what it means, the scene it came from, and one sentence of your own with it."],
-    ar: ["خلي عندك كشكول جمل", "سطر لكل جملة: الكوري، معناها، المشهد اللي جت منه، وجملة من عندك بيها."],
+    ar: ["دفتر للعبارات", "سطر لكل عبارة: الجملة الكورية، ومعناها، والمشهد الذي جاءت منه، وجملة جديدة من تأليفك بها."],
   },
 ];
 
@@ -69,26 +69,26 @@ const KDramaLearningPage = () => {
             <div className="grid items-center gap-10 lg:grid-cols-2">
               <div>
                 <span className="inline-block rounded-full bg-klovers-yellow px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-charcoal">
-                  {tr("K-dramas", "الدراما الكورية")}
+                  {tr("Culture Street · K-dramas", "شارع الثقافة · الدراما الكورية")}
                 </span>
                 <h1 className="mt-5 text-4xl md:text-5xl font-bold text-foreground leading-tight">
-                  {tr("Learn Korean from the dramas you already watch", "اتعلم كوري من المسلسلات اللي بتتفرج عليها")}
+                  {tr("Learn Korean from the dramas you already watch", "تعلُّم الكورية من المسلسلات المفضّلة")}
                 </h1>
                 <p className="mt-5 text-lg md:text-xl text-foreground/70 leading-relaxed">
                   {tr(
                     "Watching alone will not teach you Korean, but studying one scene at a time will. Here is a way to do it that you can repeat with any show.",
-                    "الفرجة لوحدها مش هتعلمك كوري، لكن مذاكرة مشهد واحد في المرة هتعلمك. دي طريقة تقدر تكررها مع أي مسلسل.",
+                    "المشاهدة وحدها لا تعلّم الكورية، أما دراسة مشهد واحد في كل مرة فتعلّمها. هذه طريقة يمكن تكرارها مع أي مسلسل.",
                   )}
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-3">
                   <Button size="lg" asChild className="rounded-full font-bold">
                     <Link to="/free-trial">
-                      {tr("Book a free class", "احجز حصة مجانية")}
+                      {tr("Book a free class", "حجز حصة مجانية")}
                       <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" asChild className="rounded-full">
-                    <Link to="/placement-test">{tr("Find your level", "اعرف مستواك")}</Link>
+                    <Link to="/placement-test">{tr("Find your level", "معرفة المستوى")}</Link>
                   </Button>
                 </div>
               </div>
@@ -114,7 +114,7 @@ const KDramaLearningPage = () => {
         {/* Method */}
         <section className="py-16 border-b">
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-8">{tr("One scene at a time", "مشهد واحد في المرة")}</h2>
+            <h2 className="text-3xl font-bold mb-8">{tr("One scene at a time", "مشهد واحد في كل مرة")}</h2>
             <ol className="space-y-4">
               {STEPS.map((s, i) => {
                 const [title, body] = isAr ? s.ar : s.en;
@@ -132,11 +132,11 @@ const KDramaLearningPage = () => {
               })}
             </ol>
             <div className="mt-8 p-6 rounded-2xl bg-card border-2 border-foreground/80">
-              <p className="font-bold mb-3">{tr("A notebook line looks like this", "سطر في الكشكول شكله كده")}</p>
+              <p className="font-bold mb-3">{tr("A notebook line looks like this", "هكذا يبدو سطر في الدفتر")}</p>
               <div className="bg-muted p-4 rounded-xl text-sm text-foreground/80 space-y-1">
                 <p lang="ko" className="font-bold text-foreground">정말이야?</p>
-                <p>{tr("\"Really?\" — a character hears surprising news.", "«بجد؟» — شخصية بتسمع خبر مفاجئ.")}</p>
-                <p>{tr("Mine: 정말이야? 내일 시험이야? (Really? The exam is tomorrow?)", "جملتي: 정말이야? 내일 시험이야؟ (بجد؟ الامتحان بكرة؟)")}</p>
+                <p>{tr("\"Really?\" — a character hears surprising news.", "«حقًّا؟» — شخصية تسمع خبرًا مفاجئًا.")}</p>
+                <p>{tr("Mine: 정말이야? 내일 시험이야? (Really? The exam is tomorrow?)", "جملة من تأليفي: 정말이야? 내일 시험이야؟ (حقًّا؟ الامتحان غدًا؟)")}</p>
               </div>
             </div>
           </div>
@@ -145,7 +145,7 @@ const KDramaLearningPage = () => {
         {/* Choosing a drama */}
         <section className="py-16 border-b bg-muted/40">
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-8">{tr("Choosing a drama to study", "تختار مسلسل تذاكر بيه إزاي")}</h2>
+            <h2 className="text-3xl font-bold mb-8">{tr("Choosing a drama to study", "اختيار مسلسل للدراسة")}</h2>
             <div className="grid md:grid-cols-2 gap-5">
               <div className="p-6 rounded-2xl border bg-card">
                 <h3 className="inline-block text-sm font-bold mb-3 px-3 py-1 rounded-full bg-klovers-yellow text-charcoal">
@@ -154,18 +154,18 @@ const KDramaLearningPage = () => {
                 <p className="text-foreground/70 leading-relaxed">
                   {tr(
                     "Modern stories set at work, at school or at home, with standard Seoul speech and everyday conversation — romantic comedies and slice-of-life shows are a good fit.",
-                    "قصص حديثة في الشغل أو المدرسة أو البيت، بلهجة سيول العادية وكلام يومي — الكوميديا الرومانسية والمسلسلات الاجتماعية مناسبة.",
+                    "قصص حديثة في العمل أو المدرسة أو البيت، بلهجة سيول المعيارية وحوار يومي؛ الكوميديا الرومانسية ومسلسلات الحياة اليومية مناسبة.",
                   )}
                 </p>
               </div>
               <div className="p-6 rounded-2xl border bg-card">
                 <h3 className="inline-block text-sm font-bold mb-3 px-3 py-1 rounded-full bg-charcoal text-klovers-yellow">
-                  {tr("Better saved for later", "أحسن تأجلها لبعدين")}
+                  {tr("Better saved for later", "الأفضل تأجيله إلى وقت لاحق")}
                 </h3>
                 <p className="text-foreground/70 leading-relaxed">
                   {tr(
                     "Historical dramas (old-fashioned speech), shows in strong regional dialects, and fast thrillers full of slang or technical words — medical, legal, military.",
-                    "المسلسلات التاريخية (لغة قديمة)، والمسلسلات بلهجات محلية قوية، والإثارة السريعة المليانة عامية أو مصطلحات — طبية أو قانونية أو عسكرية.",
+                    "المسلسلات التاريخية (لغة قديمة)، والمسلسلات ذات اللهجات المحلية القوية، ومسلسلات الإثارة السريعة المليئة بالعامية أو المصطلحات: الطبية أو القانونية أو العسكرية.",
                   )}
                 </p>
               </div>
@@ -176,12 +176,12 @@ const KDramaLearningPage = () => {
         {/* Where classes fit */}
         <section className="py-16 border-b">
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-8">{tr("Where live classes fit", "الحصص المباشرة مكانها فين")}</h2>
+            <h2 className="text-3xl font-bold mb-8">{tr("Where live classes fit", "مكان الحصص المباشرة")}</h2>
             <ul className="space-y-3">
               {[
-                tr("Dramas give you listening and real phrases. A class explains the grammar behind them.", "المسلسلات بتديك استماع وجمل حقيقية. الحصة بتشرح القواعد اللي وراها."),
-                tr("You can bring a line you did not understand and ask about it.", "تقدر تجيب جملة مفهمتهاش وتسأل عنها."),
-                tr("One live class a week, plus a scene or two between classes, is a pace most people can keep.", "حصة مباشرة في الأسبوع، ومشهد أو اتنين بين الحصص، ده إيقاع أغلب الناس تقدر تحافظ عليه."),
+                tr("Dramas give you listening and real phrases. A class explains the grammar behind them.", "المسلسلات تمنح الاستماع والعبارات الحقيقية، والحصة تشرح القواعد التي وراءها."),
+                tr("You can bring a line you did not understand and ask about it.", "يمكن إحضار أي جملة غير مفهومة والسؤال عنها."),
+                tr("One live class a week, plus a scene or two between classes, is a pace most people can keep.", "حصة مباشرة في الأسبوع، ومشهد أو اثنان بين الحصص: إيقاع يستطيع معظم الناس المحافظة عليه."),
               ].map((line) => (
                 <li key={line} className="flex items-start gap-3 text-foreground">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
@@ -193,24 +193,24 @@ const KDramaLearningPage = () => {
         </section>
 
         {/* CTA */}
-        <section className="py-20 bg-charcoal text-white">
+        <section className="py-20 bg-charcoal text-ivory">
           <div className="container mx-auto px-4 max-w-4xl text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              {tr("Bring a scene to your first class", "هات مشهد معاك في أول حصة")}
+              {tr("Bring a scene to your first class", "مشهد واحد إلى الحصة الأولى")}
             </h2>
-            <p className="text-lg mb-8 text-white/80 max-w-2xl mx-auto">
+            <p className="text-lg mb-8 text-ivory/80 max-w-2xl mx-auto">
               {tr(
                 "The first class is free. Meet your teacher, try a real class, and ask about a line from the drama you are watching.",
-                "أول حصة مجانية. اتعرّف على معلمتك، وجرّب حصة حقيقية، واسأل عن جملة من المسلسل اللي بتتفرج عليه.",
+                "الحصة الأولى مجانية: تعارف مع المعلمة، وتجربة حصة حقيقية، وسؤال عن جملة من المسلسل المفضّل.",
               )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-klovers-yellow text-charcoal hover:bg-klovers-yellow/90 rounded-full font-bold" asChild>
                 <Link to="/free-trial" className="flex items-center gap-2">
-                  {tr("Book a free class", "احجز حصة مجانية")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  {tr("Book a free class", "حجز حصة مجانية")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="bg-transparent text-white border-white hover:bg-white/10 hover:text-white rounded-full" asChild>
+              <Button size="lg" variant="outline" className="bg-transparent text-ivory border-ivory hover:bg-ivory/10 hover:text-ivory rounded-full" asChild>
                 <Link to="/blog/best-kdrama-learn-korean-difficulty-ranked">{tr("Drama picks by difficulty", "ترشيحات حسب الصعوبة")}</Link>
               </Button>
             </div>

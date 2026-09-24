@@ -34,9 +34,9 @@ const COMPARISONS: {
 }[] = [
   {
     titleEn: "Endings that show a word's job",
-    titleAr: "نهايات بتوضح وظيفة الكلمة",
+    titleAr: "نهايات تُظهر وظيفة الكلمة",
     bodyEn: "Arabic case endings tell you which word is the subject and which is the object. Korean does the same job with small particles after the word — 는 for the topic, 을/를 for the object.",
-    bodyAr: "في العربي، علامات الإعراب بتوضح مين الفاعل ومين المفعول. الكوري بيعمل نفس الحاجة بأدوات صغيرة بعد الكلمة — 는 للموضوع، و을/를 للمفعول به.",
+    bodyAr: "في العربية تُميّز علامات الإعراب الفاعل من المفعول به. والكورية تؤدي الوظيفة نفسها بأدوات صغيرة بعد الكلمة: 는 للموضوع، و을/를 للمفعول به.",
     arabic: "قرأتُ الكتابَ",
     korean: "나는 책을 읽어요",
     noteEn: "나 (I) + 는 · 책 (book) + 을 · 읽어요 (read)",
@@ -44,32 +44,32 @@ const COMPARISONS: {
   },
   {
     titleEn: "Speaking politely changes the verb",
-    titleAr: "الأدب في الكلام بيغيّر الفعل",
+    titleAr: "التأدّب في الكلام يغيّر الفعل",
     bodyEn: "Arabic speakers already switch register — حضرتك or إنت, فصحى or عامية. Korean builds politeness into the verb ending, so the idea is familiar even though the form is new.",
-    bodyAr: "المتكلم بالعربي متعود يغيّر طريقة كلامه — حضرتك أو إنت، فصحى أو عامية. الكوري بيحط الأدب في نهاية الفعل، فالفكرة مألوفة حتى لو الشكل جديد.",
+    bodyAr: "اعتاد الناطق بالعربية تغيير أسلوب كلامه: «حضرتك» أو «أنت»، فصحى أو عامية. والكورية تضع التأدّب في نهاية الفعل، فالفكرة مألوفة وإن كان الشكل جديدًا.",
     arabic: "إزيّك؟ / إزيّ حضرتك؟",
     korean: "안녕? / 안녕하세요?",
     noteEn: "casual / polite",
-    noteAr: "عادي / مؤدب",
+    noteAr: "عفوي / مهذّب",
   },
 ];
 
 const DIFFERENCES: { en: string; ar: string }[] = [
   {
     en: "The verb comes last. Korean sentences end with the verb: 나는 책을 읽어요 is literally \"I the-book read\".",
-    ar: "الفعل بييجي في الآخر. الجملة الكورية بتخلص بالفعل: 나는 책을 읽어요 حرفيًا «أنا الكتاب أقرأ».",
+    ar: "الفعل يأتي في النهاية؛ فالجملة الكورية تنتهي بالفعل: 나는 책을 읽어요 حرفيًا «أنا الكتاب أقرأ».",
   },
   {
     en: "Adjectives come before the noun: 빨간 책 (red book), where Arabic says كتاب أحمر.",
-    ar: "الصفة بتيجي قبل الاسم: 빨간 책 (كتاب أحمر)، عكس العربي.",
+    ar: "الصفة تأتي قبل الاسم: 빨간 책 (كتاب أحمر)، على عكس العربية.",
   },
   {
     en: "Hangul is read left to right, in syllable blocks. It has 24 basic letters and is quick to learn — we teach it in four classes.",
-    ar: "الهانغول بيتقري من الشمال لليمين، في مقاطع على شكل مربعات. فيه ٢٤ حرف أساسي وسهل تتعلمه — بنعلّمه في ٤ حصص.",
+    ar: "يُقرأ الهانغول من اليسار إلى اليمين، في مقاطع على شكل مربعات. فيه ٢٤ حرفًا أساسيًا وتعلّمه سريع؛ ونُدرّسه في ٤ حصص.",
   },
   {
     en: "Some sounds need practice: Arabic has no P, so ㅂ and ㅍ are easy to mix up, and Korean has three kinds of each stop (ㄱ ㅋ ㄲ).",
-    ar: "بعض الأصوات محتاجة تدريب: العربي مفيهوش حرف P، فسهل تلخبط بين ㅂ وㅍ، والكوري فيه ٣ أنواع لنفس الصوت (ㄱ ㅋ ㄲ).",
+    ar: "بعض الأصوات يحتاج إلى تدريب: لا يوجد في العربية حرف P، لذا يسهل الخلط بين ㅂ وㅍ، وفي الكورية ٣ أنواع لكل صوت انفجاري (ㄱ ㅋ ㄲ).",
   },
 ];
 
@@ -95,32 +95,32 @@ const LearnKoreanArabicSpeakersPage = () => {
         <section className="bg-charcoal text-ivory py-16 md:py-24">
           <div className="container mx-auto max-w-4xl px-4">
             <span className="inline-block rounded-full bg-klovers-yellow px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-charcoal">
-              {tr("For Arabic speakers", "للناطقين بالعربية")}
+              {tr("Conversation Café · For Arabic speakers", "مقهى المحادثة · للناطقين بالعربية")}
             </span>
             <h1 className="mt-5 text-3xl md:text-5xl font-extrabold leading-tight">
-              {tr("Learning Korean when your first language is Arabic", "تتعلم كوري ولغتك الأم عربي")}
+              {tr("Learning Korean when your first language is Arabic", "تعلُّم الكورية لمن لغته الأم العربية")}
             </h1>
             <p className="mt-4 max-w-2xl text-base md:text-lg text-ivory/80 leading-relaxed">
               {tr(
                 "Some of it will feel familiar, some of it is new. Here is which is which, and how we teach it — with explanations in Arabic.",
-                "في حاجات هتحسها مألوفة، وحاجات جديدة. هنا هتعرف دي من دي، وإزاي بنعلّمها — بشرح بالعربي.",
+                "بعضها سيبدو مألوفًا، وبعضها جديد. هنا يتّضح هذا من ذاك، وطريقة تدريسه، بشرح بالعربية.",
               )}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Button size="lg" asChild className="rounded-full font-bold">
                 <Link to="/free-trial">
-                  {tr("Book a free class", "احجز حصة مجانية")}
+                  {tr("Book a free class", "حجز حصة مجانية")}
                   <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="rounded-full bg-transparent text-ivory border-ivory/40 hover:bg-ivory/10">
-                <Link to="/placement-test">{tr("Find your level", "اعرف مستواك")}</Link>
+                <Link to="/placement-test">{tr("Find your level", "معرفة المستوى")}</Link>
               </Button>
             </div>
             {/* Story scene under the buttons, so it never pushes them down. */}
             <img
               src="/assets/story/world-conversation-cafe.webp"
-              alt={tr("The Conversation Café from the Klovers story, where friends practise Korean together", "كافيه المحادثة من قصة Klovers، حيث الصحاب بيتمرّنوا على الكوري سوا")}
+              alt={tr("The Conversation Café from the Klovers story, where friends practise Korean together", "مقهى المحادثة من قصة Klovers، حيث يتدرّب الأصدقاء على الكورية معًا")}
               width={1600}
               height={900}
               decoding="async"
@@ -133,7 +133,7 @@ const LearnKoreanArabicSpeakersPage = () => {
         <section className="py-14 md:py-20">
           <div className="container mx-auto max-w-4xl px-4">
             <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-6">
-              {tr("What Arabic already gives you", "العربي بيديك إيه")}
+              {tr("What Arabic already gives you", "ما تقدّمه العربية مسبقًا")}
             </h2>
             <div className="grid gap-5 md:grid-cols-2">
               {COMPARISONS.map((c) => (
@@ -142,11 +142,11 @@ const LearnKoreanArabicSpeakersPage = () => {
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{isAr ? c.bodyAr : c.bodyEn}</p>
                   <div className="mt-4 grid grid-cols-2 gap-2 text-center">
                     <div className="rounded-xl bg-muted px-3 py-3">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("Arabic", "عربي")}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("Arabic", "العربية")}</p>
                       <p className="mt-1 font-bold text-foreground" dir="rtl" lang="ar">{c.arabic}</p>
                     </div>
                     <div className="rounded-xl bg-klovers-yellow px-3 py-3">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-charcoal/80">{tr("Korean", "كوري")}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-charcoal/80">{tr("Korean", "الكورية")}</p>
                       <p className="mt-1 font-bold text-charcoal" lang="ko">{c.korean}</p>
                     </div>
                   </div>
@@ -161,7 +161,7 @@ const LearnKoreanArabicSpeakersPage = () => {
         <section className="py-14 md:py-20 bg-card border-y border-border">
           <div className="container mx-auto max-w-4xl px-4">
             <h2 className="text-2xl md:text-3xl font-extrabold text-foreground mb-6">
-              {tr("What will be new", "إيه الجديد عليك")}
+              {tr("What will be new", "ما الجديد")}
             </h2>
             <ul className="space-y-3">
               {DIFFERENCES.map((d) => (
@@ -183,8 +183,8 @@ const LearnKoreanArabicSpeakersPage = () => {
             <div className="grid gap-4 sm:grid-cols-3">
               {[
                 [tr("Hangul Foundation", "تأسيس الهانغول"), tr("4 classes · read and write from zero", "٤ حصص · قراءة وكتابة من الصفر")],
-                [tr("Levels 1 to 6", "المستويات من ١ لـ ٦"), tr("24 classes per level, about 6 months each", "٢٤ حصة لكل مستوى، حوالي ٦ شهور")],
-                [tr("One class a week", "حصة في الأسبوع"), tr("60 minutes, live, in a small group or privately", "٦٠ دقيقة، مباشرة، في مجموعة صغيرة أو برايفت")],
+                [tr("Levels 1 to 6", "المستويات من ١ إلى ٦"), tr("24 classes per level, about 6 months each", "٢٤ حصة لكل مستوى، نحو ٦ أشهر لكل مستوى")],
+                [tr("One class a week", "حصة في الأسبوع"), tr("60 minutes, live, in a small group or privately", "٦٠ دقيقة، مباشرة، في مجموعة صغيرة أو بشكل فردي")],
               ].map(([title, body]) => (
                 <div key={title} className={card}>
                   <h3 className="font-bold text-foreground">{title}</h3>
@@ -195,18 +195,18 @@ const LearnKoreanArabicSpeakersPage = () => {
             <p className="mt-6 text-base text-foreground/80 leading-relaxed">
               {tr(
                 "Your teacher is Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years. She explains in Arabic or English and compares Korean with Arabic wherever that makes a point clearer. In Egypt you can pay by Vodafone Cash or InstaPay.",
-                "معلمتك ريهام الشرقاوي، خريجة الألسن قسم اللغة والأدب الكوري، وبتدرّس كوري من ١٣ سنة. بتشرح بالعربي أو الإنجليزي وبتقارن الكوري بالعربي لما ده يوضّح الفكرة. في مصر تقدر تدفع بفودافون كاش أو إنستاباي.",
+                "المعلمة ريهام الشرقاوي، خريجة كلية الألسن قسم اللغة الكورية وآدابها، وتدرّس الكورية منذ ١٣ عامًا. تشرح بالعربية أو الإنجليزية، وتقارن الكورية بالعربية حين يوضّح ذلك الفكرة. في مصر يمكن الدفع عبر فودافون كاش أو إنستاباي.",
               )}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Button size="lg" asChild className="rounded-full font-bold">
                 <Link to="/free-trial">
-                  {tr("Book a free class", "احجز حصة مجانية")}
+                  {tr("Book a free class", "حجز حصة مجانية")}
                   <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="rounded-full">
-                <Link to="/courses">{tr("See all levels", "شوف كل المستويات")}</Link>
+                <Link to="/courses">{tr("See all levels", "عرض كل المستويات")}</Link>
               </Button>
             </div>
           </div>

@@ -17,7 +17,7 @@ const BOOKS = [
     subtitleEn: "TOPIK 1 & 2 · 75+ Lessons",
     subtitleAr: "توبيك ١ و ٢ · ٧٥+ درس",
     descEn: "Master Korean from Hangul to advanced grammar through worlds and missions.",
-    descAr: "أتقن الكورية من الهانغول إلى القواعد المتقدمة عبر العوالم والمهام.",
+    descAr: "إتقان الكورية من الهانغول إلى القواعد المتقدمة عبر العوالم والمهام.",
     icon: BookOpen,
     image: "/assets/story/world-hangul-village.webp",
     altEn: "Painted Hangul Village, the first world of the Klovers story",
@@ -30,7 +30,7 @@ const BOOKS = [
     subtitleEn: "32 Daily Life Categories",
     subtitleAr: "٣٢ فئة حياتية يومية",
     descEn: "Learn Korean through everyday actions — sleeping, cooking, cleaning & more.",
-    descAr: "تعلم الكورية من خلال الأفعال اليومية — النوم، الطبخ، التنظيف والمزيد.",
+    descAr: "تعلُّم الكورية من خلال الأفعال اليومية: النوم والطبخ والتنظيف وغيرها.",
     icon: Sun,
     image: "/assets/story/world-conversation-cafe.webp",
     altEn: "A cosy painted Korean café where everyday conversations happen",
@@ -41,9 +41,9 @@ const BOOKS = [
     titleEn: "K-Drama Korean",
     titleAr: "كورية الدراما",
     subtitleEn: "30 Drama-Based Lessons",
-    subtitleAr: "٣٠ درس من الدراما الكورية",
+    subtitleAr: "٣٠ درسًا من الدراما الكورية",
     descEn: "Learn Korean through iconic K-Drama dialogues, slang, and cultural context.",
-    descAr: "تعلم الكورية من خلال حوارات الدراما الأيقونية والعامية والسياق الثقافي.",
+    descAr: "تعلُّم الكورية من خلال حوارات الدراما الشهيرة، والتعابير العامية، والسياق الثقافي.",
     icon: Clapperboard,
     image: "/assets/story/world-culture-street.webp",
     altEn: "A lively painted Korean culture street at dusk",
@@ -56,7 +56,7 @@ const BOOKS = [
     subtitleEn: "57 Pattern-Focused Lessons · All 6 Levels",
     subtitleAr: "٥٧ درسًا على الأنماط · جميع المستويات الست",
     descEn: "Deep-dive every Korean grammar pattern from basic particles to classical literary style.",
-    descAr: "ادرس كل نمط قواعدي كوري بعمق — من الجسيمات الأساسية إلى الأسلوب الأدبي الكلاسيكي.",
+    descAr: "دراسة معمّقة لكل نمط قواعدي كوري، من الأدوات الأساسية إلى الأسلوب الأدبي الكلاسيكي.",
     icon: Brain,
     image: "/assets/story/world-seoul-journey.webp",
     altEn: "A painted journey across Seoul, from old gates to city lights",
@@ -70,7 +70,7 @@ const BOOKS = [
     subtitleEn: "15 Visual Scene Lessons",
     subtitleAr: "١٥ درساً بالصور",
     descEn: "Learn Korean vocabulary through beautiful illustrated scenes — bedroom, café, park and more.",
-    descAr: "تعلم مفردات الكورية من خلال مشاهد مصوّرة جميلة — غرفة النوم، الكافيه، الحديقة والمزيد.",
+    descAr: "تعلُّم المفردات الكورية من خلال مشاهد مصوّرة: غرفة النوم والمقهى والحديقة وغيرها.",
     icon: ImageIcon,
     image: "/assets/story/world-vocabulary-market.webp",
     altEn: "A colourful painted Korean market full of things to name",
@@ -93,17 +93,17 @@ const TextbookHubPage = () => {
         <section className="container mx-auto px-4 max-w-4xl mb-12">
           <div className="grid items-center gap-8 md:grid-cols-2">
             <div className="text-center md:text-start">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-klovers-yellow text-[#2E2E2E] text-sm font-bold mb-6 border border-foreground/15">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-klovers-yellow text-charcoal text-sm font-bold mb-6 border border-foreground/15">
                 <Sparkles className="h-4 w-4" />
                 {isAr ? "مكتبة الكتب" : "Book Library"}
               </div>
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-                {isAr ? "اختر كتابك" : "Choose Your Book"}
+                {isAr ? "اختيار الكتاب" : "Choose Your Book"}
               </h1>
               <p className="text-muted-foreground max-w-xl mx-auto md:mx-0 text-lg">
                 {isAr
-                  ? "اختر كتاباً تعليمياً وابدأ رحلتك في تعلم الكورية"
-                  : "Pick a learning book and start your Korean journey"}
+                  ? "كل كتاب يفتح بابًا على عالم من قصة Klovers، ومن هناك تبدأ الرحلة."
+                  : "Each book opens a door into one world of the Klovers story. Pick one, and the journey starts there."}
               </p>
             </div>
             <div className="overflow-hidden rounded-3xl border border-border shadow-lg bg-muted">
@@ -113,7 +113,7 @@ const TextbookHubPage = () => {
                 height={800}
                 alt={
                   isAr
-                    ? "صديقان يذاكران الكورية مع كلوبي في مقهى"
+                    ? "صديقان يدرسان الكورية مع كلوبي في مقهى"
                     : "Two friends studying Korean with Cluby at a café"
                 }
                 className="h-full w-full object-cover aspect-[3/2]"
@@ -146,12 +146,12 @@ const TextbookHubPage = () => {
                       decoding="async"
                     />
                     {hasBadge && (
-                      <span className="absolute top-3 end-3 text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#2E2E2E] text-klovers-yellow">
+                      <span className="absolute top-3 end-3 text-xs font-bold px-2.5 py-0.5 rounded-full bg-charcoal text-klovers-yellow">
                         {(book as { badge?: string }).badge}
                       </span>
                     )}
-                    <span className="absolute bottom-3 start-3 flex h-10 w-10 items-center justify-center rounded-full bg-klovers-yellow border-2 border-[#2E2E2E] shadow-md">
-                      <Icon className="h-5 w-5 text-[#2E2E2E]" />
+                    <span className="absolute bottom-3 start-3 flex h-10 w-10 items-center justify-center rounded-full bg-klovers-yellow border-2 border-charcoal shadow-md">
+                      <Icon className="h-5 w-5 text-charcoal" />
                     </span>
                   </div>
                   <div className="p-6">
