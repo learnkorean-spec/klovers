@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trustCopy } from "@/lib/trustFigures";
-import { Gift, Users, Clock, Star, ArrowRight, Video, ClipboardList, Sparkles, CalendarDays, MessageCircle } from "lucide-react";
+import { Gift, Users, Clock, Star, ArrowRight, Video, ClipboardList, Sparkles, CalendarDays, MessageCircle, Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AvatarInitials from "@/components/AvatarInitials";
 
@@ -362,7 +362,7 @@ const FreeTrialPage = () => {
               <div className="relative mx-auto w-full max-w-sm md:max-w-none">
                 <img
                   src="/assets/cluby/cafe.webp"
-                  alt={isAr ? "صديقان مع كلوبي بيذاكروا الكورية على ترابيزة في كافيه" : "Two friends and Cluby studying Korean together at a café table"}
+                  alt={isAr ? "صديقان يدرسان الكورية مع كلوبي على طاولة في مقهى" : "Two friends and Cluby studying Korean together at a café table"}
                   width={1200}
                   height={800}
                   decoding="async"
@@ -370,7 +370,7 @@ const FreeTrialPage = () => {
                 />
                 <div className="absolute -bottom-4 start-4 rounded-2xl bg-foreground px-4 py-3 text-background shadow-xl">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-primary">{isAr ? "حصة تجريبية" : "Free Trial"}</p>
-                  <p className="text-sm font-black leading-tight">{isAr ? "من غير كارت بنكي" : "No credit card"}</p>
+                  <p className="text-sm font-black leading-tight">{isAr ? "بلا بطاقة بنكية" : "No credit card"}</p>
                 </div>
               </div>
 
@@ -404,18 +404,18 @@ const FreeTrialPage = () => {
           </div>
         </section>
 
-        {/* ── WHAT TO EXPECT — dark ─────────────────────── */}
+        {/* ── WHAT TO EXPECT — dark ───────────────────── */}
         <section className="py-20 bg-foreground">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-3xl font-black text-background text-center mb-12">
               {t("freeTrial.whatToExpectTitle")}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border border-white/10 rounded-3xl overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-background/10 border border-background/10 rounded-3xl overflow-hidden">
               {STEPS.map(({ icon: Icon, num, text }) => (
-                <div key={num} className="flex flex-col items-start gap-5 bg-foreground hover:bg-white/5 transition-colors p-8 group">
+                <div key={num} className="flex flex-col items-start gap-5 bg-foreground hover:bg-background/5 transition-colors p-8 group">
                   <div className="flex items-center gap-3">
                     <span className="text-5xl font-black text-primary leading-none">{num}</span>
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-background/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                       <Icon className="h-5 w-5 text-background" />
                     </div>
                   </div>
@@ -454,11 +454,11 @@ const FreeTrialPage = () => {
             ) : SLOT_HIGHLIGHTS.length === 0 ? (
               <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center mb-8">
                 <p className="text-sm font-semibold text-foreground mb-1">
-                  {isAr ? "مواعيد الأسبوع الجاي لسه بتتفتح." : "Next week's sessions are still opening up."}
+                  {isAr ? "مواعيد الأسبوع القادم تُفتح تباعًا." : "Next week's sessions are still opening up."}
                 </p>
                 <p className="text-xs text-muted-foreground mb-4">
                   {isAr
-                    ? "ابعتلنا على واتساب ونحجزلك أول ميعاد بيفتح."
+                    ? "يمكن التواصل عبر واتساب لحجز أول مقعد يُفتح."
                     : "Message us on WhatsApp and we'll hold you the first seat that opens."}
                 </p>
                 <Button
@@ -467,7 +467,7 @@ const FreeTrialPage = () => {
                   onClick={() => trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "free_trial_no_slots_whatsapp" })}
                 >
                   <MessageCircle className="h-4 w-4" />
-                  {isAr ? "واتساب" : "WhatsApp Us"}
+                  {isAr ? "التواصل عبر واتساب" : "WhatsApp Us"}
                 </Button>
               </div>
             ) : (
@@ -475,7 +475,7 @@ const FreeTrialPage = () => {
                 {SLOT_HIGHLIGHTS.map((s, i) => (
                   <div
                     key={i}
-                    className="border-2 border-foreground rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_black] hover:shadow-[2px_2px_0px_0px_black] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-default"
+                    className="border-2 border-foreground rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_hsl(var(--foreground))] hover:shadow-[2px_2px_0px_0px_hsl(var(--foreground))] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-default"
                   >
                     {/* Header */}
                     <div className="bg-foreground py-2.5 px-4 text-center">
@@ -517,8 +517,8 @@ const FreeTrialPage = () => {
 
             {/* Trust guarantee */}
             <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
-              <span className="text-foreground font-bold">✓</span>
-              <span>{isAr ? "الحصة التجريبية مجانية — من غير دفع ومن غير بطاقة بنكية." : "The trial class is free — nothing to pay, no card needed."}</span>
+              <Check className="h-3.5 w-3.5 shrink-0 text-foreground" strokeWidth={3} aria-hidden="true" />
+              <span>{isAr ? "الحصة التجريبية مجانية، بلا دفع وبلا بطاقة بنكية." : "The trial class is free — nothing to pay, no card needed."}</span>
             </div>
           </div>
         </section>
