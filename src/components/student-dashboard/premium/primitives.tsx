@@ -67,9 +67,10 @@ export function BrandIcon({
 }
 
 /**
- * Progress bar: charcoal track, neon (#39FF14) fill. Neon measures 1.7:1 on
- * ivory, so it is only ever drawn on the charcoal track (≈11:1) — never as
- * text and never straight on a light surface.
+ * Progress bar: charcoal track, Klovers neon red (#FF3131) fill — Re's pick
+ * for the dashboard's progress colour (24 Sep 2026). Red on the charcoal
+ * track is 3.7:1 (passes the 3:1 rule for graphics). It is a fill only —
+ * never text: red text on ivory/white is under 4.5:1.
  */
 export function ProgressBar({
   value, label, valueText, size = "md", tone = "live", className,
@@ -91,7 +92,7 @@ export function ProgressBar({
       <div
         className={cn(
           "h-full rounded-full motion-safe:transition-[width] motion-safe:duration-700 motion-safe:ease-out",
-          tone === "live" ? "bg-live-bright" : "bg-primary",
+          tone === "live" ? "bg-[#FF3131]" : "bg-primary",
         )}
         style={{ width: `${pct}%` }}
       />

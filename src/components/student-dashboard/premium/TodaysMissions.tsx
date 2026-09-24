@@ -51,10 +51,10 @@ export function TodaysMissions({
         )}
       </div>
 
-      {/* Segmented meter: one segment per mission. Neon fills carry a charcoal edge so they read on white. */}
+      {/* Segmented meter: one segment per mission. Red (#FF3131, same as the progress bars) fills carry a charcoal edge so they read on white. */}
       <div className="mt-3 grid grid-cols-3 gap-1.5" aria-hidden="true">
         {Array.from({ length: total }).map((_, i) => (
-          <span key={i} className={cn("h-2 rounded-full", i < done ? "bg-live-bright ring-1 ring-inset ring-foreground" : "bg-foreground/10")} />
+          <span key={i} className={cn("h-2 rounded-full", i < done ? "bg-[#FF3131] ring-1 ring-inset ring-foreground" : "bg-foreground/10")} />
         ))}
       </div>
 
