@@ -32,11 +32,6 @@ import {
  * illustrated/cartoon. Flagging this as a canon visual-style note rather
  * than blocking on it, since Re supplied and approved this exact image.
  *
- * The "Tap the Egg" button is intentionally OUTLINED, not filled yellow:
- * FinalCTA sits directly below with a solid yellow "Book Your Free Class"
- * button, and the palette rule is never two solid-yellow buttons in one
- * view.
- *
  * 24 Sep 2026 (STORY CONFLICT, resolved): Re initially asked for taps to
  * count toward "their league." This page has no auth context and renders
  * for logged-out visitors, so a real per-student count can't live here —
@@ -46,13 +41,27 @@ import {
  * bigger feature that belongs in the logged-in product if she wants it
  * later — not a homepage teaser.
  *
- * 24 Sep 2026: Re asked for the tap to "open something / a new pop up"
- * instead of the clue just appearing inline below the button. Kept it a
- * pure UI change — the dialog still shows the same rotating client-side
- * clue + tap count, no backend, no league, no account, same as before.
- * Uses the repo's existing shadcn Dialog primitive (src/components/ui/dialog.tsx)
- * restyled to the brand palette: bg-charcoal, border-klovers-yellow/30,
- * text-ivory — no green, no clover icons, matching the rest of this section.
+ * 24 Sep 2026: tap now opens a popup (shadcn Dialog) instead of showing
+ * the clue inline. Same client-side-only rotating clue + tap count, no
+ * backend/league change.
+ *
+ * 24 Sep 2026 (this pass): Re said the photo needs to "merge into the
+ * background" instead of sitting in a framed/rounded box, and that the
+ * egg itself should have movement and be directly tappable ("i pressed
+ * nothing happened" — she was tapping the egg in the photo, not the text
+ * button below it). Changes:
+ *   - The photo is now a full-bleed background for the top of the section
+ *     (edge-to-edge, no rounded corners) with a bottom gradient fading it
+ *     straight into bg-charcoal, so there's no visible frame/seam.
+ *   - A real, invisible tap target sits directly over the egg in the photo
+ *     (~50% / 57%, eyeballed from the reference screenshot — may want a
+ *     small nudge once seen live at different viewport widths) with an
+ *     animated glow (ping + bounce) so the egg visibly "moves"/pulses to
+ *     invite the tap. It calls the same revealClue() as the button below.
+ *   - Kept the labelled "Tap the Egg" button underneath too, since the
+ *     on-photo hotspot alone isn't reliably discoverable (small target,
+ *     motion-sensitive users, screen readers) — both trigger the same
+ *     popup.
  */
 
 const CLUES = [
@@ -95,21 +104,43 @@ const EggTeaser = () => {
       className="relative overflow-hidden bg-charcoal text-center"
       aria-labelledby="egg-teaser-title"
     >
-      <img
-        src="/assets/story/egg-teaser.webp"
-        alt={
-          isAr
-            ? "طالبة وطالب بيبصوا على بيضة عاجية متوهجة فوق حجر في حديقة هانوك بالليل"
-            : "Two learners looking at a glowing ivory egg resting on a stone in a hanok courtyard at night"
-        }
-        width={1600}
-        height={900}
-        loading="lazy"
-        decoding="async"
-        className="mx-auto block aspect-[16/9] w-full max-w-4xl object-cover"
-      />
+      {/* Full-bleed photo merging into bg-charcoal below — no frame, no rounded box */}
+      <div className="absolute inset-x-0 top-0 h-[380px] md:h-[520px]">
+        <img
+          src="/assets/story/egg-teaser.webp"
+          alt={
+            isAr
+              ? "طالبة وطالب بيبصوا على بيضة عاجية متوهجة فوق حجر في حديقة هانوك بالليل"
+              : "Two learners looking at a glowing ivory egg resting on a stone in a hanok courtyard at night"
+          }
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-b from-charcoal/5 via-charcoal/60 to-charcoal"
+        />
 
-      <div className="px-4 pb-16 pt-8 md:pb-20">
+        {/* Real tap target sitting directly on the egg in the photo — animated so it visibly moves/invites the tap */}
+        <button
+          type="button"
+          onClick={revealClue}
+          aria-label={isAr ? "دوسي على البيضة" : "Tap the egg"}
+          className="absolute left-1/2 top-[57%] flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full outline-none"
+        >
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 animate-ping rounded-full bg-klovers-yellow/30"
+          />
+          <span
+            aria-hidden="true"
+            className="absolute inset-2 animate-bounce rounded-full bg-klovers-yellow/25 blur-[2px]"
+          />
+        </button>
+      </div>
+
+      <div className="relative z-10 px-4 pb-16 pt-[260px] md:pb-20 md:pt-[360px]">
         <div className="mx-auto max-w-2xl">
           {/* Eyebrow: plain dashes either side, no icon */}
           <div className="flex items-center justify-center gap-3">
