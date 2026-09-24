@@ -321,12 +321,8 @@ const SignUpPage = () => {
           </CardContent>
         </Card>
 
-        {/* Mini testimonial */}
-        <p className="text-xs text-muted-foreground text-center max-w-xs italic">
-          "I went from zero Korean to passing TOPIK I in 6 months — the classes and games made it so fun!"
-          <br />
-          <span className="not-italic font-medium text-foreground">— Sara M., Egypt</span>
-        </p>
+        {/* 24 Sep 2026: the "Sara M., Egypt" quote that sat here was removed.
+            It matched no real review, and Klovers never invents reviews. */}
 
       </main>
       <Footer />
