@@ -11,9 +11,9 @@ export const WORD_OF_DAY = [
   { ko: "안녕하세요", rom: "annyeonghaseyo", en: "Hello / Good day", ar: "مرحبًا / أهلًا" },
   { ko: "감사합니다", rom: "gamsahamnida", en: "Thank you", ar: "شكرًا لك" },
   { ko: "사랑해요", rom: "saranghaeyo", en: "I love you", ar: "أحبك" },
-  { ko: "공부하다", rom: "gongbuhada", en: "To study", ar: "يذاكر / يدرس" },
+  { ko: "공부하다", rom: "gongbuhada", en: "To study", ar: "يدرس" },
   { ko: "맛있어요", rom: "massisseoyo", en: "It's delicious", ar: "إنه لذيذ" },
-  { ko: "화이팅", rom: "hwaiting", en: "Fighting! / You can do it!", ar: "هيا! / تقدر تعملها!" },
+  { ko: "화이팅", rom: "hwaiting", en: "Fighting! / You can do it!", ar: "هيا! / يمكن فعلها!" },
   { ko: "천천히", rom: "cheoncheonhi", en: "Slowly", ar: "ببطء" },
 ] as const;
 
@@ -56,7 +56,7 @@ export function TodaysMissions({
       {/* Segmented meter: one segment per mission. Neon fills carry a charcoal edge so they read on white. */}
       <div className="mt-3 grid grid-cols-3 gap-1.5" aria-hidden="true">
         {Array.from({ length: total }).map((_, i) => (
-          <span key={i} className={cn("h-2 rounded-full", i < done ? "bg-live-bright ring-1 ring-inset ring-foreground" : "bg-foreground/10")} />
+          <span key={i} className={cn("h-2 rounded-full", i < done ? "bg-klovers-green ring-1 ring-inset ring-foreground" : "bg-foreground/10")} />
         ))}
       </div>
 
@@ -90,7 +90,7 @@ export function TodaysMissions({
                 </div>
                 {m.done ? (
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-foreground px-2.5 py-1 text-xs font-semibold text-background">
-                    <span className="grid h-4 w-4 place-items-center rounded-full bg-live-bright text-foreground">
+                    <span className="grid h-4 w-4 place-items-center rounded-full bg-klovers-green text-charcoal">
                       <Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
                     </span>
                     {c("missionDone")}
