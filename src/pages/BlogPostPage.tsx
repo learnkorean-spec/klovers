@@ -9,7 +9,7 @@ import BlogComments from "@/components/BlogComments";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, CalendarDays, User, ArrowRight, Clock, ChevronRight, Share2, Copy, Check, AlertTriangle } from "lucide-react";
+import { ArrowLeft, CalendarDays, User, ArrowRight, Clock, ChevronRight, Share2, Copy, Check, AlertTriangle, MessageCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -82,10 +82,10 @@ const TYPE_LABEL_AR: Record<string, string> = {
 
 const TYPE_COLOR: Record<string, string> = {
   howto: "bg-klovers-yellow text-charcoal border-charcoal/15",
-  listicle: "bg-klovers-green/15 text-charcoal border-klovers-green dark:text-foreground",
+  listicle: "bg-card text-charcoal border-charcoal/30 dark:text-foreground dark:border-border",
   longform: "bg-charcoal text-ivory border-charcoal dark:bg-ivory dark:text-charcoal dark:border-ivory",
-  news: "bg-[#FF3131]/10 text-charcoal border-[#FF3131]/40 dark:text-foreground",
-  review: "bg-[#FFF9EC] text-charcoal border-charcoal/20 dark:bg-muted dark:text-foreground dark:border-border",
+  news: "bg-charcoal/5 text-charcoal border-charcoal/40 dark:bg-ivory/10 dark:text-foreground dark:border-ivory/40",
+  review: "bg-ivory text-charcoal border-charcoal/20 dark:bg-muted dark:text-foreground dark:border-border",
 };
 
 const BlogPostPage = () => {
@@ -472,7 +472,7 @@ const BlogPostPage = () => {
             <h1 className="font-semibold text-foreground">{isAr ? "تعذر تحميل هذا المقال" : "Couldn't load this article"}</h1>
             <p className="text-sm text-muted-foreground">{fetchError}</p>
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
-              <Button onClick={() => window.location.reload()} variant="outline">{isAr ? "حاول مرة أخرى" : "Try again"}</Button>
+              <Button onClick={() => window.location.reload()} variant="outline">{isAr ? "إعادة المحاولة" : "Try again"}</Button>
               <Button asChild variant="ghost">
                 <Link to="/blog"><ArrowLeft className="h-4 w-4 mr-2" />{isAr ? "العودة للمدونة" : "Back to Blog"}</Link>
               </Button>
@@ -652,19 +652,19 @@ const BlogPostPage = () => {
               HeroSection.tsx - every student taught across 13 years. */}
           <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center space-y-4">
             <p className="text-sm font-bold text-foreground uppercase tracking-widest">
-              {post.cta_text ? (isAr ? "مستعد للبدء؟" : "Ready to start?") : (isAr ? "ابدأ تعلّم الكورية اليوم" : "Start learning Korean today")}
+              {post.cta_text ? (isAr ? "هل حان وقت البدء؟" : "Ready to start?") : (isAr ? "تعلّم الكورية يبدأ اليوم" : "Start learning Korean today")}
             </p>
             <h3 className="text-xl font-bold text-foreground">
-              {post.cta_text || (isAr ? "اكتشف مستواك مع اختبار تحديد المستوى المجاني مع معلمة درّست أكثر من 200 طالب على مدى 13 عامًا." : "Find your level with our free placement test with a teacher who has taught 200+ students over 13 years.")}
+              {post.cta_text || (isAr ? "اكتشاف المستوى عبر اختبار تحديد المستوى المجاني، مع معلمة درّست أكثر من 200 طالب على مدى 13 عامًا." : "Find your level with our free placement test with a teacher who has taught 200+ students over 13 years.")}
             </h3>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
               <Button asChild size="lg" className="gap-2">
                 <Link to={post.cta_url || "/placement-test"}>
-                  {post.cta_url ? (isAr ? "ابدأ الآن" : "Get Started") : (isAr ? "🎯 خذ اختبار تحديد المستوى المجاني" : "🎯 Take the Free Placement Test")} <ArrowRight className="h-4 w-4" />
+                  {post.cta_url ? (isAr ? "البدء الآن" : "Get Started") : (isAr ? "اختبار تحديد المستوى المجاني" : "Take the Free Placement Test")} <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="gap-2">
-                <Link to="/enroll">{isAr ? "📚 عرض الدورات والأسعار" : "📚 View Courses & Pricing"}</Link>
+                <Link to="/enroll">{isAr ? "عرض الدورات والأسعار" : "View Courses & Pricing"}</Link>
               </Button>
             </div>
           </div>
@@ -686,9 +686,9 @@ const BlogPostPage = () => {
               onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(`https://wa.me/?text=${encodeURIComponent(post.title + " — " + window.location.href)}`, { cta_label: "blog_share", metadata: { slug: post.slug } }); }}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-green-200 bg-green-50 hover:bg-green-100 transition-colors text-green-700"
+              className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
             >
-              💬 WhatsApp
+              <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" /> WhatsApp
             </a>
           </div>
 
@@ -710,15 +710,15 @@ const BlogPostPage = () => {
                 {isAr ? "تعلم الكورية مع مدرس حقيقي" : "Learn Korean with a real teacher"}
               </p>
               <p className="font-bold text-foreground text-base leading-snug">
-                {isAr ? "أول حصة مجانية — بدون بطاقة بنكية" : "Your first class is free — no credit card"}
+                {isAr ? "أول حصة مجانية، دون بطاقة بنكية" : "Your first class is free — no credit card"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {isAr ? "مجموعات صغيرة، شرح بالعربي، جدول مرن." : "Small groups, Arabic instruction, flexible schedule."}
+                {isAr ? "مجموعات صغيرة، وشرح بالعربية، وجدول مرن." : "Small groups, Arabic instruction, flexible schedule."}
               </p>
             </div>
             <Button asChild className="gap-2 shrink-0">
               <Link to="/free-trial">
-                {isAr ? "احجز مجانًا" : "Book Free Class"}
+                {isAr ? "الحجز مجانًا" : "Book Free Class"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -742,7 +742,7 @@ const BlogPostPage = () => {
                   : (isAr ? "قد يعجبك أيضاً" : "You might also like")}
               </h2>
               <p className="text-sm text-muted-foreground mb-5">
-                {isAr ? "مقالات على نفس الموضوع" : "More on the same topic"}
+                {isAr ? "مقالات في الموضوع نفسه" : "More on the same topic"}
               </p>
               <div className="grid sm:grid-cols-2 gap-4">
                 {nearbyCards.map((rp) => (
@@ -783,7 +783,7 @@ const BlogPostPage = () => {
               {extraLinks.length > 0 && (
                 <div className="mt-5 flex flex-wrap items-baseline gap-x-4 gap-y-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {isAr ? "كمان في نفس الموضوع" : "Also worth reading"}
+                    {isAr ? "المزيد في الموضوع نفسه" : "Also worth reading"}
                   </span>
                   {extraLinks.map((rp) => (
                     <Link
