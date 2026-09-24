@@ -655,7 +655,7 @@ const BlogPostPage = () => {
               {post.cta_text ? (isAr ? "مستعد للبدء؟" : "Ready to start?") : (isAr ? "ابدأ تعلّم الكورية اليوم" : "Start learning Korean today")}
             </p>
             <h3 className="text-xl font-bold text-foreground">
-              {post.cta_text || (isAr ? "اكتشف مستواك مع اختبار تحديد المستوى المجاني وانضم لأكثر من 200 طالب." : "Find your level with our free placement test and join 200+ students.")}
+              {post.cta_text || (isAr ? "اكتشف مستواك مع اختبار تحديد المستوى المجاني مع معلمة درّست أكثر من 200 طالب على مدى 13 عامًا." : "Find your level with our free placement test with a teacher who has taught 200+ students over 13 years.")}
             </h3>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
               <Button asChild size="lg" className="gap-2">
