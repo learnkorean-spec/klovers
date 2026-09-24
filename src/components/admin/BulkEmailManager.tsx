@@ -203,7 +203,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">{{greeting}}</p>
     <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">Our April Korean Language batch is now officially open for enrollment.</p>
     <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">At Klovers, we follow a structured 6-level curriculum aligned with official TOPIK progression, ensuring steady development from beginner foundations to exam readiness. Our small-group format allows for personal feedback and real speaking practice from the first weeks.</p>
-    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 24px;"><strong>Special pricing is available for Egyptian students.</strong> Seats are limited and enrollment will close once the group is full.</p>
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 24px;"><strong>Special pricing is available for Egyptian students.</strong> Enrollment for this batch closes once the group is complete.</p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:10px 0 24px;">
       <a href="https://kloversegy.com" style="background:#FFFF00;color:#000000;text-decoration:none;padding:14px 34px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Register Now →</a>
     </td></tr></table>

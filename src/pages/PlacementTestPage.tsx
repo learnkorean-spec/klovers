@@ -1036,7 +1036,7 @@ const PlacementTestPage = () => {
                     </button>
                   </div>
                   <p className="text-[10px] text-muted-foreground text-center">
-                    {isAr ? "⭐️ +200 طالب مصري · استرداد كامل بعد أول حصة مدفوعة" : "⭐️ 200+ Egyptian students · full refund after first paid class"}
+                    {isAr ? "⭐️ +200 طالب درّستهم ريهام · استرداد أو إعادة حجز لو الحصة الأولى ما عجبتكش" : "⭐️ 200+ students taught by Reham · refund or rebook if your first class isn't right"}
                   </p>
                 </CardContent>
               </Card>
@@ -1178,7 +1178,7 @@ const PlacementTestPage = () => {
                   <div className="text-amber-500 tracking-widest text-sm">★★★★★</div>
                   <p className="text-foreground/80 italic leading-relaxed">"{(isAr ? SOCIAL_PROOF_AR : SOCIAL_PROOF)[result.levelKey].quote}"</p>
                   <p className="text-muted-foreground font-medium">— {(isAr ? SOCIAL_PROOF_AR : SOCIAL_PROOF)[result.levelKey].author}</p>
-                  <p className="text-muted-foreground">{isAr ? "أكثر من 200 طالب مصري مسجل" : "200+ Egyptian students enrolled"}</p>
+                  <p className="text-muted-foreground">{isAr ? "أكثر من 200 طالب على مدى 13 عامًا" : "200+ students taught over 13 years"}</p>
                 </div>
               )}
               <p className="text-sm font-semibold text-foreground text-center">{isAr ? "مستعد لبدء التعلّم؟" : "Ready to start learning?"}</p>

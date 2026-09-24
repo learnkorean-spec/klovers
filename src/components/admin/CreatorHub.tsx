@@ -47,7 +47,7 @@ const PREMIUM_POSTS: { mainText: string; subtitle: string; extraText: string; st
   { mainText: "START SPEAKING\nKOREAN\nNOT JUST\nSTUDYING IT.", subtitle: "Live classes that get you talking from day one.", extraText: "#LearnKorean #Klovers #SpeakKorean", style: "klovers_bold" },
   { mainText: "사랑", subtitle: "sa-rang\nLove — The most searched Korean word worldwide", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
   { mainText: "WHY K-DRAMA FANS\nLEARN KOREAN\nFASTER THAN ANYONE", subtitle: "Passion is the best teacher. We just give it structure.", extraText: "#KDrama #LearnKorean #Klovers", style: "klovers_varsity" },
-  { mainText: "500+", subtitle: "Students Taught\nFrom 15+ countries — all learning Korean the right way with live classes.", extraText: "#Klovers #KoreanAcademy", style: "klovers_stats" },
+  { mainText: "200+", subtitle: "Students Taught by Reham\nOver 13 years, from 15+ countries — learning Korean the right way with live classes.", extraText: "#Klovers #KoreanAcademy", style: "klovers_stats" },
   { mainText: "STOP MEMORIZING.\nSTART SPEAKING.", subtitle: "The #1 mistake beginners make is studying grammar without ever opening their mouth. Our live classes fix that.", extraText: "#KoreanTip #Klovers #LearnKorean", style: "klovers_tip" },
   { mainText: "\"I went from zero to ordering in Korean at a restaurant in Seoul — in 3 months.\"", subtitle: "— Sara, Egypt\nKlovers Academy", extraText: "#StudentSuccess #Klovers", style: "klovers_quote" },
   { mainText: "YOUR FAVORITE\nK-DRAMA\nIS YOUR BEST\nTEXTBOOK.", subtitle: "We teach you how to actually learn from what you watch.", extraText: "#KDrama #KPop #LearnKorean #Klovers", style: "klovers_bold" },
@@ -56,7 +56,7 @@ const PREMIUM_POSTS: { mainText: string; subtitle: string; extraText: string; st
   { mainText: "WHAT HAPPENS\nWHEN YOUR\nKOREAN CLICKS", subtitle: "That moment when you understand without subtitles — we get you there.", extraText: "#LearnKorean #Klovers #KoreanGoals", style: "klovers_varsity" },
   { mainText: "DUOLINGO\nWON'T TEACH\nYOU REAL\nKOREAN.", subtitle: "Apps are fun. But speaking to a real teacher is how you actually learn.", extraText: "#LearnKorean #Klovers #RealKorean", style: "klovers_bold" },
   { mainText: "HANGUL WAS\nDESIGNED TO BE\nLEARNED IN ONE DAY.", subtitle: "King Sejong created the Korean alphabet so anyone could read. We teach you Hangul in your very first class.", extraText: "#Hangul #KoreanTip #Klovers", style: "klovers_tip" },
-  { mainText: "4.9★", subtitle: "Average Rating\nRated by real students across 15+ countries. We don't just teach — we deliver results.", extraText: "#Klovers #KoreanAcademy #Rated", style: "klovers_stats" },
+  { mainText: "5.0★", subtitle: "On Google\nFrom 7 Google reviews by real students. We don't just teach — we deliver results.", extraText: "#Klovers #KoreanAcademy #Rated", style: "klovers_stats" },
   { mainText: "감사합니다", subtitle: "gam-sa-ham-ni-da\nThank you — The first phrase every learner needs", extraText: "#KoreanWord #Klovers #WOTD", style: "klovers_tip" },
   { mainText: "SMALL GROUPS.\nBIG PROGRESS.", subtitle: "Max 6 students per class. Everyone speaks. Everyone improves.", extraText: "#LiveClasses #Klovers #SmallGroup", style: "klovers_varsity" },
   { mainText: "\"I tried apps for a year. Three months with Klovers taught me more than all of them combined.\"", subtitle: "— Ahmed, Saudi Arabia\nKlovers Academy", extraText: "#StudentSuccess #Klovers", style: "klovers_quote" },
@@ -72,7 +72,7 @@ const PREMIUM_POSTS: { mainText: string; subtitle: string; extraText: string; st
   { mainText: "WATCHING\nK-POP VIDEOS\nISN'T STUDYING.\nBUT IT CAN BE.", subtitle: "We show you how to turn your hobby into real language skills.", extraText: "#KPop #LearnKorean #Klovers", style: "klovers_bold" },
   { mainText: "OUR LEVELS", subtitle: "Beginner — Hangul to basic conversations\nElementary — Daily life Korean\nIntermediate — Express opinions & feelings\nAdvanced — Fluent discussions & formal Korean", extraText: "#KoreanLevels #Klovers", style: "klovers_list" },
   { mainText: "LEARN THE\nCULTURE,\nNOT JUST THE\nLANGUAGE.", subtitle: "Understanding honorifics, age culture, and social norms makes your Korean sound natural — not robotic.", extraText: "#ProTip #Klovers #KoreanCulture", style: "klovers_tip" },
-  { mainText: "NEW SEMESTER.\nNEW YOU.\nNEW LANGUAGE.", subtitle: "Limited spots. Enroll now and start your Korean journey this month.", extraText: "#EnrollNow #Klovers #NewSemester", style: "klovers_varsity" },
+  { mainText: "NEW SEMESTER.\nNEW YOU.\nNEW LANGUAGE.", subtitle: "Enroll now and start your Korean journey this month.", extraText: "#EnrollNow #Klovers #NewSemester", style: "klovers_varsity" },
   { mainText: "THE BEST TIME\nTO START WAS\nYESTERDAY.\nTHE NEXT BEST\nTIME IS NOW.", subtitle: "Book your free trial class — kloversegy.com", extraText: "#Klovers #LearnKorean #StartNow", style: "klovers_bold" },
 ];
 

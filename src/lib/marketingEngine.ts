@@ -68,9 +68,9 @@ export function generateAdCopy(group: GroupData) {
   const level = getLevelLabel(group.level);
   
   const primaryTexts = [
-    `Learn Korean the right way. ${level} starts ${group.day_name} at ${group.start_time}. Small group, structured lessons, real results. Limited seats available — register now.`,
+    `Learn Korean the right way. ${level} starts ${group.day_name} at ${group.start_time}. Small group, structured lessons, real results. Register now.`,
     `Want to speak Korean? Join our ${level} course. ${group.duration_min}-minute sessions every ${group.day_name}. Only ${group.seats_left} spots remaining.`,
-    `Start your Korean journey with ${level}. Expert-led classes, small groups, and a clear roadmap from day one. Seats are limited.`,
+    `Start your Korean journey with ${level}. Expert-led classes, small groups, and a clear roadmap from day one.`,
   ];
 
   const headlines = [
@@ -81,7 +81,7 @@ export function generateAdCopy(group: GroupData) {
 
   const descriptions = [
     `${group.duration_min}-min weekly sessions. Small group. Structured learning.`,
-    `Expert-led Korean course. Limited seats. Register today.`,
+    `Expert-led Korean course. Register today.`,
   ];
 
   return { primaryTexts, headlines, descriptions, cta: "Sign Up" };
@@ -738,7 +738,11 @@ export function generateMonthlyPlan(
   let tipIdx = 0;
   let cultureIdx = 0;
   const isAR = lang === "ar";
-  const sc = studentCount > 0 ? `${Math.floor(studentCount / 100) * 100}+` : "500+";
+  // Always Re's figure: 200+ students she has taught over 13 years (see
+  // src/lib/trustFigures.ts). Platform accounts undercount it, and the old
+  // fallback (500+) overstated it.
+  void studentCount;
+  const sc = "200+";
 
   const safeGroup = () => groups.length ? groups[groupIdx++ % groups.length] : null;
   const url = (type: MonthlyPostType) => enrollUrl(campaign, type);
