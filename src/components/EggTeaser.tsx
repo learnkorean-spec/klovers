@@ -21,27 +21,27 @@ import {
  * here: hatching happens on the student dashboard, from the student's real
  * learning (Re, 24 Sep 2026). Cluby stays excluded from this beat
  * (homepageNarrative slot 7, explicitlyExclude: ["cluby"]).
- *
- * Background photo: public/assets/story/egg-teaser.webp (girl + boy, glowing
- * ivory egg, hanok courtyard at night), full-bleed, fading into bg-charcoal.
  * Palette: klovers-yellow / charcoal / ivory only.
+ * Tap count is visual-only — a real per-student count lives in the
+ * logged-in product.
  *
- * Tap count is visual-only (no auth on this beat's counter) — a real
- * per-student count lives in the logged-in product.
+ * 25 Sep 2026 (account link): the beat was a dead end (tap → clue →
+ * nothing). The egg only hatches on the dashboard, so the popup now ends
+ * with the honest next step: guests → free account (signup → /dashboard)
+ * or sign in; signed-in students → their dashboard egg.
  *
- * 25 Sep 2026 (account link): Re: "fix this with better idea or link it or
- * advice to make an account". Two problems in the live section:
- *   1. The tap ring floated over blurry bokeh — on screen there was no
- *      visible egg inside it, so it read as an empty circle. The ring now
- *      holds the actual egg (egg-0.webp), gently floating, so the thing to
- *      tap IS the egg.
- *   2. The beat was a dead end: tap → clue → nothing to do. Since the egg
- *      only hatches on the dashboard, the honest next step is an account.
- *      The popup now ends with: guests → "Create a free account" (signup,
- *      redirect to /dashboard) + "Sign in"; signed-in students → "See your
- *      egg on your dashboard". A small "No account yet?" link also sits under
- *      the main button, and the feature row says where it hatches.
- *   No reward is promised beyond what exists: the dashboard egg is real.
+ * 25 Sep 2026 (no overlap): Re — "the egg is not shown from the picture and
+ * i hate the overlap". The ring, the "Tap here" pill and the heading all sat
+ * ON the photo's egg. The photo (public/assets/story/egg-teaser.webp, 16:9,
+ * egg centred at ~50% / 61%) is now its own block with NOTHING on top of it:
+ *   - 4:3 on mobile (crops the sides only, egg stays centred and larger),
+ *     16:9 from md, capped at 620px tall; object-position 50% 60% keeps the
+ *     egg in frame when the cap crops top/bottom.
+ *   - Only a thin fade at the very bottom (below the stone) so it still
+ *     meets bg-charcoal without a hard seam.
+ *   - The whole photo is the tap target (no ring, no label) — plus the
+ *     labelled "Tap the Egg" button under it.
+ *   - Heading and copy start BELOW the photo.
  */
 
 const CLUES = [
@@ -105,8 +105,14 @@ const EggTeaser = () => {
       className="relative overflow-hidden bg-charcoal text-center"
       aria-labelledby="egg-teaser-title"
     >
-      {/* Full-bleed photo merging into bg-charcoal below — no frame, no rounded box */}
-      <div className="absolute inset-x-0 top-0 h-[380px] md:h-[520px]">
+      {/* The photo on its own — nothing drawn on top of it. The whole picture
+          is the tap target, so tapping the egg itself works. */}
+      <button
+        type="button"
+        onClick={revealClue}
+        aria-label={isAr ? "دوسي على البيضة" : "Tap the egg"}
+        className="group relative block aspect-[4/3] max-h-[620px] w-full cursor-pointer overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-klovers-yellow md:aspect-[16/9]"
+      >
         <img
           src="/assets/story/egg-teaser.webp"
           alt={
@@ -116,47 +122,16 @@ const EggTeaser = () => {
           }
           loading="lazy"
           decoding="async"
-          className="h-full w-full scale-[1.7] object-cover object-center md:scale-100"
+          className="h-full w-full object-cover object-[50%_60%] transition-[filter] duration-300 group-hover:brightness-110"
         />
+        {/* Thin fade only at the very bottom, below the stone */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-b from-charcoal/5 via-charcoal/60 to-charcoal"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[18%] bg-gradient-to-b from-transparent to-charcoal"
         />
+      </button>
 
-        {/* The tap target IS the egg: the real egg image inside a yellow ring,
-            floating gently, with a "tap here" label above it. */}
-        <div className="absolute left-1/2 top-[57%] -translate-x-1/2 -translate-y-1/2">
-          <button
-            type="button"
-            onClick={revealClue}
-            aria-label={isAr ? "دوسي على البيضة" : "Tap the egg"}
-            className="group relative flex h-24 w-24 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
-          >
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 animate-ping rounded-full bg-klovers-yellow/25 motion-reduce:animate-none"
-            />
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 rounded-full border-2 border-klovers-yellow bg-charcoal/50 shadow-[0_0_24px_rgba(255,255,0,0.35)]"
-            />
-            <img
-              src="/assets/story/egg-0.webp"
-              alt=""
-              aria-hidden="true"
-              className="relative h-[4.5rem] w-[4.5rem] rounded-full object-cover animate-bounce [animation-duration:2.5s] transition-transform group-hover:scale-110 motion-reduce:animate-none"
-            />
-          </button>
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 bottom-full mb-2 -translate-x-1/2 whitespace-nowrap rounded-full border border-klovers-yellow/50 bg-charcoal/90 px-3 py-1 text-xs font-bold text-klovers-yellow"
-          >
-            {isAr ? "👇 دوسي هنا" : "👇 Tap here"}
-          </span>
-        </div>
-      </div>
-
-      <div className="relative z-10 px-4 pb-16 pt-[260px] md:pb-20 md:pt-[360px]">
+      <div className="relative px-4 pb-16 pt-8 md:pb-20 md:pt-10">
         <div className="mx-auto max-w-2xl">
           {/* Eyebrow: plain dashes either side, no icon */}
           <div className="flex items-center justify-center gap-3">
