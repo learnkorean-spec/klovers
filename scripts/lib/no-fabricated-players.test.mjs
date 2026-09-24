@@ -62,10 +62,9 @@ const FABRICATED_NAMES = ["Sara M.", "Ahmed K.", "Yuki T.", "Lin W.", "Omar F."]
  * the entry and the copy together; when the list is empty, replace the whole
  * mechanism with a flat "no fabricated name appears in src/".
  */
-const PENDING_DECISION = {
-  "src/pages/SignUpPage.tsx": ["Sara M."],
-  "src/pages/PlacementTestPage.tsx": ["Ahmed K.", "Omar F."],
-};
+// Re decided on 24 Sep 2026: remove them. Both quotes are gone, so nothing
+// is pending.
+const PENDING_DECISION = {};
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir)) {
