@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Search, BookOpen, ChevronRight, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Search, UserPlus, ChevronRight, Sparkles } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog,
   DialogContent,
@@ -13,98 +15,33 @@ import {
  * Homepage narrative slot 7 — "egg-teaser" (src/config/klovers-world.ts,
  * KLOVERS_WORLD.homepageNarrative). storyFunction: origin_mystery_teaser.
  *
- * Canon rule: characters are the two human learners only — Cluby is
- * explicitly EXCLUDED from this beat. It is a gentle "something is buried
- * in our story" hook, not a payoff: no explanation, no CTA pressure, just
- * curiosity carried into the rest of the product.
- *
- * 24 Sep 2026: uses the real courtyard photo Re supplied
- * (public/assets/story/egg-teaser.webp — girl + boy, glowing ivory egg,
- * hanok courtyard at night). No clover-mark icons and no green accent
- * color anywhere in this section by her request; the 3-colour brand
- * palette (klovers-yellow / charcoal / ivory) carries the whole thing.
- * See claude/BRAND_PALETTE_REFERENCE.md — green is documented there as a
- * functional state colour (correct/live), not a decorative one, so this
- * is actually the stricter reading of the palette, not a looser one.
- *
- * Note on style: the photo is photorealistic, while the rest of the
- * Klovers cast (docs/KLOVERS-STORY-BIBLE.md / CHARACTER_ASSET_SPEC.md) is
- * illustrated/cartoon. Flagging this as a canon visual-style note rather
- * than blocking on it, since Re supplied and approved this exact image.
- *
- * 24 Sep 2026 (STORY CONFLICT, resolved): Re initially asked for taps to
- * count toward "their league." This page has no auth context and renders
- * for logged-out visitors, so a real per-student count can't live here —
- * canon says marketing teases, the logged-in product is where progress is
- * real (CLAUDE.md KLOVERS STORY CANON). Re confirmed: visual-only counter
- * for now. A real counter tied to an actual student league is a separate,
- * bigger feature that belongs in the logged-in product if she wants it
- * later — not a homepage teaser.
- *
- * 24 Sep 2026: tap now opens a popup (shadcn Dialog) instead of showing
- * the clue inline. Same client-side-only rotating clue + tap count, no
- * backend/league change.
- *
- * 24 Sep 2026 (this pass): Re said the photo needs to "merge into the
- * background" instead of sitting in a framed/rounded box, and that the
- * egg itself should have movement and be directly tappable ("i pressed
- * nothing happened" — she was tapping the egg in the photo, not the text
- * button below it). Changes:
- *   - The photo is now a full-bleed background for the top of the section
- *     (edge-to-edge, no rounded corners) with a bottom gradient fading it
- *     straight into bg-charcoal, so there's no visible frame/seam.
- *   - A real tap target sits directly over the egg in the photo (~50% / 57%,
- *     eyeballed from the reference screenshot). It calls the same
- *     revealClue() as the button below.
- *   - Kept the labelled "Tap the Egg" button underneath too, since the
- *     on-photo hotspot alone isn't reliably discoverable (small target,
- *     motion-sensitive users, screen readers) — both trigger the same
- *     popup.
- *
- * 24 Sep 2026 (this pass, round 2): Re said the egg hotspot wasn't obvious
- * ("the egg is not obvious, and where i go clicking there") - the fading
- * ping-only glow read as decorative, not clickable. Made it a persistent
- * ring (border-2 border-klovers-yellow, always visible, not just the
- * animated pulse) plus a small "👇 Tap here" label above it (moved off the
- * "A hidden chapter" eyebrow text it originally overlapped), so it's
- * unmistakably an interactive spot instead of a subtle sparkle.
- *
- * 24 Sep 2026 (STORY CANON CHANGE, since superseded — see STORY ORDER FIX
- * below): Re supplied 3 new illustrated images —
- * a calm egg with a clover mark, the same egg cracking with dramatic light,
- * and Cluby hatching out of it — and confirmed ("1 yes") they should appear
- * inside this popup, one per tap, alongside the existing clue text. This
- * OVERRIDES the canon rule at the top of this file ("Cluby is explicitly
- * EXCLUDED from this beat"): Cluby now appears here, on the 3rd/hatching
- * reveal only, as the payoff image. The background photo (girl + boy in the
- * courtyard) is unchanged — Re explicitly said to keep it as-is, just make
- * sure it reads clearly, not to replace it with any of these new images.
- * REVEAL_IMAGES below is ordered to match CLUES: calm egg → cracking egg →
- * Cluby hatching, so the popup visually escalates in step with the text.
- *
- * 24 Sep 2026 (mobile crop fix): on narrow/mobile viewports the section is
- * nearly square (h-[380px] against a ~390px-wide screen), while the photo
- * is a wide 16:9 shot. object-cover in that near-square box only crops the
- * SIDES and keeps the photo's full height (moon/rooftops down to the stone
- * base), squeezing the couple and the egg down to a small, hazy-looking
- * strip in the middle — the tap hotspot ends up floating over indistinct
- * background bokeh instead of a recognizable egg (Re: "looks weird here").
- * Fix: scale the image up (scale-[1.7]) on mobile only (md:scale-100 resets
- * it on desktop, where the crop already reads fine) so it crops tighter
- * around the egg/couple instead of showing the whole frame shrunk down.
- * The egg sits close to the image's vertical center, and scale transforms
- * anchor from the center by default, so the tap hotspot's position
- * (top-[57%]) didn't need to move.
- *
- * 24 Sep 2026 (STORY ORDER FIX — supersedes the STORY CANON CHANGE note
- * above): the homepage only TEASES. The popup shows the egg waking —
+ * Canon: the homepage only TEASES. The popup shows the egg waking —
  * dormant → small crack → glow — with the same egg images the student
- * dashboard uses (public/assets/story/egg-0/1/2.webp), but it never
- * hatches: hatching happens on the student dashboard, from the student's
- * real learning (Re, 24 Sep 2026). Cluby stays excluded from this beat per
- * canon (homepageNarrative slot 7, explicitlyExclude: ["cluby"]). The
- * "Earn a surprise" feature item is gone too — it promised a reward that
- * does not exist.
+ * dashboard uses (public/assets/story/egg-0/1/2.webp), but it never hatches
+ * here: hatching happens on the student dashboard, from the student's real
+ * learning (Re, 24 Sep 2026). Cluby stays excluded from this beat
+ * (homepageNarrative slot 7, explicitlyExclude: ["cluby"]).
+ *
+ * Background photo: public/assets/story/egg-teaser.webp (girl + boy, glowing
+ * ivory egg, hanok courtyard at night), full-bleed, fading into bg-charcoal.
+ * Palette: klovers-yellow / charcoal / ivory only.
+ *
+ * Tap count is visual-only (no auth on this beat's counter) — a real
+ * per-student count lives in the logged-in product.
+ *
+ * 25 Sep 2026 (account link): Re: "fix this with better idea or link it or
+ * advice to make an account". Two problems in the live section:
+ *   1. The tap ring floated over blurry bokeh — on screen there was no
+ *      visible egg inside it, so it read as an empty circle. The ring now
+ *      holds the actual egg (egg-0.webp), gently floating, so the thing to
+ *      tap IS the egg.
+ *   2. The beat was a dead end: tap → clue → nothing to do. Since the egg
+ *      only hatches on the dashboard, the honest next step is an account.
+ *      The popup now ends with: guests → "Create a free account" (signup,
+ *      redirect to /dashboard) + "Sign in"; signed-in students → "See your
+ *      egg on your dashboard". A small "No account yet?" link also sits under
+ *      the main button, and the feature row says where it hatches.
+ *   No reward is promised beyond what exists: the dashboard egg is real.
  */
 
 const CLUES = [
@@ -141,11 +78,15 @@ const EGG_IMAGES = [
 
 const FEATURES = [
   { icon: Search, en: "Reveal a clue", ar: "اكشفي عن دليل" },
-  { icon: BookOpen, en: "Unlock a story piece", ar: "افتحي جزء من القصة" },
+  { icon: UserPlus, en: "Hatch it in your free account", ar: "فقّسيها في حسابك المجاني" },
 ];
+
+const SIGNUP_HREF = `/signup?redirect=${encodeURIComponent("/dashboard")}`;
+const LOGIN_HREF = `/login?redirect=${encodeURIComponent("/dashboard")}`;
 
 const EggTeaser = () => {
   const { language } = useLanguage();
+  const { user } = useAuth();
   const isAr = language === "ar";
   const [clueIndex, setClueIndex] = useState(0);
   const [tapCount, setTapCount] = useState(0);
@@ -182,23 +123,28 @@ const EggTeaser = () => {
           className="absolute inset-0 bg-gradient-to-b from-charcoal/5 via-charcoal/60 to-charcoal"
         />
 
-        {/* Real tap target sitting directly on the egg in the photo. A persistent
-            ring (not just the fading ping pulse) plus a small "tap here" label
-            make it obvious this is clickable, not just decorative glow. */}
+        {/* The tap target IS the egg: the real egg image inside a yellow ring,
+            floating gently, with a "tap here" label above it. */}
         <div className="absolute left-1/2 top-[57%] -translate-x-1/2 -translate-y-1/2">
           <button
             type="button"
             onClick={revealClue}
             aria-label={isAr ? "دوسي على البيضة" : "Tap the egg"}
-            className="relative flex h-20 w-20 items-center justify-center rounded-full outline-none"
+            className="group relative flex h-24 w-24 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
           >
             <span
               aria-hidden="true"
-              className="absolute inset-0 animate-ping rounded-full bg-klovers-yellow/30"
+              className="absolute inset-0 animate-ping rounded-full bg-klovers-yellow/25 motion-reduce:animate-none"
             />
             <span
               aria-hidden="true"
-              className="absolute inset-0 rounded-full border-2 border-klovers-yellow bg-klovers-yellow/10"
+              className="absolute inset-0 rounded-full border-2 border-klovers-yellow bg-charcoal/50 shadow-[0_0_24px_rgba(255,255,0,0.35)]"
+            />
+            <img
+              src="/assets/story/egg-0.webp"
+              alt=""
+              aria-hidden="true"
+              className="relative h-[4.5rem] w-[4.5rem] rounded-full object-cover animate-bounce [animation-duration:2.5s] transition-transform group-hover:scale-110 motion-reduce:animate-none"
             />
           </button>
           <span
@@ -233,8 +179,8 @@ const EggTeaser = () => {
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-ivory/70 md:text-base">
             {isAr
-              ? "اتنين من طلابنا لقوا حاجة عمرها ما حد فسّرها — بيضة عاجية عليها علامة غريبة. القصة بتتكشف شوية شوية جوه رحلتك مع كلوفرز."
-              : "Two of our learners found something no one has explained yet — an ivory egg with a strange mark. The story unfolds slowly, inside your own Klovers journey."}
+              ? "اتنين من طلابنا لقوا حاجة عمرها ما حد فسّرها — بيضة عاجية عليها علامة غريبة. البيضة بتصحى هنا، بس بتفقس جوه حسابك وإنتي بتتعلّمي."
+              : "Two of our learners found something no one has explained yet — an ivory egg with a strange mark. It stirs here, but it only hatches inside your own account, as you learn."}
           </p>
 
           {/* Tap the egg — outlined, not filled yellow (FinalCTA below already owns the solid-yellow button) */}
@@ -253,6 +199,19 @@ const EggTeaser = () => {
                 {isAr
                   ? `دُست عليها ${tapCount === 1 ? "مرة" : `${tapCount} مرات`}`
                   : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}
+              </p>
+            )}
+
+            {user ? (
+              <Link to="/dashboard" className="text-xs font-semibold text-ivory/70 underline-offset-4 hover:text-klovers-yellow hover:underline">
+                {isAr ? "شوفي بيضتك في لوحة التحكم" : "See your egg on your dashboard"}
+              </Link>
+            ) : (
+              <p className="text-xs text-ivory/60">
+                {isAr ? "لسه ما عندكيش حساب؟ " : "No account yet? "}
+                <Link to={SIGNUP_HREF} className="font-bold text-klovers-yellow underline-offset-4 hover:underline">
+                  {isAr ? "اعملي حساب مجاني — بيضتك مستنياكي" : "Create one free — your egg is waiting"}
+                </Link>
               </p>
             )}
           </div>
@@ -308,6 +267,50 @@ const EggTeaser = () => {
               {isAr ? "دلوقتي دليل تاني" : "Reveal another clue"}
               <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </button>
+
+            {/* The honest next step: the egg only hatches in an account. */}
+            <div className="mt-2 w-full border-t border-ivory/10 pt-4 text-center">
+              <p className="text-sm font-semibold text-ivory">
+                {isAr ? "البيضة مش هتفقس هنا…" : "It won't hatch here…"}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-ivory/60">
+                {isAr
+                  ? "بتفقس في حسابك، مع كل درس بتخلّصيه."
+                  : "It hatches in your account, with every lesson you finish."}
+              </p>
+
+              {user ? (
+                <Link
+                  to="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-klovers-yellow px-6 text-sm font-bold text-charcoal transition-opacity hover:opacity-90"
+                >
+                  {isAr ? "شوفي بيضتك في لوحة التحكم" : "See your egg on your dashboard"}
+                  <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to={SIGNUP_HREF}
+                    onClick={() => setOpen(false)}
+                    className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-klovers-yellow px-6 text-sm font-bold text-charcoal transition-opacity hover:opacity-90"
+                  >
+                    <UserPlus className="h-4 w-4" aria-hidden="true" />
+                    {isAr ? "اعملي حساب مجاني" : "Create a free account"}
+                  </Link>
+                  <p className="mt-2 text-xs text-ivory/60">
+                    {isAr ? "عندك حساب؟ " : "Already have one? "}
+                    <Link
+                      to={LOGIN_HREF}
+                      onClick={() => setOpen(false)}
+                      className="font-bold text-klovers-yellow underline-offset-4 hover:underline"
+                    >
+                      {isAr ? "سجّلي دخول" : "Sign in"}
+                    </Link>
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
