@@ -227,7 +227,7 @@ const App = () => (
                 <Route path="/complete-profile" element={<CompleteProfilePage />} />
                 <Route path="/free-trial" element={<FreeTrialPage />} />
                 <Route path="/rsvp" element={<RsvpConfirmationPage />} />
-                <Route path="/trial-booking" element={<AuthProtectedRoute><TrialBookingPage /></AuthProtectedRoute>} />
+                <Route path="/trial-booking" element={<TrialBookingPage />} />
                 <Route path="/progress-report" element={<AuthProtectedRoute><ProgressReportPage /></AuthProtectedRoute>} />
                 <Route path="/certificate" element={<AuthProtectedRoute><CertificatePage /></AuthProtectedRoute>} />
                 <Route path="/affiliate" element={<AffiliatePage />} />
