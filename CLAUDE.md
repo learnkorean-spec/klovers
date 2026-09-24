@@ -42,6 +42,15 @@ Grep for the symbol name, the UI string, and the column name before writing code
   commit authored by the `learnkorean-spec` GitHub account** (Vercel Hobby-plan
   constraint) — this is why the account distinction above isn't cosmetic.
   Supabase migrations and edge functions deploy via `deploy-functions.yml`.
+- **Deploy budget (Re's standing rule, 2026-09-24).** Every push that
+  Vercel builds (production commits on `main` AND preview builds of branch
+  pushes) counts toward the Hobby plan's **100 deployments per rolling 24h**.
+  It was hit on 2026-09-24 (partly by deleting 9 files one commit at a time);
+  after that, pushes land on GitHub but never deploy and are not queued.
+  So: put related edits, uploads and deletions in ONE commit, never one
+  commit per file; avoid fix-up commits; if the limit is hit, wait until the
+  oldest deploys age out, then redeploy the current `main` HEAD once and
+  confirm `READY`.
 - **Do not leave a PR open.** Anything sitting more than about a week against a
   moving `main` should be closed and rebuilt, not reconciled. Stale PRs here have
   a track record of being actively harmful, not merely useless.
