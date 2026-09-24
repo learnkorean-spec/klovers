@@ -136,8 +136,8 @@ const LearnKoreanArabicSpeakersPage = () => {
                       <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tr("Arabic", "عربي")}</p>
                       <p className="mt-1 font-bold text-foreground" dir="rtl" lang="ar">{c.arabic}</p>
                     </div>
-                    <div className="rounded-xl bg-klovers-yellow/40 px-3 py-3">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-charcoal/70">{tr("Korean", "كوري")}</p>
+                    <div className="rounded-xl bg-klovers-yellow px-3 py-3">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-charcoal/80">{tr("Korean", "كوري")}</p>
                       <p className="mt-1 font-bold text-charcoal" lang="ko">{c.korean}</p>
                     </div>
                   </div>

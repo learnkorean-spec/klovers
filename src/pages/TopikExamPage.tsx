@@ -145,7 +145,7 @@ const TopikExamPage = () => {
                 </ul>
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   {TOPIK_I.map((l) => (
-                    <div key={l.level} className="rounded-xl bg-klovers-yellow/40 px-3 py-2 text-center">
+                    <div key={l.level} className="rounded-xl bg-klovers-yellow px-3 py-2 text-center">
                       <p className="text-xs font-bold text-charcoal">{tr(`Level ${l.level}`, `المستوى ${l.level}`)}</p>
                       <p className="text-sm font-extrabold text-charcoal" dir="ltr">{l.score}</p>
                     </div>
@@ -162,7 +162,7 @@ const TopikExamPage = () => {
                 </ul>
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   {TOPIK_II.map((l) => (
-                    <div key={l.level} className="rounded-xl bg-klovers-yellow/40 px-3 py-2 text-center">
+                    <div key={l.level} className="rounded-xl bg-klovers-yellow px-3 py-2 text-center">
                       <p className="text-xs font-bold text-charcoal">{tr(`Level ${l.level}`, `المستوى ${l.level}`)}</p>
                       <p className="text-sm font-extrabold text-charcoal" dir="ltr">{l.score}</p>
                     </div>
@@ -226,7 +226,7 @@ const TopikExamPage = () => {
               ].map(([title, body]) => (
                 <div key={title} className={card}>
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-charcoal" aria-hidden="true" />
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-foreground" aria-hidden="true" />
                     <div>
                       <h3 className="font-bold text-foreground">{title}</h3>
                       <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{body}</p>
