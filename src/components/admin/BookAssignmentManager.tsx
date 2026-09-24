@@ -13,7 +13,20 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { BookOpen, Plus, Trash2, Search, Clock, CheckCircle2, Lock, ExternalLink, Download } from "lucide-react";
+import { BookOpen, Plus, Trash2, Search, Clock, CheckCircle2, Lock, Download } from "lucide-react";
+import { BOOKS, type BookId } from "@/constants/books";
+
+/**
+ * Admin → Books.
+ *
+ * The A0 Hangul book is a gift for joining: it is assigned automatically when
+ * a Hangul group is started (and to anyone seated into a group that is already
+ * running) by the database triggers in
+ * supabase/migrations/20260926010000_auto_assign_level_book_on_group_start.sql.
+ * This screen is for exceptions only — assign by hand, remove, or download.
+ */
+const BOOK_ID: BookId = "hangul-a0";
+const BOOK = BOOKS[BOOK_ID];
 
 interface Profile {
   user_id: string;
@@ -40,10 +53,15 @@ function availabilityStatus(available_from: string): "available" | "upcoming" | 
   return "upcoming";
 }
 
+/** A gift is given now, not in a week. Local time, as datetime-local expects. */
 function defaultAvailableFrom(): string {
   const d = new Date();
-  d.setDate(d.getDate() + 7);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
+}
+
+function bookLabel(bookId: string): string {
+  return bookId in BOOKS ? BOOKS[bookId as BookId].titleEn : bookId;
 }
 
 const BookAssignmentManager = () => {
@@ -79,11 +97,22 @@ const BookAssignmentManager = () => {
 
   useEffect(() => { fetchData(); }, []);
 
-  const assignedUserIds = new Set(assignments.map(a => a.user_id));
+  const assignedUserIds = new Set(assignments.filter(a => a.book_id === BOOK_ID).map(a => a.user_id));
   const filteredProfiles = profiles.filter(p => {
     const q = userSearch.toLowerCase();
     return (p.name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q)) && !assignedUserIds.has(p.user_id);
   });
+
+  const downloadPdf = async () => {
+    const { data, error } = await supabase.storage
+      .from("student-materials")
+      .createSignedUrl(BOOK.path, 60 * 60, { download: BOOK.fileName });
+    if (error || !data?.signedUrl) {
+      toast({ title: "Could not prepare the PDF", description: error?.message, variant: "destructive" });
+      return;
+    }
+    window.location.assign(data.signedUrl);
+  };
 
   const handleAssign = async () => {
     if (!selectedUser) { toast({ title: "Select a student first", variant: "destructive" }); return; }
@@ -94,7 +123,7 @@ const BookAssignmentManager = () => {
     setSaving(true);
     const { error } = await supabase.from("book_assignments").insert({
       user_id: selectedUser.user_id,
-      book_id: "hangul-1",
+      book_id: BOOK_ID,
       available_from: new Date(availableFrom).toISOString(),
       assigned_by: user?.email ?? "admin",
       notes: notes.trim() || null,
@@ -104,7 +133,7 @@ const BookAssignmentManager = () => {
     if (error) {
       toast({ title: "Failed to assign", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Book assigned!", description: `Hangul Book 1 assigned to ${selectedUser.name ?? selectedUser.email}` });
+      toast({ title: "Book assigned!", description: `${BOOK.titleEn} assigned to ${selectedUser.name ?? selectedUser.email}` });
       setShowDialog(false);
       setSelectedUser(null);
       setUserSearch("");
@@ -114,8 +143,8 @@ const BookAssignmentManager = () => {
     }
   };
 
-  const handleRemove = async (id: string, name: string | null | undefined) => {
-    if (!confirm(`Remove Hangul Book 1 from ${name ?? "this student"}?`)) return;
+  const handleRemove = async (id: string, bookId: string, name: string | null | undefined) => {
+    if (!confirm(`Remove ${bookLabel(bookId)} from ${name ?? "this student"}?`)) return;
     const { error } = await supabase.from("book_assignments").delete().eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Assignment removed" }); fetchData(); }
@@ -147,30 +176,17 @@ const BookAssignmentManager = () => {
       {/* Book info banner */}
       <Card className="bg-muted/40 border-dashed">
         <CardContent className="py-3 px-4 flex items-center gap-3">
-          <BookOpen className="h-8 w-8 text-amber-500 shrink-0" />
+          <BookOpen className="h-8 w-8 text-foreground shrink-0" />
           <div>
-            <div className="text-sm font-semibold">Hangul Book 1 — الهانغول</div>
+            <div className="text-sm font-semibold">{BOOK.titleEn} — {BOOK.titleAr}</div>
             <div className="text-xs text-muted-foreground">
-              Assigned to students who purchased a class. Unlocks on the specified date (default: 1 week after assignment).
+              Gift for joining: given automatically when a Hangul group starts, and to anyone seated into a running
+              Hangul group. No email is sent. Use “Assign Book” only for exceptions.
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2 shrink-0">
             <Badge variant="secondary">{assignments.length} assigned</Badge>
-            <Button
-              variant="outline" size="sm"
-              className="gap-1.5 h-7 text-xs"
-              onClick={() => window.open("/hangul-book", "_blank")}
-            >
-              <ExternalLink className="h-3 w-3" /> Preview
-            </Button>
-            <Button
-              variant="outline" size="sm"
-              className="gap-1.5 h-7 text-xs"
-              onClick={() => {
-                const win = window.open("/hangul-book", "_blank");
-                if (win) win.addEventListener("load", () => win.print());
-              }}
-            >
+            <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs" onClick={downloadPdf}>
               <Download className="h-3 w-3" /> Download PDF
             </Button>
           </div>
@@ -182,7 +198,7 @@ const BookAssignmentManager = () => {
         <div className="text-xs text-muted-foreground py-8 text-center">Loading…</div>
       ) : filtered.length === 0 ? (
         <div className="text-xs text-muted-foreground py-8 text-center">
-          {search ? "No matches found." : "No books assigned yet. Click \"Assign Book\" to get started."}
+          {search ? "No matches found." : "No books assigned yet. They appear here when a Hangul group starts."}
         </div>
       ) : (
         <Table>
@@ -206,7 +222,7 @@ const BookAssignmentManager = () => {
                     <div className="font-medium">{a.profile?.name ?? "—"}</div>
                     <div className="text-muted-foreground">{a.profile?.email ?? a.user_id.slice(0, 8)}</div>
                   </TableCell>
-                  <TableCell className="text-xs font-medium">Hangul Book 1</TableCell>
+                  <TableCell className="text-xs font-medium">{bookLabel(a.book_id)}</TableCell>
                   <TableCell className="text-xs">
                     {new Date(a.available_from).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                     <div className="text-muted-foreground">
@@ -230,13 +246,15 @@ const BookAssignmentManager = () => {
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{a.assigned_by}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {a.assigned_by === "auto:group-start" ? "Auto — group started" : a.assigned_by}
+                  </TableCell>
                   <TableCell className="text-xs text-muted-foreground max-w-[140px] truncate">{a.notes ?? "—"}</TableCell>
                   <TableCell>
                     <Button
                       variant="ghost" size="icon"
                       className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => handleRemove(a.id, a.profile?.name)}
+                      onClick={() => handleRemove(a.id, a.book_id, a.profile?.name)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -253,7 +271,7 @@ const BookAssignmentManager = () => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
-              <BookOpen className="h-4 w-4 text-amber-500" /> Assign Hangul Book 1
+              <BookOpen className="h-4 w-4 text-foreground" /> Assign {BOOK.titleEn}
             </DialogTitle>
           </DialogHeader>
 
@@ -304,7 +322,7 @@ const BookAssignmentManager = () => {
 
             {/* Available from date */}
             <div className="space-y-1.5">
-              <Label className="text-xs">Available from (default: 1 week from now)</Label>
+              <Label className="text-xs">Available from (default: now)</Label>
               <Input
                 type="datetime-local"
                 value={availableFrom}
@@ -317,7 +335,7 @@ const BookAssignmentManager = () => {
             <div className="space-y-1.5">
               <Label className="text-xs">Notes (optional)</Label>
               <Textarea
-                placeholder="e.g. Group A starts Jan 15 — 1 week unlock"
+                placeholder="e.g. Private student — gift on joining"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 className="text-xs min-h-[60px]"
