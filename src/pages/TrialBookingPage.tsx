@@ -204,6 +204,13 @@ const TrialBookingPage = () => {
   // silently. Optional everywhere else - it is asked for here because here it
   // is about a class that starts in days, not a newsletter.
   const [phone, setPhone] = useState("");
+  // Guests book without an account (audit 23 Sep 2026: the password wall in
+  // front of the slot picker was the biggest leak in the funnel). book-trial
+  // has always accepted an unauthenticated booking with a name and an email,
+  // and the confirmation link in the email works without signing in.
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const guestEmailIsValid = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(guestEmail.trim());
   const [classLanguage, setClassLanguage] = useState<"arabic" | "english">(() =>
     defaultLanguageForCountry(guessCountryFromTz())
   );
@@ -282,14 +289,21 @@ const TrialBookingPage = () => {
   const phoneIsValid = phoneDigits.length >= 8 && phoneDigits.length <= 15;
 
   // True when neither profile nor user_metadata has a level — we need to ask.
-  const needsLevel =
+  // A guest has no profile, so the level is always asked.
+  const needsLevel = !user || (
     profileLoaded &&
     !(profile?.level?.trim()) &&
-    !((user?.user_metadata?.level as string | undefined)?.trim());
+    !((user?.user_metadata?.level as string | undefined)?.trim()));
 
   const handleSlotPicked = async (dayOfWeek: number, startTime: string, trialDate: string) => {
-    if (!user) {
-      navigate(`/signup?redirect=${encodeURIComponent("/trial-booking")}`);
+    if (!user && (!guestName.trim() || !guestEmailIsValid)) {
+      toast({
+        title: language === "ar" ? "اكتب اسمك وبريدك" : "Add your name and email",
+        description: language === "ar"
+          ? "نرسل رابط الحصة وتفاصيلها على بريدك."
+          : "We send the class link and details to your email.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -331,13 +345,13 @@ const TrialBookingPage = () => {
 
       const effectiveLevel =
         profile?.level?.trim() ||
-        (user.user_metadata?.level as string | undefined)?.trim() ||
+        (user?.user_metadata?.level as string | undefined)?.trim() ||
         selectedLevel ||
         "";
 
       // If the user picked a level here (and profile was empty), persist it so
       // we don't ask again on future flows.
-      if (needsLevel && selectedLevel) {
+      if (user && needsLevel && selectedLevel) {
         await supabase
           .from("profiles")
           .update({ level: selectedLevel })
@@ -348,7 +362,7 @@ const TrialBookingPage = () => {
       // again and the admin screens can reach this student without opening the
       // booking row.
       const trimmedPhone = phone.trim();
-      if (trimmedPhone && trimmedPhone !== (profile?.phone ?? "").trim()) {
+      if (user && trimmedPhone && trimmedPhone !== (profile?.phone ?? "").trim()) {
         await supabase
           .from("profiles")
           .update({ phone: trimmedPhone })
@@ -360,8 +374,8 @@ const TrialBookingPage = () => {
           // Authenticated path: server pulls name/email/user_id from JWT.
           // We still pass the values from the client profile as a fallback
           // for the first few sessions until book-trial is fully migrated.
-          name: profile?.name || user.email?.split("@")[0] || "Student",
-          email: user.email,
+          name: user ? (profile?.name || user.email?.split("@")[0] || "Student") : guestName.trim(),
+          email: user ? user.email : guestEmail.trim().toLowerCase(),
           phone: phone.trim(),
           level: effectiveLevel || undefined,
           day_of_week: dayOfWeek,
@@ -370,7 +384,7 @@ const TrialBookingPage = () => {
           class_language: classLanguage,
           country: selectedCountry,
           referrer_id: referrerId,
-          authed: true,
+          authed: !!user,
           // The student's real zone, straight from the browser — never
           // inferred from country or phone. Read the same way the rest of
           // this page reads it, bypassing any stale localStorage value.
@@ -405,7 +419,7 @@ const TrialBookingPage = () => {
         const { data: existing } = await supabase
           .from("trial_bookings")
           .select("id, trial_date, start_time, day_of_week, status, duration_min, timezone, calendar_url")
-          .eq("email", user.email ?? "")
+          .eq("email", user?.email ?? guestEmail.trim().toLowerCase())
           .neq("status", "cancelled")
           .order("created_at", { ascending: false })
           .limit(1)
@@ -634,7 +648,16 @@ const TrialBookingPage = () => {
                 {t("trialBooking.successDesc")}
               </p>
 
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              {/* Change / cancel work on the signed-in student's own rows. A guest
+                  manages the booking from the email instead. */}
+              {!user && (
+                <p className="text-muted-foreground mt-3 text-sm max-w-md mx-auto">
+                  {language === "ar"
+                    ? "أرسلنا لك بريدًا فيه رابط الحصة وزر لتأكيد حضورك. تحتاج موعدًا آخر؟ راسلنا على واتساب."
+                    : "We've emailed you the class link and a button to confirm you're coming. Need a different time? Message us on WhatsApp."}
+                </p>
+              )}
+              <div className={user ? "mt-4 flex flex-wrap items-center justify-center gap-2" : "hidden"}>
                 <button
                   onClick={handleReschedule}
                   disabled={cancelling}
@@ -868,10 +891,10 @@ const TrialBookingPage = () => {
               </button>
               <span aria-hidden>·</span>
               <button
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate(user ? "/dashboard" : "/signup")}
                 className="hover:text-foreground underline underline-offset-2 flex items-center gap-1"
               >
-                <LayoutDashboard className="h-3 w-3" /> {t("trialBooking.goDashboard")}
+                <LayoutDashboard className="h-3 w-3" /> {user ? t("trialBooking.goDashboard") : (language === "ar" ? "أنشئ حسابًا مجانيًا" : "Create a free account")}
               </button>
             </div>
           </div>
@@ -934,6 +957,43 @@ const TrialBookingPage = () => {
                 <p className="text-xs text-muted-foreground mb-4">
                   {t("trialBooking.yourLevelIs")} <span className="font-medium text-foreground">{getLevelShortLabel(selectedLevel)}</span>
                 </p>
+              )}
+
+              {/* Name and email — only for a guest; a signed-in student's come
+                  from the account. */}
+              {!user && (
+                <div className="mb-4 space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="trial-name" className="text-sm font-medium">
+                      {language === "ar" ? "اسمك" : "Your name"} <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="trial-name"
+                      autoComplete="name"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="trial-email" className="text-sm font-medium">
+                      {language === "ar" ? "بريدك الإلكتروني" : "Your email"} <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="trial-email"
+                      type="email"
+                      dir="ltr"
+                      autoComplete="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      className="text-start"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {language === "ar"
+                        ? "لا حاجة لحساب أو كلمة مرور — نرسل رابط الحصة على بريدك."
+                        : "No account or password needed — we email you the class link."}
+                    </p>
+                  </div>
+                </div>
               )}
 
               {/* WhatsApp number — always asked, always required. The only
