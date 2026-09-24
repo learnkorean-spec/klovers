@@ -1,2 +1,0 @@
-src/pages/TextbookHubPage.tsx
-src/pages/KDramaLearningPage.tsx
