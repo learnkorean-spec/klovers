@@ -129,3 +129,75 @@ Korean language learning platform targeting Arabic speakers and K-drama fans
 - Only posts with gaps get queued for AI
 - Batch up to 5 posts per AI call
 - Never send full article content — title, description, keywords, headings only
+
+# KLOVERS STORY CANON
+
+Before building or modifying any:
+
+- homepage section
+- student dashboard
+- My Learning page
+- course
+- game
+- story moment
+- character scene
+- world
+- achievement
+- reward
+- Cluby feature
+
+read:
+
+`src/config/klovers-world.ts` (human-readable version: `docs/KLOVERS-STORY-BIBLE.md`)
+
+This file is the canonical source of truth.
+
+Do not invent parallel lore.
+
+Do not change:
+
+- Cluby's origin
+- character relationships
+- character responsibilities
+- world progression logic
+- core visual style
+- story-learning relationship
+
+without intentionally updating the canon first.
+
+If a requested feature conflicts with the canon:
+
+do not silently implement it.
+
+Report:
+
+STORY CONFLICT
+
+Then explain:
+
+1. what conflicts
+2. why
+3. the smallest canon-compatible solution
+
+Every new story feature must answer:
+
+1. What does the learner learn?
+2. Why does this event happen now?
+3. Which existing character owns this moment?
+4. Which existing world does it belong to?
+5. What real learner data triggers it?
+6. What changes in the world afterward?
+
+If these cannot be answered, the story feature should not be added.
+
+Characters support learning. Characters do not replace learning.
+
+Cluby is not a pet.
+
+The male and female learners are friends and study companions. They are not a
+romantic couple by default.
+
+Story progression must be based on real learning progress.
+
+Marketing may tease the story. The logged-in product lets the learner
+experience the story.
