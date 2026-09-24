@@ -19,7 +19,7 @@
  */
 
 export const KLOVERS_WORLD = {
-  version: "1.0",
+  version: "1.1",
 
   corePromise: {
     internal:
@@ -96,6 +96,11 @@ export const KLOVERS_WORLD = {
   characters: {
     cluby: {
       type: "original_klovers_creature",
+
+      name: {
+        en: "Cluby",
+        ar: "كلوبي",
+      },
 
       roles: [
         "companion",
@@ -342,7 +347,7 @@ export const KLOVERS_WORLD = {
 
       name: {
         en: "Cluby's Memory Garden",
-        ar: "حديقة ذاكرة كلَبي",
+        ar: "حديقة ذاكرة كلوبي",
       },
 
       purpose:
@@ -443,6 +448,23 @@ export const KLOVERS_WORLD = {
     },
   ],
 
+  /**
+   * How the seven course levels (src/constants/levels.ts) walk through the
+   * worlds on the student's journey map. Re's decision, 24 Sep 2026:
+   * Cluby's Memory Garden is NOT a level stop — it is a review place beside
+   * the journey, unlocked by review data (see its unlockRule).
+   */
+  levelJourney: {
+    hangul: { world: "hangul-village", part: null },
+    l1: { world: "vocabulary-market", part: null },
+    l2: { world: "conversation-cafe", part: null },
+    l3: { world: "culture-street", part: null },
+    l4: { world: "seoul-journey", part: 1 },
+    l5: { world: "seoul-journey", part: 2 },
+    l6: { world: "seoul-journey", part: 3 },
+    notALevelStop: ["memory-garden"],
+  },
+
   longTermStory: {
     mysteryName: "The Forgotten Clovers",
 
@@ -515,13 +537,19 @@ export const KLOVERS_WORLD = {
     ],
   },
 
+  /**
+   * The approved brand palette (Re, Sep 2026 — see src/index.css and
+   * claude/BRAND_PALETTE_REFERENCE.md; the code is the source of truth).
+   * Three brand colours plus one status colour. Retired and not to be used:
+   * #FFF000, #25D366, #BEEFCB (mint/soft green), #FFB7A1 (peach).
+   * WhatsApp's own green stays only on WhatsApp buttons/icons.
+   */
   colors: {
-    yellow: "#FFF000",
+    yellow: "#FFFF00",
     charcoal: "#2E2E2E",
     ivory: "#FFF9EC",
-    freshGreen: "#25D366",
-    softGreen: "#BEEFCB",
-    peach: "#FFB7A1",
+    // Status only (progress / correct / live) — a fill, never text or decoration.
+    neonGreen: "#39FF14",
   },
 
   typography: {
@@ -530,8 +558,9 @@ export const KLOVERS_WORLD = {
     arabicUI: "Cairo",
 
     clubyHandwriting: {
-      windows: "Segoe Script",
-      fallback: "Kalam",
+      // Matches the site's font-script (Caveat). Latin only — Arabic notes stay in Cairo.
+      latin: "Caveat",
+      arabic: "none_use_cairo",
 
       allowedOnlyFor: [
         "short_cluby_notes",
