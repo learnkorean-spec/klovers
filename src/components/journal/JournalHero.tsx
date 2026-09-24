@@ -1,18 +1,17 @@
 import { ArrowDown, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import OptimizedImage from "@/components/OptimizedImage";
 import { journey } from "@/lib/journeyProgress";
 import { trackJourney } from "@/lib/journeyAnalytics";
 import { ArticleCard, KlobiFigure, Ko, num, type JournalPost } from "./shared";
 
 /**
- * The editorial hero: one headline, one Korean mark, one photograph, Klobi
+ * The editorial hero: one headline, one Korean mark, one story scene, Cluby
  * reading — and directly under it, the featured story, so the first screen has
  * a clear lead instead of three equal cards.
  *
- * The photograph is the hero image of the published Hanok article
- * (/assets/blog/korean-hanok.jpg), i.e. an image already vetted and live on
- * the site, not a new asset.
+ * The scene is the Culture Street world of the Klovers story
+ * (/assets/story/world-culture-street.webp). It replaced the stock hanok
+ * photo, which was decoration, not a post cover; post covers are untouched.
  */
 export default function JournalHero({
   isAr,
@@ -107,13 +106,13 @@ export default function JournalHero({
 
           <div className="relative mx-auto w-full max-w-md lg:max-w-none">
             <div className="relative rotate-[1.5deg] overflow-hidden rounded-[2rem] border-4 border-card shadow-xl">
-              <OptimizedImage
-                src="/assets/blog/korean-hanok.jpg"
-                alt={isAr ? "بيوت هانوك تقليدية في سيول" : "Traditional hanok houses in Seoul"}
-                variant="card"
-                priority
-                sizes="(max-width: 1024px) 90vw, 520px"
-                className="!aspect-[4/3] !rounded-none"
+              <img
+                src="/assets/story/world-culture-street.webp"
+                alt={isAr ? "شارع الثقافة الكورية من عالم قصة Klovers" : "Culture Street, a Korean street from the Klovers story world"}
+                width={1600}
+                height={900}
+                decoding="async"
+                className="aspect-[4/3] w-full object-cover"
               />
             </div>
             {/* The seal: a stamp-like Hangul mark, the one Korean graphic element. */}

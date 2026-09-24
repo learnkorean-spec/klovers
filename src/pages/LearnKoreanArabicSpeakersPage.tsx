@@ -117,6 +117,15 @@ const LearnKoreanArabicSpeakersPage = () => {
                 <Link to="/placement-test">{tr("Find your level", "اعرف مستواك")}</Link>
               </Button>
             </div>
+            {/* Story scene under the buttons, so it never pushes them down. */}
+            <img
+              src="/assets/story/world-conversation-cafe.webp"
+              alt={tr("The Conversation Café from the Klovers story, where friends practise Korean together", "كافيه المحادثة من قصة Klovers، حيث الصحاب بيتمرّنوا على الكوري سوا")}
+              width={1600}
+              height={900}
+              decoding="async"
+              className="mt-10 w-full aspect-[16/7] rounded-3xl border border-ivory/15 object-cover"
+            />
           </div>
         </section>
 

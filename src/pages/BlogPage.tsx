@@ -275,7 +275,7 @@ const BlogPage = () => {
                 <MiniQuiz questions={QUIZ} isAr={isAr} />
                 {study.length > 0 && (
                   <div>
-                    <h3 className="mb-3 text-sm font-bold text-charcoal/70">{isAr ? "استعد للخطوة التالية" : "Ready for the next step"}</h3>
+                    <h3 className="mb-3 text-sm font-bold text-charcoal/70 dark:text-foreground/70">{isAr ? "استعد للخطوة التالية" : "Ready for the next step"}</h3>
                     <ul className="grid gap-2">
                       {study.map((p) => (
                         <li key={p.id}>

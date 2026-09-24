@@ -81,11 +81,11 @@ const TYPE_LABEL_AR: Record<string, string> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  howto: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
-  listicle: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
-  longform: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800",
-  news: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
-  review: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
+  howto: "bg-klovers-yellow text-charcoal border-charcoal/15",
+  listicle: "bg-klovers-green/15 text-charcoal border-klovers-green dark:text-foreground",
+  longform: "bg-charcoal text-ivory border-charcoal dark:bg-ivory dark:text-charcoal dark:border-ivory",
+  news: "bg-[#FF3131]/10 text-charcoal border-[#FF3131]/40 dark:text-foreground",
+  review: "bg-[#FFF9EC] text-charcoal border-charcoal/20 dark:bg-muted dark:text-foreground dark:border-border",
 };
 
 const BlogPostPage = () => {
@@ -623,7 +623,7 @@ const BlogPostPage = () => {
             prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
             prose-h4:text-lg prose-h4:mt-6 prose-h4:mb-2
             prose-p:text-foreground/90 prose-p:leading-[1.85] prose-p:my-5 prose-p:text-[1.05rem]
-            prose-a:text-blue-700 dark:prose-a:text-blue-400 prose-a:font-medium prose-a:underline prose-a:underline-offset-2 hover:prose-a:text-blue-900 dark:hover:prose-a:text-blue-300
+            prose-a:text-foreground prose-a:font-semibold prose-a:underline prose-a:decoration-primary prose-a:decoration-2 prose-a:underline-offset-2 hover:prose-a:decoration-foreground
             prose-strong:text-foreground prose-strong:font-bold
             prose-em:text-foreground/80
             prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:px-5 prose-blockquote:py-3 prose-blockquote:rounded-r-lg prose-blockquote:not-italic prose-blockquote:text-foreground/80
@@ -678,7 +678,7 @@ const BlogPostPage = () => {
               onClick={handleCopyLink}
               className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border hover:bg-accent transition-colors text-muted-foreground hover:text-foreground"
             >
-              {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? <Check className="h-3.5 w-3.5 text-foreground" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? (isAr ? "تم النسخ!" : "Copied!") : (isAr ? "نسخ الرابط" : "Copy link")}
             </button>
             <a
@@ -706,7 +706,7 @@ const BlogPostPage = () => {
           {/* Free trial CTA — conversion bridge mid-article journey */}
           <div className="my-10 bg-primary/5 border border-primary/20 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
+              <p className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-1">
                 {isAr ? "تعلم الكورية مع مدرس حقيقي" : "Learn Korean with a real teacher"}
               </p>
               <p className="font-bold text-foreground text-base leading-snug">
@@ -763,7 +763,7 @@ const BlogPostPage = () => {
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${TYPE_COLOR[rp.article_type] || "bg-muted text-muted-foreground border-border"}`}>
                         {(isAr ? TYPE_LABEL_AR : TYPE_LABEL)[rp.article_type] || rp.article_type}
                       </span>
-                      <h3 className="text-sm font-semibold text-foreground mt-2 line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                      <h3 className="text-sm font-semibold text-foreground mt-2 line-clamp-2 leading-snug group-hover:underline decoration-primary decoration-2 underline-offset-2">
                         {rp.title}
                       </h3>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
@@ -789,7 +789,7 @@ const BlogPostPage = () => {
                     <Link
                       key={rp.id}
                       to={`/blog/${rp.slug}`}
-                      className="text-sm text-blue-700 dark:text-blue-400 underline underline-offset-2 hover:text-blue-900 dark:hover:text-blue-300"
+                      className="text-sm text-foreground underline decoration-primary decoration-2 underline-offset-2 hover:decoration-foreground"
                     >
                       {rp.title}
                     </Link>

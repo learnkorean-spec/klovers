@@ -48,7 +48,8 @@ const AboutPage = () => {
     return () => { document.getElementById("about-schema")?.remove(); };
   }, []);
 
-  const { t, tArray } = useLanguage();
+  const { t, tArray, language } = useLanguage();
+  const isAr = language === "ar";
   // The experience list still comes from translations.ts, which carries a
   // "high student pass rates" bullet nothing measures. It renders as plain
   // TOPIK exam preparation instead - see withoutUnsupportedClaims.
@@ -87,6 +88,24 @@ const AboutPage = () => {
             </div>
 
             <div className="max-w-3xl mx-auto space-y-12">
+              {/* How a Klovers class feels, in the story style: the two friends
+                  and Cluby at the café table. Reham's own photos above stay the
+                  proof of who teaches; this is only the mood. */}
+              <figure className="overflow-hidden rounded-3xl border border-border bg-[#FFF9EC] dark:bg-muted">
+                <img
+                  src="/assets/cluby/cafe.webp"
+                  alt={isAr ? "صديقان مع كلوبي بيذاكروا الكورية سوا في كافيه" : "Two friends and Cluby studying Korean together at a café"}
+                  width={1200}
+                  height={800}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[16/9] w-full object-cover"
+                />
+                <figcaption className="px-5 py-4 text-sm font-semibold text-charcoal dark:text-foreground">
+                  {isAr ? "كده بيبان التعلّم مع Klovers: صحاب، ترابيزة واحدة، وكل أسبوع خطوة." : "How learning with Klovers feels: friends at one table, one step every week."}
+                </figcaption>
+              </figure>
+
               <Card className="border-border">
                 <CardContent className="p-8">
                   <h2 className="text-2xl font-bold text-foreground mb-4">

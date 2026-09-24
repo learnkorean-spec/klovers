@@ -127,6 +127,15 @@ const TopikExamPage = () => {
                 <Link to="/courses">{tr("See the TOPIK track", "شوف مسار TOPIK")}</Link>
               </Button>
             </div>
+            {/* Story scene under the buttons, so it never pushes them down. */}
+            <img
+              src="/assets/story/world-seoul-journey.webp"
+              alt={tr("The Seoul Journey, the last world of the Klovers story", "رحلة سيول، آخر عالم في قصة Klovers")}
+              width={1600}
+              height={900}
+              decoding="async"
+              className="mt-10 w-full aspect-[16/7] rounded-3xl border border-ivory/15 object-cover"
+            />
           </div>
         </section>
 

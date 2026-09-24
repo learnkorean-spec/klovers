@@ -159,6 +159,16 @@ const LADDER: { ko: string; ar: string; en: string; emoji: string }[] = [
   { ko: "4급", ar: "المستوى الرابع", en: "Level 4", emoji: "📕" },
 ];
 
+/** The story world that matches each result, shown on the result screen. */
+const GRADE_WORLD: Record<TopikGrade, string> = {
+  pre1: "world-hangul-village",
+  g1: "world-vocabulary-market",
+  g2: "world-conversation-cafe",
+  g3: "world-culture-street",
+  g4: "world-seoul-journey",
+  above: "world-seoul-journey",
+};
+
 const SECTION_IDS = EXAM_SECTIONS.map((s) => s.id);
 
 type Phase = "intro" | "test" | "extras" | "result";
@@ -803,6 +813,16 @@ const KoreanPlacementPage = () => {
 
             <Card dir={isAr ? "rtl" : "ltr"} className="relative overflow-hidden border-border/70 shadow-xl">
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/70 to-primary" />
+              {/* Story art from sm up only: on a phone the card is already long,
+                  and nothing may push "Start the test" further down. */}
+              <img
+                src="/assets/story/world-hangul-village.webp"
+                alt={isAr ? "قرية الهانغول، أول محطة في رحلة Klovers" : "Hangul Village, the first stop on the Klovers journey"}
+                width={1600}
+                height={900}
+                decoding="async"
+                className="hidden sm:block w-full aspect-[16/6] object-cover"
+              />
               <CardContent className="pt-8 pb-7 space-y-7">
 
                 <div className="space-y-4 text-center">
@@ -925,7 +945,15 @@ const KoreanPlacementPage = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main id="main-content" className="flex-1 px-4 pt-24 pb-14 max-w-xl mx-auto w-full space-y-4">
-          <Card dir={isAr ? "rtl" : "ltr"}>
+          <Card dir={isAr ? "rtl" : "ltr"} className="overflow-hidden">
+            <img
+              src={`/assets/story/${GRADE_WORLD[result.grade]}.webp`}
+              alt={isAr ? "عالم القصة اللي بيبدأ منه مستواك" : "The story world where your level begins"}
+              width={1600}
+              height={900}
+              decoding="async"
+              className="w-full aspect-[16/6] object-cover"
+            />
             <CardContent className="pt-6 space-y-5">
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center space-y-2">
                 <p className="text-4xl">{GRADE_META[result.grade].emoji}</p>
@@ -1000,7 +1028,7 @@ const KoreanPlacementPage = () => {
                 <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
                   {leadSaved ? (
                     <div className="text-center py-2 space-y-2">
-                      <CheckCircle className="h-9 w-9 text-green-600 mx-auto" />
+                      <CheckCircle className="h-9 w-9 fill-klovers-green text-charcoal mx-auto" />
                       <p className="font-semibold text-sm">{t("هنبعتلك خطتك قريب!", "We'll send your plan shortly!")}</p>
                     </div>
                   ) : (
@@ -1083,7 +1111,7 @@ const KoreanPlacementPage = () => {
                 </div>
               )}
               {extrasSaved && (
-                <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                <p className="text-sm text-charcoal dark:text-foreground bg-klovers-green/15 border border-klovers-green rounded-lg p-3">
                   {t("اتحفظت للمدرّس. شكرًا!", "Saved for your teacher. Thank you!")}
                 </p>
               )}
