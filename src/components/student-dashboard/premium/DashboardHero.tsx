@@ -19,6 +19,8 @@ export interface HeroProps {
   hasStarted: boolean;
   /** Existing profile-completion avatar (kept from the old hero). */
   avatarSlot?: React.ReactNode;
+  /** Canon: Cluby only appears once his egg has hatched. */
+  clubyAwake: boolean;
 }
 
 /**
@@ -107,7 +109,9 @@ export function DashboardHero(p: HeroProps) {
           </Link>
         </div>
 
-        <ClubyNote text={cluby} lang={lang} alt={c("clubyAlt")} className="hidden shrink-0 flex-col-reverse items-center sm:flex" />
+        {p.clubyAwake && (
+          <ClubyNote text={cluby} lang={lang} alt={c("clubyAlt")} className="hidden shrink-0 flex-col-reverse items-center sm:flex" />
+        )}
       </div>
     </section>
   );

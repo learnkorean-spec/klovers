@@ -1,17 +1,25 @@
 import { Link } from "react-router-dom";
 import { Check, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { JourneyStop } from "@/lib/dashboardProgress";
+import { worldLabel, type JourneyStop } from "@/lib/dashboardProgress";
 import { dashEvent } from "@/lib/dashboardEvents";
 import { useDashCopy } from "./copy";
 import { BrandIcon } from "./primitives";
 
 /**
  * C. Learning journey — the seven course levels (constants/levels.ts), placed
- * from the student's own course_level_key. The row follows the reading
+ * from the student's own course_level_key, told as the story's worlds
+ * (Hangul Village → Vocabulary Market → Conversation Café → Culture Street →
+ * Seoul Journey, KLOVERS_WORLD.worlds). Each stop shows the world with its
+ * course level underneath, so the story never hides the real level. The row follows the reading
  * direction (grid + logical properties), so in Arabic it runs right-to-left;
  * the icons themselves are never mirrored.
  */
+/** The Seoul Journey stops show "Part 2" under the name only once per world. */
+function worldShort(s: JourneyStop, lang: "en" | "ar") {
+  return s.part && s.part > 1 ? (lang === "ar" ? `الجزء ${s.part}` : `Part ${s.part}`) : worldLabel({ world: s.world, part: null }, lang);
+}
+
 export function LearningJourneyMap({
   stops, currentIndex, continueHref,
 }: { stops: JourneyStop[]; currentIndex: number; continueHref: string }) {
@@ -19,13 +27,17 @@ export function LearningJourneyMap({
   const doneCount = stops.filter(s => s.state === "completed").length;
   // Neon line from the first stop to the current one (0 when unknown).
   const reach = currentIndex <= 0 ? 0 : (currentIndex / (stops.length - 1)) * 100;
+  const here = currentIndex >= 0 ? stops[currentIndex] : null;
 
   return (
     <section aria-labelledby="dash-journey-title" className="rounded-[20px] border border-foreground/10 bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <BrandIcon name="progress-path" className="h-9 w-9" />
-          <h2 id="dash-journey-title" className="font-display text-lg font-semibold text-foreground">{c("journeyTitle")}</h2>
+          <div>
+            <h2 id="dash-journey-title" className="font-display text-lg font-semibold text-foreground">{c("journeyTitle")}</h2>
+            {here && <p className="text-sm text-muted-foreground">{c("journeyYouAreIn", { world: worldLabel(here, lang) })}</p>}
+          </div>
         </div>
         {currentIndex >= 0 && (
           <span className="text-sm text-muted-foreground">{c("journeyDone", { done: doneCount, total: stops.length })}</span>
@@ -41,7 +53,9 @@ export function LearningJourneyMap({
           style={{ width: `${reach * 0.86}%` }}
         />
         {stops.map(s => {
-          const label = lang === "ar" ? s.labelAr : s.labelEn;
+          const level = lang === "ar" ? s.labelAr : s.labelEn;
+          const world = worldLabel(s, lang);
+          const label = `${world} — ${level}`;
           const stateText = s.state === "completed" ? c("stateCompleted") : s.state === "current" ? c("stateCurrent") : c("stateLocked");
           const node = (
             <>
@@ -75,9 +89,10 @@ export function LearningJourneyMap({
               </span>
               </span>
               <span className={cn("mt-1.5 block text-center text-[11px] leading-tight sm:text-xs", s.state === "current" ? "font-bold text-foreground" : "text-muted-foreground")}>
-                <span className="hidden sm:inline">{label}</span>
+                <span className="hidden sm:block">{worldShort(s, lang)}</span>
+                <span className="hidden sm:block text-[11px] font-normal text-muted-foreground">{level}</span>
                 <span className="sm:hidden" aria-hidden="true">{s.order === 0 ? (lang === "ar" ? "هانغل" : "Hangul") : s.order}</span>
-                <span className="sr-only sm:hidden">{label}</span>
+                <span className="sr-only">{label}</span>
               </span>
               <span className="sr-only">, {stateText}</span>
             </>

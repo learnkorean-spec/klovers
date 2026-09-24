@@ -17,7 +17,9 @@ const SLOTS = 10;
  * variants, vouchers, classes or gifts are shown because none exist in the
  * backend yet — see the PR notes for the Cluby-collection data gap.
  */
-export function CollectionCard({ earned, milestones }: { earned: EarnedBadge[]; milestones: MilestoneRow[] }) {
+export function CollectionCard({
+  earned, milestones, clubyAwake = true,
+}: { earned: EarnedBadge[]; milestones: MilestoneRow[]; clubyAwake?: boolean }) {
   const { c, lang } = useDashCopy();
   const ref = useRef<HTMLElement>(null);
   const earnedKeys = new Set(earned.map(e => e.badge_key));
@@ -102,7 +104,7 @@ export function CollectionCard({ earned, milestones }: { earned: EarnedBadge[]; 
         <Link to="/textbook/progress" className="inline-flex min-h-11 items-center text-sm font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded">
           {c("viewAll")}
         </Link>
-        {recent && <ClubyNote text={c("clubyFound")} lang={lang} size="sm" pose="star" alt={c("clubyAlt")} />}
+        {recent && clubyAwake && <ClubyNote text={c("clubyFound")} lang={lang} size="sm" pose="star" alt={c("clubyAlt")} />}
       </div>
     </section>
   );

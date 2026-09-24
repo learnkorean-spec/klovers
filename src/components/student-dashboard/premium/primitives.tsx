@@ -13,7 +13,7 @@ const ICON_FILE: Record<BrandIconName, string> = {
   conversation: "03-conversation",
   flashcards: "04-flashcards", "hangul-card": "16-dictionary", vocabulary: "15-tips",
   controller: "05-games", puzzle: "05-games",
-  "progress-path": "06-learning-path",
+  "progress-path": "06-learning-path", passport: "10-journey-passport",
   "achievement-star": "07-achievements", success: "07-achievements",
   "reward-gift": "08-rewards", favourite: "08-rewards",
   hanok: "09-worlds", namsan: "09-worlds", "korea-map": "09-worlds", bibimbap: "09-worlds",
