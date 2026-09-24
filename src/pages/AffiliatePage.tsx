@@ -15,8 +15,17 @@ import { STUDENTS_TAUGHT, trustCopy } from "@/lib/trustFigures";
 
 const COMMISSION_RATE = 20; // %
 
+/*
+ * Story mode (Re, 25 Sep 2026): the hero was a violet gradient with no
+ * picture. It now uses the approved community picnic scene (the two learners
+ * and Cluby sharing a day by the river) - an affiliate brings friends in, so
+ * the "friends learning together" moment fits. Palette only: charcoal ground,
+ * ivory text, yellow accents and buttons. Cluby's line is a short
+ * .cluby-note, the only place his handwriting is allowed.
+ */
 export default function AffiliatePage() {
   const { t, language } = useLanguage();
+  const isAr = language === "ar";
   useSEO({
     title: "Affiliate Program — Earn 20% Commission",
     description: "Join the Klovers affiliate program. Earn 20% commission for every student you refer to our Korean language courses. Simple, transparent, and rewarding.",
@@ -75,21 +84,43 @@ export default function AffiliatePage() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1">
-        {/* Hero */}
-        <section className="bg-gradient-to-br from-violet-600 to-purple-700 text-white py-20 px-4 text-center">
-          <div className="max-w-3xl mx-auto">
-            <p className="text-violet-200 text-sm font-semibold uppercase tracking-widest mb-3">{t("affiliate.heroBadge")}</p>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-              {t("affiliate.heroTitleLine1")}<br />{t("affiliate.heroTitleLine2")}
-            </h1>
-            <p className="text-violet-100 text-lg mb-8">
-              {t("affiliate.heroSubtitle")}
-            </p>
-            <a href="#apply">
-              <Button size="lg" className="bg-white text-violet-700 hover:bg-violet-50 font-bold px-8">
-                {t("affiliate.applyFree")}
-              </Button>
-            </a>
+        {/* Hero — story mode */}
+        <section className="bg-charcoal text-ivory py-16 md:py-20 px-4 overflow-hidden">
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 md:gap-12 items-center">
+            <div className="text-center md:text-start">
+              <span className="inline-block bg-klovers-yellow text-charcoal text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
+                {t("affiliate.heroBadge")}
+              </span>
+              <h1 className="font-display text-4xl md:text-5xl font-extrabold leading-tight mb-4 text-ivory">
+                {t("affiliate.heroTitleLine1")}<br />
+                <span className="text-klovers-yellow">{t("affiliate.heroTitleLine2")}</span>
+              </h1>
+              <p className="text-ivory/85 text-lg mb-8">
+                {t("affiliate.heroSubtitle")}
+              </p>
+              <a href="#apply">
+                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold px-8">
+                  {t("affiliate.applyFree")}
+                </Button>
+              </a>
+            </div>
+            <figure className="relative mx-auto w-full max-w-xl">
+              <img
+                src="/assets/cluby/picnic.webp"
+                width={1600}
+                height={900}
+                alt={isAr ? "كلوبي مع اتنين من طلاب كلوفرز في نزهة على ضفة النهر" : "Cluby and two Klovers learners at a riverside picnic"}
+                loading="eager"
+                decoding="async"
+                className="w-full aspect-[16/9] object-cover rounded-3xl border-4 border-klovers-yellow shadow-xl"
+              />
+              <figcaption
+                lang={isAr ? "ar" : "en"}
+                className="cluby-note absolute -bottom-5 start-4 bg-ivory text-charcoal rounded-2xl px-4 py-2 shadow-md border-2 border-charcoal"
+              >
+                {isAr ? "الحلو بيحلى لما نشاركه!" : "Good things are better shared!"}
+              </figcaption>
+            </figure>
           </div>
         </section>
 
@@ -104,8 +135,8 @@ export default function AffiliatePage() {
               { icon: LinkIcon, label: t("affiliate.statCookieDuration"), value: "30 days" },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="bg-card border rounded-2xl p-6 flex flex-col items-center gap-2 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center">
-                  <Icon className="h-5 w-5 text-violet-600" />
+                <div className="w-10 h-10 rounded-full bg-klovers-yellow flex items-center justify-center">
+                  <Icon className="h-5 w-5 text-charcoal" />
                 </div>
                 <p className="text-2xl font-extrabold text-foreground">{value}</p>
                 <p className="text-xs text-muted-foreground">{label}</p>
@@ -125,7 +156,7 @@ export default function AffiliatePage() {
                 { step: "3", title: t("affiliate.step3Action"), desc: t("affiliate.step3Desc") },
               ].map(({ step, title, desc }) => (
                 <div key={step} className="bg-card border rounded-2xl p-6 shadow-sm">
-                  <div className="w-9 h-9 rounded-full bg-violet-600 text-white font-bold flex items-center justify-center mb-4 text-sm">
+                  <div className="w-9 h-9 rounded-full bg-klovers-yellow text-charcoal border border-charcoal font-bold flex items-center justify-center mb-4 text-sm">
                     {step}
                   </div>
                   <h3 className="font-semibold text-base mb-1">{title}</h3>
@@ -145,8 +176,10 @@ export default function AffiliatePage() {
             </p>
 
             {submitted ? (
-              <div className="bg-card border border-green-200 rounded-2xl p-10 text-center shadow-sm">
-                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <div className="bg-card border border-charcoal/20 rounded-2xl p-10 text-center shadow-sm">
+                <div className="w-14 h-14 rounded-full bg-klovers-green flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="h-8 w-8 text-charcoal" />
+                </div>
                 <h3 className="text-xl font-bold mb-2">{t("affiliate.applicationReceived")}</h3>
                 <p className="text-muted-foreground text-sm mb-6">
                   {t("affiliate.applicationReceivedDesc")}
@@ -213,7 +246,7 @@ export default function AffiliatePage() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700" disabled={loading}>
+                <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 border border-charcoal font-bold" disabled={loading}>
                   {loading ? t("affiliate.submittingBtn") : t("affiliate.submitApplication")}
                 </Button>
 
