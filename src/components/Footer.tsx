@@ -50,10 +50,10 @@ const Footer = () => {
               {t("footer", "tagline")}
             </p>
             <div className="space-y-1.5 text-background/70 text-sm">
-              <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+              <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 py-1 hover:text-primary transition-colors">
                 <Mail className="h-3.5 w-3.5 shrink-0" /> {CONTACT_EMAIL}
               </a>
-              <a href="tel:+201010003084" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <a href="tel:+201010003084" className="flex items-center gap-2 py-1 hover:text-primary transition-colors">
                 <Phone className="h-3.5 w-3.5 shrink-0" /> +201010003084
               </a>
             </div>
@@ -62,10 +62,10 @@ const Footer = () => {
           {/* Learn */}
           <div>
             <h4 className="font-semibold mb-4 text-background">{isAr ? "تعلم" : "Learn"}</h4>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {learnLinks.map(({ to, label }) => (
                 <li key={to}>
-                  <Link to={to} className="text-background/65 hover:text-primary text-sm transition-colors">
+                  <Link to={to} className="inline-block py-1 text-background/65 hover:text-primary text-sm transition-colors">
                     {label}
                   </Link>
                 </li>
@@ -76,10 +76,10 @@ const Footer = () => {
           {/* Company */}
           <div>
             <h4 className="font-semibold mb-4 text-background">{isAr ? "الشركة" : "Company"}</h4>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {companyLinks.map(({ to, label }) => (
                 <li key={to}>
-                  <Link to={to} className="text-background/65 hover:text-primary text-sm transition-colors">
+                  <Link to={to} className="inline-block py-1 text-background/65 hover:text-primary text-sm transition-colors">
                     {label}
                   </Link>
                 </li>
@@ -123,10 +123,10 @@ const Footer = () => {
             {isAr ? "كلوفرز — أكاديمية محبي الكورية. جميع الحقوق محفوظة." : "Klovers Korean Academy. All rights reserved."}
           </p>
           <div className="flex items-center gap-4">
-            <Link to="/privacy-policy" className="text-background/45 hover:text-background/70 text-xs transition-colors">
+            <Link to="/privacy-policy" className="inline-block py-1 text-background/75 hover:text-background text-xs transition-colors">
               {isAr ? "سياسة الخصوصية" : "Privacy Policy"}
             </Link>
-            <Link to="/terms" className="text-background/45 hover:text-background/70 text-xs transition-colors">
+            <Link to="/terms" className="inline-block py-1 text-background/75 hover:text-background text-xs transition-colors">
               {isAr ? "الشروط والأحكام" : "Terms of Service"}
             </Link>
           </div>
