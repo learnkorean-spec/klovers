@@ -12,6 +12,10 @@ import { ArticleCard, KlobiFigure, Ko, num, type JournalPost } from "./shared";
  * The scene is the Culture Street world of the Klovers story
  * (/assets/story/world-culture-street.webp). It replaced the stock hanok
  * photo, which was decoration, not a post cover; post covers are untouched.
+ *
+ * World mode: the blog is Culture Street (world 5). Cluby leads this section
+ * alone; his line hints at the memory canon (he does not remember why the
+ * street feels familiar) and never claims progress.
  */
 export default function JournalHero({
   isAr,
@@ -44,14 +48,14 @@ export default function JournalHero({
           <div>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground">
               <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-              {isAr ? "مجلة Klovers" : "The Klovers Journal"}
+              {isAr ? "شارع الثقافة · مجلة Klovers" : "Culture Street · The Klovers Journal"}
               <span aria-hidden="true" className="text-foreground/40">·</span>
               <Ko className="font-medium">한국 여행</Ko>
             </p>
             <h1 id="journal-title" className="font-display text-4xl font-extrabold leading-[1.15] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               {isAr ? (
                 <>
-                  اكتشف كوريا{" "}
+                  اكتشاف كوريا{" "}
                   <span className="relative inline-block">
                     <span className="relative z-10 dark:text-primary">خطوة بخطوة</span>
                     <span aria-hidden="true" className="absolute inset-x-0 bottom-1 h-3 rounded-sm bg-primary dark:hidden sm:h-4" />
@@ -69,8 +73,8 @@ export default function JournalHero({
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
               {isAr
-                ? "مقالات، كلمات، قصص وتجارب تأخذك إلى قلب اللغة والثقافة الكورية."
-                : "Articles, words, stories and experiences that take you into the heart of Korean language and culture."}
+                ? "تُضاء الفوانيس على امتداد شارع الثقافة مع نهاية النهار. كلّ مقال باب مفتوح: كلمة، أو قصة، أو عادة، أو مشهد من يوم كوري عادي."
+                : "Lanterns come on along Culture Street as the day ends. Every article is an open door: a word, a story, a custom, a scene from an ordinary Korean day."}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button
@@ -82,11 +86,11 @@ export default function JournalHero({
                   onStart();
                 }}
               >
-                {isAr ? "ابدأ رحلتك" : "Start your journey"}
+                {isAr ? "بدء الرحلة" : "Start your journey"}
                 <ArrowDown className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Button size="lg" variant="outline" className="h-12 rounded-full border-foreground/30 bg-card px-7 text-base font-bold" onClick={onBrowse}>
-                {isAr ? "استكشف المقالات" : "Browse articles"}
+                {isAr ? "استكشاف المقالات" : "Browse articles"}
               </Button>
             </div>
             <dl className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm">
@@ -125,9 +129,10 @@ export default function JournalHero({
             </div>
             <div className="absolute -bottom-6 end-2 flex items-end gap-2 sm:end-6">
               <p className="mb-8 hidden max-w-[11rem] rounded-2xl rounded-ee-sm bg-card px-3.5 py-2 text-sm font-medium leading-snug text-foreground shadow-md sm:block">
-                {isAr ? "أنا كلوبي، رفيقك في الرحلة!" : "I'm Cluby — your companion on this trip!"}
+                {isAr ? "أنا كلوبي. كلّ شارع هنا يبدو مألوفًا، ولا أذكر السبب بعد." : "I'm Cluby. Every street here feels familiar, and I can't remember why yet."}
               </p>
               <div className="rounded-full border border-border bg-card p-2 shadow-lg journal-klobi-enter">
+                {/* IMAGE PENDING: cluby-reading.webp (reading pose; cluby-star is the stand-in) */}
                 <KlobiFigure pose="reading" className="h-20 w-20 sm:h-24 sm:w-24" />
               </div>
             </div>

@@ -71,14 +71,14 @@ export default function AllArticles({
             </p>
           </div>
           <div className="relative w-full md:w-80">
-            <label htmlFor="journal-search" className="sr-only">{isAr ? "ابحث في المقالات" : "Search articles"}</label>
+            <label htmlFor="journal-search" className="sr-only">{isAr ? "البحث في المقالات" : "Search articles"}</label>
             <Search className="pointer-events-none absolute top-1/2 start-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <input
               id="journal-search"
               type="search"
               value={query}
               onChange={(e) => { setQuery(e.target.value); setShown(PAGE); }}
-              placeholder={isAr ? "ابحث: هانوك، TOPIK، الدراما…" : "Search: hanok, TOPIK, drama…"}
+              placeholder={isAr ? "بحث: هانوك، TOPIK، الدراما…" : "Search: hanok, TOPIK, drama…"}
               className="h-12 w-full rounded-full border border-border bg-card ps-10 pe-10 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             {query && (
@@ -128,8 +128,8 @@ export default function AllArticles({
         ) : results.length === 0 ? (
           <p className="py-16 text-center text-muted-foreground">
             {filter === "saved"
-              ? isAr ? "لم تحفظ أي مقال بعد. اضغط على رمز الحفظ في أي بطاقة." : "Nothing saved yet — tap the bookmark on any card."
-              : isAr ? "لا توجد نتائج. جرّب كلمة أخرى." : "No results. Try another word."}
+              ? isAr ? "لا توجد مقالات محفوظة بعد. يكفي الضغط على رمز الحفظ في أي بطاقة." : "Nothing saved yet — tap the bookmark on any card."
+              : isAr ? "لا توجد نتائج. يمكن تجربة كلمة أخرى." : "No results. Try another word."}
           </p>
         ) : (
           <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

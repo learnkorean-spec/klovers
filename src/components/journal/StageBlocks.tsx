@@ -42,7 +42,7 @@ function SaveWordButton({
       )}
     >
       {saved ? <Check className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
-      {saved ? (isAr ? "في مجموعتك" : "In your collection") : isAr ? "احفظ الكلمة" : "Save word"}
+      {saved ? (isAr ? "في المجموعة" : "In your collection") : isAr ? "حفظ الكلمة" : "Save word"}
       <span className="sr-only"><Ko>{ko}</Ko></span>
     </button>
   );
@@ -55,7 +55,7 @@ function ListenButton({ text, isAr, tone = "light" }: { text: string; isAr: bool
     <button
       type="button"
       onClick={() => speakKorean(text, { rate: 0.85 })}
-      aria-label={isAr ? `استمع: ${text}` : `Listen: ${text}`}
+      aria-label={isAr ? `الاستماع: ${text}` : `Listen: ${text}`}
       className={cn(
         "inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         tone === "dark" ? "border-ivory/25 text-ivory hover:bg-ivory/10" : "border-border bg-card text-foreground hover:bg-muted",
@@ -106,7 +106,7 @@ export function WordStories({ words, isAr, resolve }: { words: WordStory[]; isAr
                     onClick={() => trackJourney("article_opened", { slug, from: "word_story" })}
                     className="mt-3 block font-bold underline decoration-2 underline-offset-4"
                   >
-                    {isAr ? "اقرأ القصة كاملة" : "Read the full story"}
+                    {isAr ? "قراءة القصة كاملة" : "Read the full story"}
                   </Link>
                 )}
               </div>
@@ -119,7 +119,7 @@ export function WordStories({ words, isAr, resolve }: { words: WordStory[]; isAr
                     onClick={() => setOpen(w.ko)}
                     className="inline-flex min-h-[44px] items-center whitespace-nowrap rounded-full bg-primary px-3.5 text-[0.8125rem] font-bold text-charcoal sm:text-sm sm:px-5 transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
                   >
-                    {isAr ? "اكتشف المعنى" : "Discover the meaning"}
+                    {isAr ? "اكتشاف المعنى" : "Discover the meaning"}
                   </button>
                 ) : (
                   <SaveWordButton ko={w.ko} rom={w.rom} meaning={w.meaning[L]} isAr={isAr} />
@@ -141,7 +141,7 @@ export function DramaLines({ lines, isAr, resolve }: { lines: Expression[]; isAr
     <div>
       <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary px-3.5 py-1 text-xs font-extrabold text-charcoal">
         <Clapperboard className="h-3.5 w-3.5" aria-hidden="true" />
-        {isAr ? "سلسلة · تعلم من الدراما" : "Series · Learn from K-drama"}
+        {isAr ? "سلسلة · التعلّم من الدراما" : "Series · Learn from K-drama"}
       </p>
       {/* Phones: one swipeable strip of scenes (snap), so four tall cards don't
           stack into a wall. From md up, a plain two-column grid. */}
@@ -151,7 +151,7 @@ export function DramaLines({ lines, isAr, resolve }: { lines: Expression[]; isAr
           return (
             <li key={l.ko} className="w-[85%] shrink-0 snap-start overflow-hidden rounded-3xl border border-ivory/15 bg-black/20 md:w-auto">
               {/* The frame: letterbox bars, a scene number, and a subtitle line. */}
-              <div className="relative flex aspect-[16/8] flex-col justify-end bg-[hsl(60_8%_12%)] px-5 pb-5 pt-10">
+              <div className="relative flex aspect-[16/8] flex-col justify-end bg-charcoal px-5 pb-5 pt-10">
                 <span aria-hidden="true" className="absolute inset-x-0 top-0 h-3 bg-black/60" />
                 <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-3 bg-black/60" />
                 <span className="absolute top-5 start-5 rounded bg-ivory/10 px-2 py-0.5 tabular-nums text-[11px] font-semibold text-ivory/70" dir="ltr">
@@ -166,7 +166,7 @@ export function DramaLines({ lines, isAr, resolve }: { lines: Expression[]; isAr
                 <p className="text-sm text-ivory/70">
                   <span dir="ltr" className="font-medium">{l.rom}</span>
                   <span aria-hidden="true"> · </span>
-                  {isAr ? "حرفياً: " : "Literally: "}
+                  {isAr ? "حرفيًا: " : "Literally: "}
                   {l.literal[L]}
                 </p>
                 <p className="mt-2 text-[0.95rem] leading-relaxed text-ivory/90">{l.context[L]}</p>
@@ -199,7 +199,7 @@ export function SpeakPhrases({ phrases, isAr, resolve }: { phrases: Expression[]
   return (
     <div>
       <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-charcoal px-3.5 py-1 text-xs font-extrabold text-ivory">
-        {isAr ? "سلسلة · تكلم مثل الكوريين" : "Series · Speak like Koreans"}
+        {isAr ? "سلسلة · الكلام كما يتكلّم الكوريون" : "Series · Speak like Koreans"}
       </p>
       <ul className="grid gap-5 md:grid-cols-2">
         {phrases.map((p) => {
@@ -234,7 +234,7 @@ export function SpeakPhrases({ phrases, isAr, resolve }: { phrases: Expression[]
                     onClick={() => trackJourney("article_opened", { slug, from: "speak_phrase" })}
                     className="inline-flex min-h-[44px] items-center px-2 text-sm font-bold text-foreground underline decoration-2 underline-offset-4"
                   >
-                    {isAr ? "اعرف كيف يستخدمها الكوريون" : "How Koreans use it"}
+                    {isAr ? "كيف يستخدمها الكوريون" : "How Koreans use it"}
                   </Link>
                 )}
               </div>

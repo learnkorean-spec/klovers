@@ -43,7 +43,7 @@ export function ArticleLearningIntro({
   if (vocabCount) items.push(wordsLabel(vocabCount, isAr));
   if (CULTURAL.includes(stage)) items.push(isAr ? "مفهوم ثقافي" : "a cultural insight");
   return (
-    <aside aria-label={isAr ? "ماذا ستتعلم" : "What you'll learn"} className="mb-8 rounded-3xl border border-border bg-card p-5">
+    <aside aria-label={isAr ? "ما يقدّمه المقال" : "What you'll learn"} className="mb-8 rounded-3xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           to={`/blog#stage-${stage}`}
@@ -58,7 +58,7 @@ export function ArticleLearningIntro({
       </div>
       {items.length > 0 && (
         <>
-          <p className="mt-4 text-sm font-bold text-foreground">{isAr ? "في هذا المقال ستتعلم:" : "In this article you'll learn:"}</p>
+          <p className="mt-4 text-sm font-bold text-foreground">{isAr ? "ما يقدّمه هذا المقال:" : "In this article you'll learn:"}</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {items.map((i) => (
               <li key={i} className="rounded-full border border-border bg-background px-3 py-1 text-sm font-semibold">
@@ -70,7 +70,7 @@ export function ArticleLearningIntro({
       )}
       {vocabCount > 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
-          {isAr ? "اضغط على أي كلمة كورية في المقال لترى معناها وتحفظها." : "Tap any Korean word in the article to see its meaning and save it."}
+          {isAr ? "الضغط على أي كلمة كورية في المقال يعرض معناها ويتيح حفظها." : "Tap any Korean word in the article to see its meaning and save it."}
         </p>
       )}
     </aside>
@@ -86,7 +86,7 @@ function SpeakButton({ text, isAr }: { text: string; isAr: boolean }) {
     <button
       type="button"
       onClick={() => speakKorean(text, { rate: 0.85 })}
-      aria-label={isAr ? `استمع: ${text}` : `Listen: ${text}`}
+      aria-label={isAr ? `الاستماع: ${text}` : `Listen: ${text}`}
       className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <Volume2 className="h-5 w-5" aria-hidden="true" />
@@ -133,7 +133,7 @@ export function KoreanWord({ item, from, isAr, children }: { item: VocabItem; fr
             )}
           >
             {saved ? <Check className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
-            {saved ? (isAr ? "في مجموعتك" : "Saved") : isAr ? "احفظ الكلمة" : "Save word"}
+            {saved ? (isAr ? "في المجموعة" : "Saved") : isAr ? "حفظ الكلمة" : "Save word"}
           </button>
         </div>
       </PopoverContent>
@@ -198,9 +198,9 @@ export function ArticleLearnedToday({
         </div>
         <div>
           <p className="text-xs font-bold text-primary">
-            {isAr ? "اقرأ ← تعلّم ← اجمع" : "Read → Learn → Collect"}
+            {isAr ? "قراءة ← تعلّم ← جمع" : "Read → Learn → Collect"}
           </p>
-          <h2 id="learned-today" className="font-display text-2xl font-extrabold">{isAr ? "تعلمت اليوم" : "Today you learned"}</h2>
+          <h2 id="learned-today" className="font-display text-2xl font-extrabold">{isAr ? "حصيلة اليوم" : "Today you learned"}</h2>
         </div>
       </div>
       <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -226,10 +226,10 @@ export function ArticleLearnedToday({
           }}
         >
           {allSaved ? <Check className="h-4 w-4" aria-hidden="true" /> : <Plus className="h-4 w-4" aria-hidden="true" />}
-          {allSaved ? (isAr ? "الكلمات في مجموعتك" : "Words saved") : isAr ? "احفظ الكلمات" : "Save the words"}
+          {allSaved ? (isAr ? "الكلمات في المجموعة" : "Words saved") : isAr ? "حفظ الكلمات" : "Save the words"}
         </Button>
         <Button asChild size="lg" variant="outline" className="h-12 rounded-full border-ivory/30 bg-transparent px-6 font-bold text-ivory hover:bg-ivory/10 hover:text-ivory">
-          <Link to="/blog#stage-test">{isAr ? "اختبر نفسك" : "Test yourself"}</Link>
+          <Link to="/blog#stage-test">{isAr ? "اختبار الذات" : "Test yourself"}</Link>
         </Button>
         {hasNextStop && (
           <Button
@@ -265,7 +265,7 @@ export function NextStop({ post, isAr, fromSlug }: { post: NextStopPost; isAr: b
     <div id="next-stop" className="scroll-mt-24">
       <h2 className="mb-4 flex items-center gap-3 font-display text-2xl font-extrabold text-foreground">
         <KlobiFigure pose="wave" className="h-12 w-auto" />
-        {isAr ? "محطتك القادمة" : "Your next stop"}
+        {isAr ? "المحطة القادمة" : "Your next stop"}
       </h2>
       <Link
         to={`/blog/${post.slug}`}
@@ -281,14 +281,14 @@ export function NextStop({ post, isAr, fromSlug }: { post: NextStopPost; isAr: b
           <LearningMeta learning={learning} isAr={isAr} className="text-sm" />
           <p className="text-sm text-muted-foreground line-clamp-2">{post.description}</p>
           <span className="mt-auto inline-flex h-11 w-fit items-center gap-2 rounded-full bg-charcoal px-5 text-sm font-bold text-ivory">
-            {isAr ? "تابع الرحلة" : "Continue the journey"}
+            {isAr ? "متابعة الرحلة" : "Continue the journey"}
             <span aria-hidden="true" className="inline-block rtl:rotate-180">→</span>
           </span>
         </div>
       </Link>
       <p className="mt-3 text-sm text-muted-foreground">
         {isAr
-          ? `أكملت ${num(articlesRead.length, true)} ${articlesRead.length >= 3 && articlesRead.length <= 10 ? "محطات" : "محطة"} في رحلتك حتى الآن.`
+          ? `اكتمل حتى الآن ${num(articlesRead.length, true)} ${articlesRead.length >= 3 && articlesRead.length <= 10 ? "محطات" : "محطة"} في هذه الرحلة.`
           : `You've completed ${articlesRead.length} stop${articlesRead.length === 1 ? "" : "s"} on your journey so far.`}
       </p>
     </div>

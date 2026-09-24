@@ -75,7 +75,7 @@ export default function MyJourney({
                 aria-valuemin={0}
                 aria-valuemax={total}
                 aria-valuenow={readHere}
-                aria-label={isAr ? "تقدمك في الرحلة" : "Your journey progress"}
+                aria-label={isAr ? "التقدّم في الرحلة" : "Your journey progress"}
               >
                 <div className="h-full rounded-full bg-primary transition-[width] duration-700" style={{ width: `${Math.max(pct, readHere ? 2 : 0)}%` }} />
               </div>
@@ -97,8 +97,8 @@ export default function MyJourney({
               </dl>
               <p className="mt-3 text-xs text-ivory/60">
                 {readHere === 0
-                  ? isAr ? "كل مقال تُكمله محطة جديدة. تقدمك محفوظ على هذا الجهاز." : "Every article you finish is a new stop. Progress is saved on this device."
-                  : isAr ? "تقدمك محفوظ على هذا الجهاز." : "Your progress is saved on this device."}
+                  ? isAr ? "كل مقال مكتمل محطة جديدة. التقدّم محفوظ على هذا الجهاز." : "Every article you finish is a new stop. Progress is saved on this device."
+                  : isAr ? "التقدّم محفوظ على هذا الجهاز." : "Your progress is saved on this device."}
               </p>
             </div>
 
@@ -126,8 +126,8 @@ export default function MyJourney({
               </div>
 
               <div className="rounded-3xl bg-card p-5 text-foreground">
-                <h3 className="font-display text-lg font-extrabold">{isAr ? "كيف تريد أن تكتشف كوريا؟" : "How do you want to discover Korea?"}</h3>
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3" role="group" aria-label={isAr ? "اختر طريقك" : "Choose your path"}>
+                <h3 className="font-display text-lg font-extrabold">{isAr ? "من أين يبدأ اكتشاف كوريا؟" : "How do you want to discover Korea?"}</h3>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3" role="group" aria-label={isAr ? "اختيار الطريق" : "Choose your path"}>
                   {CHOICES.map((c) => {
                     const active = progress.path === c.stage;
                     return (
