@@ -1,23 +1,58 @@
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, CheckCircle2, ExternalLink } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, BookOpen, Zap, Users, Target, TrendingUp, ArrowRight, Clock, Award } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+/**
+ * /topik-exam-preparation
+ *
+ * 25 Sep 2026 (QA pass): rewritten. The page it replaces had wrong score bands
+ * (Level 1 "0-40", Level 2 "41-100"), wrong timings (Reading + Writing "100
+ * min", Writing "2 tasks"), a "next exam" date that had already passed, and
+ * offers nobody makes ("200+ practice tests", tutors "who passed TOPIK 6",
+ * essays "corrected by native speakers", classes "at 8 PM Cairo time").
+ *
+ * What stays is what does not go out of date: the structure and pass marks of
+ * TOPIK I and TOPIK II, and what the Klovers TOPIK track actually is (the same
+ * four lines as /courses). Exam dates are NOT written here - they differ by
+ * country and change every year - the page sends people to topik.go.kr.
+ *
+ * Palette only: yellow, charcoal, ivory. Copy is inline in both languages
+ * (translations.ts `topikExam.*` is no longer read).
+ */
+
+const TOPIK_I = [
+  { level: 1, score: "80–139" },
+  { level: 2, score: "140–200" },
+];
+const TOPIK_II = [
+  { level: 3, score: "120–149" },
+  { level: 4, score: "150–189" },
+  { level: 5, score: "190–229" },
+  { level: 6, score: "230–300" },
+];
+
 const TopikExamPage = () => {
-  const { t } = useLanguage();
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
+
   useSEO({
-    title: "TOPIK Exam Preparation 2026 | Complete Study Guide & Practice Tests",
-    description: "Master the TOPIK Korean proficiency exam with our complete 2026 guide. Learn test format, scoring, registration deadlines, and proven strategies to reach your target TOPIK level (1-6).",
-    canonical: "https://kloversegy.com/topik-exam-preparation"
+    title: "TOPIK Exam Preparation: Format, Scoring & Study Plan",
+    description:
+      "How the TOPIK Korean exam works: TOPIK I and II, sections, timing and the score needed for each level, plus the Klovers TOPIK track with past papers and writing practice.",
+    canonical: "https://kloversegy.com/topik-exam-preparation",
   });
 
   useEffect(() => {
-    // JSON-LD: FAQPage for TOPIK
-    const faqSchema = {
+    const el = document.createElement("script");
+    el.id = "topik-faq-jsonld";
+    el.setAttribute("type", "application/ld+json");
+    el.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "FAQPage",
       mainEntity: [
@@ -26,350 +61,229 @@ const TopikExamPage = () => {
           name: "What is the TOPIK exam?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "TOPIK (Test of Proficiency in Korean) is the official Korean language proficiency test administered by the Korea Institute of International Education Cooperation (KIIEC). It has 6 levels from beginner (1) to advanced (6) and is recognized worldwide for college admissions, job applications, and visa requirements."
-          }
+            text: "TOPIK (Test of Proficiency in Korean) is the official Korean proficiency test, run by Korea's National Institute for International Education (NIIED). TOPIK I covers Levels 1-2 and TOPIK II covers Levels 3-6.",
+          },
         },
         {
           "@type": "Question",
-          name: "How many TOPIK levels are there?",
+          name: "What score do I need for each TOPIK level?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "TOPIK has 6 levels: Level 1-2 (Beginner A1-A2), Level 3-4 (Intermediate B1-B2), Level 5-6 (Advanced C1-C2). Most people aim for Level 4 (upper intermediate) for job/university requirements."
-          }
+            text: "TOPIK I is scored out of 200: Level 1 from 80, Level 2 from 140. TOPIK II is scored out of 300: Level 3 from 120, Level 4 from 150, Level 5 from 190, Level 6 from 230.",
+          },
         },
         {
           "@type": "Question",
-          name: "When is the TOPIK exam in 2026?",
+          name: "When is the next TOPIK exam?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "TOPIK is offered twice yearly: Spring (April) and Fall (October). Registration opens 5-6 weeks before the exam date. Check the official TOPIK website for exact dates and registration deadlines in your country."
-          }
+            text: "TOPIK is held several times a year, and the dates and test centres differ by country. Check the official site, topik.go.kr, or your local test centre for the next date and its registration window.",
+          },
         },
         {
           "@type": "Question",
-          name: "How long should I study for TOPIK Level 4?",
+          name: "How long is a TOPIK score valid?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "For English speakers: 6-12 months of consistent study. For Arabic speakers using Klovers: 4-8 months due to grammar similarities with Arabic. The key is daily practice (1-2 hours) and focused listening/reading practice."
-          }
+            text: "A TOPIK result is valid for two years from the date results are announced.",
+          },
         },
-        {
-          "@type": "Question",
-          name: "What's the passing score for TOPIK?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "TOPIK I (Levels 1-2) requires 0-200 points. TOPIK II (Levels 3-6) requires 0-300 points. Level cutoffs: Level 3=120 pts, Level 4=150 pts, Level 5=190 pts, Level 6=230 pts. Most employers require Level 4 minimum."
-          }
-        }
-      ]
-    };
-
-    let faqLd = document.getElementById("faq-jsonld");
-    if (!faqLd) {
-      faqLd = document.createElement("script");
-      faqLd.id = "faq-jsonld";
-      faqLd.setAttribute("type", "application/ld+json");
-      document.head.appendChild(faqLd);
-    }
-    faqLd.textContent = JSON.stringify(faqSchema);
-
-    // JSON-LD: Guide schema
-    const guideSchema = {
-      "@context": "https://schema.org",
-      "@type": "Guide",
-      headline: "TOPIK Exam Preparation 2026: Complete Study Guide",
-      description: "Ultimate guide to preparing for the Korean TOPIK exam with study timeline, practice tests, and exam strategies",
-      author: { "@type": "Organization", name: "Klovers" },
-      datePublished: "2026-04-08"
-    };
-
-    let guideLd = document.getElementById("guide-jsonld");
-    if (!guideLd) {
-      guideLd = document.createElement("script");
-      guideLd.id = "guide-jsonld";
-      guideLd.setAttribute("type", "application/ld+json");
-      document.head.appendChild(guideLd);
-    }
-    guideLd.textContent = JSON.stringify(guideSchema);
-
-    return () => {
-      faqLd?.remove();
-      guideLd?.remove();
-    };
+      ],
+    });
+    document.head.appendChild(el);
+    return () => el.remove();
   }, []);
+
+  const sectionTitle = "text-2xl md:text-3xl font-extrabold text-foreground mb-6";
+  const card = "rounded-2xl border border-charcoal/10 bg-card p-5 md:p-6";
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main id="main-content">
+      <main id="main-content" className="pt-16">
         {/* Hero */}
-        <section className="pt-24 pb-16 bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950/20 dark:to-teal-950/20">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <Badge className="mb-4" variant="outline">{t("topikExam.badge")}</Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-              {t("topikExam.heroTitle")}
+        <section className="bg-charcoal text-ivory py-16 md:py-24">
+          <div className="container mx-auto max-w-4xl px-4">
+            <span className="inline-block rounded-full bg-klovers-yellow px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-charcoal">
+              {tr("TOPIK preparation", "التحضير لاختبار TOPIK")}
+            </span>
+            <h1 className="mt-5 text-3xl md:text-5xl font-extrabold leading-tight">
+              {tr("How the TOPIK exam works, and how to prepare", "إزاي امتحان TOPIK بيشتغل، وإزاي تستعد له")}
             </h1>
-            <p className="text-xl text-foreground/70 mb-8 leading-relaxed">
-              {t("topikExam.heroSubtitle")}
+            <p className="mt-4 max-w-2xl text-base md:text-lg text-ivory/80 leading-relaxed">
+              {tr(
+                "The two tests, their sections and timing, the score each level needs, and a realistic way to get ready.",
+                "الاختبارين، أقسام كل واحد ومدته، الدرجة المطلوبة لكل مستوى، وطريقة واقعية للاستعداد.",
+              )}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" asChild>
-                <a href="/placement-test">{t("topikExam.ctaTest")}</a>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <Button size="lg" asChild className="rounded-full font-bold">
+                <Link to="/placement-test">
+                  {tr("Find your level first", "اعرف مستواك الأول")}
+                  <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <a href="/enroll-now">{t("topikExam.ctaCourse")}</a>
+              <Button size="lg" variant="outline" asChild className="rounded-full bg-transparent text-ivory border-ivory/40 hover:bg-ivory/10">
+                <Link to="/courses">{tr("See the TOPIK track", "شوف مسار TOPIK")}</Link>
               </Button>
             </div>
           </div>
         </section>
 
-        {/* TOPIK Levels Overview */}
-        <section className="py-16 border-b">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-12 text-center">{t("topikExam.levelsTitle")}</h2>
-            <div className="space-y-4">
-              {[
-                { level: t("topikExam.level1"), range: t("topikExam.level1Range"), desc: t("topikExam.level1Desc") },
-                { level: t("topikExam.level2"), range: t("topikExam.level2Range"), desc: t("topikExam.level2Desc") },
-                { level: t("topikExam.level3"), range: t("topikExam.level3Range"), desc: t("topikExam.level3Desc") },
-                { level: t("topikExam.level4"), range: t("topikExam.level4Range"), desc: t("topikExam.level4Desc"), highlight: true },
-                { level: t("topikExam.level5"), range: t("topikExam.level5Range"), desc: t("topikExam.level5Desc") },
-                { level: t("topikExam.level6"), range: t("topikExam.level6Range"), desc: t("topikExam.level6Desc") }
-              ].map((item, i) => (
-                <div key={i} className={`p-6 rounded-lg border transition-colors ${
-                  item.highlight ? "bg-green-50 dark:bg-green-950/10 border-green-200 dark:border-green-800" : "bg-slate-50/50 dark:bg-slate-900/50"
-                }`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-bold text-lg">{item.level}</h3>
-                    <Badge variant={item.highlight ? "default" : "secondary"}>{item.range}</Badge>
-                  </div>
-                  <p className="text-foreground/70">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-8 p-6 rounded-lg bg-blue-50 dark:bg-blue-950/10 border border-blue-200 dark:border-blue-800">
-              <p className="text-sm"><strong>{t("topikExam.mostPopular")}</strong> {t("topikExam.mostPopularDesc")}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* 2026 TOPIK Schedule */}
-        <section className="py-16 border-b bg-slate-50/50 dark:bg-slate-950/20">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-12 text-center">{t("topikExam.datesTitle")}</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              {[
-                {
-                  season: t("topikExam.springTitle"),
-                  date: t("topikExam.springDate"),
-                  registration: t("topikExam.springReg"),
-                  location: t("topikExam.regWebsite")
-                },
-                {
-                  season: t("topikExam.fallTitle"),
-                  date: t("topikExam.fallDate"),
-                  registration: t("topikExam.fallReg"),
-                  location: t("topikExam.regWebsite")
-                }
-              ].map((item, i) => (
-                <div key={i} className="p-6 rounded-lg border bg-white dark:bg-slate-900">
-                  <h3 className="font-bold text-lg mb-4">{item.season}</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground/60">{t("topikExam.examDateLabel")}</p>
-                      <p className="text-lg font-bold">{item.date}</p>
+        {/* The two tests */}
+        <section className="py-14 md:py-20">
+          <div className="container mx-auto max-w-4xl px-4">
+            <h2 className={sectionTitle}>{tr("Two tests, six levels", "اختبارين، ست مستويات")}</h2>
+            <div className="grid gap-5 md:grid-cols-2">
+              <div className={card}>
+                <h3 className="text-xl font-bold text-foreground">TOPIK I</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{tr("Levels 1–2 · scored out of 200", "المستويين ١ و٢ · الدرجة من ٢٠٠")}</p>
+                <ul className="mt-4 space-y-2 text-sm text-foreground">
+                  <li>{tr("Listening — 30 questions, 40 minutes", "استماع — ٣٠ سؤال، ٤٠ دقيقة")}</li>
+                  <li>{tr("Reading — 40 questions, 60 minutes", "قراءة — ٤٠ سؤال، ٦٠ دقيقة")}</li>
+                  <li>{tr("All multiple choice · 100 minutes in total", "كله اختيار من متعدد · ١٠٠ دقيقة إجمالي")}</li>
+                </ul>
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  {TOPIK_I.map((l) => (
+                    <div key={l.level} className="rounded-xl bg-klovers-yellow/40 px-3 py-2 text-center">
+                      <p className="text-xs font-bold text-charcoal">{tr(`Level ${l.level}`, `المستوى ${l.level}`)}</p>
+                      <p className="text-sm font-extrabold text-charcoal" dir="ltr">{l.score}</p>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground/60">{t("topikExam.regPeriodLabel")}</p>
-                      <p className="text-lg">{item.registration}</p>
-                    </div>
-                    <div className="pt-3 border-t">
-                      <p className="text-sm text-foreground/70">{item.location}</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="mt-8 p-6 rounded-lg bg-amber-50 dark:bg-amber-950/10 border border-amber-200 dark:border-amber-800">
-              <p className="text-sm"><strong>{t("topikExam.importantNote")}</strong> {t("topikExam.importantDesc")}</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Study Timeline */}
-        <section className="py-16 border-b">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-4">{t("topikExam.timelineTitle")}</h2>
-            <p className="text-foreground/70 mb-12">{t("topikExam.timelineSubtitle")}</p>
-
-            <div className="space-y-6">
-              {[
-                {
-                  week: t("topikExam.weeks12"),
-                  focus: t("topikExam.focus12"),
-                  tasks: [t("topikExam.task121"), t("topikExam.task122"), t("topikExam.task123")]
-                },
-                {
-                  week: t("topikExam.weeks34"),
-                  focus: t("topikExam.focus34"),
-                  tasks: [t("topikExam.task341"), t("topikExam.task342"), t("topikExam.task343")]
-                },
-                {
-                  week: t("topikExam.weeks56"),
-                  focus: t("topikExam.focus56"),
-                  tasks: [t("topikExam.task561"), t("topikExam.task562"), t("topikExam.task563")]
-                },
-                {
-                  week: t("topikExam.weeks78"),
-                  focus: t("topikExam.focus78"),
-                  tasks: [t("topikExam.task781"), t("topikExam.task782"), t("topikExam.task783")]
-                },
-                {
-                  week: t("topikExam.weeks912"),
-                  focus: t("topikExam.focus912"),
-                  tasks: [t("topikExam.task9121"), t("topikExam.task9122"), t("topikExam.task9123")]
-                }
-              ].map((item, i) => (
-                <div key={i} className="p-6 rounded-lg border bg-slate-50/50 dark:bg-slate-900/50">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-green-500 text-white font-bold text-sm flex-shrink-0">
-                      {i + 1}
+              </div>
+              <div className={card}>
+                <h3 className="text-xl font-bold text-foreground">TOPIK II</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{tr("Levels 3–6 · scored out of 300", "المستويات من ٣ لـ ٦ · الدرجة من ٣٠٠")}</p>
+                <ul className="mt-4 space-y-2 text-sm text-foreground">
+                  <li>{tr("Listening — 50 questions, 60 minutes", "استماع — ٥٠ سؤال، ٦٠ دقيقة")}</li>
+                  <li>{tr("Writing — 4 questions (51–54), 50 minutes", "كتابة — ٤ أسئلة (٥١–٥٤)، ٥٠ دقيقة")}</li>
+                  <li>{tr("Reading — 50 questions, 70 minutes", "قراءة — ٥٠ سؤال، ٧٠ دقيقة")}</li>
+                </ul>
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  {TOPIK_II.map((l) => (
+                    <div key={l.level} className="rounded-xl bg-klovers-yellow/40 px-3 py-2 text-center">
+                      <p className="text-xs font-bold text-charcoal">{tr(`Level ${l.level}`, `المستوى ${l.level}`)}</p>
+                      <p className="text-sm font-extrabold text-charcoal" dir="ltr">{l.score}</p>
                     </div>
-                    <div>
-                      <p className="font-bold text-lg">{item.week}</p>
-                      <p className="text-sm font-semibold text-green-600">{item.focus}</p>
-                    </div>
-                  </div>
-                  <ul className="space-y-2">
-                    {item.tasks.map((task, j) => (
-                      <li key={j} className="flex items-start gap-2 text-foreground/70">
-                        <CheckCircle2 className="h-4 w-4 mt-1 flex-shrink-0 text-green-500" />
-                        {task}
-                      </li>
-                    ))}
-                  </ul>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        </section>
-
-        {/* TOPIK Exam Day Tips */}
-        <section className="py-16 border-b bg-blue-50/50 dark:bg-blue-950/10">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-12 text-center">{t("topikExam.examDayTitle")}</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {[
-                {
-                  icon: <Clock className="h-8 w-8 text-blue-500" />,
-                  title: t("topikExam.tipTimeTitle"),
-                  tips: [t("topikExam.tipTime1"), t("topikExam.tipTime2"), t("topikExam.tipTime3")]
-                },
-                {
-                  icon: <Target className="h-8 w-8 text-amber-500" />,
-                  title: t("topikExam.tipStrategyTitle"),
-                  tips: [t("topikExam.tipStrategy1"), t("topikExam.tipStrategy2"), t("topikExam.tipStrategy3")]
-                },
-                {
-                  icon: <TrendingUp className="h-8 w-8 text-green-500" />,
-                  title: t("topikExam.tipScoringTitle"),
-                  tips: [t("topikExam.tipScoring1"), t("topikExam.tipScoring2"), t("topikExam.tipScoring3")]
-                },
-                {
-                  icon: <Zap className="h-8 w-8 text-purple-500" />,
-                  title: t("topikExam.tipMentalTitle"),
-                  tips: [t("topikExam.tipMental1"), t("topikExam.tipMental2"), t("topikExam.tipMental3")]
-                }
-              ].map((item, i) => (
-                <div key={i} className="p-6 rounded-lg border bg-white dark:bg-slate-900">
-                  <div className="mb-4">{item.icon}</div>
-                  <h3 className="font-bold text-lg mb-4">{item.title}</h3>
-                  <ul className="space-y-2">
-                    {item.tips.map((tip, j) => (
-                      <li key={j} className="flex items-start gap-2 text-foreground/70">
-                        <span className="text-blue-500 font-bold mt-0.5">•</span>
-                        {tip}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Why Klovers for TOPIK Prep */}
-        <section className="py-16 border-b">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-12 text-center">{t("topikExam.whyKloversTitle")}</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {[
-                { title: t("topikExam.whyKlovers1Title"), desc: t("topikExam.whyKlovers1Desc") },
-                { title: t("topikExam.whyKlovers2Title"), desc: t("topikExam.whyKlovers2Desc") },
-                { title: t("topikExam.whyKlovers3Title"), desc: t("topikExam.whyKlovers3Desc") },
-                { title: t("topikExam.whyKlovers4Title"), desc: t("topikExam.whyKlovers4Desc") },
-                { title: t("topikExam.whyKlovers5Title"), desc: t("topikExam.whyKlovers5Desc") },
-                { title: t("topikExam.whyKlovers6Title"), desc: t("topikExam.whyKlovers6Desc") }
-              ].map((item, i) => (
-                <div key={i} className="p-6 rounded-lg border bg-slate-50/50 dark:bg-slate-900/50">
-                  <div className="flex items-start gap-3 mb-4">
-                    <Award className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
-                    <h3 className="font-bold text-lg">{item.title}</h3>
-                  </div>
-                  <p className="text-foreground/70">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section className="py-16 border-b">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-12 text-center">{t("topikExam.faqTitle")}</h2>
-            <div className="space-y-6">
-              {[
-                { q: t("topikExam.faq1Q"), a: t("topikExam.faq1A") },
-                { q: t("topikExam.faq2Q"), a: t("topikExam.faq2A") },
-                { q: t("topikExam.faq3Q"), a: t("topikExam.faq3A") },
-                { q: t("topikExam.faq4Q"), a: t("topikExam.faq4A") },
-                { q: t("topikExam.faq5Q"), a: t("topikExam.faq5A") }
-              ].map((item, i) => (
-                <details key={i} className="group p-6 rounded-lg border bg-slate-50/50 dark:bg-slate-900/50 cursor-pointer">
-                  <summary className="font-bold text-lg flex items-center justify-between">
-                    {item.q}
-                    <span className="transition group-open:rotate-180">
-                      <ArrowRight className="h-5 w-5" />
-                    </span>
-                  </summary>
-                  <p className="text-foreground/70 mt-4 pt-4 border-t">{item.a}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="py-20 bg-gradient-to-r from-green-600 to-teal-600 text-white">
-          <div className="container mx-auto px-4 max-w-4xl text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">{t("topikExam.finalCtaTitle")}</h2>
-            <p className="text-lg mb-8 text-green-100 max-w-2xl mx-auto">
-              {t("topikExam.finalCtaDesc")}
+            <p className="mt-5 text-sm text-muted-foreground">
+              {tr(
+                "Your level is decided by your total score, not by any single section. Results are valid for two years. The level a university, employer or visa asks for depends on them — check their own requirement.",
+                "مستواك بيتحدد من مجموع درجاتك، مش من قسم واحد. النتيجة صالحة لمدة سنتين. المستوى المطلوب للجامعة أو الشغل أو الفيزا بيختلف حسب الجهة — اسألهم عن شرطهم.",
+              )}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" asChild>
-                <a href="/enroll-now" className="flex items-center gap-2">
-                  {t("topikExam.finalCtaStart")} <ArrowRight className="h-4 w-4" />
-                </a>
+          </div>
+        </section>
+
+        {/* Dates */}
+        <section className="py-14 md:py-20 bg-card border-y border-border">
+          <div className="container mx-auto max-w-4xl px-4">
+            <h2 className={sectionTitle}>{tr("Exam dates and registration", "مواعيد الامتحان والتسجيل")}</h2>
+            <p className="text-base text-muted-foreground leading-relaxed max-w-2xl">
+              {tr(
+                "TOPIK is held several times a year, but which sessions run, where, and when registration opens differs by country. We don't list dates here because they change — the official site always has the current ones.",
+                "TOPIK بيتعمل كذا مرة في السنة، لكن المواعيد وأماكن الامتحان وفتح التسجيل بتختلف من بلد لبلد. مش بنكتب مواعيد هنا لأنها بتتغير — الموقع الرسمي دايمًا فيه المواعيد الحالية.",
+              )}
+            </p>
+            <a
+              href="https://www.topik.go.kr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex min-h-11 items-center gap-2 font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/70"
+            >
+              topik.go.kr
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+            </a>
+          </div>
+        </section>
+
+        {/* How to prepare */}
+        <section className="py-14 md:py-20">
+          <div className="container mx-auto max-w-4xl px-4">
+            <h2 className={sectionTitle}>{tr("How to prepare", "إزاي تستعد")}</h2>
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                [
+                  tr("Take a past paper first", "ابدأ بامتحان سابق"),
+                  tr("Sit one full past paper under real timing. It shows which section is costing you points.", "حل امتحان سابق كامل بنفس التوقيت الحقيقي. هيوضحلك أنهي قسم بيضيّع عليك درجات."),
+                ],
+                [
+                  tr("Build the vocabulary the exam uses", "ذاكر المفردات اللي الامتحان بيستخدمها"),
+                  tr("Most lost points in reading and listening are unknown words, not unknown grammar.", "أغلب الدرجات اللي بتضيع في القراءة والاستماع سببها كلمات مش معروفة، مش قواعد."),
+                ],
+                [
+                  tr("Practise writing 51–54 on its own", "درّب على أسئلة الكتابة ٥١–٥٤ لوحدها"),
+                  tr("Each question has a set format. Short answers, a graph description and a 600–700 character essay all need separate practice.", "كل سؤال له شكل ثابت. الإجابات القصيرة ووصف الرسم البياني والمقال (٦٠٠–٧٠٠ حرف) محتاجين تدريب منفصل."),
+                ],
+                [
+                  tr("Finish with timed full papers", "اختم بامتحانات كاملة بالتوقيت"),
+                  tr("In the last weeks, full papers under exam timing, then review every wrong answer.", "في آخر أسابيع، امتحانات كاملة بتوقيت الامتحان، وبعدها راجع كل إجابة غلط."),
+                ],
+              ].map(([title, body]) => (
+                <div key={title} className={card}>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-charcoal" aria-hidden="true" />
+                    <div>
+                      <h3 className="font-bold text-foreground">{title}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{body}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-5 text-sm text-muted-foreground">
+              {tr(
+                "Past papers are published free on the official TOPIK site.",
+                "الامتحانات السابقة منشورة مجانًا على موقع TOPIK الرسمي.",
+              )}
+            </p>
+          </div>
+        </section>
+
+        {/* The Klovers track - same four lines as /courses */}
+        <section className="py-14 md:py-20 bg-klovers-yellow/25 border-y border-border">
+          <div className="container mx-auto max-w-4xl px-4">
+            <h2 className={sectionTitle}>{tr("The Klovers TOPIK track", "مسار TOPIK في كلوفرز")}</h2>
+            <p className="text-base text-foreground/80 mb-5">
+              {tr(
+                "Exam technique, for a TOPIK date you have already put in the calendar. Taught live by Reham, in English or Arabic.",
+                "تكنيك الامتحان، لميعاد TOPIK انت حددته بالفعل. حصص مباشرة مع ريهام، بالعربي أو الإنجليزي.",
+              )}
+            </p>
+            <ul className="space-y-2">
+              {[
+                tr("Past papers under real exam timing", "امتحانات سابقة بتوقيت الامتحان الحقيقي"),
+                tr("Listening and reading strategy", "استراتيجية الاستماع والقراءة"),
+                tr("Writing: questions 51–54", "الكتابة: الأسئلة ٥١–٥٤"),
+                tr("A study plan up to your exam date", "خطة مذاكرة لحد ميعاد امتحانك"),
+              ].map((line) => (
+                <li key={line} className="flex items-start gap-3 text-foreground">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+                  {line}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-sm text-muted-foreground">
+              {tr(
+                "Classes cover the syllabus. Reaching exam standard needs study between them.",
+                "الحصص بتغطي المنهج. الوصول لمستوى الامتحان محتاج مذاكرة بينها.",
+              )}
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <Button size="lg" asChild className="rounded-full font-bold">
+                <Link to="/free-trial">
+                  {tr("Book a free class", "احجز حصة مجانية")}
+                  <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="text-foreground border-white hover:bg-white/10" asChild>
-                <a href="/placement-test">{t("topikExam.finalCtaTest")}</a>
+              <Button size="lg" variant="outline" asChild className="rounded-full">
+                <Link to="/blog/topik-exam-guide">{tr("Read the full TOPIK guide", "اقرأ دليل TOPIK الكامل")}</Link>
               </Button>
             </div>
-            <p className="text-sm text-green-100 mt-6">
-              <BookOpen className="h-4 w-4 inline mr-2" />
-              {t("topikExam.finalCtaFooter")}
-            </p>
           </div>
         </section>
       </main>

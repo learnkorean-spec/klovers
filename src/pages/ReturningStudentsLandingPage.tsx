@@ -54,8 +54,11 @@ const ReturningStudentsLandingPage = () => {
   useSEO({
     title: "Welcome Back — Returning Students Offer",
     description:
-      "Returning Klovers students get 20% off. Enroll now, share with friends, and save up to 35%. No placement test required.",
+      "Returning Klovers students: a discount on your next enrollment, and extra savings when friends join.",
     canonical: PAGE_URL,
+    // 25 Sep 2026 (QA): the page shows the returning-student promo code, so
+    // it is kept out of search results and out of sitemap.xml.
+    noindex: true,
   });
 
   useEffect(() => {
@@ -223,13 +226,13 @@ const ReturningStudentsLandingPage = () => {
 
                   {/* Referral progress (logged-in users only) */}
                   {referralStats && referralStats.bonusPercent > 0 && (
-                    <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800 p-3 text-center">
-                      <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+                    <div className="rounded-lg border border-charcoal/15 bg-klovers-yellow/30 p-3 text-center">
+                      <p className="text-sm font-semibold text-foreground">
                         {isAr
                           ? `لقد حصلت على خصم إضافي ${referralStats.bonusPercent}%!`
                           : `You've earned +${referralStats.bonusPercent}% referral bonus!`}
                       </p>
-                      <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {isAr
                           ? `${referralStats.conversions} صديق انضم · ${Math.max(0, referralStats.clicks - referralStats.conversions)} شخص زار رابطك`
                           : `${referralStats.conversions} friend${referralStats.conversions !== 1 ? "s" : ""} enrolled · ${Math.max(0, referralStats.clicks - referralStats.conversions)} link visitor${Math.max(0, referralStats.clicks - referralStats.conversions) !== 1 ? "s" : ""}`}
@@ -356,7 +359,7 @@ const ReturningStudentsLandingPage = () => {
                   <ul className="space-y-3">
                     {offerItems.map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <Check className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
                         <span className="text-sm text-muted-foreground">
                           {item as string}
                         </span>

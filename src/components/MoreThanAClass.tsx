@@ -44,8 +44,8 @@ const DOORS: Door[] = [
     tone: "bg-klovers-yellow",
     titleEn: "Live classes",
     titleAr: "حصص مباشرة",
-    bodyEn: "Learn with a real teacher, in a group of up to 8.",
-    bodyAr: "اتعلّم مع معلمة حقيقية، في مجموعة لحد 8 طلاب.",
+    bodyEn: "Learn with a real teacher, in a small group.",
+    bodyAr: "اتعلّم مع معلمة حقيقية، في مجموعة صغيرة.",
   },
   {
     to: "/review",

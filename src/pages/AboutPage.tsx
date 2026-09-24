@@ -25,12 +25,12 @@ const TRUST_STATS = [
   { value: TEACHING_YEARS, label: "Years Teaching" },
   { value: STUDENTS_TAUGHT, label: "Students Taught" },
   { value: `${RATING.value} ★`, label: `From ${RATING.count} ${RATING.source} reviews` },
-  { value: "15+", label: "Countries" },
-  { value: "A1–C2", label: "All Levels" },
+  { value: "EN · AR", label: "Classes in English or Arabic" },
+  { value: "Hangul → 6", label: "Levels" },
 ];
 
 const AboutPage = () => {
-  useSEO({ title: "About Us", description: "Meet the Klovers team. Our certified teachers bring years of experience teaching Korean to students worldwide.", canonical: "https://kloversegy.com/about" });
+  useSEO({ title: "About Us", description: "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years and more than 200 students.", canonical: "https://kloversegy.com/about" });
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -41,7 +41,7 @@ const AboutPage = () => {
       "@type": "AboutPage",
       "url": "https://kloversegy.com/about",
       "name": "About Klovers — Korean Lovers Academy",
-      "description": "Certified Korean teacher, born from a love of the language and a mission to make it accessible worldwide.",
+      "description": "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years.",
       "mainEntity": { "@id": "https://kloversegy.com/#organization" }
     });
     document.head.appendChild(script);
@@ -64,7 +64,7 @@ const AboutPage = () => {
               {t("aboutPage", "title")}
             </h1>
             <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto text-base md:text-lg">
-              Certified Korean teacher, born from a love of the language and a mission to make it accessible worldwide.
+              Founded by Reham Elshrkawy, an Al-Alsun Korean graduate who has taught Korean for 13 years.
             </p>
 
             {/* Trust stats */}
@@ -143,7 +143,7 @@ const AboutPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button asChild size="lg">
-                <Link to="/placement-test">🎯 Free Placement Test</Link>
+                <Link to="/placement-test">Free Placement Test</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
                 <Link to="/pricing">View Pricing</Link>

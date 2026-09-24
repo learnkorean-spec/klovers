@@ -25,7 +25,7 @@ const englishFaqs = [
   },
   {
     q: "Can I cancel or get a refund?",
-    a: "Yes. If you're not satisfied after your first class we'll give you a full refund — no questions asked. After that, refunds are prorated for unused sessions.",
+    a: "Yes. If you're not satisfied after your first paid class we'll refund you or rebook you. After that, refunds are prorated for unused sessions.",
   },
   {
     q: "How do I pay? Is it safe?",
@@ -33,11 +33,11 @@ const englishFaqs = [
   },
   {
     q: "How many students are in a group class?",
-    a: "Groups are kept small — usually 4 to 8 students — so you still get personal attention and time to speak Korean in every session.",
+    a: "Groups are kept small, so you still get personal attention and time to speak Korean in every session.",
   },
   {
     q: "Which platform do the classes use?",
-    a: "All live classes run on Zoom. You'll receive the link before each session. No download required — you can join from any browser.",
+    a: "All live classes run on Google Meet. You'll receive the link before each session. No download required — you can join from any browser.",
   },
 ];
 
@@ -226,7 +226,7 @@ const PricingStory = () => {
 };
 
 const PricingPage = () => {
-  useSEO({ title: "Pricing & Plans", description: "Affordable Korean language learning plans at Klovers. Choose the right course for your budget and learning goals.", canonical: "https://kloversegy.com/pricing" });
+  useSEO({ title: "Pricing & Plans", description: "Klovers prices are set by country. Group classes once a week: 1, 3 or 6 months (4, 12 or 24 classes). Private classes too.", canonical: "https://kloversegy.com/pricing" });
 
   // Viewing pricing is interest, not a conversion (23 Sep 2026): the row is
   // kept in lead_events and GA4 gets `pricing_viewed`, but no Lead fires.
@@ -243,7 +243,7 @@ const PricingPage = () => {
       "@context": "https://schema.org",
       "@type": "ItemList",
       "name": "Korean Language Course Plans",
-      "description": "Affordable Korean language learning plans at Klovers Academy",
+      "description": "Klovers group and private Korean class plans, priced by country",
       "url": "https://kloversegy.com/pricing",
       "itemListElement": [
         {

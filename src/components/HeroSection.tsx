@@ -128,7 +128,7 @@ const HeroSection = () => {
       icon: "chat-annyeong" as KloverIconName,
       tone: "bg-white",
       title: isAr ? "تتدرّب مع ناس" : "Practice together",
-      body: isAr ? "مجموعات صغيرة مباشرة" : "Small live groups, up to 8",
+      body: isAr ? "مجموعات صغيرة مباشرة" : "Small live groups",
     },
     {
       icon: "globe-plane" as KloverIconName,
@@ -139,8 +139,8 @@ const HeroSection = () => {
     {
       icon: "namsan-tower" as KloverIconName,
       tone: "bg-white",
-      title: isAr ? "نسخة أفضل منك" : "A brighter you",
-      body: isAr ? "ثقة أكبر، وعالم أوسع" : "More confidence. A bigger world.",
+      title: isAr ? "خطوة واضحة" : "A clear next step",
+      body: isAr ? "بعد كل حصة بتعرف الجاية" : "After every class, you know what comes next",
     },
   ];
 
@@ -213,8 +213,8 @@ const HeroSection = () => {
               style={{ textShadow: "0 1px 10px rgba(20,20,18,0.85)" }}
             >
               {isAr
-                ? "حصص كورية مباشرة أونلاين مع معلمة حقيقية، في مجموعات صغيرة بحد أقصى ٨ طلاب، ومسار واضح من البداية حتى التحدث بثقة."
-                : "Live online Korean classes with a real teacher, small groups of up to 8, and a clear path from beginner to confident conversation."}
+                ? "حصص كورية مباشرة أونلاين مع معلمة حقيقية، في مجموعات صغيرة، ومسار واضح من البداية حتى التحدث بثقة."
+                : "Live online Korean classes with a real teacher, small groups, and a clear path from beginner to confident conversation."}
             </p>
 
             {/* 3. The action. */}
@@ -257,8 +257,8 @@ const HeroSection = () => {
             {/* 4. Proof line. */}
             <p className="text-ivory/80 text-sm font-medium" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
               {isAr
-                ? "بحد أقصى ٨ طلاب · بالعربي أو الإنجليزي · مناسب للمبتدئين"
-                : "Max 8 students · English & Arabic · Beginner friendly"}
+                ? "مجموعات صغيرة · بالعربي أو الإنجليزي · مناسب للمبتدئين"
+                : "Small groups · English & Arabic · Beginner friendly"}
             </p>
 
             {/* 5. ONE next class, in the visitor's own time. */}

@@ -761,7 +761,7 @@ function TrialLevelsEn() {
       </div>
       <div style={{ background:Y, borderRadius:"8px", padding:"8px 14px", marginTop:"8px", textAlign:"center" }}>
         <div style={{ fontSize:"10px", color:BK, fontWeight:800 }}>
-          ⏱️ Each level: 24 sessions · 90 min each · Small groups (4–8 students)
+          ⏱️ Each level: 24 sessions · 90 min each · Small groups
         </div>
       </div>
     </Page>

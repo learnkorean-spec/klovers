@@ -1,4 +1,4 @@
-import { Facebook, CheckCircle2, ThumbsUp } from "lucide-react";
+import { Facebook, ThumbsUp } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -191,15 +191,10 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
               </span>
               <span className="text-xs text-muted-foreground">· {review.date}</span>
             </div>
-            <div className="flex items-center gap-1 mt-1 flex-wrap">
-              <CheckCircle2 className="h-3 w-3 text-foreground/45 flex-shrink-0" />
-              <span className="text-[10px] text-muted-foreground font-semibold">
-                {isAr ? "طالبة موثّقة" : "Verified Student"}
-              </span>
-              {review.duration && (
-                <span className="text-[10px] text-muted-foreground">· {review.duration} · {review.level}</span>
-              )}
-            </div>
+            {/* 25 Sep 2026 (QA): the "Verified Student · N months · Level X → Y"
+                line is gone. It was our badge, not the reviewer's words, and
+                nothing on Facebook verifies it (decision 23 Sep: never invent
+                reviews). `duration` and `level` stay in the data, unrendered. */}
           </div>
         </div>
         <Facebook className="h-4 w-4 text-foreground/40 flex-shrink-0 mt-0.5" />

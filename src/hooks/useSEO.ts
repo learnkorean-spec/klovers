@@ -33,7 +33,7 @@ const SITE_NAME = "Klovers | Korean Lovers Academy";
 // this site's traffic gets its first look at it.
 const DEFAULT_IMAGE = `${BASE_URL}/og-seoul-skyline.jpg`;
 const DEFAULT_DESC =
-  "Learn Korean online with Klovers — Korean Lovers Academy. Interactive lessons, games, placement tests, and certified instructors.";
+  "Learn Korean online with Klovers — Korean Lovers Academy. Live classes with a real teacher, games and a free placement test.";
 
 /**
  * The same rule scripts/prerender-meta.mjs applies to the raw HTML: append the

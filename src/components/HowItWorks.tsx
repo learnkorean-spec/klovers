@@ -32,8 +32,8 @@ const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] 
   },
   {
     icon: "chat-annyeong",
-    en: ["Max 8 Students", "Small enough that you speak in every class and get real personal attention."],
-    ar: ["بحد أقصى 8 طلاب", "مجموعة صغيرة، فتتكلم في كل حصة وتاخد اهتمام حقيقي."],
+    en: ["Small Groups", "Small enough that you speak in every class and get real personal attention."],
+    ar: ["مجموعات صغيرة", "مجموعة صغيرة، فتتكلم في كل حصة وتاخد اهتمام حقيقي."],
   },
   {
     icon: "lightbulb-sprout",

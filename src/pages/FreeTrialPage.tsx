@@ -77,7 +77,7 @@ const FreeTrialPage = () => {
 
   useSEO({
     title: "Book Your Free Korean Class | Klovers Academy",
-    description: "Watch your favourite K-dramas without subtitles. Try a live Korean class for free — real teacher, no credit card, 30 minutes.",
+    description: "Try a free 30-minute live Korean class at Klovers, in English or Arabic. A real teacher, no credit card.",
     canonical: "https://kloversegy.com/free-trial",
   });
 
@@ -132,7 +132,7 @@ const FreeTrialPage = () => {
         "mainEntity": [
           { "@type": "Question", "name": "Is the trial class really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — completely free, no credit card required. You attend a 30-minute live class with a real teacher." } },
           { "@type": "Question", "name": "What level do I need to be?", "acceptedAnswer": { "@type": "Answer", "text": "Any level is welcome. Most students start from zero (Hangul). The teacher will assess your level during the class." } },
-          { "@type": "Question", "name": "When are the trial classes?", "acceptedAnswer": { "@type": "Answer", "text": "New trial sessions open every week. The booking page always shows the next available dates, automatically converted to your own timezone." } },
+          { "@type": "Question", "name": "When are the trial classes?", "acceptedAnswer": { "@type": "Answer", "text": "Free trial classes run on the first Friday and Saturday of each month, in Arabic and in English. The booking page shows the next dates in your own timezone." } },
           { "@type": "Question", "name": "How do I book?", "acceptedAnswer": { "@type": "Answer", "text": "Click 'Book My Free Class', choose a day, and confirm. You'll receive an email with the class link and a Google Calendar invite." } },
           { "@type": "Question", "name": "What happens after the trial?", "acceptedAnswer": { "@type": "Answer", "text": "After your trial you'll receive a level recommendation and pricing options if you'd like to continue with a full course." } },
         ],
@@ -327,21 +327,15 @@ const FreeTrialPage = () => {
                   {(spotsRemaining !== null || daysToDeadline !== null) && (
                     <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start" aria-live="polite" aria-atomic="false">
                       {spotsRemaining !== null && spotsRemaining <= 15 && (
-                        <span className="inline-flex items-center gap-1 bg-[#FF3131] text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 bg-charcoal text-ivory text-[11px] font-bold px-2.5 py-1 rounded-full">
                           <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                           {spotsRemaining} {spotsRemaining === 1 ? "spot" : "spots"} left
                         </span>
                       )}
-                      {daysToDeadline !== null && (
-                        <span className="inline-flex items-center gap-1 bg-foreground text-primary text-[11px] font-bold px-2.5 py-1 rounded-full">
-                          <Clock className="h-3 w-3" />
-                          {daysToDeadline === 0
-                            ? "Booking closes today"
-                            : daysToDeadline === 1
-                            ? "Booking closes tomorrow"
-                            : `Booking closes in ${daysToDeadline} days`}
-                        </span>
-                      )}
+                      {/* 25 Sep 2026 (QA): the "Booking closes ..." chip is gone. It was
+                          computed from the earliest row get_trial_availability returns,
+                          including a slot already in the past, so it read "Booking
+                          closes today" when nothing closed today - English only, too. */}
                     </div>
                   )}
                 </div>
@@ -520,8 +514,8 @@ const FreeTrialPage = () => {
 
             {/* Trust guarantee */}
             <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
-              <span className="text-green-600 font-bold">✓</span>
-              <span>{isAr ? "إذا ما عجبتكش الحصة الأولى — هنرجعلك فلوسك أو نعيد الحجز بدون أسئلة." : "If your first class isn't great, we'll refund or rebook — no questions asked."}</span>
+              <span className="text-foreground font-bold">✓</span>
+              <span>{isAr ? "الحصة التجريبية مجانية — من غير دفع ومن غير بطاقة بنكية." : "The trial class is free — nothing to pay, no card needed."}</span>
             </div>
           </div>
         </section>

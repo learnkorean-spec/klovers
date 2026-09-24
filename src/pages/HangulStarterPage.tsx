@@ -50,7 +50,7 @@ const COMPOUND_VOWELS = [
   { char: "ㅔ", rom: "e",   ex: "에 (e)" },
   { char: "ㅖ", rom: "ye",  ex: "예 (ye)" },
   { char: "ㅘ", rom: "wa",  ex: "와 (wa)" },
-  { char: "ㅙ", rom: "wae", ex: "봬 (wae)" },
+  { char: "ㅙ", rom: "wae", ex: "왜 (wae)" },
   { char: "ㅚ", rom: "oe",  ex: "외 (oe)" },
   { char: "ㅝ", rom: "wo",  ex: "워 (wo)" },
   { char: "ㅞ", rom: "we",  ex: "웨 (we)" },
