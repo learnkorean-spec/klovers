@@ -705,9 +705,9 @@ const EnrollNowPage = () => {
 
         {/* Social proof banner */}
         <div className="flex items-center justify-center gap-3 flex-wrap mb-6 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">⭐ <strong className="text-foreground">4.9</strong> rated</span>
+          <span className="flex items-center gap-1">⭐ <strong className="text-foreground">5.0</strong> on Google (7 reviews)</span>
           <span className="text-border">·</span>
-          <span className="flex items-center gap-1">👥 <strong className="text-foreground">500+</strong> students enrolled</span>
+          <span className="flex items-center gap-1">👥 <strong className="text-foreground">200+</strong> students taught over 13 years</span>
           <span className="text-border">·</span>
           <span className="flex items-center gap-1">🇰🇷 <strong className="text-foreground">A1–C2</strong> all levels</span>
         </div>
