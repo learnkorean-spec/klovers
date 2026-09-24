@@ -5,16 +5,12 @@
 // (scripts/prerender-meta.mjs writes one dist/blog/<slug>/index.html per live
 // article), so any /blog/:slug request that reaches this function already has
 // no such file — by construction, an invalid, typo'd, or no-longer-published
-// slug, never a legitimate route. Retired Arabic duplicates never reach this
-// function either: their 301s in vercel.json's `redirects` are evaluated
-// before `rewrites`. This is why the fix is scoped to exactly /blog/:slug —
-// every other client-only route (/textbook/:id, /pay/:id, /dashboard, ...) is
-// never prerendered for ANY value, so reaching the SPA fallback there is
-// normal, not an error, and stays on the generic catch-all untouched.
+// slug. Retired Arabic duplicates never reach this function either: their
+// 301s in vercel.json's `redirects` are evaluated before `rewrites`.
 //
-// A plain HTML response rather than the SPA shell: a dead blog URL needs no
-// client-side interactivity, and this avoids bundling dist/app.html into a
-// Lambda just to render the same "not found" message.
+// Story mode (Re, 25 Sep 2026): same page as api/not-found.js (hanok-alley
+// scene, Cluby note, palette only, bilingual) with article wording. Keep the
+// two in step.
 export default function handler(req, res) {
   const html = `<!doctype html>
 <html lang="en">
@@ -23,12 +19,44 @@ export default function handler(req, res) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Article Not Found | Klovers</title>
 <meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/favicon.ico" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600&family=Cairo:wght@400;700&family=Kalam:wght@400&display=swap" />
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#FFF9EC;color:#2E2E2E;font-family:Inter,Cairo,system-ui,sans-serif;}
+  .wrap{max-width:64rem;margin:0 auto;padding:3rem 1.25rem 4rem;display:grid;gap:2.5rem;align-items:center;}
+  @media(min-width:768px){.wrap{grid-template-columns:1fr 1fr;padding-top:5rem;}}
+  .brand{display:inline-block;font-family:Poppins,Cairo,sans-serif;font-weight:800;color:#2E2E2E;text-decoration:none;font-size:1.25rem;margin-bottom:1.5rem;}
+  .code{display:inline-block;background:#FFFF00;color:#2E2E2E;border:2px solid #2E2E2E;border-radius:999px;padding:.25rem .9rem;font-weight:700;font-size:.8rem;letter-spacing:.12em;margin-bottom:1rem;}
+  h1{font-family:Poppins,Cairo,sans-serif;font-weight:800;font-size:2.25rem;line-height:1.15;margin:0 0 .5rem;}
+  h1 .ar,p.ar{font-family:Cairo,sans-serif;}
+  p{font-size:1.05rem;line-height:1.6;margin:.25rem 0;}
+  .note{font-family:"Segoe Script",Kalam,cursive;font-size:1.15rem;}
+  .cta{display:inline-block;margin-top:1.5rem;background:#FFFF00;color:#2E2E2E;border:2px solid #2E2E2E;border-radius:.9rem;padding:.75rem 1.4rem;font-weight:700;text-decoration:none;box-shadow:4px 4px 0 #2E2E2E;}
+  .links{margin-top:1.25rem;font-size:.95rem;}
+  .links a{color:#2E2E2E;display:inline-block;padding:.35rem 0;}
+  figure{margin:0;position:relative;justify-self:center;max-width:24rem;width:100%;}
+  figure img{width:100%;height:auto;display:block;border-radius:1.5rem;border:4px solid #2E2E2E;}
+  figcaption{position:absolute;bottom:-1.1rem;inset-inline-start:1rem;background:#FFF9EC;border:2px solid #2E2E2E;border-radius:1rem;padding:.4rem .9rem;}
+</style>
 </head>
 <body>
-<main style="font-family: system-ui, sans-serif; max-width: 32rem; margin: 4rem auto; padding: 0 1.5rem; text-align: center;">
-<h1>Article not found</h1>
-<p>This blog post doesn't exist or has moved.</p>
-<p><a href="/blog">Browse all articles</a> &middot; <a href="/">Go home</a></p>
+<main class="wrap">
+<div>
+<a class="brand" href="/">Klovers</a><br />
+<span class="code">404</span>
+<h1>This article took a wrong turn.<br /><span class="ar" lang="ar" dir="rtl">المقال ده خد طريق غلط.</span></h1>
+<p>Even Cluby gets lost in these alleys sometimes. This article doesn't exist or has moved.</p>
+<p class="ar" lang="ar" dir="rtl">حتى كلوبي ساعات بيتوه في الحواري دي. المقال ده مش موجود أو اتنقل.</p>
+<a class="cta" href="/">Back home &middot; <span lang="ar">الرئيسية</span></a>
+<p class="links"><a href="/blog">All articles &middot; <span lang="ar">كل المقالات</span></a> &middot; <a href="/courses">Courses &middot; <span lang="ar">الكورسات</span></a> &middot; <a href="/free-trial">Free trial &middot; <span lang="ar">حصة مجانية</span></a></p>
+</div>
+<figure>
+<img src="/assets/cluby/scene-hanok.webp" width="1080" height="1350" alt="Cluby and a Klovers learner walking through a hanok alley" />
+<figcaption class="note">Let's find the way back!</figcaption>
+</figure>
 </main>
 </body>
 </html>
