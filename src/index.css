@@ -714,3 +714,54 @@ Type, loaded in index.html:
   from { opacity: 0; transform: scale(0.7); }
   to { opacity: 1; transform: scale(1); }
 }
+
+
+/* ── Contrast + palette guards (25 Sep 2026) ───────────────────────────────
+   The 23 Sep audit measured light text failing WCAG AA on almost every page:
+   footer links and copyright at text-background/45 (3.9:1), captions at
+   text-ivory/45-50 (3.9-4.0:1), text-charcoal/65 (4.4:1) and
+   text-muted-foreground/80 (4.1:1). Rather than hand-edit every call site,
+   these low-alpha text utilities are lifted here to values that pass 4.5:1
+   on their usual grounds. The doubled class only buys specificity over the
+   generated utility (same trick as .text-mint-strong above). Hover variants
+   are separate classes and are unaffected. */
+.text-background\/45.text-background\/45,
+.text-background\/50.text-background\/50,
+.text-background\/55.text-background\/55,
+.text-background\/60.text-background\/60 {
+  color: hsl(var(--background) / 0.78);
+}
+.text-ivory\/40.text-ivory\/40,
+.text-ivory\/45.text-ivory\/45,
+.text-ivory\/50.text-ivory\/50,
+.text-ivory\/55.text-ivory\/55,
+.text-ivory\/60.text-ivory\/60 {
+  color: hsl(var(--ivory) / 0.78);
+}
+.text-charcoal\/55.text-charcoal\/55,
+.text-charcoal\/60.text-charcoal\/60,
+.text-charcoal\/65.text-charcoal\/65,
+.text-charcoal\/70.text-charcoal\/70 {
+  color: hsl(var(--charcoal) / 0.8);
+}
+.text-muted-foreground\/60.text-muted-foreground\/60,
+.text-muted-foreground\/70.text-muted-foreground\/70,
+.text-muted-foreground\/80.text-muted-foreground\/80 {
+  color: hsl(var(--muted-foreground));
+}
+
+/* WhatsApp buttons: #25D366 is WhatsApp's green, not a Klovers colour, and
+   white on it measures 2.0:1. Thirteen files hard-code it, so it is mapped
+   here to the Klovers neon green (#39FF14) with charcoal text (13.6:1) - the
+   palette's green, which still reads as "WhatsApp". Re, 25 Sep 2026: any
+   colour outside the palette gets fixed. */
+[class*="bg-[#25D366]"]:not([class*="hover:bg-[#25D366]"]),
+[class*="hover:bg-[#1ebe5d]"]:hover,
+[class*="hover:bg-[#20bd5a]"]:hover,
+[class*="hover:bg-[#128C7E]"]:hover {
+  background-color: hsl(var(--live-bright)) !important;
+  color: hsl(var(--charcoal)) !important;
+}
+[class*="text-[#25D366]"] {
+  color: hsl(var(--charcoal)) !important;
+}
