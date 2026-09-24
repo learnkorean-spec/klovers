@@ -109,7 +109,7 @@ export function MyBooksCard() {
       .createSignedUrl(book.path, 60 * 60, { download: book.fileName });
     setBusy(null);
     if (err || !data?.signedUrl) {
-      setError(isAr ? "تعذّر تحميل الكتاب الآن. حاول مرة أخرى بعد قليل." : "The book could not be downloaded right now. Please try again shortly.");
+      setError(isAr ? "تعذّر تحميل الكتاب الآن. يُرجى المحاولة بعد قليل." : "The book could not be downloaded right now. Please try again shortly.");
       return;
     }
     if (userId) markSeen(userId, bookId);
@@ -131,10 +131,10 @@ export function MyBooksCard() {
           <BrandIcon name="reward-gift" className="h-10 w-10" eager />
           <div className="min-w-0">
             <h2 id="dash-books-title" className="font-display text-base font-bold text-foreground sm:text-lg">
-              {isAr ? "هدية انضمامك لكورسنا" : "A gift for joining our course"}
+              {isAr ? "هدية الانضمام إلى الدورة" : "A gift for joining our course"}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {isAr ? "كتابك جاهز — حمّله الآن" : "Your book is ready — download it now"}
+              {isAr ? "الكتاب جاهز للتحميل الآن" : "Your book is ready — download it now"}
             </p>
           </div>
         </div>
@@ -153,9 +153,9 @@ export function MyBooksCard() {
                   type="button"
                   onClick={() => download(id)}
                   disabled={busy === id}
-                  className="min-h-11 shrink-0 rounded-xl border-2 border-[#2E2E2E] bg-[#FFFF00] px-4 text-sm font-bold text-[#2E2E2E] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground max-sm:w-full"
+                  className="min-h-11 shrink-0 rounded-xl border-2 border-charcoal bg-klovers-yellow px-4 text-sm font-bold text-charcoal disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground max-sm:w-full"
                 >
-                  {busy === id ? (isAr ? "جارٍ التحميل…" : "Preparing…") : (isAr ? "حمّل الآن" : "Download now")}
+                  {busy === id ? (isAr ? "جارٍ التحميل…" : "Preparing…") : (isAr ? "التحميل الآن" : "Download now")}
                 </button>
               </li>
             );
@@ -174,11 +174,11 @@ export function MyBooksCard() {
               {/* Cluby says it, in a speech bubble pointing down at him. */}
               <div className="relative mb-2 rounded-2xl border-2 border-foreground bg-card px-4 py-2.5 text-foreground shadow-sm">
                 <DialogTitle className={isAr ? "font-sans text-base font-bold leading-relaxed" : "font-display text-base font-bold leading-snug"}>
-                  {isAr ? "كتابك وصل!" : "Your book is here!"}
+                  {isAr ? "وصل الكتاب!" : "Your book is here!"}
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-sm leading-relaxed text-foreground">
                   {isAr
-                    ? "حمّله دلوقتي، واطبعه أو احفظه على موبايلك، وخلّيه معاك في كل حصة."
+                    ? "التحميل متاح الآن: للطباعة أو للحفظ على الهاتف، ليكون الكتاب حاضرًا في كل حصة."
                     : "Download it now, print it or keep it on your phone, and bring it to every class."}
                 </DialogDescription>
                 <span aria-hidden="true" className="absolute -bottom-[9px] left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-foreground bg-card" />
@@ -205,7 +205,7 @@ export function MyBooksCard() {
                 type="button"
                 onClick={() => download(popupBook)}
                 disabled={busy === popupBook}
-                className="mt-5 min-h-12 w-full rounded-xl border-2 border-[#2E2E2E] bg-[#FFFF00] px-4 text-base font-bold text-[#2E2E2E] shadow-[0_3px_0_#2E2E2E] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
+                className="mt-5 min-h-12 w-full rounded-xl border-2 border-charcoal bg-klovers-yellow px-4 text-base font-bold text-charcoal shadow-[0_3px_0_hsl(var(--charcoal))] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
               >
                 {busy === popupBook ? (isAr ? "جارٍ التحميل…" : "Preparing…") : (isAr ? "تحميل الكتاب" : "Download my book")}
               </button>
@@ -214,7 +214,7 @@ export function MyBooksCard() {
                 onClick={closePopup}
                 className="mt-3 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
               >
-                {isAr ? "لاحقًا — هيفضل موجود في أول لوحتك" : "Later — it stays at the top of your dashboard"}
+                {isAr ? "لاحقًا: يبقى الكتاب في أعلى لوحة التحكم" : "Later — it stays at the top of your dashboard"}
               </button>
               {error && <p className="mt-2 text-xs text-destructive" role="alert">{error}</p>}
             </div>

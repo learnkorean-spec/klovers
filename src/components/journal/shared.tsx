@@ -8,7 +8,7 @@
  */
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Link } from "react-router-dom";
-import { Bookmark, BookmarkCheck, Clock, Languages } from "lucide-react";
+import { Bookmark, BookmarkCheck, Check, Clock, Languages } from "lucide-react";
 import OptimizedImage from "@/components/OptimizedImage";
 import KloverIcon from "@/components/KloverIcon";
 import Korean from "@/components/Korean";
@@ -231,7 +231,7 @@ export function BookmarkButton({ slug, title, isAr, className }: { slug: string;
   const on = bookmarks.includes(baseSlug(slug));
   const label = on
     ? isAr ? `إزالة «${title}» من المحفوظات` : `Remove “${title}” from saved`
-    : isAr ? `احفظ «${title}» لوقت لاحق` : `Save “${title}” for later`;
+    : isAr ? `حفظ «${title}» لوقت لاحق` : `Save “${title}” for later`;
   return (
     <button
       type="button"
@@ -321,7 +321,7 @@ export function ArticleCard({
   const onOpen = () => trackJourney("article_opened", { slug: post.slug, from: `card_${variant}` });
   const doneBadge = done && (
     <span className="inline-flex items-center gap-1 rounded-full bg-charcoal px-2 py-0.5 text-[11px] font-bold text-ivory">
-      ✓ {isAr ? "تمت الزيارة" : "Visited"}
+      <Check className="h-3 w-3 text-klovers-green" strokeWidth={3} aria-hidden="true" /> {isAr ? "تمت الزيارة" : "Visited"}
     </span>
   );
 
@@ -409,7 +409,7 @@ export function ArticleCard({
           <LearningMeta learning={learning} isAr={isAr} className="text-sm" />
           {outcome.length > 0 && (
             <div className="rounded-2xl bg-muted/70 p-4">
-              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-foreground/70">{isAr ? "ستتعلم" : "You'll learn"}</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-foreground/70">{isAr ? "ما يقدّمه المقال" : "You'll learn"}</p>
               <ul className="flex flex-wrap gap-2">
                 {outcome.map((o) => (
                   <li key={o} className="rounded-full bg-card px-3 py-1 text-sm font-semibold text-foreground border border-border">
@@ -421,7 +421,7 @@ export function ArticleCard({
           )}
           <div className="mt-auto flex items-center justify-between gap-3 pt-2">
             <span className="inline-flex h-11 items-center gap-2 rounded-full bg-charcoal px-5 text-sm font-bold text-ivory transition-colors group-hover:bg-charcoal/90">
-              {isAr ? "اقرأ القصة" : "Read the story"}
+              {isAr ? "قراءة القصة" : "Read the story"}
               <span aria-hidden="true" className="inline-block rtl:rotate-180">→</span>
             </span>
             <BookmarkButton slug={post.slug} title={post.title} isAr={isAr} className="relative z-10" />
