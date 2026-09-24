@@ -81,7 +81,7 @@ const EggTeaser = () => {
       <div className="mx-auto max-w-2xl">
         <EggMysteryArt />
 
-        <p className="mt-6 text-xs font-bold uppercase tracking-[0.25em] text-soft-green">
+        <p className="mt-6 text-xs font-bold uppercase tracking-[0.25em] text-[#BEEFCB]">
           {isAr ? "سر صغير" : "A small mystery"}
         </p>
         <h2
