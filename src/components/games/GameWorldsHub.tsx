@@ -20,7 +20,8 @@ import { isClubyAwake } from "@/lib/clubyAwake";
  *     learners find the glowing clover egg (/assets/story/egg-teaser.webp),
  *     after it the three of them picnic by the Han river
  *     (/assets/cluby/picnic.webp). The headline sits over it and a white
- *     strip underneath holds the league, XP bar and streak - all real.
+ *     strip underneath (card-coloured in dark mode) holds the
+ *     league, XP bar and streak - all real.
  *  2. THREE CARDS - Next outfit, Today's Missions, Cluby's outfits.
  *  3. JOURNEY - the three worlds as their story paintings on a dashed road,
  *     with Cluby over "You are here" and the 더 배우기 / 더 꿈꾸기 / 더 나은 나 sign.
@@ -229,7 +230,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
   return (
     <div className="max-w-6xl mx-auto px-4 space-y-6">
       {/* ── 1. Banner: a story scene with the real characters ─────────── */}
-      <section className="overflow-hidden rounded-3xl border border-charcoal/10 bg-card shadow-[0_18px_40px_-28px_rgba(46,46,46,0.6)]">
+      <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_40px_-28px_rgba(46,46,46,0.6)]">
         <div className="relative min-h-[300px] md:min-h-[380px]">
           <img
             src={clubyAwake ? BANNER_AFTER_HATCH : BANNER_BEFORE_HATCH}
@@ -260,13 +261,13 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         </div>
 
         {/* Stats strip - under the scene so it never covers the characters */}
-        <div className="border-t border-charcoal/10 bg-white p-4 text-charcoal md:px-6">
+        <div className="border-t border-charcoal/10 bg-white p-4 text-charcoal dark:border-border dark:bg-card dark:text-foreground md:px-6">
           {isLoggedIn ? (
             <div className="grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
               <div className="min-w-0">
                 <p className="text-sm font-extrabold">{league.emoji} {league.name}</p>
                 <div
-                  className="mt-2 h-2.5 rounded-full bg-charcoal/10 overflow-hidden"
+                  className="mt-2 h-2.5 rounded-full bg-charcoal/10 dark:bg-muted overflow-hidden"
                   role="progressbar"
                   aria-valuenow={pct}
                   aria-valuemin={0}
@@ -275,24 +276,24 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                 >
                   <div className="h-full rounded-full bg-klovers-green" style={{ width: `${pct}%` }} />
                 </div>
-                <p className="mt-1.5 text-[11px] text-charcoal/70">
+                <p className="mt-1.5 text-[11px] text-charcoal/70 dark:text-muted-foreground">
                   {totalXp.toLocaleString()} XP
                   {nextLeague && (isAr
                     ? ` · ${(nextLeague.minXp - totalXp).toLocaleString()} XP لـ ${nextLeague.name}`
                     : ` · ${(nextLeague.minXp - totalXp).toLocaleString()} XP to ${nextLeague.name}`)}
                 </p>
               </div>
-              <div className="sm:border-s sm:border-charcoal/10 sm:ps-4">
+              <div className="sm:border-s sm:border-charcoal/10 dark:sm:border-border sm:ps-4">
                 <p className="flex items-center gap-1 text-xl font-extrabold">
-                  <Flame className="h-5 w-5 text-[#F26B3A]" aria-hidden="true" /> {streak}
+                  <Flame className="h-5 w-5 fill-klovers-yellow text-foreground" aria-hidden="true" /> {streak}
                 </p>
-                <p className="text-[11px] text-charcoal/70">{isAr ? "يوم متتالي" : "day streak"}</p>
+                <p className="text-[11px] text-charcoal/70 dark:text-muted-foreground">{isAr ? "يوم متتالي" : "day streak"}</p>
               </div>
               {continueGame && (
                 <button
                   type="button"
                   onClick={() => onPlay(continueGame)}
-                  className="min-h-11 rounded-full bg-charcoal px-6 text-sm font-bold text-klovers-yellow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal"
+                  className="min-h-11 rounded-full bg-charcoal px-6 text-sm font-bold text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                 >
                   {isAr ? "كمّل الرحلة" : "Continue Journey"}
                 </button>
@@ -310,7 +311,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                   <button
                     type="button"
                     onClick={() => onPlay(continueGame)}
-                    className="min-h-10 rounded-full bg-charcoal px-4 text-sm font-bold text-klovers-yellow"
+                    className="min-h-10 rounded-full bg-charcoal px-4 text-sm font-bold text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                   >
                     {isAr ? "ابدأ العب" : "Start playing"}
                   </button>
@@ -329,7 +330,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         {/* Before the hatch: the egg card stands where Cluby's outfit cards will be. */}
         {!clubyAwake && (
           <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
-            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF1C2]">
+            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF9EC] dark:bg-muted">
               <img src={EGG} alt="" aria-hidden="true" width={512} height={512} loading="lazy" className="h-16 w-auto object-contain" />
             </div>
             <div className="min-w-0 flex-1">
@@ -349,7 +350,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         {/* Next outfit */}
         {clubyAwake && (
         <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
-          <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF1C2]">
+          <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF9EC] dark:bg-muted">
             <img
               src={`${ASSET}/${nextOutfit}.webp`}
               alt=""
@@ -357,7 +358,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               width={230}
               height={286}
               loading="lazy"
-              className="h-16 w-auto brightness-0 opacity-80"
+              className="h-16 w-auto brightness-0 opacity-80 dark:invert"
             />
           </div>
           <div className="min-w-0 flex-1">
@@ -439,7 +440,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         )}
       </section>
 
-      {/* ── 3. Journey ────────────────────────────────────────────────── */}
+      {/* ── 3. Journey ──────────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden rounded-3xl border border-border bg-[#FFF8EA] p-5 dark:bg-card md:p-6">
         <div className="grid items-end gap-4 md:grid-cols-[11rem_minmax(0,1fr)_9rem]">
           <div>
@@ -499,7 +500,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                         </span>
                       )}
                     </span>
-                    <span className="-mt-3 relative grid h-6 w-6 place-items-center rounded-full bg-charcoal text-[11px] font-extrabold text-white">
+                    <span className="-mt-3 relative grid h-6 w-6 place-items-center rounded-full bg-charcoal text-[11px] font-extrabold text-white dark:bg-klovers-yellow dark:text-charcoal">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="mt-1 text-xs font-extrabold text-charcoal dark:text-foreground sm:text-sm">
@@ -542,7 +543,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         </p>
       </section>
 
-      {/* ── 4. World cards + Cluby's quote ────────────────────────────── */}
+      {/* ── 4. World cards + Cluby's quote ──────────────────────────── */}
       <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_12rem]">
         {stats.map((s, i) => {
           const Scene = WORLD_SCENES[s.world.key];
@@ -551,7 +552,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <article key={s.world.key} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <div className="relative h-36">
                 <WorldPainting worldKey={s.world.key} Fallback={Scene} lazy className="absolute inset-0 h-full w-full" />
-                <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent rtl:bg-gradient-to-l" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent dark:from-card/90 dark:via-card/55 rtl:bg-gradient-to-l" />
                 {clubyAwake && (
                   <img
                     src={CLUBY_3D}
@@ -564,12 +565,12 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                     className="absolute bottom-1 end-3 h-24 w-auto object-contain drop-shadow-[0_4px_6px_rgba(46,46,46,0.3)]"
                   />
                 )}
-                <div className={cn("relative p-4 text-charcoal", clubyAwake && "pe-28")}>
+                <div className={cn("relative p-4 text-charcoal dark:text-foreground", clubyAwake && "pe-28")}>
                   <span className={cn("grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold", WORLD_BADGE[s.world.key])}>
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <h3 className="mt-2 font-display text-xl font-extrabold leading-tight">{isAr ? s.world.nameAr : s.world.name}</h3>
-                  <p className="text-xs text-charcoal/80">{isAr ? s.world.descriptionAr : s.world.description}</p>
+                  <p className="text-xs text-charcoal/80 dark:text-foreground/80">{isAr ? s.world.descriptionAr : s.world.description}</p>
                 </div>
               </div>
 
@@ -593,7 +594,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                         <button
                           type="button"
                           onClick={() => onPlay(id)}
-                          className="flex w-full items-center gap-3 rounded-xl border border-border bg-background/60 p-2 text-start transition-colors hover:border-charcoal/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                          className="flex w-full items-center gap-3 rounded-xl border border-border bg-background/60 p-2 text-start transition-colors hover:border-foreground/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                         >
                           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-muted">
                             <KloverIcon name={gameIconName(id)} className="h-7 w-7" />

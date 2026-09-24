@@ -15,7 +15,7 @@ import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation, PerfectScoreOverlay } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Lock, X } from "lucide-react";
+import { Lock, X, Star, Unlock, BarChart3 } from "lucide-react";
 import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
@@ -27,9 +27,13 @@ import { gameWorlds } from "@/constants/gameWorlds";
 import { cn } from "@/lib/utils";
 import GameWorldsHub from "@/components/games/GameWorldsHub";
 import GamesLeaderboard from "@/components/games/GamesLeaderboard";
-// The two brand characters, inlined. See src/assets/characters.ts for why
-// they are data URIs and why they are busts rather than full-body poses.
-import { CHARACTER_GIRL, CHARACTER_BOY } from "@/assets/characters";
+// Cluby follows the egg (story canon): he appears only once the dashboard
+// has marked him awake, and never for guests. Before that, the clover egg.
+import { isClubyAwake } from "@/lib/clubyAwake";
+
+const EGG = "/assets/story/egg-0.webp";
+const EGG_TEASER = "/assets/story/egg-teaser.webp";
+const CLUBY_WAVE = "/assets/cluby/cluby-wave.webp";
 
 const SentenceBuilderGame = lazy(() => import("@/components/games/SentenceBuilderGame"));
 const NumbersGame = lazy(() => import("@/components/games/NumbersGame"));
@@ -143,6 +147,9 @@ const GamesPage = () => {
   // consoling — default to the cheer.
   const cheered =
     !lastResult || lastResult.total === 0 || lastResult.score / lastResult.total >= CHEER_THRESHOLD;
+
+  // Who hosts the game area: Cluby once he has hatched, otherwise the egg.
+  const clubyAwake = isLoggedIn && isClubyAwake();
 
   useEffect(() => {
     if (newBadges.length > 0) {
@@ -535,14 +542,14 @@ const GamesPage = () => {
           {(isLoggedIn || FREE_GAME_IDS.includes(activeGame)) && (
             <div className="max-w-2xl mx-auto px-4 pt-6 flex items-center gap-3">
               <img
-                src={CHARACTER_GIRL}
+                src={clubyAwake ? CLUBY_WAVE : EGG}
                 alt=""
                 aria-hidden="true"
-                width={56}
-                height={56}
+                width={clubyAwake ? 314 : 512}
+                height={clubyAwake ? 440 : 512}
                 loading="lazy"
                 decoding="async"
-                className="w-14 h-14 rounded-full border-[3px] border-[#FCFD01] shadow-sm shrink-0"
+                className="w-14 h-14 rounded-full border-[3px] border-klovers-yellow bg-ivory dark:bg-muted object-contain p-1 shadow-sm shrink-0"
               />
               <p className="bg-muted text-foreground rounded-2xl px-4 py-2.5 text-sm">
                 {isAr ? "يلا نشوف إنت فاكر إيه 👀" : "Let's see what you remember 👀"}
@@ -593,22 +600,22 @@ const GamesPage = () => {
           <div className="bg-background border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 relative">
             <button
               onClick={() => setShowSignupNudge(false)}
-              className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-muted transition-colors"
+              className="absolute top-3 end-3 z-10 p-1.5 rounded-full bg-background/80 hover:bg-muted transition-colors"
               aria-label="Close"
             >
               <X className="h-4 w-4 text-muted-foreground" />
             </button>
 
             <div className="text-center space-y-2">
-              {/* Decorative: the heading right below carries the same meaning. */}
+              {/* Guests never meet Cluby: the story's opening scene instead -
+                  the two friends finding the glowing clover egg. */}
               <img
-                src={cheered ? CHARACTER_GIRL : CHARACTER_BOY}
-                alt=""
-                aria-hidden="true"
-                width={96}
-                height={96}
+                src={EGG_TEASER}
+                alt={isAr ? "صديقان يكتشفان بيضة البرسيم المضيئة في الليل" : "Two friends discovering a glowing clover egg at night"}
+                width={1600}
+                height={900}
                 decoding="async"
-                className="w-24 h-24 rounded-full border-4 border-[#FCFD01] shadow-md mx-auto"
+                className="w-full h-32 rounded-xl object-cover object-[center_60%] border border-border"
               />
               <h2 className="text-xl font-bold text-foreground">
                 {cheered
@@ -620,12 +627,14 @@ const GamesPage = () => {
 
             <div className="space-y-2">
               {[
-                { icon: "⭐", text: isAr ? "احفظ XP وسلسلتك" : "Save your XP and streak" },
-                { icon: "🔓", text: isAr ? `افتح جميع الألعاب الكورية الـ ${games.length}` : `Unlock all ${games.length} Korean games` },
-                { icon: "📊", text: isAr ? "تتبع تقدمك في التعلّم" : "Track your learning progress" },
-              ].map(({ icon, text }) => (
+                { Icon: Star, text: isAr ? "احفظ XP وسلسلتك" : "Save your XP and streak" },
+                { Icon: Unlock, text: isAr ? `افتح جميع الألعاب الكورية الـ ${games.length}` : `Unlock all ${games.length} Korean games` },
+                { Icon: BarChart3, text: isAr ? "تتبع تقدمك في التعلّم" : "Track your learning progress" },
+              ].map(({ Icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">
-                  <span>{icon}</span>
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-klovers-yellow">
+                    <Icon className="h-3.5 w-3.5 text-charcoal" aria-hidden="true" />
+                  </span>
                   <span>{text}</span>
                 </div>
               ))}
