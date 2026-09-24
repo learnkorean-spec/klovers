@@ -76,17 +76,17 @@ export default function AffiliatePage() {
       <Header />
       <main className="flex-1">
         {/* Hero */}
-        <section className="bg-gradient-to-br from-violet-600 to-purple-700 text-white py-20 px-4 text-center">
+        <section className="bg-charcoal text-ivory py-20 px-4 text-center">
           <div className="max-w-3xl mx-auto">
-            <p className="text-violet-200 text-sm font-semibold uppercase tracking-widest mb-3">{t("affiliate.heroBadge")}</p>
+            <p className="text-klovers-yellow text-sm font-semibold uppercase tracking-widest mb-3">{t("affiliate.heroBadge")}</p>
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
               {t("affiliate.heroTitleLine1")}<br />{t("affiliate.heroTitleLine2")}
             </h1>
-            <p className="text-violet-100 text-lg mb-8">
+            <p className="text-ivory/80 text-lg mb-8">
               {t("affiliate.heroSubtitle")}
             </p>
             <a href="#apply">
-              <Button size="lg" className="bg-white text-violet-700 hover:bg-violet-50 font-bold px-8">
+              <Button size="lg" className="bg-klovers-yellow text-charcoal hover:bg-klovers-yellow/90 font-bold px-8">
                 {t("affiliate.applyFree")}
               </Button>
             </a>
@@ -104,8 +104,8 @@ export default function AffiliatePage() {
               { icon: LinkIcon, label: t("affiliate.statCookieDuration"), value: "30 days" },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="bg-card border rounded-2xl p-6 flex flex-col items-center gap-2 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center">
-                  <Icon className="h-5 w-5 text-violet-600" />
+                <div className="w-10 h-10 rounded-full bg-klovers-yellow flex items-center justify-center">
+                  <Icon className="h-5 w-5 text-charcoal" />
                 </div>
                 <p className="text-2xl font-extrabold text-foreground">{value}</p>
                 <p className="text-xs text-muted-foreground">{label}</p>
@@ -118,6 +118,17 @@ export default function AffiliatePage() {
         <section className="py-14 px-4">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold text-center mb-10">{t("affiliate.howItWorksTitle")}</h2>
+            {/* Friends sharing a picnic: the share-it-with-a-friend idea the
+                programme is built on, in the Klovers story style. */}
+            <img
+              src="/assets/cluby/picnic.webp"
+              alt={language === "ar" ? "صحاب بيتشاركوا نزهة على نهر الهان مع كلوبي" : "Friends sharing a picnic by the Han river with Cluby"}
+              width={1600}
+              height={900}
+              loading="lazy"
+              decoding="async"
+              className="mb-10 w-full aspect-[16/7] rounded-3xl border border-border object-cover"
+            />
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 { step: "1", title: t("affiliate.step1Action"), desc: t("affiliate.step1Desc") },
@@ -125,7 +136,7 @@ export default function AffiliatePage() {
                 { step: "3", title: t("affiliate.step3Action"), desc: t("affiliate.step3Desc") },
               ].map(({ step, title, desc }) => (
                 <div key={step} className="bg-card border rounded-2xl p-6 shadow-sm">
-                  <div className="w-9 h-9 rounded-full bg-violet-600 text-white font-bold flex items-center justify-center mb-4 text-sm">
+                  <div className="w-9 h-9 rounded-full bg-charcoal text-ivory dark:bg-klovers-yellow dark:text-charcoal font-bold flex items-center justify-center mb-4 text-sm">
                     {step}
                   </div>
                   <h3 className="font-semibold text-base mb-1">{title}</h3>
@@ -145,8 +156,8 @@ export default function AffiliatePage() {
             </p>
 
             {submitted ? (
-              <div className="bg-card border border-green-200 rounded-2xl p-10 text-center shadow-sm">
-                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <div className="bg-card border border-klovers-green rounded-2xl p-10 text-center shadow-sm">
+                <CheckCircle className="h-12 w-12 fill-klovers-green text-charcoal mx-auto mb-4" />
                 <h3 className="text-xl font-bold mb-2">{t("affiliate.applicationReceived")}</h3>
                 <p className="text-muted-foreground text-sm mb-6">
                   {t("affiliate.applicationReceivedDesc")}
@@ -213,7 +224,7 @@ export default function AffiliatePage() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700" disabled={loading}>
+                <Button type="submit" className="w-full font-bold" disabled={loading}>
                   {loading ? t("affiliate.submittingBtn") : t("affiliate.submitApplication")}
                 </Button>
 

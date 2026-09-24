@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
-import { HelpCircle, MessageCircle, Search, X } from "lucide-react";
+import { MessageCircle, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { withoutUnsupportedClaims } from "@/lib/trustFigures";
@@ -154,7 +154,7 @@ const FAQPage = () => {
                 <div className="text-center py-12 text-muted-foreground">
                   <Search className="h-8 w-8 mx-auto mb-3 opacity-40" />
                   <p className="font-medium">No results for "{searchQuery}"</p>
-                  <button onClick={() => { setSearchQuery(""); setActiveCategory(null); }} className="mt-2 text-sm text-primary hover:underline">
+                  <button onClick={() => { setSearchQuery(""); setActiveCategory(null); }} className="mt-2 text-sm font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground">
                     Clear search
                   </button>
                 </div>
@@ -176,7 +176,15 @@ const FAQPage = () => {
 
             {/* CTA Section */}
             <div className="max-w-2xl mx-auto mt-16 text-center p-8 rounded-2xl bg-card border">
-              <HelpCircle className="h-10 w-10 text-primary mx-auto mb-4" />
+              <img
+                src="/assets/cluby/cluby-wave.webp"
+                alt={isAr ? "كلوبي بيسلّم" : "Cluby waving hello"}
+                width={314}
+                height={440}
+                loading="lazy"
+                decoding="async"
+                className="mx-auto mb-4 h-24 w-auto object-contain"
+              />
               <h2 className="text-2xl font-bold text-foreground mb-2">
                 {t("faqPage", "ctaTitle")}
               </h2>
