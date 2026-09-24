@@ -18,6 +18,9 @@ import { BrandIcon } from "./primitives";
  * pops up once to tell her it is here. "Seen" is remembered per student and per
  * book in this browser, so a new book later gets its own announcement.
  *
+ * Story canon: before the egg hatches the popup shows the clover egg (no
+ * speech bubble — the egg does not talk); once hatched, Cluby says it.
+ *
  * Sits right under the hero: the book is the student's welcome gift for
  * joining, so it is the first thing she sees (Re, 25 Sep 2026).
  *
@@ -59,7 +62,7 @@ function BookCover({ id, className }: { id: BookId; className: string }) {
   );
 }
 
-export function MyBooksCard() {
+export function MyBooksCard({ clubyAwake = false }: { clubyAwake?: boolean }) {
   const { lang } = useDashCopy();
   const isAr = lang === "ar";
   const [rows, setRows] = useState<Row[]>([]);
@@ -72,17 +75,15 @@ export function MyBooksCard() {
     let alive = true;
     (async () => {
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) return;
-        const { data, error: rowsError } = await supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
           .from("book_assignments")
           .select("id, book_id")
           .eq("user_id", user.id)
           .lte("available_from", new Date().toISOString())
           .order("assigned_at", { ascending: true });
         if (!alive) return;
-        // No card rather than a broken one; the book stays assigned.
-        if (rowsError) { console.warn("[MyBooksCard] book_assignments:", rowsError.message); return; }
         const list = ((data ?? []) as Row[]).filter((r) => r.book_id in BOOKS);
         setRows(list);
         setUserId(user.id);
@@ -171,8 +172,11 @@ export function MyBooksCard() {
             className="max-w-sm overflow-hidden rounded-3xl border-2 border-foreground bg-background p-0"
           >
             <div className="flex flex-col items-center px-6 pb-6 pt-8 text-center">
-              {/* Cluby says it, in a speech bubble pointing down at him. */}
-              <div className="relative mb-2 rounded-2xl border-2 border-foreground bg-card px-4 py-2.5 text-foreground shadow-sm">
+              {/* Hatched: Cluby says it in a speech bubble pointing down at him.
+                  Not hatched: the same words as a plain note above the egg. */}
+              <div className={clubyAwake
+                ? "relative mb-2 rounded-2xl border-2 border-foreground bg-card px-4 py-2.5 text-foreground shadow-sm"
+                : "mb-1 text-foreground"}>
                 <DialogTitle className={isAr ? "font-sans text-base font-bold leading-relaxed" : "font-display text-base font-bold leading-snug"}>
                   {isAr ? "كتابك وصل!" : "Your book is here!"}
                 </DialogTitle>
@@ -181,13 +185,15 @@ export function MyBooksCard() {
                     ? "حمّله دلوقتي، واطبعه أو احفظه على موبايلك، وخلّيه معاك في كل حصة."
                     : "Download it now, print it or keep it on your phone, and bring it to every class."}
                 </DialogDescription>
-                <span aria-hidden="true" className="absolute -bottom-[9px] left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-foreground bg-card" />
+                {clubyAwake && (
+                  <span aria-hidden="true" className="absolute -bottom-[9px] left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b-2 border-r-2 border-foreground bg-card" />
+                )}
               </div>
 
               <div className="mt-3 flex items-end justify-center gap-3">
                 <img
-                  src="/assets/cluby/cluby-wave.webp"
-                  alt={isAr ? "كلوبي يلوّح" : "Cluby waving"}
+                  src={clubyAwake ? "/assets/cluby/cluby-wave.webp" : "/assets/story/egg-0.webp"}
+                  alt={clubyAwake ? (isAr ? "كلوبي يلوّح" : "Cluby waving") : (isAr ? "بيضة البرسيم" : "The clover egg")}
                   width={96}
                   height={96}
                   draggable={false}

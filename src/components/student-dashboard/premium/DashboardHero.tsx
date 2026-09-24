@@ -30,7 +30,7 @@ export interface HeroProps {
  *
  * The book gift card ("A gift for joining our course") renders directly under
  * the hero, as the second thing on the page. It renders nothing for a student
- * without a book.
+ * without a book. It gets clubyAwake so its popup shows the egg before hatching.
  */
 export function DashboardHero(p: HeroProps) {
   const { c, lang } = useDashCopy();
@@ -120,7 +120,7 @@ export function DashboardHero(p: HeroProps) {
         )}
       </div>
     </section>
-    <MyBooksCard />
+    <MyBooksCard clubyAwake={p.clubyAwake} />
     </>
   );
 }
