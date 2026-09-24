@@ -60,8 +60,8 @@ const PLACE = {
   },
   3: {
     ring: "ring-charcoal/25 dark:ring-ivory/30",
-    chip: "border border-charcoal/20 bg-[#FFF9EC] text-charcoal",
-    step: "h-14 border-2 border-b-0 border-charcoal/15 bg-[#FFF9EC] text-charcoal",
+    chip: "border border-charcoal/20 bg-ivory text-charcoal",
+    step: "h-14 border-2 border-b-0 border-charcoal/15 bg-ivory text-charcoal",
     avatar: "h-14 w-14 text-xl",
   },
 } as const;
@@ -70,11 +70,11 @@ const initialOf = (name: string) => (name.trim()[0] ?? "?").toUpperCase();
 
 const Avatar = ({ p, className }: { p: LeaderboardEntry; className?: string }) =>
   p.avatar_url ? (
-    <img src={p.avatar_url} alt="" aria-hidden="true" loading="lazy" className={cn("rounded-full bg-[#FFF9EC] object-cover", className)} />
+    <img src={p.avatar_url} alt="" aria-hidden="true" loading="lazy" className={cn("rounded-full bg-ivory object-cover", className)} />
   ) : (
     <span
       aria-hidden="true"
-      className={cn("grid place-items-center rounded-full bg-[#FFF9EC] font-display font-extrabold text-charcoal", className)}
+      className={cn("grid place-items-center rounded-full bg-ivory font-display font-extrabold text-charcoal", className)}
     >
       {initialOf(p.name)}
     </span>
@@ -88,7 +88,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
   const rest = board.slice(3);
   const leaderXp = Math.max(1, board[0]?.value ?? 1);
   const meInBoard = board.some((p) => p.isCurrentUser);
-  const you = isAr ? "إنت" : "You";
+  const you = isAr ? "أنت" : "You";
 
   // Podium order: 2nd, 1st, 3rd - only the places that exist.
   const podium = [top[1], top[0], top[2]]
@@ -103,7 +103,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
     );
 
   return (
-    <section className="border-t border-border bg-[#FFF9EC] px-4 py-12 dark:bg-muted/20">
+    <section className="border-t border-border bg-ivory px-4 py-12 dark:bg-muted/20">
       <div className="mx-auto max-w-2xl">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -114,14 +114,14 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
               {isLoggedIn ? (isAr ? "أفضل اللاعبين" : "Top Players") : (isAr ? "الترتيب" : "Leaderboard")}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              {isAr ? "مرتّبين حسب نقط الـ XP من الألعاب والدروس" : "Ranked by XP from games and lessons"}
+              {isAr ? "الترتيب حسب نقاط XP من الألعاب والدروس" : "Ranked by XP from games and lessons"}
             </p>
           </div>
           {isLoggedIn && (
             <div className="inline-flex rounded-full border border-border bg-card p-1" role="tablist">
               {([
                 ["all", isAr ? "كل الوقت" : "All time"],
-                ["week", isAr ? "الأسبوع ده" : "This week"],
+                ["week", isAr ? "هذا الأسبوع" : "This week"],
               ] as const).map(([key, label]) => (
                 <button
                   key={key}
@@ -147,7 +147,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
               <Mascot className="h-24" />
               <p className="max-w-xs text-sm text-muted-foreground">
                 {isAr
-                  ? "سجّل عشان تبدأ تجمع نقط وتدخل الترتيب."
+                  ? "إنشاء حساب يفتح جمع النقاط ودخول الترتيب."
                   : "Sign up to start earning XP and take your place on the leaderboard."}
               </p>
               <a
@@ -155,7 +155,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-charcoal px-6 text-sm font-bold text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
               >
                 <Trophy className="h-4 w-4" aria-hidden="true" />
-                {isAr ? "سجّل لرؤية ترتيبك" : "Sign up to see your rank"}
+                {isAr ? "إنشاء حساب لعرض الترتيب" : "Sign up to see your rank"}
               </a>
             </div>
           ) : loading ? (
@@ -165,14 +165,14 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
               <Mascot className="h-20" />
               <p className="text-sm text-muted-foreground">
                 {tab === "week"
-                  ? (isAr ? "لسه محدش لعب الأسبوع ده. كن الأول!" : "No one has played this week yet. Be the first!")
-                  : (isAr ? "لا توجد بيانات بعد. العب لكسب XP!" : "No data yet. Play games to earn XP!")}
+                  ? (isAr ? "لم يلعب أحد هذا الأسبوع بعد، والمركز الأول ما زال متاحًا." : "No one has played this week yet. Be the first!")
+                  : (isAr ? "لا توجد بيانات بعد. كل لعبة تضيف نقاط XP." : "No data yet. Play games to earn XP!")}
               </p>
             </div>
           ) : (
             <>
               {/* Podium */}
-              <div className="relative bg-[#FFF9EC] px-4 pt-10 dark:bg-klovers-yellow/5">
+              <div className="relative bg-ivory px-4 pt-10 dark:bg-klovers-yellow/5">
                 <Mascot className="absolute end-4 top-4 hidden h-20 sm:block" />
                 <ol className="mx-auto grid max-w-md grid-cols-3 items-end gap-2 sm:gap-3">
                   {podium.map(({ p, place }) => {
@@ -185,7 +185,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                         <Avatar
                           p={p}
                           className={cn(
-                            "ring-4 ring-offset-2 ring-offset-[#FFF9EC] dark:ring-offset-card",
+                            "ring-4 ring-offset-2 ring-offset-ivory dark:ring-offset-card",
                             m.ring,
                             m.avatar,
                           )}
@@ -221,7 +221,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                       key={p.user_id}
                       className={cn(
                         "flex items-center gap-3 px-4 py-3 sm:px-5",
-                        p.isCurrentUser && "bg-klovers-yellow/25",
+                        p.isCurrentUser && "bg-klovers-yellow/25 dark:bg-klovers-yellow/10",
                       )}
                     >
                       <span
@@ -254,8 +254,8 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
 
               {/* Outside the top ten: the real rank, from the server */}
               {tab === "all" && !meInBoard && myRank !== null && (
-                <p className="border-t border-border bg-klovers-yellow/25 px-4 py-3 text-center text-sm font-semibold text-foreground">
-                  {isAr ? `ترتيبك الحالي: #${myRank} — كمّل لعب عشان تطلع فوق!` : `Your rank: #${myRank} — keep playing to climb!`}
+                <p className="border-t border-border bg-klovers-yellow/25 dark:bg-klovers-yellow/10 px-4 py-3 text-center text-sm font-semibold text-foreground">
+                  {isAr ? `الترتيب الحالي: #${myRank} — مواصلة اللعب ترفع الترتيب.` : `Your rank: #${myRank} — keep playing to climb!`}
                 </p>
               )}
             </>
