@@ -7,6 +7,8 @@ import fs from "node:fs";
 
 const P = "scripts/qa-patch/patches.json";
 const patches = JSON.parse(fs.readFileSync(P, "utf8"));
+const O = "scripts/qa-patch/overrides.json";
+const overrides = fs.existsSync(O) ? JSON.parse(fs.readFileSync(O, "utf8")).counts || {} : {};
 const files = new Map();
 const errors = [];
 const done = [];
@@ -25,7 +27,7 @@ patches.forEach((p, i) => {
     errors.push(`#${i} ${p.file}: file not found`);
     return;
   }
-  const expect = p.count ?? 1;
+  const expect = overrides[p.find] ?? p.count ?? 1;
   let n;
   let out;
   if (p.regex) {
