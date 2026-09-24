@@ -14,13 +14,11 @@ import Footer from "@/components/Footer";
 import JourneyStepper from "@/components/JourneyStepper";
 import UpcomingSessionsCard from "@/components/UpcomingSessionsCard";
 import MyTrialClassCard from "@/components/MyTrialClassCard";
-import DashboardLearningCard from "@/components/DashboardLearningCard";
 import StudentPrimaryAction from "@/components/StudentPrimaryAction";
 import type { PrimarySession } from "@/components/StudentPrimaryAction";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
-import { LeagueProgressBar, BadgeGrid } from "@/components/GamificationUI";
 import { useGamification } from "@/hooks/useGamification";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { BADGES, LEAGUES } from "@/constants/gamification";
@@ -52,15 +50,32 @@ const StreakCalendar = lazy(() =>
 const DailyBonusCard = lazy(() =>
   import("@/components/DailyBonusCard").then(m => ({ default: m.DailyBonusCard }))
 );
-import { AlertCircle, CheckCircle2, AlertTriangle, Package, CalendarCheck, CalendarDays, Users, CreditCard, GraduationCap, RotateCcw, ChevronDown, Gamepad2, Pencil, Check, X, Download, Copy } from "lucide-react";
-import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import { AlertCircle, AlertTriangle, Package, CalendarCheck, Users, GraduationCap, RotateCcw, ChevronDown, Pencil, Check, X, Download, Copy } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { Input } from "@/components/ui/input";
 import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getLevelShortLabel } from "@/constants/levels";
 import WelcomeModal, { isOnboardingDone } from "@/components/WelcomeModal";
-import { useCountUp } from "@/hooks/useCountUp";
 import { leagueName, badgeText } from "@/lib/dashboardLocale";
+import { useDashboardLearning } from "@/hooks/useDashboardLearning";
+import {
+  xpStatus, streakState as getStreakState, localDateKey, missionsFromActivity, pickContinueLesson,
+  journeyStops, eggStatus, WORD_OF_DAY_ACTIVITY, type BrandIconName,
+} from "@/lib/dashboardProgress";
+import { dashEvent, markMissionCompletedOnce } from "@/lib/dashboardEvents";
+import { studentCalendarDaysUntil } from "@/lib/studentDashboardDate";
+import { getUserTimezone } from "@/lib/viewerTimezone";
+import { convertDateTimeToTimezone } from "@/lib/admin-utils";
+import { DashboardHero } from "@/components/student-dashboard/premium/DashboardHero";
+import { ContinueLearningCard } from "@/components/student-dashboard/premium/ContinueLearningCard";
+import { TodaysMissions } from "@/components/student-dashboard/premium/TodaysMissions";
+import { LearningJourneyMap } from "@/components/student-dashboard/premium/LearningJourneyMap";
+import { CollectionCard } from "@/components/student-dashboard/premium/CollectionCard";
+import { EggStatusCard } from "@/components/student-dashboard/premium/EggStatusCard";
+import { RecentAchievements } from "@/components/student-dashboard/premium/RecentAchievements";
+import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
+import { useDashCopy } from "@/components/student-dashboard/premium/copy";
 
 interface EnrollmentRecord {
   id: string;
@@ -101,17 +116,17 @@ const AttendanceHistoryCard = ({ dates }: { dates: AttendanceDate[] }) => {
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <Card>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="pb-3 cursor-pointer hover:bg-muted/30 transition-colors rounded-t-lg">
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <CalendarCheck className="h-5 w-5" />
+        <CardHeader className="p-0">
+          <CollapsibleTrigger asChild>
+            <button type="button" className="flex min-h-12 w-full items-center justify-between gap-2 rounded-lg px-6 py-4 text-start hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CalendarCheck className="h-5 w-5" aria-hidden="true" />
                 {tInterpolate(t("dashboardPage.attendanceHistory"), { count: dates.length })}
-              </span>
-              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-            </CardTitle>
-          </CardHeader>
-        </CollapsibleTrigger>
+              </CardTitle>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+            </button>
+          </CollapsibleTrigger>
+        </CardHeader>
         <CollapsibleContent>
           <CardContent>
             <div className="space-y-1">
@@ -182,17 +197,17 @@ const ProfileCard = ({
                   autoFocus
                   onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
                 />
-                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={handleSaveName} disabled={saving} aria-label={t("dashboardPage.saveNameAria")}>
+                <Button size="icon" variant="ghost" className="h-11 w-11 shrink-0" onClick={handleSaveName} disabled={saving} aria-label={t("dashboardPage.saveNameAria")}>
                   <Check className="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => { setEditingName(false); setNameValue(displayName); }} aria-label={t("dashboardPage.cancelEditAria")}>
+                <Button size="icon" variant="ghost" className="h-11 w-11 shrink-0" onClick={() => { setEditingName(false); setNameValue(displayName); }} aria-label={t("dashboardPage.cancelEditAria")}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2 min-w-0">
                 <p className="font-semibold text-foreground text-lg truncate" title={displayName} dir="auto">{displayName}</p>
-                <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => { setNameValue(displayName); setEditingName(true); }} aria-label={t("dashboardPage.editNameAria")}>
+                <Button size="icon" variant="ghost" className="h-11 w-11 shrink-0" onClick={() => { setNameValue(displayName); setEditingName(true); }} aria-label={t("dashboardPage.editNameAria")}>
                   <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                 </Button>
               </div>
@@ -474,41 +489,64 @@ const StudentDashboard = () => {
     sessionStorage.setItem("kl_last_league", league.key);
   }, [league, loading, gamLoading, hasNoData, uiToast, t, language]);
 
-  // Animated count-up for numeric stats
-  const xpCountUp = useCountUp(gamification.totalXp, 1200);
-  const streakCountUp = useCountUp(gamification.streak.current_streak, 800);
+  // ── Redesigned blocks: read-only derivations of existing rows ──────────
+  const { c: dc } = useDashCopy();
+  const learning = useDashboardLearning(userId);
+  const todayKey = localDateKey();
+  const xp = useMemo(() => xpStatus(gamification.totalXp), [gamification.totalXp]);
+  const heroStreakState = getStreakState(gamification.streak.current_streak, gamification.streak.last_activity_date, todayKey);
+  const missions = useMemo(
+    () => (learning.data ? missionsFromActivity(learning.data.todayActivity, vocabClaimed) : null),
+    [learning.data, vocabClaimed],
+  );
+  const nextLesson = useMemo(
+    () => (learning.data ? pickContinueLesson(learning.data.lessons, learning.data.lessonProgress, profileLevel) : null),
+    [learning.data, profileLevel],
+  );
+  const continueHref = nextLesson?.href ?? "/textbook";
+  const journey = useMemo(() => journeyStops(profileLevel), [profileLevel]);
+  // Cluby's egg — read from real progress only (null until the rows load).
+  const egg = useMemo(
+    () => (learning.data ? eggStatus(learning.data.lessonProgress, learning.data.badges, learning.data.todayActivity) : null),
+    [learning.data],
+  );
+  const clubyAwake = egg?.stage === 3;
+  const [claimingWord, setClaimingWord] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
 
-  const quickStats = useMemo(() => [
-    { id: "totalXp", label: t("dashboardPage.totalXp"), rawValue: gamification.totalXp, sub: weeklyXp > 0 ? tInterpolate(t("dashboardPage.thisWeekXp"), { count: weeklyXp }) : undefined, art: "badge-blossom" as KloverIconName, color: "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30 border border-black/10 ring-1 ring-black/5" },
-    { id: "streak", label: t("dashboardPage.dayStreakLabel"), rawValue: gamification.streak.current_streak, sub: tInterpolate(t("dashboardPage.bestStreakSub"), { count: gamification.streak.longest_streak }), art: "calendar-check" as KloverIconName, color: "text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30" },
-    { id: "lessons", label: t("dashboardPage.lessonsDone"), rawValue: lessonsCompleted, art: "books-stack" as KloverIconName, color: "text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30" },
-    { id: "league", label: t("dashboardPage.leagueLabel"), rawValue: -1, art: "growth-chart" as KloverIconName, color: "text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30" },
-  ], [t, tInterpolate, gamification.totalXp, gamification.streak.current_streak, gamification.streak.longest_streak, lessonsCompleted, weeklyXp]);
+  useEffect(() => {
+    missions?.forEach(m => { if (m.done) markMissionCompletedOnce(m.id, todayKey); });
+  }, [missions, todayKey]);
 
-  const quickActions = useMemo(() => [
-    { label: t("dashboardPage.qaTextbook"), desc: t("dashboardPage.qaTextbookDesc"), art: "books-stack" as KloverIconName, path: "/textbook", bg: "bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-blue-500/25" },
-    { label: t("dashboardPage.qaQuiz"), desc: t("dashboardPage.qaQuizDesc"), art: "lightbulb-sprout" as KloverIconName, path: "/daily-quiz", bg: "bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 shadow-orange-500/25" },
-    { label: t("dashboardPage.qaGames"), desc: t("dashboardPage.qaGamesDesc"), art: "klobi-headphones" as KloverIconName, path: "/games", bg: "bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-green-500/25" },
-    { label: t("dashboardPage.qaVocab"), desc: t("dashboardPage.qaVocabDesc"), art: "flashcard-ga" as KloverIconName, path: "/review", bg: "bg-gradient-to-br from-purple-500 to-violet-600 hover:from-purple-600 hover:to-violet-700 shadow-violet-500/25" },
+  const viewSent = useRef(false);
+  useEffect(() => {
+    if (viewSent.current || loading || gamLoading || !learning.data) return;
+    viewSent.current = true;
+    dashEvent({ name: "dashboard_view", enrolled: !hasNoData, level: profileLevel || null, xp_level: xp.levelNumber });
+  }, [loading, gamLoading, learning.data, hasNoData, profileLevel, xp.levelNumber]);
+
+  const practiceLinks = useMemo(() => [
+    { label: t("dashboardPage.qaTextbook"), desc: t("dashboardPage.qaTextbookDesc"), icon: "open-book" as BrandIconName, path: "/textbook" },
+    { label: t("dashboardPage.qaQuiz"), desc: t("dashboardPage.qaQuizDesc"), icon: "notebook" as BrandIconName, path: "/daily-quiz" },
+    { label: t("dashboardPage.qaGames"), desc: t("dashboardPage.qaGamesDesc"), icon: "controller" as BrandIconName, path: "/games" },
+    { label: t("dashboardPage.qaVocab"), desc: t("dashboardPage.qaVocabDesc"), icon: "flashcards" as BrandIconName, path: "/review" },
   ], [t]);
   // ─────────────────────────────────────────────────────────────────────────
 
   if (gateLoading || resetBlocked || loading) {
+    // Skeleton mirrors the real hierarchy (hero → continue + missions →
+    // journey) so nothing jumps when the data lands.
     return (
-      <div className="min-h-screen bg-muted/20">
+      <div className="min-h-screen bg-background">
         <Header />
-        <main id="main-content" className="pt-24 pb-16 px-4">
-          <div className="max-w-5xl mx-auto space-y-6">
-            <Skeleton className="h-8 w-48" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+        <main id="main-content" className="pt-24 pb-16 px-4" aria-busy="true">
+          <div className="max-w-5xl mx-auto space-y-4 sm:space-y-5">
+            <Skeleton className="h-52 rounded-3xl" />
+            <div className="grid gap-4 lg:grid-cols-5">
+              <Skeleton className="h-72 rounded-[20px] lg:col-span-3" />
+              <Skeleton className="h-72 rounded-[20px] lg:col-span-2" />
             </div>
-            <Skeleton className="h-16 rounded-xl" />
-            <div className="grid md:grid-cols-2 gap-4">
-              <Skeleton className="h-48 rounded-xl" />
-              <Skeleton className="h-48 rounded-xl" />
-            </div>
-            <Skeleton className="h-64 rounded-xl" />
+            <Skeleton className="h-36 rounded-[20px]" />
           </div>
         </main>
       </div>
@@ -580,13 +618,6 @@ const StudentDashboard = () => {
     return plan;
   };
 
-  const greeting = (() => {
-    const h = new Date().getHours();
-    if (h < 12) return t("dashboardPage.goodMorning");
-    if (h < 17) return t("dashboardPage.goodAfternoon");
-    return t("dashboardPage.goodEvening");
-  })();
-
   const dateLocale = language === "ar" ? "ar-EG-u-nu-latn" : "en-GB";
   const todayStr = new Date().toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long" });
 
@@ -624,89 +655,169 @@ const StudentDashboard = () => {
     URL.revokeObjectURL(url);
   };
 
+  const firstName = displayName.split(" ")[0];
+  const nextSession = upcomingSessions[0] ?? null;
+  // Same conversion StudentPrimaryAction uses, so "today" means the same day in both.
+  const classIsToday = !!nextSession && (() => {
+    const tz = getUserTimezone();
+    const local = convertDateTimeToTimezone(nextSession.session_date, nextSession.start_time, nextSession.timezone || "Africa/Cairo", tz);
+    return studentCalendarDaysUntil(local.dateStr, tz) === 0;
+  })();
+  const pendingLatest = pendingEnrollments[pendingEnrollments.length - 1];
+
+  const handleClaimWord = async () => {
+    if (vocabClaimed || claimingWord) return;
+    setClaimingWord(true);
+    try {
+      await awardGameXp("vocab_daily", 5, 1);
+      localStorage.setItem(vocabStorageKey, "1");
+      setVocabClaimed(true);
+      learning.addTodayActivity(WORD_OF_DAY_ACTIVITY);
+      markMissionCompletedOnce("word", todayKey);
+      toast({ title: t("dashboardPage.xpBonus"), description: t("dashboardPage.vocabBonus") });
+    } finally {
+      setClaimingWord(false);
+    }
+  };
+
+  const avatarSlot = profileComplete ? (
+    <div
+      className="h-11 w-11 rounded-full bg-live-bright text-foreground flex items-center justify-center font-display font-bold text-lg shrink-0 select-none ring-2 ring-foreground"
+      title={profileBadgeHint}
+      aria-label={profileBadgeHint}
+      role="img"
+    >
+      {displayName?.[0]?.toUpperCase() ?? "K"}
+    </div>
+  ) : (
+    <button
+      type="button"
+      onClick={handleProfileBadgeClick}
+      title={profileBadgeHint}
+      aria-label={profileBadgeHint}
+      className="h-11 w-11 rounded-full bg-[#b0245f] text-white flex items-center justify-center font-display font-bold text-lg shrink-0 select-none ring-2 ring-[#b0245f]/40 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground"
+    >
+      {displayName?.[0]?.toUpperCase() ?? "K"}
+    </button>
+  );
+
+  /* G. Upcoming class — real class data only (StudentPrimaryAction owns the
+     Join / schedule / renewal states). Unenrolled students get the existing
+     pending-review or start-your-journey card instead. */
+  const classBlock = !hasNoData ? (
+    <section aria-labelledby="dash-class-title" className="min-w-0 space-y-3"
+      onClickCapture={(e) => {
+        const a = (e.target as HTMLElement).closest("a[href^='http']");
+        if (a) dashEvent({ name: "class_opened", source: "next_class" });
+      }}>
+      <h2 id="dash-class-title" className="sr-only">{dc("nextClassTitle")}</h2>
+      <StudentPrimaryAction
+        enrollments={enrollments}
+        attendanceDates={attendanceDates}
+        nextSession={nextSession}
+        zoomUrl={zoomUrl}
+        pendingEnrollments={pendingEnrollments}
+        checklistItems={checklistItems}
+      />
+      <MyTrialClassCard />
+    </section>
+  ) : pendingLatest ? (() => {
+    const pending = pendingLatest;
+    const label =
+      pending.approval_status === "PENDING_PAYMENT"
+        ? t("dashboardPage.awaitingPayment")
+        : pending.approval_status === "UNDER_REVIEW"
+          ? t("dashboardPage.underReview")
+          : t("dashboardPage.pendingLabel");
+      return (
+        <div className="space-y-6">
+          <Card className="border-amber-300/60 bg-gradient-to-br from-amber-50 to-transparent">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-amber-600" /> {t("dashboardPage.enrollmentPendingTitle")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {tInterpolate(t("dashboardPage.enrollmentPendingBody1"), { plan: planLabel(pending.plan_type), status: label })}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t("dashboardPage.enrollmentPendingBody2")}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+  })() : (
+    <div className="space-y-3">
+      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent ring-1 ring-black/10">
+        <CardContent className="pt-6 pb-6 space-y-4">
+          <div className="flex items-start gap-4">
+            <BrandIcon name="open-book" className="h-12 w-12 sm:h-14 sm:w-14" />
+            <div>
+              <h2 className="text-lg font-bold text-foreground">{t("dashboardPage.startJourneyTitle")}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t("dashboardPage.startJourneyBody")}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex -space-x-1 rtl:space-x-reverse">
+              {["🇪🇬","🇸🇦","🇦🇪","🇯🇴"].map((flag, i) => (
+                <span key={i} className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">{flag}</span>
+              ))}
+            </div>
+            <span>{/* 200+ = students Reham has taught herself (the one public figure on record). */}
+            {tInterpolate(t("dashboardPage.joinStudents"), { count: 200 })}</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+            {[
+              { icon: "teacher" as BrandIconName, text: t("dashboardPage.featureLiveClasses") },
+              { icon: "progress" as BrandIconName, text: t("dashboardPage.featureProgress") },
+              { icon: "trophy" as BrandIconName, text: t("dashboardPage.featureXp") },
+            ].map(({ icon, text }) => (
+              <div key={text} className="flex items-center gap-2 bg-background/60 rounded-lg px-3 py-2 border border-border">
+                <BrandIcon name={icon} className="h-7 w-7" />
+                <span className="text-muted-foreground">{text}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={() => navigate("/enroll-now")} size="lg" className="flex-1">{t("dashboardPage.enrollNow")}</Button>
+            <Button variant="outline" size="lg" onClick={() => navigate("/free-trial")} className="flex-1">{t("dashboardPage.bookFreeTrial")}</Button>
+          </div>
+        </CardContent>
+      </Card>
+      <MyTrialClassCard />
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-muted/20">
+    <div className="min-h-screen bg-background">
       <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       <Header />
       <main id="main-content" className="pt-24 pb-16 px-4">
-        <div className="max-w-5xl mx-auto space-y-5">
+        <div className="max-w-5xl mx-auto space-y-4 sm:space-y-5">
 
-          {/* ── Hero greeting ── */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/15 px-5 py-5">
-            <div className="flex items-center gap-4">
-              {profileComplete ? (
-                <div
-                  className="h-12 w-12 rounded-full bg-[#39ff14] text-[#062b00] flex items-center justify-center font-bold text-xl shrink-0 select-none ring-2 ring-[#39ff14]/60 shadow-[0_0_14px_2px_rgba(57,255,20,0.7)]"
-                  title={profileBadgeHint}
-                  aria-label={profileBadgeHint}
-                >
-                  {displayName?.[0]?.toUpperCase() ?? "K"}
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleProfileBadgeClick}
-                  title={profileBadgeHint}
-                  aria-label={profileBadgeHint}
-                  className="h-12 w-12 rounded-full bg-[#b0245f] text-white flex items-center justify-center font-bold text-xl shrink-0 select-none ring-2 ring-[#b0245f]/40 shadow-[0_0_10px_2px_rgba(176,36,95,0.55)] animate-pulse motion-reduce:animate-none cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#b0245f]/60"
-                >
-                  {displayName?.[0]?.toUpperCase() ?? "K"}
-                </button>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground leading-tight">{todayStr}</p>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground leading-tight break-words">{greeting}{language === "ar" ? "، " : ", "}<bdi>{displayName.split(" ")[0]}</bdi> 👋</h1>
-                <p className="text-xs text-muted-foreground mt-1">{t("dashboardPage.subtitle")}</p>
-              </div>
-              <KloverIcon name="klobi-headphones" className="hidden sm:block h-16 w-16 shrink-0" />
-              <Button variant="outline" size="sm" onClick={handleExportProgress} aria-label={t("dashboardPage.exportAria")} className="min-h-11 min-w-11 gap-1.5 shrink-0 bg-background/80">
-                <Download className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t("dashboardPage.export")}</span>
-              </Button>
-            </div>
-          </div>
-
-                              {/* ── Primary next-action summary (under Hero) — hidden while the
-              wide body already owns the single primary state (pending review
-              / journey start), so those states are never rendered twice ── */}
-          <div className="grid gap-4 md:grid-cols-2 [&>div]:min-w-0">
-          {!hasNoData && (
-          <StudentPrimaryAction
-            enrollments={enrollments}
-            attendanceDates={attendanceDates}
-            nextSession={upcomingSessions[0] ?? null}
-            zoomUrl={zoomUrl}
-            pendingEnrollments={pendingEnrollments}
-            checklistItems={checklistItems}
+          {/* A. Compact hero — status + ONE action */}
+          <DashboardHero
+            firstName={firstName}
+            todayLabel={todayStr}
+            xp={xp}
+            streak={gamification.streak.current_streak}
+            streakState={heroStreakState}
+            continueHref={continueHref}
+            continueBook={nextLesson?.lesson.book ?? null}
+            continueLesson={nextLesson?.lesson.sort_order ?? null}
+            hasStarted={!!nextLesson && (nextLesson.stepsDone > 0 || nextLesson.reason !== "start_at_level")}
+            avatarSlot={avatarSlot}
+            clubyAwake={clubyAwake}
           />
-          )}
 
-          {!hasNoData && <DashboardLearningCard userId={userId} />}
+          {/* Cluby's clover egg: crack → glow → hatch from real learning. */}
+          {egg && <EggStatusCard egg={egg} />}
 
-          </div>
-
-          {/* ── Compact alerts for other account states ──
-              Was gated behind `hasNoData &&`, but the "sessions running low"
-              and "profile X% complete" branches below only ever have data
-              when `!hasNoData` — so both were dead code, and enrolled
-              students never got a renewal nudge before the package fully
-              ran out. Now runs for everyone; the profile-completion alert
-              is dropped here since StudentPrimaryAction already shows it
-              for enrolled students (it was unreachable here anyway). ── */}
+          {/* Account alerts (package running low / pending review) — compact */}
           {(() => {
             const alerts: React.ReactNode[] = [];
-            const streak = gamification.streak.current_streak;
-            const todayDate = new Date().toISOString().slice(0, 10);
-            const lastActive = gamification.streak.last_activity_date?.slice(0, 10);
-            if (streak >= 1 && lastActive !== todayDate) {
-              alerts.push(
-                <div key="streak" className="flex items-center gap-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200/80 dark:border-orange-800/60 rounded-xl px-3 py-2 text-sm">
-                  <span className="animate-bounce text-base">🔥</span>
-                  <span className="flex-1 font-medium text-orange-800 dark:text-orange-300">{tInterpolate(t("dashboardPage.streakAlive"), { count: streak })}</span>
-                  <Button size="sm" variant="ghost" className="h-7 text-xs text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30 shrink-0 px-2" onClick={() => navigate("/games")}>{t("dashboardPage.play")}</Button>
-                </div>
-              );
-            }
             if (enrollments.length > 0) {
               const remaining = enrollments[0].sessions_total - attendanceDates.length;
               if (remaining <= 2) {
@@ -714,7 +825,7 @@ const StudentDashboard = () => {
                   <div key="sessions" className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/60 rounded-xl px-3 py-2 text-sm">
                     <span className="text-base">📦</span>
                     <span className="flex-1 font-medium text-blue-900 dark:text-blue-300">{remaining <= 0 ? t("dashboardPage.packageFinished") : tInterpolate(t("dashboardPage.sessionsLeftAlert"), { count: remaining })}</span>
-                    <Button size="sm" className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white shrink-0 px-2" onClick={() => navigate("/enroll-now")}>{t("dashboardPage.renewArrow")}</Button>
+                    <Button size="sm" className="min-h-11 text-xs bg-blue-600 hover:bg-blue-700 text-white shrink-0 px-3" onClick={() => navigate("/enroll-now")}>{t("dashboardPage.renewArrow")}</Button>
                   </div>
                 );
               }
@@ -732,76 +843,221 @@ const StudentDashboard = () => {
             return <div className="space-y-1.5">{alerts}</div>;
           })()}
 
-          {hasNoData ? (
-            (() => {
-              const pending = pendingEnrollments[pendingEnrollments.length - 1];
-              if (pending) {
-                const label =
-                  pending.approval_status === "PENDING_PAYMENT"
-                    ? t("dashboardPage.awaitingPayment")
-                    : pending.approval_status === "UNDER_REVIEW"
-                      ? t("dashboardPage.underReview")
-                      : t("dashboardPage.pendingLabel");
-                return (
-                  <div className="space-y-6">
-                    <Card className="border-amber-300/60 bg-gradient-to-br from-amber-50 to-transparent">
+          {/* A class starting today outranks everything below the hero. */}
+          {classIsToday && classBlock}
+
+          {/* D + B. Primary row: continue learning + today's missions */}
+          <div className="grid gap-4 lg:grid-cols-5 [&>*]:min-w-0">
+            <div className="lg:col-span-3 flex">
+              <div className="flex-1 flex flex-col [&>section]:flex-1">
+                <ContinueLearningCard next={nextLesson} loading={learning.loading} error={learning.error} onRetry={learning.retry} />
+              </div>
+            </div>
+            <div className="lg:col-span-2 flex">
+              <div className="flex-1 flex flex-col [&>section]:flex-1">
+                <TodaysMissions
+                  missions={missions}
+                  loading={learning.loading}
+                  continueHref={continueHref}
+                  claimLabel={t("dashboardPage.claimXp")}
+                  claiming={claimingWord}
+                  onClaimWord={handleClaimWord}
+                  clubyAwake={clubyAwake}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* C. Learning journey */}
+          <LearningJourneyMap stops={journey.stops} currentIndex={journey.currentIndex} continueHref={continueHref} />
+
+          {/* E | G + F. Collection & next unlock; beside it the upcoming class,
+              then recent achievements (tertiary). Mobile order: E, G, F. */}
+          <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
+            <CollectionCard earned={learning.data?.badges ?? []} milestones={learning.data?.milestones ?? []} clubyAwake={clubyAwake} />
+            <div className="space-y-4">
+              {!classIsToday && classBlock}
+              <RecentAchievements earned={learning.data?.badges ?? []} />
+            </div>
+          </div>
+
+          {/* H. Secondary — account, classes, package */}
+          <section aria-labelledby="dash-account-title" className="space-y-4 pt-4">
+            <h2 id="dash-account-title" className="font-display text-base font-semibold text-foreground">{dc("accountTitle")}</h2>
+            {!hasNoData ? (
+              <>
+                <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
+                <div id="profile-card">
+                  <ProfileCard
+                    userId={userId}
+                    avatarUrl={avatarUrl}
+                    displayName={displayName}
+                    enrollmentCount={enrollments.length}
+                    journeyStage={journeyStage}
+                    onAvatarUploaded={(url) => setAvatarUrl(url)}
+                    onNameUpdated={(name) => setUserName(name)}
+                  />
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <KloverIcon name="growth-chart" className="h-7 w-7" /> {t("dashboardPage.koreanLevel")}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {profileLevel ? (
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Badge className="text-sm px-3 py-1">{getLevelShortLabel(profileLevel, language) || profileLevel}</Badge>
+                            {/* No score out of anything: the old test scored out of 30 and the
+                                merged one out of up to 62, so a fixed "/40" was wrong either
+                                way. The date is what a student can act on — how stale it is. */}
+                            {placementTest && (
+                              <p className="text-xs text-muted-foreground mt-1">{tInterpolate(t("dashboardPage.tested"), { date: new Date(placementTest.created_at).toLocaleDateString(dateLocale) })}</p>
+                            )}
+                          </div>
+                          <Button variant="outline" size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
+                            <RotateCcw className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.retake")}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground">{t("dashboardPage.takeTestPrompt")}</p>
+                          <Button size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
+                            <GraduationCap className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.takeTest")}
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                  {/* Package summary card (most recent) */}
+                  {enrollments[0] && (() => {
+                    const enrollment = enrollments[0];
+                    const totalUsed = attendanceDates.length;
+                    const remaining = enrollment.sessions_total - totalUsed;
+                    const extra = remaining < 0 ? Math.abs(remaining) : 0;
+                    const due = Math.round(extra * enrollment.unit_price);
+                    const curr = enrollment.currency === "EGP" ? t("dashboardPage.currencyEgp") : t("dashboardPage.currencyUsd");
+                    return (
+                      <Card className={remaining <= 0 && totalUsed > 0 ? "border-green-500 border-2" : ""}>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <CardTitle className="text-lg flex items-center gap-2 flex-wrap min-w-0">
+                              <Package className="h-4 w-4 shrink-0" />
+                              <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span> — {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
+                            </CardTitle>
+                            <Badge variant={remaining >= 0 ? "default" : "destructive"} className="shrink-0">
+                              {remaining >= 0 ? tInterpolate(t("dashboardPage.sessionsLeft"), { count: remaining }) : tInterpolate(t("dashboardPage.sessionsExtra"), { count: extra })}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                              { label: t("dashboardPage.pkgPackage"), val: enrollment.sessions_total, red: false },
+                              { label: t("dashboardPage.pkgUsed"), val: totalUsed, red: false },
+                              { label: remaining >= 0 ? t("dashboardPage.pkgRemaining") : t("dashboardPage.pkgExtraLabel"), val: remaining >= 0 ? remaining : extra, red: remaining < 0 },
+                              { label: t("dashboardPage.pkgDue"), val: `${curr}${due.toLocaleString()}`, red: due > 0 },
+                            ].map(({ label, val, red }) => (
+                              <div key={label} className={`rounded-lg p-3 text-center border ${red ? "bg-destructive/10 border-destructive/30" : "bg-muted/50 border-border"}`}>
+                                <span className="text-[10px] text-muted-foreground block">{label}</span>
+                                <p className={`text-lg font-bold ${red ? "text-destructive" : "text-foreground"}`}>{val}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div>
+                            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                              <span>{t("dashboardPage.sessionsUsed")}</span>
+                              <span>{Math.min(totalUsed, enrollment.sessions_total)}/{enrollment.sessions_total}</span>
+                            </div>
+                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-amber-500" : "bg-amber-400"}`}
+                                style={{ width: `${Math.min(100, (totalUsed / enrollment.sessions_total) * 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                          {due > 0 && (
+                            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
+                              <AlertTriangle className="h-4 w-4 shrink-0" />
+                              <span>{tInterpolate(t("dashboardPage.extraDueNote"), { extra, amount: `${curr}${due.toLocaleString()}` })}</span>
+                            </div>
+                          )}
+                          {groupName && (
+                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                              <Users className="h-3.5 w-3.5" />
+                              <span>{t("dashboardPage.group")}: <strong className="text-foreground">{groupName}</strong></span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
+                </div>
+                <UpcomingSessionsCard sessions={upcomingSessions} zoomUrl={zoomUrl} showJoinAction={false} />
+                <StudentAttendanceRequest userId={userId} />
+                {/* Additional packages (if > 1) */}
+                {enrollments.slice(1).map((enrollment) => {
+                  const totalUsed = enrollment.sessions_total - enrollment.sessions_remaining;
+                  const remaining = enrollment.sessions_total - totalUsed;
+                  const extra = remaining < 0 ? Math.abs(remaining) : 0;
+                  const due = Math.round(extra * enrollment.unit_price);
+                  const curr = enrollment.currency === "EGP" ? t("dashboardPage.currencyEgp") : t("dashboardPage.currencyUsd");
+                  return (
+                    <Card key={enrollment.id}>
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <AlertCircle className="h-5 w-5 text-amber-600" /> {t("dashboardPage.enrollmentPendingTitle")}
-                        </CardTitle>
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <CardTitle className="text-base flex items-center gap-2 flex-wrap min-w-0">
+                            <Package className="h-4 w-4 shrink-0" />
+                            <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span> — {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
+                            <Badge variant="outline" className="ms-1 text-xs shrink-0">{t("dashboardPage.older")}</Badge>
+                          </CardTitle>
+                          <Badge variant={remaining >= 0 ? "secondary" : "destructive"} className="shrink-0">
+                            {remaining >= 0 ? tInterpolate(t("dashboardPage.sessionsLeft"), { count: remaining }) : tInterpolate(t("dashboardPage.sessionsExtra"), { count: extra })}
+                          </Badge>
+                        </div>
                       </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          {tInterpolate(t("dashboardPage.enrollmentPendingBody1"), { plan: planLabel(pending.plan_type), status: label })}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {t("dashboardPage.enrollmentPendingBody2")}
-                        </p>
+                      <CardContent>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {[
+                            { label: t("dashboardPage.pkgPackage"), val: enrollment.sessions_total },
+                            { label: t("dashboardPage.pkgUsed"), val: totalUsed },
+                            { label: remaining >= 0 ? t("dashboardPage.pkgRemaining") : t("dashboardPage.pkgExtraLabel"), val: remaining >= 0 ? remaining : extra },
+                            { label: t("dashboardPage.pkgDue"), val: `${curr}${due.toLocaleString()}` },
+                          ].map(({ label, val }) => (
+                            <div key={label} className="rounded-lg bg-muted/50 border border-border p-2 text-center">
+                              <span className="text-[10px] text-muted-foreground block">{label}</span>
+                              <p className="text-base font-bold text-foreground">{val}</p>
+                            </div>
+                          ))}
+                        </div>
                       </CardContent>
                     </Card>
-                  </div>
-                );
-              }
-              return (
-            /* ── No-enrollment state: show learning features + enroll CTA ── */
-            <div className="space-y-6">
-              <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent ring-1 ring-black/10">
-                <CardContent className="pt-6 pb-6 space-y-4">
-                  <div className="flex items-start gap-4">
-                    <KloverIcon name="klobi-reading" className="h-12 w-12 sm:h-14 sm:w-14" />
-                    <div>
-                      <h2 className="text-lg font-bold text-foreground">{t("dashboardPage.startJourneyTitle")}</h2>
-                      <p className="text-sm text-muted-foreground mt-1">{t("dashboardPage.startJourneyBody")}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <div className="flex -space-x-1 rtl:space-x-reverse">
-                      {["🇪🇬","🇸🇦","🇦🇪","🇯🇴"].map((flag, i) => (
-                        <span key={i} className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">{flag}</span>
-                      ))}
-                    </div>
-                    <span>{tInterpolate(t("dashboardPage.joinStudents"), { count: 500 })}</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                    {[
-                      { emoji: "🎓", text: t("dashboardPage.featureLiveClasses") },
-                      { emoji: "📊", text: t("dashboardPage.featureProgress") },
-                      { emoji: "🏆", text: t("dashboardPage.featureXp") },
-                    ].map(({ emoji, text }) => (
-                      <div key={text} className="flex items-center gap-2 bg-background/60 rounded-lg px-3 py-2 border border-border">
-                        <span>{emoji}</span>
-                        <span className="text-muted-foreground">{text}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button onClick={() => navigate("/enroll-now")} size="lg" className="flex-1">{t("dashboardPage.enrollNow")}</Button>
-                    <Button variant="outline" size="lg" onClick={() => navigate("/free-trial")} className="flex-1">{t("dashboardPage.bookFreeTrial")}</Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Still show level test for unenrolled */}
+                  );
+                })}
+                {attendanceDates.length > 0 && <AttendanceHistoryCard dates={attendanceDates} />}
+                {/* ── Progress Report + Certificate ── */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank', 'noopener,noreferrer')}
+                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
+                  >
+                    <KloverIcon name="growth-chart" className="h-10 w-10 sm:h-12 sm:w-12" />
+                    <span className="text-sm font-semibold text-foreground">{t("dashboardPage.progressReport")}</span>
+                    <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPdf")}</span>
+                  </button>
+                  <button
+                    onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank', 'noopener,noreferrer')}
+                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
+                  >
+                    <KloverIcon name="badge-blossom" className="h-10 w-10 sm:h-12 sm:w-12" />
+                    <span className="text-sm font-semibold text-foreground">{t("dashboardPage.certificate")}</span>
+                    <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPng")}</span>
+                  </button>
+                </div>
+              </>
+            ) : (
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -820,460 +1076,144 @@ const StudentDashboard = () => {
                           <p className="text-xs text-muted-foreground mt-1">{tInterpolate(t("dashboardPage.tested"), { date: new Date(placementTest.created_at).toLocaleDateString(dateLocale) })}</p>
                         )}
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => navigate("/placement-test")}>
+                      <Button variant="outline" size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
                         <RotateCcw className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.retake")}
                       </Button>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">{t("dashboardPage.findLevel")}</p>
-                      <Button size="sm" onClick={() => navigate("/placement-test")}>
+                      <Button size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
                         <GraduationCap className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.takeTest")}
                       </Button>
                     </div>
                   )}
                 </CardContent>
               </Card>
+            )}
+          </section>
 
-              {/* Still show gamification for unenrolled learners */}
-              <Suspense fallback={<div className="h-40 bg-muted/30 rounded-2xl animate-pulse" />}>
-              <div className="grid md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2"><KloverIcon name="badge-blossom" className="h-7 w-7" /> {t("dashboardPage.myLeague")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <LeagueProgressBar totalXp={gamification.totalXp} />
-                    {gamLoading ? (
-                      <BadgeGrid earnedBadges={[]} loading />
-                    ) : gamification.badges.length > 0 ? (
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{tInterpolate(t("dashboardPage.earnedBadges"), { count: gamification.badges.length })}</p>
-                        <BadgeGrid earnedBadges={gamification.badges} />
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">{t("dashboardPage.badgesEmpty")}</p>
-                    )}
-                  </CardContent>
-                </Card>
-                <AchievementMilestoneCard />
-              </div>
-              <StreakCalendar />
-              <LeaderboardCard />
-              </Suspense>
-            </div>
-              );
-            })()
-          ) : (
-            <>
-              {/* ── Priority 5: profile at a glance — Profile → Level → Package ── */}
-              <div id="profile-card">
-                <ProfileCard
-                  userId={userId}
-                  avatarUrl={avatarUrl}
-                  displayName={displayName}
-                  enrollmentCount={enrollments.length}
-                  journeyStage={journeyStage}
-                  onAvatarUploaded={(url) => setAvatarUrl(url)}
-                  onNameUpdated={(name) => setUserName(name)}
-                />
-              </div>
-
-              {/* ── Korean Level + Package (two-col) ── */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <KloverIcon name="growth-chart" className="h-7 w-7" /> {t("dashboardPage.koreanLevel")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {profileLevel ? (
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Badge className="text-sm px-3 py-1">{getLevelShortLabel(profileLevel, language) || profileLevel}</Badge>
-                          {/* No score out of anything: the old test scored out of 30 and the
-                              merged one out of up to 62, so a fixed "/40" was wrong either
-                              way. The date is what a student can act on — how stale it is. */}
-                          {placementTest && (
-                            <p className="text-xs text-muted-foreground mt-1">{tInterpolate(t("dashboardPage.tested"), { date: new Date(placementTest.created_at).toLocaleDateString(dateLocale) })}</p>
-                          )}
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => navigate("/placement-test")}>
-                          <RotateCcw className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.retake")}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">{t("dashboardPage.takeTestPrompt")}</p>
-                        <Button size="sm" onClick={() => navigate("/placement-test")}>
-                          <GraduationCap className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.takeTest")}
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Package summary card (most recent) */}
-                {enrollments[0] && (() => {
-                  const enrollment = enrollments[0];
-                  const totalUsed = attendanceDates.length;
-                  const remaining = enrollment.sessions_total - totalUsed;
-                  const extra = remaining < 0 ? Math.abs(remaining) : 0;
-                  const due = Math.round(extra * enrollment.unit_price);
-                  const curr = enrollment.currency === "EGP" ? t("dashboardPage.currencyEgp") : t("dashboardPage.currencyUsd");
-                  return (
-                    <Card className={remaining <= 0 && totalUsed > 0 ? "border-green-500 border-2" : ""}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <CardTitle className="text-lg flex items-center gap-2 flex-wrap min-w-0">
-                            <Package className="h-4 w-4 shrink-0" />
-                            <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span> — {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
-                          </CardTitle>
-                          <Badge variant={remaining >= 0 ? "default" : "destructive"} className="shrink-0">
-                            {remaining >= 0 ? tInterpolate(t("dashboardPage.sessionsLeft"), { count: remaining }) : tInterpolate(t("dashboardPage.sessionsExtra"), { count: extra })}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          {[
-                            { label: t("dashboardPage.pkgPackage"), val: enrollment.sessions_total, red: false },
-                            { label: t("dashboardPage.pkgUsed"), val: totalUsed, red: false },
-                            { label: remaining >= 0 ? t("dashboardPage.pkgRemaining") : t("dashboardPage.pkgExtraLabel"), val: remaining >= 0 ? remaining : extra, red: remaining < 0 },
-                            { label: t("dashboardPage.pkgDue"), val: `${curr}${due.toLocaleString()}`, red: due > 0 },
-                          ].map(({ label, val, red }) => (
-                            <div key={label} className={`rounded-lg p-3 text-center border ${red ? "bg-destructive/10 border-destructive/30" : "bg-muted/50 border-border"}`}>
-                              <span className="text-[10px] text-muted-foreground block">{label}</span>
-                              <p className={`text-lg font-bold ${red ? "text-destructive" : "text-foreground"}`}>{val}</p>
-                            </div>
-                          ))}
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                            <span>{t("dashboardPage.sessionsUsed")}</span>
-                            <span>{Math.min(totalUsed, enrollment.sessions_total)}/{enrollment.sessions_total}</span>
-                          </div>
-                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-amber-500" : "bg-amber-400"}`}
-                              style={{ width: `${Math.min(100, (totalUsed / enrollment.sessions_total) * 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                        {due > 0 && (
-                          <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
-                            <AlertTriangle className="h-4 w-4 shrink-0" />
-                            <span>{tInterpolate(t("dashboardPage.extraDueNote"), { extra, amount: `${curr}${due.toLocaleString()}` })}</span>
-                          </div>
-                        )}
-                        {groupName && (
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Users className="h-3.5 w-3.5" />
-                            <span>{t("dashboardPage.group")}: <strong className="text-foreground">{groupName}</strong></span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })()}
-              </div>
-
-              {/* ── Registration Checklist ── */}
-              <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
-
-              {/* ── Priority 6: schedule zone — next classes + group up near the top ── */}
-              <MyTrialClassCard />
-              <UpcomingSessionsCard sessions={upcomingSessions} zoomUrl={zoomUrl} showJoinAction={false} />
-              <section aria-labelledby="learning-insights-heading" className="rounded-2xl border bg-card p-4 sm:p-5">
-                <h2 id="learning-insights-heading" className="text-base font-semibold text-foreground">{t("dashboardPage.learningInsights")}</h2>
-                <Suspense fallback={<Skeleton className="mt-4 h-24 rounded-xl" />}>
-                <div className="mt-4 space-y-4">
-              {/* ── League & XP ── */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <KloverIcon name="badge-blossom" className="h-7 w-7" /> {t("dashboardPage.myLeague")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <LeagueProgressBar totalXp={gamification.totalXp} />
-                  {gamLoading ? (
-                    <BadgeGrid earnedBadges={[]} loading />
-                  ) : gamification.badges.length > 0 ? (
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{tInterpolate(t("dashboardPage.earnedBadges"), { count: gamification.badges.length })}</p>
-                      <BadgeGrid earnedBadges={gamification.badges} />
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">{t("dashboardPage.badgesEmpty")}</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* ── Achievements + Goals (two-col) ── */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <AchievementMilestoneCard />
-                <LearningGoalsCard />
-              </div>
-
-              {/* ── Analytics (full width) ── */}
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-4">{t("dashboardPage.yourAnalytics")}</h3>
-                <AnalyticsSection />
-              </div>
-
-              {/* ── Streak Calendar (full width) ── */}
-              <StreakCalendar />
-
-              {/* ── Leaderboard (full width) ── */}
-              <LeaderboardCard />
-
-                </div>
-                </Suspense>
-              </section>
-              {/* ── Attendance & Admin (bottom section) ── */}
-              <StudentAttendanceRequest userId={userId} />
-
-              {/* Additional packages (if > 1) */}
-              {enrollments.slice(1).map((enrollment) => {
-                const totalUsed = enrollment.sessions_total - enrollment.sessions_remaining;
-                const remaining = enrollment.sessions_total - totalUsed;
-                const extra = remaining < 0 ? Math.abs(remaining) : 0;
-                const due = Math.round(extra * enrollment.unit_price);
-                const curr = enrollment.currency === "EGP" ? t("dashboardPage.currencyEgp") : t("dashboardPage.currencyUsd");
-                return (
-                  <Card key={enrollment.id}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <CardTitle className="text-base flex items-center gap-2 flex-wrap min-w-0">
-                          <Package className="h-4 w-4 shrink-0" />
-                          <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span> — {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
-                          <Badge variant="outline" className="ms-1 text-xs shrink-0">{t("dashboardPage.older")}</Badge>
-                        </CardTitle>
-                        <Badge variant={remaining >= 0 ? "secondary" : "destructive"} className="shrink-0">
-                          {remaining >= 0 ? tInterpolate(t("dashboardPage.sessionsLeft"), { count: remaining }) : tInterpolate(t("dashboardPage.sessionsExtra"), { count: extra })}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {[
-                          { label: t("dashboardPage.pkgPackage"), val: enrollment.sessions_total },
-                          { label: t("dashboardPage.pkgUsed"), val: totalUsed },
-                          { label: remaining >= 0 ? t("dashboardPage.pkgRemaining") : t("dashboardPage.pkgExtraLabel"), val: remaining >= 0 ? remaining : extra },
-                          { label: t("dashboardPage.pkgDue"), val: `${curr}${due.toLocaleString()}` },
-                        ].map(({ label, val }) => (
-                          <div key={label} className="rounded-lg bg-muted/50 border border-border p-2 text-center">
-                            <span className="text-[10px] text-muted-foreground block">{label}</span>
-                            <p className="text-base font-bold text-foreground">{val}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-
-              {attendanceDates.length > 0 && <AttendanceHistoryCard dates={attendanceDates} />}
-
-              {/* ── Progress Report + Certificate ── */}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank', 'noopener,noreferrer')}
-                  className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
-                >
-                  <KloverIcon name="growth-chart" className="h-10 w-10 sm:h-12 sm:w-12" />
-                  <span className="text-sm font-semibold text-foreground">{t("dashboardPage.progressReport")}</span>
-                  <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPdf")}</span>
-                </button>
-                <button
-                  onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank', 'noopener,noreferrer')}
-                  className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
-                >
-                  <KloverIcon name="badge-blossom" className="h-10 w-10 sm:h-12 sm:w-12" />
-                  <span className="text-sm font-semibold text-foreground">{t("dashboardPage.certificate")}</span>
-                  <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPng")}</span>
-                </button>
-              </div>
-            </>
-          )}
-          <section aria-labelledby="practice-extras-heading" className="rounded-2xl border bg-card p-4 sm:p-5">
-            <h2 id="practice-extras-heading" className="text-base font-semibold text-foreground">{t("dashboardPage.practiceExtras")}</h2>
-            <div className="mt-4 space-y-5">
-          {/* ── Stats row + Weekly Goal side-by-side ── */}
-          <div className="grid lg:grid-cols-5 gap-4">
-            <div className="lg:col-span-3 grid grid-cols-2 gap-3">
-              {quickStats.map(({ id, label, rawValue, sub, art, color }, idx) => {
-                let displayValue: string;
-                if (id === "totalXp") displayValue = xpCountUp.toLocaleString();
-                else if (id === "streak") displayValue = tInterpolate(t("dashboardPage.streakDaysShort"), { count: streakCountUp });
-                else if (id === "lessons") displayValue = `${rawValue}/45`;
-                else displayValue = league ? leagueName(league, language) : t("dashboardPage.beginnerFallback");
-                const isXP = id === "totalXp";
-                return (
-                  <Card key={id} className={`border-border/60 ${isXP ? "bg-gradient-to-br from-yellow-50/60 to-transparent dark:from-yellow-950/20 border-yellow-200/60 dark:border-yellow-800/40" : ""}`}>
-                    <CardContent className="pt-4 pb-3">
-                      {id === "league" && league?.emoji ? (
-                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center mb-2 ${color}`}>
-                          <span className="text-xl leading-none">{league.emoji}</span>
-                        </div>
-                      ) : (
-                        <KloverIcon name={art} className="h-10 w-10 mb-2" />
-                      )}
-                      <p className={`font-extrabold text-foreground ${id === "league" ? "text-base leading-tight break-words" : `leading-none truncate ${isXP ? "text-2xl" : "text-xl"}`}`}>{displayValue}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1">{label}</p>
-                      {sub && <p className={`text-[10px] font-medium mt-0.5 ${isXP ? "text-yellow-600 dark:text-yellow-400" : "text-muted-foreground"}`}>{sub}</p>}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-            <div className="lg:col-span-2 flex flex-col gap-3">
-              {(() => {
-                const WEEKLY_GOAL = 300;
-                const pct = Math.min(100, Math.round((weeklyXp / WEEKLY_GOAL) * 100));
-                const msg = pct >= 100 ? t("dashboardPage.goalCrushed") : pct >= 60 ? t("dashboardPage.almostThere") : pct >= 30 ? t("dashboardPage.goodStart") : t("dashboardPage.startEarning");
-                return (
-                  <div className="flex-1 bg-card border border-border/60 rounded-2xl px-4 py-4 flex flex-col justify-between gap-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-semibold text-foreground">{t("dashboardPage.weeklyXp")}</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-muted-foreground text-xs">{weeklyXp}/{WEEKLY_GOAL}</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-primary/10 text-primary"}`}>{pct}%</span>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700" style={{ width: `${pct}%` }} />
-                    </div>
-                    <p className="text-xs text-muted-foreground">{msg}</p>
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-
-          {/* ── TODAY zone — vocab + bonus + actions grouped ── */}
-          <div className="bg-muted/25 border border-border/40 rounded-2xl p-4 space-y-3">
-            <div className="flex items-center gap-2 px-1">
-              <h2 className="text-sm font-bold text-foreground">{t("dashboardPage.todayHeading")}</h2>
-              <span className="text-xs text-muted-foreground">{todayStr}</span>
-            </div>
-
-            {/* Vocab of the day — photo background */}
-            {(() => {
-              const VOCAB = [
-                { ko: "안녕하세요", rom: "annyeonghaseyo", en: "Hello / Good day", ar: "مرحبًا / أهلًا", emoji: "👋", img: imgTemple },
-                { ko: "감사합니다", rom: "gamsahamnida", en: "Thank you", ar: "شكرًا لك", emoji: "🙏", img: imgTea },
-                { ko: "사랑해요", rom: "saranghaeyo", en: "I love you", ar: "أحبك", emoji: "❤️", img: imgHanbok },
-                { ko: "공부하다", rom: "gongbuhada", en: "To study", ar: "يذاكر / يدرس", emoji: "📚", img: imgMarket },
-                { ko: "맛있어요", rom: "massisseoyo", en: "It's delicious", ar: "إنه لذيذ", emoji: "😋", img: imgBBQ },
-                { ko: "화이팅", rom: "hwaiting", en: "Fighting! / You can do it!", ar: "هيا! / تقدر تعملها!", emoji: "💪", img: imgKpop },
-                { ko: "천천히", rom: "cheoncheonhi", en: "Slowly", ar: "ببطء", emoji: "🐢", img: imgJeju },
-              ];
-              const today = VOCAB[new Date().getDay() % VOCAB.length];
-              const handleVocabClaim = async () => {
-                if (vocabClaimed) return;
-                await awardGameXp("vocab_daily", 5, 1);
-                localStorage.setItem(vocabStorageKey, "1");
-                setVocabClaimed(true);
-                toast({ title: t("dashboardPage.xpBonus"), description: t("dashboardPage.vocabBonus") });
-              };
-              return (
-                <div className="relative overflow-hidden rounded-xl min-h-28">
-                  <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${today.img})` }} />
-                  <div className="absolute inset-0 bg-gradient-to-r rtl:bg-gradient-to-l from-black/80 via-black/50 to-black/15" />
-                  <div className="relative flex flex-wrap items-center gap-3 p-4 sm:p-5">
-                    <div className="text-3xl drop-shadow">{today.emoji}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-white/50">{t("dashboardPage.wordOfDay")}</p>
-                      <p className="text-2xl md:text-3xl font-bold text-white leading-tight tracking-tight">{today.ko}</p>
-                      <p className="text-xs text-white/70"><span dir="ltr">{today.rom}</span> · {language === "ar" ? today.ar : today.en}</p>
-                    </div>
-                    <Button size="sm" disabled={vocabClaimed} onClick={handleVocabClaim}
-                      className={`shrink-0 ${vocabClaimed ? "bg-white/20 text-white/60 hover:bg-white/20" : "bg-white text-black hover:bg-white/90"}`}
-                      variant={vocabClaimed ? "outline" : "default"}>
-                      {vocabClaimed ? t("dashboardPage.claimedXp") : t("dashboardPage.claimXp")}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Daily Bonus */}
-            <Suspense fallback={<div className="h-20 bg-background/60 rounded-xl animate-pulse" />}>
+          {/* H. More practice — tertiary */}
+          <section aria-labelledby="practice-extras-heading" className="space-y-4 pt-2">
+            <h2 id="practice-extras-heading" className="font-display text-base font-semibold text-foreground">{dc("morePractice")}</h2>
+            <Suspense fallback={<div className="h-20 bg-muted/40 rounded-xl animate-pulse" />}>
               <DailyBonusCard />
             </Suspense>
-
-            {/* Quick Actions */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {quickActions.filter(({ path }) => hasNoData || path !== "/textbook").map(({ label, desc, art, path }) => (
-                <button key={label} onClick={() => navigate(path)} aria-label={`${label}: ${desc}`}
-                  className="min-w-0 rounded-xl border bg-card p-3 text-start transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                  <KloverIcon name={art} className="h-10 w-10 mb-1" />
+              {practiceLinks.map(({ label, desc, icon, path }) => (
+                <button key={path} onClick={() => navigate(path)} aria-label={`${label}: ${desc}`}
+                  className="min-w-0 min-h-11 rounded-xl border border-foreground/10 bg-card p-3 text-start transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground">
+                  <BrandIcon name={icon} className="h-9 w-9 mb-1" />
                   <p className="font-semibold text-foreground text-sm">{label}</p>
                   <p className="text-muted-foreground text-xs">{desc}</p>
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* ── Discover Korea Gallery ── */}
-          {(() => {
-            const SCENES = [
-              { img: imgJeju,        ko: "제주도",   en: "Jeju Island",       caption: "Volcanic paradise",    arName: "جزيرة جيجو",      arCaption: "جنة بركانية" },
-              { img: imgBBQ,         ko: "삼겹살",   en: "Korean BBQ",         caption: "Grilled pork belly",   arName: "الشواء الكوري",   arCaption: "لحم مشوي على الطريقة الكورية" },
-              { img: imgTemple,      ko: "사찰",     en: "Buddhist Temple",    caption: "Mountain temples",     arName: "معبد بوذي",       arCaption: "معابد بين الجبال" },
-              { img: imgHanbok,      ko: "한복",     en: "Traditional Hanbok", caption: "Centuries of fashion", arName: "الهانبوك التقليدي", arCaption: "أزياء عمرها قرون" },
-              { img: imgKpop,        ko: "케이팝",   en: "K-Pop Concert",      caption: "Global music wave",    arName: "حفلة كيبوب",      arCaption: "موجة موسيقية عالمية" },
-              { img: imgNightMarket, ko: "야시장",   en: "Night Market",       caption: "Street food & vibes",  arName: "السوق الليلي",    arCaption: "أكل الشارع وأجواء مميزة" },
-              { img: imgTea,         ko: "차 문화",  en: "Tea Culture",        caption: "Calm & tradition",     arName: "ثقافة الشاي",     arCaption: "هدوء وتقاليد" },
-              { img: imgMarket,      ko: "전통시장", en: "Traditional Market", caption: "Colors & local life",  arName: "السوق التقليدي",  arCaption: "ألوان وحياة محلية" },
-            ].map(({ en, caption, arName, arCaption, ...rest }) =>
-              language === "ar" ? { ...rest, en: arName, caption: arCaption } : { ...rest, en, caption }
-            );
-            return (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("dashboardPage.discoverKorea")}</h2>
-                </div>
-                <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
-                  {SCENES.map(({ img, ko, en, caption }) => (
-                    <div key={ko} className="relative flex-none w-36 h-44 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-300">
-                      <img src={img} alt={`${en} (${ko})`} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                        <p className="text-white font-bold text-base leading-tight" lang="ko">{ko}</p>
-                        <p className="text-white/75 text-[10px] leading-tight">{en}</p>
-                        <p className="text-white/50 text-[9px] mt-0.5">{caption}</p>
+            {/* ── Discover Korea Gallery ── */}
+            {(() => {
+              const SCENES = [
+                { img: imgJeju,        ko: "제주도",   en: "Jeju Island",       caption: "Volcanic paradise",    arName: "جزيرة جيجو",      arCaption: "جنة بركانية" },
+                { img: imgBBQ,         ko: "삼겹살",   en: "Korean BBQ",         caption: "Grilled pork belly",   arName: "الشواء الكوري",   arCaption: "لحم مشوي على الطريقة الكورية" },
+                { img: imgTemple,      ko: "사찰",     en: "Buddhist Temple",    caption: "Mountain temples",     arName: "معبد بوذي",       arCaption: "معابد بين الجبال" },
+                { img: imgHanbok,      ko: "한복",     en: "Traditional Hanbok", caption: "Centuries of fashion", arName: "الهانبوك التقليدي", arCaption: "أزياء عمرها قرون" },
+                { img: imgKpop,        ko: "케이팝",   en: "K-Pop Concert",      caption: "Global music wave",    arName: "حفلة كيبوب",      arCaption: "موجة موسيقية عالمية" },
+                { img: imgNightMarket, ko: "야시장",   en: "Night Market",       caption: "Street food & vibes",  arName: "السوق الليلي",    arCaption: "أكل الشارع وأجواء مميزة" },
+                { img: imgTea,         ko: "차 문화",  en: "Tea Culture",        caption: "Calm & tradition",     arName: "ثقافة الشاي",     arCaption: "هدوء وتقاليد" },
+                { img: imgMarket,      ko: "전통시장", en: "Traditional Market", caption: "Colors & local life",  arName: "السوق التقليدي",  arCaption: "ألوان وحياة محلية" },
+              ].map(({ en, caption, arName, arCaption, ...rest }) =>
+                language === "ar" ? { ...rest, en: arName, caption: arCaption } : { ...rest, en, caption }
+              );
+              return (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("dashboardPage.discoverKorea")}</h2>
+                  </div>
+                  <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground" tabIndex={0} role="region" aria-label={t("dashboardPage.discoverKorea")}>
+                    {SCENES.map(({ img, ko, en, caption }) => (
+                      <div key={ko} className="relative flex-none w-36 h-44 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-300">
+                        <img src={img} alt={`${en} (${ko})`} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                          <p className="text-white font-bold text-base leading-tight" lang="ko">{ko}</p>
+                          <p className="text-white/75 text-[10px] leading-tight">{en}</p>
+                          <p className="text-white/50 text-[9px] mt-0.5">{caption}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
+            {/* ── Refer a Friend — slim strip ── */}
+            {userId && (() => {
+              const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
+              return (
+                <div className="flex flex-wrap items-center gap-3 bg-violet-50/80 dark:bg-violet-950/20 border border-violet-200/50 dark:border-violet-800/40 rounded-xl px-4 py-2.5">
+                  <KloverIcon name="student-girl-heart" className="h-8 w-8 sm:h-9 sm:w-9" />
+                  <span className="flex-1 text-sm text-muted-foreground min-w-0 break-words">
+                    <strong className="text-foreground">{t("dashboardPage.referTitle")}</strong> · {t("dashboardPage.referEarn")}
+                    {referralCount > 0 && <> · <span className="text-violet-600 font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(refLink); toast({ title: t("dashboardPage.linkCopied") }); }}
+                    className="shrink-0 gap-1 border-violet-300 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 min-h-11 text-xs px-3">
+                    <Copy className="h-3 w-3" /> {t("dashboardPage.copyLink")}
+                  </Button>
+                </div>
+              );
+            })()}
+          </section>
 
-          {/* ── Refer a Friend — slim strip ── */}
-          {userId && (() => {
-            const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
-            return (
-              <div className="flex flex-wrap items-center gap-3 bg-violet-50/80 dark:bg-violet-950/20 border border-violet-200/50 dark:border-violet-800/40 rounded-xl px-4 py-2.5">
-                <KloverIcon name="student-girl-heart" className="h-8 w-8 sm:h-9 sm:w-9" />
-                <span className="flex-1 text-sm text-muted-foreground min-w-0 break-words">
-                  <strong className="text-foreground">{t("dashboardPage.referTitle")}</strong> · {t("dashboardPage.referEarn")}
-                  {referralCount > 0 && <> · <span className="text-violet-600 font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}
-                </span>
-                <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(refLink); toast({ title: t("dashboardPage.linkCopied") }); }}
-                  className="shrink-0 gap-1 border-violet-300 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 h-7 text-xs px-2">
-                  <Copy className="h-3 w-3" /> {t("dashboardPage.copyLink")}
+          {/* H. Learning insights — collapsed; its charts only load when opened */}
+          <details
+            className="group rounded-[20px] border border-foreground/10 bg-card"
+            onToggle={(e) => setInsightsOpen((e.currentTarget as HTMLDetailsElement).open)}
+          >
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-display text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-[20px]">
+              {dc("insightsTitle")}
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            {insightsOpen && (
+              <div className="space-y-4 px-5 pb-5">
+                {(() => {
+                  const WEEKLY_GOAL = 300;
+                  const pct = Math.min(100, Math.round((weeklyXp / WEEKLY_GOAL) * 100));
+                  const msg = pct >= 100 ? t("dashboardPage.goalCrushed") : pct >= 60 ? t("dashboardPage.almostThere") : pct >= 30 ? t("dashboardPage.goodStart") : t("dashboardPage.startEarning");
+                  return (
+                    <div className="flex-1 bg-card border border-border/60 rounded-2xl px-4 py-4 flex flex-col justify-between gap-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-semibold text-foreground">{t("dashboardPage.weeklyXp")}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-muted-foreground text-xs">{weeklyXp}/{WEEKLY_GOAL}</span>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-primary text-foreground"}`}>{pct}%</span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700" style={{ width: `${pct}%` }} />
+                      </div>
+                      <p className="text-xs text-muted-foreground">{msg}</p>
+                    </div>
+                  );
+                })()}
+                <Suspense fallback={<Skeleton className="h-24 rounded-xl" />}>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <AchievementMilestoneCard />
+                    <LearningGoalsCard />
+                  </div>
+                  {!hasNoData && (
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground mb-3">{t("dashboardPage.yourAnalytics")}</h3>
+                      <AnalyticsSection />
+                    </div>
+                  )}
+                  <StreakCalendar />
+                  <LeaderboardCard />
+                </Suspense>
+                <Button variant="outline" size="sm" onClick={handleExportProgress} aria-label={t("dashboardPage.exportAria")} className="min-h-11 gap-1.5">
+                  <Download className="h-3.5 w-3.5" aria-hidden="true" /> {dc("exportProgress")}
                 </Button>
               </div>
-            );
-          })()}
-
-            </div>
-          </section>
+            )}
+          </details>
         </div>
       </main>
       <Footer />

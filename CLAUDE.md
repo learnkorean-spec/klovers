@@ -25,6 +25,19 @@ Grep for the symbol name, the UI string, and the column name before writing code
   used to squash-merge `claude/*` branches automatically; it is now permanently
   disabled (PR #91, 2026-08-24) because it silently left production undeployed
   on a real, measured fraction of its own merges — see below.
+- **2026-09-24 — Re's standing instruction: Claude may commit straight to
+  `main` itself**, no PR required, when working from a Claude session. Said
+  explicitly after Claude committed directly to `main` by mistake and
+  flagged it as a process break; Re's reply was "its ok always push to main
+  ur self." This does not touch the auto-merge ban above (that was about a
+  *bot* merging PRs unattended and silently leaving Vercel `BLOCKED` — a
+  different failure mode) — it only means a Claude session no longer needs
+  to open a PR and wait for manual review before a change reaches `main`.
+  Still true regardless: verify the resulting Vercel deployment actually
+  reaches `READY` on production (see "Merge safety net" below — author
+  metadata alone isn't a sufficient signal), and this repo's other rules
+  (migrations get their own PR, don't leave things half-verified, etc.)
+  still apply to what gets committed, just not to how it lands on `main`.
 - Vercel deploys `main` to kloversegy.com automatically, but **only from a
   commit authored by the `learnkorean-spec` GitHub account** (Vercel Hobby-plan
   constraint) — this is why the account distinction above isn't cosmetic.
@@ -129,3 +142,75 @@ Korean language learning platform targeting Arabic speakers and K-drama fans
 - Only posts with gaps get queued for AI
 - Batch up to 5 posts per AI call
 - Never send full article content — title, description, keywords, headings only
+
+# KLOVERS STORY CANON
+
+Before building or modifying any:
+
+- homepage section
+- student dashboard
+- My Learning page
+- course
+- game
+- story moment
+- character scene
+- world
+- achievement
+- reward
+- Cluby feature
+
+read:
+
+`src/config/klovers-world.ts` (human-readable version: `docs/KLOVERS-STORY-BIBLE.md`)
+
+This file is the canonical source of truth.
+
+Do not invent parallel lore.
+
+Do not change:
+
+- Cluby's origin
+- character relationships
+- character responsibilities
+- world progression logic
+- core visual style
+- story-learning relationship
+
+without intentionally updating the canon first.
+
+If a requested feature conflicts with the canon:
+
+do not silently implement it.
+
+Report:
+
+STORY CONFLICT
+
+Then explain:
+
+1. what conflicts
+2. why
+3. the smallest canon-compatible solution
+
+Every new story feature must answer:
+
+1. What does the learner learn?
+2. Why does this event happen now?
+3. Which existing character owns this moment?
+4. Which existing world does it belong to?
+5. What real learner data triggers it?
+6. What changes in the world afterward?
+
+If these cannot be answered, the story feature should not be added.
+
+Characters support learning. Characters do not replace learning.
+
+Cluby is not a pet.
+
+The male and female learners are friends and study companions. They are not a
+romantic couple by default.
+
+Story progression must be based on real learning progress.
+
+Marketing may tease the story. The logged-in product lets the learner
+experience the story.
