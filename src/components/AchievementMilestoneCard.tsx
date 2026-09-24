@@ -56,7 +56,17 @@ export function AchievementMilestoneCard() {
     return (
       <Card className="border-dashed">
         <CardContent className="pt-6 pb-6 text-center space-y-2">
-          <KloverIcon name="klobi-reading" className="h-14 w-14 sm:h-16 sm:w-16 mx-auto" />
+          <img
+            src="/assets/cluby/cluby-star.webp"
+            alt=""
+            aria-hidden="true"
+            width={333}
+            height={440}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="h-14 w-14 sm:h-16 sm:w-16 mx-auto shrink-0 select-none object-contain"
+          />
           <p className="font-semibold text-sm text-foreground">{tr("No milestones yet", "لا توجد إنجازات بعد")}</p>
           <p className="text-xs text-muted-foreground">{tr("Complete lessons and earn XP to unlock milestone rewards.", "أكمل الدروس واكسب نقاط الخبرة لفتح مكافآت الإنجازات.")}</p>
         </CardContent>
