@@ -139,7 +139,7 @@ const GAMES_BODY_HTML = `<div id="games-prerendered" lang="en" dir="ltr">
 <li><strong>Conversation Order</strong> — Put a Korean dialogue's lines back in the right order</li>
 <li><strong>Story Gaps</strong> — Fill in the missing words in a short Korean story</li>
       </ul>
-      <p>Prefer to read first? The <a href="/blog">Klovers Korean blog</a> covers Hangul, grammar, TOPIK preparation and Korean culture, and the <a href="/courses">Korean courses</a> take you from the alphabet to real conversation with a certified teacher.</p>
+      <p>Prefer to read first? The <a href="/blog">Klovers Korean blog</a> covers Hangul, grammar, TOPIK preparation and Korean culture, and the <a href="/courses">Korean courses</a> take you from the alphabet to real conversation with a real teacher.</p>
     </div>`;
 
 // ── "Journey through Korea's time" body fragments ───────────────────────────
@@ -312,12 +312,12 @@ const ERA_MODERN_KOREA_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
 // the page says. Keep it short and true - exactly one <h1>.
 const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
       <h1>Start Speaking Korean From Your First Live Class</h1>
-      <p>Live online Korean classes with a real teacher, small groups of up to 8, and a clear path from beginner to confident conversation. Classes are taught in English or in Arabic.</p>
+      <p>Live online Korean classes with a real teacher, in small groups, and a clear path from beginner to confident conversation. Classes are taught in English or in Arabic.</p>
       <p><a href="/free-trial">Book a free class</a> or <a href="/placement-test">take the free placement test</a> to find your level. Group classes are priced by country - <a href="/pricing">see pricing</a>.</p>
       <h2>How we teach</h2>
       <ul>
         <li><strong>Clear explanations</strong> - every point explained simply, in English or Arabic.</li>
-        <li><strong>Max 8 students</strong> - you speak in every class.</li>
+        <li><strong>Small groups</strong> - you speak in every class.</li>
         <li><strong>Instant feedback</strong> - pronunciation corrected live.</li>
         <li><strong>A clear path</strong> - Hangul first, then Levels 1 to 6.</li>
       </ul>
@@ -339,12 +339,12 @@ const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
 // duplicated from the app on purpose, verified facts only, exactly one <h1>.
 const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
       <h1>ابدأ تتكلم كوري من أول حصة مباشرة</h1>
-      <p>حصص لغة كورية أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة حتى ٨ طلاب، ومسار واضح من المبتدئ لحد ما تتكلم بثقة. الحصص بالعربي أو بالإنجليزي.</p>
+      <p>حصص لغة كورية أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة، ومسار واضح من المبتدئ لحد ما تتكلم بثقة. الحصص بالعربي أو بالإنجليزي.</p>
       <p><a href="/free-trial">احجز حصة مجانية</a> أو <a href="/placement-test">اعمل اختبار تحديد المستوى المجاني</a> عشان تعرف مستواك. أسعار المجموعات حسب بلدك - <a href="/pricing">شوف الأسعار</a>.</p>
       <h2>إزاي بندرّس</h2>
       <ul>
         <li><strong>شرح واضح</strong> - كل نقطة بتتشرح ببساطة، بالعربي أو بالإنجليزي.</li>
-        <li><strong>٨ طلاب بحد أقصى</strong> - بتتكلم في كل حصة.</li>
+        <li><strong>مجموعات صغيرة</strong> - بتتكلم في كل حصة.</li>
         <li><strong>تصحيح فوري</strong> - النطق بيتصحح لايف.</li>
         <li><strong>مسار واضح</strong> - الهانغول الأول، وبعدها المستويات من ١ لـ ٦.</li>
       </ul>
@@ -554,7 +554,7 @@ const MARKETING_ROUTES = [
     path: "/",
     title: "Klovers — Live Online Korean Classes in Small Groups",
     description:
-      "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups of up to 8. Free trial class, free placement test and gamified practice.",
+      "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.",
     body: HOME_BODY_HTML,
     alternates: HOME_ALTERNATES,
   },
@@ -576,7 +576,7 @@ const MARKETING_ROUTES = [
     homeTwin: true,
     title: "كلوفرز Klovers — حصص كوري أونلاين مباشرة في مجموعات صغيرة",
     description:
-      "كلوفرز (Klovers): حصص كوري أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة حتى ٨ طلاب، بالعربي أو بالإنجليزي. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
+      "كلوفرز (Klovers): حصص كوري أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة، بالعربي أو بالإنجليزي. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
     body: HOME_BODY_HTML_AR,
     alternates: HOME_ALTERNATES,
   },
@@ -584,21 +584,21 @@ const MARKETING_ROUTES = [
     path: "/courses",
     title: "Korean Courses",
     description:
-      "Explore Klovers Korean language courses — Beginner to Advanced. Live classes, flexible schedules, and certified teachers.",
+      "Klovers Korean courses: Hangul in four classes, then Levels 1 to 6. Live classes with a teacher, once a week, in English or Arabic.",
     body: COURSES_BODY_HTML,
   },
   {
     path: "/pricing",
     title: "Pricing & Plans",
     description:
-      "Affordable Korean language learning plans at Klovers. Choose the right course for your budget and learning goals.",
+      "Klovers prices are set by country. Group classes once a week: 1, 3 or 6 months (4, 12 or 24 classes). Private classes too.",
     body: PRICING_BODY_HTML,
   },
   {
     path: "/about",
     title: "About Us",
     description:
-      "Meet the Klovers team. Our certified teachers bring years of experience teaching Korean to students worldwide.",
+      "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years and more than 200 students.",
   },
   {
     path: "/contact",
@@ -662,19 +662,19 @@ const MARKETING_ROUTES = [
     path: "/learn-korean-arabic-speakers",
     title: "Learn Korean for Arabic Speakers",
     description:
-      "A Korean course built for Arabic speakers. Contrastive grammar, Arabic-to-Korean explanations, and a realistic 8-month timeline.",
+      "Learning Korean from Arabic: what Arabic already gives you, what is new, and the Klovers path from Hangul to Level 6 with a teacher who explains in Arabic.",
   },
   {
     path: "/topik-exam-preparation",
-    title: "TOPIK Exam Preparation 2026",
+    title: "TOPIK Exam Preparation: Format, Scoring & Study Plan",
     description:
-      "Prepare for the TOPIK exam with Klovers. 2026 exam dates, level breakdown, scoring, and an 8-12 week study plan.",
+      "How the TOPIK Korean exam works: TOPIK I and II, sections, timing and the score needed for each level, plus the Klovers TOPIK track with past papers and writing practice.",
   },
   {
     path: "/learn-korean-kdramas",
     title: "Learn Korean Through K-Dramas",
     description:
-      "Learn Korean with K-dramas using the 4-watch method. Drama recommendations by level and a 30-day habit-building guide.",
+      "A simple, repeatable way to study Korean with K-dramas: one scene at a time, with Korean subtitles, shadowing and a phrase notebook, and how live classes fill in the grammar.",
   },
   // Added in A1 — live routes that were missing from the prerender list.
   {
@@ -687,7 +687,7 @@ const MARKETING_ROUTES = [
     path: "/welcome-back",
     title: "Welcome Back — Returning Students Offer",
     description:
-      "Returning Klovers students get 20% off. Enroll now, share with friends, and save up to 35%. No placement test required.",
+      "Returning Klovers students: a discount on your next enrollment, and extra savings when friends join.",
   },
   {
     path: "/hangul-starter",

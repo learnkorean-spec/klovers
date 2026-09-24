@@ -27,7 +27,8 @@ import { STUDENTS_TAUGHT, TEACHING_YEARS } from "@/lib/trustFigures";
  *
  * What stays is what Re has stated: 13 years teaching, 200+ students she has
  * taught herself, a Korean language and literature degree from the Faculty of
- * Al-Alsun, classes in English or Arabic, groups of at most 8.
+ * Al-Alsun, classes in English or Arabic, small groups (capacity is internal,
+ * never stated - Re, 15 Sep 2026).
  *
  * Copy lives here rather than in translations.ts for the same reason as
  * HowItWorks: that file cannot be edited safely with the tooling available.
@@ -100,8 +101,8 @@ const MeetTeacher = () => {
               </p>
               <p>
                 {isAr
-                  ? "الحصة معاها كلام حقيقي من أول دقيقة: بتشرح بالعربي أو الإنجليزي، وبتصحح نطقك وانت بتتكلم، ومع مجموعة من 8 طلاب بحد أقصى كل واحد بياخد دوره."
-                  : "Her classes are built around speaking from the first minute: she explains in English or Arabic, corrects your pronunciation while you talk, and with at most 8 students everyone gets their turn."}
+                  ? "الحصة معاها كلام حقيقي من أول دقيقة: بتشرح بالعربي أو الإنجليزي، وبتصحح نطقك وانت بتتكلم، وفي مجموعة صغيرة كل واحد بياخد دوره."
+                  : "Her classes are built around speaking from the first minute: she explains in English or Arabic, corrects your pronunciation while you talk, and in a small group everyone gets their turn."}
               </p>
               <p>
                 {isAr

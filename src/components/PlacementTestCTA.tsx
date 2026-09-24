@@ -31,17 +31,18 @@ const PlacementTestCTA = () => {
   const [activeLevel, setActiveLevel] = useState(0);
 
   const LEVELS = [
-    { label: t("placementCta.levelA1"),  color: "bg-klovers-yellow/35", width: "w-[15%]" },
-    { label: t("placementCta.levelA2"),  color: "bg-klovers-yellow/55", width: "w-[30%]" },
-    { label: t("placementCta.levelB1"),  color: "bg-klovers-yellow/75", width: "w-[50%]" },
-    { label: t("placementCta.levelB2"),  color: "bg-klovers-yellow/90", width: "w-[65%]" },
-    { label: t("placementCta.levelC1"),  color: "bg-klovers-yellow",  width: "w-[80%]" },
-    { label: t("placementCta.levelC2"),  color: "bg-foreground",      width: "w-[100%]" },
+    // 25 Sep 2026 (QA): Klovers levels, the ones /placement-test measures
+    // (Hangul to Level 4). The card showed CEFR A1-C2, which the test does not.
+    { label: isAr ? "تأسيس الهانغول" : "Hangul Foundation", color: "bg-klovers-yellow/35", width: "w-[20%]" },
+    { label: isAr ? "المستوى ١" : "Level 1", color: "bg-klovers-yellow/55", width: "w-[40%]" },
+    { label: isAr ? "المستوى ٢" : "Level 2", color: "bg-klovers-yellow/75", width: "w-[60%]" },
+    { label: isAr ? "المستوى ٣" : "Level 3", color: "bg-klovers-yellow", width: "w-[80%]" },
+    { label: isAr ? "المستوى ٤" : "Level 4", color: "bg-foreground", width: "w-[100%]" },
   ];
 
   const FEATURES = [
-    { icon: ClipboardCheck, label: t("placementCta.feature20Q") },
-    { icon: Clock,          label: t("placementCta.feature5Min") },
+    { icon: ClipboardCheck, label: isAr ? "أسئلة بشكل TOPIK" : "Real exam-style questions" },
+    { icon: Clock,          label: isAr ? "تقدر تخلّص بدري" : "Finish when you like" },
     { icon: Target,         label: isAr ? "حسب مستويات كلوفرز" : "Matched to our levels" },
     { icon: Brain,          label: t("placementCta.featureInstant") },
   ];
@@ -111,8 +112,8 @@ const PlacementTestCTA = () => {
 
             <p className="text-muted-foreground text-lg leading-relaxed">
               {isAr
-                ? "اختبار مجاني من 20 سؤال بيحدد مستواك في أقل من 5 دقايق، وبيقولك تبدأ منين معانا."
-                : "A free 20-question test that finds your level in under 5 minutes and tells you exactly where to start with us."}
+                ? "اختبار قراءة مجاني بيحدد مستواك من الهانغول للمستوى الرابع، وبيقولك تبدأ منين معانا. جاوب اللي تعرفه، واقفل لما الأسئلة تبقى أصعب منك."
+                : "A free reading test that places you from Hangul to Level 4 and tells you where to start with us. Answer what you can, and stop when the questions get ahead of you."}
             </p>
 
             {/* Feature pills */}
@@ -173,7 +174,7 @@ const PlacementTestCTA = () => {
                         <span className={`font-semibold ${idx === activeLevel ? "text-foreground" : "text-muted-foreground"}`}>
                           {lvl.label}
                         </span>
-                        {idx === activeLevel && (
+                        {idx === activeLevel && idx < LEVELS.length - 1 && (
                           <span className="text-[10px] bg-klovers-yellow text-charcoal px-2 py-0.5 rounded-full font-medium animate-pulse border border-charcoal/10">
                             {t("placementCta.detecting")}
                           </span>
@@ -194,7 +195,7 @@ const PlacementTestCTA = () => {
                 </div>
 
                 <div className="px-5 py-3 bg-muted/50 border-t border-border flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{isAr ? "20 سؤال · حوالي 5 دقايق" : "20 questions · about 5 minutes"}</span>
+                  <span className="text-xs text-muted-foreground">{isAr ? "٥٢ سؤال · تقدر تخلّص بدري" : "52 questions · finish early any time"}</span>
                   <span className="text-xs font-bold text-foreground">{t("placementCta.free")}</span>
                 </div>
               </div>

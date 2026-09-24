@@ -41,10 +41,10 @@ const FinalCTA = lazy(() => import("@/components/FinalCTA"));
  */
 export const HOME_TITLE = "Klovers — Live Online Korean Classes in Small Groups";
 export const HOME_DESCRIPTION =
-  "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups of up to 8. Free trial class, free placement test and gamified practice.";
+  "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.";
 const HOME_TITLE_AR = "كلوفرز Klovers — حصص كوري أونلاين مباشرة في مجموعات صغيرة";
 const HOME_DESCRIPTION_AR =
-  "كلوفرز (Klovers): حصص كوري أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة حتى ٨ طلاب، بالعربي أو بالإنجليزي. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.";
+  "كلوفرز (Klovers): حصص كوري أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة، بالعربي أو بالإنجليزي. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.";
 
 /** The homepage translation pair. Same as HOME_ALTERNATES in prerender-meta.mjs. */
 const HOME_URL_EN = "https://kloversegy.com/";
@@ -90,7 +90,7 @@ const Index = () => {
           item: {
             "@type": "Course",
             name: "Group Korean Classes",
-            description: "Live online group Korean classes, up to 8 students, taught in English or Arabic.",
+            description: "Live online group Korean classes in small groups, taught in English or Arabic.",
             provider: { "@type": "Organization", name: "Klovers Korean Academy", url: "https://kloversegy.com" },
             url: "https://kloversegy.com/enroll-now?classType=group",
             educationalLevel: "Beginner to Advanced",

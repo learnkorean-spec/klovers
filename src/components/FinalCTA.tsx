@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, Star, Globe, MessageCircle, ClipboardCheck } from "lucide-react";
+import { ArrowRight, Users, Star, Globe, MessageCircle, ClipboardCheck, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -20,8 +20,9 @@ import PriceTeaser from "@/components/PriceTeaser";
  *  - The community tile says "social media community", matching the band -
  *    2,000+ counts followers, never students.
  *  - The real price teaser sits under the button (PriceTeaser.tsx).
- *  - The satisfaction-guarantee wording is unchanged: wording a policy is
- *    Re's call, not a copy edit.
+ *  - 25 Sep 2026 (QA): the guarantee tile sat beside a FREE class and promised
+ *    a refund of it. It now says the first class is free, and states the
+ *    Terms policy (refund or rebook after the first PAID class) as written.
  *  - The two quiet links are 44px tap targets (they measured 20px at 375px).
  *
  * 24 Sep 2026: THE SCENE. The yellow band, the three bouncing flat characters
@@ -189,19 +190,19 @@ const FinalCTA = () => {
 
         <div className={`mx-auto mt-8 grid max-w-4xl gap-4 md:grid-cols-2 ${reveal("delay-300")}`}>
           <div className="flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory px-5 py-4 text-start">
-            <span className="text-3xl" aria-hidden="true">🛡️</span>
+            <ShieldCheck className="h-8 w-8 shrink-0 text-charcoal" aria-hidden="true" />
             <div>
               <p className="text-sm font-extrabold leading-tight text-charcoal">
-                {isAr ? "ضمان الرضا الكامل" : "Satisfaction Guarantee"}
+                {isAr ? "أول حصة مجانية" : "Your first class is free"}
               </p>
               <p className="mt-0.5 text-xs text-charcoal/75">
-                {isAr ? "إذا ما عجبتكش الحصة الأولى — هنرجعلك فلوسك أو نعيد الحجز." : "If your first class isn't great, we refund or rebook — no questions asked."}
+                {isAr ? "من غير دفع ومن غير بطاقة بنكية. وبعد ما تشترك، لو أول حصة مدفوعة ما عجبتكش، بنرجعلك فلوسك أو نعيد الحجز." : "Nothing to pay and no card needed. Once you enroll, if your first paid class isn't right for you, we refund or rebook."}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory px-5 py-4 text-start">
-            <span className="text-3xl" aria-hidden="true">🌍</span>
+            <Globe className="h-8 w-8 shrink-0 text-charcoal" aria-hidden="true" />
             <p className="text-sm font-bold leading-snug text-charcoal">
               {isAr
                 ? `انضم لأكثر من ${toArabicDigits(COMMUNITY.replace(/[^0-9]/g, ""))} متابع في مجتمعنا على السوشيال ميديا`

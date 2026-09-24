@@ -50,7 +50,6 @@ const STATIC_PAGES = [
   { loc: "/topik-exam-preparation", priority: "0.9", changefreq: "monthly" },
   { loc: "/learn-korean-kdramas", priority: "0.8", changefreq: "monthly" },
   { loc: "/interview-training", priority: "0.8", changefreq: "monthly" },
-  { loc: "/welcome-back", priority: "0.7", changefreq: "monthly" },
   { loc: "/hangul-starter", priority: "0.8", changefreq: "monthly" },
   // "Journey through Korea's time" — five era pages, added 2026-09-22.
   // Content and IDs live in src/constants/eras.ts; keep this list in step
