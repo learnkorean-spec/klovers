@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BOOKS, type BookId } from "@/constants/books";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useDashCopy } from "./copy";
+import { BrandIcon } from "./primitives";
 
 /**
  * "My books" — the PDFs a student has been given.
@@ -16,6 +17,9 @@ import { useDashCopy } from "./copy";
  * The first time a student opens the dashboard after a book reaches her, Cluby
  * pops up once to tell her it is here. "Seen" is remembered per student and per
  * book in this browser, so a new book later gets its own announcement.
+ *
+ * Sits right under the hero: the book is the student's welcome gift for
+ * joining, so it is the first thing she sees (Re, 25 Sep 2026).
  *
  * No emoji anywhere here: Klovers uses only its own 3D-plush icon library and
  * Cluby art (Re, 25 Sep 2026).
@@ -67,22 +71,24 @@ export function MyBooksCard() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) return;
-      const { data, error: rowsError } = await supabase
-        .from("book_assignments")
-        .select("id, book_id")
-        .eq("user_id", user.id)
-        .lte("available_from", new Date().toISOString())
-        .order("assigned_at", { ascending: true });
-      if (!alive) return;
-      // No card rather than a broken one; the book stays assigned.
-      if (rowsError) { console.warn("[MyBooksCard] book_assignments:", rowsError.message); return; }
-      const list = ((data ?? []) as Row[]).filter((r) => r.book_id in BOOKS);
-      setRows(list);
-      setUserId(user.id);
-      const fresh = list.find((r) => !wasSeen(user.id, r.book_id));
-      if (fresh) setPopupBook(fresh.book_id as BookId);
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) return;
+        const { data, error: rowsError } = await supabase
+          .from("book_assignments")
+          .select("id, book_id")
+          .eq("user_id", user.id)
+          .lte("available_from", new Date().toISOString())
+          .order("assigned_at", { ascending: true });
+        if (!alive) return;
+        // No card rather than a broken one; the book stays assigned.
+        if (rowsError) { console.warn("[MyBooksCard] book_assignments:", rowsError.message); return; }
+        const list = ((data ?? []) as Row[]).filter((r) => r.book_id in BOOKS);
+        setRows(list);
+        setUserId(user.id);
+        const fresh = list.find((r) => !wasSeen(user.id, r.book_id));
+        if (fresh) setPopupBook(fresh.book_id as BookId);
+      } catch { /* no session / no client (tests): show nothing */ }
     })();
     return () => { alive = false; };
   }, []);
@@ -117,11 +123,21 @@ export function MyBooksCard() {
     <>
       <section
         aria-labelledby="dash-books-title"
-        className="rounded-[20px] border border-foreground/10 bg-card p-4 sm:p-5"
+        className="relative overflow-hidden rounded-[20px] border border-foreground/10 bg-card p-4 ps-6 sm:p-5 sm:ps-7"
       >
-        <h2 id="dash-books-title" className="font-display text-base font-semibold text-foreground">
-          {isAr ? "كتبي" : "My books"}
-        </h2>
+        {/* Same yellow edge as the hero: this card belongs to the top of the page. */}
+        <span aria-hidden="true" className="absolute inset-y-0 start-0 w-1.5 bg-primary" />
+        <div className="flex items-center gap-3">
+          <BrandIcon name="reward-gift" className="h-10 w-10" eager />
+          <div className="min-w-0">
+            <h2 id="dash-books-title" className="font-display text-base font-bold text-foreground sm:text-lg">
+              {isAr ? "هدية انضمامك لكورسنا" : "A gift for joining our course"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {isAr ? "كتابك جاهز — حمّله الآن" : "Your book is ready — download it now"}
+            </p>
+          </div>
+        </div>
         <ul className="mt-3 space-y-2.5">
           {rows.map((r) => {
             const id = r.book_id as BookId;
@@ -139,7 +155,7 @@ export function MyBooksCard() {
                   disabled={busy === id}
                   className="min-h-11 shrink-0 rounded-xl border-2 border-[#2E2E2E] bg-[#FFFF00] px-4 text-sm font-bold text-[#2E2E2E] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground max-sm:w-full"
                 >
-                  {busy === id ? (isAr ? "جارٍ التحميل…" : "Preparing…") : (isAr ? "تحميل الكتاب" : "Download")}
+                  {busy === id ? (isAr ? "جارٍ التحميل…" : "Preparing…") : (isAr ? "حمّل الآن" : "Download now")}
                 </button>
               </li>
             );
@@ -198,7 +214,7 @@ export function MyBooksCard() {
                 onClick={closePopup}
                 className="mt-3 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
               >
-                {isAr ? "لاحقًا — هيفضل موجود في «كتبي»" : "Later — it stays under “My books”"}
+                {isAr ? "لاحقًا — هيفضل موجود في أول لوحتك" : "Later — it stays at the top of your dashboard"}
               </button>
               {error && <p className="mt-2 text-xs text-destructive" role="alert">{error}</p>}
             </div>
