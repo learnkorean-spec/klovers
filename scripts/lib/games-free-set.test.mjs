@@ -224,26 +224,26 @@ describe("the signup nudge is shown once per session", () => {
   });
 });
 
-describe("the characters", () => {
-  it("are imported from the shared asset module", () => {
-    expect(gamesPageSrc).toMatch(
-      /import \{ CHARACTER_GIRL, CHARACTER_BOY \} from "@\/assets\/characters"/
-    );
+describe("the game host follows the story canon", () => {
+  // The host used to be the two human characters (CHARACTER_GIRL/BOY). Story
+  // style batch 2 (c38079f, 24 Sep 2026) made it the clover egg, or Cluby
+  // once he has hatched: Cluby follows the egg and guests never meet him.
+  it("decides Cluby from isClubyAwake, and never for guests", () => {
+    expect(gamesPageSrc).toMatch(/import \{ isClubyAwake \} from "@\/lib\/clubyAwake"/);
+    expect(gamesPageCopy).toMatch(/const clubyAwake = isLoggedIn && isClubyAwake\(\)/);
   });
 
-  it("are both actually rendered, not just imported", () => {
-    expect(gamesPageCopy).toContain("CHARACTER_GIRL");
-    expect(gamesPageCopy).toContain("CHARACTER_BOY");
+  it("shows Cluby only when awake, otherwise the egg", () => {
+    expect(gamesPageCopy).toMatch(/src=\{clubyAwake \? CLUBY_WAVE : EGG\}/);
   });
 
-  it("are decorative — every character image is hidden from screen readers", () => {
-    // The heading or bubble beside each one already carries the meaning, so a
-    // screen reader announcing the image would only repeat it. What must not
-    // happen is an image with neither alt text nor aria-hidden.
+  it("is decorative — the host image is hidden from screen readers", () => {
+    // The speech bubble beside it carries the meaning, so a screen reader
+    // announcing the image would only repeat it.
     const imgs = [...gamesPageCopy.matchAll(/<img[\s\S]*?\/>/g)].map((m) => m[0]);
-    const characterImgs = imgs.filter((t) => t.includes("CHARACTER_"));
-    expect(characterImgs.length).toBeGreaterThan(0);
-    for (const tag of characterImgs) {
+    const hostImgs = imgs.filter((t) => t.includes("CLUBY_WAVE"));
+    expect(hostImgs.length).toBeGreaterThan(0);
+    for (const tag of hostImgs) {
       expect(tag).toMatch(/alt=""/);
       expect(tag).toMatch(/aria-hidden="true"/);
     }
