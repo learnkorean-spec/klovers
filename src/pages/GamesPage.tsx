@@ -20,6 +20,7 @@ import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
 import { logGameEvent } from "@/lib/leadTracking";
+import { trustCopy } from "@/lib/trustFigures";
 import KloverIcon from "@/components/KloverIcon";
 import { gameIconName } from "@/constants/gameIcons";
 import { gameWorlds } from "@/constants/gameWorlds";
@@ -350,13 +351,13 @@ const GamesPage = () => {
               <a href="/login">{isAr ? "تسجيل الدخول" : "Log In"}</a>
             </Button>
           </div>
-          {/* 200+, not 500+ — Re's figure, matching the hero strip and the rest
-              of the site. Worth a second look regardless of the number: this
-              line says "already joined", which scopes it to accounts on this
-              platform, and the leaderboard comment further down this same file
-              records that real platform activity is ~102 accounts. 200+ counts
-              every student taught across 13 years. */}
-          <p className="text-xs text-muted-foreground">{isAr ? "بدون بطاقة ائتمان · انضم أكثر من 200 طالب" : "No credit card needed · 200+ students already joined"}</p>
+          {/* It read "200+ students already joined". "Already joined" scopes
+              the figure to accounts on this platform, and the leaderboard
+              comment further down this file records that real platform
+              activity is ~102 accounts. 200+ is every student Reham has
+              taught across 13 years, so the line now says that, from
+              @/lib/trustFigures. */}
+          <p className="text-xs text-muted-foreground">{isAr ? "بدون بطاقة ائتمان" : "No credit card needed"} · {trustCopy(language).studentsTaught}</p>
         </div>
       );
     }

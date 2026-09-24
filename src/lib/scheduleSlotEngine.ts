@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getLevelShortLabel } from "@/constants/levels";
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────────
 
 export type PostType =
   | "group_opening"
@@ -49,7 +49,7 @@ export interface SlotPostDraft {
   addedToCalendar: boolean;
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────────────
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -107,10 +107,10 @@ function buildCaption(slot: AvailableClassSlot): string {
     return `🇰🇷 Weekend Korean class — ${day} at ${time}!\n\n${lvl} — the perfect way to learn Korean without disrupting your week.\n\n👉 Enroll at kloversegy.com/enroll-now\n\n#WeekendKorean #Klovers #LearnKorean`;
   }
   // default group_opening
-  return `🇰🇷 Join our ${lvl} class — ${day} at ${time}!\n\n${slot.seatsAvailable ? `${slot.seatsAvailable} seats available.` : "Limited seats."} Live interactive sessions with expert guidance.\n\n👉 Register at kloversegy.com/enroll-now\n\n#LearnKorean #Klovers #KoreanCourse${urgent ? " #LimitedSeats" : ""}`;
+  return `🇰🇷 Join our ${lvl} class — ${day} at ${time}!\n\nLive interactive sessions with expert guidance.\n\n👉 Register at kloversegy.com/enroll-now\n\n#LearnKorean #Klovers #KoreanCourse${urgent ? " #LimitedSeats" : ""}`;
 }
 
-// ── Core engine ────────────────────────────────────────────────────────────
+// ── Core engine ────────────────────────────────────────────────────────────────────────
 
 /** Fetch all available teacher slots from the DB */
 export async function getTeacherAvailability(): Promise<TeacherAvailabilitySlot[]> {

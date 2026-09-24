@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { HelpCircle, MessageCircle, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
+import { withoutUnsupportedClaims } from "@/lib/trustFigures";
 
 // Inject JSON-LD into document head
 const FAQSchemaScript = ({ schema }: { schema: object }) => {
@@ -33,6 +34,15 @@ const FAQPage = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // The TOPIK answer in translations.ts claims "high pass rates"; nothing
+  // measures that. The answers shown (and the FAQPage JSON-LD built from
+  // them) keep the TOPIK-prep wording and drop the claim - see
+  // withoutUnsupportedClaims in @/lib/trustFigures.
+  const shownFaqs = useMemo(
+    () => faqs.map((f) => ({ ...f, answer: withoutUnsupportedClaims(f.answer) })),
+    [faqs],
+  );
+
   const categories = useMemo(() => {
     const cats = new Map<string, string>();
     const catLabels: Record<string, string> = {
@@ -41,28 +51,28 @@ const FAQPage = () => {
       payment: t("faqPage", "categories.payment") || "Payment",
       progress: t("faqPage", "categories.progress") || "Progress",
     };
-    faqs.forEach(f => {
+    shownFaqs.forEach(f => {
       if (f.category && !cats.has(f.category)) {
         cats.set(f.category, catLabels[f.category] || f.category);
       }
     });
     return cats;
-  }, [faqs, t]);
+  }, [shownFaqs, t]);
 
   const filteredFaqs = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return faqs.filter(f => {
+    return shownFaqs.filter(f => {
       if (activeCategory && f.category !== activeCategory) return false;
       if (!q) return true;
       return f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q);
     });
-  }, [faqs, activeCategory, searchQuery]);
+  }, [shownFaqs, activeCategory, searchQuery]);
 
   // JSON-LD FAQ Schema
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqs.map(faq => ({
+    mainEntity: shownFaqs.map(faq => ({
       "@type": "Question",
       name: faq.question,
       acceptedAnswer: {

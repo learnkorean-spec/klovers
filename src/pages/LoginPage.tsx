@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { trustCopy } from "@/lib/trustFigures";
 
 const LoginPage = () => {
   useSEO({ title: "Login | Klovers Korean Academy", description: "Sign in to your Klovers account to access your Korean lessons, progress tracker, and student dashboard.", noindex: true });
@@ -159,11 +160,12 @@ const LoginPage = () => {
       <Header />
       <main id="main-content" className="pt-24 pb-16 flex flex-col items-center justify-center px-4 gap-4">
 
-        {/* Welcome strip */}
+        {/* Welcome strip. The rating is the sourced one (Google, 5.0 from 7) -
+            it used to read "4.9 rated academy" with no source. */}
         <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
           <span>{isAr ? "🔥 حافظ على سلسلتك" : "🔥 Keep your streak"}</span>
           <span className="text-border">·</span>
-          <span>{isAr ? "⭐ تقييم 4.9" : "⭐ 4.9 rated academy"}</span>
+          <span>⭐ {trustCopy(language).ratingShort}</span>
           <span className="text-border">·</span>
           <span>🇰🇷 A1–C2</span>
         </div>
