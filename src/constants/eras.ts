@@ -1,9 +1,10 @@
 /**
  * The five stations of the "journey through Korea's time".
  *
- * One source of truth for two consumers: the era cards on the homepage
- * (KoreaTimeSection.tsx) and the per-era pages at /journey/:eraId
- * (EraPage.tsx). Adding a sixth era is one more object here.
+ * One source of truth for two consumers: the era pages at /journey/:eraId
+ * (EraPage.tsx) and the Discover strip on the blog journey
+ * (components/journal/StageBlocks.tsx). Adding a sixth era is one more
+ * object here.
  *
  * Content rules, agreed with Re on 2026-09-22:
  *  - Korea was never "a Chinese place". The honest frame is: Han China ruled

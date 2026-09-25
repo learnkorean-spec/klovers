@@ -250,8 +250,8 @@ export function SpeakPhrases({ phrases, isAr, resolve }: { phrases: Expression[]
 
 /**
  * Links the Discover stop into the era pages that already exist at
- * /journey/:eraId (EraPage.tsx, KoreaTimeSection.tsx) instead of rebuilding a
- * history timeline here. Five internal links, no new content.
+ * /journey/:eraId (EraPage.tsx) instead of rebuilding a history timeline
+ * here. Five internal links, no new content.
  */
 export function EraStrip({ isAr }: { isAr: boolean }) {
   return (

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
+import { readFileSync, readdirSync, statSync, existsSync } from "fs";
+import { join, sep } from "path";
 import { KLOVERS_WORLD, validateKloversStoryFeature } from "@/config/klovers-world";
 import { LEVEL_KEYS } from "@/constants/levels";
 
@@ -36,6 +36,16 @@ import { LEVEL_KEYS } from "@/constants/levels";
  * It follows that these checks catch a missing, added or renamed section, and
  * canon that contradicts itself. They cannot catch a section that renders the
  * wrong picture — that is a review question, not a unit test.
+ *
+ * THE ORPHAN RULE AT THE BOTTOM IS THE OTHER HALF
+ *
+ * The slot checks above ask "is every beat rendered?". The orphan rule asks the
+ * inverse — "is every story component rendered?" Both directions were open when
+ * this file was written: homepage slot 5 had no section while its 263-line
+ * component sat imported by nothing, and four more story components
+ * (HomeBlogSection, StudentJourney, FAQSection, KoreaTimeSection) had no importer
+ * at all. Neither was visible, because nothing in the build fails on dead code.
+ * A canon that only checks forwards still lets the story rot backwards.
  */
 
 const repoRoot = process.cwd();
@@ -43,6 +53,39 @@ const indexSrc = readFileSync(join(repoRoot, "src/pages/Index.tsx"), "utf-8");
 
 /** Index.tsx with block and line comments removed, so a comment can never satisfy an assertion. */
 const indexCode = indexSrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+/**
+ * The ladder's level→world entries, typed and free of the `notALevelStop`
+ * array that shares the same object.
+ *
+ * `KLOVERS_WORLD` is `as const`, so its literal types are narrow and a
+ * `Record<string, { world: string }>` cast is rejected outright — the compiler
+ * says the shapes do not sufficiently overlap. Going through `unknown` would
+ * silence that, but it would also throw away the type safety that makes a
+ * wrong world id a compile error instead of a runtime surprise. Narrowing once,
+ * here, keeps every call site below clean and honest.
+ */
+const levelJourney = (): { level: string; world: string; part: number | null }[] =>
+  Object.entries(KLOVERS_WORLD.levelJourney)
+    .filter(([, v]) => !Array.isArray(v))
+    .map(([level, v]) => ({ level, world: (v as { world: string }).world, part: (v as { part: number | null }).part }));
+
+/** Every .ts/.tsx under src/, comments stripped, so prose can never count as a use. */
+function readSrcSources(dir: string, out: { path: string; code: string }[] = []) {
+  for (const entry of readdirSync(dir)) {
+    if (entry === "node_modules" || entry.startsWith(".")) continue;
+    const p = join(dir, entry);
+    if (statSync(p).isDirectory()) readSrcSources(p, out);
+    else if (/\.(ts|tsx)$/.test(entry) && !/\.test\.tsx?$/.test(entry)) {
+      const text = readFileSync(p, "utf-8");
+      out.push({
+        path: p,
+        code: text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, ""),
+      });
+    }
+  }
+  return out;
+}
 
 describe("KLOVERS_WORLD — internal consistency", () => {
   it("gives every world a unique id and an order", () => {
@@ -96,18 +139,15 @@ describe("levelJourney — the canon ladder is what the app reads", () => {
   });
 
   it("never puts a notALevelStop world on the ladder", () => {
-    const journey = KLOVERS_WORLD.levelJourney as Record<string, { world: string }>;
-    const onLadder = new Set(Object.values(journey).map((j) => j?.world));
+    const onLadder = new Set(levelJourney().map((j) => j.world));
     for (const id of KLOVERS_WORLD.levelJourney.notALevelStop) {
       expect(onLadder.has(id), `${id} is a notALevelStop but is on the ladder`).toBe(false);
     }
   });
 
   it("keeps every ladder world a world the canon actually defines", () => {
-    const journey = KLOVERS_WORLD.levelJourney as Record<string, { world: string }>;
     const known = new Set<string>(KLOVERS_WORLD.worlds.map((w) => w.id));
-    for (const { world } of Object.values(journey)) {
-      if (!world || Array.isArray(world)) continue;
+    for (const { world } of levelJourney()) {
       expect(known.has(world), `${world} is on the ladder but not a canon world`).toBe(true);
     }
   });
@@ -201,12 +241,160 @@ describe("story art", () => {
   });
 
   it("has a painted scene on disk for every world on the level ladder", () => {
-    const journey = KLOVERS_WORLD.levelJourney as Record<string, { world: string }>;
-    const worlds = [...new Set(Object.values(journey).map((j) => j?.world).filter(Boolean))] as string[];
+    const worlds = [...new Set(levelJourney().map((j) => j.world))];
     const missing = worlds
       .map((w) => `/assets/story/world-${w}.webp`)
       .filter((p) => !existsSync(join(repoRoot, "public", p)));
     expect(missing).toEqual([]);
+  });
+});
+
+describe("orphans — a story component nothing renders", () => {
+  /**
+   * Components that are intentionally not mounted, each with the reason it is
+   * still here. An entry here is a decision someone made; a component missing
+   * from BOTH this list and every importer is drift, and that is what this test
+   * fails on.
+   *
+   * `HomeGamesSection` is the live case: canon slot 5 ("practice-games") was
+   * folded into MoreThanAClass by Re's 23 Sep CRO pass, but the component is
+   * kept built so the beat can be restored without rewriting it. Deleting it
+   * is allowed but not required — keeping it costs nothing, since an unmounted
+   * component is never bundled and Vite's chunking never sees it.
+   *
+   * The `games/` entries are a PRODUCT BACKLOG, not dead code, and this is the
+   * one place that distinction is written down. Each is a finished game —
+   * 10 to 15 KB of real Korean content, a working component — that was built
+   * but never given a `GAMES_CATALOG` entry, so GamesPage has no `case` for it
+   * and nothing can reach it. Every wired game follows that pattern: a catalog
+   * id, a `case` in GamesPage's switch, and a lazy() import.
+   *
+   * They are deliberately NOT deleted. Deleting them would throw away working
+   * product to make a test pass, and this test's job is to surface the backlog,
+   * not to resolve it. Wiring one up is a real feature (a catalog entry, a
+   * switch case, title and description in both languages, and a free-vs-gated
+   * decision), so it belongs to whoever owns the games list. When one ships,
+   * delete its line here and this test keeps it honest.
+   */
+  const ALLOWED_UNMOUNTED = new Set([
+    "HomeGamesSection",
+    // games/ — built and finished, never added to GAMES_CATALOG
+    "DialogueFillGame",
+    "ErrorCatchGame",
+    "GrammarPatternGame",
+    "HonorificGame",
+    "NegationGame",
+    "SituationPickGame",
+    "SpeechLevelGame",
+    "TenseShiftGame",
+  ]);
+
+  /**
+   * KNOWN BACKLOG — thirty components nothing imports, audited 2026-09-26 and
+   * pre-existing, not introduced by this work.
+   *
+   * These are real and substantial (1.6 KB to 17 KB each — a leaderboard panel,
+   * an NPS modal, a dashboard card, an exit-intent sheet), not stubs, so none
+   * of them were deleted. Removing ~150 KB of working product to satisfy a test
+   * written the same day is not a decision this file gets to make by itself.
+   *
+   * Listing them turns the check into a RATCHET: the assertion fails on any
+   * orphan NOT named here, so the backlog cannot grow, and each name is a
+   * visible "triage me". Triage by group — wire it up or delete it — and
+   * remove its line when done.
+   *
+   * `CultureHeritageSection` is deliberately still listed: it is the only
+   * emitter of the `culture_section` engagement event, so dropping it is an
+   * analytics decision rather than a cleanup.
+   */
+  const KNOWN_ORPHAN_BACKLOG = new Set([
+    "AttendanceCalendar",
+    "CommunityFeed",
+    "CultureHeritageSection",
+    "DashboardLearningCard",
+    "DashboardProfileCard",
+    "DiscoverKoreaGallery",
+    "EmptyState",
+    "EnrollmentProtectedRoute",
+    "ExitIntentModal",
+    "GameIcon",
+    "InterviewBannerChip",
+    "KoreanLevelCard",
+    "LeagueXpCard",
+    "MarketingPostsArchive",
+    "NavLink",
+    "NpsModal",
+    "PageErrorBoundary",
+    "ReferFriendStrip",
+    "ReturningStudentOffer",
+    "SlotManager",
+    "SlotRanker",
+    "StudentGroupAttendance",
+    "StudentPreferenceStep",
+    "TrackedWaLink",
+    "TrialRequestsPanel",
+    "VocabOfTheDayCard",
+    "WeeklyGoalCard",
+    "WhyKLovers",
+    "whyLearnKoreanScenes",
+  ]);
+
+  const sources = readSrcSources(join(repoRoot, "src"));
+  const componentDir = join(repoRoot, "src", "components");
+
+  it("finds a component to check (guards the walk itself)", () => {
+    // If the walk silently returned nothing, every assertion below would pass
+    // vacuously — which is exactly how a guard becomes decorative.
+    expect(sources.length).toBeGreaterThan(50);
+  });
+
+  /** Escape a component name for use inside a RegExp. */
+  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  /** Every component under src/components, minus pages/ and the shadcn ui/ library. */
+  const candidates = sources.filter(
+    (f) =>
+      f.path.startsWith(componentDir) &&
+      !f.path.includes(`${sep}pages${sep}`) &&
+      !f.path.includes(`${sep}ui${sep}`)
+  );
+
+  it("has no story component that nothing imports", () => {
+    const orphans: string[] = [];
+
+    for (const file of candidates) {
+      const name = file.path.split(sep).pop()!.replace(/\.tsx?$/, "");
+      if (ALLOWED_UNMOUNTED.has(name) || KNOWN_ORPHAN_BACKLOG.has(name)) continue;
+
+      // WORD BOUNDARY, not a substring. `includes("GameIcon")` is satisfied by
+      // `gameIconName` in an unrelated import, which is a false negative in the
+      // dangerous direction — it would report a genuinely orphaned component as
+      // wired. Matching the whole identifier is what makes this check honest.
+      const nameRe = new RegExp(`\\b${escape(name)}\\b`);
+      const imported = sources.some(
+        (other) => other.path !== file.path && nameRe.test(other.code)
+      );
+      if (!imported) orphans.push(name);
+    }
+
+    expect(
+      orphans,
+      "these components are imported by nothing. Delete them, or add them to " +
+        "ALLOWED_UNMOUNTED in this file with a reason if keeping them is deliberate"
+    ).toEqual([]);
+  });
+
+  it("still counts every named backlog entry, so none are deleted by accident", () => {
+    // The ratchet only works if the two lists agree. An allowlist entry for a
+    // component that no longer exists would let the check rot quietly: the name
+    // keeps "passing" forever while the file it referred to is gone.
+    const missingFromDisk = [...ALLOWED_UNMOUNTED, ...KNOWN_ORPHAN_BACKLOG].filter(
+      (name) => !candidates.some((f) => f.path.split(sep).pop()!.replace(/\.tsx?$/, "") === name)
+    );
+    expect(
+      missingFromDisk,
+      "these names are on an allowlist but no such component exists — remove the stale line"
+    ).toEqual([]);
   });
 });
 

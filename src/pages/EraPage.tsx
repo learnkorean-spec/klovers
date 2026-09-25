@@ -18,7 +18,7 @@ const OG_IMAGE_OVERRIDES: Partial<Record<string, string>> = {
  * One station of the "journey through Korea's time" — /journey/:eraId.
  *
  * All copy lives in src/constants/eras.ts; this page only lays it out. It is
- * the destination of the era cards in KoreaTimeSection.tsx.
+ * the destination of the era links in components/journal/StageBlocks.tsx.
  *
  * Related articles come from the era's `posts` list, which only ever holds
  * blog posts already verified live in `blog_posts`. An era with no such post
