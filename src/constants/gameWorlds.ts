@@ -48,7 +48,7 @@ export const GAME_WORLDS: GameWorld[] = [
     description: "Practice real Korean conversations.",
     descriptionAr: "اتمرّن على محادثات كورية حقيقية.",
     icon: "game-headphones-music",
-    gameIds: ["greetings", "conversation", "kdrama", "sentence", "verbs", "fillblank", "readingchoice", "sentenceread", "storygap"],
+    gameIds: ["greetings", "conversation", "kdrama", "sentence", "verbs", "fillblank", "readingchoice", "sentenceread", "storygap", "honorific"],
   },
 ];
 

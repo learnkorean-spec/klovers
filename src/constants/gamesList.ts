@@ -74,6 +74,16 @@ export const GAMES_CATALOG: GameCatalogEntry[] = [
   // longer-form/intermediate entries.
   { id: "conversation", titleKey: "games.conversationTitle", descKey: "games.conversationDesc", icon: ListOrdered, emoji: "💬", difficulty: "intermediate", free: false },
   { id: "storygap", titleKey: "games.storygapTitle", descKey: "games.storygapDesc", icon: BookText, emoji: "📔", difficulty: "intermediate", free: false },
+  // Added 2026-09-26: HonorificGame, the next of the unused components in this
+  // folder (the full list is in src/config/__tests__/kloversWorld.test.ts under
+  // ALLOWED_UNMOUNTED). It teaches the (으)시- speech level — the plain/humble vs
+  // polite/honorific verb distinction — which nothing else on the site covers and
+  // which a learner cannot pick up from a textbook chapter on numbers or colours.
+  // Gated, like the other intermediate entries: it explains a concept rather than
+  // drilling recall, so it wants an account. Its questions are self-contained
+  // inline data, NOT useGameData() like VerbConjugationGame, so it needs no
+  // backend content to be correct.
+  { id: "honorific", titleKey: "games.honorificTitle", descKey: "games.honorificDesc", icon: MessageCircle, emoji: "🙇", difficulty: "intermediate", free: false },
 ];
 
 /** Derived, not hand-maintained — see the `free` field doc above. */

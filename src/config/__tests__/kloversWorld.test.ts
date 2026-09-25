@@ -275,6 +275,10 @@ describe("orphans — a story component nothing renders", () => {
    * switch case, title and description in both languages, and a free-vs-gated
    * decision), so it belongs to whoever owns the games list. When one ships,
    * delete its line here and this test keeps it honest.
+   *
+   * `HonorificGame` was the first one shipped (2026-09-26) and so no longer
+   * appears here — a name leaves this list the day it becomes reachable, which
+   * is what makes leaving it a real signal rather than a formality.
    */
   const ALLOWED_UNMOUNTED = new Set([
     "HomeGamesSection",

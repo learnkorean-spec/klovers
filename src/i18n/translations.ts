@@ -647,6 +647,8 @@ export const translations = {
       conversationDesc: "Put a Korean dialogue's lines back in the right order",
       storygapTitle: "Story Gaps",
       storygapDesc: "Fill in the missing words in a short Korean story",
+      honorificTitle: "Honorifics",
+      honorificDesc: "Learn the polite and humble forms Koreans actually use",
       // Game-specific prompts
       matchHeader: "Korean Vocabulary Match",
       matchSubtitle: "Flip the cards and match Korean words with their English meaning. How fast can you clear the board?",
@@ -2482,6 +2484,8 @@ export const translations = {
       conversationDesc: "ترتيب أسطر حوار كوري بالترتيب الصحيح",
       storygapTitle: "فراغات القصة",
       storygapDesc: "ملء الكلمات الناقصة في قصة كورية قصيرة",
+      honorificTitle: "صيغ التقدير",
+      honorificDesc: "تعلّم صيغ التحية المهذّبة التي يستخدمها الكوريون فعليًا",
       matchHeader: "مطابقة المفردات الكورية",
       matchSubtitle: "قلب البطاقات ومطابقة الكلمات الكورية مع معانيها. كم حركة يلزم لإنهاء اللوحة؟",
       matchWin: "اكتملت مطابقة جميع الأزواج في {moves} حركات ({time})!",

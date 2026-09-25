@@ -116,7 +116,7 @@ const excerpt = (s, max = 160) => {
 // accepted, and it is why the emit loop asserts the shape of the fragment
 // rather than trusting it.
 //
-// The "ten of the twenty-two" below is the one number here that can go stale
+// The "ten of the twenty-three" below is the one number here that can go stale
 // silently: it is static HTML served to crawlers at /games, so nothing in the
 // app corrects it. scripts/lib/games-free-set.test.mjs reads BOTH this file and
 // src/pages/GamesPage.tsx and fails if this sentence disagrees with
@@ -128,7 +128,7 @@ const excerpt = (s, max = 160) => {
 // helpers.
 const GAMES_BODY_HTML = `<div id="games-prerendered" lang="en" dir="ltr">
       <h1>Korean Learning Games</h1>
-      <p>Klovers Korean Learning Games are free, interactive games for practising Korean in your browser — reading Hangul, matching vocabulary, unscrambling words, conjugating verbs and more. There is nothing to download and no sign-up is needed to start: ten of the twenty-two games are open to everyone. Signed-in learners earn XP for every round, build a daily streak and climb the leaderboard.</p>
+      <p>Klovers Korean Learning Games are free, interactive games for practising Korean in your browser — reading Hangul, matching vocabulary, unscrambling words, conjugating verbs and more. There is nothing to download and no sign-up is needed to start: ten of the twenty-three games are open to everyone. Signed-in learners earn XP for every round, build a daily streak and climb the leaderboard.</p>
       <h2>The games</h2>
       <ul>
         <li><strong>Vocabulary Match</strong> — Flip cards &amp; match Korean words with English meanings</li>
@@ -153,6 +153,7 @@ const GAMES_BODY_HTML = `<div id="games-prerendered" lang="en" dir="ltr">
         <li><strong>Phonics Practice</strong> — See the romanization and pick the correct Korean spelling</li>
 <li><strong>Conversation Order</strong> — Put a Korean dialogue's lines back in the right order</li>
 <li><strong>Story Gaps</strong> — Fill in the missing words in a short Korean story</li>
+<li><strong>Honorifics</strong> — Learn the polite and humble forms Koreans actually use</li>
       </ul>
       <p>Prefer to read first? The <a href="/blog">Klovers Korean blog</a> covers Hangul, grammar, TOPIK preparation and Korean culture, and the <a href="/courses">Korean courses</a> take you from the alphabet to real conversation with a real teacher.</p>
     </div>`;
