@@ -155,6 +155,14 @@ verify_jwt = false
 [functions.send-weekly-report]
 verify_jwt = false
 
+# The teacher's day-before brief (trigger_teacher_brief, hourly, sends on the
+# 09:00-Cairo tick). Same rule again, and it matters more here than most: the
+# brief carries student names and levels, so the function's own isCronOrAdmin
+# check is the real gate and the gateway must not pre-empt it with a 401 that
+# stops the cron call before any code runs.
+[functions.send-teacher-brief]
+verify_jwt = false
+
 # --- Disabled orphan CV/AI edge functions (reversible: remove this block to re-enable) ---
 
 [functions.analyze-cv]
