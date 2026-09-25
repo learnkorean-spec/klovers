@@ -56,6 +56,13 @@ const PhonicsReadGame = lazy(() => import("@/components/games/PhonicsReadGame"))
 const ConversationOrderGame = lazy(() => import("@/components/games/ConversationOrderGame"));
 const StoryGapGame = lazy(() => import("@/components/games/StoryGapGame"));
 const HonorificGame = lazy(() => import("@/components/games/HonorificGame"));
+const SpeechLevelGame = lazy(() => import("@/components/games/SpeechLevelGame"));
+const TenseShiftGame = lazy(() => import("@/components/games/TenseShiftGame"));
+const NegationGame = lazy(() => import("@/components/games/NegationGame"));
+const ErrorCatchGame = lazy(() => import("@/components/games/ErrorCatchGame"));
+const SituationPickGame = lazy(() => import("@/components/games/SituationPickGame"));
+const GrammarPatternGame = lazy(() => import("@/components/games/GrammarPatternGame"));
+const DialogueFillGame = lazy(() => import("@/components/games/DialogueFillGame"));
 
 /**
  * A guest who finishes a game is asked to sign up — once per browser session.
@@ -395,6 +402,13 @@ const GamesPage = () => {
       case "conversation": return <Suspense fallback={<GameFallback />}><ConversationOrderGame onGameComplete={onComplete} /></Suspense>;
       case "storygap": return <Suspense fallback={<GameFallback />}><StoryGapGame onGameComplete={onComplete} /></Suspense>;
       case "honorific": return <Suspense fallback={<GameFallback />}><HonorificGame onGameComplete={onComplete} /></Suspense>;
+      case "speechlevel": return <Suspense fallback={<GameFallback />}><SpeechLevelGame onGameComplete={onComplete} /></Suspense>;
+      case "tenshift": return <Suspense fallback={<GameFallback />}><TenseShiftGame onGameComplete={onComplete} /></Suspense>;
+      case "negation": return <Suspense fallback={<GameFallback />}><NegationGame onGameComplete={onComplete} /></Suspense>;
+      case "errorcatch": return <Suspense fallback={<GameFallback />}><ErrorCatchGame onGameComplete={onComplete} /></Suspense>;
+      case "situation": return <Suspense fallback={<GameFallback />}><SituationPickGame onGameComplete={onComplete} /></Suspense>;
+      case "grammarpattern": return <Suspense fallback={<GameFallback />}><GrammarPatternGame onGameComplete={onComplete} /></Suspense>;
+      case "dialoguefill": return <Suspense fallback={<GameFallback />}><DialogueFillGame onGameComplete={onComplete} /></Suspense>;
       default: return null;
     }
   };

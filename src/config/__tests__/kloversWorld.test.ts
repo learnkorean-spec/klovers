@@ -262,36 +262,24 @@ describe("orphans — a story component nothing renders", () => {
    * is allowed but not required — keeping it costs nothing, since an unmounted
    * component is never bundled and Vite's chunking never sees it.
    *
-   * The `games/` entries are a PRODUCT BACKLOG, not dead code, and this is the
-   * one place that distinction is written down. Each is a finished game —
+   * The `games/` entries were a PRODUCT BACKLOG, not dead code, and this was
+   * the one place that distinction was written down. Each was a finished game —
    * 10 to 15 KB of real Korean content, a working component — that was built
-   * but never given a `GAMES_CATALOG` entry, so GamesPage has no `case` for it
-   * and nothing can reach it. Every wired game follows that pattern: a catalog
-   * id, a `case` in GamesPage's switch, and a lazy() import.
+   * but never given a `GAMES_CATALOG` entry, so GamesPage had no `case` for it
+   * and nothing could reach it. Every wired game follows that pattern: a
+   * catalog id, a `case` in GamesPage's switch, and a lazy() import.
    *
-   * They are deliberately NOT deleted. Deleting them would throw away working
-   * product to make a test pass, and this test's job is to surface the backlog,
-   * not to resolve it. Wiring one up is a real feature (a catalog entry, a
-   * switch case, title and description in both languages, and a free-vs-gated
-   * decision), so it belongs to whoever owns the games list. When one ships,
-   * delete its line here and this test keeps it honest.
+   * All eight shipped on 2026-09-26 and are gone from the list below, which is
+   * what makes the list meaningful: it now holds only what is unplayable.
    *
-   * `HonorificGame` was the first one shipped (2026-09-26) and so no longer
-   * appears here — a name leaves this list the day it becomes reachable, which
-   * is what makes leaving it a real signal rather than a formality.
+   * All eight were shipped on 2026-09-26 — HonorificGame in one commit and the
+   * other six in the next, because each push costs one of Vercel's 100 daily
+   * deploys and the work was identical. None of them appears here now, which is
+   * the point: a name leaves this list the day it becomes reachable, so the
+   * list stays a live backlog rather than a graveyard, and anything still on it
+   * is genuinely unplayable.
    */
-  const ALLOWED_UNMOUNTED = new Set([
-    "HomeGamesSection",
-    // games/ — built and finished, never added to GAMES_CATALOG
-    "DialogueFillGame",
-    "ErrorCatchGame",
-    "GrammarPatternGame",
-    "HonorificGame",
-    "NegationGame",
-    "SituationPickGame",
-    "SpeechLevelGame",
-    "TenseShiftGame",
-  ]);
+  const ALLOWED_UNMOUNTED = new Set(["HomeGamesSection"]);
 
   /**
    * KNOWN BACKLOG — thirty components nothing imports, audited 2026-09-26 and

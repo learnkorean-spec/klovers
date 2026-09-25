@@ -3,7 +3,7 @@ import {
   Layers, Brain, PenLine, Hash, Palette, BookOpen, MessageCircle,
   ArrowLeftRight, Shuffle, Calculator, Tv, Clock, Keyboard, Volume2,
   CreditCard, Zap, MousePointerClick, BookOpenCheck, Headphones,
-  ListOrdered, BookText,
+  ListOrdered, BookText, MapPin,
 } from "lucide-react";
 
 export type GameDifficulty = "beginner" | "intermediate";
@@ -84,6 +84,24 @@ export const GAMES_CATALOG: GameCatalogEntry[] = [
   // inline data, NOT useGameData() like VerbConjugationGame, so it needs no
   // backend content to be correct.
   { id: "honorific", titleKey: "games.honorificTitle", descKey: "games.honorificDesc", icon: MessageCircle, emoji: "🙇", difficulty: "intermediate", free: false },
+  // The remaining seven of the eight unwired components, added 2026-09-26 in one
+  // commit rather than one push each (deploy budget: CLAUDE.md's 100/24h). All
+  // seven are inline-data games — no useGameData(), so none depends on backend
+  // content to be correct — and all are intermediate and gated, matching how the
+  // other concept-teaching entries sit. The mechanic differs each time: two are
+  // conversion drills (Tense Shift rewrites a verb across tenses, Speech Level
+  // across the three politeness registers), two are error-correction (Error
+  // Catch has deliberate trick questions where the sentence is already right),
+  // one completes a real two-line dialogue (Dialogue Fill), one distinguishes
+  // 안 from 못 from -지 않다 — a distinction learners usually get wrong — and
+  // one puts a phrase in the situation you would actually use it in.
+  { id: "speechlevel", titleKey: "games.speechlevelTitle", descKey: "games.speechlevelDesc", icon: MessageCircle, emoji: "🗣️", difficulty: "intermediate", free: false },
+  { id: "tenshift", titleKey: "games.tenshiftTitle", descKey: "games.tenshiftDesc", icon: Clock, emoji: "⏳", difficulty: "intermediate", free: false },
+  { id: "negation", titleKey: "games.negationTitle", descKey: "games.negationDesc", icon: Zap, emoji: "🚫", difficulty: "intermediate", free: false },
+  { id: "errorcatch", titleKey: "games.errorcatchTitle", descKey: "games.errorcatchDesc", icon: BookOpenCheck, emoji: "🐛", difficulty: "intermediate", free: false },
+  { id: "situation", titleKey: "games.situationTitle", descKey: "games.situationDesc", icon: MapPin, emoji: "🎯", difficulty: "intermediate", free: false },
+  { id: "grammarpattern", titleKey: "games.grammarpatternTitle", descKey: "games.grammarpatternDesc", icon: Layers, emoji: "🔗", difficulty: "intermediate", free: false },
+  { id: "dialoguefill", titleKey: "games.dialoguefillTitle", descKey: "games.dialoguefillDesc", icon: MessageCircle, emoji: "💬", difficulty: "intermediate", free: false },
 ];
 
 /** Derived, not hand-maintained — see the `free` field doc above. */

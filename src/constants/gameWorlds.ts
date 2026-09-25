@@ -30,7 +30,7 @@ export const GAME_WORLDS: GameWorld[] = [
     description: "Build your Korean from the very first letter.",
     descriptionAr: "ابني الكوري بتاعك من أول حرف.",
     icon: "game-flashcard-han",
-    gameIds: ["hangul", "romanization", "phonics", "scramble", "typekorean", "speedread"],
+    gameIds: ["hangul", "romanization", "phonics", "scramble", "typekorean", "speedread", "grammarpattern", "tenshift", "negation", "errorcatch"],
   },
   {
     key: "vocabulary_market",
@@ -48,7 +48,7 @@ export const GAME_WORLDS: GameWorld[] = [
     description: "Practice real Korean conversations.",
     descriptionAr: "اتمرّن على محادثات كورية حقيقية.",
     icon: "game-headphones-music",
-    gameIds: ["greetings", "conversation", "kdrama", "sentence", "verbs", "fillblank", "readingchoice", "sentenceread", "storygap", "honorific"],
+    gameIds: ["greetings", "conversation", "kdrama", "sentence", "verbs", "fillblank", "readingchoice", "sentenceread", "storygap", "honorific", "speechlevel", "situation", "dialoguefill"],
   },
 ];
 

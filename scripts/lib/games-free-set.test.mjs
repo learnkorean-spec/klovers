@@ -96,15 +96,15 @@ const gamesPageCopy = stripComments(gamesPageSrc);
 const NUMBER_WORDS = {
   two: 2, three: 3, four: 4, five: 5, six: 6,
   seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, twenty: 20,
-  "twenty-two": 22, "twenty-three": 23,
+  "twenty-two": 22, "twenty-three": 23, "twenty-nine": 29, thirty: 30,
 };
 
 describe("the games array", () => {
-  it("holds 23 games", () => {
-    // 23 = 22 + HonorificGame, wired 2026-09-26. Bumping this number is the
+  it("holds 30 games", () => {
+    // 30 = 23 + the seven games wired 2026-09-26. Bumping this number is the
     // point of having it: a game cannot reach the page without someone saying
     // so here, which is what kept the catalog and the switch in step.
-    expect(GAME_IDS.length).toBe(23);
+    expect(GAME_IDS.length).toBe(30);
   });
 
   it("has no duplicate ids", () => {
