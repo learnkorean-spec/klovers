@@ -72,10 +72,10 @@ export function VocabularyReviewPage() {
   const handleReviewComplete = async (vocabId: number, quality: number) => {
     try {
       await recordReview(vocabId, quality);
-      // Count the card for this session's summary. Good (4) and Easy (5)
-      // count as mastered, matching the SM-2 scale useSRS records.
+      // Count the card for this session's summary. VocabularyReview rates
+      // 0 Again · 1 Hard · 2 Ok · 3 Good · 4 Easy; Good and Easy count as mastered.
       setReviewedCount((prev) => prev + 1);
-      if (quality >= 4) setMasteredCount((prev) => prev + 1);
+      if (quality >= 3) setMasteredCount((prev) => prev + 1);
       setXpEarned((prev) => prev + 5);
       await awardXp(0, "review");
     } catch {
