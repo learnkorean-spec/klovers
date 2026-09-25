@@ -91,6 +91,50 @@ export const KLOVERS_WORLD = {
 
     mystery:
       "Cluby does not fully remember where he came from. His memories return gradually as the learners progress.",
+
+    /**
+     * The "nobody sees Cluby before the egg hatches" rule, and its one
+     * deliberate exception. Re, 25 Sep 2026 — this was previously recorded
+     * only in a comment in components/EggTeaser.tsx, which meant the code canon
+     * and the shipped behaviour disagreed and the bible (which defers to this
+     * file) could not settle it.
+     *
+     * The rule protects the REVEAL in the logged-in product: /games, the games
+     * hub, the leaderboard and the XP celebration show the clover egg instead
+     * of Cluby until lib/clubyAwake.ts records a real hatch. That gate is
+     * load-bearing and is guarded by scripts/lib/games-free-set.test.mjs.
+     *
+     * Marketing is different on purpose. The homepage teases, and homepageNarrative
+     * puts Cluby in the hero, the games beat, the culture section and the final
+     * CTA — to a visitor who has an egg they have never hatched. He is a known
+     * quantity there, not a discovery. The egg-teaser beat (slot 7) still
+     * excludes him, because THAT is the beat where the mystery is on the table.
+     */
+    clubyVisibility: {
+      /** Where the gate is absolute: no account, no Cluby, egg only. */
+      gatedUntilHatch: [
+        "games_page",
+        "game_worlds_hub",
+        "games_leaderboard",
+        "xp_celebration",
+      ],
+
+      /** Where he may appear before hatching, because the page is a teaser. */
+      allowedBeforeHatch: [
+        "homepage_hero",
+        "homepage_more_than_a_class",
+        "homepage_community_band",
+        "homepage_final_cta",
+        "not_found_pages",
+      ],
+
+      /** The rule this exception carves out of. */
+      neverOnHatchGate: [
+        "the_egg_teaser_beat",
+      ],
+
+      source: "Re, 25 Sep 2026",
+    },
   },
 
   characters: {
@@ -624,6 +668,26 @@ export const KLOVERS_WORLD = {
       characters: ["cluby"],
       storyFunction:
         "practice_and_reward",
+
+      /**
+       * This beat has no section of its own, and that is a decision rather
+       * than a gap. Re's CRO pass of 23 Sep 2026 replaced four separate
+       * homepage sections (culture, eras, games, journal) that told the same
+       * story three times; see the header comment in
+       * `src/components/MoreThanAClass.tsx`, which replaced them with six
+       * doors — one of which is Games and one of which is Cluby himself.
+       *
+       * So the beat is DELIVERED, by MoreThanAClass at slot 6, and only its
+       * own homepage section was retired. `deliveredBy` records that, and
+       * src/config/__tests__/kloversWorld.test.ts checks the beat is either
+       * rendered by its own component or points at the section that carries
+       * it. Restoring a dedicated games section is a CRO question, not a
+       * story-canon one; if Re wants it back, add a `section` entry here and
+       * render `HomeGamesSection` (already built, still in
+       * src/components/HomeGamesSection.tsx) from src/pages/Index.tsx.
+       */
+      deliveredBy: "culture",
+      retiredAsOwnSection: "Re, 23 Sep 2026 CRO pass",
     },
 
     {

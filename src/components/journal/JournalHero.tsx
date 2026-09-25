@@ -132,7 +132,9 @@ export default function JournalHero({
                 {isAr ? "أنا كلوبي. كلّ شارع هنا يبدو مألوفًا، ولا أذكر السبب بعد." : "I'm Cluby. Every street here feels familiar, and I can't remember why yet."}
               </p>
               <div className="rounded-full border border-border bg-card p-2 shadow-lg journal-klobi-enter">
-                {/* IMAGE PENDING: cluby-reading.webp (reading pose; cluby-star is the stand-in) */}
+                {/* Re's reading pose, wired up 25 Sep 2026: pose="reading" resolves to
+                    /assets/cluby/cluby-reading.webp in journal/shared.tsx (POSE_ART).
+                    The stand-in this note used to describe is gone. */}
                 <KlobiFigure pose="reading" className="h-20 w-20 sm:h-24 sm:w-24" />
               </div>
             </div>

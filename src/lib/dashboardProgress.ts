@@ -12,6 +12,7 @@
  */
 import { LEAGUES, BADGES, getLeague } from "@/constants/gamification";
 import { LEVELS, normalizeLevel } from "@/constants/levels";
+import { KLOVERS_WORLD } from "@/config/klovers-world";
 
 // ── Brand icon library ──────────────────────────────────────────────────────
 /**
@@ -229,33 +230,69 @@ export function pickContinueLesson(
 // ── Learning journey (course levels → story worlds) ─────────────────────────
 export type JourneyState = "completed" | "current" | "locked";
 
-/**
- * The story worlds the levels travel through (src/config/klovers-world.ts →
- * KLOVERS_WORLD.worlds). Re's decision (24 Sep 2026): the seven course
- * levels walk through five of the six worlds in order; Cluby's Memory
- * Garden is NOT a level stop — canon unlocks it from review data, so it
- * will live beside the journey as its own review place.
- */
-export type WorldId = "hangul-village" | "vocabulary-market" | "conversation-cafe" | "culture-street" | "seoul-journey";
+/** Every world id the canon defines, in unlock order. */
+const CANON_WORLDS = KLOVERS_WORLD.worlds;
 
-export const WORLD_NAMES: Record<WorldId, { en: string; ar: string }> = {
-  "hangul-village": { en: "Hangul Village", ar: "قرية الهانغول" },
-  "vocabulary-market": { en: "Vocabulary Market", ar: "سوق المفردات" },
-  "conversation-cafe": { en: "Conversation Café", ar: "مقهى المحادثة" },
-  "culture-street": { en: "Culture Street", ar: "شارع الثقافة" },
-  "seoul-journey": { en: "Seoul Journey", ar: "رحلة سيول" },
+/**
+ * The story worlds the levels travel through (KLOVERS_WORLD.worlds), read
+ * from the canon's own levelJourney rather than restated here. Re's decision
+ * (24 Sep 2026): the seven course levels walk through five of the six worlds
+ * in order; Cluby's Memory Garden is NOT a level stop — canon unlocks it from
+ * review data, so it will live beside the journey as its own review place.
+ *
+ * WorldId is derived from levelJourney, so a world canon adds to the ladder
+ * becomes a valid WorldId automatically and a world canon removes stops
+ * compiling. `notALevelStop` is excluded by construction: those worlds have no
+ * entry in levelJourney, and src/config/__tests__/kloversWorld.test.ts asserts
+ * the two lists stay consistent.
+ */
+type LevelJourney = Exclude<
+  (typeof KLOVERS_WORLD.levelJourney)[keyof typeof KLOVERS_WORLD.levelJourney],
+  readonly string[]
+>;
+type CanonWorldId = LevelJourney["world"];
+
+export type WorldId = CanonWorldId;
+
+export const WORLD_NAMES = CANON_WORLDS.reduce(
+  (acc, w) => {
+    acc[w.id as WorldId] = { en: w.name.en, ar: w.name.ar };
+    return acc;
+  },
+  {} as Record<WorldId, { en: string; ar: string }>
+);
+
+/**
+ * Per-level icon for the journey map. Presentation only — canon names the world
+ * a level travels through, not the picture beside it, so this deliberately
+ * stays local. A new level in canon's levelJourney without an icon here falls
+ * back to the generic path icon rather than crashing.
+ */
+const LEVEL_ICON: Record<string, BrandIconName> = {
+  hangul: "hangul-card",
+  l1: "flashcards",
+  l2: "conversation",
+  l3: "hanok",
+  l4: "passport",
+  l5: "passport",
+  l6: "passport",
 };
 
 /** level key → world (+ part number when one world spans several levels). */
-const LEVEL_WORLD: Record<string, { world: WorldId; part: number | null; icon: BrandIconName }> = {
-  hangul: { world: "hangul-village", part: null, icon: "hangul-card" },
-  l1: { world: "vocabulary-market", part: null, icon: "flashcards" },
-  l2: { world: "conversation-cafe", part: null, icon: "conversation" },
-  l3: { world: "culture-street", part: null, icon: "hanok" },
-  l4: { world: "seoul-journey", part: 1, icon: "passport" },
-  l5: { world: "seoul-journey", part: 2, icon: "passport" },
-  l6: { world: "seoul-journey", part: 3, icon: "passport" },
-};
+const LEVEL_WORLD: Record<string, { world: WorldId; part: number | null; icon: BrandIconName }> =
+  Object.fromEntries(
+    (Object.entries(KLOVERS_WORLD.levelJourney) as [string, { world: WorldId; part: number | null }][]).map(
+      ([key, j]) => [
+        key,
+        {
+          world: j.world,
+          part: j.part,
+          // The icon is presentation, not canon — it has no entry in the world.
+          icon: LEVEL_ICON[key] ?? ("progress-path" as BrandIconName),
+        },
+      ]
+    )
+  );
 
 export interface JourneyStop {
   key: string;

@@ -61,6 +61,14 @@ import {
  * Journey parts 1–3), read from lib/dashboardProgress so the homepage and
  * the student's own journey map can't disagree. The level names stay; the
  * world is a small extra line, with a small painting for each world.
+ *
+ * 2026-09-26 - the chain is now real rather than promised. This file always
+ * read the level→world map from lib/dashboardProgress, and that map used to
+ * restate canon's levelJourney by hand; it is now DERIVED from it, so a world
+ * added to canon reaches the homepage and the dashboard together. See
+ * LEVEL_ICON in dashboardProgress.ts for the one thing that stays local (the
+ * icon is presentation, not canon) and src/config/__tests__/kloversWorld.test.ts
+ * for the guard that keeps the ladder honest.
  */
 
 /**

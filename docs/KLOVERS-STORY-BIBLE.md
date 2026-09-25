@@ -41,6 +41,25 @@ pieces of his memory gradually return — this is a slow-burn mystery
 distract from actual learning. Cluby is also never written as knowing every
 answer — he's a companion and a memory-keeper, not an oracle.
 
+### When a visitor may see Cluby before the egg hatches
+
+The rule is that nobody sees Cluby until his egg hatches. It is absolute in the
+**logged-in product**, and relaxed on **marketing pages** — deliberately, by
+Re's decision of 25 Sep 2026. This was previously written only in a comment in
+`EggTeaser.tsx`; it now also lives in `KLOVERS_WORLD.originStory.clubyVisibility`.
+
+**Gated until hatch (no account, no Cluby — the egg stands in):** `/games`, the
+game-worlds hub, the games leaderboard, and the XP celebration. This protects
+the reveal: the hatch has to be earned from real learning.
+
+**Allowed before hatch (the page is a teaser, not the reveal):** the homepage
+hero, "More than a class", the community band, the final CTA, and the 404
+pages. To a stranger he is a known quantity, not a discovery.
+
+**Never on the egg-teaser beat.** That beat is where the mystery is on the
+table, so Cluby stays in the egg there — this is homepage narrative slot 7's
+`explicitlyExclude`, and the exception above does not touch it.
+
 ## 3. Human character relationship
 
 The two learners are **friends and study companions**. This is the default and
