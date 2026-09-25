@@ -30,14 +30,14 @@ export default function JourneyMilestone({ isAr, onGoToStage }: { isAr: boolean;
             <div className="flex-1">
               <h2 id="milestone-title" className="font-display text-2xl font-extrabold sm:text-3xl">
                 {nextStage
-                  ? isAr ? "رحلتك مستمرة" : "Your journey continues"
+                  ? isAr ? "الرحلة مستمرة" : "Your journey continues"
                   : p.articlesRead.length === 0
-                    ? isAr ? "مررت بكل المحطات — اختر قصة وابدأ" : "You've passed every stop — pick a story to begin"
-                    : isAr ? "زرت كل محطات الرحلة!" : "You've visited every stop!"}
+                    ? isAr ? "مرّت الرحلة بكل المحطات، والخطوة التالية اختيار قصة للبدء" : "You've passed every stop — pick a story to begin"
+                    : isAr ? "اكتملت زيارة كل محطات الرحلة!" : "You've visited every stop!"}
               </h2>
               <p className="mt-2 text-muted-foreground">
                 {isAr
-                  ? `${num(p.articlesRead.length, true)} مقالة مكتملة · ${num(p.words.length, true)} كلمة في مجموعتك · ${num(journeyXp(p), true)} نقطة`
+                  ? `${num(p.articlesRead.length, true)} مقالة مكتملة · ${num(p.words.length, true)} كلمة في المجموعة · ${num(journeyXp(p), true)} نقطة`
                   : `${p.articlesRead.length} articles finished · ${p.words.length} words collected · ${journeyXp(p)} XP`}
               </p>
             </div>
@@ -45,7 +45,7 @@ export default function JourneyMilestone({ isAr, onGoToStage }: { isAr: boolean;
 
           {recent.length > 0 && (
             <div className="mt-8">
-              <h3 className="text-sm font-bold text-foreground/70">{isAr ? "آخر كلماتك" : "Your latest words"}</h3>
+              <h3 className="text-sm font-bold text-foreground/70">{isAr ? "أحدث الكلمات" : "Your latest words"}</h3>
               <ul className="mt-3 flex flex-wrap gap-2">
                 {recent.map((w) => (
                   <li key={w.ko} className="rounded-2xl border border-border bg-background px-3.5 py-2">
@@ -60,16 +60,16 @@ export default function JourneyMilestone({ isAr, onGoToStage }: { isAr: boolean;
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             {nextStage && (
               <Button size="lg" className="h-12 rounded-full px-7 font-bold" onClick={() => onGoToStage(nextStage.id)}>
-                {isAr ? `تابع رحلتك: ${nextStage.title.ar}` : `Continue: ${nextStage.title.en}`}
+                {isAr ? `متابعة الرحلة: ${nextStage.title.ar}` : `Continue: ${nextStage.title.en}`}
               </Button>
             )}
             <Button asChild size="lg" variant={nextStage ? "outline" : "default"} className="h-12 rounded-full border-foreground/30 px-7 font-bold">
               <Link to="/free-trial" onClick={() => trackJourney("course_cta_clicked", { cta: "milestone_free_trial" })}>
-                {isAr ? "ابدأ تعلم الكورية مع مدرّس" : "Start learning Korean with a teacher"}
+                {isAr ? "بدء تعلّم الكورية مع مدرّس" : "Start learning Korean with a teacher"}
               </Link>
             </Button>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">{isAr ? "الحصة الأولى مجانية — بدون بطاقة بنكية." : "Your first class is free — no card needed."}</p>
+          <p className="mt-3 text-xs text-muted-foreground">{isAr ? "الحصة الأولى مجانية، دون بطاقة بنكية." : "Your first class is free — no card needed."}</p>
         </div>
       </div>
     </section>

@@ -47,11 +47,11 @@ const CARD_ACCENT: Record<string, string> = {
   l1: "bg-[hsl(60_100%_75%)]",
   l2: "bg-[hsl(60_100%_62%)]",
   l3: "bg-primary",
-  l4: "bg-[hsl(60_90%_38%)]",
-  l5: "bg-[hsl(60_80%_25%)]",
+  l4: "bg-foreground/50",
+  l5: "bg-foreground/75",
   l6: "bg-foreground",
-  reading_speaking: "bg-[hsl(0_0%_62%)]",
-  topik_prep: "bg-[hsl(0_0%_33%)]",
+  reading_speaking: "bg-foreground/35",
+  topik_prep: "bg-foreground/60",
 };
 
 /**
@@ -65,7 +65,7 @@ type CourseWorld = { src: string; en: string; ar: string };
 const W = {
   village: { src: "/assets/story/world-hangul-village.webp", en: "Painted hanok village where Hangul begins", ar: "قرية هانوك مرسومة حيث تبدأ الهانغول" },
   market: { src: "/assets/story/world-vocabulary-market.webp", en: "Painted Korean market full of first words", ar: "سوق كوري مرسوم مليء بالكلمات الأولى" },
-  cafe: { src: "/assets/story/world-conversation-cafe.webp", en: "Painted Korean café for everyday conversation", ar: "كافيه كوري مرسوم للمحادثة اليومية" },
+  cafe: { src: "/assets/story/world-conversation-cafe.webp", en: "Painted Korean café for everyday conversation", ar: "مقهى كوري مرسوم للمحادثة اليومية" },
   street: { src: "/assets/story/world-culture-street.webp", en: "Painted Seoul street of Korean culture", ar: "شارع مرسوم في سيول للثقافة الكورية" },
   garden: { src: "/assets/story/world-memory-garden.webp", en: "Painted memory garden for review", ar: "حديقة الذاكرة المرسومة للمراجعة" },
   seoul: { src: "/assets/story/world-seoul-journey.webp", en: "Painted journey to the Seoul skyline", ar: "رحلة مرسومة نحو أفق سيول" },
@@ -211,9 +211,9 @@ const CoursesSection = () => {
             <button
               type="button"
               onClick={openWhatsApp}
-              className="inline-flex items-center gap-2.5 rounded-xl bg-[#25D366] px-6 py-3 text-[15px] font-bold text-white transition-colors hover:bg-[#1ebe5d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-2.5 rounded-xl bg-charcoal px-6 py-3 text-[15px] font-bold text-ivory transition-colors hover:bg-charcoal/90 dark:bg-klovers-yellow dark:text-charcoal dark:hover:bg-klovers-yellow/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <svg viewBox="0 0 32 32" fill="white" className="w-5 h-5" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="currentColor" className="w-5 h-5" aria-hidden="true">
                 <path d="M16 2C8.268 2 2 8.268 2 16c0 2.472.658 4.792 1.806 6.8L2 30l7.374-1.786A13.93 13.93 0 0016 30c7.732 0 14-6.268 14-14S23.732 2 16 2zm0 25.4a11.354 11.354 0 01-5.8-1.594l-.416-.248-4.37 1.058 1.094-4.256-.272-.436A11.362 11.362 0 014.6 16C4.6 9.706 9.706 4.6 16 4.6S27.4 9.706 27.4 16 22.294 27.4 16 27.4zm6.22-8.506c-.34-.17-2.014-.994-2.326-1.108-.312-.112-.54-.17-.768.17-.228.34-.882 1.108-1.08 1.338-.2.228-.398.256-.738.086-.34-.17-1.436-.53-2.734-1.686-1.01-.9-1.692-2.012-1.89-2.352-.198-.34-.022-.524.148-.694.152-.152.34-.396.51-.594.17-.198.226-.34.34-.566.112-.228.056-.426-.028-.596-.086-.17-.768-1.848-1.052-2.532-.278-.666-.56-.576-.768-.586l-.654-.012c-.228 0-.596.086-.908.424-.312.34-1.19 1.162-1.19 2.834s1.218 3.288 1.388 3.516c.17.228 2.396 3.658 5.806 5.13.812.35 1.446.56 1.94.716.814.258 1.556.222 2.142.134.654-.096 2.014-.822 2.298-1.616.284-.792.284-1.472.198-1.614-.084-.14-.312-.226-.652-.396z" />
               </svg>
               {isAr ? c.waCta_ar : c.waCta_en}

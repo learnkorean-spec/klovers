@@ -7,7 +7,7 @@ import { useGamification } from "@/hooks/useGamification";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BookOpen, ArrowLeft, Zap } from "lucide-react";
+import { BookOpen, ArrowLeft, Zap, Sprout, Lightbulb, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
@@ -75,7 +75,7 @@ export function VocabularyReviewPage() {
       setXpEarned((prev) => prev + 5);
       await awardXp(0, "review");
     } catch {
-      toast.error(isAr ? "تعذر حفظ المراجعة. حاول مرة أخرى." : "Could not save review. Please try again.");
+      toast.error(isAr ? "تعذّر حفظ المراجعة، يُرجى المحاولة مرة أخرى." : "Could not save review. Please try again.");
     }
   };
 
@@ -97,11 +97,27 @@ export function VocabularyReviewPage() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               {isAr ? "العودة للكتاب" : "Back to Textbook"}
             </Button>
-            <div className="flex items-center gap-3 mb-2">
-              <BookOpen className="w-8 h-8 text-primary" />
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground">{isAr ? "مراجعة المفردات" : "Vocabulary Review"}</h1>
+            {/* World mode: review lives in Cluby's Memory Garden (lead: Cluby). */}
+            <div className="relative mb-3 h-28 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card md:h-40">
+              <img
+                src="/assets/story/world-memory-garden.webp"
+                alt={isAr ? "حديقة ذاكرة كلوبي، حيث تنمو الكلمات التي تعلّمها الطالب" : "Cluby's Memory Garden, where learned words grow"}
+                width={1600}
+                height={900}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/35 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 flex items-end gap-3 p-4">
+                <BookOpen className="h-7 w-7 shrink-0 text-klovers-yellow" aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className="text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">{isAr ? "حديقة ذاكرة كلوبي" : "Cluby's Memory Garden"}</p>
+                  <h1 className="font-display text-2xl font-extrabold leading-tight text-white md:text-4xl">{isAr ? "مراجعة المفردات" : "Vocabulary Review"}</h1>
+                </div>
+              </div>
             </div>
-            <p className="text-muted-foreground">{isAr ? "أتقن مفرداتك بالتكرار المتباعد" : "Master your vocabulary with spaced repetition"}</p>
+            <p className="text-muted-foreground">{isAr ? "هنا تُزرع كل كلمة جديدة، وبالتكرار المتباعد يعيد كلوبي كل كلمة قبل أن تذبل في الذاكرة." : "Every new word is planted here. With spaced repetition, Cluby brings each one back just before it fades."}</p>
           </div>
 
           {/* Stats cards */}
@@ -138,19 +154,23 @@ export function VocabularyReviewPage() {
           ) : dueCards.length === 0 && !sessionStarted ? (
             <Card className="border-2">
               <CardContent className="text-center py-12">
-                <span className="text-6xl block mb-4">🎉</span>
+                {/* needs Klovers icon: garden sprout (was an emoji) */}
+                <Sprout className="mx-auto mb-4 h-14 w-14 rounded-full bg-klovers-green p-3 text-charcoal" aria-hidden="true" />
                 <h2 className="text-2xl font-bold text-foreground mb-2">{isAr ? "لا توجد بطاقات مطلوبة اليوم!" : "No Cards Due Today!"}</h2>
-                <p className="text-muted-foreground mb-6">{isAr ? "لقد راجعت جميع المفردات. عُد غداً!" : "You've reviewed all vocabulary items. Come back tomorrow!"}</p>
+                <p className="text-muted-foreground mb-6">{isAr ? "اكتملت مراجعة جميع المفردات، وتعود الحديقة بكلمات جديدة غدًا." : "Every word has been reviewed. The garden will have new ones tomorrow."}</p>
                 <Button onClick={() => navigate("/textbook")} className="gap-2">
-                  <BookOpen className="w-4 h-4" /> {isAr ? "واصل التعلّم" : "Continue Learning"}
+                  <BookOpen className="w-4 h-4" /> {isAr ? "مواصلة التعلّم" : "Continue Learning"}
                 </Button>
               </CardContent>
             </Card>
           ) : !sessionStarted ? (
             <Card className="border-2">
               <CardContent className="py-12 text-center">
-                <Zap className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-foreground mb-4">{isAr ? "مستعد للمراجعة؟" : "Ready to Review?"}</h2>
+                <Zap className="w-12 h-12 fill-klovers-yellow text-charcoal dark:text-klovers-yellow mx-auto mb-4" aria-hidden="true" />
+                <h2 className="text-2xl font-bold text-foreground mb-4">{isAr ? "هل حان وقت المراجعة؟" : "Ready to Review?"}</h2>
+                <p className="cluby-note mb-3 text-base text-foreground/80" lang={isAr ? "ar" : "en"}>
+                  {isAr ? "«كلوبي حفظ لك هذه الكلمات»" : "Cluby saved these for you."}
+                </p>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   {isAr
                     ? <>لديك <strong>{filteredCards.length}</strong> مفردة جاهزة. ستستغرق هذه الجلسة حوالي {Math.max(1, Math.ceil(filteredCards.length / 6))} دقائق.</>
@@ -175,15 +195,15 @@ export function VocabularyReviewPage() {
                   </div>
                 )}
                 <Button onClick={() => { setSessionCardCount(filteredCards.length); setSessionStarted(true); }} size="lg" className="gap-2">
-                  <BookOpen className="w-4 h-4" /> {isAr ? "ابدأ جلسة المراجعة" : "Start Review Session"}
+                  <BookOpen className="w-4 h-4" /> {isAr ? "بدء جلسة المراجعة" : "Start Review Session"}
                 </Button>
                 <div className="mt-8 text-left space-y-3 bg-muted/50 p-6 rounded-xl">
-                  <h3 className="font-semibold text-sm text-foreground">{isAr ? "💡 نصائح" : "💡 Tips"}</h3>
+                  <h3 className="font-semibold text-sm text-foreground"><Lightbulb className="me-1 inline h-4 w-4 align-[-3px]" aria-hidden="true" />{isAr ? "نصائح" : "Tips"}</h3>
                   <ul className="text-sm text-muted-foreground space-y-1.5">
-                    <li>• {isAr ? "قيّم نفسك بصدق — هذا يساعد الخوارزمية على العمل بشكل أفضل" : "Rate yourself honestly — this helps the algorithm work better"}</li>
+                    <li>• {isAr ? "التقييم الصادق يساعد الخوارزمية على العمل بشكل أفضل" : "Rate yourself honestly — this helps the algorithm work better"}</li>
                     <li>• {isAr ? "\"مرة أخرى\" = نسيان تام (البطاقة تتكرر غداً)" : "\"Again\" = complete blackout (card repeats tomorrow)"}</li>
                     <li>• {isAr ? "\"سهل\" = إجابة مثالية (البطاقة لن تظهر لأسابيع)" : "\"Easy\" = perfect response (card won't appear for weeks)"}</li>
-                    <li>• {isAr ? "خذ استراحة كل 20 بطاقة للحفاظ على التركيز" : "Take breaks every 20 cards to stay focused"}</li>
+                    <li>• {isAr ? "استراحة قصيرة كل 20 بطاقة تحافظ على التركيز" : "Take breaks every 20 cards to stay focused"}</li>
                   </ul>
                 </div>
               </CardContent>
@@ -192,7 +212,8 @@ export function VocabularyReviewPage() {
             sessionComplete ? (
               <Card className="border-2">
                 <CardContent className="py-12 text-center space-y-5">
-                  <div className="text-6xl">🎉</div>
+                  {/* needs Klovers icon: celebration (was an emoji) */}
+                  <Sparkles className="mx-auto h-14 w-14 rounded-full bg-klovers-yellow p-3 text-charcoal" aria-hidden="true" />
                   <h2 className="text-2xl font-bold text-foreground">{isAr ? "اكتملت الجلسة!" : "Session Complete!"}</h2>
                   <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
                     <div className="text-center">
@@ -200,7 +221,7 @@ export function VocabularyReviewPage() {
                       <p className="text-xs text-muted-foreground">{isAr ? "تمت المراجعة" : "Reviewed"}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">{masteredCount}</p>
+                      <p className="text-2xl font-bold text-foreground"><span className="rounded-full bg-klovers-green px-2 text-charcoal">{masteredCount}</span></p>
                       <p className="text-xs text-muted-foreground">{isAr ? "تم الإتقان" : "Mastered"}</p>
                     </div>
                     <div className="text-center">
@@ -209,7 +230,7 @@ export function VocabularyReviewPage() {
                     </div>
                   </div>
                   {masteredCount === reviewedCount && (
-                    <p className="text-sm font-medium text-green-600">{isAr ? "🌟 جلسة مثالية — عرفت كل بطاقة!" : "🌟 Perfect session — you knew every card!"}</p>
+                    <p className="text-sm font-medium text-foreground"><span className="me-1.5 inline-block h-2 w-2 rounded-full bg-klovers-green" aria-hidden="true" />{isAr ? "جلسة مثالية — كل البطاقات معروفة" : "Perfect session — you knew every card"}</p>
                   )}
                   <div className="flex gap-3 justify-center pt-2">
                     <Button variant="outline" onClick={() => { setSessionComplete(false); setSessionStarted(false); setReviewedCount(0); setMasteredCount(0); setXpEarned(0); }}>

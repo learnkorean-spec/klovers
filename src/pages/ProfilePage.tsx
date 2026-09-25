@@ -157,13 +157,25 @@ const ProfilePage = () => {
         <div className="max-w-2xl mx-auto space-y-6">
 
           {/* Header */}
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {isAr ? "ملفي الشخصي" : "My Profile"}
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              {isAr ? "إدارة معلوماتك الشخصية وإعدادات التعلم" : "Manage your personal information and learning settings"}
-            </p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-foreground">
+                {isAr ? "ملفي الشخصي" : "My Profile"}
+              </h1>
+              <p className="text-muted-foreground text-sm mt-1">
+                {isAr ? "إدارة المعلومات الشخصية وإعدادات التعلّم" : "Manage your personal information and learning settings"}
+              </p>
+            </div>
+            {/* World mode: a small Conversation Café accent (the learners' usual table). */}
+            <img
+              src="/assets/cluby/cafe.webp"
+              alt={isAr ? "طاولة في مقهى المحادثة بعالم كلوفرز" : "A table at the Conversation Café in the Klovers world"}
+              width={1200}
+              height={800}
+              loading="lazy"
+              decoding="async"
+              className="h-16 w-24 shrink-0 rounded-xl border border-border object-cover sm:h-20 sm:w-32"
+            />
           </div>
 
           {/* Avatar + Name Card */}
@@ -187,7 +199,7 @@ const ProfilePage = () => {
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder={isAr ? "أدخل اسمك" : "Enter your name"}
+                    placeholder={isAr ? "إدخال الاسم" : "Enter your name"}
                     className="max-w-xs"
                   />
                 </div>
@@ -209,7 +221,7 @@ const ProfilePage = () => {
                 <Badge variant="secondary" className="text-xs">{isAr ? "مؤكد" : "Verified"}</Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {isAr ? "لتغيير البريد الإلكتروني تواصل مع الدعم" : "To change your email address, contact support"}
+                {isAr ? "لتغيير البريد الإلكتروني، يُرجى التواصل مع الدعم" : "To change your email address, contact support"}
               </p>
             </CardContent>
           </Card>
@@ -227,7 +239,7 @@ const ProfilePage = () => {
                 <p className="text-xs text-muted-foreground mb-1.5">{isAr ? "مستوى الكورية" : "Korean Level"}</p>
                 <Select value={level} onValueChange={setLevel}>
                   <SelectTrigger className="max-w-xs">
-                    <SelectValue placeholder={isAr ? "اختر مستواك" : "Select your level"} />
+                    <SelectValue placeholder={isAr ? "اختيار المستوى" : "Select your level"} />
                   </SelectTrigger>
                   <SelectContent>
                     {levelOptions.map((l) => (
@@ -244,7 +256,7 @@ const ProfilePage = () => {
                 </p>
                 <Select value={country} onValueChange={setCountry}>
                   <SelectTrigger className="max-w-xs">
-                    <SelectValue placeholder={isAr ? "اختر دولتك" : "Select country"} />
+                    <SelectValue placeholder={isAr ? "اختيار الدولة" : "Select country"} />
                   </SelectTrigger>
                   <SelectContent>
                     {COUNTRIES.map((c) => (

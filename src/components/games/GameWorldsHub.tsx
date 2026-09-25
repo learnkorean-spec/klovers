@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
-import { Check, Lock, ArrowRight, Flame, Gift } from "lucide-react";
+import { Check, Lock, ArrowRight, Flame, Gift, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import KloverIcon from "@/components/KloverIcon";
@@ -208,12 +208,12 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
   const todayIds = new Set(playedToday);
   const currentWorldName = current ? (isAr ? current.world.nameAr : current.world.name) : "";
   const missions = [
-    { label: isAr ? "العب لعبة واحدة النهارده" : "Complete one game today", done: playedToday.length >= 1 },
+    { label: isAr ? "إكمال لعبة واحدة اليوم" : "Complete one game today", done: playedToday.length >= 1 },
     {
-      label: isAr ? `العب لعبة من ${currentWorldName}` : `Play a game in ${currentWorldName}`,
+      label: isAr ? `لعب لعبة في ${currentWorldName}` : `Play a game in ${currentWorldName}`,
       done: !!current && current.world.gameIds.some((id) => todayIds.has(id)),
     },
-    { label: isAr ? "العب 3 ألعاب النهارده" : "Play 3 games today", done: playedToday.length >= 3 },
+    { label: isAr ? "لعب 3 ألعاب اليوم" : "Play 3 games today", done: playedToday.length >= 3 },
   ];
   const missionsDone = missions.filter((m) => m.done).length;
 
@@ -224,8 +224,8 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
   };
 
   const welcome = isLoggedIn
-    ? (isAr ? `أهلًا بيك تاني${firstName ? ` يا ${firstName}` : ""}!` : `Welcome back${firstName ? `, ${firstName}` : ""}!`)
-    : (isAr ? "العب واتعلم كوري!" : "Play your way into Korean!");
+    ? (isAr ? `مرحبًا بالعودة${firstName ? ` يا ${firstName}` : ""}` : `Welcome back${firstName ? `, ${firstName}` : ""}!`)
+    : (isAr ? "تعلُّم الكورية باللعب" : "Play your way into Korean!");
 
   return (
     <div className="max-w-6xl mx-auto px-4 space-y-6">
@@ -235,8 +235,8 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           <img
             src={clubyAwake ? BANNER_AFTER_HATCH : BANNER_BEFORE_HATCH}
             alt={clubyAwake
-              ? (isAr ? "الصديقين وكلوبي في نزهة على نهر الهان" : "The two friends and Cluby having a picnic by the Han river")
-              : (isAr ? "الصديقين بيكتشفوا بيضة البرسيم المنوّرة في ساحة هانوك" : "The two friends discovering the glowing clover egg in a hanok courtyard")}
+              ? (isAr ? "الصديقان وكلوبي في نزهة على ضفاف نهر الهان" : "The two friends and Cluby having a picnic by the Han river")
+              : (isAr ? "الصديقان يكتشفان بيضة البرسيم المضيئة في ساحة هانوك" : "The two friends discovering the glowing clover egg in a hanok courtyard")}
             width={1600}
             height={900}
             decoding="async"
@@ -246,7 +246,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             aria-hidden="true"
             className={cn(
               "absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b to-transparent",
-              clubyAwake ? "from-[#FFF9EC]/90 via-[#FFF9EC]/50" : "from-charcoal/80 via-charcoal/40",
+              clubyAwake ? "from-ivory/90 via-ivory/50" : "from-charcoal/80 via-charcoal/40",
             )}
           />
           <div className={cn("relative px-5 pt-6 text-center md:px-8 md:pt-8", clubyAwake ? "text-charcoal" : "text-white")}>
@@ -254,25 +254,25 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <p className="mt-2 font-display text-3xl font-extrabold leading-tight md:text-4xl">{welcome}</p>
             <p className={cn("mt-1 text-sm md:text-base", clubyAwake ? "text-charcoal/80" : "text-white/90")}>
               {clubyAwake
-                ? (isAr ? "العب، اتعلم، وقرّب أكتر من كوريا!" : "Let's play, learn, and get closer to Korea!")
-                : (isAr ? "بيضة البرسيم بتصحى كل ما تتعلّم كوري أكتر…" : "The clover egg stirs a little more with every Korean word you learn…")}
+                ? (isAr ? "لعبٌ وتعلُّمٌ، وخطوةٌ أقرب إلى كوريا." : "Let's play, learn, and get closer to Korea!")
+                : (isAr ? "تستيقظ بيضة البرسيم قليلًا مع كل كلمة كورية جديدة…" : "The clover egg stirs a little more with every Korean word you learn…")}
             </p>
           </div>
         </div>
 
         {/* Stats strip - under the scene so it never covers the characters */}
-        <div className="border-t border-charcoal/10 bg-white p-4 text-charcoal dark:border-border dark:bg-card dark:text-foreground md:px-6">
+        <div className="border-t border-charcoal/10 bg-ivory p-4 text-charcoal dark:border-border dark:bg-card dark:text-foreground md:px-6">
           {isLoggedIn ? (
             <div className="grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
               <div className="min-w-0">
-                <p className="text-sm font-extrabold">{league.emoji} {league.name}</p>
+                <p className="text-sm font-extrabold">{/* needs Klovers icon: league badge (was league.emoji) */}<Trophy className="me-1 inline h-4 w-4 align-[-2px]" aria-hidden="true" />{league.name}</p>
                 <div
                   className="mt-2 h-2.5 rounded-full bg-charcoal/10 dark:bg-muted overflow-hidden"
                   role="progressbar"
                   aria-valuenow={pct}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-label={isAr ? "التقدّم للّيج الجاي" : "Progress to next league"}
+                  aria-label={isAr ? "التقدّم نحو الدوري التالي" : "Progress to next league"}
                 >
                   <div className="h-full rounded-full bg-klovers-green" style={{ width: `${pct}%` }} />
                 </div>
@@ -295,7 +295,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                   onClick={() => onPlay(continueGame)}
                   className="min-h-11 rounded-full bg-charcoal px-6 text-sm font-bold text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                 >
-                  {isAr ? "كمّل الرحلة" : "Continue Journey"}
+                  {isAr ? "مواصلة الرحلة" : "Continue Journey"}
                 </button>
               )}
             </div>
@@ -303,7 +303,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm font-extrabold">
                 {isAr
-                  ? `${FREE_GAME_IDS.length} ألعاب مجانية من غير حساب`
+                  ? `${FREE_GAME_IDS.length} ألعاب مجانية بلا حساب`
                   : `${FREE_GAME_IDS.length} games free, no account needed`}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -313,11 +313,11 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                     onClick={() => onPlay(continueGame)}
                     className="min-h-10 rounded-full bg-charcoal px-4 text-sm font-bold text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                   >
-                    {isAr ? "ابدأ العب" : "Start playing"}
+                    {isAr ? "بدء اللعب" : "Start playing"}
                   </button>
                 )}
                 <a href="/signup" className="inline-flex min-h-10 items-center rounded-full border-2 border-charcoal bg-klovers-yellow px-4 text-sm font-bold text-charcoal">
-                  {isAr ? "سجّل مجانًا" : "Sign up free"}
+                  {isAr ? "إنشاء حساب مجاني" : "Sign up free"}
                 </a>
               </div>
             </div>
@@ -330,18 +330,18 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         {/* Before the hatch: the egg card stands where Cluby's outfit cards will be. */}
         {!clubyAwake && (
           <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
-            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF9EC] dark:bg-muted">
+            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-ivory dark:bg-muted">
               <img src={EGG} alt="" aria-hidden="true" width={512} height={512} loading="lazy" className="h-16 w-auto object-contain" />
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="font-bold text-foreground">{isAr ? "بيضة البرسيم" : "The clover egg"}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 {isLoggedIn
-                  ? (isAr ? "تابع البيضة في لوحتك: أول كلمة، أول جملة، أول محادثة… وبعدين نشوف مين جوّه." : "Follow the egg on your dashboard: first word, first sentence, first conversation… then we'll see who's inside.")
-                  : (isAr ? "سجّل وابدأ تتعلّم علشان البيضة تصحى." : "Sign up and start learning to wake the egg.")}
+                  ? (isAr ? "تتابع لوحة الطالب البيضة: أول كلمة، ثم أول جملة، ثم أول محادثة… وبعدها يظهر مَن في داخلها." : "Follow the egg on your dashboard: first word, first sentence, first conversation… then we'll see who's inside.")
+                  : (isAr ? "إنشاء حساب وبدء التعلّم يوقظان البيضة." : "Sign up and start learning to wake the egg.")}
               </p>
               <a href={isLoggedIn ? "/dashboard" : "/signup"} className="mt-2 inline-block text-xs font-semibold text-foreground underline">
-                {isLoggedIn ? (isAr ? "روح للّوحة" : "Go to my dashboard") : (isAr ? "سجّل مجانًا" : "Sign up free")}
+                {isLoggedIn ? (isAr ? "الانتقال إلى اللوحة" : "Go to my dashboard") : (isAr ? "إنشاء حساب مجاني" : "Sign up free")}
               </a>
             </div>
           </div>
@@ -350,7 +350,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         {/* Next outfit */}
         {clubyAwake && (
         <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4">
-          <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#FFF9EC] dark:bg-muted">
+          <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-ivory dark:bg-muted">
             <img
               src={`${ASSET}/${nextOutfit}.webp`}
               alt=""
@@ -374,7 +374,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               ))}
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              {isAr ? "أنهِ هذا العالم لتفتح زي كلوبي التالي — قريبًا." : "Finish this world to unlock Cluby's next outfit — coming soon."}
+              {isAr ? "إنهاء هذا العالم يفتح زي كلوبي التالي — قريبًا." : "Finish this world to unlock Cluby's next outfit — coming soon."}
             </p>
           </div>
         </div>
@@ -383,7 +383,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         {/* Today's Missions */}
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-baseline justify-between">
-            <h2 className="font-bold text-foreground">{isAr ? "مهام النهارده" : "Today's Missions"}</h2>
+            <h2 className="font-bold text-foreground">{isAr ? "مهام اليوم" : "Today's Missions"}</h2>
             {isLoggedIn && <span className="text-sm font-extrabold text-foreground">{missionsDone} / {missions.length}</span>}
           </div>
           <ul className="mt-2 space-y-1.5">
@@ -395,7 +395,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                     m.done ? "border-charcoal bg-klovers-green" : "border-border",
                   )}
                 >
-                  {m.done && <Check className="h-3 w-3 text-charcoal" strokeWidth={3} aria-label={isAr ? "خلصت" : "Done"} />}
+                  {m.done && <Check className="h-3 w-3 text-charcoal" strokeWidth={3} aria-label={isAr ? "مكتملة" : "Done"} />}
                 </span>
                 {m.label}
               </li>
@@ -403,7 +403,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           </ul>
           {!isLoggedIn && (
             <a href="/signup" className="mt-2 inline-block text-xs font-semibold text-foreground underline">
-              {isAr ? "سجّل عشان مهامك تتحسب" : "Sign up to track your missions"}
+              {isAr ? "إنشاء حساب لاحتساب المهام" : "Sign up to track your missions"}
             </a>
           )}
         </div>
@@ -414,7 +414,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           <div className="flex items-center gap-3">
             <img src={CLUBY_3D} alt="" aria-hidden="true" width={230} height={286} loading="lazy" className="h-12 w-auto object-contain" />
             <div className="min-w-0 flex-1">
-              <h2 className="font-bold text-foreground">{isAr ? "ملابس كلوبي" : "Cluby's outfits"}</h2>
+              <h2 className="font-bold text-foreground">{isAr ? "أزياء كلوبي" : "Cluby's outfits"}</h2>
               <p className="text-xs text-muted-foreground">
                 {isAr ? `${CLUBY_OUTFITS.length} أزياء` : `${CLUBY_OUTFITS.length} outfits`}
               </p>
@@ -440,22 +440,22 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         )}
       </section>
 
-      {/* ── 3. Journey ──────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-[#FFF8EA] p-5 dark:bg-card md:p-6">
+      {/* ── 3. Journey ────────────────────────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-ivory p-5 dark:bg-card md:p-6">
         <div className="grid items-end gap-4 md:grid-cols-[11rem_minmax(0,1fr)_9rem]">
           <div>
             <h2 className="font-display text-2xl font-extrabold leading-tight text-charcoal dark:text-foreground">
               {isAr ? "رحلتك الكورية" : "Your Korean Journey"}
             </h2>
             <p className="mt-1 text-xs text-charcoal/70 dark:text-muted-foreground">
-              {isAr ? "استكشف، العب، واتقن الكوري خطوة بخطوة!" : "Explore, play, and master Korean step by step!"}
+              {isAr ? "استكشاف ولعب وإتقان للكورية، خطوة بعد خطوة." : "Explore, play, and master Korean step by step!"}
             </p>
           </div>
 
           <ol className="relative grid grid-cols-3 gap-2 sm:gap-4">
             {/* the dashed road behind the stops */}
-            <svg className="pointer-events-none absolute inset-x-0 bottom-12 h-10 w-full" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M10 30 Q60 0 110 22 T210 18 T295 26" fill="none" stroke="#F2C94C" strokeWidth="2.5" strokeDasharray="6 6" />
+            <svg className="pointer-events-none absolute inset-x-0 bottom-12 h-10 w-full text-charcoal/30 dark:text-klovers-yellow/60" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M10 30 Q60 0 110 22 T210 18 T295 26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="6 6" />
             </svg>
             {stats.map((s, i) => {
               const Stop = WORLD_STOPS[s.world.key];
@@ -508,11 +508,11 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                     </span>
                     {state === "current" && (
                       <span className="mt-0.5 rounded-full bg-klovers-yellow px-2 text-[11px] font-extrabold text-charcoal">
-                        {isAr ? "إنت هنا!" : "You are here!"}
+                        {isAr ? "المحطة الحالية" : "You are here!"}
                       </span>
                     )}
                     {state === "done" && (
-                      <span className="mt-0.5 text-[11px] text-muted-foreground">{isAr ? "خلصت" : "Completed"}</span>
+                      <span className="mt-0.5 text-[11px] text-muted-foreground">{isAr ? "مكتمل" : "Completed"}</span>
                     )}
                   </button>
                 </li>
@@ -522,24 +522,24 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
 
           {/* The signpost */}
           <div className="hidden items-end gap-2 md:flex" aria-hidden="true">
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center" lang="ko" dir="ltr">
               {["더 배우기", "더 꿈꾸기", "더 나은 나"].map((w, i) => (
                 <span
                   key={w}
                   className={cn(
-                    "rounded-md border-2 border-[#8B5E45] bg-[#C99A6E] px-2 py-0.5 text-xs font-extrabold text-white shadow-sm",
+                    "rounded-md border-2 border-charcoal bg-charcoal px-2 py-0.5 font-ko text-xs font-extrabold text-klovers-yellow shadow-sm dark:border-klovers-yellow",
                     i % 2 ? "-rotate-3" : "rotate-2",
                   )}
                 >
                   {w}
                 </span>
               ))}
-              <span className="h-8 w-2 rounded-b bg-[#8B5E45]" />
+              <span className="h-8 w-2 rounded-b bg-charcoal dark:bg-klovers-yellow" />
             </div>
           </div>
         </div>
         <p className="cluby-note mt-3 text-end text-sm text-charcoal/70 dark:text-muted-foreground" lang={lang}>
-          {isAr ? "نفس الخطوات الصغيرة، نسخة أكبر منك ♡" : "Same small steps, a bigger you ♡"}
+          {isAr ? "الخطوات الصغيرة نفسها، ونسخة أكبر منك" : "Same small steps, a bigger you."}
         </p>
       </section>
 
@@ -577,7 +577,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               <div className="flex flex-1 flex-col p-4 pt-3">
                 <div className="flex items-center gap-3">
                   <p className="shrink-0 text-xs font-semibold text-foreground">
-                    {isAr ? `${s.done} / ${s.total} ألعاب خلصت` : `${s.done} / ${s.total} games completed`}
+                    {isAr ? `${s.done} / ${s.total} ألعاب مكتملة` : `${s.done} / ${s.total} games completed`}
                   </p>
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                     <div className={cn("h-full rounded-full", WORLD_BAR[s.world.key])} style={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} />
@@ -602,17 +602,17 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                           <span className="min-w-0 flex-1">
                             <span className="flex items-center gap-1 text-sm font-bold leading-tight text-foreground">
                               {entry ? t(entry.titleKey) : id}
-                              {done && <Check className="h-4 w-4 shrink-0 rounded-full bg-klovers-green p-0.5 text-charcoal" strokeWidth={3} aria-label={isAr ? "لعبتها" : "Played"} />}
+                              {done && <Check className="h-4 w-4 shrink-0 rounded-full bg-klovers-green p-0.5 text-charcoal" strokeWidth={3} aria-label={isAr ? "تم لعبها" : "Played"} />}
                             </span>
                             <span className="block truncate text-[11px] text-muted-foreground">{entry ? t(entry.descKey) : ""}</span>
                           </span>
                           {open ? (
                             <span className="shrink-0 rounded-full bg-klovers-yellow px-2.5 py-1 text-xs font-bold text-charcoal">
-                              {isAr ? "العب" : "Play"}
+                              {isAr ? "لعب" : "Play"}
                             </span>
                           ) : (
                             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                              {isAr ? "مقفولة" : "Locked"} <Lock className="h-3 w-3" aria-hidden="true" />
+                              {isAr ? "مقفلة" : "Locked"} <Lock className="h-3 w-3" aria-hidden="true" />
                             </span>
                           )}
                         </button>
@@ -626,7 +626,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                   onClick={seeAll}
                   className="mt-3 inline-flex items-center gap-1 self-start rounded text-sm font-bold text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                 >
-                  {isAr ? `شوف الكل (${s.total})` : `See all (${s.total})`}
+                  {isAr ? `عرض الكل (${s.total})` : `See all (${s.total})`}
                   <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </button>
               </div>
@@ -635,9 +635,9 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         })}
 
         {/* Cluby's quote (before he hatches: the same line, no signature, the egg) */}
-        <aside className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border bg-[#FFF8EA] p-4 dark:bg-card sm:flex-row md:col-span-3 xl:col-span-1 xl:flex-col xl:items-stretch">
+        <aside className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border bg-ivory p-4 dark:bg-card sm:flex-row md:col-span-3 xl:col-span-1 xl:flex-col xl:items-stretch">
           <p className={cn("text-base leading-snug text-charcoal dark:text-foreground", clubyAwake ? "cluby-note" : "font-semibold")} lang={lang}>
-            {isAr ? "“كل لعبة بتقرّبك من حلمك الكوري.”" : "“Every game brings you closer to your Korean dream.”"}
+            {isAr ? "“كل لعبة خطوةٌ أقرب إلى الحلم الكوري.”" : "“Every game brings you closer to your Korean dream.”"}
             {clubyAwake && <span className="mt-1 block text-sm">— {isAr ? "كلوبي" : "Cluby"}</span>}
           </p>
           {clubyAwake ? (

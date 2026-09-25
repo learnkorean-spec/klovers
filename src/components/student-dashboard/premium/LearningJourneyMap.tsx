@@ -49,7 +49,7 @@ export function LearningJourneyMap({
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-[7%] top-5 h-1 rounded-full bg-foreground/10 sm:top-[30px]" />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute start-[7%] top-5 h-1 rounded-full bg-foreground sm:top-[30px]"
+          className="pointer-events-none absolute start-[7%] top-5 h-1 rounded-full bg-klovers-green ring-1 ring-foreground/70 sm:top-[30px]"
           style={{ width: `${reach * 0.86}%` }}
         />
         {stops.map(s => {
@@ -77,8 +77,8 @@ export function LearningJourneyMap({
                   className={cn("relative", s.milestone ? "h-7 w-7 sm:h-11 sm:w-11" : "h-6 w-6 sm:h-9 sm:w-9", s.state === "locked" && "opacity-40 grayscale")}
                 />
                 {s.state === "completed" && (
-                  <span className="absolute -bottom-0.5 -end-0.5 grid h-4 w-4 place-items-center rounded-full bg-live-bright ring-2 ring-foreground sm:h-5 sm:w-5">
-                    <Check className="h-2.5 w-2.5 text-foreground sm:h-3 sm:w-3" strokeWidth={3} aria-hidden="true" />
+                  <span className="absolute -bottom-0.5 -end-0.5 grid h-4 w-4 place-items-center rounded-full bg-klovers-green ring-2 ring-foreground sm:h-5 sm:w-5">
+                    <Check className="h-2.5 w-2.5 text-charcoal sm:h-3 sm:w-3" strokeWidth={3} aria-hidden="true" />
                   </span>
                 )}
                 {s.state === "locked" && (

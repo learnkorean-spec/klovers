@@ -106,7 +106,7 @@ function defaultLanguageForCountry(country: string): "arabic" | "english" {
 const isMissingAuditColumn = (error: any) =>
   error?.code === "42703" || /changed_at|cancelled_at|cancel_reason/i.test(error?.message || "");
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────────────────
 
 interface BookingResult {
   trial_date: string;
@@ -298,7 +298,7 @@ const TrialBookingPage = () => {
   const handleSlotPicked = async (dayOfWeek: number, startTime: string, trialDate: string) => {
     if (!user && (!guestName.trim() || !guestEmailIsValid)) {
       toast({
-        title: language === "ar" ? "اكتب اسمك وبريدك" : "Add your name and email",
+        title: language === "ar" ? "يُرجى كتابة الاسم والبريد" : "Add your name and email",
         description: language === "ar"
           ? "نرسل رابط الحصة وتفاصيلها على بريدك."
           : "We send the class link and details to your email.",
@@ -593,7 +593,7 @@ const TrialBookingPage = () => {
     }
   };
 
-  // ── Success state ──────────────────────────────────────────────────────────
+  // ── Success state ──────────────────────────────────────────────────────────────────────
   if (bookingResult) {
     const formattedDate = new Date(bookingResult.trial_date + "T00:00:00").toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
       weekday: "long",
@@ -627,7 +627,7 @@ const TrialBookingPage = () => {
             {/* Hero */}
             <div className="text-center mb-8">
               <div className="w-20 h-20 rounded-full bg-klovers-green border-2 border-foreground flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="h-10 w-10 text-[#2E2E2E]" />
+                <CheckCircle2 className="h-10 w-10 text-charcoal" />
               </div>
               <h1 className="text-3xl font-black text-foreground mb-3">{t("trialBooking.successTitle")}</h1>
               <div className="inline-flex items-center gap-3 bg-card border border-border rounded-2xl px-5 py-3 text-start">
@@ -653,7 +653,7 @@ const TrialBookingPage = () => {
               {!user && (
                 <p className="text-muted-foreground mt-3 text-sm max-w-md mx-auto">
                   {language === "ar"
-                    ? "أرسلنا لك بريدًا فيه رابط الحصة وزر لتأكيد حضورك. تحتاج موعدًا آخر؟ راسلنا على واتساب."
+                    ? "أرسلنا بريدًا فيه رابط الحصة وزر لتأكيد الحضور. ولتغيير الموعد، المراسلة متاحة عبر واتساب."
                     : "We've emailed you the class link and a button to confirm you're coming. Need a different time? Message us on WhatsApp."}
                 </p>
               )}
@@ -708,22 +708,22 @@ const TrialBookingPage = () => {
                     onClick={() => setClassLanguage("arabic")}
                     className={`px-2.5 py-1 rounded-md border text-xs font-medium transition-all ${
                       classLanguage === "arabic"
-                        ? "border-gray-800 bg-gray-800 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900"
+                        ? "border-charcoal bg-charcoal text-ivory dark:border-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                         : "border-border text-muted-foreground hover:border-primary/40"
                     }`}
                   >
-                    🇸🇦 {language === "ar" ? "عربي" : "Arabic"}
+                    {language === "ar" ? "عربي" : "Arabic"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setClassLanguage("english")}
                     className={`px-2.5 py-1 rounded-md border text-xs font-medium transition-all ${
                       classLanguage === "english"
-                        ? "border-gray-800 bg-gray-800 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900"
+                        ? "border-charcoal bg-charcoal text-ivory dark:border-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                         : "border-border text-muted-foreground hover:border-primary/40"
                     }`}
                   >
-                    🇺🇸 {language === "ar" ? "إنجليزي" : "English"}
+                    {language === "ar" ? "إنجليزي" : "English"}
                   </button>
                 </div>
               </div>
@@ -735,7 +735,7 @@ const TrialBookingPage = () => {
                 teacher's trial experience) and downgrading alternatives
                 to plain text links. */}
             <div className="bg-gradient-to-b from-primary/10 to-transparent border border-primary/20 rounded-2xl p-6 mb-4 text-center">
-              <div className="inline-flex items-center gap-2 text-xs font-bold bg-amber-500 text-black px-3 py-1 rounded-full uppercase tracking-wider mb-4">
+              <div className="inline-flex items-center gap-2 text-xs font-bold bg-klovers-yellow text-charcoal border border-charcoal/20 px-3 py-1 rounded-full uppercase tracking-wider mb-4">
                 <Sparkles className="h-3.5 w-3.5" />
                 {daysUntil > 0 ? (daysUntil === 1 ? t("trialBooking.whileWait").replace("{days}", String(daysUntil)) : t("trialBooking.whileWaitPlural").replace("{days}", String(daysUntil))) : t("trialBooking.trialToday")}
               </div>
@@ -750,8 +750,8 @@ const TrialBookingPage = () => {
                   }}
                   className="w-full flex items-center gap-4 bg-klovers-green/10 dark:bg-klovers-green/10 border-2 border-klovers-green rounded-xl p-4 text-start hover:bg-klovers-green/20 hover:shadow-md transition-all group"
                 >
-                  <div className="h-10 w-10 rounded-full bg-[#25D366] flex items-center justify-center shrink-0">
-                    <MessageCircle className="h-5 w-5 text-white" />
+                  <div className="h-10 w-10 rounded-full bg-klovers-green flex items-center justify-center shrink-0">
+                    <MessageCircle className="h-5 w-5 text-charcoal" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm text-foreground">{t("trialBooking.whatsappPromptTitle")}</p>
@@ -770,7 +770,7 @@ const TrialBookingPage = () => {
                   className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
-                    <GraduationCap className="h-5 w-5 text-[#2E2E2E]" />
+                    <GraduationCap className="h-5 w-5 text-charcoal" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">{t("trialBooking.findLevelTitle")}</p>
@@ -789,7 +789,7 @@ const TrialBookingPage = () => {
                   className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
-                    <Tag className="h-5 w-5 text-[#2E2E2E]" />
+                    <Tag className="h-5 w-5 text-charcoal" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">{t("trialBooking.peekPlansTitle")}</p>
@@ -807,8 +807,8 @@ const TrialBookingPage = () => {
                   onClick={() => {
                     track.custom("post_trial_cta_clicked", { cta: "share" });
                     const shareText = language === "ar"
-                      ? "احجزت حصة كورية مجانية مع Klovers! جرب أنت كمان 🇰🇷"
-                      : "Just booked a free Korean class with Klovers! You should try it 🇰🇷";
+                      ? "حجزتُ حصة كورية مجانية مع Klovers، والتجربة متاحة للجميع."
+                      : "Just booked a free Korean class with Klovers. You should try it too.";
                     const shareUrl = "https://kloversegy.com/free-trial";
                     if (navigator.share) {
                       navigator.share({ title: "Klovers Free Trial", text: shareText, url: shareUrl }).catch(() => {});
@@ -819,14 +819,14 @@ const TrialBookingPage = () => {
                   className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
-                    <Share2 className="h-5 w-5 text-[#2E2E2E]" />
+                    <Share2 className="h-5 w-5 text-charcoal" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">
-                      {language === "ar" ? "شارك مع صاحبك" : "Tell a friend"}
+                      {language === "ar" ? "المشاركة مع صديق" : "Tell a friend"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {language === "ar" ? "خليهم يجربوا معاك — الحصة المجانية متاحة للكل" : "Invite a friend to join your free class"}
+                      {language === "ar" ? "الحصة المجانية متاحة للجميع، والتجربة أجمل مع صديق" : "Invite a friend to join your free class"}
                     </p>
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground rtl:rotate-180 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
@@ -838,10 +838,12 @@ const TrialBookingPage = () => {
             <div className="border border-border rounded-2xl p-5 mb-4 bg-muted/30">
               <p className="text-sm font-bold text-foreground mb-1 flex items-center gap-1.5">
                 <Link2 className="h-4 w-4 text-foreground" />
-                Got a friend who loves K-dramas?
+                {language === "ar" ? "صديق يحب الدراما الكورية؟" : "Got a friend who loves K-dramas?"}
               </p>
               <p className="text-xs text-muted-foreground mb-3">
-                Share your personal link — they get a free class, you help grow the community 🙌
+                {language === "ar"
+                  ? "رابط شخصي للمشاركة: حصة مجانية للصديق، ومجتمع يكبر معًا."
+                  : "Share your personal link — they get a free class, you help grow the community."}
               </p>
               <div className="flex gap-2">
                 <input
@@ -862,7 +864,7 @@ const TrialBookingPage = () => {
                   aria-label="Copy referral link"
                 >
                   {referralCopied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
-                  {referralCopied ? "Copied!" : "Copy"}
+                  {referralCopied ? (language === "ar" ? "تم النسخ" : "Copied!") : (language === "ar" ? "نسخ" : "Copy")}
                 </button>
               </div>
             </div>
@@ -894,7 +896,7 @@ const TrialBookingPage = () => {
                 onClick={() => navigate(user ? "/dashboard" : "/signup")}
                 className="hover:text-foreground underline underline-offset-2 flex items-center gap-1"
               >
-                <LayoutDashboard className="h-3 w-3" /> {user ? t("trialBooking.goDashboard") : (language === "ar" ? "أنشئ حسابًا مجانيًا" : "Create a free account")}
+                <LayoutDashboard className="h-3 w-3" /> {user ? t("trialBooking.goDashboard") : (language === "ar" ? "إنشاء حساب مجاني" : "Create a free account")}
               </button>
             </div>
           </div>
@@ -904,7 +906,7 @@ const TrialBookingPage = () => {
     );
   }
 
-  // ── Slot picker state ──────────────────────────────────────────────────────
+  // ── Slot picker state ──────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -1043,7 +1045,7 @@ const TrialBookingPage = () => {
                   </Label>
                   <Select value={selectedCountry} onValueChange={handleCountryChange}>
                     <SelectTrigger id="trial-country">
-                      <SelectValue placeholder={language === "ar" ? "اختر بلدك" : "Select your country"} />
+                      <SelectValue placeholder={language === "ar" ? "اختيار البلد" : "Select your country"} />
                     </SelectTrigger>
                     <SelectContent>
                       {ALL_COUNTRIES.map(c => (
@@ -1065,27 +1067,27 @@ const TrialBookingPage = () => {
                     onClick={() => setClassLanguage("arabic")}
                     className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                       classLanguage === "arabic"
-                        ? "border-gray-800 bg-gray-800 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900"
+                        ? "border-charcoal bg-charcoal text-ivory dark:border-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                         : "border-border bg-card text-muted-foreground hover:border-primary/40"
                     }`}
                   >
-                    🇸🇦 {language === "ar" ? "عربي" : "Arabic"}
+                    {language === "ar" ? "عربي" : "Arabic"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setClassLanguage("english")}
                     className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                       classLanguage === "english"
-                        ? "border-gray-800 bg-gray-800 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900"
+                        ? "border-charcoal bg-charcoal text-ivory dark:border-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                         : "border-border bg-card text-muted-foreground hover:border-primary/40"
                     }`}
                   >
-                    🇺🇸 {language === "ar" ? "إنجليزي" : "English"}
+                    {language === "ar" ? "إنجليزي" : "English"}
                   </button>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   {language === "ar"
-                    ? "اخترنا هذا تلقائيًا حسب بلدك — يمكنك تغييره"
+                    ? "اختير تلقائيًا حسب البلد، ويمكن تغييره"
                     : "Auto-selected based on your country — you can change it"}
                 </p>
               </div>

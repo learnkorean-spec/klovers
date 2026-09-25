@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CalendarDays, CheckCircle2, Clock, Video, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, ClipboardList, Clock, Tag, Video, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
@@ -88,8 +88,8 @@ const COPY = {
     accountBody:
       "Create a free account and your class link, materials and reminders all live in your dashboard.",
     accountCta: "Create my account",
-    placement: "📝 Take Placement Test",
-    pricing: "💰 View Prices",
+    placement: "Take Placement Test",
+    pricing: "View Prices",
     joinMeet: "Join via Google Meet",
     errorTitle: "Link Invalid",
     errorBody:
@@ -103,49 +103,49 @@ const COPY = {
     lang: "ar",
     locale: "ar-EG",
     tagline: "أكاديمية كلوفرز لتعليم الكورية",
-    loading: "بنحمّل بيانات حصتك…",
-    greeting: (name: string) => `أهلاً ${name}!`,
-    greetingNoName: "أكّد حضورك للحصة التجريبية",
-    intro: "اضغط الزرار تحت عشان تأكّد إنك هتحضر الحصة التجريبية.",
+    loading: "جارٍ تحميل بيانات الحصة…",
+    greeting: (name: string) => `أهلًا ${name}!`,
+    greetingNoName: "تأكيد الحضور للحصة التجريبية",
+    intro: "يُرجى تأكيد الحضور للحصة التجريبية عبر الزر أدناه.",
     introEither:
-      "قولنا هتحضر الحصة ولا لأ. أي رد بيساعدنا — يا إما نحجزلك مقعدك، يا إما نفضّيه.",
-    introChoose: "اختار اليوم اللي يناسبك، وبعدين أكّد. الاتنين نفس الحصة بالظبط.",
-    pickHeading: "اختار يومك",
-    seatsLeft: (n: number) => (n === 1 ? "فاضل مقعد واحد" : `فاضل ${n} مقاعد`),
-    seatsFull: "كاملة",
-    yourCurrent: "ميعادك الحالي",
+      "يسعدنا معرفة إن كان الحضور ممكنًا. أي ردّ يساعدنا: إما حجز المقعد، وإما إتاحته لشخص آخر.",
+    introChoose: "اختيار اليوم المناسب، ثم التأكيد. كل المواعيد للحصة نفسها تمامًا.",
+    pickHeading: "اختيار اليوم",
+    seatsLeft: (n: number) => (n === 1 ? "بقي مقعد واحد" : `بقي ${n} مقاعد`),
+    seatsFull: "مكتملة",
+    yourCurrent: "الموعد الحالي",
     language: "لغة الحصة:",
     date: "التاريخ:",
     time: "الساعة:",
-    tba: "هيتحدد قريبًا",
-    forTeacher: (t: string) => `ودي ${t} بتوقيت المدرّسة.`,
-    confirmCta: "أكّد حضوري",
-    declineCta: "مش هقدر أحضر",
-    confirming: "بنسجّل تأكيدك…",
-    declining: "بنسجّل ردّك…",
-    confirmedTitle: "تم تأكيد حضورك!",
-    confirmedNew: "تمام، كل حاجة جاهزة. نشوفك في الحصة!",
-    confirmedAlready: "إنت مأكّد حضورك بالفعل. نشوفك في الحصة!",
-    declinedTitle: "شكراً إنك قلتلنا",
-    declinedNew: "فضّينا مقعدك في الحصة دي. تقدر تحجز ميعاد تاني في أي وقت.",
+    tba: "يُحدَّد قريبًا",
+    forTeacher: (t: string) => `أي ${t} بتوقيت المعلمة.`,
+    confirmCta: "تأكيد الحضور",
+    declineCta: "تعذّر الحضور",
+    confirming: "جارٍ تسجيل التأكيد…",
+    declining: "جارٍ تسجيل الرد…",
+    confirmedTitle: "تم تأكيد الحضور!",
+    confirmedNew: "كل شيء جاهز. نلتقي في الحصة!",
+    confirmedAlready: "الحضور مؤكَّد بالفعل. نلتقي في الحصة!",
+    declinedTitle: "شكرًا على إبلاغنا",
+    declinedNew: "أُتيح المقعد في هذه الحصة لشخص آخر. ويمكن حجز موعد آخر في أي وقت.",
     declinedAlready:
-      "إنت قلتلنا إنك مش هتقدر تحضر الحصة دي، وفضّينا مقعدك. تقدر تحجز ميعاد تاني في أي وقت.",
-    declinedChanged: "غيّرت رأيك؟ لسه تقدر تقولنا إنك جاي.",
-    slotFull: "اليوم ده كمل وإنت بتقرر. اختار يوم تاني — مقعدك لسه محفوظ.",
-    slotGone: "اليوم ده مبقاش متاح. اختار واحد من اللي تحت.",
-    bookAnother: "احجز ميعاد تاني",
-    accountTitle: "خلّي كل حاجة في مكان واحد",
+      "وصلنا أن الحضور غير ممكن في هذه الحصة، فأُتيح المقعد لشخص آخر. ويمكن حجز موعد آخر في أي وقت.",
+    declinedChanged: "تغيّر القرار؟ ما زال تأكيد الحضور ممكنًا.",
+    slotFull: "اكتمل هذا اليوم أثناء الاختيار. يُرجى اختيار يوم آخر، فالمقعد ما زال محفوظًا.",
+    slotGone: "هذا اليوم لم يعد متاحًا. يُرجى اختيار يوم آخر من القائمة أدناه.",
+    bookAnother: "حجز موعد آخر",
+    accountTitle: "كل شيء في مكان واحد",
     accountBody:
-      "اعمل حساب مجاني، وهتلاقي لينك الحصة والمواد والتذكيرات كلها في صفحتك.",
-    accountCta: "اعمل حسابك",
-    placement: "📝 اختبار تحديد المستوى",
-    pricing: "💰 الأسعار",
-    joinMeet: "ادخل على Google Meet",
-    errorTitle: "اللينك مش شغّال",
-    errorBody: "اللينك ده غير صالح أو اتستخدم قبل كده. كلّمنا لو محتاج مساعدة.",
-    whatsapp: "كلّمنا على واتساب",
-    arabic: "عربي",
-    english: "إنجليزي",
+      "مع حساب مجاني، يجتمع رابط الحصة والمواد والتذكيرات في لوحة واحدة.",
+    accountCta: "إنشاء حساب مجاني",
+    placement: "اختبار تحديد المستوى",
+    pricing: "عرض الأسعار",
+    joinMeet: "الدخول عبر Google Meet",
+    errorTitle: "الرابط غير صالح",
+    errorBody: "هذا الرابط غير صالح أو سبق استخدامه. يسعدنا تقديم المساعدة عند الحاجة.",
+    whatsapp: "التواصل عبر واتساب",
+    arabic: "العربية",
+    english: "الإنجليزية",
   },
 };
 
@@ -245,7 +245,7 @@ const QUIET_CLASS = "text-sm text-muted-foreground underline hover:text-foregrou
 
 /** Ivory info card for the facts a student needs on the day: when, and where. */
 const INFO_CARD_CLASS =
-  "bg-[#FFF9EC] dark:bg-muted text-[#2E2E2E] dark:text-foreground border border-foreground/10 " +
+  "bg-ivory dark:bg-muted text-charcoal dark:text-foreground border border-foreground/10 " +
   "rounded-2xl p-4 text-start";
 
 const TrialConfirmPage = () => {
@@ -431,7 +431,7 @@ const TrialConfirmPage = () => {
   // it appears. The card on top of it uses the card token, so it follows the
   // theme like every other panel.
   return (
-    <div className="min-h-screen bg-[#2E2E2E] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-charcoal flex items-center justify-center p-4">
       <div
         dir={t.dir}
         lang={t.lang}
@@ -439,7 +439,7 @@ const TrialConfirmPage = () => {
       >
         {/* Logo / brand */}
         <div className="mb-6">
-          <span dir="ltr" className="inline-block rounded-2xl bg-[#2E2E2E] px-4 py-1.5 text-4xl font-black tracking-tight text-white">
+          <span dir="ltr" className="inline-block rounded-2xl bg-charcoal px-4 py-1.5 text-4xl font-black tracking-tight text-ivory">
             K<span className="text-klovers-yellow">lovers</span>
           </span>
           <p className="text-muted-foreground text-sm mt-2">{t.tagline}</p>
@@ -462,7 +462,7 @@ const TrialConfirmPage = () => {
             </p>
 
             {notice && (
-              <div className="bg-[#2E2E2E] text-white border-s-4 border-klovers-yellow rounded-xl p-3 mb-5 text-sm text-start">
+              <div className="bg-charcoal text-ivory border-s-4 border-klovers-yellow rounded-xl p-3 mb-5 text-sm text-start">
                 {notice}
               </div>
             )}
@@ -489,7 +489,7 @@ const TrialConfirmPage = () => {
                           t.dir === "rtl" ? "text-right" : "text-left"
                         } ${
                           selected
-                            ? "border-2 border-foreground bg-klovers-yellow/25"
+                            ? "border-2 border-foreground bg-ivory dark:bg-muted"
                             : full
                               ? "border-border opacity-50 cursor-not-allowed"
                               : "border-border hover:border-foreground/50"
@@ -619,8 +619,8 @@ const TrialConfirmPage = () => {
                 loading="eager"
                 decoding="async"
               />
-              <span className="absolute -bottom-4 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-klovers-green border-2 border-[#2E2E2E] shadow-md">
-                <CheckCircle2 className="h-5 w-5 text-[#2E2E2E]" />
+              <span className="absolute -bottom-4 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-klovers-green border-2 border-charcoal shadow-md">
+                <CheckCircle2 className="h-5 w-5 text-charcoal" />
               </span>
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">{t.confirmedTitle}</h1>
@@ -644,7 +644,7 @@ const TrialConfirmPage = () => {
                 href={classLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mb-3 flex items-center justify-center gap-2 rounded-2xl bg-[#2E2E2E] text-klovers-yellow font-bold text-sm px-4 py-3 hover:opacity-90 transition-opacity"
+                className="mb-3 flex items-center justify-center gap-2 rounded-2xl bg-charcoal text-klovers-yellow font-bold text-sm px-4 py-3 hover:opacity-90 transition-opacity"
               >
                 <Video className="h-4 w-4 shrink-0" />
                 {t.joinMeet}
@@ -673,12 +673,16 @@ const TrialConfirmPage = () => {
                 href="/placement-test"
                 className={PRIMARY_CLASS}
               >
+                {/* needs Klovers icon */}
+                <ClipboardList className="inline h-4 w-4 me-1.5 -mt-0.5" aria-hidden="true" />
                 {t.placement}
               </a>
               <a
                 href="/pricing"
                 className={PRIMARY_CLASS}
               >
+                {/* needs Klovers icon */}
+                <Tag className="inline h-4 w-4 me-1.5 -mt-0.5" aria-hidden="true" />
                 {t.pricing}
               </a>
             </div>
@@ -710,8 +714,8 @@ const TrialConfirmPage = () => {
 
         {state === "error" && (
           <div className="py-4">
-            <div className="w-16 h-16 bg-[#FF3131]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <XCircle className="h-8 w-8 text-[#FF3131]" />
+            <div className="w-16 h-16 bg-wrong-graphic/15 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle className="h-8 w-8 text-wrong-graphic" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">{t.errorTitle}</h1>
             <p className="text-muted-foreground mb-6">{t.errorBody}</p>

@@ -31,13 +31,13 @@ const HOLD_COPY_EN = {
 };
 
 const HOLD_COPY_AR = {
-  holdMyPlace: "احجز مكاني وادفع بعدين",
-  placeHeld: "مكانك محجوز",
-  placeHeldDesc: "مقعدك في {group}. ادفعي في أي وقت يناسبك.",
-  placeHeldNoLinkDesc: "مقعدك في {group}. ادفعي في أي وقت يناسبك — ورابط الدخول هيوصلك.",
-  couldNotHold: "تعذّر حجز مكانك",
-  group_full: "الميعاد ده اتملى. اختار اليوم التاني لمستواك.",
-  paid_elsewhere: "انتي دافعة لميعاد تاني بالفعل. كلّمينا وإحنا ننقلك.",
+  holdMyPlace: "حجز المقعد والدفع لاحقًا",
+  placeHeld: "تم حجز المقعد",
+  placeHeldDesc: "المقعد محجوز في {group}، ويمكن الدفع في أي وقت مناسب.",
+  placeHeldNoLinkDesc: "المقعد محجوز في {group}، ويمكن الدفع في أي وقت مناسب — وسيصل رابط الدخول لاحقًا.",
+  couldNotHold: "تعذّر حجز المقعد",
+  group_full: "هذا الموعد مكتمل. يمكن اختيار اليوم الآخر المتاح للمستوى نفسه.",
+  paid_elsewhere: "تم الدفع بالفعل لموعد آخر. يمكن مراسلتنا لنقل الحجز.",
 };
 
 import { formatTime, convertSlotToTimezone } from "@/lib/admin-utils";
@@ -322,6 +322,26 @@ const MySchedulePage = () => {
             <h1 className="text-2xl font-bold text-foreground">{t("mySchedule.title")}</h1>
           </div>
 
+          {/* World mode: the weekly class is a table at the Conversation Café (lead: the two learners). Kept short so the schedule stays above the fold. */}
+          <div className="relative h-24 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card sm:h-28">
+            <img
+              src="/assets/cluby/cafe.webp"
+              alt={language === "ar" ? "مقهى المحادثة في عالم كلوفرز" : "The Conversation Café in the Klovers world"}
+              width={1200}
+              height={800}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-charcoal/85 via-charcoal/50 to-transparent rtl:bg-gradient-to-l" />
+            <div className="relative max-w-xs p-4">
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">{language === "ar" ? "مقهى المحادثة" : "Conversation Café"}</p>
+              <p className="mt-1 text-sm leading-snug text-white">
+                {language === "ar" ? "كل أسبوع تُحجز طاولة لكل مجموعة، وهنا يظهر الموعد." : "Each week a table is kept for every group. The time is right here."}
+              </p>
+            </div>
+          </div>
+
           {/* Package Details */}
           {packageDetails ? (
             <Card>
@@ -349,9 +369,9 @@ const MySchedulePage = () => {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-700">
+            <Card className="border-2 border-klovers-yellow bg-klovers-yellow/10 dark:bg-card">
               <CardContent className="pt-6 text-center space-y-4">
-                <AlertTriangle className="h-10 w-10 mx-auto text-amber-500" />
+                <AlertTriangle className="h-10 w-10 mx-auto text-charcoal dark:text-klovers-yellow" />
                 <h2 className="text-lg font-semibold text-foreground">{t("mySchedule.chooseScheduleTitle")}</h2>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                   {t("mySchedule.chooseScheduleDesc")}

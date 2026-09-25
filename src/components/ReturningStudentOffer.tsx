@@ -184,7 +184,7 @@ const ReturningStudentOffer = () => {
             <div className="relative min-h-[15rem] overflow-hidden bg-klovers-yellow sm:min-h-[19rem]">
               <img
                 src="/assets/cluby/cafe.webp"
-                alt={isAr ? "صديقان وكلوبي بيذاكروا كوري في كافيه" : "Two friends and Cluby studying Korean together at a café"}
+                alt={isAr ? "صديقان يدرسان الكورية مع كلوبي في مقهى" : "Two friends and Cluby studying Korean together at a café"}
                 width={1200}
                 height={800}
                 loading="lazy"
@@ -321,7 +321,7 @@ const ReturningStudentOffer = () => {
                 <div key={i} className="overflow-hidden rounded-2xl border border-border bg-card">
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-foreground transition-colors hover:bg-klovers-yellow/40 dark:hover:bg-klovers-yellow/10"
+                    className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-foreground transition-colors hover:bg-ivory dark:hover:bg-muted"
                   >
                     {faq.question}
                     <ChevronDown

@@ -131,8 +131,8 @@ const ReturningStudentsLandingPage = () => {
   const handleWhatsAppShare = () => {
     const msg = encodeURIComponent(
       isAr
-        ? `عرض حصري للطلاب العائدين في Klovers! خصم 20% 🎉\n${shareUrl}`
-        : `Exclusive offer for returning Klovers students! 20% off 🎉\n${shareUrl}`
+        ? `عرض حصري للطلاب العائدين في Klovers! خصم 20%\n${shareUrl}`
+        : `Exclusive offer for returning Klovers students! 20% off\n${shareUrl}`
     );
     trackAndOpenWhatsApp(`https://wa.me/?text=${msg}`, { cta_label: "returning_share" });
   };
@@ -210,7 +210,7 @@ const ReturningStudentsLandingPage = () => {
                       const Icon = REFERRAL_ICONS[i];
                       return (
                         <div key={i} className="flex items-start gap-3">
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground border border-black/25 shrink-0">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground border border-charcoal/25 shrink-0">
                             <Icon className="h-4 w-4" />
                           </span>
                           <div>
@@ -230,7 +230,7 @@ const ReturningStudentsLandingPage = () => {
               <Card className="border-border/60 flex items-center">
                 <CardContent className="pt-6 w-full space-y-4">
                   <p className="text-sm font-medium text-center text-muted-foreground mb-2">
-                    {isAr ? "شارك هذه الصفحة مع أصدقائك" : "Share this page with your friends"}
+                    {isAr ? "مشاركة هذه الصفحة مع الأصدقاء" : "Share this page with your friends"}
                   </p>
 
                   {/* Referral progress (logged-in users only) */}
@@ -239,12 +239,12 @@ const ReturningStudentsLandingPage = () => {
                       <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-charcoal dark:text-foreground">
                         <Check className="h-4 w-4 shrink-0 rounded-full bg-klovers-green p-0.5 text-charcoal" strokeWidth={3} aria-hidden="true" />
                         {isAr
-                          ? `لقد حصلت على خصم إضافي ${referralStats.bonusPercent}%!`
+                          ? `تمت إضافة خصم إحالة بنسبة ${referralStats.bonusPercent}%`
                           : `You've earned +${referralStats.bonusPercent}% referral bonus!`}
                       </p>
                       <p className="text-xs text-charcoal/70 dark:text-muted-foreground mt-1">
                         {isAr
-                          ? `${referralStats.conversions} صديق انضم · ${Math.max(0, referralStats.clicks - referralStats.conversions)} شخص زار رابطك`
+                          ? `أصدقاء انضموا: ${referralStats.conversions} · زيارات للرابط: ${Math.max(0, referralStats.clicks - referralStats.conversions)}`
                           : `${referralStats.conversions} friend${referralStats.conversions !== 1 ? "s" : ""} enrolled · ${Math.max(0, referralStats.clicks - referralStats.conversions)} link visitor${Math.max(0, referralStats.clicks - referralStats.conversions) !== 1 ? "s" : ""}`}
                       </p>
                     </div>
@@ -253,7 +253,7 @@ const ReturningStudentsLandingPage = () => {
                   {!userId && (
                     <p className="text-xs text-center text-muted-foreground">
                       {isAr ? (
-                        <><Link to="/login" className="underline font-medium text-foreground">سجل دخولك</Link> للحصول على رابط إحالة شخصي</>
+                        <><Link to="/login" className="underline font-medium text-foreground">تسجيل الدخول</Link> للحصول على رابط إحالة شخصي</>
                       ) : (
                         <><Link to="/login" className="underline font-medium text-foreground">Log in</Link> to get your personal referral link</>
                       )}
@@ -280,7 +280,7 @@ const ReturningStudentsLandingPage = () => {
 
                   <Button
                     onClick={handleWhatsAppShare}
-                    className="w-full gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white"
+                    className="w-full gap-2 bg-charcoal text-ivory hover:bg-charcoal/90 dark:bg-klovers-yellow dark:text-charcoal dark:hover:bg-klovers-yellow/90"
                   >
                     <MessageCircle className="h-4 w-4" />
                     {t("welcomeBack.share.whatsapp")}
@@ -361,7 +361,7 @@ const ReturningStudentsLandingPage = () => {
               <Card className="border-border/60">
                 <CardContent className="pt-6">
                   <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground border border-black/25">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground border border-charcoal/25">
                       <GraduationCap className="h-4 w-4" />
                     </span>
                     {t("welcomeBack.offer.title")}
@@ -427,7 +427,7 @@ const ReturningStudentsLandingPage = () => {
                 return (
                   <div key={i} className="flex items-start gap-4">
                     <div className="flex flex-col items-center">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground border border-black/25 font-bold text-sm">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground border border-charcoal/25 font-bold text-sm">
                         {i + 1}
                       </span>
                       {i < steps.length - 1 && (
@@ -484,7 +484,7 @@ const ReturningStudentsLandingPage = () => {
                     className="border-border/60 hover:shadow-md transition-shadow"
                   >
                     <CardContent className="pt-6 flex items-start gap-4">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground border border-black/25 shrink-0">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground border border-charcoal/25 shrink-0">
                         <Icon className="h-5 w-5" />
                       </span>
                       <div>
@@ -543,7 +543,7 @@ const ReturningStudentsLandingPage = () => {
         )}
 
         {/* ── Final CTA ── */}
-        <section className="py-16 md:py-20 px-4 bg-primary text-primary-foreground border-y border-black/25">
+        <section className="py-16 md:py-20 px-4 bg-primary text-primary-foreground border-y border-charcoal/25">
           <div className="container mx-auto max-w-3xl text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-4">
               {t("welcomeBack.finalCta.title")}

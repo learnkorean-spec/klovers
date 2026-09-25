@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EggStatus } from "@/lib/dashboardProgress";
 import { dashEvent } from "@/lib/dashboardEvents";
@@ -68,7 +69,7 @@ export function EggStatusCard({ egg }: { egg: EggStatus }) {
                     done ? "bg-foreground text-background" : "border border-dashed border-foreground/25 text-muted-foreground",
                   )}
                 >
-                  {done && <span aria-hidden="true">✓ </span>}
+                  {done && <Check className="me-1 inline h-3 w-3 align-[-2px]" strokeWidth={3} aria-hidden="true" />}
                   {s}
                 </li>
               );
@@ -127,7 +128,7 @@ function DrawnEgg({ stage, label }: { stage: 0 | 1 | 2; label: string }) {
       {stage === 2 && <circle cx="50" cy="55" r="48" fill="url(#egg-glow)" />}
       <ellipse cx="50" cy="92" rx="22" ry="4" fill="#2E2E2E" opacity="0.12" />
       <path d="M50 10 C 70 10 80 40 80 60 C 80 80 67 91 50 91 C 33 91 20 80 20 60 C 20 40 30 10 50 10 Z" fill="url(#egg-shell)" stroke="#2E2E2E" strokeOpacity="0.18" strokeWidth="1.5" />
-      <g transform="translate(50 58)" fill="#2F8F3A">
+      <g transform="translate(50 58)" fill="#39FF14" stroke="#2E2E2E" strokeWidth="0.8">
         <circle cx="-4" cy="-4" r="4.2" />
         <circle cx="4" cy="-4" r="4.2" />
         <circle cx="-4" cy="4" r="4.2" />

@@ -91,10 +91,10 @@ const AboutPage = () => {
               {/* How a Klovers class feels, in the story style: the two friends
                   and Cluby at the café table. Reham's own photos above stay the
                   proof of who teaches; this is only the mood. */}
-              <figure className="overflow-hidden rounded-3xl border border-border bg-[#FFF9EC] dark:bg-muted">
+              <figure className="overflow-hidden rounded-3xl border border-border bg-ivory dark:bg-muted">
                 <img
                   src="/assets/cluby/cafe.webp"
-                  alt={isAr ? "صديقان مع كلوبي بيذاكروا الكورية سوا في كافيه" : "Two friends and Cluby studying Korean together at a café"}
+                  alt={isAr ? "صديقان يدرسان الكورية مع كلوبي في مقهى" : "Two friends and Cluby studying Korean together at a café"}
                   width={1200}
                   height={800}
                   loading="lazy"
@@ -102,7 +102,7 @@ const AboutPage = () => {
                   className="aspect-[16/9] w-full object-cover"
                 />
                 <figcaption className="px-5 py-4 text-sm font-semibold text-charcoal dark:text-foreground">
-                  {isAr ? "كده بيبان التعلّم مع Klovers: صحاب، ترابيزة واحدة، وكل أسبوع خطوة." : "How learning with Klovers feels: friends at one table, one step every week."}
+                  {isAr ? "هكذا يبدو التعلّم مع Klovers: أصدقاء حول طاولة واحدة، وخطوة جديدة كل أسبوع." : "How learning with Klovers feels: friends at one table, one new step every week."}
                 </figcaption>
               </figure>
 

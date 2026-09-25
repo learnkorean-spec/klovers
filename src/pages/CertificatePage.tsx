@@ -65,7 +65,8 @@ const CertificatePage = () => {
   // search result should land on. Mirrors the Disallow in robots.txt.
   useSEO({ title: "Your Certificate", description: "Your Klovers course completion certificate.", noindex: true });
 
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   const [params] = useSearchParams();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState("Student");
@@ -117,7 +118,7 @@ const CertificatePage = () => {
     canvas.height = H;
 
     // Background
-    ctx.fillStyle = "#0a0a0a";
+    ctx.fillStyle = "#2E2E2E";
     ctx.fillRect(0, 0, W, H);
 
     // Gold border outer
@@ -145,7 +146,7 @@ const CertificatePage = () => {
     ctx.arc(W / 2, 110, 44, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#2E2E2E";
     ctx.font = "800 40px Poppins, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("K", W / 2, 126);
@@ -157,7 +158,7 @@ const CertificatePage = () => {
     ctx.fillText("K L O V E R S   K O R E A N   A C A D E M Y", W / 2, 186);
 
     ctx.letterSpacing = "0px";
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.fillStyle = "rgba(255,249,236,0.5)";
     ctx.font = "13px Inter, sans-serif";
     ctx.fillText("CERTIFICATE OF COMPLETION", W / 2, 210);
 
@@ -174,12 +175,12 @@ const CertificatePage = () => {
     ctx.stroke();
 
     // "This certifies that"
-    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.fillStyle = "rgba(255,249,236,0.6)";
     ctx.font = "italic 18px Inter, sans-serif";
     ctx.fillText("This is to certify that", W / 2, 285);
 
     // Student name
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = "#FFF9EC";
     ctx.font = `800 ${name.length > 20 ? 44 : 56}px Poppins, sans-serif`;
     ctx.fillText(name, W / 2, 360);
 
@@ -193,7 +194,7 @@ const CertificatePage = () => {
     ctx.stroke();
 
     // Completion — a course, at this academy. Not a band, not an award.
-    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.fillStyle = "rgba(255,249,236,0.6)";
     ctx.font = "italic 18px Inter, sans-serif";
     ctx.fillText("has successfully completed, at KLovers Korean Academy,", W / 2, 428);
 
@@ -220,13 +221,13 @@ const CertificatePage = () => {
     rr(W / 2 - badgeW / 2, 462, badgeW, 64, 12);
     ctx.fill();
 
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#2E2E2E";
     ctx.fillText(courseLine, W / 2, 501);
 
     // What the course prepares them toward — deliberately below the badge and
     // in the quieter style, because it is context, not the award.
     if (preparesLine) {
-      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.fillStyle = "rgba(255,249,236,0.6)";
       ctx.font = "italic 17px Inter, sans-serif";
       ctx.fillText(preparesLine, W / 2, 556);
     }
@@ -241,7 +242,7 @@ const CertificatePage = () => {
 
     // Date + signature area
     const dateStr = new Date().toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.fillStyle = "rgba(255,249,236,0.5)";
     ctx.font = "14px Inter, sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(`Issued: ${dateStr}`, 120, 632);
@@ -258,18 +259,18 @@ const CertificatePage = () => {
     ctx.lineTo(W / 2 + 120, 688);
     ctx.stroke();
 
-    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.fillStyle = "rgba(255,249,236,0.9)";
     ctx.font = "700 16px Poppins, sans-serif";
     ctx.fillText("Reham", W / 2, 712);
 
-    ctx.fillStyle = "rgba(255,255,255,0.4)";
+    ctx.fillStyle = "rgba(255,249,236,0.4)";
     ctx.font = "12px Inter, sans-serif";
     ctx.fillText("Founder & Lead Instructor · KLovers Academy", W / 2, 730);
 
     // Says the quiet part out loud. This PNG will be forwarded to people who
     // never saw the page it came from, and it must not be mistaken for a TOPIK
     // result awarded by NIIED.
-    ctx.fillStyle = "rgba(255,255,255,0.32)";
+    ctx.fillStyle = "rgba(255,249,236,0.32)";
     ctx.font = "11px Inter, sans-serif";
     ctx.fillText(
       "Certifies completion of a Klovers course. It is not a TOPIK result — TOPIK is awarded by NIIED.",
@@ -311,8 +312,26 @@ const CertificatePage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center py-10 px-4">
-      <h1 className="text-foreground text-2xl font-bold mb-2">{t("certificatePage.pageTitle")}</h1>
-      <p className="text-muted-foreground text-sm mb-6">{t("certificatePage.pageSubtitle")}</p>
+      {/* World mode: a certificate is a milestone on the Seoul Journey. Kept short so the certificate and its download stay near the top. */}
+      <div className="relative mb-6 w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-charcoal">
+        <img
+          src="/assets/story/world-seoul-journey.webp"
+          alt={isAr ? "رحلة سيول، آخر عوالم كلوفرز" : "The Seoul Journey, the last of the Klovers worlds"}
+          width={1600}
+          height={900}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div aria-hidden="true" className="absolute inset-0 bg-charcoal/70" />
+        <div className="relative px-5 py-5 text-center">
+          <p className="text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">
+            {isAr ? "رحلة سيول · محطة على الطريق الذي بدأ مع أول حرف" : "Seoul Journey · a stop on the road that began with the first letter"}
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-white">{t("certificatePage.pageTitle")}</h1>
+          <p className="mt-1 text-sm text-white/85">{t("certificatePage.pageSubtitle")}</p>
+        </div>
+      </div>
 
       {loading ? (
         <div className="text-muted-foreground">{t("certificatePage.generating")}</div>

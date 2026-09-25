@@ -91,7 +91,7 @@ export function ProgressBar({
       <div
         className={cn(
           "h-full rounded-full motion-safe:transition-[width] motion-safe:duration-700 motion-safe:ease-out",
-          tone === "live" ? "bg-live-bright" : "bg-primary",
+          tone === "live" ? "bg-klovers-green" : "bg-primary",
         )}
         style={{ width: `${pct}%` }}
       />

@@ -70,22 +70,22 @@ export default function MiniQuiz({ questions, isAr }: { questions: QuizQuestion[
           <KlobiFigure pose="thumbsup" className="h-20 w-20" />
         </div>
         <h3 className="mt-5 font-display text-2xl font-extrabold">
-          {all ? (isAr ? "أحسنت! أنهيت كل التحديات" : "Well done — every challenge complete") : isAr ? "انتهت الجولة" : "Round complete"}
+          {all ? (isAr ? "عمل رائع! اكتملت كل التحديات" : "Well done — every challenge complete") : isAr ? "انتهت الجولة" : "Round complete"}
         </h3>
         <p className="mt-2 text-muted-foreground">
           {earned > 0
-            ? isAr ? `+${num(earned, true)} نقطة لرحلتك في هذه الجولة.` : `+${earned} journey XP this round.`
-            : isAr ? "جرّب مرة أخرى في أي وقت لتثبيت ما تعلمته." : "Replay any time to lock in what you learned."}
+            ? isAr ? `+${num(earned, true)} نقطة للرحلة في هذه الجولة.` : `+${earned} journey XP this round.`
+            : isAr ? "يمكن إعادة الجولة في أي وقت لتثبيت ما تعلّمته." : "Replay any time to lock in what you learned."}
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button asChild size="lg" className="h-12 rounded-full px-7 font-bold">
             <Link to="/placement-test" onClick={() => trackJourney("course_cta_clicked", { cta: "placement_after_quiz" })}>
-              {isAr ? "اكتشف مستواك الحقيقي — مجاناً" : "Find your real level — free"}
+              {isAr ? "اكتشاف المستوى الحقيقي مجانًا" : "Find your real level — free"}
             </Link>
           </Button>
           <Button variant="outline" size="lg" className="h-12 rounded-full px-6 font-bold" onClick={restart}>
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
-            {isAr ? "أعد الاختبار" : "Play again"}
+            {isAr ? "إعادة الجولة" : "Play again"}
           </Button>
         </div>
       </div>
@@ -176,7 +176,7 @@ export default function MiniQuiz({ questions, isAr }: { questions: QuizQuestion[
         {picked && !correct && (
           <p className="flex items-center gap-2 rounded-2xl bg-wrong-surface p-4 font-bold text-wrong">
             <X className="h-5 w-5" aria-hidden="true" />
-            {isAr ? "حاول مرة أخرى" : "Try again"}
+            {isAr ? "محاولة أخرى" : "Try again"}
           </p>
         )}
       </div>
