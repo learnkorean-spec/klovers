@@ -5,6 +5,7 @@ import { ThemeProvider } from "./contexts/ThemeContext.tsx";
 import "./i18n/config";
 import { initSentry, Sentry } from "./lib/sentry";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { installJsonLdDedupe } from "./lib/jsonLdDedupe";
 
 // Initialize Sentry as early as possible so it can capture init-time errors.
 initSentry();
@@ -72,6 +73,10 @@ if (typeof window !== "undefined") {
     );
   }
 }
+
+// Static HTML carries JSON-LD for crawlers; pages also add their own. Keep one
+// copy of each @type (see src/lib/jsonLdDedupe.ts).
+installJsonLdDedupe();
 
 createRoot(document.getElementById("root")!).render(
   <Sentry.ErrorBoundary
