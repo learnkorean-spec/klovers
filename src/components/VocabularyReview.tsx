@@ -1,22 +1,33 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Volume2 } from "lucide-react";
 import { SRSCard } from "@/hooks/useSRS";
 import Korean from "@/components/Korean";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface VocabularyReviewProps {
   cards: SRSCard[];
+  /** quality: 0 Again · 1 Hard · 2 Ok · 3 Good · 4 Easy */
   onComplete: (vocabId: number, quality: number) => Promise<void>;
   isLoading?: boolean;
 }
 
+/**
+ * One flashcard at a time for the Memory Garden (/review).
+ * Brand guard (25 Sep 2026): palette only (yellow, charcoal, ivory), no emoji,
+ * Arabic in gender-neutral MSA.
+ */
 export function VocabularyReview({
   cards,
   onComplete,
   isLoading = false,
 }: VocabularyReviewProps) {
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +69,7 @@ export function VocabularyReview({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-lg text-muted-foreground">Loading cards...</div>
+        <div className="text-lg text-muted-foreground">{tr("Loading cards...", "جارٍ تحميل البطاقات...")}</div>
       </div>
     );
   }
@@ -66,9 +77,9 @@ export function VocabularyReview({
   if (cards.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-2xl font-bold mb-2">🎉 All Caught Up!</h3>
+        <h3 className="text-2xl font-bold mb-2">{tr("All caught up!", "اكتملت المراجعة!")}</h3>
         <p className="text-muted-foreground">
-          No vocabulary items need review today. Great job!
+          {tr("No vocabulary needs review today.", "لا توجد مفردات تحتاج إلى مراجعة اليوم.")}
         </p>
       </div>
     );
@@ -77,9 +88,9 @@ export function VocabularyReview({
   if (currentIndex >= cards.length) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-2xl font-bold mb-2">✨ Review Complete!</h3>
+        <h3 className="text-2xl font-bold mb-2">{tr("Review complete!", "اكتملت المراجعة!")}</h3>
         <p className="text-muted-foreground mb-6">
-          You reviewed {cards.length} vocabulary items today.
+          {isAr ? `تمت مراجعة ${cards.length} من المفردات اليوم.` : `You reviewed ${cards.length} vocabulary items today.`}
         </p>
         <Button
           onClick={() => {
@@ -87,11 +98,19 @@ export function VocabularyReview({
             setIsFlipped(false);
           }}
         >
-          Start Another Session
+          {tr("Start another session", "بدء جلسة أخرى")}
         </Button>
       </div>
     );
   }
+
+  const ratings: { q: number; en: string; ar: string; title: string; titleAr: string }[] = [
+    { q: 0, en: "Again", ar: "مرة أخرى", title: "Did not recognise it", titleAr: "لم تُعرف الكلمة" },
+    { q: 1, en: "Hard", ar: "صعب", title: "Wrong, but remembered after seeing it", titleAr: "إجابة خاطئة، ثم تذكّر بعد رؤيتها" },
+    { q: 2, en: "Ok", ar: "مقبول", title: "Right, with real difficulty", titleAr: "إجابة صحيحة بصعوبة" },
+    { q: 3, en: "Good", ar: "جيد", title: "Right, after some hesitation", titleAr: "إجابة صحيحة بعد تردّد بسيط" },
+    { q: 4, en: "Easy", ar: "سهل", title: "Right, without hesitation", titleAr: "إجابة صحيحة دون تردّد" },
+  ];
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -99,7 +118,7 @@ export function VocabularyReview({
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="font-medium">
-            Card {currentIndex + 1} of {cards.length}
+            {isAr ? `البطاقة ${currentIndex + 1} من ${cards.length}` : `Card ${currentIndex + 1} of ${cards.length}`}
           </span>
           <span className="text-muted-foreground">
             {Math.round(progress)}%
@@ -114,19 +133,19 @@ export function VocabularyReview({
         onClick={() => setIsFlipped(!isFlipped)}
       >
         <Card
-          className={`h-full flex items-center justify-center transition-all duration-300 ${
-            isFlipped ? "bg-blue-50 dark:bg-blue-950" : "bg-white dark:bg-slate-800"
-          } border-2 hover:shadow-lg`}
+          className={`h-full flex items-center justify-center transition-all duration-300 border-2 hover:shadow-lg ${
+            isFlipped ? "bg-ivory dark:bg-card border-klovers-yellow" : "bg-card"
+          }`}
         >
           <CardContent className="text-center p-8">
             {isFlipped ? (
               <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">MEANING</p>
-                <p className="text-3xl font-bold">{currentCard.meaning}</p>
+                <p className="text-sm text-muted-foreground">{tr("MEANING", "المعنى")}</p>
+                <p className="text-3xl font-bold text-foreground">{currentCard.meaning}</p>
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">KOREAN</p>
+                <p className="text-sm text-muted-foreground">{tr("KOREAN", "الكورية")}</p>
                 <Korean className="text-5xl font-bold mb-4 block">{currentCard.korean}</Korean>
                 <p className="text-lg text-muted-foreground">
                   {currentCard.romanization}
@@ -142,14 +161,16 @@ export function VocabularyReview({
                   }}
                   className="mt-4"
                 >
-                  <Volume2 className="w-4 h-4 mr-2" />
-                  Pronounce
+                  <Volume2 className="w-4 h-4 me-2" aria-hidden="true" />
+                  {tr("Pronounce", "النطق")}
                 </Button>
               </div>
             )}
 
             <p className="text-xs text-muted-foreground mt-6">
-              Click to flip • Reviewed {currentCard.review_count} times
+              {isAr
+                ? `النقر لقلب البطاقة · رُوجعت ${currentCard.review_count} مرة`
+                : `Click to flip • Reviewed ${currentCard.review_count} times`}
             </p>
           </CardContent>
         </Card>
@@ -158,62 +179,24 @@ export function VocabularyReview({
       {/* Rating Buttons */}
       <div className="space-y-3">
         <p className="text-sm font-medium text-center">
-          How well did you remember this?
+          {tr("How well did you remember this?", "ما مدى تذكّر هذه الكلمة؟")}
         </p>
         <div className="grid grid-cols-5 gap-2">
-          <Button
-            variant="outline"
-            disabled={isSubmitting}
-            onClick={() => handleRating(0)}
-            className="text-xs"
-            title="Complete blackout - did not recognize"
-          >
-            😕
-            <span className="hidden sm:inline ml-1">Again</span>
-          </Button>
-          <Button
-            variant="outline"
-            disabled={isSubmitting}
-            onClick={() => handleRating(1)}
-            className="text-xs"
-            title="Incorrect response, but remembered correctly"
-          >
-            😐
-            <span className="hidden sm:inline ml-1">Hard</span>
-          </Button>
-          <Button
-            variant="outline"
-            disabled={isSubmitting}
-            onClick={() => handleRating(2)}
-            className="text-xs"
-            title="Correct response, but with serious difficulty"
-          >
-            🤔
-            <span className="hidden sm:inline ml-1">Ok</span>
-          </Button>
-          <Button
-            variant="outline"
-            disabled={isSubmitting}
-            onClick={() => handleRating(3)}
-            className="text-xs"
-            title="Correct response, but after some hesitation"
-          >
-            🙂
-            <span className="hidden sm:inline ml-1">Good</span>
-          </Button>
-          <Button
-            variant="default"
-            disabled={isSubmitting}
-            onClick={() => handleRating(4)}
-            className="text-xs"
-            title="Correct response without hesitation"
-          >
-            😄
-            <span className="hidden sm:inline ml-1">Easy</span>
-          </Button>
+          {ratings.map((r) => (
+            <Button
+              key={r.q}
+              variant={r.q === 4 ? "default" : "outline"}
+              disabled={isSubmitting}
+              onClick={() => handleRating(r.q)}
+              className="text-xs"
+              title={isAr ? r.titleAr : r.title}
+            >
+              {isAr ? r.ar : r.en}
+            </Button>
+          ))}
         </div>
         <p className="text-xs text-muted-foreground text-center mt-2">
-          Rating affects when this card will reappear
+          {tr("Your rating decides when this card comes back", "يحدّد التقييم موعد عودة هذه البطاقة")}
         </p>
       </div>
 
@@ -221,8 +204,11 @@ export function VocabularyReview({
       <Card className="bg-muted/50">
         <CardContent className="pt-6 text-sm text-muted-foreground">
           <p>
-            <strong>Tip:</strong> Rate honestly - "Again" resets the card,
-            while "Easy" extends the interval longest.
+            <strong>{tr("Tip:", "نصيحة:")}</strong>{" "}
+            {tr(
+              "Rate honestly. \"Again\" resets the card, and \"Easy\" waits the longest before showing it again.",
+              "الصدق في التقييم مهم: «مرة أخرى» تعيد البطاقة من البداية، و«سهل» يؤجّل ظهورها أطول مدة.",
+            )}
           </p>
         </CardContent>
       </Card>
