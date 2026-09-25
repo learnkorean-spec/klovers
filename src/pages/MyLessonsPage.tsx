@@ -18,6 +18,11 @@ import { formatMoney } from "@/types/students";
  * at all. This page carries only the four facts such a student actually needs:
  * when her lessons are, how many are left, what she owes, and where to join.
  *
+ * World mode (Re, 25 Sep 2026): Korean private students open onto the
+ * Conversation Café, the same world as the schedule and profile pages. English
+ * students keep a plain header — their own world is to be built later, and
+ * nothing here may tell them they are learning Korean.
+ *
  * It reads the teaching roster directly. Until the migration that ships with
  * this page, those tables were admin-only and a private student could not see a
  * single row about her own lessons — true for the Korean students too, not just
@@ -35,10 +40,15 @@ import { formatMoney } from "@/types/students";
 const DAY_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 const DAY_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+const CAFE_IMAGE = "/assets/story/world-conversation-cafe.webp";
+
 const COPY = {
   ar: {
     title: "حصصي",
     subtitle: "المواعيد والباقة في مكان واحد.",
+    world: "مقهى المحادثة",
+    cluby: "«طاولتك محجوزة، وكل حصة جملة جديدة على الطاولة»",
+    cafeAlt: "مقهى المحادثة في عالم كلوفرز، حيث تُقال الجمل الكورية الأولى",
     weekly: "الموعد الأسبوعي",
     noWeekly: "لا يوجد موعد أسبوعي مسجّل بعد. يمكن التواصل معي لتحديده.",
     bundle: "الباقة",
@@ -61,6 +71,9 @@ const COPY = {
   en: {
     title: "My lessons",
     subtitle: "Your times and your bundle, in one place.",
+    world: "The Conversation Café",
+    cluby: "“Your table is saved. Every lesson puts a new sentence on it.”",
+    cafeAlt: "The Conversation Café in the Klovers world, where the first Korean sentences are spoken",
     weekly: "Your weekly time",
     noWeekly: "No weekly time recorded yet. Message me and we'll set one.",
     bundle: "Your bundle",
@@ -113,6 +126,9 @@ interface SessionRow {
 
 /** "16:00:00" or "16:00" -> "16:00". */
 const hhmm = (t: string) => (t ?? "").slice(0, 5);
+
+/** Korean private students get the story world; any other subject does not. */
+const isKoreanSubject = (subject: string | null | undefined) => /korean|كوري/i.test(subject ?? "");
 
 const MyLessonsPage = () => {
   const navigate = useNavigate();
@@ -245,6 +261,7 @@ const MyLessonsPage = () => {
   // rather than as a separate warning, so she reads it while looking at the
   // date it applies to.
   const lastCoveredIndex = balance ? balance.remaining_classes - 1 : -1;
+  const inWorld = isKoreanSubject(roster.subject);
 
   return (
     <div className="min-h-screen" dir={isAr ? "rtl" : "ltr"}>
@@ -252,12 +269,37 @@ const MyLessonsPage = () => {
       <main id="main-content" className="pt-24 pb-16 px-4">
         <div className="max-w-2xl mx-auto space-y-5">
 
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {c.title} — {roster.full_name}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">{c.subtitle}</p>
-          </div>
+          {inWorld ? (
+            <div className="space-y-2">
+              <div className="relative h-32 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card md:h-40">
+                <img
+                  src={CAFE_IMAGE}
+                  alt={c.cafeAlt}
+                  width={1600}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/35 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4">
+                  <p className="text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">{c.world}</p>
+                  <h1 className="font-display text-2xl font-extrabold leading-tight text-white md:text-3xl">
+                    {c.title} — {roster.full_name}
+                  </h1>
+                </div>
+              </div>
+              <p className="cluby-note text-sm text-foreground/80" lang={isAr ? "ar" : "en"}>{c.cluby}</p>
+              <p className="text-sm text-muted-foreground">{c.subtitle}</p>
+            </div>
+          ) : (
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                {c.title} — {roster.full_name}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">{c.subtitle}</p>
+            </div>
+          )}
 
           {dueEnrollmentId && (
             <Card className="border-2 border-[#FF4FD8] bg-[#FF4FD8]/10 dark:bg-card">
@@ -302,7 +344,7 @@ const MyLessonsPage = () => {
                   className="mt-4"
                   onClick={() => window.open(roster.meeting_url!, "_blank", "noopener,noreferrer")}
                 >
-                  <Video className="h-4 w-4 mr-1.5" /> {c.join}
+                  <Video className="h-4 w-4 me-1.5" /> {c.join}
                 </Button>
               )}
             </CardContent>
