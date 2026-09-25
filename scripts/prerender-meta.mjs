@@ -31,6 +31,21 @@ import { markdownToHtml } from "./lib/markdown-to-html.mjs";
 import { MARKER_START, MARKER_END } from "./lib/related-links.mjs";
 import { replaceLiteral } from "./lib/replace-literal.mjs";
 import {
+  ABOUT_BODY_HTML,
+  AFFILIATE_BODY_HTML,
+  ARABIC_SPEAKERS_BODY_HTML,
+  CONTACT_BODY_HTML,
+  ENROLL_NOW_BODY_HTML,
+  FAQ_BODY_HTML,
+  HANGUL_STARTER_BODY_HTML,
+  INTERVIEW_BODY_HTML,
+  KDRAMAS_BODY_HTML,
+  MARKETING_FAQ,
+  PLACEMENT_TEST_BODY_HTML,
+  TOPIK_BODY_HTML,
+  WELCOME_BACK_BODY_HTML,
+} from "./lib/marketing-bodies.mjs";
+import {
   HTML_TAG_PATTERN,
   languageOf,
   ogLocaleOf,
@@ -599,24 +614,31 @@ const MARKETING_ROUTES = [
     title: "About Us",
     description:
       "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years and more than 200 students.",
+    body: ABOUT_BODY_HTML,
+    pageLd: { "@type": "AboutPage", mainEntity: { "@id": `${BASE_URL}/#organization` } },
   },
   {
     path: "/contact",
     title: "Contact Us",
     description:
       "Get in touch with Klovers Korean Lovers Academy. We would love to hear from you about courses, enrollment, or any questions.",
+    body: CONTACT_BODY_HTML,
+    pageLd: { "@type": "ContactPage", mainEntity: { "@id": `${BASE_URL}/#organization` } },
   },
   {
     path: "/faq",
     title: "FAQ",
     description:
       "Got questions about learning Korean with Klovers? Find answers about courses, teachers, scheduling, and payments.",
+    body: FAQ_BODY_HTML,
+    faq: MARKETING_FAQ["/faq"],
   },
   {
     path: "/enroll-now",
     title: "Enroll Now | Klovers Korean Academy",
     description:
       "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence.",
+    body: ENROLL_NOW_BODY_HTML,
   },
   {
     path: "/enroll",
@@ -629,6 +651,17 @@ const MARKETING_ROUTES = [
     title: "Korean Placement Test",
     description:
       "Take the free Klovers Korean placement test. Discover your level and find the perfect course for your learning journey.",
+    body: PLACEMENT_TEST_BODY_HTML,
+    pageLd: {
+      "@type": "Quiz",
+      name: "Free Korean Language Placement Test",
+      educationalAlignment: {
+        "@type": "AlignmentObject",
+        alignmentType: "educationalLevel",
+        educationalFramework: "TOPIK",
+      },
+      provider: { "@id": `${BASE_URL}/#organization` },
+    },
   },
   {
     path: "/games",
@@ -651,6 +684,8 @@ const MARKETING_ROUTES = [
     title: "Affiliate Program",
     description:
       "Join the Klovers affiliate program. Earn commissions by referring students to our Korean language courses.",
+    body: AFFILIATE_BODY_HTML,
+    faq: MARKETING_FAQ["/affiliate"],
   },
   {
     path: "/blog",
@@ -663,18 +698,33 @@ const MARKETING_ROUTES = [
     title: "Learn Korean for Arabic Speakers",
     description:
       "Learning Korean from Arabic: what Arabic already gives you, what is new, and the Klovers path from Hangul to Level 6 with a teacher who explains in Arabic.",
+    body: ARABIC_SPEAKERS_BODY_HTML,
+    faq: MARKETING_FAQ["/learn-korean-arabic-speakers"],
+    articleLd: true,
+    published: "2026-04-08",
+    modified: "2026-09-25",
   },
   {
     path: "/topik-exam-preparation",
     title: "TOPIK Exam Preparation: Format, Scoring & Study Plan",
     description:
       "How the TOPIK Korean exam works: TOPIK I and II, sections, timing and the score needed for each level, plus the Klovers TOPIK track with past papers and writing practice.",
+    body: TOPIK_BODY_HTML,
+    faq: MARKETING_FAQ["/topik-exam-preparation"],
+    articleLd: true,
+    published: "2026-04-08",
+    modified: "2026-09-25",
   },
   {
     path: "/learn-korean-kdramas",
     title: "Learn Korean Through K-Dramas",
     description:
       "A simple, repeatable way to study Korean with K-dramas: one scene at a time, with Korean subtitles, shadowing and a phrase notebook, and how live classes fill in the grammar.",
+    body: KDRAMAS_BODY_HTML,
+    faq: MARKETING_FAQ["/learn-korean-kdramas"],
+    articleLd: true,
+    published: "2026-04-08",
+    modified: "2026-09-25",
   },
   // Added in A1 — live routes that were missing from the prerender list.
   {
@@ -682,18 +732,22 @@ const MARKETING_ROUTES = [
     title: "Korean Interview Training — AI-Powered | Klovers",
     description:
       "Practice Korean job interview questions with AI-generated personalized Q&A. Get 2 free questions, upgrade for more.",
+    body: INTERVIEW_BODY_HTML,
   },
   {
     path: "/welcome-back",
     title: "Welcome Back — Returning Students Offer",
     description:
       "Returning Klovers students: a discount on your next enrollment, and extra savings when friends join.",
+    body: WELCOME_BACK_BODY_HTML,
+    faq: MARKETING_FAQ["/welcome-back"],
   },
   {
     path: "/hangul-starter",
     title: "Free Hangul Starter Sheet — Korean Alphabet | Klovers",
     description:
       "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide — explained simply. Printable.",
+    body: HANGUL_STARTER_BODY_HTML,
   },
   // "Journey through Korea's time" — five era pages, added 2026-09-22. IDs and
   // all copy come from src/constants/eras.ts (ERAS); keep this list in step
@@ -712,6 +766,7 @@ const MARKETING_ROUTES = [
     body: ERA_BEFORE_KOREA_BODY,
     breadcrumb: [{ name: "Home", item: BASE_URL }],
     articleLd: true,
+    published: "2026-09-22",
   },
   {
     path: "/journey/ancient-korea",
@@ -722,6 +777,7 @@ const MARKETING_ROUTES = [
     body: ERA_ANCIENT_KOREA_BODY,
     breadcrumb: [{ name: "Home", item: BASE_URL }],
     articleLd: true,
+    published: "2026-09-22",
   },
   {
     path: "/journey/joseon",
@@ -732,6 +788,7 @@ const MARKETING_ROUTES = [
     body: ERA_JOSEON_BODY,
     breadcrumb: [{ name: "Home", item: BASE_URL }],
     articleLd: true,
+    published: "2026-09-22",
   },
   {
     path: "/journey/traditional-life",
@@ -742,6 +799,7 @@ const MARKETING_ROUTES = [
     body: ERA_TRADITIONAL_LIFE_BODY,
     breadcrumb: [{ name: "Home", item: BASE_URL }],
     articleLd: true,
+    published: "2026-09-22",
   },
   {
     path: "/journey/modern-korea",
@@ -752,6 +810,7 @@ const MARKETING_ROUTES = [
     body: ERA_MODERN_KOREA_BODY,
     breadcrumb: [{ name: "Home", item: BASE_URL }],
     articleLd: true,
+    published: "2026-09-22",
   },
   // Legal pages, added 2026-09-24. The footer and the cookie banner linked to
   // both while neither route existed. Keep in step with STATIC_PAGES in
@@ -1188,6 +1247,10 @@ function buildHeadTags(route) {
         description,
         image: [image],
         inLanguage: "en",
+        ...(route.published ? { datePublished: route.published } : {}),
+        ...(route.modified || route.published
+          ? { dateModified: route.modified || route.published }
+          : {}),
         author: { "@type": "Organization", name: SITE_NAME, url: BASE_URL },
         publisher: {
           "@type": "Organization",
@@ -1195,6 +1258,39 @@ function buildHeadTags(route) {
           url: BASE_URL,
           logo: { "@type": "ImageObject", url: DEFAULT_IMAGE },
         },
+      })
+    );
+  }
+
+  // GEO audit 25 Sep 2026: FAQPage and a page-type block for marketing
+  // routes, server-side. Before this they existed only as scripts the page
+  // appends in the browser, which no AI crawler ever sees. The FAQ items come
+  // from scripts/lib/marketing-bodies.mjs, the same file as the visible
+  // prerendered text, so the markup always matches the page. The client-side
+  // copies are removed on arrival by src/lib/jsonLdDedupe.ts, so a browser
+  // never ends up with two FAQPage blocks.
+  if (!isPost && Array.isArray(route.faq) && route.faq.length) {
+    tags.push(
+      jsonLd({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: route.faq.map(({ q, a }) => ({
+          "@type": "Question",
+          name: q,
+          acceptedAnswer: { "@type": "Answer", text: a },
+        })),
+      })
+    );
+  }
+
+  if (!isPost && route.pageLd) {
+    tags.push(
+      jsonLd({
+        "@context": "https://schema.org",
+        ...route.pageLd,
+        url,
+        name: route.pageLd.name || fullTitle,
+        description,
       })
     );
   }
