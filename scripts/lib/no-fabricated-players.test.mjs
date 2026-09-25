@@ -178,8 +178,9 @@ describe("the guest leaderboard invents no numbers", () => {
   });
 
   it("shows guests an empty state that claims nothing about other players", () => {
+    // Arabic is neutral MSA since the 25 Sep 2026 brand-guard sweep.
     expect(copy).toContain("take your place on the leaderboard");
-    expect(copy).toContain("سجّل عشان تبدأ تجمع نقط وتدخل الترتيب.");
+    expect(copy).toContain("إنشاء حساب يفتح جمع النقاط ودخول الترتيب.");
   });
 
   it("keeps a signup call to action for guests", () => {
