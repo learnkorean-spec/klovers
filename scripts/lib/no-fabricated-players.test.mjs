@@ -178,8 +178,8 @@ describe("the guest leaderboard invents no numbers", () => {
   });
 
   it("shows guests an empty state that claims nothing about other players", () => {
-    // Arabic is neutral MSA since the 25 Sep 2026 brand-guard sweep.
     expect(copy).toContain("take your place on the leaderboard");
+    // Arabic is Modern Standard Arabic since 25 Sep 2026 (brand guard).
     expect(copy).toContain("إنشاء حساب يفتح جمع النقاط ودخول الترتيب.");
   });
 
