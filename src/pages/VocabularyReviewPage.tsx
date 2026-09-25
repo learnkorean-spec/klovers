@@ -72,6 +72,10 @@ export function VocabularyReviewPage() {
   const handleReviewComplete = async (vocabId: number, quality: number) => {
     try {
       await recordReview(vocabId, quality);
+      // Count the card for this session's summary. VocabularyReview rates
+      // 0 Again · 1 Hard · 2 Ok · 3 Good · 4 Easy; Good and Easy count as mastered.
+      setReviewedCount((prev) => prev + 1);
+      if (quality >= 3) setMasteredCount((prev) => prev + 1);
       setXpEarned((prev) => prev + 5);
       await awardXp(0, "review");
     } catch {
@@ -97,11 +101,12 @@ export function VocabularyReviewPage() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               {isAr ? "العودة للكتاب" : "Back to Textbook"}
             </Button>
-            {/* World mode: review lives in Cluby's Memory Garden (lead: Cluby). */}
+            {/* World mode: review lives in Cluby's Memory Garden (lead: Cluby).
+                Scene with Cluby holding a clover: Re's image, 25 Sep 2026. */}
             <div className="relative mb-3 h-28 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card md:h-40">
               <img
-                src="/assets/story/world-memory-garden.webp"
-                alt={isAr ? "حديقة ذاكرة كلوبي، حيث تنمو الكلمات التي تعلّمها الطالب" : "Cluby's Memory Garden, where learned words grow"}
+                src="/assets/story/world-memory-garden-cluby-leaf.webp"
+                alt={isAr ? "كلوبي يحمل ورقة برسيم في حديقة الذاكرة، حيث تنمو الكلمات التي تعلّمها الطالب" : "Cluby holding a clover leaf in the Memory Garden, where learned words grow"}
                 width={1600}
                 height={900}
                 loading="lazy"

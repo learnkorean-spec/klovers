@@ -95,10 +95,13 @@ export function Reveal({ children, className, delay = 0 }: { children: ReactNode
 // drawings are retired; every pose now maps to a 3D plush Cluby.
 const CLUBY_WAVE = { src: "/assets/cluby/cluby-wave.webp", width: 314, height: 440 };
 const CLUBY_STAR = { src: "/assets/cluby/cluby-star.webp", width: 333, height: 440 };
+// Cluby reading on a hanok street (Re's image, 25 Sep 2026), cropped square
+// for the round guide avatar.
+const CLUBY_READING = { src: "/assets/cluby/cluby-reading.webp", width: 480, height: 480 };
 
 const POSE_ART: Record<KlobiPose, { src: string; width: number; height: number }> = {
   wave: CLUBY_WAVE,
-  reading: CLUBY_STAR,
+  reading: CLUBY_READING,
   cards: CLUBY_STAR,
   headphones: CLUBY_STAR,
   thumbsup: CLUBY_STAR,
