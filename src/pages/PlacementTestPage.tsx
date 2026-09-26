@@ -23,6 +23,7 @@ import { track } from "@/lib/tracking";
 import { CheckCircle, ArrowRight, ArrowLeft, BookOpen, Gamepad2, Users, SkipForward, Undo2, ClipboardList, ChevronDown, ChevronUp, TrendingUp, Share2, RefreshCw, Timer, Download, MapPin, Volume2, Square, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 
 const QUESTIONS_PER_PAGE = 6;
 const TOTAL_PAGES = Math.ceil(PLACEMENT_QUESTIONS.length / QUESTIONS_PER_PAGE);
@@ -35,6 +36,15 @@ const formatTime = (s: number) => {
 };
 
 // Keys match levelKey values returned by computePlacementResult
+// Klovers illustrations shown on the result card (brand guard: no emoji on the page).
+const LEVEL_ICON: Record<string, KloverIconName> = {
+  hangul: "sprout",
+  l1: "flashcard-ga",
+  l2: "books-stack",
+  l3: "growth-chart",
+  l5: "diploma-scroll",
+};
+
 const LEVEL_META: Record<string, { emoji: string; tagline: string; description: string; nextLabel?: string; prevLabel?: string }> = {
   hangul: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our Foundation class will teach you Hangul, basic greetings, and everyday words.", nextLabel: "Level 1" },
   l1:    { emoji: "🌿", tagline: "Beginner (A1)", description: "You know the basics. Our Level 1 class builds simple sentences, numbers, and daily conversations.", nextLabel: "Level 2", prevLabel: "Foundation" },
@@ -44,11 +54,11 @@ const LEVEL_META: Record<string, { emoji: string; tagline: string; description: 
 };
 
 const LEVEL_META_AR: Record<string, { emoji: string; tagline: string; description: string; nextLabel?: string; prevLabel?: string }> = {
-  hangul: { emoji: "🌱", tagline: "مبتدئ تماماً", description: "أنت في البداية. صفنا التأسيسي سيعلمك الهانغول والتحيات الأساسية والكلمات اليومية.", nextLabel: "مستوى 1" },
-  l1:    { emoji: "🌿", tagline: "مبتدئ (A1)", description: "تعرف الأساسيات. صفنا مستوى 1 يبني جملاً بسيطة وأرقاماً ومحادثات يومية.", nextLabel: "مستوى 2", prevLabel: "تأسيس" },
-  l2:    { emoji: "📚", tagline: "ابتدائي (A2)", description: "تستطيع التعامل مع المحادثات البسيطة. صفنا مستوى 2 يغطي أنماط القواعد والحوارات الواقعية.", nextLabel: "مستوى 3–4", prevLabel: "مستوى 1" },
-  l3:    { emoji: "🎯", tagline: "متوسط (B1–B2)", description: "أنت مرتاح مع الكورية. صفنا مستوى 3–4 يتعمق في القواعد المتقدمة والكلام الطبيعي.", nextLabel: "مستوى 5–6", prevLabel: "مستوى 2" },
-  l5:    { emoji: "🏆", tagline: "متقدم (C1–C2)", description: "تتحدث الكورية بطلاقة. صفنا مستوى 5–6 يصقل الكورية الأكاديمية والمهنية لـ TOPIK II.", prevLabel: "مستوى 3–4" },
+  hangul: { emoji: "🌱", tagline: "مبتدئ تماماً", description: "البداية من الصفر. الصف التأسيسي يعلّم الهانغول والتحيات الأساسية والكلمات اليومية.", nextLabel: "مستوى 1" },
+  l1:    { emoji: "🌿", tagline: "مبتدئ (A1)", description: "الأساسيات معروفة. صف المستوى 1 يبني جملًا بسيطة وأرقامًا ومحادثات يومية.", nextLabel: "مستوى 2", prevLabel: "تأسيس" },
+  l2:    { emoji: "📚", tagline: "ابتدائي (A2)", description: "القدرة على المحادثات البسيطة. صف المستوى 2 يغطي أنماط القواعد والحوارات الواقعية.", nextLabel: "مستوى 3–4", prevLabel: "مستوى 1" },
+  l3:    { emoji: "🎯", tagline: "متوسط (B1–B2)", description: "راحة في استخدام الكورية. صف المستوى 3–4 يتعمّق في القواعد المتقدمة والكلام الطبيعي.", nextLabel: "مستوى 5–6", prevLabel: "مستوى 2" },
+  l5:    { emoji: "🏆", tagline: "متقدم (C1–C2)", description: "طلاقة في الكورية. صف المستوى 5–6 يصقل الكورية الأكاديمية والمهنية لاختبار TOPIK II.", prevLabel: "مستوى 3–4" },
 };
 
 // Plan recommendation — group classes for low/mid levels (peer practice + affordability),
@@ -69,7 +79,7 @@ const RECOMMENDED_PLANS: Record<string, RecommendedPlan> = {
     format: "Small group · Once a week",
     formatAr: "مجموعة صغيرة · مرة في الأسبوع",
     bullets: ["Master Hangul in 2 weeks", "Build everyday phrases with peers", "Most affordable plan"],
-    bulletsAr: ["أتقن الهانغول في أسبوعين", "ابنِ الجمل اليومية مع زملائك", "الخطة الأكثر اقتصاداً"],
+    bulletsAr: ["إتقان الهانغول في أسبوعين", "بناء الجمل اليومية مع الزملاء", "الخطة الأكثر اقتصادًا"],
   },
   l1: {
     name: "Level 1 Group Class",
@@ -77,7 +87,7 @@ const RECOMMENDED_PLANS: Record<string, RecommendedPlan> = {
     format: "Small group · Once a week",
     formatAr: "مجموعة صغيرة · مرة في الأسبوع",
     bullets: ["Daily conversations & numbers", "Practice speaking with peers", "Great value for beginners"],
-    bulletsAr: ["محادثات يومية وأرقام", "تدرّب على المحادثة مع الزملاء", "قيمة ممتازة للمبتدئين"],
+    bulletsAr: ["محادثات يومية وأرقام", "تدريب على المحادثة مع الزملاء", "قيمة ممتازة للمبتدئين"],
   },
   l2: {
     name: "Level 2 Group Class",
@@ -93,15 +103,15 @@ const RECOMMENDED_PLANS: Record<string, RecommendedPlan> = {
     format: "Small group · 4–6 students · Twice a week",
     formatAr: "مجموعة صغيرة · ٤–٦ طلاب · مرتين أسبوعياً",
     bullets: ["Nuanced grammar & natural speech", "Discuss K-dramas in Korean", "TOPIK II prep track"],
-    bulletsAr: ["قواعد متقدمة وكلام طبيعي", "ناقش الدراما بالكورية", "مسار التحضير لـ TOPIK II"],
+    bulletsAr: ["قواعد متقدمة وكلام طبيعي", "نقاش الدراما بالكورية", "مسار التحضير لـ TOPIK II"],
   },
   l5: {
     name: "Private 1-on-1 Class",
     nameAr: "صف خاص فردي",
     format: "Private · Flexible schedule · Personalised",
-    formatAr: "خاص · جدول مرن · مخصص لك",
-    bullets: ["Tailored to your goals (TOPIK / business / academic)", "Native teacher, all feedback on you", "Fastest progress at this level"],
-    bulletsAr: ["مخصص لأهدافك (TOPIK / أعمال / أكاديمي)", "معلم أصلي، كل التركيز عليك", "أسرع تقدم في هذا المستوى"],
+    formatAr: "خاص · جدول مرن · حسب الطالب",
+    bullets: ["Tailored to your goals (TOPIK / business / academic)", "Experienced teacher, all feedback on you", "Fastest progress at this level"],
+    bulletsAr: ["حسب الهدف (TOPIK / أعمال / أكاديمي)", "معلمة متمرّسة، والتركيز كله على الطالب", "أسرع تقدّم في هذا المستوى"],
   },
 };
 
@@ -137,14 +147,14 @@ const JOURNEY_MESSAGES_AR: Record<string, string> = {
   l1:    "معظم طلاب المستوى 1 يصلون للمستوى 2 في 12 أسبوعاً مع Klovers",
   l2:    "معظم طلاب المستوى 2 يصلون للمستوى 3–4 في 20 أسبوعاً مع Klovers",
   l3:    "الطلاقة المتقدمة تستغرق عادة 6–12 شهراً إضافية من التمرين المركز",
-  l5:    "أنت متقدم بالفعل — صقّل كوريتك لشهادة TOPIK 5–6",
+  l5:    "مستوى متقدم بالفعل: صقل الكورية لشهادة TOPIK 5–6",
 };
 
 function subTestSummary(correct: number, total: number, skill: string, isAr = false): string {
   const pct = correct / total;
   if (isAr) {
     if (pct >= 0.8) return `فهم ${skill} ممتاز في هذا المستوى!`;
-    if (pct >= 0.6) return `مهارات ${skill} جيدة — واصل التمرين للوصول للطلاقة الكاملة.`;
+    if (pct >= 0.6) return `مهارات ${skill} جيدة، ومواصلة التمرين توصل إلى الطلاقة الكاملة.`;
     return `فهم ${skill} يحتاج لمزيد من العمل — التمرين المركز سيساعد.`;
   }
   if (pct >= 0.8) return `Excellent ${skill} comprehension at this level!`;
@@ -156,9 +166,9 @@ function speakingSummary(ratings: (0 | 1 | 2)[], levelKey: string, isAr = false)
   const score = ratings.reduce((a, b) => a + b, 0);
   const label = levelKey.replace("_", " ");
   if (isAr) {
-    if (score >= 8) return `ممتاز! كوريتك المنطوقة تتوافق مع تصنيفك ${label}.`;
-    if (score >= 5) return "جهد جيد! واصل تمرين المحادثة بجانب القراءة والقواعد.";
-    return "كوريتك المنطوقة تحتاج لمزيد من التمرين — فكّر في البدء بمستوى أقل.";
+    if (score >= 8) return `ممتاز! الكورية المنطوقة تتوافق مع تصنيف ${label}.`;
+    if (score >= 5) return "جهد جيد! مواصلة تمرين المحادثة بجانب القراءة والقواعد مفيدة.";
+    return "الكورية المنطوقة تحتاج إلى مزيد من التمرين، وقد يناسب البدء بمستوى أقل.";
   }
   if (score >= 8) return `Excellent! Your spoken Korean matches your ${label} placement.`;
   if (score >= 5) return "Good effort! Keep practising speaking alongside your reading and grammar.";
@@ -239,7 +249,7 @@ const PlacementTestPage = () => {
       "@context": "https://schema.org",
       "@type": "Quiz",
       "name": "Free Korean Language Placement Test",
-      "description": "Take the free Klovers Korean placement test to discover your level from A1 beginner to C2 advanced and find the perfect course.",
+      "description": "Take the free Klovers Korean placement test to discover your level, from Hangul to Level 6, and find the right course.",
       "url": "https://kloversegy.com/placement-test",
       "provider": { "@id": "https://kloversegy.com/#organization" },
       "educationalAlignment": {
@@ -272,7 +282,7 @@ const PlacementTestPage = () => {
         setPage(p ?? 0);
         setElapsedSeconds(e ?? 0);
         if (e) startTimeRef.current = Date.now() - e * 1000;
-        toast({ title: isAr ? "تم استئناف الاختبار" : "Test resumed", description: isAr ? "تم استعادة تقدمك السابق." : "Your previous progress has been restored." });
+        toast({ title: isAr ? "تم استئناف الاختبار" : "Test resumed", description: isAr ? "تمت استعادة التقدم السابق." : "Your previous progress has been restored." });
       }
     } catch { /* ignore */ }
     localStorage.removeItem("klovers_placement_draft"); // clear old v1 key
@@ -354,7 +364,7 @@ const PlacementTestPage = () => {
 
   const handleSubmit = async () => {
     if (totalAnswered === 0) {
-      toast({ title: isAr ? "أجب على سؤال واحد على الأقل قبل الإرسال." : "Answer at least one question before submitting.", variant: "destructive" });
+      toast({ title: isAr ? "الإجابة عن سؤال واحد على الأقل قبل الإرسال." : "Answer at least one question before submitting.", variant: "destructive" });
       return;
     }
     finalTimeRef.current = elapsedSeconds;
@@ -392,12 +402,12 @@ const PlacementTestPage = () => {
   const handleShare = (res: PlacementResult) => {
     const text = `I scored ${res.score}/30 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nFind yours → ${SITE_URL}/placement-test`;
     navigator.clipboard.writeText(text)
-      .then(() => toast({ title: isAr ? "تم النسخ!" : "Copied to clipboard!", description: isAr ? "شارك مستواك مع أصدقائك." : "Share your level with friends." }))
-      .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: isAr ? "انسخ الرابط لمشاركة نتيجتك." : "Copy the link to share your result." }));
+      .then(() => toast({ title: isAr ? "تم النسخ!" : "Copied to clipboard!", description: isAr ? "مشاركة المستوى مع الأصدقاء متاحة الآن." : "Share your level with friends." }))
+      .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: isAr ? "نسخ الرابط لمشاركة النتيجة." : "Copy the link to share your result." }));
   };
 
   const handleWhatsApp = (res: PlacementResult) => {
-    const text = encodeURIComponent(`I scored ${res.score}/30 on the Klovers Korean Placement Test! 🇰🇷\nMy level: ${res.levelLabel}\nTake the free test: ${SITE_URL}/placement-test`);
+    const text = encodeURIComponent(`I scored ${res.score}/30 on the Klovers Korean Placement Test!\nMy level: ${res.levelLabel}\nTake the free test: ${SITE_URL}/placement-test`);
     trackAndOpenWhatsApp(`https://wa.me/?text=${text}`, { cta_label: "placement_share", metadata: { level: res.levelKey, score: res.score } });
   };
 
@@ -415,7 +425,7 @@ const PlacementTestPage = () => {
     a.href = canvas.toDataURL("image/png");
     a.download = `klovers-${res.levelKey}.png`;
     a.click();
-    toast({ title: isAr ? "تم تحميل البطاقة!" : "Card downloaded!", description: isAr ? "شارك مستواك على مواقع التواصل." : "Share your level on social media." });
+    toast({ title: isAr ? "تم تحميل البطاقة!" : "Card downloaded!", description: isAr ? "مشاركة المستوى على مواقع التواصل متاحة الآن." : "Share your level on social media." });
   };
 
   const handleWhatsAppEnroll = (res: PlacementResult) => {
@@ -438,7 +448,7 @@ const PlacementTestPage = () => {
     a.href = canvas.toDataURL("image/png");
     a.download = `klovers-certificate-${res.levelKey}.png`;
     a.click();
-    toast({ title: isAr ? "تم تحميل الشهادة!" : "Certificate downloaded!", description: isAr ? "شارك إنجازك على LinkedIn أو سيرتك الذاتية." : "Share your achievement on LinkedIn or CV." });
+    toast({ title: isAr ? "تم تحميل الشهادة!" : "Certificate downloaded!", description: isAr ? "مشاركة الإنجاز على LinkedIn أو في السيرة الذاتية متاحة الآن." : "Share your achievement on LinkedIn or CV." });
   };
 
   const startRecording = async () => {
@@ -457,7 +467,7 @@ const PlacementTestPage = () => {
       setIsRecording(true);
       setRecordingUrl(null);
     } catch {
-      toast({ title: isAr ? "تم رفض الوصول للميكروفون" : "Microphone access denied", description: isAr ? "فعّل الوصول للميكروفون لتسجيل نفسك." : "Enable microphone access to record yourself.", variant: "destructive" });
+      toast({ title: isAr ? "تم رفض الوصول للميكروفون" : "Microphone access denied", description: isAr ? "تفعيل الوصول إلى الميكروفون مطلوب للتسجيل." : "Enable microphone access to record yourself.", variant: "destructive" });
     }
   };
 
@@ -516,7 +526,7 @@ const PlacementTestPage = () => {
 
   const handleLeadSubmit = async () => {
     if (!leadName.trim() || !leadEmail.trim()) {
-      toast({ title: isAr ? "يرجى إدخال اسمك وبريدك الإلكتروني." : "Please enter your name and email.", variant: "destructive" }); return;
+      toast({ title: isAr ? "يرجى إدخال الاسم والبريد الإلكتروني." : "Please enter your name and email.", variant: "destructive" }); return;
     }
     setLeadSaving(true);
     // First-touch campaign attribution captured on landing (see
@@ -557,9 +567,9 @@ const PlacementTestPage = () => {
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-1">
               <ClipboardList className="h-5 w-5 text-primary" />
-              <h1 className="text-2xl font-bold">{isAr ? "مراجعة إجاباتك" : "Review Your Answers"}</h1>
+              <h1 className="text-2xl font-bold">{isAr ? "مراجعة الإجابات" : "Review Your Answers"}</h1>
             </div>
-            <p className="text-sm text-muted-foreground">{isAr ? "اضغط على أي سؤال للعودة وتغييره." : "Click any question to go back and change it."}</p>
+            <p className="text-sm text-muted-foreground">{isAr ? "الضغط على أي سؤال يعيد إليه لتغييره." : "Click any question to go back and change it."}</p>
           </div>
 
           {/* Stats */}
@@ -645,7 +655,7 @@ const PlacementTestPage = () => {
             <CardContent className="pt-6 pb-6 space-y-5">
               {/* Audio prompt */}
               <div className="flex flex-col items-center gap-3 bg-primary/5 rounded-xl border border-primary/15 py-5 px-4">
-                <p className="text-xs text-muted-foreground text-center">{isAr ? "استمع للصوت الكوري ثم أجب أدناه" : "Listen to the Korean audio, then answer below"}</p>
+                <p className="text-xs text-muted-foreground text-center">{isAr ? "الاستماع إلى الصوت الكوري ثم الإجابة أدناه" : "Listen to the Korean audio, then answer below"}</p>
                 <Button
                   className="gap-2"
                   variant="outline"
@@ -840,15 +850,15 @@ const PlacementTestPage = () => {
               >
                 {isSpeaking
                   ? <><Square className="h-3.5 w-3.5" /> {isAr ? "إيقاف" : "Stop"}</>
-                  : <><Volume2 className="h-3.5 w-3.5" /> {isAr ? "استمع للنطق النموذجي" : "Hear model pronunciation"}</>}
+                  : <><Volume2 className="h-3.5 w-3.5" /> {isAr ? "الاستماع إلى النطق النموذجي" : "Hear model pronunciation"}</>}
               </Button>
 
               {/* Record yourself */}
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground font-medium">{isAr ? "قلها بنفسك ثم قيّم أداءك:" : "Say it yourself, then rate how you did:"}</p>
+                <p className="text-xs text-muted-foreground font-medium">{isAr ? "النطق ثم تقييم الأداء:" : "Say it yourself, then rate how you did:"}</p>
                 {!isRecording && !recordingUrl && (
                   <Button variant="outline" className="w-full gap-2" onClick={startRecording}>
-                    <Mic className="h-4 w-4" /> {isAr ? "سجّل نفسك (اختياري)" : "Record yourself (optional)"}
+                    <Mic className="h-4 w-4" /> {isAr ? "تسجيل الصوت (اختياري)" : "Record yourself (optional)"}
                   </Button>
                 )}
                 {isRecording && (
@@ -905,7 +915,7 @@ const PlacementTestPage = () => {
 
   // ── Result screen ───────────────────────────────────────────
   if (phase === "result" && result) {
-    const meta = (isAr ? LEVEL_META_AR : LEVEL_META)[result.levelKey] ?? { emoji: "🎓", tagline: isAr ? "مستواك" : "Your Level", description: isAr ? "مستعد لبدء رحلتك الكورية؟" : "Ready to start your Korean journey?" };
+    const meta = (isAr ? LEVEL_META_AR : LEVEL_META)[result.levelKey] ?? { emoji: "🎓", tagline: isAr ? "المستوى" : "Your Level", description: isAr ? "بداية الرحلة مع الكورية" : "Ready to start your Korean journey?" };
 
     const confidenceChip = result.confidence === "solid"
       ? { label: isAr ? "تصنيف واثق" : "Confident placement", color: "bg-green-500/10 text-green-800 dark:text-green-300" }
@@ -939,7 +949,7 @@ const PlacementTestPage = () => {
           {/* Result hero */}
           <Card className="text-center overflow-hidden">
             <div className="bg-primary/10 py-8 px-6">
-              <div className="text-6xl mb-3">{meta.emoji}</div>
+              <div className="mb-3 flex justify-center"><KloverIcon name={LEVEL_ICON[result.levelKey] ?? "sprout"} className="h-20 w-20" /></div>
               <div className="inline-block bg-primary text-primary-foreground text-xl font-bold px-5 py-2 rounded-full mb-2">
                 {result.levelLabel}
               </div>
@@ -982,8 +992,8 @@ const PlacementTestPage = () => {
               <Card className="border-primary/30 bg-gradient-to-b from-primary/5 to-transparent">
                 <CardContent className="pt-5 pb-5 space-y-4">
                   <div className="flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wider">
-                    <span>✨</span>
-                    {isAr ? "موصى به لك" : "Recommended for you"}
+                    <KloverIcon name="badge-blossom" className="h-5 w-5" />
+                    {isAr ? "الخطة المقترحة" : "Recommended for you"}
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-foreground leading-tight">{planName}</h3>
@@ -1007,7 +1017,7 @@ const PlacementTestPage = () => {
                         navigate("/free-trial");
                       }}
                     >
-                      {isAr ? "احجز تجربتي المجانية" : "Book My Free Trial"} <ArrowRight className="ml-2 h-4 w-4" />
+                      {isAr ? "حجز الحصة المجانية" : "Book My Free Trial"} <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                     <button
                       onClick={() => {
@@ -1016,11 +1026,11 @@ const PlacementTestPage = () => {
                       }}
                       className="w-full text-xs text-muted-foreground hover:text-foreground hover:underline"
                     >
-                      {isAr ? "أو شاهد خطط الأسعار" : "Or see full pricing"}
+                      {isAr ? "أو عرض خطط الأسعار" : "Or see full pricing"}
                     </button>
                   </div>
                   <p className="text-[10px] text-muted-foreground text-center">
-                    {isAr ? "⭐️ +200 طالب درّستهم ريهام · استرداد أو إعادة حجز لو الحصة الأولى ما عجبتكش" : "⭐️ 200+ students taught by Reham · refund or rebook if your first class isn't right"}
+                    {isAr ? "+200 طالب تعلّموا مع ريهام · استرداد المبلغ أو إعادة الحجز إن لم تكن الحصة المدفوعة الأولى مناسبة" : "200+ students taught by Reham · refund or rebook if your first paid class isn't right"}
                   </p>
                 </CardContent>
               </Card>
@@ -1069,11 +1079,11 @@ const PlacementTestPage = () => {
                   .sort((a, b) => a.pct - b.pct)[0];
                 if (!weakest || weakest.pct >= 0.7) return null;
                 const tips: Record<string, { tip: string; link: string; label: string }> = isAr ? {
-                  Vocabulary: { tip: "ابنِ مفرداتك الكورية بألعاب تفاعلية مجانية.", link: "/games", label: "العب ألعاب المفردات" },
-                  Grammar:    { tip: "تدرّب على أنماط القواعد الكورية بتمارين موجّهة.", link: "/games", label: "تمارين القواعد" },
-                  Reading:    { tip: "حسّن فهمك للقراءة مع مقالات مدونتنا.", link: "/blog", label: "اقرأ المقالات" },
-                  Listening:  { tip: "درّب أذنك مع الحوارات الكورية والدراما والتمارين الصوتية.", link: "/games", label: "ألعاب الاستماع" },
-                  Speaking:   { tip: "احجز حصة محادثة لتحسين كوريتك المنطوقة.", link: "/enroll", label: "احجز حصة محادثة" },
+                  Vocabulary: { tip: "بناء المفردات الكورية بألعاب تفاعلية مجانية.", link: "/games", label: "ألعاب المفردات" },
+                  Grammar:    { tip: "تدريب على أنماط القواعد الكورية بتمارين موجّهة.", link: "/games", label: "تمارين القواعد" },
+                  Reading:    { tip: "تحسين فهم القراءة مع مقالات المدونة.", link: "/blog", label: "المقالات" },
+                  Listening:  { tip: "تدريب الأذن مع الحوارات الكورية والدراما والتمارين الصوتية.", link: "/games", label: "ألعاب الاستماع" },
+                  Speaking:   { tip: "حصة محادثة لتحسين الكورية المنطوقة.", link: "/enroll", label: "حجز حصة محادثة" },
                 } : {
                   Vocabulary: { tip: "Build your Korean vocabulary with free interactive games.", link: "/games", label: "Play vocab games" },
                   Grammar:    { tip: "Practise Korean grammar patterns with guided exercises.", link: "/games", label: "Grammar exercises" },
@@ -1085,7 +1095,7 @@ const PlacementTestPage = () => {
                 return (
                   <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 space-y-1.5">
                     <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                      ⚠️ {isAr ? `أضعف مهارة: ${skillLabelsWeak[weakest.sec]}` : `Your weakest area: ${weakest.sec}`} ({result.sectionScores[weakest.sec]}/{sectionTotal[weakest.sec]})
+                      <KloverIcon name="lightbulb-sprout" className="h-5 w-5" /> {isAr ? `أضعف مهارة: ${skillLabelsWeak[weakest.sec]}` : `Your weakest area: ${weakest.sec}`} ({result.sectionScores[weakest.sec]}/{sectionTotal[weakest.sec]})
                     </p>
                     <p className="text-xs text-muted-foreground">{tip}</p>
                     <button
@@ -1129,7 +1139,7 @@ const PlacementTestPage = () => {
                 >
                   <span className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-primary" />
-                    {isAr ? "خطة دراستك لمدة 4 أسابيع" : "Your 4-week study roadmap"}
+                    {isAr ? "خطة دراسة لمدة 4 أسابيع" : "Your 4-week study roadmap"}
                   </span>
                   {showRoadmap ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </button>
@@ -1159,10 +1169,10 @@ const PlacementTestPage = () => {
               {/* 24 Sep 2026: the per-level student quotes that sat here
                   (SOCIAL_PROOF / SOCIAL_PROOF_AR) were removed. They matched
                   no real review, and Klovers never invents reviews. */}
-              <p className="text-sm font-semibold text-foreground text-center">{isAr ? "مستعد لبدء التعلّم؟" : "Ready to start learning?"}</p>
+              <p className="text-sm font-semibold text-foreground text-center">{isAr ? "بداية التعلّم" : "Ready to start learning?"}</p>
               <div className="flex gap-2">
                 <Button size="lg" className="flex-1" onClick={() => { track.custom("placement_recommendation_clicked", { level: result.levelKey, cta: "free_trial_bottom" }); logLeadEvent({ source_type: "placement", cta_label: "bottom_cta_free_trial", metadata: { level: result.levelKey } }); navigate("/free-trial"); }}>
-                  {isAr ? "🎁 احجز حصة مجانية" : "🎁 Book a Free Class"} <ArrowRight className="ml-2 h-4 w-4" />
+                  {isAr ? "حجز حصة مجانية" : "Book a Free Class"} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline" className="flex-1 gap-2" onClick={() => handleWhatsAppEnroll(result)}>
                   <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
@@ -1173,12 +1183,12 @@ const PlacementTestPage = () => {
               </div>
               {!userId && (
                 <Button variant="outline" className="w-full" onClick={() => navigate("/signup")}>
-                  {isAr ? "احفظ نتيجتي — سجّل مجاناً" : "Save My Result — Sign Up Free"}
+                  {isAr ? "حفظ النتيجة: تسجيل مجاني" : "Save My Result — Sign Up Free"}
                 </Button>
               )}
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => setLeadDialogOpen(true)}>
-                  {isAr ? "📚 احصل على خطة دراسية مجانية" : "📚 Get free study plan"}
+                  {isAr ? "خطة دراسية مجانية" : "Get free study plan"}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 text-xs gap-1.5" onClick={() => handleDownloadCard(result)}>
                   <Download className="h-3.5 w-3.5" /> {isAr ? "تحميل البطاقة" : "Download card"}
@@ -1190,7 +1200,7 @@ const PlacementTestPage = () => {
               <div className="grid grid-cols-3 gap-2 pt-1">
                 {[
                   { icon: <Users className="h-3.5 w-3.5" />, label: isAr ? "+200 طالب" : "200+ students" },
-                  { icon: <BookOpen className="h-3.5 w-3.5" />, label: isAr ? "مستويات A1–C2" : "A1–C2 levels" },
+                  { icon: <BookOpen className="h-3.5 w-3.5" />, label: isAr ? "من الهانغول إلى المستوى 6" : "Hangul to Level 6" },
                   { icon: <Gamepad2 className="h-3.5 w-3.5" />, label: isAr ? "13 لعبة مجانية" : "13 free games" },
                 ].map(({ icon, label }) => (
                   <div key={label} className="flex flex-col items-center gap-1 bg-muted/50 rounded-lg p-2 text-center">
@@ -1215,7 +1225,7 @@ const PlacementTestPage = () => {
               </div>
               {/* Sub-test CTAs */}
               <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground text-center uppercase tracking-wider">{isAr ? "تعمق في المهارات" : "Skill deep-dives"}</p>
+                <p className="text-xs font-medium text-muted-foreground text-center uppercase tracking-wider">{isAr ? "تعمّق في المهارات" : "Skill deep-dives"}</p>
 
                 {/* Listening Exam */}
                 {listeningAnswers.length === 0 ? (
@@ -1327,7 +1337,7 @@ const PlacementTestPage = () => {
                             className="flex items-center gap-1 text-primary hover:underline text-[11px]"
                             onClick={() => speakKorean(q.passage!)}
                           >
-                            <Volume2 className="h-3 w-3" /> {isAr ? "استمع مجدداً" : "Listen again"}
+                            <Volume2 className="h-3 w-3" /> {isAr ? "الاستماع مجددًا" : "Listen again"}
                           </button>
                         </div>
                       )}
@@ -1336,7 +1346,7 @@ const PlacementTestPage = () => {
                         <div className="ml-7 text-xs space-y-1 mb-2">
                           {!isCorrect && (
                             <p className="text-red-700 dark:text-red-300">
-                              {isAr ? "إجابتك:" : "Your answer:"} {q.options[userAnswer] ?? "—"}
+                              {isAr ? "الإجابة:" : "Your answer:"} {q.options[userAnswer] ?? "—"}
                             </p>
                           )}
                           <p className="text-green-800 dark:text-green-300 font-medium">
@@ -1348,7 +1358,7 @@ const PlacementTestPage = () => {
                       <p className="ml-7 text-xs text-muted-foreground leading-relaxed">{q.explanation}</p>
                       {q.arabicTip && (
                         <p className="mt-1.5 ml-7 text-xs text-muted-foreground border-r-2 border-primary/40 pr-2 text-right leading-relaxed" dir="rtl">
-                          💡 {q.arabicTip}
+                          <KloverIcon name="lightbulb-sprout" className="inline-block h-4 w-4 align-text-bottom" /> {q.arabicTip}
                         </p>
                       )}
                     </div>
@@ -1362,31 +1372,31 @@ const PlacementTestPage = () => {
           <Dialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen}>
             <DialogContent className="max-w-sm">
               <DialogHeader>
-                <DialogTitle>{isAr ? "احصل على خطة دراستك المجانية" : "Get your free study plan"}</DialogTitle>
+                <DialogTitle>{isAr ? "خطة دراسية مجانية" : "Get your free study plan"}</DialogTitle>
                 <DialogDescription>
-                  {isAr ? `سنرسل خطة دراسية مخصصة لمستوى ${result.levelLabel} لبريدك.` : `We'll send a personalised ${result.levelLabel} study plan to your inbox.`}
+                  {isAr ? `تصل خطة دراسية مخصصة لمستوى ${result.levelLabel} إلى البريد الإلكتروني.` : `We'll send a personalised ${result.levelLabel} study plan to your inbox.`}
                 </DialogDescription>
               </DialogHeader>
               {leadSaved ? (
                 <div className="text-center py-4 space-y-2">
                   <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
-                  <p className="font-semibold text-sm">{isAr ? "سنرسل خطتك قريباً!" : "We'll send your plan shortly!"}</p>
+                  <p className="font-semibold text-sm">{isAr ? "تصل الخطة قريبًا!" : "We'll send your plan shortly!"}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <Input
-                    placeholder={isAr ? "اسمك" : "Your name"}
+                    placeholder={isAr ? "الاسم" : "Your name"}
                     value={leadName}
                     onChange={e => setLeadName(e.target.value)}
                   />
                   <Input
-                    placeholder={isAr ? "بريدك الإلكتروني" : "Your email"}
+                    placeholder={isAr ? "البريد الإلكتروني" : "Your email"}
                     type="email"
                     value={leadEmail}
                     onChange={e => setLeadEmail(e.target.value)}
                   />
                   <Button className="w-full" onClick={handleLeadSubmit} disabled={leadSaving}>
-                    {leadSaving ? (isAr ? "جارٍ الإرسال..." : "Sending…") : (isAr ? "أرسل لي الخطة" : "Send me the plan")}
+                    {leadSaving ? (isAr ? "جارٍ الإرسال..." : "Sending…") : (isAr ? "إرسال الخطة" : "Send me the plan")}
                   </Button>
                 </div>
               )}
@@ -1407,7 +1417,7 @@ const PlacementTestPage = () => {
       <main id="main-content" className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-1">{isAr ? "اختبار تحديد المستوى" : "Placement Test"}</h1>
-          <p className="text-muted-foreground text-sm">{isAr ? "5 دقائق · أجب أو تخطَّ كل سؤال — اضغط 1–4 للاختيار." : "5 minutes · answer or skip each question — press 1–4 to select."}</p>
+          <p className="text-muted-foreground text-sm">{isAr ? "5 دقائق · إجابة كل سؤال أو تخطيه، والاختيار بالأرقام 1–4." : "5 minutes · answer or skip each question — press 1–4 to select."}</p>
         </div>
 
         {/* Absolute-beginner shortcut. Mid-quiz abandonment data showed a
@@ -1417,13 +1427,13 @@ const PlacementTestPage = () => {
             of forcing them to skip 30 questions. */}
         {totalAnswered === 0 && page === 0 && (
           <div className="mb-5 flex items-center gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
-            <span className="text-2xl shrink-0">🌱</span>
+            <KloverIcon name="sprout" className="h-10 w-10" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground leading-tight">
-                {isAr ? "تماماً مبتدئ؟" : "Total beginner?"}
+                {isAr ? "البداية من الصفر؟" : "Total beginner?"}
               </p>
               <p className="text-xs text-muted-foreground">
-                {isAr ? "تخطَّ الاختبار واحجز حصتك التجريبية مباشرةً." : "Skip the test and book your free trial directly."}
+                {isAr ? "يمكن تخطّي الاختبار وحجز الحصة التجريبية مباشرةً." : "Skip the test and book your free trial directly."}
               </p>
             </div>
             <Button
@@ -1435,7 +1445,7 @@ const PlacementTestPage = () => {
                 navigate("/free-trial?level=hangul");
               }}
             >
-              {isAr ? "احجز التجربة" : "Book trial"} <ArrowRight className="h-3 w-3 ml-1" />
+              {isAr ? "حجز التجربة" : "Book trial"} <ArrowRight className="h-3 w-3 ml-1" />
             </Button>
           </div>
         )}
@@ -1532,7 +1542,7 @@ const PlacementTestPage = () => {
 
                   {q.passage && q.section === "Listening" ? (
                     <div className="flex flex-col items-center gap-2 mb-4 py-4 bg-primary/5 rounded-xl border border-primary/15">
-                      <p className="text-xs text-muted-foreground">{isAr ? "استمع للنص ثم أجب أدناه" : "Listen to the passage, then answer below"}</p>
+                      <p className="text-xs text-muted-foreground">{isAr ? "الاستماع إلى النص ثم الإجابة أدناه" : "Listen to the passage, then answer below"}</p>
                       <Button
                         variant="outline"
                         size="sm"
@@ -1541,7 +1551,7 @@ const PlacementTestPage = () => {
                       >
                         {isSpeaking
                           ? <><Square className="h-3.5 w-3.5" /> {isAr ? "إيقاف" : "Stop"}</>
-                          : <><Volume2 className="h-3.5 w-3.5" /> {isAr ? "استمع" : "Listen"}</>}
+                          : <><Volume2 className="h-3.5 w-3.5" /> {isAr ? "استماع" : "Listen"}</>}
                       </Button>
                     </div>
                   ) : q.passage ? (
@@ -1557,7 +1567,7 @@ const PlacementTestPage = () => {
                         onClick={(e) => { e.stopPropagation(); handleUnskip(q.id); }}
                         className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
                       >
-                        <Undo2 className="h-3.5 w-3.5" /> {isAr ? "أجب هذا السؤال" : "Answer this question"}
+                        <Undo2 className="h-3.5 w-3.5" /> {isAr ? "الإجابة عن هذا السؤال" : "Answer this question"}
                       </button>
                     </div>
                   ) : (
