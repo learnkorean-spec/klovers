@@ -374,11 +374,16 @@ const BlogPostPage = () => {
       headline: post.title,
       description: post.description,
       image: [ogImage],
-      author: {
-        "@type": "Organization",
-        name: post.author,
-        url: "https://kloversegy.com"
-      },
+      author:
+        post.author === "Reham Elshrkawy"
+          ? {
+              "@type": "Person",
+              name: "Reham Elshrkawy",
+              url: "https://kloversegy.com/about",
+              jobTitle: "Korean language teacher, founder of Klovers",
+            }
+          : // GEO-09: one Klovers Organization, one spelling, whatever the byline says.
+            { "@type": "Organization", name: "Klovers", alternateName: "كلوفرز", url: "https://kloversegy.com" },
       publisher: {
         "@type": "Organization",
         name: "Klovers — Korean Lovers Academy",
