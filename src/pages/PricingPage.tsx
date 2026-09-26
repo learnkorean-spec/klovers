@@ -252,7 +252,7 @@ const PricingPage = () => {
           "item": {
             "@type": "Course",
             "name": "Group Korean Classes",
-            "provider": { "@type": "Organization", "name": "Klovers Korean Academy" },
+            "provider": { "@type": "Organization", "name": "Klovers" },
             "inLanguage": "ko"
           }
         },
@@ -262,7 +262,7 @@ const PricingPage = () => {
           "item": {
             "@type": "Course",
             "name": "Private Korean Classes",
-            "provider": { "@type": "Organization", "name": "Klovers Korean Academy" },
+            "provider": { "@type": "Organization", "name": "Klovers" },
             "inLanguage": "ko"
           }
         }

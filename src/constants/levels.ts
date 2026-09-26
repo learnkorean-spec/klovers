@@ -64,7 +64,7 @@ export const LEVELS: Level[] = [
     key: "hangul",
     name: "Hangul Foundation",
     shortLabel: "Hangul",
-    shortLabel_ar: "تأسيس الهانغل",
+    shortLabel_ar: "تأسيس الهانغول",
     topik: null,
     // CEFR has no "A0". "Pre-A1" is the official term for the stage below A1,
     // introduced in the 2018 CEFR Companion Volume.
