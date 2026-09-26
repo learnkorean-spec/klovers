@@ -197,8 +197,19 @@ export const KLOVERS_WORLD = {
       },
     },
 
+    /**
+     * The two learners' names are Re's decision of 27 Sep 2026, made while
+     * planning Book 1 (claude/BOOK_1_PLAN_AND_LESSON1_SAMPLE_2026-09-27.md).
+     * Use exactly these spellings in every language.
+     */
     maleLearner: {
       type: "foreign_korean_learner",
+
+      name: {
+        en: "Adam",
+        ar: "آدم",
+        ko: "아담",
+      },
 
       roles: [
         "structure",
@@ -224,6 +235,12 @@ export const KLOVERS_WORLD = {
 
     femaleLearner: {
       type: "foreign_korean_learner",
+
+      name: {
+        en: "Lina",
+        ar: "لينا",
+        ko: "리나",
+      },
 
       roles: [
         "curiosity",
