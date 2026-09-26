@@ -1,0 +1,36 @@
+# One-off: applies scripts/wm-patch/changes.patch on this branch, removes the
+# patch folder and commits. Deleted before merge.
+name: World-mode patch (one-off)
+
+on:
+  push:
+    branches:
+      - world/pages-cafe-village
+    paths:
+      - scripts/wm-patch/changes.patch
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: world/pages-cafe-village
+      - name: Apply patch and commit
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          if git apply --unidiff-zero -p1 scripts/wm-patch/changes.patch; then
+            git rm -r -q scripts/wm-patch
+            git add -A
+            git commit -m "Apply world-mode patch (pricing, courses, trial slot picker, Hangul starter)"
+          else
+            echo "PATCH FAILED" > scripts/wm-patch/FAILED.txt
+            git add -A
+            git commit -m "World-mode patch did not apply"
+          fi
+          git push
