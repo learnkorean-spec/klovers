@@ -26,6 +26,7 @@ import { gameIconName } from "@/constants/gameIcons";
 import { gameWorlds } from "@/constants/gameWorlds";
 import { cn } from "@/lib/utils";
 import GameWorldsHub from "@/components/games/GameWorldsHub";
+import WorldEntryCard from "@/components/games/WorldEntryCard";
 import GamesLeaderboard from "@/components/games/GamesLeaderboard";
 // Cluby follows the egg (story canon): he appears only once the dashboard
 // has marked him awake, and never for guests. Before that, the clover egg.
@@ -428,6 +429,9 @@ const GamesPage = () => {
             onPlay={selectGame}
           />
         </section>
+
+        {/* KLOVERS World — the 3D courtyard prototype (/world). */}
+        <WorldEntryCard isAr={isAr} />
 
         {/* Game selector */}
         <section className="py-10 px-4">

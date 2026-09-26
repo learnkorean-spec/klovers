@@ -88,6 +88,9 @@ const RsvpConfirmationPage = lazy(() => import("./pages/RsvpConfirmationPage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
+// KLOVERS World (3D prototype). The route shell is tiny; three.js loads in a
+// second chunk only after the page checks WebGL. See src/game/.
+const WorldPage = lazy(() => import("./pages/WorldPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -221,6 +224,7 @@ const App = () => (
                     already sent to students do not 404. */}
                 <Route path="/unit-placement" element={<Navigate to="/placement-test" replace />} />
                 <Route path="/games" element={<GamesPage />} />
+                <Route path="/world" element={<WorldPage />} />
                 <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
                 <Route path="/textbook/progress" element={<AuthProtectedRoute><TextbookProgressPage /></AuthProtectedRoute>} />
                 <Route path="/review" element={<AuthProtectedRoute><VocabularyReviewPage /></AuthProtectedRoute>} />
