@@ -12,24 +12,111 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
+import { supabase } from "@/integrations/supabase/client";
+import { getAttribution } from "@/lib/leadSession";
 
 const WA_DIRECT = `${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I'm interested in learning Korean with Klovers. Can you tell me more?")}`;
 const WA_GROUP = "https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq";
 
+/**
+ * How the message is actually delivered.
+ *
+ * This form used to fake it: on submit it showed a "Thank you!" toast, cleared
+ * every field, and opened a Telegram link 1.5s later. Nothing was ever sent
+ * anywhere. A visitor who wrote a real question - the one thing this page
+ * exists for - was told it had been received when it had not, and the text was
+ * destroyed before they could copy it. Silent data loss presented as success.
+ *
+ * Two channels, so one failing does not lose the message:
+ *
+ *  1. `submit-lead`, the same edge function every other lead form on the site
+ *     uses. It runs with the service role, so it is not subject to the anon
+ *     INSERT policy on public.leads (which only admits source =
+ *     'placement_test'), and it rate-limits per IP. The message travels in
+ *     `goal`, the field the sales team already reads.
+ *
+ *  2. WhatsApp, pre-filled with the whole message. The text is IN the link, so
+ *     if WhatsApp does not open they can still copy it from the fallback.
+ *
+ * If both fail, every field is kept and the page says so in its own language.
+ * Losing the visitor's message is never the failure mode.
+ */
+const buildMessage = (
+  f: { name: string; email: string; subject: string; message: string },
+  isAr: boolean,
+) => {
+  const from = isAr ? "الاسم" : "Name";
+  const email = isAr ? "البريد الإلكتروني" : "Email";
+  const subject = isAr ? "الموضوع" : "Subject";
+  return [`${from}: ${f.name}`, `${email}: ${f.email}`, `${subject}: ${f.subject}`, "", f.message].join("\n");
+};
+
 const ContactPage = () => {
-  useSEO({ title: "Contact Us", description: "Get in touch with Klovers Korean Lovers Academy. We would love to hear from you about courses, enrollment, or any questions.", canonical: "https://kloversegy.com/contact" });
-  const { t, language } = useLanguage();
-  const isAr = language === "ar";
+  useSEO({ title: "Contact Us", description: "Get in touch with Klovers. We would love to hear from you about courses, enrollment, or any questions.", canonical: "https://kloversegy.com/contact" });
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  /** Set only when delivery failed, so the form is never a dead end. */
+  const [failed, setFailed] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: "Thank you!", description: "Please continue in our Telegram group." });
-    setForm({ name: "", email: "", subject: "", message: "" });
-    setTimeout(() => {
-      window.open("https://t.me/+Fu5T7d4wLMsxNDY9", "_blank", "noopener,noreferrer");
-    }, 1500);
+    if (sending) return;
+
+    setSending(true);
+    setFailed(false);
+
+    const text = buildMessage(form, isAr);
+    // Computed up front and kept regardless of outcome, so the fallback always
+    // carries exactly what the visitor typed.
+    const waLink = `${WHATSAPP_BASE}?text=${encodeURIComponent(text)}`;
+
+    try {
+      const attribution = getAttribution();
+      const { error } = await supabase.functions.invoke("submit-lead", {
+        body: {
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          // `goal` is capped at 500 chars server-side. Trimmed to fit rather
+          // than rejected: a 400 would fall through to WhatsApp with nothing
+          // lost, but a silent reject would not.
+          goal: text.slice(0, 500),
+          // `source` is named explicitly and the attribution fields are mapped
+          // one by one, following EnrollNowPage. A `...attribution` spread here
+          // would clobber `source` with whatever the stored attribution held,
+          // and the lead would be filed as the wrong kind of enquiry.
+          source: "contact",
+          utm_source: attribution.utm_source,
+          utm_medium: attribution.utm_medium,
+          utm_campaign: attribution.campaign,
+          utm_content: attribution.utm_content,
+          gclid: attribution.gclid,
+        },
+      });
+      if (error) throw error;
+
+      setSent(true);
+      setForm({ name: "", email: "", subject: "", message: "" });
+      toast({
+        title: isAr ? "وصلتنا رسالتك" : "Message received",
+        description: isAr ? "هنرد عليك في أقرب وقت." : "We'll get back to you shortly.",
+      });
+    } catch (err) {
+      // Nothing cleared, no success claimed. The visitor keeps their text and
+      // gets a one-click way to send it themselves.
+      setFailed(true);
+      console.error("[contact] submit-lead failed:", err);
+      toast({
+        title: isAr ? "لم نتمكن من الإرسال" : "Could not send",
+        description: isAr
+          ? "رسالتك ما اتبعتتش ومتبعتمش. تقدر تبعتها على واتساب من الزر بالأسفل."
+          : "Your message was not sent, and has not been lost. Send it on WhatsApp using the button below.",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -55,14 +142,14 @@ const ContactPage = () => {
                 onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WA_DIRECT, { cta_label: "contact_direct" }); }}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-2xl px-6 py-5 shadow-lg transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
+                className="flex items-center gap-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl px-6 py-5 shadow-lg transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
               >
-                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-background/20 flex items-center justify-center">
                   <MessageCircle className="h-6 w-6" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-lg leading-tight">{isAr ? "تحدث عبر واتساب" : "Chat on WhatsApp"}</p>
-                  <p className="text-white/80 text-sm">{isAr ? "أسرع طريقة للتواصل — نرد خلال دقائق" : "Fastest way to reach us — reply within minutes"}</p>
+                  <p className="font-bold text-lg leading-tight">{isAr ? "التواصل عبر واتساب" : "Contact on WhatsApp"}</p>
+                  <p className="text-primary-foreground/80 text-sm">{isAr ? "أسرع طريقة للتواصل — نرد خلال دقائق" : "Fastest way to reach us — reply within minutes"}</p>
                 </div>
                 <svg viewBox="0 0 24 24" className="h-5 w-5 opacity-70" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
               </a>
@@ -73,14 +160,14 @@ const ContactPage = () => {
                 onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WA_GROUP, { cta_label: "contact_group" }); }}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 bg-card border border-border hover:border-[#25D366]/50 rounded-2xl px-6 py-4 transition-all hover:shadow-md"
+                className="flex items-center gap-4 bg-card border border-border hover:border-primary/50 rounded-2xl px-6 py-4 transition-all hover:shadow-md"
               >
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#25D366]/10 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-[#25D366]" />
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-foreground text-sm">{isAr ? "انضم لمجتمعنا على واتساب" : "Join our WhatsApp Community"}</p>
-                  <p className="text-muted-foreground text-xs">{isAr ? "تواصل مع الطلاب واحصل على تحديثات ونصائح" : "Connect with students, get updates & tips"}</p>
+                  <p className="font-semibold text-foreground text-sm">{isAr ? "مجتمع واتساب" : "WhatsApp Community"}</p>
+                  <p className="text-muted-foreground text-xs">{isAr ? "التواصل عبر المجموعة والحصول على التحديثات" : "Community chat and updates"}</p>
                 </div>
                 <svg viewBox="0 0 24 24" className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
               </a>
@@ -148,10 +235,48 @@ const ContactPage = () => {
                           rows={5}
                         />
                       </div>
-                      <Button type="submit" className="w-full gap-2">
+                      <Button type="submit" className="w-full gap-2" disabled={sending}>
                         <Send className="h-4 w-4" />
-                        {t("contactPage", "form.send")}
+                        {sending
+                          ? isAr ? "جارٍ الإرسال…" : "Sending…"
+                          : t("contactPage", "form.send")}
                       </Button>
+
+                      {/*
+                        Shown only when delivery failed. The message is still in
+                        the form above - it is never cleared on failure - and this
+                        carries the same text into WhatsApp, so the visitor always
+                        has a way through that does not depend on our API being up.
+                      */}
+                      {failed && (
+                        <div
+                          role="alert"
+                          className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 space-y-3"
+                        >
+                          <p className="text-sm text-foreground">
+                            {isAr
+                              ? "تعذّر إرسال الرسالة عبر الموقع. لم تُمسح — يمكنك إرسالها الآن على واتساب."
+                              : "Sending through the site did not work. Nothing was lost — send it on WhatsApp now."}
+                          </p>
+                          <a
+                            href={`${WHATSAPP_BASE}?text=${encodeURIComponent(buildMessage(form, isAr))}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            {isAr ? "إرسال عبر واتساب" : "Send on WhatsApp"}
+                          </a>
+                        </div>
+                      )}
+
+                      {sent && !failed && (
+                        <p className="text-sm text-muted-foreground text-center">
+                          {isAr
+                            ? "تم استلام الرسالة. سنرد قريبًا."
+                            : "Message received. We'll reply soon."}
+                        </p>
+                      )}
                     </form>
                   </CardContent>
                 </Card>
