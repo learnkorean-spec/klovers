@@ -19,7 +19,7 @@ const HomeFAQ = () => {
     <section id="home-faq" className="py-16 md:py-20 px-4" aria-labelledby="home-faq-title">
       <div className="max-w-2xl mx-auto">
         <h2 id="home-faq-title" className="text-2xl md:text-3xl font-bold text-center text-foreground mb-8">
-          {isAr ? "أسئلة قبل ما تبدأ" : "Questions Before You Start"}
+          {isAr ? "أسئلة قبل البدء" : "Questions Before You Start"}
         </h2>
         <div className="space-y-3">
           {FAQ_KEYS.map((n) => (

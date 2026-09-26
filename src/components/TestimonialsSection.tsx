@@ -1,5 +1,10 @@
 import { Facebook, ThumbsUp } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { FACEBOOK_RECOMMENDATIONS, toArabicDigits } from "@/lib/trustFigures";
+
+const AR_MONTHS: Record<string, string> = { Jan: "يناير", Feb: "فبراير", Mar: "مارس", Apr: "أبريل", May: "مايو", Jun: "يونيو", Jul: "يوليو", Aug: "أغسطس", Sep: "سبتمبر", Oct: "أكتوبر", Nov: "نوفمبر", Dec: "ديسمبر" };
+/** "Jul 2023" -> "يوليو ٢٠٢٣" on the Arabic page (one language per page). */
+const arDate = (d: string) => { const [m, y] = d.split(" "); return AR_MONTHS[m] ? `${AR_MONTHS[m]} ${toArabicDigits(y)}` : d; };
 
 /**
  * The `level` field on each review is OUR badge, not the student's words — the
@@ -180,7 +185,6 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="font-semibold text-sm text-foreground truncate">{review.name}</span>
-              <span className="text-base leading-none">{review.flag}</span>
             </div>
             {/* What Facebook shows beside the name. Not a rating — see the
                 block comment at the top of this file. */}
@@ -189,7 +193,7 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
               <span className="text-xs font-semibold text-foreground/80">
                 {isAr ? "توصية" : "Recommends"}
               </span>
-              <span className="text-xs text-muted-foreground">· {review.date}</span>
+              <span className="text-xs text-muted-foreground">· {isAr ? arDate(review.date) : review.date}</span>
             </div>
             {/* 25 Sep 2026 (QA): the "Verified Student · N months · Level X → Y"
                 line is gone. It was our badge, not the reviewer's words, and
@@ -291,7 +295,7 @@ const TestimonialsSection = () => {
             {isAr ? "١٠٠٪ يوصون بها" : "100% recommend"}
           </span>
           <span className="text-muted-foreground text-sm">
-            {isAr ? "من ٢٠ مراجعة على فيسبوك" : "from 20 reviews on Facebook"}
+            {isAr ? `من ${toArabicDigits(FACEBOOK_RECOMMENDATIONS.count)} مراجعة على فيسبوك` : `from ${FACEBOOK_RECOMMENDATIONS.count} reviews on Facebook`}
           </span>
         </div>
       </div>

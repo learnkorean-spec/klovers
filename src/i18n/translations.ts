@@ -2252,7 +2252,7 @@ export const translations = {
       ],
     },
     footer: {
-      tagline: "تعلّم الكورية. أحب الثقافة. تحدّث بثقة.",
+      tagline: "تعلُّم الكورية، وحبّ الثقافة، والتحدّث بثقة.",
       quickLinks: "روابط سريعة",
       joinCommunity: "انضم إلى مجتمعنا",
       copyright: "Klovers دورات كورية. جميع الحقوق محفوظة.",
