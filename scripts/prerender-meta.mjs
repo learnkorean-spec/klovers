@@ -746,7 +746,7 @@ const MARKETING_ROUTES = [
     path: "/welcome-back",
     title: "Welcome Back — Returning Students Offer",
     description:
-      "Returning Klovers students: a discount on your next enrollment, and extra savings when friends join.",
+      "Returning Klovers students get 20% off their next enrollment, plus extra savings when friends join. Pick up where you left off.",
     body: WELCOME_BACK_BODY_HTML,
     faq: MARKETING_FAQ["/welcome-back"],
   },

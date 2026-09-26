@@ -28,6 +28,10 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  * NUMERALS: the Arabic hero uses Arabic-Indic numerals throughout, because the
  * next-class date line (ar-EG locale) does; it used to mix "8" with "٢٥".
  *
+ * ARABIC (25 Sep 2026, brand guard): neutral Modern Standard Arabic. Buttons
+ * and card lines use verbal nouns; no verb addresses the reader as male or
+ * female, and no Egyptian dialect.
+ *
  * The section is dark in BOTH themes (photo under a charcoal scrim), which is
  * why it uses live-bright and ivory/charcoal literals.
  *
@@ -126,21 +130,21 @@ const HeroSection = () => {
     },
     {
       icon: "chat-annyeong" as KloverIconName,
-      tone: "bg-white",
-      title: isAr ? "تتدرّب مع ناس" : "Practice together",
+      tone: "bg-ivory",
+      title: isAr ? "تدريب جماعي" : "Practice together",
       body: isAr ? "مجموعات صغيرة مباشرة" : "Small live groups",
     },
     {
       icon: "globe-plane" as KloverIconName,
       tone: "bg-klovers-yellow",
       title: isAr ? "كورية حقيقية" : "Real-life Korean",
-      body: isAr ? "لغة تستعملها فعلاً" : "Useful, practical, cultural",
+      body: isAr ? "لغة للاستعمال اليومي" : "Useful, practical, cultural",
     },
     {
       icon: "namsan-tower" as KloverIconName,
-      tone: "bg-white",
+      tone: "bg-ivory",
       title: isAr ? "خطوة واضحة" : "A clear next step",
-      body: isAr ? "بعد كل حصة بتعرف الجاية" : "After every class, you know what comes next",
+      body: isAr ? "بعد كل حصة تتضح الخطوة التالية" : "After every class, you know what comes next",
     },
   ];
 
@@ -197,13 +201,13 @@ const HeroSection = () => {
               style={{ textShadow: "0 4px 40px rgba(20,20,18,0.9), 0 2px 8px rgba(20,20,18,0.8)" }}
             >
               <span className={`block ${headlineSize}`}>
-                {isAr ? "ابدأ التحدث بالكورية" : "Start Speaking Korean"}
+                {isAr ? "التحدّث بالكورية يبدأ" : "Start Speaking Korean"}
               </span>
               <span
                 className={`block mt-1 ${headlineSize}`}
                 style={{ color: "#FFFF00", textShadow: "0 0 60px rgba(255, 255, 0, 0.35), 0 4px 24px rgba(20,20,18,0.7)" }}
               >
-                {isAr ? "من حصتك الأولى" : "From Your First Live Class"}
+                {isAr ? "من الحصة الأولى" : "From Your First Live Class"}
               </span>
             </h1>
 
@@ -230,7 +234,7 @@ const HeroSection = () => {
                   onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "homepage_hero_free_trial", metadata: { language } }); } catch {} }}
                 >
                   <Gift className="h-5 w-5" />
-                  {isAr ? "احجز حصتك المجانية" : "Book a Free Class"}
+                  {isAr ? "حجز حصة مجانية" : "Book a Free Class"}
                   <ArrowRight className="h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
@@ -247,8 +251,8 @@ const HeroSection = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <MessageCircle className="h-5 w-5 text-[#25D366]" />
-                    اسألنا على واتساب
+                    <MessageCircle className="h-5 w-5 text-klovers-green" />
+                    السؤال عبر واتساب
                   </a>
                 </Button>
               )}
@@ -257,7 +261,7 @@ const HeroSection = () => {
             {/* 4. Proof line. */}
             <p className="text-ivory/80 text-sm font-medium" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
               {isAr
-                ? "مجموعات صغيرة · بالعربي أو الإنجليزي · مناسب للمبتدئين"
+                ? "مجموعات صغيرة · بالعربية أو الإنجليزية · مناسبة للمبتدئين"
                 : "Small groups · English & Arabic · Beginner friendly"}
             </p>
 
@@ -270,7 +274,7 @@ const HeroSection = () => {
                 </span>
                 <span>
                   <span className="font-semibold text-live-bright">{isAr ? "أقرب حصة مجانية:" : "Next free class:"}</span>{" "}
-                  {nextClass.day} · {nextClass.time} {isAr ? "بتوقيتك" : "your time"}
+                  {nextClass.day} · {nextClass.time} {isAr ? "بالتوقيت المحلي" : "your time"}
                   {nextClass.zoneName && <span className="text-ivory/60"> ({nextClass.zoneName})</span>}
                 </span>
               </div>
