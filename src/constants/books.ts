@@ -19,8 +19,8 @@ export const BOOKS = {
     badge: "A0",
     titleAr: "الكتاب الكوري للمبتدئين — المستوى A0",
     titleEn: "Korean for Beginners — Level A0",
-    subtitleAr: "تمهيد الهانغُل · 5 حصص",
-    subtitleEn: "Hangul primer · 5 classes",
+    subtitleAr: "تمهيد الهانغُل · 4 حصص",
+    subtitleEn: "Hangul primer · 4 classes",
   },
   "hangul-a0-en": {
     path: "books/hangul-a0-en.pdf",
@@ -28,8 +28,8 @@ export const BOOKS = {
     badge: "A0",
     titleAr: "الكتاب الكوري للمبتدئين — المستوى A0 (النسخة الإنجليزية)",
     titleEn: "Korean for Beginners — Level A0 (English edition)",
-    subtitleAr: "تمهيد الهانغُل · 5 حصص",
-    subtitleEn: "Hangul primer · 5 classes",
+    subtitleAr: "تمهيد الهانغُل · 4 حصص",
+    subtitleEn: "Hangul primer · 4 classes",
   },
   "trial-guide-ar": {
     path: "books/trial-guide-ar.pdf",
