@@ -275,23 +275,23 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
   if (isAr) {
     const opener = isHangul
       ? `<p style="margin:0 0 18px;">يعني <strong>البداية من الأساس</strong> — من الحروف الكورية نفسها، وفيه مجموعة تأسيس جاهزة.</p>`
-      : `<p style="margin:0 0 18px;">يعني <strong>البداية مش من الصفر</strong> — الأساس موجود، وفيه مجموعة في نفس المستوى جاهزة.</p>`;
+      : `<p style="margin:0 0 18px;">أي أن <strong>البداية ليست من الصفر</strong>: الأساس موجود، وهناك مجموعة جاهزة في المستوى نفسه.</p>`;
 
     const scoreBlock = !ladder ? "" : `
-    <h2 style="color:${BRAND_DARK};font-size:16px;margin:0 0 8px;">ليه المستوى ده بالذات؟</h2>
+    <h2 style="color:${BRAND_DARK};font-size:16px;margin:0 0 8px;">لماذا هذا المستوى تحديدًا؟</h2>
     <p style="margin:0 0 12px;color:${BRAND_MUTED};font-size:14px;">الاختبار ٥٢ سؤال مرتّبين من الأسهل للأصعب، وكل مستوى ليه خط ثابت لازم يتعدّى.</p>
     <table style="width:100%;border-collapse:collapse;margin:0 0 10px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;">
       ${row("الدرجة", num(payload.score as number, true))}
       ${row(`خط ${levelLabel(ladder.passed.key, lang)}`, `${num(ladder.passed.min, true)} — اتعدّى ✅`, !ladder.next)}
       ${ladder.next ? row(`خط ${levelLabel(ladder.next.key, lang)}`, `${num(ladder.next.min, true)} — فاضل ${num(ladder.remaining, true)}`, true) : ""}
     </table>
-    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">يعني الرقم مش نسبة نجاح أو رسوب — هو مكان البداية على السلم.</p>`;
+    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;">الرقم ليس نسبة نجاح أو رسوب، بل موضع البداية على السلّم.</p>`;
 
     // The door marked "not sure". After the evidence, before the times.
     const levelCheck = `
     <div style="background-color:${BRAND_GRAY};border-right:4px solid ${BRAND_BLACK};border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 22px;">
-      <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">ولو المستوى ده مش مقنع؟</p>
-      <p style="margin:0 0 8px;color:${BRAND_MUTED};font-size:14px;">الاختبار تقدير مبدئي بس — اللي بيأكد المستوى فعلاً هي أول حصة. ولو طلع مش مناسب، <strong>النقل لمجموعة تانية متاح ومن غير أي تكلفة</strong>.</p>
+      <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">وإذا لم يكن هذا المستوى مقنعًا؟</p>
+      <p style="margin:0 0 8px;color:${BRAND_MUTED};font-size:14px;">الاختبار تقدير مبدئي فقط، والحصة الأولى هي التي تؤكد المستوى فعلًا. وإن لم يكن مناسبًا، <strong>فالنقل إلى مجموعة أخرى متاح دون أي تكلفة</strong>.</p>
       <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">ولو الأفضل التأكد قبل الحجز — <a href="${askUrl}" style="color:${BRAND_DARK};font-weight:bold;">كلمة سريعة مع ريهام على الواتساب</a>، والمستوى يتظبط سوا.</p>
     </div>`;
 
@@ -302,31 +302,31 @@ export function buildPlacementResultEmail(payload: PlacementResultPayload): { su
       ${slotRows(true)}
       ${row("المجموعة", "ساعة للحصة · مجموعة صغيرة", true)}
     </table>
-    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;"><strong>حصة واحدة في الأسبوع</strong> — المواعيد دي بدائل، واختيار واحد منهم بيتم من الحساب. والمجموعة صغيرة عن قصد — عشان يبقى فيه وقت لكل حد يتكلم.</p>
+    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;"><strong>حصة واحدة في الأسبوع</strong> ، وهذه المواعيد بدائل يُختار أحدها من الحساب. والمجموعة صغيرة عن قصد، ليجد كل طالب وقتًا للكلام.</p>
 
     <div style="background-color:${BRAND_GRAY};border-right:4px solid ${BRAND_YELLOW};border-radius:0 8px 8px 0;padding:16px 18px;margin:0 0 20px;">
       <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">فاضل خطوة واحدة</p>
-      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">اختيار الميعاد من الحساب، عشان المكان يتحجز في المجموعة.</p>
+      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">اختيار الموعد من الحساب، ليُحجز المقعد في المجموعة.</p>
     </div>
 
     <div style="text-align:center;margin:24px 0 10px;">
       <a href="${scheduleUrl}" style="display:inline-block;background-color:${BRAND_YELLOW} !important;color:${BRAND_BLACK} !important;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;border:2px solid ${BRAND_BLACK};">📅 اختيار الميعاد</a>
     </div>
-    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;text-align:center;">الدخول بنفس الإيميل ده — والمواعيد المتاحة للمستوى هتكون جاهزة.</p>
-    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">ولو مافيش فيهم ميعاد مناسب — الرد على الإيميل ده كفاية، وهنرتّب ميعاد تاني.</p>`
+    <p style="margin:0 0 22px;color:${BRAND_MUTED};font-size:13px;text-align:center;">الدخول بالبريد الإلكتروني نفسه، والمواعيد المتاحة للمستوى جاهزة.</p>
+    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">وإن لم يكن بينها موعد مناسب، يكفي الرد على هذه الرسالة لترتيب موعد آخر.</p>`
       : `
     <div style="background-color:${BRAND_GRAY};border-right:4px solid ${BRAND_YELLOW};border-radius:0 8px 8px 0;padding:16px 18px;margin:26px 0 20px;">
-      <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">المستوى ده مالوش مجموعة شغالة دلوقتي</p>
-      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">فالتواصل هيبقى شخصي — رسالة جاية على الإيميل ده بالمتاح للمستوى ده بالظبط، من غير أي خطوة مطلوبة دلوقتي.</p>
+      <p style="margin:0 0 6px;font-weight:bold;color:${BRAND_DARK};">لا توجد مجموعة قائمة لهذا المستوى حاليًا</p>
+      <p style="margin:0;color:${BRAND_MUTED};font-size:14px;">لذا يكون التواصل شخصيًا: رسالة قادمة على هذا البريد بالمتاح لهذا المستوى تحديدًا، دون أي خطوة مطلوبة الآن.</p>
     </div>`;
 
     const profileBlock = payload.needs_profile
-      ? `<p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:13px;">وفيه بيانات ناقصة في الحساب (التليفون والدولة والتوقيت) — <a href="${profileUrl}" style="color:${BRAND_DARK};font-weight:bold;">استكمالها من هنا</a> بيخلي المواعيد تظهر بتوقيتك الصح.</p>`
+      ? `<p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:13px;">وهناك بيانات ناقصة في الحساب (الهاتف والدولة والتوقيت)، <a href="${profileUrl}" style="color:${BRAND_DARK};font-weight:bold;">استكمالها من هنا</a> يُظهر المواعيد بالتوقيت الصحيح.</p>`
       : "";
 
     body = `
     <h1 style="color:${BRAND_DARK};font-size:20px;margin:0 0 8px;">أهلاً ${payload.name} 👋</h1>
-    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">دي نتيجة اختبار تحديد المستوى.</p>
+    <p style="margin:0 0 20px;color:${BRAND_MUTED};font-size:14px;">هذه نتيجة اختبار تحديد المستوى.</p>
     ${levelBox}
     ${opener}
     ${scoreBlock}

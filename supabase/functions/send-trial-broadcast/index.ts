@@ -90,14 +90,14 @@ Book now → ${SITE_URL}/trial-booking?utm_source=email&utm_medium=broadcast&utm
 ---
 أهلاً ${displayName}،
 
-بنفتح كلاسات تجريبية مجانية في اللغة الكورية — وأنت مدعو/ة تحجز مكانك دلوقتي!
+نفتح حصصًا تجريبية مجانية في اللغة الكورية، والدعوة مفتوحة لحجز مقعد الآن.
 
 المواعيد (توقيت القاهرة):
 • السبت    — 4:00 مساءً
 • الأحد    — 6:30 مساءً
 • الأربعاء — 5:30 مساءً
 
-الأماكن محدودة وبتتملي بسرعة.
+الأماكن محدودة وتكتمل بسرعة.
 احجز: ${SITE_URL}/trial-booking?utm_source=email&utm_medium=broadcast&utm_campaign=trial_broadcast
 
 ---
@@ -163,10 +163,10 @@ KLovers Academy — kloversegy.com`;
           أهلاً <strong>${displayName}</strong>،
         </p>
         <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 6px;">
-          بنفتح <strong>كلاسات تجريبية مجانية</strong> في اللغة الكورية — وأنت مدعو/ة تحجز مكانك دلوقتي! 🌟
+          نفتح <strong>حصصًا تجريبية مجانية</strong> في اللغة الكورية، والدعوة مفتوحة لحجز مقعد الآن.
         </p>
         <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 24px;">
-          الأماكن محدودة وبتتملي بسرعة.
+          الأماكن محدودة وتكتمل بسرعة.
         </p>
       </div>
 
@@ -219,8 +219,8 @@ KLovers Academy — kloversegy.com`;
 
       <p style="color:#6b7280;font-size:13px;line-height:1.7;margin:0 0 10px;text-align:center;">
         Questions? Reply to this email or reach us on WhatsApp.<br>
-        <span dir="rtl">عندك سؤال؟ رد على الإيميل ده أو تواصل معنا على واتساب.</span><br><br>
-        ✨ <strong style="color:#111827;">The KLovers Team / فريق KLovers</strong>
+        <span dir="rtl">للأسئلة: الرد على هذه الرسالة أو التواصل معنا عبر واتساب.</span><br><br>
+        <strong style="color:#111827;">The KLovers Team / فريق KLovers</strong>
       </p>
 
       <!-- Unsubscribe -->

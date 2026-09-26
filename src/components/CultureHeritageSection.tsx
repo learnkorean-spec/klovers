@@ -64,7 +64,7 @@ const TILES: Tile[] = [
     titleEn: "Hangul: Built to Be Learned in a Day",
     titleAr: "الهانغول: أبجدية صُممت لتُتعلّم في يوم",
     blurbEn: "King Sejong commissioned it so ordinary people, not just scholars, could read and write.",
-    blurbAr: "أمر بها الملك سيجونغ عشان الناس العاديين، مش بس العلماء، يقدروا يقرأوا ويكتبوا.",
+    blurbAr: "أمر بها الملك سيجونغ ليتمكّن عامة الناس، لا العلماء وحدهم، من القراءة والكتابة.",
     slugEn: "learn-korean-alphabet-hangul-guide",
     slugAr: "learn-korean-alphabet-hangul-guide-ar",
     altEn: "Korean Hangul characters written on paper",
@@ -77,7 +77,7 @@ const TILES: Tile[] = [
     titleEn: "Hanbok, Korea's Traditional Dress",
     titleAr: "الهانبوك: الزي الكوري التقليدي",
     blurbEn: "How it went from everyday wear to the outfit worn at every major celebration today.",
-    blurbAr: "قصة تحوّله من لباس يومي إلى الزي اللي بيتلبس في كل مناسبة كبيرة.",
+    blurbAr: "قصة تحوّله من لباس يومي إلى الزي الذي يُلبس في كل مناسبة كبرى.",
     slugEn: "hanbok-korean-traditional-clothing",
     slugAr: "hanbok-korean-traditional-clothing-ar",
     altEn: "Traditional Korean Hanbok dress",
@@ -129,7 +129,7 @@ const TILES: Tile[] = [
     titleEn: "Learning Korean Through K-Pop",
     titleAr: "تعلّم الكورية عبر الكيبوب",
     blurbEn: "Millions of fans are already absorbing Korean by accident — how to turn that into real fluency.",
-    blurbAr: "ملايين المعجبين بيتعلموا كورية من غير ما يحسوا — إزاي تحوّلها لطلاقة حقيقية.",
+    blurbAr: "ملايين المعجبين يتعلّمون الكورية دون أن يشعروا، فكيف يتحوّل ذلك إلى طلاقة حقيقية؟",
     slugEn: "learn-korean-through-kpop-bts-blackpink",
     slugAr: "learn-korean-through-kpop-bts-blackpink-ar",
     altEn: "Concert stage with colorful lights and a massive crowd of fans",
@@ -155,7 +155,7 @@ const TILES: Tile[] = [
     titleEn: "A Taste of Korean Street Food",
     titleAr: "طعم أكل الشارع الكوري",
     blurbEn: "From tteokbokki to hotteok — the dishes, the carts, and the words to order with confidence.",
-    blurbAr: "من التوكبوكي إلى الهوتوك: الأطباق والمفردات اللي تحتاجها تطلب بثقة.",
+    blurbAr: "من التوكبوكي إلى الهوتوك: الأطباق والمفردات اللازمة للطلب بثقة.",
     slugEn: "korean-street-food-guide",
     slugAr: "korean-street-food-guide-ar",
     altEn: "Korean street food stall with tteokbokki and skewers",
@@ -215,7 +215,7 @@ const CultureHeritageSection = () => {
           </h2>
           <p className="text-ivory/70 text-base md:text-lg leading-relaxed">
             {isAr
-              ? "الكورية مش مجرد قواعد ومفردات، هي تاريخ ممتد وتقاليد حية وثقافة بيحبها ملايين حول العالم. كل درس هنا بيوصّلك بحاجة حقيقية."
+              ? "الكورية ليست مجرد قواعد ومفردات، بل تاريخ ممتد وتقاليد حية وثقافة يحبها الملايين حول العالم. كل درس هنا يصل المتعلّم بشيء حقيقي."
               : "Korean isn't just grammar and vocabulary — it's centuries of history, living traditions, and a culture millions of people are falling for. Every lesson here touches something real."}
           </p>
         </div>

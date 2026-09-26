@@ -168,11 +168,11 @@ const LevelConfirmBanner = () => {
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {isAr
-                    ? "اختاري الآن الميعاد المناسب لكِ."
+                    ? "اختيار الموعد المناسب الآن."
                     : "Now choose the class time that suits you."}
                 </p>
                 <Button className="mt-3" onClick={() => navigate("/enroll-now")}>
-                  {isAr ? "اختاري ميعادك" : "Choose your time"}
+                  {isAr ? "اختيار الموعد" : "Choose your time"}
                 </Button>
               </div>
             ) : (
@@ -189,7 +189,7 @@ const LevelConfirmBanner = () => {
                 <div className="flex flex-col sm:flex-row gap-2 mt-3 sm:items-center">
                   <Select value={chosen} onValueChange={setChosen}>
                     <SelectTrigger className="w-full sm:w-64">
-                      <SelectValue placeholder={isAr ? "اختاري المستوى" : "Select your level"} />
+                      <SelectValue placeholder={isAr ? "اختيار المستوى" : "Select your level"} />
                     </SelectTrigger>
                     <SelectContent>
                       {levels.map((key) => (

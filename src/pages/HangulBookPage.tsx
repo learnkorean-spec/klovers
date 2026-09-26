@@ -1283,7 +1283,7 @@ function CourseAr() {
             <div style={{ flex:1 }}>
               <div style={{ fontWeight: b.current ? 900 : 700, fontSize:"11px", color:T1 }}>{b.title}</div>
               <div style={{ fontSize:"10px", color: b.current ? T2 : T3, marginTop:"1px" }}>
-                {b.current ? "📍 أنت هنا — ابدأ رحلتك!" : b.sub}
+                {b.current ? "نقطة البداية: هنا تبدأ الرحلة" : b.sub}
               </div>
             </div>
           </div>

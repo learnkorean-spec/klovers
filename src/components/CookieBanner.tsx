@@ -34,7 +34,7 @@ const CookieBanner = () => {
       <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl shadow-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 pointer-events-auto">
         <p className="text-sm text-muted-foreground flex-1 leading-relaxed">
           {isAr
-            ? "بنستخدم كوكيز التحليلات عشان نحسّن تجربتك. تقدر توافق أو ترفض، والموقع هيشتغل عادي في الحالتين. اعرف أكتر في "
+            ? "نستخدم ملفات تعريف الارتباط للتحليلات لتحسين التجربة. القبول أو الرفض متاح، ويعمل الموقع بشكل طبيعي في الحالتين. التفاصيل في "
             : "We use analytics cookies to improve your experience. You can accept or decline; the site works the same either way. See our "}
           <a href="/privacy-policy" className="underline hover:text-foreground transition-colors">
             {isAr ? "سياسة الخصوصية" : "Privacy Policy"}

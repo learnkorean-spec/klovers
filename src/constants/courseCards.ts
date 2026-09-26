@@ -240,7 +240,7 @@ const levelCards: CourseCard[] = LEVELS.map((l) => {
     // EnrollNowPage reads ?level= and preselects it (canonical key).
     href: `/enroll-now?level=${l.key}`,
     cta_en: l.key === "hangul" ? "Book the 4 classes" : "Book this level",
-    cta_ar: l.key === "hangul" ? "احجز الحصص الأربع" : "احجز هذا المستوى",
+    cta_ar: l.key === "hangul" ? "حجز الحصص الأربع" : "حجز هذا المستوى",
   };
 });
 
@@ -305,7 +305,7 @@ export const COURSE_SECTION_COPY = {
   badge_en: "Our courses",
   badge_ar: "دوراتنا",
   title_en: "Choose the level that fits your journey",
-  title_ar: "اختر المستوى الذي يناسب رحلتك",
+  title_ar: "المستوى المناسب لكل رحلة",
   subtitle_en:
     "From the alphabet to advanced. Every class is 60 minutes, once a week. A level is 24 classes over 6 months — except Hangul Foundation, which is 4.",
   subtitle_ar:
@@ -323,20 +323,20 @@ export const COURSE_SECTION_COPY = {
   note_ar: "الحصص بتغطي منهج المستوى. الوصول لمستوى امتحان TOPIK بيحتاج مذاكرة بينها كمان.",
   /** Shown under the grid for anyone who cannot place themselves. */
   unsure_en: "Not sure where you are?",
-  unsure_ar: "مش متأكد من مستواك؟",
+  unsure_ar: "المستوى غير واضح؟",
   placement_en: "Take the placement test",
   placement_ar: "اختبار تحديد المستوى",
   trial_en: "or try a free class first",
-  trial_ar: "أو جرّب حصة مجانية أولًا",
+  trial_ar: "أو تجربة حصة مجانية أولًا",
   /**
    * The last exit on the page. Someone who has read nine cards and still has a
    * question will not fill in a form; they will message. Wording matches the
    * floating WhatsApp button so the two read as the same offer.
    */
   wa_en: "Can't find what you're looking for?",
-  wa_ar: "مش لاقي اللي بتدوّر عليه؟",
+  wa_ar: "لم تجد المطلوب؟",
   waCta_en: "Chat with us on WhatsApp",
-  waCta_ar: "تكلّم معانا على واتساب",
+  waCta_ar: "التواصل معنا عبر واتساب",
   waMessage_en: "Hi! I have a question about the Korean courses.",
   waMessage_ar: "السلام عليكم، عندي استفسار عن دورات الكورية.",
 };

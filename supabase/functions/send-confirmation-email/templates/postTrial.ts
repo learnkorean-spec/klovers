@@ -58,13 +58,13 @@ export function buildTrialFollowupDay1Email(p: EmailPayload) {
 
   if (isAr) {
     return {
-      subject: "KLovers — التسجيل مفتوح",
+      subject: "كلوفرز — التسجيل مفتوح",
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحباً ${p.name}،</h1>
         <p>التسجيل مفتوح الآن.</p>
-        <p>اختاري مستواكِ والموعد المناسب من صفحة التسجيل.</p>
+        <p>اختيار المستوى والموعد المناسب من صفحة التسجيل.</p>
         <div style="margin: 24px 0; text-align: center;">
-          ${brandButton("اختاري مجموعتك", ENROL_URL)}
+          ${brandButton("اختيار المجموعة", ENROL_URL)}
         </div>
         <p>المقعد يُحجز باسمك من وقت التسجيل، والدفع بعد بداية المجموعة.</p>
         ${whatsappLine(true)}

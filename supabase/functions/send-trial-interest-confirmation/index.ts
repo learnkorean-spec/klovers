@@ -42,9 +42,9 @@ function buildEmail(
   const text = `
 أهلاً ${displayName}،
 
-سجّلت اهتمامك بكلاسات الكورية معنا — ونفتكرك كويس!
+سُجّل الاهتمام بحصص الكورية معنا، ونحن نتذكر ذلك جيدًا.
 
-بفتح كلاسات تجريبية مجانية قريباً، وعايزين نتأكد إنك لسا معانا.
+نفتح حصصًا تجريبية مجانية قريبًا، ونود التأكد من استمرار الاهتمام.
 
 المواعيد المتاحة (توقيت مصر):
 • الخميس  4  يونيو 2026 — الساعة 7 مساءً
@@ -53,7 +53,7 @@ function buildEmail(
 
 انضم للكلاس: ${joinLink}
 
-الأماكن محدودة — خد مكانك دلوقتي!
+الأماكن محدودة، والحجز متاح الآن.
 
 ---
 
@@ -100,7 +100,7 @@ KLovers Academy — kloversegy.com
 
 <!-- Inbox preview text (hidden) -->
 <div style="display:none;font-size:1px;color:#f3f4f6;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
-  عندنا مواعيد جديدة وعايزينك معانا 🎓 — New trial class dates, limited spots!
+  مواعيد جديدة متاحة، ويسعدنا الانضمام — New trial class dates, limited spots!
 </div>
 
 <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 16px;">
@@ -128,10 +128,10 @@ KLovers Academy — kloversegy.com
           أهلاً ${displayName}! 👋
         </p>
         <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 6px;">
-          سجّلت اهتمامك بتعلم الكورية معنا — ومنفتكرش! 💛
+          سُجّل الاهتمام بتعلّم الكورية معنا، ونحن نتذكر ذلك.
         </p>
         <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 20px;">
-          بفتح <strong>كلاسات تجريبية مجانية</strong> وعايزين نتأكد إنك لسا معانا.
+          نفتح <strong>حصصًا تجريبية مجانية</strong>، ونود التأكد من استمرار الاهتمام.
           الأماكن محدودة، يعني كل يوم بيفرق.
         </p>
       </div>
@@ -180,7 +180,7 @@ KLovers Academy — kloversegy.com
         <p style="margin:0;font-size:14px;color:#92400e;">
           ⚡ <strong>الأماكن محدودة — Spots are limited!</strong><br>
           <span dir="rtl" style="font-size:13px;">
-            خد مكانك دلوقتي قبل ما يتملي.
+            الحجز متاح الآن قبل اكتمال الأماكن.
           </span>
         </p>
       </div>
@@ -198,16 +198,16 @@ KLovers Academy — kloversegy.com
 
       <!-- Reply CTA -->
       <p style="color:#374151;font-size:14px;line-height:1.8;text-align:center;margin:0 0 20px;">
-        أو ببساطة رد على الإيميل ده بـ <strong>"YES"</strong> وهنرسلك التفاصيل كاملة 💬<br>
+        أو يكفي الرد على هذه الرسالة بكلمة <strong>"نعم"</strong> لنرسل التفاصيل كاملة<br>
         <span style="font-size:13px;color:#6b7280;">Or just reply <strong>"YES"</strong> to this email and we'll send you all the details!</span>
       </p>
 
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 18px;">
 
       <p style="color:#6b7280;font-size:13px;line-height:1.7;margin:0 0 10px;text-align:center;">
-        عندك سؤال؟ رد على الإيميل ده — احنا هنا! 😊<br>
+        للأسئلة: الرد على هذه الرسالة، ونحن هنا.<br>
         <span style="font-size:12px;">Questions? Just reply to this email — we're here for you!</span><br><br>
-        💛 <strong style="color:#111827;">فريق KLovers / The KLovers Team</strong>
+        <strong style="color:#111827;">فريق KLovers / The KLovers Team</strong>
       </p>
 
       <p style="color:#9ca3af;font-size:11px;text-align:center;margin:12px 0 0;">
