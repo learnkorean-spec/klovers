@@ -203,7 +203,7 @@ const FinalCTA = () => {
           </div>
 
           <div className="flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory px-5 py-4 text-start">
-            <Globe className="h-8 w-8 shrink-0 text-charcoal" aria-hidden="true" />
+            <KloverIcon name="chat-annyeong" className="h-9 w-9 shrink-0" />
             <p className="text-sm font-bold leading-snug text-charcoal">
               {isAr
                 ? `مجتمع يضم أكثر من ${toArabicDigits(COMMUNITY.replace(/[^0-9]/g, ""))} متابع على وسائل التواصل`

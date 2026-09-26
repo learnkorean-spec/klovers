@@ -464,7 +464,7 @@ const StudentManager = () => {
     const { error } = await supabase.from("students").update({ group_name: value }).eq("id", studentId);
     if (error) toast({ title: "Error assigning group", description: error.message, variant: "destructive" });
     else {
-      setLegacyStudents(prev => prev.map(s => s.id === studentId ? { ...s, group_name: value } : s));
+      fetchLegacyStudents();
       toast({ title: "Group updated" });
     }
   };
