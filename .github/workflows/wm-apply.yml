@@ -8,6 +8,7 @@ on:
       - world/pages-cafe-village
     paths:
       - scripts/wm-patch/changes.patch
+      - .github/workflows/wm-apply.yml
 
 permissions:
   contents: write
@@ -24,12 +25,17 @@ jobs:
           set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          # The patch was typed with shadda before fatha; the file has fatha
+          # before shadda in one word (tukawwan). Match the file to the patch.
+          perl -CSD -pi -e 's/\x{0648}\x{064E}\x{0651}/\x{0648}\x{0651}\x{064E}/g' src/pages/HangulStarterPage.tsx
           if git apply --unidiff-zero -p1 scripts/wm-patch/changes.patch; then
             git rm -r -q scripts/wm-patch
             git add -A
             git commit -m "Apply world-mode patch (pricing, courses, trial slot picker, Hangul starter)"
           else
-            echo "PATCH FAILED" > scripts/wm-patch/FAILED.txt
+            git checkout -- src
+            echo "PATCH FAILED AGAIN" > scripts/wm-patch/FAILED.txt
+            git apply --unidiff-zero -p1 --check scripts/wm-patch/changes.patch 2>> scripts/wm-patch/FAILED.txt || true
             git add -A
             git commit -m "World-mode patch did not apply"
           fi
