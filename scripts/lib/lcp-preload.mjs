@@ -3,7 +3,7 @@
  *
  * `index.html` ships one preload tag:
  *
- *     <link rel="preload" as="image" href="/hero-korean.jpg" fetchpriority="high">
+ *     <link rel="preload" as="image" href="/hero-world.jpg" fetchpriority="high">
  *
  * and scripts/prerender-meta.mjs copies that document to every route it emits.
  * That is correct for exactly one route — the homepage — and wrong for the

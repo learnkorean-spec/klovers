@@ -3,7 +3,7 @@ import { preloadHrefFor, preloadTagFor, PRELOAD_PATTERN } from "./lcp-preload.mj
 
 const attr = (s) => String(s ?? "").replace(/"/g, "&quot;");
 const SHIPPED =
-  '    <link rel="preload" as="image" href="/hero-korean.jpg" fetchpriority="high" />\n';
+  '    <link rel="preload" as="image" href="/hero-world.jpg" fetchpriority="high" />\n';
 
 describe("preloadHrefFor", () => {
   it("leaves the homepage alone — its shipped preload is the right one", () => {

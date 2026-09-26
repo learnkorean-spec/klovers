@@ -11,7 +11,7 @@ import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
  * phones the crop moves right (object-[97%_center]) so the text lands on sky
  * and roofs instead of faces.
  */
-const heroPoster = "/hero-korean.jpg";
+const heroPoster = "/hero-world.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
