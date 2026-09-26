@@ -79,10 +79,10 @@ const AboutPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
               <div className="rounded-xl overflow-hidden shadow-md">
-                <img src={rehamKorea1} alt="Reham Elshrkawy visiting traditional Korean architecture" className="w-full h-72 object-cover" />
+                <img src={rehamKorea1} alt={isAr ? "ريهام الشرقاوي في زيارة لمعمار كوري تقليدي" : "Reham Elshrkawy visiting traditional Korean architecture"} className="w-full h-72 object-cover" />
               </div>
               <div className="rounded-xl overflow-hidden shadow-md">
-                <img src={rehamKorea2} alt="Reham Elshrkawy at the Korean seaside" className="w-full h-72 object-cover" />
+                <img src={rehamKorea2} alt={isAr ? "ريهام الشرقاوي على ساحل كوري" : "Reham Elshrkawy at the Korean seaside"} className="w-full h-72 object-cover" />
               </div>
             </div>
 
@@ -157,7 +157,7 @@ const AboutPage = () => {
               {isAr ? `التعلّم مع معلّمة درّست أكثر من ${toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))} طالب خلال ${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا` : `Learn with a teacher who has taught ${STUDENTS_TAUGHT} students over ${TEACHING_YEARS_COUNT} years`}
             </h2>
             <p className="text-muted-foreground mb-8 text-sm">
-              {isAr ? "نقطة البداية غير واضحة؟ اختبار تحديد المستوى المجاني يوضّحها في دقائق." : "Not sure where to begin? Take our free placement test and discover your level in minutes."}
+              {isAr ? "نقطة البداية غير واضحة؟ اختبار تحديد المستوى المجاني يوضّحها." : "Not sure where to begin? The free placement test shows where to start."}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button asChild size="lg">

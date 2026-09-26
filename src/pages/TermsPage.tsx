@@ -37,7 +37,7 @@ const EN: LegalContent = {
     {
       heading: "Payments",
       paragraphs: [
-        "We accept bank transfer, Vodafone Cash and InstaPay (Egypt), as well as international card or PayPal.",
+        "We accept bank transfer, Vodafone Cash and InstaPay (Egypt), and card payment through Stripe outside Egypt.",
         "All payments are manually reviewed by our team before your enrolment is activated. There are no automatic charges.",
       ],
     },
@@ -102,7 +102,7 @@ const AR: LegalContent = {
     {
       heading: "الدفع",
       paragraphs: [
-        "نقبل التحويل البنكي وفودافون كاش وإنستا باي (في مصر)، بالإضافة إلى البطاقات الدولية وPayPal.",
+        "نقبل التحويل البنكي وفودافون كاش وإنستا باي (في مصر)، والدفع بالبطاقة عبر Stripe خارج مصر.",
         "تُراجَع جميع المدفوعات يدويًا من فريقنا قبل تفعيل اشتراكك. ولا توجد أي خصومات تلقائية.",
       ],
     },

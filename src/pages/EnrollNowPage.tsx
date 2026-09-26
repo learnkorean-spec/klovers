@@ -60,8 +60,8 @@ const EnrollNowPage = () => {
     el.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "Course",
-      "name": "Korean Language Classes — Klovers Academy",
-      "description": "Live Korean classes with real teachers. Group and private options available for all levels.",
+      "name": "Korean Language Classes — Klovers",
+      "description": "Live Korean classes with a real teacher. Group and private options available for all levels.",
       "provider": {
         "@type": "Organization",
         "name": "Klovers",
@@ -555,27 +555,27 @@ const EnrollNowPage = () => {
       .eq("active", true)
       .maybeSingle();
     if (error || !data) {
-      setPromoError("Invalid promo code. Please check and try again.");
+      setPromoError(isAr ? "رمز الخصم غير صحيح. تُرجى المراجعة والمحاولة مرة أخرى." : "Invalid promo code. Please check and try again.");
       setPromoLoading(false);
       return;
     }
     if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      setPromoError("This promo code has expired.");
+      setPromoError(isAr ? "انتهت صلاحية رمز الخصم." : "This promo code has expired.");
       setPromoLoading(false);
       return;
     }
     if (data.max_uses !== null && data.uses_count >= data.max_uses) {
-      setPromoError("This promo code has reached its usage limit.");
+      setPromoError(isAr ? "وصل رمز الخصم إلى الحد الأقصى للاستخدام." : "This promo code has reached its usage limit.");
       setPromoLoading(false);
       return;
     }
     if (data.currency && data.currency !== (isEgypt ? "EGP" : "USD")) {
-      setPromoError(`This code is only valid for ${data.currency} payments.`);
+      setPromoError(isAr ? `هذا الرمز صالح فقط للدفع بعملة ${data.currency}.` : `This code is only valid for ${data.currency} payments.`);
       setPromoLoading(false);
       return;
     }
     setPromoApplied({ code: data.code, discount_pct: data.discount_pct, discount_flat: data.discount_flat, currency: data.currency });
-    toast({ title: `Promo code "${code}" applied!` });
+    toast({ title: isAr ? `طُبّق رمز الخصم «${code}»` : `Promo code "${code}" applied!` });
     setPromoLoading(false);
   };
 
@@ -1150,12 +1150,12 @@ const EnrollNowPage = () => {
               {/* Egypt payment method selector */}
               {isEgypt && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">طريقة الدفع / Payment Method</p>
+                  <p className="text-sm font-medium text-foreground">{isAr ? "طريقة الدفع" : "Payment method"}</p>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { value: "vodafone_cash", label: "Vodafone Cash" },
-                      { value: "instapay",      label: "InstaPay" },
-                      { value: "bank_transfer", label: "Bank Transfer" },
+                      { value: "vodafone_cash", label: isAr ? "فودافون كاش" : "Vodafone Cash" },
+                      { value: "instapay",      label: isAr ? "إنستا باي" : "InstaPay" },
+                      { value: "bank_transfer", label: isAr ? "تحويل بنكي" : "Bank Transfer" },
                     ].map((m) => (
                       <button
                         key={m.value}
@@ -1172,7 +1172,7 @@ const EnrollNowPage = () => {
                     ))}
                   </div>
                   {!egyptPaymentMethod && (
-                    <p className="text-xs font-medium text-foreground">Please select a payment method to continue</p>
+                    <p className="text-xs font-medium text-foreground">{isAr ? "اختيار طريقة الدفع للمتابعة" : "Please select a payment method to continue"}</p>
                   )}
                 </div>
               )}
@@ -1205,11 +1205,10 @@ const EnrollNowPage = () => {
 
               {/* Trust badges */}
               <div className="grid grid-cols-3 gap-2 pt-2">
-                {[
-                  { label: "Secure" },
-                  { label: "Verified Academy" },
-                  { label: "24h Support" },
-                ].map(({ label }) => (
+                {(isAr
+                  ? [{ label: "دفع آمن" }, { label: "دفع لمرة واحدة" }, { label: "دعم عبر واتساب" }]
+                  : [{ label: "Secure" }, { label: "One-time payment" }, { label: "WhatsApp support" }]
+                ).map(({ label }) => (
                   <div key={label} className="flex flex-col items-center gap-1 bg-muted/50 rounded-lg p-2">
                     <span className="text-[10px] text-muted-foreground font-medium text-center">{label}</span>
                   </div>
@@ -1218,11 +1217,11 @@ const EnrollNowPage = () => {
 
               {/* What happens next */}
               <div className="border border-border rounded-xl p-4 space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center">What happens next?</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center">{isAr ? "ماذا بعد الدفع؟" : "What happens next?"}</p>
                 {[
-                  { step: "1", icon: "game-checklist-pencil" as const, title: "Payment confirmed", desc: "You get an instant email receipt." },
-                  { step: "2", icon: "calendar-check" as const, title: "Schedule matched", desc: "We confirm your class slot within 24 h." },
-                  { step: "3", icon: "chat-annyeonghaseyo" as const, title: "First class!", desc: "We send your meeting link — ready to learn!" },
+                  { step: "1", icon: "game-checklist-pencil" as const, title: isAr ? "تأكيد الدفع" : "Payment confirmed", desc: isAr ? "يصل إيصال الدفع بالبريد الإلكتروني." : "You get an email receipt." },
+                  { step: "2", icon: "calendar-check" as const, title: isAr ? "تحديد الموعد" : "Schedule matched", desc: isAr ? "نؤكد موعد الحصة المناسب." : "We confirm your class slot." },
+                  { step: "3", icon: "chat-annyeonghaseyo" as const, title: isAr ? "الحصة الأولى!" : "First class!", desc: isAr ? "يصل رابط الحصة، والتعلّم يبدأ." : "We send your meeting link — ready to learn!" },
                 ].map(({ step: s, icon, title, desc }) => (
                   <div key={s} className="flex items-start gap-3">
                     <div className="w-7 h-7 rounded-full bg-primary border border-charcoal/25 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-foreground">{s}</div>
@@ -1236,7 +1235,7 @@ const EnrollNowPage = () => {
 
               {/* WhatsApp fallback */}
               <p className="text-xs text-center text-muted-foreground pt-1">
-                Need help enrolling?{" "}
+                {isAr ? "مساعدة في التسجيل؟" : "Need help enrolling?"}{" "}
                 <a
                   href={WHATSAPP_BASE}
                   onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "enroll_help" }); }}
@@ -1244,7 +1243,7 @@ const EnrollNowPage = () => {
                   rel="noopener noreferrer"
                   className="text-foreground font-semibold underline underline-offset-2 hover:no-underline"
                 >
-                  WhatsApp us
+                  {isAr ? "التواصل عبر واتساب" : "WhatsApp us"}
                 </a>
               </p>
                 </>

@@ -29,7 +29,7 @@ const englishFaqs = [
   },
   {
     q: "How do I pay? Is it safe?",
-    a: "We accept bank transfer, Vodafone Cash, and InstaPay (Egypt) plus international card or PayPal. All payments are manually reviewed by our team before activation — no automatic charges.",
+    a: "In Egypt: bank transfer, Vodafone Cash or InstaPay. Upload the receipt and the enrollment is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically.",
   },
   {
     q: "How many students are in a group class?",

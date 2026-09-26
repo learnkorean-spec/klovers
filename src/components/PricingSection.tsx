@@ -550,7 +550,7 @@ const PricingSection = () => {
           <div className="flex flex-col items-center gap-1">
             <KloverIcon name="calendar-check" className="h-10 w-10" />
             <p className="text-sm font-semibold text-foreground">{tr("Secure Checkout", "دفع آمن")}</p>
-            <p className="text-xs text-muted-foreground">{tr("Manual review · No auto-charge", "مراجعة يدوية · دون خصم تلقائي")}</p>
+            <p className="text-xs text-muted-foreground">{tr("One-time payment · No auto-charge", "دفع لمرة واحدة · دون خصم تلقائي")}</p>
           </div>
         </div>
       </div>

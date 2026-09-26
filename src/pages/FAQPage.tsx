@@ -29,7 +29,7 @@ const FAQSchemaScript = ({ schema }: { schema: object }) => {
 };
 
 const FAQPage = () => {
-  useSEO({ title: "FAQ", description: "Got questions about learning Korean with Klovers? Find answers about courses, teachers, scheduling, and payments.", canonical: "https://kloversegy.com/faq" });
+  useSEO({ title: "FAQ", description: "Got questions about learning Korean with Klovers? Find answers about courses, the teacher, scheduling, and payments.", canonical: "https://kloversegy.com/faq" });
   const { t, tArray, language } = useLanguage();
   const isAr = language === "ar";
   const faqs = tArray("faqPage", "items") as { question: string; answer: string; category?: string }[];
@@ -107,21 +107,21 @@ const FAQPage = () => {
 
             {/* Search */}
             <div className="relative max-w-md mx-auto mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
               <Input
                 type="search"
                 aria-label={isAr ? "البحث في الأسئلة" : "Search questions"}
                 placeholder={isAr ? "البحث في الأسئلة…" : "Search questions..."}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-9"
+                className="ps-9 pe-9"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
                   aria-label={isAr ? "مسح البحث" : "Clear search"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -197,13 +197,13 @@ const FAQPage = () => {
                 <Button variant="outline" asChild>
                   <a href={isAr ? FAQ_WA_AR : FAQ_WA_EN} onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(isAr ? FAQ_WA_AR : FAQ_WA_EN, { cta_label: "faq_contact" }); }} target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="mr-2 h-4 w-4" />
-                    WhatsApp
+                    {isAr ? "واتساب" : "WhatsApp"}
                   </a>
                 </Button>
                 <Button variant="outline" asChild>
                   <a href="https://t.me/+Fu5T7d4wLMsxNDY9" target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="mr-2 h-4 w-4" />
-                    Telegram
+                    {isAr ? "تيليجرام" : "Telegram"}
                   </a>
                 </Button>
                 <Button asChild>

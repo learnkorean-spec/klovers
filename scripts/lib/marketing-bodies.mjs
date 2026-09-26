@@ -26,7 +26,7 @@
 
 export const ABOUT_BODY_HTML = `<div id="about-prerendered" lang="en" dir="ltr">
       <h1>About Klovers</h1>
-      <p>Certified Korean teacher, born from a love of the language and a mission to make it accessible worldwide.</p>
+      <p>An Al-Alsun Korean graduate who has taught Korean for 13 years, making the language accessible to Arabic and English speakers.</p>
       <ul>
         <li><strong>13+</strong> Years Teaching</li>
         <li><strong>200+</strong> Students Taught</li>
@@ -47,7 +47,7 @@ export const ABOUT_BODY_HTML = `<div id="about-prerendered" lang="en" dir="ltr">
         <li>Live interactive teaching methodology</li>
       </ul>
       <h2>Learn with a teacher who has taught 200+ students over 13 years</h2>
-      <p>Not sure where to begin? Take our free placement test and discover your level in minutes.</p>
+      <p>Not sure where to begin? Take our free placement test and find where to start.</p>
       <p><a href="/placement-test">Take the free placement test</a> · <a href="/pricing">View Pricing</a> · <a href="/free-trial">Book a free trial class</a> · <a href="/courses">Courses</a> · <a href="/faq">FAQ</a></p>
     </div>`;
 
@@ -78,7 +78,7 @@ export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
       <h3>Do I need prior knowledge of Korean to enroll?</h3>
       <p>Not at all! Klovers offers a dedicated Hangul beginner course designed for absolute beginners. You'll learn the Korean alphabet (Hangul) from scratch, then progress through vocabulary, grammar, and conversation — step by step.</p>
       <h3>How do I know which level is right for me?</h3>
-      <p>We provide a free online placement test that evaluates your reading, listening, and grammar skills. Based on your score, we recommend the ideal level — from Hangul Beginner to Advanced. You can take the test before enrolling.</p>
+      <p>Take the free placement test: reading questions in TOPIK style, from Hangul up to Level 4. It shows where to start, and you can stop when the questions get too hard.</p>
       <h3>Can I switch between group and private classes?</h3>
       <p>Yes, you can switch your plan type when you renew. Contact us and we'll help you move smoothly to your preferred class format.</p>
       <h2>Classes &amp; Schedule</h2>
@@ -87,14 +87,14 @@ export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
       <h3>What is the class schedule like?</h3>
       <p>Group classes are held once per week. The exact day and time are coordinated with your group to find the most convenient slot. Private classes offer fully flexible scheduling based on your availability.</p>
       <h3>How many students are in a group class?</h3>
-      <p>Our group classes are kept small — typically 4 to 8 students per group. This ensures every student gets personal attention, practice time, and feedback from the instructor.</p>
+      <p>Our group classes are kept small — typically 4 to 8 students per group. This ensures every student gets personal attention, practice time, and feedback from the teacher.</p>
       <h3>What's the difference between group and private classes?</h3>
       <p>Group classes (once/week) let you learn alongside peers in a collaborative environment at an affordable price. Private classes (1-on-1) offer personalized lessons, flexible scheduling, and faster progression tailored to your goals.</p>
       <h2>Payment &amp; Pricing</h2>
       <h3>What payment methods do you accept?</h3>
-      <p>We accept international payments via Stripe (credit/debit cards) and local bank transfers for Egyptian students. After payment, simply upload your receipt and our team will activate your account within 24 hours.</p>
+      <p>In Egypt: bank transfer, Vodafone Cash or InstaPay. Upload the receipt and the enrollment is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically.</p>
       <h3>Can I pay in installments?</h3>
-      <p>Yes! We offer 1-month, 3-month, and 6-month plans. Longer plans come with better per-class pricing. You can choose the duration that fits your budget when enrolling.</p>
+      <p>Plans are 1, 3 or 6 months, and longer plans cost less per class. For paying in installments or another flexible arrangement, message us on WhatsApp.</p>
       <h2>Progress &amp; Certification</h2>
       <h3>Do I get a certificate after completing a course?</h3>
       <p>Yes! Upon successfully completing your course level, you'll receive an official Klovers certificate of completion. This certificate can be added to your CV, LinkedIn profile, or university application portfolio.</p>
@@ -401,7 +401,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "How do I know which level is right for me?",
-        "a": "We provide a free online placement test that evaluates your reading, listening, and grammar skills. Based on your score, we recommend the ideal level — from Hangul Beginner to Advanced. You can take the test before enrolling."
+        "a": "Take the free placement test: reading questions in TOPIK style, from Hangul up to Level 4. It shows where to start, and you can stop when the questions get too hard."
     },
     {
         "q": "Are classes online or in-person?",
@@ -413,7 +413,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "How many students are in a group class?",
-        "a": "Our group classes are kept small — typically 4 to 8 students per group. This ensures every student gets personal attention, practice time, and feedback from the instructor."
+        "a": "Our group classes are kept small — typically 4 to 8 students per group. This ensures every student gets personal attention, practice time, and feedback from the teacher."
     },
     {
         "q": "What's the difference between group and private classes?",
@@ -421,11 +421,11 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "What payment methods do you accept?",
-        "a": "We accept international payments via Stripe (credit/debit cards) and local bank transfers for Egyptian students. After payment, simply upload your receipt and our team will activate your account within 24 hours."
+        "a": "In Egypt: bank transfer, Vodafone Cash or InstaPay. Upload the receipt and the enrollment is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically."
     },
     {
         "q": "Can I pay in installments?",
-        "a": "Yes! We offer 1-month, 3-month, and 6-month plans. Longer plans come with better per-class pricing. You can choose the duration that fits your budget when enrolling."
+        "a": "Plans are 1, 3 or 6 months, and longer plans cost less per class. For paying in installments or another flexible arrangement, message us on WhatsApp."
     },
     {
         "q": "Do I get a certificate after completing a course?",

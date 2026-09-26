@@ -443,7 +443,7 @@ const PRICING_BODY_HTML = `<div id="pricing-prerendered" lang="en" dir="ltr">
       <h2>Private classes</h2>
       <p>One-to-one lessons with flexible scheduling, at your own pace.</p>
       <h2>Payment and guarantee</h2>
-      <p>Pay by bank transfer, Vodafone Cash or InstaPay (Egypt), or by international card or PayPal. Every payment is reviewed by our team before activation - there are no automatic charges. If you are not happy after your first class, we refund or rebook you. Full terms are on the <a href="/terms">Terms of Service</a> page.</p>
+      <p>Pay by bank transfer, Vodafone Cash or InstaPay (Egypt), or by card through Stripe outside Egypt. Payments in Egypt are checked before activation, and nothing is charged automatically. If you are not happy after your first class, we refund or rebook you. Full terms are on the <a href="/terms">Terms of Service</a> page.</p>
       <p><a href="/free-trial">Book a free trial class</a> · <a href="/courses">Courses</a> · <a href="/faq">FAQ</a></p>
     </div>`;
 
@@ -530,7 +530,7 @@ const TERMS_BODY_HTML = `<div id="legal-prerendered" lang="en" dir="ltr">
       <p>Please give accurate details and keep your password private. You are responsible for what happens under your account. Learners under 18 need the consent of a parent or guardian.</p>
       <h2>Payments</h2>
       <p>We accept bank transfer, Vodafone Cash and InstaPay (Egypt), as well as international card or PayPal.</p>
-      <p>All payments are manually reviewed by our team before your enrolment is activated. There are no automatic charges.</p>
+      <p>Payments in Egypt are checked by hand before your enrolment is activated; card payments through Stripe are activated automatically. Every payment is one-time, with no automatic charges.</p>
       <h2>First class guarantee and refunds</h2>
       <p>If you are not satisfied after your first class, we will refund you or rebook you — no questions asked.</p>
       <p>After that, refunds are prorated for unused sessions.</p>
@@ -660,7 +660,7 @@ const MARKETING_ROUTES = [
     path: "/faq",
     title: "FAQ",
     description:
-      "Got questions about learning Korean with Klovers? Find answers about courses, teachers, scheduling, and payments.",
+      "Got questions about learning Korean with Klovers? Find answers about courses, the teacher, scheduling, and payments.",
     body: FAQ_BODY_HTML,
     faq: MARKETING_FAQ["/faq"],
   },
