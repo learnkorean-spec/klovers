@@ -112,7 +112,7 @@ const HangulStarterPage = () => {
               </Button>
               <Button asChild className="gap-2">
                 <Link to="/free-trial">
-                  {isAr ? "احجز حصة مجانية" : "Book a Free Class"}
+                  {isAr ? "حجز حصة مجانية" : "Book a Free Class"}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -174,14 +174,14 @@ const HangulStarterPage = () => {
                 {isAr ? "٣ حقائق تسهّل عليك" : "3 facts that make Hangul easy"}
               </h2>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>✅ {isAr ? "هانغول اتصمم في ١٤٤٣ م — بيُتعلم في ساعات مش سنين." : "Hangul was designed in 1443 — it can be learned in hours, not years."}</li>
-                <li>✅ {isAr ? "كل حرف شكله بيشبح طريقة لفظه." : "Each letter's shape reflects how your mouth moves to say it."}</li>
-                <li>✅ {isAr ? "مش لازم تحفظ كل حاجة قبل ما تبدأ — مدرستك هتشرحلك كل حاجة." : "You don't need to memorize everything before starting — your teacher will guide you through it."}</li>
+                <li>{isAr ? "صُمّم الهانغول عام ١٤٤٣ م، ويُتعلّم في ساعات لا سنوات." : "Hangul was designed in 1443 — it can be learned in hours, not years."}</li>
+                <li>{isAr ? "كل حرف شكله بيشبح طريقة لفظه." : "Each letter's shape reflects how your mouth moves to say it."}</li>
+                <li>{isAr ? "لا يلزم حفظ كل شيء قبل البدء، فالمعلمة تشرح كل شيء." : "You don't need to memorize everything before starting — your teacher will guide you through it."}</li>
               </ul>
               <div className="mt-5">
                 <Button asChild className="gap-2 w-full sm:w-auto">
                   <Link to="/free-trial">
-                    {isAr ? "ابدأ مع مدرسة حقيقية — مجانًا" : "Start with a real teacher — free"}
+                    {isAr ? "البداية مع معلمة حقيقية، مجانًا" : "Start with a real teacher — free"}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>

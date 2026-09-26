@@ -59,10 +59,10 @@ export function buildCourseWelcomeEmail(payload: EmailPayload) {
 
   if (isAr) {
     return {
-      subject: "KLovers — أهلاً بكِ في الكورس 🌿",
+      subject: "كلوفرز — أهلًا وسهلًا في الدورة",
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">أهلاً ${p.name}،</h1>
-        <p>مكانكِ اتأكّد — أهلاً بكِ معانا في كورس الكوري. دي كل حاجة هتحتاجيها قبل أول حصة.</p>
+        <p>تأكّد المقعد، وأهلًا وسهلًا في دورة الكورية. هذا كل ما يلزم قبل الحصة الأولى.</p>
 
         <div style="background-color: ${BRAND_GRAY}; border-right: 4px solid ${BRAND_YELLOW}; border-radius: 4px; padding: 14px 18px; margin: 16px 0;">
           ${box("المجموعة:", group)}
@@ -78,13 +78,13 @@ export function buildCourseWelcomeEmail(payload: EmailPayload) {
 
         ${book ? `
         <h2 style="color: ${BRAND_DARK}; font-size: 17px; margin-top: 28px;">كتاب الكورس</h2>
-        <p>حمّلي الكتاب قبل أول حصة — هنشتغل عليه من الحصة الأولى.</p>
+        <p>يُستحسن تحميل الكتاب قبل الحصة الأولى، فالعمل عليه يبدأ منها.</p>
         <div style="margin: 20px 0; text-align: center;">
           ${brandButton("حمّلي الكتاب", book)}
         </div>` : ""}
 
         <h2 style="color: ${BRAND_DARK}; font-size: 17px; margin-top: 28px;">متابعة كل حاجة من مكان واحد</h2>
-        <p>من لوحة الطالب هتلاقي:</p>
+        <p>في لوحة الطالب:</p>
         <ul style="color: ${BRAND_TEXT}; font-size: 14px; padding-right: 18px; margin: 8px 0 0;">
           <li style="margin-bottom: 6px;">مواعيد حصصكِ وحالة المجموعة</li>
           <li style="margin-bottom: 6px;">الحضور — كل حصة حضرتيها وكل حصة غبتي فيها</li>

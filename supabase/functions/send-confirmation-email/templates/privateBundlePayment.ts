@@ -123,22 +123,22 @@ export function buildPrivateBundlePaymentEmail(p: EmailPayload) {
 
   if (isAr) {
     return {
-      subject: "باقتك في Klovers — حصصك والمتبقي",
+      subject: "الباقة في كلوفرز: الحصص المنجزة والمتبقية",
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 22px;">مرحبًا ${p.name}،</h1>
-        <p>ده ملخص باقتك الحالية (${arClasses(total)}):</p>
+        <p>هذا ملخص الباقة الحالية (${arClasses(total)}):</p>
 
-        <p style="margin-bottom: 4px;"><strong>اللي اتعمل — ${arClasses(done.length)}</strong></p>
+        <p style="margin-bottom: 4px;"><strong>المنجز: ${arClasses(done.length)}</strong></p>
         ${done.length
           ? `<ul style="margin-top: 0; padding-inline-start: 20px;">${listDays(done, true)}</ul>`
-          : `<p style="color: ${BRAND_MUTED};">لسه مافيش حصص محسوبة.</p>`}
+          : `<p style="color: ${BRAND_MUTED};">لا توجد حصص محسوبة بعد.</p>`}
 
         <p style="margin-bottom: 4px;"><strong>الباقي — ${arClasses(remaining)}</strong></p>
 
         <p><strong>المبلغ:</strong> ${amount} ${currency} للباقة كاملة.</p>
 
         <p style="margin-bottom: 4px;"><strong>طريقة الدفع</strong></p>
-        <p>فودافون كاش أو فوري على <strong dir="ltr">${PAY_NUMBER}</strong>. لو تفضّلي تحويل بنكي، ابعتيلي على واتساب وأبعتلك البيانات.</p>
+        <p>فودافون كاش أو فوري على <strong dir="ltr">${PAY_NUMBER}</strong>. ولمن يفضّل التحويل البنكي، تُرسل البيانات عند التواصل عبر واتساب.</p>
 
         <p><strong>بعد التحويل</strong> ادخلي صفحتك وارفعي صورة الإيصال، وهأكّد استلام المبلغ أول ما أشوفه.</p>
 

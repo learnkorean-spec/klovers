@@ -134,7 +134,7 @@ const HangulMiniGame = ({ totalGames }: { totalGames: number }) => {
           <p className="max-w-xs text-sm text-ivory/80">
             {tr(
               `That was one of ${totalGames} games. The rest are free to try too, and your XP is saved when you sign in.`,
-              `دي لعبة واحدة من ${totalGames}. الباقي كمان مجاني، والنقاط بتتحفظ لما تسجّل دخول.`
+              `هذه لعبة واحدة من ${totalGames}. البقية مجانية أيضًا، وتُحفظ النقاط عند تسجيل الدخول.`
             )}
           </p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
@@ -156,7 +156,7 @@ const HangulMiniGame = ({ totalGames }: { totalGames: number }) => {
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 py-4">
-          <p className="text-sm font-semibold text-ivory/75">{tr("Which sound is this?", "إيه صوت الحرف ده؟")}</p>
+          <p className="text-sm font-semibold text-ivory/75">{tr("Which sound is this?", "ما صوت هذا الحرف؟")}</p>
 
           <p
             dir="ltr"

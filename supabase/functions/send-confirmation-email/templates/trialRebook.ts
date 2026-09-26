@@ -116,7 +116,7 @@ const TRIAL_MINUTES = 30;
  * Hardcoded because a template has no database access. If the cohorts move,
  * change them here and in `schedule_packages` in the same breath.
  */
-const COURSE_DAYS_AR = "العربي يوم الجمعة ٣ العصر، والإنجليزي يوم السبت ٣ العصر — بتوقيت القاهرة.";
+const COURSE_DAYS_AR = "الحصص بالعربية يوم الجمعة الساعة ٣ عصرًا، وبالإنجليزية يوم السبت الساعة ٣ عصرًا، بتوقيت القاهرة.";
 const COURSE_DAYS_EN = "Arabic track Fridays 3pm, English track Saturdays 3pm — Cairo time.";
 
 const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
@@ -174,7 +174,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
     : "";
 
   const localTimeNote = isAr
-    ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 12px;">صفحة الحجز بتعرض كل ميعاد بتوقيت بلدك تلقائيًا.</p>`
+    ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 12px;">تعرض صفحة الحجز كل موعد بالتوقيت المحلي تلقائيًا.</p>`
     : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 12px;">The booking page shows every time in your own local time, automatically.</p>`;
 
   // A real deadline, derived from the dates in the letter rather than typed —
@@ -186,7 +186,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   const lastDate = slots.map((s) => s.date).filter(Boolean).sort().pop();
   const deadlineNote = lastDate
     ? (isAr
-        ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">المواعيد دي كلها في نفس الأسبوع، وآخرها <strong>${fmtDate(lastDate as string)}</strong>.</p>`
+        ? `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">هذه المواعيد كلها في الأسبوع نفسه، وآخرها <strong>${fmtDate(lastDate as string)}</strong>.</p>`
         : `<p style="color: ${BRAND_MUTED}; font-size: 13px; margin: 0 0 14px;">These dates are all in the same week — the last is <strong>${fmtDate(lastDate as string)}</strong>.</p>`)
     : "";
 
@@ -217,12 +217,12 @@ export function buildTrialRebookEmail(p: EmailPayload) {
    */
   const whatHappens = isAr
     ? `<div style="background-color: ${BRAND_GRAY}; border-radius: 12px; padding: 18px 22px; margin: 22px 0; text-align: right;">
-        <p style="margin: 0 0 12px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">الجلسة دي إيه بالظبط؟</p>
-        <p style="margin: 0 0 10px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">${minutesLabel} دقيقة على Google Meet — <strong>تعارف على الكورس، مش أول حصة فيه</strong>. الشرح والدراسة بيبدأوا في الكورس نفسه.</p>
-        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• إزاي الكورس ماشي: المستويات، المدة، والكتاب</p>
-        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>المستوى المناسب لك</strong> — سواء بتبدأ من الصفر أو معاك أساس</p>
+        <p style="margin: 0 0 12px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">ما هذه الجلسة تحديدًا؟</p>
+        <p style="margin: 0 0 10px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">${minutesLabel} دقيقة على Google Meet — <strong>تعارف على الدورة، وليست أول حصة فيها</strong>. الشرح والدراسة يبدآن في الدورة نفسها.</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• طريقة سير الدورة: المستويات والمدة والكتاب</p>
+        <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>المستوى المناسب</strong>، سواء كانت البداية من الصفر أو مع أساس سابق</p>
         <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px;">• تتعرف على المدرِّسة وتسأل أي حاجة في بالك</p>
-        <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>الكاميرا اختيارية</strong>، ومحدش مطالَب يتكلم — تقدر تسمع وبس</p>
+        <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px;">• <strong>الكاميرا اختيارية</strong>، والكلام غير إلزامي، فالاستماع وحده كافٍ</p>
       </div>`
     : `<div style="background-color: ${BRAND_GRAY}; border-radius: 12px; padding: 18px 22px; margin: 22px 0;">
         <p style="margin: 0 0 12px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">What this session actually is</p>
@@ -247,12 +247,12 @@ export function buildTrialRebookEmail(p: EmailPayload) {
    */
   const teacherBox = isAr
     ? `<div style="background-color: #fffdf0; border: 1px solid #f0e6a8; border-radius: 12px; padding: 18px 22px; margin: 22px 0; text-align: right;">
-        <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">هتقابل مين؟</p>
+        <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK}; font-size: 15px;">من المعلمة؟</p>
         <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
           <strong>ريهام الشرقاوي</strong> — خرّيجة كلية الألسن، قسم اللغة والأدب الكوري، ومؤسِّسة كلوفرز.
         </p>
         <p style="margin: 0; color: ${BRAND_MUTED}; font-size: 14px; line-height: 1.8;">
-          أكتر من ١٣ سنة في تدريس اللغات. الجلسة معاها شخصيًا ومباشرة — مش فيديو مسجّل ولا تطبيق.
+          أكثر من ١٣ عامًا في تدريس اللغات. الجلسة معها شخصيًا ومباشرة، لا فيديو مسجّل ولا تطبيق.
         </p>
       </div>`
     : `<div style="background-color: #fffdf0; border: 1px solid #f0e6a8; border-radius: 12px; padding: 18px 22px; margin: 22px 0;">
@@ -270,7 +270,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
         ? `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 10px; padding: 16px 20px; margin: 22px 0; text-align: center;">
             <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">رابط Google Meet — يُفضَّل حفظه ليوم الحصة</p>
             <a href="${p.class_link_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px;">الدخول للكلاس</a>
-            <p style="margin: 10px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">الرابط ده شخصي — من فضلك ما تشاركهوش مع حد.</p>
+            <p style="margin: 10px 0 0; color: ${BRAND_MUTED}; font-size: 12px;">هذا الرابط شخصي، ويُرجى عدم مشاركته مع أحد.</p>
           </div>`
         : `<div style="background-color: #f0fff4; border: 1px solid #6ee7b7; border-radius: 10px; padding: 16px 20px; margin: 22px 0; text-align: center;">
             <p style="margin: 0 0 10px; font-weight: bold; color: ${BRAND_DARK};">Your Google Meet link — save it for class day</p>
@@ -329,7 +329,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
   // WhatsApp is a hyperlink HERE and a button below, on purpose: this one sits
   // mid-sentence, where a button cannot go without breaking the line.
   const noneSuit = isAr
-    ? `<p style="margin: 0 0 16px;">لو مفيش ميعاد مناسب، <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">تواصل معنا على واتساب</a> وقول لنا اليوم اللي يناسبك — بنفتح مواعيد جديدة بناءً على الردود دي.</p>`
+    ? `<p style="margin: 0 0 16px;">إن لم يكن هناك موعد مناسب، <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">تواصل معنا على واتساب</a> مع ذكر اليوم المناسب، فنحن نفتح مواعيد جديدة بناءً على هذه الردود.</p>`
     : `<p style="margin: 0 0 16px;">If none of these work, <a href="${waUrl}" style="color: ${BRAND_DARK}; font-weight: 700; text-decoration: underline;">message us on WhatsApp</a> and tell us which day suits you — new slots get opened on exactly these replies.</p>`;
 
   /**
@@ -365,10 +365,10 @@ export function buildTrialRebookEmail(p: EmailPayload) {
 
   if (isAr) {
     return {
-      subject: "KLovers — التسجيل مفتوح في الحصة التجريبية المجانية",
+      subject: "كلوفرز — التسجيل مفتوح في الحصة التجريبية المجانية",
       html: brandWrapper(`
         <h1 style="color: ${BRAND_DARK}; font-size: 23px; margin: 0 0 16px;">أهلاً ${p.name}،</h1>
-        <p style="margin: 0 0 16px;">التسجيل مفتوح في حصة تجريبية مجانية للغة الكورية — دي المواعيد المتاحة:</p>
+        <p style="margin: 0 0 16px;">التسجيل مفتوح في حصة تجريبية مجانية للغة الكورية، وهذه هي المواعيد المتاحة:</p>
         ${slotCards}
         ${localTimeNote}
         ${deadlineNote}
@@ -379,7 +379,7 @@ export function buildTrialRebookEmail(p: EmailPayload) {
         ${meetLinkSection}
         ${nextStep}
         ${noneSuit}
-        <p style="margin: 0 0 16px;">ولو الحصة اكتملت قبل الحجز، هنبعت المواعيد التالية تلقائيًا — <strong>مكانك في القائمة محفوظ</strong>.</p>
+        <p style="margin: 0 0 16px;">وإذا اكتملت الحصة قبل الحجز، نرسل المواعيد التالية تلقائيًا، و <strong>مكانك في القائمة محفوظ</strong>.</p>
         ${contactLine}
       `, true),
     };

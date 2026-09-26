@@ -51,7 +51,7 @@ export const STAGES: JourneyStage[] = [
     icon: "palace-blossoms",
     guide: {
       pose: "wave",
-      line: { ar: "أول محطة: كوريا قبل الكلمات. اختر قصة وابدأ.", en: "First stop: Korea before the words. Pick a story." },
+      line: { ar: "أول محطة: كوريا قبل الكلمات. اختيار قصة والبدء.", en: "First stop: Korea before the words. Pick a story." },
     },
   },
   {
@@ -467,7 +467,7 @@ export const QUIZ: QuizQuestion[] = [
     ],
     answer: "b",
     explain: {
-      ar: "مع عرض أو هدية، 괜찮아요 رفض مهذب — «مش محتاج، شكراً».",
+      ar: "مع عرض أو هدية، 괜찮아요 رفض مهذب — «لا حاجة، شكرًا».",
       en: "Answering an offer, 괜찮아요 is a polite no — “I'm good, thanks”.",
     },
   },

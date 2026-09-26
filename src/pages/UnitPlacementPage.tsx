@@ -135,7 +135,7 @@ const UnitPlacementPage = () => {
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setMicError(
         isAr
-          ? "المتصفح ده مش بيدعم التسجيل الصوتي. سيبي القسم ده فاضي والمدرّس هيقيّمه في الحصة."
+          ? "هذا المتصفح لا يدعم التسجيل الصوتي. يُترك هذا القسم فارغًا، وتقيّمه المعلمة في الحصة."
           : "This browser cannot record audio. Leave this section empty — your teacher will assess it live.",
       );
       return;
@@ -155,7 +155,7 @@ const UnitPlacementPage = () => {
     } catch {
       setMicError(
         isAr
-          ? "مقدرناش نوصل للمايك. اسمحي للمتصفح باستخدام المايك، أو سيبي القسم ده والمدرّس هيقيّمه في الحصة."
+          ? "تعذّر الوصول إلى الميكروفون. يلزم السماح للمتصفح باستخدامه، أو ترك هذا القسم لتقيّمه المعلمة في الحصة."
           : "Microphone access was denied. Allow it in your browser, or skip this section and your teacher will assess it live.",
       );
       setRecordingId(null);
@@ -317,7 +317,7 @@ const UnitPlacementPage = () => {
             <CardContent className="space-y-4 text-sm">
               <p>
                 {t(
-                  "الاختبار ده بيحدد إنتي تبدئي من أي وحدة في كتاب 세종한국어 1 — مش بيدّي درجة كلية.",
+                  "يحدد هذا الاختبار وحدة البداية في كتاب 세종한국어 1، ولا يعطي درجة كلية.",
                   "This test decides which unit of Sejong Korean 1 you start from. It is not scored as a single total.",
                 )}
               </p>
@@ -326,7 +326,7 @@ const UnitPlacementPage = () => {
                 <li>{t("٣ أسئلة كتابة بالكوري — يصححها المدرّس.", "3 Korean writing questions — marked by your teacher.")}</li>
                 <li>{t("٥ أسئلة شفهية بالتسجيل الصوتي — يقيّمها المدرّس. تقدري تتخطيها.", "5 spoken questions recorded with your microphone — assessed by your teacher. You may skip them.")}</li>
                 <li>{t("حوالي ٣٠ دقيقة. تقدري تقفلي الصفحة وترجعي، إجاباتك محفوظة.", "About 30 minutes. You can close the page and come back — your answers are saved.")}</li>
-                <li>{t("من غير قاموس ولا ترجمة — النتيجة الصادقة هي اللي بتحطك في المكان الصح.", "No dictionary or translator — an honest result is what puts you in the right place.")}</li>
+                <li>{t("دون قاموس أو ترجمة، فالنتيجة الصادقة هي التي تحدد المكان الصحيح.", "No dictionary or translator — an honest result is what puts you in the right place.")}</li>
               </ul>
               <div className="flex gap-2 pt-2">
                 <Button onClick={() => { setStartedAt(Date.now()); setPhase("test"); }}>
@@ -361,7 +361,7 @@ const UnitPlacementPage = () => {
             <CardContent className="space-y-5">
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  {t("نقطة البداية المناسبة ليكي", "Your starting point")}
+                  {t("نقطة البداية المناسبة", "Your starting point")}
                 </p>
                 <p className="text-2xl font-bold" dir="ltr">{result.start.labelKo}</p>
                 <p className="text-sm">{isAr ? result.start.labelAr : result.start.labelEn}</p>
@@ -399,7 +399,7 @@ const UnitPlacementPage = () => {
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   {t(
-                    `المجموع التلقائي ${result.mcqScore} من ${SEJONG1_MCQ_MAX} — لكن اللي حدد نقطة البداية هو أول قسم لم تجتازيه، مش المجموع.`,
+                    `المجموع التلقائي ${result.mcqScore} من ${SEJONG1_MCQ_MAX} ، لكن نقطة البداية يحددها أول قسم لم يُجتز، لا المجموع.`,
                     `Auto-graded total ${result.mcqScore} of ${SEJONG1_MCQ_MAX} — but your starting point comes from the first section you did not pass, not from the total.`,
                   )}
                 </p>
@@ -505,7 +505,7 @@ const UnitPlacementPage = () => {
               <>
                 <p className="text-sm text-muted-foreground">
                   {t(
-                    "اكتبي بالكوري. لو مش قادرة على سؤال، سيبيه وانتقلي للي بعده.",
+                    "الكتابة بالكورية. وعند تعذّر الإجابة عن سؤال، يُترك والانتقال إلى التالي.",
                     "Write in Korean. If you cannot answer one, leave it and move on.",
                   )}
                 </p>
@@ -534,7 +534,7 @@ const UnitPlacementPage = () => {
               <>
                 <p className="text-sm text-muted-foreground">
                   {t(
-                    "سجّلي إجابتك بصوتك. لو المايك مش شغال، سيبي القسم ده والمدرّس هيقيّمه في الحصة.",
+                    "تسجيل الإجابة صوتيًا. وإن لم يعمل الميكروفون، يُترك هذا القسم لتقيّمه المعلمة في الحصة.",
                     "Record your answer. If your microphone does not work, skip this section — your teacher will assess it live.",
                   )}
                 </p>

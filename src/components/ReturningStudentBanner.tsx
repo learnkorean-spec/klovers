@@ -113,7 +113,7 @@ const ReturningStudentBanner = () => {
           </span>
           <span className="text-sm font-medium">
             {isAr
-              ? "خلّصت كورسك معانا — رجوعك عليه خصم ٢٠٪."
+              ? "للطلاب الذين أنهوا دورتهم معنا: خصم ٢٠٪ عند العودة."
               : "You finished your course with us — come back and take 20% off."}
           </span>
         </div>
@@ -121,7 +121,7 @@ const ReturningStudentBanner = () => {
           to="/welcome-back"
           className="inline-flex items-center gap-1.5 bg-secondary text-secondary-foreground text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-secondary/90 transition-colors shrink-0"
         >
-          {isAr ? "شوف عرض العودة" : "See your offer"}
+          {isAr ? "عرض العودة" : "See your offer"}
         </Link>
       </div>
       <button

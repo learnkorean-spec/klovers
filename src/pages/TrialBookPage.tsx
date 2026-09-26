@@ -244,7 +244,7 @@ function TrialWhyAr() {
     { icon:"💼", title:"فرص العمل",           body:"شركات كورية ضخمة (Samsung، Hyundai، LG) تبحث دائماً عن متحدثي اللغة." },
     { icon:"🧠", title:"سهلة جداً للعرب",    body:"الهانغول أبجدية علمية منطقية — ممكن تتعلمها في يومين فقط!" },
     { icon:"🌟", title:"مجتمع نشيط",          body:"مجتمع Klovers دافئ ومتحمس — أصدقاء جدد يتعلمون معك." },
-    { icon:"🎯", title:"منهج واضح",           body:"٦ كتب منظمة من الصفر للطلاقة — تعرف دايماً إيه اللي جاي." },
+    { icon:"🎯", title:"منهج واضح",           body:"٦ كتب منظمة من الصفر حتى الطلاقة، والخطوة التالية واضحة دائمًا." },
   ];
 
   return (
@@ -354,14 +354,14 @@ function TrialHangulAr() {
 
   return (
     <Page dir="rtl">
-      <SHead title="جرّب الهانغول الآن! ✍️" subtitle="٥ حروف + ٣ حروف مد — تقرأ كلمات كورية في ١٠ دقائق" />
+      <SHead title="تجربة الهانغول الآن" subtitle="٥ حروف + ٣ حروف مد: قراءة كلمات كورية في ١٠ دقائق" />
       <DancheongBorder />
 
       {/* Consonants */}
       <div style={{ marginBottom:"10px" }}>
         <div style={{ fontSize:"11px", fontWeight:800, color:BK, marginBottom:"6px", display:"flex", alignItems:"center", gap:"6px" }}>
           <span style={{ background:Y, padding:"2px 8px", borderRadius:"6px" }}>الحروف الساكنة</span>
-          اكتب معنا!
+          الكتابة معًا
         </div>
         <div style={{ display:"flex", flexDirection:"column", gap:"6px" }}>
           {chars.map((c, i) => (
@@ -408,7 +408,7 @@ function TrialHangulAr() {
       {/* Try reading */}
       <div style={{ background:"#f0fff4", borderRadius:"10px", padding:"10px 14px", border:`2px solid #166534` }}>
         <div style={{ fontSize:"11px", fontWeight:800, color:"#166534", marginBottom:"6px" }}>
-          🎯 جرّب اقرأ:
+          تجربة القراءة:
         </div>
         <div style={{ display:"flex", gap:"10px", flexWrap:"wrap" }}>
           {[
@@ -527,8 +527,8 @@ function TrialTestimonialsAr() {
 function TrialJoinAr() {
   const steps = [
     { n:"١", icon:"💬", title:"تواصل معنا",        body:"ابعت لنا على واتساب أو إنستجرام وإحنا هنرد عليك فوراً." },
-    { n:"٢", icon:"📅", title:"اختر موعدك",        body:"مواعيد مرنة — صباح أو مساء، أيام عطلة، حسب وقتك." },
-    { n:"٣", icon:"📚", title:"ابدأ المستوى الأول", body:"تحصل على كتاب Hangul Book 1 + الوصول للمجموعة + دعم الأستاذة." },
+    { n:"٢", icon:"📅", title:"اختيار الموعد",        body:"مواعيد مرنة صباحًا أو مساءً، وفي أيام العطلة، حسب الوقت المتاح." },
+    { n:"٣", icon:"📚", title:"بدء المستوى الأول", body:"كتاب الهانغول الأول + الانضمام إلى المجموعة + دعم المعلمة." },
     { n:"٤", icon:"🌟", title:"وصّل للطلاقة",      body:"٦ مستويات واضحة — ومجتمع يشجعك في كل خطوة." },
   ];
 
@@ -563,7 +563,7 @@ function TrialJoinAr() {
       {/* Contact */}
       <div style={{ background:BK, borderRadius:"12px", padding:"14px", textAlign:"center", border:`3px solid ${Y}` }}>
         <div style={{ fontSize:"13px", fontWeight:900, color:Y, marginBottom:"8px" }}>
-          ابدأ رحلتك الآن!
+          الرحلة تبدأ الآن
         </div>
         <div style={{ display:"flex", gap:"12px", justifyContent:"center", flexWrap:"wrap" }}>
           <div style={{ background:"#25D366", borderRadius:"8px", padding:"8px 16px", fontSize:"11px", fontWeight:700, color:"#fff" }}>
