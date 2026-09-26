@@ -232,7 +232,7 @@ const LearningRoadmap = () => {
               {t("roadmap", "subtitle")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground/80">
-              {isAr ? "اضغط على أي محطة في الطريق لتفاصيلها" : "Tap any stop on the path for its details"}
+              {isAr ? "الضغط على أي محطة يعرض تفاصيلها" : "Tap any stop on the path for its details"}
             </p>
           </div>
 

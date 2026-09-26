@@ -1,5 +1,6 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Users, BookOpen, GraduationCap, ArrowRight, Languages } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
@@ -36,9 +37,9 @@ import { STUDENTS_TAUGHT, TEACHING_YEARS } from "@/lib/trustFigures";
  */
 
 const HIGHLIGHTS = [
-  { Icon: Users, value: STUDENTS_TAUGHT, en: "Students taught", ar: "طالب درّستهم" },
-  { Icon: BookOpen, value: TEACHING_YEARS, en: "Years teaching Korean", ar: "سنة تدريس كوري" },
-  { Icon: Languages, value: "EN · AR", en: "Classes in English or Arabic", ar: "حصص بالعربي أو الإنجليزي" },
+  { icon: "student-girl-heart" as KloverIconName, value: STUDENTS_TAUGHT, en: "Students taught", ar: "طالب تعلّموا معها" },
+  { icon: "books-stack" as KloverIconName, value: TEACHING_YEARS, en: "Years teaching Korean", ar: "عامًا في تدريس الكورية" },
+  { icon: "chat-annyeong" as KloverIconName, value: "EN · AR", valueAr: "عربي · إنجليزي", en: "Classes in English or Arabic", ar: "حصص بالعربية أو الإنجليزية" },
 ];
 
 const MeetTeacher = () => {
@@ -52,10 +53,10 @@ const MeetTeacher = () => {
         {/* Section header */}
         <div className="text-center mb-16">
           <span className="inline-block bg-klovers-yellow text-charcoal text-xs font-bold tracking-[0.2em] uppercase px-5 py-2 rounded-full mb-5 border border-charcoal/10 shadow-sm">
-            {isAr ? "معلمتك" : "Your teacher"}
+            {isAr ? "المعلمة" : "Your teacher"}
           </span>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-foreground tracking-tight">
-            {isAr ? "تعرّف على معلمتك" : "Meet Your Teacher"}
+            {isAr ? "التعرّف على المعلمة" : "Meet Your Teacher"}
           </h2>
         </div>
 
@@ -78,9 +79,9 @@ const MeetTeacher = () => {
                     near-black scrim, not on a light ground. */}
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-6 py-5">
                   <div className="flex items-center gap-2 mb-1">
-                    <GraduationCap className="h-4 w-4 text-klovers-yellow shrink-0" />
+                    <KloverIcon name="diploma-scroll" className="h-6 w-6" />
                     <span className="text-klovers-yellow text-xs font-bold tracking-wider uppercase">
-                      {isAr ? "خريجة الألسن — قسم كوري" : "Al-Alsun Korean graduate"}
+                      {isAr ? "خريجة الألسن، قسم اللغة الكورية" : "Al-Alsun Korean graduate"}
                     </span>
                   </div>
                   <p className="text-white font-bold text-lg leading-tight">{isAr ? "ريهام الشرقاوي" : "Reham Elshrkawy"}</p>
@@ -96,32 +97,32 @@ const MeetTeacher = () => {
             <div className="space-y-4 text-muted-foreground text-base md:text-lg leading-relaxed">
               <p className="text-foreground font-medium">
                 {isAr
-                  ? "ريهام بتدرّس الكورية من 13 سنة، ودرّست أكتر من 200 طالب بنفسها. خريجة كلية الألسن، قسم اللغة والأدب الكوري."
+                  ? "تدرّس ريهام اللغة الكورية منذ 13 عامًا، وتعلّم معها أكثر من 200 طالب. تخرّجت في كلية الألسن، قسم اللغة الكورية وآدابها."
                   : "Reham has taught Korean for 13 years and has taught more than 200 students herself. She studied Korean language and literature at the Faculty of Al-Alsun."}
               </p>
               <p>
                 {isAr
-                  ? "الحصة معاها كلام حقيقي من أول دقيقة: بتشرح بالعربي أو الإنجليزي، وبتصحح نطقك وانت بتتكلم، وفي مجموعة صغيرة كل واحد بياخد دوره."
+                  ? "الحصة معها حديث حقيقي من الدقيقة الأولى: الشرح بالعربية أو الإنجليزية، وتصحيح النطق أثناء الكلام، وفي المجموعة الصغيرة يأخذ كل طالب دوره."
                   : "Her classes are built around speaking from the first minute: she explains in English or Arabic, corrects your pronunciation while you talk, and in a small group everyone gets their turn."}
               </p>
               <p>
                 {isAr
-                  ? "بعد كل حصة بتعرف الخطوة الجاية — من الهانغول لحد المستوى السادس."
+                  ? "بعد كل حصة تتضح الخطوة التالية، من الهانغول حتى المستوى السادس."
                   : "After every class you know what comes next — from Hangul all the way to Level 6."}
               </p>
             </div>
 
             {/* Stat cards */}
             <div className="grid grid-cols-3 gap-3 sm:gap-4 pt-2">
-              {HIGHLIGHTS.map(({ Icon, value, en, ar }) => (
+              {HIGHLIGHTS.map(({ icon, value, valueAr, en, ar }: { icon: KloverIconName; value: string; valueAr?: string; en: string; ar: string }) => (
                 <div
                   key={en}
                   className="group flex flex-col items-center text-center bg-card hover:bg-klovers-yellow/40 border border-border hover:border-klovers-yellow rounded-2xl p-3 sm:p-5 transition-all duration-300"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-klovers-yellow flex items-center justify-center mb-3 border border-charcoal/10">
-                    <Icon className="h-5 w-5 text-charcoal" />
+                  <div className="w-12 h-12 rounded-xl bg-ivory flex items-center justify-center mb-3 border border-klovers-yellow">
+                    <KloverIcon name={icon} className="h-10 w-10" />
                   </div>
-                  <span className="text-foreground font-extrabold text-base sm:text-xl leading-none" dir="ltr">{value}</span>
+                  <span className="text-foreground font-extrabold text-base sm:text-xl leading-none" dir={isAr && valueAr ? "rtl" : "ltr"}>{isAr && valueAr ? valueAr : value}</span>
                   <span className="text-muted-foreground text-xs md:text-sm mt-1 leading-snug">{isAr ? ar : en}</span>
                 </div>
               ))}
@@ -135,7 +136,7 @@ const MeetTeacher = () => {
               <div className="flex gap-0 items-stretch">
                 {(isAr ? [
                   { m: "الشهر الأول", desc: "الهانغول وأول جمل" },
-                  { m: "الشهر التالت", desc: "محادثات يومية بسيطة" },
+                  { m: "الشهر الثالث", desc: "محادثات يومية بسيطة" },
                   { m: "الشهر السادس", desc: "إتمام المستوى الأول" },
                 ] : [
                   { m: "Month 1", desc: "Hangul + first phrases" },
@@ -163,7 +164,7 @@ const MeetTeacher = () => {
                 onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "meet_teacher_cta", metadata: { language } }); } catch {} }}
               >
                 <Link to="/free-trial">
-                  {isAr ? "احجز حصتك المجانية" : "Book a Free Class"}
+                  {isAr ? "حجز حصة مجانية" : "Book a Free Class"}
                   <ArrowRight className="h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>

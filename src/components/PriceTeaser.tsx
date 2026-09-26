@@ -126,7 +126,7 @@ const PriceTeaser = ({ className = "", source }: { className?: string; source: s
           <>Live group classes from <strong className="text-foreground">{amount}/month</strong> · 4 live classes</>
         )
       ) : isAr ? (
-        "الأسعار حسب بلدك"
+        "الأسعار حسب البلد"
       ) : (
         "Prices depend on your country"
       )}
@@ -136,7 +136,7 @@ const PriceTeaser = ({ className = "", source }: { className?: string; source: s
         onClick={() => { try { logLeadEvent({ source_type: "pricing", cta_label: `${source}_view_pricing`, metadata: { language } }); } catch {} }}
         className="inline-flex min-h-11 items-center gap-1 align-middle font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/70"
       >
-        {isAr ? "شوف الأسعار" : "View pricing"}
+        {isAr ? "عرض الأسعار" : "View pricing"}
         <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
       </Link>
     </p>

@@ -45,21 +45,21 @@ const DOORS: Door[] = [
     titleEn: "Live classes",
     titleAr: "حصص مباشرة",
     bodyEn: "Learn with a real teacher, in a small group.",
-    bodyAr: "اتعلّم مع معلمة حقيقية، في مجموعة صغيرة.",
+    bodyAr: "تعلّم مع معلمة حقيقية في مجموعة صغيرة.",
   },
   {
     to: "/review",
     icon: "flashcard-ga",
-    tone: "bg-white",
+    tone: "bg-ivory",
     titleEn: "Practice",
     titleAr: "تدريب",
     bodyEn: "Review your vocabulary between classes so it sticks.",
-    bodyAr: "راجع مفرداتك بين الحصص علشان تثبت.",
+    bodyAr: "مراجعة المفردات بين الحصص لتثبت في الذاكرة.",
   },
   {
     to: "/games",
     icon: "game-headphones-music",
-    tone: "bg-white",
+    tone: "bg-ivory",
     titleEn: "Games",
     titleAr: "الألعاب",
     bodyEn: "Hangul, words and grammar as games. Free to start.",
@@ -72,25 +72,25 @@ const DOORS: Door[] = [
     titleEn: "Cluby",
     titleAr: "كلوبي",
     bodyEn: "Your study buddy, cheering you on in every game world.",
-    bodyAr: "رفيق مذاكرتك، بيشجّعك في كل عالم من عوالم الألعاب.",
+    bodyAr: "رفيق المذاكرة، يشجّع المتعلّم في كل عالم من عوالم الألعاب.",
   },
   {
     to: "/journey/before-korea",
     icon: "namsan-tower",
-    tone: "bg-white",
+    tone: "bg-ivory",
     titleEn: "Culture",
     titleAr: "الثقافة",
     bodyEn: "Korea's story, from the first legend to today.",
-    bodyAr: "حكاية كوريا، من أول أسطورة لحد النهاردة.",
+    bodyAr: "حكاية كوريا، من أول أسطورة حتى اليوم.",
   },
   {
     to: "/courses",
     icon: "growth-chart",
-    tone: "bg-white",
+    tone: "bg-ivory",
     titleEn: "Learning path",
     titleAr: "مسار التعلّم",
     bodyEn: "Hangul, then Levels 1 to 6. Always know what comes next.",
-    bodyAr: "الهانغول، وبعدين المستويات من 1 لحد 6.",
+    bodyAr: "الهانغول، ثم المستويات من 1 إلى 6.",
   },
 ];
 
@@ -109,14 +109,14 @@ const MoreThanAClass = () => {
       <div className="container mx-auto px-4">
         <div className="mx-auto mb-10 max-w-2xl text-center">
           <span className="mb-4 inline-block rounded-full border border-charcoal/10 bg-klovers-yellow px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-charcoal">
-            {isAr ? "أكتر من حصص مباشرة" : "More than live classes"}
+            {isAr ? "أكثر من حصص مباشرة" : "More than live classes"}
           </span>
           <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-foreground md:text-4xl">
-            {isAr ? "كل اللي محتاجه علشان تكمّل" : "Everything that keeps you going"}
+            {isAr ? "كل ما يلزم للاستمرار" : "Everything that keeps you going"}
           </h2>
           <p className="mt-3 text-base leading-relaxed text-muted-foreground md:text-lg">
             {isAr
-              ? "الحصة هي البداية. التدريب والألعاب والثقافة بيخلّوها تثبت."
+              ? "الحصة هي البداية، والتدريب والألعاب والثقافة تثبّت ما تعلّمته فيها."
               : "The class is where it starts. Practice, games and culture make it stick."}
           </p>
         </div>
@@ -156,7 +156,7 @@ const MoreThanAClass = () => {
           {/* The hanok-alley scene, end side, large screens only. */}
           <img
             src="/assets/cluby/scene-hanok.webp"
-            alt={isAr ? "طالب مع كلوبي في زقاق بيوت هانوك تقليدية" : "A learner and Cluby in a hanok alley"}
+            alt={isAr ? "متعلّمة مع كلوبي في زقاق بيوت هانوك تقليدية" : "A learner and Cluby in a hanok alley"}
             width={1080}
             height={1350}
             loading="lazy"
@@ -173,7 +173,7 @@ const MoreThanAClass = () => {
             className="inline-flex min-h-11 items-center gap-2 font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/70"
           >
             <BookOpen className="h-4 w-4" aria-hidden="true" />
-            {isAr ? "جديد على الهانغول؟ خد ورقة البداية المجانية" : "New to Hangul? Get the free starter sheet"}
+            {isAr ? "بداية مع الهانغول؟ ورقة البداية المجانية" : "New to Hangul? Get the free starter sheet"}
           </Link>
           <Link
             to="/blog"

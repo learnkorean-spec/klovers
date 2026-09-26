@@ -63,7 +63,7 @@ const LEVEL_COPY: Record<
     blurb_en:
       "Read and write Korean from zero. Four classes, complete in itself — take it on its own, or as the step before Level 1.",
     blurb_ar:
-      "تقرأ وتكتب الكورية من الصفر. أربع حصص كاملة بذاتها — يمكنك دراستها وحدها، أو كخطوة قبل المستوى الأول.",
+      "قراءة الكورية وكتابتها من الصفر. أربع حصص كاملة بذاتها — تُدرس وحدها، أو خطوةً قبل المستوى الأول.",
     features_en: [
       "Class 1 — the basic vowels and consonants, and how a syllable is built",
       "Class 2 — tense and aspirated consonants, and combined vowels",

@@ -884,7 +884,7 @@ export const translations = {
     testimonialsSection: {
       badge: "100% Recommend · 16 Facebook Reviews",
       title: "What Our Students Say",
-      subtitle: "Real reviews from real students — in their own words 🇰🇷",
+      subtitle: "Real reviews from real students, in their own words",
       ratingSuffix: "/ 5.0 · 200+ students",
     },
     placementCta: {
@@ -1860,7 +1860,7 @@ export const translations = {
       about: "عن Klovers",
       faq: "الأسئلة الشائعة",
       contact: "تواصل معنا",
-      enrollNow: "ابدأ الآن",
+      enrollNow: "البدء الآن",
       langToggle: "English",
     },
     hero: {
@@ -1872,13 +1872,13 @@ export const translations = {
       viewPricing: "عرض الأسعار",
     },
     whyLearn: {
-      title: "لماذا تتعلم الكورية؟",
-      subtitle: "افتح أبوابًا لفرص جديدة مع اللغة الكورية",
+      title: "لماذا الكورية؟",
+      subtitle: "أبواب لفرص جديدة مع اللغة الكورية",
       items: [
-        { title: "الثقافة الكورية", description: "استمتع بالدراما والكيبوب بالكورية", icon: "culture" },
+        { title: "الثقافة الكورية", description: "متابعة الدراما والكيبوب بالكورية", icon: "culture" },
         { title: "الدراسة", description: "الوصول إلى الجامعات والمنح الكورية", icon: "study" },
         { title: "المهنة", description: "العمل مع الشركات الكورية حول العالم", icon: "career" },
-        { title: "السفر", description: "تنقّل في كوريا كأهلها", icon: "travel" },
+        { title: "السفر", description: "التنقّل في كوريا بثقة", icon: "travel" },
       ],
     },
     teacher: {
@@ -1896,8 +1896,8 @@ export const translations = {
       cta: "احجز حصة مجانية مع ريهام",
     },
     howItWorks: {
-      title: "هتتكلم كورية من أول حصة",
-      subtitle: "مش حفظ. مش مشاهدة. كلام حقيقي — بالعربي عشان يوصل من الدقيقة الأولى.",
+      title: "التحدّث بالكورية من الحصة الأولى",
+      subtitle: "لا حفظ ولا مشاهدة فقط، بل حديث حقيقي، مع شرح بالعربية يوضّح كل شيء من الدقيقة الأولى.",
       steps: [
         { title: "شرح بالعربي", description: "معلمتك بتشرح الكورية بالعربي — عشان تفهم فعلاً مش بس تحفظ أصوات." },
         { title: "مجموعات صغيرة", description: "المجموعة صغيرة بما يكفي إنك تتكلم في كل حصة. مفيش اختباء." },
@@ -1918,8 +1918,8 @@ export const translations = {
         { title: "مستوى 5", description: "فروقات دقيقة ولغة رسمية ونقاشات.", level: "TOPIK 5 / C1" },
         { title: "مستوى 6", description: "فهم شبه أصلي وتعبيرات متقدمة واصطلاحات.", level: "TOPIK 6 / C2" },
       ],
-      cta: "اكتشف مستواك",
-      ctaSub: "خذ اختبار تحديد المستوى المجاني",
+      cta: "اكتشاف المستوى",
+      ctaSub: "اختبار تحديد المستوى المجاني",
     },
     testimonials: {
       title: "ماذا يقول طلابنا",
@@ -2733,7 +2733,7 @@ export const translations = {
     testimonialsSection: {
       badge: "100٪ يوصون بنا · 16 تقييم على فيسبوك",
       title: "ماذا يقول طلابنا",
-      subtitle: "تقييمات حقيقية من طلاب حقيقيين — بكلماتهم 🇰🇷",
+      subtitle: "تقييمات حقيقية من طلاب حقيقيين، بكلماتهم",
       ratingSuffix: "/ 5.0 · أكثر من 200 طالب",
     },
     placementCta: {
