@@ -57,6 +57,27 @@ const DIST = join(process.cwd(), "dist");
 const CACHE_FILE = join(process.cwd(), "scripts", "prerender-routes.cache.json");
 const BASE_URL = "https://kloversegy.com";
 const SITE_NAME = "Klovers";
+
+/**
+ * Blog author as JSON-LD (GEO-09, 27 Sep 2026). Posts Reham wrote carry a real
+ * Person, so answer engines can tie the article to a named teacher. Every other
+ * post is the one Klovers Organization with one spelling, "Klovers" (Arabic
+ * "كلوفرز" as alternateName) - not "Klovers Team" / "فريق كلوفرز" / other
+ * variants typed as six different organizations.
+ */
+const REHAM = "Reham Elshrkawy";
+function blogAuthorLd(name) {
+  if (name === REHAM) {
+    return {
+      "@type": "Person",
+      name: REHAM,
+      url: `${BASE_URL}/about`,
+      jobTitle: "Korean language teacher, founder of Klovers",
+      alumniOf: { "@type": "CollegeOrUniversity", name: "Faculty of Al-Alsun, Ain Shams University" },
+    };
+  }
+  return { "@type": "Organization", name: SITE_NAME, alternateName: "كلوفرز", url: BASE_URL };
+}
 const DEFAULT_IMAGE = `${BASE_URL}/klovers-logo.jpg`;
 
 // Build-time credentials. Vercel already defines the VITE_* pair for the app
@@ -1214,7 +1235,7 @@ function buildHeadTags(route) {
         ...(p.articleType ? { articleSection: p.articleType } : {}),
         ...(p.publishedAt ? { datePublished: p.publishedAt } : {}),
         ...(p.updatedAt ? { dateModified: p.updatedAt } : {}),
-        author: { "@type": "Organization", name: p.author || SITE_NAME, url: BASE_URL },
+        author: blogAuthorLd(p.author),
         publisher: {
           "@type": "Organization",
           name: SITE_NAME,
