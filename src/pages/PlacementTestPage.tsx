@@ -848,7 +848,7 @@ const PlacementTestPage = () => {
                 <p className="text-xs text-muted-foreground font-medium">{isAr ? "قلها بنفسك ثم قيّم أداءك:" : "Say it yourself, then rate how you did:"}</p>
                 {!isRecording && !recordingUrl && (
                   <Button variant="outline" className="w-full gap-2" onClick={startRecording}>
-                    <Mic className="h-4 w-4" /> {isAr ? "التسجيل الصوتي (اختياري)" : "Record yourself (optional)"}
+                    <Mic className="h-4 w-4" /> {isAr ? "سجّل نفسك (اختياري)" : "Record yourself (optional)"}
                   </Button>
                 )}
                 {isRecording && (
@@ -1007,7 +1007,7 @@ const PlacementTestPage = () => {
                         navigate("/free-trial");
                       }}
                     >
-                      {isAr ? "حجز التجربة المجانية" : "Book My Free Trial"} <ArrowRight className="ml-2 h-4 w-4" />
+                      {isAr ? "احجز تجربتي المجانية" : "Book My Free Trial"} <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                     <button
                       onClick={() => {
@@ -1020,7 +1020,7 @@ const PlacementTestPage = () => {
                     </button>
                   </div>
                   <p className="text-[10px] text-muted-foreground text-center">
-                    {isAr ? "+200 طالب درّستهم ريهام · استرداد أو إعادة حجز عند عدم الرضا عن الحصة الأولى" : "200+ students taught by Reham · refund or rebook if your first class isn't right"}
+                    {isAr ? "⭐️ +200 طالب درّستهم ريهام · استرداد أو إعادة حجز لو الحصة الأولى ما عجبتكش" : "⭐️ 200+ students taught by Reham · refund or rebook if your first class isn't right"}
                   </p>
                 </CardContent>
               </Card>
@@ -1073,7 +1073,7 @@ const PlacementTestPage = () => {
                   Grammar:    { tip: "تدرّب على أنماط القواعد الكورية بتمارين موجّهة.", link: "/games", label: "تمارين القواعد" },
                   Reading:    { tip: "حسّن فهمك للقراءة مع مقالات مدونتنا.", link: "/blog", label: "اقرأ المقالات" },
                   Listening:  { tip: "درّب أذنك مع الحوارات الكورية والدراما والتمارين الصوتية.", link: "/games", label: "ألعاب الاستماع" },
-                  Speaking:   { tip: "حصة محادثة لتحسين الكورية المنطوقة.", link: "/enroll", label: "حجز حصة محادثة" },
+                  Speaking:   { tip: "احجز حصة محادثة لتحسين كوريتك المنطوقة.", link: "/enroll", label: "احجز حصة محادثة" },
                 } : {
                   Vocabulary: { tip: "Build your Korean vocabulary with free interactive games.", link: "/games", label: "Play vocab games" },
                   Grammar:    { tip: "Practise Korean grammar patterns with guided exercises.", link: "/games", label: "Grammar exercises" },
@@ -1162,7 +1162,7 @@ const PlacementTestPage = () => {
               <p className="text-sm font-semibold text-foreground text-center">{isAr ? "مستعد لبدء التعلّم؟" : "Ready to start learning?"}</p>
               <div className="flex gap-2">
                 <Button size="lg" className="flex-1" onClick={() => { track.custom("placement_recommendation_clicked", { level: result.levelKey, cta: "free_trial_bottom" }); logLeadEvent({ source_type: "placement", cta_label: "bottom_cta_free_trial", metadata: { level: result.levelKey } }); navigate("/free-trial"); }}>
-                  {isAr ? "حجز حصة مجانية" : "Book a Free Class"} <ArrowRight className="ml-2 h-4 w-4" />
+                  {isAr ? "🎁 احجز حصة مجانية" : "🎁 Book a Free Class"} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline" className="flex-1 gap-2" onClick={() => handleWhatsAppEnroll(result)}>
                   <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
@@ -1173,7 +1173,7 @@ const PlacementTestPage = () => {
               </div>
               {!userId && (
                 <Button variant="outline" className="w-full" onClick={() => navigate("/signup")}>
-                  {isAr ? "حفظ النتيجة: تسجيل مجاني" : "Save My Result — Sign Up Free"}
+                  {isAr ? "احفظ نتيجتي — سجّل مجاناً" : "Save My Result — Sign Up Free"}
                 </Button>
               )}
               <div className="flex gap-2">
@@ -1435,7 +1435,7 @@ const PlacementTestPage = () => {
                 navigate("/free-trial?level=hangul");
               }}
             >
-              {isAr ? "حجز التجربة" : "Book trial"} <ArrowRight className="h-3 w-3 ml-1" />
+              {isAr ? "احجز التجربة" : "Book trial"} <ArrowRight className="h-3 w-3 ml-1" />
             </Button>
           </div>
         )}
