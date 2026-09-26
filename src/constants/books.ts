@@ -31,6 +31,24 @@ export const BOOKS = {
     subtitleAr: "تمهيد الهانغُل · 5 حصص",
     subtitleEn: "Hangul primer · 5 classes",
   },
+  "trial-guide-ar": {
+    path: "books/trial-guide-ar.pdf",
+    fileName: "Klovers-Trial-Guide-AR.pdf",
+    badge: "دليل",
+    titleAr: "دليل الحصة التجريبية",
+    titleEn: "Trial class guide (Arabic)",
+    subtitleAr: "ما يحدث في الحصة التجريبية · 7 صفحات",
+    subtitleEn: "What happens in the trial class · 7 pages",
+  },
+  "trial-guide-en": {
+    path: "books/trial-guide-en.pdf",
+    fileName: "Klovers-Trial-Guide-EN.pdf",
+    badge: "Guide",
+    titleAr: "دليل الحصة التجريبية (النسخة الإنجليزية)",
+    titleEn: "Trial class guide",
+    subtitleAr: "ما يحدث في الحصة التجريبية · 7 صفحات",
+    subtitleEn: "What happens in the trial class · 7 pages",
+  },
 } as const;
 
 export type BookId = keyof typeof BOOKS;
