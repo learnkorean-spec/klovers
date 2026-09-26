@@ -358,30 +358,32 @@ const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
     </div>`;
 
 // The Arabic homepage at /ar (24 Sep 2026). The same page as HOME_BODY_HTML,
-// said in Arabic, in the Egyptian register the site already uses. Same rules:
-// duplicated from the app on purpose, verified facts only, exactly one <h1>.
+// said in Arabic. 27 Sep 2026: rewritten in neutral Modern Standard Arabic
+// (Re's one-tone rule, 26 Sep) - no dialect and no verb aimed at the reader as
+// male or female; links are verbal nouns. Same rules: duplicated from the app
+// on purpose, verified facts only, exactly one <h1>.
 const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
-      <h1>ابدأ تتكلم كوري من أول حصة مباشرة</h1>
-      <p>حصص لغة كورية أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة، ومسار واضح من المبتدئ لحد ما تتكلم بثقة. الحصص بالعربي أو بالإنجليزي.</p>
-      <p><a href="/free-trial">احجز حصة مجانية</a> أو <a href="/placement-test">اعمل اختبار تحديد المستوى المجاني</a> عشان تعرف مستواك. أسعار المجموعات حسب بلدك - <a href="/pricing">شوف الأسعار</a>.</p>
-      <h2>إزاي بندرّس</h2>
+      <h1>التحدث بالكورية من أول حصة مباشرة</h1>
+      <p>حصص لغة كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، ومسار واضح من البداية حتى التحدث بثقة. تُقدَّم الحصص بالعربية أو بالإنجليزية.</p>
+      <p><a href="/free-trial">حجز حصة مجانية</a> أو <a href="/placement-test">إجراء اختبار تحديد المستوى المجاني</a> لمعرفة المستوى. تختلف أسعار المجموعات حسب البلد - <a href="/pricing">عرض الأسعار</a>.</p>
+      <h2>طريقة التدريس</h2>
       <ul>
-        <li><strong>شرح واضح</strong> - كل نقطة بتتشرح ببساطة، بالعربي أو بالإنجليزي.</li>
-        <li><strong>مجموعات صغيرة</strong> - بتتكلم في كل حصة.</li>
-        <li><strong>تصحيح فوري</strong> - النطق بيتصحح لايف.</li>
-        <li><strong>مسار واضح</strong> - الهانغول الأول، وبعدها المستويات من ١ لـ ٦.</li>
+        <li><strong>شرح واضح</strong> - تُشرح كل نقطة ببساطة، بالعربية أو بالإنجليزية.</li>
+        <li><strong>مجموعات صغيرة</strong> - يشارك كل طالب بالكلام في كل حصة.</li>
+        <li><strong>تصحيح فوري</strong> - يُصحَّح النطق مباشرةً أثناء الحصة.</li>
+        <li><strong>مسار واضح</strong> - الهانغول أولًا، ثم المستويات من ١ إلى ٦.</li>
       </ul>
-      <h2>تعرّف على معلمتك</h2>
-      <p>رهام الشرقاوي بتدرّس كوري من ١٣ سنة، ودرّست بنفسها أكتر من ٢٠٠ طالب. درست اللغة الكورية وآدابها في كلية الألسن.</p>
-      <h2>أكتر من مجرد حصص</h2>
+      <h2>المعلمة</h2>
+      <p>تُدرّس رهام الشرقاوي اللغة الكورية منذ ١٣ عامًا، ودرّست بنفسها أكثر من ٢٠٠ طالب. درست اللغة الكورية وآدابها في كلية الألسن.</p>
+      <h2>أكثر من مجرد حصص</h2>
       <ul>
         <li><a href="/review">تدريب</a> - مراجعة الكلمات بين الحصص.</li>
-        <li><a href="/games">ألعاب لتعلم الكوري</a> - تدريب مجاني على الهانغول والكلمات والقواعد.</li>
-        <li><a href="/journey/before-korea">الثقافة</a> - حكاية كوريا من أول أسطورة لحد النهارده.</li>
-        <li><a href="/courses">مسار التعلم</a> - الهانغول، وبعدها المستويات من ١ لـ ٦.</li>
-        <li><a href="/blog">المجلة</a> - مقالات عن الثقافة الكورية ونصايح المذاكرة بالعربي والإنجليزي.</li>
+        <li><a href="/games">ألعاب لتعلّم الكورية</a> - تدريب مجاني على الهانغول والمفردات والقواعد.</li>
+        <li><a href="/journey/before-korea">الثقافة</a> - حكاية كوريا من أول أسطورة حتى اليوم.</li>
+        <li><a href="/courses">مسار التعلّم</a> - الهانغول، ثم المستويات من ١ إلى ٦.</li>
+        <li><a href="/blog">المجلة</a> - مقالات عن الثقافة الكورية ونصائح للمذاكرة بالعربية والإنجليزية.</li>
       </ul>
-      <p><a href="/courses">الكورسات</a> · <a href="/pricing">الأسعار</a> · <a href="/about">عننا</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/contact">تواصل معانا</a></p>
+      <p><a href="/courses">الدورات</a> · <a href="/pricing">الأسعار</a> · <a href="/about">من نحن</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/contact">التواصل</a></p>
     </div>`;
 
 // ── Courses / pricing / free-trial body fragments ─────────────────────────
@@ -597,9 +599,9 @@ const MARKETING_ROUTES = [
     path: "/ar",
     lang: "ar",
     homeTwin: true,
-    title: "كلوفرز Klovers — حصص كوري أونلاين مباشرة في مجموعات صغيرة",
+    title: "كلوفرز Klovers — حصص كورية مباشرة في مجموعات صغيرة",
     description:
-      "كلوفرز (Klovers): حصص كوري أونلاين مباشرة مع معلمة حقيقية، في مجموعات صغيرة، بالعربي أو بالإنجليزي. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
+      "كلوفرز (Klovers): حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
     body: HOME_BODY_HTML_AR,
     alternates: HOME_ALTERNATES,
   },
