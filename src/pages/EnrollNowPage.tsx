@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, CreditCard, MapPin, Users, User, Clock, CalendarDays, PartyPopper, ShieldCheck, LogIn, Tag, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CreditCard, LogIn, CheckCircle2, Loader2 } from "lucide-react";
 import SchedulePicker from "@/components/SchedulePicker";
 import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -757,7 +757,7 @@ const EnrollNowPage = () => {
                       classType === "group" ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                     }`}
                   >
-                    <Users className="h-6 w-6" />
+                    <KloverIcon name="student-girl-heart" className="h-6 w-6" />
                     <span className="font-semibold text-foreground">{t("enrollNow.groupClasses")}</span>
                     <span className="text-xs text-muted-foreground">{t("enrollNow.learnWithOthers")}</span>
                   </button>
@@ -768,7 +768,7 @@ const EnrollNowPage = () => {
                       classType === "private" ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                     }`}
                   >
-                    <User className="h-6 w-6" />
+                    <KloverIcon name="student-boy-thumbsup" className="h-6 w-6" />
                     <span className="font-semibold text-foreground">{t("enrollNow.privateClasses")}</span>
                     <span className="text-xs text-muted-foreground">{t("enrollNow.oneOnOne")}</span>
                   </button>
@@ -780,7 +780,7 @@ const EnrollNowPage = () => {
                 <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                   <SelectTrigger aria-label={t("enrollNow.yourCountry")}>
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <KloverIcon name="globe-plane" className="h-4 w-4 text-muted-foreground" />
                       <SelectValue placeholder={t("enrollNow.selectCountry")} />
                     </div>
                   </SelectTrigger>
@@ -823,7 +823,7 @@ const EnrollNowPage = () => {
 
               {isFirstTime && !isEgypt && (
                 <div className="bg-accent rounded-lg p-3 flex items-center gap-2 text-sm">
-                  <PartyPopper className="h-5 w-5 text-primary flex-shrink-0" />
+                  <KloverIcon name="badge-blossom" className="h-5 w-5 text-primary flex-shrink-0" />
                   <span className="text-accent-foreground font-medium">{t("enrollNow.welcomeDiscount")}</span>
                 </div>
               )}
@@ -850,7 +850,7 @@ const EnrollNowPage = () => {
                 </Button>
                 <div>
                   <h1 className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
-                    <CalendarDays className="h-6 w-6" aria-hidden="true" /> {t("enrollNow.schedulePreferences")}
+                    <KloverIcon name="calendar-blossom" className="h-6 w-6" /> {t("enrollNow.schedulePreferences")}
                   </h1>
                   <p className="text-muted-foreground text-sm">{t("enrollNow.schedulePreferencesDesc")}</p>
                 </div>
@@ -870,7 +870,7 @@ const EnrollNowPage = () => {
 
               {/* Timezone */}
               <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Clock className="h-4 w-4" /> {t("enrollNow.timezone")}</Label>
+                <Label className="flex items-center gap-2"><KloverIcon name="calendar-check" className="h-4 w-4" /> {t("enrollNow.timezone")}</Label>
                 <Select value={timezone} onValueChange={(tz) => { setTimezone(tz); setUserTimezone(tz); }}>
                   <SelectTrigger aria-label={t("enrollNow.timezone")}><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1036,7 +1036,7 @@ const EnrollNowPage = () => {
                   {/* Authenticated user info */}
                   <div className="bg-muted rounded-lg p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary border border-charcoal/25 flex items-center justify-center">
-                      <User className="h-5 w-5 text-primary-foreground" />
+                      <KloverIcon name="student-boy-thumbsup" className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">{name || email}</p>
@@ -1076,7 +1076,7 @@ const EnrollNowPage = () => {
 
                   {promoApplied && promoDiscountAmount > 0 && (
                     <div className="flex justify-between text-sm font-semibold text-foreground">
-                      <span className="flex items-center gap-1"><Tag className="h-3.5 w-3.5" /> {promoApplied.code}</span>
+                      <span className="flex items-center gap-1"><KloverIcon name="badge-blossom" className="h-3.5 w-3.5" /> {promoApplied.code}</span>
                       <span className="font-bold">-{formatMoney(promoDiscountAmount, currency)}</span>
                     </div>
                   )}
@@ -1098,7 +1098,7 @@ const EnrollNowPage = () => {
                 {!promoApplied ? (
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <KloverIcon name="badge-blossom" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Promo code"
                         aria-label={isAr ? "رمز الخصم" : "Promo code"}
@@ -1186,7 +1186,7 @@ const EnrollNowPage = () => {
               >
                 {loading ? (isEgypt ? t("enrollNow.creatingOrder") : t("enrollNow.redirectingPayment")) : isEgypt ? (
                   <>
-                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    <KloverIcon name="badge-blossom" className="mr-2 h-4 w-4" />
                     {t("enrollNow.confirmOrder")} ({finalPrice !== null ? formatMoney(finalPrice, currency) : "—"})
                   </>
                 ) : (

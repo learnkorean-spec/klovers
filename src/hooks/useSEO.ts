@@ -41,8 +41,11 @@ const DEFAULT_DESC =
  * always appended, so a title that led with the brand (the homepage's) read
  * one way in the raw HTML and another in the browser.
  */
-export const withBrand = (title: string): string =>
-  title.includes("Klovers") ? title : `${title} | Klovers`;
+export const withBrand = (title: string): string => {
+  if (title.includes("Klovers") || title.includes("كلوفرز")) return title;
+  // Arabic titles carry the Arabic name, so the tab reads in one language.
+  return /[\u0600-\u06FF]/.test(title) ? `${title} | كلوفرز` : `${title} | Klovers`;
+};
 
 export const useSEO = ({
   title,

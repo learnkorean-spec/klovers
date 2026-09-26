@@ -24,8 +24,9 @@ import type { BrandIconName } from "@/lib/dashboardProgress";
 import {
   CheckCircle, ArrowRight, ArrowLeft, Share2,
   Download, RefreshCw, Mic, Square, Play, RotateCcw, PenLine, Loader2,
-  Sparkles, Target, Clock, Save, Ban,
+  Target, Clock, Save, Ban,
 } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import {
   EXAM_SECTIONS, EXAM_QUESTIONS, EXAM_MAX, EXAM_BOOK_KEY, gradeExam,
   type ExamQuestion, type ExamResult,
@@ -849,7 +850,7 @@ const KoreanPlacementPage = () => {
 
                 <div className="space-y-4 text-center">
                   <div className="inline-flex items-center gap-2 bg-klovers-yellow border border-charcoal/15 px-4 py-1.5 rounded-full text-xs font-semibold text-charcoal">
-                    <Sparkles className="h-3.5 w-3.5" />
+                    <KloverIcon name="lightbulb-sprout" className="h-3.5 w-3.5" />
                     {t("قرية الهانغول · مجاني ودون تسجيل", "Hangul Village · free, no sign-up")}
                   </div>
 

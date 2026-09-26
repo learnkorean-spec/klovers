@@ -1,4 +1,5 @@
-import { ArrowDown, BookOpen } from "lucide-react";
+import { ArrowDown, } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { Button } from "@/components/ui/button";
 import { journey } from "@/lib/journeyProgress";
 import { trackJourney } from "@/lib/journeyAnalytics";
@@ -47,7 +48,7 @@ export default function JournalHero({
         <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
           <div>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground">
-              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              <KloverIcon name="books-stack" className="h-3.5 w-3.5" />
               {isAr ? "شارع الثقافة · مجلة كلوفرز" : "Culture Street · The Klovers Journal"}
               <span aria-hidden="true" className="text-foreground/40">·</span>
               <Ko className="font-medium">한국 여행</Ko>

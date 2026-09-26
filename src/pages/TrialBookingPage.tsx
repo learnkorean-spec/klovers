@@ -22,7 +22,8 @@ import { track } from "@/lib/tracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { LEVEL_SELECT_OPTIONS, getLevelShortLabel } from "@/constants/levels";
 import { ACTIVE_TRIAL_STATUS_LIST } from "@/constants/trialStatus";
-import { CheckCircle2, CalendarPlus, CalendarClock, CalendarX, ArrowRight, GraduationCap, LayoutDashboard, Sparkles, MessageCircle, Tag, Share2, Globe, Link2, Check } from "lucide-react";
+import { CheckCircle2, CalendarPlus, CalendarClock, CalendarX, ArrowRight, LayoutDashboard, MessageCircle, Share2, Link2, Check } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
 
@@ -678,7 +679,7 @@ const TrialBookingPage = () => {
 
               {/* Inline country selector — updates pricing below in real time */}
               <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
-                <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <KloverIcon name="globe-plane" className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <span className="text-xs text-muted-foreground">
                   {language === "ar" ? "البلد:" : "Your country:"}
                 </span>
@@ -736,7 +737,7 @@ const TrialBookingPage = () => {
                 to plain text links. */}
             <div className="bg-gradient-to-b from-primary/10 to-transparent border border-primary/20 rounded-2xl p-6 mb-4 text-center">
               <div className="inline-flex items-center gap-2 text-xs font-bold bg-klovers-yellow text-charcoal border border-charcoal/20 px-3 py-1 rounded-full uppercase tracking-wider mb-4">
-                <Sparkles className="h-3.5 w-3.5" />
+                <KloverIcon name="lightbulb-sprout" className="h-3.5 w-3.5" />
                 {daysUntil > 0 ? (daysUntil === 1 ? t("trialBooking.whileWait").replace("{days}", String(daysUntil)) : t("trialBooking.whileWaitPlural").replace("{days}", String(daysUntil))) : t("trialBooking.trialToday")}
               </div>
 
@@ -770,7 +771,7 @@ const TrialBookingPage = () => {
                   className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
-                    <GraduationCap className="h-5 w-5 text-charcoal" />
+                    <KloverIcon name="diploma-scroll" className="h-5 w-5 text-charcoal" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">{t("trialBooking.findLevelTitle")}</p>
@@ -789,7 +790,7 @@ const TrialBookingPage = () => {
                   className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
-                    <Tag className="h-5 w-5 text-charcoal" />
+                    <KloverIcon name="badge-blossom" className="h-5 w-5 text-charcoal" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">{t("trialBooking.peekPlansTitle")}</p>
@@ -878,7 +879,7 @@ const TrialBookingPage = () => {
                 }}
                 className="hover:text-foreground underline underline-offset-2 flex items-center gap-1"
               >
-                <Tag className="h-3 w-3" /> {t("trialBooking.peekPlansTitle")}
+                <KloverIcon name="badge-blossom" className="h-3 w-3" /> {t("trialBooking.peekPlansTitle")}
               </button>
               <span aria-hidden>·</span>
               <button
@@ -1039,7 +1040,7 @@ const TrialBookingPage = () => {
               {!(profile?.country?.trim() && ALL_COUNTRIES.includes(profile.country.trim())) && (
                 <div className="mb-4 space-y-1.5">
                   <Label htmlFor="trial-country" className="text-sm font-medium flex items-center gap-1.5">
-                    <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                    <KloverIcon name="globe-plane" className="h-3.5 w-3.5 text-muted-foreground" />
                     {language === "ar" ? "البلد" : "Your country"}
                     <span className="text-[10px] text-muted-foreground font-normal">{language === "ar" ? "(للأسعار)" : "(for pricing)"}</span>
                   </Label>

@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, MapPin, Star, Crown, Globe, Sparkles, MessageCircle } from "lucide-react";
+import { Check, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
@@ -28,9 +28,9 @@ const CURRENCY_AR: Record<string, string> = { EGP: "جنيه", USD: "دولار"
 type TierKey = "local" | "regional" | "global";
 
 const tierIcons: Record<TierKey, React.ReactNode> = {
-  local: <Star className="h-6 w-6" />,
-  regional: <Globe className="h-6 w-6" />,
-  global: <Crown className="h-6 w-6" />,
+  local: <KloverIcon name="growth-chart" className="h-6 w-6" />,
+  regional: <KloverIcon name="globe-plane" className="h-6 w-6" />,
+  global: <KloverIcon name="game-crown" className="h-6 w-6" />,
 };
 
 const tierPrices: Record<TierKey, { duration: string; classes: string; usd: number }[]> = {
@@ -220,7 +220,7 @@ const PricingSection = () => {
             <Select value={selectedCountry} onValueChange={handleCountryChange}>
               <SelectTrigger className="w-full text-base" aria-label={t("pricing", "selectCountry")}>
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <KloverIcon name="sprout" className="h-4 w-4 text-muted-foreground" />
                   <SelectValue placeholder={t("pricing", "selectCountry")} />
                 </div>
               </SelectTrigger>
@@ -311,17 +311,17 @@ const PricingSection = () => {
                     {/* Most Popular: on local for discounted countries, on regional globally */}
                     {isDiscountedCountry && (
                       <Badge className={`${TAG} bg-foreground text-background`}>
-                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> {tr("Most Popular", "الأكثر طلباً")}
+                        <KloverIcon name="growth-chart" className="h-3 w-3 mr-1 fill-current" /> {tr("Most Popular", "الأكثر طلباً")}
                       </Badge>
                     )}
                     {isDiscountedCountry && (
                       <Badge className={`${TAG} bg-correct text-correct-foreground`}>
-                        <Sparkles className="h-3 w-3 mr-1" aria-hidden="true" /> {tr("Discount!", "خصم!")}
+                        <KloverIcon name="lightbulb-sprout" className="h-3 w-3 mr-1" /> {tr("Discount!", "خصم!")}
                       </Badge>
                     )}
                     {tierKey === "regional" && !isDiscountedCountry && isActive && (
                       <Badge className={`${TAG} bg-foreground text-background`}>
-                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> {tr("Most Popular", "الأكثر طلباً")}
+                        <KloverIcon name="growth-chart" className="h-3 w-3 mr-1 fill-current" /> {tr("Most Popular", "الأكثر طلباً")}
                       </Badge>
                     )}
                   </div>
