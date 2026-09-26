@@ -90,7 +90,7 @@ const StickyEnrollBar = () => {
       ref={barRef}
       className="fixed bottom-0 left-0 right-0 z-40 animate-in slide-in-from-bottom-2 duration-300 border-t border-primary/40 bg-charcoal px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       role="complementary"
-      aria-label={isAr ? "احجز حصتك المجانية" : "Book a free class"}
+      aria-label={isAr ? "حجز حصة مجانية" : "Book a free class"}
     >
       <div className="mx-auto flex max-w-md items-center gap-2">
         <Link
@@ -98,7 +98,7 @@ const StickyEnrollBar = () => {
           onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "sticky_bar_free_trial", metadata: { language } }); } catch {} }}
           className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
         >
-          {isAr ? "احجز حصتك المجانية" : "Book Free Class"}
+          {isAr ? "حجز حصة مجانية" : "Book Free Class"}
           <ArrowRight className="h-4 w-4 rtl:rotate-180" />
         </Link>
         {isAr && (

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Users, Star, Globe, MessageCircle, ClipboardCheck, ShieldCheck } from "lucide-react";
+import { ArrowRight, MessageCircle, ClipboardCheck, ShieldCheck } from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -38,9 +39,9 @@ import PriceTeaser from "@/components/PriceTeaser";
  * page reads them from.
  */
 const SOCIAL_PROOF = [
-  { icon: Users, value: STUDENTS_TAUGHT, en: "Students taught by Reham", ar: "طالب درّستهم ريهام" },
-  { icon: Star, value: `${RATING.value} ★`, en: `From ${RATING.count} Google reviews`, ar: `من ${toArabicDigits(RATING.count)} مراجعات جوجل` },
-  { icon: Globe, value: "EN · AR", en: "Classes in English or Arabic", ar: "حصص بالعربي أو الإنجليزي" },
+  { icon: "student-boy-thumbsup" as KloverIconName, value: STUDENTS_TAUGHT, en: "Students taught by Reham", ar: "طالب تعلّموا مع ريهام" },
+  { icon: "badge-blossom" as KloverIconName, value: `${RATING.value} / 5`, en: `From ${RATING.count} Google reviews`, ar: `من ${toArabicDigits(RATING.count)} مراجعات جوجل` },
+  { icon: "globe-plane" as KloverIconName, value: "EN · AR", valueAr: "عربي · إنجليزي", en: "Classes in English or Arabic", ar: "حصص بالعربية أو الإنجليزية" },
 ];
 
 const QUIET_LINK =
@@ -76,7 +77,7 @@ const FinalCTA = () => {
           <source media="(max-width: 767px)" srcSet="/assets/cluby/cta-mobile.webp" />
           <img
             src="/assets/cluby/cta.webp"
-            alt={isAr ? "كلوبي على تلّة بيشاور على أفق سيول وقت الغروب" : "Cluby on a hill pointing at the Seoul skyline at sunset"}
+            alt={isAr ? "كلوبي على تلّة يشير إلى أفق سيول وقت الغروب" : "Cluby on a hill pointing at the Seoul skyline at sunset"}
             width={1600}
             height={900}
             loading="lazy"
@@ -94,14 +95,14 @@ const FinalCTA = () => {
             className="mx-auto max-w-3xl text-[1.75rem] font-extrabold leading-tight text-charcoal sm:text-3xl lg:text-5xl"
             style={{ textShadow: "0 1px 14px rgba(255,249,236,0.65)" }}
           >
-            {isAr ? "جاهز تبدأ رحلتك مع الكورية؟" : "Ready to Start Your Korean Journey?"}
+            {isAr ? "بداية الرحلة مع الكورية" : "Ready to Start Your Korean Journey?"}
           </h2>
           <p
             className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-charcoal/80 lg:text-lg"
             style={{ textShadow: "0 1px 10px rgba(255,249,236,0.6)" }}
           >
             {isAr
-              ? "أول حصة مجانية. اتعرّف على معلمتك، وشوف الحصة ماشية إزاي، وبعدين قرّر إذا كانت كلوفرز مناسبة ليك."
+              ? "الحصة الأولى مجانية: تعارف مع المعلمة، وتجربة لطريقة الحصة، ثم القرار بعد ذلك إن كانت كلوفرز مناسبة."
               : "Your first class is free. Meet your teacher, see how the class works, and decide if Klovers is right for you."}
           </p>
         </div>
@@ -137,11 +138,11 @@ const FinalCTA = () => {
             {/* Body */}
             <div className="px-6 py-8 text-center md:px-10 md:py-10 md:text-start">
               <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start">
-                {SOCIAL_PROOF.map(({ icon: Icon, value, en, ar }) => (
+                {SOCIAL_PROOF.map(({ icon, value, valueAr, en, ar }: { icon: KloverIconName; value: string; valueAr?: string; en: string; ar: string }) => (
                   <div key={en} className="flex items-center gap-2">
-                    <Icon className="h-5 w-5 text-klovers-yellow" aria-hidden="true" />
+                    <KloverIcon name={icon} className="h-9 w-9" />
                     <div className="text-start">
-                      <p className="text-sm font-extrabold leading-none text-ivory" dir="ltr">{value}</p>
+                      <p className="text-sm font-extrabold leading-none text-ivory" dir={isAr && valueAr ? "rtl" : "ltr"}>{isAr && valueAr ? valueAr : value}</p>
                       <p className="mt-0.5 text-[11px] text-ivory/65">{isAr ? ar : en}</p>
                     </div>
                   </div>
@@ -156,7 +157,7 @@ const FinalCTA = () => {
                   onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "final_cta_free_trial", metadata: { language } }); } catch {} }}
                 >
                   <Link to="/free-trial">
-                    {isAr ? "احجز حصتك المجانية" : "Book Your Free Class"}
+                    {isAr ? "حجز حصة مجانية" : "Book Your Free Class"}
                     <ArrowRight className="h-5 w-5 rtl:rotate-180" />
                   </Link>
                 </Button>
@@ -166,7 +167,7 @@ const FinalCTA = () => {
                 <div className="flex flex-wrap items-center justify-center gap-x-6 md:justify-start">
                   <Link to="/placement-test" className={QUIET_LINK}>
                     <ClipboardCheck className="h-4 w-4" />
-                    {isAr ? "أو حدّد مستواك مجانًا" : "or take the free placement test"}
+                    {isAr ? "أو تحديد المستوى مجانًا" : "or take the free placement test"}
                   </Link>
                   <a
                     href={WHATSAPP_BASE}
@@ -176,7 +177,7 @@ const FinalCTA = () => {
                     className={QUIET_LINK}
                   >
                     <MessageCircle className="h-4 w-4" />
-                    {isAr ? "أو كلّمنا على واتساب" : "or message us on WhatsApp"}
+                    {isAr ? "أو التواصل عبر واتساب" : "or message us on WhatsApp"}
                   </a>
                 </div>
 
@@ -196,7 +197,7 @@ const FinalCTA = () => {
                 {isAr ? "أول حصة مجانية" : "Your first class is free"}
               </p>
               <p className="mt-0.5 text-xs text-charcoal/75">
-                {isAr ? "من غير دفع ومن غير بطاقة بنكية. وبعد ما تشترك، لو أول حصة مدفوعة ما عجبتكش، بنرجعلك فلوسك أو نعيد الحجز." : "Nothing to pay and no card needed. Once you enroll, if your first paid class isn't right for you, we refund or rebook."}
+                {isAr ? "دون دفع ودون بطاقة بنكية. وبعد الاشتراك، إن لم تكن الحصة المدفوعة الأولى مناسبة، يُردّ المبلغ أو يُعاد الحجز." : "Nothing to pay and no card needed. Once you enroll, if your first paid class isn't right for you, we refund or rebook."}
               </p>
             </div>
           </div>
@@ -205,7 +206,7 @@ const FinalCTA = () => {
             <Globe className="h-8 w-8 shrink-0 text-charcoal" aria-hidden="true" />
             <p className="text-sm font-bold leading-snug text-charcoal">
               {isAr
-                ? `انضم لأكثر من ${toArabicDigits(COMMUNITY.replace(/[^0-9]/g, ""))} متابع في مجتمعنا على السوشيال ميديا`
+                ? `مجتمع يضم أكثر من ${toArabicDigits(COMMUNITY.replace(/[^0-9]/g, ""))} متابع على وسائل التواصل`
                 : `Join ${COMMUNITY} people in our social media community`}
             </p>
           </div>

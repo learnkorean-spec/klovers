@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Briefcase, Plane, Music, ArrowRight, Sprout } from "lucide-react";
+import { ArrowRight, Sprout } from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -37,12 +38,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
  */
 const CARDS: Record<
   string,
-  { image: string; badge: string; Icon: React.ElementType; href: { ar: string; en: string } }
+  { image: string; badge: string; icon: KloverIconName; href: { ar: string; en: string } }
 > = {
   travel: {
     image: "/assets/blog/jeju-travel.jpg",
     badge: "bg-ivory",
-    Icon: Plane,
+    icon: "globe-plane",
     href: {
       ar: "/blog/korean-transportation-guide-seoul-ar",
       en: "/blog/korean-transportation-guide-seoul",
@@ -51,7 +52,7 @@ const CARDS: Record<
   career: {
     image: "/assets/blog/korean-business.jpg",
     badge: "bg-klovers-yellow",
-    Icon: Briefcase,
+    icon: "badge-blossom",
     href: {
       ar: "/blog/korean-job-interview-phrases-ar",
       en: "/blog/korean-job-interview-phrases",
@@ -60,7 +61,7 @@ const CARDS: Record<
   study: {
     image: "/assets/blog/korean-education.jpg",
     badge: "bg-klovers-yellow",
-    Icon: BookOpen,
+    icon: "books-stack",
     href: {
       ar: "/blog/korean-education-system-hagwon-culture-ar",
       en: "/blog/korean-education-system-hagwon-culture",
@@ -69,7 +70,7 @@ const CARDS: Record<
   culture: {
     image: "/assets/blog/korean-listening.jpg",
     badge: "bg-ivory",
-    Icon: Music,
+    icon: "klobi-headphones",
     href: {
       ar: "/blog/best-kdrama-learn-korean-difficulty-ranked-ar",
       en: "/blog/best-kdrama-learn-korean-difficulty-ranked",
@@ -82,7 +83,7 @@ const COPY = {
   ar: {
     eyebrow: "لغة جديدة ← آفاق أوسع",
     bandTitle: "ابدأ رحلتك في تعلم الكورية اليوم",
-    bandSub: "اختر مستواك، واكتشف طريقك مع Klovers",
+    bandSub: "اختيار المستوى، واكتشاف الطريق مع كلوفرز",
     bandCta: "ابدأ الآن",
     more: "اقرأ المقال",
   },
@@ -136,7 +137,7 @@ const WhyLearnKorean = () => {
           {items.map((item, index) => {
             const card = CARDS[item.icon];
             if (!card) return null;
-            const { Icon } = card;
+            const { icon } = card;
 
             return (
               <Link
@@ -161,7 +162,7 @@ const WhyLearnKorean = () => {
                     aria-hidden="true"
                     className={`absolute -bottom-4 start-2 grid h-9 w-9 place-items-center rounded-full shadow-md sm:-bottom-5 sm:h-12 sm:w-12 ${card.badge}`}
                   >
-                    <Icon className="h-4 w-4 text-charcoal sm:h-5 sm:w-5" />
+                    <KloverIcon name={icon} className="h-7 w-7 sm:h-9 sm:w-9" />
                   </span>
                 </div>
 

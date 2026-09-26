@@ -28,22 +28,22 @@ const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] 
   {
     icon: "flashcard-ga",
     en: ["Clear Explanations", "Every point explained simply, in English or Arabic, so you understand instead of memorizing."],
-    ar: ["شرح واضح", "كل نقطة تتشرح ببساطة، بالعربي أو الإنجليزي، علشان تفهم مش تحفظ."],
+    ar: ["شرح واضح", "شرح كل نقطة ببساطة، بالعربية أو الإنجليزية، للفهم لا للحفظ."],
   },
   {
     icon: "chat-annyeong",
     en: ["Small Groups", "Small enough that you speak in every class and get real personal attention."],
-    ar: ["مجموعات صغيرة", "مجموعة صغيرة، فتتكلم في كل حصة وتاخد اهتمام حقيقي."],
+    ar: ["مجموعات صغيرة", "مجموعة صغيرة، فيتحدّث كل طالب في كل حصة وينال اهتمامًا حقيقيًا."],
   },
   {
     icon: "lightbulb-sprout",
     en: ["Instant Feedback", "Your pronunciation and sentences are corrected live, during the class."],
-    ar: ["تصحيح فوري", "نطقك وجملك بتتصحح مباشرة، وانت في الحصة."],
+    ar: ["تصحيح فوري", "تصحيح النطق والجمل مباشرة أثناء الحصة."],
   },
   {
     icon: "growth-chart",
     en: ["A Clear Path", "Hangul first, then Levels 1 to 6. You always know what comes next."],
-    ar: ["مسار واضح", "الهانغول الأول، وبعدين المستويات من 1 لحد 6. دايمًا عارف الخطوة الجاية."],
+    ar: ["مسار واضح", "الهانغول أولًا، ثم المستويات من 1 إلى 6، والخطوة التالية واضحة دائمًا."],
   },
 ];
 
@@ -102,13 +102,13 @@ const HowItWorks = () => {
         <div className="max-w-4xl mx-auto mt-10 md:mt-12 bg-background border border-border rounded-2xl p-5 sm:p-6">
           <p className="text-center mb-4">
             <span className="inline-block bg-klovers-yellow text-charcoal text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full">
-              {isAr ? "إيه اللي بيحصل في أول حصة" : "What your first class looks like"}
+              {isAr ? "ماذا يحدث في الحصة الأولى" : "What your first class looks like"}
             </span>
           </p>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-6">
             <img
               src="/assets/cluby/cafe.webp"
-              alt={isAr ? "صديقان مع كلوبي بيذاكروا الكورية على ترابيزة في كافيه" : "Two friends and Cluby studying Korean together at a café table"}
+              alt={isAr ? "صديقان مع كلوبي يذاكران الكورية على طاولة في مقهى" : "Two friends and Cluby studying Korean together at a café table"}
               width={1200}
               height={800}
               loading="lazy"
@@ -118,10 +118,10 @@ const HowItWorks = () => {
             />
             <ul className="space-y-2.5">
               {(isAr ? [
-                "تقدّم نفسك بالكورية — حتى لو ما تعرفش ولا حرف",
-                "تقرأ أول 10 حروف هانغول وتعرف تنطقها صح",
+                "تقديم النفس بالكورية، حتى دون معرفة أي حرف",
+                "قراءة أول 10 حروف هانغول ونطقها نطقًا صحيحًا",
                 "محادثة قصيرة مباشرة مع باقي الطلاب",
-                "المعلمة تحدّد مستواك وتشرحلك الخطوة الجاية",
+                "تحديد المستوى وشرح الخطوة التالية من المعلمة",
               ] : [
                 "Introduce yourself in Korean — even if you know zero right now",
                 "Read your first 10 Hangul characters with correct pronunciation",
@@ -148,7 +148,7 @@ const HowItWorks = () => {
             onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "how_it_works_cta", metadata: { language } }); } catch {} }}
           >
             <Link to="/free-trial">
-              {isAr ? "احجز حصتك المجانية" : "Book a Free Class"}
+              {isAr ? "حجز حصة مجانية" : "Book a Free Class"}
               <ArrowRight className="h-5 w-5 rtl:rotate-180" />
             </Link>
           </Button>

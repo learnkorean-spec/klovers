@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ClipboardCheck, Brain, Target, Sparkles, Clock, CheckCircle2, ChevronRight } from "lucide-react";
+import { ClipboardCheck, Sparkles, CheckCircle2, ChevronRight } from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -41,10 +42,10 @@ const PlacementTestCTA = () => {
   ];
 
   const FEATURES = [
-    { icon: ClipboardCheck, label: isAr ? "أسئلة بشكل TOPIK" : "Real exam-style questions" },
-    { icon: Clock,          label: isAr ? "تقدر تخلّص بدري" : "Finish when you like" },
-    { icon: Target,         label: isAr ? "حسب مستويات كلوفرز" : "Matched to our levels" },
-    { icon: Brain,          label: t("placementCta.featureInstant") },
+    { icon: "game-checklist-pencil" as KloverIconName, label: isAr ? "أسئلة بشكل TOPIK" : "Real exam-style questions" },
+    { icon: "calendar-check" as KloverIconName, label: isAr ? "إنهاء الاختبار في أي وقت" : "Finish when you like" },
+    { icon: "growth-chart" as KloverIconName, label: isAr ? "حسب مستويات كلوفرز" : "Matched to our levels" },
+    { icon: "lightbulb-sprout" as KloverIconName, label: t("placementCta.featureInstant") },
   ];
 
   // Scroll-triggered bar animation only
@@ -112,15 +113,15 @@ const PlacementTestCTA = () => {
 
             <p className="text-muted-foreground text-lg leading-relaxed">
               {isAr
-                ? "اختبار قراءة مجاني بيحدد مستواك من الهانغول للمستوى الرابع، وبيقولك تبدأ منين معانا. جاوب اللي تعرفه، واقفل لما الأسئلة تبقى أصعب منك."
+                ? "اختبار قراءة مجاني يحدّد المستوى من الهانغول حتى المستوى الرابع، ويوضّح نقطة البداية المناسبة. الإجابة عمّا هو معروف، والتوقف عندما تصبح الأسئلة أصعب."
                 : "A free reading test that places you from Hangul to Level 4 and tells you where to start with us. Answer what you can, and stop when the questions get ahead of you."}
             </p>
 
             {/* Feature pills */}
             <div className="grid grid-cols-2 gap-3">
-              {FEATURES.map(({ icon: Icon, label }) => (
+              {FEATURES.map(({ icon, label }) => (
                 <div key={label} className="flex items-center gap-2.5 bg-muted/60 rounded-xl px-3 py-2.5 text-sm text-foreground font-medium">
-                  <Icon className="h-4 w-4 text-foreground/70 shrink-0" />
+                  <KloverIcon name={icon} className="h-7 w-7" />
                   {label}
                 </div>
               ))}
@@ -147,7 +148,7 @@ const PlacementTestCTA = () => {
               {/* 3D Cluby with a gold star, perched on the card's top corner. */}
               <img
                 src="/assets/cluby/cluby-star.webp"
-                alt={isAr ? "كلوبي ماسك نجمة ذهبية" : "Cluby holding a gold star"}
+                alt={isAr ? "كلوبي يمسك نجمة ذهبية" : "Cluby holding a gold star"}
                 width={333}
                 height={440}
                 loading="lazy"
@@ -195,7 +196,7 @@ const PlacementTestCTA = () => {
                 </div>
 
                 <div className="px-5 py-3 bg-muted/50 border-t border-border flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{isAr ? "٥٢ سؤال · تقدر تخلّص بدري" : "52 questions · finish early any time"}</span>
+                  <span className="text-xs text-muted-foreground">{isAr ? "٥٢ سؤالًا · الإنهاء متاح في أي وقت" : "52 questions · finish early any time"}</span>
                   <span className="text-xs font-bold text-foreground">{t("placementCta.free")}</span>
                 </div>
               </div>
