@@ -107,8 +107,8 @@ const StickyEnrollBar = () => {
             onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "sticky_bar_whatsapp" }); }}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="تواصل معنا على واتساب"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-[#25D366] hover:bg-white/10 transition-colors"
+            aria-label={document.documentElement.lang === "ar" ? "التواصل عبر واتساب" : "Chat on WhatsApp"}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-klovers-yellow hover:bg-white/10 transition-colors"
           >
             <MessageCircle className="h-5 w-5" />
           </a>

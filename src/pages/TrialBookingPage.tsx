@@ -24,6 +24,7 @@ import { LEVEL_SELECT_OPTIONS, getLevelShortLabel } from "@/constants/levels";
 import { ACTIVE_TRIAL_STATUS_LIST } from "@/constants/trialStatus";
 import { CheckCircle2, CalendarPlus, CalendarClock, CalendarX, ArrowRight, LayoutDashboard, MessageCircle, Share2, Link2, Check } from "lucide-react";
 import KloverIcon from "@/components/KloverIcon";
+import { countryLabel } from "@/lib/countryNames";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
 
@@ -183,8 +184,8 @@ const TrialBookingPage = () => {
   // The canonical is dropped with it - a noindex page should not nominate
   // itself as the preferred version of anything.
   useSEO({
-    title: "Pick Your Free Trial Slot | Klovers Academy",
-    description: "Confirm your free Korean trial class. Pick a day and time that works for you.",
+    title: document.documentElement.lang === "ar" ? "اختيار موعد الحصة المجانية" : "Pick Your Free Trial Slot",
+    description: document.documentElement.lang === "ar" ? "تأكيد الحصة الكورية التجريبية المجانية باختيار اليوم والوقت المناسبين." : "Confirm your free Korean trial class. Pick a day and time that works for you.",
     noindex: true,
   });
 
@@ -472,7 +473,7 @@ const TrialBookingPage = () => {
       logLeadEvent({ source_type: "free_trial", cta_label: "booking_failed", metadata: { reason: err?.message || "unknown" } });
       toast({
         title: t("trialBooking.somethingWrong"),
-        description: err.message || t("trialBooking.tryAgain"),
+        description: language === "ar" ? t("trialBooking.tryAgain") : (err.message || t("trialBooking.tryAgain")),
         variant: "destructive",
       });
     } finally {
@@ -586,7 +587,7 @@ const TrialBookingPage = () => {
     } catch (err: any) {
       toast({
         title: t("trialBooking.somethingWrong"),
-        description: err.message || t("trialBooking.tryAgain"),
+        description: language === "ar" ? t("trialBooking.tryAgain") : (err.message || t("trialBooking.tryAgain")),
         variant: "destructive",
       });
     } finally {
@@ -689,7 +690,7 @@ const TrialBookingPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {ALL_COUNTRIES.map(c => (
-                      <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+                      <SelectItem key={c} value={c} className="text-xs">{countryLabel(c, language === "ar")}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -812,7 +813,7 @@ const TrialBookingPage = () => {
                       : "Just booked a free Korean class with Klovers. You should try it too.";
                     const shareUrl = "https://kloversegy.com/free-trial";
                     if (navigator.share) {
-                      navigator.share({ title: "Klovers Free Trial", text: shareText, url: shareUrl }).catch(() => {});
+                      navigator.share({ title: language === "ar" ? "حصة كلوفرز المجانية" : "Klovers Free Trial", text: shareText, url: shareUrl }).catch(() => {});
                     } else {
                       window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank", "noopener,noreferrer");
                     }
@@ -862,7 +863,7 @@ const TrialBookingPage = () => {
                     setTimeout(() => setReferralCopied(false), 2000);
                   }}
                   className="flex-shrink-0 flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg transition-colors"
-                  aria-label="Copy referral link"
+                  aria-label={language === "ar" ? "نسخ رابط الإحالة" : "Copy referral link"}
                 >
                   {referralCopied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
                   {referralCopied ? (language === "ar" ? "تم النسخ" : "Copied!") : (language === "ar" ? "نسخ" : "Copy")}
@@ -1050,7 +1051,7 @@ const TrialBookingPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {ALL_COUNTRIES.map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                        <SelectItem key={c} value={c}>{countryLabel(c, language === "ar")}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

@@ -21,10 +21,10 @@ import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
 import { countryFromTimezone } from "@/lib/stripePrices";
 import { trustCopy } from "@/lib/trustFigures";
-import { Star, Users, Gift, Target, Gamepad2, BookOpen } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 
 /** Icons for the three benefit pills, in the order of the pill labels. */
-const PILL_ICONS = [Target, Gamepad2, BookOpen];
+const PILL_ICONS = ["growth-chart", "game-crown", "books-stack"] as const;
 
 const SignUpPage = () => {
   useSEO({ title: document.documentElement.lang === "ar" ? "إنشاء حساب | كلوفرز" : "Sign Up | Klovers", description: document.documentElement.lang === "ar" ? "إنشاء حساب مجاني في كلوفرز وبدء تعلّم الكورية بحصص مباشرة." : "Create your free Klovers account and start learning Korean with live interactive classes today.", noindex: true });
@@ -225,9 +225,9 @@ const SignUpPage = () => {
             student Reham has taught across 13 years, so it says "taught"; the
             rating is the sourced Google one (it used to read "4.9 rated"). */}
         <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
-          <span className="flex items-center gap-1.5 font-medium text-foreground"><Star className="h-3.5 w-3.5 fill-klovers-yellow text-foreground" aria-hidden="true" /> {trust.ratingShort}</span>
+          <span className="flex items-center gap-1.5 font-medium text-foreground"><KloverIcon name="growth-chart" className="h-3.5 w-3.5 fill-klovers-yellow text-foreground" /> {trust.ratingShort}</span>
           <span className="text-border">·</span>
-          <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" aria-hidden="true" /> {trust.studentsShort}</span>
+          <span className="flex items-center gap-1.5"><KloverIcon name="student-girl-heart" className="h-3.5 w-3.5" /> {trust.studentsShort}</span>
           <span className="text-border">·</span>
           <span className="font-semibold text-foreground">{isAr ? "مجاني" : "Free to join"}</span>
         </div>
@@ -236,7 +236,7 @@ const SignUpPage = () => {
           <CardHeader className="text-center">
             {redirectTo === "/trial-booking" && (
               <div className="bg-ivory border border-charcoal/15 dark:border-klovers-yellow/30 dark:bg-muted rounded-xl px-4 py-3 mb-3 text-sm text-foreground">
-                <p className="font-black text-base mb-0.5 flex items-center justify-center gap-1.5"><Gift className="h-4 w-4 shrink-0" aria-hidden="true" />{isAr ? "خطوة واحدة قبل الحصة المجانية" : "One step from your free class"}</p>
+                <p className="font-black text-base mb-0.5 flex items-center justify-center gap-1.5"><KloverIcon name="badge-blossom" className="h-4 w-4 shrink-0" />{isAr ? "خطوة واحدة قبل الحصة المجانية" : "One step from your free class"}</p>
                 <p className="text-muted-foreground text-xs">{isAr ? "إنشاء حساب مجاني في 30 ثانية، ثم اختيار الموعد." : "Create a free account in 30 seconds, then pick your slot."}</p>
               </div>
             )}
@@ -247,10 +247,10 @@ const SignUpPage = () => {
             {/* Benefit pills */}
             <div className="flex flex-wrap justify-center gap-2 pt-3">
               {(isAr ? ["اختبار مستوى مجاني", "ألعاب تعليمية تفاعلية", "كتاب دراسي كامل"] : ["Free placement test", "Interactive learning games", "Full textbook access"]).map((b, i) => {
-                const PillIcon = PILL_ICONS[i] ?? Target;
+                const pillIcon = PILL_ICONS[i] ?? "growth-chart";
                 return (
                   <span key={b} className="inline-flex items-center gap-1 text-[11px] bg-muted text-muted-foreground px-2.5 py-1 rounded-full font-medium">
-                    <PillIcon className="h-3 w-3" aria-hidden="true" />
+                    <KloverIcon name={pillIcon} className="h-3 w-3" />
                     {b}
                   </span>
                 );

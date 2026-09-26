@@ -15,6 +15,7 @@ import { X, ArrowRight } from "lucide-react";
 import { logLeadEvent, logEngagementEvent } from "@/lib/leadTracking";
 import { track } from "@/lib/tracking";
 import { useLanguage } from "@/contexts/LanguageContext";
+import KloverIcon from "@/components/KloverIcon";
 import { useBottomSlot } from "@/lib/bottomLayer";
 
 const STORAGE_KEY = "klovers_home_exit_nudge_shown_at";
@@ -107,17 +108,17 @@ const HomeExitNudge = () => {
           onClick={handleClick}
           className="group flex items-center gap-4 p-4 hover:bg-primary/5 transition-colors"
         >
-          <div className="text-3xl flex-shrink-0">🎯</div>
+          <KloverIcon name="growth-chart" className="h-10 w-10 flex-shrink-0" />
           <div className="flex-1 min-w-0 pr-6">
             <p className="font-bold text-foreground text-sm leading-tight">
-              {isAr ? "قبل ما تمشي — اعرف مستواك في الكورية" : "Before you go — find your Korean level"}
+              {isAr ? "قبل المغادرة: معرفة المستوى في الكورية" : "Before you go — find your Korean level"}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
-              {isAr ? "دقيقتين · مجاني · بدون تسجيل" : "2 min · free · no sign-up · instant result"}
+              {isAr ? "مجاني · دون تسجيل · نتيجة فورية" : "Free · no sign-up · instant result"}
             </p>
           </div>
           <div className="flex-shrink-0 inline-flex items-center gap-1 bg-primary text-primary-foreground font-bold text-sm px-5 py-3 rounded-xl shadow-lg group-hover:shadow-xl group-hover:scale-[1.03] transition-all">
-            {isAr ? "ابدأ" : "Start"} <ArrowRight className="h-3.5 w-3.5" />
+            {isAr ? "البدء" : "Start"} <ArrowRight className="h-3.5 w-3.5" />
           </div>
         </Link>
       </div>

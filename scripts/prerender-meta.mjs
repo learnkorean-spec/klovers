@@ -705,7 +705,7 @@ const MARKETING_ROUTES = [
     path: "/free-trial",
     // Matches the title the page sets in the browser (the audit found the
     // two differing). It names Klovers, so no " | Klovers" suffix is added.
-    title: "Book Your Free Korean Class | Klovers Academy",
+    title: "Book Your Free Korean Class",
     description:
       "Try a free 30-minute live Korean class at Klovers, in English or Arabic. No credit card and no account needed - pick a session and we email you the link.",
     body: FREE_TRIAL_BODY_HTML,

@@ -105,7 +105,7 @@ const ReturningStudentBanner = () => {
   };
 
   return (
-    <div className="bg-green-600 text-white relative border-y border-green-700">
+    <div className="bg-charcoal text-ivory relative border-y border-charcoal">
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center pe-10">
         <div className="flex items-center gap-2 flex-wrap justify-center">
           <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">

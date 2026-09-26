@@ -104,7 +104,7 @@ const FreeTrialPage = () => {
   ];
 
   useSEO({
-    title: "Book Your Free Korean Class | Klovers Academy",
+    title: isAr ? "حجز حصة كورية مجانية" : "Book Your Free Korean Class",
     description: "Try a free 30-minute live Korean class at Klovers, in English or Arabic. A real teacher, no credit card.",
     canonical: "https://kloversegy.com/free-trial",
   });

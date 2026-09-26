@@ -18,6 +18,7 @@ import {
   ShoppingCart,
   Tag,
 } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,9 +30,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { RETURNING_STUDENT_CODE, WHATSAPP_BASE, SITE_URL } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 
-const STEP_ICONS = [ShoppingCart, Tag, GraduationCap];
-const REFERRAL_ICONS = [UserPlus, Share2, Shield];
-const WHY_ICONS = [Sparkles, BookOpen, Users, Trophy];
+const STEP_ICONS = ["books-stack", "badge-blossom", "diploma-scroll"] as const;
+const REFERRAL_ICONS = ["student-girl-heart", "chat-annyeong", "badge-blossom"] as const;
+const WHY_ICONS = ["lightbulb-sprout", "books-stack", "student-boy-thumbsup", "game-crown"] as const;
 
 const PAGE_URL = `${SITE_URL}/welcome-back`;
 
@@ -208,11 +209,11 @@ const ReturningStudentsLandingPage = () => {
                 <CardContent className="pt-6">
                   <div className="space-y-4">
                     {referralItems.map((item, i) => {
-                      const Icon = REFERRAL_ICONS[i];
+                      const iconName = REFERRAL_ICONS[i];
                       return (
                         <div key={i} className="flex items-start gap-3">
                           <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground border border-charcoal/25 shrink-0">
-                            <Icon className="h-4 w-4" />
+                            {iconName && <KloverIcon name={iconName} className="h-4 w-4" />}
                           </span>
                           <div>
                             <p className="font-semibold text-sm">{item.label}</p>
@@ -310,7 +311,7 @@ const ReturningStudentsLandingPage = () => {
               variant="outline"
               className="mb-5 border-border text-foreground bg-muted text-sm px-4 py-1"
             >
-              <GraduationCap className="h-4 w-4 me-2" />
+              <KloverIcon name="diploma-scroll" className="h-4 w-4 me-2" />
               {t("welcomeBack.hero.badge")}
             </Badge>
 
@@ -363,7 +364,7 @@ const ReturningStudentsLandingPage = () => {
                 <CardContent className="pt-6">
                   <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                     <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground border border-charcoal/25">
-                      <GraduationCap className="h-4 w-4" />
+                      <KloverIcon name="diploma-scroll" className="h-4 w-4" />
                     </span>
                     {t("welcomeBack.offer.title")}
                   </h2>
@@ -424,7 +425,7 @@ const ReturningStudentsLandingPage = () => {
 
             <div className="space-y-5">
               {steps.map((step, i) => {
-                const Icon = STEP_ICONS[i];
+                const iconName = STEP_ICONS[i];
                 return (
                   <div key={i} className="flex items-start gap-4">
                     <div className="flex flex-col items-center">
@@ -437,7 +438,7 @@ const ReturningStudentsLandingPage = () => {
                     </div>
                     <div className="pt-1.5">
                       <p className="font-semibold text-sm flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-foreground" />
+                        {iconName && <KloverIcon name={iconName} className="h-4 w-4 text-foreground" />}
                         {step.title}
                       </p>
                       <p className="text-sm text-muted-foreground mt-0.5">
@@ -478,7 +479,7 @@ const ReturningStudentsLandingPage = () => {
 
             <div className="grid sm:grid-cols-2 gap-6">
               {whyItems.map((item, i) => {
-                const Icon = WHY_ICONS[i];
+                const iconName = WHY_ICONS[i];
                 return (
                   <Card
                     key={i}
@@ -486,7 +487,7 @@ const ReturningStudentsLandingPage = () => {
                   >
                     <CardContent className="pt-6 flex items-start gap-4">
                       <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground border border-charcoal/25 shrink-0">
-                        <Icon className="h-5 w-5" />
+                        {iconName && <KloverIcon name={iconName} className="h-5 w-5" />}
                       </span>
                       <div>
                         <p className="font-semibold mb-1">{item.title}</p>
