@@ -61,15 +61,15 @@ const COMPOUND_VOWELS = [
 type LetterRow = { char: string; rom: string; ex: string };
 
 const LetterGrid = ({ items, label }: { items: LetterRow[]; label: string }) => (
-  <div className="mb-10 print:mb-6">
-    <h2 className="text-lg font-black text-foreground mb-3 border-b border-border pb-1">{label}</h2>
-    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+  <div className="mb-10 print:mb-4 break-inside-avoid">
+    <h2 className="text-lg font-black text-foreground mb-3 border-b border-border pb-1 print:mb-2">{label}</h2>
+    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 print:grid-cols-7 gap-2 print:gap-1.5">
       {items.map((item) => (
         <div
           key={item.char}
-          className="flex flex-col items-center bg-card border border-border rounded-xl p-3 hover:border-primary/50 transition-colors"
+          className="flex flex-col items-center bg-card border border-border rounded-xl p-3 print:p-1.5 print:rounded-lg hover:border-primary/50 transition-colors break-inside-avoid"
         >
-          <span className="text-3xl font-black text-foreground leading-none mb-1">{item.char}</span>
+          <span className="text-3xl print:text-2xl font-black text-foreground leading-none mb-1">{item.char}</span>
           <span className="text-xs font-bold text-foreground">{item.rom}</span>
           <span className="text-[10px] text-muted-foreground mt-0.5">{item.ex}</span>
         </div>
@@ -96,9 +96,29 @@ const HangulStarterPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main id="main-content" className="pt-16 print:pt-4">
+    <div className="min-h-screen bg-background print:bg-white">
+      {/* Print (27 Sep 2026, Re's print preview): the sticky header covered the
+          first heading, the floating WhatsApp button sat on the letters and
+          the grid split across three pages. On paper: no header, footer or
+          floating buttons, a small title line, 7 letters per row, and no
+          block split between pages. */}
+      <style>{`@media print {
+        @page { margin: 12mm; }
+        .fixed, [class*="fixed "], [class^="fixed"] { display: none !important; }
+      }`}</style>
+      <div className="print:hidden"><Header /></div>
+      <main id="main-content" className="pt-16 print:pt-0">
+
+        {/* Paper-only title */}
+        <div className="hidden print:block text-center mb-4">
+          <p className="text-xs font-bold tracking-[0.2em] text-foreground/70">
+            {tr("KLOVERS · HANGUL VILLAGE", "كلوفرز · قرية الهانغول")}
+          </p>
+          <h1 className="font-display text-2xl font-black text-foreground">
+            {tr("Hangul starter sheet", "ورقة الهانغول")}
+          </h1>
+          <p className="text-[11px] text-muted-foreground" dir="ltr">kloversegy.com</p>
+        </div>
 
         {/* Hero */}
         <section className="py-12 md:py-16 border-b border-border bg-ivory dark:bg-muted/30 print:hidden">
@@ -128,11 +148,11 @@ const HangulStarterPage = () => {
         </section>
 
         {/* Alphabet tables */}
-        <section className="py-12 print:py-4">
+        <section className="py-12 print:py-0">
           <div className="container mx-auto px-4 max-w-4xl">
 
             {/* Syllable block explainer */}
-            <div className="bg-card border border-border rounded-2xl p-5 mb-10 print:mb-6 print:border-foreground">
+            <div className="bg-card border border-border rounded-2xl p-5 mb-10 print:mb-4 print:p-3 print:border-foreground break-inside-avoid">
               <h2 className="font-black text-foreground mb-2">
                 {tr("How Korean syllable blocks work", "كيف تُبنى المقاطع الكورية")}
               </h2>
@@ -196,7 +216,7 @@ const HangulStarterPage = () => {
           </div>
         </section>
       </main>
-      <Footer />
+      <div className="print:hidden"><Footer /></div>
     </div>
   );
 };
