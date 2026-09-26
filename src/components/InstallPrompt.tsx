@@ -15,6 +15,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * bar rather than beside them. It now takes its turn through the shared
  * bottom layer like the other three (see src/lib/bottomLayer.ts).
  *
+ * Arabic copy: one Arabic brand name (كلوفرز) and gender-neutral MSA
+ * (verbal nouns, no imperatives), per the Klovers brand guard.
+ *
  * Analytics: fires `pwa_installed` on successful install.
  */
 
@@ -70,23 +73,23 @@ export default function InstallPrompt() {
   return (
     <div
       role="dialog"
-      aria-label={isAr ? "تثبيت تطبيق Klovers" : "Install Klovers app"}
+      aria-label={isAr ? "تثبيت تطبيق كلوفرز" : "Install Klovers app"}
       aria-modal="false"
       className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:w-80 z-[200] bg-card border border-border rounded-xl shadow-xl p-4 flex items-start gap-3 animate-in slide-in-from-bottom-4 duration-300"
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden">
-        <img src="/klovers-logo.jpg" alt="Klovers" className="w-full h-full object-cover" />
+        <img src="/klovers-logo.jpg" alt={isAr ? "كلوفرز" : "Klovers"} className="w-full h-full object-cover" />
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-foreground leading-tight">{isAr ? "ثبّت تطبيق Klovers" : "Install Klovers App"}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{isAr ? "ذاكر بدون إنترنت� واستلم تذكيرات السلسلة� ودخول أسرع." : "Study offline, get streak reminders, faster access."}</p>
+        <p className="font-semibold text-sm text-foreground leading-tight">{isAr ? "تثبيت تطبيق كلوفرز" : "Install Klovers App"}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{isAr ? "مذاكرة دون إنترنت، وتذكيرات يومية للسلسلة، ودخول أسرع." : "Study offline, get streak reminders, faster access."}</p>
         <button
           onClick={handleInstall}
           className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:bg-primary/90 transition-colors"
         >
           <Download className="w-3 h-3" aria-hidden="true" />
-          {isAr ? "أضف إلى الشاشة الرئيسية" : "Add to Home Screen"}
+          {isAr ? "الإضافة إلى الشاشة الرئيسية" : "Add to Home Screen"}
         </button>
       </div>
 
