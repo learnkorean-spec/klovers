@@ -980,7 +980,7 @@ function AspiratedAr() {
     <Page dir="rtl">
       <SHead title="الحروف الساكنة المُشدَّدة (된소리) 💥" subtitle="٥ حروف تُنطق بضغط إضافي — بدون هواء!" />
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"4mm", borderLeft:`3px solid ${Y}`, paddingLeft:"8px" }}>
-        ⚠️ <strong>للمبتدئين:</strong> هذه حروف متقدمة — ركز أولاً على الـ١٤ حرفاً الأساسية. ارجع لهذه الصفحة في الأسبوع الثاني!
+        ⚠️ <strong>للمبتدئين:</strong> هذه حروف متقدمة — ركز أولاً على الـ١٤ حرفاً الأساسية. ارجع لهذه الصفحة في الحصة الثانية!
       </p>
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"5mm" }}>
         الفرق الأساسي: الحروف العادية مع نفخة هواء خفيفة. الحروف المُشدَّدة <strong>بدون</strong> أي هواء — الحلق والفم مضغوطان.
@@ -1542,7 +1542,7 @@ function WelcomeAr() {
 /* ── Table of Contents AR ── */
 function TocAr() {
   const chapters = [
-    { n:"١",  title:"خطة الكورس داخل الفصل — ٤ أسابيع",          icon:"🗓️", page:3,  new:true },
+    { n:"١",  title:"خطة الكورس داخل الفصل — ٤ حصص",          icon:"🗓️", page:3,  new:true },
     { n:"٢",  title:"كيفية استخدام هذا الكتاب",                    icon:"📖", page:4,  new:true },
     { n:"٣",  title:"تاريخ اللغة الكورية",                         icon:"📜", page:5 },
     { n:"٤",  title:"الملك سيجونغ العظيم",                         icon:"👑", page:6 },
@@ -1591,7 +1591,7 @@ function TocAr() {
       </div>
 
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.7, borderTop:`1px solid ${BD}`, paddingTop:"4mm", margin:0 }}>
-        اقرأ كل درس بالترتيب — كل درس يبني على السابق. في ٤ أسابيع ستقرأ الكورية بثقة كاملة!
+        اقرأ كل درس بالترتيب — كل درس يبني على السابق. في ٤ حصص ستقرأ الكورية بثقة كاملة!
       </p>
     </Page>
   );
@@ -2434,7 +2434,7 @@ function AspiratedEn() {
     <Page dir="ltr">
       <SHead title="Tensed Consonants (된소리) 💥" subtitle="5 consonants pronounced with extra tension — no air!" />
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"4mm", borderLeft:`3px solid ${Y}`, paddingLeft:"8px" }}>
-        ⚠️ <strong>Beginner note:</strong> These are advanced — master the 14 basic consonants first. Come back to this page in Week 2!
+        ⚠️ <strong>Beginner note:</strong> These are advanced — master the 14 basic consonants first. Come back to this page in Class 2!
       </p>
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"5mm" }}>
         Key difference: regular consonants release a puff of air. Tensed consonants release <strong>no</strong> air — throat and mouth are compressed.
@@ -2599,7 +2599,7 @@ function WelcomeEn() {
 /* ── Table of Contents EN ── */
 function TocEn() {
   const chapters = [
-    { n:"1",  title:"4-Week Classroom Study Plan",               icon:"🗓️", page:3,  new:true },
+    { n:"1",  title:"4-Class Classroom Study Plan",               icon:"🗓️", page:3,  new:true },
     { n:"2",  title:"How to Use This Book",                      icon:"📖", page:4,  new:true },
     { n:"3",  title:"The History of the Korean Language",        icon:"📜", page:5 },
     { n:"4",  title:"King Sejong the Great",                     icon:"👑", page:6 },
@@ -3632,7 +3632,7 @@ function CoursePlan({ lang }: { lang: Lang }) {
   const isAr = lang === "ar";
   const weeks = [
     {
-      n: isAr ? "الأسبوع ١" : "Week 1",
+      n: isAr ? "الحصة ١" : "Class 1",
       title: isAr ? "الدرس ١ + الدرس ٢" : "Lesson 1 + Lesson 2",
       letters: "ㄱ ㄴ ㄷ + ㅏ ㅓ  /  ㄹ ㅁ ㅂ + ㅗ ㅜ",
       goal: isAr
@@ -3641,7 +3641,7 @@ function CoursePlan({ lang }: { lang: Lang }) {
       lessons: isAr ? ["الدرس ١: ㄱ ㄴ ㄷ + ㅏ ㅓ","الدرس ٢: ㄹ ㅁ ㅂ + ㅗ ㅜ"] : ["Lesson 1: ㄱ ㄴ ㄷ + ㅏ ㅓ","Lesson 2: ㄹ ㅁ ㅂ + ㅗ ㅜ"],
     },
     {
-      n: isAr ? "الأسبوع ٢" : "Week 2",
+      n: isAr ? "الحصة ٢" : "Class 2",
       title: isAr ? "الدرس ٣ + الدرس ٤" : "Lesson 3 + Lesson 4",
       letters: "ㅅ ㅇ ㅈ + ㅡ ㅣ  /  ㅊ ㅋ ㅌ",
       goal: isAr
@@ -3650,7 +3650,7 @@ function CoursePlan({ lang }: { lang: Lang }) {
       lessons: isAr ? ["الدرس ٣: ㅅ ㅇ ㅈ + ㅡ ㅣ","الدرس ٤: ㅊ ㅋ ㅌ"] : ["Lesson 3: ㅅ ㅇ ㅈ + ㅡ ㅣ","Lesson 4: ㅊ ㅋ ㅌ"],
     },
     {
-      n: isAr ? "الأسبوع ٣" : "Week 3",
+      n: isAr ? "الحصة ٣" : "Class 3",
       title: isAr ? "الدرس ٥ + الدرس ٦" : "Lesson 5 + Lesson 6",
       letters: "ㅍ ㅎ  /  مراجعة شاملة",
       goal: isAr
@@ -3659,7 +3659,7 @@ function CoursePlan({ lang }: { lang: Lang }) {
       lessons: isAr ? ["الدرس ٥: ㅍ ㅎ","الدرس ٦: مراجعة + قراءة + إملاء"] : ["Lesson 5: ㅍ ㅎ","Lesson 6: Full Review + Reading + Dictation"],
     },
     {
-      n: isAr ? "الأسبوع ٤" : "Week 4",
+      n: isAr ? "الحصة ٤" : "Class 4",
       title: isAr ? "الدرس ٧ + الدرس ٨" : "Lesson 7 + Lesson 8",
       letters: "حروف المد المركبة  /  الباتشيم",
       goal: isAr
@@ -3670,7 +3670,7 @@ function CoursePlan({ lang }: { lang: Lang }) {
   ];
   return (
     <Page dir={isAr ? "rtl" : "ltr"} chapter={isAr ? "خطة الكورس" : "Course Plan"}>
-      <SHead title={isAr ? "خطة كورس الهانغول داخل الفصل — ٤ أسابيع" : "4-Week Classroom Hangul Course Plan"} subtitle={isAr ? "حصتان في الأسبوع · ٩٠ دقيقة لكل حصة · إملاء في كل حصة · واجب بعد كل درس" : "2 lessons per week · 90 minutes each · dictation every class · homework after every lesson"} />
+      <SHead title={isAr ? "خطة كورس الهانغول داخل الفصل — ٤ حصص" : "4-Class Classroom Hangul Course Plan"} subtitle={isAr ? "حصة أسبوعيًا · ٦٠ دقيقة لكل حصة · درسان في كل حصة · إملاء في كل حصة · واجب بعد كل حصة" : "1 class per week · 60 minutes each · 2 lessons per class · dictation every class · homework after every class"} />
       <div style={{ display:"flex", flexDirection:"column", gap:"5mm", marginBottom:"7mm" }}>
         {weeks.map((w,i) => (
           <div key={i} style={{ border:`1px solid ${BD}`, borderRadius:"6px", padding:"5mm", background:i===0?"#fffdf3":SBG }}>
@@ -4379,13 +4379,13 @@ function WeeklyCheckpoint({ week, lang }: { week:1|2|3|4; lang: Lang }) {
     <Page dir={isAr ? "rtl" : "ltr"} chapter={isAr ? "نقطة مراجعة" : "Checkpoint"}>
       <div style={{ marginBottom:"7mm", paddingBottom:"5mm", borderBottom:`2px solid ${T1}` }}>
         <div style={{ fontSize:"10px", color:T3, textTransform:"uppercase", letterSpacing:"3px", marginBottom:"3px" }}>
-          {isAr ? `الأسبوع ${["١","٢","٣","٤"][week-1]}` : `Week ${week}`}
+          {isAr ? `الحصة ${["١","٢","٣","٤"][week-1]}` : `Class ${week}`}
         </div>
         <div style={{ fontSize:"28px", fontWeight:900, color:T1 }}>
           {isAr ? "نقطة مراجعة" : "Checkpoint"}
         </div>
         <div style={{ fontSize:"12px", color:T2, marginTop:"2mm" }}>
-          {isAr ? "بنهاية هذا الأسبوع، يجب أن يكون الطالب قادراً على:" : "By the end of this week, the student should be able to:"}
+          {isAr ? "بنهاية هذه الحصة، يجب أن يكون الطالب قادراً على:" : "By the end of this class, the student should be able to:"}
         </div>
       </div>
       <div style={{ display:"flex", flexDirection:"column", gap:"5mm" }}>
