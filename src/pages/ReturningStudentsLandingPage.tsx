@@ -52,9 +52,10 @@ const ReturningStudentsLandingPage = () => {
   } | null>(null);
 
   useSEO({
-    title: "Welcome Back — Returning Students Offer",
-    description:
-      "Returning Klovers students get 20% off. Enroll now, share with friends, and save up to 35%. No placement test required.",
+    title: isAr ? "أهلًا بالعودة — عرض الطلاب العائدين" : "Welcome Back — Returning Students Offer",
+    description: isAr
+      ? "خصم 20% للطلاب العائدين إلى كلوفرز، وخصم إضافي عند مشاركة الصفحة مع الأصدقاء. اختبار المستوى اختياري."
+      : "Returning Klovers students get 20% off. Enroll now, share with friends, and save up to 35%. No placement test required.",
     canonical: PAGE_URL,
   });
 
@@ -131,7 +132,7 @@ const ReturningStudentsLandingPage = () => {
   const handleWhatsAppShare = () => {
     const msg = encodeURIComponent(
       isAr
-        ? `عرض حصري للطلاب العائدين في Klovers! خصم 20%\n${shareUrl}`
+        ? `عرض حصري للطلاب العائدين في كلوفرز! خصم 20%\n${shareUrl}`
         : `Exclusive offer for returning Klovers students! 20% off\n${shareUrl}`
     );
     trackAndOpenWhatsApp(`https://wa.me/?text=${msg}`, { cta_label: "returning_share" });

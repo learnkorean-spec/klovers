@@ -73,7 +73,7 @@ interface Profile {
 }
 
 const ProfilePage = () => {
-  useSEO({ title: "My Profile | Klovers Korean Academy", description: "Manage your Klovers profile", noindex: true });
+  useSEO({ title: "My Profile | Klovers", description: "Manage your Klovers profile", noindex: true });
   const navigate = useNavigate();
   const { language } = useLanguage();
   const isAr = language === "ar";

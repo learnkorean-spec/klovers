@@ -481,7 +481,7 @@ function generateReelScript(
     case "invite_student":
       return {
         slide1: `TAG someone who needs Korean in their life! 👇\n\n🇰🇷`,
-        slide2: `What they'll get:\n✅ Read Korean in 2 hours\n✅ Speak from week 1\n✅ Small group + certified teacher`,
+        slide2: `What they'll get:\n✅ Read Korean in 2 hours\n✅ Speak from week 1\n✅ Small group + experienced teacher`,
         slide3: `Share this reel with them NOW!\n\n📲 ${whatsappUrl(campaign, postType)}\n\n#LearnKorean #Klovers`,
         bgQuery: "welcome greeting invitation",
         audioSuggestion: "Upbeat social media trending audio",
@@ -764,7 +764,7 @@ export function generateMonthlyPlan(
           : (isAR ? getDiscountPostTemplateAR(discountPct, discountCode) : getDiscountPostTemplate(discountPct, discountCode));
         caption = g
           ? `📢 ${getLevelLabel(g.level)} — ${g.seats_left} seat${g.seats_left !== 1 ? "s" : ""} left!\n\n🗓 Every ${g.day_name} at ${g.start_time} · ${g.duration_min} min\n✅ Join ${sc} students · Small groups · Certified teacher\n\n📲 ${url(type)}\n\n#LearnKorean #Klovers #KoreanCourse`
-          : `📢 New Korean course spots open!\n\n✅ ${sc} students already enrolled. Small groups, certified teachers.\n\n📲 ${url(type)}\n\n#LearnKorean #Klovers`;
+          : `📢 New Korean course spots open!\n\n✅ ${sc} students already enrolled. Small groups, a real, experienced teacher.\n\n📲 ${url(type)}\n\n#LearnKorean #Klovers`;
         break;
       }
       case "invite_student": {
@@ -798,7 +798,7 @@ export function generateMonthlyPlan(
         template = isAR ? getFAQPostTemplateAR(faqIdx) : getFAQPostTemplate(faqIdx);
         const faq = isAR ? FAQ_ITEMS_AR[faqIdx % FAQ_ITEMS_AR.length] : FAQ_ITEMS[faqIdx % FAQ_ITEMS.length];
         faqIdx++;
-        caption = `❓ ${faq.q}\n\n${faq.a.replace("\n", " — ")}\n\n${sc} students chose Klovers — certified teachers, small groups, proven curriculum.\n\n📲 Try free: ${trial}\n\n#KoreanFAQ #LearnKorean #Klovers`;
+        caption = `❓ ${faq.q}\n\n${faq.a.replace("\n", " — ")}\n\n${sc} students chose Klovers — a real, experienced teacher, small groups, proven curriculum.\n\n📲 Try free: ${trial}\n\n#KoreanFAQ #LearnKorean #Klovers`;
         break;
       }
       case "countdown": {

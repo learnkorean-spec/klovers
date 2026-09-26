@@ -26,14 +26,14 @@ interface SEOProps {
 }
 
 const BASE_URL = "https://kloversegy.com";
-const SITE_NAME = "Klovers | Korean Lovers Academy";
+const SITE_NAME = "Klovers | Learn Korean Online";
 // Photo by Ethan Brooke on Unsplash (https://unsplash.com/photos/OS3ZwZI8uMs),
 // used under the Unsplash License. A skyline reads better than a square logo
 // in link previews (WhatsApp, Telegram, Facebook), which is where most of
 // this site's traffic gets its first look at it.
 const DEFAULT_IMAGE = `${BASE_URL}/og-seoul-skyline.jpg`;
 const DEFAULT_DESC =
-  "Learn Korean online with Klovers — Korean Lovers Academy. Live classes with a real teacher, games and a free placement test.";
+  "Learn Korean online with Klovers. Live classes with a real teacher, games and a free placement test.";
 
 /**
  * The same rule scripts/prerender-meta.mjs applies to the raw HTML: append the

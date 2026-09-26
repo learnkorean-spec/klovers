@@ -51,7 +51,7 @@ const durationClasses = DURATION_CLASSES;
 
 
 const EnrollNowPage = () => {
-  useSEO({ title: "Enroll Now | Klovers Korean Academy", description: "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence.", canonical: "https://kloversegy.com/enroll-now" });
+  useSEO({ title: "Enroll Now | Klovers", description: "Join Klovers — choose your class type, schedule, and start speaking Korean with confidence.", canonical: "https://kloversegy.com/enroll-now" });
 
   useEffect(() => {
     const el = document.createElement("script");
@@ -64,7 +64,7 @@ const EnrollNowPage = () => {
       "description": "Live Korean classes with real teachers. Group and private options available for all levels.",
       "provider": {
         "@type": "Organization",
-        "name": "Klovers Korean Academy",
+        "name": "Klovers",
         "url": "https://kloversegy.com"
       },
       "inLanguage": "en",

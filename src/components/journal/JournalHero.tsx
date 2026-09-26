@@ -48,7 +48,7 @@ export default function JournalHero({
           <div>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-foreground">
               <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-              {isAr ? "شارع الثقافة · مجلة Klovers" : "Culture Street · The Klovers Journal"}
+              {isAr ? "شارع الثقافة · مجلة كلوفرز" : "Culture Street · The Klovers Journal"}
               <span aria-hidden="true" className="text-foreground/40">·</span>
               <Ko className="font-medium">한국 여행</Ko>
             </p>
@@ -112,7 +112,7 @@ export default function JournalHero({
             <div className="relative rotate-[1.5deg] overflow-hidden rounded-[2rem] border-4 border-card shadow-xl">
               <img
                 src="/assets/story/world-culture-street.webp"
-                alt={isAr ? "شارع الثقافة الكورية من عالم قصة Klovers" : "Culture Street, a Korean street from the Klovers story world"}
+                alt={isAr ? "شارع الثقافة الكورية من عالم قصة كلوفرز" : "Culture Street, a Korean street from the Klovers story world"}
                 width={1600}
                 height={900}
                 decoding="async"

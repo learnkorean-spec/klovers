@@ -345,13 +345,13 @@ export const WELCOME_BACK_BODY_HTML = `<div id="welcome-back-prerendered" lang="
         <li><strong>Apply Your Promo Code</strong> — Enter KLOVERSOLDSTUDENT1 at checkout for 20% off.</li>
         <li><strong>Start Learning!</strong> — Join your class and continue your Korean journey.</li>
       </ol>
-      <p>Not sure of your level? Take our free 5-minute placement test — it's completely optional.</p>
-      <h2>What's New at Klovers</h2>
+      <p>Not sure of your level? Take our free placement test — it's completely optional.</p>
+      <h2>What's at Klovers now</h2>
       <ul>
-        <li><strong>Updated Curriculum</strong> — Fresh content aligned with the latest TOPIK standards.</li>
-        <li><strong>Flexible Scheduling</strong> — More class times to fit your busy life.</li>
-        <li><strong>Growing Community</strong> — Learn with a teacher who has taught 200+ students over 13 years.</li>
-        <li><strong>Exam Preparation</strong> — Dedicated TOPIK I &amp; II preparation tracks.</li>
+        <li><strong>Hangul Foundation</strong> — A four-class course for reading and writing from zero.</li>
+        <li><strong>Practice between classes</strong> — Vocabulary review and free games for Hangul, words and grammar.</li>
+        <li><strong>Korea's story</strong> — Five short culture stations, from the first legend to today.</li>
+        <li><strong>TOPIK track</strong> — Past papers, strategy and writing practice for a set exam date.</li>
       </ul>
       <h2>Frequently Asked Questions</h2>
       <h3>Is the placement test required?</h3>
@@ -363,7 +363,7 @@ export const WELCOME_BACK_BODY_HTML = `<div id="welcome-back-prerendered" lang="
       <h3>How does the referral program work?</h3>
       <p>Share this page with friends. For each friend who enrolls, you get +5% off. Even sharing earns you +2%. Stack up to 35% total.</p>
       <h3>What if I forgot my previous level?</h3>
-      <p>Take our free 5-minute placement test to find your current level. It's quick and completely optional.</p>
+      <p>Take our free placement test to find your current level. It's quick and completely optional.</p>
       <h2>Ready to Continue?</h2>
       <p>Your 20% discount is waiting. Enroll now and rejoin the Klovers community. Use code KLOVERSOLDSTUDENT1 at checkout.</p>
       <p><a href="/enroll-now">Enroll now</a> · <a href="/placement-test">Placement test</a> · <a href="/courses">Courses</a> · <a href="/pricing">Pricing</a></p>
@@ -481,7 +481,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "What if I forgot my previous level?",
-        "a": "Take our free 5-minute placement test to find your current level. It's quick and completely optional."
+        "a": "Take our free placement test to find your current level. It's quick and completely optional."
     }
 ],
   "/learn-korean-arabic-speakers": [

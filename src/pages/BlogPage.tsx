@@ -53,9 +53,9 @@ const BlogPage = () => {
   const isAr = language === "ar";
 
   useSEO({
-    title: isAr ? "مجلة Klovers: اكتشف كوريا وتعلّم الكورية" : "Klovers Journal: Discover Korea, Learn Korean",
+    title: isAr ? "مجلة كلوفرز: كوريا واللغة الكورية" : "Klovers Journal: Discover Korea, Learn Korean",
     description: isAr
-      ? "مقالات وكلمات وقصص وتجارب عن كوريا واللغة الكورية بالعربي — رحلة من ست محطات مع Klovers."
+      ? "مقالات وكلمات وقصص وتجارب عن كوريا واللغة الكورية بالعربية، في رحلة من ست محطات مع كلوفرز."
       : "Articles, words, stories and experiences about Korea and the Korean language — a six-stop journey with Klovers.",
     canonical: "https://kloversegy.com/blog",
   });
@@ -173,7 +173,7 @@ const BlogPage = () => {
           <div className="flex flex-col items-center justify-center space-y-4 px-4 pb-20 pt-32 text-center">
             <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden="true" />
             <h1 className="font-semibold text-foreground">{isAr ? "تعذّر تحميل المقالات" : "Couldn't load articles"}</h1>
-            <p className="max-w-xs text-sm text-muted-foreground">{fetchError}</p>
+            <p className="max-w-xs text-sm text-muted-foreground">{isAr ? "حدث خطأ مؤقت في الاتصال. تُرجى إعادة المحاولة بعد قليل." : "A temporary connection problem. Please try again shortly."}</p>
             <Button onClick={() => window.location.reload()} variant="outline">
               {isAr ? "إعادة المحاولة" : "Try again"}
             </Button>

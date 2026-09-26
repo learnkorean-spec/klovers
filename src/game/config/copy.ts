@@ -32,8 +32,8 @@ export const WORLD_COPY = {
     entryNote: "Best on a computer with a keyboard.",
   },
   ar: {
-    seoTitle: "عالم محبي الكورية",
-    seoDescription: "جولة في ساحة الهانوك حيث تنام بيضة البرسيم: الغرفة الأولى في عالم محبي الكورية.",
+    seoTitle: "عالم كلوفرز",
+    seoDescription: "جولة في ساحة الهانوك حيث تنام بيضة البرسيم: الغرفة الأولى في عالم كلوفرز.",
     loadingTitle: "جارٍ فتح الساحة…",
     loadingLine: "ما زالت بيضة البرسيم نائمة، والساحة هادئة.",
     exit: "العودة إلى الموقع",
@@ -57,7 +57,7 @@ export const WORLD_COPY = {
     entryEyebrow: "جديد · نسخة تجريبية أولى",
     entryTitle: "خطوة إلى داخل الساحة",
     entryLine: "جولة في ساحة الهانوك حيث وجد الصديقان بيضة البرسيم. ما زالت البيضة نائمة.",
-    entryCta: "دخول عالم محبي الكورية",
+    entryCta: "دخول عالم كلوفرز",
     entryNote: "التجربة أفضل على حاسوب بلوحة مفاتيح.",
   },
 } as const;

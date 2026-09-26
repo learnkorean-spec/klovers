@@ -156,7 +156,7 @@ describe("the Organization knows its Arabic name", () => {
   });
 
   it("leaves the primary name and inLanguage alone", () => {
-    expect(orgLd.name).toBe("Klovers — Korean Lovers Academy");
+    expect(orgLd.name).toBe("Klovers");
     expect(orgLd.inLanguage).toEqual(["ar", "en"]);
   });
 });

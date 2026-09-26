@@ -12,7 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { trustCopy } from "@/lib/trustFigures";
 
 const LoginPage = () => {
-  useSEO({ title: "Login | Klovers Korean Academy", description: "Sign in to your Klovers account to access your Korean lessons, progress tracker, and student dashboard.", noindex: true });
+  useSEO({ title: document.documentElement.lang === "ar" ? "تسجيل الدخول | كلوفرز" : "Login | Klovers", description: document.documentElement.lang === "ar" ? "تسجيل الدخول إلى حساب كلوفرز للوصول إلى الدروس ولوحة الطالب." : "Sign in to your Klovers account to access your Korean lessons, progress tracker, and student dashboard.", noindex: true });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -174,7 +174,7 @@ const LoginPage = () => {
           />
           <figcaption className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-charcoal/90 via-charcoal/50 to-transparent p-6 pt-20 text-start lg:block">
             <span className="block font-display text-2xl font-extrabold leading-tight text-ivory">
-              {isAr ? "أهلاً بعودتك." : "Welcome back."}
+              {isAr ? "أهلًا بالعودة." : "Welcome back."}
             </span>
             <span className="mt-1 block text-sm text-ivory/80">
               {isAr ? "كل شيء محفوظ، والرحلة تُستأنف من حيث توقفت." : "Everything is saved. The journey picks up where it paused."}
@@ -194,7 +194,7 @@ const LoginPage = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t("auth.logIn")}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">{isAr ? "مرحباً بعودتك — تقدمك في انتظارك." : "Welcome back — your progress is waiting for you."}</p>
+            <p className="text-sm text-muted-foreground mt-1">{isAr ? "مرحبًا بالعودة، والتقدّم محفوظ." : "Welcome back — your progress is waiting for you."}</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -214,7 +214,7 @@ const LoginPage = () => {
         </Card>
 
         <p className="text-xs text-muted-foreground text-center">
-          {isAr ? "أول زيارة إلى Klovers؟ " : "New to Klovers? "}
+          {isAr ? "أول زيارة إلى كلوفرز؟ " : "New to Klovers? "}
           <Link
             to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"}
             className="text-foreground font-semibold underline underline-offset-2"

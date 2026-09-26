@@ -652,7 +652,7 @@ const MARKETING_ROUTES = [
     path: "/contact",
     title: "Contact Us",
     description:
-      "Get in touch with Klovers Korean Lovers Academy. We would love to hear from you about courses, enrollment, or any questions.",
+      "Get in touch with Klovers. We would love to hear from you about courses, enrollment, or any questions.",
     body: CONTACT_BODY_HTML,
     pageLd: { "@type": "ContactPage", mainEntity: { "@id": `${BASE_URL}/#organization` } },
   },
@@ -666,9 +666,9 @@ const MARKETING_ROUTES = [
   },
   {
     path: "/enroll-now",
-    title: "Enroll Now | Klovers Korean Academy",
+    title: "Enroll Now | Klovers",
     description:
-      "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence.",
+      "Join Klovers — choose your class type, schedule, and start speaking Korean with confidence.",
     body: ENROLL_NOW_BODY_HTML,
   },
   {
@@ -1600,7 +1600,7 @@ const shellHTML = baseWithoutOrgJsonLd
   .replace(/<title>[^<]*<\/title>/, () => `<title>${SITE_NAME}</title>`)
   .replace(
     /<meta name="description" content="[^"]*"\s*\/?>/,
-    `<meta name="description" content="Klovers Korean Lovers Academy." />`
+    `<meta name="description" content="Klovers." />`
   )
   // No canonical, no og:url, no og:title: an unknown route must not claim to be
   // any particular page.

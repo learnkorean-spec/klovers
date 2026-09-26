@@ -20,7 +20,8 @@ import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
 import { logGameEvent } from "@/lib/leadTracking";
-import { trustCopy } from "@/lib/trustFigures";
+import { trustCopy, toArabicDigits } from "@/lib/trustFigures";
+import { badgeText, leagueName } from "@/lib/dashboardLocale";
 import KloverIcon from "@/components/KloverIcon";
 import { gameIconName } from "@/constants/gameIcons";
 import { gameWorlds } from "@/constants/gameWorlds";
@@ -137,7 +138,9 @@ type CelebrationStep =
   | { type: "league"; from: string; to: string };
 
 const GamesPage = () => {
-  useSEO({ title: "Korean Learning Games", description: "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.", canonical: "https://kloversegy.com/games" });
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
+  useSEO({ title: isAr ? "ألعاب تعلّم الكورية" : "Korean Learning Games", description: isAr ? "تدريب على الكورية بألعاب تفاعلية في كلوفرز: الذاكرة، والهانغول، وترتيب الكلمات، وغيرها." : "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.", canonical: "https://kloversegy.com/games" });
   const [activeGame, setActiveGame] = useState<string>("match");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
@@ -148,8 +151,6 @@ const GamesPage = () => {
   const [xpFloat, setXpFloat] = useState<number | null>(null);
   const [showPerfectScore, setShowPerfectScore] = useState<{ score: number; total: number } | null>(null);
   const { xpLeaderboard, weeklyLeaderboard, currentUserXpRank, loading: lbLoading } = useLeaderboard();
-  const { t, language } = useLanguage();
-  const isAr = language === "ar";
   const { toast } = useToast();
 
   // A round with no rounds in it, or none recorded, is not a failure worth
@@ -166,7 +167,7 @@ const GamesPage = () => {
         const badge = BADGES.find(b => b.key === badgeKey);
         if (badge) {
           toast({
-            description: <BadgeUnlockToast badgeName={badge.name} badgeEmoji={badge.emoji} />,
+            description: <BadgeUnlockToast badgeName={badgeText(badge, isAr ? "ar" : "en").name} />,
             duration: 4000,
           });
         }
@@ -280,7 +281,7 @@ const GamesPage = () => {
       const xp = await awardGameXp(gameId, score, totalRounds);
       if (xp && xp > 0) {
         setXpFloat(xp);
-        sonnerToast.success(`+${xp} XP`, { description: league.name });
+        sonnerToast.success(isAr ? `+${toArabicDigits(xp)} نقطة خبرة` : `+${xp} XP`, { description: leagueName(league, isAr ? "ar" : "en") });
       }
       // Show perfect score overlay
       if (score === totalRounds && totalRounds > 0) {
@@ -621,7 +622,7 @@ const GamesPage = () => {
             <button
               onClick={() => setShowSignupNudge(false)}
               className="absolute top-3 end-3 z-10 p-1.5 rounded-full bg-background/80 hover:bg-muted transition-colors"
-              aria-label="Close"
+              aria-label={isAr ? "إغلاق" : "Close"}
             >
               <X className="h-4 w-4 text-muted-foreground" />
             </button>
@@ -639,7 +640,7 @@ const GamesPage = () => {
               />
               <h2 className="text-xl font-bold text-foreground">
                 {cheered
-                  ? (isAr ? "أحسنت! 잘했어요" : "Nice work! 잘했어요")
+                  ? (isAr ? "عمل رائع! 잘했어요" : "Nice work! 잘했어요")
                   : (isAr ? "قريب جدًا، والمحاولة التالية أقرب" : "So close — try again!")}
               </h2>
               <p className="text-sm text-muted-foreground">{isAr ? `حساب مجاني يحفظ التقدّم ويفتح جميع الألعاب الـ ${games.length}.` : `Create a free account to save your progress and unlock all ${games.length} games.`}</p>

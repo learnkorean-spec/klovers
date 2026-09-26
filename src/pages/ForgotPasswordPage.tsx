@@ -12,7 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
 
 const ForgotPasswordPage = () => {
-  useSEO({ title: "Forgot Password | Klovers Korean Academy", description: "Reset your Klovers account password to regain access to your Korean lessons.", noindex: true });
+  useSEO({ title: "Forgot Password | Klovers", description: "Reset your Klovers account password to regain access to your Korean lessons.", noindex: true });
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
