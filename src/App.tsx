@@ -88,6 +88,9 @@ const RsvpConfirmationPage = lazy(() => import("./pages/RsvpConfirmationPage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
+// KLOVERS World (3D prototype). The route shell is tiny; three.js loads in a
+// second chunk only after the page checks WebGL. See src/game/.
+const WorldPage = lazy(() => import("./pages/WorldPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -150,7 +153,7 @@ const AppInner = () => {
 // Minimal full-screen spinner shown while a lazy chunk loads
 const PageLoader = () => (
   <div role="status" aria-label="Loading page" className="min-h-screen flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+    <div className="w-8 h-8 border-4 border-charcoal dark:border-klovers-yellow border-t-transparent dark:border-t-transparent rounded-full animate-spin" aria-hidden="true" />
     <span className="sr-only">Loading…</span>
   </div>
 );
@@ -217,6 +220,7 @@ const App = () => (
                     already sent to students do not 404. */}
                 <Route path="/unit-placement" element={<Navigate to="/placement-test" replace />} />
                 <Route path="/games" element={<GamesPage />} />
+                <Route path="/world" element={<WorldPage />} />
                 <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
                 <Route path="/textbook/progress" element={<AuthProtectedRoute><TextbookProgressPage /></AuthProtectedRoute>} />
                 <Route path="/review" element={<AuthProtectedRoute><VocabularyReviewPage /></AuthProtectedRoute>} />
