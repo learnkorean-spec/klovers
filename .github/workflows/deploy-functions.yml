@@ -137,5 +137,79 @@ jobs:
       - name: Install Supabase CLI
         run: npx supabase@2.117.0 --version
 
+      # BLOCKING, and the last gate before a live overwrite.
+      #
+      # This workflow's job is to replace the live functions with the repo's
+      # copies, unconditionally. That is correct when the two agree and silent
+      # data loss when they do not - on 26 Sep 2026 a corrected attendance
+      # letter (v3) was applied by editing the function in the Supabase
+      # dashboard, so production ran v3 while this repo still held v2. The next
+      # push to main would have replaced the fix with the older copy, and
+      # nothing in the pipeline would have said so.
+      #
+      # So before deploying, download what is actually live and compare it to
+      # this commit. `--use-api` unbundles server-side, so no Docker is needed.
+      # This is the edge-function counterpart of the migration check above: that
+      # one asserts the repo has nothing the database has not seen, this one
+      # asserts the repo has no function the dashboard has moved ahead of.
+      #
+      # The daily Edge Function Drift Check workflow (schedule 07:00 UTC) runs
+      # the same comparison for reporting. It cannot gate this one - separate
+      # workflows do not depend on each other - which is why it is repeated here
+      # rather than reused.
+      - name: Refuse to deploy over functions edited outside this repo
+        run: |
+          set -euo pipefail
+
+          mkdir -p deployed
+          npx supabase@2.117.0 functions download --use-api \
+            --project-ref "$SUPABASE_PROJECT_REF" --workdir deployed
+
+          # CRLF on a Windows checkout, LF in the bundle - line endings only.
+          norm() { tr -d '\r' < "$1" | sed -e 's/[[:space:]]*$//'; }
+
+          drift=0
+          for dir in supabase/functions/*/; do
+            name=$(basename "$dir")
+            [ "$name" = "_shared" ] && continue
+            repo_file="${dir}index.ts"
+            deployed_file="deployed/functions/${name}/index.ts"
+
+            if [ ! -f "$repo_file" ] || [ ! -f "$deployed_file" ]; then
+              continue
+            fi
+
+            if ! diff -q <(norm "$repo_file") <(norm "$deployed_file") > /dev/null; then
+              drift=1
+              echo "::error::Function '${name}' differs between the repo and what is deployed."
+              {
+                echo "### ${name} — deployed vs repo"
+                echo
+                echo '```diff'
+                diff -u <(norm "$deployed_file") <(norm "$repo_file") \
+                  --label "deployed/${name}" --label "repo/${name}" \
+                  | head -60
+                echo '```'
+                echo
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+          if [ "$drift" = "1" ]; then
+            {
+              echo "## Deploy blocked: functions edited outside this repo"
+              echo
+              echo 'At least one live function differs from `supabase/functions/`. Deploying'
+              echo 'now would overwrite the live copy with this repo'"'"'s, silently.'
+              echo
+              echo 'If the live copy is correct, bring it into the repo through a PR and'
+              echo 'merge that. If this repo is correct, redeploy it deliberately by hand and'
+              echo 'say so - the difference is a decision, not something to resolve by accident.'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Refusing to deploy: see the job summary for the diffs."
+            exit 1
+          fi
+          echo "All deployed functions match the repo - proceeding."
+
       - name: Deploy all edge functions
         run: npx supabase@2.117.0 functions deploy --project-ref $SUPABASE_PROJECT_REF

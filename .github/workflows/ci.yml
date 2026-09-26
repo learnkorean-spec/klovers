@@ -144,6 +144,21 @@ jobs:
           node-version: 22
           cache: npm
 
+      # The edge functions are Deno, not Vite - nothing else in this file
+      # touches them, and `supabase functions deploy` runs on every push to main
+      # with no typecheck of its own. Advisory first, same as the app's
+      # `tsc --noEmit` below: 16 of 69 functions fail today and paying that
+      # down is its own piece of work. Set continue-on-error to false once the
+      # baseline in scripts/edge-functions-baseline.json is empty.
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: No new edge-function type errors
+        run: node scripts/check-edge-functions.mjs
+        continue-on-error: true
+
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 

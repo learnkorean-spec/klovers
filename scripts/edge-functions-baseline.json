@@ -1,0 +1,18 @@
+{
+  "attach-blog-hero-images": 1,
+  "batch-translate-articles": 1,
+  "book-trial": 1,
+  "generate-interview-questions": 1,
+  "generate-lesson-content": 1,
+  "score-interview-answer": 1,
+  "send-confirmation-email": 1,
+  "send-test-emails": 1,
+  "send-trial-broadcast": 1,
+  "send-trial-followups": 1,
+  "send-trial-reask": 1,
+  "send-trial-reminder": 1,
+  "seo-orchestration": 1,
+  "stripe-webhook": 1,
+  "translate-article": 1,
+  "translate-lessons": 1
+}

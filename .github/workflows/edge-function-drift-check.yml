@@ -1,0 +1,146 @@
+# Edge Function Drift Check
+
+# The exact incident class this exists for, on 2026-09-26: a corrected
+# attendance letter ("حضر/غاب", v3) was applied by editing the function directly
+# in the Supabase dashboard rather than through a PR. Production ran v3 while
+# the repo still held v2. The two copies then had no relationship to each
+# other, and .github/workflows/deploy-functions.yml would have replaced the
+# dashboard edit with the repo's v2 on the next push to main - silently, because
+# that workflow's whole purpose is to overwrite live functions with the repo's
+# copy and it never checked whether the two had diverged first.
+#
+# This is the edge-function counterpart of schema-drift-check.yml, which exists
+# for the same reason on the database side: a hand-applied migration showed up
+# as "pending" forever because nothing compared the repo to what was live.
+#
+# How it works
+# ------------
+# For every function directory in the repo, `supabase functions download
+# --use-api` pulls the DEPLOYED source into a temp directory, and the two are
+# compared. `--use-api` unbundles server-side, so no Docker is needed.
+#
+# Four outcomes per function:
+#   MATCH         deployed == repo. The normal case.
+#   DRIFTED       deployed != repo. Someone changed one side only. This is the
+#                 finding - it is reported and the job fails.
+#   NOT_DEPLOYED  in the repo, not live. Normal for a brand-new function whose
+#                 deploy has not run yet, so it is informational, not a failure.
+#   NO_REPO_FILE  live, but no source in the repo. Also drift: a function whose
+#                 only copy is the dashboard, which a deploy cannot reproduce.
+#
+# What it does not do
+# -------------------
+# It does not deploy, repair, or write to the database. It is read-only, like
+# schema-drift-check.yml, and needs no approval gate.
+#
+# The comparison is text equality after normalising line endings. Supabase
+# repackages what it stores, so this is a deliberate approximation: it reliably
+# catches the case that matters (a hand edit that never came back to the repo)
+# and is not a byte-for-byte integrity proof. A false negative means the
+# dashboard copy differs only in whitespace or bundling; a false positive means
+# someone reformatted on one side, and the diff is printed so it can be read.
+#
+# A finding fails the job, which emails the repo watchers by default. There is
+# no secondary notification wired up.
+
+name: Edge Function Drift Check
+
+on:
+  schedule:
+    # 07:00 UTC daily - an hour after schema-drift-check so the two reports do
+    # not arrive together and can be told apart at a glance.
+    - cron: "0 7 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || 'ewtdgpbybkceokfohhyg' }}
+
+jobs:
+  check:
+    name: Compare deployed edge functions against the repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Compare each function against the repo
+        run: |
+          set -euo pipefail
+
+          drift=0
+          {
+            echo "## Edge function drift"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Line endings only: CRLF checkout on Windows, LF in the bundle.
+          norm() { tr -d '\r' < "$1" | sed -e 's/[[:space:]]*$//'; }
+
+          for dir in supabase/functions/*/; do
+            name=$(basename "$dir")
+            [ "$name" = "_shared" ] && continue
+            repo_file="${dir}index.ts"
+            deployed_file="deployed/functions/${name}/index.ts"
+
+            if [ ! -f "$repo_file" ]; then
+              if [ -f "$deployed_file" ]; then
+                drift=1
+                echo "::warning::Function '${name}' is DEPLOYED but has no source in supabase/functions/. The dashboard copy is the only one - a deploy will not reproduce it."
+                echo "- ⚠️ **${name}** — deployed, no repo source" >> "$GITHUB_STEP_SUMMARY"
+              fi
+              continue
+            fi
+
+            if [ ! -f "$deployed_file" ]; then
+              echo "- ${name} — in repo, not deployed yet (deploy has not run for it)" >> "$GITHUB_STEP_SUMMARY"
+              continue
+            fi
+
+            if ! diff -q <(norm "$repo_file") <(norm "$deployed_file") > /dev/null; then
+              drift=1
+              echo "::error::Function '${name}' has DRIFTED - the deployed source and supabase/functions/${name}/index.ts differ. The next push to main deploys the repo's copy and overwrites whatever is live."
+              {
+                echo "- 🔴 **${name}** — deployed source differs from the repo"
+                echo
+                echo '  <details><summary>diff (deployed vs repo)</summary>'
+                echo
+                echo '  ```diff'
+                diff -u <(norm "$deployed_file") <(norm "$repo_file") \
+                  --label "deployed/${name}" --label "repo/${name}" \
+                  | head -60 | sed 's/^/  /'
+                echo '  ```'
+                echo
+                echo '  </details>'
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+          if [ "$drift" = "1" ]; then
+            echo "## Result: DRIFT DETECTED" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::One or more edge functions have drifted from the repo - see the summary for the diffs. Bring the repo to match production (or vice versa, deliberately) through a PR; do not keep editing the dashboard."
+            exit 1
+          fi
+
+          echo "## Result: no drift" >> "$GITHUB_STEP_SUMMARY"
+          echo "No drift - every deployed function matches its source in supabase/functions/."
+
+      - name: Install Supabase CLI
+        run: npx supabase@2.117.0 --version
+
+      - name: Download deployed functions
+        run: |
+          set -euo pipefail
+          mkdir -p deployed
+          npx supabase@2.117.0 functions download --use-api \
+            --project-ref "$PROJECT_REF" --workdir deployed
+          echo "Downloaded:"
+          find deployed/functions -name '*.ts' | sort | head -80
