@@ -187,17 +187,41 @@ export default function ShopPage() {
           </section>
         ) : (
           <>
-            {/* 1 · Hero. IMAGE PENDING: shop-hero-lina.webp (prompt in the PR description) */}
-            <section className="bg-charcoal text-ivory">
-              <div className="container mx-auto grid max-w-6xl gap-8 px-4 py-14 md:py-20">
-                <div>
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-klovers-yellow">
+            {/* 1 · Hero — Lina packs her study tote on the hanok veranda (Re's
+                image, 27 Sep 2026). Desktop: the scene fills the band and the
+                copy sits on the calm side, which is mirrored for Arabic so the
+                text never covers her. Mobile: the 4:5 scene, then the copy. */}
+            <section className="relative overflow-hidden bg-ivory dark:bg-muted">
+              <div className="relative md:absolute md:inset-0">
+                <picture>
+                  <source media="(min-width: 768px)" srcSet="/assets/story/shop-hero-lina.webp" width={1600} height={900} />
+                  <img
+                    src="/assets/story/shop-hero-lina-mobile.webp"
+                    alt={tr(
+                      "Lina packing a study tote with a book, notebook and flashcards on a hanok veranda at sunset",
+                      "لينا تجهّز حقيبة الدراسة بكتاب ودفتر وبطاقات على شرفة بيت كوري تقليدي عند الغروب",
+                    )}
+                    width={900}
+                    height={1125}
+                    fetchPriority="high"
+                    decoding="async"
+                    className="block aspect-[4/5] w-full object-cover md:aspect-auto md:h-full md:object-[70%_22%] rtl:md:-scale-x-100"
+                  />
+                </picture>
+                {/* Blend: the scene fades into the page instead of ending on a hard edge. */}
+                <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-ivory to-transparent dark:from-muted md:hidden" />
+                <div aria-hidden="true" className="absolute inset-0 hidden bg-gradient-to-r from-ivory via-ivory/85 to-transparent rtl:bg-gradient-to-l md:block md:w-[62%] rtl:md:right-0 rtl:md:left-auto" />
+              </div>
+
+              <div className="container relative mx-auto max-w-6xl px-4 pb-12 pt-2 md:py-28">
+                <div className="max-w-md text-foreground md:text-charcoal">
+                  <p className="mb-4 inline-block rounded-full bg-klovers-yellow px-3 py-1 text-xs font-semibold tracking-wide text-charcoal">
                     {tr("Learn it. Carry it. Live it.", "تعلُّمها، وحملها، وعيشها.")}
                   </p>
                   <h1 className="font-display text-4xl font-bold leading-tight md:text-5xl">
                     {tr("Pack Your Korean Journey.", "حقيبة الرحلة الكورية.")}
                   </h1>
-                  <p className="mt-4 max-w-lg text-base leading-relaxed text-ivory/80">
+                  <p className="mt-4 text-base leading-relaxed text-muted-foreground md:text-charcoal/80">
                     {tr(
                       "By the courtyard gate, Lina keeps a bag ready for the next lesson. These are the books that go in it, made to take Korean beyond the classroom.",
                       "عند بوابة الفناء، تُبقي لينا حقيبة جاهزة للدرس التالي. وهذه هي الكتب التي توضع فيها، لتمتدّ الكورية إلى ما بعد الحصة.",
@@ -208,7 +232,7 @@ export default function ShopPage() {
                       <a href="#shelf">{tr("Shop the Journey", "تصفّح المتجر")}</a>
                     </Button>
                     {liveCategories.includes("start") && (
-                      <Button asChild size="lg" variant="outline" className="h-12 border-ivory/40 bg-transparent text-ivory hover:bg-ivory/10 hover:text-ivory">
+                      <Button asChild size="lg" variant="outline" className="h-12 border-charcoal/40 bg-transparent text-foreground hover:bg-charcoal/5 md:text-charcoal">
                         <Link to="/shop/start">{tr("Explore Starter Kits", "مجموعات البداية")}</Link>
                       </Button>
                     )}
