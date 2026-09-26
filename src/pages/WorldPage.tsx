@@ -1,10 +1,26 @@
-import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
+import type { RoomId } from "@/game/config/rooms";
+import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { hasWebGL, isTouchFirst } from "@/game/systems/webgl";
 import WorldHud from "@/game/ui/WorldHud";
+// Type-only: erased at build time, so the 3D chunk stays lazy.
+import type { WorldNotice } from "@/game/World";
+
+const AVATAR_KEY = "klovers-world-avatar";
+
+/** Remembered character choice — a per-browser convenience only. */
+function readAvatar(): AvatarId {
+  try {
+    const v = localStorage.getItem(AVATAR_KEY);
+    return isAvatarId(v) ? v : DEFAULT_AVATAR;
+  } catch {
+    return DEFAULT_AVATAR;
+  }
+}
 
 /**
  * /world — the KLOVERS World prototype.
@@ -99,6 +115,28 @@ const WorldPage = () => {
   const isTouch = useMemo(() => isTouchFirst(), []);
   const [ready, setReady] = useState(false);
   const [looked, setLooked] = useState(false);
+  const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
+  const [fading, setFading] = useState(false);
+  const [room, setRoom] = useState<RoomId | null>(null);
+  const [notice, setNotice] = useState<WorldNotice | null>(null);
+  const bannerTimer = useRef<number>();
+
+  const chooseAvatar = useCallback((id: AvatarId) => {
+    setAvatar(id);
+    try {
+      localStorage.setItem(AVATAR_KEY, id);
+    } catch {
+      /* private mode: the choice lasts for this visit only */
+    }
+  }, []);
+
+  // Room name card: shown for a few seconds after each arrival.
+  const arrive = useCallback((id: RoomId) => {
+    setRoom(id);
+    window.clearTimeout(bannerTimer.current);
+    bannerTimer.current = window.setTimeout(() => setRoom(null), 4200);
+  }, []);
+  useEffect(() => () => window.clearTimeout(bannerTimer.current), []);
 
   // Where to return: the page the learner came from, else the games hub.
   const from = (location.state as { from?: string } | null)?.from;
@@ -157,9 +195,32 @@ const WorldPage = () => {
             )}
           >
             <Suspense fallback={null}>
-              <World onReady={() => setReady(true)} onFirstLook={() => setLooked(true)} />
+              <World
+                onReady={() => setReady(true)}
+                onFirstLook={() => setLooked(true)}
+                avatar={avatar}
+                onFade={setFading}
+                onRoomChange={arrive}
+                onNotice={setNotice}
+              />
             </Suspense>
-            {ready && <WorldHud lang={lang} showLookHint={!looked} isTouch={isTouch} onExit={exit} />}
+            {ready && (
+              <WorldHud
+                lang={lang}
+                showLookHint={!looked}
+                isTouch={isTouch}
+                onExit={exit}
+                avatar={avatar}
+                onAvatar={chooseAvatar}
+                banner={room ? { title: copy.rooms[room].name, line: copy.rooms[room].line } : null}
+                notice={notice ? { title: copy.notices[notice].title, line: copy.notices[notice].line } : null}
+              />
+            )}
+            {/* Room change: a short fade to ivory while the next room mounts. */}
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-0 z-[15] bg-ivory transition-opacity duration-300 ${fading ? "opacity-100" : "opacity-0"}`}
+            />
           </WorldBoundary>
           <LoadingVeil lang={lang} visible={!ready} onExit={exit} />
         </>

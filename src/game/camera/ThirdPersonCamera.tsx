@@ -1,7 +1,8 @@
 import { useEffect, useRef, type MutableRefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
-import { BOUNDS, CAMERA, CAMERA_COLLIDERS, MAX_DT } from "../config/world";
+import type { RoomLayout } from "../config/rooms";
+import { CAMERA, MAX_DT } from "../config/world";
 import { isBlocked } from "../systems/collision";
 import { damp } from "../systems/movement";
 import type { CameraState, PlayerState } from "../systems/state";
@@ -9,6 +10,7 @@ import type { CameraState, PlayerState } from "../systems/state";
 interface CameraProps {
   player: MutableRefObject<PlayerState>;
   camera: MutableRefObject<CameraState>;
+  layout: RoomLayout;
   /** Called once when the pointer is first locked or dragged (hides the hint). */
   onFirstLook?: () => void;
 }
@@ -23,7 +25,7 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), h
  * with the button held works too, as does a touch drag. Wheel zooms within
  * limits. The camera pulls in rather than pass through a wall or column.
  */
-export default function ThirdPersonCamera({ player, camera, onFirstLook }: CameraProps) {
+export default function ThirdPersonCamera({ player, camera, layout, onFirstLook }: CameraProps) {
   const { camera: cam, gl } = useThree();
   const target = useRef(new Vector3());
   // Reused every frame — no per-frame allocations in the render loop.
@@ -117,6 +119,11 @@ export default function ThirdPersonCamera({ player, camera, onFirstLook }: Camer
     const p = player.current.position;
 
     desired.current.set(p.x, p.y + CAMERA.targetHeight, p.z);
+    if (c.snap) {
+      // After a teleport (room change) jump straight behind the player.
+      initialised.current = false;
+      c.snap = false;
+    }
     if (!initialised.current) {
       target.current.copy(desired.current);
     } else {
@@ -133,7 +140,7 @@ export default function ThirdPersonCamera({ player, camera, onFirstLook }: Camer
     for (let d = step; d <= c.distance; d += step) {
       const x = target.current.x + dir.x * d;
       const z = target.current.z + dir.z * d;
-      if (isBlocked(x, z, CAMERA.wallPadding, CAMERA_COLLIDERS, BOUNDS)) {
+      if (isBlocked(x, z, CAMERA.wallPadding, layout.cameraColliders, layout.bounds)) {
         free = Math.max(d - step, CAMERA.minDistance * 0.5);
         break;
       }

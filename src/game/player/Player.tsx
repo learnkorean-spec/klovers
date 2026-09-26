@@ -1,17 +1,21 @@
 import { useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
-import { BOUNDS, COLLIDERS, MAX_DT, PLAYER } from "../config/world";
+import type { RoomLayout } from "../config/rooms";
+import { MAX_DT, PLAYER } from "../config/world";
 import { resolveCollisions } from "../systems/collision";
-import { stepVelocity, stepYaw, wishDirection, yawFromDirection, type MoveInput } from "../systems/movement";
+import { NO_INPUT, stepVelocity, stepYaw, wishDirection, yawFromDirection, type MoveInput } from "../systems/movement";
 import type { CameraState, PlayerState } from "../systems/state";
 import { resolveAnimation } from "./animation";
-import PlaceholderAvatar from "./PlaceholderAvatar";
+import LearnerAvatar from "./LearnerAvatar";
+import type { AvatarId } from "./characters";
 
 interface PlayerProps {
   input: MutableRefObject<MoveInput>;
   player: MutableRefObject<PlayerState>;
   camera: MutableRefObject<CameraState>;
+  layout: RoomLayout;
+  avatar: AvatarId;
 }
 
 /**
@@ -21,20 +25,20 @@ interface PlayerProps {
  * Runs before the camera (priority −2 vs −1) so the camera always follows
  * this frame's position. Negative priorities keep R3F's automatic rendering.
  */
-export default function Player({ input, player, camera }: PlayerProps) {
+export default function Player({ input, player, camera, layout, avatar }: PlayerProps) {
   const root = useRef<Group>(null);
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, MAX_DT);
     const p = player.current;
-    const keys = input.current;
+    const keys = p.frozen ? NO_INPUT : input.current;
 
     const wish = wishDirection(keys, camera.current.yaw);
     const targetSpeed = keys.run ? PLAYER.runSpeed : PLAYER.walkSpeed;
     p.velocity = stepVelocity(p.velocity, wish, targetSpeed, PLAYER.acceleration, PLAYER.deceleration, dt);
 
     const next = { x: p.position.x + p.velocity.x * dt, z: p.position.z + p.velocity.z * dt };
-    resolveCollisions(next, PLAYER.radius, COLLIDERS, BOUNDS);
+    resolveCollisions(next, PLAYER.radius, layout.colliders, layout.bounds);
 
     // Velocity follows what actually happened, so sliding along a wall does
     // not keep "pushing" into it and the walk cycle matches real motion.
@@ -59,9 +63,9 @@ export default function Player({ input, player, camera }: PlayerProps) {
 
   return (
     <group ref={root}>
-      {/* Swap PlaceholderAvatar for a GLB avatar component with the same
-          props once a rigged character exists (see player/animation.ts). */}
-      <PlaceholderAvatar player={player} />
+      {/* Built from primitives to the canon look of Adam or Lina. Swap for a
+          rigged GLB with the same props later (see player/animation.ts). */}
+      <LearnerAvatar player={player} avatar={avatar} />
     </group>
   );
 }
