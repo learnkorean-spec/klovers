@@ -106,23 +106,23 @@ function wrap(bodyHtml: string, isAr: boolean, unsubUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="${isAr ? "ar" : "en"}" ${isAr ? 'dir="rtl"' : ""}>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light"></head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 20px;">
+<body style="margin:0;padding:0;background:#FFF9EC;font-family:${isAr ? "'Cairo',Tahoma,Arial,sans-serif" : "'Inter',-apple-system,'Segoe UI',Arial,sans-serif"};">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF9EC;padding:40px 20px;">
 <tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
-  <tr><td style="background:#000000;padding:24px 40px;text-align:center;">
-    <p style="margin:0;color:#FFFF00;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">KLovers Academy</p>
+<table width="600" cellpadding="0" cellspacing="0" style="background:#FFF9EC;border:1px solid #2E2E2E;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+  <tr><td style="background:#2E2E2E;padding:24px 40px;text-align:center;">
+    <p style="margin:0;color:#FFFF00;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">${isAr ? "كلوفرز" : "KLovers Academy"}</p>
   </td></tr>
-  <tr><td style="padding:32px 40px;color:#374151;font-size:15px;line-height:1.8;text-align:${isAr ? "right" : "left"};">
+  <tr><td style="padding:32px 40px;color:#2E2E2E;font-size:15px;line-height:1.8;text-align:${isAr ? "right" : "left"};">
     ${bodyHtml}
-    <p style="color:#6b7280;font-size:14px;margin:24px 0 0;">
+    <p style="color:#2E2E2E;font-size:14px;margin:24px 0 0;">
       ${isAr
-        ? `أي سؤال؟ <a href="${WA_URL}" style="color:#25D366;text-decoration:underline;">راسلينا على واتساب</a>.`
-        : `Any questions? <a href="${WA_URL}" style="color:#25D366;text-decoration:underline;">Message us on WhatsApp</a>.`}
+        ? `أي سؤال؟ <a href="${WA_URL}" style="color:#2E2E2E;text-decoration:underline;font-weight:700;">المراسلة على واتساب</a>.`
+        : `Any questions? <a href="${WA_URL}" style="color:#2E2E2E;text-decoration:underline;font-weight:700;">Message us on WhatsApp</a>.`}
     </p>
-    <p style="color:#9ca3af;font-size:11px;text-align:center;margin:24px 0 0;">
-      <a href="${unsubUrl}" style="color:#9ca3af;text-decoration:underline;">${isAr ? "إلغاء الاشتراك" : "Unsubscribe"}</a>
-      &nbsp;·&nbsp; KLovers Academy, Egypt
+    <p style="color:#2E2E2E;opacity:.6;font-size:11px;text-align:center;margin:24px 0 0;">
+      <a href="${unsubUrl}" style="color:#2E2E2E;text-decoration:underline;">${isAr ? "إلغاء الاشتراك" : "Unsubscribe"}</a>
+      &nbsp;·&nbsp; ${isAr ? "كلوفرز، مصر" : "KLovers Academy, Egypt"}
     </p>
   </td></tr>
 </table>
@@ -132,7 +132,7 @@ function wrap(bodyHtml: string, isAr: boolean, unsubUrl: string): string {
 
 function button(label: string, url: string): string {
   return `<div style="margin:24px 0;text-align:center;">
-    <a href="${url}" style="background:#FFFF00;color:#000000;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;display:inline-block;">${label}</a>
+    <a href="${url}" style="background:#FFFF00;color:#2E2E2E;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:700;display:inline-block;">${label}</a>
   </div>`;
 }
 
@@ -141,14 +141,14 @@ function cameLetter(name: string, isAr: boolean, unsubUrl: string) {
   const who = name?.trim() || (isAr ? "أهلاً" : "there");
   if (isAr) {
     return {
-      subject: "KLovers — مكانك في المجموعة",
-      text: `مرحباً ${who}،\n\nمبسوطين إنك كنتِ معانا في الكلاس.\n\nالتسجيل مفتوح — اختاري مستواكِ والموعد المناسب:\n${ENROL_URL}\n\nالمقعد يُحجز باسمك من وقت التسجيل، والدفع بعد بداية المجموعة.\n\nإلغاء الاشتراك: ${unsubUrl}\nKLovers Academy — kloversegy.com`,
+      subject: "كلوفرز — مقعد في المجموعة",
+      text: `مرحباً ${who}،\n\nيسعدنا حضور الحصة معنا.\n\nالتسجيل مفتوح: اختيار المستوى والموعد المناسب من صفحة التسجيل:\n${ENROL_URL}\n\nيُحجز المقعد من وقت التسجيل، والدفع بعد بداية المجموعة.\n\nإلغاء الاشتراك: ${unsubUrl}\nكلوفرز — kloversegy.com`,
       html: wrap(
-        `<h1 style="color:#111827;font-size:22px;margin:0 0 12px;">مرحباً ${who}،</h1>
-         <p style="margin:0 0 6px;">مبسوطين إنك كنتِ معانا في الكلاس.</p>
-         <p style="margin:0;">التسجيل مفتوح — اختاري مستواكِ والموعد المناسب من صفحة التسجيل.</p>
-         ${button("اختاري مجموعتك", ENROL_URL)}
-         <p style="margin:0;">المقعد يُحجز باسمك من وقت التسجيل، والدفع بعد بداية المجموعة.</p>`,
+        `<h1 style="color:#2E2E2E;font-size:22px;margin:0 0 12px;">مرحباً ${who}،</h1>
+         <p style="margin:0 0 6px;">يسعدنا حضور الحصة معنا.</p>
+         <p style="margin:0;">التسجيل مفتوح: اختيار المستوى والموعد المناسب من صفحة التسجيل.</p>
+         ${button("اختيار المجموعة", ENROL_URL)}
+         <p style="margin:0;">يُحجز المقعد من وقت التسجيل، والدفع بعد بداية المجموعة.</p>`,
         true, unsubUrl,
       ),
     };
@@ -157,7 +157,7 @@ function cameLetter(name: string, isAr: boolean, unsubUrl: string) {
     subject: "KLovers — your place in the group",
     text: `Hi ${who},\n\nIt was good to have you in the class.\n\nEnrolment is open — choose your level and a time that suits you:\n${ENROL_URL}\n\nYour seat is held from the moment you enrol, and payment comes after the group starts.\n\nUnsubscribe: ${unsubUrl}\nKLovers Academy — kloversegy.com`,
     html: wrap(
-      `<h1 style="color:#111827;font-size:22px;margin:0 0 12px;">Hi ${who},</h1>
+      `<h1 style="color:#2E2E2E;font-size:22px;margin:0 0 12px;">Hi ${who},</h1>
        <p style="margin:0 0 6px;">It was good to have you in the class.</p>
        <p style="margin:0;">Enrolment is open — choose your level and a time that suits you.</p>
        ${button("Choose your group", ENROL_URL)}
@@ -181,12 +181,12 @@ function missedLetter(name: string, isAr: boolean, unsubUrl: string) {
   const who = name?.trim() || (isAr ? "أهلاً" : "there");
   if (isAr) {
     return {
-      subject: "KLovers — كلاس تجريبي في معاد تاني",
-      text: `مرحباً ${who}،\n\nيمكن الميعاد ما كانش مناسب. فيه مواعيد تانية للكلاس التجريبي، وتقدري تحجزي مكانك في أي واحد منها:\n${TRIAL_URL}\n\nإلغاء الاشتراك: ${unsubUrl}\nKLovers Academy — kloversegy.com`,
+      subject: "كلوفرز — حصة تجريبية في موعد آخر",
+      text: `مرحباً ${who}،\n\nربما لم يكن الموعد مناسبًا. تتوفر مواعيد أخرى للحصة التجريبية، ويمكن حجز مقعد في أيٍّ منها:\n${TRIAL_URL}\n\nإلغاء الاشتراك: ${unsubUrl}\nكلوفرز — kloversegy.com`,
       html: wrap(
-        `<h1 style="color:#111827;font-size:22px;margin:0 0 12px;">مرحباً ${who}،</h1>
-         <p style="margin:0;">يمكن الميعاد ما كانش مناسب. فيه مواعيد تانية للكلاس التجريبي، وتقدري تحجزي مكانك في أي واحد منها.</p>
-         ${button("احجزي كلاس تجريبي", TRIAL_URL)}`,
+        `<h1 style="color:#2E2E2E;font-size:22px;margin:0 0 12px;">مرحباً ${who}،</h1>
+         <p style="margin:0;">ربما لم يكن الموعد مناسبًا. تتوفر مواعيد أخرى للحصة التجريبية، ويمكن حجز مقعد في أيٍّ منها.</p>
+         ${button("حجز حصة تجريبية", TRIAL_URL)}`,
         true, unsubUrl,
       ),
     };
@@ -195,7 +195,7 @@ function missedLetter(name: string, isAr: boolean, unsubUrl: string) {
     subject: "KLovers — a trial class at another time",
     text: `Hi ${who},\n\nThe time may not have suited you. There are other trial slots, and you can book any of them here:\n${TRIAL_URL}\n\nUnsubscribe: ${unsubUrl}\nKLovers Academy — kloversegy.com`,
     html: wrap(
-      `<h1 style="color:#111827;font-size:22px;margin:0 0 12px;">Hi ${who},</h1>
+      `<h1 style="color:#2E2E2E;font-size:22px;margin:0 0 12px;">Hi ${who},</h1>
        <p style="margin:0;">The time may not have suited you. There are other trial slots, and you can book any of them.</p>
        ${button("Book a trial class", TRIAL_URL)}`,
       false, unsubUrl,
