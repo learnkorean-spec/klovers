@@ -2829,7 +2829,7 @@ export const translations = {
     },
     trialBooking: {
       pickLevelTitle: "يرجى اختيار المستوى في الكورية",
-      pickLevelDesc: "سؤال سريع واحد فقط لاختيار المعلم المناسب.",
+      pickLevelDesc: "سؤال سريع واحد فقط لتحديد الحصة المناسبة.",
       somethingWrong: "حدث خطأ ما",
       tryAgain: "يرجى المحاولة مرة أخرى.",
       tooManyAttempts: "محاولات كثيرة جداً",
@@ -2854,7 +2854,7 @@ export const translations = {
       pickTimeDesc: "جميع الأوقات تُعرض بالتوقيت المحلي تلقائيًا، والحجز يتم فور التأكيد.",
       yourLevelLabel: "المستوى في الكورية",
       yourLevelPlaceholder: "اختيار المستوى",
-      levelHelperText: "سنختار المعلم المناسب، ويمكن تغيير ذلك لاحقًا من الملف الشخصي.",
+      levelHelperText: "يحدّد هذا الحصة المناسبة، ويمكن تغييره لاحقًا من الملف الشخصي.",
       yourLevelIs: "المستوى:",
       bookingTrial: "جارٍ حجز الحصة التجريبية...",
       manageFromDashboard: "تغيير لاحق؟ إدارة الحجز متاحة من لوحة التحكم.",

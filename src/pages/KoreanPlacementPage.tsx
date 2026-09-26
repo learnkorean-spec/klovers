@@ -134,12 +134,12 @@ const newAttemptId = (): string => {
 };
 
 const GRADE_META: Record<TopikGrade, { emoji: string; tagline: string }> = {
-  pre1: { emoji: "🌱", tagline: "Hangul Foundation" },
-  g1: { emoji: "📗", tagline: "TOPIK Level 1" },
-  g2: { emoji: "📘", tagline: "TOPIK Level 2" },
-  g3: { emoji: "📙", tagline: "TOPIK Level 3" },
-  g4: { emoji: "📕", tagline: "TOPIK Level 4" },
-  above: { emoji: "🏆", tagline: "Past 4급" },
+  pre1: { emoji: "", tagline: "Hangul Foundation" },
+  g1: { emoji: "", tagline: "TOPIK Level 1" },
+  g2: { emoji: "", tagline: "TOPIK Level 2" },
+  g3: { emoji: "", tagline: "TOPIK Level 3" },
+  g4: { emoji: "", tagline: "TOPIK Level 4" },
+  above: { emoji: "", tagline: "Past 4급" },
 };
 
 /**
@@ -364,7 +364,7 @@ const KoreanPlacementPage = () => {
     setMicError(null);
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setMicError(isAr
-        ? "لا يدعم هذا المتصفح التسجيل الصوتي. يمكن تخطّي هذا القسم، وسيقيّمه المدرّس في الحصة."
+        ? "لا يدعم هذا المتصفح التسجيل الصوتي. يمكن تخطّي هذا القسم، وستقيّمه المعلّمة في الحصة."
         : "This browser cannot record audio. Skip this part — your teacher will assess it live.");
       return;
     }
@@ -839,7 +839,7 @@ const KoreanPlacementPage = () => {
                   and nothing may push "Start the test" further down. */}
               <img
                 src="/assets/story/world-hangul-village.webp"
-                alt={isAr ? "قرية الهانغول، أول محطة في رحلة Klovers" : "Hangul Village, the first stop on the Klovers journey"}
+                alt={isAr ? "قرية الهانغول، أول محطة في رحلة كلوفرز" : "Hangul Village, the first stop on the Klovers journey"}
                 width={1600}
                 height={900}
                 decoding="async"
@@ -986,7 +986,7 @@ const KoreanPlacementPage = () => {
               {/* World mode: one scene line naming the world this level opens. */}
               <p className="text-sm font-semibold text-center text-foreground">
                 {isAr
-                  ? `يبدأ الطريق في عالم Klovers من ${GRADE_WORLD_NAME[result.grade].ar}.`
+                  ? `يبدأ الطريق في عالم كلوفرز من ${GRADE_WORLD_NAME[result.grade].ar}.`
                   : `Your road through the Klovers world begins in ${GRADE_WORLD_NAME[result.grade].en}.`}
               </p>
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center space-y-2">
@@ -1136,7 +1136,7 @@ const KoreanPlacementPage = () => {
                   <p className="font-semibold flex items-center gap-2"><PenLine className="h-4 w-4" />
                     {t("تقييم أدق؟", "Want a sharper placement?")}</p>
                   <p className="text-muted-foreground">
-                    {t("إضافة عيّنة كتابة وتسجيل صوتي قصير يراجعهما المدرّس قبل أول حصة. خطوة اختيارية تمامًا.",
+                    {t("إضافة عيّنة كتابة وتسجيل صوتي قصير تراجعهما المعلّمة قبل أول حصة. خطوة اختيارية تمامًا.",
                        "Add a short writing sample and a voice recording for your teacher to review before your first class. Entirely optional.")}
                   </p>
                   <Button size="sm" variant="outline" onClick={() => setPhase("extras")}>
@@ -1168,7 +1168,7 @@ const KoreanPlacementPage = () => {
             <CardContent className="pt-6 space-y-5">
               <h2 className="text-lg font-bold">{t("الكتابة والصوت — للمدرّس", "Writing and voice — for your teacher")}</h2>
               <p className="text-sm text-muted-foreground">
-                {t("لا يوجد تصحيح آلي هنا؛ المدرّس هو من يراجع.", "Nothing here is auto-graded. Your teacher reviews it.")}
+                {t("لا يوجد تصحيح آلي هنا؛ المعلّمة هي من تراجع.", "Nothing here is auto-graded. Your teacher reviews it.")}
               </p>
 
               {SEJONG1_WRITING.map((p) => (

@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import { track } from "@/lib/tracking";
 import { convertSlotToTimezone } from "@/lib/admin-utils";
 import { setUserTimezone } from "@/lib/viewerTimezone";
+import { RATING, STUDENTS_TAUGHT, TEACHING_YEARS_COUNT, toArabicDigits } from "@/lib/trustFigures";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -706,11 +707,11 @@ const EnrollNowPage = () => {
 
         {/* Social proof banner */}
         <div className="flex items-center justify-center gap-3 flex-wrap mb-6 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><strong className="text-foreground">5.0</strong> on Google (7 reviews)</span>
+          <span className="flex items-center gap-1">{isAr ? <><strong className="text-foreground">{toArabicDigits(RATING.value)}</strong> على جوجل ({toArabicDigits(RATING.count)} تقييمات)</> : <><strong className="text-foreground">{RATING.value}</strong> on Google ({RATING.count} reviews)</>}</span>
           <span className="text-border">·</span>
-          <span className="flex items-center gap-1"><strong className="text-foreground">200+</strong> students taught over 13 years</span>
+          <span className="flex items-center gap-1">{isAr ? <>أكثر من <strong className="text-foreground">{toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))}</strong> طالب خلال {toArabicDigits(TEACHING_YEARS_COUNT)} عامًا</> : <><strong className="text-foreground">{STUDENTS_TAUGHT}</strong> students taught over {TEACHING_YEARS_COUNT} years</>}</span>
           <span className="text-border">·</span>
-          <span className="flex items-center gap-1"><strong className="text-foreground">A1–C2</strong> all levels</span>
+          <span className="flex items-center gap-1">{isAr ? "من الهانغول حتى المستوى السادس" : "From Hangul to Level 6"}</span>
         </div>
 
         {/* Progress */}
@@ -1046,11 +1047,11 @@ const EnrollNowPage = () => {
               {/* Teacher card */}
               <div className="flex items-center gap-3 bg-muted/60 border border-border rounded-xl px-4 py-3">
                 <div className="relative flex-shrink-0">
-                  <img src={rehamPhoto} alt="Reham 선생님" className="w-11 h-11 rounded-full object-cover object-top" />
+                  <img src={rehamPhoto} alt={isAr ? "المعلّمة ريهام" : "Teacher Reham"} className="w-11 h-11 rounded-full object-cover object-top" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-sm text-foreground">Reham 선생님 <span className="text-xs font-semibold text-charcoal bg-klovers-yellow border border-charcoal px-1.5 py-0.5 rounded-full ms-1">Certified</span></p>
-                  <p className="text-xs text-muted-foreground">13+ years · 200+ students taught · all levels</p>
+                  <p className="font-semibold text-sm text-foreground">{isAr ? "المعلّمة ريهام" : "Teacher Reham"} <span lang="ko">선생님</span> <span className="text-xs font-semibold text-charcoal bg-klovers-yellow border border-charcoal px-1.5 py-0.5 rounded-full ms-1">{isAr ? "خريجة الألسن" : "Al-Alsun graduate"}</span></p>
+                  <p className="text-xs text-muted-foreground">{isAr ? `${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا من التدريس · أكثر من ${toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))} طالب · من الهانغول حتى المستوى السادس` : `${TEACHING_YEARS_COUNT}+ years · ${STUDENTS_TAUGHT} students taught · Hangul to Level 6`}</p>
                 </div>
               </div>
 

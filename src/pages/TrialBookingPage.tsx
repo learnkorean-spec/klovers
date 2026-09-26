@@ -322,7 +322,7 @@ const TrialBookingPage = () => {
       toast({
         title: language === "ar" ? "رقم الواتساب مطلوب" : "WhatsApp number required",
         description: language === "ar"
-          ? "نحتاج رقمك لنرسل لك رابط الحصة إن لم يصلك البريد."
+          ? "يُستخدم الرقم لإرسال رابط الحصة إن لم يصل البريد."
           : "We need your number so we can send you the class link if email fails.",
         variant: "destructive",
       });
@@ -680,7 +680,7 @@ const TrialBookingPage = () => {
               <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
                 <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <span className="text-xs text-muted-foreground">
-                  {language === "ar" ? "بلدك:" : "Your country:"}
+                  {language === "ar" ? "البلد:" : "Your country:"}
                 </span>
                 <Select value={selectedCountry} onValueChange={handleCountryChange}>
                   <SelectTrigger className="h-7 text-xs w-auto min-w-[130px] border-dashed">
@@ -807,7 +807,7 @@ const TrialBookingPage = () => {
                   onClick={() => {
                     track.custom("post_trial_cta_clicked", { cta: "share" });
                     const shareText = language === "ar"
-                      ? "حجزتُ حصة كورية مجانية مع Klovers، والتجربة متاحة للجميع."
+                      ? "حجزتُ حصة كورية مجانية مع كلوفرز، والتجربة متاحة للجميع."
                       : "Just booked a free Korean class with Klovers. You should try it too.";
                     const shareUrl = "https://kloversegy.com/free-trial";
                     if (navigator.share) {
@@ -978,7 +978,7 @@ const TrialBookingPage = () => {
                 <div className="mb-4 space-y-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="trial-name" className="text-sm font-medium">
-                      {language === "ar" ? "اسمك" : "Your name"} <span className="text-destructive">*</span>
+                      {language === "ar" ? "الاسم" : "Your name"} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="trial-name"
@@ -989,7 +989,7 @@ const TrialBookingPage = () => {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="trial-email" className="text-sm font-medium">
-                      {language === "ar" ? "بريدك الإلكتروني" : "Your email"} <span className="text-destructive">*</span>
+                      {language === "ar" ? "البريد الإلكتروني" : "Your email"} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="trial-email"
@@ -1040,7 +1040,7 @@ const TrialBookingPage = () => {
                 <div className="mb-4 space-y-1.5">
                   <Label htmlFor="trial-country" className="text-sm font-medium flex items-center gap-1.5">
                     <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                    {language === "ar" ? "بلدك" : "Your country"}
+                    {language === "ar" ? "البلد" : "Your country"}
                     <span className="text-[10px] text-muted-foreground font-normal">{language === "ar" ? "(للأسعار)" : "(for pricing)"}</span>
                   </Label>
                   <Select value={selectedCountry} onValueChange={handleCountryChange}>

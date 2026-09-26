@@ -323,8 +323,8 @@ const UnitPlacementPage = () => {
               </p>
               <ul className="space-y-1.5 list-disc ms-5 text-muted-foreground">
                 <li>{t("٦ أقسام اختيار من متعدد وقراءة — تتصحح تلقائيًا.", "6 multiple-choice and reading sections — graded automatically.")}</li>
-                <li>{t("٣ أسئلة كتابة بالكوري — يصححها المدرّس.", "3 Korean writing questions — marked by your teacher.")}</li>
-                <li>{t("٥ أسئلة شفهية بالتسجيل الصوتي — يقيّمها المدرّس. تقدري تتخطيها.", "5 spoken questions recorded with your microphone — assessed by your teacher. You may skip them.")}</li>
+                <li>{t("٣ أسئلة كتابة بالكوري — تصحّحها المعلّمة.", "3 Korean writing questions — marked by your teacher.")}</li>
+                <li>{t("٥ أسئلة شفهية بالتسجيل الصوتي — تقيّمها المعلّمة. تقدري تتخطيها.", "5 spoken questions recorded with your microphone — assessed by your teacher. You may skip them.")}</li>
                 <li>{t("حوالي ٣٠ دقيقة. تقدري تقفلي الصفحة وترجعي، إجاباتك محفوظة.", "About 30 minutes. You can close the page and come back — your answers are saved.")}</li>
                 <li>{t("دون قاموس أو ترجمة، فالنتيجة الصادقة هي التي تحدد المكان الصحيح.", "No dictionary or translator — an honest result is what puts you in the right place.")}</li>
               </ul>
