@@ -85,6 +85,7 @@ jobs:
           # Line endings only: CRLF checkout on Windows, LF in the bundle.
           norm() { tr -d '\r' < "$1" | sed -e 's/[[:space:]]*$//'; }
 
+          compared=0
           for dir in supabase/functions/*/; do
             name=$(basename "$dir")
             [ "$name" = "_shared" ] && continue
@@ -105,6 +106,8 @@ jobs:
               continue
             fi
 
+            compared=$((compared + 1))
+
             if ! diff -q <(norm "$repo_file") <(norm "$deployed_file") > /dev/null; then
               drift=1
               echo "::error::Function '${name}' has DRIFTED - the deployed source and supabase/functions/${name}/index.ts differ. The next push to main deploys the repo's copy and overwrites whatever is live."
@@ -123,6 +126,15 @@ jobs:
               } >> "$GITHUB_STEP_SUMMARY"
             fi
           done
+
+          # Zero comparisons means the download wrote nothing this loop could
+          # see. Reporting "no drift" there would be a green light from a check
+          # that never ran, so it fails instead.
+          if [ "$compared" -eq 0 ]; then
+            echo "::error::Compared 0 functions - the download produced nothing comparable, so this run verified nothing."
+            echo "## Result: CHECK COULD NOT RUN" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
 
           if [ "$drift" = "1" ]; then
             echo "## Result: DRIFT DETECTED" >> "$GITHUB_STEP_SUMMARY"
