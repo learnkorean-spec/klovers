@@ -478,50 +478,6 @@ function TrialDramaAr() {
   );
 }
 
-/* Testimonials */
-function TrialTestimonialsAr() {
-  const testimonials = [
-    { name:"نور إبراهيم", city:"القاهرة", level:"مستوى ٢", quote:"كنت بحلم إني أفهم المسلسلات الكورية بدون ترجمة. بعد ٣ شهور مع Klovers بقيت أفهم ٥٠٪ من الكلام!", emoji:"🌸" },
-    { name:"ياسمين حسن",  city:"الإسكندرية", level:"مستوى ١", quote:"الهانغول بدت صعبة جداً من بره. بس بعد أول حصة مع الأستاذة قررت إني مكملة!", emoji:"💛" },
-    { name:"محمد علي",    city:"القاهرة", level:"مستوى ٣", quote:"مجموعة صغيرة + أسلوب المدرسة = تعلمت أكتر في شهرين من ٣ سنين بنفسي!", emoji:"🔥" },
-    { name:"سارة محمود",  city:"الجيزة",  level:"مستوى ٢", quote:"كل حصة بتبقى ممتعة ومليانة ضحك. مش بس بتتعلمي — بتحبي اللغة أكتر!", emoji:"😍" },
-  ];
-
-  return (
-    <Page dir="rtl">
-      <SHead title="ماذا قال طلابنا؟ 💬" subtitle="تجارب حقيقية من مجتمع Klovers" />
-      <DancheongBorder />
-
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"9px", marginBottom:"12px" }}>
-        {testimonials.map((t, i) => (
-          <div key={i} style={{
-            background: i % 2 === 0 ? BK : "#f9f9f9",
-            border:`2px solid ${i % 2 === 0 ? Y : "#e5e5e5"}`,
-            borderRadius:"12px", padding:"12px",
-            display:"flex", flexDirection:"column", gap:"8px",
-          }}>
-            <div style={{ fontSize:"28px", lineHeight:1 }}>{t.emoji}</div>
-            <div style={{ fontSize:"10px", color: i % 2 === 0 ? "#ccc" : "#555", lineHeight:1.7, flex:1 }}>
-              "{t.quote}"
-            </div>
-            <div>
-              <div style={{ fontSize:"11px", fontWeight:800, color: i % 2 === 0 ? Y : BK }}>{t.name}</div>
-              <div style={{ fontSize:"9px", color: i % 2 === 0 ? "#888" : "#888" }}>{t.city} · {t.level}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ background:Y, borderRadius:"10px", padding:"10px 16px", display:"flex", alignItems:"center", gap:"12px" }}>
-        <MugunghwaIcon size={36} color={BK} />
-        <div>
-          <div style={{ fontSize:"12px", fontWeight:900, color:BK }}>+٢٠٠ طالب</div>
-          <div style={{ fontSize:"10px", color:BK2 }}>انضموا لمجتمع Klovers من مصر والخليج والمغرب العربي</div>
-        </div>
-      </div>
-    </Page>
-  );
-}
 
 /* Join CTA */
 function TrialJoinAr() {
@@ -898,47 +854,6 @@ function TrialDramaEn() {
   );
 }
 
-function TrialTestimonialsEn() {
-  const testimonials = [
-    { name:"Nour Ibrahim",  city:"Cairo",        level:"Level 2", quote:"I dreamed of understanding K-dramas without subtitles. After 3 months with Klovers I understand 50% of the dialogue!", emoji:"🌸" },
-    { name:"Yasmine Hassan", city:"Alexandria",  level:"Level 1", quote:"Hangul seemed really hard from the outside. But after the first class with the teacher I decided to keep going!", emoji:"💛" },
-    { name:"Mohamed Ali",   city:"Cairo",        level:"Level 3", quote:"Small group + the teacher's style = I learned more in 2 months than 3 years on my own!", emoji:"🔥" },
-    { name:"Sara Mahmoud",  city:"Giza",         level:"Level 2", quote:"Every class is fun and full of laughter. You don't just learn — you fall in love with the language!", emoji:"😍" },
-  ];
-
-  return (
-    <Page dir="ltr">
-      <SHead title="What Our Students Say 💬" subtitle="Real stories from the Klovers community" />
-      <DancheongBorder />
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"9px", marginBottom:"12px" }}>
-        {testimonials.map((t, i) => (
-          <div key={i} style={{
-            background: i % 2 === 0 ? BK : "#f9f9f9",
-            border:`2px solid ${i % 2 === 0 ? Y : "#e5e5e5"}`,
-            borderRadius:"12px", padding:"12px",
-            display:"flex", flexDirection:"column", gap:"8px",
-          }}>
-            <div style={{ fontSize:"28px", lineHeight:1 }}>{t.emoji}</div>
-            <div style={{ fontSize:"10px", color: i % 2 === 0 ? "#ccc" : "#555", lineHeight:1.7, flex:1 }}>
-              "{t.quote}"
-            </div>
-            <div>
-              <div style={{ fontSize:"11px", fontWeight:800, color: i % 2 === 0 ? Y : BK }}>{t.name}</div>
-              <div style={{ fontSize:"9px", color:"#888" }}>{t.city} · {t.level}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{ background:Y, borderRadius:"10px", padding:"10px 16px", display:"flex", alignItems:"center", gap:"12px" }}>
-        <MugunghwaIcon size={36} color={BK} />
-        <div>
-          <div style={{ fontSize:"12px", fontWeight:900, color:BK }}>200+ Students</div>
-          <div style={{ fontSize:"10px", color:BK2 }}>Taught by Reham over 13 years, from Egypt, the Gulf, and the Arab Maghreb</div>
-        </div>
-      </div>
-    </Page>
-  );
-}
 
 function TrialJoinEn() {
   const steps = [
@@ -1101,7 +1016,6 @@ export default function TrialBookPage() {
             <TrialLevelsAr />
             <TrialHangulAr />
             <TrialDramaAr />
-            <TrialTestimonialsAr />
             <TrialJoinAr />
           </>
         ) : (
@@ -1112,7 +1026,6 @@ export default function TrialBookPage() {
             <TrialLevelsEn />
             <TrialHangulEn />
             <TrialDramaEn />
-            <TrialTestimonialsEn />
             <TrialJoinEn />
           </>
         )}
