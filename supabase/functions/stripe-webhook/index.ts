@@ -93,6 +93,13 @@ serve(async (req) => {
       const charge = event.data.object as Stripe.Charge;
       const paymentIntentId = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
 
+      // A refunded shop order takes its books back out of "My books".
+      if (paymentIntentId) {
+        await supabaseAdmin.from("book_assignments").delete()
+          .eq("assigned_by", "shop:stripe")
+          .eq("notes", `Bought in the shop · ${paymentIntentId}`);
+      }
+
       if (paymentIntentId) {
         const { data: enrollment } = await supabaseAdmin
           .from("enrollments")
@@ -182,6 +189,41 @@ serve(async (req) => {
         if (itErr) console.error("Interview training payment update failed:", itErr.message);
         else console.log("Interview training payment processed for session:", meta.interview_session_id);
         return new Response(JSON.stringify({ received: true, type: "interview_training" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // ── Shop order (kloversegy.com/shop, 27 Sep 2026) ──
+      // Books go to the buyer's "My books" card; nothing here touches
+      // enrollments. Idempotent: book_assignments is unique per (user, book).
+      if (meta?.product_type === "shop") {
+        if (session.payment_status !== "paid" || !meta.user_id) {
+          return new Response(JSON.stringify({ received: true, type: "shop", skipped: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const txRef = (session.payment_intent as string) || session.id;
+        const bookIds = (meta.book_ids || "").split(",").map((s) => s.trim()).filter(Boolean);
+        if (bookIds.length > 0) {
+          const { error: bookErr } = await supabaseAdmin.from("book_assignments").upsert(
+            bookIds.map((book_id) => ({
+              user_id: meta.user_id,
+              book_id,
+              available_from: new Date().toISOString(),
+              assigned_by: "shop:stripe",
+              notes: `Bought in the shop · ${txRef}`,
+            })),
+            { onConflict: "user_id,book_id", ignoreDuplicates: true },
+          );
+          if (bookErr) console.error("Shop book assignment failed:", bookErr.message);
+        }
+        const amount = ((session.amount_total ?? 0) / 100).toFixed(2);
+        await supabaseAdmin.from("admin_notifications").insert({
+          message: `Shop order paid: ${bookIds.join(", ") || "items"} · ${meta.email || session.customer_email || ""} · ${amount} ${(session.currency || "").toUpperCase()}`,
+          type: "shop_order",
+          related_user_id: meta.user_id,
+        });
+        return new Response(JSON.stringify({ received: true, type: "shop" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

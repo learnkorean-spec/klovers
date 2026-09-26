@@ -124,7 +124,7 @@
       "destination": "/api/blog-not-found"
     },
     {
-      "source": "/(ar|courses|pricing|about|faq|contact|privacy-policy|privacy|terms|signup|login|forgot-password|reset-password|enroll|enroll-now|my-lessons|pay/[^/]+|blog|journey/[^/]+|resubmit-schedule|placement-test|unit-placement|games|world|dashboard|dashboard/[^/]+|textbook|textbook/[^/]+|textbook/[^/]+/[^/]+|review|daily-quiz|profile|complete-profile|free-trial|rsvp|trial-booking|progress-report|certificate|affiliate|learn-korean-arabic-speakers|topik-exam-preparation|learn-korean-kdramas|interview-training|welcome-back|hangul-book|trial-book|trial-confirm|enrollment-status|hangul-starter|practice-interview|unsubscribe|admin|admin/[^/]+)",
+      "source": "/(ar|courses|pricing|about|faq|contact|privacy-policy|privacy|terms|signup|login|forgot-password|reset-password|enroll|enroll-now|my-lessons|pay/[^/]+|blog|journey/[^/]+|resubmit-schedule|placement-test|unit-placement|games|world|dashboard|dashboard/[^/]+|textbook|textbook/[^/]+|textbook/[^/]+/[^/]+|review|daily-quiz|profile|complete-profile|free-trial|rsvp|trial-booking|progress-report|certificate|affiliate|learn-korean-arabic-speakers|topik-exam-preparation|learn-korean-kdramas|interview-training|welcome-back|hangul-book|trial-book|trial-confirm|enrollment-status|hangul-starter|shop|shop/[^/]+|shop/products/[^/]+|practice-interview|unsubscribe|admin|admin/[^/]+)",
       "destination": "/app.html"
     },
     {

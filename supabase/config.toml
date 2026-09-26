@@ -15,6 +15,12 @@ verify_jwt = false
 [functions.stripe-webhook]
 verify_jwt = false
 
+[functions.shop-products]
+verify_jwt = false
+
+[functions.shop-checkout]
+verify_jwt = false
+
 [functions.payment-reminder]
 verify_jwt = false
 

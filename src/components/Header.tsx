@@ -64,6 +64,7 @@ const Header = () => {
     { href: "/pricing", label: t("header", "pricing") },
     { href: "/textbook", label: isAr ? "الكتاب" : "Textbook" },
     { href: "/games", label: isAr ? "ألعاب" : "Games", badge: !user ? (isAr ? "مجاني" : "Free") : undefined },
+    { href: "/shop", label: isAr ? "المتجر" : "Shop" },
   ];
 
   const moreLinks = [
@@ -75,7 +76,8 @@ const Header = () => {
 
   const allLinks = [...primaryLinks, ...moreLinks];
 
-  const isActive = (href: string) => location.pathname === href;
+  const isActive = (href: string) =>
+    location.pathname === href || (href === "/shop" && location.pathname.startsWith("/shop/"));
 
   /*
    * SOLID, NOT GLASS (23 Sep 2026). The scrolled state was
@@ -190,7 +192,7 @@ const Header = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/trial-booking")}>
                     <Gift className="h-4 w-4 me-2" />
-                    {isAr ? "احجز حصة مجانية" : "Book Free Trial"}
+                    {isAr ? "حجز حصة مجانية" : "Book Free Trial"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <Settings className="h-4 w-4 me-2" />

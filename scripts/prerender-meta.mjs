@@ -781,6 +781,16 @@ const MARKETING_ROUTES = [
       "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide — explained simply. Printable.",
     body: HANGUL_STARTER_BODY_HTML,
   },
+  // Klovers Supply (27 Sep 2026). Products come from Stripe at runtime, so
+  // only the shop's own head is prerendered here; product pages set theirs
+  // client-side (canonical + Product JSON-LD) in src/pages/ShopProductPage.tsx.
+  // Not in api/sitemap.xml.js until the first products are live.
+  {
+    path: "/shop",
+    title: "Klovers Supply — Korean Books and Study Goods",
+    description:
+      "Klovers books and study goods that take Korean beyond the classroom. Digital books go straight to My books in the student dashboard.",
+  },
   // "Journey through Korea's time" — five era pages, added 2026-09-22. IDs and
   // all copy come from src/constants/eras.ts (ERAS); keep this list in step
   // with it and with STATIC_PAGES in api/sitemap.xml.js. `image` and `body`

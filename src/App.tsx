@@ -84,6 +84,8 @@ const TrialBookPage = lazy(() => import("./pages/TrialBookPage"));
 const TrialConfirmPage = lazy(() => import("./pages/TrialConfirmPage"));
 const EnrollmentStatusPage = lazy(() => import("./pages/EnrollmentStatusPage"));
 const HangulStarterPage = lazy(() => import("./pages/HangulStarterPage"));
+const ShopPage = lazy(() => import("./pages/ShopPage"));
+const ShopProductPage = lazy(() => import("./pages/ShopProductPage"));
 const RsvpConfirmationPage = lazy(() => import("./pages/RsvpConfirmationPage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
@@ -249,6 +251,9 @@ const App = () => (
                 <Route path="/trial-confirm" element={<TrialConfirmPage />} />
                 <Route path="/enrollment-status" element={<AuthProtectedRoute><EnrollmentStatusPage /></AuthProtectedRoute>} />
                 <Route path="/hangul-starter" element={<HangulStarterPage />} />
+                <Route path="/shop" element={<ShopPage />} />
+                <Route path="/shop/products/:slug" element={<ShopProductPage />} />
+                <Route path="/shop/:category" element={<ShopPage />} />
                 <Route path="/practice-interview" element={<InterviewTrainingPage />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />

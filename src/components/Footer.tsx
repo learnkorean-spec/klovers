@@ -14,8 +14,8 @@ const Footer = () => {
   const isAr = language === "ar";
 
   const learnLinks = isAr
-    ? [{ to: "/hangul-starter", label: "ورقة هانغول المجانية" }, { to: "/textbook", label: "الكتاب المدرسي" }, { to: "/games", label: "الألعاب" }, { to: "/review", label: "مراجعة المفردات" }, { to: "/placement-test", label: "اختبار تحديد المستوى" }]
-    : [{ to: "/hangul-starter", label: "Free Hangul Sheet" }, { to: "/textbook", label: "Textbook" }, { to: "/games", label: "Games" }, { to: "/review", label: "Vocabulary Review" }, { to: "/placement-test", label: "Placement Test" }];
+    ? [{ to: "/hangul-starter", label: "ورقة هانغول المجانية" }, { to: "/textbook", label: "الكتاب المدرسي" }, { to: "/games", label: "الألعاب" }, { to: "/review", label: "مراجعة المفردات" }, { to: "/placement-test", label: "اختبار تحديد المستوى" }, { to: "/shop", label: "متجر محبي الكورية" }]
+    : [{ to: "/hangul-starter", label: "Free Hangul Sheet" }, { to: "/textbook", label: "Textbook" }, { to: "/games", label: "Games" }, { to: "/review", label: "Vocabulary Review" }, { to: "/placement-test", label: "Placement Test" }, { to: "/shop", label: "Klovers Supply" }];
 
   const companyLinks = isAr
     ? [{ to: "/courses", label: "الدورات" }, { to: "/pricing", label: "الأسعار" }, { to: "/about", label: "من نحن" }, { to: "/blog", label: "المدونة" }, { to: "/contact", label: "تواصل معنا" }, { to: "/faq", label: "الأسئلة الشائعة" }]
@@ -90,7 +90,7 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4 text-background">{t("footer", "joinCommunity")}</h4>
             <p className="text-background/60 text-xs mb-4 leading-relaxed">
-              {isAr ? "انضم لمجتمعنا وتواصل مع متعلمي اللغة الكورية حول العالم." : "Join our community and connect with Korean learners worldwide."}
+              {isAr ? "مجتمع يجمع متعلمي اللغة الكورية حول العالم، ومساحة للتواصل معهم." : "Join our community and connect with Korean learners worldwide."}
             </p>
             <div className="flex gap-2 flex-wrap">
               {social.map(({ href, Icon, label }) => (
