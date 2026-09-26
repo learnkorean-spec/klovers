@@ -3,6 +3,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Gift, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+/*
+ * 27 Sep 2026: the photo is now the Klovers world - the two learners and
+ * Cluby studying on a hanok porch, Namsan Tower in the sky on the RIGHT.
+ * The characters sit left of centre, so from lg up the headline block is
+ * pushed to the right-hand sky (physical margin, same in AR and EN), and on
+ * phones the crop moves right (object-[97%_center]) so the text lands on sky
+ * and roofs instead of faces.
+ */
 const heroPoster = "/hero-korean.jpg";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
@@ -163,7 +171,7 @@ const HeroSection = () => {
           loading="eager"
           fetchPriority="high"
           decoding="sync"
-          className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 animate-ken-burns brightness-110 saturate-[1.15] ${
+          className={`absolute inset-0 w-full h-full object-cover object-[97%_center] lg:object-center transition-opacity duration-1000 animate-ken-burns brightness-110 saturate-[1.15] ${
             videoReady ? "opacity-0" : "opacity-100"
           }`}
         />
@@ -193,7 +201,7 @@ const HeroSection = () => {
         />
 
         <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pt-8 pb-24 sm:pb-32">
-          <div className="max-w-5xl mx-auto flex flex-col items-center gap-5 sm:gap-6">
+          <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-[4%] lg:max-w-2xl flex flex-col items-center gap-5 sm:gap-6">
 
             {/* 1. Headline. Yellow as TYPE is correct here and only here. */}
             <h1
