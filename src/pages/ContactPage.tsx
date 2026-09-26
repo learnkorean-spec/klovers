@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageCircle, Send, Users } from "lucide-react";
+import { MessageCircle, Send, } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
@@ -52,6 +53,10 @@ const buildMessage = (
 };
 
 const ContactPage = () => {
+  // 27 Sep 2026: restored - be8bc67 dropped these two lines, so the page threw
+  // "isAr is not defined" on load.
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   useSEO({ title: "Contact Us", description: "Get in touch with Klovers. We would love to hear from you about courses, enrollment, or any questions.", canonical: "https://kloversegy.com/contact" });
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
@@ -163,7 +168,7 @@ const ContactPage = () => {
                 className="flex items-center gap-4 bg-card border border-border hover:border-primary/50 rounded-2xl px-6 py-4 transition-all hover:shadow-md"
               >
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-primary" />
+                  <KloverIcon name="student-girl-heart" className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-foreground text-sm">{isAr ? "مجتمع واتساب" : "WhatsApp Community"}</p>

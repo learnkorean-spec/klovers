@@ -29,7 +29,7 @@ import { BrandIcon } from "./primitives";
  *
  * Renders nothing when the student has no book yet — no empty card.
  */
-type Row = { id: string; book_id: string };
+type Row = { id: string; book_id: string; assigned_by?: string | null };
 
 /** Cover thumbnails (300×388 WebP, ~12 KB) in the public marketing-images bucket —
  *  the cover is not secret; the book itself stays private. */
@@ -82,7 +82,7 @@ export function MyBooksCard({ clubyAwake = false }: { clubyAwake?: boolean }) {
         if (userError || !user) return;
         const { data, error: rowsError } = await supabase
           .from("book_assignments")
-          .select("id, book_id")
+          .select("id, book_id, assigned_by")
           .eq("user_id", user.id)
           .lte("available_from", new Date().toISOString())
           .order("assigned_at", { ascending: true });
@@ -124,6 +124,8 @@ export function MyBooksCard({ clubyAwake = false }: { clubyAwake?: boolean }) {
   };
 
   const popup = popupBook ? BOOKS[popupBook] : null;
+  // Books bought in the shop are not a joining gift (27 Sep 2026).
+  const allBought = rows.every((r) => r.assigned_by?.startsWith("shop:"));
 
   return (
     <>
@@ -137,10 +139,14 @@ export function MyBooksCard({ clubyAwake = false }: { clubyAwake?: boolean }) {
           <BrandIcon name="reward-gift" className="h-10 w-10" eager />
           <div className="min-w-0">
             <h2 id="dash-books-title" className="font-display text-base font-bold text-foreground sm:text-lg">
-              {isAr ? "هدية الانضمام إلى الدورة" : "A gift for joining our course"}
+              {allBought
+                ? (isAr ? "كتبي" : "My books")
+                : (isAr ? "هدية الانضمام إلى الدورة" : "A gift for joining our course")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {isAr ? "الكتاب جاهز للتحميل الآن" : "Your book is ready — download it now"}
+              {allBought
+                ? (isAr ? "الكتب جاهزة للتحميل الآن" : "Your books are ready to download")
+                : (isAr ? "الكتاب جاهز للتحميل الآن" : "Your book is ready — download it now")}
             </p>
           </div>
         </div>

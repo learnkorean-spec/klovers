@@ -1,12 +1,12 @@
 // League definitions with XP thresholds and Korean cultural icons
 export const LEAGUES = [
-  { key: "beginner", name: "Beginner League", emoji: "🌱", icon: "🇰🇷", minXp: 0, maxXp: 199, color: "hsl(var(--muted-foreground))" },
-  { key: "hangul", name: "Hangul League", emoji: "🔤", icon: "ㄱ", minXp: 200, maxXp: 499, color: "#CFF7D3" },
-  { key: "conversation", name: "Conversation League", emoji: "💬", icon: "🗣️", minXp: 500, maxXp: 999, color: "#D6E8FF" },
-  { key: "grammar", name: "Grammar League", emoji: "📖", icon: "✍️", minXp: 1000, maxXp: 1999, color: "#E8D9FF" },
-  { key: "topik_rookie", name: "TOPIK Rookie League", emoji: "🥉", icon: "🏅", minXp: 2000, maxXp: 3499, color: "#FFE5CC" },
+  { key: "beginner", name: "Beginner League", emoji: "🌱", icon: "가", minXp: 0, maxXp: 199, color: "hsl(var(--muted-foreground))" },
+  { key: "hangul", name: "Hangul League", emoji: "🔤", icon: "ㄱ", minXp: 200, maxXp: 499, color: "#FFF9EC" },
+  { key: "conversation", name: "Conversation League", emoji: "💬", icon: "🗣️", minXp: 500, maxXp: 999, color: "#FFF9EC" },
+  { key: "grammar", name: "Grammar League", emoji: "📖", icon: "✍️", minXp: 1000, maxXp: 1999, color: "#FFF9EC" },
+  { key: "topik_rookie", name: "TOPIK Rookie League", emoji: "🥉", icon: "🏅", minXp: 2000, maxXp: 3499, color: "#FFF9EC" },
   { key: "topik_challenger", name: "TOPIK Challenger League", emoji: "🥈", icon: "⚡", minXp: 3500, maxXp: 5499, color: "hsl(0 0% 75%)" },
-  { key: "topik_master", name: "TOPIK Master League", emoji: "🥇", icon: "👑", minXp: 5500, maxXp: Infinity, color: "#FFE5CC" },
+  { key: "topik_master", name: "TOPIK Master League", emoji: "🥇", icon: "👑", minXp: 5500, maxXp: Infinity, color: "#FFF9EC" },
 ] as const;
 
 export const XP_VALUES = {

@@ -21,13 +21,13 @@ import { LEVEL_SELECT_OPTIONS } from "@/constants/levels";
 import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
 import { countryFromTimezone } from "@/lib/stripePrices";
 import { trustCopy } from "@/lib/trustFigures";
-import { Star, Users, Globe, Gift, Target, Gamepad2, BookOpen } from "lucide-react";
+import { Star, Users, Gift, Target, Gamepad2, BookOpen } from "lucide-react";
 
 /** Icons for the three benefit pills, in the order of the pill labels. */
 const PILL_ICONS = [Target, Gamepad2, BookOpen];
 
 const SignUpPage = () => {
-  useSEO({ title: "Sign Up | Klovers Korean Academy", description: "Create your free Klovers account and start learning Korean with live interactive classes today.", noindex: true });
+  useSEO({ title: document.documentElement.lang === "ar" ? "إنشاء حساب | كلوفرز" : "Sign Up | Klovers", description: document.documentElement.lang === "ar" ? "إنشاء حساب مجاني في كلوفرز وبدء تعلّم الكورية بحصص مباشرة." : "Create your free Klovers account and start learning Korean with live interactive classes today.", noindex: true });
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,13 +38,17 @@ const SignUpPage = () => {
   const redirectTo = searchParams.get("redirect");
   // Capture referrer ID from URL param or localStorage (set by free-trial page)
   const referrerId = searchParams.get("ref") ?? localStorage.getItem("referrer_id");
-  if (searchParams.get("ref")) {
-    localStorage.setItem("referrer_id", searchParams.get("ref")!);
+  // 27 Sep 2026: this ran on EVERY render, so each keystroke in the form
+  // recorded another referral click. Now it runs once per page open.
+  const refParam = searchParams.get("ref");
+  useEffect(() => {
+    if (!refParam) return;
+    localStorage.setItem("referrer_id", refParam);
     // Track the referral link click (fire-and-forget, for +2% sharing bonus)
     supabase.functions.invoke("track-referral-click", {
-      body: { referrerId: searchParams.get("ref") },
+      body: { referrerId: refParam },
     }).catch(() => {});
-  }
+  }, [refParam]);
   const { t, language } = useLanguage();
   const isAr = language === "ar";
   const trust = trustCopy(language);
@@ -225,8 +229,6 @@ const SignUpPage = () => {
           <span className="text-border">·</span>
           <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" aria-hidden="true" /> {trust.studentsShort}</span>
           <span className="text-border">·</span>
-          <span className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5" aria-hidden="true" /> {isAr ? "+15 دولة" : "15+ countries"}</span>
-          <span className="text-border">·</span>
           <span className="font-semibold text-foreground">{isAr ? "مجاني" : "Free to join"}</span>
         </div>
 
@@ -234,7 +236,7 @@ const SignUpPage = () => {
           <CardHeader className="text-center">
             {redirectTo === "/trial-booking" && (
               <div className="bg-ivory border border-charcoal/15 dark:border-klovers-yellow/30 dark:bg-muted rounded-xl px-4 py-3 mb-3 text-sm text-foreground">
-                <p className="font-black text-base mb-0.5 flex items-center justify-center gap-1.5"><Gift className="h-4 w-4 shrink-0" aria-hidden="true" />{isAr ? "خطوة واحدة لحصتك المجانية" : "One step from your free class"}</p>
+                <p className="font-black text-base mb-0.5 flex items-center justify-center gap-1.5"><Gift className="h-4 w-4 shrink-0" aria-hidden="true" />{isAr ? "خطوة واحدة قبل الحصة المجانية" : "One step from your free class"}</p>
                 <p className="text-muted-foreground text-xs">{isAr ? "إنشاء حساب مجاني في 30 ثانية، ثم اختيار الموعد." : "Create a free account in 30 seconds, then pick your slot."}</p>
               </div>
             )}
@@ -244,7 +246,7 @@ const SignUpPage = () => {
             </p>
             {/* Benefit pills */}
             <div className="flex flex-wrap justify-center gap-2 pt-3">
-              {(isAr ? ["اختبار مستوى مجاني", "13 لعبة تعليمية", "كتاب دراسي كامل"] : ["Free placement test", "13 learning games", "Full textbook access"]).map((b, i) => {
+              {(isAr ? ["اختبار مستوى مجاني", "ألعاب تعليمية تفاعلية", "كتاب دراسي كامل"] : ["Free placement test", "Interactive learning games", "Full textbook access"]).map((b, i) => {
                 const PillIcon = PILL_ICONS[i] ?? Target;
                 return (
                   <span key={b} className="inline-flex items-center gap-1 text-[11px] bg-muted text-muted-foreground px-2.5 py-1 rounded-full font-medium">

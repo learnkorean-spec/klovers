@@ -348,7 +348,7 @@ const PaymentForm = ({
 
 /* ── Main Page ── */
 const EgyptPaymentPage = () => {
-  useSEO({ title: "Complete Payment | Klovers Korean Academy", description: "Complete your enrollment payment to activate your Klovers Korean course.", noindex: true });
+  useSEO({ title: "Complete Payment | Klovers", description: "Complete your enrollment payment to activate your Klovers Korean course.", noindex: true });
   const { t } = useLanguage();
   const { enrollmentId } = useParams<{ enrollmentId: string }>();
   const navigate = useNavigate();

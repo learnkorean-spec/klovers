@@ -652,7 +652,7 @@ const MARKETING_ROUTES = [
     path: "/contact",
     title: "Contact Us",
     description:
-      "Get in touch with Klovers Korean Lovers Academy. We would love to hear from you about courses, enrollment, or any questions.",
+      "Get in touch with Klovers. We would love to hear from you about courses, enrollment, or any questions.",
     body: CONTACT_BODY_HTML,
     pageLd: { "@type": "ContactPage", mainEntity: { "@id": `${BASE_URL}/#organization` } },
   },
@@ -666,9 +666,9 @@ const MARKETING_ROUTES = [
   },
   {
     path: "/enroll-now",
-    title: "Enroll Now | Klovers Korean Academy",
+    title: "Enroll Now | Klovers",
     description:
-      "Join Klovers Korean Academy — choose your class type, schedule, and start speaking Korean with confidence.",
+      "Join Klovers — choose your class type, schedule, and start speaking Korean with confidence.",
     body: ENROLL_NOW_BODY_HTML,
   },
   {
@@ -780,6 +780,16 @@ const MARKETING_ROUTES = [
     description:
       "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide — explained simply. Printable.",
     body: HANGUL_STARTER_BODY_HTML,
+  },
+  // Klovers Supply (27 Sep 2026). Products come from Stripe at runtime, so
+  // only the shop's own head is prerendered here; product pages set theirs
+  // client-side (canonical + Product JSON-LD) in src/pages/ShopProductPage.tsx.
+  // Not in api/sitemap.xml.js until the first products are live.
+  {
+    path: "/shop",
+    title: "Klovers Supply — Korean Books and Study Goods",
+    description:
+      "Klovers books and study goods that take Korean beyond the classroom. Digital books go straight to My books in the student dashboard.",
   },
   // "Journey through Korea's time" — five era pages, added 2026-09-22. IDs and
   // all copy come from src/constants/eras.ts (ERAS); keep this list in step
@@ -1600,7 +1610,7 @@ const shellHTML = baseWithoutOrgJsonLd
   .replace(/<title>[^<]*<\/title>/, () => `<title>${SITE_NAME}</title>`)
   .replace(
     /<meta name="description" content="[^"]*"\s*\/?>/,
-    `<meta name="description" content="Klovers Korean Lovers Academy." />`
+    `<meta name="description" content="Klovers." />`
   )
   // No canonical, no og:url, no og:title: an unknown route must not claim to be
   // any particular page.

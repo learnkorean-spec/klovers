@@ -60,7 +60,14 @@ export type AnalyticsEvent =
   | { event: "push_subscribed" }
   | { event: "nps_submitted";           score: number; feedback?: string }
   | { event: "referral_link_copied" }
-  | { event: "blog_read";               slug: string; readTimeSeconds?: number };
+  | { event: "blog_read";               slug: string; readTimeSeconds?: number }
+  // Shop (27 Sep 2026)
+  | { event: "shop_view" }
+  | { event: "collection_view";         category: string }
+  | { event: "product_view";            productId: string; price: number; currency: string }
+  | { event: "add_to_cart";             productId: string; price: number; currency: string }
+  | { event: "begin_checkout";          items: number; value: number; currency: string }
+  | { event: "purchase" };
 
 /**
  * Capture a typed analytics event.
