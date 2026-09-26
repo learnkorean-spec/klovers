@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { toArabicDigits } from "@/lib/trustFigures";
 
 /**
  * /topik-exam-preparation
@@ -44,9 +45,10 @@ const TopikExamPage = () => {
   const tr = (en: string, ar: string) => (isAr ? ar : en);
 
   useSEO({
-    title: "TOPIK Exam Preparation: Format, Scoring & Study Plan",
-    description:
-      "How the TOPIK Korean exam works: TOPIK I and II, sections, timing and the score needed for each level, plus the Klovers TOPIK track with past papers and writing practice.",
+    title: isAr ? "التحضير لاختبار TOPIK: الشكل والدرجات وخطة الدراسة" : "TOPIK Exam Preparation: Format, Scoring & Study Plan",
+    description: isAr
+      ? "كيف يعمل اختبار TOPIK للغة الكورية: المستويان الأول والثاني، والأقسام، والتوقيت، والدرجة المطلوبة لكل مستوى، مع مسار كلوفرز للتحضير بنماذج سابقة وتدريب على الكتابة."
+      : "How the TOPIK Korean exam works: TOPIK I and II, sections, timing and the score needed for each level, plus the Klovers TOPIK track with past papers and writing practice.",
     canonical: "https://kloversegy.com/topik-exam-preparation",
   });
 
@@ -114,8 +116,8 @@ const TopikExamPage = () => {
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   {TOPIK_I.map((l) => (
                     <div key={l.level} className="rounded-xl bg-klovers-yellow px-3 py-2 text-center">
-                      <p className="text-xs font-bold text-charcoal">{tr(`Level ${l.level}`, `المستوى ${l.level}`)}</p>
-                      <p className="text-sm font-extrabold text-charcoal" dir="ltr">{l.score}</p>
+                      <p className="text-xs font-bold text-charcoal">{tr(`Level ${l.level}`, `المستوى ${toArabicDigits(l.level)}`)}</p>
+                      <p className="text-sm font-extrabold text-charcoal" dir="ltr">{isAr ? toArabicDigits(l.score) : l.score}</p>
                     </div>
                   ))}
                 </div>
@@ -131,8 +133,8 @@ const TopikExamPage = () => {
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   {TOPIK_II.map((l) => (
                     <div key={l.level} className="rounded-xl bg-klovers-yellow px-3 py-2 text-center">
-                      <p className="text-xs font-bold text-charcoal">{tr(`Level ${l.level}`, `المستوى ${l.level}`)}</p>
-                      <p className="text-sm font-extrabold text-charcoal" dir="ltr">{l.score}</p>
+                      <p className="text-xs font-bold text-charcoal">{tr(`Level ${l.level}`, `المستوى ${toArabicDigits(l.level)}`)}</p>
+                      <p className="text-sm font-extrabold text-charcoal" dir="ltr">{isAr ? toArabicDigits(l.score) : l.score}</p>
                     </div>
                   ))}
                 </div>

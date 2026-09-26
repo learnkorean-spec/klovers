@@ -1,16 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  UserPlus,
-  CreditCard,
-  CheckCircle2,
-  Clock,
-} from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 
-const stepIcons = [UserPlus, CreditCard, CheckCircle2];
+const stepIcons: KloverIconName[] = ["sprout", "books-stack", "badge-blossom"];
 const stepLinks = ["/signup", "/pricing", "/enroll-now"];
 
 const EnrollSection = () => {
@@ -23,8 +18,8 @@ const EnrollSection = () => {
     <section id="enroll" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto mb-8">
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-6 py-3 text-sm font-medium text-foreground animate-pulse">
-            <Clock className="h-5 w-5 text-destructive shrink-0" />
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-primary/40 bg-primary/15 px-6 py-3 text-sm font-medium text-foreground">
+            <KloverIcon name="calendar-blossom" className="h-6 w-6 shrink-0" />
             <span>{t("enroll", "urgency")}</span>
           </div>
         </div>
@@ -43,7 +38,7 @@ const EnrollSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {steps.map((step, index) => {
-            const Icon = stepIcons[index];
+            const iconName = stepIcons[index];
             const link = stepLinks[index];
             return (
               <Card
@@ -57,8 +52,8 @@ const EnrollSection = () => {
                 </div>
 
                 <CardContent className="pt-12 pb-6 px-6 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-black/25 shadow-sm">
-                    <Icon className="h-8 w-8 text-primary-foreground transition-colors" />
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/15 flex items-center justify-center group-hover:scale-110 transition-all duration-300 border border-primary/40 shadow-sm">
+                    <KloverIcon name={iconName} className="h-10 w-10" />
                   </div>
 
                   <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -71,7 +66,7 @@ const EnrollSection = () => {
 
                   <Button asChild className="w-full">
                     <Link to={link}>
-                      {step.buttonText || t("enroll", "enrollNow") || "Enroll Now"}
+                      {step.buttonText || t("enroll", "enrollNow")}
                     </Link>
                   </Button>
                 </CardContent>

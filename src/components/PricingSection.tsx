@@ -22,7 +22,18 @@ import KloverIcon from "@/components/KloverIcon";
 
 /** Arabic names for the tier countries, so the Arabic page stays in one language. */
 const COUNTRY_AR: Record<string, string> = {"Egypt": "مصر", "Morocco": "المغرب", "Tunisia": "تونس", "Algeria": "الجزائر", "Libya": "ليبيا", "Jordan": "الأردن", "Lebanon": "لبنان", "Iraq": "العراق", "Syria": "سوريا", "Sudan": "السودان", "Yemen": "اليمن", "Malaysia": "ماليزيا", "Indonesia": "إندونيسيا", "Thailand": "تايلاند", "Vietnam": "فيتنام", "Philippines": "الفلبين", "India": "الهند", "Pakistan": "باكستان", "Brazil": "البرازيل", "Mexico": "المكسيك", "Colombia": "كولومبيا", "Argentina": "الأرجنتين", "Turkey": "تركيا", "UAE": "الإمارات", "Saudi Arabia": "السعودية", "Qatar": "قطر", "Bahrain": "البحرين", "Oman": "عُمان", "Kuwait": "الكويت", "United States": "الولايات المتحدة", "United Kingdom": "المملكة المتحدة", "Germany": "ألمانيا", "France": "فرنسا", "Canada": "كندا", "Australia": "أستراليا", "Japan": "اليابان", "South Korea": "كوريا الجنوبية", "China": "الصين"};
-const CURRENCY_AR: Record<string, string> = { EGP: "جنيه", USD: "دولار" };
+const CURRENCY_AR: Record<string, string> = {
+  EGP: "جنيه", USD: "دولار", MAD: "درهم مغربي", TND: "دينار تونسي", DZD: "دينار جزائري",
+  LYD: "دينار ليبي", JOD: "دينار أردني", IQD: "دينار عراقي", MYR: "رينجت", IDR: "روبية إندونيسية",
+  THB: "بات تايلاندي", VND: "دونغ فيتنامي", PHP: "بيزو فلبيني", INR: "روبية هندية", PKR: "روبية باكستانية",
+  BRL: "ريال برازيلي", MXN: "بيزو مكسيكي", COP: "بيزو كولومبي", TRY: "ليرة تركية", AED: "درهم إماراتي",
+  SAR: "ريال سعودي", QAR: "ريال قطري", BHD: "دينار بحريني", OMR: "ريال عُماني", KWD: "دينار كويتي",
+  GBP: "جنيه إسترليني", EUR: "يورو", CAD: "دولار كندي", AUD: "دولار أسترالي", JPY: "ين ياباني",
+  KRW: "وون كوري", CNY: "يوان صيني",
+};
+/** 3300 -> "٣٬٣٠٠", 22.6 -> "٢٢٫٦": Arabic-Indic digits with Arabic separators. */
+const arNumber = (n: number): string =>
+  toArabicDigits(n.toLocaleString("en-US")).replace(/,/g, "٬").replace(/\./g, "٫");
 
 
 type TierKey = "local" | "regional" | "global";
@@ -188,16 +199,31 @@ const PricingSection = () => {
     if (n <= 1) return "";
     if (price.local && price.currency) {
       const per = Math.round(price.local / n);
-      return isAr ? `${toArabicDigits(per.toLocaleString("en-US"))} ${CURRENCY_AR[price.currency] ?? price.currency} شهريًا` : `${per.toLocaleString()} ${price.currency}/mo`;
+      return isAr ? `${arNumber(per)} ${CURRENCY_AR[price.currency] ?? price.currency} شهريًا` : `${per.toLocaleString()} ${price.currency}/mo`;
     }
     if (price.usd) return isAr ? `${toArabicDigits(Math.round(price.usd / n))} دولار شهريًا` : `$${Math.round(price.usd / n)}/mo`;
     return "";
   };
 
+  // Main row price. English keeps "3,300 EGP" / "$25"; Arabic reads the same
+  // way as the per-month line under it: Arabic-Indic digits and the currency
+  // name in Arabic ("٣٬٣٠٠ جنيه"), so the card is in one script.
+  const formatMainPrice = (price: { usd?: number; local?: number; currency?: string }): string => {
+    if (price.local && price.currency) {
+      return isAr
+        ? `${arNumber(price.local)} ${CURRENCY_AR[price.currency] ?? price.currency}`
+        : `${price.local.toLocaleString()} ${price.currency}`;
+    }
+    return isAr ? `${arNumber(price.usd ?? 0)} دولار` : `$${price.usd}`;
+  };
+
   const openFlexPaymentChat = (tierKey: TierKey, ct: ClassType) => {
+    // The displayed tier name, never the internal key ("local"), so the
+    // Arabic message stays in one language.
+    const tierName = t("pricing", `tiers.${tierKey}.name`);
     const msg = isAr
-      ? `مرحبًا، أودّ الاستفسار عن باقة ${ct === "group" ? "المجموعة" : "الحصص الخاصة"} (فئة ${tierKey}). هل يمكن الدفع بالتقسيط أو بطريقة مرنة؟`
-      : `Hi! I'm interested in the ${ct === "group" ? "Group" : "Private"} plan (${tierKey} tier). Can we arrange flexible/installment payment?`;
+      ? `مرحبًا، أودّ الاستفسار عن باقة ${ct === "group" ? "المجموعة" : "الحصص الخاصة"} (${tierName}). هل يمكن الدفع بالتقسيط أو بطريقة مرنة؟`
+      : `Hi! I'm interested in the ${ct === "group" ? "Group" : "Private"} plan (${tierName}). Can we arrange flexible/installment payment?`;
     logLeadEvent({ source_type: "pricing", cta_label: "flex_payment_whatsapp", metadata: { tier: tierKey, classType: ct } });
     trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(msg)}`, { cta_label: "pricing_flex_payment" });
   };
@@ -382,7 +408,7 @@ const PricingSection = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg text-foreground">
-                              {price.local ? `${price.local.toLocaleString()} ${price.currency}` : `$${price.usd}`}
+                              {formatMainPrice(price)}
                             </p>
                             {derivePerMonth(price) && (
                               <p className="text-[11px] text-correct font-semibold">
@@ -420,7 +446,7 @@ const PricingSection = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg text-foreground">
-                              {price.local ? `${price.local.toLocaleString()} ${price.currency}` : `$${price.usd}`}
+                              {formatMainPrice(price)}
                             </p>
                             {derivePerMonth(price) && (
                               <p className="text-[11px] text-correct font-semibold">
@@ -532,8 +558,8 @@ const PricingSection = () => {
         <div className="mt-12 flex flex-wrap justify-center gap-6 text-center">
           <div className="flex flex-col items-center gap-1">
             <KloverIcon name="badge-blossom" className="h-10 w-10" />
-            <p className="text-sm font-semibold text-foreground">{tr("First Class Guarantee", "ضمان الحصة الأولى")}</p>
-            <p className="text-xs text-muted-foreground">{tr("Not happy? Refund or rebook.", "استرداد المبلغ أو إعادة الحجز عند عدم الرضا.")}</p>
+            <p className="text-sm font-semibold text-foreground">{tr("Guarantee after the first paid class", "ضمان بعد أول حصة مدفوعة")}</p>
+            <p className="text-xs text-muted-foreground">{tr("Not happy after the first paid class? Refund or rebook.", "استرداد المبلغ أو إعادة الحجز عند عدم الرضا بعد أول حصة مدفوعة.")}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <KloverIcon name="growth-chart" className="h-10 w-10" />

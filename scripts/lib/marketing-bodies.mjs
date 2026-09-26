@@ -87,7 +87,7 @@ export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
       <h3>What is the class schedule like?</h3>
       <p>Group classes are held once per week. The exact day and time are coordinated with your group to find the most convenient slot. Private classes offer fully flexible scheduling based on your availability.</p>
       <h3>How many students are in a group class?</h3>
-      <p>Our group classes are kept small — typically 4 to 8 students per group. This ensures every student gets personal attention, practice time, and feedback from the teacher.</p>
+      <p>Our group classes are kept small. This ensures every student gets personal attention, practice time, and feedback from the teacher.</p>
       <h3>What's the difference between group and private classes?</h3>
       <p>Group classes (once/week) let you learn alongside peers in a collaborative environment at an affordable price. Private classes (1-on-1) offer personalized lessons, flexible scheduling, and faster progression tailored to your goals.</p>
       <h2>Payment &amp; Pricing</h2>
@@ -99,9 +99,9 @@ export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
       <h3>Do I get a certificate after completing a course?</h3>
       <p>Yes! Upon successfully completing your course level, you'll receive an official Klovers certificate of completion. This certificate can be added to your CV, LinkedIn profile, or university application portfolio.</p>
       <h3>How is my progress tracked?</h3>
-      <p>Your student dashboard shows your attendance history, current level, and remaining sessions. Your instructor also provides regular feedback on your speaking, reading, and writing skills throughout the course.</p>
+      <p>Your student dashboard shows your attendance history, current level, and remaining sessions. The teacher also provides regular feedback on your speaking, reading, and writing skills throughout the course.</p>
       <h3>Is Klovers suitable for TOPIK preparation?</h3>
-      <p>Absolutely! Our curriculum is aligned with TOPIK standards, and Reham has experience preparing students for TOPIK exams. We cover reading, listening, and writing skills tested in TOPIK I and II.</p>
+      <p>Yes. Classes cover the TOPIK exam format and include practice questions for the reading, listening and writing sections of TOPIK I and II.</p>
       <h2>Still have questions?</h2>
       <p>We are happy to help. Reach out or start your Korean journey today!</p>
       <p><a href="https://wa.me/201010003084">WhatsApp</a> · <a href="https://t.me/+Fu5T7d4wLMsxNDY9">Telegram</a> · <a href="/enroll-now">Start Now</a></p>
@@ -413,7 +413,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "How many students are in a group class?",
-        "a": "Our group classes are kept small — typically 4 to 8 students per group. This ensures every student gets personal attention, practice time, and feedback from the teacher."
+        "a": "Our group classes are kept small. This ensures every student gets personal attention, practice time, and feedback from the teacher."
     },
     {
         "q": "What's the difference between group and private classes?",
@@ -433,7 +433,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "How is my progress tracked?",
-        "a": "Your student dashboard shows your attendance history, current level, and remaining sessions. Your instructor also provides regular feedback on your speaking, reading, and writing skills throughout the course."
+        "a": "Your student dashboard shows your attendance history, current level, and remaining sessions. The teacher also provides regular feedback on your speaking, reading, and writing skills throughout the course."
     },
     {
         "q": "Can I switch between group and private classes?",
@@ -441,7 +441,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "Is Klovers suitable for TOPIK preparation?",
-        "a": "Absolutely! Our curriculum is aligned with TOPIK standards, and Reham has experience preparing students for TOPIK exams. We cover reading, listening, and writing skills tested in TOPIK I and II."
+        "a": "Yes. Classes cover the TOPIK exam format and include practice questions for the reading, listening and writing sections of TOPIK I and II."
     }
 ],
   "/affiliate": [

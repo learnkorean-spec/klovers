@@ -74,7 +74,7 @@ const LEVEL_COPY: Record<
       "الحصة ١ — الحروف المتحركة والساكنة الأساسية وتركيب المقطع",
       "الحصة ٢ — الحروف المشددة والمهموسة والحروف المتحركة المركبة",
       "الحصة ٣ — الحرف الأخير (باتشيم)",
-      "الحصة ٤ — قواعد النطق وقراءة أول جملك",
+      "الحصة ٤ — قواعد النطق وقراءة أول جملة كورية",
     ],
   },
   l1: {
@@ -211,7 +211,7 @@ const eyebrowEn = (l: Level): string => {
 
 const eyebrowAr = (l: Level): string => {
   const n = l.sessions ?? 0;
-  if (l.topik === null) return `${ar(n)} حصص · تمهيدي (${l.cefr})`;
+  if (l.topik === null) return `${ar(n)} حصص · المستوى التمهيدي`;
   return `${ar(n)} حصة · ${ar(monthsFor(n))} شهور`;
 };
 

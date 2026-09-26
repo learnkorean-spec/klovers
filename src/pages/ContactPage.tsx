@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/leadSession";
 
 const WA_DIRECT = `${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I'm interested in learning Korean with Klovers. Can you tell me more?")}`;
+const WA_DIRECT_AR = `${WHATSAPP_BASE}?text=${encodeURIComponent("مرحبًا، أرغب في تعلّم الكورية مع كلوفرز. ما التفاصيل؟")}`;
 const WA_GROUP = "https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq";
 
 /**
@@ -57,7 +58,13 @@ const ContactPage = () => {
   // "isAr is not defined" on load.
   const { t, language } = useLanguage();
   const isAr = language === "ar";
-  useSEO({ title: "Contact Us", description: "Get in touch with Klovers. We would love to hear from you about courses, enrollment, or any questions.", canonical: "https://kloversegy.com/contact" });
+  useSEO({
+    title: isAr ? "التواصل" : "Contact Us",
+    description: isAr
+      ? "التواصل مع كلوفرز للاستفسار عن الدورات والتسجيل وأي سؤال آخر."
+      : "Get in touch with Klovers. We would love to hear from you about courses, enrollment, or any questions.",
+    canonical: "https://kloversegy.com/contact",
+  });
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [sending, setSending] = useState(false);
@@ -104,7 +111,7 @@ const ContactPage = () => {
       setSent(true);
       setForm({ name: "", email: "", subject: "", message: "" });
       toast({
-        title: isAr ? "وصلتنا رسالتك" : "Message received",
+        title: isAr ? "تم استلام الرسالة" : "Message received",
         description: isAr ? "سيصل الرد في أقرب وقت." : "We'll get back to you shortly.",
       });
     } catch (err) {
@@ -113,9 +120,9 @@ const ContactPage = () => {
       setFailed(true);
       console.error("[contact] submit-lead failed:", err);
       toast({
-        title: isAr ? "لم نتمكن من الإرسال" : "Could not send",
+        title: isAr ? "تعذّر الإرسال" : "Could not send",
         description: isAr
-          ? "رسالتك ما اتبعتتش ومتبعتمش. تقدر تبعتها على واتساب من الزر بالأسفل."
+          ? "تعذّر الإرسال، والرسالة محفوظة. الإرسال متاح عبر واتساب من الزر بالأسفل."
           : "Your message was not sent, and has not been lost. Send it on WhatsApp using the button below.",
         variant: "destructive",
       });
@@ -143,8 +150,8 @@ const ContactPage = () => {
 
               {/* ── Primary: Direct WhatsApp DM ── */}
               <a
-                href={WA_DIRECT}
-                onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WA_DIRECT, { cta_label: "contact_direct" }); }}
+                href={isAr ? WA_DIRECT_AR : WA_DIRECT}
+                onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(isAr ? WA_DIRECT_AR : WA_DIRECT, { cta_label: "contact_direct" }); }}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl px-6 py-5 shadow-lg transition-all hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
@@ -154,9 +161,9 @@ const ContactPage = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-lg leading-tight">{isAr ? "التواصل عبر واتساب" : "Contact on WhatsApp"}</p>
-                  <p className="text-primary-foreground/80 text-sm">{isAr ? "أسرع طريقة للتواصل — نرد خلال دقائق" : "Fastest way to reach us — reply within minutes"}</p>
+                  <p className="text-primary-foreground/80 text-sm">{isAr ? "أسرع طريقة للتواصل" : "The fastest way to reach us"}</p>
                 </div>
-                <svg viewBox="0 0 24 24" className="h-5 w-5 opacity-70" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
+                <svg viewBox="0 0 24 24" className="h-5 w-5 opacity-70 rtl:rotate-180" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
               </a>
 
               {/* ── Secondary: Join WhatsApp group ── */}
@@ -174,7 +181,7 @@ const ContactPage = () => {
                   <p className="font-semibold text-foreground text-sm">{isAr ? "مجتمع واتساب" : "WhatsApp Community"}</p>
                   <p className="text-muted-foreground text-xs">{isAr ? "التواصل عبر المجموعة والحصول على التحديثات" : "Community chat and updates"}</p>
                 </div>
-                <svg viewBox="0 0 24 24" className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
+                <svg viewBox="0 0 24 24" className="h-4 w-4 text-muted-foreground rtl:rotate-180" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 18l6-6-6-6"/></svg>
               </a>
 
               {/* ── Tertiary: Contact form ── */}
@@ -260,7 +267,7 @@ const ContactPage = () => {
                         >
                           <p className="text-sm text-foreground">
                             {isAr
-                              ? "تعذّر إرسال الرسالة عبر الموقع. لم تُمسح — يمكنك إرسالها الآن على واتساب."
+                              ? "تعذّر الإرسال عبر الموقع، والرسالة محفوظة في النموذج. الإرسال متاح الآن عبر واتساب."
                               : "Sending through the site did not work. Nothing was lost — send it on WhatsApp now."}
                           </p>
                           <a

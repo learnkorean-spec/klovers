@@ -53,9 +53,10 @@ const KDramaLearningPage = () => {
   const tr = (en: string, ar: string) => (isAr ? ar : en);
 
   useSEO({
-    title: "Learn Korean Through K-Dramas",
-    description:
-      "A simple, repeatable way to study Korean with K-dramas: one scene at a time, with Korean subtitles, shadowing and a phrase notebook, and how live classes fill in the grammar.",
+    title: isAr ? "تعلُّم الكورية من خلال الدراما الكورية" : "Learn Korean Through K-Dramas",
+    description: isAr
+      ? "طريقة بسيطة قابلة للتكرار لدراسة الكورية بالدراما: مشهد واحد في كل مرة، مع ترجمة كورية، وتقليد النطق، ودفتر للعبارات، ودور الحصص المباشرة في استكمال القواعد."
+      : "A simple, repeatable way to study Korean with K-dramas: one scene at a time, with Korean subtitles, shadowing and a phrase notebook, and how live classes fill in the grammar.",
     canonical: "https://kloversegy.com/learn-korean-kdramas",
   });
 

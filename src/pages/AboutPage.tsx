@@ -29,7 +29,15 @@ const TRUST_STATS = [
 ];
 
 const AboutPage = () => {
-  useSEO({ title: "About Us", description: "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years and more than 200 students.", canonical: "https://kloversegy.com/about" });
+  const { t, tArray, language } = useLanguage();
+  const isAr = language === "ar";
+  useSEO({
+    title: isAr ? "من نحن" : "About Us",
+    description: isAr
+      ? `أسّست كلوفرز ريهام الشرقاوي، خريجة الألسن قسم اللغة والأدب الكوري، وتدرّس الكورية منذ ${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا لأكثر من ${toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))} طالب.`
+      : "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years and more than 200 students.",
+    canonical: "https://kloversegy.com/about",
+  });
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -47,8 +55,6 @@ const AboutPage = () => {
     return () => { document.getElementById("about-schema")?.remove(); };
   }, []);
 
-  const { t, tArray, language } = useLanguage();
-  const isAr = language === "ar";
   // The experience list still comes from translations.ts, which carries a
   // "high student pass rates" bullet nothing measures. It renders as plain
   // TOPIK exam preparation instead - see withoutUnsupportedClaims.

@@ -13,6 +13,7 @@ import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent, logEngagementEvent } from "@/lib/leadTracking";
 import { track } from "@/lib/tracking";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useBottomSlot } from "@/lib/bottomLayer";
 
 const englishFaqs = [
   {
@@ -143,7 +144,11 @@ const ExitNudge = () => {
     trackAndOpenWhatsApp(url, { cta_label: "pricing_exit_intent" });
   };
 
-  if (!visible) return null;
+  // Claims the shared bottom layer (src/lib/bottomLayer.ts) so the sticky
+  // enrol bar steps aside while this card is up. Without it, on phones the
+  // card painted straight over the bar at bottom-0.
+  const allowed = useBottomSlot("exitNudge", visible);
+  if (!allowed) return null;
 
   // Non-blocking bottom sheet — the full-screen modal got 16 impressions
   // and 0 clicks because the blocker reflex ate the pitch before users
@@ -226,7 +231,15 @@ const PricingStory = () => {
 };
 
 const PricingPage = () => {
-  useSEO({ title: "Pricing & Plans", description: "Klovers prices are set by country. Group classes once a week: 1, 3 or 6 months (4, 12 or 24 classes). Private classes too.", canonical: "https://kloversegy.com/pricing" });
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  useSEO({
+    title: isAr ? "الأسعار والخطط" : "Pricing & Plans",
+    description: isAr
+      ? "أسعار كلوفرز تختلف حسب البلد. حصص جماعية مرة في الأسبوع لمدة شهر أو ٣ أو ٦ أشهر (٤ أو ١٢ أو ٢٤ حصة)، وحصص خاصة أيضًا."
+      : "Klovers prices are set by country. Group classes once a week: 1, 3 or 6 months (4, 12 or 24 classes). Private classes too.",
+    canonical: "https://kloversegy.com/pricing",
+  });
 
   // Viewing pricing is interest, not a conversion (23 Sep 2026): the row is
   // kept in lead_events and GA4 gets `pricing_viewed`, but no Lead fires.

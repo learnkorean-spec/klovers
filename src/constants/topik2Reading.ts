@@ -83,12 +83,12 @@ export const TOPIK2_SECTIONS: Topik2Section[] = [
     id: "D",
     gradeKo: "3급",
     titleKo: "읽기 1 — 3급",
-    titleEn: "Section 1 — TOPIK level 3 (3급)",
-    titleAr: "القسم الأول — المستوى الثالث (3급)",
+    titleEn: "Section 4 — TOPIK level 3 (3급)",
+    titleAr: "القسم الرابع — المستوى الثالث (3급)",
     instrEn:
       "Everyday texts: a notice, an advert, a short paragraph. Read for what the text is for, not only for the words in it.",
     instrAr:
-      "نصوص من الحياة اليومية: إعلان، لافتة، فقرة قصيرة. اقرأ عشان تفهم النص عايز يقول إيه، مش عشان تترجم الكلمات.",
+      "نصوص من الحياة اليومية: إعلان، ولافتة، وفقرة قصيرة. الغرض من القراءة فهم ما يريد النص قوله، لا ترجمة كلماته.",
     focusKo: "일상 표현 · 안내문 · 짧은 글의 중심 생각",
     max: 12,
   },
@@ -96,12 +96,12 @@ export const TOPIK2_SECTIONS: Topik2Section[] = [
     id: "E",
     gradeKo: "4급",
     titleKo: "읽기 2 — 4급",
-    titleEn: "Section 2 — TOPIK level 4 (4급)",
-    titleAr: "القسم الثاني — المستوى الرابع (4급)",
+    titleEn: "Section 5 — TOPIK level 4 (4급)",
+    titleAr: "القسم الخامس — المستوى الرابع (4급)",
     instrEn:
       "Longer texts on social and working life: a headline, an article, a passage with two questions on it.",
     instrAr:
-      "نصوص أطول عن المجتمع والشغل: عنوان خبر، مقال، ونص طويل عليه سؤالين.",
+      "نصوص أطول عن المجتمع والعمل: عنوان خبر، ومقال، ونص طويل يليه سؤالان.",
     focusKo: "신문 기사 제목 · 논설문 · 인물의 태도와 심정",
     max: 12,
   },
@@ -226,7 +226,7 @@ export const TOPIK2_QUESTIONS: Topik2Question[] = [
       "(다) 이제는 아침마다 자전거로 학교에 간다.\n" +
       "(라) 처음에는 넘어질까 봐 걱정이 많았다.",
     stem: "순서대로 맞게 나열한 것을 고르십시오.",
-    hintAr: "ابدأ بالجملة اللي مش محتاجة أي جملة قبلها.",
+    hintAr: "البداية بالجملة التي لا تحتاج إلى جملة قبلها.",
     options: ["(나)-(가)-(라)-(다)", "(나)-(라)-(가)-(다)", "(가)-(나)-(다)-(라)", "(가)-(라)-(나)-(다)"],
     answerIndex: 0,
   },

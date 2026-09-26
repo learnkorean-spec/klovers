@@ -33,6 +33,7 @@ import { track } from "@/lib/tracking";
 import { convertSlotToTimezone } from "@/lib/admin-utils";
 import { setUserTimezone } from "@/lib/viewerTimezone";
 import { RATING, STUDENTS_TAUGHT, TEACHING_YEARS_COUNT, toArabicDigits } from "@/lib/trustFigures";
+import { countryLabel } from "@/lib/countryNames";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -51,7 +52,6 @@ const durationClasses = DURATION_CLASSES;
 
 
 const EnrollNowPage = () => {
-  useSEO({ title: "Enroll Now | Klovers", description: "Join Klovers — choose your class type, schedule, and start speaking Korean with confidence.", canonical: "https://kloversegy.com/enroll-now" });
 
   useEffect(() => {
     const el = document.createElement("script");
@@ -88,6 +88,13 @@ const EnrollNowPage = () => {
   const [searchParams] = useSearchParams();
   const { t, tArray, language } = useLanguage();
   const isAr = language === "ar";
+  useSEO({
+    title: isAr ? "التسجيل في حصص الكورية" : "Enroll Now | Klovers",
+    description: isAr
+      ? "التسجيل في كلوفرز: اختيار نوع الحصة والجدول، ثم بدء التحدث بالكورية بثقة."
+      : "Join Klovers — choose your class type, schedule, and start speaking Korean with confidence.",
+    canonical: "https://kloversegy.com/enroll-now",
+  });
   const localDayNames: string[] = tArray("enrollNow", "dayNames").length === 7
     ? tArray("enrollNow", "dayNames") as string[]
     : DAY_NAMES;
@@ -500,7 +507,8 @@ const EnrollNowPage = () => {
       logLeadEvent({ source_type: "enroll", cta_label: "checkout", metadata: { value: finalPrice ?? 0, country: selectedCountry } });
       nav(`/pay/${enrollmentId}`);
     } catch (err: any) {
-      toast({ title: t("enrollToasts.orderError"), description: err.message, variant: "destructive" });
+      console.error("Egypt order failed:", err);
+      toast({ title: t("enrollToasts.orderError"), description: t("enrollToasts.genericError"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -533,7 +541,7 @@ const EnrollNowPage = () => {
       });
       if (error) {
         console.error("Lead submit failed:", error);
-        toast({ title: t("enrollToasts.leadCaptureFailed"), description: error.message, variant: "destructive" });
+        toast({ title: t("enrollToasts.leadCaptureFailed"), description: t("enrollToasts.genericError"), variant: "destructive" });
       }
     } catch (err) {
       console.error("Lead submit error:", err);
@@ -692,11 +700,15 @@ const EnrollNowPage = () => {
         window.location.href = data.url;
       }
     } catch (err: any) {
-      toast({ title: t("enrollToasts.checkoutError"), description: err.message, variant: "destructive" });
+      console.error("Checkout failed:", err);
+      toast({ title: t("enrollToasts.checkoutError"), description: t("enrollToasts.genericError"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
+
+  const levelLabelAr = selectedLevel ? getLevelByKey(normalizeLevel(selectedLevel))?.shortLabel_ar ?? "" : "";
+  const pillMessage = isAr ? "مرحبًا، لديّ سؤال قبل التسجيل في كلوفرز." : "Hi! I have a question before enrolling in Klovers.";
 
   const stepLabels = [t("enrollNow.choosePlan"), t("enrollNow.schedule"), t("enrollNow.payEnroll")];
 
@@ -733,7 +745,7 @@ const EnrollNowPage = () => {
           {/* Progress track */}
           <div className="relative h-1.5 bg-muted rounded-full mx-4 sm:mx-12">
             <div
-              className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-500"
+              className="absolute inset-y-0 start-0 bg-primary rounded-full transition-all duration-500"
               style={{ width: `${(Math.min(step - 1, 2) / 2) * 100}%` }}
             />
           </div>
@@ -786,7 +798,7 @@ const EnrollNowPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {allCountries.map(({ country }) => (
-                      <SelectItem key={country} value={country}>{country}</SelectItem>
+                      <SelectItem key={country} value={country}>{countryLabel(country, isAr)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -796,7 +808,7 @@ const EnrollNowPage = () => {
                 <>
                   <div className="bg-muted rounded-lg p-4">
                     <p className="text-sm text-muted-foreground mb-1">{t("enrollNow.pricingTier")}</p>
-                    <Badge>{tier.charAt(0).toUpperCase() + tier.slice(1)} Tier</Badge>
+                    <Badge>{isAr ? `الفئة ${({ local: "المحلية", regional: "الإقليمية", global: "العالمية" } as Record<string, string>)[tier] ?? tier}` : `${tier.charAt(0).toUpperCase() + tier.slice(1)} Tier`}</Badge>
                   </div>
 
                   <div className="space-y-2">
@@ -898,13 +910,15 @@ const EnrollNowPage = () => {
                     </div>
                     <a
                       href={`${WHATSAPP_BASE}?text=${encodeURIComponent(
-                        `Hi Klovers — I'd like a private ${selectedLevel || "Korean"} class. The current schedule has no private days available yet — can we arrange a time?`
+                        isAr
+                          ? `مرحبًا كلوفرز، أرغب في حصة خاصة${levelLabelAr ? ` في ${levelLabelAr}` : " في الكورية"}. لا تتوفر أيام للحصص الخاصة في الجدول الحالي، فهل يمكن ترتيب موعد مناسب؟`
+                          : `Hi Klovers — I'd like a private ${selectedLevel || "Korean"} class. The current schedule has no private days available yet — can we arrange a time?`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-md bg-klovers-green hover:bg-klovers-green/90 text-charcoal px-4 py-2 text-sm font-semibold transition-colors"
                     >
-                      Contact us on WhatsApp to arrange a private time
+                      {isAr ? "التواصل عبر واتساب لترتيب موعد خاص" : "Contact us on WhatsApp to arrange a private time"}
                     </a>
                   </div>
                 ) : levelSlots.length === 0 ? (
@@ -930,13 +944,15 @@ const EnrollNowPage = () => {
                     </div>
                     <a
                       href={`${WHATSAPP_BASE}?text=${encodeURIComponent(
-                        `Hi Klovers — I'd like to request a ${selectedLevel || "Korean"} class${preferredDays.length ? ` on ${preferredDays.join(", ")}` : ""}. The current schedule doesn't have this yet.`
+                        isAr
+                          ? `مرحبًا كلوفرز، أرغب في طلب حصة${levelLabelAr ? ` في ${levelLabelAr}` : " في الكورية"}${preferredDays.length ? ` في أيام: ${preferredDays.map((d) => localDayNames[DAY_NAMES.indexOf(d)] ?? d).join("، ")}` : ""}. هذا الموعد غير متوفر في الجدول الحالي.`
+                          : `Hi Klovers — I'd like to request a ${selectedLevel || "Korean"} class${preferredDays.length ? ` on ${preferredDays.join(", ")}` : ""}. The current schedule doesn't have this yet.`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-md bg-klovers-green hover:bg-klovers-green/90 text-charcoal px-4 py-2 text-sm font-semibold transition-colors"
                     >
-                      Or contact us on WhatsApp to find a suitable time
+                      {isAr ? "أو التواصل عبر واتساب لإيجاد موعد مناسب" : "Or contact us on WhatsApp to find a suitable time"}
                     </a>
                   </div>
                 ) : (
@@ -1001,7 +1017,7 @@ const EnrollNowPage = () => {
                 <div>
                   <h1 className="text-2xl font-semibold leading-none tracking-tight">{t("enrollNow.reviewPay")}</h1>
                   <p className="text-muted-foreground text-sm">
-                    {classType === "group" ? t("enrollNow.group") : t("enrollNow.private")} · {selectedCountry}
+                    {classType === "group" ? t("enrollNow.group") : t("enrollNow.private")} · {countryLabel(selectedCountry, isAr)}
                   </p>
                 </div>
               </div>
@@ -1256,14 +1272,14 @@ const EnrollNowPage = () => {
 
       {/* Sticky WhatsApp help pill — shown during checkout */}
       <a
-        href={`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I have a question before enrolling in Klovers.")}`}
-        onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent("Hi! I have a question before enrolling in Klovers.")}`, { cta_label: "enroll_questions_pill" }); }}
+        href={`${WHATSAPP_BASE}?text=${encodeURIComponent(pillMessage)}`}
+        onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(pillMessage)}`, { cta_label: "enroll_questions_pill" }); }}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-klovers-green text-charcoal text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg hover:bg-klovers-green/90 transition-colors"
-        aria-label="Chat on WhatsApp"
+        aria-label={isAr ? "المحادثة عبر واتساب" : "Chat on WhatsApp"}
       >
-        Questions?
+        {isAr ? "أسئلة؟" : "Questions?"}
       </a>
     </div>
   );

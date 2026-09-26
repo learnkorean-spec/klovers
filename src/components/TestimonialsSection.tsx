@@ -1,4 +1,4 @@
-import { Facebook, ThumbsUp } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FACEBOOK_RECOMMENDATIONS, toArabicDigits } from "@/lib/trustFigures";
 
@@ -194,7 +194,7 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
             {/* What Facebook shows beside the name. Not a rating — see the
                 block comment at the top of this file. */}
             <div className="flex items-center gap-1.5 mt-0.5">
-              <ThumbsUp className="h-3.5 w-3.5 text-foreground/70 shrink-0" aria-hidden="true" />
+              <KloverIcon name="game-klobi-thumbsup" className="h-4 w-4" />
               <span className="text-xs font-semibold text-foreground/80">
                 {isAr ? "توصية" : "Recommends"}
               </span>
@@ -206,7 +206,10 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
                 reviews). `duration` and `level` stay in the data, unrendered. */}
           </div>
         </div>
-        <Facebook className="h-4 w-4 text-foreground/40 flex-shrink-0 mt-0.5" />
+        {/* Source as a word, not a third-party logo (brand guard). */}
+        <span className="text-[11px] font-semibold text-muted-foreground flex-shrink-0 mt-0.5">
+          {isAr ? "فيسبوك" : "Facebook"}
+        </span>
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{noEmoji(review.text)}</p>
     </div>
@@ -260,7 +263,7 @@ const TestimonialsSection = () => {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 bg-klovers-yellow border border-charcoal/10 rounded-full px-4 py-1.5 mb-5 hover:bg-klovers-yellow/80 transition-colors"
         >
-          <Facebook className="h-4 w-4 text-charcoal" />
+          <KloverIcon name="game-chat-smile" className="h-5 w-5" />
           <span className="text-sm font-semibold text-charcoal">
             {isAr ? "المراجعات على فيسبوك" : "Reviews on Facebook"}
           </span>
@@ -295,7 +298,7 @@ const TestimonialsSection = () => {
             platform's number moves. `ratingSuffix` and `badge` are left in
             translations.ts, unused. */}
         <div className="flex items-center justify-center gap-2 mt-4">
-          <ThumbsUp className="h-5 w-5 text-foreground/70 shrink-0" aria-hidden="true" />
+          <KloverIcon name="game-klobi-thumbsup" className="h-6 w-6" />
           <span className="text-lg font-bold text-foreground">
             {isAr ? "١٠٠٪ يوصون بها" : "100% recommend"}
           </span>

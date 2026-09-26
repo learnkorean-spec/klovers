@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MessageCircle, ClipboardCheck, ShieldCheck } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
@@ -166,7 +166,7 @@ const FinalCTA = () => {
 
                 <div className="flex flex-wrap items-center justify-center gap-x-6 md:justify-start">
                   <Link to="/placement-test" className={QUIET_LINK}>
-                    <ClipboardCheck className="h-4 w-4" />
+                    <KloverIcon name="game-topik-sheet" className="h-5 w-5" />
                     {isAr ? "أو تحديد المستوى مجانًا" : "or take the free placement test"}
                   </Link>
                   <a
@@ -191,7 +191,7 @@ const FinalCTA = () => {
 
         <div className={`mx-auto mt-8 grid max-w-4xl gap-4 md:grid-cols-2 ${reveal("delay-300")}`}>
           <div className="flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory px-5 py-4 text-start">
-            <ShieldCheck className="h-8 w-8 shrink-0 text-charcoal" aria-hidden="true" />
+            <KloverIcon name="calendar-check" className="h-9 w-9 shrink-0" />
             <div>
               <p className="text-sm font-extrabold leading-tight text-charcoal">
                 {isAr ? "أول حصة مجانية" : "Your first class is free"}

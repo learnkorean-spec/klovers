@@ -29,9 +29,15 @@ const FAQSchemaScript = ({ schema }: { schema: object }) => {
 };
 
 const FAQPage = () => {
-  useSEO({ title: "FAQ", description: "Got questions about learning Korean with Klovers? Find answers about courses, the teacher, scheduling, and payments.", canonical: "https://kloversegy.com/faq" });
   const { t, tArray, language } = useLanguage();
   const isAr = language === "ar";
+  useSEO({
+    title: isAr ? "الأسئلة الشائعة" : "FAQ",
+    description: isAr
+      ? "إجابات عن تعلّم الكورية مع كلوفرز: الدورات، والمعلّمة، والمواعيد، وطرق الدفع."
+      : "Got questions about learning Korean with Klovers? Find answers about courses, the teacher, scheduling, and payments.",
+    canonical: "https://kloversegy.com/faq",
+  });
   const faqs = tArray("faqPage", "items") as { question: string; answer: string; category?: string }[];
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -164,10 +170,10 @@ const FAQPage = () => {
                 <Accordion type="single" collapsible className="w-full">
                   {filteredFaqs.map((faq, index) => (
                     <AccordionItem key={index} value={`item-${index}`}>
-                      <AccordionTrigger className="text-left text-foreground hover:text-foreground/80">
+                      <AccordionTrigger className="gap-3 text-start text-foreground hover:text-foreground/80">
                         {faq.question}
                       </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
+                      <AccordionContent className="text-start text-muted-foreground">
                         {faq.answer}
                       </AccordionContent>
                     </AccordionItem>
@@ -196,13 +202,13 @@ const FAQPage = () => {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button variant="outline" asChild>
                   <a href={isAr ? FAQ_WA_AR : FAQ_WA_EN} onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(isAr ? FAQ_WA_AR : FAQ_WA_EN, { cta_label: "faq_contact" }); }} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="mr-2 h-4 w-4" />
+                    <MessageCircle className="me-2 h-4 w-4" aria-hidden="true" />
                     {isAr ? "واتساب" : "WhatsApp"}
                   </a>
                 </Button>
                 <Button variant="outline" asChild>
                   <a href="https://t.me/+Fu5T7d4wLMsxNDY9" target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="mr-2 h-4 w-4" />
+                    <MessageCircle className="me-2 h-4 w-4" aria-hidden="true" />
                     {isAr ? "تيليجرام" : "Telegram"}
                   </a>
                 </Button>

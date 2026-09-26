@@ -90,8 +90,10 @@ const HangulStarterPage = () => {
   const tr = (en: string, ar: string) => (isAr ? ar : en);
 
   useSEO({
-    title: "Free Hangul Starter Sheet — Korean Alphabet | Klovers",
-    description: "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide — explained simply. Printable.",
+    title: isAr ? "ورقة الهانغول المجانية: الأبجدية الكورية" : "Free Hangul Starter Sheet — Korean Alphabet | Klovers",
+    description: isAr
+      ? "تعلُّم الأبجدية الكورية (الهانغول) مجانًا: الحروف الساكنة والمتحركة كاملة مع دليل للنطق بشرح مبسّط، وقابلة للطباعة."
+      : "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide — explained simply. Printable.",
     canonical: "https://kloversegy.com/hangul-starter",
   });
 

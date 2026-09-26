@@ -35,17 +35,18 @@ import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
  * (green, blue, orange, red, purple, and three more I added) belonged to no
  * design system on this site.
  *
- * The ladder is deliberate: pale yellow at Hangul, full neon at Level 3,
- * black at Level 6, so the colour itself says the level is rising. The two
- * special tracks are grey because they sit outside that ladder.
+ * The ladder: ivory at Hangul, Klovers yellow for Levels 1-3, charcoal
+ * darkening through Levels 4-6. The two special tracks are grey because they
+ * sit outside that ladder. 27 Sep 2026 (brand guard): the three hand-mixed
+ * pale yellows (hsl 60 100% 85/75/62%) were outside the palette and are gone.
  *
  * Written as literal class strings — Tailwind's scanner only sees classes that
  * appear verbatim in the source, so these must never be built by concatenation.
  */
 const CARD_ACCENT: Record<string, string> = {
-  hangul: "bg-[hsl(60_100%_85%)]",
-  l1: "bg-[hsl(60_100%_75%)]",
-  l2: "bg-[hsl(60_100%_62%)]",
+  hangul: "bg-ivory",
+  l1: "bg-primary",
+  l2: "bg-primary",
   l3: "bg-primary",
   l4: "bg-foreground/50",
   l5: "bg-foreground/75",

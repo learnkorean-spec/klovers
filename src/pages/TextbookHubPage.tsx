@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BookOpen, Sun, Sparkles, Clapperboard, Brain, ImageIcon } from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -15,10 +15,10 @@ const BOOKS = [
     titleEn: "Korean Textbook",
     titleAr: "كتاب الكورية",
     subtitleEn: "TOPIK 1 & 2 · 75+ Lessons",
-    subtitleAr: "توبيك ١ و ٢ · ٧٥+ درس",
+    subtitleAr: "TOPIK ١ و٢ · أكثر من ٧٥ درسًا",
     descEn: "Master Korean from Hangul to advanced grammar through worlds and missions.",
     descAr: "إتقان الكورية من الهانغول إلى القواعد المتقدمة عبر العوالم والمهام.",
-    icon: BookOpen,
+    icon: "books-stack" as KloverIconName,
     image: "/assets/story/world-hangul-village.webp",
     altEn: "Painted Hangul Village, the first world of the Klovers story",
     altAr: "قرية الهانغول المرسومة، أول عالم في قصة كلوفرز",
@@ -31,7 +31,7 @@ const BOOKS = [
     subtitleAr: "٣٢ فئة حياتية يومية",
     descEn: "Learn Korean through everyday actions — sleeping, cooking, cleaning & more.",
     descAr: "تعلُّم الكورية من خلال الأفعال اليومية: النوم والطبخ والتنظيف وغيرها.",
-    icon: Sun,
+    icon: "calendar-check" as KloverIconName,
     image: "/assets/story/world-conversation-cafe.webp",
     altEn: "A cosy painted Korean café where everyday conversations happen",
     altAr: "مقهى كوري دافئ مرسوم تدور فيه محادثات الحياة اليومية",
@@ -44,7 +44,7 @@ const BOOKS = [
     subtitleAr: "٣٠ درسًا من الدراما الكورية",
     descEn: "Learn Korean through iconic K-Drama dialogues, slang, and cultural context.",
     descAr: "تعلُّم الكورية من خلال حوارات الدراما الشهيرة، والتعابير العامية، والسياق الثقافي.",
-    icon: Clapperboard,
+    icon: "chat-annyeong" as KloverIconName,
     image: "/assets/story/world-culture-street.webp",
     altEn: "A lively painted Korean culture street at dusk",
     altAr: "شارع ثقافي كوري نابض بالحياة عند الغروب",
@@ -54,10 +54,10 @@ const BOOKS = [
     titleEn: "Grammar Mastery",
     titleAr: "إتقان القواعد",
     subtitleEn: "57 Pattern-Focused Lessons · All 6 Levels",
-    subtitleAr: "٥٧ درسًا على الأنماط · جميع المستويات الست",
+    subtitleAr: "٥٧ درسًا على الأنماط · جميع المستويات الستة",
     descEn: "Deep-dive every Korean grammar pattern from basic particles to classical literary style.",
     descAr: "دراسة معمّقة لكل نمط قواعدي كوري، من الأدوات الأساسية إلى الأسلوب الأدبي الكلاسيكي.",
-    icon: Brain,
+    icon: "lightbulb-sprout" as KloverIconName,
     image: "/assets/story/world-seoul-journey.webp",
     altEn: "A painted journey across Seoul, from old gates to city lights",
     altAr: "رحلة مرسومة عبر سيول من البوابات القديمة إلى أضواء المدينة",
@@ -71,7 +71,7 @@ const BOOKS = [
     subtitleAr: "١٥ درساً بالصور",
     descEn: "Learn Korean vocabulary through beautiful illustrated scenes — bedroom, café, park and more.",
     descAr: "تعلُّم المفردات الكورية من خلال مشاهد مصوّرة: غرفة النوم والمقهى والحديقة وغيرها.",
-    icon: ImageIcon,
+    icon: "flashcard-ga" as KloverIconName,
     image: "/assets/story/world-vocabulary-market.webp",
     altEn: "A colourful painted Korean market full of things to name",
     altAr: "سوق كوري ملوّن مرسوم مليء بالأشياء التي نتعلم أسماءها",
@@ -82,9 +82,15 @@ const BOOKS = [
 const FALLBACK_IMAGE = "/assets/story/world-memory-garden.webp";
 
 const TextbookHubPage = () => {
-  useSEO({ title: "Korean Textbooks", description: "Learn Korean with Klovers interactive digital textbooks. Vocabulary flashcards, grammar, dialogues, exercises and reading passages.", canonical: "https://kloversegy.com/textbook" });
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const isAr = language === "ar";
+  useSEO({
+    title: isAr ? "مكتبة كتب الكورية" : "Korean Textbooks",
+    description: isAr
+      ? "كتب رقمية تفاعلية لتعلُّم الكورية: بطاقات مفردات، وقواعد، وحوارات، وتمارين، ونصوص للقراءة."
+      : "Learn Korean with Klovers interactive digital textbooks. Vocabulary flashcards, grammar, dialogues, exercises and reading passages.",
+    canonical: "https://kloversegy.com/textbook",
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,7 +100,7 @@ const TextbookHubPage = () => {
           <div className="grid items-center gap-8 md:grid-cols-2">
             <div className="text-center md:text-start">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-klovers-yellow text-charcoal text-sm font-bold mb-6 border border-foreground/15">
-                <Sparkles className="h-4 w-4" />
+                <KloverIcon name="klobi-reading" className="h-5 w-5" />
                 {isAr ? "مكتبة الكتب" : "Book Library"}
               </div>
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -127,7 +133,6 @@ const TextbookHubPage = () => {
         <section className="container mx-auto px-4 max-w-4xl">
           <div className="grid gap-6 sm:grid-cols-2">
             {BOOKS.map((book) => {
-              const Icon = book.icon;
               const hasBadge = "badge" in book && book.badge;
               return (
                 <Link
@@ -147,11 +152,11 @@ const TextbookHubPage = () => {
                     />
                     {hasBadge && (
                       <span className="absolute top-3 end-3 text-xs font-bold px-2.5 py-0.5 rounded-full bg-charcoal text-klovers-yellow">
-                        {(book as { badge?: string }).badge}
+                        {isAr ? "جديد" : "NEW"}
                       </span>
                     )}
                     <span className="absolute bottom-3 start-3 flex h-10 w-10 items-center justify-center rounded-full bg-klovers-yellow border-2 border-charcoal shadow-md">
-                      <Icon className="h-5 w-5 text-charcoal" />
+                      <KloverIcon name={book.icon} className="h-6 w-6" />
                     </span>
                   </div>
                   <div className="p-6">

@@ -298,7 +298,15 @@ export interface PlacementCardData {
   tagline: string;
   score: number;
   total: number;
+  /** Language of every word drawn on the card. Defaults to English. */
+  lang?: PostLang;
 }
+
+const AR_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+const placementDigits = (v: string | number, lang: PostLang): string =>
+  lang === "ar" ? String(v).replace(/[0-9]/g, (d) => AR_DIGITS[Number(d)]) : String(v);
+const placementFont = (lang: PostLang, spec: string): string =>
+  `${spec} ${lang === "ar" ? FONT_AR : "system-ui, -apple-system, sans-serif"}`;
 
 /**
  * Draws a 1080×1080 branded result card onto the provided canvas.
@@ -309,6 +317,9 @@ export function drawPlacementCard(canvas: HTMLCanvasElement, data: PlacementCard
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
+  const lang: PostLang = data.lang ?? "en";
+  const ar = lang === "ar";
+  if (ar) ctx.direction = "rtl";
 
   // Background
   ctx.fillStyle = "#EBC82E";
@@ -339,13 +350,13 @@ export function drawPlacementCard(canvas: HTMLCanvasElement, data: PlacementCard
 
   // Brand name (top-right area)
   ctx.fillStyle = "#1a1a1a";
-  ctx.font = "bold 38px system-ui, -apple-system, sans-serif";
+  ctx.font = placementFont(lang, "bold 38px");
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
-  ctx.fillText("KLOVERS", W - 100, 120);
-  ctx.font = "24px system-ui, -apple-system, sans-serif";
+  ctx.fillText(ar ? AR_TEXT.brandShort : "KLOVERS", W - 100, 120);
+  ctx.font = placementFont(lang, "24px");
   ctx.fillStyle = "#333333";
-  ctx.fillText("Korean Academy", W - 100, 162);
+  ctx.fillText(ar ? "أكاديمية اللغة الكورية" : "Korean Academy", W - 100, 162);
 
   // Emoji (large, centered)
   ctx.font = "160px serif";
@@ -358,14 +369,14 @@ export function drawPlacementCard(canvas: HTMLCanvasElement, data: PlacementCard
   rRect(ctx, 180, 490, W - 360, 90, 45);
   ctx.fill();
   ctx.fillStyle = "#EBC82E";
-  ctx.font = "bold 38px system-ui, -apple-system, sans-serif";
+  ctx.font = placementFont(lang, "bold 38px");
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(data.levelLabel, W / 2, 535);
 
   // Tagline
   ctx.fillStyle = "#444444";
-  ctx.font = "32px system-ui, -apple-system, sans-serif";
+  ctx.font = placementFont(lang, "32px");
   ctx.textBaseline = "top";
   ctx.fillText(data.tagline, W / 2, 610);
 
@@ -376,10 +387,10 @@ export function drawPlacementCard(canvas: HTMLCanvasElement, data: PlacementCard
   ctx.fillStyle = "#1a1a1a";
   ctx.font = "bold 52px system-ui, -apple-system, sans-serif";
   ctx.textBaseline = "middle";
-  ctx.fillText(`${data.score} / ${data.total}`, W / 2, 725);
-  ctx.font = "26px system-ui, -apple-system, sans-serif";
+  ctx.fillText(placementDigits(`${data.score} / ${data.total}`, lang), W / 2, 725);
+  ctx.font = placementFont(lang, "26px");
   ctx.fillStyle = "#888";
-  ctx.fillText("TOPIK-aligned score", W / 2, 800);
+  ctx.fillText(ar ? "درجة اختبار تحديد المستوى" : "Placement test score", W / 2, 800);
 
   // Divider
   ctx.strokeStyle = "#e5e5e5";
@@ -404,6 +415,8 @@ export interface PlacementCertificateData {
   score: number;
   total: number;
   date: string;
+  /** Language of every word drawn on the certificate. Defaults to English. */
+  lang?: PostLang;
 }
 
 /**
@@ -414,6 +427,9 @@ export function drawPlacementCertificate(canvas: HTMLCanvasElement, data: Placem
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
+  const lang: PostLang = data.lang ?? "en";
+  const ar = lang === "ar";
+  if (ar) ctx.direction = "rtl";
 
   // White background
   ctx.fillStyle = "#ffffff";
@@ -448,25 +464,25 @@ export function drawPlacementCertificate(canvas: HTMLCanvasElement, data: Placem
 
   // Brand name (header)
   ctx.fillStyle = "#1a1a1a";
-  ctx.font = "bold 32px system-ui, -apple-system, sans-serif";
-  ctx.textAlign = "left";
+  ctx.font = placementFont(lang, "bold 32px");
+  ctx.textAlign = ar ? "right" : "left";
   ctx.textBaseline = "middle";
-  ctx.fillText("KLOVERS KOREAN ACADEMY", 144, 50);
+  ctx.fillText(ar ? AR_TEXT.brandName : "KLOVERS KOREAN ACADEMY", ar ? W - 50 : 144, 50);
   ctx.font = "20px system-ui, -apple-system, sans-serif";
   ctx.fillStyle = "#333333";
-  ctx.fillText("kloversegy.com", 144, 84);
+  ctx.fillText("kloversegy.com", ar ? W - 50 : 144, 84);
 
   // "Certificate of Language Assessment" title
   ctx.fillStyle = "#1a1a1a";
-  ctx.font = "bold 48px system-ui, -apple-system, sans-serif";
+  ctx.font = placementFont(lang, "bold 48px");
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  ctx.fillText("Certificate of Language Assessment", W / 2, 154);
+  ctx.fillText(ar ? "شهادة تقييم المستوى في اللغة الكورية" : "Certificate of Language Assessment", W / 2, 154);
 
   // Subtitle line
   ctx.fillStyle = "#888888";
-  ctx.font = "24px system-ui, -apple-system, sans-serif";
-  ctx.fillText("TOPIK-Aligned · 30-Question Assessment", W / 2, 218);
+  ctx.font = placementFont(lang, "24px");
+  ctx.fillText(ar ? "اختبار تحديد المستوى · أسئلة قراءة بصيغ امتحان TOPIK" : "Placement test · Reading questions in TOPIK formats", W / 2, 218);
 
   // Horizontal divider
   ctx.strokeStyle = "#EBC82E";
@@ -487,14 +503,14 @@ export function drawPlacementCertificate(canvas: HTMLCanvasElement, data: Placem
   rRect(ctx, W / 2 - 260, 462, 520, 80, 40);
   ctx.fill();
   ctx.fillStyle = "#EBC82E";
-  ctx.font = "bold 34px system-ui, -apple-system, sans-serif";
+  ctx.font = placementFont(lang, "bold 34px");
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(data.levelLabel, W / 2, 502);
 
   // Tagline
   ctx.fillStyle = "#555555";
-  ctx.font = "26px system-ui, -apple-system, sans-serif";
+  ctx.font = placementFont(lang, "26px");
   ctx.textBaseline = "top";
   ctx.fillText(data.tagline, W / 2, 562);
 
@@ -510,17 +526,17 @@ export function drawPlacementCertificate(canvas: HTMLCanvasElement, data: Placem
   ctx.font = "bold 44px system-ui, -apple-system, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(`${data.score} / ${data.total}`, W - 150, 622);
-  ctx.font = "18px system-ui, -apple-system, sans-serif";
+  ctx.fillText(placementDigits(`${data.score} / ${data.total}`, lang), W - 150, 622);
+  ctx.font = placementFont(lang, "18px");
   ctx.fillStyle = "#888";
-  ctx.fillText("Score", W - 150, 664);
+  ctx.fillText(ar ? "الدرجة" : "Score", W - 150, 664);
 
   // Date (bottom-left)
   ctx.fillStyle = "#888888";
-  ctx.font = "22px system-ui, -apple-system, sans-serif";
+  ctx.font = placementFont(lang, "22px");
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.fillText(data.date, 50, 630);
+  ctx.fillText(placementDigits(data.date, lang), 50, 630);
 
   // Footer URL
   ctx.fillStyle = "#1a1a1a";

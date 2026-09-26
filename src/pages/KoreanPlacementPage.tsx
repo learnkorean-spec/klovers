@@ -19,6 +19,7 @@ import { track } from "@/lib/tracking";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { toArabicDigits } from "@/lib/trustFigures";
 import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
 import type { BrandIconName } from "@/lib/dashboardProgress";
 import {
@@ -217,7 +218,13 @@ const KoreanPlacementPage = () => {
   const isAr = language === "ar";
   const { toast } = useToast();
 
-  useSEO({ title: "Korean Placement Test", description: "Take the free Klovers Korean placement test. Discover your TOPIK level and find the perfect course for your learning journey.", canonical: "https://kloversegy.com/placement-test" });
+  useSEO({
+    title: isAr ? "اختبار تحديد المستوى في اللغة الكورية" : "Korean Placement Test",
+    description: isAr
+      ? "اختبار مجاني لتحديد المستوى في اللغة الكورية من كلوفرز: أسئلة قراءة بصيغ امتحان TOPIK تحدّد المستوى من تأسيس الهانغول حتى المستوى الرابع، مع ترشيح الدورة المناسبة."
+      : "Take the free Klovers Korean placement test. Discover your TOPIK level and find the perfect course for your learning journey.",
+    canonical: "https://kloversegy.com/placement-test",
+  });
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [step, setStep] = useState(0);
@@ -621,8 +628,9 @@ const KoreanPlacementPage = () => {
   // ---- result-screen actions (funnel-critical literals) --------------------
   const handleShare = (res: ExamResult) => {
     const info = TOPIK_GRADES[res.grade];
-    const label = isAr ? info.labelAr : info.labelEn;
-    const text = `I took the Klovers Korean Placement Test!\nMy level: ${label}\nFind yours → ${SITE_URL}/placement-test`;
+    const text = isAr
+      ? `أُنجز اختبار تحديد المستوى في اللغة الكورية من كلوفرز.\nالمستوى: ${info.labelAr}\nالاختبار متاح مجانًا: ${SITE_URL}/placement-test`
+      : `I took the Klovers Korean Placement Test!\nMy level: ${info.labelEn}\nFind yours → ${SITE_URL}/placement-test`;
     navigator.clipboard.writeText(text)
       .then(() => toast({ title: isAr ? "تم النسخ!" : "Copied to clipboard!", description: isAr ? "أصبحت مشاركة المستوى مع الأصدقاء متاحة." : "Share your level with friends." }))
       .catch(() => toast({ title: `${SITE_URL}/placement-test`, description: isAr ? "يمكن نسخ الرابط لمشاركة النتيجة." : "Copy the link to share your result." }));
@@ -630,7 +638,9 @@ const KoreanPlacementPage = () => {
 
   const handleWhatsAppEnroll = (res: ExamResult) => {
     const info = TOPIK_GRADES[res.grade];
-    const text = encodeURIComponent(`مرحباً! أنهيت اختبار تحديد المستوى ومستواي: ${info.labelAr}. هل يمكنني الحجز؟`);
+    const text = encodeURIComponent(isAr
+      ? `مرحبًا، أُنجز اختبار تحديد المستوى والنتيجة: ${info.labelAr}. ما خطوات الحجز؟`
+      : `Hello! I finished the placement test and my level is: ${info.labelEn}. Can I book a place?`);
     trackAndOpenWhatsApp(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, { cta_label: "placement_enroll", metadata: { level: info.levelKey, score: res.score } });
   };
 
@@ -640,10 +650,11 @@ const KoreanPlacementPage = () => {
     const canvas = document.createElement("canvas");
     drawPlacementCard(canvas, {
       levelEmoji: meta.emoji,
-      levelLabel: `${info.labelKo} — ${info.labelEn}`,
-      tagline: meta.tagline,
+      levelLabel: isAr ? info.labelKo : `${info.labelKo} — ${info.labelEn}`,
+      tagline: isAr ? info.labelAr : meta.tagline,
       score: res.score,
       total: res.max,
+      lang: isAr ? "ar" : "en",
     });
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
@@ -658,17 +669,18 @@ const KoreanPlacementPage = () => {
     const canvas = document.createElement("canvas");
     drawPlacementCertificate(canvas, {
       levelEmoji: meta.emoji,
-      levelLabel: `${info.labelKo} — ${info.labelEn}`,
-      tagline: meta.tagline,
+      levelLabel: isAr ? info.labelKo : `${info.labelKo} — ${info.labelEn}`,
+      tagline: isAr ? info.labelAr : meta.tagline,
       score: res.score,
       total: res.max,
-      date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
+      date: new Date().toLocaleDateString(isAr ? "ar-EG" : "en-GB", { day: "numeric", month: "long", year: "numeric" }),
+      lang: isAr ? "ar" : "en",
     });
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
     a.download = `klovers-certificate-${res.grade}.png`;
     a.click();
-    toast({ title: isAr ? "تم تحميل الشهادة!" : "Certificate downloaded!", description: isAr ? "يمكن مشاركة الإنجاز على LinkedIn أو في السيرة الذاتية." : "Share your achievement on LinkedIn or CV." });
+    toast({ title: isAr ? "تم تحميل الشهادة!" : "Certificate downloaded!", description: isAr ? "يمكن مشاركة الإنجاز على لينكدإن أو في السيرة الذاتية." : "Share your achievement on LinkedIn or CV." });
   };
 
   const handleLeadSubmit = async () => {
@@ -855,7 +867,7 @@ const KoreanPlacementPage = () => {
                   </div>
 
                   <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">
-                    {t("ما مستواك في اللغة الكورية؟", "Find your Korean level")}
+                    {t("تحديد المستوى في اللغة الكورية", "Find your Korean level")}
                   </h1>
 
                   {/* World mode: the test is the gate of Hangul Village. */}
@@ -992,7 +1004,7 @@ const KoreanPlacementPage = () => {
               </p>
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 text-center space-y-2">
                 <BrandIcon name={GRADE_ICON[result.grade]} className="h-12 w-12 mx-auto" eager />
-                <p className="text-sm text-muted-foreground">{t("مستواك", "Your level")}</p>
+                <p className="text-sm text-muted-foreground">{t("المستوى:", "Your level")}</p>
                 <p className="text-3xl font-bold" dir="ltr">{info.labelKo}</p>
                 <p className="text-sm font-medium">{isAr ? info.labelAr : info.labelEn}</p>
                 <p className="text-sm text-muted-foreground">{isAr ? info.noteAr : info.noteEn}</p>
@@ -1008,13 +1020,13 @@ const KoreanPlacementPage = () => {
                       told they got wrong a question they never saw. */}
                   <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm mb-1.5">
                     <span className="font-semibold">{t("المجموع", "Total")}</span>
-                    <Badge dir="ltr">{result.score} / {result.attempted}</Badge>
+                    <Badge dir="ltr">{isAr ? toArabicDigits(`${result.score} / ${result.attempted}`) : `${result.score} / ${result.attempted}`}</Badge>
                   </div>
                   <div className="space-y-1.5">
                     {seenSections.map((s) => (
                       <div key={s.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
                         <span>{isAr ? s.titleAr : s.titleEn}</span>
-                        <Badge variant="secondary" dir="ltr">{result.sectionScores[s.id] ?? 0} / {s.max}</Badge>
+                        <Badge variant="secondary" dir="ltr">{isAr ? toArabicDigits(`${result.sectionScores[s.id] ?? 0} / ${s.max}`) : `${result.sectionScores[s.id] ?? 0} / ${s.max}`}</Badge>
                       </div>
                     ))}
                   </div>
@@ -1253,12 +1265,12 @@ const KoreanPlacementPage = () => {
           <div className="flex items-center justify-between text-sm">
             <span className="font-semibold">{t("اختبار تحديد المستوى", "Korean Placement Test")}</span>
             <span className="text-muted-foreground">
-              {t(`القسم ${step + 1} من ${totalSteps}`, `Section ${step + 1} of ${totalSteps}`)}
+              {t(`القسم ${toArabicDigits(step + 1)} من ${toArabicDigits(totalSteps)}`, `Section ${step + 1} of ${totalSteps}`)}
             </span>
           </div>
           <Progress value={sectionQuestions.length ? (answeredHere / sectionQuestions.length) * 100 : 0} />
           <p className="text-xs text-muted-foreground">
-            {t(`أُجيب عن ${answeredHere} من ${sectionQuestions.length} في هذا القسم`,
+            {t(`أُجيب عن ${toArabicDigits(answeredHere)} من ${toArabicDigits(sectionQuestions.length)} في هذا القسم`,
                `${answeredHere} of ${sectionQuestions.length} answered in this section`)}
           </p>
         </div>
@@ -1275,7 +1287,7 @@ const KoreanPlacementPage = () => {
 
             {step === 0 && (
               <p className="text-sm">
-                {t("الإجابة عمّا يمكن الإجابة عنه. لا يوقف أي قسم الاختبار، وبدءًا من القسم الثالث يعود قرار المتابعة أو التوقف إليك.",
+                {t("الإجابة عمّا يمكن الإجابة عنه. لا يوقف أي قسم الاختبار، وبدءًا من القسم الثالث يصبح قرار المتابعة أو التوقف اختياريًا.",
                    "Answer what you can. No section stops the test — and from the third section onward it is you who decides whether to carry on.")}
               </p>
             )}

@@ -79,9 +79,10 @@ const LearnKoreanArabicSpeakersPage = () => {
   const tr = (en: string, ar: string) => (isAr ? ar : en);
 
   useSEO({
-    title: "Learn Korean as an Arabic Speaker",
-    description:
-      "Learning Korean from Arabic: what Arabic already gives you, what is new, and the Klovers path from Hangul to Level 6 with a teacher who explains in Arabic.",
+    title: isAr ? "تعلُّم الكورية للناطقين بالعربية" : "Learn Korean as an Arabic Speaker",
+    description: isAr
+      ? "تعلُّم الكورية انطلاقًا من العربية: ما تقدّمه العربية مسبقًا، وما الجديد، ومسار كلوفرز من الهانغول إلى المستوى السادس مع معلّمة تشرح بالعربية."
+      : "Learning Korean from Arabic: what Arabic already gives you, what is new, and the Klovers path from Hangul to Level 6 with a teacher who explains in Arabic.",
     canonical: "https://kloversegy.com/learn-korean-arabic-speakers",
   });
 

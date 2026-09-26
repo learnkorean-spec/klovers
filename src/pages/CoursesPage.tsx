@@ -11,10 +11,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { LEVELS } from "@/constants/levels";
 
 const CoursesPage = () => {
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
   useSEO({
-    title: "Korean Courses",
-    description:
-      "Klovers Korean courses: the Hangul alphabet in four classes, then Levels 1-6 preparing you toward TOPIK 1-6. Live classes with a teacher, in Arabic or English.",
+    title: isAr ? "دورات اللغة الكورية" : "Korean Courses",
+    description: isAr
+      ? "دورات كلوفرز الكورية: الحروف الكورية (الهانغول) في أربع حصص، ثم المستويات من ١ إلى ٦ تمهيدًا لاختبار TOPIK من ١ إلى ٦. حصص مباشرة مع المعلمة بالعربية أو الإنجليزية."
+      : "Klovers Korean courses: the Hangul alphabet in four classes, then Levels 1-6 preparing you toward TOPIK 1-6. Live classes with a teacher, in Arabic or English.",
     canonical: "https://kloversegy.com/courses",
   });
 
@@ -55,8 +58,6 @@ const CoursesPage = () => {
     return () => { document.getElementById("courses-schema")?.remove(); };
   }, []);
 
-  const { t, language } = useLanguage();
-  const isAr = language === "ar";
   const tr = (en: string, ar: string) => (isAr ? ar : en);
 
   // World mode + brand guard (27 Sep 2026): the week is told as three stops
