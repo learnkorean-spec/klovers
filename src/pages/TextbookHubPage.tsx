@@ -102,7 +102,7 @@ const TextbookHubPage = () => {
               </h1>
               <p className="text-muted-foreground max-w-xl mx-auto md:mx-0 text-lg">
                 {isAr
-                  ? "كل كتاب يفتح بابًا على عالم من قصة Klovers، ومن هناك تبدأ الرحلة."
+                  ? "كل كتاب يفتح بابًا على عالم من قصة كلوفرز، ومن هناك تبدأ الرحلة."
                   : "Each book opens a door into one world of the Klovers story. Pick one, and the journey starts there."}
               </p>
             </div>

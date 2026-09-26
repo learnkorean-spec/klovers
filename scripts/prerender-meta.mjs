@@ -730,7 +730,8 @@ const MARKETING_ROUTES = [
     description:
       "Learning Korean from Arabic: what Arabic already gives you, what is new, and the Klovers path from Hangul to Level 6 with a teacher who explains in Arabic.",
     body: ARABIC_SPEAKERS_BODY_HTML,
-    faq: MARKETING_FAQ["/learn-korean-arabic-speakers"],
+    // faq removed 27 Sep 2026: the page shows no FAQ section, and FAQPage
+    // markup must describe questions visitors can see.
     articleLd: true,
     published: "2026-04-08",
     modified: "2026-09-25",
@@ -741,7 +742,7 @@ const MARKETING_ROUTES = [
     description:
       "How the TOPIK Korean exam works: TOPIK I and II, sections, timing and the score needed for each level, plus the Klovers TOPIK track with past papers and writing practice.",
     body: TOPIK_BODY_HTML,
-    faq: MARKETING_FAQ["/topik-exam-preparation"],
+    // faq removed 27 Sep 2026 (no visible FAQ section).
     articleLd: true,
     published: "2026-04-08",
     modified: "2026-09-25",
@@ -752,7 +753,7 @@ const MARKETING_ROUTES = [
     description:
       "A simple, repeatable way to study Korean with K-dramas: one scene at a time, with Korean subtitles, shadowing and a phrase notebook, and how live classes fill in the grammar.",
     body: KDRAMAS_BODY_HTML,
-    faq: MARKETING_FAQ["/learn-korean-kdramas"],
+    // faq removed 27 Sep 2026 (no visible FAQ section).
     articleLd: true,
     published: "2026-04-08",
     modified: "2026-09-25",

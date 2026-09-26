@@ -31,17 +31,16 @@ export const ABOUT_BODY_HTML = `<div id="about-prerendered" lang="en" dir="ltr">
         <li><strong>13+</strong> Years Teaching</li>
         <li><strong>200+</strong> Students Taught</li>
         <li><strong>5.0</strong> from 7 Google reviews</li>
-        <li><strong>15+</strong> Countries</li>
-        <li><strong>A1–C2</strong> All Levels</li>
+        <li><strong>Hangul to Level 6</strong> Levels</li>
       </ul>
       <h2>Reham's Story</h2>
-      <p>Klovers was founded by Reham, a passionate Korean language educator who discovered her love for Korean through K-Drama and K-Pop. After years of studying and teaching Korean, she created Klovers to make Korean language education accessible, structured, and enjoyable for students worldwide. What started as small tutoring sessions has grown into a thriving community of 200+ students across 15+ countries.</p>
+      <p>Klovers was founded by Reham, a passionate Korean language educator who discovered her love for Korean through K-Drama and K-Pop. After years of studying and teaching Korean, she created Klovers to make Korean language education accessible, structured, and enjoyable for students worldwide. What started as small tutoring sessions has grown to 200+ students taught over 13 years.</p>
       <h2>Teaching Philosophy</h2>
       <p>At Klovers, we believe language learning should be interactive, structured, and fun. Our methodology focuses on practical conversation skills from day one, combined with solid grammar foundations. We use real-world content like K-Drama dialogues and K-Pop lyrics to make learning engaging and culturally enriching.</p>
       <h2>Experience &amp; Credentials</h2>
       <ul>
         <li>13+ years of Korean language teaching experience (2013 – Present)</li>
-        <li>200+ students taught across 15+ countries</li>
+        <li>200+ students taught over 13 years</li>
         <li>Specialized in making Korean accessible to all backgrounds</li>
         <li>TOPIK exam preparation</li>
         <li>Curriculum designed for all levels from Hangul to Advanced</li>
@@ -56,11 +55,11 @@ export const CONTACT_BODY_HTML = `<div id="contact-prerendered" lang="en" dir="l
       <h1>Contact Us</h1>
       <p>Have questions? We'd love to hear from you.</p>
       <h2>Chat on WhatsApp</h2>
-      <p>Fastest way to reach us — reply within minutes. <a href="https://wa.me/201010003084">wa.me/201010003084</a></p>
+      <p>The fastest way to reach us. <a href="https://wa.me/201010003084">wa.me/201010003084</a></p>
       <h2>Join our WhatsApp Community</h2>
       <p>Connect with students, get updates &amp; tips. <a href="https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq">Join the Klovers WhatsApp community</a></p>
       <h2>Or send us a message</h2>
-      <p>Send us your name, email, subject and message, then continue the conversation in our <a href="https://t.me/+Fu5T7d4wLMsxNDY9">Telegram group</a>.</p>
+      <p>Write your name, email, subject and message and send it from this page; Reham replies by email or WhatsApp.</p>
       <h2>Ready to Start Your Korean Journey?</h2>
       <p>Your first class is free. Meet your teacher, see how the class works, and decide if Klovers is right for you. No credit card · 30 minutes · A real teacher.</p>
       <ul>
@@ -68,20 +67,20 @@ export const CONTACT_BODY_HTML = `<div id="contact-prerendered" lang="en" dir="l
         <li><strong>5.0</strong> from 7 Google reviews</li>
         <li><strong>EN · AR</strong> Classes in English or Arabic</li>
       </ul>
-      <p><strong>Satisfaction Guarantee:</strong> If your first class isn't great, we refund or rebook — no questions asked.</p>
+      <p><strong>Satisfaction Guarantee:</strong> If your first paid class isn't right for you, we refund or rebook.</p>
       <p><a href="/free-trial">Book a free trial class</a> · <a href="/placement-test">Take the free placement test</a> · <a href="/pricing">Pricing</a> · <a href="/faq">FAQ</a> · <a href="/about">About Klovers</a></p>
     </div>`;
 
 export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
       <h1>Korean Language Course FAQ</h1>
-      <p>Everything you need to know about learning Korean with Klovers Academy</p>
+      <p>Everything you need to know about learning Korean with Klovers</p>
       <h2>Getting Started</h2>
       <h3>Do I need prior knowledge of Korean to enroll?</h3>
       <p>Not at all! Klovers offers a dedicated Hangul beginner course designed for absolute beginners. You'll learn the Korean alphabet (Hangul) from scratch, then progress through vocabulary, grammar, and conversation — step by step.</p>
       <h3>How do I know which level is right for me?</h3>
       <p>We provide a free online placement test that evaluates your reading, listening, and grammar skills. Based on your score, we recommend the ideal level — from Hangul Beginner to Advanced. You can take the test before enrolling.</p>
       <h3>Can I switch between group and private classes?</h3>
-      <p>Yes, you can switch your plan type when you renew. Contact our team and we'll help you transition smoothly to your preferred class format.</p>
+      <p>Yes, you can switch your plan type when you renew. Contact us and we'll help you move smoothly to your preferred class format.</p>
       <h2>Classes &amp; Schedule</h2>
       <h3>Are classes online or in-person?</h3>
       <p>All Klovers classes are conducted 100% online via live video sessions. You can join from anywhere in the world — all you need is a stable internet connection and a computer or tablet.</p>
@@ -102,9 +101,9 @@ export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
       <h3>How is my progress tracked?</h3>
       <p>Your student dashboard shows your attendance history, current level, and remaining sessions. Your instructor also provides regular feedback on your speaking, reading, and writing skills throughout the course.</p>
       <h3>Is Klovers suitable for TOPIK preparation?</h3>
-      <p>Absolutely! Our curriculum is aligned with TOPIK standards, and our teaching team has experience preparing students for TOPIK exams. We cover reading, listening, and writing skills tested in TOPIK I and II.</p>
+      <p>Absolutely! Our curriculum is aligned with TOPIK standards, and Reham has experience preparing students for TOPIK exams. We cover reading, listening, and writing skills tested in TOPIK I and II.</p>
       <h2>Still have questions?</h2>
-      <p>Our team is happy to help. Reach out or start your Korean journey today!</p>
+      <p>We are happy to help. Reach out or start your Korean journey today!</p>
       <p><a href="https://wa.me/201010003084">WhatsApp</a> · <a href="https://t.me/+Fu5T7d4wLMsxNDY9">Telegram</a> · <a href="/enroll-now">Start Now</a></p>
       <p><a href="/free-trial">Book a free trial class</a> · <a href="/placement-test">Take the free placement test</a> · <a href="/pricing">Pricing</a> · <a href="/contact">Contact us</a></p>
     </div>`;
@@ -112,7 +111,7 @@ export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
 export const ENROLL_NOW_BODY_HTML = `<div id="enroll-now-prerendered" lang="en" dir="ltr">
       <h1>Choose Your Plan</h1>
       <p>Select your class type, country, and duration.</p>
-      <p><strong>5.0</strong> on Google (7 reviews) · <strong>200+</strong> students taught over 13 years · <strong>A1–C2</strong> all levels</p>
+      <p><strong>5.0</strong> on Google (7 reviews) · <strong>200+</strong> students taught over 13 years · <strong>Hangul to Level 6</strong></p>
       <h2>Enroll in three steps</h2>
       <ol>
         <li><strong>Choose Plan</strong> — pick Group Classes (learn with others) or Private Classes (1-on-1 sessions), your country, and a duration. Your pricing tier is set by your country.</li>
@@ -270,19 +269,9 @@ export const KDRAMAS_BODY_HTML = `<div id="learn-korean-kdramas-prerendered" lan
       <h3>Watch 2: Korean Subtitles — Notice the Words (1.5 hours per episode)</h3>
       <p>Slower pace. Notice words you recognize. When you see a word in Korean text that matches the audio, your brain notes the connection. Don't pause — let it flow.</p>
       <h3>Watch 3: No Subtitles — Test Your Listening (1 hour per episode)</h3>
-      <p>Now your listening is tested. You'll catch maybe 30-50% at A1, 60-70% at B1. This struggle is good — it's the brain working hard to process.</p>
+      <p>Now your listening is tested. How much you catch depends on your level and the drama. This struggle is good — it's the brain working hard to process.</p>
       <h3>Scene-Based Deep Dive — Master 1 Scene (30 minutes)</h3>
       <p>Pick ONE emotional 3-minute scene. Pause, repeat, write what you heard, repeat, listen again. By day 3, you'll have memorized the scene.</p>
-      <h2>Recommended Dramas by Korean Level</h2>
-      <p>Start with your level, don't jump ahead. The difficulty progression matters.</p>
-      <h3>A1 — BEGINNER</h3>
-      <ul><li><strong>Squid Game</strong>: Clear pronunciation, repetitive vocab (game/rules/numbers), high engagement</li><li><strong>My School President</strong>: Teenagers (slower speech), school vocabulary, uplifting tone</li></ul>
-      <h3>A2 — ELEMENTARY</h3>
-      <ul><li><strong>Descendants of the Sun</strong>: Medical/military vocab, clear dialogue, multiple angles teach words</li><li><strong>Crash Landing on You</strong>: Everyday Korean mixed with quirky plot, good balance</li></ul>
-      <h3>B1 — INTERMEDIATE</h3>
-      <ul><li><strong>Itaewon Class</strong>: Restaurant/business Korean, mature dialogue, realistic situations</li><li><strong>Reply 1988</strong>: Family dynamics, nostalgic (slower), conversational patterns</li></ul>
-      <h3>B2+ — ADVANCED</h3>
-      <ul><li><strong>Hospital Playlist</strong>: Medical terminology, complex emotions, multiple characters</li><li><strong>Mr. Sunshine</strong>: Historical (formal language), mature themes, dense dialogue</li></ul>
       <h2>Build the Drama Habit (30 Days to Results)</h2>
       <table><tr><th>Days</th><th>Goal</th><th>Time</th></tr><tr><td>Days 1-5</td><td>Pick your drama &amp; watch episode 1 (English subtitles)</td><td>30 min daily</td></tr><tr><td>Days 6-10</td><td>Watch episodes 1-2 again (Korean subtitles)</td><td>45 min daily</td></tr><tr><td>Days 11-15</td><td>Rewatch no subtitles + pick 1 scene to master</td><td>1 hour daily</td></tr><tr><td>Days 16-20</td><td>Finish episode 2-3 fully, keep 1 phrase journal</td><td>1 hour daily</td></tr><tr><td>Days 21-30</td><td>Build momentum: 1-2 episodes per week with journal</td><td>1-2 hours daily</td></tr></table>
       <h3>Keep a Drama Journal</h3>
@@ -300,7 +289,7 @@ export const KDRAMAS_BODY_HTML = `<div id="learn-korean-kdramas-prerendered" lan
       <h3>Should I watch the full series or just clip scenes?</h3>
       <p>Full series. Watching the full arc keeps you motivated (cliffhangers!), reinforces vocab across more situations, and the story engagement helps retention. Clips are too short to build the habit.</p>
       <h3>How much new vocabulary do you realistically learn?</h3>
-      <p>Per drama series: 200-400 words if A1, 300-500 words if B1. Not all new words — many repeats. But key phrases and high-frequency words will stick.</p>
+      <p>It depends on the drama and on your level. Many words repeat across episodes, so key phrases and high-frequency words are the ones that stick.</p>
       <h3>Is drama learning enough, or do I need formal lessons?</h3>
       <p>Dramas teach listening and vocabulary brilliantly, but grammar and writing need structure. Combine dramas with a weekly live class for grammar and speaking.</p>
       <h2>Start Learning Through K-Dramas Today</h2>
@@ -392,10 +381,10 @@ export const HANGUL_STARTER_BODY_HTML = `<div id="hangul-starter-prerendered" la
       <h2>Basic Vowels (10)</h2>
       <p>ㅏ a (아) · ㅑ ya (야) · ㅓ eo (어) · ㅕ yeo (여) · ㅗ o (오) · ㅛ yo (요) · ㅜ u (우) · ㅠ yu (유) · ㅡ eu (으) · ㅣ i (이)</p>
       <h2>Compound Vowels (11)</h2>
-      <p>ㅐ ae (애) · ㅒ yae (얘) · ㅔ e (에) · ㅖ ye (예) · ㅘ wa (와) · ㅙ wae (봬) · ㅚ oe (외) · ㅝ wo (워) · ㅞ we (웨) · ㅟ wi (위) · ㅢ ui (의)</p>
+      <p>ㅐ ae (애) · ㅒ yae (얘) · ㅔ e (에) · ㅖ ye (예) · ㅘ wa (와) · ㅙ wae (왜) · ㅚ oe (외) · ㅝ wo (워) · ㅞ we (웨) · ㅟ wi (위) · ㅢ ui (의)</p>
       <h2>3 facts that make Hangul easy</h2>
       <ul>
-        <li>Hangul was designed in 1443 — it can be learned in hours, not years.</li>
+        <li>Hangul was designed in 1443 — and made to be learned quickly: at Klovers it takes 4 classes.</li>
         <li>Each letter's shape reflects how your mouth moves to say it.</li>
         <li>You don't need to memorize everything before starting — your teacher will guide you through it.</li>
       </ul>
@@ -448,11 +437,11 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "Can I switch between group and private classes?",
-        "a": "Yes, you can switch your plan type when you renew. Contact our team and we'll help you transition smoothly to your preferred class format."
+        "a": "Yes, you can switch your plan type when you renew. Contact us and we'll help you move smoothly to your preferred class format."
     },
     {
         "q": "Is Klovers suitable for TOPIK preparation?",
-        "a": "Absolutely! Our curriculum is aligned with TOPIK standards, and our teaching team has experience preparing students for TOPIK exams. We cover reading, listening, and writing skills tested in TOPIK I and II."
+        "a": "Absolutely! Our curriculum is aligned with TOPIK standards, and Reham has experience preparing students for TOPIK exams. We cover reading, listening, and writing skills tested in TOPIK I and II."
     }
 ],
   "/affiliate": [
@@ -546,11 +535,11 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "How much new vocabulary do you realistically learn?",
-        "a": "Per drama series: 200-400 words if A1, 300-500 words if B1. Not all new words — many repeats. But key phrases and high-frequency words will stick."
+        "a": "It depends on the drama and on your level. Many words repeat across episodes, so key phrases and high-frequency words are the ones that stick."
     },
     {
         "q": "Is drama learning enough, or do I need formal lessons?",
-        "a": "Dramas teach listening and vocabulary brilliantly, but grammar and writing need structure. Combine dramas with 1-2 lessons per week from Klovers for fastest progress."
+        "a": "Dramas teach listening and vocabulary brilliantly, but grammar and writing need structure. Combine dramas with a weekly live class for grammar and speaking."
     }
 ],
 };

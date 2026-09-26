@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle2, ExternalLink } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
@@ -24,9 +23,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * Palette only: yellow, charcoal, ivory. Copy is inline in both languages
  * (translations.ts `topikExam.*` is no longer read).
  *
- * 26 Sep 2026: the FAQPage JSON-LD below is the SAME four Q&As as
- * MARKETING_FAQ["/topik-exam-preparation"] in scripts/lib/marketing-bodies.mjs
- * (the crawler-visible body). Change one, change the other.
+ * 27 Sep 2026: no FAQPage markup here or in the prerender - the page shows no
+ * FAQ section, and FAQ markup must describe visible questions.
  */
 
 const TOPIK_I = [
@@ -52,51 +50,8 @@ const TopikExamPage = () => {
     canonical: "https://kloversegy.com/topik-exam-preparation",
   });
 
-  useEffect(() => {
-    const el = document.createElement("script");
-    el.id = "topik-faq-jsonld";
-    el.setAttribute("type", "application/ld+json");
-    el.textContent = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "Can I take TOPIK from outside South Korea?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. TOPIK is held in many countries, usually at Korean cultural centres, embassies or universities. Check topik.go.kr for the test centres near you.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "How long is a TOPIK score valid?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Two years from the date results are announced.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Should I take TOPIK I or TOPIK II?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "TOPIK I covers Levels 1-2 (beginner). TOPIK II covers Levels 3-6 (intermediate and advanced). Choose the paper that matches the level you are aiming for.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Is TOPIK required to work in South Korea?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Not always, but many employers, universities and some visa routes ask for a TOPIK level, most often Level 3 or 4 and above.",
-          },
-        },
-      ],
-    });
-    document.head.appendChild(el);
-    return () => el.remove();
-  }, []);
+  // 27 Sep 2026: FAQPage JSON-LD removed - its Q&As were not visible on the
+  // page, and Google requires FAQ markup to match visible text.
 
   const sectionTitle = "text-2xl md:text-3xl font-extrabold text-foreground mb-6";
   const card = "rounded-2xl border border-charcoal/10 bg-card p-5 md:p-6";
@@ -134,7 +89,7 @@ const TopikExamPage = () => {
             {/* Story scene under the buttons, so it never pushes them down. */}
             <img
               src="/assets/story/world-seoul-journey.webp"
-              alt={tr("The Seoul Journey, the last world of the Klovers story", "رحلة سيول، آخر عالم في قصة Klovers")}
+              alt={tr("The Seoul Journey, the last world of the Klovers story", "رحلة سيول، آخر عالم في قصة كلوفرز")}
               width={1600}
               height={900}
               decoding="async"

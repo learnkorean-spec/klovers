@@ -386,7 +386,7 @@ const BlogPostPage = () => {
             { "@type": "Organization", name: "Klovers", alternateName: "كلوفرز", url: "https://kloversegy.com" },
       publisher: {
         "@type": "Organization",
-        name: "Klovers — Korean Lovers Academy",
+        name: "Klovers",
         logo: { "@type": "ImageObject", url: "https://kloversegy.com/klovers-logo.jpg", width: 512, height: 512 },
         url: "https://kloversegy.com"
       },

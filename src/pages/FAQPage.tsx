@@ -14,6 +14,8 @@ import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { withoutUnsupportedClaims } from "@/lib/trustFigures";
 
 // Inject JSON-LD into document head
+const FAQ_WA_EN = "https://wa.me/201010003084?text=Hi!%20I%20have%20a%20question%20about%20Klovers.";
+const FAQ_WA_AR = `https://wa.me/201010003084?text=${encodeURIComponent("مرحبًا، لديّ سؤال عن كلوفرز.")}`;
 const FAQSchemaScript = ({ schema }: { schema: object }) => {
   useEffect(() => {
     const script = document.createElement("script");
@@ -109,7 +111,7 @@ const FAQPage = () => {
               <Input
                 type="search"
                 aria-label={isAr ? "البحث في الأسئلة" : "Search questions"}
-                placeholder="Search questions..."
+                placeholder={isAr ? "البحث في الأسئلة…" : "Search questions..."}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-9 pr-9"
@@ -134,7 +136,7 @@ const FAQPage = () => {
                   size="sm"
                   onClick={() => setActiveCategory(null)}
                 >
-                  All
+                  {isAr ? "الكل" : "All"}
                 </Button>
                 {Array.from(categories).map(([key, label]) => (
                   <Button
@@ -153,9 +155,9 @@ const FAQPage = () => {
               {filteredFaqs.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Search className="h-8 w-8 mx-auto mb-3 opacity-40" />
-                  <p className="font-medium">No results for "{searchQuery}"</p>
+                  <p className="font-medium">{isAr ? `لا نتائج لـ «${searchQuery}»` : `No results for "${searchQuery}"`}</p>
                   <button onClick={() => { setSearchQuery(""); setActiveCategory(null); }} className="mt-2 text-sm font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground">
-                    Clear search
+                    {isAr ? "مسح البحث" : "Clear search"}
                   </button>
                 </div>
               ) : (
@@ -193,7 +195,7 @@ const FAQPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button variant="outline" asChild>
-                  <a href="https://wa.me/201010003084?text=Hi!%20I%20have%20a%20question%20about%20Klovers." onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp("https://wa.me/201010003084?text=Hi!%20I%20have%20a%20question%20about%20Klovers.", { cta_label: "faq_contact" }); }} target="_blank" rel="noopener noreferrer">
+                  <a href={isAr ? FAQ_WA_AR : FAQ_WA_EN} onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(isAr ? FAQ_WA_AR : FAQ_WA_EN, { cta_label: "faq_contact" }); }} target="_blank" rel="noopener noreferrer">
                     <MessageCircle className="mr-2 h-4 w-4" />
                     WhatsApp
                   </a>

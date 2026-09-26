@@ -27,11 +27,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const STEPS: { en: [string, string]; ar: [string, string] }[] = [
   {
     en: ["Watch for the story", "First watch with subtitles in your language. Enjoy it — you need to know what happens before you can study how it is said."],
-    ar: ["المشاهدة من أجل القصة", "المشاهدة الأولى بترجمة إلى لغتك، وللمتعة وحدها. فهم ما يحدث يسبق دراسة طريقة قوله."],
+    ar: ["المشاهدة من أجل القصة", "المشاهدة الأولى بترجمة إلى لغة المشاهد، وللمتعة وحدها. فهم ما يحدث يسبق دراسة طريقة قوله."],
   },
   {
     en: ["Pick one short scene", "Choose two or three minutes you liked. Short enough to replay many times."],
-    ar: ["اختيار مشهد قصير", "دقيقتان أو ثلاث من مشهد أعجبك، قصير بما يكفي لإعادته مرات كثيرة."],
+    ar: ["اختيار مشهد قصير", "دقيقتان أو ثلاث من مشهد مفضّل، قصير بما يكفي لإعادته مرات كثيرة."],
   },
   {
     en: ["Replay it with Korean subtitles", "Pause on each line. Write down the words and endings you recognise, and look up the rest."],
@@ -43,7 +43,7 @@ const STEPS: { en: [string, string]; ar: [string, string] }[] = [
   },
   {
     en: ["Keep a phrase notebook", "One line per phrase: the Korean, what it means, the scene it came from, and one sentence of your own with it."],
-    ar: ["دفتر للعبارات", "سطر لكل عبارة: الجملة الكورية، ومعناها، والمشهد الذي جاءت منه، وجملة جديدة من تأليفك بها."],
+    ar: ["دفتر للعبارات", "سطر لكل عبارة: الجملة الكورية، ومعناها، والمشهد الذي جاءت منه، وجملة جديدة من تأليف الطالب بها."],
   },
 ];
 

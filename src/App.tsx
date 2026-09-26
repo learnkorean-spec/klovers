@@ -151,12 +151,16 @@ const AppInner = () => {
 };
 
 // Minimal full-screen spinner shown while a lazy chunk loads
-const PageLoader = () => (
-  <div role="status" aria-label="Loading page" className="min-h-screen flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-charcoal dark:border-klovers-yellow border-t-transparent dark:border-t-transparent rounded-full animate-spin" aria-hidden="true" />
-    <span className="sr-only">Loading…</span>
-  </div>
-);
+// Reads the page language from <html lang> so it works outside the language provider.
+const PageLoader = () => {
+  const isAr = typeof document !== "undefined" && document.documentElement.lang === "ar";
+  return (
+    <div role="status" aria-label={isAr ? "جارٍ تحميل الصفحة" : "Loading page"} className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-klovers-yellow border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+      <span className="sr-only">{isAr ? "جارٍ التحميل…" : "Loading…"}</span>
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
