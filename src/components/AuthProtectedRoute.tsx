@@ -24,7 +24,7 @@ const AuthProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">{typeof document !== "undefined" && document.documentElement.lang === "ar" ? "جارٍ التحميل…" : "Loading..."}</p>
       </div>
     );
   }

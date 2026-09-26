@@ -120,7 +120,7 @@ const LearnKoreanArabicSpeakersPage = () => {
             {/* Story scene under the buttons, so it never pushes them down. */}
             <img
               src="/assets/story/world-conversation-cafe.webp"
-              alt={tr("The Conversation Café from the Klovers story, where friends practise Korean together", "مقهى المحادثة من قصة Klovers، حيث يتدرّب الأصدقاء على الكورية معًا")}
+              alt={tr("The Conversation Café from the Klovers story, where friends practise Korean together", "مقهى المحادثة من قصة كلوفرز، حيث يتدرّب الأصدقاء على الكورية معًا")}
               width={1600}
               height={900}
               decoding="async"

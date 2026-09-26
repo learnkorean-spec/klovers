@@ -15,18 +15,17 @@ import {
   STUDENTS_TAUGHT,
   TEACHING_YEARS,
   TEACHING_YEARS_COUNT,
-  withoutUnsupportedClaims,
-} from "@/lib/trustFigures";
+  withoutUnsupportedClaims, toArabicDigits } from "@/lib/trustFigures";
 
 // Figures come from @/lib/trustFigures. This strip used to say 12+ years,
 // 500+ students and a 4.9 rating with no source - three numbers no other page
 // agreed with (audit, 23 Sep 2026).
 const TRUST_STATS = [
-  { value: TEACHING_YEARS, label: "Years Teaching" },
-  { value: STUDENTS_TAUGHT, label: "Students Taught" },
-  { value: `${RATING.value} ★`, label: `From ${RATING.count} ${RATING.source} reviews` },
-  { value: "EN · AR", label: "Classes in English or Arabic" },
-  { value: "Hangul → 6", label: "Levels" },
+  { value: TEACHING_YEARS, label: "Years Teaching", valueAr: `${TEACHING_YEARS_COUNT}+`, labelAr: "عامًا من التدريس" },
+  { value: STUDENTS_TAUGHT, label: "Students Taught", valueAr: STUDENTS_TAUGHT, labelAr: "طالب تعلّموا مع المعلّمة" },
+  { value: `${RATING.value} ★`, label: `From ${RATING.count} ${RATING.source} reviews`, valueAr: `${RATING.value} ★`, labelAr: `من ${RATING.count} تقييمات على جوجل` },
+  { value: "EN · AR", label: "Classes in English or Arabic", valueAr: "عربي · إنجليزي", labelAr: "لغة الشرح في الحصص" },
+  { value: "Hangul → 6", label: "Levels", valueAr: "الهانغول ← ٦", labelAr: "المستويات" },
 ];
 
 const AboutPage = () => {
@@ -40,7 +39,7 @@ const AboutPage = () => {
       "@context": "https://schema.org",
       "@type": "AboutPage",
       "url": "https://kloversegy.com/about",
-      "name": "About Klovers — Korean Lovers Academy",
+      "name": "About Klovers",
       "description": "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years.",
       "mainEntity": { "@id": "https://kloversegy.com/#organization" }
     });
@@ -65,15 +64,15 @@ const AboutPage = () => {
               {t("aboutPage", "title")}
             </h1>
             <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto text-base md:text-lg">
-              Founded by Reham Elshrkawy, an Al-Alsun Korean graduate who has taught Korean for 13 years.
+              {isAr ? `أسّستها ريهام الشرقاوي، خريجة الألسن قسم اللغة الكورية، وتدرّس الكورية منذ ${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا.` : `Founded by Reham Elshrkawy, an Al-Alsun Korean graduate who has taught Korean for ${TEACHING_YEARS_COUNT} years.`}
             </p>
 
             {/* Trust stats */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-3xl mx-auto mb-12">
               {TRUST_STATS.map((s) => (
                 <div key={s.label} className="text-center bg-card border border-border rounded-xl px-4 py-4">
-                  <div className="text-2xl font-bold text-foreground">{s.value}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
+                  <div className="text-2xl font-bold text-foreground">{isAr ? toArabicDigits(s.valueAr) : s.value}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{isAr ? toArabicDigits(s.labelAr) : s.label}</div>
                 </div>
               ))}
             </div>
@@ -102,7 +101,7 @@ const AboutPage = () => {
                   className="aspect-[16/9] w-full object-cover"
                 />
                 <figcaption className="px-5 py-4 text-sm font-semibold text-charcoal dark:text-foreground">
-                  {isAr ? "هكذا يبدو التعلّم مع Klovers: أصدقاء حول طاولة واحدة، وخطوة جديدة كل أسبوع." : "How learning with Klovers feels: friends at one table, one new step every week."}
+                  {isAr ? "هكذا يبدو التعلّم مع كلوفرز: أصدقاء حول طاولة واحدة، وخطوة جديدة كل أسبوع." : "How learning with Klovers feels: friends at one table, one new step every week."}
                 </figcaption>
               </figure>
 
@@ -150,22 +149,22 @@ const AboutPage = () => {
         {/* Mid-page CTA */}
         <section className="py-16 bg-card border-y border-border">
           <div className="container mx-auto px-4 text-center max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Ready to start?</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">{isAr ? "البداية الآن" : "Ready to start?"}</p>
             {/* Was "Join thousands of students learning Korean". The figure is
                 200+, and it counts students Reham has taught, not a crowd on
                 this site. */}
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-              Learn with a teacher who has taught {STUDENTS_TAUGHT} students over {TEACHING_YEARS_COUNT} years
+              {isAr ? `التعلّم مع معلّمة درّست أكثر من ${toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))} طالب خلال ${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا` : `Learn with a teacher who has taught ${STUDENTS_TAUGHT} students over ${TEACHING_YEARS_COUNT} years`}
             </h2>
             <p className="text-muted-foreground mb-8 text-sm">
-              Not sure where to begin? Take our free placement test and discover your level in minutes.
+              {isAr ? "نقطة البداية غير واضحة؟ اختبار تحديد المستوى المجاني يوضّحها في دقائق." : "Not sure where to begin? Take our free placement test and discover your level in minutes."}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button asChild size="lg">
-                <Link to="/placement-test">Free Placement Test</Link>
+                <Link to="/placement-test">{isAr ? "اختبار المستوى المجاني" : "Free Placement Test"}</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/pricing">View Pricing</Link>
+                <Link to="/pricing">{isAr ? "الأسعار" : "View Pricing"}</Link>
               </Button>
             </div>
           </div>

@@ -100,7 +100,7 @@ const ContactPage = () => {
       setForm({ name: "", email: "", subject: "", message: "" });
       toast({
         title: isAr ? "وصلتنا رسالتك" : "Message received",
-        description: isAr ? "هنرد عليك في أقرب وقت." : "We'll get back to you shortly.",
+        description: isAr ? "سيصل الرد في أقرب وقت." : "We'll get back to you shortly.",
       });
     } catch (err) {
       // Nothing cleared, no success claimed. The visitor keeps their text and
@@ -174,7 +174,7 @@ const ContactPage = () => {
 
               {/* ── Tertiary: Contact form ── */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center mb-4">{isAr ? "أو أرسل لنا رسالة" : "Or send us a message"}</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center mb-4">{isAr ? "أو كتابة رسالة" : "Or send us a message"}</p>
                 <Card className="border-border">
                   <CardContent className="p-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
