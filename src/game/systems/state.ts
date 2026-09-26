@@ -11,6 +11,8 @@ export interface PlayerState {
   velocity: { x: number; z: number };
   yaw: number;
   animation: AnimationState;
+  /** True during a room change: input is ignored and the body stands still. */
+  frozen: boolean;
 }
 
 export interface CameraState {
@@ -20,6 +22,8 @@ export interface CameraState {
   distance: number;
   /** Distance actually used this frame after wall checks. */
   currentDistance: number;
+  /** Set after a teleport: the camera jumps behind the player next frame. */
+  snap: boolean;
 }
 
 export function createPlayerState(): PlayerState {
@@ -28,6 +32,7 @@ export function createPlayerState(): PlayerState {
     velocity: { x: 0, z: 0 },
     yaw: PLAYER.spawnYaw,
     animation: "idle",
+    frozen: false,
   };
 }
 
@@ -38,5 +43,6 @@ export function createCameraState(): CameraState {
     pitch: CAMERA.startPitch,
     distance: CAMERA.distance,
     currentDistance: CAMERA.distance,
+    snap: false,
   };
 }

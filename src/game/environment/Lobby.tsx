@@ -147,20 +147,26 @@ function Lattice({ bays }: { bays: Bay[] }) {
   );
 }
 
-/** The closed gate in the north wall — the way on, for a later stage. */
+/**
+ * The open gate in the north wall — the way into Hangul Village. The doors
+ * stand folded back against the wall; daylight fills the opening.
+ */
 function Gate() {
   const z = -HD + WT / 2 + 0.02;
   return (
     <group position={[0, 0, z]}>
-      {/* Doors: dark wood, closed */}
-      <mesh castShadow receiveShadow position={[0, 1.35, 0.02]}>
-        <boxGeometry args={[3.2, 2.7, 0.12]} />
-        <meshStandardMaterial color={PALETTE.woodDark} roughness={0.75} />
+      {/* Daylight in the opening (just proud of the wall's inner face) */}
+      <mesh position={[0, 1.35, -0.2]}>
+        <planeGeometry args={[3.2, 2.7]} />
+        <meshBasicMaterial color={PALETTE.white} toneMapped={false} />
       </mesh>
-      <mesh position={[0, 1.35, 0.09]}>
-        <boxGeometry args={[0.05, 2.7, 0.02]} />
-        <meshStandardMaterial color={PALETTE.charcoal} />
-      </mesh>
+      {/* Doors: dark wood, folded open against the wall */}
+      {[-1, 1].map((side) => (
+        <mesh key={side} castShadow receiveShadow position={[side * 2.62, 1.35, -0.1]}>
+          <boxGeometry args={[1.6, 2.7, 0.1]} />
+          <meshStandardMaterial color={PALETTE.woodDark} roughness={0.75} />
+        </mesh>
+      ))}
       {/* Yellow frame — the one bold brand accent in the room. Unlit and not
           tone-mapped, so it renders as exact Klovers yellow #FFFF00. */}
       {[-1.7, 1.7].map((x) => (
