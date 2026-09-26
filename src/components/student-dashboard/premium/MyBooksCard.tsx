@@ -36,6 +36,7 @@ type Row = { id: string; book_id: string };
 const COVER_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/marketing-images";
 const COVERS: Record<BookId, string> = {
   "hangul-a0": `${COVER_BASE}/hangul-a0-cover.webp`,
+  "hangul-a0-en": `${COVER_BASE}/hangul-a0-en-cover.webp`,
 };
 
 const seenKey = (userId: string, bookId: string) => `klovers-book-popup:${userId}:${bookId}`;
