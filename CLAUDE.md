@@ -134,7 +134,7 @@ Korean language learning platform targeting Arabic speakers and K-drama fans
 
 - Frontend: React + TypeScript + Vite + Tailwind + shadcn/ui
 - Backend: Supabase (Postgres + Edge Functions on Deno)
-- AI: Lovable AI Gateway → `google/gemini-2.5-flash` (`LOVABLE_API_KEY`)
+- AI: OpenAI → `gpt-4o-mini` text, `gpt-image-1` images (`OPENAI_API_KEY`), via `supabase/functions/_shared/ai.ts`. Lovable was removed from the stack on 2026-09-26 — do not reintroduce it.
 - Admin panel: `src/pages/AdminDashboard.tsx`
 
 ## Supabase functions

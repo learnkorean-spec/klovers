@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -93,8 +94,8 @@ Deno.serve(async (req) => {
 
     const toGenerate = Math.min(requestedCount, totalAllowed - totalGenerated);
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const apiKey = getAiKey();
+    if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
     const langList = (languages_spoken || []).join(", ") || "English";
     const prompt = `You are a Korean interview preparation expert. Generate exactly ${toGenerate} realistic Korean job interview question-and-answer pairs for a "${job_title}" with ${years_experience || 0} years of experience${industry ? ` in the ${industry} industry` : ""}.
@@ -118,14 +119,14 @@ Requirements:
 
 Return ONLY a JSON array of objects, no other text.`;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await fetch(AI_CHAT_URL, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: AI_TEXT_MODEL,
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
       }),

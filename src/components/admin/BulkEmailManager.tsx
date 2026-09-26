@@ -249,7 +249,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 24px;">Whether you're a complete beginner or preparing for TOPIK, this textbook will guide you step-by-step. Track your progress, earn XP, and level up your Korean!</p>
 
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:10px 0 12px;">
-      <a href="https://klovers.lovable.app/textbook" style="background:#FFFF00;color:#000000;text-decoration:none;padding:16px 40px;border-radius:8px;font-size:17px;font-weight:700;display:inline-block;border:2px solid #000000;">Start Learning Now →</a>
+      <a href="https://kloversegy.com/textbook" style="background:#FFFF00;color:#000000;text-decoration:none;padding:16px 40px;border-radius:8px;font-size:17px;font-weight:700;display:inline-block;border:2px solid #000000;">Start Learning Now →</a>
     </td></tr></table>
     <p style="text-align:center;color:#9CA3AF;font-size:13px;margin:0 0 28px;">No sign-up required to browse lessons</p>
 

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateImageDataUrl, getAiKey } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,8 +14,8 @@ serve(async (req) => {
     const { lesson_id } = await req.json();
     if (!lesson_id) throw new Error("lesson_id required");
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const AI_API_KEY = getAiKey();
+    if (!AI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -42,36 +43,24 @@ serve(async (req) => {
 
 The illustration should be in a clean, modern Korean textbook style with an isometric 3D perspective showing a scene related to the topic. Include cute cartoon characters performing actions related to these Korean vocabulary words: ${vocabList}.
 
-Style: Clean lines, soft pastel colors with purple/lavender accents, isometric perspective, educational illustration style, white background, no text labels (we will add them digitally).`;
+Style: Clean lines, Klovers palette only — ivory #FFF9EC background, bright yellow #FFFF00 and charcoal #2E2E2E accents, isometric perspective, educational illustration style, no text labels (we will add them digitally).`;
 
     console.log("Generating scene for lesson:", lesson.title_en);
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
-        messages: [{ role: "user", content: prompt }],
-        modalities: ["image", "text"],
-      }),
-    });
+    const aiResponse = await generateImageDataUrl(prompt, AI_API_KEY);
 
     if (!aiResponse.ok) {
-      const errText = await aiResponse.text();
+      const errText = aiResponse.errorText;
       console.error("AI error:", aiResponse.status, errText);
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited, try again later" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error(`AI gateway error: ${aiResponse.status}`);
+      throw new Error(`AI image API error: ${aiResponse.status}`);
     }
 
-    const aiData = await aiResponse.json();
-    const imageData = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const imageData = (aiResponse.ok ? aiResponse.dataUrl : undefined);
 
     if (!imageData) throw new Error("No image generated");
 

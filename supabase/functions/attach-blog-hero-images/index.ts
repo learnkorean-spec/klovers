@@ -6,8 +6,7 @@
  * and updates blog_posts with hero_image, hero_alt, hero_caption.
  *
  * Used to backfill hero images for the April 2026 batch of 10 Korean
- * language articles when LOVABLE_API_KEY (used by generate-blog-image)
- * was in an invalid format and PEXELS_API_KEY was not configured.
+ * language articles when generate-blog-image had no working AI key and PEXELS_API_KEY was not configured.
  *
  * Invoke with POST (no body needed). Re-invocations overwrite existing
  * hero fields for slugs listed in TARGETS.

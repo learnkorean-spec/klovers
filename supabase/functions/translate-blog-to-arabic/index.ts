@@ -6,10 +6,9 @@
  * translation as `{slug}-ar` with lang='ar', published=true, same
  * hero_image. Skips any slug that already has an -ar row.
  *
- * Used because LOVABLE_API_KEY is in an invalid format and the
- * batch-translate-articles function's AI calls fail with 401. Swap back
- * to that function once the Lovable key is rotated for higher-quality
- * translations.
+ * Written as a fallback while batch-translate-articles had no working AI
+ * key. That function now uses OpenAI (see _shared/ai.ts) and gives
+ * higher-quality translations, so prefer it.
  *
  * Body (optional):
  *   { "limit": 10 }                  // cap how many to process this run

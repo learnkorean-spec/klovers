@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateImageDataUrl, getAiKey } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,8 +13,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const AI_API_KEY = getAiKey();
+    if (!AI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
     // Verify admin
     const authHeader = req.headers.get("Authorization");
@@ -79,25 +80,11 @@ Design rules:
 
     console.log("Generating marketing image:", { level, size, dims });
 
-    const aiResp = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-image",
-          messages: [{ role: "user", content: prompt }],
-          modalities: ["image", "text"],
-        }),
-      }
-    );
+    const aiResp = await generateImageDataUrl(prompt, AI_API_KEY);
 
     if (!aiResp.ok) {
-      const errText = await aiResp.text();
-      console.error("AI gateway error:", aiResp.status, errText);
+      const errText = aiResp.errorText;
+      console.error("AI image error:", aiResp.status, errText);
       if (aiResp.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limited. Please try again in a moment." }),
@@ -106,15 +93,14 @@ Design rules:
       }
       if (aiResp.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please add credits in Settings → Workspace → Usage." }),
+          JSON.stringify({ error: "AI credits exhausted. Please add OpenAI credits." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error(`AI gateway returned ${aiResp.status}`);
+      throw new Error(`AI image API returned ${aiResp.status}`);
     }
 
-    const aiData = await aiResp.json();
-    const imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const imageUrl = (aiResp.ok ? aiResp.dataUrl : undefined);
     if (!imageUrl) throw new Error("No image generated");
 
     // Extract base64 and upload
