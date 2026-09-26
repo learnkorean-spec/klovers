@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import { Check, MapPin, Star, Crown, Globe, Sparkles, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
@@ -18,38 +18,20 @@ import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { buildCountryLocalPrices, normalizeCountry, tierCountries } from "@/lib/stripePrices";
 import { RATING, toArabicDigits } from "@/lib/trustFigures";
 import { supabase } from "@/integrations/supabase/client";
+import KloverIcon from "@/components/KloverIcon";
+
+/** Arabic names for the tier countries, so the Arabic page stays in one language. */
+const COUNTRY_AR: Record<string, string> = {"Egypt": "مصر", "Morocco": "المغرب", "Tunisia": "تونس", "Algeria": "الجزائر", "Libya": "ليبيا", "Jordan": "الأردن", "Lebanon": "لبنان", "Iraq": "العراق", "Syria": "سوريا", "Sudan": "السودان", "Yemen": "اليمن", "Malaysia": "ماليزيا", "Indonesia": "إندونيسيا", "Thailand": "تايلاند", "Vietnam": "فيتنام", "Philippines": "الفلبين", "India": "الهند", "Pakistan": "باكستان", "Brazil": "البرازيل", "Mexico": "المكسيك", "Colombia": "كولومبيا", "Argentina": "الأرجنتين", "Turkey": "تركيا", "UAE": "الإمارات", "Saudi Arabia": "السعودية", "Qatar": "قطر", "Bahrain": "البحرين", "Oman": "عُمان", "Kuwait": "الكويت", "United States": "الولايات المتحدة", "United Kingdom": "المملكة المتحدة", "Germany": "ألمانيا", "France": "فرنسا", "Canada": "كندا", "Australia": "أستراليا", "Japan": "اليابان", "South Korea": "كوريا الجنوبية", "China": "الصين"};
+const CURRENCY_AR: Record<string, string> = { EGP: "جنيه", USD: "دولار" };
+
 
 type TierKey = "local" | "regional" | "global";
 
-/** Klovers illustrated icons, one per tier (brand guard, 27 Sep 2026). */
-const tierIcons: Record<TierKey, KloverIconName> = {
-  local: "sprout",
-  regional: "globe-plane",
-  global: "namsan-tower",
+const tierIcons: Record<TierKey, React.ReactNode> = {
+  local: <Star className="h-6 w-6" />,
+  regional: <Globe className="h-6 w-6" />,
+  global: <Crown className="h-6 w-6" />,
 };
-
-/**
- * Country names in Arabic, for the Arabic page (one language per page).
- * The English name stays the VALUE everywhere (stripePrices, enroll links);
- * only the label changes.
- */
-const COUNTRY_AR: Record<string, string> = {
-  Egypt: "مصر", Morocco: "المغرب", Tunisia: "تونس", Algeria: "الجزائر", Libya: "ليبيا",
-  Jordan: "الأردن", Lebanon: "لبنان", Iraq: "العراق", Syria: "سوريا", Sudan: "السودان",
-  Yemen: "اليمن", Palestine: "فلسطين", Malaysia: "ماليزيا", Indonesia: "إندونيسيا",
-  Thailand: "تايلاند", Vietnam: "فيتنام", Philippines: "الفلبين", India: "الهند",
-  Pakistan: "باكستان", Bangladesh: "بنغلاديش", Brazil: "البرازيل", Mexico: "المكسيك",
-  Colombia: "كولومبيا", Argentina: "الأرجنتين", Turkey: "تركيا", UAE: "الإمارات",
-  "Saudi Arabia": "السعودية", Qatar: "قطر", Bahrain: "البحرين", Oman: "عُمان",
-  Kuwait: "الكويت", "United States": "الولايات المتحدة", "United Kingdom": "المملكة المتحدة",
-  Germany: "ألمانيا", France: "فرنسا", Canada: "كندا", Australia: "أستراليا",
-  Japan: "اليابان", "South Korea": "كوريا الجنوبية", China: "الصين",
-};
-
-/** The small tick before each benefit: a neon-green dot, not a generic icon. */
-const Tick = () => (
-  <span className="h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-2 ring-charcoal/20" aria-hidden="true" />
-);
 
 const tierPrices: Record<TierKey, { duration: string; classes: string; usd: number }[]> = {
   local: [
@@ -204,14 +186,18 @@ const PricingSection = () => {
     const months = /^(\d+)/.exec(price.duration)?.[1];
     const n = months ? parseInt(months, 10) : 1;
     if (n <= 1) return "";
-    const perMonth = isAr ? " / شهريًا" : "/mo";
-    if (price.local && price.currency) return `${Math.round(price.local / n).toLocaleString()} ${price.currency}${perMonth}`;
-    if (price.usd) return `$${Math.round(price.usd / n)}${perMonth}`;
+    if (price.local && price.currency) {
+      const per = Math.round(price.local / n);
+      return isAr ? `${toArabicDigits(per.toLocaleString("en-US"))} ${CURRENCY_AR[price.currency] ?? price.currency} شهريًا` : `${per.toLocaleString()} ${price.currency}/mo`;
+    }
+    if (price.usd) return isAr ? `${toArabicDigits(Math.round(price.usd / n))} دولار شهريًا` : `$${Math.round(price.usd / n)}/mo`;
     return "";
   };
 
   const openFlexPaymentChat = (tierKey: TierKey, ct: ClassType) => {
-    const msg = `Hi! I'm interested in the ${ct === "group" ? "Group" : "Private"} plan (${tierKey} tier). Can we arrange flexible/installment payment?`;
+    const msg = isAr
+      ? `مرحبًا، أودّ الاستفسار عن باقة ${ct === "group" ? "المجموعة" : "الحصص الخاصة"} (فئة ${tierKey}). هل يمكن الدفع بالتقسيط أو بطريقة مرنة؟`
+      : `Hi! I'm interested in the ${ct === "group" ? "Group" : "Private"} plan (${tierKey} tier). Can we arrange flexible/installment payment?`;
     logLeadEvent({ source_type: "pricing", cta_label: "flex_payment_whatsapp", metadata: { tier: tierKey, classType: ct } });
     trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(msg)}`, { cta_label: "pricing_flex_payment" });
   };
@@ -233,7 +219,10 @@ const PricingSection = () => {
           <div className="max-w-sm mx-auto">
             <Select value={selectedCountry} onValueChange={handleCountryChange}>
               <SelectTrigger className="w-full text-base" aria-label={t("pricing", "selectCountry")}>
-                <SelectValue placeholder={t("pricing", "selectCountry")} />
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <SelectValue placeholder={t("pricing", "selectCountry")} />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 {allCountries.map(({ country }) => (
@@ -322,28 +311,30 @@ const PricingSection = () => {
                     {/* Most Popular: on local for discounted countries, on regional globally */}
                     {isDiscountedCountry && (
                       <Badge className={`${TAG} bg-foreground text-background`}>
-                        {tr("Most Popular", "الأكثر طلباً")}
+                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> {tr("Most Popular", "الأكثر طلباً")}
                       </Badge>
                     )}
                     {isDiscountedCountry && (
                       <Badge className={`${TAG} bg-correct text-correct-foreground`}>
-                        {tr("Discount!", "خصم!")}
+                        <Sparkles className="h-3 w-3 mr-1" aria-hidden="true" /> {tr("Discount!", "خصم!")}
                       </Badge>
                     )}
                     {tierKey === "regional" && !isDiscountedCountry && isActive && (
                       <Badge className={`${TAG} bg-foreground text-background`}>
-                        {tr("Most Popular", "الأكثر طلباً")}
+                        <Star className="h-3 w-3 mr-1 fill-current" aria-hidden="true" /> {tr("Most Popular", "الأكثر طلباً")}
                       </Badge>
                     )}
                   </div>
 
                   <div className="flex justify-center mb-3">
                     <div
-                      className={`p-2 rounded-full ${
-                        isActive ? "bg-ivory ring-2 ring-primary" : "bg-ivory"
+                      className={`p-3 rounded-full ${
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
                       } transition-colors`}
                     >
-                      <KloverIcon name={tierIcons[tierKey]} className="h-10 w-10" />
+                      {tierIcons[tierKey]}
                     </div>
                   </div>
                   <CardTitle className="text-xl text-foreground">
@@ -447,30 +438,30 @@ const PricingSection = () => {
                     {classType === "group" ? (
                       <>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Tick />
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
                           {t("pricing", "groupBenefits.oncePerWeek")}
                         </li>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Tick />
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
                           {t("pricing", "groupBenefits.groupEnvironment")}
                         </li>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Tick />
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
                           {t("pricing", "groupBenefits.structuredCurriculum")}
                         </li>
                       </>
                     ) : (
                       <>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Tick />
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
                           {t("pricing", "privateBenefits.privateSessions")}
                         </li>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Tick />
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
                           {t("pricing", "privateBenefits.flexibleScheduling")}
                         </li>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Tick />
+                          <Check className="h-4 w-4 text-foreground shrink-0" />
                           {t("pricing", "privateBenefits.personalFeedback")}
                         </li>
                       </>
@@ -527,7 +518,8 @@ const PricingSection = () => {
                       onClick={() => openFlexPaymentChat(tierKey, classType)}
                       className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground py-1 transition-colors"
                     >
-                      {tr("Flexible or installment payment? Message us", "الدفع بالتقسيط أو بطريقة مرنة؟ التواصل معنا")}
+                      <MessageCircle className="h-3 w-3" />
+                      {tr("Flexible / installment payment? Chat with us", "الدفع بالتقسيط أو بمرونة؟ المراسلة عبر واتساب")}
                     </button>
                   </div>
                 </CardContent>
@@ -536,30 +528,28 @@ const PricingSection = () => {
           })}
         </div>
 
-        {/* Trust strip. Klovers icons, not emoji; Arabic in neutral MSA.
-            The guarantee is the real policy: refund or rebook after the
-            first PAID class (the trial itself is free), the same wording as
-            the exit popup. */}
+        {/* Trust strip */}
         <div className="mt-12 flex flex-wrap justify-center gap-6 text-center">
-          <div className="flex flex-col items-center gap-1 max-w-[12rem]">
-            <KloverIcon name="badge-blossom" className="h-12 w-12" />
-            <p className="text-sm font-semibold text-foreground">{tr("First paid class guarantee", "ضمان أول حصة مدفوعة")}</p>
-            <p className="text-xs text-muted-foreground">{tr("Not happy after it? Refund or rebook.", "إن لم تكن مناسبة: استرداد المبلغ أو إعادة الحجز.")}</p>
+          <div className="flex flex-col items-center gap-1">
+            <KloverIcon name="badge-blossom" className="h-10 w-10" />
+            <p className="text-sm font-semibold text-foreground">{tr("First Class Guarantee", "ضمان الحصة الأولى")}</p>
+            <p className="text-xs text-muted-foreground">{tr("Not happy? Refund or rebook.", "استرداد المبلغ أو إعادة الحجز عند عدم الرضا.")}</p>
           </div>
-          <div className="flex flex-col items-center gap-1 max-w-[12rem]">
-            <KloverIcon name="growth-chart" className="h-12 w-12" />
+          <div className="flex flex-col items-center gap-1">
+            <KloverIcon name="growth-chart" className="h-10 w-10" />
             <p className="text-sm font-semibold text-foreground">{tr(`${RATING.value} ★ Google rating`, `${RATING.value} ★ تقييم جوجل`)}</p>
-            <p className="text-xs text-muted-foreground">{tr(`From ${RATING.count} Google reviews`, `من ${toArabicDigits(RATING.count)} مراجعات على جوجل`)}</p>
+            <p className="text-xs text-muted-foreground">{tr(`From ${RATING.count} Google reviews`, `من ${toArabicDigits(RATING.count)} مراجعات جوجل`)}</p>
           </div>
-          <div className="flex flex-col items-center gap-1 max-w-[12rem]">
-            <KloverIcon name="chat-annyeonghaseyo" className="h-12 w-12" />
-            {/* Verified facts only, the same ones MeetTeacher states. */}
-            <p className="text-sm font-semibold text-foreground">{tr("Taught in English & Arabic", "الشرح بالعربية والإنجليزية")}</p>
-            <p className="text-xs text-muted-foreground">{tr("Al-Alsun Korean graduate · 13 years teaching", "خريجة الألسن، قسم اللغة الكورية · ١٣ عامًا في التدريس")}</p>
+          <div className="flex flex-col items-center gap-1">
+            <KloverIcon name="chat-annyeong" className="h-10 w-10" />
+            {/* Verified facts only, the same ones MeetTeacher states. The old
+                line claimed "TOPIK-certified", which is not one of them. */}
+            <p className="text-sm font-semibold text-foreground">{tr("Taught in English & Arabic", "الشرح بالعربية أو الإنجليزية")}</p>
+            <p className="text-xs text-muted-foreground">{tr("Al-Alsun Korean graduate · 13 years teaching", "خريجة الألسن، قسم اللغة الكورية · ١٣ عامًا من التدريس")}</p>
           </div>
-          <div className="flex flex-col items-center gap-1 max-w-[12rem]">
-            <KloverIcon name="calendar-check" className="h-12 w-12" />
-            <p className="text-sm font-semibold text-foreground">{tr("Secure checkout", "دفع آمن")}</p>
+          <div className="flex flex-col items-center gap-1">
+            <KloverIcon name="calendar-check" className="h-10 w-10" />
+            <p className="text-sm font-semibold text-foreground">{tr("Secure Checkout", "دفع آمن")}</p>
             <p className="text-xs text-muted-foreground">{tr("Manual review · No auto-charge", "مراجعة يدوية · دون خصم تلقائي")}</p>
           </div>
         </div>
