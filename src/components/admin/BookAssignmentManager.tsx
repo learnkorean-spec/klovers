@@ -23,10 +23,13 @@ import { BOOKS, type BookId } from "@/constants/books";
  * a Hangul group is started (and to anyone seated into a group that is already
  * running) by the database triggers in
  * supabase/migrations/20260926010000_auto_assign_level_book_on_group_start.sql.
+ * Arabic groups get the Arabic edition, English groups the English one.
  * This screen is for exceptions only — assign by hand, remove, or download.
  */
-const BOOK_ID: BookId = "hangul-a0";
-const BOOK = BOOKS[BOOK_ID];
+const EDITIONS: { id: BookId; label: string }[] = [
+  { id: "hangul-a0", label: "Arabic" },
+  { id: "hangul-a0-en", label: "English" },
+];
 
 interface Profile {
   user_id: string;
@@ -75,6 +78,9 @@ const BookAssignmentManager = () => {
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [availableFrom, setAvailableFrom] = useState(defaultAvailableFrom());
   const [notes, setNotes] = useState("");
+  const [bookId, setBookId] = useState<BookId>("hangul-a0");
+  const BOOK_ID = bookId;
+  const BOOK = BOOKS[bookId];
 
   const fetchData = async () => {
     setLoading(true);
@@ -178,14 +184,26 @@ const BookAssignmentManager = () => {
         <CardContent className="py-3 px-4 flex items-center gap-3">
           <BookOpen className="h-8 w-8 text-foreground shrink-0" />
           <div>
-            <div className="text-sm font-semibold">{BOOK.titleEn} — {BOOK.titleAr}</div>
+            <div className="text-sm font-semibold">{BOOK.titleEn}</div>
             <div className="text-xs text-muted-foreground">
               Gift for joining: given automatically when a Hangul group starts, and to anyone seated into a running
-              Hangul group. No email is sent. Use “Assign Book” only for exceptions.
+              Hangul group — Arabic groups get the Arabic edition, English groups the English one. No email is sent.
+              Pick the edition here before “Assign Book” or “Download PDF”; assign by hand only for exceptions.
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2 shrink-0">
-            <Badge variant="secondary">{assignments.length} assigned</Badge>
+            {EDITIONS.map(e => (
+              <Button
+                key={e.id}
+                variant={bookId === e.id ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setBookId(e.id)}
+              >
+                {e.label}
+              </Button>
+            ))}
+            <Badge variant="secondary">{assignments.filter(a => a.book_id === bookId).length} assigned</Badge>
             <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs" onClick={downloadPdf}>
               <Download className="h-3 w-3" /> Download PDF
             </Button>
