@@ -23,6 +23,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
  *
  * Palette only: yellow, charcoal, ivory. Copy is inline in both languages
  * (translations.ts `topikExam.*` is no longer read).
+ *
+ * 26 Sep 2026: the FAQPage JSON-LD below is the SAME four Q&As as
+ * MARKETING_FAQ["/topik-exam-preparation"] in scripts/lib/marketing-bodies.mjs
+ * (the crawler-visible body). Change one, change the other.
  */
 
 const TOPIK_I = [
@@ -58,26 +62,10 @@ const TopikExamPage = () => {
       mainEntity: [
         {
           "@type": "Question",
-          name: "What is the TOPIK exam?",
+          name: "Can I take TOPIK from outside South Korea?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "TOPIK (Test of Proficiency in Korean) is the official Korean proficiency test, run by Korea's National Institute for International Education (NIIED). TOPIK I covers Levels 1-2 and TOPIK II covers Levels 3-6.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "What score do I need for each TOPIK level?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "TOPIK I is scored out of 200: Level 1 from 80, Level 2 from 140. TOPIK II is scored out of 300: Level 3 from 120, Level 4 from 150, Level 5 from 190, Level 6 from 230.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "When is the next TOPIK exam?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "TOPIK is held several times a year, and the dates and test centres differ by country. Check the official site, topik.go.kr, or your local test centre for the next date and its registration window.",
+            text: "Yes. TOPIK is held in many countries, usually at Korean cultural centres, embassies or universities. Check topik.go.kr for the test centres near you.",
           },
         },
         {
@@ -85,7 +73,23 @@ const TopikExamPage = () => {
           name: "How long is a TOPIK score valid?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "A TOPIK result is valid for two years from the date results are announced.",
+            text: "Two years from the date results are announced.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Should I take TOPIK I or TOPIK II?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "TOPIK I covers Levels 1-2 (beginner). TOPIK II covers Levels 3-6 (intermediate and advanced). Choose the paper that matches the level you are aiming for.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Is TOPIK required to work in South Korea?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Not always, but many employers, universities and some visa routes ask for a TOPIK level, most often Level 3 or 4 and above.",
           },
         },
       ],
