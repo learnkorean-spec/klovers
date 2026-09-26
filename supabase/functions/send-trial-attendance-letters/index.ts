@@ -32,6 +32,11 @@
  * #502/#505/#506/#510. 27 of the 39 live bookings have no account, so a
  * profiles-only lookup would mean no unsubscribe link for most of the people
  * this writes to — the exact gap Souâd Rahmouni ran into.
+ *
+ * LANGUAGE (Re, 26 September 2026). Arabic letters are in neutral Modern
+ * Standard Arabic and gender-neutral: verbal nouns, no verb aimed at the reader
+ * as male or female. An Arabic letter carries no Latin words (the academy is
+ * «أكاديمية كلوفرز»); links stay as they are.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
@@ -48,6 +53,9 @@ const FUNCTION_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/functions/v1";
 const ENROL_URL = `${SITE_URL}/enroll-now`;
 const TRIAL_URL = `${SITE_URL}/trial-booking`;
 const WA_URL = "https://wa.me/201010003084";
+
+/** Brand palette: #FFFF00 / #2E2E2E / #FFF9EC. The WhatsApp link uses the dark tone. */
+const BRAND_DARK = "#2E2E2E";
 
 type LetterKind = "came" | "missed";
 type Selection = LetterKind | "both";
@@ -101,6 +109,9 @@ async function sendBatch(
  * Standing rule 3 (Re, 16 September) — "emails as much as possible must be
  * neutral not too much data". So neither letter names her level, quotes a
  * price, or recaps the class. The one thing each says is the next step.
+ *
+ * Letter-spacing is applied to the Latin header only: spacing Arabic letters
+ * apart breaks the joins between them.
  */
 function wrap(bodyHtml: string, isAr: boolean, unsubUrl: string): string {
   return `<!DOCTYPE html>
@@ -111,18 +122,20 @@ function wrap(bodyHtml: string, isAr: boolean, unsubUrl: string): string {
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
   <tr><td style="background:#000000;padding:24px 40px;text-align:center;">
-    <p style="margin:0;color:#FFFF00;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">KLovers Academy</p>
+    ${isAr
+      ? `<p style="margin:0;color:#FFFF00;font-size:14px;font-weight:700;">أكاديمية كلوفرز</p>`
+      : `<p style="margin:0;color:#FFFF00;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">KLovers Academy</p>`}
   </td></tr>
   <tr><td style="padding:32px 40px;color:#374151;font-size:15px;line-height:1.8;text-align:${isAr ? "right" : "left"};">
     ${bodyHtml}
     <p style="color:#6b7280;font-size:14px;margin:24px 0 0;">
       ${isAr
-        ? `أي سؤال؟ <a href="${WA_URL}" style="color:#25D366;text-decoration:underline;">راسلينا على واتساب</a>.`
-        : `Any questions? <a href="${WA_URL}" style="color:#25D366;text-decoration:underline;">Message us on WhatsApp</a>.`}
+        ? `لأي سؤال، يسعدنا التواصل عبر <a href="${WA_URL}" style="color:${BRAND_DARK};text-decoration:underline;">واتساب</a>.`
+        : `Any questions? <a href="${WA_URL}" style="color:${BRAND_DARK};text-decoration:underline;">Message us on WhatsApp</a>.`}
     </p>
     <p style="color:#9ca3af;font-size:11px;text-align:center;margin:24px 0 0;">
       <a href="${unsubUrl}" style="color:#9ca3af;text-decoration:underline;">${isAr ? "إلغاء الاشتراك" : "Unsubscribe"}</a>
-      &nbsp;·&nbsp; KLovers Academy, Egypt
+      &nbsp;·&nbsp; ${isAr ? "أكاديمية كلوفرز، مصر" : "KLovers Academy, Egypt"}
     </p>
   </td></tr>
 </table>
@@ -136,23 +149,27 @@ function button(label: string, url: string): string {
   </div>`;
 }
 
+/** "مرحباً سارة،" with a name, "مرحباً بك،" without one. */
+const arGreeting = (name: string) => `مرحباً ${name?.trim() || "بك"}،`;
+
 /** She was in the room. The next step is a seat, so that is the whole letter. */
 function cameLetter(name: string, isAr: boolean, unsubUrl: string) {
-  const who = name?.trim() || (isAr ? "أهلاً" : "there");
   if (isAr) {
+    const hello = arGreeting(name);
     return {
-      subject: "KLovers — مكانك في المجموعة",
-      text: `مرحباً ${who}،\n\nمبسوطين إنك كنتِ معانا في الكلاس.\n\nالتسجيل مفتوح — اختاري مستواكِ والموعد المناسب:\n${ENROL_URL}\n\nالمقعد يُحجز باسمك من وقت التسجيل، والدفع بعد بداية المجموعة.\n\nإلغاء الاشتراك: ${unsubUrl}\nKLovers Academy — kloversegy.com`,
+      subject: "كلوفرز — مقعد في المجموعة",
+      text: `${hello}\n\nيسعدنا حضور الحصة معنا.\n\nالتسجيل مفتوح: اختيار المستوى والموعد المناسب من صفحة التسجيل:\n${ENROL_URL}\n\nيُحجز المقعد بالاسم من وقت التسجيل، ويكون الدفع بعد بداية المجموعة.\n\nإلغاء الاشتراك: ${unsubUrl}\nأكاديمية كلوفرز — kloversegy.com`,
       html: wrap(
-        `<h1 style="color:#111827;font-size:22px;margin:0 0 12px;">مرحباً ${who}،</h1>
-         <p style="margin:0 0 6px;">مبسوطين إنك كنتِ معانا في الكلاس.</p>
-         <p style="margin:0;">التسجيل مفتوح — اختاري مستواكِ والموعد المناسب من صفحة التسجيل.</p>
-         ${button("اختاري مجموعتك", ENROL_URL)}
-         <p style="margin:0;">المقعد يُحجز باسمك من وقت التسجيل، والدفع بعد بداية المجموعة.</p>`,
+        `<h1 style="color:#111827;font-size:22px;margin:0 0 12px;">${hello}</h1>
+         <p style="margin:0 0 6px;">يسعدنا حضور الحصة معنا.</p>
+         <p style="margin:0;">التسجيل مفتوح: اختيار المستوى والموعد المناسب من صفحة التسجيل.</p>
+         ${button("اختيار المجموعة", ENROL_URL)}
+         <p style="margin:0;">يُحجز المقعد بالاسم من وقت التسجيل، ويكون الدفع بعد بداية المجموعة.</p>`,
         true, unsubUrl,
       ),
     };
   }
+  const who = name?.trim() || "there";
   return {
     subject: "KLovers — your place in the group",
     text: `Hi ${who},\n\nIt was good to have you in the class.\n\nEnrolment is open — choose your level and a time that suits you:\n${ENROL_URL}\n\nYour seat is held from the moment you enrol, and payment comes after the group starts.\n\nUnsubscribe: ${unsubUrl}\nKLovers Academy — kloversegy.com`,
@@ -178,19 +195,20 @@ function cameLetter(name: string, isAr: boolean, unsubUrl: string) {
  * Not sent unless a caller asks for it by name — see `letters` above.
  */
 function missedLetter(name: string, isAr: boolean, unsubUrl: string) {
-  const who = name?.trim() || (isAr ? "أهلاً" : "there");
   if (isAr) {
+    const hello = arGreeting(name);
     return {
-      subject: "KLovers — كلاس تجريبي في معاد تاني",
-      text: `مرحباً ${who}،\n\nيمكن الميعاد ما كانش مناسب. فيه مواعيد تانية للكلاس التجريبي، وتقدري تحجزي مكانك في أي واحد منها:\n${TRIAL_URL}\n\nإلغاء الاشتراك: ${unsubUrl}\nKLovers Academy — kloversegy.com`,
+      subject: "كلوفرز — حصة تجريبية في موعد آخر",
+      text: `${hello}\n\nربما لم يكن الموعد مناسباً. توجد مواعيد أخرى للحصة التجريبية، ويمكن حجز مقعد في أيٍّ منها:\n${TRIAL_URL}\n\nإلغاء الاشتراك: ${unsubUrl}\nأكاديمية كلوفرز — kloversegy.com`,
       html: wrap(
-        `<h1 style="color:#111827;font-size:22px;margin:0 0 12px;">مرحباً ${who}،</h1>
-         <p style="margin:0;">يمكن الميعاد ما كانش مناسب. فيه مواعيد تانية للكلاس التجريبي، وتقدري تحجزي مكانك في أي واحد منها.</p>
-         ${button("احجزي كلاس تجريبي", TRIAL_URL)}`,
+        `<h1 style="color:#111827;font-size:22px;margin:0 0 12px;">${hello}</h1>
+         <p style="margin:0;">ربما لم يكن الموعد مناسباً. توجد مواعيد أخرى للحصة التجريبية، ويمكن حجز مقعد في أيٍّ منها.</p>
+         ${button("حجز حصة تجريبية", TRIAL_URL)}`,
         true, unsubUrl,
       ),
     };
   }
+  const who = name?.trim() || "there";
   return {
     subject: "KLovers — a trial class at another time",
     text: `Hi ${who},\n\nThe time may not have suited you. There are other trial slots, and you can book any of them here:\n${TRIAL_URL}\n\nUnsubscribe: ${unsubUrl}\nKLovers Academy — kloversegy.com`,
