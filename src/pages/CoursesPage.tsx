@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import CoursesSection from "@/components/CoursesSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Clock, RotateCcw } from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LEVELS } from "@/constants/levels";
 
@@ -55,9 +55,30 @@ const CoursesPage = () => {
     return () => { document.getElementById("courses-schema")?.remove(); };
   }, []);
 
-  const { t, tArray } = useLanguage();
-  const weeklyItems = tArray("courses", "weeklyStructure.items") as { title: string; description: string }[];
-  const weeklyIcons = [BookOpen, Clock, RotateCcw];
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
+
+  // World mode + brand guard (27 Sep 2026): the week is told as three stops
+  // in the Klovers world, in neutral MSA, with Klovers icons instead of
+  // generic ones. Same facts as before: one live class, practice, review.
+  const weeklyItems: { icon: KloverIconName; title: string; description: string }[] = [
+    {
+      icon: "chat-annyeonghaseyo",
+      title: tr("The café table", "طاولة المقهى"),
+      description: tr("One live class a week with the teacher.", "حصة مباشرة واحدة كل أسبوع مع المعلمة."),
+    },
+    {
+      icon: "flashcard-ga",
+      title: tr("The market", "السوق"),
+      description: tr("Homework and practice between classes.", "واجبات وتمارين بين الحصص."),
+    },
+    {
+      icon: "lightbulb-sprout",
+      title: tr("The memory garden", "حديقة الذكريات"),
+      description: tr("Feedback, questions and review of what was learned.", "ملاحظات وأسئلة ومراجعة لما سبق تعلّمه."),
+    },
+  ];
 
   return (
     <div className="min-h-screen">
@@ -69,20 +90,19 @@ const CoursesPage = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-10">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-2">
-                {t("courses", "weeklyStructure.title")}
+                {tr("A week in the Klovers world", "أسبوع في عالم كلوفرز")}
               </h2>
               <p className="text-muted-foreground">
-                {t("courses", "weeklyStructure.subtitle")}
+                {tr("Every week has the same three stops.", "لكل أسبوع المحطات الثلاث نفسها.")}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              {weeklyItems.map((item, index) => {
-                const Icon = weeklyIcons[index];
+              {weeklyItems.map((item) => {
                 return (
-                  <Card key={index} className="text-center border-border">
+                  <Card key={item.icon} className="text-center border-border">
                     <CardContent className="p-6">
-                      <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-klovers-yellow">
-                        <Icon className="h-6 w-6 text-charcoal" aria-hidden="true" />
+                      <span className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full bg-ivory">
+                        <KloverIcon name={item.icon} className="h-12 w-12" />
                       </span>
                       <h3 className="font-semibold text-foreground mb-1">{item.title}</h3>
                       <p className="text-sm text-muted-foreground">{item.description}</p>

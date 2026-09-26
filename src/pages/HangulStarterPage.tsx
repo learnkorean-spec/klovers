@@ -3,7 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Printer, Download, ArrowRight } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { Link } from "react-router-dom";
 
 const CONSONANTS = [
@@ -78,9 +78,16 @@ const LetterGrid = ({ items, label }: { items: LetterRow[]; label: string }) => 
   </div>
 );
 
+/**
+ * /hangul-starter — world mode (27 Sep 2026): this sheet is the gate of
+ * Hangul Village, the first world in the Klovers canon
+ * (src/config/klovers-world.ts). Arabic in neutral MSA, Klovers icons only,
+ * no emoji. The letter tables and every fact are unchanged.
+ */
 const HangulStarterPage = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
 
   useSEO({
     title: "Free Hangul Starter Sheet — Korean Alphabet | Klovers",
@@ -94,27 +101,27 @@ const HangulStarterPage = () => {
       <main id="main-content" className="pt-16 print:pt-4">
 
         {/* Hero */}
-        <section className="py-12 md:py-16 border-b border-border bg-primary/5 print:hidden">
+        <section className="py-12 md:py-16 border-b border-border bg-ivory dark:bg-muted/30 print:hidden">
           <div className="container mx-auto px-4 max-w-3xl text-center">
-            <span className="inline-block text-4xl mb-3">🇰🇷</span>
-            <h1 className="text-3xl md:text-4xl font-black text-foreground mb-3">
-              {isAr ? "ورقة هانغول المجانية" : "Free Hangul Starter Sheet"}
+            <KloverIcon name="hanok-cherry-tree" className="mx-auto mb-3 h-16 w-16" />
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-foreground/70 mb-2">
+              {tr("Hangul Village · the first gate", "قرية الهانغول · البوابة الأولى")}
+            </p>
+            <h1 className="font-display text-3xl md:text-4xl font-black text-foreground mb-3">
+              {tr("Free Hangul starter sheet", "ورقة الهانغول المجانية")}
             </h1>
-            <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              {isAr
-                ? "كل الحروف الكورية في مكان واحد — مع اللفظ الصح. اطبعها أو احفظها وابدأ تتعلم النهارده."
-                : "Every Korean letter in one place — with correct pronunciation. Print it, save it, start today."}
+            <p className="text-muted-foreground mb-6 max-w-xl mx-auto leading-relaxed">
+              {tr(
+                "Every sign in the village is written in these letters. Here they all are on one page, with the right sound for each. Print it, keep it, and read the first sign today.",
+                "كل لافتة في القرية مكتوبة بهذه الحروف. وهنا تجتمع كلها في صفحة واحدة، مع النطق الصحيح لكل حرف. طباعتها أو حفظها، ثم قراءة أول لافتة اليوم.",
+              )}
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Button onClick={() => window.print()} variant="outline" className="gap-2">
-                <Printer className="h-4 w-4" />
-                {isAr ? "اطبع" : "Print"}
+              <Button onClick={() => window.print()} variant="outline">
+                {tr("Print the sheet", "طباعة الورقة")}
               </Button>
-              <Button asChild className="gap-2">
-                <Link to="/free-trial">
-                  {isAr ? "حجز حصة مجانية" : "Book a Free Class"}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+              <Button asChild>
+                <Link to="/free-trial">{tr("Book a free class", "حجز حصة مجانية")}</Link>
               </Button>
             </div>
           </div>
@@ -127,20 +134,21 @@ const HangulStarterPage = () => {
             {/* Syllable block explainer */}
             <div className="bg-card border border-border rounded-2xl p-5 mb-10 print:mb-6 print:border-foreground">
               <h2 className="font-black text-foreground mb-2">
-                {isAr ? "كيف تُكوَّن الكلمات الكورية" : "How Korean syllable blocks work"}
+                {tr("How Korean syllable blocks work", "كيف تُبنى المقاطع الكورية")}
               </h2>
               <p className="text-sm text-muted-foreground mb-3">
-                {isAr
-                  ? "الكورية بتتكتب كـ'بلوكات' — كل بلوكة = مقطع صوتي. كل بلوكة فيها حرف ساكن + حرف مد (+ حرف ساكن اختياري في الآخر)."
-                  : "Korean is written in syllable blocks — each block = one syllable sound. Each block contains a consonant + vowel (+ optional final consonant)."}
+                {tr(
+                  "Korean is written in syllable blocks: each block is one syllable, a consonant plus a vowel, sometimes with a final consonant.",
+                  "تُكتب الكورية في مربعات، وكل مربع مقطع صوتي واحد: حرف ساكن وحرف مدّ، وأحيانًا حرف ساكن أخير.",
+                )}
               </p>
               <div className="flex flex-wrap gap-6 items-center">
                 {[
-                  { syl: "가", breakdown: "ㄱ + ㅏ", meaning: isAr ? '"ga"' : '"ga"' },
-                  { syl: "한", breakdown: "ㅎ + ㅏ + ㄴ", meaning: isAr ? '"han"' : '"han"' },
-                  { syl: "국", breakdown: "ㄱ + ㅜ + ㄱ", meaning: isAr ? '"guk"' : '"guk"' },
+                  { syl: "가", breakdown: "ㄱ + ㅏ", meaning: isAr ? "«غا»" : '"ga"' },
+                  { syl: "한", breakdown: "ㅎ + ㅏ + ㄴ", meaning: isAr ? "«هان»" : '"han"' },
+                  { syl: "국", breakdown: "ㄱ + ㅜ + ㄱ", meaning: isAr ? "«غوك»" : '"guk"' },
                 ].map(({ syl, breakdown, meaning }) => (
-                  <div key={syl} className="flex items-center gap-3 bg-primary/10 rounded-xl px-4 py-3">
+                  <div key={syl} className="flex items-center gap-3 bg-ivory dark:bg-muted border border-border rounded-xl px-4 py-3">
                     <span className="text-4xl font-black text-foreground">{syl}</span>
                     <div>
                       <p className="text-sm font-semibold text-foreground">{breakdown}</p>
@@ -169,21 +177,18 @@ const HangulStarterPage = () => {
             />
 
             {/* Quick tips */}
-            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 print:hidden">
+            <div className="bg-ivory dark:bg-muted/30 border border-border rounded-2xl p-6 print:hidden">
               <h2 className="font-black text-foreground mb-3">
-                {isAr ? "٣ حقائق تسهّل عليك" : "3 facts that make Hangul easy"}
+                {tr("Three facts that make the village easy", "ثلاث حقائق تجعل القرية سهلة")}
               </h2>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>{isAr ? "صُمّم الهانغول عام ١٤٤٣ م، ويُتعلّم في ساعات لا سنوات." : "Hangul was designed in 1443 — it can be learned in hours, not years."}</li>
-                <li>{isAr ? "كل حرف شكله بيشبح طريقة لفظه." : "Each letter's shape reflects how your mouth moves to say it."}</li>
-                <li>{isAr ? "لا يلزم حفظ كل شيء قبل البدء، فالمعلمة تشرح كل شيء." : "You don't need to memorize everything before starting — your teacher will guide you through it."}</li>
+                <li>{tr("King Sejong had Hangul designed in 1443 so that anyone could learn to read quickly.", "صُمّم الهانغول بأمر الملك سيجونغ عام ١٤٤٣ م، ليتعلّم أي أحد القراءة بسرعة.")}</li>
+                <li>{tr("Many consonants are drawn from the shape the mouth makes to say them.", "كثير من الحروف الساكنة مرسوم على شكل الفم عند نطقها.")}</li>
+                <li>{tr("No need to memorize it all first: at Klovers the alphabet is four live classes with the teacher.", "لا حاجة إلى حفظ كل شيء أولًا: الأبجدية في كلوفرز أربع حصص مباشرة مع المعلمة.")}</li>
               </ul>
               <div className="mt-5">
-                <Button asChild className="gap-2 w-full sm:w-auto">
-                  <Link to="/free-trial">
-                    {isAr ? "البداية مع معلمة حقيقية، مجانًا" : "Start with a real teacher — free"}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                <Button asChild className="w-full sm:w-auto">
+                  <Link to="/free-trial">{tr("Start with a real teacher, free", "البداية مع معلمة حقيقية، مجانًا")}</Link>
                 </Button>
               </div>
             </div>

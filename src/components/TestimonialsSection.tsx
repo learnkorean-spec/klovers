@@ -164,6 +164,11 @@ const reviewsFor = (lang: string) => {
   return mine.length >= 3 ? mine : reviews;
 };
 
+/** The reviewers' words are kept exactly; only emoji are dropped at render
+ *  (brand guard, 27 Sep 2026: no emoji anywhere in Klovers UI). */
+const noEmoji = (text: string) =>
+  text.replace(/\p{Extended_Pictographic}|️/gu, "").replace(/\s{2,}/g, " ").trim();
+
 const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boolean }) => {
   const initials = review.name
     .split(" ")
@@ -203,7 +208,7 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
         </div>
         <Facebook className="h-4 w-4 text-foreground/40 flex-shrink-0 mt-0.5" />
       </div>
-      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{review.text}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{noEmoji(review.text)}</p>
     </div>
   );
 };

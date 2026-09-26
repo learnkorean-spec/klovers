@@ -80,7 +80,7 @@ const LEVEL_COPY: Record<
   l1: {
     blurb_en:
       "Greetings, the present and past, and the sentences you need for everyday situations.",
-    blurb_ar: "التحيات، والمضارع والماضي، والجمل التي تحتاجها في المواقف اليومية.",
+    blurb_ar: "التحيات، والمضارع والماضي، والجمل اللازمة في المواقف اليومية.",
     features_en: [
       "Introduce yourself and ask simple questions",
       "Numbers, time, dates and prices",
@@ -88,7 +88,7 @@ const LEVEL_COPY: Record<
       "Read and write short sentences with confidence",
     ],
     features_ar: [
-      "تعرّف بنفسك واسأل أسئلة بسيطة",
+      "التعريف بالنفس وطرح أسئلة بسيطة",
       "الأرقام والوقت والتواريخ والأسعار",
       "المفردات اليومية الأساسية",
       "قراءة وكتابة جمل قصيرة بثقة",
@@ -170,7 +170,7 @@ const LEVEL_COPY: Record<
     features_ar: [
       "فهم شبه أصلي في مختلف المواضيع",
       "الاصطلاحات والأمثال والمفردات الصينية-الكورية",
-      "الكتابة المطوّلة بأسلوبك الخاص",
+      "الكتابة المطوّلة بأسلوب شخصي",
       "التعامل مع نصوص جديدة دون ترجمة",
     ],
   },
@@ -223,7 +223,7 @@ const preparesEn = (l: Level): string =>
   l.topik ? ` Prepares you toward TOPIK ${l.topik} (≈ CEFR ${l.cefr}).` : "";
 
 const preparesAr = (l: Level): string =>
-  l.topik ? ` يجهّزك لـ TOPIK ${l.topik} (يقابل تقريبًا ${l.cefr}).` : "";
+  l.topik ? ` يمهّد لـ TOPIK ${l.topik} (يقابل تقريبًا ${l.cefr}).` : "";
 
 const levelCards: CourseCard[] = LEVELS.map((l) => {
   const copy = LEVEL_COPY[l.key];
@@ -262,7 +262,7 @@ const specialCards: CourseCard[] = [
     features_ar: [
       "فردي أو مجموعة صغيرة جدًا",
       "قراءة جهرية مع تصحيح النطق",
-      "محادثة حرة في مواضيع تختارها",
+      "محادثة حرة في مواضيع حسب الاختيار",
       "يمكن دراسته مع أي مستوى",
     ],
     // A private track is arranged by conversation, not by a booking form, so it
@@ -270,7 +270,7 @@ const specialCards: CourseCard[] = [
     href: WHATSAPP_BASE,
     external: true,
     cta_en: "Ask about times on WhatsApp",
-    cta_ar: "اسأل عن المواعيد على واتساب",
+    cta_ar: "السؤال عن المواعيد على واتساب",
   },
   {
     key: "topik_prep",
@@ -279,7 +279,7 @@ const specialCards: CourseCard[] = [
     title_en: SPECIAL_TRACKS[1].label,
     title_ar: SPECIAL_TRACKS[1].label_ar,
     blurb_en: "Exam technique, for a TOPIK date you have already put in the calendar.",
-    blurb_ar: "تدريب على تقنية الامتحان، لموعد TOPIK محدد بالفعل عندك.",
+    blurb_ar: "تدريب على تقنية الامتحان، لموعد TOPIK محدد بالفعل.",
     features_en: [
       "Past papers under real exam timing",
       "Listening and reading strategy",
@@ -294,7 +294,7 @@ const specialCards: CourseCard[] = [
     ],
     href: "/topik-exam-preparation",
     cta_en: "See the TOPIK track",
-    cta_ar: "شاهد مسار TOPIK",
+    cta_ar: "عرض مسار TOPIK",
   },
 ];
 
@@ -320,7 +320,7 @@ export const COURSE_SECTION_COPY = {
    * was just stopped from making.
    */
   note_en: "Classes cover the level's syllabus. Reaching TOPIK exam standard needs study between them.",
-  note_ar: "الحصص بتغطي منهج المستوى. الوصول لمستوى امتحان TOPIK بيحتاج مذاكرة بينها كمان.",
+  note_ar: "تغطي الحصص منهج المستوى، أما الوصول إلى مستوى امتحان TOPIK فيحتاج أيضًا إلى مذاكرة بين الحصص.",
   /** Shown under the grid for anyone who cannot place themselves. */
   unsure_en: "Not sure where you are?",
   unsure_ar: "المستوى غير واضح؟",
@@ -334,11 +334,11 @@ export const COURSE_SECTION_COPY = {
    * floating WhatsApp button so the two read as the same offer.
    */
   wa_en: "Can't find what you're looking for?",
-  wa_ar: "لم تجد المطلوب؟",
+  wa_ar: "المطلوب غير موجود هنا؟",
   waCta_en: "Chat with us on WhatsApp",
   waCta_ar: "التواصل معنا عبر واتساب",
   waMessage_en: "Hi! I have a question about the Korean courses.",
-  waMessage_ar: "السلام عليكم، عندي استفسار عن دورات الكورية.",
+  waMessage_ar: "السلام عليكم، لديّ استفسار عن دورات اللغة الكورية.",
 };
 
 // ---------------------------------------------------------------------------

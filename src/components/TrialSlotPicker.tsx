@@ -10,9 +10,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, CalendarDays, Mail, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
+import { useLanguage } from "@/contexts/LanguageContext";
+import KloverIcon from "@/components/KloverIcon";
 
 /**
  * Fallback: next UTC occurrence of dayOfWeek — mirrors the edge function
@@ -48,7 +49,18 @@ interface TrialSlotPickerProps {
 // Only used when the backend row somehow omits capacity (shouldn't happen in prod).
 const DEFAULT_CAPACITY = 6;
 
+/**
+ * 27 Sep 2026 (brand guard): this step of the booking flow was English only,
+ * on a site whose main script is Arabic. Every string now follows the page
+ * language: Arabic in Modern Standard Arabic, neutral in gender (verbal nouns
+ * on buttons). Generic icons are gone (text arrows, KloverIcon), and the
+ * waitlist confirmation uses palette colours instead of Tailwind green.
+ */
 const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerProps) => {
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
+  const backLabel = isAr ? "→ رجوع" : "← Back";
   const [slots, setSlots] = useState<TrialSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +93,7 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
         setSlots(normalised);
       } catch (err: any) {
         console.error("Failed to fetch trial slots:", err);
-        setError("Could not load available times. Please try again.");
+        setError("load");
       } finally {
         setLoading(false);
       }
@@ -99,8 +111,8 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-2">
-          <Button variant="ghost" size="sm" onClick={onBack} className="gap-1">
-            <ArrowLeft className="h-4 w-4" /> Back
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            {backLabel}
           </Button>
         </div>
         <Skeleton className="h-12 w-full rounded-xl" />
@@ -111,9 +123,11 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
   if (error) {
     return (
       <div className="text-center py-8 space-y-3">
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="text-sm text-destructive">
+          {tr("Could not load the available times. Please try again.", "تعذّر تحميل المواعيد المتاحة. المحاولة مرة أخرى بعد قليل.")}
+        </p>
         <Button variant="outline" size="sm" onClick={onBack}>
-          Go back
+          {tr("Go back", "الرجوع")}
         </Button>
       </div>
     );
@@ -124,7 +138,9 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
       const trimmed = waitlistEmail.trim().toLowerCase();
       if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return;
       setWaitlistSubmitting(true);
-      await supabase.from("leads").upsert(
+      // Best effort: a failed waitlist write is logged, and the visitor can
+      // still message on WhatsApp from the booking page.
+      const { error: waitlistError } = await supabase.from("leads").upsert(
         {
           email: trimmed,
           name: trimmed.split("@")[0],
@@ -134,28 +150,31 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
         },
         { onConflict: "email" }
       );
+      if (waitlistError) console.error("trial waitlist:", waitlistError.message);
       setWaitlistSubmitting(false);
       setWaitlistDone(true);
     };
 
     return (
       <div className="text-center py-8 space-y-4">
-        <CalendarDays className="h-10 w-10 mx-auto text-muted-foreground" />
-        <p className="text-sm font-semibold text-foreground">All sessions are currently full</p>
+        <KloverIcon name="calendar-blossom" className="h-14 w-14 mx-auto" />
+        <p className="text-sm font-semibold text-foreground">
+          {tr("All sessions are currently full", "جميع الحصص مكتملة حاليًا")}
+        </p>
         {waitlistDone ? (
-          <div className="flex items-center justify-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
-            You're on the list! We'll email you when a spot opens.
+          <div className="flex items-center justify-center gap-2 text-sm font-semibold text-charcoal bg-klovers-green border-2 border-charcoal rounded-xl px-4 py-3">
+            {tr("You're on the list. An email will arrive when a seat opens.", "تم التسجيل في قائمة الانتظار، وستصل رسالة عند فتح مقعد.")}
           </div>
         ) : (
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">
-              Leave your email and we'll notify you when a spot opens.
+              {tr("Leave an email and a message will arrive when a seat opens.", "يكفي البريد الإلكتروني، وستصل رسالة عند فتح مقعد.")}
             </p>
             <div className="flex gap-2">
               <Input
                 type="email"
-                placeholder="your@email.com"
+                placeholder="name@email.com"
+                dir="ltr"
                 value={waitlistEmail}
                 onChange={(e) => setWaitlistEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleWaitlist()}
@@ -163,18 +182,17 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
               />
               <Button
                 size="sm"
-                className="h-9 gap-1.5"
+                className="h-9"
                 disabled={waitlistSubmitting || !waitlistEmail.trim()}
                 onClick={handleWaitlist}
               >
-                <Mail className="h-3.5 w-3.5" />
-                Notify Me
+                {tr("Notify me", "إشعار عند فتح مقعد")}
               </Button>
             </div>
           </div>
         )}
-        <Button variant="outline" size="sm" onClick={onBack} className="gap-1">
-          <ArrowLeft className="h-4 w-4" /> Go back
+        <Button variant="outline" size="sm" onClick={onBack}>
+          {tr("Go back", "الرجوع")}
         </Button>
       </div>
     );
@@ -192,9 +210,24 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
     // Use convertDateTimeToTimezone for specific-dated slots (accurate DST handling)
     const { dateStr: localDateStr, timeFormatted, weekday } = convertDateTimeToTimezone(sessionDate, s.start_time, srcTz, userTz);
     const [ly, lm, ld] = localDateStr.split("-").map(Number);
-    const dateLabel = new Date(ly, lm - 1, ld).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const localDate = new Date(ly, lm - 1, ld);
     const cap = s.capacity ?? DEFAULT_CAPACITY;
     const spotsLeft = cap - s.booked_count;
+    if (isAr) {
+      const dayAr = localDate.toLocaleDateString("ar-EG", { weekday: "long" });
+      const dateAr = localDate.toLocaleDateString("ar-EG", { month: "long", day: "numeric" });
+      // timeFormatted may be "8:00 PM" or "20:00"; read both.
+      const tm = /(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(timeFormatted);
+      let hour = tm ? Number(tm[1]) : 0;
+      const isPm = tm?.[3] ? /PM/i.test(tm[3]) : hour >= 12;
+      if (!tm?.[3]) hour = hour % 12 || 12;
+      const timeAr = tm
+        ? `${hour}:${tm[2]} ${isPm ? "م" : "ص"}`.replace(/[0-9]/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)])
+        : timeFormatted;
+      const spotsAr = String(spotsLeft).replace(/[0-9]/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
+      return `${dayAr}، ${dateAr}، الساعة ${timeAr} · الأماكن المتبقية: ${spotsAr}`;
+    }
+    const dateLabel = localDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     return `${weekday}, ${dateLabel} at ${timeFormatted} — ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`;
   };
 
@@ -223,17 +256,17 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={onBack} className="gap-1">
-          <ArrowLeft className="h-4 w-4" /> Back
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          {backLabel}
         </Button>
-        <p className="text-sm text-muted-foreground">Pick your trial day</p>
+        <p className="text-sm text-muted-foreground">{tr("Pick your trial day", "اختيار يوم الحصة التجريبية")}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="trial-day">Trial Day</Label>
+        <Label htmlFor="trial-day">{tr("Trial day", "يوم الحصة")}</Label>
         <Select value={selectedKey} onValueChange={setSelectedKey}>
           <SelectTrigger id="trial-day" className="w-full">
-            <SelectValue placeholder="Choose a trial session" />
+            <SelectValue placeholder={tr("Choose a trial session", "اختيار موعد الحصة")} />
           </SelectTrigger>
           <SelectContent>
             {availableSlots.map((s) => (
@@ -246,17 +279,17 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        All times shown in your local timezone ({userTz.replace(/_/g, " ")})
+        {tr("All times shown in your local time zone", "جميع الأوقات معروضة بالتوقيت المحلي")} (<span dir="ltr">{userTz.replace(/_/g, " ")}</span>)
       </p>
 
       <Button
         type="button"
         size="lg"
-        className="w-full gap-2 text-base font-bold h-13 mt-2"
+        className="w-full text-base font-bold h-13 mt-2"
         disabled={!selectedKey}
         onClick={commit}
       >
-        {selectedKey ? "Book this trial" : "Select a trial day"}
+        {selectedKey ? tr("Book this trial", "حجز هذه الحصة") : tr("Select a trial day", "اختيار يوم الحصة أولًا")}
       </Button>
     </div>
   );
