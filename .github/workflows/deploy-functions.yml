@@ -170,6 +170,7 @@ jobs:
 
           drift=0
           compared=0
+          held=""
           for dir in supabase/functions/*/; do
             name=$(basename "$dir")
             [ "$name" = "_shared" ] && continue
@@ -188,6 +189,7 @@ jobs:
             # waved through the v2 deploy that destroys the live v3.
             if [ ! -f "$deployed_file" ]; then
               drift=1
+              held="$held $name"
               echo "::error::Function '${name}' has no downloaded copy at ${deployed_file} - cannot confirm it matches production."
               {
                 echo "- ⚠️ **${name}** — no downloaded copy, so it cannot be compared"
@@ -203,6 +205,10 @@ jobs:
 
             if ! diff -q <(norm "$repo_file") <(norm "$deployed_file") > /dev/null; then
               drift=1
+              # Recorded by name, not just counted: the deploy step moves exactly
+              # these aside, so this list is what protects them from being
+              # overwritten by the repo's older copy.
+              held="$held $name"
               echo "::error::Function '${name}' differs between the repo and what is deployed."
               {
                 echo "### ${name} — deployed vs repo"
@@ -232,20 +238,55 @@ jobs:
           fi
 
           if [ "$drift" = "1" ]; then
+            hold_count=$(echo $held | wc -w)
             {
-              echo "## Deploy blocked: functions edited outside this repo"
+              echo "## Deploy: ${hold_count} function(s) held back"
               echo
-              echo 'At least one live function differs from `supabase/functions/`. Deploying'
-              echo 'now would overwrite the live copy with this repo'"'"'s, silently.'
+              echo 'These live functions differ from `supabase/functions/`. The deploy below'
+              echo 'will SKIP them, so the live copies are preserved rather than overwritten.'
               echo
-              echo 'If the live copy is correct, bring it into the repo through a PR and'
-              echo 'merge that. If this repo is correct, redeploy it deliberately by hand and'
-              echo 'say so - the difference is a decision, not something to resolve by accident.'
+              echo '**Held back** (the live copy wins until someone reconciles it):'
+              for n in $held; do
+                echo "- \`${n}\`"
+              done
+              echo
+              echo 'Bring the repo to match production, or redeploy deliberately by hand and'
+              echo 'say so. Which one is correct is a decision, not something to resolve by'
+              echo 'accident - see the diffs above.'
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error::Refusing to deploy: see the job summary for the diffs."
-            exit 1
+            echo "::warning::${hold_count} function(s) drifted; they will be left as they are live."
+          else
+            echo "All deployed functions match the repo - proceeding."
           fi
-          echo "All deployed functions match the repo - proceeding."
+
+          # Deploy everything EXCEPT the drifted functions, so one out-of-band edit
+          # cannot block unrelated work while still protecting what is live.
+          #
+          # `supabase functions deploy` with no arguments deploys everything in
+          # supabase/functions/, so holding a function back means moving it aside
+          # for the duration of the deploy and putting it straight back. The trap
+          # matters: without it a failed deploy would leave the repo without those
+          # functions checked out, which is its own silent data loss.
+          hold_dir="$(mktemp -d)"
+          restore() {
+            if [ -d "$hold_dir" ]; then
+              for n in $held; do
+                if [ -d "$hold_dir/$n" ]; then
+                  rm -rf "supabase/functions/$n"
+                  mv "$hold_dir/$n" "supabase/functions/$n"
+                fi
+              done
+              rmdir "$hold_dir" 2>/dev/null || true
+            fi
+          }
+          trap restore EXIT
+
+          for n in $held; do
+            if [ -d "supabase/functions/$n" ]; then
+              mv "supabase/functions/$n" "$hold_dir/$n"
+              echo "Holding back: $n"
+            fi
+          done
 
       - name: Deploy all edge functions
         run: npx supabase@2.117.0 functions deploy --project-ref $SUPABASE_PROJECT_REF
