@@ -66,19 +66,23 @@ The two learners are **friends and study companions**. This is the default and
 it stays the default — no romantic framing, touching, hand-holding, or
 couple-style posing unless the canon is deliberately updated first.
 
-- **Male learner** — brings structure, learning strategy, confidence,
-  explanation.
-- **Female learner** — brings curiosity, culture, real-life context, stories,
-  emotional warmth.
+- **Adam** (آدم / 아담), the male learner — brings structure, learning
+  strategy, confidence, explanation.
+- **Lina** (لينا / 리나), the female learner — brings curiosity, culture,
+  real-life context, stories, emotional warmth.
 - **Cluby** — turns learning into discovery and memory.
+
+The learners' names are Re's decision of 27 Sep 2026 (`characters.maleLearner.name`
+and `characters.femaleLearner.name` in the code canon). Use exactly these
+spellings in every language.
 
 ## 4. Role of each character
 
 | Character | Roles | Never used as |
 |---|---|---|
 | Cluby | companion, memory keeper, discovery guide, motivation, reward guide | a pet, an all-knowing teacher, random decoration, "baby mascot" only, comic relief only |
-| Male learner | structure, learning strategy, confidence, progress, explanation | — |
-| Female learner | curiosity, culture, real-life context, stories, emotional warmth | — |
+| Adam (male learner) | structure, learning strategy, confidence, progress, explanation | — |
+| Lina (female learner) | curiosity, culture, real-life context, stories, emotional warmth | — |
 
 ## 5. Current worlds (in unlock order)
 
