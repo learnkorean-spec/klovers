@@ -1,0 +1,32 @@
+# One-off: another session fixed pricing and the course cards on main at the
+# same time (49ce418). Keep theirs, drop ours for those two files, merge main.
+# Deleted before merge.
+name: World-mode sync (one-off)
+
+on:
+  push:
+    branches:
+      - world/pages-cafe-village
+    paths:
+      - .github/workflows/wm-sync.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: world/pages-cafe-village
+          fetch-depth: 0
+      - run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout origin/main -- src/components/PricingSection.tsx src/constants/courseCards.ts
+          git commit -m "Keep main's pricing and course cards (another session's brand-guard pass)"
+          git merge --no-edit origin/main
+          git push
