@@ -23,10 +23,13 @@
  * is the only platform with a star scale that we can link to (it is the
  * share.google URL in index.html's JSON-LD sameAs). Facebook replaced star
  * ratings with Recommendations in 2018, so a "4.9" attributed to Facebook is
- * an average of nothing; the Facebook page shows "100% recommend (20
+ * an average of nothing; the Facebook page shows "100% recommend (15
  * reviews)", which is FACEBOOK_RECOMMENDATIONS below and is quoted only in
  * the Facebook-reviews section (TestimonialsSection.tsx). If either number
  * moves on its platform, change it HERE, the same day.
+ *
+ * 26 Sep 2026: the Facebook count was 20 in this file and 15 on the page.
+ * Checked on facebook.com/Kloversegy/reviews and corrected to 15.
  *
  * TEACHING_YEARS_COUNT is stated, not computed, on purpose: it changes when
  * Re says it does, not silently on 1 January.
@@ -51,7 +54,7 @@ export const RATING = {
 
 export const FACEBOOK_RECOMMENDATIONS = {
   percent: 100,
-  count: 20,
+  count: 15,
   url: "https://www.facebook.com/kloversegy/reviews",
 } as const;
 
