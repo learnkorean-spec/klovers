@@ -14,7 +14,7 @@ const Footer = () => {
   const isAr = language === "ar";
 
   const learnLinks = isAr
-    ? [{ to: "/hangul-starter", label: "ورقة هانغول المجانية" }, { to: "/textbook", label: "الكتاب المدرسي" }, { to: "/games", label: "الألعاب" }, { to: "/review", label: "مراجعة المفردات" }, { to: "/placement-test", label: "اختبار تحديد المستوى" }, { to: "/shop", label: "متجر محبي الكورية" }]
+    ? [{ to: "/hangul-starter", label: "ورقة هانغول المجانية" }, { to: "/textbook", label: "الكتاب المدرسي" }, { to: "/games", label: "الألعاب" }, { to: "/review", label: "مراجعة المفردات" }, { to: "/placement-test", label: "اختبار تحديد المستوى" }, { to: "/shop", label: "متجر كلوفرز" }]
     : [{ to: "/hangul-starter", label: "Free Hangul Sheet" }, { to: "/textbook", label: "Textbook" }, { to: "/games", label: "Games" }, { to: "/review", label: "Vocabulary Review" }, { to: "/placement-test", label: "Placement Test" }, { to: "/shop", label: "Klovers Supply" }];
 
   const companyLinks = isAr

@@ -40,7 +40,7 @@ export default function ShopProductPage() {
   const description = product ? productDescription(product, isAr) : null;
 
   useSEO({
-    title: product ? tr(`${name} · Klovers Supply`, `${name} · متجر محبي الكورية`) : tr("Klovers Supply", "متجر محبي الكورية"),
+    title: product ? tr(`${name} · Klovers Supply`, `${name} · متجر كلوفرز`) : tr("Klovers Supply", "متجر كلوفرز"),
     description: description?.slice(0, 155) || undefined,
     canonical,
     ogImage: product?.images[0],

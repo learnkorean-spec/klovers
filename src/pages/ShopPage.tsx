@@ -46,7 +46,7 @@ export function ShopBar({ isAr, products }: { isAr: boolean; products: ShopProdu
       <div className="sticky top-16 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <div className="container mx-auto flex h-12 items-center justify-between px-4">
           <Link to="/shop" className="font-display text-sm font-bold tracking-wide text-foreground">
-            {isAr ? "متجر محبي الكورية" : "Klovers Supply"}
+            {isAr ? "متجر كلوفرز" : "Klovers Supply"}
           </Link>
           <button
             type="button"
@@ -122,11 +122,11 @@ export default function ShopPage() {
 
   const catTitle = cat ? (catCopy ? tr(catCopy.title.en, catCopy.title.ar) : tr(cat.replace(/-/g, " "), "مجموعة موسمية")) : "";
   useSEO({
-    title: cat ? tr(`${catTitle} · Klovers Supply`, `${catTitle} · متجر محبي الكورية`) : tr("Klovers Supply — Korean books and study goods", "متجر محبي الكورية — كتب ومستلزمات لتعلّم الكورية"),
+    title: cat ? tr(`${catTitle} · Klovers Supply`, `${catTitle} · متجر كلوفرز`) : tr("Klovers Supply — Korean books and study goods", "متجر كلوفرز — كتب ومستلزمات لتعلّم الكورية"),
     description: cat && catCopy
-      ? tr(`${catCopy.line.en}. Klovers books and study goods for learning Korean.`, `${catCopy.line.ar}. كتب ومستلزمات من محبي الكورية لتعلّم الكورية.`)
+      ? tr(`${catCopy.line.en}. Klovers books and study goods for learning Korean.`, `${catCopy.line.ar}. كتب ومستلزمات من كلوفرز لتعلّم الكورية.`)
       : tr("Klovers books and study goods that take Korean beyond the classroom. Digital books go straight to My books in the student dashboard.",
-           "كتب ومستلزمات من محبي الكورية تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب."),
+           "كتب ومستلزمات من كلوفرز تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب."),
     canonical: cat ? `https://kloversegy.com/shop/${cat}` : "https://kloversegy.com/shop",
   });
 
