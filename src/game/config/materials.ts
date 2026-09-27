@@ -128,22 +128,22 @@ export const ACCENT = new MeshBasicMaterial({ color: new Color(PALETTE.yellow), 
  * a muted pine green for the few plants. Brand colours stay the palette's.
  */
 export const NATURAL = {
-  stoneWarm: "#D3C5AB",
+  stoneWarm: "#CBC2AF",
   /** Packed earth of a madang (courtyard floor). */
-  madang: "#CFBEA0",
+  madang: "#C9BEA8",
   /** Dressed stone paving of streets and squares. */
-  paving: "#D4C4A6",
-  pine: "#5F7D57",
+  paving: "#C8BFAD",
+  pine: "#4E7A4C",
   /** Plaster reads ivory under warm light without blowing out to white. */
-  plaster: "#F3EADA",
-  leaf: "#7D9A5B",
-  leafDark: "#56724A",
-  blossom: "#F1B6C6",
+  plaster: "#F7F1E5",
+  leaf: "#6F9E4C",
+  leafDark: "#46703D",
+  blossom: "#F3A5BD",
   moss: "#8E9A62",
   /** Ground beyond the walls, and the far hills. */
   ground: "#C9BC98",
   hill: "#8E9E93",
-  roof: "#3A3B3F",
+  roof: "#33373E",
   /** Market cloth: muted natural dyes, never brand colours. */
   clothRed: "#B5644D",
   clothBlue: "#566E8E",
@@ -162,8 +162,8 @@ export const MAT = {
   roofTile: std(PALETTE.charcoal, 0.7, { flatShading: true, detail: "tile" }),
   /** Curved hanok roofs: smooth-shaded so the curve reads, tiled rows. */
   roofSoft: std(NATURAL.roof, 0.68, { detail: "tile" }),
-  woodDark: std(PALETTE.woodDark, 0.62, { detail: "grain" }),
-  woodWarm: std(PALETTE.woodWarm, 0.66, { detail: "grain" }),
+  woodDark: std("#583824", 0.6, { detail: "grain" }),
+  woodWarm: std("#BC7F48", 0.62, { detail: "grain" }),
   stone: std(NATURAL.ground, 1),
   stoneWarm: std(NATURAL.stoneWarm, 0.98, { detail: "stone" }),
   pine: std(NATURAL.pine, 0.9, { flatShading: true }),
@@ -178,6 +178,9 @@ export const MAT = {
   clothRed: std(NATURAL.clothRed, 0.92, { detail: "fabric" }),
   clothBlue: std(NATURAL.clothBlue, 0.92, { detail: "fabric" }),
   clothSage: std(NATURAL.clothSage, 0.92, { detail: "fabric" }),
+  /** Garden flowers: pink comes from blossom; these add white and lilac. */
+  flowerWhite: std("#FBF7F0", 0.8, { flatShading: true }),
+  flowerLilac: std("#B79BD6", 0.8, { flatShading: true }),
   fruitRed: std(NATURAL.fruitRed, 0.55),
   fruitOrange: std(NATURAL.fruitOrange, 0.6),
   metal: std(PALETTE.charcoal, 0.38, { metalness: 0.55 }),

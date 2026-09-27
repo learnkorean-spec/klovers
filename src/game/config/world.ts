@@ -58,18 +58,18 @@ export const CAMERA = {
    * third, and most of the frame is the place ahead. (With the old close,
    * look-far-ahead setting the feet fell below the frame.)
    */
-  distance: 7.2,
+  distance: 6.4,
   minDistance: 3.2,
   maxDistance: 9.5,
   /** Height of the point the camera looks at, above the player's feet. */
-  targetHeight: 1.3,
+  targetHeight: 1.45,
   /** How far ahead of the learner the camera aims (keeps them low in frame). */
-  lookAhead: 1.5,
+  lookAhead: 2.0,
   /** Pitch limits, radians (positive looks down on the player). Never top-down. */
   minPitch: -0.08,
   maxPitch: 0.6,
   /** A low adventure angle: the horizon sits just above the middle. */
-  startPitch: 0.24,
+  startPitch: 0.14,
   mouseSensitivity: 0.0028,
   followSharpness: 14,
   /** Keeps the camera this far from walls so it never clips through. */
@@ -126,6 +126,11 @@ export const PROPS = {
     { x: 9.2, z: -7.2, s: 1.25 },
     { x: 9.4, z: 6.9, s: 0.95 },
   ],
+  /** Flower clumps round the egg platform and along the halls. */
+  flowers: [
+    [-2.5, -1.6, 1.15], [2.5, -1.6, 1.15], [-2.6, 1.55, 1.1], [2.2, 2.0, 1.0],
+    [-10.3, 4.4, 1.2], [10.3, 5.0, 1.2], [10.3, -5.3, 1.1], [-10.3, -3.2, 1.1],
+  ] as [number, number, number][],
   /** Notice board (게시판) against the east hall. */
   board: { x: 9.95, z: 1.8 },
   pots: [
@@ -155,6 +160,7 @@ export const COLLIDERS: Box2[] = [
   ...PROPS.pines.map((t) => box(t.x, t.z, 0.5, 0.5)),
   ...PROPS.pots.map((t) => box(t.x, t.z, 0.55 * t.s, 0.55 * t.s)),
   box(PROPS.board.x, PROPS.board.z, 0.5, 1.8),
+  ...PROPS.flowers.map(([x, z, sc]) => box(x, z, 0.85 * sc, 0.8 * sc)),
   ...PROPS.beds.map((b) => box(b.x, b.z, b.w + 0.1, b.d + 0.1)),
 ];
 

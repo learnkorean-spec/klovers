@@ -2,7 +2,7 @@ import { MAT } from "../config/materials";
 import { VILLAGE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Batch from "./Batch";
-import { Kit, bed, cart, curvedRoofOn, grass, hanokHouse, hanokRoof, jitter, platform, pot, shrub, steppingStones, tree, wallRun, gatehouse } from "./kit";
+import { Kit, bed, cart, curvedRoofOn, grass, hanokHouse, hanokRoof, jitter, platform, pot, shrub, steppingStones, tree, wallRun, gatehouse, flowerBox } from "./kit";
 import { Gate, GateWall, Lamps, Signboard, Sway } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
 import { curvedRoof } from "./shapes";
@@ -107,7 +107,17 @@ const VILLAGE_KIT: Kit = (() => {
   shrub(k, 4.4, 10.6, 0.6, 17);
   for (const z of VILLAGE.lampZ) grass(k, -VILLAGE.lampX - 0.3, z + 0.3, 0.7, z);
   // Trees behind the houses, over the roofs.
-  for (const [tx, tz] of [[-11.5, -8], [-12, 3], [11.8, 6], [12.2, -2], [-11.2, 10]] as const) tree(k, tx, tz, 1.5, false, tx * tz);
+  for (const [tx, tz] of [[-11.5, -8], [-12, 3], [11.8, 6], [12.2, -2]] as const) tree(k, tx, tz, 1.5, false, tx * tz);
+  // The village's one blossom accent, over the roofs by the entrance.
+  tree(k, -11.2, 10, 1.45, true, 31);
+  // Flower boxes along the veranda edges: colour at eye level down the street.
+  VILLAGE.planters.forEach(([x, z, l], i) => flowerBox(k, x, z, l, false, 50 + i * 7));
+  // Cloth shop banners hanging from a few eaves: depth and colour.
+  HOUSES.forEach(({ side, z }, n) => {
+    if (n % 3 !== 1) return;
+    k.box(n % 2 ? "clothBlue" : "clothRed", [side * (FACE_X - 0.35), 2.05, z - 1.75], [0.03, 1.25, 0.46]);
+    k.box("woodDark", [side * (FACE_X - 0.35), 2.72, z - 1.75], [0.05, 0.05, 0.56]);
+  });
 
   // A bench by the kerb and a vendor's cart near the well.
   platform(k, VILLAGE.bench.x, VILLAGE.bench.z, VILLAGE.bench.d, VILLAGE.bench.w, Math.PI / 2);

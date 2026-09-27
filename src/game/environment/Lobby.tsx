@@ -4,7 +4,7 @@ import { PROPS, ROOM } from "../config/world";
 import type { StoryState } from "../systems/story";
 import Batch from "./Batch";
 import CloverEgg from "./CloverEgg";
-import { Kit, bed, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, shrub, steppingStones, stoneLantern, tree, wallRun } from "./kit";
+import { Kit, bed, flowers, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, shrub, steppingStones, stoneLantern, tree, wallRun } from "./kit";
 import { Gate, Signboard } from "./parts";
 import { paintMadang, useTiledTexture } from "./textures";
 
@@ -69,6 +69,7 @@ const COURTYARD_KIT: Kit = (() => {
   noticeBoard(k, PROPS.board.x, PROPS.board.z, "-x");
   planter(k, -5.6, HD - 0.55, 3.2);
   planter(k, 5.6, HD - 0.55, 3.2);
+  for (const [fx, fz, fs] of PROPS.flowers) flowers(k, fx, fz, fs, fx * 3 + fz);
   // The way on: the only yellow-marked gate in the room.
   gatehouse(k, 0, -HD - 0.02, 0, { open: true, accent: true });
   return k;

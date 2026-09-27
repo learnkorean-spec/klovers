@@ -119,6 +119,11 @@ export const VILLAGE = {
   /** Planting beds by the kerbs: a tree on the right, flowers on the left. */
   bedRight: { x: 4.35, z: -1.9, w: 0.8, d: 2.2 },
   bedLeft: { x: -4.35, z: -3.4, w: 0.8, d: 2.0 },
+  /** Flower boxes along the veranda edges: x, z, length (along z). */
+  planters: [
+    [-4.7, -12.8, 1.4], [-4.7, -7.2, 1.4], [-4.7, -1.6, 1.3], [-4.7, 3.0, 1.4], [-4.7, 9.6, 1.4],
+    [4.7, -7.2, 1.4], [4.7, 3.0, 1.4],
+  ] as [number, number, number][],
   entranceSign: "한글 마을",
   marketSign: "시장",
 } as const;
@@ -146,6 +151,7 @@ const HANGUL_VILLAGE: RoomLayout = {
     ...lamps,
     ...archPosts,
     box(VILLAGE.bench.x, VILLAGE.bench.z, VILLAGE.bench.w, VILLAGE.bench.d),
+    ...VILLAGE.planters.map(([x, z, l]) => box(x, z, 0.62, l + 0.08)),
     box(VILLAGE.cart.x, VILLAGE.cart.z, VILLAGE.cart.w, VILLAGE.cart.d),
     box(VILLAGE.bedRight.x, VILLAGE.bedRight.z, VILLAGE.bedRight.w + 0.1, VILLAGE.bedRight.d + 0.1),
     box(VILLAGE.bedLeft.x, VILLAGE.bedLeft.z, VILLAGE.bedLeft.w + 0.1, VILLAGE.bedLeft.d + 0.1),
@@ -213,6 +219,8 @@ export const MARKET = {
     [-5.6, 6.3, 0.9], [-5.1, 6.95, 0.7], [5.6, 6.2, 0.85],
     [5.7, -2.4, 0.8], [-5.7, 2.3, 0.75], [5.2, 2.6, 0.7],
   ] as [number, number, number][],
+  /** Flower clumps in the gaps between stalls. */
+  flowers: [[-5.95, -2.25], [5.95, 2.25], [-6.2, 6.9], [6.2, -6.9]] as [number, number][],
   lamps: [
     { x: -3.5, z: -5 },
     { x: 3.5, z: -5 },
@@ -238,6 +246,7 @@ const VOCABULARY_MARKET: RoomLayout = {
     ...marketStalls,
     box(MARKET.crates.x, MARKET.crates.z, MARKET.crates.size, MARKET.crates.size),
     ...MARKET.tables.map(([x, z, w, d]) => box(x, z, w + 0.1, d + 0.1)),
+    ...MARKET.flowers.map(([x, z]) => box(x, z, 0.65, 0.6)),
     box(-3.6, -MARKET.halfDepth + 0.7, 0.5, 0.5),
     box(3.6, -MARKET.halfDepth + 0.7, 0.5, 0.5),
     ...marketLamps,
@@ -246,8 +255,8 @@ const VOCABULARY_MARKET: RoomLayout = {
   ],
   cameraColliders: [...marketLamps, ...marketStalls, ...MARKET.tables.map(([x, z]) => box(x, z, 0.3, 0.3))],
   spawns: {
-    fromVillage: { x: 0, z: MARKET.halfDepth - 2.2, yaw: Math.PI },
-    fromHub: { x: 0, z: -MARKET.halfDepth + 2.2, yaw: 0 },
+    fromVillage: { x: 0, z: MARKET.halfDepth - 3.4, yaw: Math.PI },
+    fromHub: { x: 0, z: -MARKET.halfDepth + 3.4, yaw: 0 },
   },
   portals: [
     {
@@ -306,6 +315,8 @@ export const HUB = {
   lanterns: [
     [-2.5, -9.7], [2.5, -9.7],
   ] as [number, number][],
+  /** Flower beds at the corners of the pavilion base. */
+  flowerBeds: [[-2.7, -2.7], [2.7, -2.7], [-2.7, 2.7], [2.7, 2.7]] as [number, number][],
   /** A bench with a pine and lantern (a sitting corner), and a notice board. */
   bench: { x: -7.6, z: 7.45, w: 2.3, d: 0.9 },
   benchPine: { x: -9.7, z: 5.8 },
@@ -336,6 +347,7 @@ const hubProps = [
   box(HUB.benchPine.x, HUB.benchPine.z, 0.5, 0.5),
   box(HUB.board.x, HUB.board.z, 0.5, 1.8),
   ...HUB.beds.map((b) => box(b.x, b.z, b.w + 0.1, b.d + 0.1)),
+  ...HUB.flowerBeds.map(([x, z]) => box(x, z, 1.35, 1.35)),
 ];
 
 const KLOVERS_HUB: RoomLayout = {
@@ -344,7 +356,8 @@ const KLOVERS_HUB: RoomLayout = {
   colliders: [hubPost, ...hubProps, ...people("hub")],
   cameraColliders: [hubPost],
   spawns: {
-    fromVillage: { x: HUB.southGates.village, z: HUB.half - 2.2, yaw: Math.PI },
+    // Turned a little toward the pavilion, so the landmark leads the view.
+    fromVillage: { x: HUB.southGates.village, z: HUB.half - 2.2, yaw: Math.PI - 0.32 },
     fromMarket: { x: HUB.southGates.market, z: HUB.half - 2.2, yaw: Math.PI },
     fromCafe: { x: 0, z: -HUB.half + 2.2, yaw: 0 },
   },
