@@ -15,6 +15,11 @@
  * (1,872 lines) — the routing decision, and now the chrome decision, are
  * legible here in a file you can read in one sitting.
  *
+ * /admin?tab=legacy is the one exception: Legacy Data (historical students
+ * 2022-2025) is a self-contained screen with its own sub-tabs, so it renders
+ * here inside the same shell instead of adding a fifth group to AdminDashboard.
+ * Same URL shape, same sidebar, same ProtectedRoute in front of it.
+ *
  * Known and left alone: AdminDashboard renders its own sticky header and its
  * own group pills, which now duplicate what the shell provides. Removing them
  * is an edit to that file and belongs in its own change.
@@ -24,6 +29,7 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import AdminShell from "@/components/admin/AdminShell";
 
 const AdminDashboard = lazy(() => import("./AdminDashboard"));
+const LegacyDataPanel = lazy(() => import("@/components/admin/legacy/LegacyDataPanel"));
 
 const DashboardLoader = () => (
   <div role="status" aria-label="Loading" className="flex min-h-[60vh] items-center justify-center">
@@ -45,7 +51,7 @@ const AdminEntry = () => {
   return (
     <AdminShell activeId={tab}>
       <Suspense fallback={<DashboardLoader />}>
-        <AdminDashboard />
+        {tab === "legacy" ? <LegacyDataPanel /> : <AdminDashboard />}
       </Suspense>
     </AdminShell>
   );

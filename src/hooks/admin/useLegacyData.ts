@@ -371,6 +371,6 @@ export function legacyErrorMessage(e: unknown): string {
   if (msg.includes("account_not_found")) return "That account no longer exists.";
   if (msg.includes("batch_has_linked_students")) return "This import has students linked to accounts. Unlink them first.";
   if (msg.includes("batch_not_staged")) return "This import is no longer waiting for approval.";
-  if (msg.includes("relation") && msg.includes("does not exist")) return "The Legacy Data tables are not installed yet (migration pending).";
+  if ((msg.includes("relation") && msg.includes("does not exist")) || msg.includes("schema cache")) return "The Legacy Data tables are not installed yet (migration pending).";
   return msg;
 }
