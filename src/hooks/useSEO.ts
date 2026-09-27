@@ -45,7 +45,7 @@ const DEFAULT_DESC =
 export const withBrand = (title: string): string => {
   if (title.includes("Klovers") || title.includes("كلوفرز")) return title;
   // Arabic titles carry the Arabic name, so the tab reads in one language.
-  return /[\\u0600-\\u06FF]/.test(title) ? `${title} | كلوفرز` : `${title} | Klovers`;
+  return /[؀-ۿ]/.test(title) ? `${title} | كلوفرز` : `${title} | Klovers`;
 };
 
 export const useSEO = ({
