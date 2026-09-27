@@ -383,7 +383,8 @@ const PricingSection = () => {
                   <div className="space-y-3 mb-6">
                     {classType === "group" ? (
                       (localRows?.group ?? tierPrices[tierKey]).map((price: any) => {
-                        const isBestValue = price.duration === "3 Months";
+                        // 6 months is the cheapest per month in every tier (scan 27 Sep 2026).
+                        const isBestValue = price.duration === "6 Months";
                         return (
                         <div
                           key={price.duration}
@@ -421,7 +422,8 @@ const PricingSection = () => {
                       })
                     ) : (
                       (localRows?.private ?? privatePrices[tierKey]).map((price: any) => {
-                        const isBestValue = price.duration === "3 Months";
+                        // 6 months is the cheapest per month in every tier (scan 27 Sep 2026).
+                        const isBestValue = price.duration === "6 Months";
                         return (
                         <div
                           key={`private-${price.duration}`}
