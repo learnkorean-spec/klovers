@@ -128,10 +128,28 @@ export const ACCENT = new MeshBasicMaterial({ color: new Color(PALETTE.yellow), 
  * a muted pine green for the few plants. Brand colours stay the palette's.
  */
 export const NATURAL = {
-  stoneWarm: "#D6CAB4",
+  stoneWarm: "#D3C5AB",
   /** Packed earth of a madang (courtyard floor). */
-  madang: "#E4D9C4",
-  pine: "#6E8B67",
+  madang: "#CFBEA0",
+  /** Dressed stone paving of streets and squares. */
+  paving: "#D4C4A6",
+  pine: "#5F7D57",
+  /** Plaster reads ivory under warm light without blowing out to white. */
+  plaster: "#F3EADA",
+  leaf: "#7D9A5B",
+  leafDark: "#56724A",
+  blossom: "#F1B6C6",
+  moss: "#8E9A62",
+  /** Ground beyond the walls, and the far hills. */
+  ground: "#C9BC98",
+  hill: "#8E9E93",
+  roof: "#3A3B3F",
+  /** Market cloth: muted natural dyes, never brand colours. */
+  clothRed: "#B5644D",
+  clothBlue: "#566E8E",
+  clothSage: "#80926C",
+  fruitRed: "#C4473A",
+  fruitOrange: "#DD8A3E",
 } as const;
 
 /** Named finishes of the world's visual system. */
@@ -139,18 +157,32 @@ export const MAT = {
   // Each finish differs in colour AND surface: matte toothy plaster, grained
   // wood with a soft sheen, rough mottled stone, tiled roofs, woven canvas,
   // a little metal for fittings, flat-shaded foliage.
-  plaster: std(PALETTE.ivory, 0.97, { detail: "plaster" }),
+  plaster: std(NATURAL.plaster, 0.97, { detail: "plaster" }),
   charcoal: std(PALETTE.charcoal, 0.85),
   roofTile: std(PALETTE.charcoal, 0.7, { flatShading: true, detail: "tile" }),
+  /** Curved hanok roofs: smooth-shaded so the curve reads, tiled rows. */
+  roofSoft: std(NATURAL.roof, 0.68, { detail: "tile" }),
   woodDark: std(PALETTE.woodDark, 0.62, { detail: "grain" }),
   woodWarm: std(PALETTE.woodWarm, 0.66, { detail: "grain" }),
-  stone: std(PALETTE.stone, 1),
+  stone: std(NATURAL.ground, 1),
   stoneWarm: std(NATURAL.stoneWarm, 0.98, { detail: "stone" }),
   pine: std(NATURAL.pine, 0.9, { flatShading: true }),
+  leaf: std(NATURAL.leaf, 0.9, { flatShading: true }),
+  leafDark: std(NATURAL.leafDark, 0.9, { flatShading: true }),
+  blossom: std(NATURAL.blossom, 0.85, { flatShading: true }),
+  moss: std(NATURAL.moss, 1, { detail: "stone" }),
+  /** Raked gravel either side of a stone path. */
+  gravel: std("#A99A7F", 1, { detail: "stone" }),
+  hill: std(NATURAL.hill, 1, { flatShading: true }),
   fabric: std(PALETTE.ivory, 0.92, { detail: "fabric" }),
+  clothRed: std(NATURAL.clothRed, 0.92, { detail: "fabric" }),
+  clothBlue: std(NATURAL.clothBlue, 0.92, { detail: "fabric" }),
+  clothSage: std(NATURAL.clothSage, 0.92, { detail: "fabric" }),
+  fruitRed: std(NATURAL.fruitRed, 0.55),
+  fruitOrange: std(NATURAL.fruitOrange, 0.6),
   metal: std(PALETTE.charcoal, 0.38, { metalness: 0.55 }),
-  /** Hanji paper in a window: a little self-light so it reads as daylight. */
-  paper: std(PALETTE.white, 0.95, { emissive: PALETTE.ivory, emissiveIntensity: 0.3 }),
-  /** Lantern paper: brighter than a window. */
-  lanternPaper: std(PALETTE.white, 0.9, { emissive: PALETTE.ivory, emissiveIntensity: 0.45 }),
+  /** Hanji paper in a window: warm late-day light glowing through. */
+  paper: std("#FFF4DE", 0.95, { emissive: "#FFD9A0", emissiveIntensity: 0.32 }),
+  /** Lantern paper: a warm glow, the world's "lights" without real lights. */
+  lanternPaper: std("#FFEBC8", 0.9, { emissive: "#FFBE62", emissiveIntensity: 0.95 }),
 } as const;

@@ -6,6 +6,36 @@ import Instanced, { type Part } from "./Instanced";
 import { useSignTexture } from "./signTexture";
 import { REDUCED_MOTION } from "../systems/motion";
 import { ACCENT, MAT, std } from "../config/materials";
+import { curvedRoof } from "./shapes";
+
+/** A small tiled roof over a gate (curved, corners lifted). */
+function GateRoof({ y, w, d = 1.3 }: { y: number; w: number; d?: number }) {
+  const a = 4;
+  return (
+    <group position={[0, y, 0]}>
+      <mesh castShadow position={[0, -0.05, 0]}>
+        <boxGeometry args={[w - 0.3, 0.1, d - 0.5]} />
+        <primitive object={MAT.woodWarm} attach="material" />
+      </mesh>
+      <mesh castShadow geometry={curvedRoof(a)} scale={[w / a, 0.62, d]} dispose={null}>
+        <primitive object={MAT.roofSoft} attach="material" />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * The one yellow a usable gate carries: a thin line along the lintel's
+ * face — "this way", said quietly. Shut gates carry none.
+ */
+function LintelLine({ y, z, w }: { y: number; z: number; w: number }) {
+  return (
+    <mesh position={[0, y, z]}>
+      <boxGeometry args={[w, 0.045, 0.02]} />
+      <primitive object={ACCENT} attach="material" />
+    </mesh>
+  );
+}
 
 /**
  * Scenery pieces shared by the KLOVERS World rooms: signboards with real
@@ -13,8 +43,17 @@ import { ACCENT, MAT, std } from "../config/materials";
  */
 
 /** Two back-to-back planes so the sign reads correctly from both sides. */
-export function Signboard({ text, w, h, aspect = 1 }: { text: string; w: number; h: number; aspect?: number }) {
+export function Signboard({ text, w, h, aspect = 1, oneSided = false }: { text: string; w: number; h: number; aspect?: number; oneSided?: boolean }) {
   const tex = useSignTexture(text, aspect);
+  // One-sided boards (over gates) have no back and no frame box: from outside
+  // the room — where only the camera ever goes — they are simply not there.
+  if (oneSided)
+    return (
+      <mesh position={[0, 0, 0.011]}>
+        <planeGeometry args={[w, h]} />
+        <meshBasicMaterial map={tex} toneMapped={false} />
+      </mesh>
+    );
   return (
     <>
       {[0, Math.PI].map((ry) => (
@@ -46,7 +85,7 @@ export function Lamps({ spots, size = 0.28 }: { spots: { x: number; z: number }[
   return (
     <>
       <Instanced parts={parts.post} material={MAT.woodDark} castShadow />
-      <Instanced parts={parts.foot} material={MAT.stone} receiveShadow />
+      <Instanced parts={parts.foot} material={MAT.stoneWarm} receiveShadow />
       <Instanced parts={parts.light} material={MAT.lanternPaper} />
       <Instanced parts={parts.cap} material={MAT.charcoal} />
     </>
@@ -58,7 +97,7 @@ export function Lamps({ spots, size = 0.28 }: { spots: { x: number; z: number }[
  * middle. `facing` points into the room. Open gates show daylight and
  * doors swung outward; shut gates show closed doors.
  */
-export function GateWall({ z, facing, open, sign, halfWidth }: { z: number; facing: 1 | -1; open: boolean; sign?: string; halfWidth: number }) {
+export function GateWall({ z, facing, open, sign, halfWidth, accent = open }: { z: number; facing: 1 | -1; open: boolean; sign?: string; halfWidth: number; accent?: boolean }) {
   const gateHalf = 1.8;
   const segW = halfWidth + 0.6 - gateHalf;
   const segX = gateHalf + segW / 2;
@@ -67,44 +106,47 @@ export function GateWall({ z, facing, open, sign, halfWidth }: { z: number; faci
     <group>
       {[-segX, segX].map((x) => (
         <group key={x}>
-          <mesh receiveShadow position={[x, 1.4, z]}>
+          <mesh receiveShadow castShadow position={[x, 1.4, z]}>
             <boxGeometry args={[segW, 2.8, 0.4]} />
-            <primitive object={std(PALETTE.ivory, 0.95)} attach="material" />
+            <primitive object={MAT.plaster} attach="material" />
           </mesh>
-          <mesh position={[x, 0.45, z]}>
-            <boxGeometry args={[segW + 0.02, 0.9, 0.42]} />
-            <primitive object={std(PALETTE.charcoal, 0.85)} attach="material" />
+          <mesh receiveShadow position={[x, 0.45, z]}>
+            <boxGeometry args={[segW + 0.04, 0.9, 0.46]} />
+            <primitive object={MAT.stoneWarm} attach="material" />
           </mesh>
-          <mesh castShadow position={[x, 2.92, z]}>
-            <boxGeometry args={[segW + 0.4, 0.2, 1.1]} />
-            <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
+          <mesh position={[x, 2.72, z]}>
+            <boxGeometry args={[segW + 0.02, 0.14, 0.44]} />
+            <primitive object={MAT.woodDark} attach="material" />
+          </mesh>
+          <mesh castShadow position={[x, 2.8, z]} geometry={curvedRoof(9)} scale={[(segW + 0.5) / 9, 0.5, 1.2]} dispose={null}>
+            <primitive object={MAT.roofSoft} attach="material" />
           </mesh>
         </group>
       ))}
-      {/* Gate frame: Klovers yellow when it can be used (navigation), dark timber when shut. */}
+      {/* Gate frame: dark timber on stone feet; a usable gate adds one thin yellow line. */}
       {[-1.7, 1.7].map((x) => (
-        <mesh key={x} castShadow position={[x, 1.5, inner]}>
-          <boxGeometry args={[0.2, 3, 0.2]} />
-          <primitive object={open ? ACCENT : MAT.woodDark} attach="material" />
-        </mesh>
+        <group key={x}>
+          <mesh castShadow position={[x, 1.6, inner]}>
+            <boxGeometry args={[0.26, 3.2, 0.26]} />
+            <primitive object={MAT.woodDark} attach="material" />
+          </mesh>
+          <mesh receiveShadow position={[x, 0.14, inner]}>
+            <boxGeometry args={[0.44, 0.28, 0.44]} />
+            <primitive object={MAT.stoneWarm} attach="material" />
+          </mesh>
+        </group>
       ))}
-      <mesh castShadow position={[0, 3.05, inner]}>
-        <boxGeometry args={[3.6, 0.22, 0.22]} />
-        <primitive object={open ? ACCENT : MAT.woodDark} attach="material" />
+      <mesh castShadow position={[0, 3.12, inner]}>
+        <boxGeometry args={[3.9, 0.24, 0.3]} />
+        <primitive object={MAT.woodDark} attach="material" />
       </mesh>
+      {accent && <LintelLine y={2.96} z={inner + facing * 0.155} w={3.2} />}
+      <group position={[0, 0, inner]}>
+        <GateRoof y={3.3} w={4.6} />
+      </group>
       {open ? (
         <>
-          {/* Daylight through the open gate */}
-          <mesh position={[0, 1.45, z - facing * 0.3]} rotation={[0, facing > 0 ? 0 : Math.PI, 0]}>
-            <planeGeometry args={[3.2, 2.9]} />
-            <meshBasicMaterial color={PALETTE.ivory} toneMapped={false} />
-          </mesh>
-          {[-1, 1].map((sx) => (
-            <mesh key={sx} castShadow position={[sx * 1.55, 1.35, z - facing * 0.85]}>
-              <boxGeometry args={[0.1, 2.7, 1.5]} />
-              <primitive object={std(PALETTE.woodDark, 0.75)} attach="material" />
-            </mesh>
-          ))}
+          {/* An open gateway: the doors stand folded out of sight. */}
         </>
       ) : (
         <>
@@ -120,7 +162,7 @@ export function GateWall({ z, facing, open, sign, halfWidth }: { z: number; faci
       )}
       {sign && (
         <group position={[0, 2.25, z + facing * 0.12]} rotation={[0, facing > 0 ? 0 : Math.PI, 0]}>
-          <Signboard text={sign} w={1.3} h={0.65} aspect={2} />
+          <Signboard text={sign} w={1.3} h={0.65} aspect={2} oneSided />
         </group>
       )}
     </group>
@@ -134,56 +176,15 @@ export function GateWall({ z, facing, open, sign, halfWidth }: { z: number; faci
  * world that does not exist yet gets a bar across. Yellow frames mark only
  * gates the learner can use — yellow is navigation, never decoration.
  */
-export function Gate({ x, z, rotY, open, accent, barred = false, sign }: {
-  x: number;
-  z: number;
-  rotY: number;
-  open: boolean;
-  accent: boolean;
-  barred?: boolean;
-  sign?: string;
-}) {
-  const frame = accent ? ACCENT : MAT.woodDark;
+export function Gate({ x, z, rotY, sign }: { x: number; z: number; rotY: number; sign?: string }) {
+  // The gatehouse itself is drawn by the room's kit (kit.ts, gatehouse());
+  // only the name board, with its painted Hangul, is a separate mesh.
+  if (!sign) return null;
   return (
     <group position={[x, 0, z]} rotation={[0, rotY, 0]}>
-      {[-1.7, 1.7].map((fx) => (
-        <mesh key={fx} castShadow position={[fx, 1.5, 0]}>
-          <boxGeometry args={[0.2, 3, 0.2]} />
-          <primitive object={frame} attach="material" />
-        </mesh>
-      ))}
-      <mesh castShadow position={[0, 3.05, 0]}>
-        <boxGeometry args={[3.6, 0.22, 0.22]} />
-        <primitive object={frame} attach="material" />
-      </mesh>
-      {open ? (
-        <mesh position={[0, 1.45, -0.09]}>
-          <planeGeometry args={[3.2, 2.9]} />
-          <meshBasicMaterial color={PALETTE.ivory} toneMapped={false} />
-        </mesh>
-      ) : (
-        <>
-          <mesh receiveShadow position={[0, 1.35, -0.05]}>
-            <boxGeometry args={[3.2, 2.7, 0.1]} />
-            <primitive object={MAT.woodDark} attach="material" />
-          </mesh>
-          <mesh position={[0, 1.35, 0.005]}>
-            <boxGeometry args={[0.04, 2.7, 0.02]} />
-            <primitive object={MAT.charcoal} attach="material" />
-          </mesh>
-          {barred && (
-            <mesh position={[0, 1.35, 0.03]}>
-              <boxGeometry args={[3.5, 0.18, 0.08]} />
-              <primitive object={MAT.charcoal} attach="material" />
-            </mesh>
-          )}
-        </>
-      )}
-      {sign && (
-        <group position={[0, 3.55, 0.05]}>
-          <Signboard text={sign} w={1.5} h={0.6} aspect={2.5} />
-        </group>
-      )}
+      <group position={[0, 2.72, 0.2]}>
+        <Signboard text={sign} w={1.5} h={0.6} aspect={2.5} oneSided />
+      </group>
     </group>
   );
 }

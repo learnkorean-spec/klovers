@@ -169,7 +169,9 @@ export default function InteractionCard({ lang, kind, notice, who, avatar, signe
   }
 
   return (
-    <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-charcoal/40 p-4" onClick={onClose}>
+    // The world stays in view: a light veil, and on wider screens the card
+    // sits to one side like a note held up beside the scene.
+    <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-charcoal/20 p-4 sm:justify-end sm:pe-10 lg:pe-20" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"

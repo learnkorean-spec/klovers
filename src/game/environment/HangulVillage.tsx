@@ -2,9 +2,10 @@ import { MAT } from "../config/materials";
 import { VILLAGE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Batch from "./Batch";
-import { Kit, cart, hanokHouse, hanokRoof, jitter, platform, pot, steppingStones, wallRun } from "./kit";
+import { Kit, bed, cart, curvedRoofOn, grass, hanokHouse, hanokRoof, jitter, platform, pot, shrub, steppingStones, tree, wallRun, gatehouse } from "./kit";
 import { Gate, GateWall, Lamps, Signboard, Sway } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
+import { curvedRoof } from "./shapes";
 
 /**
  * Room 2 — Hangul Village, the first learning world (canon: worlds[0]).
@@ -78,19 +79,39 @@ const VILLAGE_KIT: Kit = (() => {
   wallRun(k, HW + 0.3, laneZ + 1.9, HW + 6, laneZ + 1.9, 2.2);
   steppingStones(k, HW + 0.4, laneZ, HW + 5.4, laneZ, 0.9, 41, "stoneWarm");
   hanokRoof(k, HW + 9, laneZ, 3.2, 5, 6, 1.4);
+  gatehouse(k, HW + 0.25, laneZ, -Math.PI / 2, { open: true, accent: true });
 
   // The landmark gate: two posts, a double beam, a small tiled roof.
   for (const x of [-ARCH_X, ARCH_X]) {
     k.add("stoneWarm", "oct", [x, 0.15, ARCH_Z], [0.55, 0.3, 0.55], undefined, true);
-    k.box("woodDark", [x, 1.9, ARCH_Z], [VILLAGE.arch.post, 3.8, VILLAGE.arch.post], true);
+    k.box("woodDark", [x, 2.3, ARCH_Z], [VILLAGE.arch.post, 4.6, VILLAGE.arch.post], true);
   }
-  k.box("woodDark", [0, 3.35, ARCH_Z], [ARCH_X * 2 + 0.6, 0.2, 0.3], true);
-  k.box("woodDark", [0, 3.75, ARCH_Z], [ARCH_X * 2 + 1.2, 0.24, 0.34], true);
-  k.box("accent", [0, 3.35, ARCH_Z + 0.16], [ARCH_X * 2 - 0.6, 0.03, 0.015]);
-  k.add("roof", "hip", [0, 4.1, ARCH_Z], [ARCH_X * 2 + 2, 0.55, 1.3], undefined, true);
+  k.box("woodDark", [0, 4.15, ARCH_Z], [ARCH_X * 2 + 0.6, 0.2, 0.3], true);
+  k.box("woodDark", [0, 4.55, ARCH_Z], [ARCH_X * 2 + 1.2, 0.24, 0.34], true);
+  k.box("accent", [0, 4.15, ARCH_Z + 0.16], [ARCH_X * 2 - 0.6, 0.03, 0.015]);
+  for (let x = -ARCH_X + 0.5; x <= ARCH_X - 0.4; x += 0.6) k.box("woodLight", [x, 4.7, ARCH_Z], [0.2, 0.1, 0.46]);
+  curvedRoofOn(k, 0, 4.72, ARCH_Z, ARCH_X * 2 + 2.2, 1.5, 0.7);
+
+  // The landmark past the far gate: a two-storey gate tower over the market.
+  hanokHouse(k, { x: 0, z: -VILLAGE.halfLength - 4.6, w: 6.4, d: 3.6, h: 3.2, face: "+z", roofH: 1.0 });
+  k.box("plaster", [0, 5.6, -VILLAGE.halfLength - 4.6], [3.6, 1.5, 2.2], true);
+  for (const sx of [-1, 1]) k.box("woodDark", [sx * 1.8, 5.6, -VILLAGE.halfLength - 4.6], [0.16, 1.5, 2.3]);
+  hanokRoof(k, 0, -VILLAGE.halfLength - 4.6, 6.35, 3.6, 2.2, 1.1);
+
+  // Greens along both kerbs (not mirrored): a tree and bed on the right,
+  // shrubs and pots on the left, grass at lamp feet.
+  bed(k, VILLAGE.bedRight.x, VILLAGE.bedRight.z, VILLAGE.bedRight.w, VILLAGE.bedRight.d, 11);
+  tree(k, VILLAGE.bedRight.x + 0.1, VILLAGE.bedRight.z, 1.0, false, 12);
+  bed(k, VILLAGE.bedLeft.x, VILLAGE.bedLeft.z, VILLAGE.bedLeft.w, VILLAGE.bedLeft.d, 13, true);
+  pot(k, -4.5, -8.2, 0.75, true);
+  shrub(k, 4.4, 10.6, 0.6, 17);
+  for (const z of VILLAGE.lampZ) grass(k, -VILLAGE.lampX - 0.3, z + 0.3, 0.7, z);
+  // Trees behind the houses, over the roofs.
+  for (const [tx, tz] of [[-11.5, -8], [-12, 3], [11.8, 6], [12.2, -2], [-11.2, 10]] as const) tree(k, tx, tz, 1.5, false, tx * tz);
 
   // A bench by the kerb and a vendor's cart near the well.
   platform(k, VILLAGE.bench.x, VILLAGE.bench.z, VILLAGE.bench.d, VILLAGE.bench.w, Math.PI / 2);
+  bed(k, 4.35, 9.3, 0.8, 1.2, 19);
   cart(k, VILLAGE.cart.x, VILLAGE.cart.z, VILLAGE.cart.w, VILLAGE.cart.d);
 
   // A slate path up the middle of the street.
@@ -121,9 +142,8 @@ function Well() {
           <primitive object={MAT.woodDark} attach="material" />
         </mesh>
       ))}
-      <mesh castShadow position={[0, 2.15, 0]} scale={[2.1, 0.45, 1.3]}>
-        <coneGeometry args={[Math.SQRT1_2, 1, 4, 1]} />
-        <primitive object={MAT.roofTile} attach="material" />
+      <mesh castShadow position={[0, 2.02, 0]} geometry={curvedRoof(1.5)} scale={[2.3 / 1.5, 0.55, 1.5]} dispose={null}>
+        <primitive object={MAT.roofSoft} attach="material" />
       </mesh>
       <mesh castShadow position={[0, 1.55, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.05, 0.05, 1.4, 8]} />
@@ -174,15 +194,15 @@ export default function HangulVillage({ marketOpen }: { marketOpen: boolean }) {
         </group>
       ))}
 
-      <group position={[0, 2.95, ARCH_Z]}>
+      <group position={[0, 3.72, ARCH_Z]}>
         <Signboard text={VILLAGE.entranceSign} w={2.6} h={0.72} aspect={3.4} />
       </group>
 
       {/* East: the lane to the KLOVERS Hub (yellow: the way on). */}
-      <Gate x={HW + 0.25} z={VILLAGE.hubLaneZ} rotY={-Math.PI / 2} open accent sign={VILLAGE.hubSign} />
+      <Gate x={HW + 0.25} z={VILLAGE.hubLaneZ} rotY={-Math.PI / 2} sign={VILLAGE.hubSign} />
       {/* North: the market (Level 1). South: back to the courtyard. */}
       <GateWall z={-HL - 0.2} facing={1} open={marketOpen} sign={VILLAGE.marketSign} halfWidth={HW} />
-      <GateWall z={HL + 0.2} facing={-1} open halfWidth={HW} />
+      <GateWall z={HL + 0.2} facing={-1} open accent={false} halfWidth={HW} />
     </group>
   );
 }

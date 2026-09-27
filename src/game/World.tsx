@@ -25,18 +25,31 @@ import { pickQuality } from "./systems/quality";
 import { createCameraState, createPlayerState, type PlayerState } from "./systems/state";
 import { createStoryState, HATCH, type StoryState } from "./systems/story";
 import type { WorldState } from "./systems/worldState";
+import Backdrop, { SKY } from "./environment/Backdrop";
+import GroundWear from "./environment/GroundWear";
 
 /**
  * Light colours (not brand colours): golden sun, warm sky bounce, earth
  * bounce, cool fill, and a sky a touch warmer than the brand ivory.
  */
 const LIGHT = {
-  sun: "#FFE2B8",
-  skyBounce: "#FFF3DF",
-  groundBounce: "#9A7A5C",
-  fill: "#DCE5F6",
-  sky: "#FFF6E6",
+  /** Low golden sun: warm, but not orange — stone and plaster stay neutral. */
+  sun: "#FFD49E",
+  skyBounce: "#FFE9CC",
+  groundBounce: "#7E6249",
+  fill: "#C4D3EC",
+  /** Haze at the horizon: the sky dome's lowest colour. */
+  haze: SKY.horizon,
 } as const;
+
+/** How far past its walls each room's buildings reach (tree ring, far hills). */
+const BACKDROP: Record<RoomId, { hx: number; hz: number }> = {
+  courtyard: { hx: 16.5, hz: 15 },
+  "hangul-village": { hx: 11, hz: 16.5 },
+  "vocabulary-market": { hx: 14.5, hz: 10.5 },
+  hub: { hx: 17.5, hz: 18 },
+  "conversation-cafe": { hx: 9, hz: 8 },
+};
 
 /** Length of the fade to and from ivory on a room change, ms. */
 export const FADE_MS = 350;
@@ -359,21 +372,22 @@ export default function World(props: WorldProps) {
         requestAnimationFrame(() => requestAnimationFrame(() => onReady?.()));
       }}
     >
-      <color attach="background" args={[LIGHT.sky]} />
-      <fog attach="fog" args={[LIGHT.sky, 24, 70]} />
+      <color attach="background" args={[LIGHT.haze]} />
+      <fog attach="fog" args={[LIGHT.haze, 28, 92]} />
+      <Backdrop id={roomId} hx={BACKDROP[roomId].hx} hz={BACKDROP[roomId].hz} />
 
       {/* Warm late-afternoon light: a low golden sun with soft shadows, a
           warm sky/ground bounce, and a faint cool fill from the other side
           so shadows keep their shape without going black. Two lights only. */}
-      <hemisphereLight args={[LIGHT.skyBounce, LIGHT.groundBounce, 1.0]} />
-      <directionalLight position={[-9, 7, -8]} intensity={0.35} color={LIGHT.fill} />
+      <hemisphereLight args={[LIGHT.skyBounce, LIGHT.groundBounce, 0.72]} />
+      <directionalLight position={[-9, 7, -8]} intensity={0.32} color={LIGHT.fill} />
       <directionalLight
         key={roomId}
         castShadow={quality.shadows}
-        position={[11, 10, 6]}
-        intensity={2.3}
+        position={[13, 7.6, 8]}
+        intensity={2.95}
         color={LIGHT.sun}
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
         shadow-normalBias={0.02}
         shadow-camera-left={-layout.shadowExtent}
@@ -384,6 +398,7 @@ export default function World(props: WorldProps) {
         shadow-camera-far={40}
       />
 
+      <GroundWear key={`w-${roomId}`} bounds={layout.bounds} seed={roomId.length * 7} />
       {roomId === "courtyard" && <Lobby story={story} />}
       {roomId === "hangul-village" && <HangulVillage marketOpen={access.open.has("vocabulary-market")} />}
       {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} />}

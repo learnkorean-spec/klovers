@@ -1,7 +1,8 @@
-import { useEffect, useRef, type MutableRefObject } from "react";
+import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3 } from "three";
 import type { RoomLayout } from "../config/rooms";
+import type { Box2 } from "../config/world";
 import { CAMERA, MAX_DT } from "../config/world";
 import { isBlocked } from "../systems/collision";
 import { angleDelta, damp } from "../systems/movement";
@@ -18,6 +19,38 @@ interface CameraProps {
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
 /**
+ * Passages the camera may back out through: every always-open gate (a
+ * portal with no lock) continues 8 m past the wall, a little narrower than
+ * the gate. Arriving just inside a gate, the camera then keeps its full
+ * distance and frames the learner in the gateway instead of pressing in.
+ */
+function cameraOpenings(layout: RoomLayout): Box2[] {
+  const b = layout.bounds;
+  const out: Box2[] = [];
+  for (const p of layout.portals) {
+    if (p.lockedNotice) continue;
+    const z = p.zone;
+    const nx = (z.maxX - z.minX) / 2 - 0.2;
+    const cx = (z.minX + z.maxX) / 2;
+    const cz = (z.minZ + z.maxZ) / 2;
+    const nz = (z.maxZ - z.minZ) / 2 - 0.2;
+    if (z.maxZ >= b.maxZ - 1.2) out.push({ minX: cx - nx, maxX: cx + nx, minZ: b.maxZ - 1, maxZ: b.maxZ + 8 });
+    else if (z.minZ <= b.minZ + 1.2) out.push({ minX: cx - nx, maxX: cx + nx, minZ: b.minZ - 8, maxZ: b.minZ + 1 });
+    else if (z.maxX >= b.maxX - 1.2) out.push({ minX: b.maxX - 1, maxX: b.maxX + 8, minZ: cz - nz, maxZ: cz + nz });
+    else if (z.minX <= b.minX + 1.2) out.push({ minX: b.minX - 8, maxX: b.minX + 1, minZ: cz - nz, maxZ: cz + nz });
+  }
+  return out;
+}
+
+function cameraBlocked(x: number, z: number, pad: number, layout: RoomLayout, openings: Box2[]): boolean {
+  const b = layout.bounds;
+  const outside = x < b.minX + pad || x > b.maxX - pad || z < b.minZ + pad || z > b.maxZ - pad;
+  if (outside && !openings.some((o) => x > o.minX + pad && x < o.maxX - pad && z > o.minZ && z < o.maxZ)) return true;
+  // Colliders only (bounds handled above, with the openings).
+  return isBlocked(x, z, pad, layout.cameraColliders, { minX: -1e6, maxX: 1e6, minZ: -1e6, maxZ: 1e6 });
+}
+
+/**
  * Orbit-follow camera behind the player.
  *
  * Mouse: click the scene to lock the pointer and look around freely (Esc
@@ -32,6 +65,9 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
   const desired = useRef(new Vector3());
   const dirRef = useRef(new Vector3());
   const initialised = useRef(false);
+  const portrait = useRef(false);
+  portrait.current = size.width < size.height;
+  const openings = useMemo(() => cameraOpenings(layout), [layout]);
   const firstLook = useRef(onFirstLook);
   firstLook.current = onFirstLook;
 
@@ -39,7 +75,7 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
   useEffect(() => {
     if (!("fov" in cam)) return;
     const persp = cam as typeof cam & { fov: number };
-    persp.fov = size.width < size.height ? CAMERA.fovPortrait : CAMERA.fov;
+    persp.fov = size.width < size.height ? CAMERA.fovPortrait : size.height < 500 ? CAMERA.fovLandscapePhone : CAMERA.fov;
     cam.updateProjectionMatrix();
   }, [cam, size.width, size.height]);
 
@@ -148,12 +184,17 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
     const dir = dirRef.current.set(Math.sin(c.yaw) * cosP, Math.sin(c.pitch), Math.cos(c.yaw) * cosP);
 
     // Walk out from the player until a wall or column would be hit.
-    let free = c.distance;
+    const want = c.distance * (portrait.current ? CAMERA.portraitDistance : 1);
+    let free = want;
     const step = 0.1;
-    for (let d = step; d <= c.distance; d += step) {
+    for (let d = step; d <= want; d += step) {
       const x = target.current.x + dir.x * d;
       const z = target.current.z + dir.z * d;
-      if (isBlocked(x, z, CAMERA.wallPadding, layout.cameraColliders, layout.bounds)) {
+      // Above eave height (≈ 3 m) the camera would sit inside the roofs that
+      // overhang the walls, so it keeps further from them the higher it is.
+      const y = target.current.y + dir.y * d;
+      const pad = CAMERA.wallPadding + Math.max(0, y - 2.8) * 0.9;
+      if (cameraBlocked(x, z, pad, layout, openings)) {
         free = Math.max(d - step, CAMERA.minDistance * 0.5);
         break;
       }
@@ -163,6 +204,15 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
       ? free
       : c.currentDistance + (free - c.currentDistance) * damp(4, dt);
 
+    // Pulled in by a wall behind: tilt down a little so the learner stays
+    // framed full-length instead of filling the screen. (Tilting only
+    // shortens the horizontal reach, so it never re-enters the wall.)
+    const squeeze = Math.max(0, 1 - c.currentDistance / Math.max(want, 0.001));
+    if (squeeze > 0.02) {
+      const p2 = Math.min(c.pitch + squeeze * 0.42, CAMERA.maxPitch + 0.1);
+      const cp = Math.cos(p2);
+      dir.set(Math.sin(c.yaw) * cp, Math.sin(p2), Math.cos(c.yaw) * cp);
+    }
     cam.position.copy(target.current).addScaledVector(dir, c.currentDistance);
     cam.lookAt(target.current);
     initialised.current = true;

@@ -11,6 +11,8 @@ export interface Quality {
 }
 
 export function pickQuality(): Quality {
+  // Checks only: ?hq forces the desktop tier (screenshots on slow machines).
+  if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("hq")) return { shadows: true, dpr: [1, 1.5] };
   const nav = navigator as Navigator & { deviceMemory?: number };
   const small = (nav.deviceMemory ?? 8) < 4 || (nav.hardwareConcurrency ?? 8) <= 4;
   if (isTouchFirst() || small) return { shadows: false, dpr: [1, 1.25] };

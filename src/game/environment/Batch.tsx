@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import Instanced from "./Instanced";
-import { KIT_GEOMETRY, KIT_MATERIALS, type GeoKey, type Kit, type MatKey } from "./kit";
+import { KIT_MATERIALS, kitGeometry, type GeoKey, type Kit, type MatKey } from "./kit";
 
 /**
  * Draws a whole Kit: one instanced mesh per finish × shape × shadow flag.
@@ -17,9 +17,9 @@ export default function Batch({ kit }: { kit: Kit }) {
             key={key}
             parts={parts}
             material={KIT_MATERIALS[mat]}
-            geometry={KIT_GEOMETRY[geo]}
+            geometry={kitGeometry(geo)}
             castShadow={cast === "1"}
-            receiveShadow={mat !== "accent" && mat !== "lantern" && mat !== "paper"}
+            receiveShadow={mat !== "accent" && mat !== "lantern" && mat !== "paper" && mat !== "hill"}
           />
         );
       })}

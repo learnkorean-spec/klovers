@@ -46,33 +46,41 @@ export const PLAYER = {
   deceleration: 12,
   /** How quickly the body turns to face the travel direction (1/s). */
   turnRate: 12,
-  spawn: { x: 0, z: 6.4 },
+  /** Off the path a little, so the egg shows beside the learner, not behind. */
+  spawn: { x: -1.3, z: 3.7 },
   /** Facing at spawn: looking toward the egg (−z). */
   spawnYaw: Math.PI,
 } as const;
 
 export const CAMERA = {
-  distance: 6.4,
-  minDistance: 2.4,
-  maxDistance: 8.5,
-  /** Height of the point the camera looks at, above the player's feet. */
-  targetHeight: 1.5,
   /**
-   * The camera looks a little ahead of the learner, so they sit in the
-   * lower-middle of the frame and the way forward stays visible.
+   * Adventure framing: the learner stands full-length in the lower-middle
+   * third, and most of the frame is the place ahead. (With the old close,
+   * look-far-ahead setting the feet fell below the frame.)
    */
-  lookAhead: 1.3,
-  /** Pitch limits, radians (positive looks down on the player). */
-  minPitch: -0.15,
-  maxPitch: 1.1,
-  startPitch: 0.33,
+  distance: 7.2,
+  minDistance: 3.2,
+  maxDistance: 9.5,
+  /** Height of the point the camera looks at, above the player's feet. */
+  targetHeight: 1.3,
+  /** How far ahead of the learner the camera aims (keeps them low in frame). */
+  lookAhead: 1.5,
+  /** Pitch limits, radians (positive looks down on the player). Never top-down. */
+  minPitch: -0.08,
+  maxPitch: 0.6,
+  /** A low adventure angle: the horizon sits just above the middle. */
+  startPitch: 0.24,
   mouseSensitivity: 0.0028,
   followSharpness: 14,
   /** Keeps the camera this far from walls so it never clips through. */
-  wallPadding: 0.25,
-  fov: 55,
+  wallPadding: 0.35,
+  fov: 52,
+  /** Short landscape phones see a little more to each side. */
+  fovLandscapePhone: 58,
   /** Wider view on portrait screens (phones held upright). */
-  fovPortrait: 70,
+  fovPortrait: 66,
+  /** Portrait screens also pull the camera back a little. */
+  portraitDistance: 1.12,
 } as const;
 
 /** Largest simulated step; protects collision after a tab switch or hitch. */
@@ -121,14 +129,23 @@ export const PROPS = {
   /** Notice board (게시판) against the east hall. */
   board: { x: 9.95, z: 1.8 },
   pots: [
-    { x: -9.8, z: -7.6, s: 1 },
-    { x: -8.9, z: -8.0, s: 0.8 },
-    { x: 10.0, z: 2.2, s: 0.9 },
+    { x: -4.9, z: -8.3, s: 1 },
+    { x: -4.1, z: -8.5, s: 0.75 },
+    { x: 10.0, z: 2.9, s: 0.9 },
+  ],
+  /**
+   * Planting beds (low stone kerb, moss, shrubs, grass): the flowering hero
+   * tree in the north-west corner, green beds against both halls.
+   */
+  beds: [
+    { x: -8.5, z: -7.8, w: 4.4, d: 2.0, blossom: true },
+    { x: -10.25, z: 1.0, w: 1.3, d: 3.6, blossom: false },
+    { x: 10.25, z: -2.4, w: 1.3, d: 3.2, blossom: false },
   ],
 } as const;
 
 /** Everything tall enough to stop the camera, as points (tests use this). */
-export const SOLID_POINTS: { x: number; z: number }[] = [...PROPS.lanterns, ...PROPS.pines];
+export const SOLID_POINTS: { x: number; z: number }[] = [...PROPS.lanterns, ...PROPS.pines, { x: -8.9, z: -7.9 }];
 
 /** All static colliders in the courtyard (walls are the bounds). */
 export const COLLIDERS: Box2[] = [
@@ -138,6 +155,7 @@ export const COLLIDERS: Box2[] = [
   ...PROPS.pines.map((t) => box(t.x, t.z, 0.5, 0.5)),
   ...PROPS.pots.map((t) => box(t.x, t.z, 0.55 * t.s, 0.55 * t.s)),
   box(PROPS.board.x, PROPS.board.z, 0.5, 1.8),
+  ...PROPS.beds.map((b) => box(b.x, b.z, b.w + 0.1, b.d + 0.1)),
 ];
 
 /** Tall colliders only: the camera may pass over platforms and the egg. */
