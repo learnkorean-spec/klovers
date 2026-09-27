@@ -327,7 +327,7 @@ const ReturningStudentsLandingPage = () => {
               <Button size="lg" asChild className="gap-2 h-13 px-8 text-base font-bold shadow-lg">
                 <Link to="/enroll-now">
                   {t("welcomeBack.hero.ctaPrimary")}
-                  <ArrowRight className="h-5 w-5" />
+                  <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
                 </Link>
               </Button>
               <Button
@@ -463,7 +463,7 @@ const ReturningStudentsLandingPage = () => {
               >
                 <Link to="/placement-test">
                   {t("welcomeBack.steps.placementLink")}
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden="true" />
                 </Link>
               </Button>
             </div>
@@ -562,7 +562,7 @@ const ReturningStudentsLandingPage = () => {
               >
                 <Link to="/enroll-now">
                   {t("welcomeBack.finalCta.button")}
-                  <ArrowRight className="h-5 w-5" />
+                  <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
                 </Link>
               </Button>
               <Button

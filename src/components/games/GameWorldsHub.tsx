@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
-import { Check, Lock, ArrowRight, Flame, Gift, Trophy } from "lucide-react";
+import { Check, Lock, ArrowRight, Flame, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import KloverIcon from "@/components/KloverIcon";
@@ -10,6 +10,8 @@ import { gameIconName } from "@/constants/gameIcons";
 import { gameWorlds, CLUBY_OUTFITS, type GameWorld } from "@/constants/gameWorlds";
 import { WORLD_SCENES, WORLD_STOPS } from "@/components/games/WorldScenes";
 import { isClubyAwake } from "@/lib/clubyAwake";
+import { toArabicDigits } from "@/lib/trustFigures";
+import { leagueName } from "@/lib/dashboardLocale";
 
 /**
  * Top of /games: the Game Worlds hub, in the style of Re's 23 Sep 2026 mockup,
@@ -198,6 +200,9 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
   };
   const continueGame = nextGameIn(allComplete ? 0 : currentIdx);
 
+  // Arabic page: Arabic-Indic digits throughout, matching the points toast.
+  const num = (n: number | string) => (isAr ? toArabicDigits(n) : String(n));
+
   const league = getLeague(totalXp);
   const nextLeague = LEAGUES[league.index + 1];
   const pct = nextLeague
@@ -213,7 +218,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
       label: isAr ? `لعب لعبة في ${currentWorldName}` : `Play a game in ${currentWorldName}`,
       done: !!current && current.world.gameIds.some((id) => todayIds.has(id)),
     },
-    { label: isAr ? "لعب 3 ألعاب اليوم" : "Play 3 games today", done: playedToday.length >= 3 },
+    { label: isAr ? `لعب ${num(3)} ألعاب اليوم` : "Play 3 games today", done: playedToday.length >= 3 },
   ];
   const missionsDone = missions.filter((m) => m.done).length;
 
@@ -265,7 +270,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           {isLoggedIn ? (
             <div className="grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
               <div className="min-w-0">
-                <p className="text-sm font-extrabold">{/* needs Klovers icon: league badge (was league.emoji) */}<Trophy className="me-1 inline h-4 w-4 align-[-2px]" aria-hidden="true" />{league.name}</p>
+                <p className="text-sm font-extrabold"><KloverIcon name="game-crown" className="me-1 inline-block h-5 w-5 align-middle" />{leagueName(league, lang)}</p>
                 <div
                   className="mt-2 h-2.5 rounded-full bg-charcoal/10 dark:bg-muted overflow-hidden"
                   role="progressbar"
@@ -277,15 +282,15 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                   <div className="h-full rounded-full bg-klovers-green" style={{ width: `${pct}%` }} />
                 </div>
                 <p className="mt-1.5 text-[11px] text-charcoal/70 dark:text-muted-foreground">
-                  {totalXp.toLocaleString()} XP
+                  {isAr ? `${num(totalXp)} من نقاط الخبرة` : `${totalXp.toLocaleString()} XP`}
                   {nextLeague && (isAr
-                    ? ` · ${(nextLeague.minXp - totalXp).toLocaleString()} XP لـ ${nextLeague.name}`
+                    ? ` · ${num(nextLeague.minXp - totalXp)} نقطة خبرة حتى ${leagueName(nextLeague, lang)}`
                     : ` · ${(nextLeague.minXp - totalXp).toLocaleString()} XP to ${nextLeague.name}`)}
                 </p>
               </div>
               <div className="sm:border-s sm:border-charcoal/10 dark:sm:border-border sm:ps-4">
                 <p className="flex items-center gap-1 text-xl font-extrabold">
-                  <Flame className="h-5 w-5 fill-klovers-yellow text-foreground" aria-hidden="true" /> {streak}
+                  <Flame className="h-5 w-5 fill-klovers-yellow text-foreground" aria-hidden="true" /> {num(streak)}
                 </p>
                 <p className="text-[11px] text-charcoal/70 dark:text-muted-foreground">{isAr ? "يوم متتالي" : "day streak"}</p>
               </div>
@@ -303,7 +308,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm font-extrabold">
                 {isAr
-                  ? `${FREE_GAME_IDS.length} ألعاب مجانية بلا حساب`
+                  ? `${num(FREE_GAME_IDS.length)} ألعاب مجانية بلا حساب`
                   : `${FREE_GAME_IDS.length} games free, no account needed`}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -365,7 +370,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <h2 className="font-bold text-foreground">{isAr ? "الزي التالي" : "Next outfit"}</h2>
             <p className="text-xs text-muted-foreground">
               {current
-                ? (isAr ? `${current.done} / ${current.total} ألعاب في ${currentWorldName}` : `${current.done} / ${current.total} games in ${currentWorldName}`)
+                ? (isAr ? `${num(current.done)} / ${num(current.total)} ألعاب في ${currentWorldName}` : `${current.done} / ${current.total} games in ${currentWorldName}`)
                 : ""}
             </p>
             <div className="mt-2 flex gap-1">
@@ -384,7 +389,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-baseline justify-between">
             <h2 className="font-bold text-foreground">{isAr ? "مهام اليوم" : "Today's Missions"}</h2>
-            {isLoggedIn && <span className="text-sm font-extrabold text-foreground">{missionsDone} / {missions.length}</span>}
+            {isLoggedIn && <span className="text-sm font-extrabold text-foreground">{num(missionsDone)} / {num(missions.length)}</span>}
           </div>
           <ul className="mt-2 space-y-1.5">
             {missions.map((m) => (
@@ -416,7 +421,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <div className="min-w-0 flex-1">
               <h2 className="font-bold text-foreground">{isAr ? "أزياء كلوبي" : "Cluby's outfits"}</h2>
               <p className="text-xs text-muted-foreground">
-                {isAr ? `${CLUBY_OUTFITS.length} أزياء` : `${CLUBY_OUTFITS.length} outfits`}
+                {isAr ? `${num(CLUBY_OUTFITS.length)} أزياء` : `${CLUBY_OUTFITS.length} outfits`}
               </p>
             </div>
             <span className="rounded bg-klovers-yellow px-2 py-0.5 text-[11px] font-bold text-charcoal">{isAr ? "قريبًا" : "Coming soon"}</span>
@@ -445,7 +450,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         <div className="grid items-end gap-4 md:grid-cols-[11rem_minmax(0,1fr)_9rem]">
           <div>
             <h2 className="font-display text-2xl font-extrabold leading-tight text-charcoal dark:text-foreground">
-              {isAr ? "رحلتك الكورية" : "Your Korean Journey"}
+              {isAr ? "الرحلة الكورية" : "Your Korean Journey"}
             </h2>
             <p className="mt-1 text-xs text-charcoal/70 dark:text-muted-foreground">
               {isAr ? "استكشاف ولعب وإتقان للكورية، خطوة بعد خطوة." : "Explore, play, and master Korean step by step!"}
@@ -501,7 +506,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                       )}
                     </span>
                     <span className="-mt-3 relative grid h-6 w-6 place-items-center rounded-full bg-charcoal text-[11px] font-extrabold text-white dark:bg-klovers-yellow dark:text-charcoal">
-                      {String(i + 1).padStart(2, "0")}
+                      {num(String(i + 1).padStart(2, "0"))}
                     </span>
                     <span className="mt-1 text-xs font-extrabold text-charcoal dark:text-foreground sm:text-sm">
                       {isAr ? s.world.nameAr : s.world.name}
@@ -539,7 +544,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           </div>
         </div>
         <p className="cluby-note mt-3 text-end text-sm text-charcoal/70 dark:text-muted-foreground" lang={lang}>
-          {isAr ? "الخطوات الصغيرة نفسها، ونسخة أكبر منك" : "Same small steps, a bigger you."}
+          {isAr ? "الخطوات الصغيرة نفسها، ونسخة أكبر من الأمس" : "Same small steps, a bigger you."}
         </p>
       </section>
 
@@ -567,7 +572,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                 )}
                 <div className={cn("relative p-4 text-charcoal dark:text-foreground", clubyAwake && "pe-28")}>
                   <span className={cn("grid h-7 w-7 place-items-center rounded-full text-xs font-extrabold", WORLD_BADGE[s.world.key])}>
-                    {String(i + 1).padStart(2, "0")}
+                    {num(String(i + 1).padStart(2, "0"))}
                   </span>
                   <h3 className="mt-2 font-display text-xl font-extrabold leading-tight">{isAr ? s.world.nameAr : s.world.name}</h3>
                   <p className="text-xs text-charcoal/80 dark:text-foreground/80">{isAr ? s.world.descriptionAr : s.world.description}</p>
@@ -577,7 +582,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               <div className="flex flex-1 flex-col p-4 pt-3">
                 <div className="flex items-center gap-3">
                   <p className="shrink-0 text-xs font-semibold text-foreground">
-                    {isAr ? `${s.done} / ${s.total} ألعاب مكتملة` : `${s.done} / ${s.total} games completed`}
+                    {isAr ? `${num(s.done)} / ${num(s.total)} ألعاب مكتملة` : `${s.done} / ${s.total} games completed`}
                   </p>
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                     <div className={cn("h-full rounded-full", WORLD_BAR[s.world.key])} style={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} />
@@ -626,7 +631,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                   onClick={seeAll}
                   className="mt-3 inline-flex items-center gap-1 self-start rounded text-sm font-bold text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                 >
-                  {isAr ? `عرض الكل (${s.total})` : `See all (${s.total})`}
+                  {isAr ? `عرض الكل (${num(s.total)})` : `See all (${s.total})`}
                   <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </button>
               </div>
@@ -651,13 +656,15 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-charcoal bg-klovers-yellow px-4 py-2 text-sm font-bold text-charcoal"
           >
             <Gift className="h-4 w-4" aria-hidden="true" />
-            {isAr ? `كل الألعاب (${totalGames})` : `All ${totalGames} games`}
+            {isAr ? `كل الألعاب (${num(totalGames)})` : `All ${totalGames} games`}
           </button>
         </aside>
       </section>
 
-      {/* "See all" lands here: GamesPage renders the full grid right after the hub. */}
-      <div id="all-games" className="scroll-mt-24" aria-hidden="true" />
+      {/* "See all" scrolls to id="all-games", which sits on the games-list
+          section in GamesPage itself (not here: the KLOVERS World card is
+          rendered between the hub and the list, so a marker at the end of the
+          hub landed on that card instead). */}
     </div>
   );
 };

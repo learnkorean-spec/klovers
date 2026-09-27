@@ -357,7 +357,7 @@ const GamesPage = () => {
           <div className="space-y-2">
             <h3 className="text-xl font-bold text-foreground">{game && <KloverIcon name={gameIconName(game.id)} className="me-2 inline-block h-9 w-9 align-middle" />}{game?.title} {isAr ? "للأعضاء فقط" : "is for members"}</h3>
             <p className="text-muted-foreground max-w-sm text-sm">
-              {isAr ? `حساب مجاني يفتح جميع الألعاب الـ ${games.length}، ويحفظ نقاط XP، ويبني السلسلة اليومية.` : `Create a free account to unlock all ${games.length} games, save your XP, and build your daily streak.`}
+              {isAr ? `حساب مجاني يفتح جميع الألعاب الـ ${toArabicDigits(games.length)}، ويحفظ نقاط الخبرة، ويبني السلسلة اليومية.` : `Create a free account to unlock all ${games.length} games, save your XP, and build your daily streak.`}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -434,11 +434,13 @@ const GamesPage = () => {
         {/* KLOVERS World — the 3D courtyard prototype (/world). */}
         <WorldEntryCard isAr={isAr} />
 
-        {/* Game selector */}
-        <section className="py-10 px-4">
+        {/* Game selector. id="all-games" is the target of the hub's "See all"
+            and "All games" buttons: it must sit on this list, not before the
+            KLOVERS World card above. */}
+        <section id="all-games" className="py-10 px-4 scroll-mt-24">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-lg font-bold text-foreground mb-4">
-              {isAr ? `كل الألعاب (${games.length})` : `All games (${games.length})`}
+              {isAr ? `كل الألعاب (${toArabicDigits(games.length)})` : `All games (${games.length})`}
             </h2>
             {/* Grouped by world, in journey order. Same catalog, same gate:
                 every id comes from gameWorlds(), which is GAMES_CATALOG grouped
@@ -455,7 +457,7 @@ const GamesPage = () => {
                       <KloverIcon name={world.icon} className="h-9 w-9" />
                       <h3 className="text-base md:text-lg font-bold text-foreground">{isAr ? world.nameAr : world.name}</h3>
                       <span className="text-xs text-muted-foreground">
-                        {isAr ? `${worldGames.length} ألعاب` : `${worldGames.length} games`}
+                        {isAr ? `${toArabicDigits(worldGames.length)} ألعاب` : `${worldGames.length} games`}
                       </span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -643,13 +645,13 @@ const GamesPage = () => {
                   ? (isAr ? "عمل رائع! 잘했어요" : "Nice work! 잘했어요")
                   : (isAr ? "قريب جدًا، والمحاولة التالية أقرب" : "So close — try again!")}
               </h2>
-              <p className="text-sm text-muted-foreground">{isAr ? `حساب مجاني يحفظ التقدّم ويفتح جميع الألعاب الـ ${games.length}.` : `Create a free account to save your progress and unlock all ${games.length} games.`}</p>
+              <p className="text-sm text-muted-foreground">{isAr ? `حساب مجاني يحفظ التقدّم ويفتح جميع الألعاب الـ ${toArabicDigits(games.length)}.` : `Create a free account to save your progress and unlock all ${games.length} games.`}</p>
             </div>
 
             <div className="space-y-2">
               {[
-                { Icon: Star, text: isAr ? "حفظ نقاط XP والسلسلة اليومية" : "Save your XP and streak" },
-                { Icon: Unlock, text: isAr ? `فتح جميع الألعاب الكورية الـ ${games.length}` : `Unlock all ${games.length} Korean games` },
+                { Icon: Star, text: isAr ? "حفظ نقاط الخبرة والسلسلة اليومية" : "Save your XP and streak" },
+                { Icon: Unlock, text: isAr ? `فتح جميع الألعاب الكورية الـ ${toArabicDigits(games.length)}` : `Unlock all ${games.length} Korean games` },
                 { Icon: BarChart3, text: isAr ? "تتبّع التقدّم في التعلّم" : "Track your learning progress" },
               ].map(({ Icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">

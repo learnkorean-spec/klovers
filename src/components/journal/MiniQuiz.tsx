@@ -75,7 +75,7 @@ export default function MiniQuiz({ questions, isAr }: { questions: QuizQuestion[
         <p className="mt-2 text-muted-foreground">
           {earned > 0
             ? isAr ? `+${num(earned, true)} نقطة للرحلة في هذه الجولة.` : `+${earned} journey XP this round.`
-            : isAr ? "يمكن إعادة الجولة في أي وقت لتثبيت ما تعلّمته." : "Replay any time to lock in what you learned."}
+            : isAr ? "يمكن إعادة الجولة في أي وقت لتثبيت الدرس." : "Replay any time to lock in what you learned."}
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button asChild size="lg" className="h-12 rounded-full px-7 font-bold">
@@ -163,7 +163,7 @@ export default function MiniQuiz({ questions, isAr }: { questions: QuizQuestion[
                 <Check className="h-5 w-5" aria-hidden="true" />
                 {isAr ? "صحيح" : "Correct"}
                 {justEarned && (
-                  <span className="journal-pop rounded-full bg-primary px-2.5 py-0.5 text-sm text-charcoal">+{num(XP.quizCorrect, isAr)} XP</span>
+                  <span className="journal-pop rounded-full bg-primary px-2.5 py-0.5 text-sm text-charcoal">{isAr ? `+${num(XP.quizCorrect, true)} نقاط للرحلة` : `+${XP.quizCorrect} XP`}</span>
                 )}
               </p>
               <p className="mt-1 text-sm leading-relaxed text-foreground">{q.explain[L]}</p>

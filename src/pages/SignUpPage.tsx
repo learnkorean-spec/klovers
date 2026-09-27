@@ -237,7 +237,7 @@ const SignUpPage = () => {
             {redirectTo === "/trial-booking" && (
               <div className="bg-ivory border border-charcoal/15 dark:border-klovers-yellow/30 dark:bg-muted rounded-xl px-4 py-3 mb-3 text-sm text-foreground">
                 <p className="font-black text-base mb-0.5 flex items-center justify-center gap-1.5"><KloverIcon name="badge-blossom" className="h-4 w-4 shrink-0" />{isAr ? "خطوة واحدة قبل الحصة المجانية" : "One step from your free class"}</p>
-                <p className="text-muted-foreground text-xs">{isAr ? "إنشاء حساب مجاني في 30 ثانية، ثم اختيار الموعد." : "Create a free account in 30 seconds, then pick your slot."}</p>
+                <p className="text-muted-foreground text-xs">{isAr ? "إنشاء حساب مجاني، ثم اختيار الموعد." : "Create a free account, then pick your slot."}</p>
               </div>
             )}
             <CardTitle className="text-2xl">{t("auth.createAccount") || "Create Account"}</CardTitle>

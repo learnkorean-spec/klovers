@@ -62,7 +62,7 @@ const TextbookProgressPage = () => {
             {isAr ? "التقدّم في التعلّم" : "Your Learning Progress"}
           </h1>
           <p className="text-muted-foreground mb-6">
-            {isAr ? "تسجيل الدخول يتيح تتبّع نقاط XP وكسب الشارات والمنافسة في الترتيب." : "Sign in to track your XP, earn badges, and compete on the leaderboard!"}
+            {isAr ? "تسجيل الدخول يتيح تتبّع نقاط الخبرة وكسب الشارات والمنافسة في الترتيب." : "Sign in to track your XP, earn badges, and compete on the leaderboard!"}
           </p>
           <Link to="/login?redirect=/textbook/progress" className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90">
             {isAr ? "تسجيل الدخول للبدء" : "Sign In to Start"}

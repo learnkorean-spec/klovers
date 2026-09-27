@@ -114,7 +114,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
               {isLoggedIn ? (isAr ? "أفضل اللاعبين" : "Top Players") : (isAr ? "الترتيب" : "Leaderboard")}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              {isAr ? "الترتيب حسب نقاط XP من الألعاب والدروس" : "Ranked by XP from games and lessons"}
+              {isAr ? "الترتيب حسب نقاط الخبرة من الألعاب والدروس" : "Ranked by XP from games and lessons"}
             </p>
           </div>
           {isLoggedIn && (
@@ -166,7 +166,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
               <p className="text-sm text-muted-foreground">
                 {tab === "week"
                   ? (isAr ? "لم يلعب أحد هذا الأسبوع بعد، والمركز الأول ما زال متاحًا." : "No one has played this week yet. Be the first!")
-                  : (isAr ? "لا توجد بيانات بعد. كل لعبة تضيف نقاط XP." : "No data yet. Play games to earn XP!")}
+                  : (isAr ? "لا توجد بيانات بعد. كل لعبة تضيف نقاط الخبرة." : "No data yet. Play games to earn XP!")}
               </p>
             </div>
           ) : (

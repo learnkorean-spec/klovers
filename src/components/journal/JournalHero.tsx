@@ -98,7 +98,7 @@ export default function JournalHero({
               {[
                 { v: loading ? "—" : num(totalPosts, isAr), l: isAr ? "مقالة" : "articles" },
                 { v: num(6, isAr), l: isAr ? "محطات" : "stops" },
-                { v: isAr ? "عربي" : "AR · EN", l: isAr ? "بلغتك" : "in your language" },
+                { v: isAr ? "عربي" : "AR · EN", l: isAr ? "بالعربية" : "in your language" },
               ].map((s) => (
                 <div key={s.l} className="flex items-baseline gap-1.5">
                   <dt className="sr-only">{s.l}</dt>

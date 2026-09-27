@@ -11,8 +11,8 @@ const COPY = {
   welcomeBack: { en: "Welcome back, {name}", ar: "أهلًا بعودتك يا {name}" },
   levelOf: { en: "{n}/{total}", ar: "{n}/{total}" },
   leagueRankAria: { en: "XP league {n} of {total}", ar: "دوري النقاط {n} من {total}" },
-  xpUnit: { en: "XP", ar: "نقطة XP" },
-  xpToNext: { en: "{n} XP to {league}", ar: "{n} نقطة XP حتى {league}" },
+  xpUnit: { en: "XP", ar: "نقطة خبرة" },
+  xpToNext: { en: "{n} XP to {league}", ar: "{n} نقطة خبرة حتى {league}" },
   xpTop: { en: "top level reached", ar: "تم بلوغ أعلى مستوى" },
   xpBarLabel: { en: "Progress to the next level", ar: "التقدّم نحو المستوى التالي" },
   streakDays: { en: "{n}-day streak", ar: "سلسلة {days}" },
@@ -74,7 +74,7 @@ const COPY = {
   missionDone: { en: "Done", ar: "تمّت" },
   missionGo: { en: "Go", ar: "بدء" },
   missionPlay: { en: "Play", ar: "لعب" },
-  missionsReward: { en: "Every mission adds XP to your level.", ar: "كل مهمة تضيف نقاط XP إلى مستواك." },
+  missionsReward: { en: "Every mission adds XP to your level.", ar: "كل مهمة تضيف نقاط الخبرة إلى مستواك." },
   missionsAllDone: { en: "All done for today. See you tomorrow!", ar: "اكتملت كل مهام اليوم. إلى اللقاء غدًا!" },
 
   // Journey
@@ -100,7 +100,7 @@ const COPY = {
   ms_lessons_completed: { en: "Complete {n} lessons", ar: "إكمال {lessons}" },
   ms_streak_days: { en: "Reach a {n}-day streak", ar: "تحقيق سلسلة {days}" },
   ms_vocabulary_mastered: { en: "Master {n} words", ar: "إتقان {n} كلمة" },
-  ms_xp_earned: { en: "Earn {n} XP", ar: "جمع {n} نقطة XP" },
+  ms_xp_earned: { en: "Earn {n} XP", ar: "جمع {n} نقطة خبرة" },
 
   // Achievements
   achievementsTitle: { en: "Recent achievements", ar: "أحدث الإنجازات" },

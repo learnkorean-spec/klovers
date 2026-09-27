@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trustCopy } from "@/lib/trustFigures";
+import { safeRedirect, withRedirect } from "@/lib/authRedirect";
 
 const LoginPage = () => {
   useSEO({ title: document.documentElement.lang === "ar" ? "تسجيل الدخول | كلوفرز" : "Login | Klovers", description: document.documentElement.lang === "ar" ? "تسجيل الدخول إلى حساب كلوفرز للوصول إلى الدروس ولوحة الطالب." : "Sign in to your Klovers account to access your Korean lessons, progress tracker, and student dashboard.", noindex: true });
@@ -18,7 +19,8 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect");
+  // Only same-site relative paths ("/x", never "//x") are honoured.
+  const redirectTo = safeRedirect(searchParams.get("redirect"));
   const { t, language } = useLanguage();
   const isAr = language === "ar";
 
@@ -27,7 +29,7 @@ const LoginPage = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const savedRedirect = localStorage.getItem("enroll_redirect");
+        const savedRedirect = safeRedirect(localStorage.getItem("enroll_redirect"));
         const finalRedirect = redirectTo || savedRedirect || "/dashboard";
         if (savedRedirect) localStorage.removeItem("enroll_redirect");
         navigate(finalRedirect, { replace: true });
@@ -37,7 +39,7 @@ const LoginPage = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        const savedRedirect = localStorage.getItem("enroll_redirect");
+        const savedRedirect = safeRedirect(localStorage.getItem("enroll_redirect"));
         const finalRedirect = redirectTo || savedRedirect || "/dashboard";
         if (savedRedirect) localStorage.removeItem("enroll_redirect");
         navigate(finalRedirect, { replace: true });
@@ -120,7 +122,7 @@ const LoginPage = () => {
         }
       } catch { /* ignore draft sync errors */ }
 
-      const savedRedirect = localStorage.getItem("enroll_redirect");
+      const savedRedirect = safeRedirect(localStorage.getItem("enroll_redirect"));
       const finalRedirect = redirectTo || savedRedirect || "/dashboard";
       if (savedRedirect) localStorage.removeItem("enroll_redirect");
       navigate(finalRedirect);
@@ -198,16 +200,36 @@ const LoginPage = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
-              <Input type="email" placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} required />
-              <Input type="password" placeholder={t("auth.password")} value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <label htmlFor="login-email" className="sr-only">{t("auth.email")}</label>
+              <Input
+                id="login-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder={t("auth.email")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <label htmlFor="login-password" className="sr-only">{t("auth.password")}</label>
+              <Input
+                id="login-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder={t("auth.password")}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? t("auth.signingIn") : t("auth.logIn")}
               </Button>
               <p className="text-sm text-center text-muted-foreground">
-                <Link to="/forgot-password" className="text-foreground font-semibold underline">{t("auth.forgotPassword")}</Link>
+                <Link to={withRedirect("/forgot-password", redirectTo)} className="text-foreground font-semibold underline">{t("auth.forgotPassword")}</Link>
               </p>
               <p className="text-sm text-center text-muted-foreground">
-                {t("auth.dontHaveAccount")} <Link to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"} className="text-foreground font-semibold underline">{t("auth.signUp")}</Link>
+                {t("auth.dontHaveAccount")} <Link to={withRedirect("/signup", redirectTo)} className="text-foreground font-semibold underline">{t("auth.signUp")}</Link>
               </p>
             </form>
           </CardContent>
@@ -216,7 +238,7 @@ const LoginPage = () => {
         <p className="text-xs text-muted-foreground text-center">
           {isAr ? "أول زيارة إلى كلوفرز؟ " : "New to Klovers? "}
           <Link
-            to={redirectTo ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : "/signup"}
+            to={withRedirect("/signup", redirectTo)}
             className="text-foreground font-semibold underline underline-offset-2"
           >
             {isAr ? "إنشاء حساب مجاني ←" : "Create a free account →"}
