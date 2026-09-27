@@ -15,6 +15,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import WhatsAppButton from "./components/WhatsAppButton";
 import CookieBanner from "./components/CookieBanner";
 import InstallPrompt from "./components/InstallPrompt";
+import LanguageUrlSync from "./components/LanguageUrlSync";
 
 // Route guards — kept eager (tiny, needed immediately)
 import ProtectedRoute from "./components/admin/ProtectedRoute";
@@ -182,6 +183,7 @@ const App = () => (
         <CookieBanner />
         <BrowserRouter>
           <PageViewTracker />
+          <LanguageUrlSync />
           <InstallPrompt />
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
@@ -191,6 +193,14 @@ const App = () => (
                     URL, so Arabic can be indexed and paired with hreflang.
                     LanguageContext opens it in Arabic. */}
                 <Route path="/ar" element={<Index />} />
+                {/* Arabic twins of six pages (GEO-03, 27 Sep 2026). Same pages,
+                    their own Arabic URLs; see src/lib/arabicRoutes.ts. */}
+                <Route path="/ar/courses" element={<CoursesPage />} />
+                <Route path="/ar/pricing" element={<PricingPage />} />
+                <Route path="/ar/about" element={<AboutPage />} />
+                <Route path="/ar/faq" element={<FAQPage />} />
+                <Route path="/ar/placement-test" element={<KoreanPlacementPage />} />
+                <Route path="/ar/free-trial" element={<FreeTrialPage />} />
                 <Route path="/courses" element={<CoursesPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/about" element={<AboutPage />} />

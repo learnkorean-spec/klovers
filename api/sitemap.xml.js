@@ -12,6 +12,7 @@
 // unused at /api/sitemap.xml (docs/SEO_DIAGNOSIS.md, finding #4).
 import { createClient } from "@supabase/supabase-js";
 import { RETIRED_SLUGS } from "../scripts/lib/retired-arabic-slugs.mjs";
+import { ARABIC_TWIN_PATHS } from "../scripts/lib/arabic-page-meta.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY =
@@ -67,6 +68,18 @@ const STATIC_PAGES = [
   { loc: "/privacy-policy", priority: "0.3", changefreq: "yearly" },
   { loc: "/terms", priority: "0.3", changefreq: "yearly" },
 ];
+
+// Arabic twins (GEO-03, 27 Sep 2026): each English page in
+// scripts/lib/arabic-pages.mjs gains the en/ar pair, and its "/ar" twin gets a
+// <loc> of its own right after it, with the same pair. Same list as
+// scripts/prerender-meta.mjs, so the sitemap and the pages always agree.
+for (const path of ARABIC_TWIN_PATHS) {
+  const i = STATIC_PAGES.findIndex((p) => p.loc === path);
+  if (i === -1) throw new Error(`arabic-pages.mjs names ${path}, which is not in STATIC_PAGES`);
+  const alternates = { en: path, ar: `/ar${path}` };
+  STATIC_PAGES[i] = { ...STATIC_PAGES[i], alternates };
+  STATIC_PAGES.splice(i + 1, 0, { ...STATIC_PAGES[i], loc: `/ar${path}`, alternates });
+}
 
 const xmlEscape = (s) =>
   String(s)

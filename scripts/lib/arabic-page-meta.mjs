@@ -1,0 +1,26 @@
+/**
+ * arabic-page-meta.mjs - which marketing pages have an Arabic URL twin, and
+ * their Arabic title and description (GEO-03, 27 Sep 2026).
+ *
+ * Deliberately tiny: the browser bundle imports it (src/lib/arabicRoutes.ts)
+ * for routing, the language switch and the Arabic <title>, so the Arabic body
+ * copy lives next door in arabic-pages.mjs, which only the build reads.
+ * Consumers: scripts/prerender-meta.mjs, api/sitemap.xml.js,
+ * src/lib/arabicRoutes.ts, and (by test) src/App.tsx and vercel.json.
+ */
+
+export const ARABIC_PAGE_META = [
+  { path: "/courses", title: "دورات الكورية من الهانغول إلى المستوى ٦ | كلوفرز", description: "دورات كلوفرز للغة الكورية من الهانغول حتى المستوى السادس: حصص مباشرة مع معلمة حقيقية، ٦٠ دقيقة أسبوعيًا، في مجموعات صغيرة، بالعربية أو بالإنجليزية." },
+  { path: "/pricing", title: "أسعار دورات الكورية وخططها | كلوفرز", description: "أسعار كلوفرز حسب البلد وبالعملة المحلية: حصص جماعية مرة أسبوعيًا لشهر أو ٣ أو ٦ أشهر، وحصص خاصة بجدولة مرنة." },
+  { path: "/free-trial", title: "حجز حصة كورية مجانية | كلوفرز", description: "حصة كورية مجانية مباشرة مدتها ٣٠ دقيقة مع معلمة حقيقية، بالعربية أو بالإنجليزية، دون بطاقة ائتمان ودون حساب." },
+  { path: "/faq", title: "الأسئلة الشائعة عن دورات الكورية | كلوفرز", description: "إجابات عن تعلّم الكورية مع كلوفرز: المستوى المناسب، ومواعيد الحصص، وطرق الدفع، والشهادات، والتحضير لاختبار TOPIK." },
+  { path: "/about", title: "عن كلوفرز والمعلمة ريهام الشرقاوي | كلوفرز", description: "أسست كلوفرز المعلمة ريهام الشرقاوي، خريجة قسم اللغة الكورية بكلية الألسن، التي تُدرّس الكورية منذ ١٣ عامًا لأكثر من ٢٠٠ طالب." },
+  { path: "/placement-test", title: "اختبار تحديد مستوى الكورية المجاني | كلوفرز", description: "اختبار مجاني لتحديد مستوى اللغة الكورية بصيغ قراءة TOPIK: ٥٢ سؤالًا من الهانغول حتى المستوى الرابع، دون تسجيل." },
+];
+
+/** The English paths that have an Arabic twin (the homepage pair is separate). */
+export const ARABIC_TWIN_PATHS = ARABIC_PAGE_META.map((p) => p.path);
+
+/** "/pricing" -> "/ar/pricing"; null when the page has no Arabic twin. */
+export const arabicTwinOf = (path) =>
+  ARABIC_TWIN_PATHS.includes(path) ? "/ar" + path : null;

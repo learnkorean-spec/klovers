@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { arabicMetaFor, arabicTwinOf, englishTwinOf } from "@/lib/arabicRoutes";
 
 interface SEOProps {
   title: string;
@@ -44,7 +45,7 @@ const DEFAULT_DESC =
 export const withBrand = (title: string): string => {
   if (title.includes("Klovers") || title.includes("كلوفرز")) return title;
   // Arabic titles carry the Arabic name, so the tab reads in one language.
-  return /[\u0600-\u06FF]/.test(title) ? `${title} | كلوفرز` : `${title} | Klovers`;
+  return /[؀-ۿ]/.test(title) ? `${title} | كلوفرز` : `${title} | Klovers`;
 };
 
 export const useSEO = ({
@@ -57,6 +58,26 @@ export const useSEO = ({
   hreflangAr,
   alternates,
 }: SEOProps) => {
+  // Paired pages (GEO-03, 27 Sep 2026). The six pages with an Arabic twin keep
+  // passing their English title and canonical; on the Arabic URL this swaps in
+  // the Arabic title, description and canonical, and on both URLs it emits the
+  // en / ar / x-default pair - the same tags the prerendered HTML carries. The
+  // homepage pair ("/" and "/ar") is left to Index, which passes its own.
+  // The path is read on every render and is an effect dependency, because
+  // "/pricing" and "/ar/pricing" render the same component without remounting.
+  const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  const isHomePair = path === "/" || path === "/ar";
+  const enTwin = isHomePair ? null : englishTwinOf(path);
+  const arTwin = isHomePair ? null : arabicTwinOf(path);
+  const arMeta = enTwin ? arabicMetaFor(path) : null;
+  if (arMeta) {
+    title = arMeta.title;
+    description = arMeta.description;
+    canonical = `${BASE_URL}${path}`;
+  }
+  if (!alternates && enTwin) alternates = { en: `${BASE_URL}${enTwin}`, ar: `${BASE_URL}${path}` };
+  if (!alternates && arTwin) alternates = { en: `${BASE_URL}${path}`, ar: `${BASE_URL}${arTwin}` };
+
   const altEn = alternates?.en;
   const altAr = alternates?.ar;
 
@@ -137,5 +158,5 @@ export const useSEO = ({
       setMeta('meta[name="description"]', "content", DEFAULT_DESC);
       hreflangEls.forEach(el => el.remove());
     };
-  }, [title, description, canonical, ogImage, type, hreflangAr, altEn, altAr]);
+  }, [title, description, canonical, ogImage, type, hreflangAr, altEn, altAr, path]);
 };
