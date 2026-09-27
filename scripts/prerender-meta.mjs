@@ -615,14 +615,14 @@ const MARKETING_ROUTES = [
     // `homeTwin` keeps the Organization JSON-LD and the hero preload that the
     // emit loop otherwise keeps for "/" only - it is the same page.
     //
-    // The title names Klovers, so no " | Klovers" suffix is appended, and it
-    // leads with the Arabic brand for the reason the "/" comment gives.
+    // The title leads with «كلوفرز» (Arabic only, no Latin "Klovers" - one
+    // language per page), so the emit loop appends no suffix.
     path: "/ar",
     lang: "ar",
     homeTwin: true,
-    title: "كلوفرز Klovers — حصص كورية مباشرة في مجموعات صغيرة",
+    title: "كلوفرز — حصص كورية مباشرة في مجموعات صغيرة",
     description:
-      "كلوفرز (Klovers): حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
+      "كلوفرز: حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
     body: HOME_BODY_HTML_AR,
     alternates: HOME_ALTERNATES,
   },
@@ -1171,7 +1171,8 @@ function buildHeadTags(route) {
   // slash. This must match api/sitemap.xml.js exactly or the canonical and
   // the sitemap entry disagree.
   const url = `${BASE_URL}${isHome ? "/" : route.path}`;
-  const fullTitle = route.title.includes(SITE_NAME)
+  // An Arabic title that already carries «كلوفرز» gets no Latin suffix.
+  const fullTitle = route.title.includes(SITE_NAME) || route.title.includes("كلوفرز")
     ? route.title
     : `${route.title} | ${SITE_NAME}`;
   const description = route.description || "";
@@ -1415,7 +1416,8 @@ let preloadDropped = 0;
 
 for (const route of routes) {
   const isHome = route.path === "/";
-  const fullTitle = route.title.includes(SITE_NAME)
+  // An Arabic title that already carries «كلوفرز» gets no Latin suffix.
+  const fullTitle = route.title.includes(SITE_NAME) || route.title.includes("كلوفرز")
     ? route.title
     : `${route.title} | ${SITE_NAME}`;
   const description = route.description || "";

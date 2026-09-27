@@ -105,7 +105,9 @@ const FreeTrialPage = () => {
 
   useSEO({
     title: isAr ? "حجز حصة كورية مجانية" : "Book Your Free Korean Class",
-    description: "Try a free 30-minute live Korean class at Klovers, in English or Arabic. A real teacher, no credit card.",
+    description: isAr
+      ? "حصة كورية مباشرة مجانية مدتها ٣٠ دقيقة مع معلّمة حقيقية، بالعربية أو بالإنجليزية، ودون بطاقة دفع."
+      : "Try a free 30-minute live Korean class at Klovers, in English or Arabic. A real teacher, no credit card.",
     canonical: "https://kloversegy.com/free-trial",
   });
 
@@ -145,7 +147,7 @@ const FreeTrialPage = () => {
       {
         "@context": "https://schema.org",
         "@type": "Event",
-        "name": "Free Korean Trial Class — Klovers Academy",
+        "name": "Free Korean Trial Class — Klovers",
         "description": "Join a 30-minute live Korean class with a real teacher. Free, no credit card needed.",
         "url": "https://kloversegy.com/free-trial",
         "eventStatus": "https://schema.org/EventScheduled",
@@ -153,17 +155,6 @@ const FreeTrialPage = () => {
         "organizer": { "@type": "Organization", "name": "Klovers", "url": "https://kloversegy.com" },
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "validFrom": new Date().toISOString() },
         "location": { "@type": "VirtualLocation", "url": "https://kloversegy.com/free-trial" },
-      },
-      {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-          { "@type": "Question", "name": "Is the trial class really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — completely free, no credit card required. You attend a 30-minute live class with a real teacher." } },
-          { "@type": "Question", "name": "What level do I need to be?", "acceptedAnswer": { "@type": "Answer", "text": "Any level is welcome. Most students start from zero (Hangul). The teacher will assess your level during the class." } },
-          { "@type": "Question", "name": "When are the trial classes?", "acceptedAnswer": { "@type": "Answer", "text": "Free trial classes run on the first Friday and Saturday of each month, in Arabic and in English. The booking page shows the next dates in your own timezone." } },
-          { "@type": "Question", "name": "How do I book?", "acceptedAnswer": { "@type": "Answer", "text": "Click 'Book My Free Class', choose a day, and confirm. You'll receive an email with the class link and a Google Calendar invite." } },
-          { "@type": "Question", "name": "What happens after the trial?", "acceptedAnswer": { "@type": "Answer", "text": "After your trial you'll receive a level recommendation and pricing options if you'd like to continue with a full course." } },
-        ],
       },
     ]);
     document.head.appendChild(el);

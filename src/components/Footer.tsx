@@ -119,7 +119,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-background/45 text-xs">
             © {new Date().getFullYear()}{" "}
-            {isAr ? "كلوفرز — أكاديمية محبي الكورية. جميع الحقوق محفوظة." : "Klovers Korean Academy. All rights reserved."}
+            {isAr ? "كلوفرز. جميع الحقوق محفوظة." : "Klovers. All rights reserved."}
           </p>
           <div className="flex items-center gap-4">
             <Link to="/privacy-policy" className="inline-block py-1 text-background/75 hover:text-background text-xs transition-colors">

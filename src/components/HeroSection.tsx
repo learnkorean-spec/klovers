@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Gift, MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 /*
@@ -241,7 +241,7 @@ const HeroSection = () => {
                   to="/free-trial"
                   onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "homepage_hero_free_trial", metadata: { language } }); } catch {} }}
                 >
-                  <Gift className="h-5 w-5" />
+                  <KloverIcon name="game-lucky-bag" className="h-6 w-6" />
                   {isAr ? "حجز حصة مجانية" : "Book a Free Class"}
                   <ArrowRight className="h-5 w-5 rtl:rotate-180" />
                 </Link>
@@ -259,7 +259,7 @@ const HeroSection = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <MessageCircle className="h-5 w-5 text-klovers-green" />
+                    <MessageCircle className="h-5 w-5 text-klovers-yellow" />
                     السؤال عبر واتساب
                   </a>
                 </Button>

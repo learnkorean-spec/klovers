@@ -118,7 +118,7 @@ const HomeExitNudge = () => {
             </p>
           </div>
           <div className="flex-shrink-0 inline-flex items-center gap-1 bg-primary text-primary-foreground font-bold text-sm px-5 py-3 rounded-xl shadow-lg group-hover:shadow-xl group-hover:scale-[1.03] transition-all">
-            {isAr ? "البدء" : "Start"} <ArrowRight className="h-3.5 w-3.5" />
+            {isAr ? "البدء" : "Start"} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
           </div>
         </Link>
       </div>

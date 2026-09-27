@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ClipboardCheck, Sparkles, CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight } from "lucide-react";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -42,7 +42,7 @@ const PlacementTestCTA = () => {
   ];
 
   const FEATURES = [
-    { icon: "game-checklist-pencil" as KloverIconName, label: isAr ? "أسئلة بشكل TOPIK" : "Real exam-style questions" },
+    { icon: "game-checklist-pencil" as KloverIconName, label: isAr ? "أسئلة بأسلوب الامتحانات" : "Real exam-style questions" },
     { icon: "calendar-check" as KloverIconName, label: isAr ? "إنهاء الاختبار في أي وقت" : "Finish when you like" },
     { icon: "growth-chart" as KloverIconName, label: isAr ? "حسب مستويات كلوفرز" : "Matched to our levels" },
     { icon: "lightbulb-sprout" as KloverIconName, label: t("placementCta.featureInstant") },
@@ -97,7 +97,7 @@ const PlacementTestCTA = () => {
           {/* ── Left: Copy ── */}
           <div className="space-y-6 text-center md:text-start">
             <div className="inline-flex items-center gap-2 bg-klovers-yellow border border-charcoal/10 px-4 py-2 rounded-full text-sm font-semibold text-charcoal">
-              <Sparkles className="h-4 w-4" />
+              <KloverIcon name="badge-blossom" className="h-5 w-5" />
               {t("placementCta.badge")}
             </div>
 
@@ -160,11 +160,11 @@ const PlacementTestCTA = () => {
               <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
                 <div className="bg-charcoal px-5 py-4 flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center">
-                    <ClipboardCheck className="h-5 w-5 text-white" />
+                    <KloverIcon name="game-checklist-pencil" className="h-8 w-8" />
                   </div>
                   <div>
                     <p className="text-white font-bold text-sm">{isAr ? "اختبار تحديد المستوى" : "Korean Placement Test"}</p>
-                    <p className="text-white/70 text-xs">{t("placementCta.cardSubtitle").includes("TOPIK") ? (isAr ? "أكاديمية كلوفرز" : "Klovers Korean Academy") : t("placementCta.cardSubtitle")}</p>
+                    <p className="text-white/70 text-xs">{isAr ? "كلوفرز" : "Klovers"}</p>
                   </div>
                 </div>
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Star, ArrowRight, Clock, CalendarDays } from "lucide-react";
+import { ArrowRight, Clock, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -73,21 +73,21 @@ import {
 
 /**
  * Per-level ornament. Keyed by canonical level key. Literal class strings,
- * because Tailwind's scanner only keeps what it sees. One colour getting
+ * because Tailwind's scanner only keeps what it sees. One colour (Klovers yellow tints) getting
  * stronger, with Level 6 ringed in Charcoal as the end of the path.
  */
 const LEVEL_META: Record<string, { icon: KloverIconName; tile: string }> = {
-  hangul: { icon: "flashcard-ga", tile: "bg-amber-100" },
-  l1: { icon: "chat-annyeong", tile: "bg-amber-200" },
-  l2: { icon: "lightbulb-sprout", tile: "bg-amber-300" },
-  l3: { icon: "badge-blossom", tile: "bg-amber-400" },
+  hangul: { icon: "flashcard-ga", tile: "bg-klovers-yellow/25" },
+  l1: { icon: "chat-annyeong", tile: "bg-klovers-yellow/45" },
+  l2: { icon: "lightbulb-sprout", tile: "bg-klovers-yellow/65" },
+  l3: { icon: "badge-blossom", tile: "bg-klovers-yellow/85" },
   l4: { icon: "growth-chart", tile: "bg-klovers-yellow" },
   l5: { icon: "books-stack", tile: "bg-klovers-yellow" },
   l6: { icon: "diploma-scroll", tile: "bg-klovers-yellow ring-2 ring-charcoal" },
 };
 
 const getMeta = (key: string) =>
-  LEVEL_META[key] ?? { icon: "badge-blossom" as KloverIconName, tile: "bg-amber-100" };
+  LEVEL_META[key] ?? { icon: "badge-blossom" as KloverIconName, tile: "bg-klovers-yellow/25" };
 
 /** Level key → its story world (+ part), from the same mapping the dashboard uses. */
 const LEVEL_WORLDS = new Map(journeyStops("").stops.map((s) => [s.key, s]));
@@ -153,7 +153,7 @@ const LearningRoadmap = () => {
         style={{ ...place(view, summit, flip), transitionDelay: "560ms" }}
       >
         <span className="flex flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl bg-charcoal px-3 py-2 text-center text-[11px] font-bold leading-tight text-ivory shadow-md">
-          <Star className="h-3.5 w-3.5 text-klovers-yellow" fill="currentColor" aria-hidden="true" />
+          <KloverIcon name="game-crown" className="h-5 w-5" />
           <span>{isAr ? "المستوى ٦" : "Level 6"}</span>
           <span className="font-medium text-ivory/70">{isAr ? "وما بعده" : "and beyond"}</span>
         </span>
@@ -213,7 +213,7 @@ const LearningRoadmap = () => {
 
           <div className="mx-auto w-full max-w-[26rem] text-start lg:max-w-none lg:text-center">
             <span className="inline-block rounded-md bg-charcoal px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-ivory">
-              {isAr ? "7 محطات · من الهانغول للمستوى ٦" : "7 stops · Hangul → Level 6"}
+              {isAr ? "٧ محطات · من الهانغول للمستوى ٦" : "7 stops · Hangul → Level 6"}
             </span>
             <h2 className="mt-4 text-4xl font-extrabold leading-tight text-foreground md:text-5xl">
               {t("roadmap", "title")}

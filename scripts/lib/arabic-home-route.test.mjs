@@ -34,13 +34,15 @@ describe("the /ar route exists end to end", () => {
     expect(entry[0]).toContain("homeTwin: true");
     expect(entry[0]).toContain("body: HOME_BODY_HTML_AR");
     expect(entry[0]).toContain("alternates: HOME_ALTERNATES");
-    // Leads with the Arabic brand and names Klovers, so no suffix is added.
+    // Leads with the Arabic brand, so no suffix is added. One language per
+    // page: no Latin "Klovers" in the Arabic title or description.
     const title = entry[0].match(/title: "([^"]+)"/)[1];
     expect(title.startsWith("كلوفرز")).toBe(true);
-    expect(title).toContain("Klovers");
+    expect(title).not.toMatch(/[A-Za-z]/);
     expect([...title].length).toBeLessThanOrEqual(60);
     const description = entry[0].match(/description:\s*"([^"]+)"/)[1];
     expect([...description].length).toBeLessThanOrEqual(160);
+    expect(description).not.toContain("Klovers");
   });
 
   it("the Arabic body is Arabic and has exactly one h1", () => {

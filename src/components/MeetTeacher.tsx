@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import { logLeadEvent } from "@/lib/leadTracking";
-import { STUDENTS_TAUGHT, TEACHING_YEARS } from "@/lib/trustFigures";
+import { STUDENTS_TAUGHT, TEACHING_YEARS, TEACHING_YEARS_COUNT, toArabicDigits } from "@/lib/trustFigures";
 
 /**
  * The teacher.
@@ -97,7 +97,7 @@ const MeetTeacher = () => {
             <div className="space-y-4 text-muted-foreground text-base md:text-lg leading-relaxed">
               <p className="text-foreground font-medium">
                 {isAr
-                  ? "تدرّس ريهام اللغة الكورية منذ 13 عامًا، وتعلّم معها أكثر من 200 طالب. تخرّجت في كلية الألسن، قسم اللغة الكورية وآدابها."
+                  ? `تدرّس ريهام اللغة الكورية منذ ${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا، وتعلّم معها أكثر من ${toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))} طالب. تخرّجت في كلية الألسن، قسم اللغة الكورية وآدابها.`
                   : "Reham has taught Korean for 13 years and has taught more than 200 students herself. She studied Korean language and literature at the Faculty of Al-Alsun."}
               </p>
               <p>
@@ -122,7 +122,7 @@ const MeetTeacher = () => {
                   <div className="w-12 h-12 rounded-xl bg-ivory flex items-center justify-center mb-3 border border-klovers-yellow">
                     <KloverIcon name={icon} className="h-10 w-10" />
                   </div>
-                  <span className="text-foreground font-extrabold text-base sm:text-xl leading-none" dir={isAr && valueAr ? "rtl" : "ltr"}>{isAr && valueAr ? valueAr : value}</span>
+                  <span className="text-foreground font-extrabold text-base sm:text-xl leading-none" dir={isAr && valueAr ? "rtl" : "ltr"}>{isAr ? (valueAr ?? toArabicDigits(value)) : value}</span>
                   <span className="text-muted-foreground text-xs md:text-sm mt-1 leading-snug">{isAr ? ar : en}</span>
                 </div>
               ))}
@@ -136,11 +136,11 @@ const MeetTeacher = () => {
               <div className="flex gap-0 items-stretch">
                 {(isAr ? [
                   { m: "الشهر الأول", desc: "الهانغول وأول جمل" },
-                  { m: "الشهر الثالث", desc: "محادثات يومية بسيطة" },
+                  { m: "الشهور ٢–٥", desc: "دروس المستوى الأول وتدريب على التحدّث" },
                   { m: "الشهر السادس", desc: "إتمام المستوى الأول" },
                 ] : [
                   { m: "Month 1", desc: "Hangul + first phrases" },
-                  { m: "Month 3", desc: "Simple everyday conversations" },
+                  { m: "Months 2–5", desc: "Level 1 lessons and speaking practice" },
                   { m: "Month 6", desc: "Level 1 complete" },
                 ]).map(({ m, desc }, i, arr) => (
                   <div key={m} className="flex-1 flex flex-col items-center gap-1 text-center relative">

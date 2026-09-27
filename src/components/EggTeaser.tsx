@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, UserPlus, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import { toArabicDigits } from "@/lib/trustFigures";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -83,8 +85,8 @@ const EGG_IMAGES = [
 ];
 
 const FEATURES = [
-  { icon: Search, en: "Reveal a clue", ar: "كشف دليل جديد" },
-  { icon: UserPlus, en: "Hatch it in your free account", ar: "الفقس داخل الحساب المجاني" },
+  { icon: "lightbulb-sprout" as KloverIconName, en: "Reveal a clue", ar: "كشف دليل جديد" },
+  { icon: "student-girl-heart" as KloverIconName, en: "Hatch it in your free account", ar: "الفقس داخل الحساب المجاني" },
 ];
 
 const SIGNUP_HREF = `/signup?redirect=${encodeURIComponent("/dashboard")}`;
@@ -178,7 +180,7 @@ const EggTeaser = () => {
             {tapCount > 0 && (
               <p className="text-xs font-semibold text-ivory/50">
                 {isAr
-                  ? `عدد مرات اللمس: ${tapCount}`
+                  ? `عدد مرات اللمس: ${toArabicDigits(tapCount)}`
                   : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}
               </p>
             )}
@@ -199,9 +201,9 @@ const EggTeaser = () => {
 
           {/* Feature row */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-            {FEATURES.map(({ icon: Icon, en, ar }) => (
+            {FEATURES.map(({ icon, en, ar }) => (
               <div key={en} className="flex items-center gap-2 text-xs font-semibold text-ivory/60">
-                <Icon className="h-4 w-4 text-klovers-yellow" aria-hidden="true" />
+                <KloverIcon name={icon} className="h-6 w-6" />
                 {isAr ? ar : en}
               </div>
             ))}
@@ -224,7 +226,7 @@ const EggTeaser = () => {
               />
             </div>
             <div className="mx-auto -mt-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-klovers-yellow bg-charcoal">
-              <Sparkles className="h-4 w-4 text-klovers-yellow" aria-hidden="true" />
+              <KloverIcon name="badge-blossom" className="h-6 w-6" />
             </div>
             <DialogTitle className="text-center text-lg font-extrabold text-ivory">
               {isAr ? "فصل مخفي" : "A hidden chapter"}
@@ -237,7 +239,7 @@ const EggTeaser = () => {
           <div className="flex flex-col items-center gap-3 pt-1">
             <p className="text-xs font-semibold text-ivory/50">
               {isAr
-                ? `عدد مرات اللمس: ${tapCount}`
+                ? `عدد مرات اللمس: ${toArabicDigits(tapCount)}`
                 : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}
             </p>
             <button
@@ -276,7 +278,7 @@ const EggTeaser = () => {
                     onClick={() => setOpen(false)}
                     className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-klovers-yellow px-6 text-sm font-bold text-charcoal transition-opacity hover:opacity-90"
                   >
-                    <UserPlus className="h-4 w-4" aria-hidden="true" />
+                    <KloverIcon name="student-boy-thumbsup" className="h-6 w-6" />
                     {isAr ? "إنشاء حساب مجاني" : "Create a free account"}
                   </Link>
                   <p className="mt-2 text-xs text-ivory/60">

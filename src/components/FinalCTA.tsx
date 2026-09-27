@@ -142,7 +142,7 @@ const FinalCTA = () => {
                   <div key={en} className="flex items-center gap-2">
                     <KloverIcon name={icon} className="h-9 w-9" />
                     <div className="text-start">
-                      <p className="text-sm font-extrabold leading-none text-ivory" dir={isAr && valueAr ? "rtl" : "ltr"}>{isAr && valueAr ? valueAr : value}</p>
+                      <p className="text-sm font-extrabold leading-none text-ivory" dir={isAr && valueAr ? "rtl" : "ltr"}>{isAr ? (valueAr ?? toArabicDigits(value).replace(".", "٫")) : value}</p>
                       <p className="mt-0.5 text-[11px] text-ivory/65">{isAr ? ar : en}</p>
                     </div>
                   </div>

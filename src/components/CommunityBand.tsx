@@ -49,7 +49,7 @@ const CommunityBand = () => {
     : "Two friends and Cluby at a picnic by the Han river";
 
   return (
-    <section className="relative overflow-hidden border-y border-charcoal/10 bg-primary dark:bg-[#E8E000]">
+    <section className="relative overflow-hidden border-y border-charcoal/10 bg-primary dark:bg-klovers-yellow/90">
       {/* The picnic scene: on top on phones, the start half of the band on md+. */}
       <div className="md:absolute md:inset-y-0 md:start-0 md:w-1/2">
         <img
@@ -99,7 +99,7 @@ const CommunityBand = () => {
                 onClick={() => { try { logLeadEvent({ source_type: "community", cta_label: "community_band_telegram" }); } catch {} }}
               >
                 <Send className="h-4 w-4" aria-hidden="true" />
-                {isAr ? "تيليغرام" : "Telegram"}
+                {isAr ? "تيليجرام" : "Telegram"}
               </a>
               <a
                 href="https://www.facebook.com/kloversegy"

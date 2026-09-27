@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { logLeadEvent } from "@/lib/leadTracking";
@@ -116,7 +116,7 @@ const MoreThanAClass = () => {
           </h2>
           <p className="mt-3 text-base leading-relaxed text-muted-foreground md:text-lg">
             {isAr
-              ? "الحصة هي البداية، والتدريب والألعاب والثقافة تثبّت ما تعلّمته فيها."
+              ? "الحصة هي البداية، والتدريب والألعاب والثقافة لتثبيت الدروس."
               : "The class is where it starts. Practice, games and culture make it stick."}
           </p>
         </div>
@@ -172,14 +172,14 @@ const MoreThanAClass = () => {
             onClick={() => { try { logLeadEvent({ source_type: "free_resource", cta_label: "more_than_class_hangul_sheet" }); } catch {} }}
             className="inline-flex min-h-11 items-center gap-2 font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/70"
           >
-            <BookOpen className="h-4 w-4" aria-hidden="true" />
+            <KloverIcon name="flashcard-ga" className="h-6 w-6" />
             {isAr ? "بداية مع الهانغول؟ ورقة البداية المجانية" : "New to Hangul? Get the free starter sheet"}
           </Link>
           <Link
             to="/blog"
             className="inline-flex min-h-11 items-center gap-2 font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/70"
           >
-            {isAr ? "اقرأ المدونة" : "Read the Journal"}
+            {isAr ? "قراءة المدونة" : "Read the Journal"}
             <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
           </Link>
         </p>

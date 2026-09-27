@@ -42,9 +42,9 @@ const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 export const HOME_TITLE = "Klovers — Live Online Korean Classes in Small Groups";
 export const HOME_DESCRIPTION =
   "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.";
-const HOME_TITLE_AR = "كلوفرز Klovers — حصص كورية مباشرة في مجموعات صغيرة";
+const HOME_TITLE_AR = "كلوفرز — حصص كورية مباشرة في مجموعات صغيرة";
 const HOME_DESCRIPTION_AR =
-  "كلوفرز (Klovers): حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.";
+  "كلوفرز: حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.";
 
 /** The homepage translation pair. Same as HOME_ALTERNATES in prerender-meta.mjs. */
 const HOME_URL_EN = "https://kloversegy.com/";
