@@ -13,7 +13,7 @@ import { paintPaving, useTiledTexture } from "./textures";
  *
  * A busier street than the village: six stalls under canvas awnings, shop
  * fronts rising behind them, paper lanterns strung across the square. Each
- * stall sells one everyday thing and names it in Korean (물 밥 빵 · 책 옷 끝),
+ * stall sells one everyday thing and names it in Korean (물 밥 빵 · 책 옷 꽃),
  * so the word hangs right above the object — "words learned by the student
  * begin appearing as understandable objects inside the world" (canon).
  */
@@ -92,7 +92,7 @@ function Goods({ word }: { word: Word }) {
           </mesh>
         )),
       );
-    case "끝": // flowers in pots — the one stall allowed a touch of yellow
+    case "꽃": // flowers in pots — the one stall allowed a touch of yellow
       return each((i) => (
         <>
           <mesh position={[0, 0.1, 0]}>
