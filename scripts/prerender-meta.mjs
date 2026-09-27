@@ -444,7 +444,7 @@ const PRICING_BODY_HTML = `<div id="pricing-prerendered" lang="en" dir="ltr">
       <h2>Private classes</h2>
       <p>One-to-one lessons with flexible scheduling, at your own pace.</p>
       <h2>Payment and guarantee</h2>
-      <p>Pay by bank transfer, Vodafone Cash or InstaPay (Egypt), or by card through Stripe outside Egypt. Payments in Egypt are checked before activation, and nothing is charged automatically. If you are not happy after your first class, we refund or rebook you. Full terms are on the <a href="/terms">Terms of Service</a> page.</p>
+      <p>Pay by bank transfer, Vodafone Cash or InstaPay (Egypt), or by card through Stripe outside Egypt. Payments in Egypt are checked before activation, and nothing is charged automatically. If you are not happy after your first paid class, we refund or rebook you. Full terms are on the <a href="/terms">Terms of Service</a> page.</p>
       <p><a href="/free-trial">Book a free trial class</a> · <a href="/courses">Courses</a> · <a href="/faq">FAQ</a></p>
     </div>`;
 
