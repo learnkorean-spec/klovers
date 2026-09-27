@@ -274,7 +274,7 @@ describe("published counts agree with the arrays", () => {
     // swapping a numeral would have left it saying "two" in Arabic. For 3-10
     // Arabic takes the plural, "ألعاب".
     expect(gamesPageCopy).not.toContain("لعبتان");
-    expect(gamesCopySrc).toMatch(/\$\{FREE_GAME_IDS\.length\} ألعاب مجانية/);
+    expect(gamesCopySrc).toMatch(/\$\{(?:num\()?FREE_GAME_IDS\.length\)?\} ألعاب مجانية/);
   });
 
   it("the prerendered /games copy states the real free and total counts", () => {
