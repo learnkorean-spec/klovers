@@ -69,8 +69,9 @@ const HowItWorks = () => {
           </p>
         </div>
 
-        {/* dir="ltr" keeps step order 1→4 left-to-right even in RTL locales */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto" dir="ltr">
+        {/* Step order follows the reading direction: 1→4 left-to-right in
+            English, right-to-left in Arabic (grid inherits the page dir). */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto" dir={isAr ? "rtl" : "ltr"}>
           {STEPS.map((step, index) => {
             const [title, description] = isAr ? step.ar : step.en;
             return (

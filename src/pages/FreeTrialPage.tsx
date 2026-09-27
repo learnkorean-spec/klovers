@@ -9,7 +9,7 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
 import { supabase } from "@/integrations/supabase/client";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
-import { trustCopy } from "@/lib/trustFigures";
+import { trustCopy, toArabicDigits } from "@/lib/trustFigures";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AvatarInitials from "@/components/AvatarInitials";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
@@ -81,14 +81,52 @@ const FreeTrialPage = () => {
   /** The real upcoming trial slots, straight from the database. */
   const { slots, loading: slotsLoading } = useUpcomingTrialSlots();
 
+  // Trial slots carry a class language ("arabic" | "english"; null = not set).
+  // A slot "matches" the page when it is in the page's language or has none.
+  const pageClassLanguage = isAr ? "arabic" : "english";
+  const matchesPage = (lang: string | null) => !lang || lang === pageClassLanguage;
+  const seatsLeft = (slot: { capacity: number; bookedCount: number }) =>
+    Math.max(0, (slot.capacity ?? 0) - (slot.bookedCount ?? 0));
+
   const SLOT_HIGHLIGHTS = useMemo(() => {
     const locale = isAr ? "ar-EG" : "en-US";
     const tz = viewerTimezone();
-    return slots.map((slot) => ({
+    // Page-language slots first (stable: the hook already sorts by start time).
+    const ordered = [...slots].sort(
+      (a, b) => Number(!matchesPage(a.language)) - Number(!matchesPage(b.language)),
+    );
+    return ordered.map((slot) => ({
+      key: `${slot.date}-${slot.startTime}-${slot.language ?? "any"}`,
       day: slot.startsAt.toLocaleDateString(locale, { weekday: "long", month: "short", day: "numeric", timeZone: tz }),
       time: slot.startsAt.toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz }),
+      languageLabel:
+        slot.language === "arabic"
+          ? (isAr ? "الحصة بالعربية" : "Class in Arabic")
+          : slot.language === "english"
+            ? (isAr ? "الحصة بالإنجليزية" : "Class in English")
+            : null,
+      isFull: seatsLeft(slot) === 0,
     }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slots, isAr]);
+
+  // Live seats remaining for the page's class language only, over open slots.
+  const pageSlotsOpen = useMemo(
+    () => slots.filter((s) => matchesPage(s.language) && seatsLeft(s) > 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [slots, isAr],
+  );
+  const spotsRemaining: number | null =
+    slotsLoading || pageSlotsOpen.length === 0
+      ? null
+      : pageSlotsOpen.reduce((sum, s) => sum + seatsLeft(s), 0);
+  // Deadline = earliest open page-language slot date minus 1 day (booking cutoff).
+  const daysToDeadline: number | null = (() => {
+    const earliest = pageSlotsOpen[0]?.date;
+    if (!earliest) return null;
+    const deadlineMs = new Date(earliest + "T00:00:00Z").getTime() - 86_400_000;
+    return Math.max(0, Math.ceil((deadlineMs - Date.now()) / 86_400_000));
+  })();
 
   const TESTIMONIALS: { quote: string; name: string; role: string }[] = [
     {
@@ -199,24 +237,8 @@ const FreeTrialPage = () => {
       .then(({ count }) => { if (count !== null) setBookedCount(count); });
   }, []);
 
-  // Live spots remaining across all upcoming slots (summed) + nearest deadline
-  const [spotsRemaining, setSpotsRemaining] = useState<number | null>(null);
-  const [daysToDeadline, setDaysToDeadline] = useState<number | null>(null);
-  useEffect(() => {
-    supabase.rpc("get_trial_availability").then(({ data }) => {
-      if (!data || data.length === 0) return;
-      const total = (data as { booked_count: number; capacity: number; next_trial_date: string }[])
-        .reduce((sum, row) => sum + (row.capacity - row.booked_count), 0);
-      setSpotsRemaining(total);
-      // Deadline = earliest next_trial_date minus 1 day (booking cutoff)
-      const earliest = data[0].next_trial_date as string;
-      if (earliest) {
-        const deadlineMs = new Date(earliest + "T00:00:00Z").getTime() - 86_400_000;
-        const days = Math.max(0, Math.ceil((deadlineMs - Date.now()) / 86_400_000));
-        setDaysToDeadline(days);
-      }
-    });
-  }, []);
+  // Spots remaining + nearest deadline are derived from `slots` above
+  // (page class language only, full slots excluded).
 
 
   useEffect(() => {
@@ -325,8 +347,8 @@ const FreeTrialPage = () => {
                         <span className="inline-flex items-center gap-1.5 bg-klovers-yellow text-charcoal border-2 border-charcoal text-[11px] font-bold px-2.5 py-1 rounded-full">
                           <span className="w-2 h-2 rounded-full bg-klovers-green animate-pulse" aria-hidden="true" />
                           {isAr
-                            ? `الأماكن المتبقية: ${spotsRemaining}`
-                            : `${spotsRemaining} ${spotsRemaining === 1 ? "spot" : "spots"} left`}
+                            ? `الأماكن المتبقية في الحصص بالعربية: ${toArabicDigits(spotsRemaining)}`
+                            : `${spotsRemaining} ${spotsRemaining === 1 ? "spot" : "spots"} left in English classes`}
                         </span>
                       )}
                     </div>
@@ -477,10 +499,15 @@ const FreeTrialPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                {SLOT_HIGHLIGHTS.map((s, i) => (
+                {SLOT_HIGHLIGHTS.map((s) => (
                   <div
-                    key={i}
-                    className="border-2 border-foreground rounded-2xl overflow-hidden shadow-[4px_4px_0px_0px_hsl(var(--charcoal))] dark:shadow-none"
+                    key={s.key}
+                    aria-disabled={s.isFull || undefined}
+                    className={`border-2 border-foreground rounded-2xl overflow-hidden ${
+                      s.isFull
+                        ? "opacity-60 pointer-events-none select-none"
+                        : "shadow-[4px_4px_0px_0px_hsl(var(--charcoal))] dark:shadow-none"
+                    }`}
                   >
                     <div className="bg-charcoal py-2.5 px-4 text-center">
                       <p className="text-xs font-black text-klovers-yellow uppercase tracking-widest">{s.day}</p>
@@ -491,7 +518,15 @@ const FreeTrialPage = () => {
                       <div className="absolute -right-[9px] w-4 h-4 bg-background border-2 border-foreground rounded-full z-10" />
                     </div>
                     <div className="bg-background py-5 px-4 text-center">
-                      <p className="text-2xl font-black text-foreground">{s.time}</p>
+                      <p className={`text-2xl font-black text-foreground ${s.isFull ? "line-through" : ""}`}>{s.time}</p>
+                      {s.languageLabel && (
+                        <p className="mt-1 text-xs font-semibold text-muted-foreground">{s.languageLabel}</p>
+                      )}
+                      {s.isFull && (
+                        <span className="mt-2 inline-block rounded-full border-2 border-foreground bg-muted px-2.5 py-0.5 text-[11px] font-bold text-foreground">
+                          {tr("Full", "مكتمل")}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}

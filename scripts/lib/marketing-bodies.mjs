@@ -307,15 +307,15 @@ export const INTERVIEW_BODY_HTML = `<div id="interview-training-prerendered" lan
     </div>`;
 
 export const WELCOME_BACK_BODY_HTML = `<div id="welcome-back-prerendered" lang="en" dir="ltr">
-      <h1>Share with Friends &amp; Save More</h1>
+      <h1>Returning Students Offer: 20% Off</h1>
+      <p><strong>Welcome Back, Klovers!</strong> Returning students get 20% off — enroll now and pick up where you left off.</p>
+      <h2>Share with Friends &amp; Save More</h2>
       <p>Earn extra discounts when you refer friends or classmates to Klovers.</p>
       <ul>
         <li><strong>+5% per friend</strong> — For each friend who enrolls, you get an extra 5% off</li>
         <li><strong>+2% for sharing</strong> — Even if your friend doesn't join, you still get 2% off for sharing</li>
         <li><strong>Up to 35% total</strong> — Stack referrals on top of your 20% base — max 35% off</li>
       </ul>
-      <h2>Continue Your Korean Journey</h2>
-      <p><strong>Welcome Back, Klovers!</strong> Returning students get 20% off — enroll now and pick up where you left off.</p>
       <h2>Your Exclusive Offer</h2>
       <ul>
         <li>20% off your next enrollment — no questions asked</li>

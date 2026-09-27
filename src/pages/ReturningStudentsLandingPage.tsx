@@ -174,7 +174,48 @@ const ReturningStudentsLandingPage = () => {
     <>
       <Header />
       <main id="main-content">
-        {/* ── Share & Referral (Lead Section) ── */}
+        {/* ── Hero: the returning-student offer is the page H1 (matches the
+            SEO title); the share/referral section follows as an h2. ── */}
+        <section className="py-16 md:py-24 px-4 bg-background">
+          <div className="container mx-auto max-w-4xl text-center">
+            <Badge
+              variant="outline"
+              className="mb-5 border-border text-foreground bg-muted text-sm px-4 py-1"
+            >
+              <KloverIcon name="diploma-scroll" className="h-4 w-4 me-2" />
+              {t("welcomeBack.hero.badge")}
+            </Badge>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-5 leading-tight">
+              {t("welcomeBack.hero.title")}
+            </h1>
+
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              {t("welcomeBack.hero.subtitle")}
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button size="lg" asChild className="gap-2 h-13 px-8 text-base font-bold shadow-lg">
+                <Link to="/enroll-now">
+                  {t("welcomeBack.hero.ctaPrimary")}
+                  <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="gap-2 h-13 px-8 text-base font-medium border-border text-foreground hover:bg-muted"
+              >
+                <Link to="/placement-test">
+                  {t("welcomeBack.hero.ctaSecondary")}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Share & Referral ── */}
         <section className="relative overflow-hidden bg-muted/30 py-20 md:py-28 px-4">
           <div className="absolute inset-0 pointer-events-none" aria-hidden>
             <div className="absolute -top-24 -start-24 w-80 h-80 bg-primary/10 dark:bg-primary/5 rounded-full blur-3xl" />
@@ -183,9 +224,9 @@ const ReturningStudentsLandingPage = () => {
 
           <div className="container mx-auto max-w-5xl relative z-10">
             <div className="text-center mb-10">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-3">
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-3">
                 {t("welcomeBack.share.title")}
-              </h1>
+              </h2>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
                 {t("welcomeBack.share.subtitle")}
               </p>
@@ -239,7 +280,7 @@ const ReturningStudentsLandingPage = () => {
                   {referralStats && referralStats.bonusPercent > 0 && (
                     <div className="rounded-lg border border-charcoal/15 bg-ivory dark:border-border dark:bg-muted p-3 text-center">
                       <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-charcoal dark:text-foreground">
-                        <Check className="h-4 w-4 shrink-0 rounded-full bg-klovers-green p-0.5 text-charcoal" strokeWidth={3} aria-hidden="true" />
+                        <Check className="h-4 w-4 shrink-0 rounded-full bg-klovers-yellow p-0.5 text-charcoal" strokeWidth={3} aria-hidden="true" />
                         {isAr
                           ? `تمت إضافة خصم إحالة بنسبة ${referralStats.bonusPercent}%`
                           : `You've earned +${referralStats.bonusPercent}% referral bonus!`}
@@ -304,46 +345,6 @@ const ReturningStudentsLandingPage = () => {
           </div>
         </section>
 
-        {/* ── Hero ── */}
-        <section className="py-16 md:py-24 px-4 bg-background">
-          <div className="container mx-auto max-w-4xl text-center">
-            <Badge
-              variant="outline"
-              className="mb-5 border-border text-foreground bg-muted text-sm px-4 py-1"
-            >
-              <KloverIcon name="diploma-scroll" className="h-4 w-4 me-2" />
-              {t("welcomeBack.hero.badge")}
-            </Badge>
-
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-5 leading-tight">
-              {t("welcomeBack.hero.title")}
-            </h2>
-
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              {t("welcomeBack.hero.subtitle")}
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" asChild className="gap-2 h-13 px-8 text-base font-bold shadow-lg">
-                <Link to="/enroll-now">
-                  {t("welcomeBack.hero.ctaPrimary")}
-                  <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                asChild
-                className="gap-2 h-13 px-8 text-base font-medium border-border text-foreground hover:bg-muted"
-              >
-                <Link to="/placement-test">
-                  {t("welcomeBack.hero.ctaSecondary")}
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-
         {/* ── Offer Details + Promo Code ── */}
         <section
           ref={sectionRef}
@@ -371,7 +372,7 @@ const ReturningStudentsLandingPage = () => {
                   <ul className="space-y-3">
                     {offerItems.map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 shrink-0 mt-0.5 rounded-full bg-klovers-green p-0.5 text-charcoal" strokeWidth={3} />
+                        <Check className="h-5 w-5 shrink-0 mt-0.5 rounded-full bg-klovers-yellow p-0.5 text-charcoal" strokeWidth={3} aria-hidden="true" />
                         <span className="text-sm text-muted-foreground">
                           {item as string}
                         </span>

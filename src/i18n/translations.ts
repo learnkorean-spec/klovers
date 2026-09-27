@@ -126,7 +126,7 @@ export const translations = {
     welcomeBack: {
       hero: {
         badge: "Welcome Back, Klovers!",
-        title: "Continue Your Korean Journey",
+        title: "Returning Students Offer: 20% Off",
         subtitle: "Returning students get 20% off — enroll now and pick up where you left off.",
         ctaPrimary: "Enroll Now",
         ctaSecondary: "Take Optional Placement Test",
@@ -1980,7 +1980,7 @@ export const translations = {
     welcomeBack: {
       hero: {
         badge: "أهلًا بعودتكم إلى كلوفرز!",
-        title: "استئناف رحلة تعلّم الكورية",
+        title: "عرض الطلاب العائدين: خصم ٢٠٪",
         subtitle: "خصم 20% للطلاب العائدين: التسجيل الآن والاستئناف من نقطة التوقف.",
         ctaPrimary: "التسجيل الآن",
         ctaSecondary: "اختبار المستوى (اختياري)",
