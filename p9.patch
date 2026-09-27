@@ -1,0 +1,78 @@
+--- a/src/components/EggTeaser.tsx
++++ b/src/components/EggTeaser.tsx
+@@ -3 +2,0 @@
+-import { ChevronRight } from "lucide-react";
+@@ -177 +175,0 @@
+-              <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+@@ -251 +248,0 @@
+-              <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+@@ -272 +268,0 @@
+-                  <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+--- a/src/pages/VocabularyReviewPage.tsx
++++ b/src/pages/VocabularyReviewPage.tsx
+@@ -10 +10,2 @@
+-import { BookOpen, ArrowLeft, Zap, Sprout, Lightbulb, Sparkles } from "lucide-react";
++import KloverIcon from "@/components/KloverIcon";
++import { toArabicDigits } from "@/lib/trustFigures";
+@@ -65,2 +66,9 @@
+-      .then(({ data }) => {
+-        setLessonOptions((data || []).map((l: any) => ({ id: l.id, title: `Lesson ${l.sort_order}: ${l.title_en}` })));
++      .then(({ data, error }) => {
++        if (error) {
++          console.error("[VocabularyReviewPage] lesson filter", error);
++          return;
++        }
++        setLessonOptions((data || []).map((l: any) => ({
++          id: l.id,
++          title: isAr ? `الدرس ${toArabicDigits(l.sort_order)}: ${l.title_en}` : `Lesson ${l.sort_order}: ${l.title_en}`,
++        })));
+@@ -68 +76 @@
+-  }, [dueCards]);
++  }, [dueCards, isAr]);
+@@ -100,2 +108 @@
+-            <Button variant="ghost" onClick={() => navigate("/textbook")} className="mb-4 -ml-2">
+-              <ArrowLeft className="w-4 h-4 mr-2" />
++            <Button variant="ghost" onClick={() => navigate("/textbook")} className="mb-4 -ms-2">
+@@ -118 +125 @@
+-                <BookOpen className="h-7 w-7 shrink-0 text-klovers-yellow" aria-hidden="true" />
++                <span className="shrink-0 rounded-xl bg-ivory p-1"><KloverIcon name="books-stack" className="h-9 w-9 md:h-11 md:w-11" /></span>
+@@ -154 +161 @@
+-                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
++                  <div className="w-8 h-8 border-2 border-klovers-yellow border-t-transparent rounded-full animate-spin mx-auto" />
+@@ -162,2 +169 @@
+-                {/* needs Klovers icon: garden sprout (was an emoji) */}
+-                <Sprout className="mx-auto mb-4 h-14 w-14 rounded-full bg-klovers-green p-3 text-charcoal" aria-hidden="true" />
++                <KloverIcon name="sprout" className="mx-auto mb-4 h-16 w-16" />
+@@ -174 +180 @@
+-                <Zap className="w-12 h-12 fill-klovers-yellow text-charcoal dark:text-klovers-yellow mx-auto mb-4" aria-hidden="true" />
++                <KloverIcon name="flashcard-ga" className="mx-auto mb-4 h-16 w-16" />
+@@ -186 +192 @@
+-                  <div className="mb-6 text-left">
++                  <div className="mb-6 text-start">
+@@ -191 +197 @@
+-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
++                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-klovers-yellow"
+@@ -193 +199 @@
+-                      <option value="">{isAr ? `جميع الدروس (${dueCards.length} بطاقة)` : `All lessons (${dueCards.length} cards)`}</option>
++                      <option value="">{isAr ? `جميع الدروس (${toArabicDigits(dueCards.length)} بطاقة)` : `All lessons (${dueCards.length} cards)`}</option>
+@@ -196 +202 @@
+-                          {l.title} ({dueCards.filter(c => c.lesson_id === l.id).length} cards)
++                          {l.title} ({isAr ? `${toArabicDigits(dueCards.filter(c => c.lesson_id === l.id).length)} بطاقة` : `${dueCards.filter(c => c.lesson_id === l.id).length} cards`})
+@@ -205,2 +211,2 @@
+-                <div className="mt-8 text-left space-y-3 bg-muted/50 p-6 rounded-xl">
+-                  <h3 className="font-semibold text-sm text-foreground"><Lightbulb className="me-1 inline h-4 w-4 align-[-3px]" aria-hidden="true" />{isAr ? "نصائح" : "Tips"}</h3>
++                <div className="mt-8 text-start space-y-3 bg-muted/50 p-6 rounded-xl">
++                  <h3 className="font-semibold text-sm text-foreground"><KloverIcon name="lightbulb-sprout" className="me-1 inline h-6 w-6 align-middle" />{isAr ? "نصائح" : "Tips"}</h3>
+@@ -220,2 +226 @@
+-                  {/* needs Klovers icon: celebration (was an emoji) */}
+-                  <Sparkles className="mx-auto h-14 w-14 rounded-full bg-klovers-yellow p-3 text-charcoal" aria-hidden="true" />
++                  <KloverIcon name="badge-blossom" className="mx-auto h-16 w-16" />
+@@ -233 +238 @@
+-                      <p className="text-2xl font-bold text-primary">+{xpEarned}</p>
++                      <p className="text-2xl font-bold text-foreground">+{xpEarned}</p>
+@@ -255 +260 @@
+-                    <Card className="border-primary/20 bg-primary/5">
++                    <Card className="border-2 border-klovers-yellow bg-ivory dark:bg-card">
+@@ -258 +263 @@
+-                        <p className="text-3xl font-bold text-primary">+{xpEarned} XP</p>
++                        <p className="text-3xl font-bold text-foreground">+{xpEarned} XP</p>
