@@ -27,10 +27,17 @@ export interface WorldState {
   discovered: DiscoveryKey[];
   /** Room to reopen in after a trip to the site's lessons or games. */
   lastRoom: RoomId | null;
+  /**
+   * Korean met while exploring: market words (their stall signs go up) and
+   * the village's discoverable letters. Exploration feedback only — never
+   * counted as learning progress anywhere.
+   */
+  words: string[];
+  letters: string[];
 }
 
 const KEY = "klovers-world-state";
-const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false, tutorialDone: false, welcomed: false, met: [], objectivesDone: [], discovered: [], lastRoom: null };
+const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false, tutorialDone: false, welcomed: false, met: [], objectivesDone: [], discovered: [], lastRoom: null, words: [], letters: [] };
 
 function strings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
@@ -51,6 +58,8 @@ export function loadWorldState(): WorldState {
       objectivesDone: strings(v.objectivesDone) as ObjectiveId[],
       discovered: strings(v.discovered) as DiscoveryKey[],
       lastRoom: typeof v.lastRoom === "string" ? (v.lastRoom as RoomId) : null,
+      words: strings(v.words),
+      letters: strings(v.letters),
     };
   } catch {
     return { ...EMPTY };

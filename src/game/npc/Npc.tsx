@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group, Mesh } from "three";
+import { INTERACTABLES } from "../config/interactions";
 import type { NpcPlacement } from "../config/npcs";
+import type { PlayerState } from "../systems/state";
+import { cheerAmount } from "../systems/reactions";
 import { angleDelta, damp } from "../systems/movement";
 import { REDUCED_MOTION } from "../systems/motion";
 import { CAST } from "./cast";
@@ -9,13 +12,16 @@ import { buildPerson, PEOPLE_MATERIAL, type PersonSpec } from "./people";
 import ShadowBlob from "./ShadowBlob";
 
 const WALK_SPEED = 1.15;
+/** People who can be spoken to notice the learner inside this distance. */
+const NOTICE = 3.4;
+const TALKERS = new Set(INTERACTABLES.map((i) => i.npc).filter(Boolean) as string[]);
 
 /**
  * One ambient person: a merged body plus, only when they move, arms and
  * legs. Behaviour is a tiny deterministic loop per pose — no AI, no paths
  * beyond two points — so a dozen of them cost almost nothing.
  */
-export default function Npc({ n }: { n: NpcPlacement }) {
+export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRefObject<PlayerState> }) {
   const spec: PersonSpec = CAST[n.cast];
   const parts = useMemo(() => buildPerson(spec, n.pose), [spec, n.pose]);
   useEffect(
@@ -36,6 +42,8 @@ export default function Npc({ n }: { n: NpcPlacement }) {
   const legL = useRef<Mesh>(null);
   const legR = useRef<Mesh>(null);
   const walk = useRef({ t: 0, dir: 1, pause: 0, yaw: n.yaw, x: n.x, z: n.z });
+  const talker = TALKERS.has(n.id);
+  const seated = n.pose === "sit" || n.pose === "sitRead";
 
   useFrame(({ clock }, rawDt) => {
     const g = root.current;
@@ -74,6 +82,33 @@ export default function Npc({ n }: { n: NpcPlacement }) {
       return;
     }
 
+    // Someone who can be spoken to turns toward the learner coming close
+    // (seated people only half-turn), and back to what they were doing after.
+    if (talker && player) {
+      const p = player.current.position;
+      const d = Math.hypot(p.x - n.x, p.z - n.z);
+      const w = walk.current;
+      let target = n.yaw;
+      if (d < NOTICE) {
+        const toward = Math.atan2(p.x - n.x, p.z - n.z);
+        const turn = angleDelta(n.yaw, toward);
+        target = n.yaw + (seated ? Math.max(-0.6, Math.min(0.6, turn)) : turn);
+      }
+      w.yaw += angleDelta(w.yaw, target) * damp(d < NOTICE ? 5 : 2, dt);
+      g.rotation.y = w.yaw;
+    }
+
+    // A reaction (answered, or pleased): a wave and a small lift.
+    const cheer = cheerAmount(n.id, performance.now());
+    if (cheer > 0) {
+      if (body.current) body.current.position.y = Math.abs(Math.sin(t * 9)) * 0.05 * cheer * calm;
+      if (armR.current) {
+        armR.current.rotation.x = -2.5 * cheer;
+        armR.current.rotation.z = (0.25 + Math.sin(t * 10) * 0.25) * cheer * calm;
+      }
+      return;
+    }
+
     // Breathing for everyone; a pose-specific gesture on top.
     if (body.current) body.current.position.y = Math.sin(t * 1.6) * 0.006 * calm;
     if (n.pose === "talk" && armR.current) {
@@ -99,7 +134,6 @@ export default function Npc({ n }: { n: NpcPlacement }) {
   });
 
   const sc = spec.scale ?? 1;
-  const seated = n.pose === "sit" || n.pose === "sitRead";
   return (
     <group ref={root} position={[n.x, 0, n.z]} rotation={[0, n.yaw, 0]} scale={sc}>
       <group ref={body}>

@@ -3,7 +3,7 @@ import { findPortal, ROOMS } from "../../config/rooms";
 import { PLAYER } from "../../config/world";
 import { resolveCollisions } from "../collision";
 import { worldAccess } from "../access";
-import { INTERACTABLES, nearestInteractable } from "../../config/interactions";
+import { INTERACTABLES, nearestInteractable, pickInteractable, VILLAGE_LETTERS } from "../../config/interactions";
 import { stickDirection } from "../movement";
 
 describe("KLOVERS World rooms", () => {
@@ -97,7 +97,8 @@ describe("KLOVERS World interactions", () => {
       const p = { x: it.x, z: it.z };
       resolveCollisions(p, PLAYER.radius, room.colliders, room.bounds);
       expect(Math.hypot(p.x - it.x, p.z - it.z)).toBeLessThanOrEqual(it.radius);
-      expect(nearestInteractable(it.room, p.x, p.z)?.id).toBe(it.id);
+      // Doors only exist while their world is open; locked notes while it is not.
+      expect(nearestInteractable(it.room, p.x, p.z, undefined, () => !!it.whileOpen)?.id).toBe(it.id);
     }
   });
 
@@ -105,6 +106,7 @@ describe("KLOVERS World interactions", () => {
     for (const room of Object.values(ROOMS)) {
       for (const spawn of Object.values(room.spawns)) {
         expect(nearestInteractable(room.id, spawn.x, spawn.z)).toBeUndefined();
+        expect(nearestInteractable(room.id, spawn.x, spawn.z, undefined, () => true)).toBeUndefined();
       }
     }
   });
@@ -154,6 +156,40 @@ describe("guest path (the Hub is open to everyone)", () => {
     const gate = INTERACTABLES.find((i) => i.id === "gate-village-market-gate");
     expect(gate?.kind).toBe("locked");
     expect(nearestInteractable("hangul-village", gate!.x, gate!.z, undefined, () => false)?.id).toBe(gate!.id);
-    expect(nearestInteractable("hangul-village", gate!.x, gate!.z, undefined, () => true)).toBeUndefined();
+    // Once open, the same gate offers "Enter" instead.
+    expect(nearestInteractable("hangul-village", gate!.x, gate!.z, undefined, () => true)?.kind).toBe("door");
+  });
+});
+
+describe("choosing what to offer", () => {
+  it("prefers what the learner faces, and holds the current choice (no flicker)", () => {
+    const a = { id: "a", room: "courtyard" as const, kind: "learn" as const, action: "learn" as const, x: 1, z: 0, radius: 2 };
+    const b = { id: "b", room: "courtyard" as const, kind: "learn" as const, action: "learn" as const, x: -1, z: 0, radius: 2 };
+    const list = [a, b];
+    // Facing +x (yaw π/2): a wins though both are 1 m away.
+    expect(pickInteractable("courtyard", 0, 0, Math.PI / 2, null, () => false, [], list)?.id).toBe("a");
+    // Facing −x: b wins.
+    expect(pickInteractable("courtyard", 0, 0, -Math.PI / 2, null, () => false, [], list)?.id).toBe("b");
+    // Slightly nearer b, but a is held: a stays.
+    expect(pickInteractable("courtyard", -0.1, 0, 0, "a", () => false, [], list)?.id).toBe("a");
+    // Held a little past its radius, then let go.
+    expect(pickInteractable("courtyard", 3.2, 0, 0, "a", () => false, [], [a])?.id).toBe("a");
+    expect(pickInteractable("courtyard", 3.5, 0, 0, "a", () => false, [], [a])).toBeUndefined();
+  });
+
+  it("offers Cluby only when the learner turns to him", () => {
+    const cluby = { id: "cluby", room: "courtyard" as const, kind: "cluby" as const, action: "talk" as const, x: 1, z: 0, radius: 1.6, needsFacing: true };
+    expect(pickInteractable("courtyard", 0, 0, 0, null, () => false, [cluby], [])).toBeUndefined();
+    expect(pickInteractable("courtyard", 0, 0, Math.PI / 2, null, () => false, [cluby], [])?.id).toBe("cluby");
+  });
+
+  it("every room has its own things to do, within the brief's limits", () => {
+    const people = (room: string) => INTERACTABLES.filter((i) => i.room === room && (i.kind === "say" || i.kind === "talk"));
+    expect(people("courtyard").length).toBe(1);
+    expect(people("hangul-village").length).toBeGreaterThanOrEqual(2);
+    expect(people("hub").length).toBeGreaterThanOrEqual(2);
+    const learn = INTERACTABLES.filter((i) => i.room === "vocabulary-market" && i.kind === "learn");
+    expect(learn.length).toBeGreaterThanOrEqual(3);
+    expect(INTERACTABLES.filter((i) => i.letter).map((i) => i.letter).sort()).toEqual([...VILLAGE_LETTERS].sort());
   });
 });

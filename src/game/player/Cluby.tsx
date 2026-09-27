@@ -46,7 +46,7 @@ interface Props {
 }
 
 /** Seconds of the learner standing still before he offers a direction. */
-const GUIDE_AFTER_IDLE = 6;
+const GUIDE_AFTER_IDLE = 9;
 const GUIDE_EVERY = 16;
 
 export default function Cluby({ story, player, layout, guide, interests }: Props) {
@@ -174,11 +174,22 @@ export default function Cluby({ story, player, layout, guide, interests }: Props
         faceX = c.look.x;
         faceZ = c.look.z;
       }
+      // Spoken to: he turns to the learner (and hops, below).
+      if (now < c.ackUntil) {
+        faceX = p.x;
+        faceZ = p.z;
+      }
       g.position.set(c.x, 0, c.z);
+      // A little personality while waiting: a slow side-to-side sway.
+      if (body.current) {
+        const sway = d <= 0.35 && m.idleFor > 3 && !c.look ? Math.sin(t * 1.4) * 0.07 : 0;
+        body.current.rotation.z += (sway - body.current.rotation.z) * damp(4, dt);
+      }
     }
 
     // A happy hop (a right answer, a new place).
     if (now < c.hopUntil) hop = Math.abs(Math.sin(now / 110)) * 0.22;
+    else if (now < c.ackUntil) hop = Math.abs(Math.sin(now / 140)) * 0.1;
     if (body.current) {
       body.current.position.y = hop + Math.sin(now / 600) * 0.01;
     }

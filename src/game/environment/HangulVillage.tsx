@@ -4,6 +4,7 @@ import { PALETTE } from "../config/world";
 import Batch from "./Batch";
 import { Kit, bed, cart, curvedRoofOn, grass, hanokHouse, hanokRoof, jitter, platform, pot, shrub, steppingStones, tree, wallRun, gatehouse, flowerBox } from "./kit";
 import { Gate, GateWall, Lamps, Signboard, Sway } from "./parts";
+import { VILLAGE_LETTERS } from "../config/interactions";
 import { paintPaving, useTiledTexture } from "./textures";
 import { curvedRoof } from "./shapes";
 
@@ -34,7 +35,6 @@ interface SignSpot {
   x: number;
   z: number;
   letter: string;
-  learn: boolean;
 }
 
 /** Houses on both sides (the right side stops at the Hub lane). */
@@ -49,7 +49,7 @@ const SIGNS: SignSpot[] = HOUSES.map(({ side, z, i }) => {
   // South → north: the house nearest the village gate carries the first letter.
   const southIndex = VILLAGE.houseZ.length - 1 - i;
   const letter = letters[southIndex] ?? "";
-  return { x: side * FACE_X - side * 0.62, z: z + 0.9, letter, learn: side < 0 && southIndex === 0 };
+  return { x: side * FACE_X - side * 0.62, z: z + 0.9, letter };
 }).filter((s) => s.letter);
 
 const VILLAGE_KIT: Kit = (() => {
@@ -163,7 +163,7 @@ function Well() {
   );
 }
 
-export default function HangulVillage({ marketOpen }: { marketOpen: boolean }) {
+export default function HangulVillage({ marketOpen, letters }: { marketOpen: boolean; letters: string[] }) {
   const paving = useTiledTexture(paintPaving, HW, HL);
   return (
     <group>
@@ -191,8 +191,8 @@ export default function HangulVillage({ marketOpen }: { marketOpen: boolean }) {
         <group key={`${s.x}${s.z}`} position={[s.x, 2.58, s.z]}>
           <Sway amp={0.045} speed={1.1 + (i % 3) * 0.17} phase={i * 1.7} axis="z">
             <group position={[0, -0.46, 0]}>
-              {s.learn && (
-                // The sign a learner can read up close: a thin yellow edge.
+              {(VILLAGE_LETTERS as readonly string[]).includes(s.letter) && !letters.includes(s.letter) && (
+                // A sign still to be discovered up close: a thin yellow edge.
                 <mesh position={[0, 0, 0]} scale={[0.74, 0.74, 0.012]}>
                   <boxGeometry />
                   <meshBasicMaterial color={PALETTE.yellow} toneMapped={false} />

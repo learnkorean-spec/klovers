@@ -24,14 +24,13 @@ export const WORLD_COPY = {
     worldTitle: "KLOVERS World",
     skip: "Skip",
     clubyName: "Cluby",
+    /** The verb on every prompt, by action (config/interactions). */
     prompts: {
-      egg: "Inspect",
+      inspect: "Inspect",
       talk: "Talk",
-      letter: "Read the sign",
-      word: "Look closer",
-      games: "Enter",
-      lessons: "Enter",
-      locked: "Inspect",
+      learn: "Learn",
+      enter: "Enter",
+      help: "Help",
     },
     speech: {
       hello: { ko: "안녕!", text: "annyeong — hello" },
@@ -41,6 +40,13 @@ export const WORLD_COPY = {
       "vocabulary-market": { text: "The baker's sign is gone. Which word goes there?" },
       hub: { text: "Every path starts here." },
       wordRight: { ko: "잘했어!", text: "Well done." },
+      // Talking to Cluby: one short line per place.
+      "talk-courtyard": { ko: "가자!", text: "Let's see what's outside!" },
+      "talk-hangul-village": { ko: "한글!", text: "Look — letters everywhere." },
+      "talk-vocabulary-market": { ko: "이게 뭐예요?", text: "What's this? Everything here has a Korean name." },
+      "talk-hub": { ko: "어디로 갈까?", text: "Where to? New worlds start from here." },
+      "talk-conversation-cafe": { ko: "커피 한 잔!", text: "One coffee, please!" },
+      letters: { ko: "잘했어!", text: "All three letters found!" },
     },
     egg: {
       title: "The clover egg",
@@ -62,8 +68,8 @@ export const WORLD_COPY = {
       line: "The baker's sign has fallen. Which word goes back up over the bread?",
       options: [
         { ko: "빵", right: true, feedback: "빵 (ppang) — bread. The sign is back up." },
-        { ko: "밥", right: false, feedback: "밥 (bap) is cooked rice. Look again at the loaves." },
-        { ko: "물", right: false, feedback: "물 (mul) is water. Look again at the loaves." },
+        { ko: "밥", right: false, feedback: "밥 (bap) = cooked rice. Try again." },
+        { ko: "물", right: false, feedback: "물 (mul) = water. Try again." },
       ],
       close: "Back to the market",
     },
@@ -87,7 +93,7 @@ export const WORLD_COPY = {
       },
       "vocabulary-market": {
         name: "Vocabulary Market",
-        line: "Every stall names what it sells — the word and the thing, side by side.",
+        line: "Walk up to a stall: its word goes up once it is learned.",
       },
       hub: { name: "The KLOVERS Hub", line: "Every path in the world starts here — and more are on the way." },
       "conversation-cafe": {
@@ -98,9 +104,9 @@ export const WORLD_COPY = {
     notices: {
       marketLocked: { title: "Vocabulary Market", line: "Vocabulary Market unlocks at Level 1." },
       cafeLocked: { title: "Conversation Café", line: "Conversation Café unlocks at Level 2." },
-      cultureSoon: { title: "Culture Street", line: "Coming soon" },
-      seoulSoon: { title: "Seoul Journey", line: "Coming soon" },
-      gardenSoon: { title: "Cluby's Memory Garden", line: "Coming soon" },
+      cultureSoon: { title: "Culture Street", line: "Coming soon", more: "Everyday Korean life: food, manners and traditions." },
+      seoulSoon: { title: "Seoul Journey", line: "Coming soon", more: "Real city moments in Seoul: getting around, shopping, restaurants." },
+      gardenSoon: { title: "Cluby's Memory Garden", line: "Coming soon", more: "A quiet garden where learned words come back for review." },
     },
     lockedCard: {
       learn: "Continue learning",
@@ -124,15 +130,16 @@ export const WORLD_COPY = {
         { id: "look", keys: ["Drag the screen"], label: "Look around" },
         { id: "interact", keys: ["Round button"], label: "Interact" },
       ],
-      stepMove: "First: move a few steps",
+      stepMove: "Move to explore the place",
       stepLook: "Now: look around",
     },
     objective: {
       label: "Objective",
       done: "Objective complete",
       meetCharacters: "Meet the KLOVERS characters",
-      readSign: "Read the first letter sign",
+      readSign: "Learn the first letter",
       findHub: "Find the KLOVERS Hub",
+      helpBaker: "Put the baker's sign back up",
     },
     names: { lina: "Lina", adam: "Adam", minsu: "Minsu" },
     talk: {
@@ -149,6 +156,49 @@ export const WORLD_COPY = {
       marketStalls: { title: "Vocabulary Market", line: "Learn words by exploring the stalls." },
       hubSignpost: { title: "The KLOVERS Hub", line: "Every arm of the signpost points to a place — some are still being built." },
     },
+    /** Small learning cards: the Korean, how it sounds, what it means. */
+    learn: {
+      seokdeung: { ko: "석등", roman: "seokdeung", meaning: "stone lantern", note: "Stone lanterns have lit hanok courtyards and temple yards for centuries." },
+      nieun: { ko: "ㄴ", roman: "nieun · 니은", meaning: "the n sound", note: "Its shape draws the tongue touching the ridge behind the teeth.", example: { ko: "나", gloss: "na — I, me" } },
+      mul: { ko: "물", roman: "mul", meaning: "water", example: { ko: "물 주세요.", gloss: "Water, please." } },
+      bap: { ko: "밥", roman: "bap", meaning: "cooked rice — and a meal", example: { ko: "밥 먹었어요?", gloss: "Have you eaten? — an everyday hello" } },
+      chaek: { ko: "책", roman: "chaek", meaning: "book", example: { ko: "책을 읽어요.", gloss: "I read a book." } },
+      ot: { ko: "옷", roman: "ot", meaning: "clothes" },
+      kkot: { ko: "꽃", roman: "kkot", meaning: "flower", example: { ko: "꽃이 예뻐요.", gloss: "The flower is pretty." } },
+      sagwa: { ko: "사과", roman: "sagwa", meaning: "apple", note: "사과 also means an apology.", example: { ko: "사과 주세요.", gloss: "An apple, please." } },
+      jido: { ko: "지도", roman: "jido", meaning: "map", note: "KLOVERS World: the courtyard, the village, the market, the café — and this square in the middle." },
+    },
+    quiz: {
+      a: {
+        ko: "ㅏ",
+        question: "Which sound is this?",
+        options: [
+          { label: "a", right: true, feedback: "Yes: ㅏ is a, as in father. 아 — a." },
+          { label: "o", right: false, feedback: "That one is ㅗ. Here the short stroke points right: a." },
+          { label: "i", right: false, feedback: "That one is ㅣ. Here the short stroke points right: a." },
+        ],
+      },
+    },
+    /** People's short lines: Korean, meaning, one note from Cluby. */
+    say: {
+      auntie: { name: "Neighbour", ko: "안녕하세요!", gloss: "Hello!", note: "A very common Korean greeting." },
+      vendor: { name: "Cart seller", ko: "감사합니다!", gloss: "Thank you!", note: "The polite thank-you, said after every sale." },
+      shopkeeper: { name: "Clothes seller", ko: "어서 오세요! 뭐 드릴까요?", gloss: "Welcome! What can I get you?", note: "어서 오세요 — the welcome heard in every Korean shop." },
+      baker: { name: "The baker", ko: "고마워요! 빵 드세요.", gloss: "Thank you! Have some bread.", note: "고마워요 — a warm, friendly thank-you." },
+      hubFriend: { name: "Student", ko: "어디 가요?", gloss: "Where are you going?", note: "어디 means where; 가요 means go." },
+      hubReader: { name: "Reader", ko: "한국어를 공부해요.", gloss: "I'm studying Korean.", note: "공부 means study." },
+    },
+    card: {
+      listen: "Listen",
+      close: "Close",
+    },
+    found: {
+      lettersLabel: "Letters",
+      word: "A new word discovered",
+      letter: "A new letter discovered",
+    },
+    /** A short "this way" after the egg: where the path goes next. */
+    wayEyebrow: "This way",
     previewNote: "Admin Preview",
   },
   ar: {
@@ -174,13 +224,11 @@ export const WORLD_COPY = {
     skip: "تخطّي",
     clubyName: "كلوبي",
     prompts: {
-      egg: "فحص",
-      talk: "تحية",
-      letter: "قراءة اللافتة",
-      word: "نظرة أقرب",
-      games: "دخول",
-      lessons: "دخول",
-      locked: "فحص",
+      inspect: "فحص",
+      talk: "تحدّث",
+      learn: "تعلّم",
+      enter: "دخول",
+      help: "مساعدة",
     },
     speech: {
       hello: { ko: "안녕!", text: "أنيونغ: مرحبًا" },
@@ -190,6 +238,12 @@ export const WORLD_COPY = {
       "vocabulary-market": { text: "لافتة الخبّاز مفقودة. أيّ كلمة تناسبها؟" },
       hub: { text: "من هنا تبدأ كل الطرق." },
       wordRight: { ko: "잘했어!", text: "أحسنت." },
+      "talk-courtyard": { ko: "가자!", text: "هيا نرَ ما في الخارج!" },
+      "talk-hangul-village": { ko: "한글!", text: "الحروف في كل مكان حولنا." },
+      "talk-vocabulary-market": { ko: "이게 뭐예요?", text: "ما هذا؟ لكل شيء هنا اسم كوري." },
+      "talk-hub": { ko: "어디로 갈까?", text: "إلى أين؟ من هنا تبدأ عوالم جديدة." },
+      "talk-conversation-cafe": { ko: "커피 한 잔!", text: "فنجان قهوة، من فضلك!" },
+      letters: { ko: "잘했어!", text: "اكتُشفت الحروف الثلاثة!" },
     },
     egg: {
       title: "بيضة البرسيم",
@@ -211,8 +265,8 @@ export const WORLD_COPY = {
       line: "سقطت لافتة الخبّاز. أيّ كلمة تعود فوق الخبز؟",
       options: [
         { ko: "빵", right: true, feedback: "빵 (بّانغ): الخبز. عادت اللافتة إلى مكانها." },
-        { ko: "밥", right: false, feedback: "밥 (باب) تعني الأرز المطبوخ. نظرة أخرى إلى الأرغفة." },
-        { ko: "물", right: false, feedback: "물 (مول) تعني الماء. نظرة أخرى إلى الأرغفة." },
+        { ko: "밥", right: false, feedback: "밥 (باب) = الأرز المطبوخ. محاولة أخرى." },
+        { ko: "물", right: false, feedback: "물 (مول) = الماء. محاولة أخرى." },
       ],
       close: "العودة إلى السوق",
     },
@@ -236,7 +290,7 @@ export const WORLD_COPY = {
       },
       "vocabulary-market": {
         name: "سوق المفردات",
-        line: "على كل كشك اسمُ ما يبيعه: الكلمة والشيء جنبًا إلى جنب.",
+        line: "الاقتراب من أي كشك يكشف اسم ما يبيعه، وترتفع لافتته بعد تعلّمه.",
       },
       hub: { name: "ساحة كلوفرز", line: "من هنا تبدأ كل طرق العالم، وطرق أخرى قادمة." },
       "conversation-cafe": {
@@ -247,9 +301,9 @@ export const WORLD_COPY = {
     notices: {
       marketLocked: { title: "سوق المفردات", line: "يُفتح سوق المفردات عند الوصول إلى المستوى الأول." },
       cafeLocked: { title: "مقهى المحادثة", line: "يُفتح مقهى المحادثة عند الوصول إلى المستوى الثاني." },
-      cultureSoon: { title: "شارع الثقافة", line: "قريبًا" },
-      seoulSoon: { title: "رحلة سيول", line: "قريبًا" },
-      gardenSoon: { title: "حديقة ذاكرة كلوبي", line: "قريبًا" },
+      cultureSoon: { title: "شارع الثقافة", line: "قريبًا", more: "الحياة الكورية اليومية: الطعام والآداب والتقاليد." },
+      seoulSoon: { title: "رحلة سيول", line: "قريبًا", more: "مواقف حقيقية في مدينة سيول: التنقّل والتسوّق والمطاعم." },
+      gardenSoon: { title: "حديقة ذاكرة كلوبي", line: "قريبًا", more: "حديقة هادئة تعود فيها الكلمات المتعلَّمة للمراجعة." },
     },
     lockedCard: {
       learn: "متابعة التعلّم",
@@ -274,15 +328,16 @@ export const WORLD_COPY = {
         { id: "look", keys: ["سحب الشاشة"], label: "تحريك الكاميرا" },
         { id: "interact", keys: ["الزر الدائري"], label: "التفاعل" },
       ],
-      stepMove: "أولًا: بضع خطوات",
+      stepMove: "التحرّك لاستكشاف المكان",
       stepLook: "الآن: تحريك الكاميرا",
     },
     objective: {
       label: "الهدف",
       done: "اكتمل الهدف",
       meetCharacters: "التعرّف على شخصيات كلوفرز",
-      readSign: "قراءة لافتة الحرف الأول",
+      readSign: "تعلُّم الحرف الأول",
       findHub: "الوصول إلى ساحة كلوفرز",
+      helpBaker: "إعادة لافتة المخبز إلى مكانها",
     },
     names: { lina: "لينا", adam: "آدم", minsu: "مين سو" },
     talk: {
@@ -299,6 +354,46 @@ export const WORLD_COPY = {
       marketStalls: { title: "سوق المفردات", line: "تعلُّم الكلمات باستكشاف الأكشاك." },
       hubSignpost: { title: "ساحة كلوفرز", line: "كل ذراع في هذا العمود تشير إلى مكان، وبعضها ما زال قيد البناء." },
     },
+    learn: {
+      seokdeung: { ko: "석등", roman: "سوك دونغ", meaning: "فانوس حجري", note: "تضيء الفوانيس الحجرية ساحات الهانوك والمعابد منذ قرون." },
+      nieun: { ko: "ㄴ", roman: "نيئون · 니은", meaning: "صوت النون", note: "شكله يرسم طرف اللسان وهو يلمس ما خلف الأسنان.", example: { ko: "나", gloss: "نا: أنا" } },
+      mul: { ko: "물", roman: "مول", meaning: "ماء", example: { ko: "물 주세요.", gloss: "ماءً، من فضلك." } },
+      bap: { ko: "밥", roman: "باب", meaning: "الأرز المطبوخ، والوجبة عمومًا", example: { ko: "밥 먹었어요?", gloss: "هل تناولتم الطعام؟ تحية يومية شائعة" } },
+      chaek: { ko: "책", roman: "تشيك", meaning: "كتاب", example: { ko: "책을 읽어요.", gloss: "أقرأ كتابًا." } },
+      ot: { ko: "옷", roman: "أوت", meaning: "ملابس" },
+      kkot: { ko: "꽃", roman: "كّوت", meaning: "زهرة", example: { ko: "꽃이 예뻐요.", gloss: "الزهرة جميلة." } },
+      sagwa: { ko: "사과", roman: "ساغوا", meaning: "تفاحة", note: "وكلمة 사과 تعني أيضًا: اعتذار.", example: { ko: "사과 주세요.", gloss: "تفاحةً، من فضلك." } },
+      jido: { ko: "지도", roman: "جيدو", meaning: "خريطة", note: "عالم كلوفرز: الساحة، والقرية، والسوق، والمقهى، وهذه الساحة في الوسط." },
+    },
+    quiz: {
+      a: {
+        ko: "ㅏ",
+        question: "أيّ صوت هذا؟",
+        options: [
+          { label: "آ", right: true, feedback: "صحيح: ㅏ صوت الألف الممدودة. 아: آ." },
+          { label: "أو", right: false, feedback: "هذا صوت ㅗ. هنا الخط القصير يتجه يمينًا: آ." },
+          { label: "إي", right: false, feedback: "هذا صوت ㅣ. هنا الخط القصير يتجه يمينًا: آ." },
+        ],
+      },
+    },
+    say: {
+      auntie: { name: "الجارة", ko: "안녕하세요!", gloss: "مرحبًا!", note: "هذه تحية كورية شائعة." },
+      vendor: { name: "بائع العربة", ko: "감사합니다!", gloss: "شكرًا!", note: "كلمة الشكر المهذّبة، تُقال بعد كل بيع." },
+      shopkeeper: { name: "بائع الملابس", ko: "어서 오세요! 뭐 드릴까요?", gloss: "أهلًا وسهلًا! ماذا أقدّم لكم؟", note: "어서 오세요: الترحيب الذي يُسمع في كل محل كوري." },
+      baker: { name: "الخبّازة", ko: "고마워요! 빵 드세요.", gloss: "شكرًا! تفضّلوا بالخبز.", note: "고마워요: شكر ودود." },
+      hubFriend: { name: "طالب", ko: "어디 가요?", gloss: "إلى أين الوجهة؟", note: "어디 تعني أين، و가요 تعني الذهاب." },
+      hubReader: { name: "قارئة", ko: "한국어를 공부해요.", gloss: "أدرس اللغة الكورية.", note: "공부 تعني الدراسة." },
+    },
+    card: {
+      listen: "استماع",
+      close: "إغلاق",
+    },
+    found: {
+      lettersLabel: "الحروف",
+      word: "اكتُشفت كلمة جديدة",
+      letter: "اكتُشف حرف جديد",
+    },
+    wayEyebrow: "الطريق من هنا",
     previewNote: "معاينة الإدارة",
   },
 } as const;
