@@ -31,7 +31,8 @@ const FinalCTA = lazy(() => import("@/components/FinalCTA"));
  * HTML for "/". The title already names Klovers, so neither useSEO nor the
  * prerender emit loop appends a suffix. Change both or neither -
  * scripts/lib/brand-identity.test.mjs guards the prerender side (brand first,
- * كلوفرز in the description).
+ * English only in the description since 27 Sep 2026; the Arabic name lives in
+ * the JSON-LD alternateName and on /ar).
  *
  * Arabic: since 24 Sep 2026 the Arabic homepage has its own URL, /ar, and
  * these are the SAME strings the prerender writes into dist/ar/index.html.
@@ -41,7 +42,7 @@ const FinalCTA = lazy(() => import("@/components/FinalCTA"));
  */
 export const HOME_TITLE = "Klovers — Live Online Korean Classes in Small Groups";
 export const HOME_DESCRIPTION =
-  "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.";
+  "Klovers: live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.";
 const HOME_TITLE_AR = "كلوفرز — حصص كورية مباشرة في مجموعات صغيرة";
 const HOME_DESCRIPTION_AR =
   "كلوفرز: حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.";

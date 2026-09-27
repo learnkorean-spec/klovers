@@ -307,9 +307,10 @@ describe("the homepage title", () => {
 });
 
 describe("the homepage description", () => {
-  it("names the business in Arabic so a crawler can bind the two forms", () => {
-    expect(hasArabic(home.description)).toBe(true);
-    expect(home.description).toContain("كلوفرز");
+  it("is English only — one language per page (Re, 27 Sep 2026)", () => {
+    // The Arabic name is bound through the JSON-LD alternateName and the /ar
+    // twin instead, both guarded above.
+    expect(hasArabic(home.description)).toBe(false);
   });
 
   it("still names the business in Latin", () => {

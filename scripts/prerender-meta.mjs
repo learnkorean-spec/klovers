@@ -595,13 +595,16 @@ const MARKETING_ROUTES = [
     // back to leading with the brand and the description to carrying كلوفرز
     // in prose, because scripts/lib/brand-identity.test.mjs guards exactly
     // that and the CRO pass had broken it.
+    // 27 Sep 2026 (Re): one language per page — the English description is
+    // English only. The Arabic name stays in the JSON-LD alternateName and
+    // leads the /ar title.
     //
     // `body` gives crawlers that never run JavaScript the page's real text
     // (the review measured 76 characters of body text in the raw HTML).
     path: "/",
     title: "Klovers — Live Online Korean Classes in Small Groups",
     description:
-      "Klovers (كلوفرز): live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.",
+      "Klovers: live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.",
     body: HOME_BODY_HTML,
     alternates: HOME_ALTERNATES,
   },
