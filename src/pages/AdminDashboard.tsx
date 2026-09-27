@@ -1055,6 +1055,11 @@ const AdminDashboard = () => {
         : studentFilter === "egypt" ? u.source_label === "Egypt"
         : studentFilter === "overdue" ? u.amount_due > 0
         : studentFilter === "atrisk" ? isAtRiskRow(u)
+        // These three match the dashboard tiles one for one (AdminKpiStrip,
+        // LifecycleFunnel link here with ?filter=…).
+        : studentFilter === "active" ? u.derived_status === "ACTIVE"
+        : studentFilter === "locked" ? u.derived_status === "LOCKED"
+        : studentFilter === "completed" ? u.derived_status === "COMPLETED"
         : true;
       const matchesLevel = levelFilter === "all" || normalizeLevel(u.level || "") === levelFilter;
       return matchesSearch && matchesFilter && matchesLevel;
@@ -1094,6 +1099,9 @@ const AdminDashboard = () => {
     { value: "egypt", label: `Egypt Manual (${egyptCount})` },
     { value: "overdue", label: `Outstanding Balance (${overdueCount})` },
     { value: "atrisk", label: `At-Risk (${atRiskCount})` },
+    { value: "active", label: `Active (${lifecycleActive})` },
+    { value: "locked", label: `Locked (${lifecycleLocked})` },
+    { value: "completed", label: `Completed (${lifecycleCompleted})` },
   ];
 
   const legacyEnrollmentCount = useMemo(() =>
