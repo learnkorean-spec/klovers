@@ -47,6 +47,10 @@ const GLOW = (() => {
   return new MeshBasicMaterial({ map, transparent: true, opacity: 0.6, blending: AdditiveBlending, depthWrite: false, toneMapped: false });
 })();
 
+/** The same warm light, spread wide on the paving round the platform: the
+ * brightest pool in the courtyard is where the egg sleeps (focal point). */
+const FLOOR_GLOW = new MeshBasicMaterial({ map: GLOW.map, transparent: true, opacity: 0.3, blending: AdditiveBlending, depthWrite: false, toneMapped: false });
+
 export default function CloverEgg({ story }: { story: MutableRefObject<StoryState> }) {
   const { x, z, w } = PROPS.eggPlinth;
   const egg = useRef<Group>(null);
@@ -100,6 +104,10 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
       <mesh receiveShadow position={[0, 0.05, 0]} rotation={[0, Math.PI / 8, 0]}>
         <cylinderGeometry args={[w / 2 / Math.cos(Math.PI / 8) + 0.42, w / 2 / Math.cos(Math.PI / 8) + 0.46, 0.1, 8]} />
         <primitive object={MAT.stoneWarm} attach="material" />
+      </mesh>
+      <mesh position={[0, 0.115, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
+        <planeGeometry args={[6.2, 6.2]} />
+        <primitive object={FLOOR_GLOW} attach="material" />
       </mesh>
       {/* A soft warm glow on the timber round the egg: presence, not magic. */}
       <mesh position={[0, PLINTH_H + 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>

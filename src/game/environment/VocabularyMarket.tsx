@@ -171,7 +171,29 @@ const MARKET_KIT: Kit = (() => {
   for (const s of [-1, 1]) gutter(k, s * (HW - 0.27), -HD, s * (HW - 0.27), HD);
   // Cloth bunting across the square, and flowers by the gate.
   bunting(k, -HW, -4.9, HW, -4.9, 4.35, 1);
-  bunting(k, -HW, 4.9, HW, 4.9, 4.35, 2);
+  // The centrepiece: a two-tier produce stand under a big striped parasol —
+  // the square's one landmark, full of the colours the words name.
+  {
+    const { x, z, size } = MARKET.crates;
+    const r = size / 2;
+    k.add("woodLight", "oct", [x, 0.28, z], [size, 0.56, size], [0, Math.PI / 8, 0], true);
+    k.add("woodDark", "oct", [x, 0.58, z], [size + 0.08, 0.06, size + 0.08], [0, Math.PI / 8, 0]);
+    k.add("woodLight", "oct", [x, 0.78, z], [size * 0.55, 0.4, size * 0.55], [0, Math.PI / 8, 0], true);
+    k.add("woodDark", "oct", [x, 1.0, z], [size * 0.55 + 0.06, 0.05, size * 0.55 + 0.06], [0, Math.PI / 8, 0]);
+    const heapsLow: MatKey[] = ["fruitRed", "fruitOrange", "leaf", "fruitRed", "woodLight", "fruitOrange"];
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + 0.3;
+      basket(k, x + Math.sin(a) * r * 0.72, z + Math.cos(a) * r * 0.72, 0.5, heapsLow[i], 0.61);
+    }
+    for (let i = 0; i < 3; i++) {
+      const a = (i / 3) * Math.PI * 2;
+      basket(k, x + Math.sin(a) * r * 0.3, z + Math.cos(a) * r * 0.3, 0.42, (["fruitOrange", "leaf", "fruitRed"] as MatKey[])[i], 1.03);
+    }
+    k.add("woodDark", "cyl", [x, 2.0, z], [0.09, 2.6, 0.09]);
+    k.add("clothRed", "cone", [x, 3.2, z], [3.6, 0.7, 3.6], undefined, true);
+    k.add("fabric", "cone", [x, 3.28, z], [1.4, 0.42, 1.4]);
+    k.add("woodDark", "ball", [x, 3.62, z], [0.14, 0.14, 0.14]);
+  }
   // Flowers by the stall ends: green and colour between the counters.
   for (const [fx, fz] of MARKET.flowers) flowers(k, fx, fz, 0.7, fx + fz);
   for (const x of [-3.6, 3.6]) {
@@ -219,20 +241,6 @@ function useStringLights() {
     }
     return { lights, line };
   }, []);
-}
-
-function Crates() {
-  const { x, z, size } = MARKET.crates;
-  const parts: Part[] = useMemo(
-    () => [
-      { p: [x - 0.35, size * 0.2, z - 0.3], s: [size * 0.52, size * 0.39, size * 0.52] },
-      { p: [x + 0.38, size * 0.2, z + 0.3], s: [size * 0.52, size * 0.39, size * 0.52], r: [0, 0.3, 0] },
-      { p: [x + 0.3, size * 0.17, z - 0.38], s: [size * 0.45, size * 0.34, size * 0.45], r: [0, -0.2, 0] },
-      { p: [x, size * 0.58, z], s: [size * 0.48, size * 0.36, size * 0.48], r: [0, 0.5, 0] },
-    ],
-    [x, z, size],
-  );
-  return <Instanced parts={parts} material={MAT.woodWarm} castShadow receiveShadow />;
 }
 
 export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: boolean; breadSign: boolean }) {
@@ -313,7 +321,6 @@ export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: bo
 
       <Instanced parts={strings.line} material={MAT.charcoal} />
       <Instanced parts={strings.lights} material={MAT.lanternPaper} />
-      <Crates />
       <Lamps spots={LAMP_SPOTS} size={MARKET.lampSize} />
       {/* North: on to the KLOVERS Hub. South: back to the village. */}
       <GateWall z={-HD - 0.2} facing={1} open={nextOpen} sign={MARKET.nextSign} halfWidth={HW} />

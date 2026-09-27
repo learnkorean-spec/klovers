@@ -97,7 +97,8 @@ export default function Cluby({ story, player, layout, guide, interests }: Props
         faceZ = c.look.z;
       }
     } else {
-      // Follow: a comfortable step behind and to the right of the learner.
+      // Follow: at the learner's side (screen right, where the view opens),
+      // level with them — never between the learner and the camera.
       const m = mem.current;
       const pl = player.current;
       const moving = Math.hypot(pl.velocity.x, pl.velocity.z) > 0.2;
@@ -106,8 +107,8 @@ export default function Cluby({ story, player, layout, guide, interests }: Props
       const yaw = pl.yaw;
       const fx = Math.sin(yaw);
       const fz = Math.cos(yaw);
-      const tx = p.x - fx * 1.15 + fz * 0.8;
-      const tz = p.z - fz * 1.15 - fx * 0.8;
+      const tx = p.x - fx * 0.25 - fz * 1.0;
+      const tz = p.z - fz * 0.25 + fx * 1.0;
       const dx = tx - c.x;
       const dz = tz - c.z;
       const d = Math.hypot(dx, dz);

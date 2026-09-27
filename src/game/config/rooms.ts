@@ -162,7 +162,7 @@ const HANGUL_VILLAGE: RoomLayout = {
   cameraColliders: [...lamps, ...archPosts],
   spawns: {
     // Just through the south gate, facing up the street (−z).
-    fromCourtyard: { x: 0, z: VILLAGE.halfLength - 2.2, yaw: Math.PI },
+    fromCourtyard: { x: 0, z: VILLAGE.halfLength - 3.4, yaw: Math.PI },
     fromMarket: { x: 0, z: -VILLAGE.halfLength + 2.2, yaw: 0 },
     // Just inside the lane gate, facing into the street (−x).
     fromHub: { x: VILLAGE.halfWidth - 2.0, z: VILLAGE.hubLaneZ, yaw: -Math.PI / 2 },
@@ -208,7 +208,8 @@ export const MARKET = {
   /** One word per stall, south → north: left side (−x), right side (+x). */
   stallsLeft: ["물", "밥", "빵"],
   stallsRight: ["책", "옷", "꽃"],
-  crates: { x: 0, z: 0, size: 1.5 },
+  /** The market's centrepiece: a tiered produce stand under a big parasol. */
+  crates: { x: 0, z: 0, size: 1.8 },
   /** Produce tables under market parasols in the square: x, z, w, d. */
   tables: [
     [-2.9, 1.9, 1.7, 1.0],
@@ -255,8 +256,10 @@ const VOCABULARY_MARKET: RoomLayout = {
   ],
   cameraColliders: [...marketLamps, ...marketStalls, ...MARKET.tables.map(([x, z]) => box(x, z, 0.3, 0.3))],
   spawns: {
-    fromVillage: { x: 0, z: MARKET.halfDepth - 3.4, yaw: Math.PI },
-    fromHub: { x: 0, z: -MARKET.halfDepth + 3.4, yaw: 0 },
+    // Off the centre line, so the produce stand in the middle of the square
+    // shows beside the learner rather than behind them.
+    fromVillage: { x: -1.4, z: MARKET.halfDepth - 4.4, yaw: Math.PI },
+    fromHub: { x: 1.4, z: -MARKET.halfDepth + 4.4, yaw: 0 },
   },
   portals: [
     {
@@ -318,7 +321,7 @@ export const HUB = {
   /** Flower beds at the corners of the pavilion base. */
   flowerBeds: [[-2.7, -2.7], [2.7, -2.7], [-2.7, 2.7], [2.7, 2.7]] as [number, number][],
   /** A bench with a pine and lantern (a sitting corner), and a notice board. */
-  bench: { x: -7.6, z: 7.45, w: 2.3, d: 0.9 },
+  bench: { x: -9.95, z: 0.3, w: 0.9, d: 2.3 },
   benchPine: { x: -9.7, z: 5.8 },
   board: { x: 10.25, z: 2.6 },
   gates: [
@@ -357,8 +360,8 @@ const KLOVERS_HUB: RoomLayout = {
   cameraColliders: [hubPost],
   spawns: {
     // Turned a little toward the pavilion, so the landmark leads the view.
-    fromVillage: { x: HUB.southGates.village, z: HUB.half - 2.2, yaw: Math.PI - 0.32 },
-    fromMarket: { x: HUB.southGates.market, z: HUB.half - 2.2, yaw: Math.PI },
+    fromVillage: { x: HUB.southGates.village, z: HUB.half - 3.2, yaw: Math.PI - 0.32 },
+    fromMarket: { x: HUB.southGates.market, z: HUB.half - 3.2, yaw: Math.PI + 0.32 },
     fromCafe: { x: 0, z: -HUB.half + 2.2, yaw: 0 },
   },
   portals: [

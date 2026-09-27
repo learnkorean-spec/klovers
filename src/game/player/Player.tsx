@@ -33,7 +33,20 @@ export default function Player({ input, player, camera, layout, avatar }: Player
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, MAX_DT);
     const p = player.current;
-    const still = p.frozen || p.paused;
+    // Frozen (a room change or a story moment): the learner is placed, not
+    // moved. No collision pass either — during a room swap the new position
+    // can meet the previous room's walls for a frame, and resolving that
+    // would fling the learner across the new room on arrival.
+    if (p.frozen) {
+      p.velocity = { x: 0, z: 0 };
+      p.animation = "idle";
+      if (root.current) {
+        root.current.position.set(p.position.x, 0, p.position.z);
+        root.current.rotation.y = p.yaw;
+      }
+      return;
+    }
+    const still = p.paused;
     const keys = still ? NO_INPUT : input.current;
 
     let wish = wishDirection(keys, camera.current.yaw);
@@ -53,9 +66,15 @@ export default function Player({ input, player, camera, layout, avatar }: Player
 
     // Velocity follows what actually happened, so sliding along a wall does
     // not keep "pushing" into it and the walk cycle matches real motion.
+    // A collision may only take speed away, never add it.
     if (dt > 0) {
-      p.velocity.x = (next.x - p.position.x) / dt;
-      p.velocity.z = (next.z - p.position.z) / dt;
+      const vx = (next.x - p.position.x) / dt;
+      const vz = (next.z - p.position.z) / dt;
+      const cap = Math.hypot(p.velocity.x, p.velocity.z);
+      const m = Math.hypot(vx, vz);
+      const k = m > cap && m > 0 ? cap / m : 1;
+      p.velocity.x = vx * k;
+      p.velocity.z = vz * k;
     }
     p.position.x = next.x;
     p.position.z = next.z;

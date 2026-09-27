@@ -120,10 +120,11 @@ export function hanokRoof(k: Kit, x: number, z: number, baseY: number, w: number
   // Soffit: the underside of the eaves, warm wood seen from the ground.
   k.box("woodLight", [x, baseY + 0.1, z], [w + 1.9, 0.06, d + 1.9]);
   k.box("woodDark", [x, baseY + 0.04, z], [w + 0.3, 0.14, d + 0.3], true);
-  // A second, darker eave layer: the fascia board just under the tile edge.
+  // A second eave layer: a light timber fascia just under the tile edge,
+  // which keeps overlapping roofs apart even when both sit in shade.
   for (const s of [-1, 1]) {
-    k.box("woodDark", [x, baseY + 0.2, z + s * (D / 2 - 0.2)], [W - 0.5, 0.13, 0.09]);
-    k.box("woodDark", [x + s * (W / 2 - 0.2), baseY + 0.2, z], [0.09, 0.13, D - 0.5]);
+    k.box("woodLight", [x, baseY + 0.2, z + s * (D / 2 - 0.2)], [W - 0.5, 0.13, 0.09]);
+    k.box("woodLight", [x + s * (W / 2 - 0.2), baseY + 0.2, z], [0.09, 0.13, D - 0.5]);
   }
   curvedRoofOn(k, x, baseY + 0.16, z, W, D, h + 0.45);
   const along = w >= d;
@@ -547,7 +548,9 @@ export function gatehouse(k: Kit, x: number, z: number, rotY: number, o: { open:
   for (const fx of [-1.75, 1.75]) {
     k.add("woodDark", "cyl", P(fx, 1.75, 0), [0.32, 3.5, 0.32], undefined, true);
     k.add("stoneWarm", "oct", P(fx, 0.13, 0), [0.62, 0.26, 0.62], undefined, true);
-    const lx = fx * 0.72;
+    // Lanterns hang just outside the posts: they flank the gate, and stay
+    // out of the way when the camera stands in the gateway.
+    const lx = fx * 1.28;
     k.add("lantern", "cyl", P(lx, 2.55, 0.22), [0.3, 0.4, 0.3]);
     k.add("woodDark", "cyl", P(lx, 2.8, 0.22), [0.2, 0.06, 0.2]);
     k.box("woodDark", P(lx, 3.0, 0.22), [0.015, 0.36, 0.015]);
@@ -575,13 +578,16 @@ export function gatehouse(k: Kit, x: number, z: number, rotY: number, o: { open:
  * white, lilac). Cheap low-poly shapes with no shadows — colour, not cost.
  */
 export function flowers(k: Kit, x: number, z: number, s = 1, seed = 1, y = 0): void {
-  k.add("leaf", "ballLow", [x, y + 0.14 * s, z], [0.95 * s, 0.34 * s, 0.85 * s], [0, jitter(seed, 2), 0]);
-  k.add("leafDark", "ballLow", [x + 0.22 * s, y + 0.12 * s, z - 0.14 * s], [0.6 * s, 0.28 * s, 0.55 * s]);
+  k.add("leafDark", "ball", [x, y + 0.11 * s, z], [0.9 * s, 0.26 * s, 0.8 * s], [0, jitter(seed, 2), 0]);
+  k.add("leaf", "ball", [x + 0.2 * s, y + 0.13 * s, z - 0.12 * s], [0.55 * s, 0.26 * s, 0.5 * s]);
+  // Blooms sit on top of the leaves, one colour leading per clump.
   const cols: MatKey[] = ["blossom", "flowerWhite", "flowerLilac"];
-  for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2 + seed;
-    const r = (0.18 + (i % 3) * 0.08) * s;
-    k.add(cols[(i + Math.abs(Math.round(seed))) % 3], "ballLow", [x + Math.cos(a) * r, y + (0.27 + (i % 2) * 0.05) * s, z + Math.sin(a) * r], [0.13 * s, 0.11 * s, 0.13 * s]);
+  const lead = Math.abs(Math.round(seed)) % 3;
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2 + seed;
+    const r = (0.12 + (i % 3) * 0.09) * s;
+    const col = cols[i % 3 === 2 ? (lead + 1) % 3 : lead];
+    k.add(col, "ballLow", [x + Math.cos(a) * r, y + (0.25 + (i % 2) * 0.05) * s, z + Math.sin(a) * r * 0.9], [0.17 * s, 0.13 * s, 0.17 * s]);
   }
 }
 
@@ -594,4 +600,16 @@ export function flowerBox(k: Kit, x: number, z: number, len: number, alongX = fa
     const t = -len / 2 + (len / n) * (i + 0.5);
     flowers(k, alongX ? x + t : x, alongX ? z : z + t, 0.62, seed + i * 3, 0.36);
   }
+}
+
+/**
+ * A path from (x1, z1) to (x2, z2) in the courtyard's language: a darker
+ * gravel bed with pale stepping stones set in it. Paths say where
+ * something is; they are only laid toward real places.
+ */
+export function pathStrip(k: Kit, x1: number, z1: number, x2: number, z2: number, w = 1.3, seed = 1): void {
+  const len = Math.hypot(x2 - x1, z2 - z1);
+  const yaw = Math.atan2(x2 - x1, z2 - z1);
+  k.box("gravel", [(x1 + x2) / 2, 0.006, (z1 + z2) / 2], [w, 0.012, len], false, [0, yaw, 0]);
+  steppingStones(k, x1, z1, x2, z2, 0.95, seed, "stoneWarm");
 }

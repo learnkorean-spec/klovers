@@ -54,8 +54,8 @@ export const NPCS: NpcPlacement[] = [
   // crossing the square, someone at the notice board.
   { id: "h-talk-1", room: "hub", cast: "friendA", pose: "drink", x: 2.4, z: 3.3, yaw: face(2.4, 3.3, 3.2, 2.6), phase: 0.5 },
   { id: "h-talk-2", room: "hub", cast: "friendB", pose: "talk", x: 3.2, z: 2.6, yaw: face(3.2, 2.6, 2.4, 3.3), phase: 1.7 },
-  { id: "h-bench-1", room: "hub", cast: "student1", pose: "sitRead", x: -8.1, z: 7.25, yaw: Math.PI, phase: 0.9 },
-  { id: "h-bench-2", room: "hub", cast: "readerA", pose: "sit", x: -7.1, z: 7.25, yaw: Math.PI - 0.3, phase: 2.4 },
+  { id: "h-bench-1", room: "hub", cast: "student1", pose: "sitRead", x: -9.75, z: -0.25, yaw: Math.PI / 2, phase: 0.9 },
+  { id: "h-bench-2", room: "hub", cast: "readerA", pose: "sit", x: -9.75, z: 0.8, yaw: Math.PI / 2 - 0.35, phase: 2.4 },
   { id: "h-walker", room: "hub", cast: "shopper", pose: "walk", x: -6, z: -4.6, yaw: Math.PI / 2, path: [[-6, -4.6], [6, -4.6]], phase: 3 },
 
   // Vocabulary Market: two stall keepers, a shopper at the rice stall, a
@@ -63,7 +63,7 @@ export const NPCS: NpcPlacement[] = [
   { id: "m-keeper-1", room: "vocabulary-market", cast: "auntie", pose: "stand", x: -8.15, z: 4.5, yaw: Math.PI / 2, phase: 0.2 },
   { id: "m-keeper-2", room: "vocabulary-market", cast: "vendor", pose: "talk", x: 8.15, z: 0, yaw: -Math.PI / 2, phase: 1.3 },
   { id: "m-shopper", room: "vocabulary-market", cast: "shopper", pose: "browse", x: -5.35, z: -0.2, yaw: -Math.PI / 2, phase: 2.1 },
-  { id: "m-porter", room: "vocabulary-market", cast: "porter", pose: "carry", x: 2.6, z: 6, yaw: Math.PI, path: [[2.6, 6], [2.6, -5.6]] },
+  { id: "m-porter", room: "vocabulary-market", cast: "porter", pose: "carry", x: -4.4, z: -3.4, yaw: Math.PI / 2, path: [[-4.4, -3.4], [2.8, -3.4]] },
 
   // Conversation Café: a barista, two friends at a table.
   { id: "k-barista", room: "conversation-cafe", cast: "barista", pose: "talk", x: 0.9, z: -5.55, yaw: 0, phase: 0.6 },

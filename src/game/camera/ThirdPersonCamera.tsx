@@ -20,10 +20,13 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), h
 
 /**
  * Passages the camera may back out through: every always-open gate (a
- * portal with no lock) continues 8 m past the wall, a little narrower than
- * the gate. Arriving just inside a gate, the camera then keeps its full
+ * portal with no lock) continues a short way past the wall (OPENING_DEPTH),
+ * a little narrower than the gate — far enough to frame the learner in the
+ * gateway, never so far that it wanders into the scenery outside. Arriving just inside a gate, the camera then keeps its full
  * distance and frames the learner in the gateway instead of pressing in.
  */
+const OPENING_DEPTH = 2.4;
+
 function cameraOpenings(layout: RoomLayout): Box2[] {
   const b = layout.bounds;
   const out: Box2[] = [];
@@ -34,10 +37,10 @@ function cameraOpenings(layout: RoomLayout): Box2[] {
     const cx = (z.minX + z.maxX) / 2;
     const cz = (z.minZ + z.maxZ) / 2;
     const nz = (z.maxZ - z.minZ) / 2 - 0.2;
-    if (z.maxZ >= b.maxZ - 1.2) out.push({ minX: cx - nx, maxX: cx + nx, minZ: b.maxZ - 1, maxZ: b.maxZ + 8 });
-    else if (z.minZ <= b.minZ + 1.2) out.push({ minX: cx - nx, maxX: cx + nx, minZ: b.minZ - 8, maxZ: b.minZ + 1 });
-    else if (z.maxX >= b.maxX - 1.2) out.push({ minX: b.maxX - 1, maxX: b.maxX + 8, minZ: cz - nz, maxZ: cz + nz });
-    else if (z.minX <= b.minX + 1.2) out.push({ minX: b.minX - 8, maxX: b.minX + 1, minZ: cz - nz, maxZ: cz + nz });
+    if (z.maxZ >= b.maxZ - 1.2) out.push({ minX: cx - nx, maxX: cx + nx, minZ: b.maxZ - 1, maxZ: b.maxZ + OPENING_DEPTH });
+    else if (z.minZ <= b.minZ + 1.2) out.push({ minX: cx - nx, maxX: cx + nx, minZ: b.minZ - OPENING_DEPTH, maxZ: b.minZ + 1 });
+    else if (z.maxX >= b.maxX - 1.2) out.push({ minX: b.maxX - 1, maxX: b.maxX + OPENING_DEPTH, minZ: cz - nz, maxZ: cz + nz });
+    else if (z.minX <= b.minX + 1.2) out.push({ minX: b.minX - OPENING_DEPTH, maxX: b.minX + 1, minZ: cz - nz, maxZ: cz + nz });
   }
   return out;
 }
@@ -68,6 +71,7 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
   const portrait = useRef(false);
   portrait.current = size.width < size.height;
   const openings = useMemo(() => cameraOpenings(layout), [layout]);
+  const lastLayout = useRef(layout);
   const firstLook = useRef(onFirstLook);
   firstLook.current = onFirstLook;
 
@@ -163,15 +167,27 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
     const p = player.current.position;
 
     if (c.focus) desired.current.set(c.focus.x, c.focus.y, c.focus.z);
-    else desired.current.set(p.x - Math.sin(c.yaw) * CAMERA.lookAhead, p.y + CAMERA.targetHeight, p.z - Math.cos(c.yaw) * CAMERA.lookAhead);
+    else {
+      // Aim ahead of the learner and a little to the camera's right (less on
+      // a narrow portrait screen), so the learner sits left of centre.
+      const sh = CAMERA.shoulder * (portrait.current ? 0.45 : 1);
+      desired.current.set(
+        p.x - Math.sin(c.yaw) * CAMERA.lookAhead + Math.cos(c.yaw) * sh,
+        p.y + CAMERA.targetHeight,
+        p.z - Math.cos(c.yaw) * CAMERA.lookAhead - Math.sin(c.yaw) * sh,
+      );
+    }
     // Story reframing eases slowly; normal follow is brisk.
     const sharp = c.focus || c.yawTarget !== null ? 2.5 : CAMERA.followSharpness;
     if (c.yawTarget !== null) c.yaw += angleDelta(c.yaw, c.yawTarget) * damp(2.5, dt);
     if (c.pitchTarget !== null) c.pitch += (c.pitchTarget - c.pitch) * damp(2.5, dt);
-    if (c.snap) {
-      // After a teleport (room change) jump straight behind the player.
+    if (c.snap || layout !== lastLayout.current) {
+      // After a teleport (room change) jump straight behind the player — and
+      // again once the new room's walls are in place, so the first frame of
+      // a room never measures its distance against the previous room.
       initialised.current = false;
       c.snap = false;
+      lastLayout.current = layout;
     }
     if (!initialised.current) {
       target.current.copy(desired.current);

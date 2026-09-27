@@ -4,7 +4,7 @@ import { ACCENT, MAT } from "../config/materials";
 import { PALETTE } from "../config/world";
 import { HUB, hubGateSpot, type HubGate } from "../config/rooms";
 import Batch from "./Batch";
-import { Kit, bed, grass, gutter, hanokHouse, hanokRoof, noticeBoard, pine, platform, pot, shopfront, steppingStones, stoneLantern, tree, wallRun, gatehouse, flowers } from "./kit";
+import { Kit, bed, grass, gutter, hanokHouse, hanokRoof, noticeBoard, pine, platform, pot, shopfront, stoneLantern, tree, wallRun, gatehouse, flowers, pathStrip } from "./kit";
 import { Gate, Signboard } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
 
@@ -95,12 +95,19 @@ const HUB_KIT: Kit = (() => {
     flowers(k, bx, bz, 0.95, bx * 2 + bz, 0.18);
   }
 
-  // Slate paths from the pillar to every gate.
-  const spots = [...HUB.gates.map((g) => hubGateSpot(g, 1.2)), ...SOUTH_GATES.map((g) => ({ x: g.along, z: H - 1.2 }))];
-  spots.forEach((s, i) => {
+  // Paved paths from the pavilion to every gate: wide to the places that
+  // are open (the way you came, the café, lessons, games), narrower to the
+  // worlds still ahead. They answer "where does this lead?" at a glance.
+  const R0 = 2.35;
+  for (const g of HUB.gates) {
+    const s = hubGateSpot(g, 0.5);
     const d = Math.hypot(s.x, s.z) || 1;
-    steppingStones(k, (s.x / d) * 2.0, (s.z / d) * 2.0, s.x, s.z, 1.5, 60 + i * 13, "stoneWarm");
-  });
+    pathStrip(k, (s.x / d) * R0, (s.z / d) * R0, s.x, s.z, g.kind === "future" ? 0.85 : 1.2, g.along * 7 + 3);
+  }
+  for (const g of SOUTH_GATES) {
+    const d = Math.hypot(g.along, H - 0.5);
+    pathStrip(k, (g.along / d) * R0, ((H - 0.5) / d) * R0, g.along, H - 0.5, 1.2, g.along * 5 + 11);
+  }
 
   for (const [x, z, sc] of HUB.pots) pot(k, x, z, sc, sc > 0.9);
   for (const [x, z] of HUB.lanterns) stoneLantern(k, x, z);
@@ -143,8 +150,9 @@ const HUB_KIT: Kit = (() => {
   // The academy for lessons, rising behind the east gate.
   hanokHouse(k, { x: H + 3.4, z: -3.5, w: 5.2, d: 9, h: 3.2, face: "-x", roofH: 1.5 });
   // Behind the south wall: the village and market we came from.
-  hanokRoof(k, -6, H + 4, 2.4, 5, 4, 1.1);
-  shopfront(k, { x: 6, z: H + 3.6, w: 4.6, d: 3.6, h: 3.4, face: "-z" });
+  // (Set well back: the camera may stand in either south gateway.)
+  hanokRoof(k, -6, H + 6, 2.4, 5, 4, 1.1);
+  shopfront(k, { x: 6, z: H + 6, w: 4.6, d: 3.6, h: 3.4, face: "-z" });
   return k;
 })();
 
