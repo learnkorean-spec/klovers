@@ -11,6 +11,7 @@ import { CalendarClock, CheckCircle2, Mail, PauseCircle, Pencil, PlayCircle, Rad
 import { LEVELS, getLevelShortLabel, normalizeLevel } from "@/constants/levels";
 // The welcome letter lives in its own file: see the note on welcomeOpenId.
 import GroupWelcomeSender from "./GroupWelcomeSender";
+import GroupResetButton from "./GroupResetButton";
 
 /**
  * Starting a group — the one action nothing in the UI could do.
@@ -272,13 +273,13 @@ function lifecycleOf(g: { startDate: string | null; isActive: boolean }): Lifecy
  */
 const LIFECYCLE_CARD: Record<Lifecycle, string> = {
   running: "border-2 border-mint-strong",
-  waiting: "border-2 border-amber-400 dark:border-amber-500",
+  waiting: "border-2 border-klovers-yellow",
   paused: "border-2 border-pink-400 dark:border-pink-500 shadow-[0_0_16px_rgba(244,114,182,0.55)] dark:shadow-[0_0_20px_rgba(244,114,182,0.4)]",
 };
 
 const LIFECYCLE_BADGE: Record<Lifecycle, string> = {
   running: "bg-mint-strong text-charcoal hover:bg-mint-strong",
-  waiting: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-400",
+  waiting: "bg-klovers-yellow text-charcoal border border-klovers-yellow hover:bg-klovers-yellow",
   paused: "bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border border-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.6)]",
 };
 
@@ -1124,7 +1125,7 @@ export default function GroupsToStart() {
           <span className="text-muted-foreground">{runningCount} running</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-sm border-2 border-amber-400" />
+          <span className="h-2.5 w-2.5 rounded-sm border-2 border-klovers-yellow" />
           <span className="text-muted-foreground">{waitingCount} waiting to fill</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
@@ -1354,6 +1355,10 @@ export default function GroupsToStart() {
                       {busyId === g.id ? "Resuming…" : "Resume"}
                     </Button>
                   )}
+                  {/* Empty paused group: back to the waiting list. See GroupResetButton.tsx. */}
+                  {phase === "paused" && g.members.length === 0 && (
+                    <GroupResetButton groupId={g.id} title={g.title} onDone={load} />
+                  )}
                 </div>
 
                 {phase === "paused" && (
@@ -1361,6 +1366,7 @@ export default function GroupsToStart() {
                     Paused — it is not meeting, and nobody new can be seated into it. Its start date, its
                     {" "}{g.members.length} student{g.members.length === 1 ? "" : "s"} and their payment dates are all
                     kept, so Resume puts it straight back.
+                    {g.members.length === 0 && " With nobody in it, Reset group clears the start date and puts this time back on the waiting list."}
                   </p>
                 )}
 
