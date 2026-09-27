@@ -80,7 +80,6 @@ const KDramaLearningPage = lazy(() => import("./pages/KDramaLearningPage"));
 const InterviewTrainingPage = lazy(() => import("./pages/InterviewTrainingPage"));
 const KoreanInterviewPage = lazy(() => import("./pages/KoreanInterviewPage"));
 const ReturningStudentsLandingPage = lazy(() => import("./pages/ReturningStudentsLandingPage"));
-const HangulBookPage = lazy(() => import("./pages/HangulBookPage"));
 const TrialBookPage = lazy(() => import("./pages/TrialBookPage"));
 const TrialConfirmPage = lazy(() => import("./pages/TrialConfirmPage"));
 const EnrollmentStatusPage = lazy(() => import("./pages/EnrollmentStatusPage"));
@@ -256,7 +255,10 @@ const App = () => (
                 <Route path="/learn-korean-kdramas" element={<KDramaLearningPage />} />
                 <Route path="/interview-training" element={<KoreanInterviewPage />} />
                 <Route path="/welcome-back" element={<ReturningStudentsLandingPage />} />
-                <Route path="/hangul-book" element={<AuthProtectedRoute><HangulBookPage /></AuthProtectedRoute>} />
+                {/* The old web book (HangulBookPage) was removed on 27 Sep 2026 (Re: it is
+                    old and not used). Students get the A0 PDF in My Books on
+                    the dashboard, so old links land there. */}
+                <Route path="/hangul-book" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/trial-book" element={<AuthProtectedRoute><TrialBookPage /></AuthProtectedRoute>} />
                 <Route path="/trial-confirm" element={<TrialConfirmPage />} />
                 <Route path="/enrollment-status" element={<AuthProtectedRoute><EnrollmentStatusPage /></AuthProtectedRoute>} />
