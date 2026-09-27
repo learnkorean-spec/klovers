@@ -8,6 +8,7 @@ import { AT_RISK_SESSION_THRESHOLD } from "@/lib/admin-utils";
 import { useCollectedRevenue } from "@/hooks/admin/useCollectedRevenue";
 import { usePrivateBudgets } from "@/hooks/admin/usePrivateBudgets";
 import type { OverviewRow } from "@/types/admin";
+import { scrollToAdminTabs } from "@/lib/admin/scrollToAdminTabs";
 
 interface Props {
   overviewRows: OverviewRow[];
@@ -24,8 +25,13 @@ interface KpiCard {
   sublabel?: string;
   alert?: boolean;
   sparkData?: { v: number }[];
-  /** Makes the whole tile a link. */
-  to?: string;
+  /**
+   * Where the tile opens. Every tile has one: a number on the dashboard is
+   * only useful if the list behind it is one click away.
+   */
+  to: string;
+  /** Screen name for the link's accessible label ("open Enrollments"). */
+  opens: string;
 }
 
 /** Tiles that run their own query and so keep their own skeleton. */
@@ -131,6 +137,8 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
           ? `${overviewRows.length} total · +${legacy.students} legacy`
           : `${overviewRows.length} total`,
         sparkData: enrollSparkline,
+        to: "/admin?tab=students",
+        opens: "Students",
       },
       {
         icon: DollarSign,
@@ -144,6 +152,8 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         value: revenue ? `${formatMoney(revenue.total)} ${revenue.currency}` : "—",
         label: GROUP_REVENUE_LABEL,
         sublabel: revenue ? `paid · ${revenue.count} enrollments` : "paid enrollments",
+        to: "/admin?tab=sales",
+        opens: "Sales",
       },
       {
         icon: Wallet,
@@ -152,6 +162,9 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         value: leadCurrency ? `${formatMoney(leadCurrency.total)} ${leadCurrency.currency}` : "—",
         label: PRIVATE_BUDGETS_LABEL,
         sublabel: privateSublabel,
+        // Private students and their bundles are kept in My students.
+        to: "/admin?tab=my-students",
+        opens: "My students",
       },
       {
         icon: Archive,
@@ -163,6 +176,7 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
           ? `${legacy.sessions.toLocaleString("en-US")} sessions · paid ${formatMoney(legacy.paid)} EGP`
           : "historical students",
         to: "/admin?tab=legacy",
+        opens: "Legacy Data",
       },
       {
         icon: AlertTriangle,
@@ -172,6 +186,8 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         label: "At-Risk Students",
         sublabel: `≤${AT_RISK_SESSION_THRESHOLD} sessions left`,
         alert: atRisk.length > 0,
+        to: "/admin?tab=students",
+        opens: "Students",
       },
       {
         icon: TrendingUp,
@@ -181,6 +197,8 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         label: "Need Attention",
         sublabel: `${actionableEnrollments} pending · ${locked.length} locked`,
         alert: actionableEnrollments > 0 || locked.length > 0,
+        to: "/admin?tab=enrollments",
+        opens: "Enrollments",
       },
     ];
   }, [overviewRows, actionableEnrollments, revenue, privateBudgets, legacy]);
@@ -201,7 +219,7 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
           (kpi.label === GROUP_REVENUE_LABEL && revenueLoading) ||
           (kpi.label === PRIVATE_BUDGETS_LABEL && privateLoading) ||
           (kpi.label === LEGACY_LABEL && legacyLoading);
-        const className = `rounded-2xl border bg-card px-4 py-3 flex items-center gap-3 transition-shadow hover:shadow-sm ${kpi.alert ? "border-klovers-yellow" : "border-border"}`;
+        const className = `rounded-2xl border bg-card px-4 py-3 flex items-center gap-3 cursor-pointer transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow ${kpi.alert ? "border-klovers-yellow" : "border-border"}`;
         const body = (
           <>
             <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.iconBg}`}>
@@ -241,14 +259,16 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
             )}
           </>
         );
-        return kpi.to ? (
-          <Link key={kpi.label} to={kpi.to} className={className} aria-label={`${kpi.label}: open Legacy Data`}>
+        return (
+          <Link
+            key={kpi.label}
+            to={kpi.to}
+            onClick={scrollToAdminTabs}
+            className={className}
+            aria-label={`${kpi.label}: open ${kpi.opens}`}
+          >
             {body}
           </Link>
-        ) : (
-          <div key={kpi.label} className={className}>
-            {body}
-          </div>
         );
       })}
     </div>
