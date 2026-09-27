@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import KloverIcon from "@/components/KloverIcon";
 import { Link } from "react-router-dom";
+import kloversLogo from "@/assets/klovers-logo.jpg";
 
 const CONSONANTS = [
   { char: "ㄱ", rom: "g / k",  ex: "가 (ga)" },
@@ -60,6 +61,17 @@ const COMPOUND_VOWELS = [
 
 type LetterRow = { char: string; rom: string; ex: string };
 
+/** The rules page at the end of the printed sheet. */
+const RULES: { en: string; ar: string; ex: string }[] = [
+  { en: "Every syllable is one block: a consonant, a vowel, and sometimes a final consonant.", ar: "كل مقطع مربع واحد: حرف ساكن وحرف مدّ، وأحيانًا حرف ساكن أخير.", ex: "가 · 한 · 국" },
+  { en: "Read a block left to right, then top to bottom.", ar: "يُقرأ المربع من اليسار إلى اليمين، ثم من أعلى إلى أسفل.", ex: "한 = ㅎ → ㅏ → ㄴ" },
+  { en: "Tall vowels sit to the right of the consonant; flat vowels sit under it.", ar: "حروف المدّ الطويلة تُكتب يمين الحرف الساكن، والمسطّحة تُكتب تحته.", ex: "가 · 거 · 고 · 구" },
+  { en: "No block starts with a vowel alone: a silent ㅇ holds its place.", ar: "لا يبدأ المربع بحرف مدّ وحده، بل يسبقه ㅇ صامت.", ex: "아 · 오 · 이" },
+  { en: "At the end of a block, ㅇ is no longer silent: it sounds \"ng\".", ar: "في آخر المربع لا يكون ㅇ صامتًا، بل يُنطق «نغ».", ex: "강 · 방 · 공" },
+  { en: "A final consonant is pronounced with only seven sounds: ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ ㅇ.", ar: "الحرف الأخير يُنطق بسبعة أصوات فقط: ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ ㅇ.", ex: "옷 → [옫] · 부엌 → [부억]" },
+  { en: "Write each letter top to bottom, left to right.", ar: "يُكتب كل حرف من أعلى إلى أسفل، ومن اليسار إلى اليمين.", ex: "ㄱ · ㅏ · 가" },
+];
+
 const LetterGrid = ({ items, label }: { items: LetterRow[]; label: string }) => (
   <div className="mb-10 print:mb-4 break-inside-avoid">
     <h2 className="text-lg font-black text-foreground mb-3 border-b border-border pb-1 print:mb-2">{label}</h2>
@@ -109,15 +121,38 @@ const HangulStarterPage = () => {
       <div className="print:hidden"><Header /></div>
       <main id="main-content" className="pt-16 print:pt-0">
 
-        {/* Paper-only title */}
-        <div className="hidden print:block text-center mb-4">
-          <p className="text-xs font-bold tracking-[0.2em] text-foreground/70">
+        {/* Paper-only COVER (Re, 27 Sep 2026: logo + cover first, rules
+            page last). Hidden on screen; one full page when printed. */}
+        <div className="hidden print:flex flex-col items-center justify-center text-center min-h-[250mm]" style={{ pageBreakAfter: "always" }}>
+          <img src={kloversLogo} alt="Klovers" className="h-24 w-24 rounded-full border-4 border-klovers-yellow object-cover mb-4" />
+          <p className="text-sm font-bold tracking-[0.25em] text-foreground/70 mb-2">
             {tr("KLOVERS · HANGUL VILLAGE", "كلوفرز · قرية الهانغول")}
           </p>
-          <h1 className="font-display text-2xl font-black text-foreground">
+          <h1 className="font-display text-4xl font-black text-foreground mb-2">
             {tr("Hangul starter sheet", "ورقة الهانغول")}
           </h1>
-          <p className="text-[11px] text-muted-foreground" dir="ltr">kloversegy.com</p>
+          <p className="text-base text-foreground/80 mb-6 max-w-md">
+            {tr(
+              "Every Korean letter on one sheet, with its sound, and the rules for reading a block.",
+              "كل الحروف الكورية في ورقة واحدة، مع نطق كل حرف، وقواعد قراءة المقطع.",
+            )}
+          </p>
+          <img
+            src="/assets/story/world-hangul-village.webp"
+            alt={tr("Hangul Village", "قرية الهانغول")}
+            className="w-full max-w-[160mm] rounded-2xl border-2 border-charcoal object-cover aspect-[16/9]"
+          />
+          <p className="mt-6 text-sm font-bold text-foreground">
+            {tr("Reham Elshrkawy · Al-Alsun Korean graduate", "ريهام الشرقاوي · خريجة الألسن، قسم اللغة الكورية")}
+          </p>
+          <p className="text-xs text-muted-foreground" dir="ltr">kloversegy.com</p>
+        </div>
+
+        {/* Small running title above the tables on paper */}
+        <div className="hidden print:flex items-center justify-between mb-3 border-b border-foreground/30 pb-1">
+          <img src={kloversLogo} alt="" aria-hidden="true" className="h-8 w-8 rounded-full object-cover" />
+          <p className="text-xs font-bold text-foreground">{tr("Hangul starter sheet · Klovers", "ورقة الهانغول · كلوفرز")}</p>
+          <p className="text-[10px] text-muted-foreground" dir="ltr">kloversegy.com</p>
         </div>
 
         {/* Hero */}
@@ -195,6 +230,35 @@ const HangulStarterPage = () => {
               items={COMPOUND_VOWELS}
               label={isAr ? "حروف المد المركبة (١١)" : "Compound Vowels (11)"}
             />
+
+            {/* Paper-only RULES page: how a Korean block is read and written. */}
+            <div className="hidden print:block" style={{ pageBreakBefore: "always" }}>
+              <div className="flex items-center justify-between mb-3 border-b border-foreground/30 pb-1">
+                <img src={kloversLogo} alt="" aria-hidden="true" className="h-8 w-8 rounded-full object-cover" />
+                <p className="text-xs font-bold text-foreground">{tr("Reading rules · Klovers", "قواعد القراءة · كلوفرز")}</p>
+                <p className="text-[10px] text-muted-foreground" dir="ltr">kloversegy.com</p>
+              </div>
+              <h2 className="font-display text-2xl font-black text-foreground mb-4">
+                {tr("Seven rules of Hangul Village", "سبع قواعد في قرية الهانغول")}
+              </h2>
+              <ol className="space-y-3 text-sm text-foreground">
+                {RULES.map((r, i) => (
+                  <li key={i} className="flex gap-3 break-inside-avoid border border-border rounded-xl p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-klovers-yellow font-black text-charcoal">{i + 1}</span>
+                    <div>
+                      <p className="font-bold">{isAr ? r.ar : r.en}</p>
+                      <p className="mt-1 font-ko text-lg" lang="ko" dir="ltr">{r.ex}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-6 text-center text-xs text-muted-foreground">
+                {tr(
+                  "The alphabet at Klovers is four live classes with the teacher. The first class is free: kloversegy.com/free-trial",
+                  "الأبجدية في كلوفرز أربع حصص مباشرة مع المعلمة، والحصة الأولى مجانية: kloversegy.com/free-trial",
+                )}
+              </p>
+            </div>
 
             {/* Quick tips */}
             <div className="bg-ivory dark:bg-muted/30 border border-border rounded-2xl p-6 print:hidden">
