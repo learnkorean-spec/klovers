@@ -561,14 +561,6 @@ const HOME_ALTERNATES = { en: "/", ar: "/ar" };
 // `body` is optional. A route that declares it gets that fragment written into
 // #root by the emit loop; a route that omits it keeps the empty mount point it
 // has always had.
-/**
- * Append " | Klovers" unless the title already names the brand, in either
- * script. The Arabic twins (27 Sep 2026) end in "| كلوفرز", and a title that
- * names the brand twice reads as spam in a search result.
- */
-const withSiteName = (title) =>
-  title.includes(SITE_NAME) || title.includes("كلوفرز") ? title : `${title} | ${SITE_NAME}`;
-
 const MARKETING_ROUTES = [
   {
     // The homepage carries the brand-entity work, so it is commented where the
@@ -624,14 +616,14 @@ const MARKETING_ROUTES = [
     // `homeTwin` keeps the Organization JSON-LD and the hero preload that the
     // emit loop otherwise keeps for "/" only - it is the same page.
     //
-    // The title names Klovers, so no " | Klovers" suffix is appended, and it
-    // leads with the Arabic brand for the reason the "/" comment gives.
+    // The title leads with «كلوفرز» (Arabic only, no Latin "Klovers" - one
+    // language per page), so the emit loop appends no suffix.
     path: "/ar",
     lang: "ar",
     homeTwin: true,
-    title: "كلوفرز Klovers — حصص كورية مباشرة في مجموعات صغيرة",
+    title: "كلوفرز — حصص كورية مباشرة في مجموعات صغيرة",
     description:
-      "كلوفرز (Klovers): حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
+      "كلوفرز: حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
     body: HOME_BODY_HTML_AR,
     alternates: HOME_ALTERNATES,
   },
@@ -1205,7 +1197,10 @@ function buildHeadTags(route) {
   // slash. This must match api/sitemap.xml.js exactly or the canonical and
   // the sitemap entry disagree.
   const url = `${BASE_URL}${isHome ? "/" : route.path}`;
-  const fullTitle = withSiteName(route.title);
+  // An Arabic title that already carries «كلوفرز» gets no Latin suffix.
+  const fullTitle = route.title.includes(SITE_NAME) || route.title.includes("كلوفرز")
+    ? route.title
+    : `${route.title} | ${SITE_NAME}`;
   const description = route.description || "";
   // route.image is opt-in (only the /journey/:eraId routes set it so far) and
   // falls back to the same DEFAULT_IMAGE every other marketing route already
@@ -1447,7 +1442,10 @@ let preloadDropped = 0;
 
 for (const route of routes) {
   const isHome = route.path === "/";
-  const fullTitle = withSiteName(route.title);
+  // An Arabic title that already carries «كلوفرز» gets no Latin suffix.
+  const fullTitle = route.title.includes(SITE_NAME) || route.title.includes("كلوفرز")
+    ? route.title
+    : `${route.title} | ${SITE_NAME}`;
   const description = route.description || "";
   // "/ar" is the homepage in Arabic: it keeps what "/" keeps (the Organization
   // JSON-LD and the hero preload) but is written to dist/ar/index.html.
