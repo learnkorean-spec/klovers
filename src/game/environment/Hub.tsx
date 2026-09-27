@@ -4,7 +4,7 @@ import { ACCENT, MAT } from "../config/materials";
 import { PALETTE } from "../config/world";
 import { HUB, hubGateSpot, type HubGate } from "../config/rooms";
 import Batch from "./Batch";
-import { Kit, bed, grass, gutter, hanokHouse, hanokRoof, noticeBoard, pine, platform, pot, shopfront, steppingStones, stoneLantern, tree, wallRun, gatehouse } from "./kit";
+import { Kit, bed, grass, gutter, hanokHouse, hanokRoof, noticeBoard, pine, platform, pot, shopfront, steppingStones, stoneLantern, tree, wallRun, gatehouse, flowers } from "./kit";
 import { Gate, Signboard } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
 
@@ -68,19 +68,32 @@ const HUB_KIT: Kit = (() => {
   k.add("stoneWarm", "oct", [0, 0.12, 0], [S + 0.3, 0.24, S + 0.3], [0, Math.PI / 8, 0], true);
   k.add("stoneWarm", "oct", [0, 0.34, 0], [S - 0.3, 0.2, S - 0.3], [0, Math.PI / 8, 0], true);
   k.add("woodLight", "oct", [0, 0.46, 0], [S - 0.5, 0.05, S - 0.5], [0, Math.PI / 8, 0]);
-  const P = 1.22;
+  const P = 1.45;
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    k.add("stoneWarm", "oct", [sx * P, 0.56, sz * P], [0.34, 0.2, 0.34]);
-    k.add("woodDark", "cyl", [sx * P, 2.05, sz * P], [0.22, 3.1, 0.22], undefined, true);
+    k.add("stoneWarm", "oct", [sx * P, 0.56, sz * P], [0.38, 0.2, 0.38]);
+    k.add("woodDark", "cyl", [sx * P, 2.2, sz * P], [0.26, 3.4, 0.26], undefined, true);
   }
-  for (const sz of [-1, 1]) k.box("woodDark", [0, 3.5, sz * P], [2 * P + 0.3, 0.2, 0.18], true);
-  for (const sx of [-1, 1]) k.box("woodDark", [sx * P, 3.5, 0], [0.18, 0.2, 2 * P + 0.3], true);
+  const TOP = 3.9;
+  for (const sz of [-1, 1]) k.box("woodDark", [0, TOP - 0.1, sz * P], [2 * P + 0.4, 0.24, 0.2], true);
+  for (const sx of [-1, 1]) k.box("woodDark", [sx * P, TOP - 0.1, 0], [0.2, 0.24, 2 * P + 0.4], true);
   // Bracket blocks at each post head, and a low rail between the back posts.
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.box("woodLight", [sx * P, 3.66, sz * P], [0.36, 0.14, 0.36]);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.box("woodLight", [sx * P, TOP + 0.08, sz * P], [0.4, 0.16, 0.4]);
   for (const sx of [-1, 1]) k.box("woodDark", [sx * P, 0.95, 0], [0.08, 0.08, 2 * P]);
-  hanokRoof(k, 0, 0, 3.62, 2 * P + 0.4, 2 * P + 0.4, 1.0);
+  // Lower roof, then a second, smaller tier on a timber drum: a double-eave
+  // pavilion that rises clearly above every wall — the centre of the world.
+  hanokRoof(k, 0, 0, TOP, 2 * P + 0.4, 2 * P + 0.4, 0.95);
+  k.box("woodDark", [0, TOP + 1.35, 0], [1.5, 0.75, 1.5], true);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.box("woodLight", [sx * 0.72, TOP + 1.35, sz * 0.72], [0.12, 0.75, 0.12]);
+  for (const sz of [-1, 1]) k.box("paper", [0, TOP + 1.37, sz * 0.76], [1.1, 0.42, 0.02]);
+  for (const sx of [-1, 1]) k.box("paper", [sx * 0.76, TOP + 1.37, 0], [0.02, 0.42, 1.1]);
+  hanokRoof(k, 0, 0, TOP + 1.72, 1.5, 1.5, 0.8);
   // The central post that carries the direction boards.
   k.add("woodDark", "oct", [0, 2.0, 0], [0.34, 3.1, 0.34], [0, Math.PI / 8, 0], true);
+  // Flower beds at the four corners of the base, framing the landmark.
+  for (const [bx, bz] of HUB.flowerBeds) {
+    k.box("stoneWarm", [bx, 0.12, bz], [1.25, 0.24, 1.25], true);
+    flowers(k, bx, bz, 0.95, bx * 2 + bz, 0.18);
+  }
 
   // Slate paths from the pillar to every gate.
   const spots = [...HUB.gates.map((g) => hubGateSpot(g, 1.2)), ...SOUTH_GATES.map((g) => ({ x: g.along, z: H - 1.2 }))];
@@ -277,7 +290,7 @@ function MapBoard() {
 /** Four small leaves on the pavilion's peak: the KLOVERS clover, the one yellow up high. */
 function CloverFinial() {
   return (
-    <group position={[0, 5.42, 0]}>
+    <group position={[0, 7.35, 0]}>
       {[[0.09, 0.09], [-0.09, 0.09], [0.09, -0.09], [-0.09, -0.09]].map(([x, y]) => (
         <mesh key={`${x}${y}`} position={[x, y, 0]} rotation={[0, 0, Math.PI / 4]}>
           <sphereGeometry args={[0.1, 10, 8]} />
