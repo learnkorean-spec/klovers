@@ -1,4 +1,5 @@
 import { HUB, hubGateSpot, MARKET, ROOMS, VILLAGE, type NoticeKey, type RoomId } from "./rooms";
+import { FRIEND_SPOT, MINSU_SPOT } from "./npcs";
 import { PROPS } from "./world";
 
 /**
@@ -12,10 +13,12 @@ import { PROPS } from "./world";
  * - letter   a Hangul letter card (Hangul Village)
  * - word     pick the word for an object (Vocabulary Market)
  * - link     a door out to a page of the site (Hub)
+ * - talk     a character with a name and a first line (the other learner,
+ *            Minsu) — the "meet the characters" objective
  * - locked   a gate to a world that is not open yet (or not built yet):
  *            inspecting it says, kindly, what opens it
  */
-export type InteractionKind = "egg" | "letter" | "word" | "link" | "locked";
+export type InteractionKind = "egg" | "letter" | "word" | "link" | "locked" | "talk";
 
 export interface Interactable {
   id: string;
@@ -26,6 +29,7 @@ export interface Interactable {
   radius: number;
   /** Kind-specific payload. */
   link?: "games" | "lessons";
+  who?: "friend" | "minsu";
   notice?: NoticeKey;
   /**
    * For a gate into a world: usable only while that world is still locked
@@ -46,6 +50,8 @@ const hubNotice: Record<string, NoticeKey> = {
 };
 
 export const INTERACTABLES: Interactable[] = [
+  { id: "talk-friend", room: "courtyard", kind: "talk", who: "friend", x: FRIEND_SPOT.x, z: FRIEND_SPOT.z, radius: 1.9 },
+  { id: "talk-minsu", room: "hangul-village", kind: "talk", who: "minsu", x: MINSU_SPOT.x, z: MINSU_SPOT.z, radius: 1.9 },
   { id: "egg", room: "courtyard", kind: "egg", x: PROPS.eggPlinth.x, z: PROPS.eggPlinth.z, radius: 2.3 },
   { id: "letter-giyeok", room: "hangul-village", kind: "letter", x: -VILLAGE.halfWidth + 0.6, z: firstHouseZ, radius: 1.7 },
   { id: "word-bread", room: "vocabulary-market", kind: "word", x: -MARKET.stallX + MARKET.stallW / 2 + 0.7, z: breadZ, radius: 1.6 },

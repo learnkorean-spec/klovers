@@ -8,6 +8,7 @@ import { NO_INPUT, stepVelocity, stepYaw, stickDirection, wishDirection, yawFrom
 import { touchStick } from "../systems/touchInput";
 import type { CameraState, PlayerState } from "../systems/state";
 import { resolveAnimation } from "./animation";
+import ShadowBlob from "../npc/ShadowBlob";
 import LearnerAvatar from "./LearnerAvatar";
 import type { AvatarId } from "./characters";
 
@@ -76,6 +77,7 @@ export default function Player({ input, player, camera, layout, avatar }: Player
       {/* Built from primitives to the canon look of Adam or Lina. Swap for a
           rigged GLB with the same props later (see player/animation.ts). */}
       <LearnerAvatar player={player} avatar={avatar} />
+      <ShadowBlob size={0.95} />
     </group>
   );
 }

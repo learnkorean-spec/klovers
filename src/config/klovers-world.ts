@@ -265,6 +265,47 @@ export const KLOVERS_WORLD = {
         ],
       },
     },
+
+    /**
+     * Minsu — a Korean friend and conversation partner of the two learners.
+     * He speaks with them in the Book 1 conversations (Re, 27 Sep 2026:
+     * "there is a new guy in the pictures"). A native speaker to practise
+     * with; never a teacher (real teachers stay real) and never a love
+     * interest. Visual follows the Book 1 artwork Re shared on 27 Sep 2026.
+     */
+    koreanFriend: {
+      type: "korean_friend",
+
+      name: {
+        en: "Minsu",
+        ar: "مين سو",
+        ko: "민수",
+      },
+
+      roles: [
+        "native_speaker_friend",
+        "conversation_partner",
+        "everyday_korean",
+      ],
+
+      neverUseAs: [
+        "teacher",
+        "romantic_interest",
+      ],
+
+      visual: {
+        age: "early_20s",
+        ethnicityRule: "korean",
+        hair: "short_black",
+        // From the Book 1 artwork Re shared on 27 Sep 2026.
+        outfit: [
+          "pale_periwinkle_button_shirt_sleeves_rolled",
+          "near_black_trousers",
+          "navy_lanyard_with_white_id_card",
+        ],
+        status: "from_book_1_artwork_2026_09_27",
+      },
+    },
   },
 
   characterRelationshipRules: {

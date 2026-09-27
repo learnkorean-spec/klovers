@@ -14,7 +14,7 @@ import { UNIT, type Part } from "./Instanced";
  * orientation, not from new materials.
  */
 
-export type MatKey = "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "charcoal" | "paper" | "lantern" | "pine" | "accent";
+export type MatKey = "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "charcoal" | "paper" | "lantern" | "pine" | "accent" | "fabric" | "metal";
 export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "ball";
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
@@ -29,6 +29,8 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   lantern: MAT.lanternPaper,
   pine: MAT.pine,
   accent: ACCENT,
+  fabric: MAT.fabric,
+  metal: MAT.metal,
 };
 
 export const KIT_GEOMETRY: Record<GeoKey, BufferGeometry> = {
@@ -250,4 +252,44 @@ export function basket(k: Kit, x: number, z: number, s = 1, heap: MatKey = "wood
   k.add("woodLight", "cyl", [x, 0.14 * s, z], [0.55 * s, 0.28 * s, 0.55 * s]);
   k.add("woodDark", "cyl", [x, 0.29 * s, z], [0.58 * s, 0.04 * s, 0.58 * s]);
   k.add(heap, "ball", [x, 0.32 * s, z], [0.42 * s, 0.2 * s, 0.42 * s]);
+}
+
+/**
+ * A village notice board (게시판): two posts, a board with pinned papers,
+ * a little tiled roof. `face` is the side people read from.
+ */
+export function noticeBoard(k: Kit, x: number, z: number, face: Face): void {
+  const { n, alongX } = faceFrame(face);
+  const s = (a: number, y: number, t: number): V3 => (alongX ? [a, y, t] : [t, y, a]);
+  const at = (a: number, y: number, o: number): V3 => (alongX ? [x + a, y, z + n[2] * o] : [x + n[0] * o, y, z + a]);
+  for (const a of [-0.8, 0.8]) k.box("woodDark", at(a, 1.0, 0), s(0.1, 2.0, 0.1), true);
+  k.box("woodLight", at(0, 1.35, 0.02), s(1.7, 0.95, 0.06), true);
+  const sheets: [number, number, number, number][] = [[-0.5, 1.5, 0.34, 0.42], [0.05, 1.45, 0.4, 0.5], [0.55, 1.55, 0.3, 0.36], [-0.3, 1.08, 0.46, 0.3], [0.45, 1.1, 0.34, 0.3]];
+  for (const [a, y, w, h] of sheets) k.box("paper", at(a, y, 0.06), s(w, h, 0.01));
+  k.add("roof", "hip", at(0, 2.02, 0), s(2.1, 0.28, 0.55), undefined, true);
+}
+
+/** A two-wheeled wooden hand cart (sonsure) loaded with crates. */
+export function cart(k: Kit, x: number, z: number, w: number, d: number): void {
+  k.box("woodLight", [x, 0.62, z], [w, 0.08, d], true);
+  k.box("woodDark", [x, 0.75, z - d / 2 + 0.04], [w, 0.22, 0.06]);
+  k.box("woodDark", [x, 0.75, z + d / 2 - 0.04], [w, 0.22, 0.06]);
+  for (const sx of [-1, 1]) {
+    k.add("woodDark", "cyl", [x + sx * (w / 2 + 0.05), 0.36, z], [0.72, 0.08, 0.72], [0, 0, Math.PI / 2], true);
+    k.box("woodDark", [x + sx * 0.3, 0.55, z - d / 2 - 0.5], [0.06, 0.06, 1.0]);
+  }
+  k.box("woodLight", [x - 0.2, 0.86, z - 0.4], [0.5, 0.4, 0.5], true);
+  k.box("woodLight", [x + 0.22, 0.83, z + 0.35], [0.5, 0.34, 0.6], true);
+  k.add("pine", "ball", [x + 0.22, 1.05, z + 0.35], [0.4, 0.18, 0.5]);
+}
+
+/** A low wooden planter with a few rounded shrubs. */
+export function planter(k: Kit, x: number, z: number, len: number, alongX = true): void {
+  k.box("woodDark", [x, 0.2, z], alongX ? [len, 0.4, 0.5] : [0.5, 0.4, len], true);
+  const n = Math.max(2, Math.round(len / 0.55));
+  for (let i = 0; i < n; i++) {
+    const t = -len / 2 + (len / n) * (i + 0.5);
+    const sc = 0.45 + jitter(i + x * 3 + z, 0.1);
+    k.add("pine", "ball", alongX ? [x + t, 0.48, z] : [x, 0.48, z + t], [sc, sc * 0.8, sc]);
+  }
 }

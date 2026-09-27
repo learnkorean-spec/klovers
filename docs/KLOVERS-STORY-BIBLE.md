@@ -71,6 +71,11 @@ couple-style posing unless the canon is deliberately updated first.
 - **Lina** (لينا / 리나), the female learner — brings curiosity, culture,
   real-life context, stories, emotional warmth.
 - **Cluby** — turns learning into discovery and memory.
+- **Minsu** (مين سو / 민수) — a Korean friend and conversation partner of the
+  two learners, from the Book 1 conversations (Re, 27 Sep 2026). A native
+  speaker to practise with: never a teacher, never a love interest. His look
+  follows the Book 1 artwork (27 Sep 2026): short black hair, pale periwinkle
+  shirt with rolled sleeves, near-black trousers, navy lanyard with a white card.
 
 The learners' names are Re's decision of 27 Sep 2026 (`characters.maleLearner.name`
 and `characters.femaleLearner.name` in the code canon). Use exactly these
@@ -83,6 +88,7 @@ spellings in every language.
 | Cluby | companion, memory keeper, discovery guide, motivation, reward guide | a pet, an all-knowing teacher, random decoration, "baby mascot" only, comic relief only |
 | Adam (male learner) | structure, learning strategy, confidence, progress, explanation | — |
 | Lina (female learner) | curiosity, culture, real-life context, stories, emotional warmth | — |
+| Minsu (Korean friend) | native-speaker friend, conversation partner, everyday Korean | a teacher, a romantic interest |
 
 ## 5. Current worlds (in unlock order)
 

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { AVATARS, type AvatarId } from "../player/characters";
 import Joystick from "./Joystick";
@@ -30,9 +31,12 @@ interface HudProps {
   /** The thing within reach and what using it does ("Inspect" …). */
   prompt: string | null;
   onInteract: () => void;
-  /** First-steps hints: movement until the learner has moved, then looking. */
+  /** Tutorial on its movement step: the joystick pulses. */
   showMoveHint: boolean;
-  showLookHint: boolean;
+  /** Under the way out: objective, help, the controls card. */
+  side?: ReactNode;
+  /** A one-time discovery note, shown under the room banner. */
+  toast?: ReactNode;
   pointerLocked: boolean;
   /** A story moment is playing: only Skip is offered. */
   sequence: boolean;
@@ -56,6 +60,7 @@ export default function WorldHud(p: HudProps) {
   const copy = WORLD_COPY[p.lang];
   const h = copy.hints;
 
+
   return (
     <div
       className="pointer-events-none absolute inset-0 z-10 flex select-none flex-col p-4 md:p-6"
@@ -67,13 +72,16 @@ export default function WorldHud(p: HudProps) {
       }}
     >
       <div className="flex items-start justify-between gap-3">
-        <button
-          type="button"
-          onClick={p.onExit}
-          className="pointer-events-auto min-h-11 whitespace-nowrap rounded-full border-2 border-charcoal bg-klovers-yellow px-4 text-sm font-bold text-charcoal shadow-md sm:px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal"
-        >
-          {copy.exit}
-        </button>
+        <div className="flex min-w-0 flex-col items-start gap-2">
+          <button
+            type="button"
+            onClick={p.onExit}
+            className="pointer-events-auto min-h-11 whitespace-nowrap rounded-full border-2 border-charcoal bg-klovers-yellow px-4 text-sm font-bold text-charcoal shadow-md sm:px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal"
+          >
+            {copy.exit}
+          </button>
+          {!p.sequence && p.side}
+        </div>
 
         <div
           role="group"
@@ -120,6 +128,7 @@ export default function WorldHud(p: HudProps) {
             <p className="max-w-md text-sm text-ivory/85">{p.banner.line}</p>
           </div>
         )}
+        {!p.sequence && p.toast}
       </div>
 
       <div className="flex-1" />
@@ -156,24 +165,6 @@ export default function WorldHud(p: HudProps) {
             <span>{p.prompt}</span>
           </button>
         )}
-        {!p.isTouch && !p.sequence && (p.showMoveHint || (p.showLookHint && !p.prompt)) && (
-          <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-full bg-charcoal/75 px-4 py-1.5 text-xs text-ivory transition-opacity">
-            {p.showMoveHint ? (
-              [h.move, h.run].map((hint) => (
-                <span key={hint.label} className="flex items-center gap-1.5">
-                  {hint.keys.map((k) => (
-                    <kbd key={k} className={kbd}>
-                      {k}
-                    </kbd>
-                  ))}
-                  <span>{hint.label}</span>
-                </span>
-              ))
-            ) : (
-              <span>{copy.lookHint}</span>
-            )}
-          </p>
-        )}
       </div>
 
       {!p.isTouch && p.pointerLocked && !p.sequence && (
@@ -184,11 +175,6 @@ export default function WorldHud(p: HudProps) {
       )}
 
       {p.isTouch && !p.sequence && <Joystick label={copy.joystick} pulse={p.showMoveHint} />}
-      {p.isTouch && p.showMoveHint && !p.sequence && (
-        <p className="absolute bottom-44 left-6 max-w-[10rem] rounded-full bg-charcoal/80 px-3 py-1.5 text-center text-xs font-semibold text-ivory">
-          {copy.dragToMove}
-        </p>
-      )}
       {p.isTouch && p.prompt && !p.sequence && (
         <button
           type="button"

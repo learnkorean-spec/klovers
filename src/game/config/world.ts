@@ -118,6 +118,8 @@ export const PROPS = {
     { x: 9.2, z: -7.2, s: 1.25 },
     { x: 9.4, z: 6.9, s: 0.95 },
   ],
+  /** Notice board (게시판) against the east hall. */
+  board: { x: 9.95, z: 1.8 },
   pots: [
     { x: -9.8, z: -7.6, s: 1 },
     { x: -8.9, z: -8.0, s: 0.8 },
@@ -135,6 +137,7 @@ export const COLLIDERS: Box2[] = [
   ...PROPS.lanterns.map((l) => box(l.x, l.z, PROPS.lanternSize, PROPS.lanternSize)),
   ...PROPS.pines.map((t) => box(t.x, t.z, 0.5, 0.5)),
   ...PROPS.pots.map((t) => box(t.x, t.z, 0.55 * t.s, 0.55 * t.s)),
+  box(PROPS.board.x, PROPS.board.z, 0.5, 1.8),
 ];
 
 /** Tall colliders only: the camera may pass over platforms and the egg. */

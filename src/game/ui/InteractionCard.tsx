@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import type { NoticeKey } from "../config/rooms";
+import type { AvatarId } from "../player/characters";
 
 /**
  * The small web-UI cards opened from the 3D world (E / the round button).
  * Real learning stays in the site's lessons; these are one-step moments that
  * end in a real action. One language per screen; Korean stays Korean.
  */
-export type CardKind = "egg" | "letter" | "word" | "locked";
+export type CardKind = "egg" | "letter" | "word" | "locked" | "talk";
 
 interface Props {
   lang: WorldLang;
   kind: CardKind;
   /** For a locked gate: which notice to show. */
   notice?: NoticeKey;
+  /** For a talk card: who is speaking. The friend is the learner not chosen. */
+  who?: "friend" | "minsu";
+  avatar?: AvatarId;
   signedIn: boolean;
   /** The bread sign is already back up (the word card opens solved). */
   solved: boolean;
@@ -24,7 +28,7 @@ interface Props {
 
 const btn = "min-h-11 rounded-full px-5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
 
-export default function InteractionCard({ lang, kind, notice, signedIn, solved, onClose, onGo, onWordRight }: Props) {
+export default function InteractionCard({ lang, kind, notice, who, avatar, signedIn, solved, onClose, onGo, onWordRight }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
   const [picked, setPicked] = useState<number | null>(solved ? 0 : null);
@@ -58,6 +62,27 @@ export default function InteractionCard({ lang, kind, notice, signedIn, solved, 
             {copy.lockedCard.close}
           </button>
         </div>
+      </>
+    );
+  } else if (kind === "talk" && who) {
+    // A first greeting: the Korean line, its meaning, one short line of
+    // direction. Continue returns to the world.
+    const c = copy.talk;
+    const friendId = avatar === "lina" ? "adam" : "lina";
+    const hello = who === "minsu" ? c.minsu : c[friendId];
+    const name = who === "minsu" ? copy.names.minsu : copy.names[friendId];
+    body = (
+      <>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-charcoal/60">{name}</p>
+        <p lang="ko" className="font-ko text-2xl font-bold leading-snug" style={{ wordBreak: "keep-all" }}>
+          {hello.ko}
+        </p>
+        <p className="font-semibold">{hello.gloss}</p>
+        <p className="text-sm text-charcoal/80">{who === "minsu" ? c.minsuLine : c.friendLine}</p>
+        <p className="rounded-xl bg-white px-3 py-2 text-xs text-charcoal/70">{c.note}</p>
+        <button ref={first} type="button" className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal`} onClick={onClose}>
+          {c.next}
+        </button>
       </>
     );
   } else if (kind === "egg") {
