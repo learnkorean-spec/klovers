@@ -1,6 +1,9 @@
 import { useMemo, memo } from "react";
-import { Users, TrendingUp, AlertTriangle, DollarSign, Wallet } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Users, TrendingUp, AlertTriangle, DollarSign, Wallet, Archive } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, Tooltip as RechartsTooltip } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { AT_RISK_SESSION_THRESHOLD } from "@/lib/admin-utils";
 import { useCollectedRevenue } from "@/hooks/admin/useCollectedRevenue";
 import { usePrivateBudgets } from "@/hooks/admin/usePrivateBudgets";
@@ -21,12 +24,45 @@ interface KpiCard {
   sublabel?: string;
   alert?: boolean;
   sparkData?: { v: number }[];
-  sparkColor?: string;
+  /** Makes the whole tile a link. */
+  to?: string;
 }
 
 /** Tiles that run their own query and so keep their own skeleton. */
 const GROUP_REVENUE_LABEL = "Group Revenue";
 const PRIVATE_BUDGETS_LABEL = "Private Budgets";
+const LEGACY_LABEL = "Legacy 2022–2025";
+
+/**
+ * Historical students imported into Legacy Data (admin-only tables).
+ *
+ * Kept in its own tile and never added to Active Students or Group Revenue:
+ * legacy students have no account and no live enrolment, and their "session
+ * value" is sessions x price, not money received. Only recorded_paid is
+ * money, and it is shown as such.
+ */
+function useLegacyTotals() {
+  return useQuery({
+    queryKey: ["admin", "legacy", "kpi"],
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
+      const [{ count, error: cErr }, { data, error: yErr }] = await Promise.all([
+        db.from("legacy_students").select("id", { count: "exact", head: true }),
+        db.from("legacy_year_summary").select("counted_sessions, recorded_paid"),
+      ]);
+      if (cErr) throw cErr;
+      if (yErr) throw yErr;
+      const rows = (data ?? []) as { counted_sessions: number; recorded_paid: string | number | null }[];
+      return {
+        students: count ?? 0,
+        sessions: rows.reduce((a, r) => a + Number(r.counted_sessions ?? 0), 0),
+        paid: rows.reduce((a, r) => a + Number(r.recorded_paid ?? 0), 0),
+      };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 /** Build a 7-day enrollment count sparkline from overviewRows */
 function buildEnrollmentSparkline(rows: OverviewRow[]): { v: number }[] {
@@ -56,6 +92,7 @@ function formatMoney(n: number): string {
 export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actionableEnrollments, isLoading }: Props) {
   const { data: revenue, isLoading: revenueLoading } = useCollectedRevenue();
   const { data: privateBudgets, isLoading: privateLoading } = usePrivateBudgets();
+  const { data: legacy, isLoading: legacyLoading } = useLegacyTotals();
 
   const kpis = useMemo<KpiCard[]>(() => {
     const activeRows = overviewRows.filter(r => r.derived_status === "ACTIVE");
@@ -80,21 +117,25 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         ].join(" · ")
       : "entered by hand";
 
+    // Palette per the brand guard: klovers-green (always a fill, charcoal on
+    // it) = live / money in, klovers-yellow = needs a look, muted = neutral,
+    // destructive only for something that is actually wrong.
     return [
       {
         icon: Users,
-        iconBg: "bg-blue-100 dark:bg-blue-900/30",
-        iconColor: "text-blue-600 dark:text-blue-400",
+        iconBg: "bg-klovers-green",
+        iconColor: "text-charcoal",
         value: activeRows.length,
         label: "Active Students",
-        sublabel: `${overviewRows.length} total`,
+        sublabel: legacy && legacy.students > 0
+          ? `${overviewRows.length} total · +${legacy.students} legacy`
+          : `${overviewRows.length} total`,
         sparkData: enrollSparkline,
-        sparkColor: "#3b82f6",
       },
       {
         icon: DollarSign,
-        iconBg: "bg-green-100 dark:bg-green-900/30",
-        iconColor: "text-green-600 dark:text-green-400",
+        iconBg: "bg-klovers-green",
+        iconColor: "text-charcoal",
         // Money received: PAID + APPROVED enrollments, all of them, not just
         // each student's most recent. See useCollectedRevenue. Named "Group"
         // because that is all it has ever counted — private students go through
@@ -106,16 +147,27 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
       },
       {
         icon: Wallet,
-        iconBg: "bg-violet-100 dark:bg-violet-900/30",
-        iconColor: "text-violet-600 dark:text-violet-400",
+        iconBg: "bg-klovers-yellow",
+        iconColor: "text-charcoal",
         value: leadCurrency ? `${formatMoney(leadCurrency.total)} ${leadCurrency.currency}` : "—",
         label: PRIVATE_BUDGETS_LABEL,
         sublabel: privateSublabel,
       },
       {
+        icon: Archive,
+        iconBg: "bg-muted",
+        iconColor: "text-foreground",
+        value: legacy ? legacy.students : "—",
+        label: LEGACY_LABEL,
+        sublabel: legacy
+          ? `${legacy.sessions.toLocaleString("en-US")} sessions · paid ${formatMoney(legacy.paid)} EGP`
+          : "historical students",
+        to: "/admin?tab=legacy",
+      },
+      {
         icon: AlertTriangle,
-        iconBg: atRisk.length > 0 ? "bg-amber-100 dark:bg-amber-900/30" : "bg-muted",
-        iconColor: atRisk.length > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+        iconBg: atRisk.length > 0 ? "bg-klovers-yellow" : "bg-muted",
+        iconColor: atRisk.length > 0 ? "text-charcoal" : "text-muted-foreground",
         value: atRisk.length,
         label: "At-Risk Students",
         sublabel: `≤${AT_RISK_SESSION_THRESHOLD} sessions left`,
@@ -123,36 +175,35 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
       },
       {
         icon: TrendingUp,
-        iconBg: actionableEnrollments > 0 ? "bg-red-100 dark:bg-red-900/30" : "bg-muted",
-        iconColor: actionableEnrollments > 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground",
+        iconBg: actionableEnrollments > 0 ? "bg-destructive/15" : "bg-muted",
+        iconColor: actionableEnrollments > 0 ? "text-destructive" : "text-muted-foreground",
         value: actionableEnrollments + locked.length,
         label: "Need Attention",
         sublabel: `${actionableEnrollments} pending · ${locked.length} locked`,
         alert: actionableEnrollments > 0 || locked.length > 0,
       },
     ];
-  }, [overviewRows, actionableEnrollments, revenue, privateBudgets]);
+  }, [overviewRows, actionableEnrollments, revenue, privateBudgets, legacy]);
 
   return (
     <div
-      className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3"
+      className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3"
       role="region"
       aria-label="Key performance indicators"
       aria-busy={isLoading}
     >
       {kpis.map((kpi) => {
         const Icon = kpi.icon;
-        // The two money tiles have their own queries, so each keeps its skeleton
-        // until that resolves rather than following the shared overview spinner.
+        // The money and legacy tiles have their own queries, so each keeps its
+        // skeleton until that resolves rather than following the shared spinner.
         const cardLoading =
           isLoading ||
           (kpi.label === GROUP_REVENUE_LABEL && revenueLoading) ||
-          (kpi.label === PRIVATE_BUDGETS_LABEL && privateLoading);
-        return (
-          <div
-            key={kpi.label}
-            className={`rounded-2xl border bg-card px-4 py-3 flex items-center gap-3 transition-shadow hover:shadow-sm ${kpi.alert ? "border-amber-300/60 dark:border-amber-700/40" : "border-border"}`}
-          >
+          (kpi.label === PRIVATE_BUDGETS_LABEL && privateLoading) ||
+          (kpi.label === LEGACY_LABEL && legacyLoading);
+        const className = `rounded-2xl border bg-card px-4 py-3 flex items-center gap-3 transition-shadow hover:shadow-sm ${kpi.alert ? "border-klovers-yellow" : "border-border"}`;
+        const body = (
+          <>
             <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.iconBg}`}>
               <Icon className={`h-4 w-4 ${kpi.iconColor}`} aria-hidden="true" />
             </div>
@@ -168,13 +219,13 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
               )}
             </div>
             {kpi.sparkData && kpi.sparkData.length > 0 && !isLoading && (
-              <div className="w-14 h-8 shrink-0" aria-hidden="true">
+              <div className="w-14 h-8 shrink-0 text-foreground" aria-hidden="true">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={kpi.sparkData}>
                     <Line
                       type="monotone"
                       dataKey="v"
-                      stroke={kpi.sparkColor ?? "#94a3b8"}
+                      stroke="currentColor"
                       strokeWidth={1.5}
                       dot={false}
                       isAnimationActive={false}
@@ -188,6 +239,15 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
                 </ResponsiveContainer>
               </div>
             )}
+          </>
+        );
+        return kpi.to ? (
+          <Link key={kpi.label} to={kpi.to} className={className} aria-label={`${kpi.label}: open Legacy Data`}>
+            {body}
+          </Link>
+        ) : (
+          <div key={kpi.label} className={className}>
+            {body}
           </div>
         );
       })}
