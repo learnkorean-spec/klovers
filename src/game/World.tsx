@@ -34,7 +34,7 @@ import GroundWear from "./environment/GroundWear";
  */
 const LIGHT = {
   /** Low golden sun: warm, but not orange — stone and plaster stay neutral. */
-  sun: "#FFD49E",
+  sun: "#FFCC8E",
   skyBounce: "#FFE9CC",
   groundBounce: "#7E6249",
   fill: "#C4D3EC",
@@ -379,13 +379,13 @@ export default function World(props: WorldProps) {
       {/* Warm late-afternoon light: a low golden sun with soft shadows, a
           warm sky/ground bounce, and a faint cool fill from the other side
           so shadows keep their shape without going black. Two lights only. */}
-      <hemisphereLight args={[LIGHT.skyBounce, LIGHT.groundBounce, 0.72]} />
-      <directionalLight position={[-9, 7, -8]} intensity={0.32} color={LIGHT.fill} />
+      <hemisphereLight args={[LIGHT.skyBounce, LIGHT.groundBounce, 0.5]} />
+      <directionalLight position={[-12, 6, -3]} intensity={0.42} color={LIGHT.fill} />
       <directionalLight
         key={roomId}
         castShadow={quality.shadows}
-        position={[13, 7.6, 8]}
-        intensity={2.95}
+        position={[14, 7.2, 4.5]}
+        intensity={3.5}
         color={LIGHT.sun}
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}

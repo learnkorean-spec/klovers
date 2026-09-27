@@ -4,7 +4,7 @@ import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Instanced, { type Part } from "./Instanced";
 import Batch from "./Batch";
-import { Kit, basket, bunting, gutter, pot, shopfront, shrub, tree, wallRun, type MatKey } from "./kit";
+import { Kit, basket, bunting, gutter, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
 
@@ -13,7 +13,7 @@ import { paintPaving, useTiledTexture } from "./textures";
  *
  * A busier street than the village: six stalls under canvas awnings, shop
  * fronts rising behind them, paper lanterns strung across the square. Each
- * stall sells one everyday thing and names it in Korean (물 밥 빵 · 책 옷 꽃),
+ * stall sells one everyday thing and names it in Korean (물 밥 빵 · 책 옷 끝),
  * so the word hangs right above the object — "words learned by the student
  * begin appearing as understandable objects inside the world" (canon).
  */
@@ -92,7 +92,7 @@ function Goods({ word }: { word: Word }) {
           </mesh>
         )),
       );
-    case "꽃": // flowers in pots — the one stall allowed a touch of yellow
+    case "끝": // flowers in pots — the one stall allowed a touch of yellow
       return each((i) => (
         <>
           <mesh position={[0, 0.1, 0]}>
@@ -170,8 +170,10 @@ const MARKET_KIT: Kit = (() => {
   // Banner poles by the north gate.
   for (const s of [-1, 1]) gutter(k, s * (HW - 0.27), -HD, s * (HW - 0.27), HD);
   // Cloth bunting across the square, and flowers by the gate.
-  bunting(k, -HW, -6.1, HW, -6.1, 3.7, 1);
-  bunting(k, -HW, 6.3, HW, 6.3, 3.7, 2);
+  bunting(k, -HW, -4.9, HW, -4.9, 4.35, 1);
+  bunting(k, -HW, 4.9, HW, 4.9, 4.35, 2);
+  // Flowers by the stall ends: green and colour between the counters.
+  for (const [fx, fz] of MARKET.flowers) flowers(k, fx, fz, 0.7, fx + fz);
   for (const x of [-3.6, 3.6]) {
     pot(k, x, -HD + 0.7, 0.8, false);
     shrub(k, x, -HD + 0.7, 0.45, x > 0 ? 4 : 5, "blossom");
