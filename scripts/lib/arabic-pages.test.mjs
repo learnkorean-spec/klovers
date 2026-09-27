@@ -22,6 +22,9 @@ const allow = new RegExp(`^${vercel.rewrites.find((r) => r.destination === "/app
 // Egyptian-dialect markers the brand guard forbids in Arabic copy.
 const DIALECT = /(^|\s)(مش|دلوقتي|عشان|لسه|إزاي|كده|بتاع|أوي|معانا|احجز|اعمل|شوف)(\s|$)/;
 
+// CEFR bands the visible cards no longer claim (brand rule, 27 Sep 2026).
+const CEFR = /CEFR|(^|[^A-Za-z])[ABC][12]([^A-Za-z0-9]|$)/;
+
 describe("the Arabic twins exist end to end", () => {
   it("lists six pages, all with the same paths in meta and bodies", () => {
     expect(ARABIC_PAGE_META.map((p) => p.path)).toEqual(ARABIC_PAGES.map((p) => p.path));
@@ -47,6 +50,7 @@ describe("the Arabic copy", () => {
     expect(p.body).not.toMatch(/[$`]/);
     const text = p.body.replace(/<[^>]+>/g, " ");
     expect(text).not.toMatch(DIALECT);
+    expect(text).not.toMatch(CEFR);
     expect([...p.title].length).toBeLessThanOrEqual(60);
     expect([...p.description].length).toBeLessThanOrEqual(160);
     // Links to a paired page stay in Arabic.
