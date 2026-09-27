@@ -721,7 +721,15 @@ const StudentDashboard = () => {
   /* G. Upcoming class — real class data only (StudentPrimaryAction owns the
      Join / schedule / renewal states). Unenrolled students get the existing
      pending-review or start-your-journey card instead. */
-  const classBlock = !hasNoData ? (
+  // A private student's lessons come from her roster row and bundle. An old
+  // enrollments row (e.g. from the site's enrol flow) must not replace them
+  // with a package count that is never deducted.
+  const classBlock = isPrivate ? (
+    <section aria-labelledby="dash-private-title" className="min-w-0 space-y-3">
+      <h2 id="dash-private-title" className="sr-only">{dc("nextClassTitle")}</h2>
+      <StudentSelfService userId={userId} />
+    </section>
+  ) : !hasNoData ? (
     <section aria-labelledby="dash-class-title" className="min-w-0 space-y-3"
       onClickCapture={(e) => {
         const a = (e.target as HTMLElement).closest("a[href^='http']");
@@ -737,11 +745,6 @@ const StudentDashboard = () => {
         checklistItems={checklistItems}
       />
       <MyTrialClassCard />
-    </section>
-  ) : isPrivate ? (
-    <section aria-labelledby="dash-private-title" className="min-w-0 space-y-3">
-      <h2 id="dash-private-title" className="sr-only">{dc("nextClassTitle")}</h2>
-      <StudentSelfService userId={userId} />
     </section>
   ) : pendingLatest ? (() => {
     const pending = pendingLatest;
@@ -835,7 +838,7 @@ const StudentDashboard = () => {
           {/* Account alerts (package running low / pending review) — compact */}
           {(() => {
             const alerts: React.ReactNode[] = [];
-            if (enrollments.length > 0) {
+            if (enrollments.length > 0 && !isPrivate) {
               const remaining = enrollments[0].sessions_total - attendanceDates.length;
               if (remaining <= 2) {
                 alerts.push(
@@ -949,7 +952,7 @@ const StudentDashboard = () => {
                     </CardContent>
                   </Card>
                   {/* Package summary card (most recent) */}
-                  {enrollments[0] && (() => {
+                  {enrollments[0] && !isPrivate && (() => {
                     const enrollment = enrollments[0];
                     const totalUsed = attendanceDates.length;
                     const remaining = enrollment.sessions_total - totalUsed;
@@ -1013,9 +1016,9 @@ const StudentDashboard = () => {
                   })()}
                 </div>
                 <UpcomingSessionsCard sessions={upcomingSessions} zoomUrl={zoomUrl} showJoinAction={false} />
-                <StudentAttendanceRequest userId={userId} />
+                {!isPrivate && <StudentAttendanceRequest userId={userId} />}
                 {/* Additional packages (if > 1) */}
-                {enrollments.slice(1).map((enrollment) => {
+                {!isPrivate && enrollments.slice(1).map((enrollment) => {
                   const totalUsed = enrollment.sessions_total - enrollment.sessions_remaining;
                   const remaining = enrollment.sessions_total - totalUsed;
                   const extra = remaining < 0 ? Math.abs(remaining) : 0;
