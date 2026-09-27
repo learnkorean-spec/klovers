@@ -1,7 +1,9 @@
 import { memo } from "react";
+import { Link } from "react-router-dom";
 import { UserPlus, Users, CreditCard, GraduationCap, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useFunnelCounts } from "@/hooks/admin/useFunnelCounts";
+import { scrollToAdminTabs } from "@/lib/admin/scrollToAdminTabs";
 
 interface FunnelProps {
   /**
@@ -19,18 +21,35 @@ interface FunnelProps {
   completedCount?: number;
 
   pendingCount?: number;
+  /**
+   * @deprecated Ignored. Every card is now a link (see `to` below), and the
+   * Enrolled card opens Enrollments whether or not anything is pending.
+   */
   onPendingClick?: () => void;
 }
 
+/*
+ * Each card opens the list behind its number. A count you cannot click into
+ * sends you hunting through the tab rows for the same people.
+ *
+ * Colours are brand tokens only: klovers-green (a fill, charcoal on it) for
+ * live students, klovers-yellow for the stage that usually needs a look, and
+ * neutral for the rest.
+ */
 const stages = [
-  { key: "leads", label: "Leads", icon: UserPlus, accent: "bg-blue-500", light: "bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-  { key: "registered", label: "Registered", icon: Users, accent: "bg-blue-500", light: "bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-  { key: "enrolled", label: "Enrolled", icon: CreditCard, accent: "bg-amber-500", light: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
-  { key: "active", label: "Active", icon: GraduationCap, accent: "bg-green-500", light: "bg-green-500/10", text: "text-green-600 dark:text-green-400" },
-  { key: "completed", label: "Completed", icon: Award, accent: "bg-primary", light: "bg-primary/10", text: "text-primary" },
+  { key: "leads", label: "Leads", icon: UserPlus, to: "/admin?tab=leads", opens: "Leads",
+    accent: "bg-charcoal/60", light: "bg-muted", text: "text-foreground" },
+  { key: "registered", label: "Registered", icon: Users, to: "/admin?tab=students", opens: "Students",
+    accent: "bg-charcoal/60", light: "bg-muted", text: "text-foreground" },
+  { key: "enrolled", label: "Enrolled", icon: CreditCard, to: "/admin?tab=enrollments", opens: "Enrollments",
+    accent: "bg-klovers-yellow", light: "bg-klovers-yellow", text: "text-charcoal" },
+  { key: "active", label: "Active", icon: GraduationCap, to: "/admin?tab=my-students", opens: "My students",
+    accent: "bg-klovers-green", light: "bg-klovers-green", text: "text-charcoal" },
+  { key: "completed", label: "Completed", icon: Award, to: "/admin?tab=students", opens: "Students",
+    accent: "bg-charcoal/60", light: "bg-muted", text: "text-foreground" },
 ] as const;
 
-const LifecycleFunnel = ({ pendingCount, onPendingClick }: FunnelProps) => {
+const LifecycleFunnel = ({ pendingCount }: FunnelProps) => {
   const { data: counts, isLoading } = useFunnelCounts();
 
   /*
@@ -51,44 +70,50 @@ const LifecycleFunnel = ({ pendingCount, onPendingClick }: FunnelProps) => {
       {stages.map((stage) => {
         const Icon = stage.icon;
         const isEnrolled = stage.key === "enrolled";
-        const hasPending = isEnrolled && pendingCount && pendingCount > 0;
+        const hasPending = isEnrolled && !!pendingCount && pendingCount > 0;
         const count = counts?.[stage.key];
         const pct = count === undefined ? 0 : Math.round((count / total) * 100);
         return (
-          <Card
+          <Link
             key={stage.key}
-            className={`rounded-2xl overflow-hidden transition-all ${hasPending ? "cursor-pointer border-amber-400/60 hover:border-amber-500 hover:shadow-md" : "hover:shadow-sm"}`}
-            onClick={hasPending ? onPendingClick : undefined}
+            to={stage.to}
+            onClick={scrollToAdminTabs}
+            aria-label={`${stage.label}: open ${stage.opens}`}
+            className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow"
           >
-            <CardContent className="p-0">
-              {/* Color bar at top */}
-              <div className={`h-1 ${stage.accent}`} style={{ width: `${pct}%`, minWidth: "8px", transition: "width 0.4s ease" }} />
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className={`rounded-xl p-2 ${stage.light} shrink-0`}>
-                    <Icon className={`h-4 w-4 ${stage.text}`} />
+            <Card
+              className={`h-full rounded-2xl overflow-hidden cursor-pointer transition-all hover:shadow-md ${hasPending ? "border-klovers-yellow" : ""}`}
+            >
+              <CardContent className="p-0">
+                {/* Colour bar at top */}
+                <div className={`h-1 ${stage.accent}`} style={{ width: `${pct}%`, minWidth: "8px", transition: "width 0.4s ease" }} />
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className={`rounded-xl p-2 ${stage.light} shrink-0`}>
+                      <Icon className={`h-4 w-4 ${stage.text}`} aria-hidden="true" />
+                    </div>
+                    {hasPending && (
+                      <span className="text-[9px] font-bold bg-klovers-yellow text-charcoal rounded-full px-1.5 py-0.5 leading-none shrink-0">
+                        +{pendingCount}
+                      </span>
+                    )}
                   </div>
-                  {hasPending && (
-                    <span className="text-[9px] font-bold bg-amber-500 text-white rounded-full px-1.5 py-0.5 leading-none shrink-0">
-                      +{pendingCount}
-                    </span>
+                  {isLoading || count === undefined ? (
+                    <div className="h-8 w-14 bg-muted animate-pulse rounded" />
+                  ) : (
+                    <p className="text-3xl font-black text-foreground leading-none tabular-nums">{count}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1.5 font-medium">
+                    {stage.label}
+                  </p>
+                  {/* Leads is the denominator; "100% of leads" under it says nothing. */}
+                  {stage.key !== "leads" && count !== undefined && (
+                    <p className="text-[10px] mt-0.5 font-semibold text-muted-foreground">{pct}% of leads</p>
                   )}
                 </div>
-                {isLoading || count === undefined ? (
-                  <div className="h-8 w-14 bg-muted animate-pulse rounded" />
-                ) : (
-                  <p className="text-3xl font-black text-foreground leading-none tabular-nums">{count}</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1.5 font-medium">
-                  {stage.label}
-                </p>
-                {/* Leads is the denominator; "100% of leads" under it says nothing. */}
-                {stage.key !== "leads" && count !== undefined && (
-                  <p className={`text-[10px] mt-0.5 font-semibold ${stage.text}`}>{pct}% of leads</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         );
       })}
     </div>
