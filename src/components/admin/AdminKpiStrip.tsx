@@ -186,8 +186,9 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         label: "At-Risk Students",
         sublabel: `≤${AT_RISK_SESSION_THRESHOLD} sessions left`,
         alert: atRisk.length > 0,
-        to: "/admin?tab=students",
-        opens: "Students",
+        // Pre-filtered to the at-risk rows, not the whole Users list.
+        to: "/admin?tab=students&filter=atrisk",
+        opens: "At-Risk students",
       },
       {
         icon: TrendingUp,

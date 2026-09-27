@@ -35,6 +35,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminKpiStrip } from "@/components/admin/AdminKpiStrip";
 
+/** Same rule as the At-Risk Students KPI tile: active and running low. */
+const isAtRiskRow = (u: { derived_status: string; sessions_remaining: number }) =>
+  u.derived_status === "ACTIVE" && u.sessions_remaining > 0 && u.sessions_remaining <= AT_RISK_SESSION_THRESHOLD;
+
 // Lazy-load heavy tab components — each loads only when its tab is first opened
 const BlogManager = lazy(() => import("@/components/admin/BlogManager"));
 const StudentManager = lazy(() => import("@/components/admin/StudentManager"));
@@ -273,7 +277,7 @@ import { ClassLinkDialog } from "@/components/admin/dialogs/ClassLinkDialog";
 import { ReceiptModal } from "@/components/admin/dialogs/ReceiptModal";
 import { RejectEnrollmentDialog } from "@/components/admin/dialogs/RejectEnrollmentDialog";
 import { ManualEnrollDialog } from "@/components/admin/dialogs/ManualEnrollDialog";
-import { formatTime, ADMIN_PAGE_SIZE as PAGE_SIZE, MAX_UNIT_PRICE } from "@/lib/admin-utils";
+import { formatTime, ADMIN_PAGE_SIZE as PAGE_SIZE, MAX_UNIT_PRICE, AT_RISK_SESSION_THRESHOLD } from "@/lib/admin-utils";
 import type { ProfileEntry } from "@/hooks/admin/useProfiles";
 import { StudentsTab } from "@/components/admin/tabs/StudentsTab";
 import { EnrollmentsTab } from "@/components/admin/tabs/EnrollmentsTab";
@@ -398,7 +402,12 @@ const AdminDashboard = () => {
   const [receiptModalLoading, setReceiptModalLoading] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
   const [rejecting, setRejecting] = useState(false);
-  const [studentFilter, setStudentFilter] = useState("all");
+  // `?filter=` lets a KPI tile (e.g. At-Risk Students) open this list pre-filtered.
+  const urlStudentFilter = searchParams.get("filter");
+  const [studentFilter, setStudentFilter] = useState(urlStudentFilter ?? "all");
+  useEffect(() => {
+    if (urlStudentFilter) setStudentFilter(urlStudentFilter);
+  }, [urlStudentFilter]);
   const [levelFilter, setLevelFilter] = useState("all");
   const [studentSort, setStudentSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "joined_at", dir: "desc" });
   const [studentPage, setStudentPage] = useState(0);
@@ -1045,6 +1054,7 @@ const AdminDashboard = () => {
         : studentFilter === "stripe" ? u.source_label === "Stripe"
         : studentFilter === "egypt" ? u.source_label === "Egypt"
         : studentFilter === "overdue" ? u.amount_due > 0
+        : studentFilter === "atrisk" ? isAtRiskRow(u)
         : true;
       const matchesLevel = levelFilter === "all" || normalizeLevel(u.level || "") === levelFilter;
       return matchesSearch && matchesFilter && matchesLevel;
@@ -1075,6 +1085,7 @@ const AdminDashboard = () => {
   useEffect(() => { setEnrollmentPage(0); }, [debouncedEnrollmentSearch]);
 
   const overdueCount = overviewRows.filter(u => u.amount_due > 0).length;
+  const atRiskCount = overviewRows.filter(isAtRiskRow).length;
   const studentFilterOptions = [
     { value: "all", label: `All (${overviewRows.length})` },
     { value: "confirmed", label: `Confirmed (${confirmedCount})` },
@@ -1082,6 +1093,7 @@ const AdminDashboard = () => {
     { value: "stripe", label: `Stripe (${stripeCount})` },
     { value: "egypt", label: `Egypt Manual (${egyptCount})` },
     { value: "overdue", label: `Outstanding Balance (${overdueCount})` },
+    { value: "atrisk", label: `At-Risk (${atRiskCount})` },
   ];
 
   const legacyEnrollmentCount = useMemo(() =>
