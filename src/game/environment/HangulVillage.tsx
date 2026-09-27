@@ -2,7 +2,7 @@ import { MAT } from "../config/materials";
 import { VILLAGE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Batch from "./Batch";
-import { Kit, hanokHouse, hanokRoof, jitter, pot, steppingStones, wallRun } from "./kit";
+import { Kit, cart, hanokHouse, hanokRoof, jitter, platform, pot, steppingStones, wallRun } from "./kit";
 import { Gate, GateWall, Lamps, Signboard, Sway } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
 
@@ -88,6 +88,10 @@ const VILLAGE_KIT: Kit = (() => {
   k.box("woodDark", [0, 3.75, ARCH_Z], [ARCH_X * 2 + 1.2, 0.24, 0.34], true);
   k.box("accent", [0, 3.35, ARCH_Z + 0.16], [ARCH_X * 2 - 0.6, 0.03, 0.015]);
   k.add("roof", "hip", [0, 4.1, ARCH_Z], [ARCH_X * 2 + 2, 0.55, 1.3], undefined, true);
+
+  // A bench by the kerb and a vendor's cart near the well.
+  platform(k, VILLAGE.bench.x, VILLAGE.bench.z, VILLAGE.bench.d, VILLAGE.bench.w, Math.PI / 2);
+  cart(k, VILLAGE.cart.x, VILLAGE.cart.z, VILLAGE.cart.w, VILLAGE.cart.d);
 
   // A slate path up the middle of the street.
   steppingStones(k, 0, HL - 1, 0, 1.4, 1.1, 5, "stoneWarm");

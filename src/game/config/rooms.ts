@@ -1,4 +1,8 @@
 import { BOUNDS, box, CAMERA_COLLIDERS, COLLIDERS, PLAYER, ROOM, type Box2 } from "./world";
+import { FRIEND_SPOT, npcColliderSpots } from "./npcs";
+
+/** People who stand still are solid (a small circle-ish box). */
+const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p.x, p.z, 0.6, 0.6));
 
 /**
  * KLOVERS World — rooms and the doors between them.
@@ -60,7 +64,7 @@ export interface RoomLayout {
 const COURTYARD: RoomLayout = {
   id: "courtyard",
   bounds: BOUNDS,
-  colliders: COLLIDERS,
+  colliders: [...COLLIDERS, box(FRIEND_SPOT.x, FRIEND_SPOT.z, 0.6, 0.6), ...people("courtyard")],
   cameraColliders: CAMERA_COLLIDERS,
   spawns: {
     start: { x: PLAYER.spawn.x, z: PLAYER.spawn.z, yaw: PLAYER.spawnYaw },
@@ -109,6 +113,9 @@ export const VILLAGE = {
    */
   hubLaneZ: -11.2,
   hubSign: "광장",
+  /** A bench by the kerb and a vendor's cart near the well. */
+  bench: { x: 3.95, z: 7.4, w: 0.9, d: 1.9 },
+  cart: { x: 2.6, z: -5.2, w: 1.3, d: 2.1 },
   entranceSign: "한글 마을",
   marketSign: "시장",
 } as const;
@@ -131,7 +138,14 @@ const HANGUL_VILLAGE: RoomLayout = {
   id: "hangul-village",
   canonWorldId: "hangul-village",
   bounds: VB,
-  colliders: [box(VILLAGE.well.x, VILLAGE.well.z, VILLAGE.well.size, VILLAGE.well.size), ...lamps, ...archPosts],
+  colliders: [
+    box(VILLAGE.well.x, VILLAGE.well.z, VILLAGE.well.size, VILLAGE.well.size),
+    ...lamps,
+    ...archPosts,
+    box(VILLAGE.bench.x, VILLAGE.bench.z, VILLAGE.bench.w, VILLAGE.bench.d),
+    box(VILLAGE.cart.x, VILLAGE.cart.z, VILLAGE.cart.w, VILLAGE.cart.d),
+    ...people("hangul-village"),
+  ],
   cameraColliders: [...lamps, ...archPosts],
   spawns: {
     // Just through the south gate, facing up the street (−z).
@@ -213,6 +227,7 @@ const VOCABULARY_MARKET: RoomLayout = {
     box(MARKET.crates.x, MARKET.crates.z, MARKET.crates.size, MARKET.crates.size),
     ...marketLamps,
     ...MARKET.baskets.map(([x, z, sc]) => box(x, z, 0.58 * sc, 0.58 * sc)),
+    ...people("vocabulary-market"),
   ],
   cameraColliders: [...marketLamps, ...marketStalls],
   spawns: {
@@ -270,6 +285,10 @@ export const HUB = {
   lanterns: [
     [-2.5, -9.7], [2.5, -9.7],
   ] as [number, number][],
+  /** A bench with a pine and lantern (a sitting corner), and a notice board. */
+  bench: { x: -7.6, z: 7.45, w: 2.3, d: 0.9 },
+  benchPine: { x: -9.7, z: 5.8 },
+  board: { x: 10.25, z: 2.6 },
   gates: [
     { id: "hub-cafe", kind: "room", wall: "north", along: 0, sign: "카페" },
     { id: "hub-culture", kind: "future", wall: "north", along: -6.5, sign: "문화 거리" },
@@ -292,12 +311,15 @@ const hubPost = box(HUB.post.x, HUB.post.z, HUB.post.size, HUB.post.size);
 const hubProps = [
   ...HUB.pots.map(([x, z, sc]) => box(x, z, 0.55 * sc, 0.55 * sc)),
   ...HUB.lanterns.map(([x, z]) => box(x, z, 0.55, 0.55)),
+  box(HUB.bench.x, HUB.bench.z, HUB.bench.w, HUB.bench.d),
+  box(HUB.benchPine.x, HUB.benchPine.z, 0.5, 0.5),
+  box(HUB.board.x, HUB.board.z, 0.5, 1.8),
 ];
 
 const KLOVERS_HUB: RoomLayout = {
   id: "hub",
   bounds: { minX: -HUB.half, maxX: HUB.half, minZ: -HUB.half, maxZ: HUB.half },
-  colliders: [hubPost, ...hubProps],
+  colliders: [hubPost, ...hubProps, ...people("hub")],
   cameraColliders: [hubPost],
   spawns: {
     fromVillage: { x: HUB.southGates.village, z: HUB.half - 2.2, yaw: Math.PI },

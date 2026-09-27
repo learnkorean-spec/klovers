@@ -1,7 +1,7 @@
 import { MAT } from "../config/materials";
 import { HUB, hubGateSpot, type HubGate } from "../config/rooms";
 import Batch from "./Batch";
-import { Kit, hanokHouse, hanokRoof, pine, pot, shopfront, steppingStones, stoneLantern, wallRun } from "./kit";
+import { Kit, hanokHouse, hanokRoof, noticeBoard, pine, platform, pot, shopfront, steppingStones, stoneLantern, wallRun } from "./kit";
 import { Gate, Signboard } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
 
@@ -75,6 +75,10 @@ const HUB_KIT: Kit = (() => {
 
   for (const [x, z, sc] of HUB.pots) pot(k, x, z, sc, sc > 0.9);
   for (const [x, z] of HUB.lanterns) stoneLantern(k, x, z);
+  // A sitting corner (bench, pine, lantern) and a notice board by the academy.
+  platform(k, HUB.bench.x, HUB.bench.z, HUB.bench.w, HUB.bench.d);
+  pine(k, HUB.benchPine.x, HUB.benchPine.z, 1.15);
+  noticeBoard(k, HUB.board.x, HUB.board.z, "-x");
 
   // Beyond the north wall: Culture Street (left), the café (middle), Seoul (right).
   shopfront(k, { x: 0, z: -H - 3.2, w: 5.2, d: 4, h: 3.6, face: "+z" });
@@ -145,6 +149,9 @@ export default function Hub({ cafeOpen, marketOpen }: { cafeOpen: boolean; marke
       </mesh>
       <Batch kit={HUB_KIT} />
       <Signpost />
+      <group position={[HUB.board.x - 0.05, 2.35, HUB.board.z]} rotation={[0, -Math.PI / 2, 0]}>
+        <Signboard text="게시판" w={0.9} h={0.3} aspect={3} />
+      </group>
       {HUB.gates.map((g) => {
         const pose = gatePose(g);
         const usable = g.kind === "link" || (g.kind === "room" && cafeOpen);

@@ -97,9 +97,14 @@ function Legs({ look, left, right }: { look: AvatarLook; left: MutableRefObject<
             <Mat color={legColor} />
           </mesh>
           {/* Shoe: Adam's white sneakers, Lina's ivory flats */}
-          <mesh castShadow position={[0, -HIP_Y + 0.05, 0.05]}>
-            <boxGeometry args={[0.12, trousers ? 0.1 : 0.07, 0.27]} />
+          <mesh castShadow position={[0, -HIP_Y + (trousers ? 0.06 : 0.045), 0.05]}>
+            <boxGeometry args={[0.12, trousers ? 0.09 : 0.06, 0.27]} />
             <Mat color={look.shoes} rough={0.6} />
+          </mesh>
+          {/* Sole: a thin warm-grey strip so the shoe reads against the ground */}
+          <mesh position={[0, -HIP_Y + 0.009, 0.05]}>
+            <boxGeometry args={[0.126, 0.018, 0.28]} />
+            <Mat color="#B9B0A2" rough={0.9} />
           </mesh>
         </group>
       ))}
@@ -219,7 +224,7 @@ function Arm({ look, side, group }: { look: AvatarLook; side: -1 | 1; group: Mut
         <capsuleGeometry args={[slim ? 0.05 : 0.058, 0.42, 4, 10]} />
         <Mat color={look.sleeves} rough={0.85} />
       </mesh>
-      <mesh castShadow position={[0, -0.56, 0.01]}>
+      <mesh castShadow position={[0, -0.57, 0.012]} scale={[0.85, 1.2, 0.72]}>
         <sphereGeometry args={[0.052, 12, 10]} />
         <Mat color={look.skin} rough={0.7} />
       </mesh>
@@ -253,6 +258,11 @@ function Head({ look }: { look: AvatarLook }) {
               <sphereGeometry args={[0.016, 10, 8]} />
               <Mat color={PALETTE.charcoal} rough={0.3} />
             </mesh>
+            {/* Catch-light: keeps the eyes alive at a distance */}
+            <mesh position={[side * 0.043 + 0.005, 0.018, 0.132]}>
+              <sphereGeometry args={[0.0045, 6, 4]} />
+              <Mat color={PALETTE.white} rough={0.2} />
+            </mesh>
             <mesh position={[side * 0.045, 0.045, 0.118]} rotation={[0, 0, side * -0.12]}>
               <boxGeometry args={[0.04, 0.009, 0.01]} />
               <Mat color={look.hair} />
@@ -263,8 +273,9 @@ function Head({ look }: { look: AvatarLook }) {
           <sphereGeometry args={[0.017, 10, 8]} />
           <Mat color={look.skin} rough={0.7} />
         </mesh>
-        <mesh position={[0, -0.062, 0.118]}>
-          <boxGeometry args={[0.035, 0.008, 0.01]} />
+        {/* A small, friendly smile (lower half of a thin ring) */}
+        <mesh position={[0, -0.052, 0.117]} rotation={[0, 0, Math.PI]}>
+          <torusGeometry args={[0.02, 0.0045, 6, 12, Math.PI]} />
           <Mat color={PALETTE.charcoal} rough={0.6} />
         </mesh>
         {look.freckles &&
@@ -305,8 +316,36 @@ function Hair({ look }: { look: AvatarLook }) {
           <Mat color={look.hair} rough={0.9} />
         </mesh>
       ))}
+      {!long && (
+        // Side-swept fringe (cover art): a soft wave across the forehead.
+        <mesh castShadow position={[0.025, 0.085, 0.092]} rotation={[0.35, 0, -0.32]} scale={[1.7, 0.55, 0.75]}>
+          <sphereGeometry args={[0.052, 12, 8]} />
+          <Mat color={look.hair} rough={0.9} />
+        </mesh>
+      )}
       {long && (
         <>
+          {/* Fuller crown and side volume */}
+          {[-1, 1].map((side) => (
+            <mesh key={`v${side}`} castShadow position={[side * 0.1, 0.02, -0.03]} scale={[0.8, 1.15, 1]}>
+              <sphereGeometry args={[0.07, 12, 8]} />
+              <Mat color={look.hair} rough={0.9} />
+            </mesh>
+          ))}
+          {/* Side part: a sweep of hair across one side of the forehead */}
+          <mesh castShadow position={[-0.035, 0.09, 0.088]} rotation={[0.35, 0, 0.35]} scale={[1.6, 0.5, 0.7]}>
+            <sphereGeometry args={[0.05, 12, 8]} />
+            <Mat color={look.hair} rough={0.9} />
+          </mesh>
+          {/* Waves along the back */}
+          {[
+            [-0.07, -0.36, -0.1], [0.07, -0.33, -0.1], [0, -0.42, -0.11],
+          ].map((w, i) => (
+            <mesh key={`w${i}`} castShadow position={w as [number, number, number]}>
+              <sphereGeometry args={[0.06, 10, 8]} />
+              <Mat color={look.hair} rough={0.9} />
+            </mesh>
+          ))}
           {/* Long waves down the back to the shoulder blades */}
           <mesh castShadow position={[0, -0.22, -0.075]} scale={[1.35, 1, 0.62]}>
             <capsuleGeometry args={[0.11, 0.3, 6, 14]} />

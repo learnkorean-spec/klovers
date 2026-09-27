@@ -8,6 +8,7 @@ import { resolveCollisions } from "../systems/collision";
 import { angleDelta, damp } from "../systems/movement";
 import type { PlayerState } from "../systems/state";
 import type { StoryState } from "../systems/story";
+import ShadowBlob from "../npc/ShadowBlob";
 
 /**
  * Cluby — companion, memory-keeper and discovery guide (canon). Never a pet.
@@ -196,6 +197,7 @@ export default function Cluby({ story, player, layout, guide, interests }: Props
 
   return (
     <group ref={root} visible={false}>
+      <ShadowBlob size={0.5} />
       <group ref={body}>
         {/* Feet */}
         {[-1, 1].map((s) => (

@@ -5,6 +5,12 @@ import { INTERACTABLES, nearestInteractable, type Interactable } from "./config/
 import { findPortal, HUB, MARKET, ROOMS, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
 import ThirdPersonCamera from "./camera/ThirdPersonCamera";
+import { DISCOVERIES, type DiscoveryKey } from "./config/discoveries";
+import { NPCS, FRIEND_SPOT } from "./config/npcs";
+import { objectiveTarget, type ObjectiveId, type ObjectiveProgress } from "./config/objectives";
+import ObjectiveMarker from "./environment/ObjectiveMarker";
+import Friend from "./npc/Friend";
+import Npc from "./npc/Npc";
 import ConversationCafe from "./environment/ConversationCafe";
 import HangulVillage from "./environment/HangulVillage";
 import Hub from "./environment/Hub";
@@ -19,6 +25,18 @@ import { pickQuality } from "./systems/quality";
 import { createCameraState, createPlayerState, type PlayerState } from "./systems/state";
 import { createStoryState, HATCH, type StoryState } from "./systems/story";
 import type { WorldState } from "./systems/worldState";
+
+/**
+ * Light colours (not brand colours): golden sun, warm sky bounce, earth
+ * bounce, cool fill, and a sky a touch warmer than the brand ivory.
+ */
+const LIGHT = {
+  sun: "#FFE2B8",
+  skyBounce: "#FFF3DF",
+  groundBounce: "#9A7A5C",
+  fill: "#DCE5F6",
+  sky: "#FFF6E6",
+} as const;
 
 /** Length of the fade to and from ivory on a room change, ms. */
 export const FADE_MS = 350;
@@ -70,6 +88,11 @@ export interface WorldProps {
   paused?: boolean;
   /** Room to open in (returning from the site's lessons or games). */
   startRoom?: RoomId;
+  /** First-visit objectives: which one is current, and progress so far. */
+  objective?: ObjectiveId | null;
+  progress?: ObjectiveProgress;
+  /** Walked up to something worth a short note (first time only; the page decides). */
+  onDiscover?: (key: DiscoveryKey) => void;
 }
 
 declare global {
@@ -85,6 +108,8 @@ declare global {
       stats: () => { calls: number; triangles: number; geometries: number; textures: number };
       /** Jump to a room — only one this learner may already enter. */
       goto: (room: RoomId) => boolean;
+      /** Stand the player at a point in the current room (checks only). */
+      place: (x: number, z: number) => void;
     };
   }
 }
@@ -306,6 +331,10 @@ export default function World(props: WorldProps) {
           textures: info?.memory.textures ?? 0,
         };
       },
+      place: (x: number, z: number) => {
+        player.current.position.x = x;
+        player.current.position.z = z;
+      },
       goto: (room: RoomId) => {
         if (!cb.current.access.open.has(room) || room === roomRef.current) return false;
         const arrive = Object.keys(ROOMS[room].spawns)[0];
@@ -330,16 +359,20 @@ export default function World(props: WorldProps) {
         requestAnimationFrame(() => requestAnimationFrame(() => onReady?.()));
       }}
     >
-      <color attach="background" args={[PALETTE.ivory]} />
-      <fog attach="fog" args={[PALETTE.ivory, 22, 60]} />
+      <color attach="background" args={[LIGHT.sky]} />
+      <fog attach="fog" args={[LIGHT.sky, 24, 70]} />
 
-      <hemisphereLight args={[PALETTE.ivory, PALETTE.woodDark, 1.2]} />
+      {/* Warm late-afternoon light: a low golden sun with soft shadows, a
+          warm sky/ground bounce, and a faint cool fill from the other side
+          so shadows keep their shape without going black. Two lights only. */}
+      <hemisphereLight args={[LIGHT.skyBounce, LIGHT.groundBounce, 1.0]} />
+      <directionalLight position={[-9, 7, -8]} intensity={0.35} color={LIGHT.fill} />
       <directionalLight
         key={roomId}
         castShadow={quality.shadows}
-        position={[8, 14, 6]}
-        intensity={1.8}
-        color={PALETTE.white}
+        position={[11, 10, 6]}
+        intensity={2.3}
+        color={LIGHT.sun}
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0004}
         shadow-normalBias={0.02}
@@ -356,6 +389,15 @@ export default function World(props: WorldProps) {
       {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} />}
       {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} />}
       {roomId === "conversation-cafe" && <ConversationCafe />}
+      {/* The people of this room only; they leave with it. */}
+      {NPCS.filter((n) => n.room === roomId).map((n) => (
+        <Npc key={n.id} n={n} />
+      ))}
+      {roomId === "courtyard" && <Friend avatar={avatar} x={FRIEND_SPOT.x} z={FRIEND_SPOT.z} yaw={Math.atan2(-FRIEND_SPOT.x, -FRIEND_SPOT.z) + 0.5} />}
+      {(() => {
+        const t = props.progress ? objectiveTarget(props.objective ?? null, roomId, props.progress) : null;
+        return t ? <ObjectiveMarker x={t.x} z={t.z} /> : null;
+      })()}
       {/* Frame priorities: player moves (−2), watchers read (−1.5), camera follows (−1). */}
       <Player input={input} player={player} camera={camera} layout={layout} avatar={avatar} />
       <Cluby story={story} player={player} layout={layout} guide={guideFor(roomId, access)} interests={interestsIn(roomId)} />
@@ -370,6 +412,7 @@ export default function World(props: WorldProps) {
         onFocus={(it) => cb.current.onFocus?.(it)}
         onFirstMove={() => cb.current.onFirstMove?.()}
       />
+      <DiscoveryWatcher key={`d-${roomId}`} room={roomId} player={player} onDiscover={(k) => cb.current.onDiscover?.(k)} />
       <Stats glRef={glRef} />
     </Canvas>
   );
@@ -457,6 +500,23 @@ function FocusWatcher({ room, player, story, access, onFocus, onFirstMove }: {
     current.current = id;
     onFocus(it);
   }, -1.5);
+  return null;
+}
+
+/** Notices the first step into a discovery spot in this room. */
+function DiscoveryWatcher({ room, player, onDiscover }: { room: RoomId; player: MutableRefObject<PlayerState>; onDiscover: (k: DiscoveryKey) => void }) {
+  const seen = useRef(new Set<string>());
+  const spots = useMemo(() => DISCOVERIES.filter((d) => d.room === room), [room]);
+  useFrame(() => {
+    const p = player.current.position;
+    for (const d of spots) {
+      if (seen.current.has(d.key)) continue;
+      if (Math.hypot(p.x - d.x, p.z - d.z) < d.radius) {
+        seen.current.add(d.key);
+        onDiscover(d.key);
+      }
+    }
+  });
   return null;
 }
 

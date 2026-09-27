@@ -12,6 +12,9 @@ import { hasWebGL, isTouchFirst } from "@/game/systems/webgl";
 import { loadWorldState, saveWorldState, type WorldState } from "@/game/systems/worldState";
 import InteractionCard, { type CardKind } from "@/game/ui/InteractionCard";
 import WorldHud, { type Speech } from "@/game/ui/WorldHud";
+import { ControlsCard, DiscoveryToast, HelpButton, ObjectiveChip, WelcomeCard, type TutorialStep } from "@/game/ui/Onboarding";
+import { currentObjective, type ObjectiveId } from "@/game/config/objectives";
+import type { DiscoveryKey } from "@/game/config/discoveries";
 // Type-only: erased at build time, so the 3D chunk stays lazy.
 import type { SpeechKey, WorldApi } from "@/game/World";
 
@@ -129,7 +132,14 @@ const WorldPage = () => {
   const [focus, setFocus] = useState<Interactable | null>(null);
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
-  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey } | null>(null);
+  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; who?: "friend" | "minsu" } | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  // Returning learners who finished the tutorial never see it again unasked.
+  const [tutorialGone, setTutorialGone] = useState(() => loadWorldState().tutorialDone);
+  const [justDone, setJustDone] = useState<ObjectiveId | null>(null);
+  const [toast, setToast] = useState<DiscoveryKey | null>(null);
+  const toastTimer = useRef<number>();
+  const doneTimer = useRef<number>();
   const [tipDismissed, setTipDismissed] = useState(() => {
     try {
       return sessionStorage.getItem("klovers-world-landscape-tip") === "1";
@@ -162,17 +172,61 @@ const WorldPage = () => {
   }, []);
 
   // An admin preview never writes anything: it is a look, not progress.
+  // Always merged onto the latest state, so two quick saves never undo each other.
+  const savedRef = useRef(saved);
   const save = useCallback(
     (next: WorldState) => {
+      savedRef.current = next;
       setSaved(next);
       if (!access.preview) saveWorldState(next);
     },
     [access.preview],
   );
+  const patch = useCallback((p: Partial<WorldState>) => save({ ...savedRef.current, ...p }), [save]);
+
+  /** Mark objectives done; the chip shows "complete" for a moment. */
+  const complete = useCallback(
+    (id: ObjectiveId, extra: Partial<WorldState> = {}) => {
+      const cur = savedRef.current;
+      if (cur.objectivesDone.includes(id)) {
+        if (Object.keys(extra).length) patch(extra);
+        return;
+      }
+      patch({ ...extra, objectivesDone: [...cur.objectivesDone, id] });
+      setJustDone(id);
+    },
+    [patch],
+  );
+
+  // "Objective complete" stays a moment once nothing covers it (a talk card
+  // may still be open when the objective finishes).
+  useEffect(() => {
+    if (!justDone || card) return;
+    window.clearTimeout(doneTimer.current);
+    doneTimer.current = window.setTimeout(() => setJustDone(null), 3200);
+  }, [justDone, card]);
+
+  const discover = useCallback(
+    (k: DiscoveryKey) => {
+      if (savedRef.current.discovered.includes(k)) return;
+      patch({ discovered: [...savedRef.current.discovered, k] });
+      setToast(k);
+      window.clearTimeout(toastTimer.current);
+      toastTimer.current = window.setTimeout(() => setToast(null), 5200);
+    },
+    [patch],
+  );
+  useEffect(
+    () => () => {
+      window.clearTimeout(toastTimer.current);
+      window.clearTimeout(doneTimer.current);
+    },
+    [],
+  );
 
   // Consume the resume point once, so a later fresh visit starts at the gate.
   useEffect(() => {
-    if (startRoom !== "courtyard") save({ ...loadWorldState(), lastRoom: null });
+    if (startRoom !== "courtyard") patch({ lastRoom: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -186,10 +240,11 @@ const WorldPage = () => {
   const [introBanner, setIntroBanner] = useState(false);
   const arrive = useCallback((id: RoomId, intro = false) => {
     setIntroBanner(intro);
+    if (id === "hub") complete("findHub");
     setRoom(id);
     window.clearTimeout(bannerTimer.current);
     bannerTimer.current = window.setTimeout(() => setRoom(null), 4200);
-  }, []);
+  }, [complete]);
   useEffect(() => () => window.clearTimeout(bannerTimer.current), []);
 
   // Where to return: the page the learner came from, else the games hub.
@@ -207,15 +262,26 @@ const WorldPage = () => {
     if (it.kind === "egg") {
       if (clubyAwake && !saved.hatchSeen) api.current?.hatch();
       else setCard({ kind: "egg" });
-    } else if (it.kind === "letter") setCard({ kind: "letter" });
+    } else if (it.kind === "letter") {
+      setCard({ kind: "letter" });
+      // Reading the sign counts only once the characters have been met, so
+      // the objectives stay in their order.
+      if (savedRef.current.objectivesDone.includes("meetCharacters")) complete("readSign");
+    } else if (it.kind === "talk" && it.who) {
+      setCard({ kind: "talk", who: it.who });
+      const cur = savedRef.current;
+      const met = cur.met.includes(it.who) ? cur.met : [...cur.met, it.who];
+      if (met.includes("friend") && met.includes("minsu")) complete("meetCharacters", { met });
+      else if (met !== cur.met) patch({ met });
+    }
     else if (it.kind === "word") setCard({ kind: "word" });
     else if (it.kind === "locked") setCard({ kind: "locked", notice: it.notice });
     else if (it.kind === "link") {
       // Out to the site; the world reopens here (the Hub) on the way back.
-      save({ ...saved, lastRoom: it.room });
+      patch({ lastRoom: it.room });
       navigate(it.link === "games" ? "/games" : access.signedIn ? "/textbook" : "/courses");
     }
-  }, [focus, card, sequence, clubyAwake, saved, save, navigate, access.signedIn]);
+  }, [focus, card, sequence, clubyAwake, saved, patch, complete, navigate, access.signedIn]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -253,6 +319,23 @@ const WorldPage = () => {
       {label}
     </button>
   );
+
+  // Onboarding: welcome once, then the controls taught one at a time.
+  const welcoming = ready && !saved.welcomed && !sequence;
+  const tutorialStep: TutorialStep = saved.tutorialDone ? "done" : !moved ? "move" : !looked ? "look" : "done";
+  useEffect(() => {
+    if (tutorialStep === "done" && !saved.tutorialDone && saved.welcomed) patch({ tutorialDone: true });
+  }, [tutorialStep, saved.tutorialDone, saved.welcomed, patch]);
+  useEffect(() => {
+    if (!saved.tutorialDone || tutorialGone) return;
+    // Let the finished card fade out, then take it away.
+    const t = window.setTimeout(() => setTutorialGone(true), 900);
+    return () => window.clearTimeout(t);
+  }, [saved.tutorialDone, tutorialGone]);
+  const showControls = helpOpen || (saved.welcomed && !tutorialGone && !room && !card);
+  const objective = currentObjective({ met: saved.met, done: saved.objectivesDone });
+  const progress = useMemo(() => ({ met: saved.met, done: saved.objectivesDone }), [saved.met, saved.objectivesDone]);
+  const objectiveCount = objective === "meetCharacters" ? `${saved.met.filter((m) => m === "friend" || m === "minsu").length}/2` : undefined;
 
   const promptLabel = !focus
     ? null
@@ -297,27 +380,28 @@ const WorldPage = () => {
               <World
                 onReady={() => {
                   setReady(true);
-                  // First thing seen: the world's name, then where one stands.
-                  arrive(startRoom, true);
+                  // First thing seen: the world's name, then where one stands
+                  // (after the welcome card on a first visit).
+                  if (savedRef.current.welcomed) arrive(startRoom, true);
                 }}
                 onFirstLook={() => setLooked(true)}
-                onFirstMove={() => {
-                  setMoved(true);
-                  if (!saved.tutorialDone) save({ ...saved, tutorialDone: true });
-                }}
+                onFirstMove={() => setMoved(true)}
                 startRoom={startRoom}
                 avatar={avatar}
                 access={access}
                 clubyAwake={clubyAwake}
                 saved={saved}
-                onSave={save}
+                onSave={(next) => patch({ hatchSeen: next.hatchSeen, greeted: next.greeted })}
                 onApi={(a) => (api.current = a)}
                 onFade={setFading}
                 onRoomChange={arrive}
                 onFocus={setFocus}
                 onSpeech={setSpeechKey}
                 onSequence={setSequence}
-                paused={card !== null}
+                paused={card !== null || welcoming}
+                objective={objective}
+                progress={progress}
+                onDiscover={discover}
               />
             </Suspense>
             {ready && (
@@ -333,8 +417,35 @@ const WorldPage = () => {
                 speech={speech}
                 prompt={card ? null : promptLabel}
                 onInteract={interact}
-                showMoveHint={!moved && !saved.tutorialDone}
-                showLookHint={moved && !looked}
+                showMoveHint={saved.welcomed && tutorialStep === "move"}
+                side={
+                  saved.welcomed && !welcoming ? (
+                    <div className="flex flex-col items-start gap-2">
+                      <ObjectiveChip lang={lang} objective={objective} count={objectiveCount} justDone={justDone} />
+                      {!showControls && <HelpButton lang={lang} onClick={() => setHelpOpen(true)} />}
+                    </div>
+                  ) : null
+                }
+                toast={
+                  <>
+                    {showControls && (
+                      <ControlsCard
+                        lang={lang}
+                        isTouch={isTouch}
+                        step={helpOpen ? "done" : tutorialStep}
+                        replay={helpOpen}
+                        onClose={() => {
+                          setHelpOpen(false);
+                          if (!saved.tutorialDone) {
+                            setTutorialGone(true);
+                            patch({ tutorialDone: true });
+                          }
+                        }}
+                      />
+                    )}
+                    {toast && !card && <DiscoveryToast lang={lang} discovery={toast} />}
+                  </>
+                }
                 pointerLocked={locked}
                 sequence={sequence}
                 onSkip={() => api.current?.skip()}
@@ -349,17 +460,28 @@ const WorldPage = () => {
                 }}
               />
             )}
+            {welcoming && (
+              <WelcomeCard
+                lang={lang}
+                onStart={() => {
+                  patch({ welcomed: true });
+                  arrive(room ?? startRoom, true);
+                }}
+              />
+            )}
             {card && (
               <InteractionCard
                 lang={lang}
                 kind={card.kind}
                 notice={card.notice}
+                who={card.who}
+                avatar={avatar}
                 signedIn={access.signedIn}
                 solved={saved.breadSign}
                 onClose={() => setCard(null)}
                 onGo={(href) => navigate(href)}
                 onWordRight={() => {
-                  if (!saved.breadSign) save({ ...saved, breadSign: true });
+                  if (!savedRef.current.breadSign) patch({ breadSign: true });
                   api.current?.celebrate();
                 }}
               />

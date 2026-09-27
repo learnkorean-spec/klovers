@@ -4,8 +4,8 @@ import { PROPS, ROOM } from "../config/world";
 import type { StoryState } from "../systems/story";
 import Batch from "./Batch";
 import CloverEgg from "./CloverEgg";
-import { Kit, hanokHouse, pine, platform, pot, steppingStones, stoneLantern, wallRun } from "./kit";
-import { Gate } from "./parts";
+import { Kit, hanokHouse, noticeBoard, pine, planter, platform, pot, steppingStones, stoneLantern, wallRun } from "./kit";
+import { Gate, Signboard } from "./parts";
 import { paintMadang, useTiledTexture } from "./textures";
 
 /**
@@ -44,6 +44,10 @@ const COURTYARD_KIT: Kit = (() => {
   for (const p of PROPS.platforms) platform(k, p.x, p.z, p.w, p.d);
   for (const t of PROPS.pines) pine(k, t.x, t.z, t.s);
   for (const t of PROPS.pots) pot(k, t.x, t.z, t.s);
+  // A notice board against the east hall, and planters softening the south wall.
+  noticeBoard(k, PROPS.board.x, PROPS.board.z, "-x");
+  planter(k, -5.6, HD - 0.55, 3.2);
+  planter(k, 5.6, HD - 0.55, 3.2);
   return k;
 })();
 
@@ -62,6 +66,9 @@ export default function Lobby({ story }: { story: MutableRefObject<StoryState> }
       <Batch kit={COURTYARD_KIT} />
       {/* The way on: the only yellow-framed opening in the room. */}
       <Gate x={0} z={-HD - 0.02} rotY={0} open accent sign="한글 마을" />
+      <group position={[PROPS.board.x - 0.05, 2.35, PROPS.board.z]} rotation={[0, -Math.PI / 2, 0]}>
+        <Signboard text="게시판" w={0.9} h={0.3} aspect={3} />
+      </group>
       <CloverEgg story={story} />
     </group>
   );
