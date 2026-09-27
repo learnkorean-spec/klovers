@@ -136,7 +136,7 @@ const AttendanceHistoryCard = ({ dates }: { dates: AttendanceDate[] }) => {
                 <div key={`${d.date}-${i}`} className="flex items-center justify-between p-2 rounded-lg border border-border">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground w-5 text-end">{i + 1}.</span>
-                    <CalendarCheck className="h-4 w-4 text-amber-600" />
+                    <CalendarCheck className="h-4 w-4 text-charcoal dark:text-foreground" />
                     <span className="text-sm font-medium text-foreground">
                       {new Date(d.date + "T00:00:00").toLocaleDateString(dateLocale, { day: "2-digit", month: "2-digit", year: "numeric" })}
                     </span>
@@ -839,10 +839,10 @@ const StudentDashboard = () => {
               const remaining = enrollments[0].sessions_total - attendanceDates.length;
               if (remaining <= 2) {
                 alerts.push(
-                  <div key="sessions" className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/60 rounded-xl px-3 py-2 text-sm">
-                    <span className="text-base">📦</span>
-                    <span className="flex-1 font-medium text-blue-900 dark:text-blue-300">{remaining <= 0 ? t("dashboardPage.packageFinished") : tInterpolate(t("dashboardPage.sessionsLeftAlert"), { count: remaining })}</span>
-                    <Button size="sm" className="min-h-11 text-xs bg-blue-600 hover:bg-blue-700 text-white shrink-0 px-3" onClick={() => navigate("/enroll-now")}>{t("dashboardPage.renewArrow")}</Button>
+                  <div key="sessions" className="flex items-center gap-2 bg-ivory dark:bg-card border border-charcoal/20 rounded-xl px-3 py-2 text-sm">
+                    <KloverIcon name="calendar-check" className="h-6 w-6 shrink-0" />
+                    <span className="flex-1 font-medium text-charcoal dark:text-foreground">{remaining <= 0 ? t("dashboardPage.packageFinished") : tInterpolate(t("dashboardPage.sessionsLeftAlert"), { count: remaining })}</span>
+                    <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal shrink-0 px-3" onClick={() => navigate("/enroll-now")}>{t("dashboardPage.renewArrow")}</Button>
                   </div>
                 );
               }
@@ -957,7 +957,7 @@ const StudentDashboard = () => {
                     const due = Math.round(extra * enrollment.unit_price);
                     const curr = enrollment.currency === "EGP" ? t("dashboardPage.currencyEgp") : t("dashboardPage.currencyUsd");
                     return (
-                      <Card className={remaining <= 0 && totalUsed > 0 ? "border-green-500 border-2" : ""}>
+                      <Card className={remaining <= 0 && totalUsed > 0 ? "border-klovers-green border-2" : ""}>
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <CardTitle className="text-lg flex items-center gap-2 flex-wrap min-w-0">
@@ -990,7 +990,7 @@ const StudentDashboard = () => {
                             </div>
                             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-amber-500" : "bg-amber-400"}`}
+                                className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-klovers-yellow" : "bg-klovers-green"}`}
                                 style={{ width: `${Math.min(100, (totalUsed / enrollment.sessions_total) * 100)}%` }}
                               />
                             </div>
@@ -1058,7 +1058,7 @@ const StudentDashboard = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank', 'noopener,noreferrer')}
-                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
+                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center"
                   >
                     <KloverIcon name="growth-chart" className="h-10 w-10 sm:h-12 sm:w-12" />
                     <span className="text-sm font-semibold text-foreground">{t("dashboardPage.progressReport")}</span>
@@ -1066,7 +1066,7 @@ const StudentDashboard = () => {
                   </button>
                   <button
                     onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank', 'noopener,noreferrer')}
-                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
+                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center"
                   >
                     <KloverIcon name="badge-blossom" className="h-10 w-10 sm:h-12 sm:w-12" />
                     <span className="text-sm font-semibold text-foreground">{t("dashboardPage.certificate")}</span>
@@ -1165,14 +1165,14 @@ const StudentDashboard = () => {
             {userId && (() => {
               const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
               return (
-                <div className="flex flex-wrap items-center gap-3 bg-violet-50/80 dark:bg-violet-950/20 border border-violet-200/50 dark:border-violet-800/40 rounded-xl px-4 py-2.5">
+                <div className="flex flex-wrap items-center gap-3 bg-ivory dark:bg-card border border-charcoal/20 rounded-xl px-4 py-2.5">
                   <KloverIcon name="student-girl-heart" className="h-8 w-8 sm:h-9 sm:w-9" />
                   <span className="flex-1 text-sm text-muted-foreground min-w-0 break-words">
                     <strong className="text-foreground">{t("dashboardPage.referTitle")}</strong> · {t("dashboardPage.referEarn")}
-                    {referralCount > 0 && <> · <span className="text-violet-600 font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}
+                    {referralCount > 0 && <> · <span className="text-charcoal dark:text-foreground font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}
                   </span>
                   <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(refLink); toast({ title: t("dashboardPage.linkCopied") }); }}
-                    className="shrink-0 gap-1 border-violet-300 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 min-h-11 text-xs px-3">
+                    className="shrink-0 gap-1 border-charcoal/30 text-charcoal dark:text-foreground hover:bg-klovers-yellow/40 min-h-11 text-xs px-3">
                     <Copy className="h-3 w-3" /> {t("dashboardPage.copyLink")}
                   </Button>
                 </div>
@@ -1201,7 +1201,7 @@ const StudentDashboard = () => {
                         <span className="font-semibold text-foreground">{t("dashboardPage.weeklyXp")}</span>
                         <div className="flex items-center gap-1.5">
                           <span className="text-muted-foreground text-xs">{weeklyXp}/{WEEKLY_GOAL}</span>
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-primary text-foreground"}`}>{pct}%</span>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pct >= 100 ? "bg-klovers-green text-charcoal" : "bg-primary text-foreground"}`}>{pct}%</span>
                         </div>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
