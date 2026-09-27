@@ -143,7 +143,7 @@ export const NATURAL = {
   /** Ground beyond the walls, and the far hills. */
   ground: "#C9BC98",
   hill: "#8E9E93",
-  roof: "#33373E",
+  roof: "#40444B",
   /** Market cloth: muted natural dyes, never brand colours. */
   clothRed: "#B5644D",
   clothBlue: "#566E8E",
@@ -161,8 +161,8 @@ export const MAT = {
   charcoal: std(PALETTE.charcoal, 0.85),
   roofTile: std(PALETTE.charcoal, 0.7, { flatShading: true, detail: "tile" }),
   /** Curved hanok roofs: smooth-shaded so the curve reads, tiled rows. */
-  roofSoft: std(NATURAL.roof, 0.68, { detail: "tile" }),
-  woodDark: std("#583824", 0.6, { detail: "grain" }),
+  roofSoft: std(NATURAL.roof, 0.56, { detail: "tile" }),
+  woodDark: std("#664231", 0.6, { detail: "grain" }),
   woodWarm: std("#BC7F48", 0.62, { detail: "grain" }),
   stone: std(NATURAL.ground, 1),
   stoneWarm: std(NATURAL.stoneWarm, 0.98, { detail: "stone" }),
@@ -185,7 +185,7 @@ export const MAT = {
   fruitOrange: std(NATURAL.fruitOrange, 0.6),
   metal: std(PALETTE.charcoal, 0.38, { metalness: 0.55 }),
   /** Hanji paper in a window: warm late-day light glowing through. */
-  paper: std("#FFF4DE", 0.95, { emissive: "#FFD9A0", emissiveIntensity: 0.32 }),
+  paper: std("#FFF6E6", 0.95, { emissive: "#FFDDAA", emissiveIntensity: 0.45 }),
   /** Lantern paper: a warm glow, the world's "lights" without real lights. */
   lanternPaper: std("#FFEBC8", 0.9, { emissive: "#FFBE62", emissiveIntensity: 0.95 }),
 } as const;

@@ -98,36 +98,39 @@ export default function WorldHud(p: HudProps) {
           {!p.sequence && p.side}
         </div>
 
-        <div
-          role="group"
-          aria-label={copy.avatarLabel}
-          className="pointer-events-auto flex items-center gap-1 rounded-full bg-charcoal/85 p-1 text-xs text-ivory sm:ps-3"
-        >
-          <span className="hidden pe-1 font-semibold sm:inline">{copy.avatarLabel}</span>
-          {(Object.keys(AVATARS) as AvatarId[]).map((id) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={p.avatar === id}
-              onClick={(e) => {
-                p.onAvatar(id);
-                // Keep keyboard focus off the button so WASD stays with the scene.
-                e.currentTarget.blur();
-              }}
-              className={`min-h-9 rounded-full px-4 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow ${
-                p.avatar === id ? "bg-klovers-yellow text-charcoal" : "text-ivory hover:bg-ivory/10"
-              }`}
-            >
-              {AVATARS[id].name[p.lang]}
-            </button>
-          ))}
+        <div className="flex flex-col items-end gap-2">
+          <div
+            role="group"
+            aria-label={copy.avatarLabel}
+            className="pointer-events-auto flex items-center gap-1 rounded-full bg-charcoal/85 p-1 text-xs text-ivory sm:ps-3"
+          >
+            <span className="hidden pe-1 font-semibold sm:inline">{copy.avatarLabel}</span>
+            {(Object.keys(AVATARS) as AvatarId[]).map((id) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={p.avatar === id}
+                onClick={(e) => {
+                  p.onAvatar(id);
+                  // Keep keyboard focus off the button so WASD stays with the scene.
+                  e.currentTarget.blur();
+                }}
+                className={`min-h-9 rounded-full px-4 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow ${
+                  p.avatar === id ? "bg-klovers-yellow text-charcoal" : "text-ivory hover:bg-ivory/10"
+                }`}
+              >
+                {AVATARS[id].name[p.lang]}
+              </button>
+            ))}
+          </div>
+          {/* Admin preview label: small, at the edge — never over the view. */}
+          {p.preview && (
+            <p className="rounded-full border border-klovers-yellow/50 bg-charcoal/70 px-2.5 py-0.5 text-[11px] font-semibold text-ivory/90">{copy.previewNote}</p>
+          )}
         </div>
       </div>
 
       <div className="mx-auto mt-2 flex flex-col items-center gap-2">
-        {p.preview && (
-          <p className="rounded-full border border-klovers-yellow/60 bg-charcoal/85 px-3 py-1 text-xs font-semibold text-ivory">{copy.previewNote}</p>
-        )}
         {p.landscapeTip && (
           <div className="pointer-events-auto flex max-w-sm items-center justify-between gap-3 rounded-2xl bg-charcoal/90 px-4 py-2.5 text-sm text-ivory">
             <span>{copy.landscapeTip}</span>

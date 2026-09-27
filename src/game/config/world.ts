@@ -58,7 +58,7 @@ export const CAMERA = {
    * third, and most of the frame is the place ahead. (With the old close,
    * look-far-ahead setting the feet fell below the frame.)
    */
-  distance: 6.4,
+  distance: 7.1,
   minDistance: 3.2,
   maxDistance: 9.5,
   /** Height of the point the camera looks at, above the player's feet. */
@@ -69,9 +69,15 @@ export const CAMERA = {
   minPitch: -0.08,
   maxPitch: 0.6,
   /** A low adventure angle: the horizon sits just above the middle. */
-  startPitch: 0.14,
+  startPitch: 0.15,
   mouseSensitivity: 0.0028,
   followSharpness: 14,
+  /**
+   * Over-the-shoulder offset (metres to the camera's right): the learner
+   * stands a little left of centre and the way ahead opens beside them,
+   * instead of the learner covering the room's landmark.
+   */
+  shoulder: 0.6,
   /** Keeps the camera this far from walls so it never clips through. */
   wallPadding: 0.35,
   fov: 52,
@@ -128,7 +134,7 @@ export const PROPS = {
   ],
   /** Flower clumps round the egg platform and along the halls. */
   flowers: [
-    [-2.5, -1.6, 1.15], [2.5, -1.6, 1.15], [-2.6, 1.55, 1.1], [2.2, 2.0, 1.0],
+    [-2.5, -1.6, 1.15], [2.5, -1.6, 1.15], [-4.2, 2.1, 1.0], [4.2, 2.1, 1.0],
     [-10.3, 4.4, 1.2], [10.3, 5.0, 1.2], [10.3, -5.3, 1.1], [-10.3, -3.2, 1.1],
   ] as [number, number, number][],
   /** Notice board (게시판) against the east hall. */
