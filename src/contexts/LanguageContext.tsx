@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/tracking";
+import { arabicTwinOf, englishTwinOf, isArabicUrl } from "@/lib/arabicRoutes";
 
 type Language = "en" | "ar";
 
@@ -12,10 +13,15 @@ type Language = "en" | "ar";
  * with hreflang. Every other page still follows the visitor's saved choice.
  */
 const AR_HOME = "/ar";
-const EN_HOME = "/";
 
+/**
+ * 27 Sep 2026 (GEO-03): six more pages have an Arabic URL ("/ar/pricing" etc.,
+ * see src/lib/arabicRoutes.ts). Every Arabic URL is Arabic whatever was saved,
+ * exactly like /ar.
+ */
 const onArabicHome = (): boolean =>
-  typeof window !== "undefined" && window.location.pathname === AR_HOME;
+  typeof window !== "undefined" &&
+  (window.location.pathname === AR_HOME || isArabicUrl(window.location.pathname));
 
 /**
  * Move between the two homepage URLs without a reload. The LanguageProvider
@@ -53,6 +59,8 @@ function getPluralCategory(count: number, lang: Language): PluralCategory {
 interface LanguageContextType {
   language: Language;
   toggleLanguage: () => void;
+  /** Set the language without moving URL (used by LanguageUrlSync). */
+  setLanguage: (lang: Language) => void;
   t: (sectionOrPath: string, key?: string) => string;
   tArray: (sectionOrPath: string, key?: string) => any[];
   /**
@@ -138,10 +146,14 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     window.gtag?.("set", "user_properties", { site_language: language });
   }, [language]);
 
-  // Back/forward onto /ar keeps the page Arabic.
+  // Back/forward onto an Arabic URL shows Arabic; back onto the English twin
+  // of a paired page shows English (this also ends the 24 Sep quirk where Back
+  // from /ar to / stayed Arabic).
   useEffect(() => {
     const onPop = () => {
+      const path = window.location.pathname;
       if (onArabicHome()) setLanguage("ar");
+      else if (arabicTwinOf(path)) setLanguage("en");
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -215,8 +227,10 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     const path = window.location.pathname;
     track.ga("language_switched", { from, to, page: path });
     setLanguage(to);
-    if (to === "ar" && path === EN_HOME) goTo(AR_HOME);
-    else if (to === "en" && path === AR_HOME) goTo(EN_HOME);
+    // 27 Sep 2026: every paired page, not only the homepage ("/" and "/ar"
+    // are the first entry of arabicTwinOf / englishTwinOf).
+    const twin = to === "ar" ? arabicTwinOf(path) : englishTwinOf(path);
+    if (twin) goTo(twin);
   };
 
   const resolve = (sectionOrPath: string, key?: string): any => {
@@ -275,7 +289,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t, tArray, tPlural, tInterpolate }}>
+    <LanguageContext.Provider value={{ language, toggleLanguage, setLanguage, t, tArray, tPlural, tInterpolate }}>
       {children}
     </LanguageContext.Provider>
   );

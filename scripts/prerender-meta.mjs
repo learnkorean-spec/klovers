@@ -45,6 +45,7 @@ import {
   TOPIK_BODY_HTML,
   WELCOME_BACK_BODY_HTML,
 } from "./lib/marketing-bodies.mjs";
+import { ARABIC_PAGES, ARABIC_FAQ, arabicTwinOf } from "./lib/arabic-pages.mjs";
 import {
   HTML_TAG_PATTERN,
   languageOf,
@@ -386,7 +387,7 @@ const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
 const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
       <h1>التحدث بالكورية من أول حصة مباشرة</h1>
       <p>حصص لغة كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، ومسار واضح من البداية حتى التحدث بثقة. تُقدَّم الحصص بالعربية أو بالإنجليزية.</p>
-      <p><a href="/free-trial">حجز حصة مجانية</a> أو <a href="/placement-test">إجراء اختبار تحديد المستوى المجاني</a> لمعرفة المستوى. تختلف أسعار المجموعات حسب البلد - <a href="/pricing">عرض الأسعار</a>.</p>
+      <p><a href="/ar/free-trial">حجز حصة مجانية</a> أو <a href="/ar/placement-test">إجراء اختبار تحديد المستوى المجاني</a> لمعرفة المستوى. تختلف أسعار المجموعات حسب البلد - <a href="/ar/pricing">عرض الأسعار</a>.</p>
       <h2>طريقة التدريس</h2>
       <ul>
         <li><strong>شرح واضح</strong> - تُشرح كل نقطة ببساطة، بالعربية أو بالإنجليزية.</li>
@@ -401,10 +402,10 @@ const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
         <li><a href="/review">تدريب</a> - مراجعة الكلمات بين الحصص.</li>
         <li><a href="/games">ألعاب لتعلّم الكورية</a> - تدريب مجاني على الهانغول والمفردات والقواعد.</li>
         <li><a href="/journey/before-korea">الثقافة</a> - حكاية كوريا من أول أسطورة حتى اليوم.</li>
-        <li><a href="/courses">مسار التعلّم</a> - الهانغول، ثم المستويات من ١ إلى ٦.</li>
+        <li><a href="/ar/courses">مسار التعلّم</a> - الهانغول، ثم المستويات من ١ إلى ٦.</li>
         <li><a href="/blog">المجلة</a> - مقالات عن الثقافة الكورية ونصائح للمذاكرة بالعربية والإنجليزية.</li>
       </ul>
-      <p><a href="/courses">الدورات</a> · <a href="/pricing">الأسعار</a> · <a href="/about">من نحن</a> · <a href="/faq">الأسئلة الشائعة</a> · <a href="/contact">التواصل</a></p>
+      <p><a href="/ar/courses">الدورات</a> · <a href="/ar/pricing">الأسعار</a> · <a href="/ar/about">من نحن</a> · <a href="/ar/faq">الأسئلة الشائعة</a> · <a href="/contact">التواصل</a></p>
     </div>`;
 
 // ── Courses / pricing / free-trial body fragments ─────────────────────────
@@ -967,6 +968,31 @@ try {
 
 
 // ── Head construction ───────────────────────────────────────────────────────
+
+// ── Arabic twins (GEO-03, 27 Sep 2026) ───────────────────────────────────────
+// Six marketing pages get their own Arabic URL, "/ar" + the English path, on
+// the model of the homepage pair: each English route gains the en/ar pair, and
+// an Arabic route is added with its own head (lang ar, Arabic title and
+// description) and its own Arabic body. Copy and the page list live in
+// scripts/lib/arabic-pages.mjs.
+for (const route of MARKETING_ROUTES) {
+  const ar = arabicTwinOf(route.path);
+  if (ar) route.alternates = { en: route.path, ar };
+}
+for (const page of ARABIC_PAGES) {
+  const en = MARKETING_ROUTES.find((r) => r.path === page.path);
+  if (!en) throw new Error(`arabic-pages.mjs names ${page.path}, which has no English route here`);
+  MARKETING_ROUTES.push({
+    path: `/ar${page.path}`,
+    lang: "ar",
+    title: page.title,
+    description: page.description,
+    body: page.body,
+    alternates: { en: page.path, ar: `/ar${page.path}` },
+    ...(page.path === "/faq" ? { faq: ARABIC_FAQ } : {}),
+    ...(en.pageLd ? { pageLd: { ...en.pageLd, inLanguage: "ar" } } : {}),
+  });
+}
 
 const routes = [...MARKETING_ROUTES, ...blogRoutes];
 
