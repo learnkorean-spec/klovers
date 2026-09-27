@@ -20,6 +20,16 @@
  * rows the letter reads, and the amount owed is stated as owed rather than as
  * what the package costs.
  *
+ * COUNTED AGAINST THE ACTIVE PACKAGE ONLY (28 Sep 2026)
+ * "Used" and "left" are counted from the sessions whose bundle_id is the active
+ * bundle. Counting every counted session ever made a renewed student read
+ * "13 of 12 taught · 0 left" on a package she had only just started.
+ *
+ * HER WEEKLY CLASS (28 Sep 2026)
+ * The weekly class time and the meeting link are shown here too, in the
+ * viewer's own time zone, as one block (start + duration) even when the class
+ * crosses midnight.
+ *
  * WHY THIS EXISTS SEPARATELY FROM StudentAttendanceRequest
  * That card is built on `enrollments` and unlocks only for a group enrolment
  * that is APPROVED and PAID. Every private student — the only students who have
@@ -28,13 +38,12 @@
  * `student_class_sessions`, which is what this reads.
  *
  * It renders nothing at all for a student who has no roster row, so it is safe
- * to mount beside the group card for everyone.
+ * to mount beside the group card for everyone. StudentDashboard also mounts it
+ * directly for a private student who has no group enrolment at all.
  *
  * VISUAL PASS (22 Sep 2026): the "Payment" card was restyled to the current
  * brand palette (see reference/BRAND_PALETTE_REFERENCE.md — yellow #FFFF00,
  * charcoal #2E2E2E, ivory #FFF9EC, plus the functional correct/wrong tokens).
- * Nothing about the data flow, RPCs or state below changed — only className
- * and icon treatment in the render.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,7 +52,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { AlertTriangle, CheckCircle2, Clock, Loader2, Paperclip, Wallet, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Loader2, Paperclip, XCircle } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props {
@@ -61,6 +71,7 @@ interface Bundle {
 
 interface SessionRow {
   id: string;
+  bundle_id: string | null;
   session_date: string;
   start_time: string | null;
   outcome: string;
@@ -78,12 +89,27 @@ interface Claim {
   receipt_path: string | null;
 }
 
+interface WeeklyClass {
+  id: string;
+  weekday: number; // 0 = Sunday, same as Date.getUTCDay()
+  start_time: string; // "HH:MM:SS" wall-clock in `timezone`
+  duration_minutes: number;
+  timezone: string;
+  effective_from: string | null;
+  effective_to: string | null;
+}
+
 // The value is what gets stored (Re reads it in MONEY IN); only the label is translated.
 const PAYMENT_METHODS = ["Vodafone Cash", "Fawry", "InstaPay", "Bank transfer", "Other"];
 const PAYMENT_METHOD_AR: Record<string, string> = {
+  "Vodafone Cash": "فودافون كاش",
+  Fawry: "فوري",
+  InstaPay: "إنستا باي",
   "Bank transfer": "تحويل بنكي",
   Other: "أخرى",
 };
+// Display only — the stored currency code never changes.
+const CURRENCY_AR: Record<string, string> = { USD: "دولار", EGP: "جنيه", EUR: "يورو", SAR: "ريال", AED: "درهم" };
 const PAY_NUMBER = "+20 101 000 3084";
 const WHATSAPP = "https://wa.me/201010003084";
 
@@ -100,6 +126,41 @@ function formatDate(iso: string, isAr = false): string {
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(isAr ? "ar-EG-u-nu-latn" : "en-GB", {
     weekday: "short", day: "numeric", month: "short", timeZone: "UTC",
   });
+}
+
+/** How far `tz` is ahead of UTC at instant `t`, in ms. */
+function tzOffsetMs(t: number, tz: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz, hourCycle: "h23",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+  }).formatToParts(new Date(t));
+  const get = (k: string) => Number(parts.find(p => p.type === k)?.value);
+  const asUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour") % 24, get("minute"), get("second"));
+  return asUtc - Math.floor(t / 1000) * 1000;
+}
+
+/**
+ * The next start of a weekly class as a real instant. The class is stored as
+ * the teacher's wall-clock time in her zone; the viewer's browser then shows it
+ * in her own zone. A class still running counts as "next" until it ends.
+ */
+function nextStart(c: WeeklyClass, now = Date.now()): Date | null {
+  const [hh, mm] = c.start_time.split(":").map(Number);
+  let today: string;
+  try {
+    today = new Intl.DateTimeFormat("en-CA", { timeZone: c.timezone }).format(new Date(now));
+  } catch {
+    return null; // unknown zone name — show nothing rather than a wrong time
+  }
+  const [y, m, d] = today.split("-").map(Number);
+  for (let i = 0; i < 8; i++) {
+    const wall = Date.UTC(y, m - 1, d + i, hh, mm);
+    if (new Date(wall).getUTCDay() !== c.weekday) continue;
+    const start = wall - tzOffsetMs(wall, c.timezone);
+    if (start + c.duration_minutes * 60_000 > now) return new Date(start);
+  }
+  return null;
 }
 
 /**
@@ -129,11 +190,14 @@ const StudentSelfService = ({ userId }: Props) => {
   const isAr = language === "ar";
   const tr = (en: string, ar: string) => (isAr ? ar : en);
   const methodLabel = (m: string) => (isAr ? PAYMENT_METHOD_AR[m] ?? m : m);
+  const currencyLabel = (c: string | null | undefined) => (c ? (isAr ? CURRENCY_AR[c] ?? c : c) : "");
 
   const [loading, setLoading] = useState(true);
   const [studentId, setStudentId] = useState<string | null>(null);
+  const [meetingUrl, setMeetingUrl] = useState<string | null>(null);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [weekly, setWeekly] = useState<WeeklyClass[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -149,14 +213,14 @@ const StudentSelfService = ({ userId }: Props) => {
   const load = useCallback(async () => {
     const { data: roster, error: rosterError } = await supabase
       .from("teacher_students")
-      .select("id")
+      .select("id, meeting_url")
       .eq("user_id", userId)
       .maybeSingle();
 
     if (rosterError) {
-            console.error("[StudentSelfService] failed to load roster:", rosterError);
-            setLoading(false);
-            return;
+      console.error("[StudentSelfService] failed to load roster:", rosterError);
+      setLoading(false);
+      return;
     }
 
     if (!roster?.id) {
@@ -165,8 +229,9 @@ const StudentSelfService = ({ userId }: Props) => {
       return;
     }
     setStudentId(roster.id);
+    setMeetingUrl((roster as { meeting_url?: string | null }).meeting_url ?? null);
 
-    const [bundleRes, sessionRes, claimRes] = await Promise.all([
+    const [bundleRes, sessionRes, classRes, claimRes] = await Promise.all([
       supabase
         .from("student_bundles")
         .select("id, label, total_classes, total_price, currency, paid_on")
@@ -177,10 +242,14 @@ const StudentSelfService = ({ userId }: Props) => {
         .maybeSingle(),
       supabase
         .from("student_class_sessions")
-        .select("id, session_date, start_time, outcome, counted, student_confirmed_at")
+        .select("id, bundle_id, session_date, start_time, outcome, counted, student_confirmed_at")
         .eq("student_id", roster.id)
         .order("session_date", { ascending: false })
-        .limit(20),
+        .limit(200),
+      supabase
+        .from("teacher_student_classes")
+        .select("id, weekday, start_time, duration_minutes, timezone, effective_from, effective_to")
+        .eq("student_id", roster.id),
       supabase
         .from("student_payment_claims")
         .select("id, amount, currency, paid_on, method, status, receipt_path")
@@ -192,6 +261,12 @@ const StudentSelfService = ({ userId }: Props) => {
     setBundle(b);
     if (b?.currency) setCurrency(b.currency);
     setSessions((sessionRes.data ?? []) as SessionRow[]);
+    const today = cairoToday();
+    setWeekly(
+      ((classRes.data ?? []) as WeeklyClass[]).filter(
+        c => (!c.effective_from || c.effective_from <= today) && (!c.effective_to || c.effective_to >= today),
+      ),
+    );
     setClaims((claimRes.data ?? []) as Claim[]);
     setLoading(false);
   }, [userId]);
@@ -199,15 +274,18 @@ const StudentSelfService = ({ userId }: Props) => {
   useEffect(() => { void load(); }, [load]);
 
   /**
-   * The classes she was actually charged for, oldest first — the same rows,
+   * The classes charged to the ACTIVE package, oldest first — the same rows,
    * in the same order, as the list in the payment letter. Ordered here rather
    * than in the query because the query is shared with the confirm strip
    * above, which wants the newest lesson first.
    */
   const taught = useMemo(
-    () => sessions.filter(s => s.counted).sort((a, b) => a.session_date.localeCompare(b.session_date)),
-    [sessions],
+    () => sessions
+      .filter(s => s.counted && (!bundle || s.bundle_id === bundle.id))
+      .sort((a, b) => a.session_date.localeCompare(b.session_date)),
+    [sessions, bundle],
   );
+  const allTaught = useMemo(() => sessions.filter(s => s.counted).length, [sessions]);
   const used = taught.length;
   const remaining = bundle ? Math.max(0, bundle.total_classes - used) : 0;
   const owes = !!bundle && !bundle.paid_on;
@@ -219,6 +297,18 @@ const StudentSelfService = ({ userId }: Props) => {
       s => s.session_date <= today && !s.counted && s.outcome === "scheduled"
     );
   }, [sessions]);
+
+  /** Each weekly class with its next real start, soonest first. */
+  const upcoming = useMemo(
+    () => weekly
+      .map(c => ({ c, start: nextStart(c) }))
+      .filter((x): x is { c: WeeklyClass; start: Date } => x.start !== null)
+      .sort((a, b) => a.start.getTime() - b.start.getTime()),
+    [weekly],
+  );
+  const locale = isAr ? "ar-EG-u-nu-latn" : "en-GB";
+  const fmtTime = (d: Date) => d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  const fmtDay = (d: Date) => d.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
 
   /** Opens the form on the figure she is being asked for — still editable, because a part payment is a real thing. */
   function openClaimForm() {
@@ -237,10 +327,10 @@ const StudentSelfService = ({ userId }: Props) => {
       return;
     }
     toast({
-      title: tr("Sent to your teacher", "تم الإرسال للمعلّمة"),
+      title: tr("Sent to your teacher", "تم الإرسال إلى المعلّمة"),
       description: tr(
         "She confirms it, and then it comes off your balance.",
-        "بعد تأكيدها تُخصم الحصة من رصيدك.",
+        "بعد تأكيد المعلّمة تُخصم الحصة من الرصيد.",
       ),
     });
     void load();
@@ -249,13 +339,13 @@ const StudentSelfService = ({ userId }: Props) => {
   async function submitClaim() {
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) {
-      toast({ title: tr("Enter the amount you paid", "اكتب المبلغ الذي دفعته"), variant: "destructive" });
+      toast({ title: tr("Enter the amount you paid", "يُرجى كتابة المبلغ المدفوع"), variant: "destructive" });
       return;
     }
     if (receipt && receipt.size > MAX_RECEIPT_BYTES) {
       toast({
         title: tr("That image is too large", "الصورة كبيرة جدًا"),
-        description: tr("Send one under 8 MB.", "ابعتي صورة أقل من 8 ميجا."),
+        description: tr("Send one under 8 MB.", "يُرجى إرسال صورة أصغر من 8 ميغابايت."),
         variant: "destructive",
       });
       return;
@@ -274,7 +364,7 @@ const StudentSelfService = ({ userId }: Props) => {
       if (uploadError) {
         setBusy(null);
         toast({
-          title: tr("The image did not send", "الصورة ماتبعتتش"),
+          title: tr("The image did not send", "تعذّر إرسال الصورة"),
           description: uploadError.message,
           variant: "destructive",
         });
@@ -319,25 +409,50 @@ const StudentSelfService = ({ userId }: Props) => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Clock className="h-5 w-5" />
+            <KloverIcon name="calendar-check" className="h-7 w-7" />
             {tr("My lessons", "حصصي")}
           </CardTitle>
           {bundle && (
             <p className="text-sm text-muted-foreground">
               {tr(
                 `${used} of ${bundle.total_classes} taught · ${remaining} left`,
-                `اتعمل ${used} من ${bundle.total_classes} · الباقي ${remaining}`,
+                `المُنجَز ${used} من ${bundle.total_classes} · المتبقي ${remaining}`,
               )}
-              {bundle.label ? ` · ${bundle.label}` : ""}
+              {bundle.label && !isAr ? ` · ${bundle.label}` : ""}
             </p>
           )}
         </CardHeader>
         <CardContent className="space-y-3">
+          {/* The weekly class, in the viewer's own time — one block, even across midnight. */}
+          {upcoming.length > 0 && (
+            <div className="space-y-2 rounded-lg border bg-ivory p-3 text-charcoal dark:bg-card dark:text-foreground">
+              <p className="text-sm font-medium">{tr("Next class", "الحصة القادمة")}</p>
+              {upcoming.map(({ c, start }) => {
+                const end = new Date(start.getTime() + c.duration_minutes * 60_000);
+                return (
+                  <p key={c.id} className="text-sm">
+                    {fmtDay(start)} · <span dir="ltr" className="inline-block whitespace-nowrap">{fmtTime(start)} – {fmtTime(end)}</span>
+                  </p>
+                );
+              })}
+              <p className="text-xs text-muted-foreground">
+                {tr("Shown in your local time.", "المواعيد بالتوقيت المحلي للجهاز.")}
+              </p>
+              {meetingUrl && (
+                <Button asChild size="sm" className="w-full sm:w-auto">
+                  <a href={meetingUrl} target="_blank" rel="noreferrer">
+                    {tr("Join the class", "الانضمام إلى الحصة")}
+                  </a>
+                </Button>
+              )}
+            </div>
+          )}
+
           {toConfirm.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {tr(
                 "Nothing waiting. After a lesson, it appears here to confirm.",
-                "لا يوجد شيء بانتظارك. بعد كل حصة تظهر هنا لتأكيدها.",
+                "لا يوجد ما ينتظر التأكيد. بعد كل حصة تظهر هنا لتأكيدها.",
               )}
             </p>
           ) : (
@@ -351,7 +466,7 @@ const StudentSelfService = ({ userId }: Props) => {
                   <p className="text-xs text-muted-foreground">
                     {s.student_confirmed_at
                       ? tr("Sent — waiting for your teacher", "تم الإرسال — بانتظار المعلّمة")
-                      : tr("Did this lesson happen?", "هل حضرت هذه الحصة؟")}
+                      : tr("Did this lesson happen?", "هل تمّ حضور هذه الحصة؟")}
                   </p>
                 </div>
                 {s.student_confirmed_at ? (
@@ -361,7 +476,7 @@ const StudentSelfService = ({ userId }: Props) => {
                   </Badge>
                 ) : (
                   <Button size="sm" disabled={busy === s.id} onClick={() => void confirmSession(s.id)}>
-                    {busy === s.id ? <Loader2 className="h-4 w-4 animate-spin" /> : tr("I attended", "حضرت")}
+                    {busy === s.id ? <Loader2 className="h-4 w-4 animate-spin" /> : tr("I attended", "تمّ الحضور")}
                   </Button>
                 )}
               </div>
@@ -371,29 +486,38 @@ const StudentSelfService = ({ userId }: Props) => {
           {/* The dates, not the count. This is the list the payment letter
               quotes; a student asked for money should be able to read the same
               rows the ask was built from. */}
-          {taught.length > 0 && (
+          {(taught.length > 0 || allTaught > 0) && (
             <div className="rounded-lg border p-3">
               <p className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
                 <CheckCircle2 className="h-4 w-4" />
-                {tr("Lessons counted", "الحصص المحسوبة")}
+                {tr("Lessons counted on this package", "الحصص المحسوبة في هذه الباقة")}
               </p>
-              <ul className="space-y-0.5">
-                {taught.map(s => (
-                  <li key={s.id} className="text-sm text-muted-foreground">
-                    {formatDate(s.session_date, isAr)}
-                  </li>
-                ))}
-              </ul>
+              {taught.length > 0 ? (
+                <ul className="space-y-0.5">
+                  {taught.map(s => (
+                    <li key={s.id} className="text-sm text-muted-foreground">
+                      {formatDate(s.session_date, isAr)}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {tr("None yet on this package.", "لا توجد حصص محسوبة في هذه الباقة بعد.")}
+                </p>
+              )}
               {bundle && (
                 <p className="mt-2 text-xs text-muted-foreground">
                   {remaining === 0
-                    ? tr("This package is fully used.", "الباقة اتستخدمت بالكامل.")
+                    ? tr("This package is fully used.", "استُخدمت الباقة بالكامل.")
                     : tr(
                         `${remaining} lesson${remaining === 1 ? "" : "s"} left on this package.`,
-                        `الباقي في الباقة: ${remaining} ${remaining === 1 ? "حصة" : "حصص"}.`,
+                        `المتبقي في الباقة: ${remaining} ${remaining === 1 ? "حصة" : "حصص"}.`,
                       )}
                 </p>
               )}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {tr(`${allTaught} lessons in total since the start.`, `إجمالي الحصص منذ البداية: ${allTaught}.`)}
+              </p>
             </div>
           )}
         </CardContent>
@@ -402,9 +526,7 @@ const StudentSelfService = ({ userId }: Props) => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-klovers-yellow text-charcoal">
-              <Wallet className="h-4 w-4" aria-hidden="true" />
-            </span>
+            <KloverIcon name="game-lucky-bag" className="h-7 w-7" />
             {tr("Payment", "الدفع")}
           </CardTitle>
         </CardHeader>
@@ -417,7 +539,7 @@ const StudentSelfService = ({ userId }: Props) => {
                 <p className="text-sm font-medium">
                   {tr(
                     `${bundle.total_price} ${bundle.currency ?? ""} due for this package.`,
-                    `المستحق: ${bundle.total_price} ${bundle.currency ?? ""}`,
+                    `المستحق: ${bundle.total_price} ${currencyLabel(bundle.currency)}`,
                   )}
                 </p>
               </div>
@@ -425,7 +547,7 @@ const StudentSelfService = ({ userId }: Props) => {
               <div className="flex items-center gap-2 rounded-lg border border-correct/30 bg-correct/10 p-3 text-correct">
                 <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <p className="text-sm font-medium">
-                  {tr("Received — thank you.", "تم الاستلام — شكرًا لك.")}
+                  {tr("Received — thank you.", "تم الاستلام — شكرًا.")}
                 </p>
               </div>
             )
@@ -436,11 +558,11 @@ const StudentSelfService = ({ userId }: Props) => {
             <p className="text-muted-foreground">
               {tr("Vodafone Cash or Fawry on", "فودافون كاش أو فوري على الرقم")}{" "}
               <span className="inline-block whitespace-nowrap font-semibold" dir="ltr">{PAY_NUMBER}</span>.{" "}
-              {tr("For a bank transfer, ask on", "للتحويل البنكي، اسألنا على")}{" "}
+              {tr("For a bank transfer, ask on", "للتحويل البنكي، يمكن السؤال عبر")}{" "}
               <a href={WHATSAPP} target="_blank" rel="noreferrer" className="font-semibold underline">
                 {tr("WhatsApp", "واتساب")}
               </a>{" "}
-              {tr("and we will send the details.", "وسنرسل لك التفاصيل.")}
+              {tr("and we will send the details.", "وتُرسَل التفاصيل.")}
             </p>
           </div>
 
@@ -450,7 +572,7 @@ const StudentSelfService = ({ userId }: Props) => {
               className="h-auto min-h-10 w-full whitespace-normal"
               onClick={openClaimForm}
             >
-              {tr("I have paid — upload the receipt", "دفعت — ارفعي صورة الإيصال")}
+              {tr("I have paid — upload the receipt", "تمّ الدفع — رفع صورة الإيصال")}
             </Button>
           ) : (
             <div className="space-y-2 rounded-lg border bg-ivory p-3 dark:bg-card">
@@ -548,7 +670,7 @@ const StudentSelfService = ({ userId }: Props) => {
                 return (
                   <div key={c.id} className="flex items-center justify-between gap-2 text-xs">
                     <span className="truncate text-muted-foreground">
-                      {c.amount} {c.currency} · {formatDate(c.paid_on, isAr)} · {methodLabel(c.method)}
+                      {c.amount} {currencyLabel(c.currency)} · {formatDate(c.paid_on, isAr)} · {methodLabel(c.method)}
                       {c.receipt_path && (
                         <Paperclip className="ms-1 inline h-3 w-3" aria-hidden="true" />
                       )}

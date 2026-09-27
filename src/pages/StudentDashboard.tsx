@@ -17,6 +17,7 @@ import MyTrialClassCard from "@/components/MyTrialClassCard";
 import StudentPrimaryAction from "@/components/StudentPrimaryAction";
 import type { PrimarySession } from "@/components/StudentPrimaryAction";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
+import StudentSelfService from "@/components/StudentSelfService";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { useGamification } from "@/hooks/useGamification";
@@ -135,7 +136,7 @@ const AttendanceHistoryCard = ({ dates }: { dates: AttendanceDate[] }) => {
                 <div key={`${d.date}-${i}`} className="flex items-center justify-between p-2 rounded-lg border border-border">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground w-5 text-end">{i + 1}.</span>
-                    <CalendarCheck className="h-4 w-4 text-amber-600" />
+                    <CalendarCheck className="h-4 w-4 text-charcoal dark:text-foreground" />
                     <span className="text-sm font-medium text-foreground">
                       {new Date(d.date + "T00:00:00").toLocaleDateString(dateLocale, { day: "2-digit", month: "2-digit", year: "numeric" })}
                     </span>
@@ -238,6 +239,10 @@ const StudentDashboard = () => {
   const [profileLevel, setProfileLevel] = useState("");
   const [placementTest, setPlacementTest] = useState<PlacementTestResult | null>(null);
   const [hasNoData, setHasNoData] = useState(false);
+  // A private (1:1) student lives in teacher_students + student_bundles, not
+  // enrollments. Without this flag she counted as "no data" and saw the
+  // Enroll Now card instead of her own lessons and package.
+  const [isPrivate, setIsPrivate] = useState(false);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [latestEnrollmentId, setLatestEnrollmentId] = useState("");
   const [attendanceDates, setAttendanceDates] = useState<AttendanceDate[]>([]);
@@ -356,6 +361,13 @@ const StudentDashboard = () => {
       if (ptData) {
         setPlacementTest(ptData as PlacementTestResult);
       }
+
+      const { data: rosterRow } = await supabase
+        .from("teacher_students")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      setIsPrivate(Boolean(rosterRow?.id));
 
       const { data: enrollmentData } = await supabase
         .from("enrollments")
@@ -700,7 +712,7 @@ const StudentDashboard = () => {
       onClick={handleProfileBadgeClick}
       title={profileBadgeHint}
       aria-label={profileBadgeHint}
-      className="h-11 w-11 rounded-full bg-[#b0245f] text-white flex items-center justify-center font-display font-bold text-lg shrink-0 select-none ring-2 ring-[#b0245f]/40 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground"
+      className="h-11 w-11 rounded-full bg-klovers-yellow text-charcoal flex items-center justify-center font-display font-bold text-lg shrink-0 select-none ring-2 ring-charcoal/20 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground"
     >
       {displayName?.[0]?.toUpperCase() ?? "K"}
     </button>
@@ -726,6 +738,11 @@ const StudentDashboard = () => {
       />
       <MyTrialClassCard />
     </section>
+  ) : isPrivate ? (
+    <section aria-labelledby="dash-private-title" className="min-w-0 space-y-3">
+      <h2 id="dash-private-title" className="sr-only">{dc("nextClassTitle")}</h2>
+      <StudentSelfService userId={userId} />
+    </section>
   ) : pendingLatest ? (() => {
     const pending = pendingLatest;
     const label =
@@ -736,10 +753,10 @@ const StudentDashboard = () => {
           : t("dashboardPage.pendingLabel");
       return (
         <div className="space-y-6">
-          <Card className="border-amber-300/60 bg-gradient-to-br from-amber-50 to-transparent">
+          <Card className="border-charcoal/20 bg-ivory dark:bg-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-amber-600" /> {t("dashboardPage.enrollmentPendingTitle")}
+                <AlertCircle className="h-5 w-5 text-charcoal dark:text-foreground" /> {t("dashboardPage.enrollmentPendingTitle")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -755,7 +772,7 @@ const StudentDashboard = () => {
       );
   })() : (
     <div className="space-y-3">
-      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent ring-1 ring-black/10">
+      <Card className="border-charcoal/20 bg-ivory dark:bg-card ring-1 ring-charcoal/10">
         <CardContent className="pt-6 pb-6 space-y-4">
           <div className="flex items-start gap-4">
             <BrandIcon name="open-book" className="h-12 w-12 sm:h-14 sm:w-14" />
@@ -765,11 +782,6 @@ const StudentDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="flex -space-x-1 rtl:space-x-reverse">
-              {["🇪🇬","🇸🇦","🇦🇪","🇯🇴"].map((flag, i) => (
-                <span key={i} className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">{flag}</span>
-              ))}
-            </div>
             <span>{/* 200+ = students Reham has taught herself (the one public figure on record). */}
             {tInterpolate(t("dashboardPage.joinStudents"), { count: 200 })}</span>
           </div>
@@ -827,10 +839,10 @@ const StudentDashboard = () => {
               const remaining = enrollments[0].sessions_total - attendanceDates.length;
               if (remaining <= 2) {
                 alerts.push(
-                  <div key="sessions" className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/60 rounded-xl px-3 py-2 text-sm">
-                    <span className="text-base">📦</span>
-                    <span className="flex-1 font-medium text-blue-900 dark:text-blue-300">{remaining <= 0 ? t("dashboardPage.packageFinished") : tInterpolate(t("dashboardPage.sessionsLeftAlert"), { count: remaining })}</span>
-                    <Button size="sm" className="min-h-11 text-xs bg-blue-600 hover:bg-blue-700 text-white shrink-0 px-3" onClick={() => navigate("/enroll-now")}>{t("dashboardPage.renewArrow")}</Button>
+                  <div key="sessions" className="flex items-center gap-2 bg-ivory dark:bg-card border border-charcoal/20 rounded-xl px-3 py-2 text-sm">
+                    <KloverIcon name="calendar-check" className="h-6 w-6 shrink-0" />
+                    <span className="flex-1 font-medium text-charcoal dark:text-foreground">{remaining <= 0 ? t("dashboardPage.packageFinished") : tInterpolate(t("dashboardPage.sessionsLeftAlert"), { count: remaining })}</span>
+                    <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal shrink-0 px-3" onClick={() => navigate("/enroll-now")}>{t("dashboardPage.renewArrow")}</Button>
                   </div>
                 );
               }
@@ -945,7 +957,7 @@ const StudentDashboard = () => {
                     const due = Math.round(extra * enrollment.unit_price);
                     const curr = enrollment.currency === "EGP" ? t("dashboardPage.currencyEgp") : t("dashboardPage.currencyUsd");
                     return (
-                      <Card className={remaining <= 0 && totalUsed > 0 ? "border-green-500 border-2" : ""}>
+                      <Card className={remaining <= 0 && totalUsed > 0 ? "border-klovers-green border-2" : ""}>
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <CardTitle className="text-lg flex items-center gap-2 flex-wrap min-w-0">
@@ -978,7 +990,7 @@ const StudentDashboard = () => {
                             </div>
                             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-amber-500" : "bg-amber-400"}`}
+                                className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-klovers-yellow" : "bg-klovers-green"}`}
                                 style={{ width: `${Math.min(100, (totalUsed / enrollment.sessions_total) * 100)}%` }}
                               />
                             </div>
@@ -1046,7 +1058,7 @@ const StudentDashboard = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank', 'noopener,noreferrer')}
-                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
+                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center"
                   >
                     <KloverIcon name="growth-chart" className="h-10 w-10 sm:h-12 sm:w-12" />
                     <span className="text-sm font-semibold text-foreground">{t("dashboardPage.progressReport")}</span>
@@ -1054,7 +1066,7 @@ const StudentDashboard = () => {
                   </button>
                   <button
                     onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank', 'noopener,noreferrer')}
-                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-amber-300 hover:bg-amber-50 transition-all text-center"
+                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center"
                   >
                     <KloverIcon name="badge-blossom" className="h-10 w-10 sm:h-12 sm:w-12" />
                     <span className="text-sm font-semibold text-foreground">{t("dashboardPage.certificate")}</span>
@@ -1153,14 +1165,14 @@ const StudentDashboard = () => {
             {userId && (() => {
               const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
               return (
-                <div className="flex flex-wrap items-center gap-3 bg-violet-50/80 dark:bg-violet-950/20 border border-violet-200/50 dark:border-violet-800/40 rounded-xl px-4 py-2.5">
+                <div className="flex flex-wrap items-center gap-3 bg-ivory dark:bg-card border border-charcoal/20 rounded-xl px-4 py-2.5">
                   <KloverIcon name="student-girl-heart" className="h-8 w-8 sm:h-9 sm:w-9" />
                   <span className="flex-1 text-sm text-muted-foreground min-w-0 break-words">
                     <strong className="text-foreground">{t("dashboardPage.referTitle")}</strong> · {t("dashboardPage.referEarn")}
-                    {referralCount > 0 && <> · <span className="text-violet-600 font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}
+                    {referralCount > 0 && <> · <span className="text-charcoal dark:text-foreground font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}
                   </span>
                   <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(refLink); toast({ title: t("dashboardPage.linkCopied") }); }}
-                    className="shrink-0 gap-1 border-violet-300 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/30 min-h-11 text-xs px-3">
+                    className="shrink-0 gap-1 border-charcoal/30 text-charcoal dark:text-foreground hover:bg-klovers-yellow/40 min-h-11 text-xs px-3">
                     <Copy className="h-3 w-3" /> {t("dashboardPage.copyLink")}
                   </Button>
                 </div>
@@ -1189,7 +1201,7 @@ const StudentDashboard = () => {
                         <span className="font-semibold text-foreground">{t("dashboardPage.weeklyXp")}</span>
                         <div className="flex items-center gap-1.5">
                           <span className="text-muted-foreground text-xs">{weeklyXp}/{WEEKLY_GOAL}</span>
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pct >= 100 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-primary text-foreground"}`}>{pct}%</span>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pct >= 100 ? "bg-klovers-green text-charcoal" : "bg-primary text-foreground"}`}>{pct}%</span>
                         </div>
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
