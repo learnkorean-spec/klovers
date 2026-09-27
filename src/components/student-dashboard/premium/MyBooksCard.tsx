@@ -37,6 +37,7 @@ const COVER_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/p
 const COVERS: Record<BookId, string> = {
   "hangul-a0": `${COVER_BASE}/hangul-a0-cover.webp`,
   "hangul-a0-en": `${COVER_BASE}/hangul-a0-en-cover.webp`,
+  "book-1": `${COVER_BASE}/book-1-cover.webp`,
   "trial-guide-ar": `${COVER_BASE}/trial-guide-ar-cover.webp`,
   "trial-guide-en": `${COVER_BASE}/trial-guide-en-cover.webp`,
 };

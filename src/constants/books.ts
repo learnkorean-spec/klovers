@@ -31,6 +31,15 @@ export const BOOKS = {
     subtitleAr: "تمهيد الهانغُل · 4 حصص",
     subtitleEn: "Hangul primer · 4 classes",
   },
+  "book-1": {
+    path: "books/book-1.pdf",
+    fileName: "Klovers-Level-1-Korean.pdf",
+    badge: "1",
+    titleAr: "الكورية: أول محادثة — المستوى 1",
+    titleEn: "Korean: First Conversation — Level 1 (Arabic edition)",
+    subtitleAr: "سوق المفردات · 24 حصة",
+    subtitleEn: "Vocabulary Market · 24 classes",
+  },
   "trial-guide-ar": {
     path: "books/trial-guide-ar.pdf",
     fileName: "Klovers-Trial-Guide-AR.pdf",
