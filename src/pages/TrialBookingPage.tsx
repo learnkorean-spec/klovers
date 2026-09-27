@@ -27,6 +27,8 @@ import KloverIcon from "@/components/KloverIcon";
 import { countryLabel } from "@/lib/countryNames";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
+import { buildCountryLocalPrices, getTierForCountry, tierPrices } from "@/lib/stripePrices";
+import { toArabicDigits } from "@/lib/trustFigures";
 
 // ── Country / pricing helpers ─────────────────────────────────────────────────
 
@@ -52,26 +54,41 @@ const TZ_TO_COUNTRY: Record<string, string> = {
   "Asia/Tokyo": "Japan", "Asia/Seoul": "South Korea", "Asia/Shanghai": "China",
 };
 
-/** Country → starting group price for display on confirmation */
-const COUNTRY_PRICE: Record<string, string> = {
-  // Egypt — EGP
-  Egypt: "1,200 EGP/mo",
-  // Local Arab tier — $25
-  Morocco: "$25/mo", Tunisia: "$25/mo", Algeria: "$25/mo", Libya: "$25/mo",
-  Jordan: "$25/mo", Lebanon: "$25/mo", Iraq: "$25/mo", Syria: "$25/mo",
-  Sudan: "$25/mo", Yemen: "$25/mo",
-  // Regional tier — $40
-  Malaysia: "$40/mo", Indonesia: "$40/mo", Thailand: "$40/mo",
-  Vietnam: "$40/mo", Philippines: "$40/mo", India: "$40/mo",
-  Pakistan: "$40/mo", Brazil: "$40/mo", Mexico: "$40/mo",
-  Colombia: "$40/mo", Argentina: "$40/mo", Turkey: "$40/mo",
-  // Gulf + Western tier — $60
-  UAE: "$60/mo", "Saudi Arabia": "$60/mo", Qatar: "$60/mo",
-  Bahrain: "$60/mo", Oman: "$60/mo", Kuwait: "$60/mo",
-  "United States": "$60/mo", "United Kingdom": "$60/mo",
-  Germany: "$60/mo", France: "$60/mo", Canada: "$60/mo",
-  Australia: "$60/mo", Japan: "$60/mo", "South Korea": "$60/mo", China: "$60/mo",
+/**
+ * Starting group price per country, read from the same table the pricing page
+ * uses (@/lib/stripePrices): the country's own 1-month group price in its local
+ * currency where one exists, otherwise its tier's USD price — exactly what
+ * PricingSection shows for that country. The old hardcoded copy here showed
+ * Malaysia "$40/mo" while the pricing page showed 175 MYR.
+ */
+const countryLocalPrices = buildCountryLocalPrices();
+
+/** Arabic currency names, so the Arabic line stays in one script. */
+const CURRENCY_AR: Record<string, string> = {
+  EGP: "جنيه", USD: "دولار", MAD: "درهم مغربي", TND: "دينار تونسي", DZD: "دينار جزائري",
+  LYD: "دينار ليبي", JOD: "دينار أردني", IQD: "دينار عراقي", MYR: "رينجت", IDR: "روبية إندونيسية",
+  THB: "بات تايلاندي", VND: "دونغ فيتنامي", PHP: "بيزو فلبيني", INR: "روبية هندية", PKR: "روبية باكستانية",
+  BRL: "ريال برازيلي", MXN: "بيزو مكسيكي", COP: "بيزو كولومبي", TRY: "ليرة تركية", AED: "درهم إماراتي",
+  SAR: "ريال سعودي", QAR: "ريال قطري", BHD: "دينار بحريني", OMR: "ريال عُماني", KWD: "دينار كويتي",
+  GBP: "جنيه إسترليني", EUR: "يورو", CAD: "دولار كندي", AUD: "دولار أسترالي", JPY: "ين ياباني",
+  KRW: "وون كوري", CNY: "يوان صيني",
 };
+
+/** 1200 -> "١٬٢٠٠": Arabic-Indic digits with Arabic separators. */
+const arNumber = (n: number): string =>
+  toArabicDigits(n.toLocaleString("en-US")).replace(/,/g, "٬").replace(/\./g, "٫");
+
+/** Arabic city names for common timezones; anything else reads «بالتوقيت المحلي». */
+const TZ_CITY_AR: Record<string, string> = {
+  "Africa/Cairo": "القاهرة", "Asia/Riyadh": "الرياض", "Asia/Dubai": "دبي",
+  "Asia/Kuala_Lumpur": "كوالالمبور", "Asia/Bangkok": "بانكوك",
+  "Asia/Ho_Chi_Minh": "هو تشي منه", "Europe/London": "لندن",
+};
+
+function tzLabelAr(tz: string): string {
+  const city = TZ_CITY_AR[tz];
+  return city ? `بتوقيت ${city}` : "بالتوقيت المحلي";
+}
 
 const ALL_COUNTRIES = [
   "Algeria","Argentina","Australia","Bahrain","Brazil","Canada","China",
@@ -82,8 +99,15 @@ const ALL_COUNTRIES = [
   "Vietnam","Yemen",
 ];
 
-function getStartingPrice(country: string): string {
-  return COUNTRY_PRICE[country] ?? "$25/mo";
+function getStartingPrice(country: string, isAr: boolean): string {
+  const local = countryLocalPrices[country]?.group[0];
+  if (local) {
+    return isAr
+      ? `${arNumber(local.local)} ${CURRENCY_AR[local.currency] ?? local.currency} شهريًا`
+      : `${local.local.toLocaleString("en-US")} ${local.currency}/mo`;
+  }
+  const usd = tierPrices[getTierForCountry(country) ?? "local"].group[1];
+  return isAr ? `${arNumber(usd)} دولار شهريًا` : `$${usd}/mo`;
 }
 
 function guessCountryFromTz(): string {
@@ -302,7 +326,7 @@ const TrialBookingPage = () => {
       toast({
         title: language === "ar" ? "يُرجى كتابة الاسم والبريد" : "Add your name and email",
         description: language === "ar"
-          ? "نرسل رابط الحصة وتفاصيلها على بريدك."
+          ? "يُرسَل رابط الحصة وتفاصيلها إلى البريد الإلكتروني."
           : "We send the class link and details to your email.",
         variant: "destructive",
       });
@@ -616,7 +640,13 @@ const TrialBookingPage = () => {
     const localFormattedDate = localDate.toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
     // Friendly city name: "Asia/Kuala_Lumpur" → "Kuala Lumpur"
-    const tzCity = userTz.includes("/") ? userTz.split("/").pop()!.replace(/_/g, " ") : userTz;
+    // Arabic shows an Arabic city name or «بالتوقيت المحلي», never a Latin IANA id.
+    const tzCity = language === "ar"
+      ? tzLabelAr(userTz)
+      : (userTz.includes("/") ? userTz.split("/").pop()!.replace(/_/g, " ") : userTz);
+    const slotTzLabel = language === "ar"
+      ? tzLabelAr(SLOT_TZ)
+      : SLOT_TZ.split("/").pop()?.replace(/_/g, " ");
 
     // Show source-tz reference line only when the user is in a different timezone
     const isInSlotTz = userTz === SLOT_TZ;
@@ -641,7 +671,7 @@ const TrialBookingPage = () => {
                   </p>
                   {!isInSlotTz && (
                     <p className="text-[11px] text-muted-foreground/60">
-                      ({formattedDate} {bookingResult.start_time_12h} {SLOT_TZ.split("/").pop()?.replace(/_/g, " ")})
+                      ({formattedDate} {bookingResult.start_time_12h} {slotTzLabel})
                     </p>
                   )}
                 </div>
@@ -655,8 +685,8 @@ const TrialBookingPage = () => {
               {!user && (
                 <p className="text-muted-foreground mt-3 text-sm max-w-md mx-auto">
                   {language === "ar"
-                    ? "أرسلنا بريدًا فيه رابط الحصة وزر لتأكيد الحضور. ولتغيير الموعد، المراسلة متاحة عبر واتساب."
-                    : "We've emailed you the class link and a button to confirm you're coming. Need a different time? Message us on WhatsApp."}
+                    ? "ولتغيير الموعد، المراسلة متاحة عبر واتساب."
+                    : "Need a different time? Message us on WhatsApp."}
                 </p>
               )}
               <div className={user ? "mt-4 flex flex-wrap items-center justify-center gap-2" : "hidden"}>
@@ -695,7 +725,7 @@ const TrialBookingPage = () => {
                   </SelectContent>
                 </Select>
                 <span className="text-[11px] text-muted-foreground/70">
-                  → {getStartingPrice(selectedCountry)}
+                  → {getStartingPrice(selectedCountry, language === "ar")}
                 </span>
               </div>
 
@@ -797,8 +827,8 @@ const TrialBookingPage = () => {
                     <p className="font-semibold text-sm text-foreground">{t("trialBooking.peekPlansTitle")}</p>
                     <p className="text-xs text-muted-foreground">
                       {language === "ar"
-                        ? `حصص جماعية من ${getStartingPrice(selectedCountry)} · مجموعات صغيرة`
-                        : `Group classes from ${getStartingPrice(selectedCountry)} · small groups`}
+                        ? `حصص جماعية من ${getStartingPrice(selectedCountry, true)} · مجموعات صغيرة`
+                        : `Group classes from ${getStartingPrice(selectedCountry, false)} · small groups`}
                     </p>
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground rtl:rotate-180 group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
@@ -920,7 +950,7 @@ const TrialBookingPage = () => {
                 src="/assets/cluby/cluby-wave.webp"
                 width={314}
                 height={440}
-                alt={language === "ar" ? "كلوبي يلوّح لك مرحبًا" : "Cluby waving hello"}
+                alt={language === "ar" ? "كلوبي يلوّح بالترحيب" : "Cluby waving hello"}
                 className="h-16 md:h-24 w-auto shrink-0 drop-shadow-md"
                 loading="eager"
                 decoding="async"
@@ -940,7 +970,11 @@ const TrialBookingPage = () => {
             <div className="max-w-lg mx-auto bg-card border border-border rounded-3xl p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-foreground mb-1">{t("trialBooking.pickTimeTitle")}</h2>
               <p className="text-sm text-muted-foreground mb-6">
-                {t("trialBooking.pickTimeDesc")} <span className="opacity-70">({(Intl.DateTimeFormat().resolvedOptions().timeZone || "Africa/Cairo").replace(/_/g, " ")})</span>
+                {t("trialBooking.pickTimeDesc")}{language === "ar"
+                  ? (TZ_CITY_AR[Intl.DateTimeFormat().resolvedOptions().timeZone || ""]
+                      ? <span className="opacity-70"> ({tzLabelAr(Intl.DateTimeFormat().resolvedOptions().timeZone || "")})</span>
+                      : null)
+                  : <> <span className="opacity-70">({(Intl.DateTimeFormat().resolvedOptions().timeZone || "Africa/Cairo").replace(/_/g, " ")})</span></>}
               </p>
 
               {/* Inline level dropdown — only shown when profile/user_metadata has no level */}
@@ -1004,7 +1038,7 @@ const TrialBookingPage = () => {
                     />
                     <p className="text-xs text-muted-foreground">
                       {language === "ar"
-                        ? "لا حاجة لحساب أو كلمة مرور — نرسل رابط الحصة على بريدك."
+                        ? "لا حاجة لحساب أو كلمة مرور — يُرسَل رابط الحصة إلى البريد الإلكتروني."
                         : "No account or password needed — we email you the class link."}
                     </p>
                   </div>
@@ -1032,7 +1066,7 @@ const TrialBookingPage = () => {
                 />
                 <p className="text-xs text-muted-foreground">
                   {language === "ar"
-                    ? "نرسل رابط الحصة على البريد، ونستخدم الواتساب فقط إن لم يصلك."
+                    ? "يُرسَل رابط الحصة إلى البريد الإلكتروني، ويُستخدم واتساب فقط إن لم يصل البريد."
                     : "We email the class link, and use WhatsApp only if it does not arrive."}
                 </p>
               </div>

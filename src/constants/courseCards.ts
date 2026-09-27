@@ -10,7 +10,7 @@
  * truth, in a file too large for anyone to notice.
  *
  * So the cards are now DERIVED from `LEVELS`. The level number, the TOPIK
- * band, the CEFR band and the class count all come from `levels.ts`; only the
+ * band and the class count all come from `levels.ts`; only the
  * marketing sentences live here, keyed by the same canonical keys. Change a
  * level there and the card follows.
  *
@@ -19,8 +19,9 @@
  *  1. A level PREPARES a student toward a TOPIK band. It does not equal one,
  *     and it certainly does not certify one — see the hours note at the top
  *     of `levels.ts`. Every blurb reads "prepares you toward", never "=".
- *  2. CEFR is shown with "≈". The TOPIK↔CEFR table is a convenience, not a
- *     standard, and the TOPIK 6 = C2 end of it is disputed.
+ *  2. No CEFR band (A1–C2) is shown at all (brand rule, 27 Sep 2026): the
+ *     TOPIK↔CEFR table is a convenience, not a standard, and the claim was
+ *     dropped from every visible card.
  *
  * Hangul is a real four-class course a student can buy on its own — several
  * people ask for the alphabet and nothing else — so it carries its own
@@ -205,7 +206,7 @@ const monthsFor = (sessions: number): number => Math.round(sessions / 4);
 
 const eyebrowEn = (l: Level): string => {
   const n = l.sessions ?? 0;
-  if (l.topik === null) return `${n} classes · ${l.cefr}`;
+  if (l.topik === null) return `${n} classes · Foundation`;
   return `${n} classes · ${monthsFor(n)} months`;
 };
 
@@ -220,10 +221,10 @@ const eyebrowAr = (l: Level): string => {
  * and cannot accidentally be written as an equation in one card and not another.
  */
 const preparesEn = (l: Level): string =>
-  l.topik ? ` Prepares you toward TOPIK ${l.topik} (≈ CEFR ${l.cefr}).` : "";
+  l.topik ? ` Prepares you toward TOPIK ${l.topik}.` : "";
 
 const preparesAr = (l: Level): string =>
-  l.topik ? ` تجهيز لـ TOPIK ${l.topik} (يقابل تقريبًا ${l.cefr}).` : "";
+  l.topik ? ` تجهيز لـ TOPIK ${ar(l.topik)}.` : "";
 
 const levelCards: CourseCard[] = LEVELS.map((l) => {
   const copy = LEVEL_COPY[l.key];

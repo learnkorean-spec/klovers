@@ -46,7 +46,8 @@ const CoursesPage = () => {
         item: {
           "@type": "Course",
           name: level.name,
-          description: level.description_en,
+          // No CEFR band in public copy (brand rule, 27 Sep 2026).
+          description: level.description_en.replace(/\s*\(≈ CEFR [A-C][12]\)/, ""),
           inLanguage: ["ar", "en"],
           teaches: "Korean",
           provider: { "@id": "https://kloversegy.com/#organization" },

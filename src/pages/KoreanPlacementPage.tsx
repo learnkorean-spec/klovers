@@ -1196,7 +1196,7 @@ const KoreanPlacementPage = () => {
               ))}
 
               {micError && (
-                <p className="text-sm text-charcoal dark:text-foreground bg-[#FF4FD8]/15 border border-[#FF4FD8] rounded-lg p-3">{micError}</p>
+                <p className="text-sm text-charcoal dark:text-foreground bg-wrong-graphic/15 border border-wrong-graphic rounded-lg p-3">{micError}</p>
               )}
               {SEJONG1_SPEAKING.map((p) => {
                 const recorded = !!audio[p.id];

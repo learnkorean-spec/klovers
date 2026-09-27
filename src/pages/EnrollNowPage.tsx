@@ -50,6 +50,28 @@ allCountries.sort((a, b) => a.country.localeCompare(b.country));
 
 const durationClasses = DURATION_CLASSES;
 
+// Arabic currency names (same map as PricingSection), so an Arabic price reads
+// "١٬٢٠٠ جنيه" rather than "1,200 EGP".
+const CURRENCY_AR: Record<string, string> = {
+  EGP: "جنيه", USD: "دولار", MAD: "درهم مغربي", TND: "دينار تونسي", DZD: "دينار جزائري",
+  LYD: "دينار ليبي", JOD: "دينار أردني", IQD: "دينار عراقي", MYR: "رينجت", IDR: "روبية إندونيسية",
+  THB: "بات تايلاندي", VND: "دونغ فيتنامي", PHP: "بيزو فلبيني", INR: "روبية هندية", PKR: "روبية باكستانية",
+  BRL: "ريال برازيلي", MXN: "بيزو مكسيكي", COP: "بيزو كولومبي", TRY: "ليرة تركية", AED: "درهم إماراتي",
+  UAE: "درهم إماراتي", SAR: "ريال سعودي", QAR: "ريال قطري", BHD: "دينار بحريني", OMR: "ريال عُماني",
+  KWD: "دينار كويتي", GBP: "جنيه إسترليني", EUR: "يورو", CAD: "دولار كندي", AUD: "دولار أسترالي",
+  JPY: "ين ياباني", KRW: "وون كوري", CNY: "يوان صيني",
+};
+/** 1200 -> "١٬٢٠٠", 22.5 -> "٢٢٫٥": Arabic-Indic digits with Arabic separators. */
+const arNumber = (n: number): string =>
+  toArabicDigits(n.toLocaleString("en-US", { maximumFractionDigits: 2 })).replace(/,/g, "٬").replace(/\./g, "٫");
+/** Arabic money: whole pounds for EGP (as formatMoney does), no trailing ".00". */
+const formatMoneyAr = (amount: number, currency: string): string =>
+  `${arNumber(currency === "EGP" ? Math.round(amount) : Math.round(amount * 100) / 100)} ${CURRENCY_AR[currency] ?? currency}`;
+/** 1 -> "شهر واحد", 3 -> "٣ أشهر", 6 -> "٦ أشهر". */
+const monthsAr = (n: number): string => (n === 1 ? "شهر واحد" : n === 2 ? "شهران" : `${toArabicDigits(n)} ${n <= 10 ? "أشهر" : "شهرًا"}`);
+/** 4 -> "٤ حصص", 12 -> "١٢ حصة", 24 -> "٢٤ حصة" (3–10 plural, 11+ singular). */
+const classesAr = (n: number): string => (n === 1 ? "حصة واحدة" : n === 2 ? "حصتان" : `${toArabicDigits(n)} ${n <= 10 ? "حصص" : "حصة"}`);
+
 
 const EnrollNowPage = () => {
 
@@ -357,10 +379,15 @@ const EnrollNowPage = () => {
   const originalPrice = priced?.amount ?? null;
   const currency = priced?.currency ?? resolveCurrency(selectedCountry, timezone);
 
+  /** Price in the page language: "1,200 EGP" / "$25.00" in English, "١٬٢٠٠ جنيه" / "٢٥ دولار" in Arabic. */
+  const money = (amount: number, cur: string) => (isAr ? formatMoneyAr(amount, cur) : formatMoney(amount, cur));
+  const monthsLabel = (d: number) => (isAr ? monthsAr(d) : `${d} ${d === 1 ? t("enrollNow.month") : t("enrollNow.months")}`);
+  const classesLabel = (n: number) => (isAr ? classesAr(n) : `${n} ${t("enrollNow.classes")}`);
+
   /** One duration button's price label, in the student's own currency. */
   const priceLabelFor = (d: Duration) => {
     const p = getPriceFor(selectedCountry, timezone, classType, d);
-    return p ? formatMoney(p.amount, p.currency) : "—";
+    return p ? money(p.amount, p.currency) : "—";
   };
 
   const discountAmount = isFirstTime && originalPrice && !isEgypt ? Math.round(originalPrice * 0.1 * 100) / 100 : 0;
@@ -578,7 +605,7 @@ const EnrollNowPage = () => {
       return;
     }
     if (data.currency && data.currency !== (isEgypt ? "EGP" : "USD")) {
-      setPromoError(isAr ? `هذا الرمز صالح فقط للدفع بعملة ${data.currency}.` : `This code is only valid for ${data.currency} payments.`);
+      setPromoError(isAr ? `هذا الرمز صالح فقط للدفع بعملة ${CURRENCY_AR[data.currency] ?? data.currency}.` : `This code is only valid for ${data.currency} payments.`);
       setPromoLoading(false);
       return;
     }
@@ -823,8 +850,8 @@ const EnrollNowPage = () => {
                             duration === d ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                           }`}
                         >
-                          <p className="font-bold text-foreground">{d} {d === 1 ? t("enrollNow.month") : t("enrollNow.months")}</p>
-                          <p className="text-xs text-muted-foreground">{durationClasses[d]} {t("enrollNow.classes")}</p>
+                          <p className="font-bold text-foreground">{monthsLabel(d)}</p>
+                          <p className="text-xs text-muted-foreground">{classesLabel(durationClasses[d])}</p>
                           <p className="text-sm font-bold text-foreground mt-1">{priceLabelFor(d)}</p>
                         </button>
                       ))}
@@ -1076,35 +1103,35 @@ const EnrollNowPage = () => {
                 <div className="bg-muted rounded-lg p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
-                      {classType === "group" ? t("enrollNow.group") : t("enrollNow.private")} · {duration} {duration === 1 ? t("enrollNow.month") : t("enrollNow.months")} ({durationClasses[duration]} {t("enrollNow.classes")})
+                      {classType === "group" ? t("enrollNow.group") : t("enrollNow.private")} · {monthsLabel(duration)} ({classesLabel(durationClasses[duration])})
                     </span>
                     <span className={`font-bold text-foreground ${isFirstTime && !isEgypt ? "line-through text-muted-foreground" : ""}`}>
-                      {formatMoney(originalPrice, currency)}
+                      {money(originalPrice, currency)}
                     </span>
                   </div>
 
                   {isFirstTime && discountAmount > 0 && (
                     <div className="flex justify-between text-sm text-primary">
                       <span>{t("enrollNow.firstTimeDiscount")}</span>
-                      <span className="font-bold">-{formatMoney(discountAmount, currency)}</span>
+                      <span className="font-bold">-{money(discountAmount, currency)}</span>
                     </div>
                   )}
 
                   {promoApplied && promoDiscountAmount > 0 && (
                     <div className="flex justify-between text-sm font-semibold text-foreground">
                       <span className="flex items-center gap-1"><KloverIcon name="badge-blossom" className="h-3.5 w-3.5" /> {promoApplied.code}</span>
-                      <span className="font-bold">-{formatMoney(promoDiscountAmount, currency)}</span>
+                      <span className="font-bold">-{money(promoDiscountAmount, currency)}</span>
                     </div>
                   )}
 
                   <div className="border-t border-border pt-2 flex justify-between">
                     <span className="font-semibold text-foreground">{t("enrollNow.total")}</span>
-                    <span className="font-bold text-lg text-foreground">{formatMoney(finalPrice, currency)}</span>
+                    <span className="font-bold text-lg text-foreground">{money(finalPrice, currency)}</span>
                   </div>
 
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{durationClasses[duration]} {t("enrollNow.classesIncluded")}</span>
-                    <span>{formatMoney(finalPrice / durationClasses[duration], currency)}{t("enrollNow.perClass")}</span>
+                    <span>{isAr ? `${classesAr(durationClasses[duration])} مشمولة` : `${durationClasses[duration]} ${t("enrollNow.classesIncluded")}`}</span>
+                    <span>{isAr ? `${formatMoneyAr(finalPrice / durationClasses[duration], currency)} للحصة` : `${formatMoney(finalPrice / durationClasses[duration], currency)}${t("enrollNow.perClass")}`}</span>
                   </div>
                 </div>
               )}
@@ -1116,7 +1143,7 @@ const EnrollNowPage = () => {
                     <div className="relative flex-1">
                       <KloverIcon name="badge-blossom" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Promo code"
+                        placeholder={isAr ? "كود الخصم" : "Promo code"}
                         aria-label={isAr ? "رمز الخصم" : "Promo code"}
                         value={promoInput}
                         onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
@@ -1132,7 +1159,7 @@ const EnrollNowPage = () => {
                       onClick={applyPromo}
                       disabled={!promoInput.trim() || promoLoading}
                     >
-                      {promoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                      {promoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (isAr ? "تطبيق" : "Apply")}
                     </Button>
                   </div>
                 ) : (
@@ -1140,15 +1167,16 @@ const EnrollNowPage = () => {
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-charcoal" />
                       <span className="text-sm font-medium text-charcoal">
-                        {promoApplied.code} applied!
-                        {promoApplied.discount_pct ? ` (${promoApplied.discount_pct}% off)` : promoApplied.discount_flat ? ` (${formatMoney(promoApplied.discount_flat, currency)} off)` : ""}
+                        {isAr
+                          ? `طُبّق الكود${promoApplied.discount_pct ? `: خصم ${toArabicDigits(promoApplied.discount_pct)}٪` : promoApplied.discount_flat ? `: خصم ${formatMoneyAr(promoApplied.discount_flat, currency)}` : ""}`
+                          : <>{promoApplied.code} applied!{promoApplied.discount_pct ? ` (${promoApplied.discount_pct}% off)` : promoApplied.discount_flat ? ` (${formatMoney(promoApplied.discount_flat, currency)} off)` : ""}</>}
                       </span>
                     </div>
                     <button
                       onClick={() => { setPromoApplied(null); setPromoInput(""); setPromoError(""); }}
                       className="text-xs text-muted-foreground hover:text-foreground underline"
                     >
-                      Remove
+                      {isAr ? "إزالة" : "Remove"}
                     </button>
                   </div>
                 )}
@@ -1203,12 +1231,12 @@ const EnrollNowPage = () => {
                 {loading ? (isEgypt ? t("enrollNow.creatingOrder") : t("enrollNow.redirectingPayment")) : isEgypt ? (
                   <>
                     <KloverIcon name="badge-blossom" className="mr-2 h-4 w-4" />
-                    {t("enrollNow.confirmOrder")} ({finalPrice !== null ? formatMoney(finalPrice, currency) : "—"})
+                    {t("enrollNow.confirmOrder")} ({finalPrice !== null ? money(finalPrice, currency) : "—"})
                   </>
                 ) : (
                   <>
                     <CreditCard className="mr-2 h-4 w-4" />
-                    {t("enrollNow.payNow")} {finalPrice !== null ? formatMoney(finalPrice, currency) : "—"} {t("enrollNow.now")}
+                    {t("enrollNow.payNow")} {finalPrice !== null ? money(finalPrice, currency) : "—"} {t("enrollNow.now")}
                   </>
                 )}
               </Button>

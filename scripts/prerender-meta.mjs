@@ -420,16 +420,16 @@ const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
 const COURSES_BODY_HTML = `<div id="courses-prerendered" lang="en" dir="ltr">
       <h1>Korean Courses: from Hangul to Level 6</h1>
       <p>Live online Korean classes with a real teacher, in English or Arabic. Every class is 60 minutes, once a week. A level is 24 classes over 6 months - except Hangul Foundation, which is 4 classes.</p>
-      <h2>Hangul Foundation (4 classes, Pre-A1)</h2>
+      <h2>Hangul Foundation (4 classes)</h2>
       <p>Read and write Korean from zero: the basic vowels and consonants and how a syllable is built; tense and aspirated consonants and combined vowels; the final consonant (batchim); pronunciation rules and your first sentences.</p>
       <h2>Levels 1 to 6 (24 classes, 6 months each)</h2>
       <ul>
-        <li><strong>Level 1</strong> - greetings, the present and past, everyday sentences. Toward TOPIK 1 (about CEFR A1).</li>
-        <li><strong>Level 2</strong> - longer sentences, enough to handle a day on your own in Korean. Toward TOPIK 2 (about CEFR A2).</li>
-        <li><strong>Level 3</strong> - real topics, more complex grammar, formal and casual speech. Toward TOPIK 3 (about CEFR B1).</li>
-        <li><strong>Level 4</strong> - discussion, abstract topics, longer listening, structured writing. Toward TOPIK 4 (about CEFR B2).</li>
-        <li><strong>Level 5</strong> - nuance: tone, politeness and implication. Toward TOPIK 5 (about CEFR C1).</li>
-        <li><strong>Level 6</strong> - near-native comprehension. Toward TOPIK 6 (about CEFR C2).</li>
+        <li><strong>Level 1</strong> - greetings, the present and past, everyday sentences. Toward TOPIK 1.</li>
+        <li><strong>Level 2</strong> - longer sentences, enough to handle a day on your own in Korean. Toward TOPIK 2.</li>
+        <li><strong>Level 3</strong> - real topics, more complex grammar, formal and casual speech. Toward TOPIK 3.</li>
+        <li><strong>Level 4</strong> - discussion, abstract topics, longer listening, structured writing. Toward TOPIK 4.</li>
+        <li><strong>Level 5</strong> - nuance: tone, politeness and implication. Toward TOPIK 5.</li>
+        <li><strong>Level 6</strong> - near-native comprehension. Toward TOPIK 6.</li>
       </ul>
       <h2>Also available</h2>
       <p>Reading &amp; Speaking practice for students who already have the grammar, and TOPIK exam preparation for a test date you have already booked.</p>

@@ -47,18 +47,18 @@ const LEVEL_ICON: Record<string, KloverIconName> = {
 
 const LEVEL_META: Record<string, { emoji: string; tagline: string; description: string; nextLabel?: string; prevLabel?: string }> = {
   hangul: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our Foundation class will teach you Hangul, basic greetings, and everyday words.", nextLabel: "Level 1" },
-  l1:    { emoji: "🌿", tagline: "Beginner (A1)", description: "You know the basics. Our Level 1 class builds simple sentences, numbers, and daily conversations.", nextLabel: "Level 2", prevLabel: "Foundation" },
-  l2:    { emoji: "📚", tagline: "Elementary (A2)", description: "You can handle simple exchanges. Our Level 2 class covers grammar patterns and real-life dialogues.", nextLabel: "Level 3–4", prevLabel: "Level 1" },
-  l3:    { emoji: "🎯", tagline: "Intermediate (B1–B2)", description: "You're comfortable in Korean. Our Level 3–4 class dives into nuanced grammar and natural speech.", nextLabel: "Level 5–6", prevLabel: "Level 2" },
-  l5:    { emoji: "🏆", tagline: "Advanced (C1–C2)", description: "You speak Korean fluently. Our Level 5–6 class polishes academic and professional Korean for TOPIK II.", prevLabel: "Level 3–4" },
+  l1:    { emoji: "🌿", tagline: "Beginner", description: "You know the basics. Our Level 1 class builds simple sentences, numbers, and daily conversations.", nextLabel: "Level 2", prevLabel: "Foundation" },
+  l2:    { emoji: "📚", tagline: "Elementary", description: "You can handle simple exchanges. Our Level 2 class covers grammar patterns and real-life dialogues.", nextLabel: "Level 3–4", prevLabel: "Level 1" },
+  l3:    { emoji: "🎯", tagline: "Intermediate", description: "You're comfortable in Korean. Our Level 3–4 class dives into nuanced grammar and natural speech.", nextLabel: "Level 5–6", prevLabel: "Level 2" },
+  l5:    { emoji: "🏆", tagline: "Advanced", description: "You speak Korean fluently. Our Level 5–6 class polishes academic and professional Korean for TOPIK II.", prevLabel: "Level 3–4" },
 };
 
 const LEVEL_META_AR: Record<string, { emoji: string; tagline: string; description: string; nextLabel?: string; prevLabel?: string }> = {
   hangul: { emoji: "🌱", tagline: "مبتدئ تماماً", description: "البداية من الصفر. الصف التأسيسي يعلّم الهانغول والتحيات الأساسية والكلمات اليومية.", nextLabel: "مستوى 1" },
-  l1:    { emoji: "🌿", tagline: "مبتدئ (A1)", description: "الأساسيات معروفة. صف المستوى 1 يبني جملًا بسيطة وأرقامًا ومحادثات يومية.", nextLabel: "مستوى 2", prevLabel: "تأسيس" },
-  l2:    { emoji: "📚", tagline: "ابتدائي (A2)", description: "القدرة على المحادثات البسيطة. صف المستوى 2 يغطي أنماط القواعد والحوارات الواقعية.", nextLabel: "مستوى 3–4", prevLabel: "مستوى 1" },
-  l3:    { emoji: "🎯", tagline: "متوسط (B1–B2)", description: "راحة في استخدام الكورية. صف المستوى 3–4 يتعمّق في القواعد المتقدمة والكلام الطبيعي.", nextLabel: "مستوى 5–6", prevLabel: "مستوى 2" },
-  l5:    { emoji: "🏆", tagline: "متقدم (C1–C2)", description: "طلاقة في الكورية. صف المستوى 5–6 يصقل الكورية الأكاديمية والمهنية لاختبار TOPIK II.", prevLabel: "مستوى 3–4" },
+  l1:    { emoji: "🌿", tagline: "مبتدئ", description: "الأساسيات معروفة. صف المستوى 1 يبني جملًا بسيطة وأرقامًا ومحادثات يومية.", nextLabel: "مستوى 2", prevLabel: "تأسيس" },
+  l2:    { emoji: "📚", tagline: "ابتدائي", description: "القدرة على المحادثات البسيطة. صف المستوى 2 يغطي أنماط القواعد والحوارات الواقعية.", nextLabel: "مستوى 3–4", prevLabel: "مستوى 1" },
+  l3:    { emoji: "🎯", tagline: "متوسط", description: "راحة في استخدام الكورية. صف المستوى 3–4 يتعمّق في القواعد المتقدمة والكلام الطبيعي.", nextLabel: "مستوى 5–6", prevLabel: "مستوى 2" },
+  l5:    { emoji: "🏆", tagline: "متقدم", description: "طلاقة في الكورية. صف المستوى 5–6 يصقل الكورية الأكاديمية والمهنية لاختبار TOPIK II.", prevLabel: "مستوى 3–4" },
 };
 
 // Plan recommendation — group classes for low/mid levels (peer practice + affordability),
@@ -117,18 +117,18 @@ const RECOMMENDED_PLANS: Record<string, RecommendedPlan> = {
 
 const SECTION_BANNERS: Record<number, { label: string; hint: string }> = {
   0: { label: "Foundation", hint: "Hangul, core vocabulary, reading passages & speaking basics" },
-  1: { label: "TOPIK 1 — A1 Beginner", hint: "Grammar particles, reading sentences & spoken expressions" },
-  2: { label: "TOPIK 2 — A2 Elementary", hint: "Connectors, reading passages & spoken grammar forms" },
-  3: { label: "TOPIK 3–4 — B1/B2 Intermediate", hint: "Advanced grammar, reading comprehension & natural speech" },
-  4: { label: "TOPIK 5–6 — C1/C2 Advanced", hint: "Nuanced grammar, academic reading & formal speech" },
+  1: { label: "TOPIK 1 — Beginner", hint: "Grammar particles, reading sentences & spoken expressions" },
+  2: { label: "TOPIK 2 — Elementary", hint: "Connectors, reading passages & spoken grammar forms" },
+  3: { label: "TOPIK 3–4 — Intermediate", hint: "Advanced grammar, reading comprehension & natural speech" },
+  4: { label: "TOPIK 5–6 — Advanced", hint: "Nuanced grammar, academic reading & formal speech" },
 };
 
 const SECTION_BANNERS_AR: Record<number, { label: string; hint: string }> = {
   0: { label: "تأسيس", hint: "الهانغول، المفردات الأساسية، نصوص القراءة وأساسيات المحادثة" },
-  1: { label: "TOPIK 1 — مبتدئ A1", hint: "جسيمات القواعد، قراءة الجمل والتعبيرات المنطوقة" },
-  2: { label: "TOPIK 2 — ابتدائي A2", hint: "الروابط، نصوص القراءة وأشكال القواعد المنطوقة" },
-  3: { label: "TOPIK 3–4 — متوسط B1/B2", hint: "القواعد المتقدمة، فهم القراءة والكلام الطبيعي" },
-  4: { label: "TOPIK 5–6 — متقدم C1/C2", hint: "القواعد الدقيقة، القراءة الأكاديمية والكلام الرسمي" },
+  1: { label: "TOPIK 1 — مبتدئ", hint: "جسيمات القواعد، قراءة الجمل والتعبيرات المنطوقة" },
+  2: { label: "TOPIK 2 — ابتدائي", hint: "الروابط، نصوص القراءة وأشكال القواعد المنطوقة" },
+  3: { label: "TOPIK 3–4 — متوسط", hint: "القواعد المتقدمة، فهم القراءة والكلام الطبيعي" },
+  4: { label: "TOPIK 5–6 — متقدم", hint: "القواعد الدقيقة، القراءة الأكاديمية والكلام الرسمي" },
 };
 
 const BAND_LABELS = ["Foundation", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5–6"];
@@ -574,12 +574,12 @@ const PlacementTestPage = () => {
 
           {/* Stats */}
           <div className="flex gap-3 mb-6 text-sm flex-wrap">
-            <span className="flex items-center gap-1.5 bg-green-500/10 text-green-800 dark:text-green-300 px-3 py-1.5 rounded-full font-medium">
-              <span className="h-2 w-2 rounded-full bg-green-500 inline-block" /> {isAr ? `${totalAnswered} تمت الإجابة` : `${totalAnswered} answered`}
+            <span className="flex items-center gap-1.5 bg-klovers-green/20 border border-klovers-green text-charcoal dark:text-foreground px-3 py-1.5 rounded-full font-medium">
+              <span className="h-2 w-2 rounded-full bg-klovers-green border border-charcoal/40 inline-block" /> {isAr ? `${totalAnswered} تمت الإجابة` : `${totalAnswered} answered`}
             </span>
             {totalSkipped > 0 && (
-              <span className="flex items-center gap-1.5 bg-amber-500/10 text-amber-800 dark:text-amber-300 px-3 py-1.5 rounded-full font-medium">
-                <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" /> {isAr ? `${totalSkipped} تم التخطي` : `${totalSkipped} skipped`}
+              <span className="flex items-center gap-1.5 bg-klovers-yellow/25 border border-klovers-yellow text-charcoal dark:text-foreground px-3 py-1.5 rounded-full font-medium">
+                <span className="h-2 w-2 rounded-full bg-klovers-yellow border border-charcoal/40 inline-block" /> {isAr ? `${totalSkipped} تم التخطي` : `${totalSkipped} skipped`}
               </span>
             )}
             {totalRemaining > 0 && (
@@ -606,8 +606,8 @@ const PlacementTestPage = () => {
                             onClick={() => { setPage(Math.floor(PLACEMENT_QUESTIONS.findIndex(pq => pq.id === q.id) / QUESTIONS_PER_PAGE)); setPhase("test"); }}
                             className={[
                               "rounded-lg border text-sm font-semibold py-2.5 transition-colors",
-                              st === "answered"   ? "bg-green-500/15 border-green-500/30 text-green-800 dark:text-green-300 hover:bg-green-500/25" : "",
-                              st === "skipped"    ? "bg-amber-500/15 border-amber-500/30 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25" : "",
+                              st === "answered"   ? "bg-klovers-green/20 border-klovers-green text-charcoal dark:text-foreground hover:bg-klovers-green/30" : "",
+                              st === "skipped"    ? "bg-klovers-yellow/25 border-klovers-yellow text-charcoal dark:text-foreground hover:bg-klovers-yellow/40" : "",
                               st === "unanswered" ? "bg-muted/60 border-border text-muted-foreground hover:bg-muted" : "",
                             ].join(" ")}
                           >
@@ -679,8 +679,8 @@ const PlacementTestPage = () => {
                       ? "bg-primary/10 border-primary text-foreground font-medium"
                       : "border-border hover:bg-muted/60";
                   } else {
-                    if (i === q.correctIndex) cls += "bg-green-500/10 border-green-500/50 text-green-800 dark:text-green-300 font-medium";
-                    else if (i === listeningSelected && listeningSelected !== q.correctIndex) cls += "bg-red-500/10 border-red-500/50 text-red-700 dark:text-red-300 line-through";
+                    if (i === q.correctIndex) cls += "bg-klovers-green/20 border-klovers-green text-charcoal dark:text-foreground font-medium";
+                    else if (i === listeningSelected && listeningSelected !== q.correctIndex) cls += "bg-wrong-graphic/15 border-wrong-graphic text-charcoal dark:text-foreground line-through";
                     else cls += "border-border text-muted-foreground";
                   }
                   return (
@@ -766,8 +766,8 @@ const PlacementTestPage = () => {
                       ? "bg-primary/10 border-primary text-foreground font-medium"
                       : "border-border hover:bg-muted/60";
                   } else {
-                    if (i === q.correctIndex) cls += "bg-green-500/10 border-green-500/50 text-green-800 dark:text-green-300 font-medium";
-                    else if (i === readingSelected && readingSelected !== q.correctIndex) cls += "bg-red-500/10 border-red-500/50 text-red-700 dark:text-red-300 line-through";
+                    if (i === q.correctIndex) cls += "bg-klovers-green/20 border-klovers-green text-charcoal dark:text-foreground font-medium";
+                    else if (i === readingSelected && readingSelected !== q.correctIndex) cls += "bg-wrong-graphic/15 border-wrong-graphic text-charcoal dark:text-foreground line-through";
                     else cls += "border-border text-muted-foreground";
                   }
                   return (
@@ -876,7 +876,7 @@ const PlacementTestPage = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-green-700 border-green-500/30 bg-green-500/5 hover:bg-green-500/15 font-semibold"
+                  className="text-charcoal dark:text-foreground border-klovers-green bg-klovers-green/15 hover:bg-klovers-green/30 font-semibold"
                   onClick={() => handleSpeakingRate(2)}
                 >
                   {isAr ? "✓ أتقنتها" : "✓ Nailed it"}
@@ -884,7 +884,7 @@ const PlacementTestPage = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-amber-700 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 font-semibold"
+                  className="text-charcoal dark:text-foreground border-klovers-yellow bg-klovers-yellow/20 hover:bg-klovers-yellow/40 font-semibold"
                   onClick={() => handleSpeakingRate(1)}
                 >
                   {isAr ? "～ تقريباً" : "～ Almost"}
@@ -892,7 +892,7 @@ const PlacementTestPage = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-700 border-red-500/30 bg-red-500/5 hover:bg-red-500/15 font-semibold"
+                  className="text-charcoal dark:text-foreground border-wrong-graphic bg-wrong-graphic/15 hover:bg-wrong-graphic/25 font-semibold"
                   onClick={() => handleSpeakingRate(0)}
                 >
                   {isAr ? "✗ واجهت صعوبة" : "✗ Struggled"}
@@ -918,10 +918,10 @@ const PlacementTestPage = () => {
     const meta = (isAr ? LEVEL_META_AR : LEVEL_META)[result.levelKey] ?? { emoji: "🎓", tagline: isAr ? "المستوى" : "Your Level", description: isAr ? "بداية الرحلة مع الكورية" : "Ready to start your Korean journey?" };
 
     const confidenceChip = result.confidence === "solid"
-      ? { label: isAr ? "تصنيف واثق" : "Confident placement", color: "bg-green-500/10 text-green-800 dark:text-green-300" }
+      ? { label: isAr ? "تصنيف واثق" : "Confident placement", color: "bg-klovers-green/20 border border-klovers-green text-charcoal dark:text-foreground" }
       : result.confidence === "borderline-up"
-      ? { label: isAr ? `قريب من ${meta.nextLabel ?? "المستوى التالي"}` : `Close to ${meta.nextLabel ?? "next level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" }
-      : { label: isAr ? `على حافة ${meta.prevLabel ?? "المستوى السابق"}` : `On the edge of ${meta.prevLabel ?? "previous level"}`, color: "bg-amber-500/10 text-amber-800 dark:text-amber-300" };
+      ? { label: isAr ? `قريب من ${meta.nextLabel ?? "المستوى التالي"}` : `Close to ${meta.nextLabel ?? "next level"}`, color: "bg-klovers-yellow/25 border border-klovers-yellow text-charcoal dark:text-foreground" }
+      : { label: isAr ? `على حافة ${meta.prevLabel ?? "المستوى السابق"}` : `On the edge of ${meta.prevLabel ?? "previous level"}`, color: "bg-klovers-yellow/25 border border-klovers-yellow text-charcoal dark:text-foreground" };
 
     // Section breakdown (5 Vocab, 10 Grammar, 10 Reading, 5 Speaking)
     const sectionTotal = { Vocabulary: 5, Grammar: 10, Reading: 5, Listening: 5, Speaking: 5 };
@@ -1093,8 +1093,8 @@ const PlacementTestPage = () => {
                 };
                 const { tip, link, label } = tips[weakest.sec];
                 return (
-                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 space-y-1.5">
-                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                  <div className="rounded-lg border border-klovers-yellow bg-klovers-yellow/15 px-4 py-3 space-y-1.5">
+                    <p className="text-xs font-semibold text-charcoal dark:text-foreground flex items-center gap-1.5">
                       <KloverIcon name="lightbulb-sprout" className="h-5 w-5" /> {isAr ? `أضعف مهارة: ${skillLabelsWeak[weakest.sec]}` : `Your weakest area: ${weakest.sec}`} ({result.sectionScores[weakest.sec]}/{sectionTotal[weakest.sec]})
                     </p>
                     <p className="text-xs text-muted-foreground">{tip}</p>
@@ -1241,9 +1241,9 @@ const PlacementTestPage = () => {
                     <Volume2 className="h-4 w-4" /> {isAr ? "اختبار الاستماع (5 أسئلة · ~5 دقائق)" : "Listening Exam (5 questions · ~5 min)"}
                   </Button>
                 ) : (
-                  <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 space-y-1">
+                  <div className="rounded-lg border border-charcoal/15 bg-ivory dark:bg-muted/40 px-4 py-3 space-y-1">
                     <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                      <Volume2 className="h-3.5 w-3.5 text-blue-600" />
+                      <Volume2 className="h-3.5 w-3.5 text-charcoal dark:text-klovers-yellow" />
                       {isAr ? "الاستماع:" : "Listening:"} {listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["hangul"])[i]?.correctIndex).length}/{listeningAnswers.length}
                     </p>
                     <p className="text-xs text-muted-foreground">{subTestSummary(listeningAnswers.filter((a, i) => a === (LISTENING_EXAM[result.levelKey] ?? LISTENING_EXAM["hangul"])[i]?.correctIndex).length, listeningAnswers.length, isAr ? "الاستماع" : "Listening", isAr)}</p>
@@ -1264,9 +1264,9 @@ const PlacementTestPage = () => {
                     <BookOpen className="h-4 w-4" /> {isAr ? "اختبار القراءة (5 نصوص · ~5 دقائق)" : "Reading Exam (5 passages · ~5 min)"}
                   </Button>
                 ) : (
-                  <div className="rounded-lg border border-green-500/20 bg-green-500/5 px-4 py-3 space-y-1">
+                  <div className="rounded-lg border border-charcoal/15 bg-ivory dark:bg-muted/40 px-4 py-3 space-y-1">
                     <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                      <BookOpen className="h-3.5 w-3.5 text-green-700" />
+                      <BookOpen className="h-3.5 w-3.5 text-charcoal dark:text-klovers-yellow" />
                       {isAr ? "القراءة:" : "Reading:"} {readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["hangul"])[i]?.correctIndex).length}/{readingAnswers.length}
                     </p>
                     <p className="text-xs text-muted-foreground">{subTestSummary(readingAnswers.filter((a, i) => a === (READING_EXAM[result.levelKey] ?? READING_EXAM["hangul"])[i]?.correctIndex).length, readingAnswers.length, isAr ? "القراءة" : "Reading", isAr)}</p>
@@ -1321,8 +1321,8 @@ const PlacementTestPage = () => {
                       <div className="flex items-start gap-2 mb-2">
                         <span className={`shrink-0 text-xs font-bold px-1.5 py-0.5 rounded ${
                           wasSkipped ? "bg-muted text-muted-foreground" :
-                          isCorrect  ? "bg-green-500/15 text-green-800 dark:text-green-300" :
-                                       "bg-red-500/15 text-red-800 dark:text-red-300"
+                          isCorrect  ? "bg-klovers-green text-charcoal" :
+                                       "bg-wrong-graphic text-charcoal"
                         }`}>
                           {wasSkipped ? "—" : isCorrect ? "✓" : "✗"}
                         </span>
@@ -1345,11 +1345,11 @@ const PlacementTestPage = () => {
                       {!wasSkipped && (
                         <div className="ml-7 text-xs space-y-1 mb-2">
                           {!isCorrect && (
-                            <p className="text-red-700 dark:text-red-300">
+                            <p className="text-wrong dark:text-[#FF4FD8]">
                               {isAr ? "الإجابة:" : "Your answer:"} {q.options[userAnswer] ?? "—"}
                             </p>
                           )}
-                          <p className="text-green-800 dark:text-green-300 font-medium">
+                          <p className="text-correct font-medium">
                             {isAr ? "الصحيح:" : "Correct:"} {q.options[q.correctIndex]}
                           </p>
                         </div>
@@ -1379,7 +1379,7 @@ const PlacementTestPage = () => {
               </DialogHeader>
               {leadSaved ? (
                 <div className="text-center py-4 space-y-2">
-                  <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
+                  <CheckCircle className="h-10 w-10 fill-klovers-green text-charcoal mx-auto" />
                   <p className="font-semibold text-sm">{isAr ? "تصل الخطة قريبًا!" : "We'll send your plan shortly!"}</p>
                 </div>
               ) : (
@@ -1426,7 +1426,7 @@ const PlacementTestPage = () => {
             exit straight to the trial booking with level=hangul instead
             of forcing them to skip 30 questions. */}
         {totalAnswered === 0 && page === 0 && (
-          <div className="mb-5 flex items-center gap-3 bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-3">
+          <div className="mb-5 flex items-center gap-3 bg-klovers-yellow/20 border border-klovers-yellow rounded-xl px-4 py-3">
             <KloverIcon name="sprout" className="h-10 w-10" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground leading-tight">
@@ -1462,8 +1462,8 @@ const PlacementTestPage = () => {
               )}
             </span>
             <span className="flex items-center gap-3 text-xs">
-              <span className="text-green-800 dark:text-green-300 font-medium">{isAr ? `${totalAnswered} تمت الإجابة` : `${totalAnswered} answered`}</span>
-              {totalSkipped > 0 && <span className="text-amber-800 dark:text-amber-300 font-medium">{isAr ? `${totalSkipped} تم التخطي` : `${totalSkipped} skipped`}</span>}
+              <span className="rounded-full bg-klovers-green/20 border border-klovers-green px-2 text-charcoal dark:text-foreground font-medium">{isAr ? `${totalAnswered} تمت الإجابة` : `${totalAnswered} answered`}</span>
+              {totalSkipped > 0 && <span className="rounded-full bg-klovers-yellow/25 border border-klovers-yellow px-2 text-charcoal dark:text-foreground font-medium">{isAr ? `${totalSkipped} تم التخطي` : `${totalSkipped} skipped`}</span>}
               {totalRemaining > 0 && <span>{isAr ? `${totalRemaining} متبقي` : `${totalRemaining} left`}</span>}
               <span className="flex items-center gap-1 ml-1 text-muted-foreground" title="Auto-advance to next question after answering">
                 <Switch id="auto-advance" checked={autoAdvance} onCheckedChange={toggleAutoAdvance} className="scale-75 origin-right" />
@@ -1486,8 +1486,8 @@ const PlacementTestPage = () => {
                 onClick={() => setPage(qPage)}
                 className={[
                   "h-5 w-5 rounded-full border-2 transition-all",
-                  st === "answered"   ? "bg-green-500 border-green-600" : "",
-                  st === "skipped"    ? "bg-amber-400 border-amber-500" : "",
+                  st === "answered"   ? "bg-klovers-green border-charcoal/40" : "",
+                  st === "skipped"    ? "bg-klovers-yellow border-charcoal/40" : "",
                   st === "unanswered" ? "bg-muted border-border" : "",
                   qPage === page ? "ring-2 ring-primary ring-offset-1 scale-110" : "hover:scale-110",
                 ].join(" ")}
@@ -1530,7 +1530,7 @@ const PlacementTestPage = () => {
                     <div className="flex flex-col gap-1 shrink-0">
                       <Badge variant="outline" className="text-xs">{q.section}</Badge>
                       <Badge variant="secondary" className="text-[10px] font-normal">{q.level}</Badge>
-                      <span className="text-[10px] text-amber-500 tracking-tighter text-center" title={`Difficulty ${q.difficulty}/5`}>
+                      <span className="text-[10px] text-charcoal dark:text-klovers-yellow tracking-tighter text-center" title={`Difficulty ${q.difficulty}/5`}>
                         {"★".repeat(q.difficulty)}{"☆".repeat(5 - q.difficulty)}
                       </span>
                     </div>

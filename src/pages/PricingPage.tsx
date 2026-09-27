@@ -231,7 +231,7 @@ const PricingStory = () => {
 };
 
 const PricingPage = () => {
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const isAr = language === "ar";
   useSEO({
     title: isAr ? "الأسعار والخطط" : "Pricing & Plans",
@@ -292,7 +292,12 @@ const PricingPage = () => {
     faqEl.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      "mainEntity": englishFaqs.map((f) => ({
+      // Follows the page language: /ar/pricing shows the Arabic FAQ, so its
+      // FAQPage carries the same visible Arabic items.
+      "mainEntity": (isAr
+        ? [1, 2, 3, 4, 5, 6].map((n) => ({ q: t(`pricingPage.faq${n}Q`), a: t(`pricingPage.faq${n}A`) }))
+        : englishFaqs
+      ).map((f) => ({
         "@type": "Question",
         "name": f.q,
         "acceptedAnswer": { "@type": "Answer", "text": f.a }
@@ -300,7 +305,8 @@ const PricingPage = () => {
     });
     document.head.appendChild(faqEl);
     return () => { faqEl.remove(); };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t is not memoised; items change only with the language
+  }, [isAr]);
 
   return (
     <div className="min-h-screen">
