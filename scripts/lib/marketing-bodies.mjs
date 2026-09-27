@@ -103,7 +103,7 @@ export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
       <h3>Is Klovers suitable for TOPIK preparation?</h3>
       <p>Yes. Classes cover the TOPIK exam format and include practice questions for the reading, listening and writing sections of TOPIK I and II.</p>
       <h2>Still have questions?</h2>
-      <p>We are happy to help. Reach out or start your Korean journey today!</p>
+      <p>The teacher is happy to help. Reach out or start your Korean journey today!</p>
       <p><a href="https://wa.me/201010003084">WhatsApp</a> · <a href="https://t.me/+Fu5T7d4wLMsxNDY9">Telegram</a> · <a href="/enroll-now">Start Now</a></p>
       <p><a href="/free-trial">Book a free trial class</a> · <a href="/placement-test">Take the free placement test</a> · <a href="/pricing">Pricing</a> · <a href="/contact">Contact us</a></p>
     </div>`;
@@ -116,12 +116,12 @@ export const ENROLL_NOW_BODY_HTML = `<div id="enroll-now-prerendered" lang="en" 
       <ol>
         <li><strong>Choose Plan</strong> — pick Group Classes (learn with others) or Private Classes (1-on-1 sessions), your country, and a duration. Your pricing tier is set by your country.</li>
         <li><strong>Schedule</strong> — Schedule Preferences: help us find the best time for your classes. Choose your Korean level, timezone and preferred day. Private classes are only available on days without group classes.</li>
-        <li><strong>Pay &amp; Enroll</strong> — Review &amp; Pay. Secure payment via Stripe. Your account will be created automatically after payment.</li>
+        <li><strong>Pay &amp; Enroll</strong> — Review &amp; Pay. In Egypt: bank transfer, Vodafone Cash or InstaPay; upload the receipt and the enrollment is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically.</li>
       </ol>
       <p>Your schedule will be confirmed within 24 hours after payment.</p>
       <h2>What happens next?</h2>
       <ol>
-        <li><strong>Payment confirmed</strong> — You get an instant email receipt.</li>
+        <li><strong>Payment confirmed</strong> — Card payments are confirmed at once; transfers in Egypt after the receipt is checked.</li>
         <li><strong>Schedule matched</strong> — We confirm your class slot within 24 h.</li>
         <li><strong>First class!</strong> — We send your meeting link — ready to learn!</li>
       </ol>

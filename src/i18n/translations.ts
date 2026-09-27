@@ -282,7 +282,7 @@ export const translations = {
     faqPage: {
       badge: "FAQ",
       title: "Korean Language Course FAQ",
-      subtitle: "Everything you need to know about learning Korean with Klovers Academy",
+      subtitle: "Everything you need to know about learning Korean with Klovers",
       ctaTitle: "Still have questions?",
       ctaText: "The teacher is happy to help. Reach out or start your Korean journey today!",
       ctaContact: "Contact Us",
