@@ -97,7 +97,7 @@ export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
       <p>Plans are 1, 3 or 6 months, and longer plans cost less per class. For paying in installments or another flexible arrangement, message us on WhatsApp.</p>
       <h2>Progress &amp; Certification</h2>
       <h3>Do I get a certificate after completing a course?</h3>
-      <p>Yes! Upon successfully completing your course level, you'll receive an official Klovers certificate of completion. This certificate can be added to your CV, LinkedIn profile, or university application portfolio.</p>
+      <p>Yes! Upon successfully completing your course level, you'll receive a Klovers certificate of completion. It can be added to your CV or LinkedIn profile.</p>
       <h3>How is my progress tracked?</h3>
       <p>Your student dashboard shows your attendance history, current level, and remaining sessions. The teacher also provides regular feedback on your speaking, reading, and writing skills throughout the course.</p>
       <h3>Is Klovers suitable for TOPIK preparation?</h3>
@@ -429,7 +429,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "Do I get a certificate after completing a course?",
-        "a": "Yes! Upon successfully completing your course level, you'll receive an official Klovers certificate of completion. This certificate can be added to your CV, LinkedIn profile, or university application portfolio."
+        "a": "Yes! Upon successfully completing your course level, you'll receive a Klovers certificate of completion. It can be added to your CV or LinkedIn profile."
     },
     {
         "q": "How is my progress tracked?",

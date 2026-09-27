@@ -37,7 +37,7 @@ const COMPARISONS: {
     titleAr: "نهايات تُظهر وظيفة الكلمة",
     bodyEn: "Arabic case endings tell you which word is the subject and which is the object. Korean does the same job with small particles after the word — 는 for the topic, 을/를 for the object.",
     bodyAr: "في العربية تُميّز علامات الإعراب الفاعل من المفعول به. والكورية تؤدي الوظيفة نفسها بأدوات صغيرة بعد الكلمة: 는 للموضوع، و을/를 للمفعول به.",
-    arabic: "قرأتُ الكتابَ",
+    arabic: "أقرأُ الكتابَ",
     korean: "나는 책을 읽어요",
     noteEn: "나 (I) + 는 · 책 (book) + 을 · 읽어요 (read)",
     noteAr: "나 (أنا) + 는 · 책 (كتاب) + 을 · 읽어요 (أقرأ)",
@@ -196,7 +196,7 @@ const LearnKoreanArabicSpeakersPage = () => {
             <p className="mt-6 text-base text-foreground/80 leading-relaxed">
               {tr(
                 "Your teacher is Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years. She explains in Arabic or English and compares Korean with Arabic wherever that makes a point clearer. In Egypt you can pay by Vodafone Cash or InstaPay.",
-                "المعلمة ريهام الشرقاوي، خريجة كلية الألسن قسم اللغة الكورية وآدابها، وتدرّس الكورية منذ ١٣ عامًا. تشرح بالعربية أو الإنجليزية، وتقارن الكورية بالعربية حين يوضّح ذلك الفكرة. في مصر يمكن الدفع عبر فودافون كاش أو إنستاباي.",
+                "المعلمة ريهام الشرقاوي، خريجة كلية الألسن قسم اللغة الكورية وآدابها، وتدرّس الكورية منذ ١٣ عامًا. تشرح بالعربية أو الإنجليزية، وتقارن الكورية بالعربية حين يوضّح ذلك الفكرة. داخل مصر: تحويل بنكي أو فودافون كاش أو إنستا باي، مع رفع الإيصال، ويُفعَّل الاشتراك بعد مراجعة يدوية. خارج مصر: الدفع بالبطاقة عبر Stripe ويُفعَّل تلقائيًا.",
               )}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">

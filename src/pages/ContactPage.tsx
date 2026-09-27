@@ -12,6 +12,7 @@ import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import { toArabicDigits } from "@/lib/trustFigures";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { supabase } from "@/integrations/supabase/client";
 import { getAttribution } from "@/lib/leadSession";
@@ -53,6 +54,13 @@ const buildMessage = (
   return [`${from}: ${f.name}`, `${email}: ${f.email}`, `${subject}: ${f.subject}`, "", f.message].join("\n");
 };
 
+/** submit-lead caps `goal` at 500 characters. Name and email travel in their
+ *  own fields, so `goal` carries only the subject and the message; these two
+ *  visible limits keep it inside 500, so nothing is cut without the visitor
+ *  seeing it (scan 27 Sep 2026). */
+const SUBJECT_MAX = 80;
+const MESSAGE_MAX = 400;
+
 const ContactPage = () => {
   // 27 Sep 2026: restored - be8bc67 dropped these two lines, so the page threw
   // "isAr is not defined" on load.
@@ -93,7 +101,7 @@ const ContactPage = () => {
           // `goal` is capped at 500 chars server-side. Trimmed to fit rather
           // than rejected: a 400 would fall through to WhatsApp with nothing
           // lost, but a silent reject would not.
-          goal: text.slice(0, 500),
+          goal: [`${isAr ? "الموضوع" : "Subject"}: ${form.subject.trim()}`, "", form.message.trim()].join("\n").slice(0, 500),
           // `source` is named explicitly and the attribution fields are mapped
           // one by one, following EnrollNowPage. A `...attribution` spread here
           // would clobber `source` with whatever the stored attribution held,
@@ -230,6 +238,7 @@ const ContactPage = () => {
                           placeholder={t("contactPage", "form.subjectPlaceholder")}
                           value={form.subject}
                           onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                          maxLength={SUBJECT_MAX}
                           required
                         />
                       </div>
@@ -243,9 +252,16 @@ const ContactPage = () => {
                           placeholder={t("contactPage", "form.messagePlaceholder")}
                           value={form.message}
                           onChange={(e) => setForm({ ...form, message: e.target.value })}
+                          maxLength={MESSAGE_MAX}
+                          aria-describedby="contact-message-count"
                           required
                           rows={5}
                         />
+                        <p id="contact-message-count" className="mt-1 text-xs text-muted-foreground text-end">
+                          {isAr
+                            ? `${toArabicDigits(form.message.length)} / ${toArabicDigits(MESSAGE_MAX)} حرف`
+                            : `${form.message.length} / ${MESSAGE_MAX} characters`}
+                        </p>
                       </div>
                       <Button type="submit" className="w-full gap-2" disabled={sending}>
                         <Send className="h-4 w-4" />
