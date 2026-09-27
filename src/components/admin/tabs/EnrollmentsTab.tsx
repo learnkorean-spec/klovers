@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "@/i18n/config";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,24 @@ export const EnrollmentsTab = memo(function EnrollmentsTab({
   const { t } = useTranslation("admin");
   const isMobile = useIsMobile();
 
+  // Which status list opens. It used to be "Under review" always, which is
+  // usually empty: the enrollment that needs Re is normally waiting for
+  // payment, so the dashboard's Need Attention tile opened on "No under
+  // review enrollments." and looked like it went nowhere.
+  //   ?status=<list>     opens that list (under_review, pending_payment, …)
+  //   ?status=attention  or no param: the first list with work in it, in the
+  //                      same order the Need Attention count uses.
+  const [searchParams] = useSearchParams();
+  const wantedStatus = searchParams.get("status");
+  const STATUS_TABS = ["under_review", "pending_payment", "pending", "approved", "rejected"];
+  const initialStatus = (() => {
+    if (wantedStatus && STATUS_TABS.includes(wantedStatus)) return wantedStatus;
+    if (enrollments.some(e => e.approval_status === "UNDER_REVIEW")) return "under_review";
+    if (enrollments.some(e => e.approval_status === "PENDING_PAYMENT")) return "pending_payment";
+    if (enrollments.some(e => e.approval_status === "PENDING" && e.admin_review_required)) return "pending";
+    return "under_review";
+  })();
+
   return (
     <>
       {/* The people Re actually teaches every week. They are not enrollments —
@@ -76,7 +95,8 @@ export const EnrollmentsTab = memo(function EnrollmentsTab({
           size of the business. */}
       <OngoingStudentsStrip setAdminTab={setAdminTab} />
 
-      <Card className="rounded-2xl">
+      {/* Scroll target for the dashboard tiles: see scrollToAdminTabs. */}
+      <Card className="rounded-2xl scroll-mt-4" data-admin-focus="enrollments">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <CardTitle className="text-base">{t("enrollments.title")}</CardTitle>
@@ -156,7 +176,9 @@ export const EnrollmentsTab = memo(function EnrollmentsTab({
               ))}
             </div>
           ) : (
-            <Tabs defaultValue="under_review" onValueChange={() => setEnrollmentPage(() => 0)}>
+            // Keyed on the URL status so a second tile click (a different
+            // ?status=) re-opens on that list instead of keeping the old one.
+            <Tabs key={wantedStatus ?? "auto"} defaultValue={initialStatus} onValueChange={() => setEnrollmentPage(() => 0)}>
               <div className="flex gap-2 mb-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

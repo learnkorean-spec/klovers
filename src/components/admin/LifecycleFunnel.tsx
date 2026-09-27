@@ -39,13 +39,16 @@ interface FunnelProps {
 const stages = [
   { key: "leads", label: "Leads", icon: UserPlus, to: "/admin?tab=leads", opens: "Leads",
     accent: "bg-charcoal/60", light: "bg-muted", text: "text-foreground" },
-  { key: "registered", label: "Registered", icon: Users, to: "/admin?tab=students", opens: "Students",
+  { key: "registered", label: "Registered", icon: Users, to: "/admin?tab=students&filter=all", opens: "all students",
     accent: "bg-charcoal/60", light: "bg-muted", text: "text-foreground" },
-  { key: "enrolled", label: "Enrolled", icon: CreditCard, to: "/admin?tab=enrollments", opens: "Enrollments",
+  // Enrolled and Active include private students (admin_funnel_overview, see
+  // useFunnelCounts), who have no enrollment row — My students is the one
+  // screen that lists both kinds.
+  { key: "enrolled", label: "Enrolled", icon: CreditCard, to: "/admin?tab=my-students", opens: "My students",
     accent: "bg-klovers-yellow", light: "bg-klovers-yellow", text: "text-charcoal" },
   { key: "active", label: "Active", icon: GraduationCap, to: "/admin?tab=my-students", opens: "My students",
     accent: "bg-klovers-green", light: "bg-klovers-green", text: "text-charcoal" },
-  { key: "completed", label: "Completed", icon: Award, to: "/admin?tab=students", opens: "Students",
+  { key: "completed", label: "Completed", icon: Award, to: "/admin?tab=students&filter=completed", opens: "the completed students",
     accent: "bg-charcoal/60", light: "bg-muted", text: "text-foreground" },
 ] as const;
 
@@ -77,7 +80,7 @@ const LifecycleFunnel = ({ pendingCount }: FunnelProps) => {
           <Link
             key={stage.key}
             to={stage.to}
-            onClick={scrollToAdminTabs}
+            onClick={() => scrollToAdminTabs()}
             aria-label={`${stage.label}: open ${stage.opens}`}
             className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow"
           >
