@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, ExternalLink } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -81,7 +81,6 @@ const TopikExamPage = () => {
               <Button size="lg" asChild className="rounded-full font-bold">
                 <Link to="/placement-test">
                   {tr("Find your level first", "معرفة المستوى أولًا")}
-                  <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="rounded-full bg-transparent text-ivory border-ivory/40 hover:bg-ivory/10">
@@ -166,7 +165,6 @@ const TopikExamPage = () => {
               className="mt-5 inline-flex min-h-11 items-center gap-2 font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/70"
             >
               topik.go.kr
-              <ExternalLink className="h-4 w-4" aria-hidden="true" />
             </a>
           </div>
         </section>
@@ -196,7 +194,7 @@ const TopikExamPage = () => {
               ].map(([title, body]) => (
                 <div key={title} className={card}>
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-foreground" aria-hidden="true" />
+                    <KloverIcon name="game-checklist-pencil" className="h-9 w-9" />
                     <div>
                       <h3 className="font-bold text-foreground">{title}</h3>
                       <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{body}</p>
@@ -232,7 +230,7 @@ const TopikExamPage = () => {
                 tr("A study plan up to your exam date", "خطة دراسة حتى موعد الاختبار"),
               ].map((line) => (
                 <li key={line} className="flex items-start gap-3 text-foreground">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-klovers-green" aria-hidden="true" />
                   {line}
                 </li>
               ))}
@@ -247,7 +245,6 @@ const TopikExamPage = () => {
               <Button size="lg" asChild className="rounded-full font-bold">
                 <Link to="/free-trial">
                   {tr("Book a free class", "حجز حصة مجانية")}
-                  <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="rounded-full">
