@@ -13,10 +13,14 @@ export interface WorldState {
   greeted: RoomId[];
   /** The market's bread sign, put back by naming the loaves correctly. */
   breadSign: boolean;
+  /** The learner has moved on their own: movement hints stay hidden. */
+  tutorialDone: boolean;
+  /** Room to reopen in after a trip to the site's lessons or games. */
+  lastRoom: RoomId | null;
 }
 
 const KEY = "klovers-world-state";
-const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false };
+const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false, tutorialDone: false, lastRoom: null };
 
 export function loadWorldState(): WorldState {
   try {
@@ -27,6 +31,8 @@ export function loadWorldState(): WorldState {
       hatchSeen: v.hatchSeen === true,
       greeted: Array.isArray(v.greeted) ? (v.greeted.filter((r) => typeof r === "string") as RoomId[]) : [],
       breadSign: v.breadSign === true,
+      tutorialDone: v.tutorialDone === true,
+      lastRoom: typeof v.lastRoom === "string" ? (v.lastRoom as RoomId) : null,
     };
   } catch {
     return { ...EMPTY };

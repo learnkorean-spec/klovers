@@ -1,27 +1,26 @@
-import { useMemo } from "react";
-import { MAT, std } from "../config/materials";
+import { MAT } from "../config/materials";
 import { VILLAGE } from "../config/rooms";
 import { PALETTE } from "../config/world";
-import Instanced, { UNIT, type Part } from "./Instanced";
-import { GateWall, Lamps, Signboard } from "./parts";
+import Batch from "./Batch";
+import { Kit, hanokHouse, hanokRoof, jitter, pot, steppingStones, wallRun } from "./kit";
+import { Gate, GateWall, Lamps, Signboard, Sway } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
 
 /**
- * Hangul Village — the first learning world (canon: worlds[0]).
+ * Room 2 — Hangul Village, the first learning world (canon: worlds[0]).
  *
- * One quiet street of hanok houses. Every door carries a hanging signboard
- * with one of the first letters a learner reads (ㄱ ㄴ ㄷ ㄹ ㅁ · ㅏ ㅓ ㅗ ㅜ ㅣ),
- * a well sits in the middle, and a banner arch reads 한글 마을. South: the
- * open gate back to the courtyard. North: the shut gate of 시장, the
- * Vocabulary Market, which opens only on a real Hangul milestone.
+ * "I am walking inside the Korean language": one street of hanok houses,
+ * each a little different in size and roof, every door with a hanging
+ * signboard carrying one of the first letters a learner reads (ㄱ ㄴ ㄷ ㄹ ㅁ
+ * on the left, ㅏ ㅓ ㅗ ㅜ on the right). The 한글 마을 gate is the landmark,
+ * the well marks the middle. Where the last house on the right would be, a
+ * yellow-framed lane leads to the KLOVERS Hub (open to all); at the far end
+ * the market gate, 시장, opens at Level 1. The ㄱ sign — the one a learner
+ * can read closely — carries a thin yellow edge: noticed, not announced.
  */
 
 const HW = VILLAGE.halfWidth;
 const HL = VILLAGE.halfLength;
-const HOUSE_D = VILLAGE.houseDepth;
-const HOUSE_L = VILLAGE.houseLength;
-const WALL_H = 2.6;
-/** x of the street-facing house wall. */
 const FACE_X = HW + 0.3;
 const ARCH_Z = VILLAGE.arch.z;
 const ARCH_X = VILLAGE.arch.x;
@@ -30,111 +29,102 @@ const LAMP_SPOTS = VILLAGE.lampZ.flatMap((z) => [
   { x: VILLAGE.lampX, z },
 ]);
 
-type P3 = [number, number, number];
+interface SignSpot {
+  x: number;
+  z: number;
+  letter: string;
+  learn: boolean;
+}
 
-/**
- * Every house on the street as instanced parts: ten houses cost six draw
- * calls instead of about 140. Signboards stay separate (each has a letter).
- */
-function useHouseParts() {
-  return useMemo(() => {
-    const out = { plaster: [] as Part[], charcoal: [] as Part[], wood: [] as Part[], roof: [] as Part[], paper: [] as Part[] };
-    VILLAGE.houseZ.forEach((z) => {
-      ([-1, 1] as const).forEach((side) => {
-        const cx = side * (FACE_X + HOUSE_D / 2);
-        const face = cx - side * (HOUSE_D / 2); // x of the street-facing wall
-        const at = (dx: number, y: number, dz: number): P3 => [face - side * dx, y, z + dz];
-        out.plaster.push({ p: [cx, WALL_H / 2, z], s: [HOUSE_D, WALL_H, HOUSE_L] });
-        out.charcoal.push({ p: [cx, 0.3, z], s: [HOUSE_D + 0.02, 0.6, HOUSE_L + 0.02] });
-        out.charcoal.push({ p: at(0.02, 1.55, -1.3), s: [0.04, 0.8, 1.1] });
-        out.paper.push({ p: at(0.045, 1.55, -1.3), s: [0.02, 0.68, 0.98] });
-        for (const pz of [-HOUSE_L / 2, 0, HOUSE_L / 2]) out.wood.push({ p: at(0.05, WALL_H / 2, pz), s: [0.2, WALL_H, 0.2] });
-        out.wood.push({ p: [cx, WALL_H + 0.08, z], s: [HOUSE_D + 1.2, 0.16, HOUSE_L + 1.2] });
-        out.wood.push({ p: at(0.03, 1.0, 0.9), s: [0.08, 2.0, 1.1] });
-        out.wood.push({ p: at(0.4, 2.5, 0.9), s: [0.8, 0.07, 0.07] });
-        out.roof.push({ p: [cx, WALL_H + 0.16 + 0.65, z], s: [HOUSE_D + 1.5, 1.3, HOUSE_L + 1.5] });
-      });
+/** Houses on both sides (the right side stops at the Hub lane). */
+const HOUSES: { side: -1 | 1; z: number; i: number }[] = VILLAGE.houseZ.flatMap((z, i) => {
+  const out: { side: -1 | 1; z: number; i: number }[] = [{ side: -1, z, i }];
+  if (z !== VILLAGE.hubLaneZ) out.push({ side: 1, z, i });
+  return out;
+});
+
+const SIGNS: SignSpot[] = HOUSES.map(({ side, z, i }) => {
+  const letters = side < 0 ? VILLAGE.lettersLeft : VILLAGE.lettersRight;
+  // South → north: the house nearest the village gate carries the first letter.
+  const southIndex = VILLAGE.houseZ.length - 1 - i;
+  const letter = letters[southIndex] ?? "";
+  return { x: side * FACE_X - side * 0.62, z: z + 0.9, letter, learn: side < 0 && southIndex === 0 };
+}).filter((s) => s.letter);
+
+const VILLAGE_KIT: Kit = (() => {
+  const k = new Kit();
+  HOUSES.forEach(({ side, z, i }, n) => {
+    const w = 4.4 + jitter(n + 1, 0.35);
+    const d = VILLAGE.houseLength + jitter(n + 7, 0.3);
+    hanokHouse(k, {
+      x: side * (FACE_X + w / 2),
+      z,
+      w,
+      d,
+      h: 2.35 + ((i + (side > 0 ? 1 : 0)) % 3) * 0.2,
+      face: side < 0 ? "+x" : "-x",
+      door: 0.9,
+      roofH: 1.0 + ((i + n) % 2) * 0.25,
     });
-    return out;
-  }, []);
-}
+    // Bracket for the hanging signboard.
+    k.box("woodDark", [side * FACE_X - side * 0.4, 2.62, z + 0.9], [0.8, 0.07, 0.07]);
+    // An onggi pot or two by some doors.
+    if ((i + n) % 2 === 0) pot(k, side * (FACE_X - 0.55), z - 1.6, 0.7, n % 3 !== 0);
+  });
 
-function Houses() {
-  const parts = useHouseParts();
-  return (
-    <>
-      <Instanced parts={parts.plaster} material={MAT.plaster} castShadow receiveShadow />
-      <Instanced parts={parts.charcoal} material={MAT.charcoal} />
-      <Instanced parts={parts.wood} material={MAT.woodDark} castShadow />
-      <Instanced parts={parts.roof} material={MAT.roofTile} geometry={UNIT.hipRoof} castShadow />
-      <Instanced parts={parts.paper} material={MAT.paper} />
-      {/* Hanging signboards, square to the street so they read while
-          walking; high enough to pass beneath. */}
-      {VILLAGE.houseZ.map((z, i) =>
-        ([-1, 1] as const).map((side) => {
-          const letters = side < 0 ? VILLAGE.lettersLeft : VILLAGE.lettersRight;
-          const face = side * FACE_X;
-          return (
-            <group key={`${side}${z}`} position={[face - side * 0.62, 2.12, z + 0.9]}>
-              <Signboard text={letters[letters.length - 1 - i]} w={0.62} h={0.62} />
-            </group>
-          );
-        }),
-      )}
-    </>
-  );
-}
+  // The lane to the Hub: short walls either side, and the Hub's roofs beyond.
+  const laneZ = VILLAGE.hubLaneZ;
+  wallRun(k, HW + 0.3, laneZ - 1.9, HW + 6, laneZ - 1.9, 2.2);
+  wallRun(k, HW + 0.3, laneZ + 1.9, HW + 6, laneZ + 1.9, 2.2);
+  steppingStones(k, HW + 0.4, laneZ, HW + 5.4, laneZ, 0.9, 41, "stoneWarm");
+  hanokRoof(k, HW + 9, laneZ, 3.2, 5, 6, 1.4);
+
+  // The landmark gate: two posts, a double beam, a small tiled roof.
+  for (const x of [-ARCH_X, ARCH_X]) {
+    k.add("stoneWarm", "oct", [x, 0.15, ARCH_Z], [0.55, 0.3, 0.55], undefined, true);
+    k.box("woodDark", [x, 1.9, ARCH_Z], [VILLAGE.arch.post, 3.8, VILLAGE.arch.post], true);
+  }
+  k.box("woodDark", [0, 3.35, ARCH_Z], [ARCH_X * 2 + 0.6, 0.2, 0.3], true);
+  k.box("woodDark", [0, 3.75, ARCH_Z], [ARCH_X * 2 + 1.2, 0.24, 0.34], true);
+  k.box("accent", [0, 3.35, ARCH_Z + 0.16], [ARCH_X * 2 - 0.6, 0.03, 0.015]);
+  k.add("roof", "hip", [0, 4.1, ARCH_Z], [ARCH_X * 2 + 2, 0.55, 1.3], undefined, true);
+
+  // A slate path up the middle of the street.
+  steppingStones(k, 0, HL - 1, 0, 1.4, 1.1, 5, "stoneWarm");
+  steppingStones(k, 0, -1.4, 0, -HL + 1, 1.1, 29, "stoneWarm");
+  return k;
+})();
 
 function Well() {
   const { x, z } = VILLAGE.well;
   return (
     <group position={[x, 0, z]}>
-      <mesh castShadow receiveShadow position={[0, 0.37, 0]}>
-        <cylinderGeometry args={[0.8, 0.85, 0.74, 24]} />
-        <primitive object={std(PALETTE.stone, 1)} attach="material" />
+      <mesh castShadow receiveShadow position={[0, 0.37, 0]} rotation={[0, Math.PI / 8, 0]}>
+        <cylinderGeometry args={[0.8, 0.86, 0.74, 8]} />
+        <primitive object={MAT.stoneWarm} attach="material" />
       </mesh>
-      <mesh position={[0, 0.745, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.76, 0.06, 8, 28]} />
-        <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
+      <mesh position={[0, 0.745, 0]} rotation={[0, Math.PI / 8, 0]}>
+        <cylinderGeometry args={[0.84, 0.84, 0.06, 8]} />
+        <primitive object={MAT.woodDark} attach="material" />
       </mesh>
-      <mesh position={[0, 0.62, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.7, 24]} />
-        <primitive object={std(PALETTE.charcoal, 0.2)} attach="material" />
+      <mesh position={[0, 0.66, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.66, 16]} />
+        <primitive object={MAT.charcoal} attach="material" />
       </mesh>
       {[-1, 1].map((sx) => (
         <mesh key={sx} castShadow position={[sx * 0.72, 1.2, 0]}>
           <boxGeometry args={[0.1, 1.7, 0.1]} />
-          <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
+          <primitive object={MAT.woodDark} attach="material" />
         </mesh>
       ))}
-      <mesh castShadow position={[0, 2.05, 0]}>
-        <boxGeometry args={[1.9, 0.12, 1.1]} />
-        <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
+      <mesh castShadow position={[0, 2.15, 0]} scale={[2.1, 0.45, 1.3]}>
+        <coneGeometry args={[Math.SQRT1_2, 1, 4, 1]} />
+        <primitive object={MAT.roofTile} attach="material" />
       </mesh>
       <mesh castShadow position={[0, 1.55, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.05, 0.05, 1.4, 10]} />
-        <primitive object={std(PALETTE.woodWarm, 0.7)} attach="material" />
+        <cylinderGeometry args={[0.05, 0.05, 1.4, 8]} />
+        <primitive object={MAT.woodWarm} attach="material" />
       </mesh>
-    </group>
-  );
-}
-
-function Arch() {
-  return (
-    <group position={[0, 0, ARCH_Z]}>
-      {[-ARCH_X, ARCH_X].map((x) => (
-        <mesh key={x} castShadow position={[x, 1.75, 0]}>
-          <boxGeometry args={[VILLAGE.arch.post, 3.5, VILLAGE.arch.post]} />
-          <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
-        </mesh>
-      ))}
-      <mesh castShadow position={[0, 3.5, 0]}>
-        <boxGeometry args={[ARCH_X * 2 + 0.8, 0.26, 0.34]} />
-        <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
-      </mesh>
-      <group position={[0, 2.85, 0]}>
-        <Signboard text={VILLAGE.entranceSign} w={2.6} h={1} aspect={2.6} />
-      </group>
     </group>
   );
 }
@@ -149,21 +139,44 @@ export default function HangulVillage({ marketOpen }: { marketOpen: boolean }) {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[90, 90]} />
-        <primitive object={std(PALETTE.stone, 1)} attach="material" />
+        <primitive object={MAT.stone} attach="material" />
       </mesh>
       {/* Kerbs */}
       {[-1, 1].map((s) => (
-        <mesh key={s} receiveShadow position={[s * (HW + 0.15), 0.08, 0]}>
-          <boxGeometry args={[0.3, 0.16, HL * 2]} />
-          <primitive object={std(PALETTE.charcoal, 0.9)} attach="material" />
+        <mesh key={s} receiveShadow position={[s * (HW + 0.15), 0.08, 0]} scale={[0.3, 0.16, HL * 2]}>
+          <boxGeometry />
+          <primitive object={MAT.charcoal} attach="material" />
         </mesh>
       ))}
-
-      <Houses />
+      <Batch kit={VILLAGE_KIT} />
       <Lamps spots={LAMP_SPOTS} size={VILLAGE.lampSize} />
       <Well />
-      <Arch />
-      {/* North: the market gate, shut. South: open, back to the courtyard. */}
+
+      {/* Hanging signboards, one letter per door, gently swaying. */}
+      {SIGNS.map((s, i) => (
+        <group key={`${s.x}${s.z}`} position={[s.x, 2.58, s.z]}>
+          <Sway amp={0.045} speed={1.1 + (i % 3) * 0.17} phase={i * 1.7} axis="z">
+            <group position={[0, -0.46, 0]}>
+              {s.learn && (
+                // The sign a learner can read up close: a thin yellow edge.
+                <mesh position={[0, 0, 0]} scale={[0.74, 0.74, 0.012]}>
+                  <boxGeometry />
+                  <meshBasicMaterial color={PALETTE.yellow} toneMapped={false} />
+                </mesh>
+              )}
+              <Signboard text={s.letter} w={0.62} h={0.62} />
+            </group>
+          </Sway>
+        </group>
+      ))}
+
+      <group position={[0, 2.95, ARCH_Z]}>
+        <Signboard text={VILLAGE.entranceSign} w={2.6} h={0.72} aspect={3.4} />
+      </group>
+
+      {/* East: the lane to the KLOVERS Hub (yellow: the way on). */}
+      <Gate x={HW + 0.25} z={VILLAGE.hubLaneZ} rotY={-Math.PI / 2} open accent sign={VILLAGE.hubSign} />
+      {/* North: the market (Level 1). South: back to the courtyard. */}
       <GateWall z={-HL - 0.2} facing={1} open={marketOpen} sign={VILLAGE.marketSign} halfWidth={HW} />
       <GateWall z={HL + 0.2} facing={-1} open halfWidth={HW} />
     </group>

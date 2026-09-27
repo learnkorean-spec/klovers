@@ -6,7 +6,7 @@ import { resetTouchStick, touchStick } from "../systems/touchInput";
  * shared touchStick the player reads every frame; lets go → stops. Kept on
  * the physical left in both languages: the 3D world is never mirrored.
  */
-export default function Joystick({ label }: { label: string }) {
+export default function Joystick({ label, pulse = false }: { label: string; pulse?: boolean }) {
   const base = useRef<HTMLDivElement>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
   const active = useRef<number | null>(null);
@@ -39,8 +39,11 @@ export default function Joystick({ label }: { label: string }) {
     <div
       ref={base}
       role="application"
+      style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))", left: "calc(1.5rem + env(safe-area-inset-left))" }}
       aria-label={label}
-      className="pointer-events-auto absolute bottom-6 left-6 h-32 w-32 touch-none select-none rounded-full border-2 border-ivory/50 bg-charcoal/25"
+      className={`pointer-events-auto absolute bottom-6 left-6 h-32 w-32 touch-none select-none rounded-full border-2 border-ivory/50 bg-charcoal/25 ${
+        pulse ? "motion-safe:animate-pulse" : ""
+      }`}
       onPointerDown={(e) => {
         active.current = e.pointerId;
         e.currentTarget.setPointerCapture(e.pointerId);

@@ -47,6 +47,17 @@ export function std(color: string, roughness = 0.8, extra: Omit<StdOptions, "rou
  */
 export const ACCENT = new MeshBasicMaterial({ color: new Color(PALETTE.yellow), toneMapped: false });
 
+/**
+ * Natural material colours of the world (not brand colours): warm stone,
+ * a muted pine green for the few plants. Brand colours stay the palette's.
+ */
+export const NATURAL = {
+  stoneWarm: "#D6CAB4",
+  /** Packed earth of a madang (courtyard floor). */
+  madang: "#E4D9C4",
+  pine: "#6E8B67",
+} as const;
+
 /** Named finishes of the world's visual system. */
 export const MAT = {
   plaster: std(PALETTE.ivory, 0.95),
@@ -55,6 +66,8 @@ export const MAT = {
   woodDark: std(PALETTE.woodDark, 0.7),
   woodWarm: std(PALETTE.woodWarm, 0.75),
   stone: std(PALETTE.stone, 1),
+  stoneWarm: std(NATURAL.stoneWarm, 0.95),
+  pine: std(NATURAL.pine, 0.9, { flatShading: true }),
   /** Hanji paper in a window: a little self-light so it reads as daylight. */
   paper: std(PALETTE.white, 0.95, { emissive: PALETTE.ivory, emissiveIntensity: 0.3 }),
   /** Lantern paper: brighter than a window. */

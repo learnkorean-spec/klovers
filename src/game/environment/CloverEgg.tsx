@@ -4,6 +4,7 @@ import type { Group } from "three";
 import { ACCENT, MAT, std } from "../config/materials";
 import { PALETTE, PROPS } from "../config/world";
 import { HATCH, type StoryState } from "../systems/story";
+import { REDUCED_MOTION } from "../systems/motion";
 
 /**
  * The clover egg on its plinth in the middle of the courtyard.
@@ -16,7 +17,7 @@ import { HATCH, type StoryState } from "../systems/story";
  *              yet — a small rock now and then, inviting a closer look
  * - hatching : rocks harder, the cap cracks off (≈ 2.3 s), Cluby appears
  * - open     : the two halves of the shell rest in the nest
- * A thin yellow inlay on the plinth is the only accent: navigation, not glow.
+ * A thin yellow line on the platform is the only accent: navigation, not glow.
  */
 const PLINTH_H = 0.5;
 const EGG_R = 0.42;
@@ -33,7 +34,7 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
     const now = performance.now();
     let rock = 0;
     let capOff = 0; // 0 = on, 1 = lying beside the nest
-    if (s.egg === "stirring") {
+    if (s.egg === "stirring" && !REDUCED_MOTION) {
       const t = (now % 3200) / 3200;
       rock = t < 0.25 ? Math.sin(t * Math.PI * 16) * 0.05 * (1 - t / 0.25) : 0;
     } else if (s.egg === "hatching") {
@@ -54,14 +55,25 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
 
   return (
     <group position={[x, 0, z]}>
-      <mesh castShadow receiveShadow position={[0, PLINTH_H / 2, 0]}>
-        <boxGeometry args={[w, PLINTH_H, w]} />
-        <primitive object={std(PALETTE.charcoal, 0.9)} attach="material" />
+      {/* Octagonal ceremonial platform: warm stone base, dark timber top,
+          a thin Klovers-yellow line round the top edge — the room's one
+          pointer. It frames the egg rather than overpowering it. */}
+      <mesh castShadow receiveShadow position={[0, 0.14, 0]} rotation={[0, Math.PI / 8, 0]}>
+        <cylinderGeometry args={[w / 2 / Math.cos(Math.PI / 8), w / 2 / Math.cos(Math.PI / 8) + 0.08, 0.28, 8]} />
+        <primitive object={MAT.stoneWarm} attach="material" />
       </mesh>
-      {/* Thin yellow inlay round the top edge: the courtyard's one pointer */}
-      <mesh position={[0, PLINTH_H + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[w / 2 - 0.12, w / 2 - 0.07, 4, 1, Math.PI / 4]} />
+      <mesh castShadow receiveShadow position={[0, 0.39, 0]} rotation={[0, Math.PI / 8, 0]}>
+        <cylinderGeometry args={[w / 2 - 0.28, w / 2 - 0.2, 0.22, 8]} />
+        <primitive object={MAT.woodDark} attach="material" />
+      </mesh>
+      <mesh position={[0, PLINTH_H + 0.004, 0]} rotation={[-Math.PI / 2, 0, Math.PI / 8]}>
+        <ringGeometry args={[w / 2 - 0.42, w / 2 - 0.36, 8, 1]} />
         <primitive object={ACCENT} attach="material" />
+      </mesh>
+      {/* A low step on the arrival side */}
+      <mesh receiveShadow position={[0, 0.07, w / 2 + 0.28]}>
+        <boxGeometry args={[1.2, 0.14, 0.4]} />
+        <primitive object={MAT.stoneWarm} attach="material" />
       </mesh>
       <mesh castShadow position={[0, PLINTH_H + 0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.42, 0.07, 10, 32]} />

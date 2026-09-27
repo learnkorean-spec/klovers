@@ -1,7 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
+import { useFrame } from "@react-three/fiber";
+import type { Group } from "three";
 import { PALETTE } from "../config/world";
 import Instanced, { type Part } from "./Instanced";
 import { useSignTexture } from "./signTexture";
+import { REDUCED_MOTION } from "../systems/motion";
 import { ACCENT, MAT, std } from "../config/materials";
 
 /**
@@ -78,16 +81,16 @@ export function GateWall({ z, facing, open, sign, halfWidth }: { z: number; faci
           </mesh>
         </group>
       ))}
-      {/* Yellow gate frame — unlit so it renders as exact Klovers yellow. */}
+      {/* Gate frame: Klovers yellow when it can be used (navigation), dark timber when shut. */}
       {[-1.7, 1.7].map((x) => (
         <mesh key={x} castShadow position={[x, 1.5, inner]}>
           <boxGeometry args={[0.2, 3, 0.2]} />
-          <primitive object={ACCENT} attach="material" />
+          <primitive object={open ? ACCENT : MAT.woodDark} attach="material" />
         </mesh>
       ))}
       <mesh castShadow position={[0, 3.05, inner]}>
         <boxGeometry args={[3.6, 0.22, 0.22]} />
-        <primitive object={ACCENT} attach="material" />
+        <primitive object={open ? ACCENT : MAT.woodDark} attach="material" />
       </mesh>
       {open ? (
         <>
@@ -183,4 +186,26 @@ export function Gate({ x, z, rotY, open, accent, barred = false, sign }: {
       )}
     </group>
   );
+}
+
+
+
+/**
+ * A gentle sway for hanging things (signs, banners): children hang from the
+ * group's origin. Cheap (one rotation per frame) and switched off when the
+ * learner prefers reduced motion.
+ */
+export function Sway({ children, amp = 0.05, speed = 1.3, phase = 0, axis = "z" }: {
+  children: ReactNode;
+  amp?: number;
+  speed?: number;
+  phase?: number;
+  axis?: "x" | "z";
+}) {
+  const ref = useRef<Group>(null);
+  useFrame(({ clock }) => {
+    if (REDUCED_MOTION || !ref.current) return;
+    ref.current.rotation[axis] = Math.sin(clock.elapsedTime * speed + phase) * amp;
+  });
+  return <group ref={ref}>{children}</group>;
 }
