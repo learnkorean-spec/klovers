@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { CorrectText, AnswerText } from "@/components/games/GameFeedbackText";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -123,8 +124,8 @@ const PhonicsReadGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
                 }`}>{opt}</button>
             ))}
           </div>
-          {feedback && <p className={feedback === "correct" ? "text-green-600 dark:text-green-400 font-medium" : "text-destructive font-medium"}>
-            {feedback === "correct" ? "✅ Correct! +5 XP" : `❌ Answer: ${q.answer}`}
+          {feedback && <p className={feedback === "correct" ? "text-foreground font-medium" : "text-destructive font-medium"}>
+            {feedback === "correct" ? <CorrectText /> : <AnswerText answer={`${q.answer}`} />}
           </p>}
         </Card>
         {feedback && <Button onClick={nextRound} className="w-full gap-2">Next <ArrowRight className="h-4 w-4" /></Button>}

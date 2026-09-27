@@ -715,7 +715,7 @@ export const translations = {
       kdramaComplete: "K-Drama Expert!",
       timePrompt: "What time is it?",
       timeComplete: "Time Master!",
-      wrongPrefix: "❌ Answer: {answer}",
+      wrongPrefix: "Answer: {answer}",
       // Home game cards
       homeCard1Title: "Vocabulary Match",
       homeCard1Desc: "Flip cards & match Korean words with their English meanings",

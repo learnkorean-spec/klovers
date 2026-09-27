@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { CorrectText } from "@/components/games/GameFeedbackText";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -80,8 +81,8 @@ const GreetingMasterGame = ({ onGameComplete }: { onGameComplete?: (score: numbe
                 }`}>{opt}</button>
             ))}
           </div>
-          {feedback && <p className={feedback === "correct" ? "text-green-600 dark:text-green-400 font-medium" : "text-destructive font-medium"}>
-            {feedback === "correct" ? "✅ 잘했어요! +5 XP" : t("games.wrongPrefix").replace("{answer}", q.answer)}
+          {feedback && <p className={feedback === "correct" ? "text-foreground font-medium" : "text-destructive font-medium"}>
+            {feedback === "correct" ? <CorrectText korean="잘했어요!" /> : t("games.wrongPrefix").replace("{answer}", q.answer)}
           </p>}
         </Card>
         {feedback && <Button onClick={nextRound} className="w-full gap-2">{t("games.next")} <ArrowRight className="h-4 w-4" /></Button>}

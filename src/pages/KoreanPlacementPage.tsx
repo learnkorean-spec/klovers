@@ -1159,7 +1159,7 @@ const KoreanPlacementPage = () => {
               )}
               {extrasSaved && (
                 <p className="text-sm text-charcoal dark:text-foreground bg-klovers-green/15 border border-klovers-green rounded-lg p-3">
-                  {t("حُفظت للمدرّس. شكرًا.", "Saved for your teacher. Thank you!")}
+                  {t("حُفظت للمعلّمة. شكرًا.", "Saved for your teacher. Thank you!")}
                 </p>
               )}
             </CardContent>
@@ -1179,7 +1179,7 @@ const KoreanPlacementPage = () => {
           <div ref={topRef} />
           <Card dir={isAr ? "rtl" : "ltr"}>
             <CardContent className="pt-6 space-y-5">
-              <h2 className="text-lg font-bold">{t("الكتابة والصوت — للمدرّس", "Writing and voice — for your teacher")}</h2>
+              <h2 className="text-lg font-bold">{t("الكتابة والصوت — للمعلّمة", "Writing and voice — for your teacher")}</h2>
               <p className="text-sm text-muted-foreground">
                 {t("لا يوجد تصحيح آلي هنا؛ المعلّمة هي من تراجع.", "Nothing here is auto-graded. Your teacher reviews it.")}
               </p>
@@ -1231,7 +1231,7 @@ const KoreanPlacementPage = () => {
               <div className="flex gap-2">
                 <Button onClick={saveExtras} disabled={savingExtras || recordingId !== null}>
                   {savingExtras && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
-                  {t("الحفظ للمدرّس", "Save for my teacher")}
+                  {t("الحفظ للمعلّمة", "Save for my teacher")}
                 </Button>
                 <Button variant="ghost" onClick={() => setPhase("result")}>{t("العودة إلى النتيجة", "Back to result")}</Button>
               </div>

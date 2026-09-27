@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { CorrectText, AnswerText } from "@/components/games/GameFeedbackText";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -148,8 +149,8 @@ const SpeedReadGame = ({ onGameComplete }: { onGameComplete?: (score: number, to
                     }`}>{opt}</button>
                 ))}
               </div>
-              {feedback && <p className={feedback === "correct" ? "text-green-600 dark:text-green-400 font-medium" : "text-destructive font-medium"}>
-                {feedback === "correct" ? "✅ Correct! +5 XP" : `❌ Answer: ${q.meaning}`}
+              {feedback && <p className={feedback === "correct" ? "text-foreground font-medium" : "text-destructive font-medium"}>
+                {feedback === "correct" ? <CorrectText /> : <AnswerText answer={`${q.meaning}`} />}
               </p>}
             </>
           )}
