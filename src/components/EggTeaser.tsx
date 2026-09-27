@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { toArabicDigits } from "@/lib/trustFigures";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -174,7 +173,6 @@ const EggTeaser = () => {
               className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-klovers-yellow px-7 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
             >
               {isAr ? "لمس البيضة" : "Tap the Egg"}
-              <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </button>
 
             {tapCount > 0 && (
@@ -248,7 +246,6 @@ const EggTeaser = () => {
               className="inline-flex min-h-10 items-center gap-2 rounded-full border-2 border-klovers-yellow px-6 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
             >
               {isAr ? "كشف دليل آخر" : "Reveal another clue"}
-              <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             </button>
 
             {/* The honest next step: the egg only hatches in an account. */}
@@ -269,7 +266,6 @@ const EggTeaser = () => {
                   className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-klovers-yellow px-6 text-sm font-bold text-charcoal transition-opacity hover:opacity-90"
                 >
                   {isAr ? "عرض البيضة في لوحة التحكم" : "See your egg on your dashboard"}
-                  <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
                 </Link>
               ) : (
                 <>

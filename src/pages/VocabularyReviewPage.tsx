@@ -7,7 +7,8 @@ import { useGamification } from "@/hooks/useGamification";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { BookOpen, ArrowLeft, Zap, Sprout, Lightbulb, Sparkles } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
+import { toArabicDigits } from "@/lib/trustFigures";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
@@ -62,10 +63,17 @@ export function VocabularyReviewPage() {
       .select("id, title_en, sort_order")
       .in("id", lessonIds)
       .order("sort_order")
-      .then(({ data }) => {
-        setLessonOptions((data || []).map((l: any) => ({ id: l.id, title: `Lesson ${l.sort_order}: ${l.title_en}` })));
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[VocabularyReviewPage] lesson filter", error);
+          return;
+        }
+        setLessonOptions((data || []).map((l: any) => ({
+          id: l.id,
+          title: isAr ? `الدرس ${toArabicDigits(l.sort_order)}: ${l.title_en}` : `Lesson ${l.sort_order}: ${l.title_en}`,
+        })));
       });
-  }, [dueCards]);
+  }, [dueCards, isAr]);
 
   const filteredCards = selectedLessonId ? dueCards.filter(c => c.lesson_id === selectedLessonId) : dueCards;
 
@@ -97,8 +105,7 @@ export function VocabularyReviewPage() {
         <div className="container mx-auto px-4 max-w-3xl">
           {/* Page header */}
           <div className="mb-8">
-            <Button variant="ghost" onClick={() => navigate("/textbook")} className="mb-4 -ml-2">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+            <Button variant="ghost" onClick={() => navigate("/textbook")} className="mb-4 -ms-2">
               {isAr ? "العودة للكتاب" : "Back to Textbook"}
             </Button>
             {/* World mode: review lives in Cluby's Memory Garden (lead: Cluby).
@@ -115,7 +122,7 @@ export function VocabularyReviewPage() {
               />
               <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/35 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 flex items-end gap-3 p-4">
-                <BookOpen className="h-7 w-7 shrink-0 text-klovers-yellow" aria-hidden="true" />
+                <span className="shrink-0 rounded-xl bg-ivory p-1"><KloverIcon name="books-stack" className="h-9 w-9 md:h-11 md:w-11" /></span>
                 <div className="min-w-0">
                   <p className="text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">{isAr ? "حديقة ذاكرة كلوبي" : "Cluby's Memory Garden"}</p>
                   <h1 className="font-display text-2xl font-extrabold leading-tight text-white md:text-4xl">{isAr ? "مراجعة المفردات" : "Vocabulary Review"}</h1>
@@ -151,7 +158,7 @@ export function VocabularyReviewPage() {
             <Card className="border-2">
               <CardContent className="flex items-center justify-center h-64">
                 <div className="text-center space-y-3">
-                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                  <div className="w-8 h-8 border-2 border-klovers-yellow border-t-transparent rounded-full animate-spin mx-auto" />
                   <p className="text-muted-foreground">{isAr ? "جارٍ تحميل مراجعة المفردات..." : "Loading your vocabulary review…"}</p>
                 </div>
               </CardContent>
@@ -159,19 +166,18 @@ export function VocabularyReviewPage() {
           ) : dueCards.length === 0 && !sessionStarted ? (
             <Card className="border-2">
               <CardContent className="text-center py-12">
-                {/* needs Klovers icon: garden sprout (was an emoji) */}
-                <Sprout className="mx-auto mb-4 h-14 w-14 rounded-full bg-klovers-green p-3 text-charcoal" aria-hidden="true" />
+                <KloverIcon name="sprout" className="mx-auto mb-4 h-16 w-16" />
                 <h2 className="text-2xl font-bold text-foreground mb-2">{isAr ? "لا توجد بطاقات مطلوبة اليوم!" : "No Cards Due Today!"}</h2>
                 <p className="text-muted-foreground mb-6">{isAr ? "اكتملت مراجعة جميع المفردات، وتعود الحديقة بكلمات جديدة غدًا." : "Every word has been reviewed. The garden will have new ones tomorrow."}</p>
                 <Button onClick={() => navigate("/textbook")} className="gap-2">
-                  <BookOpen className="w-4 h-4" /> {isAr ? "مواصلة التعلّم" : "Continue Learning"}
+                  {isAr ? "مواصلة التعلّم" : "Continue Learning"}
                 </Button>
               </CardContent>
             </Card>
           ) : !sessionStarted ? (
             <Card className="border-2">
               <CardContent className="py-12 text-center">
-                <Zap className="w-12 h-12 fill-klovers-yellow text-charcoal dark:text-klovers-yellow mx-auto mb-4" aria-hidden="true" />
+                <KloverIcon name="flashcard-ga" className="mx-auto mb-4 h-16 w-16" />
                 <h2 className="text-2xl font-bold text-foreground mb-4">{isAr ? "هل حان وقت المراجعة؟" : "Ready to Review?"}</h2>
                 <p className="cluby-note mb-3 text-base text-foreground/80" lang={isAr ? "ar" : "en"}>
                   {isAr ? "«كلوبي حفظ لك هذه الكلمات»" : "Cluby saved these for you."}
@@ -183,27 +189,27 @@ export function VocabularyReviewPage() {
                   }
                 </p>
                 {lessonOptions.length > 1 && (
-                  <div className="mb-6 text-left">
+                  <div className="mb-6 text-start">
                     <label className="block text-sm font-medium text-foreground mb-2">{isAr ? "تصفية حسب الدرس" : "Filter by lesson"}</label>
                     <select
                       value={selectedLessonId ?? ""}
                       onChange={e => setSelectedLessonId(e.target.value ? Number(e.target.value) : null)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-klovers-yellow"
                     >
-                      <option value="">{isAr ? `جميع الدروس (${dueCards.length} بطاقة)` : `All lessons (${dueCards.length} cards)`}</option>
+                      <option value="">{isAr ? `جميع الدروس (${toArabicDigits(dueCards.length)} بطاقة)` : `All lessons (${dueCards.length} cards)`}</option>
                       {lessonOptions.map(l => (
                         <option key={l.id} value={l.id}>
-                          {l.title} ({dueCards.filter(c => c.lesson_id === l.id).length} cards)
+                          {l.title} ({isAr ? `${toArabicDigits(dueCards.filter(c => c.lesson_id === l.id).length)} بطاقة` : `${dueCards.filter(c => c.lesson_id === l.id).length} cards`})
                         </option>
                       ))}
                     </select>
                   </div>
                 )}
                 <Button onClick={() => { setSessionCardCount(filteredCards.length); setSessionStarted(true); }} size="lg" className="gap-2">
-                  <BookOpen className="w-4 h-4" /> {isAr ? "بدء جلسة المراجعة" : "Start Review Session"}
+                  {isAr ? "بدء جلسة المراجعة" : "Start Review Session"}
                 </Button>
-                <div className="mt-8 text-left space-y-3 bg-muted/50 p-6 rounded-xl">
-                  <h3 className="font-semibold text-sm text-foreground"><Lightbulb className="me-1 inline h-4 w-4 align-[-3px]" aria-hidden="true" />{isAr ? "نصائح" : "Tips"}</h3>
+                <div className="mt-8 text-start space-y-3 bg-muted/50 p-6 rounded-xl">
+                  <h3 className="font-semibold text-sm text-foreground"><KloverIcon name="lightbulb-sprout" className="me-1 inline h-6 w-6 align-middle" />{isAr ? "نصائح" : "Tips"}</h3>
                   <ul className="text-sm text-muted-foreground space-y-1.5">
                     <li>• {isAr ? "التقييم الصادق يساعد الخوارزمية على العمل بشكل أفضل" : "Rate yourself honestly — this helps the algorithm work better"}</li>
                     <li>• {isAr ? "\"مرة أخرى\" = نسيان تام (البطاقة تتكرر غداً)" : "\"Again\" = complete blackout (card repeats tomorrow)"}</li>
@@ -217,8 +223,7 @@ export function VocabularyReviewPage() {
             sessionComplete ? (
               <Card className="border-2">
                 <CardContent className="py-12 text-center space-y-5">
-                  {/* needs Klovers icon: celebration (was an emoji) */}
-                  <Sparkles className="mx-auto h-14 w-14 rounded-full bg-klovers-yellow p-3 text-charcoal" aria-hidden="true" />
+                  <KloverIcon name="badge-blossom" className="mx-auto h-16 w-16" />
                   <h2 className="text-2xl font-bold text-foreground">{isAr ? "اكتملت الجلسة!" : "Session Complete!"}</h2>
                   <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
                     <div className="text-center">
@@ -230,7 +235,7 @@ export function VocabularyReviewPage() {
                       <p className="text-xs text-muted-foreground">{isAr ? "تم الإتقان" : "Mastered"}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-primary">+{xpEarned}</p>
+                      <p className="text-2xl font-bold text-foreground">+{xpEarned}</p>
                       <p className="text-xs text-muted-foreground">{isAr ? "XP مكتسب" : "XP Earned"}</p>
                     </div>
                   </div>
@@ -252,10 +257,10 @@ export function VocabularyReviewPage() {
                 <VocabularyReview cards={filteredCards} onComplete={handleReviewComplete} isLoading={srsLoading} />
                 {xpEarned > 0 && (
                   <div className="mt-8 text-center">
-                    <Card className="border-primary/20 bg-primary/5">
+                    <Card className="border-2 border-klovers-yellow bg-ivory dark:bg-card">
                       <CardContent className="pt-6 pb-5">
                         <p className="text-sm text-muted-foreground mb-1">{isAr ? "XP مكتسب في هذه الجلسة" : "XP Earned This Session"}</p>
-                        <p className="text-3xl font-bold text-primary">+{xpEarned} XP</p>
+                        <p className="text-3xl font-bold text-foreground">+{xpEarned} XP</p>
                       </CardContent>
                     </Card>
                   </div>
