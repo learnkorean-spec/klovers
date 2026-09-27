@@ -11,8 +11,10 @@ export interface PlayerState {
   velocity: { x: number; z: number };
   yaw: number;
   animation: AnimationState;
-  /** True during a room change: input is ignored and the body stands still. */
+  /** True during a room change or story moment: input is ignored. */
   frozen: boolean;
+  /** True while a web-UI card is open: input is ignored. */
+  paused: boolean;
 }
 
 export interface CameraState {
@@ -24,6 +26,11 @@ export interface CameraState {
   currentDistance: number;
   /** Set after a teleport: the camera jumps behind the player next frame. */
   snap: boolean;
+  /** Story moments: look at this point instead of the player (eases in/out). */
+  focus: { x: number; y: number; z: number } | null;
+  /** Story moments: swing the orbit to this yaw / pitch. */
+  yawTarget: number | null;
+  pitchTarget: number | null;
 }
 
 export function createPlayerState(): PlayerState {
@@ -33,6 +40,7 @@ export function createPlayerState(): PlayerState {
     yaw: PLAYER.spawnYaw,
     animation: "idle",
     frozen: false,
+    paused: false,
   };
 }
 
@@ -44,5 +52,8 @@ export function createCameraState(): CameraState {
     distance: CAMERA.distance,
     currentDistance: CAMERA.distance,
     snap: false,
+    focus: null,
+    yawTarget: null,
+    pitchTarget: null,
   };
 }

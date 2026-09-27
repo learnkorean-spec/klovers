@@ -74,3 +74,21 @@ export function stepYaw(current: number, target: number, turnRate: number, dt: n
 
 /** Facing yaw for a travel direction (matches three.js rotation.y). */
 export const yawFromDirection = (x: number, z: number): number => Math.atan2(x, z);
+
+/**
+ * World-space direction and strength (0…1) from the touch joystick.
+ * y is "push forward" (away from the camera), x is right. A small dead zone
+ * keeps a resting thumb from drifting.
+ */
+export function stickDirection(sx: number, sy: number, cameraYaw: number, deadZone = 0.15): { x: number; z: number; strength: number } {
+  const mag = Math.min(Math.hypot(sx, sy), 1);
+  if (mag < deadZone) return { x: 0, z: 0, strength: 0 };
+  const sin = Math.sin(cameraYaw);
+  const cos = Math.cos(cameraYaw);
+  let x = -sin * sy + cos * sx;
+  let z = -cos * sy - sin * sx;
+  const len = Math.hypot(x, z);
+  x /= len;
+  z /= len;
+  return { x, z, strength: (mag - deadZone) / (1 - deadZone) };
+}

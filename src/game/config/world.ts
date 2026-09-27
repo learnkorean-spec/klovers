@@ -66,6 +66,8 @@ export const CAMERA = {
   /** Keeps the camera this far from walls so it never clips through. */
   wallPadding: 0.25,
   fov: 55,
+  /** Wider view on portrait screens (phones held upright). */
+  fovPortrait: 70,
 } as const;
 
 /** Largest simulated step; protects collision after a tab switch or hitch. */

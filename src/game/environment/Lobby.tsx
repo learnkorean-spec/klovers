@@ -1,7 +1,13 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { CanvasTexture, InstancedMesh, Object3D, RepeatWrapping, SRGBColorSpace } from "three";
+import { InstancedMesh, Object3D } from "three";
 import { PALETTE, POSTS, PROPS, ROOM } from "../config/world";
+import type { MutableRefObject } from "react";
+import type { StoryState } from "../systems/story";
+import { MAT } from "../config/materials";
 import CloverEgg from "./CloverEgg";
+import Instanced, { UNIT, type Part } from "./Instanced";
+import { paintPlanks, useTiledTexture } from "./textures";
+import { ACCENT, std } from "../config/materials";
 
 /**
  * The prototype lobby: a quiet hanok courtyard, 22 m × 18 m.
@@ -13,39 +19,6 @@ import CloverEgg from "./CloverEgg";
  */
 
 const { halfWidth: HW, halfDepth: HD, wallHeight: WH, wallThickness: WT } = ROOM;
-
-/** Plank pattern drawn once on a small canvas (no image download). */
-function usePlankTexture() {
-  return useMemo(() => {
-    const size = 256;
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = PALETTE.woodWarm;
-      ctx.fillRect(0, 0, size, size);
-      const rows = 8;
-      for (let r = 0; r < rows; r++) {
-        const y = (r * size) / rows;
-        // Subtle per-plank tone so the floor is not a flat colour.
-        ctx.fillStyle = r % 2 ? "rgba(107,74,51,0.10)" : "rgba(255,249,236,0.06)";
-        ctx.fillRect(0, y, size, size / rows);
-        ctx.fillStyle = "rgba(46,46,46,0.35)";
-        ctx.fillRect(0, y, size, 1.5);
-        const seam = ((r * 97) % size) + 20;
-        ctx.fillRect(seam % size, y, 1.5, size / rows);
-      }
-    }
-    const tex = new CanvasTexture(canvas);
-    tex.wrapS = RepeatWrapping;
-    tex.wrapT = RepeatWrapping;
-    tex.repeat.set(HW / 1.5, HD / 1.5);
-    tex.colorSpace = SRGBColorSpace;
-    tex.anisotropy = 4;
-    return tex;
-  }, []);
-}
 
 interface Bay {
   /** Centre of the bay along the wall. */
@@ -130,7 +103,7 @@ function Lattice({ bays }: { bays: Bay[] }) {
     <>
       <instancedMesh ref={ref} args={[undefined, undefined, count]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={PALETTE.charcoal} roughness={0.6} />
+        <primitive object={std(PALETTE.charcoal, 0.6)} attach="material" />
       </instancedMesh>
       {/* Hanji paper behind the lattice */}
       {windows.map((b, i) => (
@@ -140,7 +113,7 @@ function Lattice({ bays }: { bays: Bay[] }) {
           rotation={[0, b.rotY, 0]}
         >
           <planeGeometry args={[panelW, panelH]} />
-          <meshStandardMaterial color={PALETTE.white} emissive={PALETTE.ivory} emissiveIntensity={0.25} roughness={0.95} />
+          <primitive object={std(PALETTE.white, 0.95, { emissive: PALETTE.ivory, emissiveIntensity: 0.25 })} attach="material" />
         </mesh>
       ))}
     </>
@@ -164,7 +137,7 @@ function Gate() {
       {[-1, 1].map((side) => (
         <mesh key={side} castShadow receiveShadow position={[side * 2.62, 1.35, -0.1]}>
           <boxGeometry args={[1.6, 2.7, 0.1]} />
-          <meshStandardMaterial color={PALETTE.woodDark} roughness={0.75} />
+          <primitive object={std(PALETTE.woodDark, 0.75)} attach="material" />
         </mesh>
       ))}
       {/* Yellow frame — the one bold brand accent in the room. Unlit and not
@@ -172,12 +145,12 @@ function Gate() {
       {[-1.7, 1.7].map((x) => (
         <mesh key={x} castShadow position={[x, 1.45, 0.08]}>
           <boxGeometry args={[0.2, 2.9, 0.2]} />
-          <meshBasicMaterial color={PALETTE.yellow} toneMapped={false} />
+          <primitive object={ACCENT} attach="material" />
         </mesh>
       ))}
       <mesh castShadow position={[0, 2.95, 0.08]}>
         <boxGeometry args={[3.6, 0.22, 0.22]} />
-        <meshBasicMaterial color={PALETTE.yellow} toneMapped={false} />
+        <primitive object={ACCENT} attach="material" />
       </mesh>
     </group>
   );
@@ -197,17 +170,17 @@ function Walls() {
         <group key={i}>
           <mesh receiveShadow position={w.pos}>
             <boxGeometry args={w.size} />
-            <meshStandardMaterial color={PALETTE.ivory} roughness={0.95} />
+            <primitive object={std(PALETTE.ivory, 0.95)} attach="material" />
           </mesh>
           {/* Charcoal base band (wainscot) */}
           <mesh position={[w.pos[0], 0.45, w.pos[2]]}>
             <boxGeometry args={[w.size[0] + 0.02, 0.9, w.size[2] + 0.02]} />
-            <meshStandardMaterial color={PALETTE.charcoal} roughness={0.85} />
+            <primitive object={std(PALETTE.charcoal, 0.85)} attach="material" />
           </mesh>
           {/* Eave: a dark overhang that frames the open sky */}
           <mesh castShadow position={[w.pos[0], WH + 0.12, w.pos[2]]}>
             <boxGeometry args={[w.size[0] + 1.6, 0.24, w.size[2] + 1.6]} />
-            <meshStandardMaterial color={PALETTE.charcoal} roughness={0.8} />
+            <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
           </mesh>
         </group>
       ))}
@@ -223,12 +196,12 @@ function Posts() {
         <group key={i} position={[p.x, 0, p.z]}>
           <mesh castShadow position={[0, WH / 2, 0]}>
             <boxGeometry args={[s, WH, s]} />
-            <meshStandardMaterial color={PALETTE.woodDark} roughness={0.7} />
+            <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
           </mesh>
           {/* Stone footing (chotdol) */}
           <mesh receiveShadow position={[0, 0.08, 0]}>
             <boxGeometry args={[s + 0.16, 0.16, s + 0.16]} />
-            <meshStandardMaterial color={PALETTE.stone} roughness={1} />
+            <primitive object={std(PALETTE.stone, 1)} attach="material" />
           </mesh>
         </group>
       ))}
@@ -243,12 +216,12 @@ function Benches() {
         <group key={i} position={[b.x, 0, b.z]}>
           <mesh castShadow receiveShadow position={[0, 0.45, 0]}>
             <boxGeometry args={[b.w, 0.1, b.d]} />
-            <meshStandardMaterial color={PALETTE.woodWarm} roughness={0.7} />
+            <primitive object={std(PALETTE.woodWarm, 0.7)} attach="material" />
           </mesh>
           {[-1, 1].map((side) => (
             <mesh key={side} castShadow position={[side * (b.w / 2 - 0.2), 0.2, 0]}>
               <boxGeometry args={[0.12, 0.4, b.d - 0.1]} />
-              <meshStandardMaterial color={PALETTE.woodDark} roughness={0.8} />
+              <primitive object={std(PALETTE.woodDark, 0.8)} attach="material" />
             </mesh>
           ))}
         </group>
@@ -266,15 +239,15 @@ function Lanterns() {
         <group key={i} position={[l.x, 0, l.z]}>
           <mesh castShadow receiveShadow position={[0, 0.3, 0]}>
             <boxGeometry args={[s * 0.55, 0.6, s * 0.55]} />
-            <meshStandardMaterial color={PALETTE.stone} roughness={1} />
+            <primitive object={std(PALETTE.stone, 1)} attach="material" />
           </mesh>
           <mesh castShadow position={[0, 0.82, 0]}>
             <boxGeometry args={[s * 0.8, 0.44, s * 0.8]} />
-            <meshStandardMaterial color={PALETTE.white} emissive={PALETTE.ivory} emissiveIntensity={0.35} roughness={0.9} />
+            <primitive object={std(PALETTE.white, 0.9, { emissive: PALETTE.ivory, emissiveIntensity: 0.35 })} attach="material" />
           </mesh>
           <mesh castShadow position={[0, 1.1, 0]}>
             <boxGeometry args={[s, 0.1, s]} />
-            <meshStandardMaterial color={PALETTE.charcoal} roughness={0.8} />
+            <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
           </mesh>
         </group>
       ))}
@@ -282,8 +255,28 @@ function Lanterns() {
   );
 }
 
-export default function Lobby() {
-  const plank = usePlankTexture();
+/**
+ * Village rooftops just beyond the courtyard walls, so the first room reads
+ * as part of the same world as Hangul Village (and the north gate reads as
+ * the way into it). Two draw calls.
+ */
+const NEIGHBOURS: { body: Part[]; roof: Part[] } = (() => {
+  const body: Part[] = [], roof: Part[] = [];
+  const spots: [number, number, number, number][] = [
+    // x, z, width (x), depth (z)
+    [-8, -HD - 4, 6, 4.6], [8, -HD - 4, 6, 4.6],
+    [-HW - 4, -3, 4.6, 6], [-HW - 4, 5, 4.6, 5], [HW + 4, -3, 4.6, 6], [HW + 4, 5, 4.6, 5],
+    [-6, HD + 4, 6, 4.6], [6, HD + 4, 6, 4.6],
+  ];
+  for (const [x, z, w, d] of spots) {
+    body.push({ p: [x, 1.6, z], s: [w, 3.2, d] });
+    roof.push({ p: [x, 3.2 + 0.9, z], s: [w + 1.5, 1.8, d + 1.5] });
+  }
+  return { body, roof };
+})();
+
+export default function Lobby({ story }: { story: MutableRefObject<StoryState> }) {
+  const plank = useTiledTexture(paintPlanks, HW / 1.5, HD / 1.5);
   const bays = useMemo(computeBays, []);
 
   return (
@@ -296,12 +289,12 @@ export default function Lobby() {
       {/* Stone madang in the centre */}
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
         <planeGeometry args={[8, 8]} />
-        <meshStandardMaterial color={PALETTE.stone} roughness={1} />
+        <primitive object={std(PALETTE.stone, 1)} attach="material" />
       </mesh>
       {/* Ground beyond the walls, seen past the eaves */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[80, 80]} />
-        <meshStandardMaterial color={PALETTE.stone} roughness={1} />
+        <primitive object={std(PALETTE.stone, 1)} attach="material" />
       </mesh>
 
       <Walls />
@@ -310,7 +303,9 @@ export default function Lobby() {
       <Gate />
       <Benches />
       <Lanterns />
-      <CloverEgg />
+      <CloverEgg story={story} />
+      <Instanced parts={NEIGHBOURS.body} material={MAT.plaster} />
+      <Instanced parts={NEIGHBOURS.roof} material={MAT.roofTile} geometry={UNIT.hipRoof} />
     </group>
   );
 }

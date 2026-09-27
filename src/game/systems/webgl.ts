@@ -15,7 +15,7 @@ export function hasWebGL(): boolean {
   }
 }
 
-/** Touch-first device (no fine pointer): walking needs a keyboard for now. */
+/** Touch-first device (no fine pointer): gets the joystick instead of key hints. */
 export function isTouchFirst(): boolean {
   try {
     return window.matchMedia("(pointer: coarse)").matches && !window.matchMedia("(pointer: fine)").matches;

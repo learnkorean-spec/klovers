@@ -4,7 +4,7 @@ import { Vector3 } from "three";
 import type { RoomLayout } from "../config/rooms";
 import { CAMERA, MAX_DT } from "../config/world";
 import { isBlocked } from "../systems/collision";
-import { damp } from "../systems/movement";
+import { angleDelta, damp } from "../systems/movement";
 import type { CameraState, PlayerState } from "../systems/state";
 
 interface CameraProps {
@@ -26,7 +26,7 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), h
  * limits. The camera pulls in rather than pass through a wall or column.
  */
 export default function ThirdPersonCamera({ player, camera, layout, onFirstLook }: CameraProps) {
-  const { camera: cam, gl } = useThree();
+  const { camera: cam, gl, size } = useThree();
   const target = useRef(new Vector3());
   // Reused every frame — no per-frame allocations in the render loop.
   const desired = useRef(new Vector3());
@@ -34,6 +34,14 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
   const initialised = useRef(false);
   const firstLook = useRef(onFirstLook);
   firstLook.current = onFirstLook;
+
+  // Portrait phones see a narrow slice at the desktop FOV: widen it there.
+  useEffect(() => {
+    if (!("fov" in cam)) return;
+    const persp = cam as typeof cam & { fov: number };
+    persp.fov = size.width < size.height ? CAMERA.fovPortrait : CAMERA.fov;
+    cam.updateProjectionMatrix();
+  }, [cam, size.width, size.height]);
 
   useEffect(() => {
     const el = gl.domElement;
@@ -118,7 +126,12 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
     const c = camera.current;
     const p = player.current.position;
 
-    desired.current.set(p.x, p.y + CAMERA.targetHeight, p.z);
+    if (c.focus) desired.current.set(c.focus.x, c.focus.y, c.focus.z);
+    else desired.current.set(p.x, p.y + CAMERA.targetHeight, p.z);
+    // Story reframing eases slowly; normal follow is brisk.
+    const sharp = c.focus || c.yawTarget !== null ? 2.5 : CAMERA.followSharpness;
+    if (c.yawTarget !== null) c.yaw += angleDelta(c.yaw, c.yawTarget) * damp(2.5, dt);
+    if (c.pitchTarget !== null) c.pitch += (c.pitchTarget - c.pitch) * damp(2.5, dt);
     if (c.snap) {
       // After a teleport (room change) jump straight behind the player.
       initialised.current = false;
@@ -127,7 +140,7 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
     if (!initialised.current) {
       target.current.copy(desired.current);
     } else {
-      target.current.lerp(desired.current, damp(CAMERA.followSharpness, dt));
+      target.current.lerp(desired.current, damp(sharp, dt));
     }
 
     // Direction from the target back to the camera.
