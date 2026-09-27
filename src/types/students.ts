@@ -138,6 +138,8 @@ export interface StudentBundle {
   coverage_start: string;
   /** Null means coverage_start was backfilled and nobody has reviewed it yet. */
   coverage_start_confirmed_at: string | null;
+  /** Null means Re has not recorded a payment for this bundle yet. */
+  paid_on?: string | null;
   status: BundleStatus;
   voided_reason: string | null;
   voided_at: string | null;

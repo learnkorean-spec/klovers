@@ -233,7 +233,7 @@ export function useBundleBalances() {
 
 const BUNDLE_COLUMNS =
   "id, student_id, source, catalog_key, label, total_classes, total_price, currency, " +
-  "purchased_on, coverage_start, coverage_start_confirmed_at, status, voided_reason, voided_at, note";
+  "purchased_on, paid_on, coverage_start, coverage_start_confirmed_at, status, voided_reason, voided_at, note";
 
 const SESSION_COLUMNS =
   "id, student_id, bundle_id, class_id, session_date, start_time, outcome, counted, confirmed_at, note";

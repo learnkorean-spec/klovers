@@ -406,7 +406,16 @@ const BundleBox = ({
         </span>
       </div>
 
-      {unreviewed && <UnreviewedBadge />}
+      {(unreviewed || (activeBundle && !activeBundle.paid_on)) && (
+        <div className="flex flex-wrap gap-1.5">
+          {unreviewed && <UnreviewedBadge />}
+          {activeBundle && !activeBundle.paid_on && (
+            <Badge variant="outline" className="text-[10px] border-destructive/60 text-destructive">
+              <Wallet className="h-3 w-3 mr-1" /> unpaid
+            </Badge>
+          )}
+        </div>
+      )}
 
       <div className="h-2 rounded-full bg-muted overflow-hidden">
         <div
