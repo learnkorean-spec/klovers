@@ -1,0 +1,24 @@
+name: hb-brand
+on:
+  push:
+    branches: [brand/hangul-book-icons-palette]
+    paths: [hb_brand.py]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: brand/hangul-book-icons-palette
+      - name: Apply
+        run: |
+          set -e
+          python3 hb_brand.py
+          git rm -q hb_brand.py
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add -A src
+          git commit -m 'brand: Hangul book in the Klovers palette, Klovers icons instead of emoji, Korean word tiles instead of stock photos'
+          git push

@@ -2,20 +2,73 @@ import { useState, useEffect, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock } from "lucide-react";
-import KloverIcon from "@/components/KloverIcon";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useSEO } from "@/hooks/useSEO";
+
+
+/* Emoji in the book data are shown as Klovers icons (brand guard, 27 Sep
+   2026). An emoji with no matching Klovers icon is not drawn at all. */
+const BOOK_ICON_MAP: Record<string, KloverIconName> = {
+  "\ud83d\udd24": "flashcard-ga",
+  "\ud83c\udfac": "game-chat-smile",
+  "\ud83d\udc51": "palace-blossoms",
+  "\ud83d\udcda": "books-stack",
+  "\ud83d\udcd6": "klobi-reading",
+  "\ud83c\udfc6": "badge-blossom",
+  "\ud83d\udcaa": "growth-chart",
+  "\ud83d\udde3\ufe0f": "chat-annyeong",
+  "\ud83c\udfd7\ufe0f": "game-hangeul-spelling",
+  "\u270f\ufe0f": "game-checklist-pencil",
+  "\ud83d\udcdc": "diploma-scroll",
+  "\ud83c\udf93": "diploma-scroll",
+  "\u2705": "calendar-check",
+  "\ud83d\uddfa\ufe0f": "game-korea-map",
+  "\ud83c\udf38": "hanok-cherry-tree",
+  "\ud83c\udfdb\ufe0f": "palace-blossoms",
+  "\ud83c\udfd4\ufe0f": "game-korea-map",
+  "\ud83c\udfaf": "lightbulb-sprout",
+  "\ud83d\uddd3\ufe0f": "calendar-blossom",
+  "\ud83d\udcc5": "calendar-blossom",
+  "\u23f1\ufe0f": "game-time-dates",
+  "\ud83d\udd0a": "klobi-headphones",
+  "\ud83c\udfa4": "klobi-headphones",
+  "\u270d\ufe0f": "game-checklist-pencil",
+  "\ud83d\uddbc\ufe0f": "flashcard-ga",
+  "\ud83d\udd22": "game-time-dates",
+  "\ud83c\udf1f": "badge-blossom",
+  "\ud83c\udf89": "badge-blossom",
+  "\ud83d\udd17": "game-particle-puzzle",
+  "\ud83e\udde0": "lightbulb-sprout",
+  "\ud83c\uddf0\ud83c\uddf7": "flag-korea",
+  "\ud83c\udf0d": "globe-plane",
+  "\ud83c\udf10": "globe-plane",
+  "\ud83d\udc4b": "chat-annyeonghaseyo",
+  "\ud83d\ude4b": "chat-annyeonghaseyo",
+  "\ud83c\udf5c": "bibimbap",
+  "\ud83d\udd2c": "lightbulb-sprout",
+  "\ud83c\udf82": "calendar-blossom",
+  "\ud83d\udc69\u200d\ud83c\udfeb": "student-girl-heart",
+  "\ud83c\udfd9\ufe0f": "namsan-tower",
+  "\ud83d\udcd3": "books-stack",
+  "\ud83d\udd11": "lightbulb-sprout",
+};
+function BookIcon({ e }: { e?: string }) {
+  const name = e ? BOOK_ICON_MAP[e] : undefined;
+  if (!name) return null;
+  return <KloverIcon name={name} className="inline-block h-[1.4em] w-[1.4em] align-middle" />;
+}
 
 /* ─── Brand tokens ─────────────────────────────── */
 const Y    = "#FFFF00";   // yellow — thin accent lines only
-const YL   = "#FFFDE7";   // very pale yellow — subtle row tints
-const GL   = "#F0FFF4";   // very pale mint — subtle vowel tint
-const GD   = "#166534";   // dark green text on mint
-const BK   = "#111111";   // primary text
+const YL   = "#FFF9EC";   // very pale yellow — subtle row tints
+const GL   = "#FFF9EC";   // very pale mint — subtle vowel tint
+const GD   = "#2E2E2E";   // dark green text on mint
+const BK   = "#2E2E2E";   // primary text
 const BK2  = "#333333";   // secondary text
-const GOLD = "#D4AF37";   // cover gold accent
-const CREAM = "#FAFAF8";  // page soft background (near-white)
+const GOLD = "#FFFF00";   // cover gold accent
+const CREAM = "#FFF9EC";  // page soft background (near-white)
 /* ─── Book design system ────────────────────────── */
-const T1   = "#111111";   // heading text
+const T1   = "#2E2E2E";   // heading text
 const T2   = "#444444";   // body text
 const T3   = "#777777";   // captions / metadata
 const BD   = "#DDDDDD";   // borders / dividers
@@ -29,12 +82,12 @@ function TaegeukIcon({ size = 40 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="48" fill="none" stroke={Y} strokeWidth="3" />
       {/* Top half - blue */}
-      <path d="M50 2 A48 48 0 0 1 50 98 A24 24 0 0 1 50 50 A24 24 0 0 0 50 2Z" fill="#0047AB" />
+      <path d="M50 2 A48 48 0 0 1 50 98 A24 24 0 0 1 50 50 A24 24 0 0 0 50 2Z" fill="#2E2E2E" />
       {/* Bottom half - red */}
-      <path d="M50 98 A48 48 0 0 1 50 2 A24 24 0 0 1 50 50 A24 24 0 0 0 50 98Z" fill="#C8102E" />
+      <path d="M50 98 A48 48 0 0 1 50 2 A24 24 0 0 1 50 50 A24 24 0 0 0 50 98Z" fill="#FFFF00" />
       {/* Small circles */}
-      <circle cx="50" cy="26" r="12" fill="#0047AB" />
-      <circle cx="50" cy="74" r="12" fill="#C8102E" />
+      <circle cx="50" cy="26" r="12" fill="#2E2E2E" />
+      <circle cx="50" cy="74" r="12" fill="#FFFF00" />
     </svg>
   );
 }
@@ -110,7 +163,7 @@ function KoreanLanternIcon({ size = 40, color = Y }: { size?: number; color?: st
       {/* Bottom cap */}
       <path d="M35 84 Q50 88 65 84 L70 92 Q50 96 30 92Z" fill={color} />
       {/* Tassel */}
-      <line x1="50" y1="92" x2="50" y2="100" stroke="#C8102E" strokeWidth="3" />
+      <line x1="50" y1="92" x2="50" y2="100" stroke="#2E2E2E" strokeWidth="3" />
     </svg>
   );
 }
@@ -121,7 +174,7 @@ function DancheongBorder() {
       display:"flex", gap:"4px", alignItems:"center",
       padding:"6px 0", marginBottom:"8px",
     }}>
-      {["#0047AB","#C8102E",Y,GL,"#C8102E","#0047AB",Y,GL,"#C8102E","#0047AB",Y,GL,"#C8102E","#0047AB"].map((c,i) => (
+      {["#2E2E2E","#FFFF00",Y,GL,"#FFFF00","#2E2E2E",Y,GL,"#FFFF00","#2E2E2E",Y,GL,"#FFFF00","#2E2E2E"].map((c,i) => (
         <div key={i} style={{
           width:"14px", height:"14px", borderRadius:"2px",
           background: c, flexShrink:0,
@@ -256,14 +309,14 @@ function StoryPageAr() {
   return (
     <div className="book-page" style={{
       width:"210mm", minHeight:"297mm", padding:"0",
-      boxSizing:"border-box", background:"#0a0800",
+      boxSizing:"border-box", background:"#2E2E2E",
       position:"relative", pageBreakAfter:"always", breakAfter:"page",
       display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
       overflow:"hidden",
     }}>
       {/* top stripe */}
       <div style={{ position:"absolute", top:0, left:0, right:0, height:"9px", background:"#FFFF00" }} />
-      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"6px", background:"#111111" }} />
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"6px", background:"#2E2E2E" }} />
 
       {/* Title */}
       <div style={{ textAlign:"center", marginBottom:"18px", zIndex:2, direction:"rtl", padding:"0 20mm" }}>
@@ -299,17 +352,17 @@ function StoryPageAr() {
       <div style={{ display:"flex", gap:"40px", marginTop:"20px", zIndex:2, direction:"rtl" }}>
         <div style={{ textAlign:"center" }}>
           <KloverIcon name="student-boy-thumbsup" className="h-6 w-6" />
-          <div style={{ fontSize:"13px", fontWeight:900, color:"#20B2AA" }}>جونهو</div>
+          <div style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>جونهو</div>
           <div style={{ fontSize:"10px", color:"#777" }}>Junho</div>
         </div>
         <div style={{ textAlign:"center" }}>
           <KloverIcon name="klobi-reading" className="h-6 w-6" />
-          <div style={{ fontSize:"13px", fontWeight:900, color:"#D2691E" }}>ثعلب غوميهو</div>
+          <div style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>ثعلب غوميهو</div>
           <div style={{ fontSize:"10px", color:"#777" }}>The Gumiho Fox</div>
         </div>
         <div style={{ textAlign:"center" }}>
           <KloverIcon name="student-girl-heart" className="h-6 w-6" />
-          <div style={{ fontSize:"13px", fontWeight:900, color:"#7B1A3A" }}>ميا</div>
+          <div style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>ميا</div>
           <div style={{ fontSize:"10px", color:"#777" }}>Miya</div>
         </div>
       </div>
@@ -327,13 +380,13 @@ function StoryPageEn() {
   return (
     <div className="book-page" style={{
       width:"210mm", minHeight:"297mm", padding:"0",
-      boxSizing:"border-box", background:"#0a0800",
+      boxSizing:"border-box", background:"#2E2E2E",
       position:"relative", pageBreakAfter:"always", breakAfter:"page",
       display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
       overflow:"hidden",
     }}>
       <div style={{ position:"absolute", top:0, left:0, right:0, height:"9px", background:"#FFFF00" }} />
-      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"6px", background:"#111111" }} />
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"6px", background:"#2E2E2E" }} />
 
       <div style={{ textAlign:"center", marginBottom:"18px", zIndex:2, padding:"0 20mm" }}>
         <div style={{ fontSize:"11px", fontWeight:900, color:"#FFFF00", letterSpacing:"4px", textTransform:"uppercase", marginBottom:"6px", opacity:0.7 }}>The Klovers Story</div>
@@ -366,17 +419,17 @@ function StoryPageEn() {
       <div style={{ display:"flex", gap:"40px", marginTop:"20px", zIndex:2 }}>
         <div style={{ textAlign:"center" }}>
           <KloverIcon name="student-boy-thumbsup" className="h-6 w-6" />
-          <div style={{ fontSize:"13px", fontWeight:900, color:"#20B2AA" }}>Junho</div>
+          <div style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>Junho</div>
           <div style={{ fontSize:"10px", color:"#777" }}>Our Korean guide</div>
         </div>
         <div style={{ textAlign:"center" }}>
           <KloverIcon name="klobi-reading" className="h-6 w-6" />
-          <div style={{ fontSize:"13px", fontWeight:900, color:"#D2691E" }}>Gumiho Fox</div>
+          <div style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>Gumiho Fox</div>
           <div style={{ fontSize:"10px", color:"#777" }}>The magical fox</div>
         </div>
         <div style={{ textAlign:"center" }}>
           <KloverIcon name="student-girl-heart" className="h-6 w-6" />
-          <div style={{ fontSize:"13px", fontWeight:900, color:"#7B1A3A" }}>Miya</div>
+          <div style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>Miya</div>
           <div style={{ fontSize:"10px", color:"#777" }}>Your learning partner</div>
         </div>
       </div>
@@ -611,7 +664,7 @@ const SYLLABLES = [
 /* ══════════════════════════════════════════════════
    LAYOUT HELPERS
 ══════════════════════════════════════════════════ */
-function Page({ children, dir = "ltr", chapter, bgColor = "#FFF5F5" }: { children: React.ReactNode; dir?: "ltr" | "rtl"; chapter?: string; bgColor?: string }) {
+function Page({ children, dir = "ltr", chapter, bgColor = "#FFF9EC" }: { children: React.ReactNode; dir?: "ltr" | "rtl"; chapter?: string; bgColor?: string }) {
   const isRtl = dir === "rtl";
   return (
     <div
@@ -919,13 +972,13 @@ const BOOKS_EN = [
 /* ── 7-Day Study Plan AR ── */
 function StudyPlanAr() {
   const days = [
-    { d:"اليوم ١", icon:"🔤", task:"الحروف الساكنة — الجزء الأول (ㄱ–ㅅ)", tip:"تكرار كل حرف ١٠ مرات بصوت عالٍ", color:"#fef9ec" },
-    { d:"اليوم ٢", icon:"🔤", task:"الحروف الساكنة — الجزء الثاني (ㅇ–ㅎ)", tip:"كتابة كل حرف ٥ مرات في الكرّاسة", color:"#fef9ec" },
-    { d:"اليوم ٣", icon:"🗣️", task:"حروف المد (ㅏ–ㅕ) + الحروف المُشدَّدة", tip:"الاستماع إلى النطق من رمز QR ثم تكراره", color:"#f0fff4" },
-    { d:"اليوم ٤", icon:"🏗️", task:"بناء الكتل المقطعية + الباتشيم", tip:"محاولة كتابة الاسم بالكورية!", color:"#f0fff4" },
-    { d:"اليوم ٥", icon:"✏️", task:"التمارين التطبيقية (المستويات ١–٣)", tip:"تخصيص ٣٠ دقيقة دون هاتف", color:"#fffef0" },
-    { d:"اليوم ٦", icon:"🎬", task:"مفردات المسلسلات الكورية (٢٠ كلمة)", tip:"ربط كل كلمة بمشهد من مسلسل مفضّل", color:"#fffef0" },
-    { d:"اليوم ٧", icon:"🏆", task:"مراجعة شاملة + اختبار المفردات", tip:"قراءة خمس كلمات كورية عشوائية بصوت عالٍ!", color:"#f0f4ff" },
+    { d:"اليوم ١", icon:"🔤", task:"الحروف الساكنة — الجزء الأول (ㄱ–ㅅ)", tip:"تكرار كل حرف ١٠ مرات بصوت عالٍ", color:"#FFF9EC" },
+    { d:"اليوم ٢", icon:"🔤", task:"الحروف الساكنة — الجزء الثاني (ㅇ–ㅎ)", tip:"كتابة كل حرف ٥ مرات في الكرّاسة", color:"#FFF9EC" },
+    { d:"اليوم ٣", icon:"🗣️", task:"حروف المد (ㅏ–ㅕ) + الحروف المُشدَّدة", tip:"الاستماع إلى النطق من رمز QR ثم تكراره", color:"#FFF9EC" },
+    { d:"اليوم ٤", icon:"🏗️", task:"بناء الكتل المقطعية + الباتشيم", tip:"محاولة كتابة الاسم بالكورية!", color:"#FFF9EC" },
+    { d:"اليوم ٥", icon:"✏️", task:"التمارين التطبيقية (المستويات ١–٣)", tip:"تخصيص ٣٠ دقيقة دون هاتف", color:"#FFF9EC" },
+    { d:"اليوم ٦", icon:"🎬", task:"مفردات المسلسلات الكورية (٢٠ كلمة)", tip:"ربط كل كلمة بمشهد من مسلسل مفضّل", color:"#FFF9EC" },
+    { d:"اليوم ٧", icon:"🏆", task:"مراجعة شاملة + اختبار المفردات", tip:"قراءة خمس كلمات كورية عشوائية بصوت عالٍ!", color:"#FFF9EC" },
   ];
   return (
     <Page dir="rtl">
@@ -1090,7 +1143,7 @@ function HistoryAr() {
           { era:"١٤٤٦ م", icon:"📚", title:"إعلان هونمينجونغأوم", body:"أُعلن عن الأبجدية الجديدة تحت اسم «훈민정음» (هونمينجونغأوم) بمعنى «الأصوات الصحيحة لتعليم الشعب». واجه الملك معارضة شديدة من الطبقة الحاكمة — لكنه أصرّ. واليوم يُحتفل بيوم الهانغول كل عام في التاسع من أكتوبر." },
         ].map((item, i) => (
           <div key={i} style={{ display:"flex", gap:"12px", marginBottom:"6px", paddingBottom:"6px", borderBottom:`1px solid ${BD}`, alignItems:"flex-start" }}>
-            <div style={{ fontSize:"18px", flexShrink:0, marginTop:"2px" }}>{item.icon}</div>
+            <div style={{ fontSize:"18px", flexShrink:0, marginTop:"2px" }}><BookIcon e={item.icon} /></div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:"10px", fontWeight:600, color:T3, marginBottom:"1px" }}>{item.era}</div>
               <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"3px" }}>{item.title}</div>
@@ -1136,7 +1189,7 @@ function SejongAr() {
               { icon:"🌟", label:"لقبه", val:"«أعظم ملوك كوريا»" },
             ].map(r=>(
               <div key={r.label} style={{ display:"flex", gap:"8px", alignItems:"center" }}>
-                <span style={{ fontSize:"12px" }}>{r.icon}</span>
+                <span style={{ fontSize:"12px" }}><BookIcon e={r.icon} /></span>
                 <span style={{ fontSize:"10px", color:T3, minWidth:"60px" }}>{r.label}</span>
                 <span style={{ fontSize:"10px", color:T2, fontWeight:600 }}>{r.val}</span>
               </div>
@@ -1155,7 +1208,7 @@ function SejongAr() {
             { icon:"🏗️", title:"بنية منطقية", body:"الحروف المشتقة من بعضها تتشابه في الشكل — ㄱ الأصل، ㄲ الشديدة، ㅋ المنفوخة. نظام متكامل ومتسق!" },
           ].map(c=>(
             <div key={c.title} style={{ background:SBG, borderRadius:"6px", padding:"10px", border:`1px solid ${BD}` }}>
-              <div style={{ fontSize:"22px", marginBottom:"5px" }}>{c.icon}</div>
+              <div style={{ fontSize:"22px", marginBottom:"5px" }}><BookIcon e={c.icon} /></div>
               <div style={{ fontWeight:800, fontSize:"11px", color:T1, marginBottom:"3px" }}>{c.title}</div>
               <div style={{ fontSize:"10px", color:T2, lineHeight:1.7 }}>{c.body}</div>
             </div>
@@ -1280,7 +1333,7 @@ function CourseAr() {
               <span style={{ fontSize:"9px", fontWeight:700, opacity:0.7 }}>كتاب</span>
               <span style={{ fontSize:"15px", lineHeight:1 }}>{b.n}</span>
             </div>
-            <div style={{ fontSize:"18px", flexShrink:0 }}>{b.icon}</div>
+            <div style={{ fontSize:"18px", flexShrink:0 }}><BookIcon e={b.icon} /></div>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight: b.current ? 900 : 700, fontSize:"11px", color:T1 }}>{b.title}</div>
               <div style={{ fontSize:"10px", color: b.current ? T2 : T3, marginTop:"1px" }}>
@@ -1298,7 +1351,7 @@ function CourseAr() {
           { icon:"🎬", title:"لغة حقيقية", sub:"من المسلسلات والحياة" },
         ].map(s=>(
           <div key={s.title} style={{ border:`1px solid ${BD}`, borderRadius:"6px", padding:"10px", textAlign:"center", background:SBG }}>
-            <div style={{ fontSize:"22px", marginBottom:"4px" }}>{s.icon}</div>
+            <div style={{ fontSize:"22px", marginBottom:"4px" }}><BookIcon e={s.icon} /></div>
             <div style={{ fontWeight:800, fontSize:"11px", color:T1 }}>{s.title}</div>
             <div style={{ fontSize:"10px", color:T3 }}>{s.sub}</div>
           </div>
@@ -1350,7 +1403,7 @@ function EdCover({ lang }: { lang: "ar" | "en" }) {
           position:"absolute", top:"7mm",
           ...(isAr ? { left:"14mm" } : { right:"14mm" }),
           width:"54px", height:"54px", borderRadius:"50%",
-          border:"2px solid #111", background:"#fff",
+          border:"2px solid #2E2E2E", background:"#fff",
           display:"flex", flexDirection:"column",
           alignItems:"center", justifyContent:"center", gap:"1px",
         }}>
@@ -1402,7 +1455,7 @@ function EdCover({ lang }: { lang: "ar" | "en" }) {
           letterSpacing:"1.5px", marginBottom:"4mm",
         }}>{headline}</div>
 
-        <div style={{ width:"100%", height:"1px", background:"#2a2a2a", marginBottom:"5mm" }} />
+        <div style={{ width:"100%", height:"1px", background:"#2E2E2E", marginBottom:"5mm" }} />
 
         <div style={{ fontSize:"13px", color:"#fff", lineHeight:1.6, marginBottom:"2mm" }}>{body1}</div>
         <div style={{ fontSize:"13px", color:"#888", fontStyle:"italic", lineHeight:1.6, marginBottom:"8mm" }}>{body2}</div>
@@ -1706,13 +1759,13 @@ function SyllableAr() {
    Soft pastel cards, character + speech bubble, numbered pill rows.
    Used to give the book the look of a Korean children's workbook.
    ════════════════════════════════════════════════════════════ */
-const KIDS_PINK = "#FFF5F5";
-const KIDS_RED  = "#E94B4B";
-const KIDS_GREEN= "#3FB984";
-const KIDS_BLUE = "#4D9EE8";
-const KIDS_YELL = "#FFC93C";
-const KIDS_PURPLE="#9B6BC9";
-const KIDS_ORANGE="#FF8C42";
+const KIDS_PINK = "#FFF9EC";
+const KIDS_RED  = "#2E2E2E";
+const KIDS_GREEN= "#2E2E2E";
+const KIDS_BLUE = "#2E2E2E";
+const KIDS_YELL = "#FFFF00";
+const KIDS_PURPLE="#2E2E2E";
+const KIDS_ORANGE="#2E2E2E";
 
 function CharImg({ size = 110, style }: { size?: number; style?: React.CSSProperties }) {
   return <img src="/characters/hanbok-pair.jpg" alt="" style={{ width:size, height:"auto", borderRadius:"8px", ...style }} />;
@@ -1768,7 +1821,7 @@ function NumCircle({ n, color=KIDS_RED }:{ n:number|string; color?:string }) {
   );
 }
 
-function Pill({ children, bg, color="#222" }:{ children:React.ReactNode; bg:string; color?:string }) {
+function Pill({ children, bg, color="#2E2E2E" }:{ children:React.ReactNode; bg:string; color?:string }) {
   return (
     <span style={{
       background:bg, color, padding:"3px 12px",
@@ -1791,9 +1844,9 @@ function RuleRow({ n, ncolor, pillBg, pillChars, arrow, arabicRule, exampleK, ex
       <NumCircle n={n} color={ncolor} />
       <div style={{ direction:"ltr", textAlign:"center" }}><Pill bg={pillBg}>{pillChars}</Pill></div>
       <div style={{ color:KIDS_RED, fontSize:"18px", fontWeight:900, textAlign:"center" }}>{arrow ?? "←"}</div>
-      <div style={{ fontSize:"12px", color:"#222", fontWeight:700 }}>{arabicRule}</div>
+      <div style={{ fontSize:"12px", color:"#2E2E2E", fontWeight:700 }}>{arabicRule}</div>
       <div style={{ display:"flex", alignItems:"baseline", gap:"6px", direction:"ltr", justifyContent:"flex-start" }}>
-        <span style={{ fontSize:"22px", fontWeight:900, color:"#222" }}>{exampleK}</span>
+        <span style={{ fontSize:"22px", fontWeight:900, color:"#2E2E2E" }}>{exampleK}</span>
         <span style={{ fontSize:"11px", fontWeight:700, color:exRColor }}>({exampleR})</span>
       </div>
     </div>
@@ -1811,13 +1864,13 @@ function KidsPage({ children, dir="rtl", chapter }:{ children:React.ReactNode; d
 /* ── Batchim (Single) AR — kids-style rebuild ── */
 function BatchimAr() {
   const FINAL7: { n:number; ncolor:string; pillBg:string; pillChars:string; rule:string; exK:string; exR:string }[] = [
-    { n:1, ncolor:KIDS_RED,    pillBg:"#FFE2C0", pillChars:"ㄱ / ㄲ / ㅋ", rule:"تُنطق: ك (k)", exK:"박", exR:"bak" },
-    { n:2, ncolor:KIDS_GREEN,  pillBg:"#D7EFD0", pillChars:"ㄴ",            rule:"تُنطق: ن (n)", exK:"산", exR:"san" },
-    { n:3, ncolor:KIDS_RED,    pillBg:"#FFD7D7", pillChars:"ㄷ / ㅅ / ㅆ / ㅈ / ㅊ / ㅌ / ㅎ", rule:"تُنطق: ت (t) مقطوعة", exK:"옷", exR:"ot" },
-    { n:4, ncolor:KIDS_BLUE,   pillBg:"#D6E9F8", pillChars:"ㄹ",            rule:"تُنطق: ل (l)", exK:"달", exR:"dal" },
-    { n:5, ncolor:KIDS_PURPLE, pillBg:"#E5D8F0", pillChars:"ㅁ",            rule:"تُنطق: م (m)", exK:"밤", exR:"bam" },
-    { n:6, ncolor:KIDS_PURPLE, pillBg:"#FAD9E8", pillChars:"ㅂ / ㅍ",       rule:"تُنطق: ب (p)", exK:"밥", exR:"bap" },
-    { n:7, ncolor:KIDS_RED,    pillBg:"#FBD9D9", pillChars:"ㅇ",            rule:"تُنطق: نغ (ng) (غنة)", exK:"강", exR:"gang" },
+    { n:1, ncolor:KIDS_RED,    pillBg:"#FFF9EC", pillChars:"ㄱ / ㄲ / ㅋ", rule:"تُنطق: ك (k)", exK:"박", exR:"bak" },
+    { n:2, ncolor:KIDS_GREEN,  pillBg:"#FFF9EC", pillChars:"ㄴ",            rule:"تُنطق: ن (n)", exK:"산", exR:"san" },
+    { n:3, ncolor:KIDS_RED,    pillBg:"#FFF9EC", pillChars:"ㄷ / ㅅ / ㅆ / ㅈ / ㅊ / ㅌ / ㅎ", rule:"تُنطق: ت (t) مقطوعة", exK:"옷", exR:"ot" },
+    { n:4, ncolor:KIDS_BLUE,   pillBg:"#FFF9EC", pillChars:"ㄹ",            rule:"تُنطق: ل (l)", exK:"달", exR:"dal" },
+    { n:5, ncolor:KIDS_PURPLE, pillBg:"#FFF9EC", pillChars:"ㅁ",            rule:"تُنطق: م (m)", exK:"밤", exR:"bam" },
+    { n:6, ncolor:KIDS_PURPLE, pillBg:"#FFF9EC", pillChars:"ㅂ / ㅍ",       rule:"تُنطق: ب (p)", exK:"밥", exR:"bap" },
+    { n:7, ncolor:KIDS_RED,    pillBg:"#FFF9EC", pillChars:"ㅇ",            rule:"تُنطق: نغ (ng) (غنة)", exK:"강", exR:"gang" },
   ];
 
   return (
@@ -1838,11 +1891,11 @@ function BatchimAr() {
 
       {/* Definition panel + character */}
       <div style={{ display:"flex", gap:"10px", marginBottom:"6mm", alignItems:"flex-start" }}>
-        <KidsPanel color={KIDS_GREEN} bg="#FFF8F1">
+        <KidsPanel color={KIDS_GREEN} bg="#FFF9EC">
           <div style={{ marginBottom:"6px" }}>
             <SectionBadge icon="" label="تعريف" color={KIDS_GREEN} />
           </div>
-          <p style={{ fontSize:"12px", color:"#222", lineHeight:1.8, margin:0, fontWeight:600 }}>
+          <p style={{ fontSize:"12px", color:"#2E2E2E", lineHeight:1.8, margin:0, fontWeight:600 }}>
             الباتشيم (<span style={{ color:KIDS_RED, fontWeight:900 }}>받침</span>) هو الحرف الساكن
             الذي يأتي في نهاية المقطع الكوري، ويؤثّر بشكل كبير على النطق.
           </p>
@@ -1859,7 +1912,7 @@ function BatchimAr() {
       <div style={{ marginBottom:"4mm" }}>
         <SectionBadge icon="" label="قاعدة" color={KIDS_ORANGE} />
       </div>
-      <p style={{ fontSize:"12px", color:"#222", textAlign:"center", marginBottom:"5mm", fontWeight:700 }}>
+      <p style={{ fontSize:"12px", color:"#2E2E2E", textAlign:"center", marginBottom:"5mm", fontWeight:700 }}>
         رغم وجود حروف كثيرة، إلا أن نطق الباتشيم يُختصر إلى{" "}
         <span style={{ color:KIDS_RED, fontWeight:900, textDecoration:"underline" }}>٧ أصوات أساسية فقط.</span>
       </p>
@@ -1880,11 +1933,11 @@ function BatchimAr() {
 
       {/* Note */}
       <div style={{ display:"flex", gap:"10px", alignItems:"flex-start" }}>
-        <KidsPanel color={KIDS_BLUE} bg="#F5FAFE">
+        <KidsPanel color={KIDS_BLUE} bg="#FFF9EC">
           <div style={{ marginBottom:"6px" }}>
             <SectionBadge icon="" label="ملاحظة" color={KIDS_BLUE} />
           </div>
-          <p style={{ fontSize:"11.5px", color:"#222", lineHeight:1.8, margin:0, fontWeight:600 }}>
+          <p style={{ fontSize:"11.5px", color:"#2E2E2E", lineHeight:1.8, margin:0, fontWeight:600 }}>
             الباتشيم يُكتب في نهاية المقطع، لكنه لا يظهر منفصلاً.
             ويُساعد على معرفة <span style={{ color:KIDS_RED, fontWeight:900 }}>النطق الصحيح</span> للكلمة.
           </p>
@@ -1910,7 +1963,7 @@ function DoubleBatchimAr() {
     <Page dir="rtl">
       <SHead title="الباتشيم المزدوج (겹받침)" subtitle="حرفان ساكنان في الأسفل، ويُقرأ حرف واحد فقط!" />
       {/* Larsen-Freeman: don't memorize warning */}
-      <div style={{ background:"#fff8e1", border:"2px solid #fbbf24", borderRadius:"8px", padding:"7px 12px", fontSize:"11px", color:"#92400e", marginBottom:"8px" }}>
+      <div style={{ background:"#FFF9EC", border:"2px solid #FFFF00", borderRadius:"8px", padding:"7px 12px", fontSize:"11px", color:"#2E2E2E", marginBottom:"8px" }}>
         <strong>تنبيه مهم للمبتدئين:</strong> لا حاجة إلى حفظ هذه الجداول كلها الآن! هذا محتوى متقدم — فهم المبدأ يكفي تماماً.
         الباتشيم المزدوج سيصبح طبيعياً جداً بعد قراءة ١٠٠ كلمة فقط. <strong>سيُشرح بالتفصيل في الكتاب الثاني.</strong>
       </div>
@@ -1929,8 +1982,8 @@ function DoubleBatchimAr() {
                 <span style={{ fontSize:"13px", color:BK }}>ㅏ</span>
               </div>
               <div style={{ display:"flex", gap:"2px", borderTop:"1px solid rgba(0,0,0,0.3)", marginTop:"3px", paddingTop:"3px" }}>
-                <span style={{ fontSize:"13px", fontWeight:900, color:"#0047AB" }}>ㄹ</span>
-                <span style={{ fontSize:"13px", fontWeight:900, color:"#C8102E" }}>ㄱ</span>
+                <span style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>ㄹ</span>
+                <span style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>ㄱ</span>
               </div>
             </div>
           </div>
@@ -1940,7 +1993,7 @@ function DoubleBatchimAr() {
         <div style={{ background:GL, border:`2px solid ${GD}`, borderRadius:"12px", padding:"12px" }}>
           <div style={{ fontSize:"11px", fontWeight:800, color:GD, marginBottom:"6px" }}>القاعدة الكبرى للربط</div>
           <div style={{ fontSize:"11px", color:BK2, lineHeight:1.9, marginBottom:"8px" }}>
-            إذا جاء بعد الباتشيم المزدوج مقطع يبدأ بـ <strong>ㅇ</strong> الصامت، يتحرك الحرف <strong style={{color:"#C8102E"}}>الأيمن (الثاني)</strong> إلى المقطع التالي!
+            إذا جاء بعد الباتشيم المزدوج مقطع يبدأ بـ <strong>ㅇ</strong> الصامت، يتحرك الحرف <strong style={{color:"#2E2E2E"}}>الأيمن (الثاني)</strong> إلى المقطع التالي!
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:"5px" }}>
             {[
@@ -1950,7 +2003,7 @@ function DoubleBatchimAr() {
             ].map(e=>(
               <div key={e.w} style={{ background:BK, borderRadius:"6px", padding:"6px 10px", display:"flex", justifyContent:"space-between", alignItems:"center", direction:"ltr" }}>
                 <span style={{ fontSize:"16px", color:Y, fontWeight:900 }}>{e.w}</span>
-                <span style={{ fontSize:"11px", color:"#4ade80", fontWeight:700 }}>→ [{e.r}]</span>
+                <span style={{ fontSize:"11px", color:"#2E2E2E", fontWeight:700 }}>→ [{e.r}]</span>
                 <span style={{ fontSize:"11px", color:"#888", direction:"rtl" }}>{e.m}</span>
               </div>
             ))}
@@ -2006,7 +2059,7 @@ function KdramaPageAr({ slice, page }: { slice:[number,number]; page:number }) {
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"7px" }}>
         {KDRAMA_AR.slice(...slice).map(v=>(
           <div key={v.k} style={{ background:"#fff", border:`1px solid ${BD}`, borderRadius:"8px", padding:"8px 10px", display:"flex", gap:"8px", alignItems:"flex-start", pageBreakInside:"avoid", breakInside:"avoid" }}>
-            <div style={{ fontSize:"22px" }}>{v.emoji}</div>
+            <div style={{ fontSize:"22px" }}><BookIcon e={v.emoji} /></div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:"22px", fontWeight:900, color:T1, background:Y, display:"inline-block", padding:"1px 8px", borderRadius:"4px", marginBottom:"2px", direction:"ltr" }}>{v.k}</div>
               <div style={{ fontSize:"11px", color:T1, fontWeight:700 }}>{v.m}</div>
@@ -2117,7 +2170,7 @@ function AnswerAr() {
             {ex.items.map(([q,a])=>(
               <div key={q} style={{ display:"flex", justifyContent:"space-between", fontSize:"11px", padding:"2px 0", borderBottom:"1px solid #eee", direction:"ltr" }}>
                 <span style={{ fontWeight:700 }}>{q}</span>
-                <span style={{ color:"#22c55e", fontWeight:700 }}>{a}</span>
+                <span style={{ color:"#2E2E2E", fontWeight:700 }}>{a}</span>
               </div>
             ))}
           </div>
@@ -2131,7 +2184,7 @@ function AnswerAr() {
             <div key={c.char} style={{ textAlign:"center" }}>
               <div style={{ fontSize:"22px", color:T1, fontWeight:900, lineHeight:1 }}>{c.char}</div>
               <div style={{ fontSize:"10px", color:T3 }}>{c.roman}</div>
-              <div style={{ fontSize:"12px" }}>{c.emoji}</div>
+              <div style={{ fontSize:"12px" }}><BookIcon e={c.emoji} /></div>
             </div>
           ))}
         </div>
@@ -2142,7 +2195,7 @@ function AnswerAr() {
             <div key={v.char} style={{ textAlign:"center" }}>
               <div style={{ fontSize:"20px", color:T1, fontWeight:900, lineHeight:1 }}>{v.char}</div>
               <div style={{ fontSize:"10px", color:T3 }}>{v.roman}</div>
-              <div style={{ fontSize:"11px" }}>{v.emoji}</div>
+              <div style={{ fontSize:"11px" }}><BookIcon e={v.emoji} /></div>
             </div>
           ))}
         </div>
@@ -2183,7 +2236,7 @@ function HistoryEn() {
           { era:"1446 AD", icon:"📚", title:"Hunminjeongeum Announced", body:"The new alphabet was proclaimed as «훈민정음» (Hunminjeongeum) — 'The Correct Sounds for the Instruction of the People.' The ruling class fiercely opposed it — but the king prevailed. Today, Hangul Day is celebrated every October 9th worldwide." },
         ].map((item, i) => (
           <div key={i} style={{ display:"flex", gap:"12px", marginBottom:"6px", paddingBottom:"6px", borderBottom:`1px solid ${BD}`, alignItems:"flex-start" }}>
-            <div style={{ fontSize:"18px", flexShrink:0, marginTop:"2px" }}>{item.icon}</div>
+            <div style={{ fontSize:"18px", flexShrink:0, marginTop:"2px" }}><BookIcon e={item.icon} /></div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:"10px", fontWeight:600, color:T3, marginBottom:"1px" }}>{item.era}</div>
               <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"3px" }}>{item.title}</div>
@@ -2229,7 +2282,7 @@ function SejongEn() {
               { icon:"🌟", label:"Title", val:"'Greatest King of Korea'" },
             ].map(r=>(
               <div key={r.label} style={{ display:"flex", gap:"8px", alignItems:"center" }}>
-                <span style={{ fontSize:"12px" }}>{r.icon}</span>
+                <span style={{ fontSize:"12px" }}><BookIcon e={r.icon} /></span>
                 <span style={{ fontSize:"10px", color:T3, minWidth:"70px" }}>{r.label}</span>
                 <span style={{ fontSize:"10px", color:T2, fontWeight:600 }}>{r.val}</span>
               </div>
@@ -2247,7 +2300,7 @@ function SejongEn() {
             { icon:"🏗️", title:"Logical Structure", body:"Related letters look alike — ㄱ is the base, ㄲ is doubled, ㅋ has an extra stroke for aspiration. A complete, consistent system." },
           ].map(c=>(
             <div key={c.title} style={{ background:SBG, borderRadius:"6px", padding:"10px", border:`1px solid ${BD}` }}>
-              <div style={{ fontSize:"22px", marginBottom:"5px" }}>{c.icon}</div>
+              <div style={{ fontSize:"22px", marginBottom:"5px" }}><BookIcon e={c.icon} /></div>
               <div style={{ fontWeight:800, fontSize:"11px", color:T1, marginBottom:"3px" }}>{c.title}</div>
               <div style={{ fontSize:"10px", color:T2, lineHeight:1.7 }}>{c.body}</div>
             </div>
@@ -2365,7 +2418,7 @@ function CourseEn() {
               <span style={{ fontSize:"9px", fontWeight:700, opacity:0.7 }}>Book</span>
               <span style={{ fontSize:"15px", lineHeight:1 }}>{b.n}</span>
             </div>
-            <div style={{ fontSize:"18px", flexShrink:0 }}>{b.icon}</div>
+            <div style={{ fontSize:"18px", flexShrink:0 }}><BookIcon e={b.icon} /></div>
             <div style={{ flex:1 }}>
               <div style={{ fontWeight: b.current ? 900 : 700, fontSize:"11px", color:T1 }}>{b.title}</div>
               <div style={{ fontSize:"10px", color: b.current ? T2 : T3, marginTop:"1px" }}>
@@ -2383,7 +2436,7 @@ function CourseEn() {
           { icon:"🎬", title:"Real Language", sub:"from dramas & life" },
         ].map(s=>(
           <div key={s.title} style={{ border:`1px solid ${BD}`, borderRadius:"6px", padding:"10px", textAlign:"center", background:SBG }}>
-            <div style={{ fontSize:"22px", marginBottom:"4px" }}>{s.icon}</div>
+            <div style={{ fontSize:"22px", marginBottom:"4px" }}><BookIcon e={s.icon} /></div>
             <div style={{ fontWeight:800, fontSize:"11px", color:T1 }}>{s.title}</div>
             <div style={{ fontSize:"10px", color:T3 }}>{s.sub}</div>
           </div>
@@ -2397,13 +2450,13 @@ function CoverEn() { return <EdCover lang="en" />; }
 
 function StudyPlanEn() {
   const days = [
-    { d:"Day 1", icon:"🔤", task:"Consonants — Part 1 (ㄱ–ㅅ)", tip:"Repeat each letter 10 times out loud", color:"#fef9ec" },
-    { d:"Day 2", icon:"🔤", task:"Consonants — Part 2 (ㅇ–ㅎ)", tip:"Write each letter 5 times in a notebook", color:"#fef9ec" },
-    { d:"Day 3", icon:"🗣️", task:"Vowels (ㅏ–ㅕ) + Tensed Consonants", tip:"Listen to pronunciation via QR then repeat", color:"#f0fff4" },
-    { d:"Day 4", icon:"🏗️", task:"Syllable Blocks + Batchim", tip:"Try spelling your name in Korean!", color:"#f0fff4" },
-    { d:"Day 5", icon:"✏️", task:"Practice Exercises (Levels 1–3)", tip:"Set aside 30 minutes — phone off!", color:"#fffef0" },
-    { d:"Day 6", icon:"🎬", task:"K-Drama Vocabulary (20 words)", tip:"Link each word to a scene you remember", color:"#fffef0" },
-    { d:"Day 7", icon:"🏆", task:"Full Review + Vocabulary Test", tip:"Read 5 random Korean words aloud!", color:"#f0f4ff" },
+    { d:"Day 1", icon:"🔤", task:"Consonants — Part 1 (ㄱ–ㅅ)", tip:"Repeat each letter 10 times out loud", color:"#FFF9EC" },
+    { d:"Day 2", icon:"🔤", task:"Consonants — Part 2 (ㅇ–ㅎ)", tip:"Write each letter 5 times in a notebook", color:"#FFF9EC" },
+    { d:"Day 3", icon:"🗣️", task:"Vowels (ㅏ–ㅕ) + Tensed Consonants", tip:"Listen to pronunciation via QR then repeat", color:"#FFF9EC" },
+    { d:"Day 4", icon:"🏗️", task:"Syllable Blocks + Batchim", tip:"Try spelling your name in Korean!", color:"#FFF9EC" },
+    { d:"Day 5", icon:"✏️", task:"Practice Exercises (Levels 1–3)", tip:"Set aside 30 minutes — phone off!", color:"#FFF9EC" },
+    { d:"Day 6", icon:"🎬", task:"K-Drama Vocabulary (20 words)", tip:"Link each word to a scene you remember", color:"#FFF9EC" },
+    { d:"Day 7", icon:"🏆", task:"Full Review + Vocabulary Test", tip:"Read 5 random Korean words aloud!", color:"#FFF9EC" },
   ];
   return (
     <Page dir="ltr">
@@ -2960,13 +3013,13 @@ function SyllableEn() {
 /* ── Batchim (Single) EN ── */
 function BatchimEn() {
   const FINAL7: { n:number; ncolor:string; pillBg:string; pillChars:string; rule:string; exK:string; exR:string }[] = [
-    { n:1, ncolor:KIDS_RED,    pillBg:"#FFE2C0", pillChars:"ㄱ / ㄲ / ㅋ", rule:"Pronounced: k", exK:"박", exR:"bak" },
-    { n:2, ncolor:KIDS_GREEN,  pillBg:"#D7EFD0", pillChars:"ㄴ",            rule:"Pronounced: n", exK:"산", exR:"san" },
-    { n:3, ncolor:KIDS_RED,    pillBg:"#FFD7D7", pillChars:"ㄷ / ㅅ / ㅆ / ㅈ / ㅊ / ㅌ / ㅎ", rule:"Pronounced: hard t (no release)", exK:"옷", exR:"ot" },
-    { n:4, ncolor:KIDS_BLUE,   pillBg:"#D6E9F8", pillChars:"ㄹ",            rule:"Pronounced: l", exK:"달", exR:"dal" },
-    { n:5, ncolor:KIDS_PURPLE, pillBg:"#E5D8F0", pillChars:"ㅁ",            rule:"Pronounced: m", exK:"밤", exR:"bam" },
-    { n:6, ncolor:KIDS_PURPLE, pillBg:"#FAD9E8", pillChars:"ㅂ / ㅍ",       rule:"Pronounced: p", exK:"밥", exR:"bap" },
-    { n:7, ncolor:KIDS_RED,    pillBg:"#FBD9D9", pillChars:"ㅇ",            rule:"Pronounced: ng (nasal)", exK:"강", exR:"gang" },
+    { n:1, ncolor:KIDS_RED,    pillBg:"#FFF9EC", pillChars:"ㄱ / ㄲ / ㅋ", rule:"Pronounced: k", exK:"박", exR:"bak" },
+    { n:2, ncolor:KIDS_GREEN,  pillBg:"#FFF9EC", pillChars:"ㄴ",            rule:"Pronounced: n", exK:"산", exR:"san" },
+    { n:3, ncolor:KIDS_RED,    pillBg:"#FFF9EC", pillChars:"ㄷ / ㅅ / ㅆ / ㅈ / ㅊ / ㅌ / ㅎ", rule:"Pronounced: hard t (no release)", exK:"옷", exR:"ot" },
+    { n:4, ncolor:KIDS_BLUE,   pillBg:"#FFF9EC", pillChars:"ㄹ",            rule:"Pronounced: l", exK:"달", exR:"dal" },
+    { n:5, ncolor:KIDS_PURPLE, pillBg:"#FFF9EC", pillChars:"ㅁ",            rule:"Pronounced: m", exK:"밤", exR:"bam" },
+    { n:6, ncolor:KIDS_PURPLE, pillBg:"#FFF9EC", pillChars:"ㅂ / ㅍ",       rule:"Pronounced: p", exK:"밥", exR:"bap" },
+    { n:7, ncolor:KIDS_RED,    pillBg:"#FFF9EC", pillChars:"ㅇ",            rule:"Pronounced: ng (nasal)", exK:"강", exR:"gang" },
   ];
   return (
     <Page dir="ltr" bgColor={KIDS_PINK}>
@@ -2981,11 +3034,11 @@ function BatchimEn() {
       </div>
 
       <div style={{ display:"flex", gap:"10px", marginBottom:"6mm", alignItems:"flex-start" }}>
-        <KidsPanel color={KIDS_GREEN} bg="#FFF8F1" dir="ltr">
+        <KidsPanel color={KIDS_GREEN} bg="#FFF9EC" dir="ltr">
           <div style={{ marginBottom:"6px" }}>
             <SectionBadge icon="" label="Definition" color={KIDS_GREEN} dir="ltr" />
           </div>
-          <p style={{ fontSize:"12px", color:"#222", lineHeight:1.8, margin:0, fontWeight:600 }}>
+          <p style={{ fontSize:"12px", color:"#2E2E2E", lineHeight:1.8, margin:0, fontWeight:600 }}>
             Batchim (<span style={{ color:KIDS_RED, fontWeight:900 }}>받침</span>) is the final
             consonant at the end of a Korean syllable block — and it strongly affects how the word is pronounced.
           </p>
@@ -3001,7 +3054,7 @@ function BatchimEn() {
       <div style={{ marginBottom:"4mm" }}>
         <SectionBadge icon="" label="Rule" color={KIDS_ORANGE} dir="ltr" />
       </div>
-      <p style={{ fontSize:"12px", color:"#222", textAlign:"center", marginBottom:"5mm", fontWeight:700 }}>
+      <p style={{ fontSize:"12px", color:"#2E2E2E", textAlign:"center", marginBottom:"5mm", fontWeight:700 }}>
         Many consonants exist, but batchim collapses them into{" "}
         <span style={{ color:KIDS_RED, fontWeight:900, textDecoration:"underline" }}>just 7 final sounds.</span>
       </p>
@@ -3019,9 +3072,9 @@ function BatchimEn() {
               <NumCircle n={r.n} color={r.ncolor} />
               <div style={{ textAlign:"center" }}><Pill bg={r.pillBg}>{r.pillChars}</Pill></div>
               <div style={{ color:KIDS_RED, fontSize:"18px", fontWeight:900, textAlign:"center" }}>→</div>
-              <div style={{ fontSize:"12px", color:"#222", fontWeight:700 }}>{r.rule}</div>
+              <div style={{ fontSize:"12px", color:"#2E2E2E", fontWeight:700 }}>{r.rule}</div>
               <div style={{ display:"flex", alignItems:"baseline", gap:"6px" }}>
-                <span style={{ fontSize:"22px", fontWeight:900, color:"#222" }}>{r.exK}</span>
+                <span style={{ fontSize:"22px", fontWeight:900, color:"#2E2E2E" }}>{r.exK}</span>
                 <span style={{ fontSize:"11px", fontWeight:700, color:KIDS_GREEN }}>({r.exR})</span>
               </div>
             </div>
@@ -3029,11 +3082,11 @@ function BatchimEn() {
         </div>
       </KidsPanel>
 
-      <KidsPanel color={KIDS_BLUE} bg="#F5FAFE" dir="ltr">
+      <KidsPanel color={KIDS_BLUE} bg="#FFF9EC" dir="ltr">
         <div style={{ marginBottom:"6px" }}>
           <SectionBadge icon="" label="Note" color={KIDS_BLUE} dir="ltr" />
         </div>
-        <p style={{ fontSize:"11.5px", color:"#222", lineHeight:1.8, margin:0, fontWeight:600 }}>
+        <p style={{ fontSize:"11.5px", color:"#2E2E2E", lineHeight:1.8, margin:0, fontWeight:600 }}>
           Batchim is written at the bottom of the syllable block but is not separated as a standalone letter.
           It is the key to <span style={{ color:KIDS_RED, fontWeight:900 }}>correct pronunciation</span> of Korean words.
         </p>
@@ -3058,7 +3111,7 @@ function DoubleBatchimEn() {
     <Page dir="ltr">
       <SHead title="Double Batchim — 겹받침 (Gyeop-batchim)" subtitle="Two consonants at the bottom — only one is pronounced!" />
       {/* Larsen-Freeman: don't memorize warning */}
-      <div style={{ background:"#fff8e1", border:"2px solid #fbbf24", borderRadius:"8px", padding:"7px 12px", fontSize:"11px", color:"#92400e", marginBottom:"8px" }}>
+      <div style={{ background:"#FFF9EC", border:"2px solid #FFFF00", borderRadius:"8px", padding:"7px 12px", fontSize:"11px", color:"#2E2E2E", marginBottom:"8px" }}>
         <strong>Beginner notice:</strong> Don't try to memorize all of this right now! Understanding the principle is enough.
         Double batchim becomes natural after reading just 100 Korean words. <strong>This will be covered in depth in Book 2.</strong>
       </div>
@@ -3076,8 +3129,8 @@ function DoubleBatchimEn() {
                 <span style={{ fontSize:"13px", color:T2 }}>ㅏ</span>
               </div>
               <div style={{ display:"flex", gap:"2px", borderTop:`1px solid ${BD}`, marginTop:"3px", paddingTop:"3px" }}>
-                <span style={{ fontSize:"13px", fontWeight:900, color:"#0047AB" }}>ㄹ</span>
-                <span style={{ fontSize:"13px", fontWeight:900, color:"#C8102E" }}>ㄱ</span>
+                <span style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>ㄹ</span>
+                <span style={{ fontSize:"13px", fontWeight:900, color:"#2E2E2E" }}>ㄱ</span>
               </div>
             </div>
           </div>
@@ -3087,7 +3140,7 @@ function DoubleBatchimEn() {
         <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"12px", background:SBG }}>
           <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>Linking Rule for Double Batchim</div>
           <div style={{ fontSize:"11px", color:T2, lineHeight:1.9, marginBottom:"8px" }}>
-            When followed by a syllable starting with <strong>ㅇ</strong>, the <strong style={{color:"#C8102E"}}>right (second)</strong> consonant moves to the next syllable!
+            When followed by a syllable starting with <strong>ㅇ</strong>, the <strong style={{color:"#2E2E2E"}}>right (second)</strong> consonant moves to the next syllable!
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:"4px" }}>
             {[
@@ -3097,7 +3150,7 @@ function DoubleBatchimEn() {
             ].map(e=>(
               <div key={e.w} style={{ border:`1px solid ${BD}`, borderRadius:"4px", padding:"5px 8px", display:"flex", justifyContent:"space-between", alignItems:"center", background:"#fff" }}>
                 <span style={{ fontSize:"15px", color:T1, fontWeight:900 }}>{e.w}</span>
-                <span style={{ fontSize:"11px", color:"#166534", fontWeight:700 }}>{e.r}</span>
+                <span style={{ fontSize:"11px", color:"#2E2E2E", fontWeight:700 }}>{e.r}</span>
                 <span style={{ fontSize:"10px", color:T3 }}>{e.m}</span>
               </div>
             ))}
@@ -3151,7 +3204,7 @@ function KdramaPageEn({ slice, page }: { slice:[number,number]; page:number }) {
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"7px" }}>
         {KDRAMA_EN.slice(...slice).map(v=>(
           <div key={v.k} style={{ background:"#fff", border:`1px solid ${BD}`, borderRadius:"8px", padding:"8px 10px", display:"flex", gap:"8px", alignItems:"flex-start", pageBreakInside:"avoid", breakInside:"avoid" }}>
-            <div style={{ fontSize:"22px" }}>{v.emoji}</div>
+            <div style={{ fontSize:"22px" }}><BookIcon e={v.emoji} /></div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:"22px", fontWeight:900, color:T1, background:Y, display:"inline-block", padding:"1px 8px", borderRadius:"4px", marginBottom:"2px" }}>{v.k}</div>
               <div style={{ fontSize:"11px", color:T1, fontWeight:700 }}>{v.m}</div>
@@ -3262,7 +3315,7 @@ function AnswerEn() {
             {ex.items.map(([q,a])=>(
               <div key={q} style={{ display:"flex", justifyContent:"space-between", fontSize:"11px", padding:"2px 0", borderBottom:"1px solid #eee" }}>
                 <span style={{ fontWeight:700 }}>{q}</span>
-                <span style={{ color:"#22c55e", fontWeight:700 }}>{a}</span>
+                <span style={{ color:"#2E2E2E", fontWeight:700 }}>{a}</span>
               </div>
             ))}
           </div>
@@ -3276,7 +3329,7 @@ function AnswerEn() {
             <div key={c.char} style={{ textAlign:"center" }}>
               <div style={{ fontSize:"22px", color:T1, fontWeight:900, lineHeight:1 }}>{c.char}</div>
               <div style={{ fontSize:"10px", color:T3 }}>{c.roman}</div>
-              <div style={{ fontSize:"12px" }}>{c.emoji}</div>
+              <div style={{ fontSize:"12px" }}><BookIcon e={c.emoji} /></div>
             </div>
           ))}
         </div>
@@ -3287,7 +3340,7 @@ function AnswerEn() {
             <div key={v.char} style={{ textAlign:"center" }}>
               <div style={{ fontSize:"20px", color:T1, fontWeight:900, lineHeight:1 }}>{v.char}</div>
               <div style={{ fontSize:"10px", color:T3 }}>{v.roman}</div>
-              <div style={{ fontSize:"11px" }}>{v.emoji}</div>
+              <div style={{ fontSize:"11px" }}><BookIcon e={v.emoji} /></div>
             </div>
           ))}
         </div>
@@ -3327,7 +3380,7 @@ function BackCoverAr() {
         <div style={{
           position:"absolute", top:"10mm", right:"14mm",
           width:"52px", height:"52px", borderRadius:"50%",
-          border:"2px solid #111", background:"#fff",
+          border:"2px solid #2E2E2E", background:"#fff",
           display:"flex", flexDirection:"column",
           alignItems:"center", justifyContent:"center", gap:"1px",
         }}>
@@ -3406,7 +3459,7 @@ function BackCoverEn() {
         <div style={{
           position:"absolute", top:"10mm", right:"14mm",
           width:"52px", height:"52px", borderRadius:"50%",
-          border:"2px solid #111", background:"#fff",
+          border:"2px solid #2E2E2E", background:"#fff",
           display:"flex", flexDirection:"column",
           alignItems:"center", justifyContent:"center", gap:"1px",
         }}>
@@ -3674,7 +3727,7 @@ function CoursePlan({ lang }: { lang: Lang }) {
       <SHead title={isAr ? "خطة كورس الهانغول داخل الفصل — ٤ حصص" : "4-Class Classroom Hangul Course Plan"} subtitle={isAr ? "حصة أسبوعيًا · ٦٠ دقيقة لكل حصة · درسان في كل حصة · إملاء في كل حصة · واجب بعد كل حصة" : "1 class per week · 60 minutes each · 2 lessons per class · dictation every class · homework after every class"} />
       <div style={{ display:"flex", flexDirection:"column", gap:"5mm", marginBottom:"7mm" }}>
         {weeks.map((w,i) => (
-          <div key={i} style={{ border:`1px solid ${BD}`, borderRadius:"6px", padding:"5mm", background:i===0?"#fffdf3":SBG }}>
+          <div key={i} style={{ border:`1px solid ${BD}`, borderRadius:"6px", padding:"5mm", background:i===0?"#FFF9EC":SBG }}>
             <div style={{ display:"flex", alignItems:"baseline", gap:"10px", marginBottom:"3mm", borderBottom:`1px solid ${BD}`, paddingBottom:"3mm" }}>
               <div style={{ fontSize:"10px", color:T3, fontWeight:800, letterSpacing:"2px", textTransform:"uppercase" }}>{w.n}</div>
               <div style={{ fontSize:"15px", fontWeight:900, color:T1 }}>{w.title}</div>
@@ -3690,7 +3743,7 @@ function CoursePlan({ lang }: { lang: Lang }) {
           </div>
         ))}
       </div>
-      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
+      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#FFF9EC", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr ? "هذا الكورس يعطي أفضل نتائج عندما يلتزم الطالب بحلّ الواجب وتطبيق الإملاء والتدريب اليومي (٥–١٠ دقائق) بين الحصص. الإملاء واجب في كل حصة، دون تخطٍّ أبدًا." : "This course works best when students complete the homework, dictation drills, and 5–10 minute daily practice between classes. Dictation is required every class — never skip it."}
       </div>
     </Page>
@@ -3703,7 +3756,7 @@ function InClassExercise({ lang }: { lang: Lang }) {
     ? ["التكرار بعد المعلمة.", "مطابقة الحرف بالصوت.", "كتابة الحرف من الذاكرة.", "القراءة بصوت عالٍ واحدًا تلو الآخر.", "تحدي السرعة: من يتعرّف على الحرف أولًا؟"]
     : ["Repeat after the teacher.", "Match the letter with the sound.", "Write the letter from memory.", "Read aloud one by one.", "Speed challenge: who can recognize the letter first?"];
   return (
-    <div style={{ marginTop:"7mm", border:`1px solid ${BD}`, borderLeft:`3px solid ${Y}`, borderRadius:"4px", padding:"4mm 5mm", background:"#fffdf3" }}>
+    <div style={{ marginTop:"7mm", border:`1px solid ${BD}`, borderLeft:`3px solid ${Y}`, borderRadius:"4px", padding:"4mm 5mm", background:"#FFF9EC" }}>
       <div style={{ fontSize:"10px", fontWeight:800, color:T1, letterSpacing:"2px", textTransform:"uppercase", marginBottom:"3mm" }}>
         {isAr ? "تدريب داخل الحصة" : "In-Class Exercise"}
       </div>
@@ -3738,8 +3791,8 @@ function HowToUse({ lang }: { lang: Lang }) {
       <SHead title={isAr ? "كيفية استخدام هذا الكتاب" : "How to Use This Book"} subtitle={isAr ? "ستة مبادئ تجعل تعلّم الهانغول سريعاً وفعّالاً داخل الفصل" : "Six principles that make classroom Hangul learning fast and effective"} />
       <div style={{ display:"flex", flexDirection:"column", gap:"4mm", marginBottom:"6mm" }}>
         {items.map((it,i) => (
-          <div key={i} style={{ display:"flex", gap:"4mm", border:`1px solid ${BD}`, borderRadius:"6px", padding:"4mm 5mm", background: i===2?"#fffdf3":SBG, alignItems:"flex-start" }}>
-            <div style={{ fontSize:"32px", lineHeight:1, flexShrink:0 }}>{it.icon}</div>
+          <div key={i} style={{ display:"flex", gap:"4mm", border:`1px solid ${BD}`, borderRadius:"6px", padding:"4mm 5mm", background: i===2?"#FFF9EC":SBG, alignItems:"flex-start" }}>
+            <div style={{ fontSize:"32px", lineHeight:1, flexShrink:0 }}><BookIcon e={it.icon} /></div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:"13px", fontWeight:900, color:T1, marginBottom:"2mm" }}>{it.title}</div>
               <div style={{ fontSize:"11px", color:T2, lineHeight:1.7 }}>{it.body}</div>
@@ -3747,7 +3800,7 @@ function HowToUse({ lang }: { lang: Lang }) {
           </div>
         ))}
       </div>
-      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
+      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#FFF9EC", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr
           ? "كل درس يتبع نفس التسلسل الثابت: أ. تعلّم → ب. كلمات بالصور → ج. تطبيق الكتابة → د. تدريب النطق → هـ. إملاء → و. قراءة قصيرة → ز. مراجعة. الالتزام بالترتيب دائمًا، فهكذا صُمِّم الكتاب."
           : "Every lesson follows the same fixed flow: A. Learn → B. Visual Words → C. Writing Practice → D. Speaking Drill → E. Dictation → F. Mini Reading → G. Review. Always follow this order — the book is designed this way."}
@@ -3819,7 +3872,7 @@ function Dictation({ lesson, slice, lang }: LessonProps) {
   return (
     <Page dir={isAr ? "rtl" : "ltr"} chapter={isAr ? "إملاء" : "Dictation"}>
       <SHead title={isAr ? `إملاء — الدرس ${["١","٢","٣","٤","٥","٦","٧","٨"][lesson-1]}` : `Dictation — Lesson ${lesson}`} subtitle={isAr ? "ينطق المعلم بصوت واضح، والطالب يكتب في المربعات" : "The teacher reads aloud; the student writes in the boxes"} />
-      <div style={{ borderLeft:`3px solid ${Y}`, padding:"3mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7, marginBottom:"5mm" }}>
+      <div style={{ borderLeft:`3px solid ${Y}`, padding:"3mm 5mm", background:"#FFF9EC", fontSize:"11px", color:T2, lineHeight:1.7, marginBottom:"5mm" }}>
         <strong>{isAr ? "للمعلم: " : "Teacher: "}</strong>
         {isAr
           ? `انطق ببطء — أولاً الحروف، ثم المقاطع، ثم الكلمات: ${dictWords.join(" / ")}`
@@ -3907,7 +3960,7 @@ function MiniReading({ lesson, lang }: LessonProps) {
           </div>
         ))}
       </div>
-      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
+      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#FFF9EC", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr ? "اسأل كل طالب أن يقرأ كلمة، ثم يستخدمها في جملة عربية بسيطة (مثال: عندي حقيبة)." : "Ask each student to read one word and use it in a simple sentence (e.g., \"I have a bag\")."}
       </div>
     </Page>
@@ -3922,39 +3975,21 @@ const LESSON_VOWEL_INDICES: Record<number, [number, number]> = {
 
 type LessonWord = { k: string; r: string; en: string; ar: string; emoji: string };
 
-// Map each English word/phrase to a single safe-search keyword for the photo CDN.
-// LoremFlickr serves CC-licensed Flickr photos by keyword — no API key needed.
-function photoKeyword(en: string): string {
-  return en
-    .split("/")[0]            // "car / tea" -> "car "
-    .split("(")[0]            // "go (root)" -> "go "
-    .replace(/[^a-zA-Z\s]/g, "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)              // keep keyword short for better matches
-    .join(",");
-}
-
-function WordIllustration({ emoji, alt, en, size = 64 }: { emoji: string; alt: string; en: string; size?: number }) {
-  const kw = photoKeyword(en);
-  const photo = `https://loremflickr.com/${size*3}/${size*3}/${kw || "object"}?lock=${Math.abs([...kw].reduce((a,c)=>a+c.charCodeAt(0),0))}`;
+// 27 Sep 2026 (brand guard): the word pictures used random stock photos
+// (loremflickr) with an emoji fallback. Now each word is a Korean word tile
+// in the palette, so nothing off-brand or unrelated appears in the book.
+function WordIllustration({ k, alt, size = 64 }: { k: string; alt: string; size?: number }) {
   return (
-    <img
-      src={photo}
-      alt={alt}
-      width={size}
-      height={size}
-      loading="lazy"
-      onError={(e) => {
-        // graceful fallback to a styled emoji span if photo CDN is blocked
-        const parent = (e.currentTarget as HTMLImageElement).parentElement;
-        if (parent && !parent.dataset.fallback) {
-          parent.dataset.fallback = "1";
-          parent.innerHTML = `<span style="font-size:${size*0.7}px;line-height:1">${emoji}</span>`;
-        }
-      }}
-      style={{ display:"block", objectFit:"cover", borderRadius:"4px", width:`${size}px`, height:`${size}px` }}
-    />
+    <div
+      role="img"
+      aria-label={alt}
+      lang="ko"
+      style={{ width:`${size}px`, height:`${size}px`, display:"flex", alignItems:"center", justifyContent:"center",
+        background:"#FFF9EC", border:"2px solid #2E2E2E", borderRadius:"6px", color:"#2E2E2E",
+        fontFamily:"'Noto Sans KR', sans-serif", fontWeight:800, fontSize:`${Math.round(size*0.3)}px`, lineHeight:1.1, textAlign:"center", padding:"2px" }}
+    >
+      {k}
+    </div>
   );
 }
 
@@ -4118,7 +4153,7 @@ function LessonVowels({ lesson, lang }: { lesson: number; lang: Lang }) {
           </div>
         );
       })}
-      <div style={{ marginTop:"4mm", borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
+      <div style={{ marginTop:"4mm", borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#FFF9EC", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr ? "تجربة الآن: وضع حروف اليوم الساكنة قبل كل صوت مد لتكوين مقاطع جديدة." : "Try it: place today's consonants before each vowel to build new syllables."}
       </div>
     </Page>
@@ -4151,7 +4186,7 @@ function LessonReviewAll({ lang }: { lang: Lang }) {
           <div key={i} style={{ border:`1px solid ${BD}`, height:"18mm", borderRadius:"4px", background:"#fff", display:"flex", alignItems:"flex-end", justifyContent:"flex-start", padding:"2mm 3mm", fontSize:"9px", color:T3 }}>{i+1}</div>
         ))}
       </div>
-      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
+      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#FFF9EC", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr
           ? "المعلم يقرأ ببطء: 가 / 나 / 다 / 라 / 마 / 바 / 사 / 아 / 자 / 차 → ثم كلمات: 가방 / 나비 / 다리 / 라면 / 물 / 밥 / 사과 / 아이 / 지도 / 한국"
           : "Teacher reads slowly: 가 / 나 / 다 / 라 / 마 / 바 / 사 / 아 / 자 / 차 → then words: 가방 / 나비 / 다리 / 라면 / 물 / 밥 / 사과 / 아이 / 지도 / 한국"}
@@ -4170,13 +4205,13 @@ function PictureWords({ lesson, lang }: LessonProps) {
         {words.map((w, i) => (
           <div key={`${w.k}-${i}`} style={{ border:`1px solid ${BD}`, borderRadius:"5px", padding:"2.5mm", background:"#fff", direction:isAr?"rtl":"ltr", textAlign:"center" }}>
             <div style={{ height:"15mm", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"1.5mm" }}>
-              <WordIllustration emoji={w.emoji} en={w.en} alt={isAr ? w.ar : w.en} size={56} />
+              <WordIllustration k={w.k} alt={isAr ? w.ar : w.en} size={56} />
             </div>
             <div style={{ fontSize:"17px", fontWeight:900, color:T1, lineHeight:1.1, direction:"ltr" }}>{w.k}</div>
           </div>
         ))}
       </div>
-      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
+      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#FFF9EC", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr
           ? "اطلب من الطلاب رسم الصورة في المربع الفارغ — كل الحروف ومدّ الصوت في هذه الكلمات سبق شرحها، فلا توجد مفاجآت."
           : "Ask students to draw the object in the placeholder box — every consonant and vowel here has already been taught, so nothing is unfamiliar."}
@@ -4197,7 +4232,7 @@ function HwSection({ letter, title, body }: { letter:string; title:string; body:
   );
 }
 
-function SyllableWritingGrid({ vowels, consonants, fillFirstRow = true, color = "#7ED957" }:{
+function SyllableWritingGrid({ vowels, consonants, fillFirstRow = true, color = "#FFF9EC" }:{
   vowels: string[]; consonants: string[]; fillFirstRow?: boolean; color?: string;
 }) {
   return (
@@ -4216,7 +4251,7 @@ function SyllableWritingGrid({ vowels, consonants, fillFirstRow = true, color = 
       {vowels.map(v => (
         <div key={"vh-"+v} style={{
           display:"flex", alignItems:"center", justifyContent:"center",
-          height:"34px", fontSize:"22px", fontWeight:900, color:"#111",
+          height:"34px", fontSize:"22px", fontWeight:900, color:"#2E2E2E",
           borderRight:"2px solid #fff", borderBottom:"2px solid #fff",
         }}>{v}</div>
       ))}
@@ -4225,15 +4260,15 @@ function SyllableWritingGrid({ vowels, consonants, fillFirstRow = true, color = 
         <Fragment key={"row-"+c}>
           <div style={{
             display:"flex", alignItems:"center", justifyContent:"center",
-            height:"34px", fontSize:"22px", fontWeight:900, color:"#111",
+            height:"34px", fontSize:"22px", fontWeight:900, color:"#2E2E2E",
             borderRight:"2px solid #fff", borderBottom:"2px solid #fff",
           }}>{c}</div>
           {vowels.map(v => (
             <div key={"cell-"+c+v} style={{
               display:"flex", alignItems:"center", justifyContent:"center",
-              height:"34px", fontSize:"20px", fontWeight:900, color:"#111",
+              height:"34px", fontSize:"20px", fontWeight:900, color:"#2E2E2E",
               borderRight:"2px solid #fff", borderBottom:"2px solid #fff",
-              background: ci === 0 && fillFirstRow ? "#A8E690" : color,
+              background: ci === 0 && fillFirstRow ? "#FFFF00" : color,
             }}>{ci === 0 && fillFirstRow ? buildSyllable(c, v) : ""}</div>
           ))}
         </Fragment>
@@ -4269,7 +4304,7 @@ function SyllableWritingPage({ lang, mode }:{ lang:"ar"|"en"; mode:"basic"|"comp
       <div style={{ marginBottom:"4mm" }}>
         <SectionBadge icon="" label={isAr ? "تدريب الكتابة" : "Writing Practice"} color={KIDS_GREEN} dir={isAr?"rtl":"ltr"} />
       </div>
-      <p style={{ fontSize:"12px", color:"#222", fontWeight:700, marginBottom:"5mm", direction: isAr ? "rtl" : "ltr" }}>
+      <p style={{ fontSize:"12px", color:"#2E2E2E", fontWeight:700, marginBottom:"5mm", direction: isAr ? "rtl" : "ltr" }}>
         {isAr ? instructAr : instructEn}
       </p>
       <SyllableWritingGrid vowels={vowels} consonants={consonants} />
@@ -4360,7 +4395,7 @@ function DailyPractice({ lesson, lang }: { lesson:number; lang: Lang }) {
           </div>
         ))}
       </div>
-      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
+      <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#FFF9EC", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr ? "وضع علامة في المربّع الصغير عند إنهاء مهمة كل يوم." : "Tick the small box when you finish each day's task."}
       </div>
     </Page>
@@ -4592,7 +4627,7 @@ function Certificate({ lang }: { lang: Lang }) {
   const isAr = lang === "ar";
   return (
     <Page dir={isAr ? "rtl" : "ltr"} chapter={isAr ? "شهادة" : "Certificate"}>
-      <div style={{ border:`3px solid ${GOLD}`, borderRadius:"6px", padding:"18mm 12mm", textAlign:"center", background:"#fffdf3", marginTop:"15mm" }}>
+      <div style={{ border:`3px solid ${GOLD}`, borderRadius:"6px", padding:"18mm 12mm", textAlign:"center", background:"#FFF9EC", marginTop:"15mm" }}>
         <div style={{ fontSize:"11px", color:T3, fontWeight:800, letterSpacing:"4px", textTransform:"uppercase", marginBottom:"5mm" }}>
           {isAr ? "أكاديمية كلوفرز" : "Klovers Korean Academy"}
         </div>
@@ -4742,7 +4777,7 @@ export default function HangulBookPage() {
 
         #hangul-book {
           /* Dark wood desk look */
-          background: radial-gradient(ellipse at center, #2a1a0e 0%, #1a0e08 60%, #0d0804 100%);
+          background: radial-gradient(ellipse at center, #2E2E2E 0%, #2E2E2E 60%, #2E2E2E 100%);
           font-family: 'Cairo', 'Noto Sans KR', system-ui, sans-serif;
           counter-reset: book-page;
           padding: 20px 40px 40px;
@@ -4751,16 +4786,16 @@ export default function HangulBookPage() {
         .book-page {
           counter-increment: book-page;
           /* Cream paper instead of pure white */
-          background: #fffdf8 !important;
+          background: #FFF9EC !important;
         }
 
-        .book-page.cover-dark   { background: #111111 !important; }
+        .book-page.cover-dark   { background: #2E2E2E !important; }
         .book-page.cover-yellow { background: #FFFF00 !important; }
 
         /* Override white backgrounds on page content */
         .book-page > div[style*="background:#fff"],
         .book-page > div[style*='background: #fff'] {
-          background: #fffdf8 !important;
+          background: #FFF9EC !important;
         }
 
         /* Book title ribbon at top of viewer */
@@ -4791,7 +4826,7 @@ export default function HangulBookPage() {
 
         <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
           {/* Preview toggle */}
-          <div style={{ display:"flex", background:"#1a1a1a", borderRadius:"8px", overflow:"hidden", border:`1px solid ${Y}44` }}>
+          <div style={{ display:"flex", background:"#2E2E2E", borderRadius:"8px", overflow:"hidden", border:`1px solid ${Y}44` }}>
             {(["ar","en"] as Lang[]).map(l=>(
               <button key={l} onClick={()=>setPreview(l)} style={{
                 padding:"6px 16px", fontSize:"12px", fontWeight:700,
@@ -4804,7 +4839,7 @@ export default function HangulBookPage() {
             ))}
           </div>
 
-          <button onClick={()=>window.history.back()} style={{ background:"#2a2a2a", color:"#ccc", border:"none", borderRadius:"8px", padding:"7px 14px", fontSize:"12px", cursor:"pointer" }}>
+          <button onClick={()=>window.history.back()} style={{ background:"#2E2E2E", color:"#ccc", border:"none", borderRadius:"8px", padding:"7px 14px", fontSize:"12px", cursor:"pointer" }}>
             ← Back
           </button>
 
