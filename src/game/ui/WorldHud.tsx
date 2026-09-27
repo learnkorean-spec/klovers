@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { AVATARS, type AvatarId } from "../player/characters";
 import Joystick from "./Joystick";
@@ -71,9 +71,29 @@ const kbd = "min-w-6 rounded-md border border-ivory/30 bg-ivory/10 px-1.5 py-0.5
  * joystick and one round button instead of any keyboard hints.
  * pointer-events stay off except on real controls, so clicks reach the scene.
  */
+/**
+ * The prompt, held a moment after it goes away: standing at the edge of a
+ * range can drop it for a frame, and a button that vanishes under a finger
+ * swallows the tap.
+ */
+function useSteadyPrompt(prompt: string | null, holdMs = 400): string | null {
+  const [shown, setShown] = useState(prompt);
+  const timer = useRef<number>();
+  useEffect(() => {
+    window.clearTimeout(timer.current);
+    if (prompt) setShown(prompt);
+    else timer.current = window.setTimeout(() => setShown(null), holdMs);
+    return () => window.clearTimeout(timer.current);
+  }, [prompt, holdMs]);
+  return shown;
+}
+
 export default function WorldHud(p: HudProps) {
   const copy = WORLD_COPY[p.lang];
   const h = copy.hints;
+  const prompt = useSteadyPrompt(p.prompt);
+  /** When the round button last acted on a touch (its click then does nothing). */
+  const pressedAt = useRef(0);
 
 
   return (
@@ -176,9 +196,10 @@ export default function WorldHud(p: HudProps) {
             <p className="text-sm text-ivory/85">{p.notice.line}</p>
           </div>
         )}
-        {p.prompt && !p.sequence && !p.isTouch && (
+        {prompt && !p.sequence && !p.isTouch && (
           <button
             type="button"
+            aria-label={`${prompt} — ${h.pressKey}`}
             onClick={p.onInteract}
             className="pointer-events-auto flex items-center gap-2 rounded-full bg-charcoal/90 px-4 py-2 text-sm font-semibold text-ivory ring-2 ring-klovers-yellow/70 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2"
           >
@@ -187,7 +208,8 @@ export default function WorldHud(p: HudProps) {
                 {k}
               </kbd>
             ))}
-            <span>{p.prompt}</span>
+            <span>{prompt}</span>
+            <span aria-hidden="true" className="border-s border-ivory/25 ps-2 text-xs font-normal text-ivory/70">{h.pressKey}</span>
           </button>
         )}
       </div>
@@ -200,20 +222,39 @@ export default function WorldHud(p: HudProps) {
       )}
 
       {p.isTouch && !p.sequence && <Joystick label={copy.joystick} pulse={p.showMoveHint} />}
-      {p.isTouch && p.prompt && !p.sequence && (
+      {p.isTouch && prompt && !p.sequence && (
         // The contextual action: a dark disc ringed in Klovers yellow with the
-        // clover mark, and what it does written under it. Only when useful.
+        // clover mark, what it does under it, and how to use it above.
+        // It acts on touch-down, so a tap is never lost to a re-render.
         <button
           type="button"
-          onClick={p.onInteract}
-          aria-label={p.prompt}
-          style={{ bottom: "calc(1.75rem + env(safe-area-inset-bottom))", right: "calc(1.25rem + env(safe-area-inset-right))" }}
-          className="pointer-events-auto absolute flex flex-col items-center gap-1.5 motion-safe:animate-in motion-safe:zoom-in-90"
+          aria-label={prompt}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            pressedAt.current = performance.now();
+            p.onInteract();
+          }}
+          onClick={() => {
+            // Keyboard / assistive activation only: a press already acted.
+            if (performance.now() - pressedAt.current > 1000) p.onInteract();
+          }}
+          style={{ bottom: "calc(1.25rem + env(safe-area-inset-bottom))", right: "calc(1rem + env(safe-area-inset-right))" }}
+          dir="ltr"
+          className="pointer-events-auto absolute flex touch-none select-none items-center gap-2 p-1 motion-safe:animate-in motion-safe:zoom-in-90"
         >
-          <span className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-charcoal/70 shadow-lg ring-4 ring-klovers-yellow backdrop-blur-sm">
-            <CloverMark />
+          {/* How to use it, beside the disc (never above it: the side column lives there). */}
+          <span dir="auto" className="rounded-full bg-klovers-yellow px-2.5 py-1 text-xs font-bold text-charcoal shadow">
+            {h.tapButton}
           </span>
-          <span className="rounded-full bg-charcoal/85 px-3 py-1 text-xs font-bold text-ivory">{p.prompt}</span>
+          <span className="flex flex-col items-center gap-1.5">
+            <span className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-charcoal/70 shadow-lg ring-4 ring-klovers-yellow backdrop-blur-sm active:scale-95">
+              <CloverMark />
+            </span>
+            <span dir="auto" className="rounded-full bg-charcoal/85 px-3 py-1 text-xs font-bold text-ivory">
+              {prompt}
+            </span>
+          </span>
         </button>
       )}
       {p.sequence && (

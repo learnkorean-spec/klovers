@@ -16,6 +16,9 @@ export const WORLD_COPY = {
       run: { keys: ["Shift"], label: "run" },
       interact: { keys: ["E"], label: "" },
       esc: { keys: ["Esc"], label: "frees the mouse" },
+      /** Always shown with the prompt: how to use it. */
+      pressKey: "Press E or click",
+      tapButton: "Tap the button",
     },
     joystick: "Move",
     dragToMove: "Drag to move",
@@ -215,6 +218,8 @@ export const WORLD_COPY = {
       run: { keys: ["التبديل"], label: "الركض" },
       interact: { keys: ["E"], label: "" },
       esc: { keys: ["الهروب"], label: "لتحرير الفأرة" },
+      pressKey: "الضغط على E أو النقر هنا",
+      tapButton: "الضغط على الزر",
     },
     joystick: "المشي",
     dragToMove: "سحب الإصبع للمشي",
