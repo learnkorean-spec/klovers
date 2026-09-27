@@ -273,7 +273,7 @@ import { ClassLinkDialog } from "@/components/admin/dialogs/ClassLinkDialog";
 import { ReceiptModal } from "@/components/admin/dialogs/ReceiptModal";
 import { RejectEnrollmentDialog } from "@/components/admin/dialogs/RejectEnrollmentDialog";
 import { ManualEnrollDialog } from "@/components/admin/dialogs/ManualEnrollDialog";
-import { formatTime, ADMIN_PAGE_SIZE as PAGE_SIZE, MAX_UNIT_PRICE } from "@/lib/admin-utils";
+import { formatTime, ADMIN_PAGE_SIZE as PAGE_SIZE, MAX_UNIT_PRICE, AT_RISK_SESSION_THRESHOLD } from "@/lib/admin-utils";
 import type { ProfileEntry } from "@/hooks/admin/useProfiles";
 import { StudentsTab } from "@/components/admin/tabs/StudentsTab";
 import { EnrollmentsTab } from "@/components/admin/tabs/EnrollmentsTab";
@@ -399,6 +399,13 @@ const AdminDashboard = () => {
   const [rejectNote, setRejectNote] = useState("");
   const [rejecting, setRejecting] = useState(false);
   const [studentFilter, setStudentFilter] = useState("all");
+  // The dashboard tiles link here with ?filter=… (AdminKpiStrip,
+  // LifecycleFunnel) so the Users list opens on exactly the students the tile
+  // counted — "2 Active" opens on those 2, not on all 106.
+  const urlStudentFilter = searchParams.get("filter");
+  useEffect(() => {
+    if (urlStudentFilter) setStudentFilter(urlStudentFilter);
+  }, [urlStudentFilter]);
   const [levelFilter, setLevelFilter] = useState("all");
   const [studentSort, setStudentSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "joined_at", dir: "desc" });
   const [studentPage, setStudentPage] = useState(0);
@@ -1045,6 +1052,11 @@ const AdminDashboard = () => {
         : studentFilter === "stripe" ? u.source_label === "Stripe"
         : studentFilter === "egypt" ? u.source_label === "Egypt"
         : studentFilter === "overdue" ? u.amount_due > 0
+        // The four below match the dashboard tiles one for one.
+        : studentFilter === "active" ? u.derived_status === "ACTIVE"
+        : studentFilter === "at-risk" ? u.derived_status === "ACTIVE" && u.sessions_remaining > 0 && u.sessions_remaining <= AT_RISK_SESSION_THRESHOLD
+        : studentFilter === "locked" ? u.derived_status === "LOCKED"
+        : studentFilter === "completed" ? u.derived_status === "COMPLETED"
         : true;
       const matchesLevel = levelFilter === "all" || normalizeLevel(u.level || "") === levelFilter;
       return matchesSearch && matchesFilter && matchesLevel;
@@ -1075,6 +1087,9 @@ const AdminDashboard = () => {
   useEffect(() => { setEnrollmentPage(0); }, [debouncedEnrollmentSearch]);
 
   const overdueCount = overviewRows.filter(u => u.amount_due > 0).length;
+  const atRiskCount = overviewRows.filter(u =>
+    u.derived_status === "ACTIVE" && u.sessions_remaining > 0 && u.sessions_remaining <= AT_RISK_SESSION_THRESHOLD
+  ).length;
   const studentFilterOptions = [
     { value: "all", label: `All (${overviewRows.length})` },
     { value: "confirmed", label: `Confirmed (${confirmedCount})` },
@@ -1082,6 +1097,10 @@ const AdminDashboard = () => {
     { value: "stripe", label: `Stripe (${stripeCount})` },
     { value: "egypt", label: `Egypt Manual (${egyptCount})` },
     { value: "overdue", label: `Outstanding Balance (${overdueCount})` },
+    { value: "active", label: `Active (${lifecycleActive})` },
+    { value: "at-risk", label: `At risk (${atRiskCount})` },
+    { value: "locked", label: `Locked (${lifecycleLocked})` },
+    { value: "completed", label: `Completed (${lifecycleCompleted})` },
   ];
 
   const legacyEnrollmentCount = useMemo(() =>
