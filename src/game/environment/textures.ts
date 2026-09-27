@@ -31,19 +31,44 @@ export function useTiledTexture(paint: Paint, rx: number, ry: number) {
   return texture;
 }
 
-/** Stone paving: ivory slabs in staggered rows. */
-export const paintPaving: Paint = (ctx, size) => {
-  ctx.fillStyle = PALETTE.stone;
+/**
+ * Dressed stone paving: warm slabs in staggered rows, each a slightly
+ * different tone, with soft joints and a little wear. Variation comes from
+ * tone, not noise, so the floor reads as stone without shimmering.
+ */
+export const paintPaving: Paint = (ctx, size) => slabs(ctx, size, NATURAL.paving, 4, 2, 0.11);
+
+/** Shared slab painter: rows × cols per tile, tone jitter per slab. */
+function slabs(ctx: CanvasRenderingContext2D, size: number, base: string, rows: number, cols: number, tone: number) {
+  ctx.fillStyle = base;
   ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = "rgba(46,46,46,0.16)";
-  const rows = 4;
+  let seed = 11;
+  const rnd = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+  const rh = size / rows;
+  const cw = size / cols;
   for (let r = 0; r < rows; r++) {
-    const y = (r * size) / rows;
-    ctx.fillRect(0, y, size, 2);
-    const off = r % 2 ? size / 4 : 0;
-    for (let x = off; x < size + 1; x += size / 2) ctx.fillRect(x % size, y, 2, size / rows);
+    const off = r % 2 ? cw / 2 : 0;
+    for (let c = -1; c < cols + 1; c++) {
+      const x = c * cw + off;
+      const t = (rnd() - 0.5) * 2 * tone;
+      ctx.fillStyle = t > 0 ? `rgba(255,250,240,${t})` : `rgba(90,70,50,${-t})`;
+      ctx.fillRect(x + 1, r * rh + 1, cw - 2, rh - 2);
+      // A few wear marks inside the slab.
+      for (let k = 0; k < 3; k++) {
+        ctx.fillStyle = `rgba(90,70,50,${0.03 + rnd() * 0.04})`;
+        ctx.beginPath();
+        ctx.arc(x + rnd() * cw, r * rh + rnd() * rh, 2 + rnd() * 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.fillStyle = "rgba(70,54,40,0.42)";
+    ctx.fillRect(0, r * rh, size, 2);
+    for (let c = 0; c <= cols; c++) ctx.fillRect((c * cw + off) % size, r * rh, 2, rh);
   }
-};
+}
 
 /** Warm wooden planks (maru floor). */
 export const paintPlanks: Paint = (ctx, size) => {
@@ -62,16 +87,5 @@ export const paintPlanks: Paint = (ctx, size) => {
 };
 
 
-/** Packed-earth madang: warm stone with faint, irregular slabs. */
-export const paintMadang: Paint = (ctx, size) => {
-  ctx.fillStyle = NATURAL.madang;
-  ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = "rgba(107,74,51,0.10)";
-  const rows = 3;
-  for (let r = 0; r < rows; r++) {
-    const y = (r * size) / rows;
-    ctx.fillRect(0, y, size, 1.5);
-    const off = (r * 53) % 90;
-    for (let x = off; x < size + 1; x += 90 + ((r * 17) % 30)) ctx.fillRect(x % size, y, 1.5, size / rows);
-  }
-};
+/** Courtyard madang: larger, rougher slabs in a warmer earth tone. */
+export const paintMadang: Paint = (ctx, size) => slabs(ctx, size, NATURAL.madang, 3, 2, 0.13);

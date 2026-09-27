@@ -1,6 +1,6 @@
 import { useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { Group } from "three";
+import { AdditiveBlending, CanvasTexture, MeshBasicMaterial, type Group } from "three";
 import { ACCENT, MAT, std } from "../config/materials";
 import { PALETTE, PROPS } from "../config/world";
 import { HATCH, type StoryState } from "../systems/story";
@@ -20,9 +20,32 @@ import { REDUCED_MOTION } from "../systems/motion";
  * A thin yellow line on the platform is the only accent: navigation, not glow.
  */
 const PLINTH_H = 0.5;
-const EGG_R = 0.42;
+const EGG_R = 0.5;
 const EGG_Y = PLINTH_H + EGG_R * 1.25;
 const SPLIT = Math.PI * 0.42; // where the cap breaks off
+
+/** Warm radial glow (canvas, painted once), added softly over the timber. */
+const GLOW = (() => {
+  let map: CanvasTexture | null = null;
+  try {
+    const c = document.createElement("canvas");
+    c.width = 64;
+    c.height = 64;
+    const ctx = c.getContext("2d");
+    if (ctx) {
+      const g = ctx.createRadialGradient(32, 32, 4, 32, 32, 31);
+      g.addColorStop(0, "rgba(255,214,140,0.9)");
+      g.addColorStop(0.5, "rgba(255,200,120,0.35)");
+      g.addColorStop(1, "rgba(255,200,120,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 64, 64);
+      map = new CanvasTexture(c);
+    }
+  } catch {
+    map = null;
+  }
+  return new MeshBasicMaterial({ map, transparent: true, opacity: 0.6, blending: AdditiveBlending, depthWrite: false, toneMapped: false });
+})();
 
 export default function CloverEgg({ story }: { story: MutableRefObject<StoryState> }) {
   const { x, z, w } = PROPS.eggPlinth;
@@ -46,9 +69,12 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
       capOff = 1;
     }
     if (egg.current) egg.current.rotation.z = rock;
+    // A slow warm breath of light round the nest. The egg itself stays
+    // perfectly still while dormant (canon); only the light lives.
+    GLOW.opacity = REDUCED_MOTION ? 0.6 : 0.56 + 0.1 * Math.sin(now / 1500);
     if (cap.current) {
       const e = 1 - (1 - capOff) ** 3;
-      cap.current.position.set(e * 0.62, -e * 0.38 + Math.sin(e * Math.PI) * 0.3, e * 0.25);
+      cap.current.position.set(e * 0.74, -e * 0.45 + Math.sin(e * Math.PI) * 0.3, e * 0.25);
       cap.current.rotation.set(e * 0.4, 0, -e * 2.2);
     }
   });
@@ -70,13 +96,23 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
         <ringGeometry args={[w / 2 - 0.42, w / 2 - 0.36, 8, 1]} />
         <primitive object={ACCENT} attach="material" />
       </mesh>
+      {/* A wide low stone tier under the platform: it sits in the ground. */}
+      <mesh receiveShadow position={[0, 0.05, 0]} rotation={[0, Math.PI / 8, 0]}>
+        <cylinderGeometry args={[w / 2 / Math.cos(Math.PI / 8) + 0.42, w / 2 / Math.cos(Math.PI / 8) + 0.46, 0.1, 8]} />
+        <primitive object={MAT.stoneWarm} attach="material" />
+      </mesh>
+      {/* A soft warm glow on the timber round the egg: presence, not magic. */}
+      <mesh position={[0, PLINTH_H + 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
+        <planeGeometry args={[2.3, 2.3]} />
+        <primitive object={GLOW} attach="material" />
+      </mesh>
       {/* A low step on the arrival side */}
       <mesh receiveShadow position={[0, 0.07, w / 2 + 0.28]}>
         <boxGeometry args={[1.2, 0.14, 0.4]} />
         <primitive object={MAT.stoneWarm} attach="material" />
       </mesh>
       <mesh castShadow position={[0, PLINTH_H + 0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.42, 0.07, 10, 32]} />
+        <torusGeometry args={[0.5, 0.08, 10, 32]} />
         <primitive object={MAT.woodWarm} attach="material" />
       </mesh>
       <group ref={egg} position={[0, PLINTH_H + 0.05, 0]}>
@@ -96,13 +132,13 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
           {/* Four-leaf clover mark, facing the spawn point (+z) */}
           <group position={[0, -0.02, EGG_R + 0.004]}>
             {[
-              [0.035, 0.035],
-              [-0.035, 0.035],
-              [0.035, -0.035],
-              [-0.035, -0.035],
+              [0.045, 0.045],
+              [-0.045, 0.045],
+              [0.045, -0.045],
+              [-0.045, -0.045],
             ].map(([dx, dy], i) => (
               <mesh key={i} position={[dx, dy, 0]}>
-                <circleGeometry args={[0.04, 16]} />
+                <circleGeometry args={[0.05, 16]} />
                 <meshBasicMaterial color={PALETTE.cloverGreen} toneMapped={false} />
               </mesh>
             ))}

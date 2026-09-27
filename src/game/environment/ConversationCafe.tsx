@@ -196,7 +196,7 @@ export default function ConversationCafe() {
       ))}
       <BeamsAndLamps />
       {/* The door back to the market */}
-      <GateWall z={HD + 0.2} facing={-1} open halfWidth={HW} />
+      <GateWall z={HD + 0.2} facing={-1} open accent={false} halfWidth={HW} />
     </group>
   );
 }

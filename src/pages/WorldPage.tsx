@@ -20,6 +20,15 @@ import type { SpeechKey, WorldApi } from "@/game/World";
 
 const AVATAR_KEY = "klovers-world-avatar";
 
+/** Each place's number on its arrival card (the order a learner meets them). */
+const ROOM_NUMBER: Record<RoomId, number> = {
+  courtyard: 1,
+  "hangul-village": 2,
+  "vocabulary-market": 3,
+  hub: 4,
+  "conversation-cafe": 5,
+};
+
 /** Remembered character choice — a per-browser convenience only. */
 function readAvatar(): AvatarId {
   try {
@@ -243,7 +252,7 @@ const WorldPage = () => {
     if (id === "hub") complete("findHub");
     setRoom(id);
     window.clearTimeout(bannerTimer.current);
-    bannerTimer.current = window.setTimeout(() => setRoom(null), 4200);
+    bannerTimer.current = window.setTimeout(() => setRoom(null), 2800);
   }, [complete]);
   useEffect(() => () => window.clearTimeout(bannerTimer.current), []);
 
@@ -411,7 +420,7 @@ const WorldPage = () => {
                 onExit={exit}
                 avatar={avatar}
                 onAvatar={chooseAvatar}
-                banner={room ? { eyebrow: introBanner ? copy.worldTitle : undefined, title: copy.rooms[room].name, line: copy.rooms[room].line } : null}
+                banner={room ? { eyebrow: introBanner ? copy.worldTitle : undefined, number: ROOM_NUMBER[room], title: copy.rooms[room].name, line: copy.rooms[room].line } : null}
                 notice={null}
                 preview={access.preview}
                 speech={speech}

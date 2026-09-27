@@ -116,6 +116,9 @@ export const VILLAGE = {
   /** A bench by the kerb and a vendor's cart near the well. */
   bench: { x: 3.95, z: 7.4, w: 0.9, d: 1.9 },
   cart: { x: 2.6, z: -5.2, w: 1.3, d: 2.1 },
+  /** Planting beds by the kerbs: a tree on the right, flowers on the left. */
+  bedRight: { x: 4.35, z: -1.9, w: 0.8, d: 2.2 },
+  bedLeft: { x: -4.35, z: -3.4, w: 0.8, d: 2.0 },
   entranceSign: "한글 마을",
   marketSign: "시장",
 } as const;
@@ -144,6 +147,10 @@ const HANGUL_VILLAGE: RoomLayout = {
     ...archPosts,
     box(VILLAGE.bench.x, VILLAGE.bench.z, VILLAGE.bench.w, VILLAGE.bench.d),
     box(VILLAGE.cart.x, VILLAGE.cart.z, VILLAGE.cart.w, VILLAGE.cart.d),
+    box(VILLAGE.bedRight.x, VILLAGE.bedRight.z, VILLAGE.bedRight.w + 0.1, VILLAGE.bedRight.d + 0.1),
+    box(VILLAGE.bedLeft.x, VILLAGE.bedLeft.z, VILLAGE.bedLeft.w + 0.1, VILLAGE.bedLeft.d + 0.1),
+    box(4.35, 9.3, 0.9, 1.3),
+    box(-4.5, -8.2, 0.5, 0.5),
     ...people("hangul-village"),
   ],
   cameraColliders: [...lamps, ...archPosts],
@@ -196,6 +203,11 @@ export const MARKET = {
   stallsLeft: ["물", "밥", "빵"],
   stallsRight: ["책", "옷", "꽃"],
   crates: { x: 0, z: 0, size: 1.5 },
+  /** Produce tables under market parasols in the square: x, z, w, d. */
+  tables: [
+    [-2.9, 1.9, 1.7, 1.0],
+    [4.5, -2.1, 1.0, 1.7],
+  ] as [number, number, number, number][],
   /** Baskets of goods in front of the stalls: x, z, size. */
   baskets: [
     [-5.6, 6.3, 0.9], [-5.1, 6.95, 0.7], [5.6, 6.2, 0.85],
@@ -225,11 +237,14 @@ const VOCABULARY_MARKET: RoomLayout = {
   colliders: [
     ...marketStalls,
     box(MARKET.crates.x, MARKET.crates.z, MARKET.crates.size, MARKET.crates.size),
+    ...MARKET.tables.map(([x, z, w, d]) => box(x, z, w + 0.1, d + 0.1)),
+    box(-3.6, -MARKET.halfDepth + 0.7, 0.5, 0.5),
+    box(3.6, -MARKET.halfDepth + 0.7, 0.5, 0.5),
     ...marketLamps,
     ...MARKET.baskets.map(([x, z, sc]) => box(x, z, 0.58 * sc, 0.58 * sc)),
     ...people("vocabulary-market"),
   ],
-  cameraColliders: [...marketLamps, ...marketStalls],
+  cameraColliders: [...marketLamps, ...marketStalls, ...MARKET.tables.map(([x, z]) => box(x, z, 0.3, 0.3))],
   spawns: {
     fromVillage: { x: 0, z: MARKET.halfDepth - 2.2, yaw: Math.PI },
     fromHub: { x: 0, z: -MARKET.halfDepth + 2.2, yaw: 0 },
@@ -276,8 +291,14 @@ export const HUB = {
   half: 11,
   /** The two gates in the south wall, back toward the village and the market. */
   southGates: { village: -5, market: 5 },
-  /** The wayfinding pillar on its octagonal base (collider is the base). */
-  post: { x: 0, z: 0, size: 2.6 },
+  /** The wayfinding pavilion on its octagonal base (collider is the base). */
+  post: { x: 0, z: 0, size: 3.4 },
+  /** Planting beds: a tree corner by the market gate, shrubs by the garden gate. */
+  beds: [
+    { x: 8.3, z: 9.9, w: 2.2, d: 1.2, tree: true },
+    { x: -10.2, z: -7.4, w: 1.4, d: 3.0, tree: false },
+    { x: 10.2, z: 7.2, w: 1.4, d: 3.2, tree: true },
+  ],
   /** Onggi pots in the corners and stone lanterns flanking the café gate. */
   pots: [
     [-9.9, 9.7, 1.1], [-9.1, 10.1, 0.8], [9.9, 9.7, 1], [-9.9, -9.9, 1], [9.9, -9.9, 1.1], [9.1, -10.2, 0.8],
@@ -314,6 +335,7 @@ const hubProps = [
   box(HUB.bench.x, HUB.bench.z, HUB.bench.w, HUB.bench.d),
   box(HUB.benchPine.x, HUB.benchPine.z, 0.5, 0.5),
   box(HUB.board.x, HUB.board.z, 0.5, 1.8),
+  ...HUB.beds.map((b) => box(b.x, b.z, b.w + 0.1, b.d + 0.1)),
 ];
 
 const KLOVERS_HUB: RoomLayout = {

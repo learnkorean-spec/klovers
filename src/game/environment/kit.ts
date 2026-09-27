@@ -1,6 +1,7 @@
 import { ConeGeometry, CylinderGeometry, IcosahedronGeometry, type BufferGeometry, type Material } from "three";
 import { ACCENT, MAT } from "../config/materials";
 import { UNIT, type Part } from "./Instanced";
+import { curvedRoof, roofAspect } from "./shapes";
 
 /**
  * KLOVERS World environment kit.
@@ -14,16 +15,21 @@ import { UNIT, type Part } from "./Instanced";
  * orientation, not from new materials.
  */
 
-export type MatKey = "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "charcoal" | "paper" | "lantern" | "pine" | "accent" | "fabric" | "metal";
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "ball";
+export type MatKey =
+  | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
+  | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "moss" | "hill"
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange";
+/** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "ball" | "ballLow" | "cylLow" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
   stoneWarm: MAT.stoneWarm,
-  stone: MAT.stone,
+  stone: MAT.stoneWarm,
   woodLight: MAT.woodWarm,
   woodDark: MAT.woodDark,
   roof: MAT.roofTile,
+  roofSoft: MAT.roofSoft,
   charcoal: MAT.charcoal,
   paper: MAT.paper,
   lantern: MAT.lanternPaper,
@@ -31,16 +37,35 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   accent: ACCENT,
   fabric: MAT.fabric,
   metal: MAT.metal,
+  leaf: MAT.leaf,
+  leafDark: MAT.leafDark,
+  blossom: MAT.blossom,
+  moss: MAT.moss,
+  gravel: MAT.gravel,
+  hill: MAT.hill,
+  clothRed: MAT.clothRed,
+  clothBlue: MAT.clothBlue,
+  clothSage: MAT.clothSage,
+  fruitRed: MAT.fruitRed,
+  fruitOrange: MAT.fruitOrange,
 };
 
-export const KIT_GEOMETRY: Record<GeoKey, BufferGeometry> = {
+const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   box: UNIT.box,
   hip: UNIT.hipRoof,
   oct: new CylinderGeometry(0.5, 0.5, 1, 8),
   cyl: UNIT.cylinder,
   cone: new ConeGeometry(0.5, 1, 8),
   ball: new IcosahedronGeometry(0.5, 1),
+  // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
+  ballLow: new IcosahedronGeometry(0.5, 0),
+  cylLow: new CylinderGeometry(0.5, 0.5, 1, 6),
 };
+
+export function kitGeometry(key: GeoKey): BufferGeometry {
+  if (key.startsWith("roof:")) return curvedRoof(Number(key.slice(5)));
+  return BASE_GEOMETRY[key];
+}
 
 type V3 = [number, number, number];
 
@@ -67,21 +92,42 @@ export function jitter(seed: number, amount: number): number {
 }
 
 /**
- * Hanok roof over a w × d footprint whose walls end at `baseY`: a wood eave
- * board, a wide shallow lower skirt (the upturned-eave read), a steeper
- * upper hip, and a ridge along the long side with pale mortar ends.
+ * A curved hanok roof covering a footprint of w × d (already including the
+ * overhang), sitting at `y`, `h` tall: concave slopes, lifted corners, a
+ * real ridge. Long thin roofs (wall caps) use the stretched aspects.
+ */
+export function curvedRoofOn(k: Kit, x: number, y: number, z: number, w: number, d: number, h: number, cast = true): void {
+  const alongX = w >= d;
+  const long = alongX ? w : d;
+  const short = alongX ? d : w;
+  const a = roofAspect(long / short);
+  // Geometry is A × 1 along x; turn it for roofs that run along z.
+  k.add("roofSoft", `roof:${a}`, [x, y, z], [long / a, h, short], alongX ? undefined : [0, Math.PI / 2, 0], cast);
+}
+
+/**
+ * Hanok roof over a w × d footprint whose walls end at `baseY`: a bracketed
+ * wooden eave (warm soffit, rafter ends), the curved tiled roof, and a ridge
+ * with white mortar ends that tips up at both ends.
  */
 export function hanokRoof(k: Kit, x: number, z: number, baseY: number, w: number, d: number, h = 1.1): void {
-  k.box("woodDark", [x, baseY + 0.07, z], [w + 1.0, 0.14, d + 1.0], true);
-  k.add("roof", "hip", [x, baseY + 0.14 + 0.22, z], [w + 1.7, 0.44, d + 1.7], undefined, true);
-  k.add("roof", "hip", [x, baseY + 0.36 + h / 2, z], [w + 0.55, h, d + 0.55], undefined, true);
+  const W = w + 1.7;
+  const D = d + 1.7;
+  // Soffit: the underside of the eaves, warm wood seen from the ground.
+  k.box("woodLight", [x, baseY + 0.1, z], [w + 1.3, 0.06, d + 1.3]);
+  k.box("woodDark", [x, baseY + 0.04, z], [w + 0.3, 0.14, d + 0.3], true);
+  curvedRoofOn(k, x, baseY + 0.16, z, W, D, h + 0.45);
   const along = w >= d;
-  const len = Math.abs(w - d) * 0.55 + 0.6;
-  const top = baseY + 0.36 + h - 0.12;
-  k.box("roof", [x, top, z], along ? [len, 0.16, 0.2] : [0.2, 0.16, len]);
+  // The ridge line of the curved roof (see shapes.ts): (long − short) wide.
+  const len = Math.max(Math.abs(W - D), 0.5) + 0.3;
+  const top = baseY + 0.16 + h + 0.45;
+  k.box("roofSoft", [x, top + 0.02, z], along ? [len, 0.2, 0.26] : [0.26, 0.2, len], true);
+  k.box("plaster", [x, top - 0.06, z], along ? [len + 0.02, 0.05, 0.3] : [0.3, 0.05, len + 0.02]);
   for (const s of [-1, 1]) {
     const o = (len / 2) * s;
-    k.box("plaster", along ? [x + o, top + 0.02, z] : [x, top + 0.02, z + o], [0.16, 0.14, 0.16]);
+    // Upturned ridge ends (yongmaru) with pale mortar.
+    k.box("roofSoft", along ? [x + o, top + 0.12, z] : [x, top + 0.12, z + o], [0.24, 0.24, 0.28], false, along ? [0, 0, -s * 0.5] : [s * 0.5, 0, 0]);
+    k.box("plaster", along ? [x + o * 0.98, top - 0.02, z] : [x, top - 0.02, z + o * 0.98], [0.2, 0.12, 0.2]);
   }
 }
 
@@ -109,41 +155,116 @@ export interface HouseSpec {
 }
 
 /**
- * A hanok house: stone foundation, ivory plaster between timber posts and a
- * top beam, a recessed door, paper windows with lattice, and a hanok roof.
+ * A hanok house, built for depth rather than as a box:
+ * - a raised stone platform (gidan) with a darker footing course;
+ * - the front wall set BACK under the eave, leaving a wooden veranda (maru)
+ *   in front of it, with round timber columns on stone plinths at the eave
+ *   line — the column rhythm and the shadowed recess are what make a hanok
+ *   facade read at a glance;
+ * - lattice-paper door panels in every bay, one pair standing open onto a
+ *   dark interior; paper lanterns hanging from the front beam;
+ * - the curved tiled roof over the whole footprint.
+ * The footprint (w × d) is unchanged, so colliders stay what they were.
  */
 export function hanokHouse(k: Kit, spec: HouseSpec): void {
   const { x, z, w, d, face } = spec;
   const h = spec.h ?? 2.4;
-  const found = 0.4;
-  k.box("stoneWarm", [x, found / 2, z], [w + 0.3, found, d + 0.3], true);
-  k.box("plaster", [x, found + h / 2, z], [w, h, d], true);
-  // Timber frame: corner posts and the top beam.
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.box("woodDark", [x + sx * (w / 2), found + h / 2, z + sz * (d / 2)], [0.22, h, 0.22], true);
-  k.box("woodDark", [x, found + h - 0.09, z], [w + 0.06, 0.18, d + 0.06]);
-
+  const found = 0.5;
   const { n, alongX } = faceFrame(face);
   const half = alongX ? d / 2 : w / 2;
   const span = alongX ? w : d;
+  const depthN = half * 2;
+  // Veranda depth: generous on real halls, none on shallow gatehouses.
+  const R = depthN >= 3.2 ? Math.min(0.95, depthN * 0.24) : 0;
   const at = (along: number, y: number, out: number): V3 =>
     alongX ? [x + along, y, z + n[2] * (half + out)] : [x + n[0] * (half + out), y, z + along];
   const size = (a: number, y: number, t: number): V3 => (alongX ? [a, y, t] : [t, y, a]);
 
-  // Middle posts along the facade.
-  for (const a of [-span / 4, span / 4]) k.box("woodDark", at(a, found + h / 2, 0.02), size(0.16, h, 0.16));
-  // Recessed door: a dark frame, and the panel set back into the wall.
+  // Platform: footing course, dressed stone, a thin top slab edge.
+  k.box("gravel", [x, 0.08, z], [w + 0.46, 0.16, d + 0.46], true);
+  k.box("stoneWarm", [x, found / 2 + 0.06, z], [w + 0.3, found - 0.12, d + 0.3], true);
+  k.box("stoneWarm", [x, found - 0.03, z], [w + 0.36, 0.06, d + 0.36]);
+
+  // Walls, the front one pulled back by R.
+  // Centre of the body: shifted half the recess away from the face.
+  const bx = alongX ? x : x - n[0] * (R / 2);
+  const bz = alongX ? z - n[2] * (R / 2) : z;
+  k.box("plaster", [bx, found + h / 2, bz], alongX ? [w, h, d - R] : [w - R, h, d], true);
+  // Timber frame on the recessed body: corner posts and a top beam.
+  const bw = alongX ? w : w - R;
+  const bd = alongX ? d - R : d;
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.box("woodDark", [bx + sx * (bw / 2), found + h / 2, bz + sz * (bd / 2)], [0.2, h, 0.2], true);
+  k.box("woodDark", [bx, found + h - 0.09, bz], [bw + 0.06, 0.18, bd + 0.06]);
+
+  const bays = Math.max(2, Math.round(span / 1.7));
+  const bayW = span / bays;
   const door = spec.door ?? 0;
-  k.box("woodDark", at(door, found + 1.0, 0.04), size(1.2, 2.0, 0.08));
-  k.box("charcoal", at(door, found + 0.95, 0.06), size(0.9, 1.8, 0.04));
-  k.box("woodLight", at(door, found + 0.95, 0.075), size(0.04, 1.8, 0.02));
-  // Two paper windows with a simple lattice.
-  for (const a of [-span / 2 + span * 0.18, span / 2 - span * 0.18]) {
-    if (Math.abs(a - door) < 1.1) continue;
-    k.box("woodDark", at(a, found + 1.35, 0.03), size(0.95, 0.8, 0.06));
-    k.box("paper", at(a, found + 1.35, 0.065), size(0.82, 0.67, 0.02));
-    k.box("woodDark", at(a, found + 1.35, 0.08), size(0.03, 0.67, 0.02));
-    k.box("woodDark", at(a, found + 1.35, 0.08), size(0.82, 0.03, 0.02));
+  const doorBay = Math.min(bays - 1, Math.max(0, Math.floor((door + span / 2) / bayW)));
+
+  // Recessed front wall: a low timber band, a rail at door-head height, and
+  // lattice paper in every bay (the door bay taller, one leaf open).
+  const wallOut = -R + 0.02;
+  k.box("woodDark", at(0, found + 0.22, wallOut + 0.02), size(span, 0.44, 0.08));
+  k.box("woodDark", at(0, found + 2.12, wallOut + 0.03), size(span, 0.1, 0.1));
+  for (let b = 0; b < bays; b++) {
+    const a = -span / 2 + bayW * (b + 0.5);
+    const pw = bayW - 0.34;
+    const isDoor = b === doorBay;
+    const ph = isDoor ? 1.62 : 1.12;
+    const py = isDoor ? found + 0.44 + ph / 2 : found + 0.62 + ph / 2 + 0.2;
+    k.box("woodDark", at(a, py, wallOut + 0.04), size(pw + 0.12, ph + 0.12, 0.06));
+    if (isDoor) {
+      // Two leaves: the left open (dark interior), the right shut paper.
+      k.box("charcoal", at(a - pw / 4, py, wallOut + 0.06), size(pw / 2 - 0.02, ph, 0.02));
+      k.box("paper", at(a + pw / 4, py, wallOut + 0.07), size(pw / 2 - 0.04, ph, 0.02));
+      k.box("paper", at(a - pw / 2 - 0.02, py, wallOut + 0.3), size(0.03, ph, 0.46));
+      for (const g of [-0.25, 0.05, 0.35]) k.box("woodDark", at(a + pw / 4, py + g * ph, wallOut + 0.085), size(pw / 2 - 0.04, 0.025, 0.012));
+      k.box("woodDark", at(a + pw / 4, py, wallOut + 0.085), size(0.025, ph, 0.012));
+    } else {
+      k.box("paper", at(a, py, wallOut + 0.07), size(pw, ph, 0.02));
+      const cols = Math.max(3, Math.round(pw / 0.2));
+      for (let c = 1; c < cols; c++) k.box("woodDark", at(a - pw / 2 + (pw / cols) * c, py, wallOut + 0.085), size(0.022, ph, 0.012));
+      for (const g of [-0.3, -0.1, 0.1, 0.3]) k.box("woodDark", at(a, py + g * ph, wallOut + 0.085), size(pw, 0.022, 0.012));
+      // Sill
+      k.box("woodDark", at(a, py - ph / 2 - 0.08, wallOut + 0.1), size(pw + 0.2, 0.05, 0.16));
+    }
   }
+
+  if (R > 0) {
+    // Maru: the wooden veranda floor, its edge beam, and floor boards.
+    k.box("woodLight", at(0, found + 0.05, -R / 2), size(span, 0.1, R), true);
+    k.box("woodDark", at(0, found - 0.02, -0.04), size(span + 0.04, 0.12, 0.08));
+    // Columns on stone plinths along the eave line, with a front beam.
+    for (let b = 0; b <= bays; b++) {
+      const a = -span / 2 + bayW * b;
+      const inset = b === 0 ? 0.12 : b === bays ? -0.12 : 0;
+      k.add("stoneWarm", "oct", at(a + inset, found + 0.07, -0.14), [0.34, 0.14, 0.34]);
+      k.add("woodDark", "cyl", at(a + inset, found + h / 2 + 0.07, -0.14), [0.2, h - 0.1, 0.2], undefined, true);
+    }
+    k.box("woodDark", at(0, found + h - 0.12, -0.14), size(span + 0.1, 0.22, 0.2), true);
+    k.box("woodLight", at(0, found + h - 0.34, -0.12), size(span, 0.07, 0.12));
+    // Paper lanterns from the front beam (every other bay).
+    for (let b = 0; b < bays; b += 2) {
+      const a = -span / 2 + bayW * (b + 0.5);
+      k.box("woodDark", at(a, found + h - 0.36, -0.2), size(0.012, 0.3, 0.012));
+      k.add("lantern", "cyl", at(a, found + h - 0.72, -0.2), [0.3, 0.42, 0.3]);
+      k.add("woodDark", "cyl", at(a, found + h - 0.49, -0.2), [0.2, 0.05, 0.2]);
+    }
+  }
+
+  // Eave brackets and rafter ends past the columns.
+  for (let b = 0; b <= bays; b++) {
+    const a = -span / 2 + bayW * b;
+    k.box("woodLight", at(a, found + h + 0.06, 0.14), size(0.2, 0.16, 0.36));
+  }
+  for (let b = 0; b < bays * 3; b++) {
+    const a = -span / 2 + (span / (bays * 3)) * (b + 0.5);
+    k.box("woodLight", at(a, found + h + 0.14, 0.6), size(0.09, 0.09, 0.2));
+  }
+  // Stone steps up to the door: two treads.
+  const da = -span / 2 + bayW * (doorBay + 0.5);
+  k.box("stoneWarm", at(da, 0.13, 0.3), size(1.3, 0.26, 0.46), true);
+  k.box("stoneWarm", at(da, 0.32, 0.08), size(1.2, 0.2, 0.3));
   hanokRoof(k, x, z, found + h, w, d, spec.roofH ?? 1.1);
 }
 
@@ -160,7 +281,8 @@ export function wallRun(k: Kit, x1: number, z1: number, x2: number, z2: number, 
   k.box("stoneWarm", [cx, 0.3, cz], s(len, 0.6, t + 0.08), false);
   k.box("plaster", [cx, h / 2, cz], s(len, h, t), true);
   k.box("woodDark", [cx, h - 0.12, cz], s(len + 0.02, 0.12, t + 0.04));
-  k.add("roof", "hip", [cx, h + 0.2, cz], s(len + 0.5, 0.42, t + 0.8), undefined, true);
+  const cap = s(len + 0.5, 0, t + 0.8);
+  curvedRoofOn(k, cx, h - 0.04, cz, cap[0], cap[2], 0.5);
 }
 
 /** A stone lantern (seokdeung): octagonal foot, shaft, paper light, small roof. */
@@ -168,7 +290,8 @@ export function stoneLantern(k: Kit, x: number, z: number, s = 1): void {
   k.add("stoneWarm", "oct", [x, 0.12 * s, z], [0.55 * s, 0.24 * s, 0.55 * s], undefined, true);
   k.add("stoneWarm", "oct", [x, 0.55 * s, z], [0.22 * s, 0.7 * s, 0.22 * s], undefined, true);
   k.box("lantern", [x, 1.05 * s, z], [0.36 * s, 0.34 * s, 0.36 * s]);
-  k.add("roof", "hip", [x, 1.33 * s, z], [0.62 * s, 0.24 * s, 0.62 * s], undefined, true);
+  curvedRoofOn(k, x, 1.22 * s, z, 0.56 * s, 0.56 * s, 0.22 * s);
+  k.add("stoneWarm", "ball", [x, 1.47 * s, z], [0.09 * s, 0.11 * s, 0.09 * s]);
 }
 
 /** A raised wooden platform to sit on (pyeongsang) — replaces box benches. */
@@ -233,7 +356,7 @@ export function shopfront(k: Kit, spec: { x: number; z: number; w: number; d: nu
   k.box("charcoal", at(0, 1.35, 0.03), size(span, 1.9, 0.06));
   k.box("woodLight", at(0, 0.75, 0.2), size(span, 0.12, 0.36));
   // Tiled canopy over the shop.
-  k.box("roof", at(0, 2.55, 0.45), size(span + 0.6, 0.12, 0.95), true, alongX ? [n[2] * 0.25, 0, 0] : [0, 0, -n[0] * 0.25]);
+  k.box("roofSoft", at(0, 2.55, 0.45), size(span + 0.6, 0.12, 0.95), true, alongX ? [n[2] * 0.25, 0, 0] : [0, 0, -n[0] * 0.25]);
   k.box("woodDark", at(0, 2.42, 0.05), size(span + 0.2, 0.14, 0.12));
   // Upper floor: a row of paper windows.
   const count = Math.max(2, Math.round(span / 1.3));
@@ -243,15 +366,16 @@ export function shopfront(k: Kit, spec: { x: number; z: number; w: number; d: nu
     k.box("paper", at(a, 0.4 + h - 1.0, 0.065), size(0.78, 0.63, 0.02));
   }
   // A lower, flatter roof than the village houses.
-  k.box("woodDark", [x, 0.4 + h + 0.06, z], [w + 0.7, 0.12, d + 0.7], true);
-  k.add("roof", "hip", [x, 0.4 + h + 0.4, z], [w + 1.1, 0.6, d + 1.1], undefined, true);
+  k.box("woodLight", [x, 0.4 + h + 0.06, z], [w + 0.8, 0.05, d + 0.8]);
+  k.box("woodDark", [x, 0.4 + h, z], [w + 0.2, 0.12, d + 0.2], true);
+  curvedRoofOn(k, x, 0.4 + h + 0.1, z, w + 1.2, d + 1.2, 0.85);
 }
 
 /** A woven basket with a few round goods heaped in it. */
-export function basket(k: Kit, x: number, z: number, s = 1, heap: MatKey = "woodLight"): void {
-  k.add("woodLight", "cyl", [x, 0.14 * s, z], [0.55 * s, 0.28 * s, 0.55 * s]);
-  k.add("woodDark", "cyl", [x, 0.29 * s, z], [0.58 * s, 0.04 * s, 0.58 * s]);
-  k.add(heap, "ball", [x, 0.32 * s, z], [0.42 * s, 0.2 * s, 0.42 * s]);
+export function basket(k: Kit, x: number, z: number, s = 1, heap: MatKey = "woodLight", y = 0): void {
+  k.add("woodLight", "cyl", [x, y + 0.14 * s, z], [0.55 * s, 0.28 * s, 0.55 * s]);
+  k.add("woodDark", "cyl", [x, y + 0.29 * s, z], [0.58 * s, 0.04 * s, 0.58 * s]);
+  k.add(heap, "ball", [x, y + 0.32 * s, z], [0.42 * s, 0.2 * s, 0.42 * s]);
 }
 
 /**
@@ -266,7 +390,8 @@ export function noticeBoard(k: Kit, x: number, z: number, face: Face): void {
   k.box("woodLight", at(0, 1.35, 0.02), s(1.7, 0.95, 0.06), true);
   const sheets: [number, number, number, number][] = [[-0.5, 1.5, 0.34, 0.42], [0.05, 1.45, 0.4, 0.5], [0.55, 1.55, 0.3, 0.36], [-0.3, 1.08, 0.46, 0.3], [0.45, 1.1, 0.34, 0.3]];
   for (const [a, y, w, h] of sheets) k.box("paper", at(a, y, 0.06), s(w, h, 0.01));
-  k.add("roof", "hip", at(0, 2.02, 0), s(2.1, 0.28, 0.55), undefined, true);
+  const r = s(2.2, 0, 0.7);
+  curvedRoofOn(k, at(0, 0, 0)[0], 1.9, at(0, 0, 0)[2], r[0], r[2], 0.32);
 }
 
 /** A two-wheeled wooden hand cart (sonsure) loaded with crates. */
@@ -291,5 +416,139 @@ export function planter(k: Kit, x: number, z: number, len: number, alongX = true
     const t = -len / 2 + (len / n) * (i + 0.5);
     const sc = 0.45 + jitter(i + x * 3 + z, 0.1);
     k.add("pine", "ball", alongX ? [x + t, 0.48, z] : [x, 0.48, z + t], [sc, sc * 0.8, sc]);
+  }
+}
+
+
+/* ───────────────────────── Landscaping ───────────────────────── */
+
+/**
+ * A rounded broadleaf tree: a slightly leaning trunk under a cluster of
+ * faceted crowns in two greens. `blossom` makes it the room's one flowering
+ * hero tree (use sparingly — one per room at most).
+ */
+export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed = 1, far = false): void {
+  const lean = jitter(seed, 0.12);
+  // Far trees (beyond the walls): low-poly, and no shadow (they fall
+  // outside the sun's shadow box anyway, so casting would only cost).
+  const cyl: GeoKey = far ? "cylLow" : "cyl";
+  const ball: GeoKey = far ? "ballLow" : "ball";
+  k.add("woodDark", cyl, [x, 1.0 * s, z], [0.22 * s, 2.0 * s, 0.22 * s], [lean, 0, -lean], !far);
+  if (!far) k.add("woodDark", "cyl", [x + 0.35 * s, 1.75 * s, z], [0.1 * s, 0.9 * s, 0.1 * s], [0, 0, -0.8], false);
+  const crowns: [number, number, number, number][] = [
+    [0, 2.55, 0, 1.55], [0.7, 2.35, 0.2, 1.15], [-0.65, 2.3, -0.15, 1.1], [0.1, 3.05, -0.1, 1.05], [0.2, 2.4, -0.7, 0.95],
+  ];
+  crowns.forEach(([dx, dy, dz, r], i) => {
+    const mat: MatKey = blossom ? "blossom" : i % 2 ? "leafDark" : "leaf";
+    const j = 1 + jitter(seed * 3 + i, 0.12);
+    k.add(mat, ball, [x + dx * s, dy * s, z + dz * s], [r * s * j, r * s * 0.82 * j, r * s * j], [0, jitter(seed + i, 1), 0], !far);
+  });
+}
+
+/** A low flowering or green shrub: two or three soft mounds. */
+export function shrub(k: Kit, x: number, z: number, s = 1, seed = 1, mat: MatKey = "leaf"): void {
+  const n = 2 + (Math.abs(Math.round(jitter(seed, 1.4))) % 2);
+  for (let i = 0; i < n; i++) {
+    const r = (0.55 + jitter(seed + i, 0.12)) * s;
+    k.add(i === 0 ? mat : "leafDark", "ball", [x + jitter(seed * 5 + i, 0.35) * s, r * 0.36, z + jitter(seed * 7 + i, 0.35) * s], [r, r * 0.72, r], undefined, true);
+  }
+}
+
+/** A tuft of grass: a few thin blades (cones) leaning outward. */
+export function grass(k: Kit, x: number, z: number, s = 1, seed = 1): void {
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 + seed;
+    k.add(i % 2 ? "leaf" : "leafDark", "cone", [x + Math.cos(a) * 0.08 * s, 0.18 * s, z + Math.sin(a) * 0.08 * s], [0.07 * s, 0.38 * s * (1 + jitter(seed + i, 0.25)), 0.07 * s], [Math.sin(a) * 0.35, 0, -Math.cos(a) * 0.35]);
+  }
+}
+
+/** A garden rock, half sunk into the ground. */
+export function rock(k: Kit, x: number, z: number, s = 1, seed = 1): void {
+  k.add("stoneWarm", "ball", [x, 0.12 * s, z], [0.7 * s, 0.42 * s, 0.55 * s], [jitter(seed, 0.3), jitter(seed * 3, 3), 0], true);
+}
+
+/**
+ * A planting bed: a low stone kerb round a mossy bed, with shrubs, grass
+ * tufts and a rock or two. Breaks up flat paving along walls and in corners.
+ */
+export function bed(k: Kit, x: number, z: number, w: number, d: number, seed = 1, flowers = false): void {
+  k.box("stoneWarm", [x, 0.09, z], [w + 0.16, 0.18, d + 0.16], false);
+  k.box("moss", [x, 0.14, z], [w, 0.12, d]);
+  const along = w >= d;
+  const len = along ? w : d;
+  const n = Math.max(1, Math.round(len / 1.3));
+  for (let i = 0; i < n; i++) {
+    const t = -len / 2 + (len / n) * (i + 0.5);
+    const px = along ? x + t : x + jitter(seed + i, d * 0.15);
+    const pz = along ? z + jitter(seed + i, d * 0.15) : z + t;
+    if ((i + seed) % 3 === 2) rock(k, px, pz, 0.7, seed + i);
+    else shrub(k, px, pz, 0.62, seed + i * 3, flowers && i % 2 === 0 ? "blossom" : "leaf");
+    grass(k, px + (along ? 0.55 : 0.2), pz + (along ? 0.2 : 0.55), 0.9, seed + i * 5);
+  }
+}
+
+/**
+ * A gravel drip-line along the foot of a wall (x1,z1 → x2,z2): the darker
+ * band real courtyards have where the eaves drip. Zones the floor cheaply.
+ */
+export function gutter(k: Kit, x1: number, z1: number, x2: number, z2: number, w = 0.55): void {
+  const alongX = Math.abs(x2 - x1) >= Math.abs(z2 - z1);
+  const len = alongX ? Math.abs(x2 - x1) : Math.abs(z2 - z1);
+  k.box("gravel", [(x1 + x2) / 2, 0.008, (z1 + z2) / 2], alongX ? [len, 0.016, w] : [w, 0.016, len]);
+}
+
+/** Cloth bunting on a line from (x1, y, z1) to (x2, y, z2), gently sagging. */
+export function bunting(k: Kit, x1: number, z1: number, x2: number, z2: number, y: number, seed = 1): void {
+  const len = Math.hypot(x2 - x1, z2 - z1);
+  const n = Math.max(3, Math.floor(len / 0.55));
+  const yaw = Math.atan2(x2 - x1, z2 - z1);
+  const cloths: MatKey[] = ["clothRed", "fabric", "clothBlue", "clothSage"];
+  for (let i = 1; i < n; i++) {
+    const t = i / n;
+    const sag = 0.45 * Math.sin(t * Math.PI);
+    // A flag: a cone flattened into a triangle, point down.
+    k.add(cloths[(i + seed) % cloths.length], "cone", [x1 + (x2 - x1) * t, y - sag - 0.17, z1 + (z2 - z1) * t], [0.34, 0.34, 0.02], [Math.PI, yaw + Math.PI / 2, 0]);
+  }
+  k.box("charcoal", [(x1 + x2) / 2, y - 0.3, (z1 + z2) / 2], [0.015, 0.015, len], false, [0, yaw, 0]);
+}
+
+/**
+ * A hanok gatehouse (daemun) standing on a wall line, drawn into the room's
+ * kit (so eight gates cost no more draw calls than one): round columns on
+ * octagonal stone plinths, a double lintel with bracket blocks, a curved
+ * roof with a pale-mortared ridge, two paper lanterns on the room side, and
+ * doors — folded back when open, shut (and barred for a world not built yet)
+ * otherwise. Local +z faces into the room; rotY is a multiple of π/2.
+ * A usable gate carries the room's one thin yellow line on its lintel.
+ */
+export function gatehouse(k: Kit, x: number, z: number, rotY: number, o: { open: boolean; accent: boolean; barred?: boolean }): void {
+  const c = Math.round(Math.cos(rotY));
+  const sn = Math.round(Math.sin(rotY));
+  const turned = sn !== 0;
+  const P = (lx: number, y: number, lz: number): V3 => [x + lx * c + lz * sn, y, z - lx * sn + lz * c];
+  const S = (sx: number, sy: number, sz: number): V3 => (turned ? [sz, sy, sx] : [sx, sy, sz]);
+  for (const fx of [-1.75, 1.75]) {
+    k.add("woodDark", "cyl", P(fx, 1.75, 0), [0.32, 3.5, 0.32], undefined, true);
+    k.add("stoneWarm", "oct", P(fx, 0.13, 0), [0.62, 0.26, 0.62], undefined, true);
+    const lx = fx * 0.72;
+    k.add("lantern", "cyl", P(lx, 2.55, 0.22), [0.3, 0.4, 0.3]);
+    k.add("woodDark", "cyl", P(lx, 2.8, 0.22), [0.2, 0.06, 0.2]);
+    k.box("woodDark", P(lx, 3.0, 0.22), [0.015, 0.36, 0.015]);
+  }
+  k.box("woodDark", P(0, 3.2, 0), S(4.0, 0.24, 0.32), true);
+  k.box("woodDark", P(0, 3.62, 0), S(4.5, 0.2, 0.36), true);
+  for (const bx of [-1.5, -0.75, 0, 0.75, 1.5]) k.box("woodLight", P(bx, 3.42, 0), S(0.22, 0.2, 0.3));
+  if (o.accent) k.box("accent", P(0, 3.2, 0.17), S(3.4, 0.045, 0.02));
+  const roof = S(5.4, 0, 2.1);
+  k.box("woodLight", P(0, 3.73, 0), S(5.1, 0.1, 1.6), true);
+  curvedRoofOn(k, P(0, 0, 0)[0], 3.76, P(0, 0, 0)[2], roof[0], roof[2], 0.62);
+  k.box("roofSoft", P(0, 4.45, 0), S(2.1, 0.18, 0.24), true);
+  k.box("plaster", P(0, 4.38, 0), S(2.12, 0.05, 0.28));
+  // An open gate is simply open (its doors folded away out of sight).
+  if (!o.open) {
+    k.box("woodDark", P(0, 1.45, -0.05), S(3.3, 2.9, 0.1), true);
+    k.box("charcoal", P(0, 1.45, 0.005), S(0.04, 2.9, 0.02));
+    for (const dx of [-0.8, 0.8]) for (const dy of [0.7, 1.45, 2.2]) k.box("woodLight", P(dx, dy, 0.01), S(1.35, 0.06, 0.02));
+    if (o.barred) k.box("charcoal", P(0, 1.45, 0.04), S(3.6, 0.18, 0.08));
   }
 }

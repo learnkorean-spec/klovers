@@ -4,7 +4,7 @@ import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Instanced, { type Part } from "./Instanced";
 import Batch from "./Batch";
-import { Kit, basket, shopfront, wallRun, type MatKey } from "./kit";
+import { Kit, basket, bunting, gutter, pot, shopfront, shrub, tree, wallRun, type MatKey } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
 
@@ -129,10 +129,12 @@ const STALLS: StallSpot[] = MARKET.stallZ.flatMap((z, i) => {
 /** Stall frames, counters and awnings: instanced across all six stalls. */
 function useStallParts() {
   return useMemo(() => {
-    const counter: Part[] = [], top: Part[] = [], post: Part[] = [], awning: Part[] = [], stripe: Part[] = [];
+    const counter: Part[] = [], top: Part[] = [], post: Part[] = [], stripe: Part[] = [];
+    // Awning cloth in three muted dyes, so neighbouring stalls differ.
+    const awning: Part[][] = [[], [], []];
     const hw = MARKET.stallW / 2;
     const hd = MARKET.stallD / 2;
-    for (const { side, z } of STALLS) {
+    STALLS.forEach(({ side, z }, n) => {
       const cx = side * MARKET.stallX;
       const front = -side;
       counter.push({ p: [cx + front * 0.55, 0.45, z], s: [1, 0.9, MARKET.stallD - 0.4] });
@@ -140,9 +142,11 @@ function useStallParts() {
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) post.push({ p: [cx + sx * (hw - 0.08), 1.2, z + sz * (hd - 0.08)], s: [0.1, 2.4, 0.1] });
       // Canvas awning, lower at the front edge.
       const tilt: [number, number, number] = [0, 0, side * 0.18];
-      awning.push({ p: [cx, 2.45, z], s: [MARKET.stallW + 0.3, 0.06, MARKET.stallD + 0.2], r: tilt });
+      awning[n % 3].push({ p: [cx, 2.45, z], s: [MARKET.stallW + 0.3, 0.06, MARKET.stallD + 0.2], r: tilt });
       for (const k of [-1, 0, 1]) stripe.push({ p: [cx, 2.485, z + k * 0.9], s: [MARKET.stallW + 0.31, 0.012, 0.28], r: tilt });
-    }
+      // A scalloped valance along the awning's front edge.
+      for (let v = -1.5; v <= 1.5; v += 0.5) stripe.push({ p: [cx - side * (MARKET.stallW / 2 + 0.1), 2.3, z + v], s: [0.02, 0.18, 0.42] });
+    });
     return { counter, top, post, awning, stripe };
   }, []);
 }
@@ -160,9 +164,38 @@ const MARKET_KIT: Kit = (() => {
     });
   }
   // Baskets of goods in front of the stalls: the square looks traded in.
-  const heaps: MatKey[] = ["woodLight", "plaster", "pine", "woodLight", "plaster", "woodLight"];
+  // Produce in the baskets: apples, citrus, greens, bread-brown.
+  const heaps: MatKey[] = ["fruitRed", "fruitOrange", "leaf", "woodLight", "fruitRed", "fruitOrange"];
   MARKET.baskets.forEach(([x, z, sc], i) => basket(k, x, z, sc, heaps[i % heaps.length]));
   // Banner poles by the north gate.
+  for (const s of [-1, 1]) gutter(k, s * (HW - 0.27), -HD, s * (HW - 0.27), HD);
+  // Cloth bunting across the square, and flowers by the gate.
+  bunting(k, -HW, -6.1, HW, -6.1, 3.7, 1);
+  bunting(k, -HW, 6.3, HW, 6.3, 3.7, 2);
+  for (const x of [-3.6, 3.6]) {
+    pot(k, x, -HD + 0.7, 0.8, false);
+    shrub(k, x, -HD + 0.7, 0.45, x > 0 ? 4 : 5, "blossom");
+  }
+  // Trees rising behind the shop roofs.
+  for (const [tx, tz] of [[-13.5, -5], [13.8, 3], [-13.2, 6.5]] as const) tree(k, tx, tz, 1.4, false, tx + tz);
+  // Produce tables under parasols in the square: the middle is traded in
+  // too, and the parasols give the square a skyline of colour.
+  MARKET.tables.forEach(([x, z, w, d], i) => {
+    k.box("woodLight", [x, 0.74, z], [w, 0.07, d], true);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.box("woodDark", [x + sx * (w / 2 - 0.08), 0.36, z + sz * (d / 2 - 0.08)], [0.07, 0.72, 0.07]);
+    k.box("fabric", [x, 0.79, z], [w * 0.8, 0.02, d * 0.8]);
+    const along = w >= d;
+    for (const t of [-0.3, 0.3]) {
+      const bx = along ? x + t * w : x;
+      const bz = along ? z : z + t * d;
+      basket(k, bx, bz, 0.62, (["fruitRed", "fruitOrange", "leaf", "woodLight"] as MatKey[])[(i * 2 + (t > 0 ? 1 : 0)) % 4], 0.8);
+    }
+    // A crate at the table's end.
+    k.box("woodLight", along ? [x - w / 2 - 0.35, 0.2, z] : [x, 0.2, z - d / 2 - 0.35], [0.5, 0.4, 0.5], true, [0, 0.3, 0]);
+    k.add("woodDark", "cyl", [x, 1.6, z], [0.07, 3.2, 0.07]);
+    k.add(i % 2 ? "clothBlue" : "clothRed", "cone", [x, 2.95, z], [2.6, 0.55, 2.6], undefined, true);
+    k.add("fabric", "cone", [x, 3.02, z], [0.9, 0.3, 0.9]);
+  });
   for (const x of [-2.6, 2.6]) {
     k.add("stoneWarm", "oct", [x, 0.12, -HD + 0.9], [0.4, 0.24, 0.4]);
     k.box("woodDark", [x, 1.7, -HD + 0.9], [0.1, 3.4, 0.1], true);
@@ -234,8 +267,10 @@ export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: bo
       <Instanced parts={stalls.counter} material={MAT.woodWarm} castShadow receiveShadow />
       <Instanced parts={stalls.top} material={MAT.woodDark} />
       <Instanced parts={stalls.post} material={MAT.woodDark} castShadow />
-      <Instanced parts={stalls.awning} material={MAT.plaster} castShadow />
-      <Instanced parts={stalls.stripe} material={MAT.charcoal} />
+      <Instanced parts={stalls.awning[0]} material={MAT.clothRed} castShadow />
+      <Instanced parts={stalls.awning[1]} material={MAT.clothBlue} castShadow />
+      <Instanced parts={stalls.awning[2]} material={MAT.clothSage} castShadow />
+      <Instanced parts={stalls.stripe} material={MAT.fabric} />
       {STALLS.map(({ side, z, word }) => {
         const front = -side;
         return (
@@ -280,7 +315,7 @@ export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: bo
       <Lamps spots={LAMP_SPOTS} size={MARKET.lampSize} />
       {/* North: on to the KLOVERS Hub. South: back to the village. */}
       <GateWall z={-HD - 0.2} facing={1} open={nextOpen} sign={MARKET.nextSign} halfWidth={HW} />
-      <GateWall z={HD + 0.2} facing={-1} open halfWidth={HW} />
+      <GateWall z={HD + 0.2} facing={-1} open accent={false} halfWidth={HW} />
     </group>
   );
 }

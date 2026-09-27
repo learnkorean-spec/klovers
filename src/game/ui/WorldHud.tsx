@@ -21,7 +21,7 @@ interface HudProps {
   avatar: AvatarId;
   onAvatar: (id: AvatarId) => void;
   /** Room name card, shown briefly after arriving in a room. */
-  banner: (Line & { eyebrow?: string }) | null;
+  banner: (Line & { eyebrow?: string; number?: number }) | null;
   /** A gate that is shut, or a door to a world still ahead. */
   notice: Line | null;
   /** Admin preview: every world open (shown so it is never mistaken for progress). */
@@ -44,6 +44,21 @@ interface HudProps {
   /** Touch, portrait: a dismissible nudge toward landscape. */
   landscapeTip: boolean;
   onDismissTip: () => void;
+}
+
+/** The Klovers four-leaf clover, drawn (brand mark, not a stock icon). */
+function CloverMark() {
+  return (
+    <svg viewBox="0 0 48 48" className="h-9 w-9" aria-hidden="true">
+      <g fill="#FFFF00">
+        <circle cx="17" cy="17" r="8" />
+        <circle cx="31" cy="17" r="8" />
+        <circle cx="17" cy="31" r="8" />
+        <circle cx="31" cy="31" r="8" />
+      </g>
+      <circle cx="24" cy="24" r="3" fill="#2E2E2E" />
+    </svg>
+  );
 }
 
 const kbd = "min-w-6 rounded-md border border-ivory/30 bg-ivory/10 px-1.5 py-0.5 text-center font-display text-[11px] font-semibold text-ivory";
@@ -122,10 +137,17 @@ export default function WorldHud(p: HudProps) {
           </div>
         )}
         {p.banner && (
-          <div role="status" className="flex flex-col items-center gap-1 rounded-2xl bg-charcoal/85 px-6 py-3 text-center text-ivory motion-safe:animate-in motion-safe:fade-in">
-            {p.banner.eyebrow && <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ivory/70">{p.banner.eyebrow}</p>}
-            <p className="font-display text-lg font-bold text-klovers-yellow">{p.banner.title}</p>
-            <p className="max-w-md text-sm text-ivory/85">{p.banner.line}</p>
+          <div role="status" className="flex items-center gap-3 rounded-2xl bg-charcoal/85 py-2.5 pe-5 ps-3 text-ivory motion-safe:animate-in motion-safe:fade-in">
+            {p.banner.number !== undefined && (
+              <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-klovers-yellow font-display text-base font-bold text-charcoal">
+                {p.banner.number}
+              </span>
+            )}
+            <span className="flex flex-col items-start gap-0.5 text-start">
+              {p.banner.eyebrow && <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ivory/65">{p.banner.eyebrow}</span>}
+              <span className="font-display text-base font-bold leading-tight sm:text-lg">{p.banner.title}</span>
+              <span className="max-w-sm text-xs text-ivory/80 sm:text-sm">{p.banner.line}</span>
+            </span>
           </div>
         )}
         {!p.sequence && p.toast}
@@ -176,13 +198,19 @@ export default function WorldHud(p: HudProps) {
 
       {p.isTouch && !p.sequence && <Joystick label={copy.joystick} pulse={p.showMoveHint} />}
       {p.isTouch && p.prompt && !p.sequence && (
+        // The contextual action: a dark disc ringed in Klovers yellow with the
+        // clover mark, and what it does written under it. Only when useful.
         <button
           type="button"
           onClick={p.onInteract}
-          style={{ bottom: "calc(2.5rem + env(safe-area-inset-bottom))", right: "calc(1.5rem + env(safe-area-inset-right))" }}
-          className="pointer-events-auto absolute bottom-10 right-6 flex h-20 w-20 items-center justify-center rounded-full border-2 border-charcoal bg-klovers-yellow px-2 text-center text-sm font-bold leading-tight text-charcoal shadow-lg motion-safe:animate-in motion-safe:zoom-in-90"
+          aria-label={p.prompt}
+          style={{ bottom: "calc(1.75rem + env(safe-area-inset-bottom))", right: "calc(1.25rem + env(safe-area-inset-right))" }}
+          className="pointer-events-auto absolute flex flex-col items-center gap-1.5 motion-safe:animate-in motion-safe:zoom-in-90"
         >
-          {p.prompt}
+          <span className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-charcoal/70 shadow-lg ring-4 ring-klovers-yellow backdrop-blur-sm">
+            <CloverMark />
+          </span>
+          <span className="rounded-full bg-charcoal/85 px-3 py-1 text-xs font-bold text-ivory">{p.prompt}</span>
         </button>
       )}
       {p.sequence && (

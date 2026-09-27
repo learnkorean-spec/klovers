@@ -68,7 +68,11 @@ export function ControlsCard({
   onClose: () => void;
 }) {
   const c = WORLD_COPY[lang].onboarding;
-  const rows = isTouch ? c.touch : c.desktop;
+  const all = isTouch ? c.touch : c.desktop;
+  // Taught one step at a time: only what to try now (moving comes with
+  // running on a keyboard); the full list only when reopened from help.
+  const show: string[] = replay ? all.map((r) => r.id) : step === "move" ? ["move", "run"] : ["look"];
+  const rows = all.filter((r) => show.includes(r.id));
   const done = (id: string) => !replay && ((id === "move" && step !== "move") || (id === "look" && step === "done"));
   const active = (id: string) => !replay && id === step;
   const instruction = replay ? null : step === "move" ? c.stepMove : step === "look" ? c.stepLook : null;
@@ -77,7 +81,7 @@ export function ControlsCard({
     <div
       role="region"
       aria-label={c.controlsTitle}
-      className={`pointer-events-auto w-[min(20rem,calc(100vw-2rem))] rounded-2xl bg-ivory/95 p-3 text-charcoal shadow-xl transition-opacity duration-700 motion-safe:animate-in motion-safe:fade-in ${
+      className={`pointer-events-auto ${replay ? "w-[min(20rem,calc(100vw-2rem))]" : "w-[min(16rem,calc(100vw-2rem))]"} rounded-2xl bg-ivory/95 p-3 text-charcoal shadow-xl transition-opacity duration-700 motion-safe:animate-in motion-safe:fade-in ${
         step === "done" && !replay ? "opacity-0" : "opacity-100"
       }`}
     >
@@ -158,11 +162,15 @@ export function ObjectiveChip({
     >
       <span aria-hidden="true" className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${justDone ? "bg-klovers-green" : "bg-klovers-yellow"}`} />
       <span className="flex flex-col">
-        <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ivory/60">{justDone ? c.done : c.label}</span>
-        <span className="text-sm font-semibold leading-snug">
-          {c[shown]}
-          {!justDone && count ? <span className="ms-1.5 text-ivory/70" dir="ltr">{count}</span> : null}
+        <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-ivory/60">
+          {justDone ? c.done : c.label}
+          {!justDone && count ? (
+            <span className="rounded-full bg-ivory/15 px-1.5 py-px tracking-normal text-ivory/85" dir="ltr">
+              {count}
+            </span>
+          ) : null}
         </span>
+        <span className="text-sm font-semibold leading-snug">{c[shown]}</span>
       </span>
     </div>
   );
