@@ -17,6 +17,7 @@ import MyTrialClassCard from "@/components/MyTrialClassCard";
 import StudentPrimaryAction from "@/components/StudentPrimaryAction";
 import type { PrimarySession } from "@/components/StudentPrimaryAction";
 import StudentAttendanceRequest from "@/components/StudentAttendanceRequest";
+import StudentSelfService from "@/components/StudentSelfService";
 import AvatarUpload from "@/components/AvatarUpload";
 import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { useGamification } from "@/hooks/useGamification";
@@ -238,6 +239,10 @@ const StudentDashboard = () => {
   const [profileLevel, setProfileLevel] = useState("");
   const [placementTest, setPlacementTest] = useState<PlacementTestResult | null>(null);
   const [hasNoData, setHasNoData] = useState(false);
+  // A private (1:1) student lives in teacher_students + student_bundles, not
+  // enrollments. Without this flag she counted as "no data" and saw the
+  // Enroll Now card instead of her own lessons and package.
+  const [isPrivate, setIsPrivate] = useState(false);
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [latestEnrollmentId, setLatestEnrollmentId] = useState("");
   const [attendanceDates, setAttendanceDates] = useState<AttendanceDate[]>([]);
@@ -356,6 +361,13 @@ const StudentDashboard = () => {
       if (ptData) {
         setPlacementTest(ptData as PlacementTestResult);
       }
+
+      const { data: rosterRow } = await supabase
+        .from("teacher_students")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      setIsPrivate(Boolean(rosterRow?.id));
 
       const { data: enrollmentData } = await supabase
         .from("enrollments")
@@ -700,7 +712,7 @@ const StudentDashboard = () => {
       onClick={handleProfileBadgeClick}
       title={profileBadgeHint}
       aria-label={profileBadgeHint}
-      className="h-11 w-11 rounded-full bg-[#b0245f] text-white flex items-center justify-center font-display font-bold text-lg shrink-0 select-none ring-2 ring-[#b0245f]/40 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground"
+      className="h-11 w-11 rounded-full bg-klovers-yellow text-charcoal flex items-center justify-center font-display font-bold text-lg shrink-0 select-none ring-2 ring-charcoal/20 cursor-pointer focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-foreground"
     >
       {displayName?.[0]?.toUpperCase() ?? "K"}
     </button>
@@ -726,6 +738,11 @@ const StudentDashboard = () => {
       />
       <MyTrialClassCard />
     </section>
+  ) : isPrivate ? (
+    <section aria-labelledby="dash-private-title" className="min-w-0 space-y-3">
+      <h2 id="dash-private-title" className="sr-only">{dc("nextClassTitle")}</h2>
+      <StudentSelfService userId={userId} />
+    </section>
   ) : pendingLatest ? (() => {
     const pending = pendingLatest;
     const label =
@@ -736,10 +753,10 @@ const StudentDashboard = () => {
           : t("dashboardPage.pendingLabel");
       return (
         <div className="space-y-6">
-          <Card className="border-amber-300/60 bg-gradient-to-br from-amber-50 to-transparent">
+          <Card className="border-charcoal/20 bg-ivory dark:bg-card">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-amber-600" /> {t("dashboardPage.enrollmentPendingTitle")}
+                <AlertCircle className="h-5 w-5 text-charcoal dark:text-foreground" /> {t("dashboardPage.enrollmentPendingTitle")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -755,7 +772,7 @@ const StudentDashboard = () => {
       );
   })() : (
     <div className="space-y-3">
-      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 to-transparent ring-1 ring-black/10">
+      <Card className="border-charcoal/20 bg-ivory dark:bg-card ring-1 ring-charcoal/10">
         <CardContent className="pt-6 pb-6 space-y-4">
           <div className="flex items-start gap-4">
             <BrandIcon name="open-book" className="h-12 w-12 sm:h-14 sm:w-14" />
@@ -765,11 +782,6 @@ const StudentDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="flex -space-x-1 rtl:space-x-reverse">
-              {["🇪🇬","🇸🇦","🇦🇪","🇯🇴"].map((flag, i) => (
-                <span key={i} className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-sm">{flag}</span>
-              ))}
-            </div>
             <span>{/* 200+ = students Reham has taught herself (the one public figure on record). */}
             {tInterpolate(t("dashboardPage.joinStudents"), { count: 200 })}</span>
           </div>
