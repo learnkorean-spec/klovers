@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from "three";
+import { NATURAL } from "../config/materials";
 import { PALETTE } from "../config/world";
 
 /** Small procedural floor textures, painted once on a canvas (no download). */
@@ -60,3 +61,17 @@ export const paintPlanks: Paint = (ctx, size) => {
   }
 };
 
+
+/** Packed-earth madang: warm stone with faint, irregular slabs. */
+export const paintMadang: Paint = (ctx, size) => {
+  ctx.fillStyle = NATURAL.madang;
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = "rgba(107,74,51,0.10)";
+  const rows = 3;
+  for (let r = 0; r < rows; r++) {
+    const y = (r * size) / rows;
+    ctx.fillRect(0, y, size, 1.5);
+    const off = (r * 53) % 90;
+    for (let x = off; x < size + 1; x += 90 + ((r * 17) % 30)) ctx.fillRect(x % size, y, 1.5, size / rows);
+  }
+};

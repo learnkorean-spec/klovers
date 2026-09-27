@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
+import type { NoticeKey } from "../config/rooms";
 
 /**
  * The small web-UI cards opened from the 3D world (E / the round button).
  * Real learning stays in the site's lessons; these are one-step moments that
  * end in a real action. One language per screen; Korean stays Korean.
  */
-export type CardKind = "egg" | "letter" | "word";
+export type CardKind = "egg" | "letter" | "word" | "locked";
 
 interface Props {
   lang: WorldLang;
   kind: CardKind;
+  /** For a locked gate: which notice to show. */
+  notice?: NoticeKey;
   signedIn: boolean;
   /** The bread sign is already back up (the word card opens solved). */
   solved: boolean;
@@ -21,7 +24,7 @@ interface Props {
 
 const btn = "min-h-11 rounded-full px-5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
 
-export default function InteractionCard({ lang, kind, signedIn, solved, onClose, onGo, onWordRight }: Props) {
+export default function InteractionCard({ lang, kind, notice, signedIn, solved, onClose, onGo, onWordRight }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
   const [picked, setPicked] = useState<number | null>(solved ? 0 : null);
@@ -36,7 +39,28 @@ export default function InteractionCard({ lang, kind, signedIn, solved, onClose,
   }, [onClose]);
 
   let body: JSX.Element;
-  if (kind === "egg") {
+  if (kind === "locked" && notice) {
+    // A learning gate, not a paywall: say what opens it, kindly, and offer
+    // the real way there to someone already learning.
+    const n = copy.notices[notice];
+    const levelGate = notice === "marketLocked" || notice === "cafeLocked";
+    body = (
+      <>
+        <h2 className="font-display text-xl font-bold">{n.title}</h2>
+        <p className="text-sm text-charcoal/80">{n.line}</p>
+        <div className="flex flex-wrap justify-center gap-2 pt-1">
+          {levelGate && signedIn && (
+            <button type="button" className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal`} onClick={() => onGo("/dashboard")}>
+              {copy.lockedCard.learn}
+            </button>
+          )}
+          <button ref={first} type="button" className={`${btn} border-2 border-charcoal text-charcoal outline-charcoal`} onClick={onClose}>
+            {copy.lockedCard.close}
+          </button>
+        </div>
+      </>
+    );
+  } else if (kind === "egg") {
     const c = copy.egg;
     body = (
       <>
@@ -73,7 +97,7 @@ export default function InteractionCard({ lang, kind, signedIn, solved, onClose,
         </div>
       </>
     );
-  } else {
+  } else if (kind === "word") {
     const c = copy.word;
     const chosen = picked === null ? null : c.options[picked];
     body = (
@@ -115,6 +139,8 @@ export default function InteractionCard({ lang, kind, signedIn, solved, onClose,
         </button>
       </>
     );
+  } else {
+    body = <></>;
   }
 
   return (
@@ -122,7 +148,7 @@ export default function InteractionCard({ lang, kind, signedIn, solved, onClose,
       <div
         role="dialog"
         aria-modal="true"
-        className="flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl bg-ivory p-6 text-center text-charcoal shadow-2xl"
+        className="flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl bg-ivory p-6 text-center text-charcoal shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
         {body}

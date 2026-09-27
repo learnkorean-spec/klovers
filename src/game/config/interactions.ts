@@ -1,4 +1,4 @@
-import { HUB, hubGateSpot, MARKET, VILLAGE, type NoticeKey, type RoomId } from "./rooms";
+import { HUB, hubGateSpot, MARKET, ROOMS, VILLAGE, type NoticeKey, type RoomId } from "./rooms";
 import { PROPS } from "./world";
 
 /**
@@ -12,7 +12,8 @@ import { PROPS } from "./world";
  * - letter   a Hangul letter card (Hangul Village)
  * - word     pick the word for an object (Vocabulary Market)
  * - link     a door out to a page of the site (Hub)
- * - locked   a gate to a world that is not open yet: just says so
+ * - locked   a gate to a world that is not open yet (or not built yet):
+ *            inspecting it says, kindly, what opens it
  */
 export type InteractionKind = "egg" | "letter" | "word" | "link" | "locked";
 
@@ -26,6 +27,11 @@ export interface Interactable {
   /** Kind-specific payload. */
   link?: "games" | "lessons";
   notice?: NoticeKey;
+  /**
+   * For a gate into a world: usable only while that world is still locked
+   * for this learner (then it explains why); once open, the gate just opens.
+   */
+  whileLocked?: RoomId;
 }
 
 /** The ㄱ house: first on the left, nearest the village gate. */
@@ -34,9 +40,9 @@ const firstHouseZ = VILLAGE.houseZ[VILLAGE.houseZ.length - 1] + 0.9;
 const breadZ = MARKET.stallZ[0];
 
 const hubNotice: Record<string, NoticeKey> = {
-  "hub-culture": "cultureLocked",
-  "hub-seoul": "seoulLocked",
-  "hub-garden": "gardenLocked",
+  "hub-culture": "cultureSoon",
+  "hub-seoul": "seoulSoon",
+  "hub-garden": "gardenSoon",
 };
 
 export const INTERACTABLES: Interactable[] = [
@@ -51,14 +57,36 @@ export const INTERACTABLES: Interactable[] = [
         ? { id: g.id, room: "hub", kind: "link", x: spot.x, z: spot.z, radius: 1.8, link: g.id === "hub-games" ? "games" : "lessons" }
         : { id: g.id, room: "hub", kind: "locked", x: spot.x, z: spot.z, radius: 1.8, notice: hubNotice[g.id] };
     }),
+  // Every gate into a world that may be locked can be inspected while it is.
+  ...Object.values(ROOMS).flatMap((room) =>
+    room.portals
+      .filter((p) => p.lockedNotice)
+      .map((p): Interactable => ({
+        id: `gate-${p.id}`,
+        room: room.id,
+        kind: "locked",
+        x: (p.zone.minX + p.zone.maxX) / 2,
+        z: (p.zone.minZ + p.zone.maxZ) / 2,
+        radius: 1.5,
+        notice: p.lockedNotice,
+        whileLocked: p.to,
+      })),
+  ),
 ];
 
 /** Nearest interactable in this room within its radius, if any. */
-export function nearestInteractable(room: RoomId, x: number, z: number, list = INTERACTABLES): Interactable | undefined {
+export function nearestInteractable(
+  room: RoomId,
+  x: number,
+  z: number,
+  list = INTERACTABLES,
+  isOpen: (r: RoomId) => boolean = () => false,
+): Interactable | undefined {
   let best: Interactable | undefined;
   let bestD = Infinity;
   for (const it of list) {
     if (it.room !== room) continue;
+    if (it.whileLocked && isOpen(it.whileLocked)) continue;
     const d = Math.hypot(it.x - x, it.z - z);
     if (d <= it.radius && d < bestD) {
       best = it;

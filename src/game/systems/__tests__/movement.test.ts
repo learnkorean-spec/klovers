@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BOUNDS, COLLIDERS, PLAYER, POSTS } from "../../config/world";
+import { BOUNDS, COLLIDERS, PLAYER, PROPS, SOLID_POINTS } from "../../config/world";
 import { isBlocked, resolveCollisions } from "../collision";
 import { angleDelta, NO_INPUT, stepVelocity, stepYaw, wishDirection } from "../movement";
 import { resolveAnimation } from "../../player/animation";
@@ -72,7 +72,7 @@ describe("collision", () => {
       p.z -= 0.05;
       resolveCollisions(p, PLAYER.radius, COLLIDERS, BOUNDS);
     }
-    expect(p.z).toBeGreaterThan(1.1 + PLAYER.radius - 1e-6);
+    expect(p.z).toBeGreaterThan(PROPS.eggPlinth.w / 2 + PLAYER.radius - 1e-6);
   });
 
   it("pushes a player that starts inside a box back out", () => {
@@ -80,10 +80,10 @@ describe("collision", () => {
     expect(isBlocked(p.x, p.z, PLAYER.radius - 1e-3, COLLIDERS, BOUNDS)).toBe(false);
   });
 
-  it("spawn point is free and every column is a collider", () => {
+  it("spawn point is free and every lantern and tree is a collider", () => {
     expect(isBlocked(PLAYER.spawn.x, PLAYER.spawn.z, PLAYER.radius, COLLIDERS, BOUNDS)).toBe(false);
-    expect(POSTS.length).toBeGreaterThan(0);
-    for (const post of POSTS) {
+    expect(SOLID_POINTS.length).toBeGreaterThan(0);
+    for (const post of SOLID_POINTS) {
       expect(COLLIDERS.some((b) => post.x > b.minX && post.x < b.maxX && post.z > b.minZ && post.z < b.maxZ)).toBe(true);
     }
   });

@@ -127,7 +127,7 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
     const p = player.current.position;
 
     if (c.focus) desired.current.set(c.focus.x, c.focus.y, c.focus.z);
-    else desired.current.set(p.x, p.y + CAMERA.targetHeight, p.z);
+    else desired.current.set(p.x - Math.sin(c.yaw) * CAMERA.lookAhead, p.y + CAMERA.targetHeight, p.z - Math.cos(c.yaw) * CAMERA.lookAhead);
     // Story reframing eases slowly; normal follow is brisk.
     const sharp = c.focus || c.yawTarget !== null ? 2.5 : CAMERA.followSharpness;
     if (c.yawTarget !== null) c.yaw += angleDelta(c.yaw, c.yawTarget) * damp(2.5, dt);

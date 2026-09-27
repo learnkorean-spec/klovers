@@ -5,7 +5,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
 import type { Interactable } from "@/game/config/interactions";
-import type { RoomId } from "@/game/config/rooms";
+import type { NoticeKey, RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { useWorldAccess } from "@/game/systems/useWorldAccess";
 import { hasWebGL, isTouchFirst } from "@/game/systems/webgl";
@@ -13,7 +13,7 @@ import { loadWorldState, saveWorldState, type WorldState } from "@/game/systems/
 import InteractionCard, { type CardKind } from "@/game/ui/InteractionCard";
 import WorldHud, { type Speech } from "@/game/ui/WorldHud";
 // Type-only: erased at build time, so the 3D chunk stays lazy.
-import type { SpeechKey, WorldApi, WorldNotice } from "@/game/World";
+import type { SpeechKey, WorldApi } from "@/game/World";
 
 const AVATAR_KEY = "klovers-world-avatar";
 
@@ -126,11 +126,24 @@ const WorldPage = () => {
   const [saved, setSaved] = useState<WorldState>(loadWorldState);
   const [fading, setFading] = useState(false);
   const [room, setRoom] = useState<RoomId | null>(null);
-  const [gateNotice, setGateNotice] = useState<WorldNotice | null>(null);
   const [focus, setFocus] = useState<Interactable | null>(null);
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
-  const [card, setCard] = useState<CardKind | null>(null);
+  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey } | null>(null);
+  const [tipDismissed, setTipDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem("klovers-world-landscape-tip") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [portrait, setPortrait] = useState(() => window.innerHeight > window.innerWidth);
+  // Where to open: back where the learner left for the site's lessons or
+  // games (only rooms open to everyone), else the courtyard. Read once.
+  const [startRoom] = useState<RoomId>(() => {
+    const r = loadWorldState().lastRoom;
+    return r === "hangul-village" || r === "hub" ? r : "courtyard";
+  });
   const [locked, setLocked] = useState(false);
   const api = useRef<WorldApi | null>(null);
   const bannerTimer = useRef<number>();
@@ -148,13 +161,31 @@ const WorldPage = () => {
     }
   }, []);
 
-  const save = useCallback((next: WorldState) => {
-    setSaved(next);
-    saveWorldState(next);
+  // An admin preview never writes anything: it is a look, not progress.
+  const save = useCallback(
+    (next: WorldState) => {
+      setSaved(next);
+      if (!access.preview) saveWorldState(next);
+    },
+    [access.preview],
+  );
+
+  // Consume the resume point once, so a later fresh visit starts at the gate.
+  useEffect(() => {
+    if (startRoom !== "courtyard") save({ ...loadWorldState(), lastRoom: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const onResize = () => setPortrait(window.innerHeight > window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   // Room name card: shown for a few seconds after each arrival.
-  const arrive = useCallback((id: RoomId) => {
+  const [introBanner, setIntroBanner] = useState(false);
+  const arrive = useCallback((id: RoomId, intro = false) => {
+    setIntroBanner(intro);
     setRoom(id);
     window.clearTimeout(bannerTimer.current);
     bannerTimer.current = window.setTimeout(() => setRoom(null), 4200);
@@ -175,11 +206,16 @@ const WorldPage = () => {
     if (document.pointerLockElement) document.exitPointerLock();
     if (it.kind === "egg") {
       if (clubyAwake && !saved.hatchSeen) api.current?.hatch();
-      else setCard("egg");
-    } else if (it.kind === "letter") setCard("letter");
-    else if (it.kind === "word") setCard("word");
-    else if (it.kind === "link") navigate(it.link === "games" ? "/games" : access.signedIn ? "/textbook" : "/courses");
-  }, [focus, card, sequence, clubyAwake, saved.hatchSeen, navigate, access.signedIn]);
+      else setCard({ kind: "egg" });
+    } else if (it.kind === "letter") setCard({ kind: "letter" });
+    else if (it.kind === "word") setCard({ kind: "word" });
+    else if (it.kind === "locked") setCard({ kind: "locked", notice: it.notice });
+    else if (it.kind === "link") {
+      // Out to the site; the world reopens here (the Hub) on the way back.
+      save({ ...saved, lastRoom: it.room });
+      navigate(it.link === "games" ? "/games" : access.signedIn ? "/textbook" : "/courses");
+    }
+  }, [focus, card, sequence, clubyAwake, saved, save, navigate, access.signedIn]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -218,9 +254,7 @@ const WorldPage = () => {
     </button>
   );
 
-  // What to show at the bottom: a shut gate, or a future door within reach.
-  const noticeKey = gateNotice ?? (focus?.kind === "locked" ? focus.notice ?? null : null);
-  const promptLabel = !focus || focus.kind === "locked"
+  const promptLabel = !focus
     ? null
     : focus.kind === "link"
       ? copy.prompts[focus.link === "games" ? "games" : "lessons"]
@@ -261,9 +295,17 @@ const WorldPage = () => {
           >
             <Suspense fallback={null}>
               <World
-                onReady={() => setReady(true)}
+                onReady={() => {
+                  setReady(true);
+                  // First thing seen: the world's name, then where one stands.
+                  arrive(startRoom, true);
+                }}
                 onFirstLook={() => setLooked(true)}
-                onFirstMove={() => setMoved(true)}
+                onFirstMove={() => {
+                  setMoved(true);
+                  if (!saved.tutorialDone) save({ ...saved, tutorialDone: true });
+                }}
+                startRoom={startRoom}
                 avatar={avatar}
                 access={access}
                 clubyAwake={clubyAwake}
@@ -272,7 +314,6 @@ const WorldPage = () => {
                 onApi={(a) => (api.current = a)}
                 onFade={setFading}
                 onRoomChange={arrive}
-                onNotice={setGateNotice}
                 onFocus={setFocus}
                 onSpeech={setSpeechKey}
                 onSequence={setSequence}
@@ -286,23 +327,33 @@ const WorldPage = () => {
                 onExit={exit}
                 avatar={avatar}
                 onAvatar={chooseAvatar}
-                banner={room ? { title: copy.rooms[room].name, line: copy.rooms[room].line } : null}
-                notice={noticeKey ? { title: copy.notices[noticeKey].title, line: copy.notices[noticeKey].line } : null}
+                banner={room ? { eyebrow: introBanner ? copy.worldTitle : undefined, title: copy.rooms[room].name, line: copy.rooms[room].line } : null}
+                notice={null}
                 preview={access.preview}
                 speech={speech}
                 prompt={card ? null : promptLabel}
                 onInteract={interact}
-                showMoveHint={!moved}
+                showMoveHint={!moved && !saved.tutorialDone}
                 showLookHint={moved && !looked}
                 pointerLocked={locked}
                 sequence={sequence}
                 onSkip={() => api.current?.skip()}
+                landscapeTip={isTouch && portrait && !tipDismissed && !card}
+                onDismissTip={() => {
+                  setTipDismissed(true);
+                  try {
+                    sessionStorage.setItem("klovers-world-landscape-tip", "1");
+                  } catch {
+                    /* fine: this visit only */
+                  }
+                }}
               />
             )}
             {card && (
               <InteractionCard
                 lang={lang}
-                kind={card}
+                kind={card.kind}
+                notice={card.notice}
                 signedIn={access.signedIn}
                 solved={saved.breadSign}
                 onClose={() => setCard(null)}

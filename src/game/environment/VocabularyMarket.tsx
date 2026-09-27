@@ -1,9 +1,11 @@
 import { useMemo, type ReactNode } from "react";
-import { MAT, std } from "../config/materials";
+import { ACCENT, MAT, std } from "../config/materials";
 import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
-import Instanced, { UNIT, type Part } from "./Instanced";
-import { GateWall, Lamps, Signboard } from "./parts";
+import Instanced, { type Part } from "./Instanced";
+import Batch from "./Batch";
+import { Kit, basket, shopfront, wallRun, type MatKey } from "./kit";
+import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import { paintPaving, useTiledTexture } from "./textures";
 
 /**
@@ -18,7 +20,6 @@ import { paintPaving, useTiledTexture } from "./textures";
 
 const HW = MARKET.halfWidth;
 const HD = MARKET.halfDepth;
-const WALL_H = 2.8;
 const LAMP_SPOTS = MARKET.lamps.map((l) => ({ x: l.x, z: l.z }));
 
 type Word = (typeof MARKET.stallsLeft)[number] | (typeof MARKET.stallsRight)[number];
@@ -146,25 +147,29 @@ function useStallParts() {
   }, []);
 }
 
-/** Two- and three-storey shop fronts behind the stalls: the market's skyline. */
-function useSkyline() {
-  return useMemo(() => {
-    const body: Part[] = [], band: Part[] = [], eave: Part[] = [], win: Part[] = [];
-    const heights = [4.2, 5.4, 3.8, 4.8];
-    for (const side of [-1, 1]) {
-      heights.forEach((_, i) => {
-        const z = -HD + 2 + i * 4;
-        const x = side * (HW + 2.6);
-        const h = heights[(i + (side > 0 ? 2 : 0)) % 4];
-        body.push({ p: [x, h / 2, z], s: [4, h, 3.8] });
-        band.push({ p: [x, 0.5, z], s: [4.02, 1, 3.82] });
-        eave.push({ p: [x, h + 0.1, z], s: [4.6, 0.2, 4.3] });
-        win.push({ p: [x - side * 2.01, h - 1.1, z], s: [0.02, 0.7, 2.4] });
-      });
-    }
-    return { body, band, eave, win };
-  }, []);
-}
+/** Shop fronts, walls, baskets and banner poles: one Kit for the square. */
+const MARKET_KIT: Kit = (() => {
+  const k = new Kit();
+  const heights = [3.6, 4.4, 3.2, 4.0];
+  for (const side of [-1, 1] as const) {
+    // Low walls behind the stalls, then two-storey shops rising behind them.
+    wallRun(k, side * (HW + 0.2), -HD - 0.4, side * (HW + 0.2), HD + 0.4, 1.6, 0.35);
+    heights.forEach((_, i) => {
+      const h = heights[(i + (side > 0 ? 2 : 0)) % 4];
+      shopfront(k, { x: side * (HW + 2.8), z: -HD + 2 + i * 4, w: 3.6, d: 3.7, h, face: side > 0 ? "-x" : "+x" });
+    });
+  }
+  // Baskets of goods in front of the stalls: the square looks traded in.
+  const heaps: MatKey[] = ["woodLight", "plaster", "pine", "woodLight", "plaster", "woodLight"];
+  MARKET.baskets.forEach(([x, z, sc], i) => basket(k, x, z, sc, heaps[i % heaps.length]));
+  // Banner poles by the north gate.
+  for (const x of [-2.6, 2.6]) {
+    k.add("stoneWarm", "oct", [x, 0.12, -HD + 0.9], [0.4, 0.24, 0.4]);
+    k.box("woodDark", [x, 1.7, -HD + 0.9], [0.1, 3.4, 0.1], true);
+    k.box("woodDark", [x, 3.3, -HD + 0.9], [0.9, 0.06, 0.06]);
+  }
+  return k;
+})();
 
 /** Paper lanterns strung across the square on two lines. */
 function useStringLights() {
@@ -179,25 +184,6 @@ function useStringLights() {
     }
     return { lights, line };
   }, []);
-}
-
-function SideWalls() {
-  return (
-    <>
-      {[-1, 1].map((side) => (
-        <group key={side} position={[side * (HW + 0.2), 0, 0]}>
-          <mesh receiveShadow position={[0, WALL_H / 2, 0]} scale={[0.4, WALL_H, HD * 2 + 0.8]}>
-            <primitive object={UNIT.box} attach="geometry" />
-            <primitive object={MAT.plaster} attach="material" />
-          </mesh>
-          <mesh position={[0, 0.45, 0]} scale={[0.42, 0.9, HD * 2 + 0.82]}>
-            <primitive object={UNIT.box} attach="geometry" />
-            <primitive object={MAT.charcoal} attach="material" />
-          </mesh>
-        </group>
-      ))}
-    </>
-  );
 }
 
 function Crates() {
@@ -217,7 +203,6 @@ function Crates() {
 export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: boolean; breadSign: boolean }) {
   const paving = useTiledTexture(paintPaving, HW, HD);
   const stalls = useStallParts();
-  const sky = useSkyline();
   const strings = useStringLights();
   return (
     <group>
@@ -229,11 +214,22 @@ export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: bo
         <planeGeometry args={[80, 80]} />
         <primitive object={MAT.stone} attach="material" />
       </mesh>
-      <SideWalls />
-      <Instanced parts={sky.body} material={MAT.plaster} />
-      <Instanced parts={sky.band} material={MAT.charcoal} />
-      <Instanced parts={sky.eave} material={MAT.roofTile} />
-      <Instanced parts={sky.win} material={MAT.paper} />
+      <Batch kit={MARKET_KIT} />
+      {/* Two cloth banners by the gate: the market's small movement. */}
+      {[-2.6, 2.6].map((x, i) => (
+        <group key={x} position={[x + 0.3, 3.28, -HD + 0.9]}>
+          <Sway axis="x" amp={0.08} speed={1.6} phase={i * 2.1}>
+            <mesh position={[0, -0.75, 0]}>
+              <boxGeometry args={[0.55, 1.5, 0.02]} />
+              <primitive object={MAT.plaster} attach="material" />
+            </mesh>
+            <mesh position={[0, -0.75, 0.012]}>
+              <boxGeometry args={[0.55, 0.12, 0.01]} />
+              <primitive object={MAT.charcoal} attach="material" />
+            </mesh>
+          </Sway>
+        </group>
+      ))}
 
       <Instanced parts={stalls.counter} material={MAT.woodWarm} castShadow receiveShadow />
       <Instanced parts={stalls.top} material={MAT.woodDark} />
@@ -247,14 +243,32 @@ export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: bo
             <group position={[side * MARKET.stallX + front * 0.55, 0.945, z]}>
               <Goods word={word} />
             </group>
-            {/* The word, hanging at the front edge of the awning */}
+            {/* The word, hanging at the front edge of the awning. */}
             <group
-              position={[side * MARKET.stallX + front * (MARKET.stallW / 2 + 0.15), 2.1, z]}
+              position={[side * MARKET.stallX + front * (MARKET.stallW / 2 + 0.15), 2.36, z]}
               rotation={[0, side < 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
             >
-              {/* The bread stall's sign is blank until the learner names the
-                  loaves — then the word goes back up (world changes after learning). */}
-              <Signboard text={word === "빵" && !breadSign ? "" : word} w={0.9} h={0.54} aspect={1.7} />
+              {word === "빵" && !breadSign ? (
+                // The baker's sign has come down: it hangs by one corner from
+                // its hook, blank. Something clearly belongs here.
+                <>
+                  <mesh position={[0.34, 0.02, 0]} scale={[0.07, 0.07, 0.07]}>
+                    <torusGeometry args={[0.6, 0.25, 6, 12]} />
+                    <primitive object={ACCENT} attach="material" />
+                  </mesh>
+                  <group position={[0.34, -0.02, 0]} rotation={[0, 0, 0.62]}>
+                    <group position={[-0.45, -0.27, 0]}>
+                      <Signboard text="" w={0.9} h={0.54} aspect={1.7} />
+                    </group>
+                  </group>
+                </>
+              ) : (
+                <Sway amp={0.035} speed={1.2} phase={z}>
+                  <group position={[0, -0.27, 0]}>
+                    <Signboard text={word} w={0.9} h={0.54} aspect={1.7} />
+                  </group>
+                </Sway>
+              )}
             </group>
           </group>
         );

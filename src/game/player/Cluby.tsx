@@ -38,13 +38,34 @@ interface Props {
   story: MutableRefObject<StoryState>;
   player: MutableRefObject<PlayerState>;
   layout: RoomLayout;
+  /** The next meaningful place in this room — where he points, now and then. */
+  guide: { x: number; z: number } | null;
+  /** Things worth a glance in this room (interactables). */
+  interests: { x: number; z: number }[];
 }
 
-export default function Cluby({ story, player, layout }: Props) {
+/** Seconds of the learner standing still before he offers a direction. */
+const GUIDE_AFTER_IDLE = 6;
+const GUIDE_EVERY = 16;
+
+export default function Cluby({ story, player, layout, guide, interests }: Props) {
   const root = useRef<Group>(null);
   const body = useRef<Group>(null);
   const armR = useRef<Group>(null);
   const hopPhase = useRef(0);
+  // Small behaviour memory, outside React.
+  const mem = useRef({
+    idleFor: 0,
+    lastGuide: -99,
+    glanceAt: null as { x: number; z: number } | null,
+    glanceUntil: 0,
+    nextGlance: 4,
+    stuckFor: 0,
+    lastD: 0,
+    /** 0 → 1 while vanishing, then 1 → 0 reappearing (hidden reposition). */
+    poof: 0,
+    poofing: false,
+  });
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.05);
@@ -75,30 +96,76 @@ export default function Cluby({ story, player, layout }: Props) {
         faceZ = c.look.z;
       }
     } else {
-      // Follow: a step behind and to the right of the learner.
-      const yaw = player.current.yaw;
+      // Follow: a comfortable step behind and to the right of the learner.
+      const m = mem.current;
+      const pl = player.current;
+      const moving = Math.hypot(pl.velocity.x, pl.velocity.z) > 0.2;
+      const t = now / 1000;
+      m.idleFor = moving ? 0 : m.idleFor + dt;
+      const yaw = pl.yaw;
       const fx = Math.sin(yaw);
       const fz = Math.cos(yaw);
-      const tx = p.x - fx * 0.95 + fz * 0.75;
-      const tz = p.z - fz * 0.95 - fx * 0.75;
+      const tx = p.x - fx * 1.15 + fz * 0.8;
+      const tz = p.z - fz * 1.15 - fx * 0.8;
       const dx = tx - c.x;
       const dz = tz - c.z;
       const d = Math.hypot(dx, dz);
-      if (d > 7) {
-        c.x = tx;
-        c.z = tz;
-      } else if (d > 0.05) {
-        const speed = Math.min(d * 3, 7.5);
+
+      // Stuck behind something, or left far behind: slip out of view and
+      // reappear at the learner's side (a quick shrink/grow, never a pop).
+      m.stuckFor = d > 2.5 && Math.abs(m.lastD - d) < 0.4 * dt ? m.stuckFor + dt : 0;
+      m.lastD = d;
+      if (!m.poofing && (d > 9 || m.stuckFor > 1.2)) m.poofing = true;
+      if (m.poofing) {
+        m.poof = Math.min(m.poof + dt * 5, 2);
+        if (m.poof >= 1 && m.poof - dt * 5 < 1) {
+          c.x = tx;
+          c.z = tz;
+          m.stuckFor = 0;
+        }
+        if (m.poof >= 2) {
+          m.poof = 0;
+          m.poofing = false;
+        }
+        scale = m.poof < 1 ? 1 - m.poof : m.poof - 1;
+      } else if (d > 0.08) {
+        // Eases in close, jogs when behind; never pushes into the learner.
+        const speed = Math.min(d * 2.4, d > 4 ? 8.5 : 6.5);
         const step = Math.min(speed * dt, d);
         const next = { x: c.x + (dx / d) * step, z: c.z + (dz / d) * step };
-        resolveCollisions(next, RADIUS, layout.colliders, layout.bounds);
+        const personal = [{ minX: p.x - 0.55, maxX: p.x + 0.55, minZ: p.z - 0.55, maxZ: p.z + 0.55 }];
+        resolveCollisions(next, RADIUS, [...layout.colliders, ...personal], layout.bounds);
         c.x = next.x;
         c.z = next.z;
-        if (d > 0.3) {
+        if (d > 0.35) {
           faceX = c.x + dx;
           faceZ = c.z + dz;
-          hopPhase.current += dt * 13;
-          hop = Math.abs(Math.sin(hopPhase.current)) * 0.08;
+          hopPhase.current += dt * (d > 4 ? 16 : 12);
+          hop = Math.abs(Math.sin(hopPhase.current)) * (d > 4 ? 0.12 : 0.07);
+        }
+      }
+
+      if (d <= 0.35) {
+        // Settled. Now and then: a glance at something worth a look nearby,
+        // and — if the learner has stood still a while — a point toward the
+        // next place. Rarely, quietly; never a lecture.
+        if (!c.look && m.idleFor > GUIDE_AFTER_IDLE && guide && t - m.lastGuide > GUIDE_EVERY) {
+          m.lastGuide = t;
+          c.look = guide;
+          const g0 = guide;
+          window.setTimeout(() => {
+            if (story.current.cluby.look === g0) story.current.cluby.look = null;
+          }, 2600);
+        }
+        if (!c.look && t > m.nextGlance) {
+          const near = interests.filter((it) => Math.hypot(it.x - c.x, it.z - c.z) < 5);
+          m.glanceAt = near.length ? near[Math.floor(t) % near.length] : null;
+          m.glanceUntil = t + 1.6;
+          m.nextGlance = t + 7 + (Math.floor(t * 13) % 5);
+        }
+        if (m.glanceAt && t < m.glanceUntil) {
+          faceX = m.glanceAt.x;
+          faceZ = m.glanceAt.z;
         }
       }
       if (c.look) {

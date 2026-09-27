@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PCFSoftShadowMap, type WebGLRenderer } from "three";
-import { nearestInteractable, type Interactable } from "./config/interactions";
-import { findPortal, ROOMS, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn } from "./config/rooms";
+import { INTERACTABLES, nearestInteractable, type Interactable } from "./config/interactions";
+import { findPortal, HUB, MARKET, ROOMS, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
 import ThirdPersonCamera from "./camera/ThirdPersonCamera";
 import ConversationCafe from "./environment/ConversationCafe";
@@ -68,6 +68,8 @@ export interface WorldProps {
   onFirstMove?: () => void;
   /** A web-UI card is open: the learner stands still until it closes. */
   paused?: boolean;
+  /** Room to open in (returning from the site's lessons or games). */
+  startRoom?: RoomId;
 }
 
 declare global {
@@ -102,11 +104,13 @@ export default function World(props: WorldProps) {
   const camera = useRef(createCameraState());
   const hatchedHere = saved.hatchSeen && clubyAwake;
   const story = useRef<StoryState>(createStoryState(hatchedHere));
-  const [roomId, setRoomId] = useState<RoomId>("courtyard");
+  const first = props.startRoom && props.startRoom !== "courtyard" ? props.startRoom : "courtyard";
+  const [roomId, setRoomId] = useState<RoomId>(first);
   const roomRef = useRef(roomId);
   roomRef.current = roomId;
   const layout = ROOMS[roomId];
-  const arrival = useRef<Spawn | null>(null);
+  // Opening somewhere other than the courtyard: arrive at that room's first gate.
+  const arrival = useRef<Spawn | null>(first === "courtyard" ? null : Object.values(ROOMS[first].spawns)[0]);
   const cb = useRef(props);
   cb.current = props;
   const savedRef = useRef(saved);
@@ -350,11 +354,11 @@ export default function World(props: WorldProps) {
       {roomId === "courtyard" && <Lobby story={story} />}
       {roomId === "hangul-village" && <HangulVillage marketOpen={access.open.has("vocabulary-market")} />}
       {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} />}
-      {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} />}
+      {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} />}
       {roomId === "conversation-cafe" && <ConversationCafe />}
       {/* Frame priorities: player moves (−2), watchers read (−1.5), camera follows (−1). */}
       <Player input={input} player={player} camera={camera} layout={layout} avatar={avatar} />
-      <Cluby story={story} player={player} layout={layout} />
+      <Cluby story={story} player={player} layout={layout} guide={guideFor(roomId, access)} interests={interestsIn(roomId)} />
       <ThirdPersonCamera player={player} camera={camera} layout={layout} onFirstLook={onFirstLook} />
       <PortalWatcher key={`p-${roomId}`} player={player} layout={layout} access={access} onDoor={travel} onNotice={(n) => cb.current.onNotice?.(n)} />
       <FocusWatcher
@@ -362,12 +366,32 @@ export default function World(props: WorldProps) {
         room={roomId}
         player={player}
         story={story}
+        access={access}
         onFocus={(it) => cb.current.onFocus?.(it)}
         onFirstMove={() => cb.current.onFirstMove?.()}
       />
       <Stats glRef={glRef} />
     </Canvas>
   );
+}
+
+/**
+ * Where Cluby points when the learner stands still: the next meaningful
+ * place in each room (only somewhere this learner can actually go).
+ */
+function guideFor(room: RoomId, access: WorldAccess): { x: number; z: number } | null {
+  if (room === "courtyard") return { x: 0, z: -ROOM.halfDepth };
+  if (room === "hangul-village") return access.open.has("vocabulary-market") ? { x: 0, z: -VILLAGE.halfLength } : { x: VILLAGE.halfWidth, z: VILLAGE.hubLaneZ };
+  if (room === "vocabulary-market") return { x: 0, z: -MARKET.halfDepth };
+  if (room === "hub") return access.open.has("conversation-cafe") ? { x: 0, z: -HUB.half } : { x: HUB.half, z: -3.5 };
+  return null;
+}
+
+const INTEREST_CACHE = new Map<RoomId, { x: number; z: number }[]>();
+function interestsIn(room: RoomId) {
+  let v = INTEREST_CACHE.get(room);
+  if (!v) INTEREST_CACHE.set(room, (v = INTERACTABLES.filter((i) => i.room === room).map((i) => ({ x: i.x, z: i.z }))));
+  return v;
 }
 
 interface WatcherProps {
@@ -380,7 +404,7 @@ interface WatcherProps {
 
 /**
  * Checks, after the player moves, whether a gate zone was entered or left.
- * An open gate starts the trip; a gate into a locked world shows its notice.
+ * An open gate starts the trip; a gate into a locked world stays shut.
  */
 function PortalWatcher({ player, layout, access, onDoor, onNotice }: WatcherProps) {
   const current = useRef<string | null>(null);
@@ -396,15 +420,17 @@ function PortalWatcher({ player, layout, access, onDoor, onNotice }: WatcherProp
       if (left) onNotice(null);
       return;
     }
-    if (hit.lockedNotice && !access.open.has(hit.to)) onNotice(hit.lockedNotice);
-    else onDoor(hit);
+    // A gate into a locked world simply stays shut; it can be inspected (E).
+    if (hit.lockedNotice && !access.open.has(hit.to)) return;
+    onDoor(hit);
   }, -1.5);
   return null;
 }
 
 /** Reports the nearest usable thing, and the learner's first real move. */
-function FocusWatcher({ room, player, story, onFocus, onFirstMove }: {
+function FocusWatcher({ room, player, story, access, onFocus, onFirstMove }: {
   room: RoomId;
+  access: WorldAccess;
   player: MutableRefObject<PlayerState>;
   story: MutableRefObject<StoryState>;
   onFocus: (it: Interactable | null) => void;
@@ -423,7 +449,7 @@ function FocusWatcher({ room, player, story, onFocus, onFirstMove }: {
       }
     }
     if (p.frozen) return;
-    let it = nearestInteractable(room, p.position.x, p.position.z) ?? null;
+    let it = nearestInteractable(room, p.position.x, p.position.z, undefined, (r) => access.open.has(r)) ?? null;
     // Once the egg has opened there is nothing more to do with it.
     if (it?.kind === "egg" && (story.current.egg === "open" || story.current.egg === "hatching")) it = null;
     const id = it?.id ?? null;

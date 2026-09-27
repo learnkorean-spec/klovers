@@ -22,7 +22,7 @@ import { BOUNDS, box, CAMERA_COLLIDERS, COLLIDERS, PLAYER, ROOM, type Box2 } fro
 export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe";
 
 /** Notices shown at a gate whose world is still locked (or not built yet). */
-export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "seoulLocked" | "gardenLocked";
+export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon";
 
 export interface Spawn {
   x: number;
@@ -90,19 +90,25 @@ export const VILLAGE = {
   halfWidth: 5,
   halfLength: 15,
   /** Street lamp posts along both kerbs. */
-  lampZ: [-10, -4, 4, 10],
+  lampZ: [-7.5, -3, 1.8, 9.8],
   lampX: 4.1,
   lampSize: 0.28,
   well: { x: 0, z: 0, size: 1.7 },
   /** Banner arch (한글 마을) across the street; its posts are solid. */
-  arch: { z: 7.5, x: 4.6, post: 0.3 },
+  arch: { z: 4.6, x: 4.6, post: 0.3 },
   /** Houses: centre z of each house on both sides (5 per side). */
   houseZ: [-11.2, -5.6, 0, 5.6, 11.2],
   houseDepth: 4.6,
   houseLength: 5,
   /** First letters a learner reads (Klovers Hangul course order). */
   lettersLeft: ["ㄱ", "ㄴ", "ㄷ", "ㄹ", "ㅁ"],
-  lettersRight: ["ㅏ", "ㅓ", "ㅗ", "ㅜ", "ㅣ"],
+  lettersRight: ["ㅏ", "ㅓ", "ㅗ", "ㅜ"],
+  /**
+   * The lane to the KLOVERS Hub opens where the last house on the right
+   * would stand — open to everyone, guests included (the Hub is not a world).
+   */
+  hubLaneZ: -11.2,
+  hubSign: "광장",
   entranceSign: "한글 마을",
   marketSign: "시장",
 } as const;
@@ -131,8 +137,16 @@ const HANGUL_VILLAGE: RoomLayout = {
     // Just through the south gate, facing up the street (−z).
     fromCourtyard: { x: 0, z: VILLAGE.halfLength - 2.2, yaw: Math.PI },
     fromMarket: { x: 0, z: -VILLAGE.halfLength + 2.2, yaw: 0 },
+    // Just inside the lane gate, facing into the street (−x).
+    fromHub: { x: VILLAGE.halfWidth - 2.0, z: VILLAGE.hubLaneZ, yaw: -Math.PI / 2 },
   },
   portals: [
+    {
+      id: "village-hub-lane",
+      zone: box(VILLAGE.halfWidth - 0.55, VILLAGE.hubLaneZ, 1.1, 3),
+      to: "hub",
+      arrive: "fromVillage",
+    },
     {
       id: "village-back-gate",
       zone: box(0, VILLAGE.halfLength - 0.55, 3, 1.1),
@@ -168,6 +182,11 @@ export const MARKET = {
   stallsLeft: ["물", "밥", "빵"],
   stallsRight: ["책", "옷", "꽃"],
   crates: { x: 0, z: 0, size: 1.5 },
+  /** Baskets of goods in front of the stalls: x, z, size. */
+  baskets: [
+    [-5.6, 6.3, 0.9], [-5.1, 6.95, 0.7], [5.6, 6.2, 0.85],
+    [5.7, -2.4, 0.8], [-5.7, 2.3, 0.75], [5.2, 2.6, 0.7],
+  ] as [number, number, number][],
   lamps: [
     { x: -3.5, z: -5 },
     { x: 3.5, z: -5 },
@@ -189,7 +208,12 @@ const VOCABULARY_MARKET: RoomLayout = {
   id: "vocabulary-market",
   canonWorldId: "vocabulary-market",
   bounds: { minX: -MARKET.halfWidth, maxX: MARKET.halfWidth, minZ: -MARKET.halfDepth, maxZ: MARKET.halfDepth },
-  colliders: [...marketStalls, box(MARKET.crates.x, MARKET.crates.z, MARKET.crates.size, MARKET.crates.size), ...marketLamps],
+  colliders: [
+    ...marketStalls,
+    box(MARKET.crates.x, MARKET.crates.z, MARKET.crates.size, MARKET.crates.size),
+    ...marketLamps,
+    ...MARKET.baskets.map(([x, z, sc]) => box(x, z, 0.58 * sc, 0.58 * sc)),
+  ],
   cameraColliders: [...marketLamps, ...marketStalls],
   spawns: {
     fromVillage: { x: 0, z: MARKET.halfDepth - 2.2, yaw: Math.PI },
@@ -235,7 +259,17 @@ export interface HubGate {
 
 export const HUB = {
   half: 11,
-  post: { x: 0, z: 0, size: 0.6 },
+  /** The two gates in the south wall, back toward the village and the market. */
+  southGates: { village: -5, market: 5 },
+  /** The wayfinding pillar on its octagonal base (collider is the base). */
+  post: { x: 0, z: 0, size: 2.6 },
+  /** Onggi pots in the corners and stone lanterns flanking the café gate. */
+  pots: [
+    [-9.9, 9.7, 1.1], [-9.1, 10.1, 0.8], [9.9, 9.7, 1], [-9.9, -9.9, 1], [9.9, -9.9, 1.1], [9.1, -10.2, 0.8],
+  ] as [number, number, number][],
+  lanterns: [
+    [-2.5, -9.7], [2.5, -9.7],
+  ] as [number, number][],
   gates: [
     { id: "hub-cafe", kind: "room", wall: "north", along: 0, sign: "카페" },
     { id: "hub-culture", kind: "future", wall: "north", along: -6.5, sign: "문화 거리" },
@@ -255,22 +289,34 @@ export function hubGateSpot(g: HubGate, inset = 0.9): { x: number; z: number; ya
 }
 
 const hubPost = box(HUB.post.x, HUB.post.z, HUB.post.size, HUB.post.size);
+const hubProps = [
+  ...HUB.pots.map(([x, z, sc]) => box(x, z, 0.55 * sc, 0.55 * sc)),
+  ...HUB.lanterns.map(([x, z]) => box(x, z, 0.55, 0.55)),
+];
 
 const KLOVERS_HUB: RoomLayout = {
   id: "hub",
   bounds: { minX: -HUB.half, maxX: HUB.half, minZ: -HUB.half, maxZ: HUB.half },
-  colliders: [hubPost],
+  colliders: [hubPost, ...hubProps],
   cameraColliders: [hubPost],
   spawns: {
-    fromMarket: { x: 0, z: HUB.half - 2.2, yaw: Math.PI },
+    fromVillage: { x: HUB.southGates.village, z: HUB.half - 2.2, yaw: Math.PI },
+    fromMarket: { x: HUB.southGates.market, z: HUB.half - 2.2, yaw: Math.PI },
     fromCafe: { x: 0, z: -HUB.half + 2.2, yaw: 0 },
   },
   portals: [
     {
-      id: "hub-back-gate",
-      zone: box(0, HUB.half - 0.55, 3, 1.1),
+      id: "hub-village-gate",
+      zone: box(HUB.southGates.village, HUB.half - 0.55, 3, 1.1),
+      to: "hangul-village",
+      arrive: "fromHub",
+    },
+    {
+      id: "hub-market-gate",
+      zone: box(HUB.southGates.market, HUB.half - 0.55, 3, 1.1),
       to: "vocabulary-market",
       arrive: "fromHub",
+      lockedNotice: "marketLocked",
     },
     {
       id: "hub-cafe",

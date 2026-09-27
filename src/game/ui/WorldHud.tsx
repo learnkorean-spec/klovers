@@ -20,7 +20,7 @@ interface HudProps {
   avatar: AvatarId;
   onAvatar: (id: AvatarId) => void;
   /** Room name card, shown briefly after arriving in a room. */
-  banner: Line | null;
+  banner: (Line & { eyebrow?: string }) | null;
   /** A gate that is shut, or a door to a world still ahead. */
   notice: Line | null;
   /** Admin preview: every world open (shown so it is never mistaken for progress). */
@@ -37,6 +37,9 @@ interface HudProps {
   /** A story moment is playing: only Skip is offered. */
   sequence: boolean;
   onSkip: () => void;
+  /** Touch, portrait: a dismissible nudge toward landscape. */
+  landscapeTip: boolean;
+  onDismissTip: () => void;
 }
 
 const kbd = "min-w-6 rounded-md border border-ivory/30 bg-ivory/10 px-1.5 py-0.5 text-center font-display text-[11px] font-semibold text-ivory";
@@ -54,7 +57,15 @@ export default function WorldHud(p: HudProps) {
   const h = copy.hints;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col p-4 md:p-6">
+    <div
+      className="pointer-events-none absolute inset-0 z-10 flex select-none flex-col p-4 md:p-6"
+      style={{
+        paddingTop: "max(1rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+        paddingLeft: "max(1rem, env(safe-area-inset-left))",
+        paddingRight: "max(1rem, env(safe-area-inset-right))",
+      }}
+    >
       <div className="flex items-start justify-between gap-3">
         <button
           type="button"
@@ -94,8 +105,17 @@ export default function WorldHud(p: HudProps) {
         {p.preview && (
           <p className="rounded-full border border-klovers-yellow/60 bg-charcoal/85 px-3 py-1 text-xs font-semibold text-ivory">{copy.previewNote}</p>
         )}
+        {p.landscapeTip && (
+          <div className="pointer-events-auto flex max-w-sm items-center justify-between gap-3 rounded-2xl bg-charcoal/90 px-4 py-2.5 text-sm text-ivory">
+            <span>{copy.landscapeTip}</span>
+            <button type="button" onClick={p.onDismissTip} className="min-h-9 shrink-0 rounded-full bg-klovers-yellow px-3 text-xs font-bold text-charcoal">
+              {copy.gotIt}
+            </button>
+          </div>
+        )}
         {p.banner && (
-          <div role="status" className="flex flex-col items-center gap-1 rounded-2xl bg-charcoal/85 px-6 py-3 text-center text-ivory">
+          <div role="status" className="flex flex-col items-center gap-1 rounded-2xl bg-charcoal/85 px-6 py-3 text-center text-ivory motion-safe:animate-in motion-safe:fade-in">
+            {p.banner.eyebrow && <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-ivory/70">{p.banner.eyebrow}</p>}
             <p className="font-display text-lg font-bold text-klovers-yellow">{p.banner.title}</p>
             <p className="max-w-md text-sm text-ivory/85">{p.banner.line}</p>
           </div>
@@ -126,7 +146,7 @@ export default function WorldHud(p: HudProps) {
           <button
             type="button"
             onClick={p.onInteract}
-            className="pointer-events-auto flex items-center gap-2 rounded-full bg-charcoal/90 px-4 py-2 text-sm font-semibold text-ivory"
+            className="pointer-events-auto flex items-center gap-2 rounded-full bg-charcoal/90 px-4 py-2 text-sm font-semibold text-ivory ring-2 ring-klovers-yellow/70 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2"
           >
             {h.interact.keys.map((k) => (
               <kbd key={k} className={kbd}>
@@ -163,12 +183,18 @@ export default function WorldHud(p: HudProps) {
         </p>
       )}
 
-      {p.isTouch && !p.sequence && <Joystick label={copy.joystick} />}
+      {p.isTouch && !p.sequence && <Joystick label={copy.joystick} pulse={p.showMoveHint} />}
+      {p.isTouch && p.showMoveHint && !p.sequence && (
+        <p className="absolute bottom-44 left-6 max-w-[10rem] rounded-full bg-charcoal/80 px-3 py-1.5 text-center text-xs font-semibold text-ivory">
+          {copy.dragToMove}
+        </p>
+      )}
       {p.isTouch && p.prompt && !p.sequence && (
         <button
           type="button"
           onClick={p.onInteract}
-          className="pointer-events-auto absolute bottom-10 right-6 flex h-20 w-20 items-center justify-center rounded-full border-2 border-charcoal bg-klovers-yellow px-2 text-center text-xs font-bold leading-tight text-charcoal shadow-lg"
+          style={{ bottom: "calc(2.5rem + env(safe-area-inset-bottom))", right: "calc(1.5rem + env(safe-area-inset-right))" }}
+          className="pointer-events-auto absolute bottom-10 right-6 flex h-20 w-20 items-center justify-center rounded-full border-2 border-charcoal bg-klovers-yellow px-2 text-center text-sm font-bold leading-tight text-charcoal shadow-lg motion-safe:animate-in motion-safe:zoom-in-90"
         >
           {p.prompt}
         </button>

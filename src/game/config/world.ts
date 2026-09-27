@@ -46,21 +46,26 @@ export const PLAYER = {
   deceleration: 12,
   /** How quickly the body turns to face the travel direction (1/s). */
   turnRate: 12,
-  spawn: { x: 0, z: 3.6 },
+  spawn: { x: 0, z: 6.4 },
   /** Facing at spawn: looking toward the egg (−z). */
   spawnYaw: Math.PI,
 } as const;
 
 export const CAMERA = {
-  distance: 5.2,
+  distance: 6.4,
   minDistance: 2.4,
-  maxDistance: 7.5,
+  maxDistance: 8.5,
   /** Height of the point the camera looks at, above the player's feet. */
-  targetHeight: 1.45,
+  targetHeight: 1.5,
+  /**
+   * The camera looks a little ahead of the learner, so they sit in the
+   * lower-middle of the frame and the way forward stays visible.
+   */
+  lookAhead: 1.3,
   /** Pitch limits, radians (positive looks down on the player). */
   minPitch: -0.15,
   maxPitch: 1.1,
-  startPitch: 0.32,
+  startPitch: 0.33,
   mouseSensitivity: 0.0028,
   followSharpness: 14,
   /** Keeps the camera this far from walls so it never clips through. */
@@ -89,53 +94,51 @@ export const box = (cx: number, cz: number, w: number, d: number): Box2 => ({
 });
 
 /**
- * Solid furniture inside the courtyard. The Lobby renders from the same
- * list, so what you see is exactly what you collide with.
+ * The courtyard's furniture, in one place: the renderer (environment/Lobby)
+ * and the collision lists below both read it, so what you see is exactly
+ * what you bump into. The egg platform is octagonal; its collider is the
+ * square that circumscribes it.
  */
 export const PROPS = {
-  eggPlinth: { x: 0, z: 0, w: 2.2, d: 2.2 },
-  benches: [
-    { x: -7, z: -5.5, w: 2.4, d: 0.7 },
-    { x: 7, z: -5.5, w: 2.4, d: 0.7 },
-    { x: -7, z: 5.5, w: 2.4, d: 0.7 },
-    { x: 7, z: 5.5, w: 2.4, d: 0.7 },
-  ],
+  eggPlinth: { x: 0, z: 0, w: 2.8 },
   lanterns: [
-    { x: -3.5, z: -3.5 },
-    { x: 3.5, z: -3.5 },
-    { x: -3.5, z: 3.5 },
-    { x: 3.5, z: 3.5 },
+    { x: -2.6, z: -6.3 },
+    { x: 2.6, z: -6.3 },
+    { x: -3.4, z: 3.0 },
+    { x: 3.4, z: 3.0 },
   ],
-  lanternSize: 0.6,
-  /** Wooden posts along the walls (hanok columns): four bays per wall. */
-  postSpacingX: 5.5,
-  postSpacingZ: 4.5,
-  postSize: 0.34,
+  lanternSize: 0.55,
+  /** Raised wooden platforms to sit on (pyeongsang). */
+  platforms: [
+    { x: -7.4, z: -4.6, w: 2.4, d: 1.6 },
+    { x: 7.4, z: -4.6, w: 2.4, d: 1.6 },
+  ],
+  pines: [
+    { x: -9.3, z: 6.8, s: 1.1 },
+    { x: 9.2, z: -7.2, s: 1.25 },
+    { x: 9.4, z: 6.9, s: 0.95 },
+  ],
+  pots: [
+    { x: -9.8, z: -7.6, s: 1 },
+    { x: -8.9, z: -8.0, s: 0.8 },
+    { x: 10.0, z: 2.2, s: 0.9 },
+  ],
 } as const;
 
-/** Hanok columns, centred on the inner wall faces (corners included). */
-export const POSTS: { x: number; z: number }[] = (() => {
-  const out: { x: number; z: number }[] = [];
-  const { halfWidth: hw, halfDepth: hd } = ROOM;
-  for (let x = -hw; x <= hw + 1e-6; x += PROPS.postSpacingX) {
-    out.push({ x, z: -hd }, { x, z: hd });
-  }
-  for (let z = -hd + PROPS.postSpacingZ; z <= hd - PROPS.postSpacingZ + 1e-6; z += PROPS.postSpacingZ) {
-    out.push({ x: -hw, z }, { x: hw, z });
-  }
-  return out;
-})();
+/** Everything tall enough to stop the camera, as points (tests use this). */
+export const SOLID_POINTS: { x: number; z: number }[] = [...PROPS.lanterns, ...PROPS.pines];
 
-/** All static colliders in the lobby, walls excluded (walls are the bounds). */
+/** All static colliders in the courtyard (walls are the bounds). */
 export const COLLIDERS: Box2[] = [
-  box(PROPS.eggPlinth.x, PROPS.eggPlinth.z, PROPS.eggPlinth.w, PROPS.eggPlinth.d),
-  ...PROPS.benches.map((b) => box(b.x, b.z, b.w, b.d)),
+  box(PROPS.eggPlinth.x, PROPS.eggPlinth.z, PROPS.eggPlinth.w, PROPS.eggPlinth.w),
+  ...PROPS.platforms.map((b) => box(b.x, b.z, b.w, b.d)),
   ...PROPS.lanterns.map((l) => box(l.x, l.z, PROPS.lanternSize, PROPS.lanternSize)),
-  ...POSTS.map((p) => box(p.x, p.z, PROPS.postSize, PROPS.postSize)),
+  ...PROPS.pines.map((t) => box(t.x, t.z, 0.5, 0.5)),
+  ...PROPS.pots.map((t) => box(t.x, t.z, 0.55 * t.s, 0.55 * t.s)),
 ];
 
-/** Tall colliders only (posts): the camera may pass over benches and plinth. */
-export const CAMERA_COLLIDERS: Box2[] = POSTS.map((p) => box(p.x, p.z, PROPS.postSize, PROPS.postSize));
+/** Tall colliders only: the camera may pass over platforms and the egg. */
+export const CAMERA_COLLIDERS: Box2[] = SOLID_POINTS.map((p) => box(p.x, p.z, 0.4, 0.4));
 
 /** Walkable bounds: the inner wall faces. */
 export const BOUNDS: Box2 = {
