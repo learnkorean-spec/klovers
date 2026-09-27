@@ -75,15 +75,15 @@ const RULES: { en: string; ar: string; ex: string }[] = [
 const LetterGrid = ({ items, label }: { items: LetterRow[]; label: string }) => (
   <div className="mb-10 print:mb-4 break-inside-avoid">
     <h2 className="text-lg font-black text-foreground mb-3 border-b border-border pb-1 print:mb-2">{label}</h2>
-    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 print:grid-cols-7 gap-2 print:gap-1.5">
+    <div dir="ltr" className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 print:grid-cols-7 gap-2 print:gap-1.5">
       {items.map((item) => (
         <div
           key={item.char}
           className="flex flex-col items-center bg-card border border-border rounded-xl p-3 print:p-1.5 print:rounded-lg hover:border-primary/50 transition-colors break-inside-avoid"
         >
-          <span className="text-3xl print:text-2xl font-black text-foreground leading-none mb-1">{item.char}</span>
+          <span lang="ko" className="text-3xl print:text-2xl font-black text-foreground leading-none mb-1">{item.char}</span>
           <span className="text-xs font-bold text-foreground">{item.rom}</span>
-          <span className="text-[10px] text-muted-foreground mt-0.5">{item.ex}</span>
+          <span lang="ko" className="text-[10px] text-muted-foreground mt-0.5">{item.ex}</span>
         </div>
       ))}
     </div>
@@ -201,17 +201,17 @@ const HangulStarterPage = () => {
                   "تُكتب الكورية في مربعات، وكل مربع مقطع صوتي واحد: حرف ساكن وحرف مدّ، وأحيانًا حرف ساكن أخير.",
                 )}
               </p>
-              <div className="flex flex-wrap gap-6 items-center">
+              <div dir="ltr" className="flex flex-wrap gap-6 items-center">
                 {[
                   { syl: "가", breakdown: "ㄱ + ㅏ", meaning: isAr ? "«غا»" : '"ga"' },
                   { syl: "한", breakdown: "ㅎ + ㅏ + ㄴ", meaning: isAr ? "«هان»" : '"han"' },
                   { syl: "국", breakdown: "ㄱ + ㅜ + ㄱ", meaning: isAr ? "«غوك»" : '"guk"' },
                 ].map(({ syl, breakdown, meaning }) => (
                   <div key={syl} className="flex items-center gap-3 bg-ivory dark:bg-muted border border-border rounded-xl px-4 py-3">
-                    <span className="text-4xl font-black text-foreground">{syl}</span>
+                    <span lang="ko" className="text-4xl font-black text-foreground">{syl}</span>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{breakdown}</p>
-                      <p className="text-xs text-muted-foreground">{meaning}</p>
+                      <p lang="ko" className="text-sm font-semibold text-foreground">{breakdown}</p>
+                      <p dir={isAr ? "rtl" : "ltr"} className="text-xs text-muted-foreground text-left">{meaning}</p>
                     </div>
                   </div>
                 ))}
