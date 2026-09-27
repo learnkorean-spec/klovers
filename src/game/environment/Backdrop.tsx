@@ -12,9 +12,9 @@ import { Kit, jitter, tree } from "./kit";
  */
 
 export const SKY = {
-  zenith: "#A7C4DD",
-  mid: "#F0D6B2",
-  horizon: "#F7DDB6",
+  zenith: "#7EA7D1",
+  mid: "#F5CDA2",
+  horizon: "#F8D8AC",
 } as const;
 
 /** One sky dome for all rooms: colours painted into the vertices. */
