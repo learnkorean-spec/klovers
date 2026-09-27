@@ -53,6 +53,7 @@ const DailyBonusCard = lazy(() =>
 );
 import { AlertCircle, AlertTriangle, Package, CalendarCheck, Users, GraduationCap, RotateCcw, ChevronDown, Pencil, Check, X, Download, Copy } from "lucide-react";
 import KloverIcon from "@/components/KloverIcon";
+import WorldEntryCard from "@/components/games/WorldEntryCard";
 import { Input } from "@/components/ui/input";
 import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -834,6 +835,10 @@ const StudentDashboard = () => {
 
           {/* Cluby's clover egg: crack → glow → hatch from real learning. */}
           {egg && <EggStatusCard egg={egg} />}
+
+          {/* KLOVERS World: the story as a place to walk into, near the top
+              so it is seen on a phone without scrolling far. */}
+          <WorldEntryCard isAr={language === "ar"} compact />
 
           {/* Account alerts (package running low / pending review) — compact */}
           {(() => {

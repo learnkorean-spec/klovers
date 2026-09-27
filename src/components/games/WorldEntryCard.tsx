@@ -3,6 +3,8 @@ import { WORLD_COPY } from "@/game/config/copy";
 
 interface WorldEntryCardProps {
   isAr: boolean;
+  /** Dashboard size: a shorter picture, the same door. */
+  compact?: boolean;
 }
 
 /**
@@ -13,12 +15,12 @@ interface WorldEntryCardProps {
  * The picture is the existing egg-teaser scene — the same hanok courtyard
  * and plinth the 3D lobby is built on.
  */
-export default function WorldEntryCard({ isAr }: WorldEntryCardProps) {
+export default function WorldEntryCard({ isAr, compact = false }: WorldEntryCardProps) {
   const copy = WORLD_COPY[isAr ? "ar" : "en"];
   const { pathname } = useLocation();
 
   return (
-    <section className="px-4 pt-4" aria-labelledby="world-entry-title">
+    <section className={compact ? "" : "px-4 pt-4"} aria-labelledby="world-entry-title">
       <div className="mx-auto grid max-w-6xl overflow-hidden rounded-3xl border border-border bg-charcoal text-ivory md:grid-cols-[1.1fr_1fr]">
         <img
           src="/assets/story/egg-teaser.webp"
@@ -27,9 +29,9 @@ export default function WorldEntryCard({ isAr }: WorldEntryCardProps) {
           height={900}
           loading="lazy"
           decoding="async"
-          className="h-48 w-full object-cover md:h-full"
+          className={`${compact ? "h-36" : "h-48"} w-full object-cover md:h-full`}
         />
-        <div className="flex flex-col justify-center gap-3 p-6 md:p-8">
+        <div className={`flex flex-col justify-center gap-3 ${compact ? "p-5 md:p-6" : "p-6 md:p-8"}`}>
           <p className="text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">{copy.entryEyebrow}</p>
           <h2 id="world-entry-title" className="font-display text-2xl font-extrabold leading-tight md:text-3xl">
             {copy.entryTitle}

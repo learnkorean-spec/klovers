@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Clock, Loader2, Video, AlertTriangle, Wallet } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatMoney } from "@/types/students";
+import WorldEntryCard from "@/components/games/WorldEntryCard";
 
 /**
  * What a private student sees: her own lessons, and nothing else.
@@ -314,6 +315,8 @@ const MyLessonsPage = () => {
               </CardContent>
             </Card>
           )}
+
+          <WorldEntryCard isAr={isAr} compact />
 
           <Card>
             <CardHeader className="pb-3">

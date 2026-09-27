@@ -8,6 +8,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { logLeadEvent } from "@/lib/leadTracking";
+import KloverIcon from "@/components/KloverIcon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -190,6 +191,10 @@ const Header = () => {
                     <LayoutDashboard className="h-4 w-4 me-2" />
                     {isAr ? "لوحة التحكم" : "My Dashboard"}
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/world", { state: { from: location.pathname } })}>
+                    <KloverIcon name="hanok-cherry-tree" className="h-4 w-4 me-2" />
+                    {isAr ? "عالم كلوفرز" : "KLOVERS World"}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/trial-booking")}>
                     <Gift className="h-4 w-4 me-2" />
                     {isAr ? "حجز حصة مجانية" : "Book Free Trial"}
@@ -226,6 +231,18 @@ const Header = () => {
             )}
           </div>
 
+          {/* KLOVERS World, one tap away on phones (desktop: in the menus). */}
+          {location.pathname !== "/world" && (
+            <Link
+              to="/world"
+              state={{ from: location.pathname }}
+              className="lg:hidden inline-flex min-h-10 items-center gap-1.5 rounded-full border-2 border-charcoal bg-klovers-yellow ps-1.5 pe-3 text-xs font-bold text-charcoal"
+            >
+              <KloverIcon name="hanok-cherry-tree" className="h-7 w-7" />
+              {isAr ? "العالم" : "World"}
+            </Link>
+          )}
+
           {/* Mobile hamburger */}
           <button
             className="lg:hidden p-2 rounded-md hover:bg-accent transition-colors"
@@ -241,6 +258,15 @@ const Header = () => {
         {isMenuOpen && (
           <nav className="lg:hidden py-4 border-t border-border animate-in slide-in-from-top-2 duration-200">
             <div className="flex flex-col gap-1">
+              <Link
+                to="/world"
+                state={{ from: location.pathname }}
+                onClick={() => setIsMenuOpen(false)}
+                className="mb-1 inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-charcoal bg-klovers-yellow px-3 text-sm font-bold text-charcoal"
+              >
+                <KloverIcon name="hanok-cherry-tree" className="h-8 w-8" />
+                {isAr ? "دخول عالم كلوفرز" : "Enter KLOVERS World"}
+              </Link>
               {allLinks.map((link) => (
                 <Link
                   key={link.href}

@@ -86,7 +86,7 @@ export const WORLD_COPY = {
     entryTitle: "Step into the courtyard",
     entryLine: "Walk the hanok courtyard where the two friends found the clover egg, then step through the gate into Hangul Village.",
     entryCta: "Enter KLOVERS World",
-    entryNote: "Best on a computer with a keyboard.",
+    entryNote: "Works on phones and computers.",
     avatarLabel: "Walk as",
     rooms: {
       courtyard: { name: "The hanok courtyard", line: "The clover egg is still asleep." },
@@ -285,7 +285,7 @@ export const WORLD_COPY = {
     entryTitle: "خطوة إلى داخل الساحة",
     entryLine: "جولة في ساحة الهانوك حيث وجد الصديقان بيضة البرسيم، ثم عبور البوابة إلى قرية الهانغول.",
     entryCta: "دخول عالم كلوفرز",
-    entryNote: "التجربة أفضل على حاسوب بلوحة مفاتيح.",
+    entryNote: "يعمل على الجوال والحاسوب.",
     avatarLabel: "الشخصية",
     rooms: {
       courtyard: { name: "ساحة الهانوك", line: "ما زالت بيضة البرسيم نائمة." },
