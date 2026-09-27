@@ -36,7 +36,8 @@ const LIGHT = {
   /** Low golden sun: warm, but not orange — stone and plaster stay neutral. */
   sun: "#FFCC8E",
   skyBounce: "#FFE9CC",
-  groundBounce: "#7E6249",
+  /** Warm, fairly light earth bounce: timber under the eaves stays readable. */
+  groundBounce: "#A08466",
   fill: "#C4D3EC",
   /** Haze at the horizon: the sky dome's lowest colour. */
   haze: SKY.horizon,
@@ -297,8 +298,10 @@ export default function World(props: WorldProps) {
     c.snap = true;
     const cl = story.current.cluby;
     if (cl.mode === "follow") {
-      cl.x = spawn.x - Math.sin(spawn.yaw) * 0.9 + Math.cos(spawn.yaw) * 0.7;
-      cl.z = spawn.z - Math.cos(spawn.yaw) * 0.9 - Math.sin(spawn.yaw) * 0.7;
+      // Beside the learner (on the side the view opens to), never between
+      // the learner and the camera.
+      cl.x = spawn.x - Math.sin(spawn.yaw) * 0.25 - Math.cos(spawn.yaw) * 1.0;
+      cl.z = spawn.z - Math.cos(spawn.yaw) * 0.25 + Math.sin(spawn.yaw) * 1.0;
       cl.look = null;
     }
     requestAnimationFrame(() =>
@@ -379,13 +382,13 @@ export default function World(props: WorldProps) {
       {/* Warm late-afternoon light: a low golden sun with soft shadows, a
           warm sky/ground bounce, and a faint cool fill from the other side
           so shadows keep their shape without going black. Two lights only. */}
-      <hemisphereLight args={[LIGHT.skyBounce, LIGHT.groundBounce, 0.5]} />
-      <directionalLight position={[-12, 6, -3]} intensity={0.42} color={LIGHT.fill} />
+      <hemisphereLight args={[LIGHT.skyBounce, LIGHT.groundBounce, 0.8]} />
+      <directionalLight position={[-12, 6, -3]} intensity={0.55} color={LIGHT.fill} />
       <directionalLight
         key={roomId}
         castShadow={quality.shadows}
-        position={[14, 7.2, 4.5]}
-        intensity={3.5}
+        position={[14, 7.6, 4.5]}
+        intensity={3.1}
         color={LIGHT.sun}
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
