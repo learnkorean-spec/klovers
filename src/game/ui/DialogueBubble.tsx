@@ -29,6 +29,16 @@ interface LearnText {
 
 const canSpeak = () => typeof window !== "undefined" && "speechSynthesis" in window;
 
+/** Who speaks each line: men and boys get a man's voice. */
+const MALE_SAY = new Set<SayId>(["vendor", "shopkeeper", "hubFriend"]);
+
+/** A Korean voice that is clearly a man's, if this device has one. */
+const hasMaleKoreanVoice = () =>
+  canSpeak() &&
+  window.speechSynthesis
+    .getVoices()
+    .some((v) => v.lang.toLowerCase().startsWith("ko") && /(^|[^e])male|junwoo|jian|hyunbin|injoon|남/i.test(v.name));
+
 export default function DialogueBubble({
   lang,
   bubble,
@@ -62,6 +72,8 @@ export default function DialogueBubble({
   let ko: string;
   let lines: JSX.Element;
   let big = false;
+  /** Whose voice reads the Korean: undefined for words (any voice). */
+  let voice: "male" | "female" | undefined;
 
   if (bubble.kind === "learn") {
     const t = copy.learn[bubble.id] as LearnText;
@@ -84,6 +96,7 @@ export default function DialogueBubble({
     );
   } else if (bubble.kind === "say") {
     const t = copy.say[bubble.id];
+    voice = MALE_SAY.has(bubble.id) ? "male" : "female";
     name = t.name;
     ko = t.ko;
     lines = (
@@ -98,6 +111,7 @@ export default function DialogueBubble({
   } else {
     const c = copy.talk;
     const friendId = avatar === "lina" ? "adam" : "lina";
+    voice = bubble.who === "minsu" || friendId === "adam" ? "male" : "female";
     const hello = bubble.who === "minsu" ? c.minsu : c[friendId];
     name = bubble.who === "minsu" ? copy.names.minsu : copy.names[friendId];
     ko = hello.ko;
@@ -131,7 +145,9 @@ export default function DialogueBubble({
           <button
             type="button"
             onClick={(e) => {
-              speakKorean(ko);
+              // Many phones carry only one Korean voice, a woman's: for a man's
+              // line without a man's voice, the pitch is lowered instead.
+              speakKorean(ko, voice === "male" ? { gender: "male", pitch: hasMaleKoreanVoice() ? 1 : 0.6 } : voice ? { gender: "female" } : undefined);
               e.currentTarget.blur();
             }}
             className="min-h-9 rounded-full bg-charcoal px-4 text-xs font-bold text-ivory focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow"
