@@ -1,0 +1,29 @@
+--- a/src/components/PlacementTestCTA.tsx
++++ b/src/components/PlacementTestCTA.tsx
+@@ -3 +2,0 @@
+-import { CheckCircle2, ChevronRight } from "lucide-react";
+@@ -133 +132 @@
+-              className="text-base px-8 gap-2 h-12 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow"
++              className="text-base px-8 gap-2 h-12 rounded-full shadow-lg shadow-charcoal/20 hover:shadow-charcoal/30 transition-shadow"
+@@ -136 +134,0 @@
+-              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+@@ -184 +182 @@
+-                          <CheckCircle2 className="h-3.5 w-3.5 text-foreground/45" />
++                          <span className="h-2 w-2 rounded-full bg-klovers-green" aria-hidden="true" />
+--- a/src/pages/TopikExamPage.tsx
++++ b/src/pages/TopikExamPage.tsx
+@@ -2 +2 @@
+-import { ArrowRight, CheckCircle2, ExternalLink } from "lucide-react";
++import KloverIcon from "@/components/KloverIcon";
+@@ -84 +83,0 @@
+-                  <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
+@@ -169 +167,0 @@
+-              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+@@ -199 +197 @@
+-                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-foreground" aria-hidden="true" />
++                    <KloverIcon name="game-checklist-pencil" className="h-9 w-9" />
+@@ -235 +233 @@
+-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
++                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-klovers-green" aria-hidden="true" />
+@@ -250 +247,0 @@
+-                  <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
