@@ -7,19 +7,83 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { DollarSign, Users, Link as LinkIcon, TrendingUp, CheckCircle } from "lucide-react";
+import { DollarSign, Users, Link as LinkIcon, CheckCircle } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getAttribution } from "@/lib/leadSession";
 import { STUDENTS_TAUGHT, trustCopy } from "@/lib/trustFigures";
 
 const COMMISSION_RATE = 20; // %
+const COOKIE_DAYS = 30;
+
+// Arabic copy for this page, in neutral MSA (brand guard §5): no verb aimed
+// at the reader as male or female, no loanwords («الكوكي», «يوتيوبرز»),
+// Arabic-Indic digits, and no «recurring» promise — the commission is paid
+// once, after the student's first payment (see faqA2). It lives here so the
+// page can be fixed without rewriting the shared translations file; the
+// matching keys in src/i18n/translations.ts can be aligned in a later sweep.
+const AR_COPY: Record<string, string> = {
+  heroBadge: "برنامج الشركاء",
+  heroTitleLine1: "عمولة ٢٠٪",
+  heroTitleLine2: "على كل طالب يسجّل عبر رابط الإحالة",
+  heroSubtitle: "شراكة مع كلوفرز: رابط خاص للمشاركة، وعمولة ٢٠٪ من أول دفعة لكل طالب جديد.",
+  applyFree: "تقديم الطلب الآن مجانًا",
+  statCommission: "نسبة العمولة",
+  statCookieDuration: "مدة احتساب الإحالة",
+  howItWorksTitle: "طريقة العمل",
+  step1Action: "التقديم",
+  step1Desc: "ملء النموذج أدناه، ثم يصل رابط الإحالة الخاص عبر البريد الإلكتروني بعد الموافقة.",
+  step2Action: "المشاركة",
+  step2Desc: "نشر الرابط مع الجمهور في المحتوى والقنوات المعتادة.",
+  step3Action: "الربح",
+  step3Desc: "عمولة ٢٠٪ من أول دفعة لكل طالب يسجّل عبر الرابط.",
+  applyTitle: "طلب الانضمام إلى برنامج الشركاء",
+  applySubtitle: "التقديم مجاني، وتُراجَع كل الطلبات.",
+  nameRequired: "الاسم والبريد الإلكتروني مطلوبان.",
+  submitError: "تعذّر إرسال الطلب. يُرجى المحاولة مرة أخرى.",
+  applicationReceived: "تم استلام الطلب",
+  applicationReceivedDesc: "يُراجَع الطلب، ثم يصل رابط الإحالة الخاص عبر البريد الإلكتروني.",
+  backToHome: "العودة إلى الرئيسية",
+  fullNameLabel: "الاسم الكامل",
+  fullNamePlaceholder: "الاسم الكامل",
+  emailLabel: "البريد الإلكتروني",
+  platformLabel: "المنصة الرئيسية",
+  platformPlaceholder: "مثل: يوتيوب أو تيك توك أو إنستغرام",
+  audienceLabel: "حجم الجمهور (تقريبًا)",
+  audiencePlaceholder: "مثل: ٥٬٠٠٠ متابع",
+  whyJoinLabel: "سبب الرغبة في الشراكة (اختياري)",
+  whyJoinPlaceholder: "نبذة قصيرة عن الجمهور والمحتوى...",
+  submittingBtn: "جارٍ الإرسال…",
+  submitApplication: "إرسال الطلب",
+  termsNote: "يعني التقديم الموافقة على شروط الشراكة. تُدفع العمولة شهريًا عبر التحويل البنكي أو باي بال.",
+  pageFaqTitle: "الأسئلة الشائعة",
+  faqQ1: "من يمكنه التقديم؟",
+  faqA1: "كل من لديه جمهور مهتم بتعلّم الكورية: صنّاع المحتوى على يوتيوب وتيك توك، والمدوّنون، ومعلّمو اللغات، والطلاب الذين يحبون المشاركة.",
+  faqQ2: "كيف تُدفع العمولة؟",
+  faqA2: "تُدفع عمولة ٢٠٪ من رسوم التسجيل مرة واحدة بعد أن يُكمل الطالب دفعته الأولى، وتتم المعالجة شهريًا.",
+  faqQ3: "كيف تُتابَع الإحالات؟",
+  faqA3: "بعد الموافقة يصل رابط إحالة خاص، ويُحتسب كل تسجيل عبر هذا الرابط لمدة ٣٠ يومًا.",
+  faqQ4: "هل يوجد حد أدنى للدفع؟",
+  faqA4: "يُدفع أي رصيد يتجاوز ١٠ دولارات، وينتقل الرصيد الأقل إلى الشهر التالي.",
+};
+
+// English: the commission is one-off (faqA2), so the hero must not promise a
+// recurring commission.
+const EN_COPY: Record<string, string> = {
+  heroSubtitle: "Partner with Klovers: a unique link to share, and 20% of each new student's first payment.",
+};
 
 export default function AffiliatePage() {
-  const { t, language } = useLanguage();
+  const { t: baseT, language } = useLanguage();
+  const isAr = language === "ar";
+  const t = (key: string): string => {
+    const short = key.startsWith("affiliate.") ? key.slice("affiliate.".length) : key;
+    const local = isAr ? AR_COPY[short] : EN_COPY[short];
+    return local ?? baseT(key);
+  };
   useSEO({
     title: "Affiliate Program — Earn 20% Commission",
-    description: "Join the Klovers affiliate program. Earn 20% commission for every student you refer to our Korean language courses. Simple, transparent, and rewarding.",
+    description: "Join the Klovers affiliate program. Earn 20% of each referred student's first payment for our Korean language courses.",
     canonical: "https://kloversegy.com/affiliate",
   });
   const { toast } = useToast();
@@ -65,7 +129,8 @@ export default function AffiliatePage() {
       if (error) throw error;
       setSubmitted(true);
     } catch (err: any) {
-      toast({ title: t("affiliate.submitError"), description: err.message, variant: "destructive" });
+      // The raw error text is English; the Arabic page shows only the Arabic toast.
+      toast({ title: t("affiliate.submitError"), description: isAr ? undefined : err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -94,14 +159,14 @@ export default function AffiliatePage() {
         </section>
 
         {/* Stats. The student tile was "500+ Active Students"; the figure is
-            200+ students Reham has taught over 13 years (@/lib/trustFigures). */}
+            200+ students Reham has taught over 13 years (@/lib/trustFigures).
+            The "average order ~$120" tile was removed: no source for it. */}
         <section className="py-14 bg-muted/40">
-          <div className="max-w-4xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="max-w-4xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
             {[
-              { icon: DollarSign, label: t("affiliate.statCommission"), value: `${COMMISSION_RATE}%` },
-              { icon: TrendingUp, label: t("affiliate.statAvgOrder"), value: "~$120" },
+              { icon: DollarSign, label: t("affiliate.statCommission"), value: isAr ? "٢٠٪" : `${COMMISSION_RATE}%` },
               { icon: Users, label: trustCopy(language).studentsTaughtLabel, value: STUDENTS_TAUGHT },
-              { icon: LinkIcon, label: t("affiliate.statCookieDuration"), value: "30 days" },
+              { icon: LinkIcon, label: t("affiliate.statCookieDuration"), value: isAr ? "٣٠ يومًا" : `${COOKIE_DAYS} days` },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="bg-card border rounded-2xl p-6 flex flex-col items-center gap-2 shadow-sm">
                 <div className="w-10 h-10 rounded-full bg-klovers-yellow flex items-center justify-center">
@@ -122,7 +187,7 @@ export default function AffiliatePage() {
                 programme is built on, in the Klovers story style. */}
             <img
               src="/assets/cluby/picnic.webp"
-              alt={language === "ar" ? "أصدقاء يتشاركون نزهة على ضفة نهر الهان مع كلوبي" : "Friends sharing a picnic by the Han river with Cluby"}
+              alt={isAr ? "أصدقاء يتشاركون نزهة على ضفة نهر الهان مع كلوبي" : "Friends sharing a picnic by the Han river with Cluby"}
               width={1600}
               height={900}
               loading="lazy"
@@ -131,9 +196,9 @@ export default function AffiliatePage() {
             />
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                { step: "1", title: t("affiliate.step1Action"), desc: t("affiliate.step1Desc") },
-                { step: "2", title: t("affiliate.step2Action"), desc: t("affiliate.step2Desc") },
-                { step: "3", title: t("affiliate.step3Action"), desc: t("affiliate.step3Desc") },
+                { step: isAr ? "١" : "1", title: t("affiliate.step1Action"), desc: t("affiliate.step1Desc") },
+                { step: isAr ? "٢" : "2", title: t("affiliate.step2Action"), desc: t("affiliate.step2Desc") },
+                { step: isAr ? "٣" : "3", title: t("affiliate.step3Action"), desc: t("affiliate.step3Desc") },
               ].map(({ step, title, desc }) => (
                 <div key={step} className="bg-card border rounded-2xl p-6 shadow-sm">
                   <div className="w-9 h-9 rounded-full bg-charcoal text-ivory dark:bg-klovers-yellow dark:text-charcoal font-bold flex items-center justify-center mb-4 text-sm">
@@ -184,9 +249,10 @@ export default function AffiliatePage() {
                     <Input
                       id="email"
                       type="email"
+                      dir="ltr"
                       value={form.email}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                      placeholder="you@example.com"
+                      placeholder={isAr ? "" : "you@example.com"}
                       required
                     />
                   </div>
