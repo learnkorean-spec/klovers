@@ -60,8 +60,10 @@ export const NPCS: NpcPlacement[] = [
 
   // Vocabulary Market: two stall keepers, a shopper at the rice stall, a
   // porter with a crate.
-  { id: "m-keeper-1", room: "vocabulary-market", cast: "auntie", pose: "stand", x: -8.15, z: 4.5, yaw: Math.PI / 2, phase: 0.2 },
-  { id: "m-keeper-2", room: "vocabulary-market", cast: "vendor", pose: "talk", x: 8.15, z: 0, yaw: -Math.PI / 2, phase: 1.3 },
+  // The baker keeps the bread stall, whose sign has fallen; the clothes
+  // seller greets whoever stops at his counter.
+  { id: "m-keeper-1", room: "vocabulary-market", cast: "auntie", pose: "stand", x: -8.15, z: -4.5, yaw: Math.PI / 2, phase: 0.2 },
+  { id: "m-keeper-2", room: "vocabulary-market", cast: "vendor", pose: "talk", x: 8.15, z: 0.9, yaw: -Math.PI / 2, phase: 1.3 },
   { id: "m-shopper", room: "vocabulary-market", cast: "shopper", pose: "browse", x: -5.35, z: -0.2, yaw: -Math.PI / 2, phase: 2.1 },
   { id: "m-porter", room: "vocabulary-market", cast: "porter", pose: "carry", x: -4.4, z: -3.4, yaw: Math.PI / 2, path: [[-4.4, -3.4], [2.8, -3.4]] },
 

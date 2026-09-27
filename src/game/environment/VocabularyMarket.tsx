@@ -1,4 +1,6 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
+import { useFrame } from "@react-three/fiber";
+import type { Group } from "three";
 import { ACCENT, MAT, std } from "../config/materials";
 import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
@@ -13,9 +15,10 @@ import { paintPaving, useTiledTexture } from "./textures";
  *
  * A busier street than the village: six stalls under canvas awnings, shop
  * fronts rising behind them, paper lanterns strung across the square. Each
- * stall sells one everyday thing and names it in Korean (물 밥 빵 · 책 옷 꽃),
- * so the word hangs right above the object — "words learned by the student
- * begin appearing as understandable objects inside the world" (canon).
+ * stall sells one everyday thing (물 밥 빵 · 책 옷 꽃). Its word is not shown
+ * until the learner walks up and learns it: then the signboard goes up over
+ * the thing — "words learned by the student begin appearing as
+ * understandable objects inside the world" (canon).
  */
 
 const HW = MARKET.halfWidth;
@@ -228,6 +231,24 @@ const MARKET_KIT: Kit = (() => {
   return k;
 })();
 
+/** A sign that has just gone up: it swings into place (a new word learned). */
+function PopIn({ animate, children }: { animate: boolean; children: ReactNode }) {
+  const g = useRef<Group>(null);
+  const t0 = useRef(-1);
+  useFrame(({ clock }) => {
+    if (!animate || !g.current) return;
+    if (t0.current < 0) t0.current = clock.elapsedTime;
+    const k = Math.min(1, (clock.elapsedTime - t0.current) / 0.5);
+    const e = 1 + 2.4 * (k - 1) ** 3 + 1.4 * (k - 1) ** 2;
+    g.current.scale.setScalar(Math.max(0.001, e));
+  });
+  return (
+    <group ref={g} scale={animate ? 0.001 : 1}>
+      {children}
+    </group>
+  );
+}
+
 /** Paper lanterns strung across the square on two lines. */
 function useStringLights() {
   return useMemo(() => {
@@ -243,8 +264,10 @@ function useStringLights() {
   }, []);
 }
 
-export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: boolean; breadSign: boolean }) {
+export default function VocabularyMarket({ nextOpen, breadSign, words }: { nextOpen: boolean; breadSign: boolean; words: string[] }) {
   const paving = useTiledTexture(paintPaving, HW, HD);
+  // Signs already up when the market opened stay still; new ones swing in.
+  const atMount = useRef(new Set([...words, ...(breadSign ? ["빵"] : [])]));
   const stalls = useStallParts();
   const strings = useStringLights();
   return (
@@ -293,7 +316,7 @@ export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: bo
               position={[side * MARKET.stallX + front * (MARKET.stallW / 2 + 0.15), 2.36, z]}
               rotation={[0, side < 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
             >
-              {word === "빵" && !breadSign ? (
+              {word !== "빵" && !words.includes(word) ? null : word === "빵" && !breadSign ? (
                 // The baker's sign has come down: it hangs by one corner from
                 // its hook, blank. Something clearly belongs here.
                 <>
@@ -308,11 +331,13 @@ export default function VocabularyMarket({ nextOpen, breadSign }: { nextOpen: bo
                   </group>
                 </>
               ) : (
-                <Sway amp={0.035} speed={1.2} phase={z}>
-                  <group position={[0, -0.27, 0]}>
-                    <Signboard text={word} w={0.9} h={0.54} aspect={1.7} />
-                  </group>
-                </Sway>
+                <PopIn animate={!atMount.current.has(word)}>
+                  <Sway amp={0.035} speed={1.2} phase={z}>
+                    <group position={[0, -0.27, 0]}>
+                      <Signboard text={word} w={0.9} h={0.54} aspect={1.7} />
+                    </group>
+                  </Sway>
+                </PopIn>
               )}
             </group>
           </group>

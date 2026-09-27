@@ -4,15 +4,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 import { isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
-import type { Interactable } from "@/game/config/interactions";
+import { VILLAGE_LETTERS, type Interactable, type QuizId } from "@/game/config/interactions";
 import type { NoticeKey, RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { useWorldAccess } from "@/game/systems/useWorldAccess";
 import { hasWebGL, isTouchFirst } from "@/game/systems/webgl";
 import { loadWorldState, saveWorldState, type WorldState } from "@/game/systems/worldState";
 import InteractionCard, { type CardKind } from "@/game/ui/InteractionCard";
+import DialogueBubble, { type Bubble } from "@/game/ui/DialogueBubble";
 import WorldHud, { type Speech } from "@/game/ui/WorldHud";
-import { ControlsCard, DiscoveryToast, HelpButton, ObjectiveChip, WelcomeCard, type TutorialStep } from "@/game/ui/Onboarding";
+import { ControlsCard, DiscoveryToast, FoundToast, HelpButton, LettersChip, ObjectiveChip, WayHint, WelcomeCard, type TutorialStep } from "@/game/ui/Onboarding";
+import { cheer } from "@/game/systems/reactions";
 import { currentObjective, type ObjectiveId } from "@/game/config/objectives";
 import type { DiscoveryKey } from "@/game/config/discoveries";
 // Type-only: erased at build time, so the 3D chunk stays lazy.
@@ -141,7 +143,16 @@ const WorldPage = () => {
   const [focus, setFocus] = useState<Interactable | null>(null);
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
-  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; who?: "friend" | "minsu" } | null>(null);
+  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId } | null>(null);
+  // A person's line or a word: shown over the world without stopping it.
+  const [bubble, setBubble] = useState<(Bubble & { at: string }) | null>(null);
+  const [found, setFound] = useState<{ text: string; ko?: string } | null>(null);
+  const foundTimer = useRef<number>();
+  const [way, setWay] = useState(false);
+  const wayShown = useRef(false);
+  const wayTimer = useRef<number>();
+  const [idle, setIdle] = useState(false);
+  const [currentRoom, setCurrentRoom] = useState<RoomId>("courtyard");
   const [helpOpen, setHelpOpen] = useState(false);
   // Returning learners who finished the tutorial never see it again unasked.
   const [tutorialGone, setTutorialGone] = useState(() => loadWorldState().tutorialDone);
@@ -229,9 +240,52 @@ const WorldPage = () => {
     () => () => {
       window.clearTimeout(toastTimer.current);
       window.clearTimeout(doneTimer.current);
+      window.clearTimeout(foundTimer.current);
+      window.clearTimeout(wayTimer.current);
     },
     [],
   );
+
+  /** A small "found" note that fades on its own. */
+  const note = useCallback((text: string, ko?: string) => {
+    setFound({ text, ko });
+    window.clearTimeout(foundTimer.current);
+    foundTimer.current = window.setTimeout(() => setFound(null), 2600);
+  }, []);
+
+  /** A market word met: its stall sign goes up (exploration only). */
+  const learnWord = useCallback(
+    (ko: string) => {
+      const cur = savedRef.current;
+      if (cur.words.includes(ko)) return;
+      patch({ words: [...cur.words, ko] });
+      note(copy.found.word, ko);
+    },
+    [patch, note, copy],
+  );
+
+  /** One of the village's three letters found; all three: Cluby is delighted. */
+  const findLetter = useCallback(
+    (l: string) => {
+      const cur = savedRef.current;
+      if (cur.letters.includes(l)) return;
+      const letters = [...cur.letters, l];
+      patch({ letters });
+      if (VILLAGE_LETTERS.every((v) => letters.includes(v))) api.current?.celebrate("letters");
+      else note(copy.found.letter, l);
+    },
+    [patch, note, copy],
+  );
+
+  /** After the egg: name where the path goes next, and Cluby points there. */
+  const showWay = useCallback(() => {
+    if (wayShown.current) return;
+    wayShown.current = true;
+    api.current?.point(0, -9);
+    setWay(true);
+    window.clearTimeout(wayTimer.current);
+    wayTimer.current = window.setTimeout(() => setWay(false), 4500);
+  }, []);
 
   // Consume the resume point once, so a later fresh visit starts at the gate.
   useEffect(() => {
@@ -249,6 +303,9 @@ const WorldPage = () => {
   const [introBanner, setIntroBanner] = useState(false);
   const arrive = useCallback((id: RoomId, intro = false) => {
     setIntroBanner(intro);
+    setCurrentRoom(id);
+    setBubble(null);
+    setWay(false);
     if (id === "hub") complete("findHub");
     setRoom(id);
     window.clearTimeout(bannerTimer.current);
@@ -266,31 +323,82 @@ const WorldPage = () => {
   /** Use whatever is within reach (E, Enter, the prompt, or the round button). */
   const interact = useCallback(() => {
     const it = focus;
-    if (!it || card || sequence) return;
-    if (document.pointerLockElement) document.exitPointerLock();
-    if (it.kind === "egg") {
-      if (clubyAwake && !saved.hatchSeen) api.current?.hatch();
-      else setCard({ kind: "egg" });
-    } else if (it.kind === "letter") {
-      setCard({ kind: "letter" });
-      // Reading the sign counts only once the characters have been met, so
-      // the objectives stay in their order.
-      if (savedRef.current.objectivesDone.includes("meetCharacters")) complete("readSign");
-    } else if (it.kind === "talk" && it.who) {
-      setCard({ kind: "talk", who: it.who });
-      const cur = savedRef.current;
-      const met = cur.met.includes(it.who) ? cur.met : [...cur.met, it.who];
-      if (met.includes("friend") && met.includes("minsu")) complete("meetCharacters", { met });
-      else if (met !== cur.met) patch({ met });
+    if (card || sequence) return;
+    // E again on what is already open puts the note away.
+    if (bubble) {
+      setBubble(null);
+      if (!it || it.id === bubble.at) return;
     }
-    else if (it.kind === "word") setCard({ kind: "word" });
-    else if (it.kind === "locked") setCard({ kind: "locked", notice: it.notice });
-    else if (it.kind === "link") {
-      // Out to the site; the world reopens here (the Hub) on the way back.
-      patch({ lastRoom: it.room });
-      navigate(it.link === "games" ? "/games" : access.signedIn ? "/textbook" : "/courses");
+    if (!it) return;
+    if (document.pointerLockElement && it.kind !== "say" && it.kind !== "learn" && it.kind !== "talk" && it.kind !== "cluby") document.exitPointerLock();
+    if (it.npc) cheer(it.npc, 1200);
+    switch (it.kind) {
+      case "egg":
+        api.current?.pulseEgg();
+        if (clubyAwake && !saved.hatchSeen) api.current?.hatch();
+        else setCard({ kind: "egg" });
+        break;
+      case "letter":
+        setCard({ kind: "letter" });
+        if (it.letter) findLetter(it.letter);
+        // Reading the sign counts only once the characters have been met, so
+        // the objectives stay in their order.
+        if (savedRef.current.objectivesDone.includes("meetCharacters")) complete("readSign");
+        break;
+      case "learn":
+        if (it.learn) setBubble({ kind: "learn", id: it.learn, at: it.id });
+        if (it.word) learnWord(it.word);
+        if (it.letter) findLetter(it.letter);
+        break;
+      case "quiz":
+        if (it.quiz) setCard({ kind: "quiz", quiz: it.quiz });
+        if (it.letter) findLetter(it.letter);
+        break;
+      case "say":
+        if (it.say) setBubble({ kind: "say", id: it.say, at: it.id });
+        break;
+      case "talk":
+        if (it.who) {
+          setBubble({ kind: "talk", who: it.who, at: it.id });
+          const cur = savedRef.current;
+          const met = cur.met.includes(it.who) ? cur.met : [...cur.met, it.who];
+          if (met.includes("friend") && met.includes("minsu")) complete("meetCharacters", { met });
+          else if (met !== cur.met) patch({ met });
+        }
+        break;
+      case "cluby":
+        api.current?.clubyTalk();
+        break;
+      case "word":
+        // Once the sign is back up, the baker simply thanks the learner.
+        if (savedRef.current.breadSign) setBubble({ kind: "say", id: "baker", at: it.id });
+        else setCard({ kind: "word" });
+        break;
+      case "locked":
+        setCard({ kind: "locked", notice: it.notice });
+        break;
+      case "door":
+        if (it.to && it.arrive) api.current?.enter(it.to, it.arrive);
+        break;
+      case "link":
+        // Out to the site; the world reopens here (the Hub) on the way back.
+        patch({ lastRoom: it.room });
+        navigate(it.link === "games" ? "/games" : access.signedIn ? "/textbook" : "/courses");
+        break;
     }
-  }, [focus, card, sequence, clubyAwake, saved, patch, complete, navigate, access.signedIn]);
+  }, [focus, card, sequence, bubble, clubyAwake, saved, patch, complete, navigate, access.signedIn, findLetter, learnWord]);
+
+  // Walking away from a person or a word puts its note away.
+  useEffect(() => {
+    if (bubble && focus?.id !== bubble.at) setBubble(null);
+  }, [focus, bubble]);
+
+  // The hatch has just ended in the courtyard: the way on is named once.
+  const wasSequence = useRef(false);
+  useEffect(() => {
+    if (wasSequence.current && !sequence && currentRoom === "courtyard") showWay();
+    wasSequence.current = sequence;
+  }, [sequence, currentRoom, showWay]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -342,15 +450,17 @@ const WorldPage = () => {
     return () => window.clearTimeout(t);
   }, [saved.tutorialDone, tutorialGone]);
   const showControls = helpOpen || (saved.welcomed && !tutorialGone && !room && !card);
-  const objective = currentObjective({ met: saved.met, done: saved.objectivesDone });
+  const marketOpen = access.open.has("vocabulary-market");
+  const objective = currentObjective({ met: saved.met, done: saved.objectivesDone }, marketOpen);
   const progress = useMemo(() => ({ met: saved.met, done: saved.objectivesDone }), [saved.met, saved.objectivesDone]);
   const objectiveCount = objective === "meetCharacters" ? `${saved.met.filter((m) => m === "friend" || m === "minsu").length}/2` : undefined;
 
-  const promptLabel = !focus
+  const promptLabel = !focus || (bubble && bubble.at === focus.id)
     ? null
-    : focus.kind === "link"
-      ? copy.prompts[focus.link === "games" ? "games" : "lessons"]
-      : copy.prompts[focus.kind];
+    : copy.prompts[focus.kind === "word" && saved.breadSign ? "talk" : focus.action];
+  // Standing still on a first visit: the objective gently asks for attention,
+  // and on a touch screen the joystick pulses again.
+  const nudge = idle && objective !== null && !card && !bubble;
   const speech: Speech | null = speechKey
     ? { name: copy.clubyName, ko: "ko" in copy.speech[speechKey] ? (copy.speech[speechKey] as { ko: string }).ko : undefined, text: copy.speech[speechKey].text }
     : null;
@@ -395,6 +505,7 @@ const WorldPage = () => {
                 }}
                 onFirstLook={() => setLooked(true)}
                 onFirstMove={() => setMoved(true)}
+                onIdle={setIdle}
                 startRoom={startRoom}
                 avatar={avatar}
                 access={access}
@@ -426,11 +537,14 @@ const WorldPage = () => {
                 speech={speech}
                 prompt={card ? null : promptLabel}
                 onInteract={interact}
-                showMoveHint={saved.welcomed && tutorialStep === "move"}
+                showMoveHint={(saved.welcomed && tutorialStep === "move") || nudge}
                 side={
                   saved.welcomed && !welcoming ? (
-                    <div className="flex flex-col items-start gap-2">
-                      <ObjectiveChip lang={lang} objective={objective} count={objectiveCount} justDone={justDone} />
+                    // On a short screen a word or a person's line takes the side
+                    // column's place for a moment, so the two never overlap.
+                    <div className={`flex flex-col items-start gap-2 ${bubble ? "max-sm:hidden [@media(max-height:500px)]:hidden" : ""}`}>
+                      <ObjectiveChip lang={lang} objective={objective} count={objectiveCount} justDone={justDone} nudge={nudge} />
+                      {currentRoom === "hangul-village" && <LettersChip lang={lang} letters={VILLAGE_LETTERS} found={saved.letters} />}
                       {!showControls && <HelpButton lang={lang} onClick={() => setHelpOpen(true)} />}
                     </div>
                   ) : null
@@ -452,13 +566,16 @@ const WorldPage = () => {
                         }}
                       />
                     )}
-                    {toast && !card && <DiscoveryToast lang={lang} discovery={toast} />}
+                    {bubble && !card && <DialogueBubble lang={lang} bubble={bubble} avatar={avatar} clubyHere={clubyAwake && saved.hatchSeen} onClose={() => setBubble(null)} />}
+                    {found && !card && <FoundToast text={found.text} ko={found.ko} />}
+                    {way && !card && !bubble && <WayHint lang={lang} ko="한글 마을" name={copy.rooms["hangul-village"].name} />}
+                    {toast && !card && !bubble && <DiscoveryToast lang={lang} discovery={toast} />}
                   </>
                 }
                 pointerLocked={locked}
                 sequence={sequence}
                 onSkip={() => api.current?.skip()}
-                landscapeTip={isTouch && portrait && !tipDismissed && !card}
+                landscapeTip={isTouch && portrait && !tipDismissed && !card && !bubble}
                 onDismissTip={() => {
                   setTipDismissed(true);
                   try {
@@ -483,16 +600,22 @@ const WorldPage = () => {
                 lang={lang}
                 kind={card.kind}
                 notice={card.notice}
-                who={card.who}
-                avatar={avatar}
+                quiz={card.quiz}
                 signedIn={access.signedIn}
                 solved={saved.breadSign}
-                onClose={() => setCard(null)}
+                onClose={() => {
+                  const was = card.kind;
+                  setCard(null);
+                  if (was === "egg" && currentRoom === "courtyard") showWay();
+                }}
                 onGo={(href) => navigate(href)}
+                onWordSeen={learnWord}
                 onWordRight={() => {
-                  if (!savedRef.current.breadSign) patch({ breadSign: true });
+                  if (!savedRef.current.breadSign) complete("helpBaker", { breadSign: true });
+                  cheer("m-keeper-1", 2200);
                   api.current?.celebrate();
                 }}
+                onQuizRight={() => api.current?.celebrate()}
               />
             )}
             {/* Room change: a short fade to ivory while the next room mounts. */}

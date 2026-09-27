@@ -14,6 +14,8 @@ export interface StoryState {
   egg: EggPhase;
   /** performance.now() when the hatch started. */
   eggT0: number;
+  /** Inspected: the warm light round the egg brightens until then (the egg itself stays still). */
+  eggPulseUntil: number;
   cluby: {
     mode: ClubyMode;
     x: number;
@@ -26,6 +28,8 @@ export interface StoryState {
     look: { x: number; z: number } | null;
     /** A happy hop plays until this time (performance.now()). */
     hopUntil: number;
+    /** Spoken to: turns to the learner until this time. */
+    ackUntil: number;
   };
 }
 
@@ -33,7 +37,8 @@ export function createStoryState(hatched: boolean): StoryState {
   return {
     egg: hatched ? "open" : "dormant",
     eggT0: 0,
-    cluby: { mode: hatched ? "follow" : "hidden", x: 0, y: 0, z: 0, yaw: 0, t0: 0, look: null, hopUntil: 0 },
+    eggPulseUntil: 0,
+    cluby: { mode: hatched ? "follow" : "hidden", x: 0, y: 0, z: 0, yaw: 0, t0: 0, look: null, hopUntil: 0, ackUntil: 0 },
   };
 }
 

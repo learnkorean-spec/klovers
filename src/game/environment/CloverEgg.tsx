@@ -76,6 +76,10 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
     // A slow warm breath of light round the nest. The egg itself stays
     // perfectly still while dormant (canon); only the light lives.
     GLOW.opacity = REDUCED_MOTION ? 0.6 : 0.56 + 0.1 * Math.sin(now / 1500);
+    // Inspected: the warm light answers — brighter for a moment, then calm.
+    const pulse = Math.max(0, Math.min(1, (s.eggPulseUntil - now) / 1400));
+    GLOW.opacity += 0.4 * pulse;
+    FLOOR_GLOW.opacity = 0.3 + 0.3 * pulse;
     if (cap.current) {
       const e = 1 - (1 - capOff) ** 3;
       cap.current.position.set(e * 0.74, -e * 0.45 + Math.sin(e * Math.PI) * 0.3, e * 0.25);

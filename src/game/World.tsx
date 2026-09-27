@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { PCFSoftShadowMap, type WebGLRenderer } from "three";
-import { INTERACTABLES, nearestInteractable, type Interactable } from "./config/interactions";
+import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, RingGeometry, type Mesh, type WebGLRenderer } from "three";
+import { INTERACTABLES, pickInteractable, type Interactable } from "./config/interactions";
 import { findPortal, HUB, MARKET, ROOMS, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
 import ThirdPersonCamera from "./camera/ThirdPersonCamera";
@@ -58,7 +58,9 @@ export const FADE_MS = 350;
 export type WorldNotice = NoticeKey;
 
 /** Short things Cluby says (text lives in config/copy.ts, per language). */
-export type SpeechKey = "hello" | "found" | "follow" | "hangul-village" | "vocabulary-market" | "hub" | "wordRight";
+export type SpeechKey =
+  | "hello" | "found" | "follow" | "hangul-village" | "vocabulary-market" | "hub" | "wordRight" | "letters"
+  | "talk-courtyard" | "talk-hangul-village" | "talk-vocabulary-market" | "talk-hub" | "talk-conversation-cafe";
 
 /** Commands the page can give the scene (HTML UI → 3D). */
 export interface WorldApi {
@@ -67,7 +69,15 @@ export interface WorldApi {
   /** Skip the rest of a story moment. */
   skip: () => void;
   /** Cluby's happy hop and line after a right answer. */
-  celebrate: () => void;
+  celebrate: (line?: SpeechKey) => void;
+  /** Spoken to: Cluby turns to the learner, hops, and says his line here. */
+  clubyTalk: () => void;
+  /** The egg was inspected: its light answers (the egg stays still). */
+  pulseEgg: () => void;
+  /** Cluby points toward a place for a moment ("this way"). */
+  point: (x: number, z: number) => void;
+  /** Walk through an open gate now (E at the gate). */
+  enter: (to: RoomId, arrive: string) => void;
 }
 
 export interface WorldProps {
@@ -107,6 +117,8 @@ export interface WorldProps {
   progress?: ObjectiveProgress;
   /** Walked up to something worth a short note (first time only; the page decides). */
   onDiscover?: (key: DiscoveryKey) => void;
+  /** The learner has stood still a while (true), or moved again (false). */
+  onIdle?: (idle: boolean) => void;
 }
 
 declare global {
@@ -157,6 +169,8 @@ export default function World(props: WorldProps) {
   const timers = useRef<number[]>([]);
   const sequence = useRef<"none" | "hatch">("none");
   const glRef = useRef<WebGLRenderer | null>(null);
+  /** What the learner can use right now (drawn as a small ring under it). */
+  const focusRef = useRef<Interactable | null>(null);
 
   useEffect(() => {
     player.current.paused = !!props.paused;
@@ -259,16 +273,37 @@ export default function World(props: WorldProps) {
     at(HATCH.failSafeAt, finishHatch);
   }, [finishHatch, say]);
 
-  const celebrate = useCallback(() => {
+  const celebrate = useCallback(
+    (line: SpeechKey = "wordRight") => {
+      const s = story.current;
+      if (s.cluby.mode !== "follow") return;
+      s.cluby.hopUntil = performance.now() + 1100;
+      say(line, 2400);
+    },
+    [say],
+  );
+
+  const clubyTalk = useCallback(() => {
     const s = story.current;
     if (s.cluby.mode !== "follow") return;
-    s.cluby.hopUntil = performance.now() + 1100;
-    say("wordRight", 2200);
+    s.cluby.ackUntil = performance.now() + 1600;
+    s.cluby.look = null;
+    say(`talk-${roomRef.current}` as SpeechKey, 3000);
   }, [say]);
 
-  useEffect(() => {
-    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate });
-  }, [hatch, finishHatch, celebrate]);
+  const pulseEgg = useCallback(() => {
+    story.current.eggPulseUntil = performance.now() + 1600;
+  }, []);
+
+  const point = useCallback((x: number, z: number) => {
+    const s = story.current;
+    if (s.cluby.mode !== "follow") return;
+    const at = { x, z };
+    s.cluby.look = at;
+    timers.current.push(window.setTimeout(() => {
+      if (story.current.cluby.look === at) story.current.cluby.look = null;
+    }, 2800));
+  }, []);
 
   /** Walked into an open gate: fade out, swap rooms, fade back in. */
   const travel = useCallback((portal: Pick<Portal, "to" | "arrive">) => {
@@ -281,6 +316,10 @@ export default function World(props: WorldProps) {
       setRoomId(portal.to);
     }, FADE_MS);
   }, []);
+
+  useEffect(() => {
+    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }) });
+  }, [hatch, finishHatch, celebrate, clubyTalk, pulseEgg, point, travel]);
 
   // New room mounted: learner at the arrival point, camera behind, Cluby beside.
   useLayoutEffect(() => {
@@ -364,6 +403,11 @@ export default function World(props: WorldProps) {
     };
   }, [travel]);
 
+  const objectiveSpot = useMemo(
+    () => (props.progress ? objectiveTarget(props.objective ?? null, roomId, props.progress) : null),
+    [props.progress, props.objective, roomId],
+  );
+
   return (
     <Canvas
       shadows={quality.shadows ? { type: PCFSoftShadowMap } : false}
@@ -403,22 +447,22 @@ export default function World(props: WorldProps) {
 
       <GroundWear key={`w-${roomId}`} bounds={layout.bounds} seed={roomId.length * 7} />
       {roomId === "courtyard" && <Lobby story={story} />}
-      {roomId === "hangul-village" && <HangulVillage marketOpen={access.open.has("vocabulary-market")} />}
-      {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} />}
+      {roomId === "hangul-village" && <HangulVillage marketOpen={access.open.has("vocabulary-market")} letters={saved.letters} />}
+      {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} words={saved.words} />}
       {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} />}
       {roomId === "conversation-cafe" && <ConversationCafe />}
       {/* The people of this room only; they leave with it. */}
       {NPCS.filter((n) => n.room === roomId).map((n) => (
-        <Npc key={n.id} n={n} />
+        <Npc key={n.id} n={n} player={player} />
       ))}
-      {roomId === "courtyard" && <Friend avatar={avatar} x={FRIEND_SPOT.x} z={FRIEND_SPOT.z} yaw={Math.atan2(-FRIEND_SPOT.x, -FRIEND_SPOT.z) + 0.5} />}
-      {(() => {
-        const t = props.progress ? objectiveTarget(props.objective ?? null, roomId, props.progress) : null;
-        return t ? <ObjectiveMarker x={t.x} z={t.z} /> : null;
-      })()}
+      {roomId === "courtyard" && <Friend avatar={avatar} x={FRIEND_SPOT.x} z={FRIEND_SPOT.z} yaw={Math.atan2(-FRIEND_SPOT.x, -FRIEND_SPOT.z) + 0.5} player={player} />}
+      {objectiveSpot ? <ObjectiveMarker x={objectiveSpot.x} z={objectiveSpot.z} /> : null}
+      <FocusCue focus={focusRef} />
       {/* Frame priorities: player moves (−2), watchers read (−1.5), camera follows (−1). */}
       <Player input={input} player={player} camera={camera} layout={layout} avatar={avatar} />
-      <Cluby story={story} player={player} layout={layout} guide={guideFor(roomId, access)} interests={interestsIn(roomId)} />
+      {/* On a first visit, he points toward the current objective; after
+          that, he guides no one who already knows the way. */}
+      <Cluby story={story} player={player} layout={layout} guide={objectiveSpot ?? (props.objective === undefined ? guideFor(roomId, access) : null)} interests={interestsIn(roomId)} />
       <ThirdPersonCamera player={player} camera={camera} layout={layout} onFirstLook={onFirstLook} />
       <PortalWatcher key={`p-${roomId}`} player={player} layout={layout} access={access} onDoor={travel} onNotice={(n) => cb.current.onNotice?.(n)} />
       <FocusWatcher
@@ -427,8 +471,10 @@ export default function World(props: WorldProps) {
         player={player}
         story={story}
         access={access}
+        focusRef={focusRef}
         onFocus={(it) => cb.current.onFocus?.(it)}
         onFirstMove={() => cb.current.onFirstMove?.()}
+        onIdle={(idle) => cb.current.onIdle?.(idle)}
       />
       <DiscoveryWatcher key={`d-${roomId}`} room={roomId} player={player} onDiscover={(k) => cb.current.onDiscover?.(k)} />
       <Stats glRef={glRef} />
@@ -488,19 +534,33 @@ function PortalWatcher({ player, layout, access, onDoor, onNotice }: WatcherProp
   return null;
 }
 
-/** Reports the nearest usable thing, and the learner's first real move. */
-function FocusWatcher({ room, player, story, access, onFocus, onFirstMove }: {
+/** Seconds of standing still before the learner counts as idle. */
+const IDLE_AFTER = 10;
+
+/**
+ * Reports the one usable thing to offer (nearest, faced, steady — see
+ * pickInteractable), the learner's first real move, and long pauses.
+ * Cluby joins the candidates while he follows: turn to him to talk.
+ */
+function FocusWatcher({ room, player, story, access, focusRef, onFocus, onFirstMove, onIdle }: {
   room: RoomId;
   access: WorldAccess;
   player: MutableRefObject<PlayerState>;
   story: MutableRefObject<StoryState>;
+  focusRef: MutableRefObject<Interactable | null>;
   onFocus: (it: Interactable | null) => void;
   onFirstMove: () => void;
+  onIdle: (idle: boolean) => void;
 }) {
   const current = useRef<string | null>(null);
   const start = useRef<{ x: number; z: number } | null>(null);
   const moved = useRef(false);
-  useFrame(() => {
+  const still = useRef({ t: 0, idle: false });
+  const clubyIt = useRef<Interactable>({ id: "cluby", room, kind: "cluby", action: "talk", x: 0, z: 0, radius: 1.6, needsFacing: true, priority: -1 });
+  useEffect(() => () => {
+    focusRef.current = null;
+  }, [focusRef]);
+  useFrame((_, rawDt) => {
     const p = player.current;
     if (!moved.current) {
       start.current ??= { x: p.position.x, z: p.position.z };
@@ -509,16 +569,67 @@ function FocusWatcher({ room, player, story, access, onFocus, onFirstMove }: {
         onFirstMove();
       }
     }
+    const w = still.current;
+    if (Math.hypot(p.velocity.x, p.velocity.z) > 0.3 || p.paused || p.frozen) {
+      w.t = 0;
+      if (w.idle) {
+        w.idle = false;
+        onIdle(false);
+      }
+    } else {
+      w.t += Math.min(rawDt, 0.1);
+      if (!w.idle && w.t > IDLE_AFTER) {
+        w.idle = true;
+        onIdle(true);
+      }
+    }
     if (p.frozen) return;
-    let it = nearestInteractable(room, p.position.x, p.position.z, undefined, (r) => access.open.has(r)) ?? null;
+    const s = story.current;
+    const extra: Interactable[] = [];
+    if (s.cluby.mode === "follow") {
+      const c = clubyIt.current;
+      c.room = room;
+      c.x = s.cluby.x;
+      c.z = s.cluby.z;
+      extra.push(c);
+    }
+    let it = pickInteractable(room, p.position.x, p.position.z, p.yaw, current.current, (r) => access.open.has(r), extra) ?? null;
     // Once the egg has opened there is nothing more to do with it.
-    if (it?.kind === "egg" && (story.current.egg === "open" || story.current.egg === "hatching")) it = null;
+    if (it?.kind === "egg" && (s.egg === "open" || s.egg === "hatching")) it = null;
+    focusRef.current = it;
     const id = it?.id ?? null;
     if (id === current.current) return;
     current.current = id;
     onFocus(it);
   }, -1.5);
   return null;
+}
+
+const CUE_GEO = new RingGeometry(0.42, 0.5, 40).rotateX(-Math.PI / 2);
+const CUE_MAT = new MeshBasicMaterial({ color: new Color(PALETTE.yellow), transparent: true, opacity: 0.5, depthWrite: false, blending: AdditiveBlending, toneMapped: false });
+const NPC_AT = new Map(NPCS.map((n) => [n.id, n]));
+
+/**
+ * In range of something usable: a thin yellow ring breathes on the ground
+ * under it (under the person, for someone to talk to). Nothing far away is
+ * marked — the cue only appears once the prompt does.
+ */
+function FocusCue({ focus }: { focus: MutableRefObject<Interactable | null> }) {
+  const ref = useRef<Mesh>(null);
+  useFrame(({ clock }) => {
+    const m = ref.current;
+    if (!m) return;
+    const it = focus.current;
+    const show = it && it.kind !== "cluby" && it.kind !== "door" && it.kind !== "link" && it.kind !== "locked";
+    m.visible = !!show;
+    if (!show || !it) return;
+    const who = it.npc ? NPC_AT.get(it.npc) : it.kind === "talk" && it.who === "friend" ? FRIEND_SPOT : null;
+    m.position.set(who ? who.x : it.x, 0.03, who ? who.z : it.z);
+    const k = 0.5 + 0.5 * Math.sin(clock.elapsedTime * 3.2);
+    m.scale.setScalar(it.kind === "egg" ? 3.4 : 1 + 0.08 * k);
+    CUE_MAT.opacity = 0.28 + 0.3 * k;
+  });
+  return <mesh ref={ref} geometry={CUE_GEO} material={CUE_MAT} visible={false} renderOrder={3} />;
 }
 
 /** Notices the first step into a discovery spot in this room. */

@@ -143,6 +143,7 @@ export function ObjectiveChip({
   objective,
   count,
   justDone,
+  nudge = false,
 }: {
   lang: WorldLang;
   objective: ObjectiveId | null;
@@ -150,6 +151,8 @@ export function ObjectiveChip({
   count?: string;
   /** Briefly shows the finished objective instead of the next one. */
   justDone: ObjectiveId | null;
+  /** The learner seems unsure (standing still on a first visit): a soft ring. */
+  nudge?: boolean;
 }) {
   const c = WORLD_COPY[lang].objective;
   const shown = justDone ?? objective;
@@ -158,7 +161,7 @@ export function ObjectiveChip({
     <div
       role="status"
       aria-live="polite"
-      className="flex max-w-[16rem] items-start gap-2 rounded-2xl bg-charcoal/85 px-3 py-2 text-ivory motion-safe:animate-in motion-safe:fade-in"
+      className={`flex max-w-[16rem] items-start gap-2 rounded-2xl bg-charcoal/85 px-3 py-2 text-ivory ring-klovers-yellow/80 transition-shadow motion-safe:animate-in motion-safe:fade-in ${nudge ? "ring-2 motion-safe:animate-pulse" : "ring-0"}`}
     >
       <span aria-hidden="true" className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${justDone ? "bg-klovers-green" : "bg-klovers-yellow"}`} />
       <span className="flex flex-col">
@@ -182,6 +185,63 @@ export function DiscoveryToast({ lang, discovery }: { lang: WorldLang; discovery
     <div role="status" className="max-w-sm rounded-2xl border-s-4 border-klovers-yellow bg-ivory/95 px-4 py-2.5 text-charcoal shadow-lg motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2">
       <p className="font-display text-sm font-bold">{d.title}</p>
       <p className="text-sm text-charcoal/80">{d.line}</p>
+    </div>
+  );
+}
+
+/**
+ * The village's three discoverable letters: one dot each, filled once found.
+ * Exploration feedback only; it counts nothing anywhere else.
+ */
+export function LettersChip({ lang, letters, found }: { lang: WorldLang; letters: readonly string[]; found: string[] }) {
+  const c = WORLD_COPY[lang].found;
+  const n = letters.filter((l) => found.includes(l)).length;
+  return (
+    <div role="status" aria-label={`${c.lettersLabel} ${n}/${letters.length}`} className="flex items-center gap-2 rounded-full bg-charcoal/85 px-3 py-1.5 text-ivory">
+      <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ivory/65">{c.lettersLabel}</span>
+      <span className="flex items-center gap-1.5" dir="ltr">
+        {letters.map((l) => {
+          const got = found.includes(l);
+          return (
+            <span
+              key={l}
+              lang="ko" dir="ltr"
+              className={`flex h-6 w-6 items-center justify-center rounded-full border font-ko text-xs font-bold ${got ? "border-klovers-yellow bg-klovers-yellow text-charcoal" : "border-ivory/40 text-transparent"}`}
+            >
+              {got ? l : "·"}
+            </span>
+          );
+        })}
+      </span>
+    </div>
+  );
+}
+
+/** A small "found" note (a new word, a new letter), then gone. */
+export function FoundToast({ text, ko }: { text: string; ko?: string }) {
+  return (
+    <div role="status" className="flex items-center gap-2 rounded-full bg-charcoal/90 px-4 py-2 text-sm font-semibold text-ivory shadow-lg motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2">
+      <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-klovers-green" />
+      <span>{text}</span>
+      {ko && (
+        <span lang="ko" dir="ltr" className="font-ko font-bold text-klovers-yellow">
+          {ko}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Where the path goes next, named once, then gone (no "go to room 2"). */
+export function WayHint({ lang, ko, name }: { lang: WorldLang; ko: string; name: string }) {
+  const c = WORLD_COPY[lang];
+  return (
+    <div role="status" className="flex items-center gap-2 rounded-full bg-charcoal/80 px-4 py-1.5 text-ivory motion-safe:animate-in motion-safe:fade-in">
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ivory/60">{c.wayEyebrow}</span>
+      <span lang="ko" dir="ltr" className="font-ko text-base font-bold leading-tight">
+        {ko}
+      </span>
+      <span className="text-sm text-ivory/85">{name}</span>
     </div>
   );
 }

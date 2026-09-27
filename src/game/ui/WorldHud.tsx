@@ -163,7 +163,7 @@ export default function WorldHud(p: HudProps) {
           <div role="status" aria-live="polite" className="max-w-md rounded-2xl bg-ivory px-5 py-2.5 text-center text-charcoal shadow-lg">
             <p className="text-[11px] font-bold uppercase tracking-wide text-charcoal/60">{p.speech.name}</p>
             {p.speech.ko && (
-              <p lang="ko" className="font-ko text-xl font-bold">
+              <p lang="ko" dir="ltr" className="font-ko text-xl font-bold">
                 {p.speech.ko}
               </p>
             )}
