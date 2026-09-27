@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useSpeech } from "@/hooks/useSpeech";
+import { playVoice, stopVoice, type VoiceLine } from "../systems/voice";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import type { LearnId, SayId } from "../config/interactions";
 import type { AvatarId } from "../player/characters";
@@ -65,6 +66,7 @@ export default function DialogueBubble({
     return () => {
       window.removeEventListener("keydown", onKey);
       if (canSpeak()) window.speechSynthesis.cancel();
+      stopVoice();
     };
   }, [onClose]);
 
@@ -74,6 +76,8 @@ export default function DialogueBubble({
   let big = false;
   /** Whose voice reads the Korean: undefined for words (any voice). */
   let voice: "male" | "female" | undefined;
+  /** A recorded line for this speaker, if there is one. */
+  let line: VoiceLine | undefined;
 
   if (bubble.kind === "learn") {
     const t = copy.learn[bubble.id] as LearnText;
@@ -97,6 +101,7 @@ export default function DialogueBubble({
   } else if (bubble.kind === "say") {
     const t = copy.say[bubble.id];
     voice = MALE_SAY.has(bubble.id) ? "male" : "female";
+    line = bubble.id;
     name = t.name;
     ko = t.ko;
     lines = (
@@ -112,6 +117,7 @@ export default function DialogueBubble({
     const c = copy.talk;
     const friendId = avatar === "lina" ? "adam" : "lina";
     voice = bubble.who === "minsu" || friendId === "adam" ? "male" : "female";
+    line = bubble.who === "minsu" ? "minsu" : friendId;
     const hello = bubble.who === "minsu" ? c.minsu : c[friendId];
     name = bubble.who === "minsu" ? copy.names.minsu : copy.names[friendId];
     ko = hello.ko;
@@ -141,13 +147,17 @@ export default function DialogueBubble({
       </p>
       {lines}
       <div className="flex items-center gap-2 pt-1">
-        {speakable && (
+        {(speakable || line) && (
           <button
             type="button"
             onClick={(e) => {
-              // Many phones carry only one Korean voice, a woman's: for a man's
-              // line without a man's voice, the pitch is lowered instead.
-              speakKorean(ko, voice === "male" ? { gender: "male", pitch: hasMaleKoreanVoice() ? 1 : 0.6 } : voice ? { gender: "female" } : undefined);
+              // People speak in their own recorded voice; words (and any
+              // failure) use the browser's Korean voice. Many phones carry only
+              // a woman's voice: for a man's line the pitch is then lowered.
+              const browser = () =>
+                speakKorean(ko, voice === "male" ? { gender: "male", pitch: hasMaleKoreanVoice() ? 1 : 0.6 } : voice ? { gender: "female" } : undefined);
+              if (line) playVoice(line, browser);
+              else browser();
               e.currentTarget.blur();
             }}
             className="min-h-9 rounded-full bg-charcoal px-4 text-xs font-bold text-ivory focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow"

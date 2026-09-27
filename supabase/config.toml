@@ -194,3 +194,6 @@ enabled = false
 
 [functions.extract-pdf-text]
 enabled = false
+
+[functions.world-voice]
+verify_jwt = false
