@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, ChevronRight } from "lucide-react";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -130,10 +129,9 @@ const PlacementTestCTA = () => {
             <Button
               size="lg"
               onClick={() => navigate("/placement-test")}
-              className="text-base px-8 gap-2 h-12 rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow"
+              className="text-base px-8 gap-2 h-12 rounded-full shadow-lg shadow-charcoal/20 hover:shadow-charcoal/30 transition-shadow"
             >
               {t("placementCta.cta")}
-              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
             </Button>
 
             <p className="text-xs text-muted-foreground">
@@ -181,7 +179,7 @@ const PlacementTestCTA = () => {
                           </span>
                         )}
                         {idx < activeLevel && (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-foreground/45" />
+                          <span className="h-2 w-2 rounded-full bg-klovers-green" aria-hidden="true" />
                         )}
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
