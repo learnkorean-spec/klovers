@@ -724,9 +724,10 @@ const MARKETING_ROUTES = [
   },
   {
     path: "/blog",
-    title: "Blog",
+    // Same title and description as BlogPage's useSEO (27 Sep 2026 scan).
+    title: "Klovers Journal: Discover Korea, Learn Korean",
     description:
-      "Read the latest articles about learning Korean, K-culture, TOPIK preparation, and language tips on the Klovers blog.",
+      "Articles, words, stories and experiences about Korea and the Korean language — a six-stop journey with Klovers.",
   },
   {
     path: "/learn-korean-arabic-speakers",
@@ -1181,8 +1182,8 @@ ${items}
     .join("\n");
 
   return `<div id="blog-index-prerendered">
-      <h1>Klovers Korean blog</h1>
-      <p>Guides to Korean grammar, vocabulary, TOPIK and Korean culture, in English and Arabic.</p>
+      <h1>Klovers Journal</h1>
+      <p>Articles, words, stories and experiences about Korea and the Korean language.</p>
 ${sections}
     </div>`;
 }
