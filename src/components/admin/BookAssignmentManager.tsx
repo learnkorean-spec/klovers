@@ -19,7 +19,7 @@ import { BOOKS, type BookId } from "@/constants/books";
 /**
  * Admin → Books.
  *
- * The A0 Hangul book is a gift for joining: it is assigned automatically when
+ * Level books (A0 Hangul, Level 1) are gifts for joining: it is assigned automatically when
  * a Hangul group is started (and to anyone seated into a group that is already
  * running) by the database triggers in
  * supabase/migrations/20260926010000_auto_assign_level_book_on_group_start.sql.
@@ -29,6 +29,7 @@ import { BOOKS, type BookId } from "@/constants/books";
 const EDITIONS: { id: BookId; label: string }[] = [
   { id: "hangul-a0", label: "Arabic" },
   { id: "hangul-a0-en", label: "English" },
+  { id: "book-1", label: "Level 1 · Arabic" },
 ];
 
 interface Profile {
