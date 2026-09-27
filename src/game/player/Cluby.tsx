@@ -1,0 +1,241 @@
+import { useRef, type MutableRefObject } from "react";
+import { useFrame } from "@react-three/fiber";
+import type { Group } from "three";
+import { std } from "../config/materials";
+import type { RoomLayout } from "../config/rooms";
+import { PALETTE, PROPS } from "../config/world";
+import { resolveCollisions } from "../systems/collision";
+import { angleDelta, damp } from "../systems/movement";
+import type { PlayerState } from "../systems/state";
+import type { StoryState } from "../systems/story";
+
+/**
+ * Cluby — companion, memory-keeper and discovery guide (canon). Never a pet.
+ *
+ * Built from simple shapes to the canon look: mint plush body, two short
+ * butter-yellow horns, pointed ears with pink insides, warm brown eyes,
+ * rose cheeks, two small fangs, an ivory mini-hanbok top, a Klovers-yellow
+ * wrap skirt with the green four-leaf clover, a short spiky mint tail.
+ * The mint, butter, pink and brown are his own colours, fixed by the canon.
+ *
+ * Behaviour is deliberately small: pop out of the egg, stand, hop down, then
+ * follow a step behind the learner (straight-line follow with the same
+ * collision as the player, teleporting back if ever stuck). No pathfinding.
+ */
+
+const MINT = "#9FDDBE";
+const BUTTER = "#F3D46A";
+const PINK = "#F4B3C2";
+const EYES = "#4A2E1F";
+const RADIUS = 0.22;
+
+const easeOutBack = (t: number) => {
+  const c = 1.7;
+  return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2;
+};
+
+interface Props {
+  story: MutableRefObject<StoryState>;
+  player: MutableRefObject<PlayerState>;
+  layout: RoomLayout;
+}
+
+export default function Cluby({ story, player, layout }: Props) {
+  const root = useRef<Group>(null);
+  const body = useRef<Group>(null);
+  const armR = useRef<Group>(null);
+  const hopPhase = useRef(0);
+
+  useFrame((_, rawDt) => {
+    const dt = Math.min(rawDt, 0.05);
+    const c = story.current.cluby;
+    const g = root.current;
+    if (!g) return;
+    if (c.mode === "hidden") {
+      g.visible = false;
+      return;
+    }
+    g.visible = true;
+    const now = performance.now();
+    const p = player.current.position;
+    let scale = 1;
+    let hop = 0;
+    let faceX = p.x;
+    let faceZ = p.z;
+
+    if (c.mode === "emerge") {
+      // Stand in the open shell, then hop down beside the plinth.
+      const t = (now - c.t0) / 1000;
+      const shell = { x: PROPS.eggPlinth.x, y: 0.62, z: PROPS.eggPlinth.z };
+      scale = t < 0.45 ? 0.2 + 0.8 * easeOutBack(t / 0.45) : 1;
+      const k = Math.min(Math.max((t - 3.4) / 0.8, 0), 1);
+      g.position.set(shell.x + (c.x - shell.x) * k, shell.y * (1 - k) + Math.sin(k * Math.PI) * 0.6, shell.z + (c.z - shell.z) * k);
+      if (c.look && t > 3.4) {
+        faceX = c.look.x;
+        faceZ = c.look.z;
+      }
+    } else {
+      // Follow: a step behind and to the right of the learner.
+      const yaw = player.current.yaw;
+      const fx = Math.sin(yaw);
+      const fz = Math.cos(yaw);
+      const tx = p.x - fx * 0.95 + fz * 0.75;
+      const tz = p.z - fz * 0.95 - fx * 0.75;
+      const dx = tx - c.x;
+      const dz = tz - c.z;
+      const d = Math.hypot(dx, dz);
+      if (d > 7) {
+        c.x = tx;
+        c.z = tz;
+      } else if (d > 0.05) {
+        const speed = Math.min(d * 3, 7.5);
+        const step = Math.min(speed * dt, d);
+        const next = { x: c.x + (dx / d) * step, z: c.z + (dz / d) * step };
+        resolveCollisions(next, RADIUS, layout.colliders, layout.bounds);
+        c.x = next.x;
+        c.z = next.z;
+        if (d > 0.3) {
+          faceX = c.x + dx;
+          faceZ = c.z + dz;
+          hopPhase.current += dt * 13;
+          hop = Math.abs(Math.sin(hopPhase.current)) * 0.08;
+        }
+      }
+      if (c.look) {
+        faceX = c.look.x;
+        faceZ = c.look.z;
+      }
+      g.position.set(c.x, 0, c.z);
+    }
+
+    // A happy hop (a right answer, a new place).
+    if (now < c.hopUntil) hop = Math.abs(Math.sin(now / 110)) * 0.22;
+    if (body.current) {
+      body.current.position.y = hop + Math.sin(now / 600) * 0.01;
+    }
+    const targetYaw = Math.atan2(faceX - g.position.x, faceZ - g.position.z);
+    c.yaw += angleDelta(c.yaw, targetYaw) * damp(8, dt);
+    g.rotation.y = c.yaw;
+    g.scale.setScalar(scale);
+    // Point with the right arm while showing the way.
+    if (armR.current) {
+      const target = c.look ? -2.3 : 0;
+      armR.current.rotation.x += (target - armR.current.rotation.x) * damp(8, dt);
+    }
+  });
+
+  const mint = std(MINT, 0.95);
+  const m = (o: ReturnType<typeof std>) => <primitive object={o} attach="material" />;
+
+  return (
+    <group ref={root} visible={false}>
+      <group ref={body}>
+        {/* Feet */}
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 0.07, 0.04, 0.04]} scale={[1, 0.6, 1.3]}>
+            <sphereGeometry args={[0.06, 10, 8]} />
+            {m(mint)}
+          </mesh>
+        ))}
+        {/* Body, Klovers-yellow wrap skirt, ivory mini-hanbok top */}
+        <mesh castShadow position={[0, 0.24, 0]} scale={[1, 1.1, 0.95]}>
+          <sphereGeometry args={[0.17, 18, 14]} />
+          {m(mint)}
+        </mesh>
+        <mesh position={[0, 0.15, 0]}>
+          <cylinderGeometry args={[0.15, 0.2, 0.12, 18]} />
+          {m(std(PALETTE.yellow, 0.8))}
+        </mesh>
+        <mesh position={[0, 0.29, 0]} scale={[1, 1, 0.95]}>
+          <cylinderGeometry args={[0.172, 0.172, 0.13, 18]} />
+          {m(std(PALETTE.ivory, 0.9))}
+        </mesh>
+        {/* Four-leaf clover emblem */}
+        {[[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([sx, sy], i) => (
+          <mesh key={i} position={[sx * 0.013, 0.3 + sy * 0.013, 0.166]}>
+            <sphereGeometry args={[0.014, 8, 6]} />
+            <meshBasicMaterial color={PALETTE.cloverGreen} toneMapped={false} />
+          </mesh>
+        ))}
+        {/* Arms (the right one points the way) */}
+        <group position={[-0.17, 0.3, 0]} rotation={[0, 0, 0.6]}>
+          <mesh position={[0, -0.06, 0]}>
+            <capsuleGeometry args={[0.035, 0.08, 4, 8]} />
+            {m(mint)}
+          </mesh>
+        </group>
+        <group ref={armR} position={[0.17, 0.3, 0]}>
+          <group rotation={[0, 0, -0.6]}>
+            <mesh position={[0, -0.06, 0]}>
+              <capsuleGeometry args={[0.035, 0.08, 4, 8]} />
+              {m(mint)}
+            </mesh>
+          </group>
+        </group>
+        {/* Head */}
+        <group position={[0, 0.5, 0]}>
+          <mesh castShadow scale={[1.05, 0.95, 1]}>
+            <sphereGeometry args={[0.17, 20, 16]} />
+            {m(mint)}
+          </mesh>
+          {[-1, 1].map((s) => (
+            <group key={s}>
+              {/* Warm brown eyes with a small light */}
+              <mesh position={[s * 0.062, 0.02, 0.145]}>
+                <sphereGeometry args={[0.03, 12, 10]} />
+                {m(std(EYES, 0.3))}
+              </mesh>
+              <mesh position={[s * 0.055, 0.035, 0.173]}>
+                <sphereGeometry args={[0.009, 6, 4]} />
+                <meshBasicMaterial color={PALETTE.white} />
+              </mesh>
+              {/* Rose cheeks */}
+              <mesh position={[s * 0.105, -0.03, 0.13]} scale={[1, 0.6, 0.4]}>
+                <sphereGeometry args={[0.026, 8, 6]} />
+                {m(std(PINK, 0.9))}
+              </mesh>
+              {/* Two short butter-yellow horns */}
+              <mesh position={[s * 0.07, 0.16, 0.02]} rotation={[0, 0, -s * 0.35]}>
+                <coneGeometry args={[0.03, 0.09, 10]} />
+                {m(std(BUTTER, 0.7))}
+              </mesh>
+              {/* Pointed ears, pink inside */}
+              <group position={[s * 0.16, 0.06, 0]} rotation={[0, 0, -s * 1.15]}>
+                <mesh>
+                  <coneGeometry args={[0.05, 0.13, 10]} />
+                  {m(mint)}
+                </mesh>
+                <mesh position={[0, -0.005, 0.018]} scale={[0.65, 0.8, 0.4]}>
+                  <coneGeometry args={[0.05, 0.13, 10]} />
+                  {m(std(PINK, 0.9))}
+                </mesh>
+              </group>
+              {/* Small fangs */}
+              <mesh position={[s * 0.013, -0.057, 0.158]} rotation={[Math.PI, 0, 0]}>
+                <coneGeometry args={[0.007, 0.018, 6]} />
+                <meshBasicMaterial color={PALETTE.white} />
+              </mesh>
+            </group>
+          ))}
+          <mesh position={[0, -0.045, 0.16]}>
+            <boxGeometry args={[0.04, 0.008, 0.008]} />
+            {m(std(EYES, 0.5))}
+          </mesh>
+        </group>
+        {/* Short spiky tail */}
+        <group position={[0, 0.14, -0.17]} rotation={[-1.9, 0, 0]}>
+          <mesh>
+            <coneGeometry args={[0.05, 0.16, 10]} />
+            {m(mint)}
+          </mesh>
+          {[0.02, -0.03].map((y, i) => (
+            <mesh key={i} position={[0, y, 0.04]} rotation={[0.9, 0, 0]}>
+              <coneGeometry args={[0.018, 0.04, 6]} />
+              {m(mint)}
+            </mesh>
+          ))}
+        </group>
+      </group>
+    </group>
+  );
+}

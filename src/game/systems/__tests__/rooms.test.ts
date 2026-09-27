@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import { findPortal, ROOMS } from "../../config/rooms";
 import { PLAYER } from "../../config/world";
 import { resolveCollisions } from "../collision";
+import { worldAccess } from "../access";
+import { INTERACTABLES, nearestInteractable } from "../../config/interactions";
+import { stickDirection } from "../movement";
 
 describe("KLOVERS World rooms", () => {
   it("every door leads to a real room and arrival point", () => {
     for (const room of Object.values(ROOMS)) {
       for (const portal of room.portals) {
-        if (portal.kind !== "door") continue;
         expect(ROOMS[portal.to]).toBeDefined();
         expect(ROOMS[portal.to].spawns[portal.arrive]).toBeDefined();
       }
@@ -45,8 +47,74 @@ describe("KLOVERS World rooms", () => {
     }
   });
 
-  it("the Vocabulary Market gate stays closed (canon: opens on a real milestone)", () => {
-    const market = ROOMS["hangul-village"].portals.find((p) => p.id === "market-gate");
-    expect(market?.kind).toBe("closed");
+  it("every gate into a later canon world carries a locked notice", () => {
+    const gated = new Set(["vocabulary-market", "conversation-cafe"]);
+    const order: Record<string, number> = { courtyard: 0, "hangul-village": 1, "vocabulary-market": 2, hub: 2.5, "conversation-cafe": 3 };
+    for (const room of Object.values(ROOMS)) {
+      for (const portal of room.portals) {
+        // Going back never needs a lock; going forward into a gated world does.
+        const forward = gated.has(portal.to) && order[portal.to] > order[room.id];
+        if (forward) expect(portal.lockedNotice, `${room.id} → ${portal.to}`).toBeDefined();
+      }
+    }
+  });
+});
+
+describe("KLOVERS World access (real level only)", () => {
+  it("guests and learners without a level get the courtyard and Hangul Village", () => {
+    for (const lvl of [null, "", "not-a-level"]) {
+      const a = worldAccess(lvl, false);
+      expect([...a.open].sort()).toEqual(["courtyard", "hangul-village", "hub"]);
+      expect(a.preview).toBe(false);
+    }
+  });
+
+  it("a level opens its own world and every world before it", () => {
+    expect(worldAccess("hangul", false).open.has("vocabulary-market")).toBe(false);
+    expect(worldAccess("l1", false).open.has("vocabulary-market")).toBe(true);
+    expect(worldAccess("l1", false).open.has("conversation-cafe")).toBe(false);
+    expect(worldAccess("l2", false).open.has("conversation-cafe")).toBe(true);
+    // Experienced learners are never sent back to replay beginner worlds.
+    const l4 = worldAccess("l4", false).open;
+    expect(l4.has("vocabulary-market") && l4.has("conversation-cafe")).toBe(true);
+  });
+
+  it("legacy level labels map like the dashboard does", () => {
+    expect(worldAccess("level_1", false).open.has("vocabulary-market")).toBe(true);
+  });
+
+  it("admins get a labelled preview of every world", () => {
+    const a = worldAccess(null, true);
+    expect(a.preview).toBe(true);
+    expect(a.open.has("conversation-cafe")).toBe(true);
+  });
+});
+
+describe("KLOVERS World interactions", () => {
+  it("every interactable can be reached on foot and focuses itself", () => {
+    for (const it of INTERACTABLES) {
+      const room = ROOMS[it.room];
+      const p = { x: it.x, z: it.z };
+      resolveCollisions(p, PLAYER.radius, room.colliders, room.bounds);
+      expect(Math.hypot(p.x - it.x, p.z - it.z)).toBeLessThanOrEqual(it.radius);
+      expect(nearestInteractable(it.room, p.x, p.z)?.id).toBe(it.id);
+    }
+  });
+
+  it("no room's arrival point already stands at something to use", () => {
+    for (const room of Object.values(ROOMS)) {
+      for (const spawn of Object.values(room.spawns)) {
+        expect(nearestInteractable(room.id, spawn.x, spawn.z)).toBeUndefined();
+      }
+    }
+  });
+});
+
+describe("touch joystick", () => {
+  it("ignores a resting thumb and pushes forward away from the camera", () => {
+    expect(stickDirection(0.05, 0.05, 0).strength).toBe(0);
+    const d = stickDirection(0, 1, 0);
+    expect(d.z).toBeCloseTo(-1);
+    expect(d.strength).toBeCloseTo(1);
   });
 });

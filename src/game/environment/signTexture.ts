@@ -6,7 +6,7 @@ import { PALETTE } from "../config/world";
 const KO_FONT = '"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", sans-serif';
 
 /**
- * A wooden signboard with real Hangul, drawn on a small canvas (no image
+ * A wooden signboard with real Hangul (one line, or several lines), drawn on a small canvas (no image
  * download). Redraws once the Korean web font has loaded so the letters use
  * the site's type, not a system fallback.
  */
@@ -36,15 +36,18 @@ export function useSignTexture(text: string, aspect = 1) {
       ctx.fillStyle = PALETTE.charcoal;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      let size = h * 0.62;
+      // One or more lines ("\n"), each as large as the board allows.
+      const lines = text.split("\n");
+      const lineH = (h - 40) / lines.length;
+      let size = lineH * (lines.length > 1 ? 0.7 : 0.62 / 0.84);
       ctx.font = `700 ${size}px ${KO_FONT}`;
       const max = w - 64;
-      const measured = ctx.measureText(text).width;
-      if (measured > max) {
-        size *= max / measured;
+      const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
+      if (widest > max) {
+        size *= max / widest;
         ctx.font = `700 ${size}px ${KO_FONT}`;
       }
-      ctx.fillText(text, w / 2, h / 2 + size * 0.04);
+      lines.forEach((l, i) => ctx.fillText(l, w / 2, 20 + lineH * (i + 0.5) + size * 0.04));
       texture.needsUpdate = true;
     };
     draw();

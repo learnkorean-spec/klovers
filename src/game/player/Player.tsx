@@ -4,7 +4,8 @@ import type { Group } from "three";
 import type { RoomLayout } from "../config/rooms";
 import { MAX_DT, PLAYER } from "../config/world";
 import { resolveCollisions } from "../systems/collision";
-import { NO_INPUT, stepVelocity, stepYaw, wishDirection, yawFromDirection, type MoveInput } from "../systems/movement";
+import { NO_INPUT, stepVelocity, stepYaw, stickDirection, wishDirection, yawFromDirection, type MoveInput } from "../systems/movement";
+import { touchStick } from "../systems/touchInput";
 import type { CameraState, PlayerState } from "../systems/state";
 import { resolveAnimation } from "./animation";
 import LearnerAvatar from "./LearnerAvatar";
@@ -31,10 +32,19 @@ export default function Player({ input, player, camera, layout, avatar }: Player
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, MAX_DT);
     const p = player.current;
-    const keys = p.frozen ? NO_INPUT : input.current;
+    const still = p.frozen || p.paused;
+    const keys = still ? NO_INPUT : input.current;
 
-    const wish = wishDirection(keys, camera.current.yaw);
-    const targetSpeed = keys.run ? PLAYER.runSpeed : PLAYER.walkSpeed;
+    let wish = wishDirection(keys, camera.current.yaw);
+    let targetSpeed: number = keys.run ? PLAYER.runSpeed : PLAYER.walkSpeed;
+    if (wish.x === 0 && wish.z === 0 && !still) {
+      // Touch joystick: a light push walks, a full push runs.
+      const st = stickDirection(touchStick.x, touchStick.y, camera.current.yaw);
+      if (st.strength > 0) {
+        wish = { x: st.x, z: st.z };
+        targetSpeed = st.strength > 0.92 ? PLAYER.runSpeed : PLAYER.walkSpeed * Math.max(0.45, st.strength);
+      }
+    }
     p.velocity = stepVelocity(p.velocity, wish, targetSpeed, PLAYER.acceleration, PLAYER.deceleration, dt);
 
     const next = { x: p.position.x + p.velocity.x * dt, z: p.position.z + p.velocity.z * dt };

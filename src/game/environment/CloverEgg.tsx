@@ -1,49 +1,101 @@
+import { useRef, type MutableRefObject } from "react";
+import { useFrame } from "@react-three/fiber";
+import type { Group } from "three";
+import { ACCENT, MAT, std } from "../config/materials";
 import { PALETTE, PROPS } from "../config/world";
+import { HATCH, type StoryState } from "../systems/story";
 
 /**
- * The clover egg, dormant, on its plinth in the middle of the courtyard.
+ * The clover egg on its plinth in the middle of the courtyard.
  *
- * Canon (src/config/klovers-world.ts → originStory.discovery.egg): ivory
- * shell, a small green four-leaf clover mark, initial state dormant. It does
- * not crack, glow or move here — those reactions belong to real learning
- * progress (first word / first sentence / first conversation) and will be
- * wired to learner data in a later stage, never faked.
+ * Canon (originStory): ivory shell, a small green four-leaf clover mark,
+ * dormant until real learning wakes it. Phases come from StoryState:
+ * - dormant  : perfectly still (guests, and learners whose egg has not
+ *              hatched on the dashboard yet)
+ * - stirring : Cluby has really hatched but the learner has not seen it here
+ *              yet — a small rock now and then, inviting a closer look
+ * - hatching : rocks harder, the cap cracks off (≈ 2.3 s), Cluby appears
+ * - open     : the two halves of the shell rest in the nest
+ * A thin yellow inlay on the plinth is the only accent: navigation, not glow.
  */
-export default function CloverEgg() {
+const PLINTH_H = 0.5;
+const EGG_R = 0.42;
+const EGG_Y = PLINTH_H + EGG_R * 1.25;
+const SPLIT = Math.PI * 0.42; // where the cap breaks off
+
+export default function CloverEgg({ story }: { story: MutableRefObject<StoryState> }) {
   const { x, z, w } = PROPS.eggPlinth;
-  const plinthH = 0.5;
-  const eggR = 0.42;
+  const egg = useRef<Group>(null);
+  const cap = useRef<Group>(null);
+
+  useFrame(() => {
+    const s = story.current;
+    const now = performance.now();
+    let rock = 0;
+    let capOff = 0; // 0 = on, 1 = lying beside the nest
+    if (s.egg === "stirring") {
+      const t = (now % 3200) / 3200;
+      rock = t < 0.25 ? Math.sin(t * Math.PI * 16) * 0.05 * (1 - t / 0.25) : 0;
+    } else if (s.egg === "hatching") {
+      const t = now - s.eggT0;
+      const k = Math.min(t / HATCH.crackAt, 1);
+      rock = t < HATCH.crackAt ? Math.sin(t / 55) * (0.03 + 0.11 * k) : 0;
+      capOff = t < HATCH.crackAt ? 0 : Math.min((t - HATCH.crackAt) / 600, 1);
+    } else if (s.egg === "open") {
+      capOff = 1;
+    }
+    if (egg.current) egg.current.rotation.z = rock;
+    if (cap.current) {
+      const e = 1 - (1 - capOff) ** 3;
+      cap.current.position.set(e * 0.62, -e * 0.38 + Math.sin(e * Math.PI) * 0.3, e * 0.25);
+      cap.current.rotation.set(e * 0.4, 0, -e * 2.2);
+    }
+  });
 
   return (
     <group position={[x, 0, z]}>
-      {/* Dark stone plinth, so the ivory egg reads against it */}
-      <mesh castShadow receiveShadow position={[0, plinthH / 2, 0]}>
-        <boxGeometry args={[w, plinthH, w]} />
-        <meshStandardMaterial color={PALETTE.charcoal} roughness={0.9} />
+      <mesh castShadow receiveShadow position={[0, PLINTH_H / 2, 0]}>
+        <boxGeometry args={[w, PLINTH_H, w]} />
+        <primitive object={std(PALETTE.charcoal, 0.9)} attach="material" />
       </mesh>
-      {/* Wooden nest ring */}
-      <mesh castShadow position={[0, plinthH + 0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      {/* Thin yellow inlay round the top edge: the courtyard's one pointer */}
+      <mesh position={[0, PLINTH_H + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[w / 2 - 0.12, w / 2 - 0.07, 4, 1, Math.PI / 4]} />
+        <primitive object={ACCENT} attach="material" />
+      </mesh>
+      <mesh castShadow position={[0, PLINTH_H + 0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.42, 0.07, 10, 32]} />
-        <meshStandardMaterial color={PALETTE.woodWarm} roughness={0.8} />
+        <primitive object={MAT.woodWarm} attach="material" />
       </mesh>
-      {/* Egg */}
-      <mesh castShadow position={[0, plinthH + eggR * 1.25, 0]} scale={[1, 1.3, 1]}>
-        <sphereGeometry args={[eggR, 32, 24]} />
-        <meshStandardMaterial color={PALETTE.ivory} roughness={0.55} />
-      </mesh>
-      {/* Four-leaf clover mark, facing the spawn point (+z) */}
-      <group position={[0, plinthH + eggR * 1.25, eggR + 0.004]}>
-        {[
-          [0.035, 0.035],
-          [-0.035, 0.035],
-          [0.035, -0.035],
-          [-0.035, -0.035],
-        ].map(([dx, dy], i) => (
-          <mesh key={i} position={[dx, dy, 0]}>
-            <circleGeometry args={[0.04, 16]} />
-            <meshBasicMaterial color={PALETTE.cloverGreen} toneMapped={false} />
+      <group ref={egg} position={[0, PLINTH_H + 0.05, 0]}>
+        <group position={[0, EGG_Y - PLINTH_H - 0.05, 0]} scale={[1, 1.3, 1]}>
+          {/* Lower shell */}
+          <mesh castShadow>
+            <sphereGeometry args={[EGG_R, 32, 24, 0, Math.PI * 2, SPLIT, Math.PI - SPLIT]} />
+            <primitive object={std(PALETTE.ivory, 0.55)} attach="material" />
           </mesh>
-        ))}
+          {/* Cap */}
+          <group ref={cap}>
+            <mesh castShadow>
+              <sphereGeometry args={[EGG_R, 32, 12, 0, Math.PI * 2, 0, SPLIT]} />
+              <primitive object={std(PALETTE.ivory, 0.55)} attach="material" />
+            </mesh>
+          </group>
+          {/* Four-leaf clover mark, facing the spawn point (+z) */}
+          <group position={[0, -0.02, EGG_R + 0.004]}>
+            {[
+              [0.035, 0.035],
+              [-0.035, 0.035],
+              [0.035, -0.035],
+              [-0.035, -0.035],
+            ].map(([dx, dy], i) => (
+              <mesh key={i} position={[dx, dy, 0]}>
+                <circleGeometry args={[0.04, 16]} />
+                <meshBasicMaterial color={PALETTE.cloverGreen} toneMapped={false} />
+              </mesh>
+            ))}
+          </group>
+        </group>
       </group>
     </group>
   );

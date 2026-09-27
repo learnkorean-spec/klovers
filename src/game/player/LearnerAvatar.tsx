@@ -1,6 +1,7 @@
 import { useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
+import { std } from "../config/materials";
 import { PALETTE, PLAYER } from "../config/world";
 import { damp } from "../systems/movement";
 import type { PlayerState } from "../systems/state";
@@ -78,8 +79,9 @@ export default function LearnerAvatar({ player, avatar }: AvatarProps) {
   );
 }
 
+/** Shared, cached material per colour/finish (see config/materials.ts). */
 function Mat({ color, rough = 0.8 }: { color: string; rough?: number }) {
-  return <meshStandardMaterial color={color} roughness={rough} />;
+  return <primitive object={std(color, rough)} attach="material" />;
 }
 
 function Legs({ look, left, right }: { look: AvatarLook; left: MutableRefObject<Group | null>; right: MutableRefObject<Group | null> }) {
