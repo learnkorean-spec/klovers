@@ -2,6 +2,7 @@ import { useState, useEffect, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { useSEO } from "@/hooks/useSEO";
 
 /* ─── Brand tokens ─────────────────────────────── */
@@ -268,11 +269,11 @@ function StoryPageAr() {
       <div style={{ textAlign:"center", marginBottom:"18px", zIndex:2, direction:"rtl", padding:"0 20mm" }}>
         <div style={{ fontSize:"11px", fontWeight:900, color:"#FFFF00", letterSpacing:"4px", textTransform:"uppercase", marginBottom:"6px", opacity:0.7 }}>قصة كلوفرز</div>
         <div style={{ fontSize:"26px", fontWeight:900, color:"#fff", lineHeight:1.2, marginBottom:"6px" }}>
-          تعرّف على جونهو وميا 🇰🇷
+          التعرّف على جونهو وميا
         </div>
         <div style={{ fontSize:"12px", color:"#aaa", lineHeight:1.7 }}>
-          مرحباً بك في رحلة تعلم الهانغول مع رفيقَيك الكوريَّيْن — جونهو وميا.
-          تابع مغامراتهما من شوارع سيول إلى قاعة الدراسة، وتعلَّم الكورية بطريقة تجعلك تعيشها!
+          مرحبًا في رحلة تعلّم الهانغول برفقة صديقين كوريين: جونهو وميا.
+          مغامراتهما تمتد من شوارع سيول إلى قاعة الدراسة، وتعلّم الكورية معهما تجربة حيّة!
         </div>
       </div>
 
@@ -297,17 +298,17 @@ function StoryPageAr() {
       {/* Character labels */}
       <div style={{ display:"flex", gap:"40px", marginTop:"20px", zIndex:2, direction:"rtl" }}>
         <div style={{ textAlign:"center" }}>
-          <div style={{ fontSize:"18px" }}>🧑‍🎓</div>
+          <KloverIcon name="student-boy-thumbsup" className="h-6 w-6" />
           <div style={{ fontSize:"13px", fontWeight:900, color:"#20B2AA" }}>جونهو</div>
           <div style={{ fontSize:"10px", color:"#777" }}>Junho</div>
         </div>
         <div style={{ textAlign:"center" }}>
-          <div style={{ fontSize:"18px" }}>🦊</div>
+          <KloverIcon name="klobi-reading" className="h-6 w-6" />
           <div style={{ fontSize:"13px", fontWeight:900, color:"#D2691E" }}>ثعلب غوميهو</div>
           <div style={{ fontSize:"10px", color:"#777" }}>The Gumiho Fox</div>
         </div>
         <div style={{ textAlign:"center" }}>
-          <div style={{ fontSize:"18px" }}>👩‍🎓</div>
+          <KloverIcon name="student-girl-heart" className="h-6 w-6" />
           <div style={{ fontSize:"13px", fontWeight:900, color:"#7B1A3A" }}>ميا</div>
           <div style={{ fontSize:"10px", color:"#777" }}>Miya</div>
         </div>
@@ -337,7 +338,7 @@ function StoryPageEn() {
       <div style={{ textAlign:"center", marginBottom:"18px", zIndex:2, padding:"0 20mm" }}>
         <div style={{ fontSize:"11px", fontWeight:900, color:"#FFFF00", letterSpacing:"4px", textTransform:"uppercase", marginBottom:"6px", opacity:0.7 }}>The Klovers Story</div>
         <div style={{ fontSize:"26px", fontWeight:900, color:"#fff", lineHeight:1.2, marginBottom:"6px" }}>
-          Meet Junho & Miya 🇰🇷
+          Meet Junho & Miya 
         </div>
         <div style={{ fontSize:"12px", color:"#aaa", lineHeight:1.7 }}>
           Welcome to your Hangul journey with your Korean companions — Junho and Miya.
@@ -364,17 +365,17 @@ function StoryPageEn() {
 
       <div style={{ display:"flex", gap:"40px", marginTop:"20px", zIndex:2 }}>
         <div style={{ textAlign:"center" }}>
-          <div style={{ fontSize:"18px" }}>🧑‍🎓</div>
+          <KloverIcon name="student-boy-thumbsup" className="h-6 w-6" />
           <div style={{ fontSize:"13px", fontWeight:900, color:"#20B2AA" }}>Junho</div>
           <div style={{ fontSize:"10px", color:"#777" }}>Our Korean guide</div>
         </div>
         <div style={{ textAlign:"center" }}>
-          <div style={{ fontSize:"18px" }}>🦊</div>
+          <KloverIcon name="klobi-reading" className="h-6 w-6" />
           <div style={{ fontSize:"13px", fontWeight:900, color:"#D2691E" }}>Gumiho Fox</div>
           <div style={{ fontSize:"10px", color:"#777" }}>The magical fox</div>
         </div>
         <div style={{ textAlign:"center" }}>
-          <div style={{ fontSize:"18px" }}>👩‍🎓</div>
+          <KloverIcon name="student-girl-heart" className="h-6 w-6" />
           <div style={{ fontSize:"13px", fontWeight:900, color:"#7B1A3A" }}>Miya</div>
           <div style={{ fontSize:"10px", color:"#777" }}>Your learning partner</div>
         </div>
@@ -807,7 +808,7 @@ function ConsCard({ c, lang }: { c: typeof CONSONANTS[0]; lang: Lang }) {
         {/* Egyptian dialect note */}
         {c.arDialect && isAr && (
           <div style={{ fontSize:"10px", color:T3, marginBottom:"4px", lineHeight:1.4 }}>
-            🇪🇬 <em>{c.arDialect}</em>
+            <em>{c.arDialect}</em>
           </div>
         )}
 
@@ -882,7 +883,7 @@ function VowCard({ v, lang }: { v: typeof VOWELS[0]; lang: Lang }) {
           <div style={{
             fontSize:"10px", color:T3, direction:"ltr",
           }}>
-            🔤 {isAr ? "يشبه: " : "Like: "}<span style={{ fontSize:"13px" }}>{(d as any).eq}</span>
+            {isAr ? "يشبه: " : "Like: "}<span style={{ fontSize:"13px" }}>{(d as any).eq}</span>
           </div>
         )}
       </div>
@@ -918,19 +919,19 @@ const BOOKS_EN = [
 /* ── 7-Day Study Plan AR ── */
 function StudyPlanAr() {
   const days = [
-    { d:"اليوم ١", icon:"🔤", task:"الحروف الساكنة — الجزء الأول (ㄱ–ㅅ)", tip:"كرر كل حرف ١٠ مرات بصوت عالٍ", color:"#fef9ec" },
-    { d:"اليوم ٢", icon:"🔤", task:"الحروف الساكنة — الجزء الثاني (ㅇ–ㅎ)", tip:"اكتب كل حرف ٥ مرات في كراسة", color:"#fef9ec" },
-    { d:"اليوم ٣", icon:"🗣️", task:"حروف المد (ㅏ–ㅕ) + الحروف المُشدَّدة", tip:"استمع للنطق من QR ثم كرره", color:"#f0fff4" },
-    { d:"اليوم ٤", icon:"🏗️", task:"بناء الكتل المقطعية + الباتشيم", tip:"جرب تكتب اسمك بالكوري!", color:"#f0fff4" },
-    { d:"اليوم ٥", icon:"✏️", task:"التمارين التطبيقية (المستويات ١–٣)", tip:"خصص ٣٠ دقيقة بدون هاتف", color:"#fffef0" },
-    { d:"اليوم ٦", icon:"🎬", task:"مفردات المسلسلات الكورية (٢٠ كلمة)", tip:"اربط كل كلمة بمشهد من مسلسل تحبه", color:"#fffef0" },
-    { d:"اليوم ٧", icon:"🏆", task:"مراجعة شاملة + اختبار المفردات", tip:"اقرأ خمس كلمات كورية عشوائية بصوت عالٍ!", color:"#f0f4ff" },
+    { d:"اليوم ١", icon:"🔤", task:"الحروف الساكنة — الجزء الأول (ㄱ–ㅅ)", tip:"تكرار كل حرف ١٠ مرات بصوت عالٍ", color:"#fef9ec" },
+    { d:"اليوم ٢", icon:"🔤", task:"الحروف الساكنة — الجزء الثاني (ㅇ–ㅎ)", tip:"كتابة كل حرف ٥ مرات في الكرّاسة", color:"#fef9ec" },
+    { d:"اليوم ٣", icon:"🗣️", task:"حروف المد (ㅏ–ㅕ) + الحروف المُشدَّدة", tip:"الاستماع إلى النطق من رمز QR ثم تكراره", color:"#f0fff4" },
+    { d:"اليوم ٤", icon:"🏗️", task:"بناء الكتل المقطعية + الباتشيم", tip:"محاولة كتابة الاسم بالكورية!", color:"#f0fff4" },
+    { d:"اليوم ٥", icon:"✏️", task:"التمارين التطبيقية (المستويات ١–٣)", tip:"تخصيص ٣٠ دقيقة دون هاتف", color:"#fffef0" },
+    { d:"اليوم ٦", icon:"🎬", task:"مفردات المسلسلات الكورية (٢٠ كلمة)", tip:"ربط كل كلمة بمشهد من مسلسل مفضّل", color:"#fffef0" },
+    { d:"اليوم ٧", icon:"🏆", task:"مراجعة شاملة + اختبار المفردات", tip:"قراءة خمس كلمات كورية عشوائية بصوت عالٍ!", color:"#f0f4ff" },
   ];
   return (
     <Page dir="rtl">
       <SHead title="خطة الدراسة — ٧ أيام" subtitle="اتبع هذه الخطة وستقرأ الكورية في أسبوع واحد!" />
       <div style={{ borderLeft:`3px solid ${Y}`, paddingLeft:"10px", marginBottom:"8mm", background:SBG, padding:"8px 10px" }}>
-        <div style={{ fontSize:"12px", fontWeight:800, color:T1, marginBottom:"2px" }}>🎯 الهدف: قراءة الهانغول في ٧ أيام</div>
+        <div style={{ fontSize:"12px", fontWeight:800, color:T1, marginBottom:"2px" }}>الهدف: قراءة الهانغول في ٧ أيام</div>
         <div style={{ fontSize:"11px", color:T3, lineHeight:1.6 }}>٣٠–٤٥ دقيقة يومياً تكفي. الاستمرارية أهم من الكم!</div>
       </div>
       <div style={{ display:"flex", flexDirection:"column", marginBottom:"8mm" }}>
@@ -945,7 +946,7 @@ function StudyPlanAr() {
         ))}
       </div>
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.7, borderTop:`1px solid ${BD}`, paddingTop:"4mm", margin:0 }}>
-        🔑 <strong>سر النجاح:</strong> لا تنتقل لليوم التالي قبل أن تتقن حروف اليوم الحالي. الجودة تتفوق على السرعة دائماً!
+        <strong>سر النجاح:</strong> الانتقال إلى اليوم التالي يكون بعد إتقان حروف اليوم الحالي. الجودة تتفوق على السرعة دائماً!
       </p>
     </Page>
   );
@@ -978,9 +979,9 @@ const ASPIRATED = [
 function AspiratedAr() {
   return (
     <Page dir="rtl">
-      <SHead title="الحروف الساكنة المُشدَّدة (된소리) 💥" subtitle="٥ حروف تُنطق بضغط إضافي — بدون هواء!" />
+      <SHead title="الحروف الساكنة المُشدَّدة (된소리)" subtitle="٥ حروف تُنطق بضغط إضافي — بدون هواء!" />
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"4mm", borderLeft:`3px solid ${Y}`, paddingLeft:"8px" }}>
-        ⚠️ <strong>للمبتدئين:</strong> هذه حروف متقدمة — ركز أولاً على الـ١٤ حرفاً الأساسية. ارجع لهذه الصفحة في الحصة الثانية!
+        <strong>للمبتدئين:</strong> هذه حروف متقدمة، والأولوية للحروف الـ١٤ الأساسية. العودة إلى هذه الصفحة تكون في الحصة الثانية.
       </p>
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"5mm" }}>
         الفرق الأساسي: الحروف العادية مع نفخة هواء خفيفة. الحروف المُشدَّدة <strong>بدون</strong> أي هواء — الحلق والفم مضغوطان.
@@ -998,7 +999,7 @@ function AspiratedAr() {
                 <div style={{ fontSize:"10px", color:T3 }}>= {a.base} مع ضغط إضافي</div>
               </div>
             </div>
-            <div style={{ fontSize:"10px", color:T2, marginBottom:"2px" }}>🔊 {a.ar.sound}</div>
+            <div style={{ fontSize:"10px", color:T2, marginBottom:"2px" }}>{a.ar.sound}</div>
             <div style={{ fontSize:"10px", color:T2, borderRight:`2px solid ${Y}`, paddingRight:"5px", marginBottom:"4px", fontStyle:"italic" }}>{a.ar.mnemonic}</div>
             <div style={{ display:"flex", gap:"4px", flexWrap:"wrap", direction:"ltr" }}>
               {a.ar.ex.map((ex, i) => (
@@ -1013,7 +1014,7 @@ function AspiratedAr() {
       <div style={{ display:"flex", alignItems:"center", gap:"12px", borderTop:`1px solid ${BD}`, paddingTop:"4mm" }}>
         <QRPlaceholder size={44} label="" />
         <div>
-          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>🔊 اسمع الفرق بين العادي والمُشدَّد</div>
+          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>الاستماع إلى الفرق بين العادي والمُشدَّد</div>
           <div style={{ fontSize:"10px", color:T3, marginTop:"2px" }}>klovers.academy/audio/tensed</div>
         </div>
       </div>
@@ -1023,7 +1024,7 @@ function AspiratedAr() {
 
 /* ── Compound Vowels AR ── */
 const COMPOUND_VOWELS = [
-  { char:"ㅘ", roman:"wa",  en:"Like 'wa' in water",      ar:"مثل 'وا' في واو",         ex:"봐요 (bwa-yo) = انظر" },
+  { char:"ㅘ", roman:"wa",  en:"Like 'wa' in water",      ar:"مثل 'وا' في واو",         ex:"봐요 (bwa-yo) = يرى / ينظر" },
   { char:"ㅙ", roman:"wae", en:"Like 'we' in wet",        ar:"مثل 'ويه' — نادر",         ex:"왜요 (wae-yo) = لماذا؟" },
   { char:"ㅚ", roman:"oe",  en:"Like 'we' (round lips)",  ar:"مثل 'ويه' مع دائري",       ex:"최고 (choe-go) = الأفضل" },
   { char:"ㅝ", roman:"wo",  en:"Like 'wo' in wonder",     ar:"مثل 'وو' ممدودة",          ex:"뭐 (mwo) = ماذا؟" },
@@ -1039,9 +1040,9 @@ const COMPOUND_VOWELS = [
 function CompoundVowelsAr() {
   return (
     <Page dir="rtl">
-      <SHead title="حروف المد المُركَّبة (이중모음) 🔗" subtitle="١١ حرف مد مُركَّب — تُبنى من حرفين بسيطين!" />
+      <SHead title="حروف المد المُركَّبة (이중모음)" subtitle="١١ حرف مد مُركَّب — تُبنى من حرفين بسيطين!" />
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"5mm" }}>
-        لا تحفظها كلها الآن! الأكثر استخداماً: <strong>ㅘ ㅝ ㅐ ㅔ ㅢ</strong> — ستقابلهم كثيراً في المسلسلات والأغاني.
+        لا حاجة إلى حفظها كلها الآن. الأكثر استخدامًا: <strong>ㅘ ㅝ ㅐ ㅔ ㅢ</strong>، وتتكرر كثيرًا في المسلسلات والأغاني.
       </p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"6px 10px", marginBottom:"8mm" }}>
         {COMPOUND_VOWELS.map(v => (
@@ -1060,7 +1061,7 @@ function CompoundVowelsAr() {
       <div style={{ display:"flex", alignItems:"center", gap:"12px", borderTop:`1px solid ${BD}`, paddingTop:"4mm" }}>
         <QRPlaceholder size={40} label="" />
         <div>
-          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>🔊 اسمع نطق حروف المد المركبة</div>
+          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>الاستماع إلى نطق حروف المد المركبة</div>
           <div style={{ fontSize:"10px", color:T3, marginTop:"2px" }}>klovers.academy/audio/compound</div>
         </div>
       </div>
@@ -1113,7 +1114,7 @@ function HistoryAr() {
 function SejongAr() {
   return (
     <Page dir="rtl">
-      <SHead title="الملك سيجونغ العظيم 👑" subtitle="الرجل الذي غيّر مصير شعب بكلمة واحدة: العدالة" />
+      <SHead title="الملك سيجونغ العظيم" subtitle="الرجل الذي غيّر مصير شعب بكلمة واحدة: العدالة" />
 
       {/* Bio */}
       <div style={{ display:"grid", gridTemplateColumns:"120px 1fr", gap:"14px", marginBottom:"8mm", paddingBottom:"6mm", borderBottom:`1px solid ${BD}` }}>
@@ -1177,7 +1178,7 @@ function SejongAr() {
 function CultureAr() {
   return (
     <Page dir="rtl">
-      <SHead title="الثقافة الكورية 🌸" subtitle="خمسة آلاف عام من الجمال والفلسفة والفن" />
+      <SHead title="الثقافة الكورية" subtitle="خمسة آلاف عام من الجمال والفلسفة والفن" />
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"8mm" }}>
 
@@ -1216,7 +1217,7 @@ function CultureAr() {
 
         {/* Values & Spirit */}
         <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px", background:SBG }}>
-          <div style={{ fontSize:"22px", marginBottom:"5px" }}>🌿</div>
+          <KloverIcon name="sprout" className="mx-auto mb-1 h-7 w-7" />
           <div style={{ fontWeight:800, fontSize:"11px", color:T1, marginBottom:"4px" }}>القيم والروح الكورية</div>
           <div style={{ fontSize:"10px", color:T2, lineHeight:1.7 }}>
             <strong>빨리빨리</strong> = «يلا يلا!» — <strong>눈치</strong> = فهم المشاعر دون كلام. <strong>한</strong> = الحنين العميق والمقاومة — روح الشعب الكوري الأبدية.
@@ -1238,9 +1239,9 @@ function CultureAr() {
       </div>
 
       <div style={{ borderTop:`1px solid ${BD}`, paddingTop:"4mm" }}>
-        <div style={{ fontSize:"11px", fontWeight:700, color:T1, marginBottom:"5px" }}>بعد إتمام هذه الكتب الستة ستتمكن من:</div>
+        <div style={{ fontSize:"11px", fontWeight:700, color:T1, marginBottom:"5px" }}>بعد إتمام هذه الكتب الستة يصبح الطالب قادرًا على:</div>
         <div style={{ display:"flex", gap:"6px", flexWrap:"wrap" }}>
-          {["فهم المسلسلات الكورية بدون ترجمة 🎬","التحدث مع الكوريين بثقة 🗣️","قراءة اللافتات في كوريا 🪧","غناء أغاني K-Pop 🎵"].map(t=>(
+          {["فهم المسلسلات الكورية بدون ترجمة","التحدث مع الكوريين بثقة","قراءة اللافتات في كوريا","غناء أغاني K-Pop"].map(t=>(
             <div key={t} style={{ fontSize:"10px", color:T2, padding:"3px 7px", border:`1px solid ${BD}`, borderRadius:"4px" }}>{t}</div>
           ))}
         </div>
@@ -1253,10 +1254,10 @@ function CultureAr() {
 function CourseAr() {
   return (
     <Page dir="rtl">
-      <SHead title="سلسلة كتب Klovers — ٦ كتب إلى الإتقان 📚" subtitle="خارطة رحلتك من الصفر إلى الطلاقة" />
+      <SHead title="سلسلة كتب كلوفرز — ٦ كتب إلى الإتقان" subtitle="خارطة الرحلة من الصفر إلى الطلاقة" />
 
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.8, marginBottom:"6mm" }}>
-        صُمِّمت سلسلة Klovers لتأخذك من <strong>لا تعرف حرفاً واحداً</strong> إلى <strong>التحدث والكتابة بطلاقة</strong> — بطريقة ممتعة تعتمد على مسلسلاتك المفضلة وموسيقاك الكورية المحبوبة. كل كتاب يبني على السابق.
+        صُمِّمت سلسلة كلوفرز للانتقال من <strong>عدم معرفة حرف واحد</strong> إلى <strong>التحدث والكتابة بطلاقة</strong>، بطريقة ممتعة تعتمد على المسلسلات والموسيقى الكورية المحبوبة. كل كتاب يبني على السابق.
       </p>
 
       <div style={{ display:"flex", flexDirection:"column", gap:"0", marginBottom:"8mm" }}>
@@ -1310,8 +1311,8 @@ function CourseAr() {
 function EdCover({ lang }: { lang: "ar" | "en" }) {
   const isAr = lang === "ar";
   const badge    = isAr ? "كتاب مبتدئين · كتاب ٠١" : "BEGINNER WORKBOOK · BOOK 01";
-  const subtitle = isAr ? "اقرأ وأكتب الكورية — خطوة بخطوة" : "Read and Write Korean — Step by Step";
-  const headline = isAr ? "اقرأ الكورية في ٦ ساعات فقط" : "READ KOREAN IN JUST 6 HOURS";
+  const subtitle = isAr ? "قراءة الكورية وكتابتها، خطوة بخطوة" : "Read and Write Korean — Step by Step";
+  const headline = isAr ? "قراءة الكورية في ٤ حصص" : "READ KOREAN IN 4 CLASSES";
   const body1    = isAr ? "كتاب الأبجدية الكورية للمبتدئين تماماً." : "The Korean Alphabet Workbook for Complete Beginners.";
   const body2    = isAr ? "مستوحى من المسلسلات الكورية والكيبوب." : "Inspired by K-drama and K-pop.";
   const author   = isAr ? "رهام الشرقاوي" : "REHAM ELSHRKAWY";
@@ -1452,11 +1453,11 @@ function WelcomeAr() {
     { d:"يوم ١", t:"حروف المد ㅏ–ㅜ" }, { d:"يوم ٢", t:"حروف المد ㅡ–ㅕ" },
     { d:"يوم ٣", t:"ساكنة ㄱ–ㄷ" }, { d:"يوم ٤", t:"ساكنة ㄹ–ㅅ" },
     { d:"يوم ٥", t:"ساكنة ㅇ–ㅊ" }, { d:"يوم ٦", t:"ساكنة ㅋ–ㅎ" },
-    { d:"يوم ٧", t:"مقاطع + مراجعة 🏆" },
+    { d:"يوم ٧", t:"مقاطع + مراجعة" },
   ];
   return (
     <Page dir="rtl">
-      <SHead title="مرحباً بعالم الهانغول!" subtitle="اكتشف جمال الأبجدية الكورية" />
+      <SHead title="مرحبًا في عالم الهانغول!" subtitle="جمال الأبجدية الكورية" />
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"7mm" }}>
         <div style={{ border:`1px solid ${BD}`, borderRadius:"6px", padding:"12px", background:SBG }}>
@@ -1591,7 +1592,7 @@ function TocAr() {
       </div>
 
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.7, borderTop:`1px solid ${BD}`, paddingTop:"4mm", margin:0 }}>
-        اقرأ كل درس بالترتيب — كل درس يبني على السابق. في ٤ حصص ستقرأ الكورية بثقة كاملة!
+        الدروس تُقرأ بالترتيب، فكل درس يبني على السابق. وفي ٤ حصص تصبح قراءة الكورية ممكنة بثقة.
       </p>
     </Page>
   );
@@ -1607,7 +1608,7 @@ function MiniReadingStripAr() {
   ];
   return (
     <div style={{ marginTop:"5mm", paddingTop:"4mm", borderTop:`1px solid ${BD}` }}>
-      <div style={{ fontSize:"10px", color:T3, marginBottom:"4px" }}>يمكنك الآن قراءة هذه الكلمات الحقيقية:</div>
+      <div style={{ fontSize:"10px", color:T3, marginBottom:"4px" }}>هذه كلمات حقيقية يمكن قراءتها الآن:</div>
       <div style={{ display:"flex", gap:"10px", flexWrap:"wrap", direction:"ltr" }}>
         {words.map(w => (
           <div key={w.k} style={{ textAlign:"center" }}>
@@ -1646,8 +1647,8 @@ function VowelsAr() {
     <Page dir="rtl" chapter="حروف المد">
       <SHead title="حروف المد (모음)" subtitle="حروف المد لا تقف وحدها — تحتاج دائماً حرفاً ساكناً" />
       <p style={{ fontSize:"11px", color:T2, marginBottom:"4mm", lineHeight:1.6 }}>
-        بنهاية هذه الصفحة ستتمكن من قراءة ونطق ١٠ حروف مد كورية وتكوين مقاطع كاملة.
-        إذا بدأت الكلمة بصوت مدّي، استخدم الحرف الصامت ㅇ أمامه: أ = 아 (ㅇ + ㅏ).
+        بنهاية هذه الصفحة تصبح قراءة ١٠ حروف مد كورية ونطقها وتكوين مقاطع كاملة أمرًا ممكنًا.
+        إذا بدأت الكلمة بصوت مدّي، يُكتب الحرف الصامت ㅇ أمامه: أ = 아 (ㅇ + ㅏ).
       </p>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px 16px" }}>
         {VOWELS.map(v => <VowCard key={v.char} v={v} lang="ar" />)}
@@ -1656,7 +1657,7 @@ function VowelsAr() {
         borderTop:`1px solid ${BD}`, paddingTop:"4mm" }}>
         <QRPlaceholder size={44} label="" />
         <div>
-          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>استمع لنطق حروف المد</div>
+          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>الاستماع إلى نطق حروف المد</div>
           <div style={{ fontSize:"10px", color:T3, marginTop:"2px" }}>klovers.academy/audio</div>
         </div>
       </div>
@@ -1737,7 +1738,7 @@ function SectionBadge({ icon, label, color=KIDS_GREEN, dir="rtl" }:{ icon:string
       borderRadius:"22px", fontSize:"13px", fontWeight:900,
       boxShadow:"0 2px 0 rgba(0,0,0,0.08)",
     }}>
-      <span style={{ fontSize:"15px" }}>{icon}</span>
+      {icon ? <span style={{ fontSize:"15px" }}>{icon}</span> : null}
       <span>{label}</span>
     </div>
   );
@@ -1831,7 +1832,7 @@ function BatchimAr() {
         <div style={{ fontSize:"22px", fontWeight:900 }}>الباتشيم في اللغة الكورية</div>
         <div style={{ fontSize:"18px", fontWeight:900, opacity:0.95 }}>(받침)</div>
         <div style={{ marginInlineStart:"auto", display:"flex", flexDirection:"column", lineHeight:1 }}>
-          <span style={{ background:"#fff", color:KIDS_RED, fontSize:"10px", fontWeight:900, padding:"3px 8px", borderRadius:"4px" }}>🇰🇷</span>
+          <span style={{ background:"#fff", color:KIDS_RED, fontSize:"10px", fontWeight:900, padding:"3px 8px", borderRadius:"4px" }}>KR</span>
         </div>
       </div>
 
@@ -1839,7 +1840,7 @@ function BatchimAr() {
       <div style={{ display:"flex", gap:"10px", marginBottom:"6mm", alignItems:"flex-start" }}>
         <KidsPanel color={KIDS_GREEN} bg="#FFF8F1">
           <div style={{ marginBottom:"6px" }}>
-            <SectionBadge icon="📗" label="تعريف" color={KIDS_GREEN} />
+            <SectionBadge icon="" label="تعريف" color={KIDS_GREEN} />
           </div>
           <p style={{ fontSize:"12px", color:"#222", lineHeight:1.8, margin:0, fontWeight:600 }}>
             الباتشيم (<span style={{ color:KIDS_RED, fontWeight:900 }}>받침</span>) هو الحرف الساكن
@@ -1856,7 +1857,7 @@ function BatchimAr() {
 
       {/* Rule banner */}
       <div style={{ marginBottom:"4mm" }}>
-        <SectionBadge icon="💡" label="قاعدة" color={KIDS_ORANGE} />
+        <SectionBadge icon="" label="قاعدة" color={KIDS_ORANGE} />
       </div>
       <p style={{ fontSize:"12px", color:"#222", textAlign:"center", marginBottom:"5mm", fontWeight:700 }}>
         رغم وجود حروف كثيرة، إلا أن نطق الباتشيم يُختصر إلى{" "}
@@ -1866,7 +1867,7 @@ function BatchimAr() {
       {/* The 7 sounds */}
       <KidsPanel color={KIDS_BLUE} bg="#fff">
         <div style={{ marginBottom:"6px" }}>
-          <SectionBadge icon="🔊" label="الأصوات السبعة" color={KIDS_BLUE} />
+          <SectionBadge icon="" label="الأصوات السبعة" color={KIDS_BLUE} />
         </div>
         <div>
           {FINAL7.map(r => (
@@ -1881,7 +1882,7 @@ function BatchimAr() {
       <div style={{ display:"flex", gap:"10px", alignItems:"flex-start" }}>
         <KidsPanel color={KIDS_BLUE} bg="#F5FAFE">
           <div style={{ marginBottom:"6px" }}>
-            <SectionBadge icon="📘" label="ملاحظة" color={KIDS_BLUE} />
+            <SectionBadge icon="" label="ملاحظة" color={KIDS_BLUE} />
           </div>
           <p style={{ fontSize:"11.5px", color:"#222", lineHeight:1.8, margin:0, fontWeight:600 }}>
             الباتشيم يُكتب في نهاية المقطع، لكنه لا يظهر منفصلاً.
@@ -1907,10 +1908,10 @@ function DoubleBatchimAr() {
   ];
   return (
     <Page dir="rtl">
-      <SHead title="الباتشيم المزدوج (겹받침)" subtitle="حرفان ساكنان في الأسفل — اقرأ حرفاً واحداً فقط!" />
+      <SHead title="الباتشيم المزدوج (겹받침)" subtitle="حرفان ساكنان في الأسفل، ويُقرأ حرف واحد فقط!" />
       {/* Larsen-Freeman: don't memorize warning */}
       <div style={{ background:"#fff8e1", border:"2px solid #fbbf24", borderRadius:"8px", padding:"7px 12px", fontSize:"11px", color:"#92400e", marginBottom:"8px" }}>
-        <strong>⚠️ تنبيه مهم للمبتدئين:</strong> لا تحاول حفظ هذه الجداول كلها الآن! هذا محتوى متقدم — فهم المبدأ يكفي تماماً.
+        <strong>تنبيه مهم للمبتدئين:</strong> لا حاجة إلى حفظ هذه الجداول كلها الآن! هذا محتوى متقدم — فهم المبدأ يكفي تماماً.
         الباتشيم المزدوج سيصبح طبيعياً جداً بعد قراءة ١٠٠ كلمة فقط. <strong>سيُشرح بالتفصيل في الكتاب الثاني.</strong>
       </div>
 
@@ -1937,7 +1938,7 @@ function DoubleBatchimAr() {
         </div>
 
         <div style={{ background:GL, border:`2px solid ${GD}`, borderRadius:"12px", padding:"12px" }}>
-          <div style={{ fontSize:"11px", fontWeight:800, color:GD, marginBottom:"6px" }}>القاعدة الكبرى للربط 🔗</div>
+          <div style={{ fontSize:"11px", fontWeight:800, color:GD, marginBottom:"6px" }}>القاعدة الكبرى للربط</div>
           <div style={{ fontSize:"11px", color:BK2, lineHeight:1.9, marginBottom:"8px" }}>
             إذا جاء بعد الباتشيم المزدوج مقطع يبدأ بـ <strong>ㅇ</strong> الصامت، يتحرك الحرف <strong style={{color:"#C8102E"}}>الأيمن (الثاني)</strong> إلى المقطع التالي!
           </div>
@@ -1987,7 +1988,7 @@ function DoubleBatchimAr() {
         <div>
           <div style={{ fontWeight:800, fontSize:"11px", color:GD }}>نصيحة الخبراء</div>
           <div style={{ fontSize:"11px", color:GD, lineHeight:1.7 }}>
-            لا تحفظ كل هذا فوراً! ابدأ بـ <strong>ㄺ (닭)، ㅄ (없다)، ㄻ (삶)</strong> — هذه الثلاثة تكفي لمستوى المبتدئين. ستتعلم الباقي تلقائياً من خلال القراءة.
+            لا حاجة إلى حفظ كل هذا فورًا. البداية بـ <strong>ㄺ (닭)، ㅄ (없다)، ㄻ (삶)</strong> تكفي لمستوى المبتدئين، والباقي يأتي تلقائيًا مع القراءة.
           </div>
         </div>
       </div>
@@ -1998,9 +1999,9 @@ function DoubleBatchimAr() {
 function KdramaPageAr({ slice, page }: { slice:[number,number]; page:number }) {
   return (
     <Page dir="rtl">
-      <SHead title={`أساسيات المسلسلات الكورية 🎬 — الجزء ${page===1?"١":"٢"} من ٢`} subtitle="كلمات سمعتها مئة مرة — اقرأها الآن بالهانغول!" />
+      <SHead title={`أساسيات المسلسلات الكورية — الجزء ${page===1?"١":"٢"} من ٢`} subtitle="كلمات مسموعة مئة مرة، وقراءتها الآن بالهانغول!" />
       <div style={{ borderLeft:`3px solid ${Y}`, paddingLeft:"10px", marginBottom:"8px", fontSize:"11px", color:T2, fontWeight:700, background:SBG, padding:"7px 10px" }}>
-        🎬 {page===1 ? "الكلمات الأساسية — تُسمع في كل حلقة تقريباً!" : "الكلمات المتقدمة — ستبدو كالمحترف!"}
+        {page===1 ? "الكلمات الأساسية — تُسمع في كل حلقة تقريباً!" : "الكلمات المتقدمة — للكلام كالمحترفين!"}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"7px" }}>
         {KDRAMA_AR.slice(...slice).map(v=>(
@@ -2022,10 +2023,10 @@ function KdramaAr() { return <KdramaPageAr slice={[0,10]} page={1} />; }
 function PracticeAr() {
   return (
     <Page dir="rtl">
-      <SHead title="تمارين تطبيقية ✏️" subtitle="اختبر نفسك!" />
+      <SHead title="تمارين تطبيقية" subtitle="اختبار ذاتي!" />
       {/* Knowles self-assessment checklist */}
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px 12px", marginBottom:"10px", background:SBG }}>
-        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"7px" }}>✅ قائمة التحقق الذاتي — هل أنت مستعد للتمارين؟</div>
+        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"7px" }}>قائمة التحقق الذاتي — هل حان وقت التمارين؟</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px" }}>
           {[
             "أستطيع نطق الـ١٤ حرفاً الساكناً",
@@ -2046,14 +2047,14 @@ function PracticeAr() {
       <div style={{ display:"flex", gap:"8px", marginBottom:"8px" }}>
         {["المستوى ١ — /٥","المستوى ٢ — /٥","المستوى ٣ — /٥"].map((l,i)=>(
           <div key={i} style={{ flex:1, border:`1px solid ${BD}`, borderRadius:"6px", padding:"6px", textAlign:"center", background:SBG }}>
-            <div style={{ fontSize:"16px" }}>{"⭐".repeat(i+1)}</div>
+            <div style={{ fontSize:"16px" }}>{"★".repeat(i+1)}</div>
             <div style={{ fontSize:"10px", color:T3, marginTop:"2px" }}>{l}</div>
           </div>
         ))}
       </div>
 
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px", marginBottom:"8px", background:SBG }}>
-        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>⭐ تحدي المستوى ١ — الصوت الصحيح</div>
+        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>تحدي المستوى ١ — الصوت الصحيح</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"6px" }}>
           {[{q:"ㄱ",c:["ن","م","ك","هـ"]},{q:"ㄴ",c:["ك","ن","س","م"]},{q:"ㅁ",c:["هـ","ب","م","ر"]},{q:"ㅅ",c:["س","ك","ج","ب"]},{q:"ㅎ",c:["م","هـ","ن","ك"]}].map((e,i)=>(
             <div key={i} style={{ textAlign:"center" }}>
@@ -2067,7 +2068,7 @@ function PracticeAr() {
       </div>
 
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px", marginBottom:"8px", background:SBG }}>
-        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>⭐⭐ تحدي المستوى ٢ — اكتب النطق</div>
+        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>تحدي المستوى ٢ — كتابة النطق</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"6px" }}>
           {[{k:"가방",a:"ga-bang"},{k:"사랑",a:"sa-rang"},{k:"한국",a:"han-guk"},{k:"친구",a:"chin-gu"},{k:"고마워",a:"go-ma-wo"}].map((e,i)=>(
             <div key={i} style={{ textAlign:"center" }}>
@@ -2079,7 +2080,7 @@ function PracticeAr() {
       </div>
 
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px", marginBottom:"8px", background:SBG }}>
-        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>⭐⭐⭐ تحدي المستوى ٣ — ابنِ المقطع</div>
+        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>تحدي المستوى ٣ — بناء المقطع</div>
         <div style={{ display:"flex", gap:"8px", flexWrap:"wrap", direction:"ltr" }}>
           {[{eq:"ㅂ+ㅏ=?",a:"바"},{eq:"ㄴ+ㅗ=?",a:"노"},{eq:"ㅅ+ㅣ=?",a:"시"},{eq:"ㅎ+ㅏ=?",a:"하"},{eq:"ㄱ+ㅜ=?",a:"구"}].map((e,i)=>(
             <div key={i} style={{ border:`1px solid ${BD}`, borderRadius:"6px", padding:"8px 10px", textAlign:"center", background:"#fff" }}>
@@ -2090,7 +2091,7 @@ function PracticeAr() {
         </div>
       </div>
 
-      <div style={{ fontWeight:800, fontSize:"11px", color:T1, marginBottom:"5px" }}>✏️ شبكة الكتابة الحرة</div>
+      <div style={{ fontWeight:800, fontSize:"11px", color:T1, marginBottom:"5px" }}>شبكة الكتابة الحرة</div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:"3px" }}>
         {Array(32).fill(null).map((_,i)=>(
           <div key={i} style={{ border:`1px solid ${BD}`, borderRadius:"3px", height:"30px", background:"#fff" }} />
@@ -2148,7 +2149,7 @@ function AnswerAr() {
       </div>
 
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"16px", textAlign:"center", background:SBG }}>
-        <div style={{ fontSize:"32px", marginBottom:"4px" }}>🏆</div>
+        <KloverIcon name="badge-blossom" className="mx-auto mb-1 h-10 w-10" />
         <div style={{ fontSize:"20px", fontWeight:900, color:T1 }}>تهانينا! أتممت مستوى الهانغول الأول</div>
         <div style={{ margin:"12px auto", width:"220px", borderBottom:`2px solid ${BD}` }} />
         <div style={{ fontSize:"11px", color:T3 }}>اسم الطالب</div>
@@ -2206,7 +2207,7 @@ function HistoryEn() {
 function SejongEn() {
   return (
     <Page dir="ltr">
-      <SHead title="King Sejong the Great 👑" subtitle="The man who changed a nation's destiny with one word: justice" />
+      <SHead title="King Sejong the Great" subtitle="The man who changed a nation's destiny with one word: justice" />
 
       {/* Bio */}
       <div style={{ display:"grid", gridTemplateColumns:"120px 1fr", gap:"14px", marginBottom:"8mm", paddingBottom:"6mm", borderBottom:`1px solid ${BD}` }}>
@@ -2268,7 +2269,7 @@ function SejongEn() {
 function CultureEn() {
   return (
     <Page dir="ltr">
-      <SHead title="Korean Culture 🌸" subtitle="5,000 years of beauty, philosophy, and art" />
+      <SHead title="Korean Culture" subtitle="5,000 years of beauty, philosophy, and art" />
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"8mm" }}>
 
@@ -2303,7 +2304,7 @@ function CultureEn() {
         </div>
 
         <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px", background:SBG }}>
-          <div style={{ fontSize:"22px", marginBottom:"5px" }}>🌿</div>
+          <KloverIcon name="sprout" className="mx-auto mb-1 h-7 w-7" />
           <div style={{ fontWeight:800, fontSize:"11px", color:T1, marginBottom:"4px" }}>Korean Values & Spirit</div>
           <div style={{ fontSize:"10px", color:T2, lineHeight:1.7 }}>
             <strong>빨리빨리</strong> = "hurry hurry" — <strong>눈치</strong> = reading unspoken feelings. <strong>한</strong> = a deep bittersweet longing — the eternal spirit of the Korean people.
@@ -2326,7 +2327,7 @@ function CultureEn() {
       <div style={{ borderTop:`1px solid ${BD}`, paddingTop:"4mm" }}>
         <div style={{ fontSize:"11px", fontWeight:700, color:T1, marginBottom:"5px" }}>After completing all 6 books you will be able to:</div>
         <div style={{ display:"flex", gap:"6px", flexWrap:"wrap" }}>
-          {["Watch K-dramas without subtitles 🎬","Speak to Koreans with confidence 🗣️","Read signs in Korea 🪧","Sing along to K-Pop songs 🎵"].map(t=>(
+          {["Watch K-dramas without subtitles","Speak to Koreans with confidence","Read signs in Korea","Sing along to K-Pop songs"].map(t=>(
             <div key={t} style={{ fontSize:"10px", color:T2, padding:"3px 7px", border:`1px solid ${BD}`, borderRadius:"4px" }}>{t}</div>
           ))}
         </div>
@@ -2339,7 +2340,7 @@ function CultureEn() {
 function CourseEn() {
   return (
     <Page dir="ltr">
-      <SHead title="The Klovers Series — 6 Books to Fluency 📚" subtitle="Your complete roadmap from zero to confident Korean" />
+      <SHead title="The Klovers Series — 6 Books to Fluency" subtitle="Your complete roadmap from zero to confident Korean" />
 
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.8, marginBottom:"6mm" }}>
         The Klovers series takes you from <strong>knowing nothing</strong> to <strong>speaking and writing fluently</strong> — using the K-dramas and music you already love as your learning material. Each book builds on the last.
@@ -2368,7 +2369,7 @@ function CourseEn() {
             <div style={{ flex:1 }}>
               <div style={{ fontWeight: b.current ? 900 : 700, fontSize:"11px", color:T1 }}>{b.title}</div>
               <div style={{ fontSize:"10px", color: b.current ? T2 : T3, marginTop:"1px" }}>
-                {b.current ? "📍 You are here — start your journey!" : b.sub}
+                {b.current ? "You are here — start your journey!" : b.sub}
               </div>
             </div>
           </div>
@@ -2408,7 +2409,7 @@ function StudyPlanEn() {
     <Page dir="ltr">
       <SHead title="7-Day Study Plan" subtitle="Follow this plan and you'll read Korean in one week!" />
       <div style={{ borderLeft:`3px solid ${Y}`, paddingLeft:"10px", marginBottom:"8mm", background:SBG, padding:"8px 10px" }}>
-        <div style={{ fontSize:"12px", fontWeight:800, color:T1, marginBottom:"2px" }}>🎯 Goal: Read Hangul in 7 Days</div>
+        <div style={{ fontSize:"12px", fontWeight:800, color:T1, marginBottom:"2px" }}>Goal: Read Hangul in 7 Days</div>
         <div style={{ fontSize:"11px", color:T3, lineHeight:1.6 }}>30–45 minutes daily is enough. Consistency beats quantity!</div>
       </div>
       <div style={{ display:"flex", flexDirection:"column", marginBottom:"8mm" }}>
@@ -2423,7 +2424,7 @@ function StudyPlanEn() {
         ))}
       </div>
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.7, borderTop:`1px solid ${BD}`, paddingTop:"4mm", margin:0 }}>
-        🔑 <strong>The secret to success:</strong> Don't move to the next day until you've mastered the current day's letters. Quality always beats speed!
+        <strong>The secret to success:</strong> Don't move to the next day until you've mastered the current day's letters. Quality always beats speed!
       </p>
     </Page>
   );
@@ -2432,9 +2433,9 @@ function StudyPlanEn() {
 function AspiratedEn() {
   return (
     <Page dir="ltr">
-      <SHead title="Tensed Consonants (된소리) 💥" subtitle="5 consonants pronounced with extra tension — no air!" />
+      <SHead title="Tensed Consonants (된소리)" subtitle="5 consonants pronounced with extra tension — no air!" />
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"4mm", borderLeft:`3px solid ${Y}`, paddingLeft:"8px" }}>
-        ⚠️ <strong>Beginner note:</strong> These are advanced — master the 14 basic consonants first. Come back to this page in Class 2!
+        <strong>Beginner note:</strong> These are advanced — master the 14 basic consonants first. Come back to this page in Class 2!
       </p>
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"5mm" }}>
         Key difference: regular consonants release a puff of air. Tensed consonants release <strong>no</strong> air — throat and mouth are compressed.
@@ -2452,7 +2453,7 @@ function AspiratedEn() {
                 <div style={{ fontSize:"10px", color:T3 }}>= {a.base} + extra tension</div>
               </div>
             </div>
-            <div style={{ fontSize:"10px", color:T2, marginBottom:"2px" }}>🔊 {a.en.sound}</div>
+            <div style={{ fontSize:"10px", color:T2, marginBottom:"2px" }}>{a.en.sound}</div>
             <div style={{ fontSize:"10px", color:T2, borderLeft:`2px solid ${Y}`, paddingLeft:"5px", marginBottom:"4px", fontStyle:"italic" }}>{a.en.mnemonic}</div>
             <div style={{ display:"flex", gap:"4px", flexWrap:"wrap" }}>
               {a.en.ex.map((ex, i) => (
@@ -2467,7 +2468,7 @@ function AspiratedEn() {
       <div style={{ display:"flex", alignItems:"center", gap:"12px", borderTop:`1px solid ${BD}`, paddingTop:"4mm" }}>
         <QRPlaceholder size={44} label="" />
         <div>
-          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>🔊 Hear the difference: regular vs tensed</div>
+          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>Hear the difference: regular vs tensed</div>
           <div style={{ fontSize:"10px", color:T3, marginTop:"2px" }}>klovers.academy/audio/tensed</div>
         </div>
       </div>
@@ -2478,7 +2479,7 @@ function AspiratedEn() {
 function CompoundVowelsEn() {
   return (
     <Page dir="ltr">
-      <SHead title="Compound Vowels (이중모음) 🔗" subtitle="11 diphthongs built from two simple vowels!" />
+      <SHead title="Compound Vowels (이중모음)" subtitle="11 diphthongs built from two simple vowels!" />
       <p style={{ fontSize:"11px", color:T2, lineHeight:1.6, marginBottom:"5mm" }}>
         Don't memorize them all now! Most common: <strong>ㅘ ㅝ ㅐ ㅔ ㅢ</strong> — you'll meet these constantly in K-dramas and songs.
       </p>
@@ -2499,7 +2500,7 @@ function CompoundVowelsEn() {
       <div style={{ display:"flex", alignItems:"center", gap:"12px", borderTop:`1px solid ${BD}`, paddingTop:"4mm" }}>
         <QRPlaceholder size={40} label="" />
         <div>
-          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>🔊 Hear compound vowel pronunciation</div>
+          <div style={{ fontSize:"11px", fontWeight:700, color:T1 }}>Hear compound vowel pronunciation</div>
           <div style={{ fontSize:"10px", color:T3, marginTop:"2px" }}>klovers.academy/audio/compound</div>
         </div>
       </div>
@@ -2512,7 +2513,7 @@ function WelcomeEn() {
     {d:"Day 1",t:"Vowels ㅏ–ㅜ"},{d:"Day 2",t:"Vowels ㅡ–ㅕ"},
     {d:"Day 3",t:"Cons. ㄱ–ㄷ"},{d:"Day 4",t:"Cons. ㄹ–ㅅ"},
     {d:"Day 5",t:"Cons. ㅇ–ㅊ"},{d:"Day 6",t:"Cons. ㅋ–ㅎ"},
-    {d:"Day 7",t:"Syllables + Review 🏆"},
+    {d:"Day 7",t:"Syllables + Review"},
   ];
   return (
     <Page dir="ltr">
@@ -2686,7 +2687,7 @@ function TeachLetters({ lesson, slice, lang }: LessonProps) {
 
       <div style={{ fontSize:"12px", color:T2, marginBottom:"7mm", lineHeight:1.7 }}>
         {isAr
-          ? `في هذه الصفحة ستتعرّف على ${letters.length === 2 ? "حرفين جديدين" : "ثلاثة حروف جديدة"}. اقرأ الاسم، استمع للصوت، وانظر إلى الشكل بعناية.`
+          ? `في هذه الصفحة ${letters.length === 2 ? "حرفان جديدان" : "ثلاثة حروف جديدة"}: قراءة الاسم، والاستماع إلى الصوت، والنظر إلى الشكل بعناية.`
           : `On this page you will meet ${letters.length} new letter${letters.length>1?"s":""}. Read the name, hear the sound, study the shape.`}
       </div>
 
@@ -2718,7 +2719,7 @@ function TeachLetters({ lesson, slice, lang }: LessonProps) {
 
               {isAr && c.arDialect && (
                 <>
-                  <div style={{ fontSize:"10px", color:T3, textTransform:"uppercase", letterSpacing:"1px", marginBottom:"2px" }}>🇪🇬 بالمصري</div>
+                  <div style={{ fontSize:"10px", color:T3, textTransform:"uppercase", letterSpacing:"1px", marginBottom:"2px" }}>بالمصري</div>
                   <div style={{ fontSize:"12px", color:T2, lineHeight:1.7, marginBottom:"5mm" }}>{c.arDialect}</div>
                 </>
               )}
@@ -2844,10 +2845,10 @@ function ReviewLetters({ lesson, slice, lang }: LessonProps) {
       {/* Task 1 — Match character to sound */}
       <div style={{ marginBottom:"9mm" }}>
         <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"2mm" }}>
-          1. {isAr ? "صل الحرف بصوته" : "Match the letter to its sound"}
+          1. {isAr ? "توصيل الحرف بصوته" : "Match the letter to its sound"}
         </div>
         <div style={{ fontSize:"10px", color:T3, marginBottom:"4mm" }}>
-          {isAr ? "ارسم خطاً بين الحرف والصوت الصحيح." : "Draw a line between each letter and its sound."}
+          {isAr ? "رسم خط بين الحرف والصوت الصحيح." : "Draw a line between each letter and its sound."}
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4mm 30mm", direction:"ltr" }}>
           {letters.map(c => (
@@ -2862,7 +2863,7 @@ function ReviewLetters({ lesson, slice, lang }: LessonProps) {
       {/* Task 2 — Write the sound under each letter */}
       <div style={{ marginBottom:"9mm" }}>
         <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"2mm" }}>
-          2. {isAr ? "اكتب الصوت تحت كل حرف" : "Write the sound under each letter"}
+          2. {isAr ? "كتابة الصوت تحت كل حرف" : "Write the sound under each letter"}
         </div>
         <div style={{ display:"grid", gridTemplateColumns:`repeat(${letters.length}, 1fr)`, gap:"6mm", marginTop:"3mm" }}>
           {letters.map(c => (
@@ -2877,7 +2878,7 @@ function ReviewLetters({ lesson, slice, lang }: LessonProps) {
       {/* Task 3 — Read these syllables */}
       <div style={{ marginBottom:"9mm" }}>
         <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"2mm" }}>
-          3. {isAr ? "اقرأ هذه المقاطع بصوت عالٍ" : "Read these syllables out loud"}
+          3. {isAr ? "قراءة هذه المقاطع بصوت عالٍ" : "Read these syllables out loud"}
         </div>
         <div style={{ display:"flex", gap:"8mm", flexWrap:"wrap", marginTop:"3mm", direction:"ltr" }}>
           {letters.map(c => (
@@ -2982,7 +2983,7 @@ function BatchimEn() {
       <div style={{ display:"flex", gap:"10px", marginBottom:"6mm", alignItems:"flex-start" }}>
         <KidsPanel color={KIDS_GREEN} bg="#FFF8F1" dir="ltr">
           <div style={{ marginBottom:"6px" }}>
-            <SectionBadge icon="📗" label="Definition" color={KIDS_GREEN} dir="ltr" />
+            <SectionBadge icon="" label="Definition" color={KIDS_GREEN} dir="ltr" />
           </div>
           <p style={{ fontSize:"12px", color:"#222", lineHeight:1.8, margin:0, fontWeight:600 }}>
             Batchim (<span style={{ color:KIDS_RED, fontWeight:900 }}>받침</span>) is the final
@@ -2998,7 +2999,7 @@ function BatchimEn() {
       </div>
 
       <div style={{ marginBottom:"4mm" }}>
-        <SectionBadge icon="💡" label="Rule" color={KIDS_ORANGE} dir="ltr" />
+        <SectionBadge icon="" label="Rule" color={KIDS_ORANGE} dir="ltr" />
       </div>
       <p style={{ fontSize:"12px", color:"#222", textAlign:"center", marginBottom:"5mm", fontWeight:700 }}>
         Many consonants exist, but batchim collapses them into{" "}
@@ -3007,7 +3008,7 @@ function BatchimEn() {
 
       <KidsPanel color={KIDS_BLUE} bg="#fff" dir="ltr">
         <div style={{ marginBottom:"6px" }}>
-          <SectionBadge icon="🔊" label="The 7 Sounds" color={KIDS_BLUE} dir="ltr" />
+          <SectionBadge icon="" label="The 7 Sounds" color={KIDS_BLUE} dir="ltr" />
         </div>
         <div style={{ direction:"ltr" }}>
           {FINAL7.map(r => (
@@ -3030,7 +3031,7 @@ function BatchimEn() {
 
       <KidsPanel color={KIDS_BLUE} bg="#F5FAFE" dir="ltr">
         <div style={{ marginBottom:"6px" }}>
-          <SectionBadge icon="📘" label="Note" color={KIDS_BLUE} dir="ltr" />
+          <SectionBadge icon="" label="Note" color={KIDS_BLUE} dir="ltr" />
         </div>
         <p style={{ fontSize:"11.5px", color:"#222", lineHeight:1.8, margin:0, fontWeight:600 }}>
           Batchim is written at the bottom of the syllable block but is not separated as a standalone letter.
@@ -3058,7 +3059,7 @@ function DoubleBatchimEn() {
       <SHead title="Double Batchim — 겹받침 (Gyeop-batchim)" subtitle="Two consonants at the bottom — only one is pronounced!" />
       {/* Larsen-Freeman: don't memorize warning */}
       <div style={{ background:"#fff8e1", border:"2px solid #fbbf24", borderRadius:"8px", padding:"7px 12px", fontSize:"11px", color:"#92400e", marginBottom:"8px" }}>
-        <strong>⚠️ Beginner notice:</strong> Don't try to memorize all of this right now! Understanding the principle is enough.
+        <strong>Beginner notice:</strong> Don't try to memorize all of this right now! Understanding the principle is enough.
         Double batchim becomes natural after reading just 100 Korean words. <strong>This will be covered in depth in Book 2.</strong>
       </div>
 
@@ -3084,7 +3085,7 @@ function DoubleBatchimEn() {
         </div>
 
         <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"12px", background:SBG }}>
-          <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>Linking Rule for Double Batchim 🔗</div>
+          <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>Linking Rule for Double Batchim</div>
           <div style={{ fontSize:"11px", color:T2, lineHeight:1.9, marginBottom:"8px" }}>
             When followed by a syllable starting with <strong>ㅇ</strong>, the <strong style={{color:"#C8102E"}}>right (second)</strong> consonant moves to the next syllable!
           </div>
@@ -3143,9 +3144,9 @@ function DoubleBatchimEn() {
 function KdramaPageEn({ slice, page }: { slice:[number,number]; page:number }) {
   return (
     <Page dir="ltr">
-      <SHead title={`K-Drama Essentials 🎬 — Part ${page} of 2`} subtitle="Words you've heard 100 times — now read them in Hangul!" />
+      <SHead title={`K-Drama Essentials — Part ${page} of 2`} subtitle="Words you've heard 100 times — now read them in Hangul!" />
       <div style={{ borderLeft:`3px solid ${Y}`, paddingLeft:"10px", marginBottom:"8px", fontSize:"11px", color:T2, fontWeight:700, background:SBG, padding:"7px 10px" }}>
-        🎬 {page===1 ? "Core vocabulary — heard in almost every episode!" : "Advanced words — use these to sound like a native!"}
+        {page===1 ? "Core vocabulary — heard in almost every episode!" : "Advanced words — use these to sound like a native!"}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"7px" }}>
         {KDRAMA_EN.slice(...slice).map(v=>(
@@ -3167,10 +3168,10 @@ function KdramaEn() { return <KdramaPageEn slice={[0,10]} page={1} />; }
 function PracticeEn() {
   return (
     <Page dir="ltr">
-      <SHead title="Practice Exercises ✏️" subtitle="Test yourself!" />
+      <SHead title="Practice Exercises" subtitle="Test yourself!" />
       {/* Knowles self-assessment checklist */}
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px 12px", marginBottom:"10px", background:SBG }}>
-        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"7px" }}>✅ Self-Assessment Checklist — Ready for the exercises?</div>
+        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"7px" }}>Self-Assessment Checklist — Ready for the exercises?</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px" }}>
           {[
             "I can pronounce all 14 consonants",
@@ -3191,14 +3192,14 @@ function PracticeEn() {
       <div style={{ display:"flex", gap:"8px", marginBottom:"8px" }}>
         {["Level 1 — /5","Level 2 — /5","Level 3 — /5"].map((l,i)=>(
           <div key={i} style={{ flex:1, border:`1px solid ${BD}`, borderRadius:"6px", padding:"6px", textAlign:"center", background:SBG }}>
-            <div style={{ fontSize:"16px" }}>{"⭐".repeat(i+1)}</div>
+            <div style={{ fontSize:"16px" }}>{"★".repeat(i+1)}</div>
             <div style={{ fontSize:"10px", color:T3, marginTop:"2px" }}>{l}</div>
           </div>
         ))}
       </div>
 
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px", marginBottom:"8px", background:SBG }}>
-        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>⭐ Level 1 Challenge — Spot the Sound</div>
+        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>Level 1 Challenge — Spot the Sound</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"6px" }}>
           {[{q:"ㄱ",c:["n","m","g","h"]},{q:"ㄴ",c:["g","n","s","m"]},{q:"ㅁ",c:["h","b","m","r"]},{q:"ㅅ",c:["s","k","j","p"]},{q:"ㅎ",c:["m","h","n","g"]}].map((e,i)=>(
             <div key={i} style={{ textAlign:"center" }}>
@@ -3212,7 +3213,7 @@ function PracticeEn() {
       </div>
 
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px", marginBottom:"8px", background:SBG }}>
-        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>⭐⭐ Level 2 Challenge — Write the Romanization</div>
+        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>Level 2 Challenge — Write the Romanization</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"6px" }}>
           {[{k:"가방",a:"ga-bang"},{k:"사랑",a:"sa-rang"},{k:"한국",a:"han-guk"},{k:"친구",a:"chin-gu"},{k:"고마워",a:"go-ma-wo"}].map((e,i)=>(
             <div key={i} style={{ textAlign:"center" }}>
@@ -3224,7 +3225,7 @@ function PracticeEn() {
       </div>
 
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"10px", marginBottom:"8px", background:SBG }}>
-        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>⭐⭐⭐ Level 3 Challenge — Build the Syllable</div>
+        <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"6px" }}>Level 3 Challenge — Build the Syllable</div>
         <div style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
           {[{eq:"ㅂ+ㅏ=?",a:"바"},{eq:"ㄴ+ㅗ=?",a:"노"},{eq:"ㅅ+ㅣ=?",a:"시"},{eq:"ㅎ+ㅏ=?",a:"하"},{eq:"ㄱ+ㅜ=?",a:"구"}].map((e,i)=>(
             <div key={i} style={{ border:`1px solid ${BD}`, borderRadius:"6px", padding:"8px 10px", textAlign:"center", background:"#fff" }}>
@@ -3235,7 +3236,7 @@ function PracticeEn() {
         </div>
       </div>
 
-      <div style={{ fontWeight:800, fontSize:"11px", color:T1, marginBottom:"5px" }}>✏️ Free Writing Grid</div>
+      <div style={{ fontWeight:800, fontSize:"11px", color:T1, marginBottom:"5px" }}>Free Writing Grid</div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(8,1fr)", gap:"3px" }}>
         {Array(32).fill(null).map((_,i)=>(
           <div key={i} style={{ border:`1px solid ${BD}`, borderRadius:"3px", height:"30px", background:"#fff" }} />
@@ -3293,7 +3294,7 @@ function AnswerEn() {
       </div>
 
       <div style={{ border:`1px solid ${BD}`, borderRadius:"8px", padding:"16px", textAlign:"center", background:SBG }}>
-        <div style={{ fontSize:"32px", marginBottom:"4px" }}>🏆</div>
+        <KloverIcon name="badge-blossom" className="mx-auto mb-1 h-10 w-10" />
         <div style={{ fontSize:"20px", fontWeight:900, color:T1 }}>Hangul Level 1 — Complete!</div>
         <div style={{ margin:"12px auto", width:"220px", borderBottom:`2px solid ${BD}` }} />
         <div style={{ fontSize:"11px", color:T3 }}>Student Name</div>
@@ -3346,7 +3347,7 @@ function BackCoverAr() {
           KLOVERS HANGUL
         </div>
         <div style={{ fontSize:"13px", color:BK, textAlign:"center", marginBottom:"5mm" }}>
-          اقرأ وأكتب الكورية — خطوة بخطوة
+          قراءة الكورية وكتابتها، خطوة بخطوة
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
           <div style={{ width:"40px", height:"1px", background:BK }} />
@@ -3364,7 +3365,7 @@ function BackCoverAr() {
       }}>
         <div style={{ width:"30px", height:"4px", background:Y, marginBottom:"6mm" }} />
         <div style={{ fontSize:"19px", fontWeight:900, color:Y, letterSpacing:"2px", marginBottom:"4mm" }}>
-          اقرأ الكورية في ٦ ساعات فقط
+          قراءة الكورية في ٤ حصص
         </div>
         <div style={{ width:"100%", height:"1px", background:"#333", marginBottom:"5mm" }} />
         <div style={{ fontSize:"13px", color:"#fff", lineHeight:1.6, marginBottom:"2mm" }}>
@@ -3519,9 +3520,9 @@ function VocabAppendixAr() {
   ];
   return (
     <Page dir="rtl">
-      <SHead title="ملحق المفردات — أكثر ٥٠ كلمة شيوعاً 📖" subtitle="مرتبة حسب التكرار في اللغة الكورية اليومية" />
+      <SHead title="ملحق المفردات — أكثر ٥٠ كلمة شيوعاً" subtitle="مرتبة حسب التكرار في اللغة الكورية اليومية" />
       <div style={{ borderLeft:`3px solid ${Y}`, paddingLeft:"10px", marginBottom:"8px", fontSize:"11px", color:T2, background:SBG, padding:"7px 10px" }}>
-        💡 هذه الكلمات تُشكّل أكثر من <strong>٧٠٪</strong> من اللغة الكورية اليومية. احفظ أول ٢٠ كلمة وستفهم نصف ما يُقال حولك!
+        هذه الكلمات من <strong>الأكثر تكرارًا</strong> في الكورية اليومية، وحفظ أول ٢٠ كلمة منها بداية قوية للفهم.
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"5px" }}>
         {words.map(w => (
@@ -3595,9 +3596,9 @@ function VocabAppendixEn() {
   ];
   return (
     <Page dir="ltr">
-      <SHead title="Vocabulary Appendix — Top 50 Most Common Words 📖" subtitle="Ranked by frequency in everyday Korean speech" />
+      <SHead title="Vocabulary Appendix — Top 50 Most Common Words" subtitle="Ranked by frequency in everyday Korean speech" />
       <div style={{ borderLeft:`3px solid ${Y}`, paddingLeft:"10px", marginBottom:"8px", fontSize:"11px", color:T2, background:SBG, padding:"7px 10px" }}>
-        💡 These 50 words make up over <strong>70%</strong> of everyday Korean. Master the first 20 and you'll understand half of what's said around you!
+        These 50 words are among the <strong>most frequent</strong> in everyday Korean. Learning the first 20 is a strong start.
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"5px" }}>
         {words.map(w => (
@@ -3690,7 +3691,7 @@ function CoursePlan({ lang }: { lang: Lang }) {
         ))}
       </div>
       <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
-        {isAr ? "هذا الكورس يعطي أفضل نتائج عندما يلتزم الطالب بحلّ الواجب وتطبيق الإملاء والتدريب اليومي (٥–١٠ دقائق) بين الحصص. الإملاء واجب في كل حصة — لا تتخطّه أبداً." : "This course works best when students complete the homework, dictation drills, and 5–10 minute daily practice between classes. Dictation is required every class — never skip it."}
+        {isAr ? "هذا الكورس يعطي أفضل نتائج عندما يلتزم الطالب بحلّ الواجب وتطبيق الإملاء والتدريب اليومي (٥–١٠ دقائق) بين الحصص. الإملاء واجب في كل حصة، دون تخطٍّ أبدًا." : "This course works best when students complete the homework, dictation drills, and 5–10 minute daily practice between classes. Dictation is required every class — never skip it."}
       </div>
     </Page>
   );
@@ -3699,7 +3700,7 @@ function CoursePlan({ lang }: { lang: Lang }) {
 function InClassExercise({ lang }: { lang: Lang }) {
   const isAr = lang === "ar";
   const items = isAr
-    ? ["كرّر بعد المعلم.", "طابق الحرف بالصوت.", "اكتب الحرف من الذاكرة.", "اقرأ بصوت عالٍ واحداً تلو الآخر.", "تحدي السرعة: من يتعرّف على الحرف أوّلاً؟"]
+    ? ["التكرار بعد المعلمة.", "مطابقة الحرف بالصوت.", "كتابة الحرف من الذاكرة.", "القراءة بصوت عالٍ واحدًا تلو الآخر.", "تحدي السرعة: من يتعرّف على الحرف أولًا؟"]
     : ["Repeat after the teacher.", "Match the letter with the sound.", "Write the letter from memory.", "Read aloud one by one.", "Speed challenge: who can recognize the letter first?"];
   return (
     <div style={{ marginTop:"7mm", border:`1px solid ${BD}`, borderLeft:`3px solid ${Y}`, borderRadius:"4px", padding:"4mm 5mm", background:"#fffdf3" }}>
@@ -3717,12 +3718,12 @@ function HowToUse({ lang }: { lang: Lang }) {
   const isAr = lang === "ar";
   const items = isAr
     ? [
-        { icon:"🔊", title:"الصوت + الشكل أولاً", body:"تعلّم كل حرف من خلال صوته وشكله معاً. لا تحفظ بالترتيب — افهم الشكل من الصوت." },
-        { icon:"🖼️", title:"تعلّم بالصور والكلمات", body:"كل حرف مربوط بكلمة وصورة. مثال: ㄱ = 가방 (حقيبة). اربط الحرف بالشيء، مش بالقاعدة." },
-        { icon:"✍️", title:"تعلّم بالكتابة التطبيقية", body:"اكتب، انطق، اقرأ — التطبيق أهم من الشرح. لا تتجاوز تمارين التتبع والكتابة من الذاكرة." },
-        { icon:"🗣️", title:"الإملاء واجب كل حصة", body:"ينطق المعلم حروفاً ومقاطع وكلمات، والطالب يكتب ما يسمع. هذا أهم تدريب على الإطلاق — لا تتخطّه." },
-        { icon:"🎤", title:"النطق والتكرار مع زميل", body:"كرّر بصوت عالٍ بعد المعلم، اقرأ مع زميلك، سجّل صوتك واستمع له. النطق الصحيح يجي من التكرار." },
-        { icon:"📖", title:"اقرأ كلمات حقيقية من الدرس ١", body:"لا تنتظر حتى تنتهي من الكتاب. من الدرس الأول ستقرأ كلمات حقيقية: 가방، 나비، 밥، 물. كل درس يضيف كلمات جديدة." },
+        { icon:"🔊", title:"الصوت + الشكل أولاً", body:"كل حرف يُتعلَّم من خلال صوته وشكله معًا. لا حفظ بالترتيب، بل فهم الشكل من الصوت." },
+        { icon:"🖼️", title:"تعلّم بالصور والكلمات", body:"كل حرف مربوط بكلمة وصورة. مثال: ㄱ = 가방 (حقيبة). الربط يكون بالشيء لا بالقاعدة." },
+        { icon:"✍️", title:"تعلّم بالكتابة التطبيقية", body:"كتابة ونطق وقراءة، فالتطبيق أهم من الشرح. تمارين التتبع والكتابة من الذاكرة لا تُتجاوز." },
+        { icon:"🗣️", title:"الإملاء واجب كل حصة", body:"ينطق المعلم حروفاً ومقاطع وكلمات، والطالب يكتب ما يسمع. هذا أهم تدريب على الإطلاق، ولا يُتخطّى." },
+        { icon:"🎤", title:"النطق والتكرار مع زميل", body:"التكرار بصوت عالٍ بعد المعلمة، والقراءة مع زميل، وتسجيل الصوت والاستماع إليه. النطق الصحيح يأتي من التكرار." },
+        { icon:"📖", title:"كلمات حقيقية من الدرس ١", body:"لا داعي لانتظار نهاية الكتاب. من الدرس الأول تبدأ قراءة كلمات حقيقية: 가방، 나비، 밥، 물. كل درس يضيف كلمات جديدة." },
       ]
     : [
         { icon:"🔊", title:"Sound + Shape first", body:"Learn every letter through its sound and its shape together. Don't memorize in order — understand the shape from the sound." },
@@ -3748,7 +3749,7 @@ function HowToUse({ lang }: { lang: Lang }) {
       </div>
       <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr
-          ? "كل درس يتبع نفس التسلسل الثابت: أ. تعلّم → ب. كلمات بالصور → ج. تطبيق الكتابة → د. تدريب النطق → هـ. إملاء → و. قراءة قصيرة → ز. مراجعة. اتّبع الترتيب دائماً — هكذا صُمِّم الكتاب."
+          ? "كل درس يتبع نفس التسلسل الثابت: أ. تعلّم → ب. كلمات بالصور → ج. تطبيق الكتابة → د. تدريب النطق → هـ. إملاء → و. قراءة قصيرة → ز. مراجعة. الالتزام بالترتيب دائمًا، فهكذا صُمِّم الكتاب."
           : "Every lesson follows the same fixed flow: A. Learn → B. Visual Words → C. Writing Practice → D. Speaking Drill → E. Dictation → F. Mini Reading → G. Review. Always follow this order — the book is designed this way."}
       </div>
     </Page>
@@ -3763,10 +3764,10 @@ function SpeakingDrill({ lesson, slice, lang }: LessonProps) {
   const syllables = letters.flatMap(c => drillVowels.slice(0,3).map(v => buildSyllable(c.char, v)));
   return (
     <Page dir={isAr ? "rtl" : "ltr"} chapter={isAr ? "تدريب النطق" : "Speaking Drill"}>
-      <SHead title={isAr ? `تدريب النطق — الدرس ${["١","٢","٣","٤","٥","٦","٧","٨"][lesson-1]}` : `Speaking Drill — Lesson ${lesson}`} subtitle={isAr ? "كرّر بصوت عالٍ، ثم اقرأ مع زميلك" : "Say each one aloud, then read with a partner"} />
+      <SHead title={isAr ? `تدريب النطق — الدرس ${["١","٢","٣","٤","٥","٦","٧","٨"][lesson-1]}` : `Speaking Drill — Lesson ${lesson}`} subtitle={isAr ? "التكرار بصوت عالٍ، ثم القراءة مع زميل" : "Say each one aloud, then read with a partner"} />
       <div style={{ marginBottom:"5mm" }}>
         <div style={{ fontSize:"11px", fontWeight:800, color:T3, letterSpacing:"2px", textTransform:"uppercase", marginBottom:"3mm" }}>
-          {isAr ? "١. كرّر بعد المعلم" : "1. Repeat after the teacher"}
+          {isAr ? "١. التكرار بعد المعلمة" : "1. Repeat after the teacher"}
         </div>
         <div style={{ display:"flex", gap:"6mm", justifyContent:"center", flexWrap:"wrap", border:`1px solid ${BD}`, borderRadius:"6px", padding:"6mm", background:"#fff" }}>
           {letters.map(c => (
@@ -3793,7 +3794,7 @@ function SpeakingDrill({ lesson, slice, lang }: LessonProps) {
         </div>
         <ul style={{ margin:0, paddingInlineStart:"18px", fontSize:"11px", color:T2, lineHeight:1.8 }}>
           {(isAr
-            ? ["الطالب أ يقرأ الحرف، الطالب ب يكرّر بصوت أعلى.","تبادلوا الأدوار كل ٣٠ ثانية.","ركّز على المخارج: المعلم يصحّح النطق."]
+            ? ["الطالب أ يقرأ الحرف، الطالب ب يكرّر بصوت أعلى.","تبادل الأدوار كل ٣٠ ثانية.","التركيز على المخارج: المعلمة تصحّح النطق."]
             : ["Student A reads the letter, Student B repeats louder.","Switch roles every 30 seconds.","Focus on pronunciation — teacher corrects mouth shape."]
           ).map((t,i) => <li key={i}>{t}</li>)}
         </ul>
@@ -3907,7 +3908,7 @@ function MiniReading({ lesson, lang }: LessonProps) {
         ))}
       </div>
       <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
-        {isAr ? "💬 اسأل كل طالب أن يقرأ كلمة، ثم يستخدمها في جملة عربية بسيطة (مثال: عندي حقيبة)." : "💬 Ask each student to read one word and use it in a simple sentence (e.g., \"I have a bag\")."}
+        {isAr ? "اسأل كل طالب أن يقرأ كلمة، ثم يستخدمها في جملة عربية بسيطة (مثال: عندي حقيبة)." : "Ask each student to read one word and use it in a simple sentence (e.g., \"I have a bag\")."}
       </div>
     </Page>
   );
@@ -4082,7 +4083,7 @@ function LessonVowels({ lesson, lang }: { lesson: number; lang: Lang }) {
     <Page dir={isAr ? "rtl" : "ltr"} chapter={isAr ? "حروف المد" : "Vowels"}>
       <SHead
         title={isAr ? `حروف المد — الدرس ${num}` : `Vowels — Lesson ${lesson}`}
-        subtitle={isAr ? "تعلّم صوتي مد جديدين لتكوين أول مقاطع كورية" : "Two new vowels — combine them with today's consonants to form your first syllables"}
+        subtitle={isAr ? "صوتا مد جديدان لتكوين أول مقاطع كورية" : "Two new vowels — combine them with today's consonants to form your first syllables"}
       />
       {vowels.map((v, idx) => {
         const d = isAr ? v.ar : v.en;
@@ -4118,7 +4119,7 @@ function LessonVowels({ lesson, lang }: { lesson: number; lang: Lang }) {
         );
       })}
       <div style={{ marginTop:"4mm", borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
-        {isAr ? "💡 جرّب الآن: ضع حروف اليوم الساكنة قبل كل صوت مد لتكوين مقاطع جديدة." : "💡 Try it: place today's consonants before each vowel to build new syllables."}
+        {isAr ? "تجربة الآن: وضع حروف اليوم الساكنة قبل كل صوت مد لتكوين مقاطع جديدة." : "Try it: place today's consonants before each vowel to build new syllables."}
       </div>
     </Page>
   );
@@ -4135,15 +4136,15 @@ function LessonReviewAll({ lang }: { lang: Lang }) {
         subtitle={isAr ? "ثبّت كل ما تعلمته في الدروس ١–٥" : "Consolidate everything from Lessons 1–5"}
       />
       <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"3mm" }}>
-        1. {isAr ? "اقرأ كل الحروف الساكنة بصوت عالٍ" : "Read every consonant out loud"}
+        1. {isAr ? "قراءة كل الحروف الساكنة بصوت عالٍ" : "Read every consonant out loud"}
       </div>
       <div style={{ fontSize:"34px", fontWeight:900, color:T1, lineHeight:1.4, textAlign:"center", border:`1px solid ${BD}`, borderRadius:"6px", padding:"6mm", background:"#fff", marginBottom:"7mm" }}>{allCons}</div>
       <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"3mm" }}>
-        2. {isAr ? "اقرأ كل حروف المد" : "Read every vowel"}
+        2. {isAr ? "قراءة كل حروف المد" : "Read every vowel"}
       </div>
       <div style={{ fontSize:"34px", fontWeight:900, color:T1, lineHeight:1.4, textAlign:"center", border:`1px solid ${BD}`, borderRadius:"6px", padding:"6mm", background:"#fff", marginBottom:"7mm" }}>{allVow}</div>
       <div style={{ fontSize:"11px", fontWeight:800, color:T1, marginBottom:"3mm" }}>
-        3. {isAr ? "إملاء — اكتب ما يقوله المعلم" : "Dictation — write what the teacher says"}
+        3. {isAr ? "إملاء — كتابة ما تقوله المعلمة" : "Dictation — write what the teacher says"}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"4mm", marginBottom:"6mm" }}>
         {Array(10).fill(null).map((_,i)=>(
@@ -4152,8 +4153,8 @@ function LessonReviewAll({ lang }: { lang: Lang }) {
       </div>
       <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr
-          ? "💬 المعلم يقرأ ببطء: 가 / 나 / 다 / 라 / 마 / 바 / 사 / 아 / 자 / 차 → ثم كلمات: 가방 / 나비 / 다리 / 라면 / 물 / 밥 / 사과 / 아이 / 지도 / 한국"
-          : "💬 Teacher reads slowly: 가 / 나 / 다 / 라 / 마 / 바 / 사 / 아 / 자 / 차 → then words: 가방 / 나비 / 다리 / 라면 / 물 / 밥 / 사과 / 아이 / 지도 / 한국"}
+          ? "المعلم يقرأ ببطء: 가 / 나 / 다 / 라 / 마 / 바 / 사 / 아 / 자 / 차 → ثم كلمات: 가방 / 나비 / 다리 / 라면 / 물 / 밥 / 사과 / 아이 / 지도 / 한국"
+          : "Teacher reads slowly: 가 / 나 / 다 / 라 / 마 / 바 / 사 / 아 / 자 / 차 → then words: 가방 / 나비 / 다리 / 라면 / 물 / 밥 / 사과 / 아이 / 지도 / 한국"}
       </div>
     </Page>
   );
@@ -4177,8 +4178,8 @@ function PictureWords({ lesson, lang }: LessonProps) {
       </div>
       <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
         {isAr
-          ? "✍️ اطلب من الطلاب رسم الصورة في المربع الفارغ — كل الحروف ومدّ الصوت في هذه الكلمات سبق شرحها، فلا توجد مفاجآت."
-          : "✍️ Ask students to draw the object in the placeholder box — every consonant and vowel here has already been taught, so nothing is unfamiliar."}
+          ? "اطلب من الطلاب رسم الصورة في المربع الفارغ — كل الحروف ومدّ الصوت في هذه الكلمات سبق شرحها، فلا توجد مفاجآت."
+          : "Ask students to draw the object in the placeholder box — every consonant and vowel here has already been taught, so nothing is unfamiliar."}
       </div>
     </Page>
   );
@@ -4266,7 +4267,7 @@ function SyllableWritingPage({ lang, mode }:{ lang:"ar"|"en"; mode:"basic"|"comp
         <div style={{ fontSize:"20px", fontWeight:900 }}>{isAr ? titleAr : titleEn}</div>
       </div>
       <div style={{ marginBottom:"4mm" }}>
-        <SectionBadge icon="✍️" label={isAr ? "تدريب الكتابة" : "Writing Practice"} color={KIDS_GREEN} dir={isAr?"rtl":"ltr"} />
+        <SectionBadge icon="" label={isAr ? "تدريب الكتابة" : "Writing Practice"} color={KIDS_GREEN} dir={isAr?"rtl":"ltr"} />
       </div>
       <p style={{ fontSize:"12px", color:"#222", fontWeight:700, marginBottom:"5mm", direction: isAr ? "rtl" : "ltr" }}>
         {isAr ? instructAr : instructEn}
@@ -4297,23 +4298,23 @@ function Homework({ lesson, slice, lang }: LessonProps) {
         </div>
       </div>
 
-      <HwSection letter="A" title={isAr ? "تدريب الكتابة" : "Writing Practice"} body={isAr ? "اكتب كل حرف ١٠ مرات في كرّاسك." : "Write each letter 10 times in your notebook."} />
+      <HwSection letter="A" title={isAr ? "تدريب الكتابة" : "Writing Practice"} body={isAr ? "كتابة كل حرف ١٠ مرات في الكرّاسة." : "Write each letter 10 times in your notebook."} />
       <div style={{ display:"flex", gap:"8px", marginBottom:"6mm", flexWrap:"wrap" }}>
         {letters.map(c => (
           <div key={c.char} style={{ border:`1px solid ${BD}`, borderRadius:"4px", padding:"3mm 5mm", fontSize:"30px", fontWeight:900, color:T1, background:"#fff" }}>{c.char}</div>
         ))}
       </div>
 
-      <HwSection letter="B" title={isAr ? "تدريب النطق" : "Speaking Practice"} body={isAr ? "سجّل voice note وأنت تنطق الحروف والمقاطع." : "Record yourself reading the letters and syllables aloud."} />
+      <HwSection letter="B" title={isAr ? "تدريب النطق" : "Speaking Practice"} body={isAr ? "تسجيل رسالة صوتية أثناء نطق الحروف والمقاطع." : "Record yourself reading the letters and syllables aloud."} />
 
-      <HwSection letter="C" title={isAr ? "تدريب القراءة" : "Reading Practice"} body={isAr ? "اقرأ المقاطع التالية بصوت عالٍ:" : "Read the following syllables aloud:"} />
+      <HwSection letter="C" title={isAr ? "تدريب القراءة" : "Reading Practice"} body={isAr ? "قراءة المقاطع التالية بصوت عالٍ:" : "Read the following syllables aloud:"} />
       <div style={{ display:"flex", gap:"6px", flexWrap:"wrap", marginBottom:"6mm", direction:"ltr" }}>
         {syllables.map((s,i) => (
           <div key={i} style={{ border:`1px solid ${BD}`, borderRadius:"4px", padding:"4mm 5mm", fontSize:"22px", fontWeight:900, color:T1, background:"#fff" }}>{s}</div>
         ))}
       </div>
 
-      <HwSection letter="D" title={isAr ? "تحدي صغير" : "Mini Challenge"} body={isAr ? "حاول قراءة أو كتابة كلمة كورية بسيطة باستخدام حروف اليوم." : "Try to read or write one simple Korean word using today's letters."} />
+      <HwSection letter="D" title={isAr ? "تحدي صغير" : "Mini Challenge"} body={isAr ? "محاولة قراءة كلمة كورية بسيطة أو كتابتها باستخدام حروف اليوم." : "Try to read or write one simple Korean word using today's letters."} />
       <div style={{ height:"14mm", border:`1px dashed ${BD}`, borderRadius:"4px", marginBottom:"6mm" }} />
 
       <div style={{ borderTop:`1px solid ${BD}`, paddingTop:"4mm" }}>
@@ -4336,7 +4337,7 @@ function Homework({ lesson, slice, lang }: LessonProps) {
 function DailyPractice({ lesson, lang }: { lesson:number; lang: Lang }) {
   const isAr = lang === "ar";
   const days = isAr
-    ? ["اكتب حروف اليوم ٥ مرات.","سجّل صوتك وأنت تقرأ الحروف.","اقرأ المقاطع بصوت عالٍ.","امزج بين الحروف القديمة والجديدة.","اختبار سريع: غطِّ الإجابات واختبر نفسك.","اقرأ ٣ كلمات كورية بسيطة.","راجع كل شيء قبل الحصة القادمة."]
+    ? ["كتابة حروف اليوم ٥ مرات.","تسجيل الصوت أثناء قراءة الحروف.","قراءة المقاطع بصوت عالٍ.","المزج بين الحروف القديمة والجديدة.","اختبار سريع: تغطية الإجابات واختبار الذات.","قراءة ٣ كلمات كورية بسيطة.","مراجعة كل شيء قبل الحصة القادمة."]
     : ["Write today's letters 5 times.","Record your voice reading the letters.","Read the syllables aloud.","Mix old + new letters.","Mini quiz: cover the answers and test yourself.","Read 3 simple Korean words.","Review everything before the next class."];
   return (
     <Page dir={isAr ? "rtl" : "ltr"} chapter={isAr ? "تدريب يومي" : "Daily Practice"}>
@@ -4360,7 +4361,7 @@ function DailyPractice({ lesson, lang }: { lesson:number; lang: Lang }) {
         ))}
       </div>
       <div style={{ borderLeft:`3px solid ${Y}`, padding:"4mm 5mm", background:"#fffdf3", fontSize:"11px", color:T2, lineHeight:1.7 }}>
-        {isAr ? "✓ علّم على المربّع الصغير عند إنهاء مهمة كل يوم." : "✓ Tick the small box when you finish each day's task."}
+        {isAr ? "وضع علامة في المربّع الصغير عند إنهاء مهمة كل يوم." : "Tick the small box when you finish each day's task."}
       </div>
     </Page>
   );
@@ -4405,7 +4406,7 @@ function VowelsLesson({ part, lang }: { part: 1|2|3; lang: Lang }) {
   const data = VOWEL_PARTS[part];
   return (
     <Page dir={isAr ? "rtl" : "ltr"} chapter={isAr ? "حروف المد" : "Vowels"}>
-      <SHead title={isAr ? data.ar : data.en} subtitle={isAr ? "اقرأ الحرف، استمع للصوت، وانطقه بوضوح" : "Read each vowel, listen to the sound, say it clearly"} />
+      <SHead title={isAr ? data.ar : data.en} subtitle={isAr ? "قراءة الحرف، والاستماع إلى الصوت، ونطقه بوضوح" : "Read each vowel, listen to the sound, say it clearly"} />
       <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:"5mm", marginBottom:"6mm" }}>
         {data.chars.map(ch => (
           <div key={ch} style={{ border:`1px solid ${BD}`, borderRadius:"6px", padding:"5mm", textAlign:"center", background:"#fff" }}>
@@ -4415,7 +4416,7 @@ function VowelsLesson({ part, lang }: { part: 1|2|3; lang: Lang }) {
         ))}
       </div>
       <div style={{ fontSize:"10px", fontWeight:800, color:T3, letterSpacing:"2px", textTransform:"uppercase", marginBottom:"3mm" }}>
-        {isAr ? "اكتب كل حرف ٤ مرات" : "Write each vowel 4 times"}
+        {isAr ? "كتابة كل حرف ٤ مرات" : "Write each vowel 4 times"}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"3mm", marginBottom:"6mm" }}>
         {Array(8).fill(null).map((_,i) => (
@@ -4441,7 +4442,7 @@ function BatchimLesson({ part, lang }: { part: 1|2|3; lang: Lang }) {
         <>
           <p style={{ fontSize:"12px", color:T2, lineHeight:1.8, marginBottom:"5mm" }}>
             {isAr
-              ? "الباتشيم هو الحرف الساكن الذي يأتي في نهاية المقطع الكوري. مثلاً في كلمة 한 الحرف ㄴ هو الباتشيم. لا تنطقه بقوة — فقط اقفل الصوت بلطف."
+              ? "الباتشيم هو الحرف الساكن الذي يأتي في نهاية المقطع الكوري. مثلاً في كلمة 한 الحرف ㄴ هو الباتشيم. لا يُنطق بقوة، بل يُقفَل الصوت بلطف فقط."
               : "Batchim is the final consonant at the bottom of a Korean syllable. In 한, the ㄴ is the batchim. Don't release it loudly — just close the sound gently."}
           </p>
           <div style={{ display:"flex", gap:"10mm", justifyContent:"center", margin:"6mm 0" }}>
@@ -4515,7 +4516,7 @@ function ReadingPractice({ lang }: { lang: Lang }) {
   ];
   return (
     <Page dir={isAr ? "rtl" : "ltr"} chapter={isAr ? "تدريب القراءة" : "Reading Practice"}>
-      <SHead title={isAr ? "تدريب القراءة" : "Reading Practice"} subtitle={isAr ? "اقرأ كل كلمة بصوت عالٍ ثم ترجمها" : "Read each word aloud, then translate it"} />
+      <SHead title={isAr ? "تدريب القراءة" : "Reading Practice"} subtitle={isAr ? "قراءة كل كلمة بصوت عالٍ ثم ترجمتها" : "Read each word aloud, then translate it"} />
       <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:"4mm", marginBottom:"6mm" }}>
         {words.map(w => (
           <div key={w.k} style={{ border:`1px solid ${BD}`, borderRadius:"4px", padding:"4mm 5mm", background:"#fff", direction:"ltr" }}>
@@ -4541,17 +4542,17 @@ function FinalTest({ lang }: { lang: Lang }) {
         </div>
       </div>
 
-      <HwSection letter="A" title={isAr ? "اقرأ بصوت عالٍ" : "Read aloud"} body="" />
+      <HwSection letter="A" title={isAr ? "القراءة بصوت عالٍ" : "Read aloud"} body="" />
       <div style={{ fontSize:"24px", fontWeight:900, color:T1, marginBottom:"6mm", letterSpacing:"4px", direction:"ltr" }}>가 나 다 라 마 바 사 자 차 카 타 파 하</div>
 
-      <HwSection letter="B" title={isAr ? "اقرأ الكلمات" : "Read words"} body="" />
+      <HwSection letter="B" title={isAr ? "قراءة الكلمات" : "Read words"} body="" />
       <div style={{ display:"flex", gap:"4mm", flexWrap:"wrap", marginBottom:"6mm", direction:"ltr" }}>
         {["한국","사랑","친구","고마워","바나나","물","밥"].map(w => (
           <div key={w} style={{ border:`1px solid ${BD}`, borderRadius:"4px", padding:"3mm 5mm", fontSize:"22px", fontWeight:900, color:T1, background:"#fff" }}>{w}</div>
         ))}
       </div>
 
-      <HwSection letter="C" title={isAr ? "اكتب المقطع الكوري" : "Write the Korean syllable"} body="" />
+      <HwSection letter="C" title={isAr ? "كتابة المقطع الكوري" : "Write the Korean syllable"} body="" />
       <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"3mm", marginBottom:"6mm" }}>
         {["ba","na","go","ha","sa"].map(s => (
           <div key={s} style={{ border:`1px solid ${BD}`, borderRadius:"4px", padding:"3mm", textAlign:"center", background:SBG }}>
@@ -4604,7 +4605,7 @@ function Certificate({ lang }: { lang: Lang }) {
         <div style={{ width:"60px", height:"2px", background:GOLD, margin:"0 auto 8mm" }} />
         <div style={{ fontSize:"13px", color:T2, lineHeight:1.8, maxWidth:"140mm", margin:"0 auto" }}>
           {isAr
-            ? "أصبحت قادراً على قراءة الحروف الكورية الأساسية والمقاطع والكلمات المبدئية. أنت الآن جاهز للبدء في كورس الكورية المستوى ١ مع كلوفرز."
+            ? "اكتملت القدرة على قراءة الحروف الكورية الأساسية والمقاطع والكلمات المبدئية، والخطوة التالية هي المستوى ١ مع كلوفرز."
             : "You can now read basic Korean letters, syllables, and beginner words. You are ready to start Korean Level 1 with Klovers."}
         </div>
         <div style={{ marginTop:"15mm", display:"flex", justifyContent:"space-between", gap:"10mm" }}>
@@ -4663,7 +4664,7 @@ export default function HangulBookPage() {
       </div>
       <h1 className="text-2xl font-black">الكتاب غير متاح بعد</h1>
       <p className="text-muted-foreground max-w-sm">
-        سيُفتح هذا الكتاب لك أسبوعاً واحداً قبل بدء مجموعتك. يُرجى التواصل مع الإدارة إذا كنت تعتقد أن هناك خطأ.
+        يُفتح هذا الكتاب قبل بدء المجموعة بأسبوع واحد. وعند وجود خطأ، يُرجى التواصل مع الإدارة.
       </p>
       <p className="text-sm text-muted-foreground">
         The book unlocks one week before your class group starts.
@@ -4783,7 +4784,7 @@ export default function HangulBookPage() {
         boxShadow:"0 2px 16px rgba(0,0,0,0.4)",
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
-          <span style={{ fontSize:"22px" }}>🍀</span>
+          <KloverIcon name="sprout" className="h-7 w-7" />
           <span style={{ fontWeight:900, color:Y, fontSize:"17px", letterSpacing:"2px" }}>KLOVERS</span>
           <span style={{ color:"#555", fontSize:"12px" }}>Hangul Book</span>
         </div>
@@ -4798,7 +4799,7 @@ export default function HangulBookPage() {
                 color: preview===l ? BK : "#777",
                 border:"none", cursor:"pointer",
               }}>
-                {l==="ar" ? "🇦🇪 Preview Arabic" : "🇬🇧 Preview English"}
+                {l==="ar" ? "Preview Arabic" : "Preview English"}
               </button>
             ))}
           </div>
@@ -4827,7 +4828,7 @@ export default function HangulBookPage() {
 
       {/* Book — renders only the selected language */}
       <div id="hangul-book" style={{ paddingTop:"64px", paddingBottom:"40px", minHeight:"100vh" }}>
-        <div id="book-title-ribbon" className="no-print">📖 KLOVERS HANGUL BOOK 🇰🇷</div>
+        <div id="book-title-ribbon" className="no-print">KLOVERS HANGUL BOOK</div>
         {isAr ? (
           <>
             <CoverAr />
