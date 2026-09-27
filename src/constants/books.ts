@@ -9,8 +9,8 @@
  * edition, English groups the English one (app_private.level_book_id picks
  * it from schedule_packages.class_language when a group starts).
  *
- * `hangul-1` (the old web book at /hangul-book) is deliberately absent: it is
- * not a file, so the dashboard card skips it.
+ * `hangul-1` (the old web book at /hangul-book, removed 27 Sep 2026) is
+ * deliberately absent: it is not a file, so the dashboard card skips it.
  */
 export const BOOKS = {
   "hangul-a0": {
