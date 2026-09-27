@@ -18,7 +18,7 @@ import { curvedRoof, roofAspect } from "./shapes";
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "moss" | "hill"
-  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange";
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
 export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "ball" | "ballLow" | "cylLow" | `roof:${number}`;
 
@@ -48,6 +48,8 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   clothSage: MAT.clothSage,
   fruitRed: MAT.fruitRed,
   fruitOrange: MAT.fruitOrange,
+  flowerWhite: MAT.flowerWhite,
+  flowerLilac: MAT.flowerLilac,
 };
 
 const BASE_GEOMETRY: Record<string, BufferGeometry> = {
@@ -111,11 +113,18 @@ export function curvedRoofOn(k: Kit, x: number, y: number, z: number, w: number,
  * with white mortar ends that tips up at both ends.
  */
 export function hanokRoof(k: Kit, x: number, z: number, baseY: number, w: number, d: number, h = 1.1): void {
-  const W = w + 1.7;
-  const D = d + 1.7;
+  // Deep eaves (≈1.15 m past the walls): the overhang and its shadow are
+  // what give a hanok its depth.
+  const W = w + 2.3;
+  const D = d + 2.3;
   // Soffit: the underside of the eaves, warm wood seen from the ground.
-  k.box("woodLight", [x, baseY + 0.1, z], [w + 1.3, 0.06, d + 1.3]);
+  k.box("woodLight", [x, baseY + 0.1, z], [w + 1.9, 0.06, d + 1.9]);
   k.box("woodDark", [x, baseY + 0.04, z], [w + 0.3, 0.14, d + 0.3], true);
+  // A second, darker eave layer: the fascia board just under the tile edge.
+  for (const s of [-1, 1]) {
+    k.box("woodDark", [x, baseY + 0.2, z + s * (D / 2 - 0.2)], [W - 0.5, 0.13, 0.09]);
+    k.box("woodDark", [x + s * (W / 2 - 0.2), baseY + 0.2, z], [0.09, 0.13, D - 0.5]);
+  }
   curvedRoofOn(k, x, baseY + 0.16, z, W, D, h + 0.45);
   const along = w >= d;
   // The ridge line of the curved roof (see shapes.ts): (long − short) wide.
@@ -281,6 +290,14 @@ export function wallRun(k: Kit, x1: number, z1: number, x2: number, z2: number, 
   k.box("stoneWarm", [cx, 0.3, cz], s(len, 0.6, t + 0.08), false);
   k.box("plaster", [cx, h / 2, cz], s(len, h, t), true);
   k.box("woodDark", [cx, h - 0.12, cz], s(len + 0.02, 0.12, t + 0.04));
+  // Timber posts and a low rail on the stone course: the wall reads as a
+  // framed structure, not a flat slab.
+  k.box("woodDark", [cx, 0.64, cz], s(len + 0.02, 0.08, t + 0.05));
+  const posts = Math.max(1, Math.round(len / 2.4));
+  for (let i = 0; i <= posts; i++) {
+    const a = -len / 2 + (len / posts) * i;
+    k.box("woodDark", alongX ? [cx + a, h / 2 + 0.3, cz] : [cx, h / 2 + 0.3, cz + a], s(0.16, h - 0.6, t + 0.06));
+  }
   const cap = s(len + 0.5, 0, t + 0.8);
   curvedRoofOn(k, cx, h - 0.04, cz, cap[0], cap[2], 0.5);
 }
@@ -550,5 +567,31 @@ export function gatehouse(k: Kit, x: number, z: number, rotY: number, o: { open:
     k.box("charcoal", P(0, 1.45, 0.005), S(0.04, 2.9, 0.02));
     for (const dx of [-0.8, 0.8]) for (const dy of [0.7, 1.45, 2.2]) k.box("woodLight", P(dx, dy, 0.01), S(1.35, 0.06, 0.02));
     if (o.barred) k.box("charcoal", P(0, 1.45, 0.04), S(3.6, 0.18, 0.08));
+  }
+}
+
+/**
+ * A clump of garden flowers: a low green mound dotted with blooms (pink,
+ * white, lilac). Cheap low-poly shapes with no shadows — colour, not cost.
+ */
+export function flowers(k: Kit, x: number, z: number, s = 1, seed = 1, y = 0): void {
+  k.add("leaf", "ballLow", [x, y + 0.14 * s, z], [0.95 * s, 0.34 * s, 0.85 * s], [0, jitter(seed, 2), 0]);
+  k.add("leafDark", "ballLow", [x + 0.22 * s, y + 0.12 * s, z - 0.14 * s], [0.6 * s, 0.28 * s, 0.55 * s]);
+  const cols: MatKey[] = ["blossom", "flowerWhite", "flowerLilac"];
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2 + seed;
+    const r = (0.18 + (i % 3) * 0.08) * s;
+    k.add(cols[(i + Math.abs(Math.round(seed))) % 3], "ballLow", [x + Math.cos(a) * r, y + (0.27 + (i % 2) * 0.05) * s, z + Math.sin(a) * r], [0.13 * s, 0.11 * s, 0.13 * s]);
+  }
+}
+
+/** A wooden planter box full of flowers (street edges, square corners). */
+export function flowerBox(k: Kit, x: number, z: number, len: number, alongX = false, seed = 1): void {
+  k.box("woodDark", [x, 0.22, z], alongX ? [len, 0.44, 0.55] : [0.55, 0.44, len], true);
+  k.box("woodLight", [x, 0.45, z], alongX ? [len + 0.06, 0.04, 0.6] : [0.6, 0.04, len + 0.06]);
+  const n = Math.max(1, Math.round(len / 0.6));
+  for (let i = 0; i < n; i++) {
+    const t = -len / 2 + (len / n) * (i + 0.5);
+    flowers(k, alongX ? x + t : x, alongX ? z : z + t, 0.62, seed + i * 3, 0.36);
   }
 }
