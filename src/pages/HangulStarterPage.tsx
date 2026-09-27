@@ -119,8 +119,10 @@ const HangulStarterPage = () => {
               )}
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Button onClick={() => window.print()} variant="outline">
-                {tr("Print the sheet", "طباعة الورقة")}
+              <Button asChild variant="outline">
+                <a href={isAr ? "/hangul-starter-ar.pdf" : "/hangul-starter-en.pdf"} download>
+                  {tr("Download the free PDF", "تحميل الورقة المجانية PDF")}
+                </a>
               </Button>
               <Button asChild>
                 <Link to="/free-trial">{tr("Book a free class", "حجز حصة مجانية")}</Link>
