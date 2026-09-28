@@ -1088,6 +1088,7 @@ const EnrollNowPage = () => {
                     </a>
                   </div>
                 ) : (
+                  <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
                     {levelSlots.map((slot) => {
                       const { day, time, seatsLeft, packageId } = slot;
@@ -1119,6 +1120,20 @@ const EnrollNowPage = () => {
                         </button>
                       );
                     })}
+                  </div>
+                  {/* None of the offered days suits: don't dead-end, let her ask for another time. */}
+                  <a
+                    href={`${WHATSAPP_BASE}?text=${encodeURIComponent(
+                      isAr
+                        ? `مرحبًا كلوفرز، المواعيد المعروضة لا تناسبني${levelLabelAr ? ` في ${levelLabelAr}` : ""}${classType === "private" ? " (حصة خاصة)" : ""}. هل يمكن ترتيب موعد آخر؟ توقيتي: ${timezone}`
+                        : `Hi Klovers — the times shown don't suit me${selectedLevel ? ` for ${selectedLevel}` : ""}${classType === "private" ? " (private)" : ""}. Can we arrange another time? My timezone: ${timezone}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-sm text-primary underline underline-offset-4"
+                  >
+                    {isAr ? "لا تناسبك هذه المواعيد؟ يمكنك طلب موعد آخر عبر واتساب" : "These times don't suit you? Ask for another time on WhatsApp"}
+                  </a>
                   </div>
                 )}
               </div>
