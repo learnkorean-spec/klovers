@@ -71,7 +71,17 @@ async function fetchPrivateTimeOptions(): Promise<string[]> {
 
 /**
  * Fetch admin-configured private class days from app_settings.
- * Falls back to auto-computing from non-group days if not configured.
+ *
+ * 29 Sep 2026 (Re: "private must see all available times, all times, and
+ * groups if its empty and not activated"): the old fallback excluded every
+ * day that had ANY active schedule_packages row of course_type != "private" —
+ * and every one of the 7 weekdays has one, so a private booker saw zero
+ * days, always. A schedule_packages row only means a group slot is
+ * *configured*, not that a real group is running and full there — the
+ * fallback was blocking on the wrong signal. Group occupancy (pkg_groups /
+ * pkg_group_members) is close to empty across the board right now, so the
+ * fix is: offer every day for a private class unless Re has explicitly
+ * fenced some off via private_class_days.
  */
 async function fetchPrivateDays(): Promise<string[]> {
   const { data } = await supabase
@@ -87,15 +97,10 @@ async function fetchPrivateDays(): Promise<string[]> {
     } catch { /* fall through */ }
   }
 
-  // Fallback: auto-compute from non-group days
-  const { data: groupSlots } = await supabase
-    .from("schedule_packages")
-    .select("day_of_week")
-    .eq("is_active", true)
-    .neq("course_type", "private");
-
-  const courseDayIndices = new Set((groupSlots as any[] || []).map((s: any) => s.day_of_week));
-  return WEEKDAYS.filter((_, i) => !courseDayIndices.has(i));
+  // No explicit fence configured — a private class can be requested on any
+  // day of the week. (Real group fullness, not mere configuration, is what
+  // should ever narrow this; nothing here currently does, on purpose.)
+  return WEEKDAYS;
 }
 
 /**
