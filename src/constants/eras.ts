@@ -346,12 +346,12 @@ export const ERAS: Era[] = [
       },
     ],
     storyEn: [
-      "In 1393 the capital moved to Hanseong, which is modern Seoul. The state ran on Neo-Confucian ideas. Government jobs went to men who passed the gwageo, exams on Confucian learning, and the educated elite who held those jobs were called the yangban. By 1800 the yangban may have made up as much as 30 percent of the population. Buddhism, which had thrived in Silla, was discouraged.",
+      "In 1394 the capital moved to Hanseong, which is modern Seoul. The state ran on Neo-Confucian ideas. Government jobs went to men who passed the gwageo, exams on Confucian learning, and the educated elite who held those jobs were called the yangban. By 1800 the yangban may have made up as much as 30 percent of the population. Buddhism, which had thrived in Silla, was discouraged.",
       "The most famous king, Sejong, oversaw the creation of Hangul. Before it, writing meant Chinese characters, which took years to learn. Hangul was made to be learned quickly. It was promulgated on October 9, 1446, a date Koreans still celebrate as Hangul Day. But the scholarly elite rejected it at the time, and it took centuries to become the everyday script.",
       "In 1897 the Korean Empire was proclaimed, which formally ended the Joseon period. The dynasty continued to rule until Japan annexed Korea in 1910.",
     ],
     storyAr: [
-      "في عام ١٣٩٣ انتقلت العاصمة إلى هانسونغ، وهي سيول الحديثة. قامت الدولة على الكونفوشيوسية الجديدة. وذهبت وظائف الحكم إلى من ينجحون في امتحان غواغو الذي يختبر المعرفة الكونفوشيوسية، وسُمّي أبناء النخبة المتعلمة الذين شغلوا هذه الوظائف يانغبان. وبحلول عام ١٨٠٠ قد يصل عددهم إلى ثلاثين في المئة من السكان. أما البوذية التي ازدهرت في سيلا فوُجهت بالتثبيط.",
+      "في عام ١٣٩٤ انتقلت العاصمة إلى هانسونغ، وهي سيول الحديثة. قامت الدولة على الكونفوشيوسية الجديدة. وذهبت وظائف الحكم إلى من ينجحون في امتحان غواغو الذي يختبر المعرفة الكونفوشيوسية، وسُمّي أبناء النخبة المتعلمة الذين شغلوا هذه الوظائف يانغبان. وبحلول عام ١٨٠٠ قد يصل عددهم إلى ثلاثين في المئة من السكان. أما البوذية التي ازدهرت في سيلا فوُجهت بالتثبيط.",
       "أشهر ملوك جوسون هو سيجونغ الذي أشرف على إنشاء الهانغول. قبلها كانت الكتابة تعني الحروف الصينية التي يستغرق تعلمها سنوات، أما الهانغول فصُمم ليُتعلم بسرعة. أُعلن رسمياً في ٩ أكتوبر ١٤٤٦، وما زال الكوريون يحتفلون بهذا اليوم باسم يوم الهانغول. لكن نخبة العلماء رفضته في وقته، واحتاج قروناً ليصبح الخط اليومي.",
       "في عام ١٨٩٧ أُعلنت الإمبراطورية الكورية، وبها انتهت حقبة جوسون رسمياً. لكن الأسرة ظلت حاكمة حتى ضمّت اليابان كوريا عام ١٩١٠.",
     ],
@@ -414,7 +414,7 @@ export const ERAS: Era[] = [
       "الهانوك هو البيت الكوري التقليدي. تمتد جذوره إلى بيوت حفرية من نحو عام ٦٠٠٠ ق.م، واكتمل شكله الكلاسيكي في أواخر حقبة جوسون. والموقع المثالي هو بيسانيمسو: جبل خلف البيت ونهر أمامه، مع مراعاة الأرض والفصول.",
       "يُبنى لتحقيق الراحة في الحر والبرد معاً. فللشتاء أوندول، نظام تدفئة تحت الأرضية ابتُكر منذ زمن بعيد ليساعد الكوريين على احتمال البرد، وما زال مستخدماً في بيوت كثيرة. وللصيف مارو، قاعة بأرضية خشبية باردة تحجب شمس الصيف وتسمح للهواء بالدوران.",
       "يُبنى الهانوك من الخشب للعوارض والأعمدة، ومن قرميد الطين المحروق للسقف واسمه غيوا، ومن أساسات حجرية. وتُصنع النوافذ والأبواب من هانجي، الورق الكوري المعالج بزيت الفول ليقاوم الماء. هانوك الشمال مربع ليحتفظ بالدفء، وهانوك الجنوب مفتوح على شكل حرف إل للتهوية، وفي الوسط يجمعون بين النمطين.",
-      "ما زال بإمكانك المشي بينها اليوم في قرية بوكتشون للهانوك في وسط سيول. وكما في معظم البيوت الكورية، تُخلع الأحذية عند الباب.",
+      "وما زالت هذه البيوت مفتوحة للزوار اليوم في قرية بوكتشون للهانوك في وسط سيول. وكما في معظم البيوت الكورية، تُخلع الأحذية عند الباب.",
     ],
     words: [
       { ko: "한옥", rom: "hanok", romAr: "هانوك", en: "traditional Korean house", ar: "البيت الكوري التقليدي" },
