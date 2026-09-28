@@ -271,7 +271,9 @@ const BlogPostPage = () => {
   useEffect(() => {
     if (!post) return;
 
-    document.title = `${post.title} | Klovers Blog`;
+    // One language per page: an Arabic article's tab ends in «كلوفرز», the
+    // same suffix scripts/prerender-meta.mjs writes into its prerendered head.
+    document.title = post.lang === "ar" ? `${post.title} | كلوفرز` : `${post.title} | Klovers Blog`;
 
     const setMeta = (name: string, content: string, attr = "name") => {
       let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement;
