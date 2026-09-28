@@ -15,6 +15,8 @@ import { type ClassType, type Duration, getTierForCountry, normalizeCountry, get
 import { track } from "@/lib/tracking";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trustCopy } from "@/lib/trustFigures";
+import KloverIcon from "@/components/KloverIcon";
+import rehamPhoto from "@/assets/reham-teacher.jpg";
 
 const EnrollPage = () => {
   const { t, language } = useLanguage();
@@ -121,8 +123,10 @@ const EnrollPage = () => {
 
       toast({ title: t("enrollForm.submitted"), description: t("enrollForm.submittedDesc") });
       navigate("/dashboard");
-    } catch (err: any) {
-      toast({ title: t("enrollForm.error"), description: err.message, variant: "destructive" });
+    } catch {
+      // Never show the raw Supabase/network error text — it's untranslated
+      // and technical. A page-language message covers every failure case.
+      toast({ title: t("enrollForm.error"), description: t("enrollForm.submitFailed"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -140,9 +144,9 @@ const EnrollPage = () => {
             <h1 className="text-2xl font-bold text-foreground">{t("enrollForm.completeEnrollment")}</h1>
             <p className="text-muted-foreground text-sm">{t("enrollForm.chooseSubmit")}</p>
             <div className="flex items-center justify-center gap-3 flex-wrap pt-1 text-xs text-muted-foreground">
-              <span>⭐ {trustCopy(language).ratingShort}</span>
+              <span className="inline-flex items-center gap-1"><KloverIcon name="badge-blossom" className="h-3.5 w-3.5" /> {trustCopy(language).ratingShort}</span>
               <span className="text-border">·</span>
-              <span>👥 {trustCopy(language).studentsShort}</span>
+              <span className="inline-flex items-center gap-1"><KloverIcon name="student-girl-heart" className="h-3.5 w-3.5" /> {trustCopy(language).studentsShort}</span>
               <span className="text-border">·</span>
               <span>{t("enrollForm.levels")}</span>
             </div>
@@ -150,15 +154,16 @@ const EnrollPage = () => {
 
           {/* Teacher card */}
           <div className="flex items-center gap-4 bg-card border border-border rounded-2xl px-5 py-4 shadow-sm">
-            <div className="relative flex-shrink-0">
-              <div className="w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center text-xl font-bold text-primary select-none">
-                ريم
-              </div>
-              <span className="absolute -bottom-0.5 -right-0.5 text-base leading-none">🇰🇷</span>
-            </div>
+            <img
+              src={rehamPhoto}
+              alt={language === "ar" ? "المعلّمة ريهام" : "Teacher Reham"}
+              className="w-14 h-14 rounded-full object-cover object-top flex-shrink-0"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-bold text-foreground">Reham — 선생님</p>
+                <p className="font-bold text-foreground">
+                  {language === "ar" ? "المعلّمة ريهام" : "Teacher Reham"} <span lang="ko">선생님</span>
+                </p>
                 <span className="text-xs bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">{t("enrollForm.certifiedTeacher")}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{t("enrollForm.teacherExp")}</p>
@@ -245,16 +250,16 @@ const EnrollPage = () => {
                   {loading ? t("enrollForm.submitting") : t("enrollForm.submitEnrollment")}
                 </Button>
 
-                {/* Trust badges */}
+                {/* Trust badges — text only, no time promise (review is
+                    manual, not on a fixed clock) and nothing unverifiable. */}
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { icon: "🔒", label: t("enrollForm.secure") },
-                    { icon: "⚡", label: t("enrollForm.review24h") },
-                    { icon: "✅", label: t("enrollForm.verified") },
-                  ].map(({ icon, label }) => (
+                    t("enrollForm.secure"),
+                    t("enrollForm.manualReview"),
+                    t("enrollForm.whatsappSupport"),
+                  ].map((label) => (
                     <div key={label} className="flex flex-col items-center gap-1 bg-muted/50 rounded-lg p-2">
-                      <span className="text-base">{icon}</span>
-                      <span className="text-[10px] text-muted-foreground font-medium">{label}</span>
+                      <span className="text-[10px] text-muted-foreground font-medium text-center">{label}</span>
                     </div>
                   ))}
                 </div>
