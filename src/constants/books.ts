@@ -18,6 +18,8 @@
  *              same content, written for self-study, answer key open,
  *              licence = personal use of the buyer
  *   free     — trial-class guides
+ *   topik    — official TOPIK past papers (NIIED), kept for teachers and for
+ *              TOPIK practice; assigned to a student by hand only
  */
 export const BOOKS = {
   "hangul-a0": {
@@ -97,6 +99,39 @@ export const BOOKS = {
     subtitleAr: "نسخة الدراسة الذاتية · 78 صفحة",
     subtitleEn: "Self-study edition · 78 pages",
   },
+  "topik-i-91-reading": {
+    use: "topik",
+    lang: "ko",
+    path: "books/topik-i-91-reading.pdf",
+    fileName: "TOPIK-I-91-Reading.pdf",
+    badge: "TOPIK",
+    titleAr: "توبيك 1 — القراءة، الامتحان 91",
+    titleEn: "TOPIK I — Reading, test 91",
+    subtitleAr: "امتحان سابق رسمي · الأسئلة 31–70 · 17 صفحة",
+    subtitleEn: "Official past paper · questions 31–70 · 17 pages",
+  },
+  "topik-i-96-reading": {
+    use: "topik",
+    lang: "ko",
+    path: "books/topik-i-96-reading.pdf",
+    fileName: "TOPIK-I-96-Reading.pdf",
+    badge: "TOPIK",
+    titleAr: "توبيك 1 — القراءة، الامتحان 96",
+    titleEn: "TOPIK I — Reading, test 96",
+    subtitleAr: "امتحان سابق رسمي · الأسئلة 31–70 · 17 صفحة",
+    subtitleEn: "Official past paper · questions 31–70 · 17 pages",
+  },
+  "topik-i-102-reading": {
+    use: "topik",
+    lang: "ko",
+    path: "books/topik-i-102-reading.pdf",
+    fileName: "TOPIK-I-102-Reading.pdf",
+    badge: "TOPIK",
+    titleAr: "توبيك 1 — القراءة، الامتحان 102",
+    titleEn: "TOPIK I — Reading, test 102",
+    subtitleAr: "امتحان سابق رسمي · الأسئلة 31–70 · 19 صفحة",
+    subtitleEn: "Official past paper · questions 31–70 · 19 pages",
+  },
 } as const;
 
 export type BookId = keyof typeof BOOKS;
@@ -113,4 +148,8 @@ export const BOOK_COVERS: Record<BookId, string> = {
   // Store editions share the student editions' covers.
   "hangul-a0-store": `${COVER_BASE}/hangul-a0-cover.webp`,
   "hangul-a0-en-store": `${COVER_BASE}/hangul-a0-en-cover.webp`,
+  // TOPIK past papers: plain Klovers thumbnails shipped with the site.
+  "topik-i-91-reading": "/book-covers/topik-i-91.webp",
+  "topik-i-96-reading": "/book-covers/topik-i-96.webp",
+  "topik-i-102-reading": "/book-covers/topik-i-102.webp",
 };

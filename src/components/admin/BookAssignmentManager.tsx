@@ -34,12 +34,13 @@ import { BOOKS, BOOK_COVERS, type BookId } from "@/constants/books";
  * Arabic groups get the Arabic edition, English groups the English one.
  * This screen is for exceptions only — assign by hand, remove, or download.
  */
-type Shelf = "teaching" | "store" | "free";
+type Shelf = "teaching" | "store" | "free" | "topik";
 
 const SHELVES: { id: Shelf; title: string; note: string }[] = [
   { id: "teaching", title: "Teaching", note: "Level books — a free gift when a group starts (Arabic groups get the Arabic edition, English groups the English one)." },
   { id: "store", title: "Store", note: "Self-study editions sold in /shop. Same lessons; answer key open to the reader; licence = personal use of the buyer." },
   { id: "free", title: "Free", note: "Trial-class guides and the public Hangul starter sheets." },
+  { id: "topik", title: "TOPIK past papers", note: "Official TOPIK I reading papers — for teachers and TOPIK practice. Assign to a student by hand; not given automatically." },
 ];
 
 /** Public PDFs on the site itself (not in book_assignments). */
@@ -257,7 +258,7 @@ const BookAssignmentManager = () => {
                           className="h-[78px] w-[60px] rounded object-cover shrink-0 bg-muted" />
                         <div className="min-w-0 flex-1 space-y-1.5">
                           <div className="text-xs font-semibold leading-snug">{b.titleEn}</div>
-                          <div className="text-[11px] text-muted-foreground">{b.subtitleEn} · {b.lang === "ar" ? "Arabic" : "English"}</div>
+                          <div className="text-[11px] text-muted-foreground">{b.subtitleEn} · {b.lang === "ar" ? "Arabic" : b.lang === "ko" ? "Korean" : "English"}</div>
                           <div className="flex flex-wrap gap-1">
                             {hasFile === false && <Chip tone="wait">PDF not uploaded</Chip>}
                             {hasFile === true && <Chip tone="plain">PDF in storage</Chip>}
