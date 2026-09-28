@@ -26,6 +26,9 @@ import { toArabicDigits } from "@/lib/trustFigures";
  *
  * 27 Sep 2026: no FAQPage markup here or in the prerender - the page shows no
  * FAQ section, and FAQ markup must describe visible questions.
+ *
+ * 28 Sep 2026: the "full TOPIK guide" button follows the page language - the
+ * Arabic page opens the Arabic article (topik-exam-guide-ar), not the English one.
  */
 
 const TOPIK_I = [
@@ -248,7 +251,7 @@ const TopikExamPage = () => {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="rounded-full">
-                <Link to="/blog/topik-exam-guide">{tr("Read the full TOPIK guide", "قراءة دليل TOPIK الكامل")}</Link>
+                <Link to={isAr ? "/blog/topik-exam-guide-ar" : "/blog/topik-exam-guide"}>{tr("Read the full TOPIK guide", "قراءة دليل TOPIK الكامل")}</Link>
               </Button>
             </div>
           </div>
