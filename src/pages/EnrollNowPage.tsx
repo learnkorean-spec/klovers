@@ -50,6 +50,10 @@ allCountries.sort((a, b) => a.country.localeCompare(b.country));
 
 const durationClasses = DURATION_CLASSES;
 
+// Private and dynamically-suggested group times are preferences, not rows in
+// schedule_packages, so their ids must never be sent as package_id.
+const isPreferenceSlot = (id: string | null) => !!id && (id.startsWith("private-") || id.startsWith("dynamic-"));
+
 // Arabic currency names (same map as PricingSection), so an Arabic price reads
 // "١٬٢٠٠ جنيه" rather than "1,200 EGP".
 const CURRENCY_AR: Record<string, string> = {
@@ -342,10 +346,21 @@ const EnrollNowPage = () => {
         pkgMemberCount[g.package_id] = (pkgMemberCount[g.package_id] || 0) + (memberCounts[g.id] || 0);
       }
 
+      // 29 Sep 2026: an EMPTY group slot is not a hard reservation. If a private
+      // lesson / blocked window / running group has taken its time, drop it —
+      // fn_locked_group_packages() says which (function may not exist yet or may
+      // fail: then nothing is dropped, i.e. the previous behaviour).
+      let lockedIds = new Set<string>();
+      try {
+        const { data: lockedRows, error: lockedErr } = await supabase.rpc("fn_locked_group_packages" as any, { p_level: normalizedLevel });
+        if (!lockedErr) lockedIds = new Set(((lockedRows as any[]) || []).map((x: any) => x.package_id));
+      } catch { /* keep previous behaviour */ }
+      const usableRows = rows.filter((r: any) => !lockedIds.has(r.id));
+
       // Deduplicate by admin-side day_of_week; convert each slot to the learner's timezone for display
       const seen = new Set<number>();
       const slots: { day: string; time: string; packageId: string; seatsLeft: number; demand: number }[] = [];
-      for (const r of rows) {
+      for (const r of usableRows) {
         if (!seen.has(r.day_of_week)) {
           seen.add(r.day_of_week);
           const srcTz = r.timezone || "Africa/Cairo";
@@ -365,7 +380,29 @@ const EnrollNowPage = () => {
       const ranked = slots
         .slice()
         .sort((a, b) => b.demand - a.demand || b.seatsLeft - a.seatsLeft || rows.findIndex(r => r.id === a.packageId) - rows.findIndex(r => r.id === b.packageId));
-      const topSlots = (ranked.length > 2 ? ranked.slice(0, 2) : ranked).map(({ demand, ...s }) => s);
+      const topSlots: { day: string; time: string; packageId: string; seatsLeft: number }[] =
+        (ranked.length > 2 ? ranked.slice(0, 2) : ranked).map(({ demand, ...s }) => s);
+
+      // Fewer than two options left (a slot was taken by a private lesson):
+      // fill from the scoring engine — same Cairo hour as the class that is
+      // still offered where possible, on a day not already shown. Preference
+      // only (no package yet), same as private times.
+      if (topSlots.length < 2 && lockedIds.size > 0) {
+        try {
+          const { data: sug } = await supabase.rpc("fn_suggest_group_slots" as any, { p_level: normalizedLevel, p_count: 400 });
+          const cands = ((sug as any[]) || []);
+          const usedDow = new Set<number>(rows.map((r: any) => r.day_of_week as number));
+          const wantTime = String((usableRows[0] ?? rows[0]).start_time).slice(0, 5);
+          const pick = cands.find((c: any) => !usedDow.has(c.day_of_week) && c.start_time === wantTime)
+            ?? cands.find((c: any) => !usedDow.has(c.day_of_week));
+          if (pick) {
+            const local = convertSlotToTimezone(pick.day_of_week, pick.start_time, pick.timezone || "Africa/Cairo", timezone);
+            topSlots.push({ day: local.weekday, time: local.timeFormatted, packageId: `dynamic-${pick.day_of_week}-${pick.start_time}`, seatsLeft: 99 });
+          }
+        } catch (e) {
+          console.error("fn_suggest_group_slots backfill failed:", e);
+        }
+      }
       setLevelSlots(topSlots);
 
       // On initial load, restore selectedPackageId from rehydrated preferredDays.
@@ -580,7 +617,7 @@ const EnrollNowPage = () => {
           schedPrefs.preferred_days = preferredDays;
           schedPrefs.preferred_day = preferredDays[0];
         }
-        if (selectedPackageId && !selectedPackageId.startsWith("private-")) schedPrefs.package_id = selectedPackageId;
+        if (selectedPackageId && !isPreferenceSlot(selectedPackageId)) schedPrefs.package_id = selectedPackageId;
         if (timezone) schedPrefs.timezone = timezone;
         // Always write level to enrollment (triggers sync to profile via DB trigger)
         if (selectedLevel) schedPrefs.level = normalizeLevel(selectedLevel);
@@ -725,7 +762,7 @@ const EnrollNowPage = () => {
         timezone,
         status: "PENDING_PAYMENT",
       };
-      if (selectedPackageId && !selectedPackageId.startsWith("private-")) schedFields.package_id = selectedPackageId;
+      if (selectedPackageId && !isPreferenceSlot(selectedPackageId)) schedFields.package_id = selectedPackageId;
       if (preferredDays.length > 0) schedFields.preferred_days = preferredDays;
       // Add student preference for scheduling (from step 3)
       if (preferredDayOfWeek !== null) schedFields.preferred_day_of_week = preferredDayOfWeek;
@@ -751,7 +788,7 @@ const EnrollNowPage = () => {
           name: name.trim(),
           email: lowerEmail,
           level: normalizedLevel,
-          package_id: (selectedPackageId && !selectedPackageId.startsWith("private-")) ? selectedPackageId : "",
+          package_id: (selectedPackageId && !isPreferenceSlot(selectedPackageId)) ? selectedPackageId : "",
           schedule: {
             timezone,
             preferred_days: preferredDays,
