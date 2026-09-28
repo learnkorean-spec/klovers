@@ -28,6 +28,9 @@ const OG_IMAGE_OVERRIDES: Partial<Record<string, string>> = {
  * logLeadEvent, mirrors every call to Meta Pixel / GA4 as a Lead conversion,
  * and a station click is not a lead. Add a pixel-free logger (see
  * logEngagementEvent in src/lib/leadTracking.ts) before instrumenting this.
+ *
+ * Arabic copy addresses the reader in neutral MSA: verbal nouns (تعلُّم،
+ * بدء، قراءة), never a masculine or feminine imperative.
  */
 
 const EraPage = () => {
@@ -171,7 +174,7 @@ const EraPage = () => {
         {era.posts.length > 0 && (
           <section className="container mx-auto px-4 max-w-5xl pb-12">
             <h2 className="font-display text-2xl md:text-3xl font-extrabold text-foreground mb-5">
-              {isAr ? "اقرأ عن هذا العصر" : "Read about this era"}
+              {isAr ? "مقالات عن هذا العصر" : "Read about this era"}
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {era.posts.map((post) => (
@@ -197,7 +200,7 @@ const EraPage = () => {
                       {isAr ? post.blurbAr : post.blurbEn}
                     </p>
                     <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-foreground pt-1">
-                      {isAr ? "اقرأ المقال" : "Read more"}
+                      {isAr ? "قراءة المقال" : "Read more"}
                       <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </span>
                   </div>
@@ -231,11 +234,11 @@ const EraPage = () => {
           <div className="rounded-3xl bg-foreground text-background p-6 md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
             <div>
               <h2 className="font-display text-xl md:text-2xl font-extrabold">
-                {isAr ? "تعلّم هذه الكلمات في حصة مباشرة" : "Learn these words in a live class"}
+                {isAr ? "تعلُّم هذه الكلمات في حصة مباشرة" : "Learn these words in a live class"}
               </h2>
               <p className="text-sm md:text-base text-background/75 mt-2">
                 {isAr
-                  ? "كل كلمة تتعلمها تأتي من مكان حقيقي وزمن حقيقي."
+                  ? "كل كلمة في الحصة تأتي من مكان حقيقي وزمن حقيقي."
                   : "Every word you learn comes from a real place and a real time."}
               </p>
             </div>
@@ -243,7 +246,7 @@ const EraPage = () => {
               to="/free-trial"
               className="inline-flex items-center justify-center rounded-xl bg-klovers-yellow text-charcoal font-bold px-6 py-3 text-base transition-opacity hover:opacity-90"
             >
-              {isAr ? "ابدأ التجربة المجانية" : "Start Free Trial"}
+              {isAr ? "بدء التجربة المجانية" : "Start Free Trial"}
             </Link>
           </div>
         </section>
