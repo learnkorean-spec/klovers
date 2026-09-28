@@ -252,8 +252,8 @@ export const ERAS: Era[] = [
     altAr: "معبد بوذي كوري وسط الأشجار",
     titleEn: "Ancient Korea",
     titleAr: "كوريا القديمة",
-    datesEn: "Silla · 57 BC – 935",
-    datesAr: "مملكة شيلا · ٥٧ ق.م – ٩٣٥",
+    datesEn: "Silla · 57 BCE – 935",
+    datesAr: "مملكة سيلا · ٥٧ ق.م – ٩٣٥",
     lineEn: "Temples and invention",
     lineAr: "معابد وابتكار",
     introEn:
