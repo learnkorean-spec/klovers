@@ -240,7 +240,11 @@ const EnrollNowPage = () => {
     }
     if (!selectedLevel) return;
 
-    // Private classes: fetch private availability (days without group classes)
+    // Private classes: fetch private availability (all days; see privateAvailability.ts).
+    // 29 Sep 2026 (Re: "times must be different in the days"): this used to
+    // dedupe down to one button per day, always keeping whichever time option
+    // came first — so every day showed the same 10:00 and 18:00 silently
+    // disappeared. Keep every day+time combination as its own slot instead.
     if (classType === "private") {
       const loadPrivate = async () => {
         const { options } = await fetchPrivateAvailability();
@@ -250,16 +254,9 @@ const EnrollNowPage = () => {
           packageId: `private-${opt.dayIndex}-${opt.time}`,
           seatsLeft: 99, // private slots don't have seat limits in day picker
         }));
-        // Deduplicate by day (show first time option per day)
-        const seen = new Set<string>();
-        const deduped = slots.filter((s) => {
-          if (seen.has(s.day)) return false;
-          seen.add(s.day);
-          return true;
-        });
-        setLevelSlots(deduped);
+        setLevelSlots(slots);
         if (initialLevelLoad && preferredDays.length > 0) {
-          const matchSlot = deduped.find(s => s.day === preferredDays[0]);
+          const matchSlot = slots.find(s => s.day === preferredDays[0]);
           if (matchSlot) setSelectedPackageId(matchSlot.packageId);
           setInitialLevelLoad(false);
         } else {
@@ -415,6 +412,20 @@ const EnrollNowPage = () => {
       setSelectedPackageId(slot?.packageId ?? null);
       return [day];
     });
+  };
+
+  // Private classes offer several times per day (see levelSlots load above),
+  // so selection has to be keyed by the exact slot (packageId), not just the
+  // day — toggleDay's "first slot matching this day" would always land back
+  // on the same time.
+  const selectPrivateSlot = (slot: { day: string; packageId: string }) => {
+    if (selectedPackageId === slot.packageId) {
+      setPreferredDays([]);
+      setSelectedPackageId(null);
+      return;
+    }
+    setPreferredDays([slot.day]);
+    setSelectedPackageId(slot.packageId);
   };
 
   // Build a URL that preserves all current selections so user can return after signup
@@ -984,26 +995,31 @@ const EnrollNowPage = () => {
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {levelSlots.map(({ day, time, seatsLeft }) => {
+                    {levelSlots.map((slot) => {
+                      const { day, time, seatsLeft, packageId } = slot;
                       const isFull = classType !== "private" && seatsLeft <= 0;
                       const dayIdx = DAY_NAMES.indexOf(day);
                       const translatedDay = dayIdx >= 0 ? (localDayNames[dayIdx] ?? day) : day;
+                      // Private: several time buttons can share a day, so the
+                      // exact slot (packageId) decides which one is selected.
+                      // Group: still deduped to one button per day.
+                      const isSelected = classType === "private" ? selectedPackageId === packageId : preferredDays.includes(day);
                       return (
                         <button
                           type="button"
-                          key={day}
+                          key={packageId}
                           disabled={isFull}
-                          onClick={() => !isFull && toggleDay(day)}
+                          onClick={() => !isFull && (classType === "private" ? selectPrivateSlot(slot) : toggleDay(day))}
                           className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all flex flex-col items-center gap-0.5 ${
                             isFull
                               ? "border-border opacity-50 cursor-not-allowed"
-                              : preferredDays.includes(day)
+                              : isSelected
                                 ? "border-primary bg-primary text-primary-foreground"
                                 : "border-border text-foreground hover:border-primary/50"
                           }`}
                         >
                           <span className="font-semibold">{translatedDay}</span>
-                          <span className={`text-xs ${isFull ? "text-destructive font-semibold" : preferredDays.includes(day) ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                          <span className={`text-xs ${isFull ? "text-destructive font-semibold" : isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                             {isFull ? t("enrollNow.full") : time}
                           </span>
                         </button>
