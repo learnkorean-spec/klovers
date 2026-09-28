@@ -28,7 +28,7 @@ const EN: LegalContent = {
     {
       heading: "Who we are",
       paragraphs: [
-        `Klovers Korean Academy is an online Korean academy operated from Egypt. You can reach us by email at ${CONTACT_EMAIL} or on WhatsApp at ${WHATSAPP}.`,
+        `Klovers is an online Korean academy operated from Egypt. You can reach us by email at ${CONTACT_EMAIL} or on WhatsApp at ${WHATSAPP}.`,
       ],
     },
     {
@@ -207,7 +207,7 @@ const PrivacyPolicyPage = () => {
   useSEO({
     title: "Privacy Policy",
     description:
-      "How Klovers Korean Academy collects, uses and protects your personal information, which services we share it with, and how to access or delete it.",
+      "How Klovers collects, uses and protects your personal information, which services we share it with, and how to access or delete it.",
     canonical: "https://kloversegy.com/privacy-policy",
   });
   const { language } = useLanguage();

@@ -473,7 +473,7 @@ const PRIVACY_BODY_HTML = `<div id="legal-prerendered" lang="en" dir="ltr">
       <p>Last updated: 24 September 2026</p>
       <p>This policy explains what personal information Klovers collects when you use kloversegy.com and our classes, why we collect it, who we share it with, and the choices you have.</p>
       <h2>Who we are</h2>
-      <p>Klovers Korean Academy is an online Korean academy operated from Egypt. You can reach us by email at kloversegy@gmail.com or on WhatsApp at +201010003084.</p>
+      <p>Klovers is an online Korean academy operated from Egypt. You can reach us by email at kloversegy@gmail.com or on WhatsApp at +201010003084.</p>
       <h2>What we collect</h2>
       <ul>
         <li>Account details: your name, email address and password (the password is handled by our authentication provider), your site language, and optionally your Korean level. Your browser's time zone, and the country it indicates, are saved to your profile.</li>
@@ -524,7 +524,7 @@ const PRIVACY_BODY_HTML = `<div id="legal-prerendered" lang="en" dir="ltr">
 const TERMS_BODY_HTML = `<div id="legal-prerendered" lang="en" dir="ltr">
       <h1>Terms of Service</h1>
       <p>Last updated: 24 September 2026</p>
-      <p>These terms apply when you use kloversegy.com or take classes with Klovers Korean Academy. By creating an account or booking a class, you agree to them.</p>
+      <p>These terms apply when you use kloversegy.com or take classes with Klovers. By creating an account or booking a class, you agree to them.</p>
       <h2>The service</h2>
       <p>Klovers teaches live online classes with a teacher, in groups or privately. The first trial class is free. The site also offers learning materials, a placement test and practice games.</p>
       <h2>Your account</h2>
@@ -866,14 +866,14 @@ const MARKETING_ROUTES = [
     path: "/privacy-policy",
     title: "Privacy Policy",
     description:
-      "How Klovers Korean Academy collects, uses and protects your personal information, which services we share it with, and how to access or delete it.",
+      "How Klovers collects, uses and protects your personal information, which services we share it with, and how to access or delete it.",
     body: PRIVACY_BODY_HTML,
   },
   {
     path: "/terms",
     title: "Terms of Service",
     description:
-      "The terms for Klovers Korean Academy's live online Korean classes: accounts, payments, the first class guarantee, refunds, missed classes and conduct.",
+      "The terms for Klovers' live online Korean classes: accounts, payments, the first class guarantee, refunds, missed classes and conduct.",
     body: TERMS_BODY_HTML,
   },
 ];

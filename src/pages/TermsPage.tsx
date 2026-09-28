@@ -20,7 +20,7 @@ const EN: LegalContent = {
   title: "Terms of Service",
   updated: "Last updated: 28 September 2026",
   intro:
-    "These terms apply when you use kloversegy.com or take classes with Klovers Korean Academy. By creating an account or booking a class, you agree to them.",
+    "These terms apply when you use kloversegy.com or take classes with Klovers. By creating an account or booking a class, you agree to them.",
   sections: [
     {
       heading: "The service",
@@ -85,7 +85,7 @@ const AR: LegalContent = {
   title: "الشروط والأحكام",
   updated: "آخر تحديث: 28 سبتمبر 2026",
   intro:
-    "تسري هذه الشروط عند استخدامك موقع kloversegy.com أو حضورك الحصص مع كلوفرز — أكاديمية محبي الكورية. وبإنشائك حسابًا أو حجزك حصة، فإنك توافق عليها.",
+    "تسري هذه الشروط عند استخدام موقع kloversegy.com أو حضور الحصص مع كلوفرز. ويُعدّ إنشاء حساب أو حجز حصة موافقةً عليها.",
   sections: [
     {
       heading: "الخدمة",
@@ -150,7 +150,7 @@ const TermsPage = () => {
   useSEO({
     title: "Terms of Service",
     description:
-      "The terms for Klovers Korean Academy's live online Korean classes: accounts, payments, the first class guarantee, refunds, missed classes and conduct.",
+      "The terms for Klovers' live online Korean classes: accounts, payments, the first class guarantee, refunds, missed classes and conduct.",
     canonical: "https://kloversegy.com/terms",
   });
   const { language } = useLanguage();

@@ -48,17 +48,17 @@ const LEVEL_ICON: Record<string, KloverIconName> = {
 const LEVEL_META: Record<string, { emoji: string; tagline: string; description: string; nextLabel?: string; prevLabel?: string }> = {
   hangul: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our Foundation class will teach you Hangul, basic greetings, and everyday words.", nextLabel: "Level 1" },
   l1:    { emoji: "🌿", tagline: "Beginner", description: "You know the basics. Our Level 1 class builds simple sentences, numbers, and daily conversations.", nextLabel: "Level 2", prevLabel: "Foundation" },
-  l2:    { emoji: "📚", tagline: "Elementary", description: "You can handle simple exchanges. Our Level 2 class covers grammar patterns and real-life dialogues.", nextLabel: "Level 3–4", prevLabel: "Level 1" },
-  l3:    { emoji: "🎯", tagline: "Intermediate", description: "You're comfortable in Korean. Our Level 3–4 class dives into nuanced grammar and natural speech.", nextLabel: "Level 5–6", prevLabel: "Level 2" },
-  l5:    { emoji: "🏆", tagline: "Advanced", description: "You speak Korean fluently. Our Level 5–6 class polishes academic and professional Korean for TOPIK II.", prevLabel: "Level 3–4" },
+  l2:    { emoji: "📚", tagline: "Elementary", description: "You can handle simple exchanges. Our Level 2 class covers grammar patterns and real-life dialogues.", nextLabel: "Level 3", prevLabel: "Level 1" },
+  l3:    { emoji: "🎯", tagline: "Intermediate", description: "You're comfortable in Korean. Our intermediate classes dive into nuanced grammar and natural speech.", nextLabel: "Level 5", prevLabel: "Level 2" },
+  l5:    { emoji: "🏆", tagline: "Advanced", description: "You speak Korean fluently. Our advanced classes polish academic and professional Korean for TOPIK II.", prevLabel: "Level 4" },
 };
 
 const LEVEL_META_AR: Record<string, { emoji: string; tagline: string; description: string; nextLabel?: string; prevLabel?: string }> = {
   hangul: { emoji: "🌱", tagline: "مبتدئ تماماً", description: "البداية من الصفر. الصف التأسيسي يعلّم الهانغول والتحيات الأساسية والكلمات اليومية.", nextLabel: "مستوى 1" },
   l1:    { emoji: "🌿", tagline: "مبتدئ", description: "الأساسيات معروفة. صف المستوى 1 يبني جملًا بسيطة وأرقامًا ومحادثات يومية.", nextLabel: "مستوى 2", prevLabel: "تأسيس" },
-  l2:    { emoji: "📚", tagline: "ابتدائي", description: "القدرة على المحادثات البسيطة. صف المستوى 2 يغطي أنماط القواعد والحوارات الواقعية.", nextLabel: "مستوى 3–4", prevLabel: "مستوى 1" },
-  l3:    { emoji: "🎯", tagline: "متوسط", description: "راحة في استخدام الكورية. صف المستوى 3–4 يتعمّق في القواعد المتقدمة والكلام الطبيعي.", nextLabel: "مستوى 5–6", prevLabel: "مستوى 2" },
-  l5:    { emoji: "🏆", tagline: "متقدم", description: "طلاقة في الكورية. صف المستوى 5–6 يصقل الكورية الأكاديمية والمهنية لاختبار TOPIK II.", prevLabel: "مستوى 3–4" },
+  l2:    { emoji: "📚", tagline: "ابتدائي", description: "القدرة على المحادثات البسيطة. صف المستوى 2 يغطي أنماط القواعد والحوارات الواقعية.", nextLabel: "مستوى 3", prevLabel: "مستوى 1" },
+  l3:    { emoji: "🎯", tagline: "متوسط", description: "راحة في استخدام الكورية. صفوف المستوى المتوسط تتعمّق في القواعد المتقدمة والكلام الطبيعي.", nextLabel: "مستوى 5", prevLabel: "مستوى 2" },
+  l5:    { emoji: "🏆", tagline: "متقدم", description: "طلاقة في الكورية. صفوف المستوى المتقدم تصقل الكورية الأكاديمية والمهنية لاختبار TOPIK II.", prevLabel: "مستوى 4" },
 };
 
 // Plan recommendation — group classes for low/mid levels (peer practice + affordability),
@@ -78,8 +78,8 @@ const RECOMMENDED_PLANS: Record<string, RecommendedPlan> = {
     nameAr: "صف التأسيس الجماعي",
     format: "Small group · Once a week",
     formatAr: "مجموعة صغيرة · مرة في الأسبوع",
-    bullets: ["Master Hangul in 2 weeks", "Build everyday phrases with peers", "Most affordable plan"],
-    bulletsAr: ["إتقان الهانغول في أسبوعين", "بناء الجمل اليومية مع الزملاء", "الخطة الأكثر اقتصادًا"],
+    bullets: ["Read and write Hangul in 4 classes", "Build everyday phrases with peers", "Most affordable plan"],
+    bulletsAr: ["قراءة الهانغول وكتابته في ٤ حصص", "بناء الجمل اليومية مع الزملاء", "الخطة الأكثر اقتصادًا"],
   },
   l1: {
     name: "Level 1 Group Class",
@@ -98,10 +98,10 @@ const RECOMMENDED_PLANS: Record<string, RecommendedPlan> = {
     bulletsAr: ["أنماط القواعد للمحادثات الحقيقية", "تمارين استماع من الدراما", "التحضير لـ TOPIK I"],
   },
   l3: {
-    name: "Level 3–4 Group Class",
-    nameAr: "صف المستوى ٣–٤ الجماعي",
-    format: "Small group · 4–6 students · Twice a week",
-    formatAr: "مجموعة صغيرة · ٤–٦ طلاب · مرتين أسبوعياً",
+    name: "Group Class at Your Level",
+    nameAr: "صف جماعي في المستوى المناسب",
+    format: "Small group · Once a week",
+    formatAr: "مجموعة صغيرة · مرة في الأسبوع",
     bullets: ["Nuanced grammar & natural speech", "Discuss K-dramas in Korean", "TOPIK II prep track"],
     bulletsAr: ["قواعد متقدمة وكلام طبيعي", "نقاش الدراما بالكورية", "مسار التحضير لـ TOPIK II"],
   },
@@ -110,8 +110,8 @@ const RECOMMENDED_PLANS: Record<string, RecommendedPlan> = {
     nameAr: "صف خاص فردي",
     format: "Private · Flexible schedule · Personalised",
     formatAr: "خاص · جدول مرن · حسب الطالب",
-    bullets: ["Tailored to your goals (TOPIK / business / academic)", "Experienced teacher, all feedback on you", "Fastest progress at this level"],
-    bulletsAr: ["حسب الهدف (TOPIK / أعمال / أكاديمي)", "معلمة متمرّسة، والتركيز كله على الطالب", "أسرع تقدّم في هذا المستوى"],
+    bullets: ["Tailored to your goals (TOPIK / business / academic)", "Experienced teacher, all feedback on you", "The pace is set around you"],
+    bulletsAr: ["حسب الهدف (TOPIK / أعمال / أكاديمي)", "معلّمة متمرّسة، والتركيز كله على الطالب", "وتيرة الدروس حسب الطالب"],
   },
 };
 
@@ -135,20 +135,27 @@ const BAND_LABELS = ["Foundation", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5
 const BAND_LABELS_AR = ["تأسيس", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5–6"];
 
 const JOURNEY_MESSAGES: Record<string, string> = {
-  hangul: "Most Foundation students reach Level 1 in just 8 weeks with Klovers",
-  l1:    "Most Level 1 students reach Level 2 in 12 weeks with Klovers",
-  l2:    "Most Level 2 students reach Level 3–4 in 20 weeks with Klovers",
-  l3:    "Advanced fluency typically takes 6–12 more months of focused practice",
+  hangul: "Next step after Foundation: Level 1",
+  l1:    "Next step: Level 2",
+  l2:    "Next step: Level 3",
+  l3:    "Next steps: the rest of the intermediate levels, then Levels 5 and 6",
   l5:    "You're already advanced — refine your Korean for TOPIK 5–6 certification",
 };
 
 const JOURNEY_MESSAGES_AR: Record<string, string> = {
-  hangul: "معظم طلاب التأسيس يصلون للمستوى 1 في 8 أسابيع فقط مع Klovers",
-  l1:    "معظم طلاب المستوى 1 يصلون للمستوى 2 في 12 أسبوعاً مع Klovers",
-  l2:    "معظم طلاب المستوى 2 يصلون للمستوى 3–4 في 20 أسبوعاً مع Klovers",
-  l3:    "الطلاقة المتقدمة تستغرق عادة 6–12 شهراً إضافية من التمرين المركز",
+  hangul: "الخطوة التالية بعد التأسيس: المستوى 1",
+  l1:    "الخطوة التالية: المستوى 2",
+  l2:    "الخطوة التالية: المستوى 3",
+  l3:    "الخطوات التالية: بقية المستوى المتوسط، ثم المستويان 5 و6",
   l5:    "مستوى متقدم بالفعل: صقل الكورية لشهادة TOPIK 5–6",
 };
+
+/** The result label in the page's language (one language per page). */
+function levelLabelFor(label: string, isAr: boolean): string {
+  if (!isAr) return label;
+  if (label === "Hangul Foundation") return "تأسيس الهانغول";
+  return label.replace(/^Level (\d)/, "المستوى $1");
+}
 
 function subTestSummary(correct: number, total: number, skill: string, isAr = false): string {
   const pct = correct / total;
@@ -429,7 +436,7 @@ const PlacementTestPage = () => {
   };
 
   const handleWhatsAppEnroll = (res: PlacementResult) => {
-    const text = encodeURIComponent(`مرحباً! أنهيت اختبار تحديد المستوى وحصلت على ${res.score}/30. مستواي: ${res.levelLabel}. هل يمكنني الحجز؟`);
+    const text = encodeURIComponent(`مرحباً! أنهيت اختبار تحديد المستوى وحصلت على ${res.score}/30. مستواي: ${levelLabelFor(res.levelLabel, true)}. هل يمكنني الحجز؟`);
     trackAndOpenWhatsApp(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, { cta_label: "placement_enroll", metadata: { level: res.levelKey, score: res.score } });
   };
 
@@ -951,7 +958,7 @@ const PlacementTestPage = () => {
             <div className="bg-primary/10 py-8 px-6">
               <div className="mb-3 flex justify-center"><KloverIcon name={LEVEL_ICON[result.levelKey] ?? "sprout"} className="h-20 w-20" /></div>
               <div className="inline-block bg-primary text-primary-foreground text-xl font-bold px-5 py-2 rounded-full mb-2">
-                {result.levelLabel}
+                {levelLabelFor(result.levelLabel, isAr)}
               </div>
               <p className="text-sm font-semibold text-foreground mt-1">{meta.tagline}</p>
               <span className={`inline-block mt-2 text-xs font-medium px-3 py-1 rounded-full ${confidenceChip.color}`}>
@@ -1374,7 +1381,7 @@ const PlacementTestPage = () => {
               <DialogHeader>
                 <DialogTitle>{isAr ? "خطة دراسية مجانية" : "Get your free study plan"}</DialogTitle>
                 <DialogDescription>
-                  {isAr ? `تصل خطة دراسية مخصصة لمستوى ${result.levelLabel} إلى البريد الإلكتروني.` : `We'll send a personalised ${result.levelLabel} study plan to your inbox.`}
+                  {isAr ? `تصل خطة دراسية مخصصة لمستوى ${levelLabelFor(result.levelLabel, true)} إلى البريد الإلكتروني.` : `We'll send a personalised ${result.levelLabel} study plan to your inbox.`}
                 </DialogDescription>
               </DialogHeader>
               {leadSaved ? (

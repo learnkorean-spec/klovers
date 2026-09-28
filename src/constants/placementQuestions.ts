@@ -796,11 +796,16 @@ export interface PlacementResult {
 
 /**
  * Score brackets (out of 30 — 6 questions × 5 TOPIK bands):
- *  0–6   → Foundation (A0)
- *  7–12  → Level 1    (A1 / TOPIK 1)
- *  13–18 → Level 2    (A2 / TOPIK 2)
- *  19–24 → Level 3–4  (B1–B2 / TOPIK 3–4)
- *  25–30 → Level 5–6  (C1–C2 / TOPIK 5–6)
+ *  0–6   → Foundation
+ *  7–12  → Level 1    (TOPIK 1)
+ *  13–18 → Level 2    (TOPIK 2)
+ *  19–24 → Level 3 (19–21) or Level 4 (22–24)
+ *  25–30 → Level 5 (25–27) or Level 6 (28–30)
+ *
+ * The courses are six separate levels, so the result always names ONE level
+ * to enrol in (28 Sep 2026: "Level 3–4" left students unsure which to pick).
+ * levelKey stays per band (l3 / l5) for the copy and plans; the confidence
+ * edges use the whole band, so 23–24 reads "close to Level 5".
  */
 export function computePlacementResult(answers: Record<number, number>): PlacementResult {
   let score = 0;
@@ -821,13 +826,13 @@ export function computePlacementResult(answers: Record<number, number>): Placeme
   if (score <= 6) {
     levelKey = "hangul"; levelLabel = "Hangul Foundation"; bandMin = 0; bandMax = 6;
   } else if (score <= 12) {
-    levelKey = "l1"; levelLabel = "Level 1 (A1 / TOPIK 1)"; bandMin = 7; bandMax = 12;
+    levelKey = "l1"; levelLabel = "Level 1 (TOPIK 1)"; bandMin = 7; bandMax = 12;
   } else if (score <= 18) {
-    levelKey = "l2"; levelLabel = "Level 2 (A2 / TOPIK 2)"; bandMin = 13; bandMax = 18;
+    levelKey = "l2"; levelLabel = "Level 2 (TOPIK 2)"; bandMin = 13; bandMax = 18;
   } else if (score <= 24) {
-    levelKey = "l3"; levelLabel = "Level 3–4 (B1–B2 / TOPIK 3–4)"; bandMin = 19; bandMax = 24;
+    levelKey = "l3"; levelLabel = score <= 21 ? "Level 3 (TOPIK 3)" : "Level 4 (TOPIK 4)"; bandMin = 19; bandMax = 24;
   } else {
-    levelKey = "l5"; levelLabel = "Level 5–6 (C1–C2 / TOPIK 5–6)"; bandMin = 25; bandMax = 30;
+    levelKey = "l5"; levelLabel = score <= 27 ? "Level 5 (TOPIK 5)" : "Level 6 (TOPIK 6)"; bandMin = 25; bandMax = 30;
   }
 
   // Within 1 of the upper boundary → close to the next level
@@ -871,12 +876,12 @@ export const STUDY_ROADMAPS: Record<string, RoadmapWeek[]> = {
     { week: 1, title: "Advanced grammar patterns", tasks: ["-더라고요 (past personal observation)", "-는 바람에 (unintended negative cause)", "-(으)ㄹ 뻔했다 (almost did)"] },
     { week: 2, title: "Indirect speech & nuance", tasks: ["Indirect speech: -다고 하다 / -라고 하다", "Quoted commands: -(으)라고 하다", "Distinguish formal & informal registers"] },
     { week: 3, title: "Intermediate reading comprehension", tasks: ["Read Korean news headlines daily", "Summarise articles in Korean (3–5 sentences)", "Learn 20 new TOPIK 3 vocabulary words per week"] },
-    { week: 4, title: "Natural speech & idioms", tasks: ["Watch 1 Korean drama episode with Korean subtitles", "Shadow native speakers for pronunciation", "Start Klovers Level 3–4 class"] },
+    { week: 4, title: "Natural speech & idioms", tasks: ["Watch 1 Korean drama episode with Korean subtitles", "Shadow native speakers for pronunciation", "Start your Klovers class at your level"] },
   ],
   l5: [
     { week: 1, title: "Advanced grammar nuance", tasks: ["-(으)ㄴ/는 셈이다 (amounts to / practically)", "-기는커녕 (far from, let alone)", "모순·영향·논쟁 — C1 vocabulary lists"] },
     { week: 2, title: "Academic & professional Korean", tasks: ["Write a 200-word opinion paragraph in Korean", "Learn formal writing endings (-ㄴ바, -인즉)", "Study Korean business email patterns"] },
     { week: 3, title: "TOPIK II writing practice", tasks: ["Practice 200-word descriptive essays (설명문)", "Practice 700-word argumentative essays (논설문)", "Review past TOPIK II writing prompts"] },
-    { week: 4, title: "Mastery & refinement", tasks: ["Read Korean newspaper editorials & opinion columns", "Maintain a Korean journal (한국어 일기)", "Start Klovers Level 5–6 advanced class"] },
+    { week: 4, title: "Mastery & refinement", tasks: ["Read Korean newspaper editorials & opinion columns", "Maintain a Korean journal (한국어 일기)", "Start your Klovers advanced class at your level"] },
   ],
 };

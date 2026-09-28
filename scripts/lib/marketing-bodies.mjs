@@ -178,7 +178,7 @@ export const AFFILIATE_BODY_HTML = `<div id="affiliate-prerendered" lang="en" di
       </ol>
       <h2>Apply to Join</h2>
       <p>No minimum followers required. We welcome all content creators. Tell us your name, email, platform or channel, and approximate audience size. We'll review your application and email you your unique affiliate link within 24 hours.</p>
-      <p>By applying you agree to our affiliate terms. Commission paid monthly via bank transfer or PayPal.</p>
+      <p>Commission paid monthly via bank transfer or PayPal.</p>
       <h2>Frequently Asked Questions</h2>
       <h3>Who can apply?</h3>
       <p>Anyone with an audience interested in learning Korean — YouTubers, TikTokers, bloggers, language teachers, or even students who love to share.</p>
@@ -295,12 +295,12 @@ export const WELCOME_BACK_BODY_HTML = `<div id="welcome-back-prerendered" lang="
       <p>Earn extra discounts when you refer friends or classmates to Klovers.</p>
       <ul>
         <li><strong>+5% per friend</strong> — For each friend who enrolls, you get an extra 5% off</li>
-        <li><strong>+2% for sharing</strong> — Even if your friend doesn't join, you still get 2% off for sharing</li>
+        <li><strong>+2% per visitor</strong> — 2% more for each person who opens your link, even if they don't enroll</li>
         <li><strong>Up to 35% total</strong> — Stack referrals on top of your 20% base — max 35% off</li>
       </ul>
       <h2>Your Exclusive Offer</h2>
       <ul>
-        <li>20% off your next enrollment — no questions asked</li>
+        <li>20% off your next enrollment</li>
         <li>Use code KLOVERSOLDSTUDENT1 at checkout</li>
         <li>Valid for group and private classes, all tiers</li>
       </ul>
@@ -326,7 +326,7 @@ export const WELCOME_BACK_BODY_HTML = `<div id="welcome-back-prerendered" lang="
       <h3>How long is the promo code valid?</h3>
       <p>The code is valid for the current enrollment cycle. Contact us on WhatsApp if you need an extension.</p>
       <h3>How does the referral program work?</h3>
-      <p>Share this page with friends. For each friend who enrolls, you get +5% off. Even sharing earns you +2%. Stack up to 35% total.</p>
+      <p>Share your link with friends: +5% for each friend who enrolls and +2% for each person who opens the link without enrolling. Referral bonuses go up to 15%, so the total discount can reach 35%.</p>
       <h3>What if I forgot my previous level?</h3>
       <p>Take our free placement test to find your current level. It's quick and completely optional.</p>
       <h2>Ready to Continue?</h2>
@@ -443,7 +443,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "How does the referral program work?",
-        "a": "Share this page with friends. For each friend who enrolls, you get +5% off. Even sharing earns you +2%. Stack up to 35% total."
+        "a": "Share your link with friends: +5% for each friend who enrolls and +2% for each person who opens the link without enrolling. Referral bonuses go up to 15%, so the total discount can reach 35%."
     },
     {
         "q": "What if I forgot my previous level?",
