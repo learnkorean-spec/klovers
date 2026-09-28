@@ -9,6 +9,7 @@ import {
 } from "@/lib/shop";
 import { ProductImage } from "./ProductCard";
 import KloverIcon from "@/components/KloverIcon";
+import { WHATSAPP_BASE, MANUAL_PAY_NUMBER } from "@/lib/siteConfig";
 
 /**
  * The bag. Lines whose product is no longer in the shop are dropped from
@@ -27,6 +28,20 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
     .filter((x): x is { line: typeof x.line; product: ShopProduct } => !!x.product);
   const currencies = new Set(lines.map((x) => x.product.price.currency));
   const subtotal = lines.reduce((s, x) => s + x.product.price.amount * x.line.quantity, 0);
+
+  // A manual, non-Stripe way to pay (Egypt: Vodafone Cash / Fawry / InstaPay
+  // / bank transfer). The book is not delivered automatically here — Re
+  // assigns it by hand once the transfer is confirmed, same as course
+  // bundles paid this way. Kept as a fallback next to Stripe checkout, not a
+  // replacement for it.
+  const manualPayHref = () => {
+    const items = lines.map((x) => `${productName(x.product, isAr)} × ${x.line.quantity}`).join(isAr ? "، " : ", ");
+    const total = currencies.size === 1 ? formatPrice(subtotal, [...currencies][0], isAr) : "";
+    const text = isAr
+      ? `مرحبًا، أريد الدفع يدويًا (بدون بطاقة) عن: ${items}.${total ? ` الإجمالي: ${total}.` : ""} سأحوّل على ${MANUAL_PAY_NUMBER} (فودافون كاش / فوري / إنستا باي) أو تحويل بنكي، وأرسل الإيصال هنا.`
+      : `Hi, I'd like to pay manually (no card) for: ${items}.${total ? ` Total: ${total}.` : ""} I'll send the transfer receipt here.`;
+    return `${WHATSAPP_BASE}?text=${encodeURIComponent(text)}`;
+  };
 
   const checkout = async () => {
     setBusy(true);
@@ -161,10 +176,18 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
               <Button className="h-12 w-full text-base font-semibold" onClick={checkout} disabled={busy}>
                 {busy ? (isAr ? "جارٍ فتح صفحة الدفع…" : "Opening checkout…") : (isAr ? "الدفع الآمن" : "Checkout Securely")}
               </Button>
+              <a
+                href={manualPayHref()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-11 w-full items-center justify-center rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-accent"
+              >
+                {isAr ? "أو ادفع يدويًا من مصر (بدون بطاقة)" : "Or pay manually from Egypt (no card)"}
+              </a>
               <p className="text-center text-xs text-muted-foreground">
                 {isAr
-                  ? "يتم الدفع عبر صفحة دفع آمنة، ويتطلّب الشراء تسجيل الدخول لإضافة الكتب إلى «كتبي»."
-                  : "Payment happens on Stripe's secure page. Signing in is needed so books land in My books."}
+                  ? "يتم الدفع عبر صفحة دفع آمنة، ويتطلّب الشراء تسجيل الدخول لإضافة الكتب إلى «كتبي». الدفع اليدوي عبر واتساب، ويُضاف الكتاب بعد تأكيد التحويل."
+                  : "Payment happens on Stripe's secure page. Signing in is needed so books land in My books. Manual payment is over WhatsApp; the book is added after the transfer is confirmed."}
               </p>
             </div>
           </>

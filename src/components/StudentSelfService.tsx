@@ -55,6 +55,7 @@ import { toast } from "@/hooks/use-toast";
 import { AlertTriangle, CheckCircle2, Clock, Loader2, Paperclip, XCircle } from "lucide-react";
 import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { MANUAL_PAY_NUMBER } from "@/lib/siteConfig";
 
 interface Props {
   userId: string;
@@ -110,7 +111,7 @@ const PAYMENT_METHOD_AR: Record<string, string> = {
 };
 // Display only — the stored currency code never changes.
 const CURRENCY_AR: Record<string, string> = { USD: "دولار", EGP: "جنيه", EUR: "يورو", SAR: "ريال", AED: "درهم" };
-const PAY_NUMBER = "+20 101 000 3084";
+const PAY_NUMBER = MANUAL_PAY_NUMBER;
 const WHATSAPP = "https://wa.me/201010003084";
 
 /** A phone screenshot is the usual case; 8 MB covers one comfortably. */
