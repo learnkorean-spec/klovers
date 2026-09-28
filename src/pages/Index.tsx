@@ -21,6 +21,7 @@ const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"
 const PlacementTestCTA = lazy(() => import("@/components/PlacementTestCTA"));
 const MoreThanAClass = lazy(() => import("@/components/MoreThanAClass"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
+const HomeShopShelf = lazy(() => import("@/components/HomeShopShelf"));
 const EggTeaser = lazy(() => import("@/components/EggTeaser"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 
@@ -247,6 +248,10 @@ const Index = () => {
         </div>
         {/* The community band — 2,000+ on social media (see CommunityBand.tsx). */}
         <CommunityBand />
+        {/* The shop door — Lina's bag by the courtyard gate, the first book on the shelf */}
+        <Suspense fallback={<SectionFallback />}>
+          <HomeShopShelf />
+        </Suspense>
         {/* Objections — the four questions asked before a first booking */}
         <Suspense fallback={<SectionFallback />}>
           <HomeFAQ />
