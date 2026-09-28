@@ -18,7 +18,7 @@ const WHATSAPP = `+${WHATSAPP_NUMBER}`;
 
 const EN: LegalContent = {
   title: "Terms of Service",
-  updated: "Last updated: 24 September 2026",
+  updated: "Last updated: 28 September 2026",
   intro:
     "These terms apply when you use kloversegy.com or take classes with Klovers Korean Academy. By creating an account or booking a class, you agree to them.",
   sections: [
@@ -38,7 +38,7 @@ const EN: LegalContent = {
       heading: "Payments",
       paragraphs: [
         "We accept bank transfer, Vodafone Cash and InstaPay (Egypt), and card payment through Stripe outside Egypt.",
-        "All payments are manually reviewed by our team before your enrolment is activated. There are no automatic charges.",
+        "Payments in Egypt are checked by hand before your enrolment is activated; card payments through Stripe are activated automatically. Every payment is one-time, with no automatic charges.",
       ],
     },
     {
@@ -83,7 +83,7 @@ const EN: LegalContent = {
 
 const AR: LegalContent = {
   title: "الشروط والأحكام",
-  updated: "آخر تحديث: 24 سبتمبر 2026",
+  updated: "آخر تحديث: 28 سبتمبر 2026",
   intro:
     "تسري هذه الشروط عند استخدامك موقع kloversegy.com أو حضورك الحصص مع كلوفرز — أكاديمية محبي الكورية. وبإنشائك حسابًا أو حجزك حصة، فإنك توافق عليها.",
   sections: [
@@ -103,7 +103,7 @@ const AR: LegalContent = {
       heading: "الدفع",
       paragraphs: [
         "نقبل التحويل البنكي وفودافون كاش وإنستا باي (في مصر)، والدفع بالبطاقة عبر Stripe خارج مصر.",
-        "تُراجَع جميع المدفوعات يدويًا من فريقنا قبل تفعيل اشتراكك. ولا توجد أي خصومات تلقائية.",
+        "تُراجَع المدفوعات داخل مصر يدويًا قبل تفعيل الاشتراك، ويُفعَّل الدفع بالبطاقة عبر Stripe تلقائيًا. وكل دفعة تتم مرة واحدة، دون أي سحب تلقائي.",
       ],
     },
     {

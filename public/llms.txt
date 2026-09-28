@@ -10,7 +10,7 @@ Key facts:
 - Path: Hangul Foundation (4 classes, Pre-A1), then Levels 1 to 6 (24 classes over 6 months each). Also: Reading & Speaking practice, and TOPIK exam preparation for students who want it.
 - Free first step: a free live trial class and a free online placement test.
 - Trial classes run once a month, on the first Friday and Saturday of the month — two in Arabic and two in English. A student booking a trial always has two dates to choose between.
-- Prices depend on the learner's country and are shown in local currency on the pricing page. Payment by bank transfer, Vodafone Cash or InstaPay (Egypt), or international card or PayPal. Every payment is reviewed by the team; there are no automatic charges.
+- Prices depend on the learner's country and are shown in local currency on the pricing page. Payment by bank transfer, Vodafone Cash or InstaPay in Egypt (checked by hand after the receipt is uploaded), or by card through Stripe outside Egypt (activated automatically). Every payment is one-time; there are no automatic charges.
 - First class guarantee: if a student is not happy after the first class, Klovers refunds or rebooks.
 - Contact: WhatsApp +201010003084, email kloversegy@gmail.com.
 
