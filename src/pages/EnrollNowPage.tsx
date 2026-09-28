@@ -1130,7 +1130,7 @@ const EnrollNowPage = () => {
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block text-sm text-primary underline underline-offset-4"
+                    className="inline-block text-sm font-medium text-foreground underline underline-offset-4 hover:opacity-80"
                   >
                     {isAr ? "لا تناسبك هذه المواعيد؟ يمكنك طلب موعد آخر عبر واتساب" : "These times don't suit you? Ask for another time on WhatsApp"}
                   </a>
