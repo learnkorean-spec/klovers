@@ -67,6 +67,11 @@ const STATIC_PAGES = [
   // scripts/prerender-meta.mjs.
   { loc: "/privacy-policy", priority: "0.3", changefreq: "yearly" },
   { loc: "/terms", priority: "0.3", changefreq: "yearly" },
+  // Klovers Supply (28 Sep 2026). The first product (the A0 Hangul book) is on
+  // the shelf, so the shop itself is listed; it is already in MARKETING_ROUTES.
+  // Product pages stay out: they are client-rendered from Stripe and have no
+  // prerendered head of their own.
+  { loc: "/shop", priority: "0.6", changefreq: "weekly" },
 ];
 
 // Arabic twins (GEO-03, 27 Sep 2026): each English page in
