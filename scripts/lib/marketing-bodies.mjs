@@ -11,14 +11,15 @@
  * it). Ampersands are escaped by hand; nothing here contains "$" or a
  * backtick, and the test next to this file keeps it that way.
  *
- * Three routes deliberately say LESS than the live page, not more:
- * /topik-exam-preparation, /learn-korean-arabic-speakers and
- * /learn-korean-kdramas. Their live copy carries claims that are wrong or
- * unverified (a TOPIK score table that does not match NIIED's cut-offs, a
- * past exam date, "SOV like Arabic", "500K+ fans", "40% faster", month-by-month
- * CEFR promises). Static HTML is what AI answer engines quote, so these
- * fragments keep only statements that are true; the live copy is to be
- * corrected to match (see docs, GEO audit follow-up).
+ * Two routes deliberately say LESS than the live page, not more:
+ * /topik-exam-preparation and /learn-korean-kdramas. Their live copy carries
+ * claims that are wrong or unverified (a TOPIK score table that does not
+ * match NIIED's cut-offs, a past exam date, "500K+ fans", "40% faster",
+ * month-by-month CEFR promises). Static HTML is what AI answer engines quote,
+ * so these fragments keep only statements that are true; the live copy is to
+ * be corrected to match (see docs, GEO audit follow-up).
+ * /learn-korean-arabic-speakers was in that list until its page was rewritten
+ * on 25 Sep 2026; since 28 Sep its fragment mirrors the live English copy.
  *
  * FAQ arrays feed the server-side FAQPage JSON-LD for the same routes, so the
  * markup matches the questions the page shows.
@@ -189,27 +190,30 @@ export const AFFILIATE_BODY_HTML = `<div id="affiliate-prerendered" lang="en" di
     </div>`;
 
 export const ARABIC_SPEAKERS_BODY_HTML = `<div id="learn-korean-arabic-speakers-prerendered" lang="en" dir="ltr">
-      <h1>Learn Korean as an Arabic Speaker</h1>
-      <p>Arabic speakers can learn Korean well with a teacher who explains it through Arabic. Korean uses Hangul, a phonetic alphabet of 14 basic consonants and 10 basic vowels that most learners can read after a few days of practice, and, like Arabic, it changes words and endings to show respect and formality.</p>
-      <h2>What feels familiar, and what is new</h2>
+      <h1>Learning Korean when your first language is Arabic</h1>
+      <p>Some of it will feel familiar, some of it is new. Here is which is which, and how we teach it — with explanations in Arabic.</p>
+      <h2>What Arabic already gives you</h2>
+      <h3>Endings that show a word's job</h3>
+      <p>Arabic case endings tell you which word is the subject and which is the object. Korean does the same job with small particles after the word — 는 for the topic, 을/를 for the object.</p>
+      <p>Arabic: <span lang="ar" dir="rtl">أقرأُ الكتابَ</span> · Korean: <span lang="ko">나는 책을 읽어요</span> (나 (I) + 는 · 책 (book) + 을 · 읽어요 (read))</p>
+      <h3>Speaking politely changes the verb</h3>
+      <p>Arabic speakers already switch register — <span lang="ar" dir="rtl">حضرتك</span> or <span lang="ar" dir="rtl">إنت</span>, <span lang="ar" dir="rtl">فصحى</span> or <span lang="ar" dir="rtl">عامية</span>. Korean builds politeness into the verb ending, so the idea is familiar even though the form is new.</p>
+      <p>Arabic: <span lang="ar" dir="rtl">إزيّك؟ / إزيّ حضرتك؟</span> · Korean: <span lang="ko">안녕? / 안녕하세요?</span> (casual / polite)</p>
+      <h2>What will be new</h2>
       <ul>
-        <li><strong>Formal and casual speech:</strong> Korean marks respect through speech levels and honorific words, much as Arabic speakers switch between formal and everyday registers.</li>
-        <li><strong>Hangul:</strong> letters combine into syllable blocks, written left to right. It is a true alphabet with full vowels, unlike Arabic script, which mostly writes consonants.</li>
-        <li><strong>Word order:</strong> Korean puts the verb at the end of the sentence (subject - object - verb) and marks the role of each word with particles such as 은/는, 이/가 and 을/를. This is the biggest new habit for Arabic speakers.</li>
-        <li><strong>Sounds:</strong> Korean separates plain, aspirated and tense consonants (for example ㄱ, ㅋ, ㄲ) and has vowels such as ㅓ and ㅗ that take practice.</li>
+        <li>The verb comes last. Korean sentences end with the verb: 나는 책을 읽어요 is literally "I the-book read".</li>
+        <li>Adjectives come before the noun: 빨간 책 (red book), where Arabic says <span lang="ar" dir="rtl">كتاب أحمر</span>.</li>
+        <li>Hangul is read left to right, in syllable blocks. It has 24 basic letters and is quick to learn — we teach it in four classes.</li>
+        <li>Some sounds need practice: Arabic has no P, so ㅂ and ㅍ are easy to mix up, and Korean has three kinds of each stop (ㄱ ㅋ ㄲ).</li>
       </ul>
-      <h2>Frequently asked questions</h2>
-      <h3>Will I need to learn hanja (Chinese characters)?</h3>
-      <p>Not for conversation. Hanja appears in some official documents and newspapers, but everyday Korean - texting, social media, K-dramas - is written in Hangul.</p>
-      <h3>How is Hangul different from Arabic script?</h3>
-      <p>Hangul is a full alphabet: consonants and vowels are both written and combine into syllable blocks. Arabic script is an abjad that mostly writes consonants. Hangul is also written left to right.</p>
-      <h3>Can I learn Korean with translation apps alone?</h3>
-      <p>Not effectively. Apps give translations, not understanding. Use them for reference, and practise actively through lessons, conversation and writing.</p>
-      <h3>What is the best way for an Arabic speaker to learn Korean?</h3>
-      <p>Combine structured lessons with a teacher, listening through K-dramas, conversation practice and daily vocabulary review.</p>
-      <h2>Learning with Klovers</h2>
-      <p>Klovers teaches live online Korean classes in small groups, in Arabic or in English. Your teacher, Reham Elshrkawy, studied Korean language and literature at the Faculty of Al-Alsun and has taught Korean for 13 years to more than 200 students. The path starts with Hangul Foundation, then Levels 1 to 6.</p>
-      <p><a href="/free-trial">Book a free trial class</a> · <a href="/placement-test">Take the free placement test</a> · <a href="/courses">Korean courses</a> · <a href="/pricing">Pricing</a> · <a href="/blog/korean-for-arabic-speakers-difficulty-guide">Is Korean hard for Arabic speakers?</a></p>
+      <h2>The path at Klovers</h2>
+      <ul>
+        <li><strong>Hangul Foundation</strong> — 4 classes · read and write from zero</li>
+        <li><strong>Levels 1 to 6</strong> — 24 classes per level, about 6 months each</li>
+        <li><strong>One class a week</strong> — 60 minutes, live, in a small group or privately</li>
+      </ul>
+      <p>Your teacher is Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years. She explains in Arabic or English and compares Korean with Arabic wherever that makes a point clearer. In Egypt: bank transfer, Vodafone Cash or InstaPay, with a receipt upload; the enrollment is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically.</p>
+      <p><a href="/free-trial">Book a free class</a> · <a href="/placement-test">Find your level</a> · <a href="/courses">See all levels</a> · <a href="/pricing">Pricing</a> · <a href="/blog/korean-for-arabic-speakers-difficulty-guide">Is Korean hard for Arabic speakers?</a></p>
     </div>`;
 
 export const TOPIK_BODY_HTML = `<div id="topik-exam-preparation-prerendered" lang="en" dir="ltr">
@@ -465,24 +469,6 @@ export const MARKETING_FAQ = {
     {
         "q": "What if I forgot my previous level?",
         "a": "Take our free placement test to find your current level. It's quick and completely optional."
-    }
-],
-  "/learn-korean-arabic-speakers": [
-    {
-        "q": "Will I need to learn hanja (Chinese characters)?",
-        "a": "Not for conversation. Hanja appears in some official documents and newspapers, but everyday Korean - texting, social media, K-dramas - is written in Hangul."
-    },
-    {
-        "q": "How is Hangul different from Arabic script?",
-        "a": "Hangul is a full alphabet: consonants and vowels are both written and combine into syllable blocks. Arabic script is an abjad that mostly writes consonants. Hangul is also written left to right."
-    },
-    {
-        "q": "Can I learn Korean with translation apps alone?",
-        "a": "Not effectively. Apps give translations, not understanding. Use them for reference, and practise actively through lessons, conversation and writing."
-    },
-    {
-        "q": "What is the best way for an Arabic speaker to learn Korean?",
-        "a": "Combine structured lessons with a teacher, listening through K-dramas, conversation practice and daily vocabulary review."
     }
 ],
   "/learn-korean-kdramas": [
