@@ -200,6 +200,8 @@ const App = () => (
                 <Route path="/ar/faq" element={<FAQPage />} />
                 <Route path="/ar/placement-test" element={<KoreanPlacementPage />} />
                 <Route path="/ar/free-trial" element={<FreeTrialPage />} />
+                {/* The Arabic blog index (28 Sep 2026): Arabic articles only. */}
+                <Route path="/ar/blog" element={<BlogPage />} />
                 <Route path="/courses" element={<CoursesPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/about" element={<AboutPage />} />

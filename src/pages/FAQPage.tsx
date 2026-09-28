@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
-import { MessageCircle, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { Input } from "@/components/ui/input";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { withoutUnsupportedClaims } from "@/lib/trustFigures";
@@ -160,7 +161,6 @@ const FAQPage = () => {
             <div className="max-w-3xl mx-auto">
               {filteredFaqs.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
-                  <Search className="h-8 w-8 mx-auto mb-3 opacity-40" />
                   <p className="font-medium">{isAr ? `لا نتائج لـ «${searchQuery}»` : `No results for "${searchQuery}"`}</p>
                   <button onClick={() => { setSearchQuery(""); setActiveCategory(null); }} className="mt-2 text-sm font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground">
                     {isAr ? "مسح البحث" : "Clear search"}
@@ -202,13 +202,13 @@ const FAQPage = () => {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button variant="outline" asChild>
                   <a href={isAr ? FAQ_WA_AR : FAQ_WA_EN} onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(isAr ? FAQ_WA_AR : FAQ_WA_EN, { cta_label: "faq_contact" }); }} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="me-2 h-4 w-4" aria-hidden="true" />
+                    <KloverIcon name="game-chat-smile" className="me-2 h-5 w-5" />
                     {isAr ? "واتساب" : "WhatsApp"}
                   </a>
                 </Button>
                 <Button variant="outline" asChild>
                   <a href="https://t.me/+Fu5T7d4wLMsxNDY9" target="_blank" rel="noopener noreferrer">
-                    <MessageCircle className="me-2 h-4 w-4" aria-hidden="true" />
+                    <KloverIcon name="game-hello-bubble" className="me-2 h-5 w-5" />
                     {isAr ? "تيليجرام" : "Telegram"}
                   </a>
                 </Button>

@@ -66,8 +66,9 @@ const FAQ = () => {
           {faqs.map((faq, i) => (
             <div key={i} className="bg-card border border-border rounded-xl overflow-hidden">
               <button
-                className="w-full flex items-center justify-between px-5 py-4 text-left gap-4 hover:bg-muted/30 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 text-start gap-4 hover:bg-muted/30 transition-colors"
                 onClick={() => setOpen(open === i ? null : i)}
+                aria-expanded={open === i}
               >
                 <span className="font-medium text-sm text-foreground">{faq.q}</span>
                 <ChevronDown

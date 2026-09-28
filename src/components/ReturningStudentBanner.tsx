@@ -108,8 +108,8 @@ const ReturningStudentBanner = () => {
     <div className="bg-charcoal text-ivory relative border-y border-charcoal">
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center pe-10">
         <div className="flex items-center gap-2 flex-wrap justify-center">
-          <span className="bg-white/20 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
-            {isAr ? "أهلاً بعودتك" : "Welcome back"}
+          <span className="bg-ivory/20 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
+            {isAr ? "أهلًا بالعودة" : "Welcome back"}
           </span>
           <span className="text-sm font-medium">
             {isAr

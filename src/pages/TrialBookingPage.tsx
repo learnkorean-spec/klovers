@@ -22,7 +22,7 @@ import { track } from "@/lib/tracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { LEVEL_SELECT_OPTIONS, getLevelShortLabel } from "@/constants/levels";
 import { ACTIVE_TRIAL_STATUS_LIST } from "@/constants/trialStatus";
-import { CheckCircle2, CalendarPlus, CalendarClock, CalendarX, ArrowRight, LayoutDashboard, MessageCircle, Share2, Link2, Check } from "lucide-react";
+import { CalendarClock, CalendarX, ArrowRight, LayoutDashboard, MessageCircle, Link2, Check } from "lucide-react";
 import KloverIcon from "@/components/KloverIcon";
 import { countryLabel } from "@/lib/countryNames";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -77,6 +77,19 @@ const CURRENCY_AR: Record<string, string> = {
 /** 1200 -> "١٬٢٠٠": Arabic-Indic digits with Arabic separators. */
 const arNumber = (n: number): string =>
   toArabicDigits(n.toLocaleString("en-US")).replace(/,/g, "٬").replace(/\./g, "٫");
+
+/**
+ * "Days left" in Arabic, with the noun and adjective in agreement:
+ * 1 «يوم واحد متبقٍ», 2 «يومان متبقيان», 3–10 «٣ أيام متبقية»,
+ * 11+ «١١ يومًا متبقيًا». Arabic-Indic digits.
+ */
+const arabicDaysLeft = (n: number): string => {
+  if (n === 1) return "يوم واحد متبقٍ";
+  if (n === 2) return "يومان متبقيان";
+  const mod = n % 100;
+  if (mod >= 3 && mod <= 10) return `${toArabicDigits(n)} أيام متبقية`;
+  return `${toArabicDigits(n)} يومًا متبقيًا`;
+};
 
 /** Arabic city names for common timezones; anything else reads «بالتوقيت المحلي». */
 const TZ_CITY_AR: Record<string, string> = {
@@ -693,11 +706,11 @@ const TrialBookingPage = () => {
             {/* Hero */}
             <div className="text-center mb-8">
               <div className="w-20 h-20 rounded-full bg-klovers-green border-2 border-foreground flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="h-10 w-10 text-charcoal" />
+                <KloverIcon name="game-klobi-thumbsup" className="h-14 w-14" />
               </div>
               <h1 className="text-3xl font-black text-foreground mb-3">{t("trialBooking.successTitle")}</h1>
               <div className="inline-flex items-center gap-3 bg-card border border-border rounded-2xl px-5 py-3 text-start">
-                <CalendarPlus className="h-5 w-5 text-foreground shrink-0" />
+                <KloverIcon name="calendar-check" className="h-9 w-9" />
                 <div>
                   <p className="font-bold text-foreground">{localFormattedDate}</p>
                   <p className="text-sm text-muted-foreground">
@@ -803,7 +816,11 @@ const TrialBookingPage = () => {
             <div className="bg-gradient-to-b from-primary/10 to-transparent border border-primary/20 rounded-2xl p-6 mb-4 text-center">
               <div className="inline-flex items-center gap-2 text-xs font-bold bg-klovers-yellow text-charcoal border border-charcoal/20 px-3 py-1 rounded-full uppercase tracking-wider mb-4">
                 <KloverIcon name="lightbulb-sprout" className="h-3.5 w-3.5" />
-                {daysUntil > 0 ? (daysUntil === 1 ? t("trialBooking.whileWait") : t("trialBooking.whileWaitPlural")).replace("{days}", language === "ar" ? toArabicDigits(daysUntil) : String(daysUntil)) : t("trialBooking.trialToday")}
+                {daysUntil > 0
+                  ? (language === "ar"
+                      ? `في الانتظار — ${arabicDaysLeft(daysUntil)}`
+                      : (daysUntil === 1 ? t("trialBooking.whileWait") : t("trialBooking.whileWaitPlural")).replace("{days}", String(daysUntil)))
+                  : t("trialBooking.trialToday")}
               </div>
 
               <div className="space-y-3">
@@ -817,7 +834,7 @@ const TrialBookingPage = () => {
                   className="w-full flex items-center gap-4 bg-klovers-green/10 dark:bg-klovers-green/10 border-2 border-klovers-green rounded-xl p-4 text-start hover:bg-klovers-green/20 hover:shadow-md transition-all group"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-green flex items-center justify-center shrink-0">
-                    <MessageCircle className="h-5 w-5 text-charcoal" />
+                    <KloverIcon name="game-chat-smile" className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm text-foreground">{t("trialBooking.whatsappPromptTitle")}</p>
@@ -885,7 +902,7 @@ const TrialBookingPage = () => {
                   className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
-                    <Share2 className="h-5 w-5 text-charcoal" />
+                    <KloverIcon name="student-girl-heart" className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">
@@ -1182,8 +1199,9 @@ const TrialBookingPage = () => {
               )}
 
               <p className="text-xs text-muted-foreground text-center mt-6">
+                {/* Plain text, not a link: no arrow (it pointed the wrong way in
+                    Arabic and read as a link). */}
                 {t("trialBooking.manageFromDashboard")}
-                <ArrowRight className="inline h-3 w-3 ml-1" />
               </p>
             </div>
           </div>

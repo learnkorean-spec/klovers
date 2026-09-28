@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
-import { Check, Lock, ArrowRight, Flame, Gift } from "lucide-react";
+import { Check, Lock, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import KloverIcon from "@/components/KloverIcon";
+import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LEAGUES, getLeague } from "@/constants/gamification";
 import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
@@ -297,7 +298,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               </div>
               <div className="sm:border-s sm:border-charcoal/10 dark:sm:border-border sm:ps-4">
                 <p className="flex items-center gap-1 text-xl font-extrabold">
-                  <Flame className="h-5 w-5 fill-klovers-yellow text-foreground" aria-hidden="true" /> {num(streak)}
+                  <BrandIcon name="streak" className="h-6 w-6" /> {num(streak)}
                 </p>
                 <p className="text-[11px] text-charcoal/70 dark:text-muted-foreground">{isAr ? "يوم متتالي" : "day streak"}</p>
               </div>
@@ -662,7 +663,6 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             onClick={seeAll}
             className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-charcoal bg-klovers-yellow px-4 py-2 text-sm font-bold text-charcoal"
           >
-            <Gift className="h-4 w-4" aria-hidden="true" />
             {isAr ? `كل الألعاب (${num(totalGames)})` : `All ${totalGames} games`}
           </button>
         </aside>

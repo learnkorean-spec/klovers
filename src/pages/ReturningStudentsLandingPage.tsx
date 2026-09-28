@@ -7,13 +7,11 @@ import {
   UserPlus,
   Share2,
   Shield,
-  ArrowRight,
   ChevronDown,
   Sparkles,
   BookOpen,
   Users,
   Trophy,
-  MessageCircle,
   Link2,
   ShoppingCart,
   Tag,
@@ -199,7 +197,6 @@ const ReturningStudentsLandingPage = () => {
               <Button size="lg" asChild className="gap-2 h-13 px-8 text-base font-bold shadow-lg">
                 <Link to="/enroll-now">
                   {t("welcomeBack.hero.ctaPrimary")}
-                  <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
                 </Link>
               </Button>
               <Button
@@ -326,7 +323,7 @@ const ReturningStudentsLandingPage = () => {
                     onClick={handleWhatsAppShare}
                     className="w-full gap-2 bg-charcoal text-ivory hover:bg-charcoal/90 dark:bg-klovers-yellow dark:text-charcoal dark:hover:bg-klovers-yellow/90"
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <KloverIcon name="game-chat-smile" className="h-5 w-5" />
                     {t("welcomeBack.share.whatsapp")}
                   </Button>
 
@@ -373,7 +370,7 @@ const ReturningStudentsLandingPage = () => {
                   <ul className="space-y-3">
                     {offerItems.map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 shrink-0 mt-0.5 rounded-full bg-klovers-yellow p-0.5 text-charcoal" strokeWidth={3} aria-hidden="true" />
+                        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                         <span className="text-sm text-muted-foreground">
                           {item as string}
                         </span>
@@ -465,7 +462,6 @@ const ReturningStudentsLandingPage = () => {
               >
                 <Link to="/placement-test">
                   {t("welcomeBack.steps.placementLink")}
-                  <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden="true" />
                 </Link>
               </Button>
             </div>
@@ -521,16 +517,21 @@ const ReturningStudentsLandingPage = () => {
                   >
                     <button
                       onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                      aria-expanded={openFaq === i}
+                      aria-controls={`wb-faq-${i}`}
                       className="w-full flex items-center justify-between px-4 py-3 text-start text-sm font-medium hover:bg-muted/50 transition-colors"
                     >
                       {faq.question}
                       <ChevronDown
+                        aria-hidden="true"
                         className={`h-4 w-4 text-muted-foreground shrink-0 ms-2 transition-transform duration-200 ${
                           openFaq === i ? "rotate-180" : ""
                         }`}
                       />
                     </button>
                     <div
+                      id={`wb-faq-${i}`}
+                      aria-hidden={openFaq !== i}
                       className={`px-4 text-sm text-muted-foreground overflow-hidden transition-all duration-200 ${
                         openFaq === i
                           ? "py-3 border-t border-border/60"
@@ -564,7 +565,6 @@ const ReturningStudentsLandingPage = () => {
               >
                 <Link to="/enroll-now">
                   {t("welcomeBack.finalCta.button")}
-                  <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
                 </Link>
               </Button>
               <Button
@@ -579,7 +579,7 @@ const ReturningStudentsLandingPage = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <MessageCircle className="h-5 w-5" />
+                  <KloverIcon name="game-chat-smile" className="h-6 w-6" />
                   {t("welcomeBack.finalCta.whatsapp")}
                 </a>
               </Button>

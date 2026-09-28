@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { DollarSign, Users, Link as LinkIcon, CheckCircle } from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getAttribution } from "@/lib/leadSession";
@@ -164,14 +164,12 @@ export default function AffiliatePage() {
         <section className="py-14 bg-muted/40">
           <div className="max-w-4xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
             {[
-              { icon: DollarSign, label: t("affiliate.statCommission"), value: isAr ? "٢٠٪" : `${COMMISSION_RATE}%` },
-              { icon: Users, label: trustCopy(language).studentsTaughtLabel, value: STUDENTS_TAUGHT },
-              { icon: LinkIcon, label: t("affiliate.statCookieDuration"), value: isAr ? "٣٠ يومًا" : `${COOKIE_DAYS} days` },
-            ].map(({ icon: Icon, label, value }) => (
+              { icon: "game-lucky-bag" as KloverIconName, label: t("affiliate.statCommission"), value: isAr ? "٢٠٪" : `${COMMISSION_RATE}%` },
+              { icon: "student-boy-thumbsup" as KloverIconName, label: trustCopy(language).studentsTaughtLabel, value: STUDENTS_TAUGHT },
+              { icon: "calendar-blossom" as KloverIconName, label: t("affiliate.statCookieDuration"), value: isAr ? "٣٠ يومًا" : `${COOKIE_DAYS} days` },
+            ].map(({ icon, label, value }) => (
               <div key={label} className="bg-card border rounded-2xl p-6 flex flex-col items-center gap-2 shadow-sm">
-                <div className="w-10 h-10 rounded-full bg-klovers-yellow flex items-center justify-center">
-                  <Icon className="h-5 w-5 text-charcoal" />
-                </div>
+                <KloverIcon name={icon} className="h-12 w-12" />
                 <p className="text-2xl font-extrabold text-foreground">{value}</p>
                 <p className="text-xs text-muted-foreground">{label}</p>
               </div>
@@ -222,7 +220,7 @@ export default function AffiliatePage() {
 
             {submitted ? (
               <div className="bg-card border border-klovers-green rounded-2xl p-10 text-center shadow-sm">
-                <CheckCircle className="h-12 w-12 fill-klovers-green text-charcoal mx-auto mb-4" />
+                <KloverIcon name="game-klobi-thumbsup" className="h-16 w-16 mx-auto mb-4" />
                 <h3 className="text-xl font-bold mb-2">{t("affiliate.applicationReceived")}</h3>
                 <p className="text-muted-foreground text-sm mb-6">
                   {t("affiliate.applicationReceivedDesc")}

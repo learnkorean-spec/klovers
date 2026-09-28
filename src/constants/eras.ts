@@ -367,15 +367,17 @@ export const ERAS: Era[] = [
   },
   {
     id: "traditional-life",
-    image: "/assets/blog/korean-tea.jpg",
-    altEn: "A traditional Korean tea setting",
-    altAr: "طقم شاي كوري تقليدي",
+    // 28 Sep 2026: the station is about the hanok (placement, ondol, maru,
+    // giwa, hanji), so the image and the line show the house, not a tea set.
+    image: "/assets/blog/korean-hanok.jpg",
+    altEn: "Inside a traditional hanok: wooden beams and paper-screen doors",
+    altAr: "داخل هانوك تقليدي: عوارض خشبية وأبواب من الورق",
     titleEn: "Traditional Life",
     titleAr: "الحياة التقليدية",
     datesEn: "Hanok villages",
     datesAr: "قرى الهانوك",
-    lineEn: "Tea, manners, timeless beauty",
-    lineAr: "شاي، آداب، وجمال لا يقدم",
+    lineEn: "Wood, paper and a warm floor",
+    lineAr: "خشب وورق وأرضية دافئة",
     introEn:
       "A hanok is a traditional Korean house that listens to the land: where you build it matters as much as how.",
     introAr:
@@ -428,9 +430,12 @@ export const ERAS: Era[] = [
   },
   {
     id: "modern-korea",
-    image: "/assets/blog/hallyu-wave.jpg",
-    altEn: "Modern Korean pop culture",
-    altAr: "ثقافة كورية معاصرة",
+    // 28 Sep 2026: Culture Street from the story world (the female learner
+    // and Cluby, palace gate and modern Seoul) replaces the off-palette stock
+    // image with national flags. Canon: the culture beat is theirs.
+    image: "/assets/story/world-culture-street.webp",
+    altEn: "Painted Seoul street where a palace gate meets the modern skyline",
+    altAr: "شارع مرسوم في سيول تلتقي فيه بوابة قصر بأفق المدينة الحديث",
     titleEn: "Modern Korea",
     titleAr: "كوريا الحديثة",
     datesEn: "1950s – today",

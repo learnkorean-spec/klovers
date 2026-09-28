@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import InterviewQACard, { type InterviewQA } from "@/components/interview/InterviewQACard";
+import InterviewQACard, { questionBadge, type InterviewQA } from "@/components/interview/InterviewQACard";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import { useToast } from "@/hooks/use-toast";
@@ -82,9 +82,14 @@ export default function KoreanInterviewPage() {
   const { t, language } = useLanguage();
   const copy = language === "ar" ? PAGE_COPY.ar : PAGE_COPY.en;
   const trust = trustCopy(language);
+  // Tab title and description follow the page language (28 Sep 2026): the
+  // Arabic version used to keep the English ones.
+  const isAr = language === "ar";
   useSEO({
-    title: "Korean Interview Training — AI-Powered | Klovers",
-    description: "Practice Korean job interview questions with AI-generated personalized Q&A. Get 2 free questions, upgrade for more.",
+    title: isAr ? "التدريب على مقابلة العمل بالكورية" : "Korean Interview Training — AI-Powered | Klovers",
+    description: isAr
+      ? "تدريب على أسئلة مقابلات العمل بالكورية: أسئلة وأجوبة مخصّصة بالذكاء الاصطناعي، مع سؤالين مجانيين وإمكانية فتح أسئلة إضافية."
+      : "Practice Korean job interview questions with AI-generated personalized Q&A. Get 2 free questions, upgrade for more.",
     canonical: "https://kloversegy.com/interview-training",
   });
 
@@ -437,7 +442,7 @@ export default function KoreanInterviewPage() {
                   <Card key={`placeholder-${i}`} className="rounded-xl relative overflow-hidden">
                     <CardContent className="p-5">
                       <div className="flex items-center gap-2 mb-3">
-                        <Badge variant="outline" className="text-xs">Q{questions.length + i + 1}</Badge>
+                        <Badge variant="outline" className="text-xs">{questionBadge(language, questions.length + i + 1)}</Badge>
                       </div>
                       <div className="space-y-3 blur-sm select-none pointer-events-none">
                         <div className="p-3 rounded-lg bg-muted/50">

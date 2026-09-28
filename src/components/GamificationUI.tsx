@@ -2,7 +2,9 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LEAGUES, getLeague, getLeagueProgress, BADGES } from "@/constants/gamification";
 import { cn } from "@/lib/utils";
-import { Flame, Trophy, Star, Zap } from "lucide-react";
+import { Star } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
+import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { leagueName, badgeText } from "@/lib/dashboardLocale";
@@ -11,7 +13,7 @@ import { leagueName, badgeText } from "@/lib/dashboardLocale";
 export function XpBadge({ xp, className }: { xp: number; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-400 text-amber-950 text-xs font-bold shadow-sm border border-black/15", className)}>
-      <Zap className="h-3 w-3" /> {xp} XP
+      <BrandIcon name="achievement-star" className="h-4 w-4" /> {xp} XP
     </span>
   );
 }
@@ -20,7 +22,7 @@ export function XpBadge({ xp, className }: { xp: number; className?: string }) {
 export function XpEarnedToast({ xp }: { xp: number }) {
   return (
     <div className="flex items-center gap-2">
-      <Zap className="h-5 w-5 text-primary" />
+      <BrandIcon name="achievement-star" className="h-6 w-6" />
       <span className="font-bold text-primary text-outlined">+{xp} XP</span>
     </div>
   );
@@ -115,12 +117,9 @@ export function StreakDisplay({
   return (
     <div className="flex items-center gap-6">
       <div className="flex items-center gap-2">
-        <Flame className={cn(
-          "h-6 w-6 transition-colors",
-          isAtRisk ? "text-red-500 animate-pulse" :
-          currentStreak > 7 ? "text-orange-500" :
-          currentStreak > 0 ? "text-orange-400" :
-          "text-muted-foreground"
+        <BrandIcon name="streak" className={cn(
+          "h-7 w-7",
+          isAtRisk ? "animate-pulse" : currentStreak === 0 && "opacity-50 grayscale"
         )} />
         <div>
           <p className={cn("text-lg font-bold text-foreground", isAtRisk && "animate-shake")}>{currentStreak}</p>
@@ -130,7 +129,7 @@ export function StreakDisplay({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Trophy className="h-5 w-5 text-primary" />
+        <KloverIcon name="game-crown" className="h-7 w-7" />
         <div>
           <p className="text-lg font-bold text-foreground">{longestStreak}</p>
           <p className="text-xs text-muted-foreground">Best Streak</p>

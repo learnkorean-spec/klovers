@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { COURSE_CARDS, COURSE_SECTION_COPY } from "@/constants/courseCards";
@@ -115,7 +114,6 @@ const CoursesSection = () => {
           {COURSE_CARDS.map((course) => {
             const features = isAr ? course.features_ar : course.features_en;
             const label = isAr ? course.cta_ar : course.cta_en;
-            const arrow = <ArrowRight className={`h-4 w-4 ${isAr ? "rotate-180" : ""}`} />;
             const world = COURSE_WORLD[course.key] ?? W.garden;
 
             return (
@@ -157,7 +155,7 @@ const CoursesSection = () => {
                   <ul className="space-y-2 flex-1">
                     {features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-foreground mt-0.5 flex-shrink-0" />
+                        <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                         <span className="text-sm text-muted-foreground">{feature}</span>
                       </li>
                     ))}
@@ -169,12 +167,10 @@ const CoursesSection = () => {
                     {course.external ? (
                       <a href={course.href} target="_blank" rel="noopener noreferrer">
                         {label}
-                        {arrow}
                       </a>
                     ) : (
                       <Link to={course.href}>
                         {label}
-                        {arrow}
                       </Link>
                     )}
                   </Button>

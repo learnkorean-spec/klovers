@@ -90,7 +90,8 @@ const BlogPage = () => {
     };
   }, [language]);
 
-  // BreadcrumbList JSON-LD for the listing page (unchanged).
+  // BreadcrumbList JSON-LD for the listing page, in the page's own language:
+  // /blog is English, /ar/blog Arabic (28 Sep 2026, one language per page).
   useEffect(() => {
     const el = document.createElement("script");
     el.id = "blog-list-jsonld";
@@ -98,16 +99,21 @@ const BlogPage = () => {
     el.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: "https://kloversegy.com/" },
-        { "@type": "ListItem", position: 2, name: "Blog", item: "https://kloversegy.com/blog" },
-      ],
+      itemListElement: isAr
+        ? [
+            { "@type": "ListItem", position: 1, name: "الرئيسية", item: "https://kloversegy.com/ar" },
+            { "@type": "ListItem", position: 2, name: "المجلة", item: "https://kloversegy.com/ar/blog" },
+          ]
+        : [
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://kloversegy.com/" },
+            { "@type": "ListItem", position: 2, name: "Blog", item: "https://kloversegy.com/blog" },
+          ],
     });
     document.head.appendChild(el);
     return () => {
       el.remove();
     };
-  }, []);
+  }, [isAr]);
 
   const bySlugBase = useMemo(() => new Map(posts.map((p) => [baseSlug(p.slug), p])), [posts]);
   const resolve = useCallback((base: string) => bySlugBase.get(base)?.slug ?? null, [bySlugBase]);

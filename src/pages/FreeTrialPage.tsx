@@ -153,24 +153,31 @@ const FreeTrialPage = () => {
     const el = document.createElement("script");
     el.id = "free-trial-jsonld";
     el.setAttribute("type", "application/ld+json");
+    // /ar/free-trial carries the same three blocks in Arabic, pointing at the
+    // Arabic URLs (28 Sep 2026). Same facts as the visible page.
+    const home = isAr ? "https://kloversegy.com/ar" : "https://kloversegy.com";
+    const pageUrl = isAr ? "https://kloversegy.com/ar/free-trial" : "https://kloversegy.com/free-trial";
+    const brand = isAr ? "كلوفرز" : "Klovers";
     el.textContent = JSON.stringify([
       {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://kloversegy.com" },
-          { "@type": "ListItem", "position": 2, "name": "Free Korean Trial Class", "item": "https://kloversegy.com/free-trial" },
+          { "@type": "ListItem", "position": 1, "name": isAr ? "الرئيسية" : "Home", "item": home },
+          { "@type": "ListItem", "position": 2, "name": isAr ? "حصة كورية تجريبية مجانية" : "Free Korean Trial Class", "item": pageUrl },
         ],
       },
       {
         "@context": "https://schema.org",
         "@type": "Course",
-        "name": "Free Trial Korean Class",
-        "description": "30-minute live Korean class with a real teacher. Free, no credit card required.",
-        "provider": { "@type": "Organization", "name": "Klovers", "url": "https://kloversegy.com" },
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "category": "Free Trial" },
+        "name": isAr ? "حصة كورية تجريبية مجانية" : "Free Trial Korean Class",
+        "description": isAr
+          ? "حصة كورية مباشرة مدتها ٣٠ دقيقة مع معلّمة حقيقية. مجانية ودون بطاقة دفع."
+          : "30-minute live Korean class with a real teacher. Free, no credit card required.",
+        "provider": { "@type": "Organization", "name": brand, "url": "https://kloversegy.com" },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "category": isAr ? "حصة تجريبية مجانية" : "Free Trial" },
         "inLanguage": "ko",
-        "url": "https://kloversegy.com/free-trial",
+        "url": pageUrl,
         ...(slots.length > 0
           ? {
               "hasCourseInstance": slots.map((slot) => ({
@@ -185,19 +192,22 @@ const FreeTrialPage = () => {
       {
         "@context": "https://schema.org",
         "@type": "Event",
-        "name": "Free Korean Trial Class — Klovers",
-        "description": "Join a 30-minute live Korean class with a real teacher. Free, no credit card needed.",
-        "url": "https://kloversegy.com/free-trial",
+        "name": isAr ? "حصة كورية تجريبية مجانية — كلوفرز" : "Free Korean Trial Class — Klovers",
+        "description": isAr
+          ? "حصة كورية مباشرة مدتها ٣٠ دقيقة مع معلّمة حقيقية. مجانية ودون بطاقة دفع."
+          : "Join a 30-minute live Korean class with a real teacher. Free, no credit card needed.",
+        "url": pageUrl,
+        "inLanguage": isAr ? "ar" : "en",
         "eventStatus": "https://schema.org/EventScheduled",
         "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
-        "organizer": { "@type": "Organization", "name": "Klovers", "url": "https://kloversegy.com" },
+        "organizer": { "@type": "Organization", "name": brand, "url": "https://kloversegy.com" },
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock", "validFrom": new Date().toISOString() },
-        "location": { "@type": "VirtualLocation", "url": "https://kloversegy.com/free-trial" },
+        "location": { "@type": "VirtualLocation", "url": pageUrl },
       },
     ]);
     document.head.appendChild(el);
     return () => { el.remove(); };
-  }, [slots]);
+  }, [slots, isAr]);
 
   const navigate = useNavigate();
   const { user, loading } = useAuth();

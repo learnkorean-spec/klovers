@@ -15,7 +15,8 @@ import { GAMES_CATALOG, FREE_GAME_IDS } from "@/constants/gamesList";
 import { LeaguePromotionModal, BadgeUnlockToast, StreakCelebration, XpFloatAnimation, PerfectScoreOverlay } from "@/components/XpAnimation";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Lock, X, Star, Unlock, BarChart3 } from "lucide-react";
+import { Lock, X } from "lucide-react";
+import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
 import { toast as sonnerToast } from "sonner";
 // G0c funnel telemetry. logGameEvent, never logLeadEvent — the latter
 // mirrors to the Meta Pixel / GA4 as a conversion. See leadTracking.ts.
@@ -657,14 +658,12 @@ const GamesPage = () => {
 
             <div className="space-y-2">
               {[
-                { Icon: Star, text: isAr ? "حفظ نقاط الخبرة والسلسلة اليومية" : "Save your XP and streak" },
-                { Icon: Unlock, text: isAr ? `فتح جميع الألعاب الكورية الـ ${toArabicDigits(games.length)}` : `Unlock all ${games.length} Korean games` },
-                { Icon: BarChart3, text: isAr ? "تتبّع التقدّم في التعلّم" : "Track your learning progress" },
-              ].map(({ Icon, text }) => (
+                { icon: "achievement-star" as const, text: isAr ? "حفظ نقاط الخبرة والسلسلة اليومية" : "Save your XP and streak" },
+                { icon: "controller" as const, text: isAr ? `فتح جميع الألعاب الكورية الـ ${toArabicDigits(games.length)}` : `Unlock all ${games.length} Korean games` },
+                { icon: "progress" as const, text: isAr ? "تتبّع التقدّم في التعلّم" : "Track your learning progress" },
+              ].map(({ icon, text }) => (
                 <div key={text} className="flex items-center gap-2 text-sm text-foreground">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-klovers-yellow">
-                    <Icon className="h-3.5 w-3.5 text-charcoal" aria-hidden="true" />
-                  </span>
+                  <BrandIcon name={icon} className="h-7 w-7" />
                   <span>{text}</span>
                 </div>
               ))}

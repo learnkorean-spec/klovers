@@ -43,17 +43,22 @@ const AboutPage = () => {
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.id = "about-schema";
+    // /ar/about gets one AboutPage block, in Arabic and naming the Arabic URL
+    // (28 Sep 2026); it replaces the static one as before (jsonLdDedupe).
     script.text = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "AboutPage",
-      "url": "https://kloversegy.com/about",
-      "name": "About Klovers",
-      "description": "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years.",
+      "url": isAr ? "https://kloversegy.com/ar/about" : "https://kloversegy.com/about",
+      "name": isAr ? "عن كلوفرز" : "About Klovers",
+      "description": isAr
+        ? `أسّستها ريهام الشرقاوي، خريجة الألسن قسم اللغة الكورية، وتدرّس الكورية منذ ${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا.`
+        : `Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for ${TEACHING_YEARS_COUNT} years.`,
+      "inLanguage": isAr ? "ar" : "en",
       "mainEntity": { "@id": "https://kloversegy.com/#organization" }
     });
     document.head.appendChild(script);
     return () => { document.getElementById("about-schema")?.remove(); };
-  }, []);
+  }, [isAr]);
 
   // The experience list still comes from translations.ts, which carries a
   // "high student pass rates" bullet nothing measures. It renders as plain

@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LEVELS } from "@/constants/levels";
+import { COURSE_CARDS } from "@/constants/courseCards";
 
 const CoursesPage = () => {
   const { t, language } = useLanguage();
@@ -35,29 +36,38 @@ const CoursesPage = () => {
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.id = "courses-schema";
+    // On /ar/courses the list is Arabic and points at the Arabic URL, with the
+    // same names and blurbs as the visible Arabic cards (28 Sep 2026).
+    const pageUrl = isAr ? "https://kloversegy.com/ar/courses" : "https://kloversegy.com/courses";
     script.text = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "ItemList",
-      name: "Korean Language Courses at Klovers",
-      url: "https://kloversegy.com/courses",
-      itemListElement: LEVELS.map((level, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        item: {
-          "@type": "Course",
-          name: level.name,
-          // No CEFR band in public copy (brand rule, 27 Sep 2026).
-          description: level.description_en.replace(/\s*\(≈ CEFR [A-C][12]\)/, ""),
-          inLanguage: ["ar", "en"],
-          teaches: "Korean",
-          provider: { "@id": "https://kloversegy.com/#organization" },
-          url: `https://kloversegy.com/courses#${level.key}`,
-        },
-      })),
+      name: isAr ? "دورات اللغة الكورية في كلوفرز" : "Korean Language Courses at Klovers",
+      url: pageUrl,
+      ...(isAr ? { inLanguage: "ar" } : {}),
+      itemListElement: LEVELS.map((level, index) => {
+        const card = COURSE_CARDS.find((c) => c.key === level.key);
+        return {
+          "@type": "ListItem",
+          position: index + 1,
+          item: {
+            "@type": "Course",
+            name: isAr && card ? card.title_ar : level.name,
+            // No CEFR band in public copy (brand rule, 27 Sep 2026).
+            description: isAr && card
+              ? card.blurb_ar
+              : level.description_en.replace(/\s*\(≈ CEFR [A-C][12]\)/, ""),
+            inLanguage: ["ar", "en"],
+            teaches: isAr ? "اللغة الكورية" : "Korean",
+            provider: { "@id": "https://kloversegy.com/#organization" },
+            url: `${pageUrl}#${level.key}`,
+          },
+        };
+      }),
     });
     document.head.appendChild(script);
     return () => { document.getElementById("courses-schema")?.remove(); };
-  }, []);
+  }, [isAr]);
 
   const tr = (en: string, ar: string) => (isAr ? ar : en);
 

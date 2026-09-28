@@ -45,7 +45,12 @@ import {
   TOPIK_BODY_HTML,
   WELCOME_BACK_BODY_HTML,
 } from "./lib/marketing-bodies.mjs";
-import { ARABIC_PAGES, ARABIC_FAQ, arabicTwinOf } from "./lib/arabic-pages.mjs";
+import {
+  ARABIC_PAGES,
+  ARABIC_FAQ,
+  BLOG_INDEX_ARTICLES_MARKER,
+  arabicTwinOf,
+} from "./lib/arabic-pages.mjs";
 import {
   HTML_TAG_PATTERN,
   languageOf,
@@ -286,7 +291,7 @@ const ERA_JOSEON_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
 
 const ERA_TRADITIONAL_LIFE_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
       <h1>Traditional Life</h1>
-      <p>Hanok villages · Tea, manners, timeless beauty</p>
+      <p>Hanok villages · Wood, paper and a warm floor</p>
       <p>A hanok is a traditional Korean house that listens to the land: where you build it matters as much as how.</p>
       <h2>This era at a glance</h2>
       <ul>
@@ -403,7 +408,7 @@ const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
         <li><a href="/games">ألعاب لتعلّم الكورية</a> - تدريب مجاني على الهانغول والمفردات والقواعد.</li>
         <li><a href="/journey/before-korea">الثقافة</a> - حكاية كوريا من أول أسطورة حتى اليوم.</li>
         <li><a href="/ar/courses">مسار التعلّم</a> - الهانغول، ثم المستويات من ١ إلى ٦.</li>
-        <li><a href="/blog">المجلة</a> - مقالات عن الثقافة الكورية ونصائح للمذاكرة بالعربية والإنجليزية.</li>
+        <li><a href="/ar/blog">المجلة</a> - مقالات بالعربية عن الثقافة الكورية ونصائح للمذاكرة.</li>
       </ul>
       <p><a href="/ar/courses">الدورات</a> · <a href="/ar/pricing">الأسعار</a> · <a href="/ar/about">من نحن</a> · <a href="/ar/faq">الأسئلة الشائعة</a> · <a href="/contact">التواصل</a></p>
     </div>`;
@@ -676,10 +681,24 @@ const MARKETING_ROUTES = [
     body: ENROLL_NOW_BODY_HTML,
   },
   {
+    // Sign-in required (EnrollPage sends a visitor without a session to
+    // /login), so the static HTML says noindex too, like the page itself.
     path: "/enroll",
     title: "Enroll Now",
     description:
-      "Start learning Korean today. Enroll in a Klovers course — choose your level, schedule, and teacher.",
+      "Enroll in a Klovers Korean course: choose a plan, a duration and a payment method.",
+    noindex: true,
+  },
+  {
+    // The 3D world (28 Sep 2026). Not indexed - WorldPage sets noindex and
+    // this keeps it - but a shared link used to preview as a bare "Klovers".
+    // Same words as WORLD_COPY.en in src/game/config/copy.ts; there is no
+    // Arabic URL for the world, so the head is English only.
+    path: "/world",
+    title: "Klovers World",
+    description:
+      "Walk the hanok courtyard where the clover egg sleeps, then through the gate into Hangul Village.",
+    noindex: true,
   },
   {
     path: "/placement-test",
@@ -842,7 +861,7 @@ const MARKETING_ROUTES = [
     title: "Traditional Life",
     description:
       "Inside the hanok, the traditional Korean house: mountain-and-river placement, ondol floor heating, the cool maru hall, and clay tile roofs.",
-    image: "/assets/blog/korean-tea.jpg",
+    image: "/assets/blog/korean-hanok.jpg",
     body: ERA_TRADITIONAL_LIFE_BODY,
     breadcrumb: [{ name: "Home", item: BASE_URL }],
     articleLd: true,
@@ -853,7 +872,7 @@ const MARKETING_ROUTES = [
     title: "Modern Korea",
     description:
       "Hallyu, the Korean wave: from the 1990s to Winter Sonata, Gangnam Style, Parasite and Squid Game, and why so many people now learn Korean.",
-    image: "/assets/blog/hallyu-wave.jpg",
+    image: "/assets/story/world-culture-street.webp",
     body: ERA_MODERN_KOREA_BODY,
     breadcrumb: [{ name: "Home", item: BASE_URL }],
     articleLd: true,
@@ -979,6 +998,10 @@ try {
 // an Arabic route is added with its own head (lang ar, Arabic title and
 // description) and its own Arabic body. Copy and the page list live in
 // scripts/lib/arabic-pages.mjs.
+//
+// 28 Sep 2026: the blog index is the seventh pair. /ar/blog's body is the
+// Arabic shell from arabic-pages.mjs with the Arabic article list (from the
+// database, fetched above) written where the marker sits.
 for (const route of MARKETING_ROUTES) {
   const ar = arabicTwinOf(route.path);
   if (ar) route.alternates = { en: route.path, ar };
@@ -986,12 +1009,19 @@ for (const route of MARKETING_ROUTES) {
 for (const page of ARABIC_PAGES) {
   const en = MARKETING_ROUTES.find((r) => r.path === page.path);
   if (!en) throw new Error(`arabic-pages.mjs names ${page.path}, which has no English route here`);
+  let body = page.body;
+  if (page.path === "/blog") {
+    if (!body.includes(BLOG_INDEX_ARTICLES_MARKER)) {
+      throw new Error("arabic-pages.mjs /blog body lost its article-list marker");
+    }
+    body = replaceLiteral(body, BLOG_INDEX_ARTICLES_MARKER, buildArabicBlogListHtml(blogRoutes));
+  }
   MARKETING_ROUTES.push({
     path: `/ar${page.path}`,
     lang: "ar",
     title: page.title,
     description: page.description,
-    body: page.body,
+    body,
     alternates: { en: page.path, ar: `/ar${page.path}` },
     ...(page.path === "/faq" ? { faq: ARABIC_FAQ } : {}),
     ...(en.pageLd ? { pageLd: { ...en.pageLd, inLanguage: "ar" } } : {}),
@@ -1154,38 +1184,52 @@ function absoluteUrl(u) {
  * crawler will follow, and the alternative would mean inventing /blog/page/2
  * URLs that prerender fine but that the SPA has no route for — a reader who
  * clicked one would land on the app's not-found page.
+ *
+ * 28 Sep 2026: one language per page. /blog lists the English articles only
+ * and is English only; the Arabic articles are listed on /ar/blog, whose body
+ * is the Arabic shell in scripts/lib/arabic-pages.mjs with the list from
+ * buildArabicBlogListHtml written into it. Every published article is still
+ * linked from exactly one of the two indexes.
  */
-function buildBlogIndexHtml(routes) {
-  const groups = [
-    { lang: "en", dir: "ltr", heading: "All articles", rows: routes.filter((r) => r.post.lang !== "ar") },
-    { lang: "ar", dir: "rtl", heading: "كل المقالات", rows: routes.filter((r) => r.post.lang === "ar") },
-  ];
+// Function declarations, not consts: the Arabic twin loop above calls
+// buildArabicBlogListHtml before this point in the module is evaluated.
+function isArabicPost(r) {
+  return r.post.lang === "ar";
+}
 
-  const sections = groups
-    .filter((g) => g.rows.length)
-    .map((g) => {
-      const items = g.rows
-        .map(
-          (r) => `        <li>
+function blogIndexItemsHtml(rows) {
+  return rows
+    .map(
+      (r) => `        <li>
           <a href="${attr(r.path)}">${text(r.title)}</a>
           <p>${text(excerpt(r.description))}</p>
         </li>`
-        )
-        .join("\n");
-      return `      <section lang="${g.lang}" dir="${g.dir}">
-        <h2>${text(g.heading)} (${g.rows.length})</h2>
-        <ul>
-${items}
-        </ul>
-      </section>`;
-    })
+    )
     .join("\n");
+}
 
-  return `<div id="blog-index-prerendered">
+function buildBlogIndexHtml(routes) {
+  const rows = routes.filter((r) => !isArabicPost(r));
+  return `<div id="blog-index-prerendered" lang="en" dir="ltr">
       <h1>Klovers Journal</h1>
       <p>Articles, words, stories and experiences about Korea and the Korean language.</p>
-${sections}
+      <section>
+        <h2>All articles (${rows.length})</h2>
+        <ul>
+${blogIndexItemsHtml(rows)}
+        </ul>
+      </section>
     </div>`;
+}
+
+/** The Arabic article list for /ar/blog (same wording as AllArticles.tsx). */
+function buildArabicBlogListHtml(routes) {
+  const rows = routes.filter(isArabicPost);
+  const count = rows.length.toLocaleString("ar-EG");
+  return `<p>كل المقالات، من الأحدث إلى الأقدم — ${count} مقالة.</p>
+      <ul>
+${blogIndexItemsHtml(rows)}
+      </ul>`;
 }
 
 const jsonLd = (obj) =>
@@ -1501,6 +1545,15 @@ for (const route of routes) {
     /<meta name="twitter:description" content="[^"]*"\s*\/?>/,
     `<meta name="twitter:description" content="${attr(description)}" />`
   );
+  // A route that must never be indexed (sign-in pages, the 3D world) says so
+  // in the static HTML as well, not only after the app boots.
+  if (route.noindex) {
+    html = replaceLiteral(
+      html,
+      /<meta name="robots" content="[^"]*"\s*\/?>/,
+      `<meta name="robots" content="noindex, nofollow" />`
+    );
+  }
 
   // The LCP preload. index.html ships one pointing at the homepage hero, and
   // this loop copies that document to every route — so without this, all 189
@@ -1553,7 +1606,7 @@ for (const route of routes) {
     // renames or reformats it would leave /blog silently empty again, which is
     // the exact regression this branch exists to fix.
     html = writeIntoRoot(html, buildBlogIndexHtml(blogRoutes), route.path, "index links");
-    blogIndexLinks = blogRoutes.length;
+    blogIndexLinks = blogRoutes.filter((r) => !isArabicPost(r)).length;
   }
 
   // Article pages carry their related-articles block in the raw HTML, for the
@@ -1662,7 +1715,10 @@ console.log(
     `${usedCache ? ", FROM CACHE" : ""}).`
 );
 console.log(`   ${withHreflang} blog routes have a real EN/AR partner and got hreflang.`);
-console.log(`   /blog carries ${blogIndexLinks} article links in its raw HTML.`);
+console.log(
+  `   /blog carries ${blogIndexLinks} English and /ar/blog ` +
+    `${blogRoutes.filter(isArabicPost).length} Arabic article links in their raw HTML.`
+);
 console.log(
   `   ${marketingBodiesWritten} marketing route(s) carry hand-written body copy ` +
     `(the rest keep an empty #root).`

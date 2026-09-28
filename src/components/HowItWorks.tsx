@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -130,7 +130,7 @@ const HowItWorks = () => {
                 "Your teacher identifies your level and maps out your next steps",
               ]).map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
-                  <CheckCircle2 className="h-4 w-4 text-foreground/45 shrink-0 mt-0.5" />
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                   <span>{item}</span>
                 </li>
               ))}

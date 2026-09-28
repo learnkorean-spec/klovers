@@ -20,7 +20,16 @@ import rehamPhoto from "@/assets/reham-teacher.jpg";
 
 const EnrollPage = () => {
   const { t, language } = useLanguage();
-  useSEO({ title: "Enroll Now", description: "Start learning Korean today. Enroll in a Klovers course — choose your level, schedule, and teacher.", canonical: "https://kloversegy.com/enroll" });
+  // Page-language title and description; noindex because the page needs a
+  // signed-in student (28 Sep 2026), like the other sign-in pages.
+  useSEO({
+    title: language === "ar" ? "التسجيل في دورة" : "Enroll Now",
+    description: language === "ar"
+      ? "التسجيل في دورة كورية من كلوفرز: اختيار الخطة والمدة وطريقة الدفع."
+      : "Enroll in a Klovers Korean course: choose a plan, a duration and a payment method.",
+    canonical: "https://kloversegy.com/enroll",
+    noindex: true,
+  });
   const [planType, setPlanType] = useState<ClassType | "">("");
   const [duration, setDuration] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("");

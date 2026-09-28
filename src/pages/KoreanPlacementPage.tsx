@@ -280,22 +280,26 @@ const KoreanPlacementPage = () => {
     const script = document.createElement("script");
     script.type = "application/ld+json";
     script.id = "placement-schema";
+    // Arabic on /ar/placement-test, pointing at the Arabic URL (28 Sep 2026).
     script.text = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "Quiz",
-      "name": "Free Korean Language Placement Test",
-      "description": "Take the free Klovers Korean placement test to discover your TOPIK level and find the perfect course.",
-      "url": "https://kloversegy.com/placement-test",
+      "name": isAr ? "اختبار تحديد مستوى الكورية المجاني" : "Free Korean Language Placement Test",
+      "description": isAr
+        ? "اختبار مجاني لتحديد المستوى في اللغة الكورية من كلوفرز: أسئلة قراءة بصيغ امتحان TOPIK تحدّد المستوى من تأسيس الهانغول حتى المستوى الرابع، مع ترشيح الدورة المناسبة."
+        : "Take the free Klovers Korean placement test to discover your TOPIK level and find the perfect course.",
+      "url": isAr ? "https://kloversegy.com/ar/placement-test" : "https://kloversegy.com/placement-test",
+      "inLanguage": isAr ? "ar" : "en",
       "provider": { "@id": "https://kloversegy.com/#organization" },
       "educationalAlignment": {
         "@type": "AlignmentObject",
         "educationalFramework": "TOPIK",
-        "targetName": "Korean Language Proficiency"
+        "targetName": isAr ? "إتقان اللغة الكورية" : "Korean Language Proficiency"
       }
     });
     document.head.appendChild(script);
     return () => { document.getElementById("placement-schema")?.remove(); };
-  }, []);
+  }, [isAr]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

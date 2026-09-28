@@ -868,7 +868,7 @@ const EnrollNowPage = () => {
               )}
 
               <Button type="button" className="w-full" size="lg" disabled={!canProceedStep1} onClick={() => setStep(2)}>
-                {t("enrollNow.next")} <ArrowRight className="ml-2 h-4 w-4" />
+                {t("enrollNow.next")} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Button>
               {!canProceedStep1 && (
                 <p className="text-xs text-destructive text-center">
@@ -885,7 +885,7 @@ const EnrollNowPage = () => {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Button type="button" variant="ghost" size="sm" onClick={() => setStep(1)} aria-label={isAr ? "العودة إلى الخطوة السابقة" : "Back to previous step"}>
-                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                  <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
                 </Button>
                 <div>
                   <h1 className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
@@ -1018,7 +1018,7 @@ const EnrollNowPage = () => {
               </p>
 
               <Button type="button" className="w-full" size="lg" disabled={!canProceedStep2} onClick={handleGoToStep3}>
-                {t("enrollNow.next")} <ArrowRight className="ml-2 h-4 w-4" />
+                {t("enrollNow.next")} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Button>
               {!canProceedStep2 && (
                 <p className="text-xs text-destructive text-center">
@@ -1039,7 +1039,7 @@ const EnrollNowPage = () => {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Button type="button" variant="ghost" size="sm" onClick={() => setStep(2)} aria-label={isAr ? "العودة إلى الخطوة السابقة" : "Back to previous step"}>
-                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                  <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
                 </Button>
                 <div>
                   <h1 className="text-2xl font-semibold leading-none tracking-tight">{t("enrollNow.reviewPay")}</h1>

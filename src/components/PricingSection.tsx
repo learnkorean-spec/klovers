@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
@@ -466,30 +465,30 @@ const PricingSection = () => {
                     {classType === "group" ? (
                       <>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                           {t("pricing", "groupBenefits.oncePerWeek")}
                         </li>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                           {t("pricing", "groupBenefits.groupEnvironment")}
                         </li>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                           {t("pricing", "groupBenefits.structuredCurriculum")}
                         </li>
                       </>
                     ) : (
                       <>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                           {t("pricing", "privateBenefits.privateSessions")}
                         </li>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                           {t("pricing", "privateBenefits.flexibleScheduling")}
                         </li>
                         <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Check className="h-4 w-4 text-foreground shrink-0" />
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                           {t("pricing", "privateBenefits.personalFeedback")}
                         </li>
                       </>
@@ -546,7 +545,7 @@ const PricingSection = () => {
                       onClick={() => openFlexPaymentChat(tierKey, classType)}
                       className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground py-1 transition-colors"
                     >
-                      <MessageCircle className="h-3 w-3" />
+                      <KloverIcon name="game-chat-smile" className="h-5 w-5" />
                       {tr("Flexible / installment payment? Chat with us", "الدفع بالتقسيط أو بمرونة؟ المراسلة عبر واتساب")}
                     </button>
                   </div>

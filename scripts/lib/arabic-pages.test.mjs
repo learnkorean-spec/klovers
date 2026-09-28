@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { ARABIC_PAGES, ARABIC_FAQ, ARABIC_PAGE_META } from "./arabic-pages.mjs";
+import { ARABIC_PAGES, ARABIC_FAQ, ARABIC_PAGE_META, BLOG_INDEX_ARTICLES_MARKER } from "./arabic-pages.mjs";
 import { buildSitemap } from "../../api/sitemap.xml.js";
 
 /**
@@ -23,9 +23,17 @@ const allow = new RegExp(`^${vercel.rewrites.find((r) => r.destination === "/app
 const DIALECT = /(^|\s)(مش|دلوقتي|عشان|لسه|إزاي|كده|بتاع|أوي|معانا|احجز|اعمل|شوف)(\s|$)/;
 
 describe("the Arabic twins exist end to end", () => {
-  it("lists six pages, all with the same paths in meta and bodies", () => {
+  it("lists seven pages, all with the same paths in meta and bodies", () => {
     expect(ARABIC_PAGE_META.map((p) => p.path)).toEqual(ARABIC_PAGES.map((p) => p.path));
-    expect(ARABIC_PAGES).toHaveLength(6);
+    expect(ARABIC_PAGES).toHaveLength(7);
+  });
+
+  it("the Arabic blog index gets its article list from the prerender (28 Sep 2026)", () => {
+    const blog = ARABIC_PAGES.find((p) => p.path === "/blog");
+    expect(blog.body).toContain(BLOG_INDEX_ARTICLES_MARKER);
+    expect(prerender).toContain("buildArabicBlogListHtml(blogRoutes)");
+    // The shell itself is Arabic only (Korean and TOPIK excepted, none here).
+    expect(blog.body.replace(/<[^>]+>/g, " ")).not.toMatch(/[A-Za-z]/);
   });
 
   it.each(ARABIC_PAGES.map((p) => p.path))("%s has an Arabic route in the app and in vercel.json", (path) => {

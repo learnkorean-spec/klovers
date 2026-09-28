@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -111,7 +110,6 @@ const LearnKoreanArabicSpeakersPage = () => {
               <Button size="lg" asChild className="rounded-full font-bold">
                 <Link to="/free-trial">
                   {tr("Book a free class", "حجز حصة مجانية")}
-                  <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="rounded-full bg-transparent text-ivory border-ivory/40 hover:bg-ivory/10">
@@ -167,7 +165,7 @@ const LearnKoreanArabicSpeakersPage = () => {
             <ul className="space-y-3">
               {DIFFERENCES.map((d) => (
                 <li key={d.en} className="flex items-start gap-3 text-foreground">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-klovers-green ring-1 ring-foreground/25" aria-hidden="true" />
                   <span className="leading-relaxed">{isAr ? d.ar : d.en}</span>
                 </li>
               ))}
@@ -203,7 +201,6 @@ const LearnKoreanArabicSpeakersPage = () => {
               <Button size="lg" asChild className="rounded-full font-bold">
                 <Link to="/free-trial">
                   {tr("Book a free class", "حجز حصة مجانية")}
-                  <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="rounded-full">

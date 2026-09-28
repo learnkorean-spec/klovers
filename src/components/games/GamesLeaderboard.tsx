@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Crown, Trophy } from "lucide-react";
+import KloverIcon from "@/components/KloverIcon";
 import { cn } from "@/lib/utils";
 import type { LeaderboardEntry } from "@/hooks/useLeaderboard";
 import { isClubyAwake } from "@/lib/clubyAwake";
@@ -108,9 +108,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 font-display text-2xl font-extrabold text-foreground md:text-3xl">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-klovers-yellow">
-                <Trophy className="h-5 w-5 text-charcoal" aria-hidden="true" />
-              </span>
+              <KloverIcon name="game-crown" className="h-9 w-9" />
               {isLoggedIn ? (isAr ? "أفضل اللاعبين" : "Top Players") : (isAr ? "الترتيب" : "Leaderboard")}
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -154,7 +152,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                 href="/signup"
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-charcoal px-6 text-sm font-bold text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
               >
-                <Trophy className="h-4 w-4" aria-hidden="true" />
+                <KloverIcon name="game-crown" className="h-5 w-5" />
                 {isAr ? "إنشاء حساب لعرض الترتيب" : "Sign up to see your rank"}
               </a>
             </div>
@@ -180,7 +178,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                     return (
                       <li key={p.user_id} className="flex min-w-0 flex-col items-center text-center">
                         {place === 1 && (
-                          <Crown className="mb-1 h-7 w-7 fill-klovers-yellow text-charcoal" strokeWidth={1.8} aria-hidden="true" />
+                          <KloverIcon name="game-crown" className="mb-1 h-8 w-8" />
                         )}
                         <Avatar
                           p={p}

@@ -202,7 +202,6 @@ const EraPage = () => {
                     </p>
                     <span className="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-foreground pt-1">
                       {isAr ? "قراءة المقال" : "Read more"}
-                      <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </span>
                   </div>
                 </Link>
@@ -257,7 +256,7 @@ const EraPage = () => {
           <div className="flex items-center justify-between gap-4">
             {prev ? (
               <Link to={`/journey/${prev.id}`} className="group flex items-center gap-3">
-                <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
+                <ArrowLeft className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
                 <span>
                   <span className="block text-xs text-muted-foreground">
                     {isAr ? "المحطة السابقة" : "Previous station"}
@@ -280,7 +279,7 @@ const EraPage = () => {
                     {isAr ? next.titleAr : next.titleEn}
                   </span>
                 </span>
-                <ArrowRight className="h-5 w-5 rtl:rotate-180" />
+                <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
               </Link>
             ) : (
               <span />

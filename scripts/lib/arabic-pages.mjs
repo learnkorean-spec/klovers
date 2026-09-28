@@ -8,6 +8,11 @@
  * six pages now have their own Arabic address, "/ar" + the English path, built
  * the same way as the homepage pair.
  *
+ * 28 Sep 2026: the blog index joined as a seventh page, so /blog carries the
+ * English articles only and /ar/blog the Arabic ones (one language per page).
+ * Its article list comes from the database at build time: the prerender puts
+ * it where BLOG_INDEX_ARTICLES_MARKER sits in the body below.
+ *
  * One list, read by four consumers - keep them in step by editing THIS file:
  *   - scripts/prerender-meta.mjs   Arabic head + body in the static HTML
  *   - api/sitemap.xml.js           <loc> and hreflang for both twins
@@ -172,7 +177,24 @@ export const ARABIC_PAGES = [
       <p><a href="/ar/free-trial">حجز حصة تجريبية مجانية</a> · <a href="/hangul-starter">ورقة الهانغول المجانية</a> · <a href="/ar/courses">الدورات</a> · <a href="/ar/pricing">الأسعار</a></p>
     </div>`,
   },
+  {
+    path: "/blog",
+    title: "مجلة كلوفرز: كوريا واللغة الكورية",
+    description: "مقالات وكلمات وقصص وتجارب عن كوريا واللغة الكورية بالعربية، في رحلة من ست محطات مع كلوفرز.",
+    // Heading and intro are the visible Arabic journal hero (JournalHero.tsx);
+    // the prerender replaces the marker with the Arabic article list.
+    body: `<div id="blog-index-prerendered" lang="ar" dir="rtl">
+      <h1>مجلة كلوفرز: اكتشاف كوريا خطوة بخطوة</h1>
+      <p>تُضاء الفوانيس على امتداد شارع الثقافة مع نهاية النهار. كلّ مقال باب مفتوح: كلمة، أو قصة، أو عادة، أو مشهد من يوم كوري عادي.</p>
+      <h2>مكتبة الرحلة</h2>
+      <!-- blog-index-articles -->
+      <p><a href="/ar/courses">الدورات</a> · <a href="/ar/free-trial">حجز حصة تجريبية مجانية</a> · <a href="/ar/placement-test">اختبار تحديد المستوى المجاني</a></p>
+    </div>`,
+  },
 ];
+
+/** Where the prerender writes the Arabic article list into the /blog body. */
+export const BLOG_INDEX_ARTICLES_MARKER = "<!-- blog-index-articles -->";
 
 export const ARABIC_FAQ = [
   {

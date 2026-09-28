@@ -16,6 +16,9 @@ export const ARABIC_PAGE_META = [
   { path: "/faq", title: "الأسئلة الشائعة عن دورات الكورية | كلوفرز", description: "إجابات عن تعلّم الكورية مع كلوفرز: المستوى المناسب، ومواعيد الحصص، وطرق الدفع، والشهادات، والتحضير لاختبار TOPIK." },
   { path: "/about", title: "عن كلوفرز والمعلمة ريهام الشرقاوي | كلوفرز", description: "أسست كلوفرز المعلمة ريهام الشرقاوي، خريجة قسم اللغة الكورية بكلية الألسن، التي تُدرّس الكورية منذ ١٣ عامًا لأكثر من ٢٠٠ طالب." },
   { path: "/placement-test", title: "اختبار تحديد مستوى الكورية المجاني | كلوفرز", description: "اختبار مجاني لتحديد مستوى اللغة الكورية بصيغ قراءة TOPIK: ٥٢ سؤالًا من الهانغول حتى المستوى الرابع، دون تسجيل." },
+  // The blog index (28 Sep 2026): /blog lists the English articles only and
+  // /ar/blog the Arabic ones. Same title and description as BlogPage's Arabic useSEO.
+  { path: "/blog", title: "مجلة كلوفرز: كوريا واللغة الكورية", description: "مقالات وكلمات وقصص وتجارب عن كوريا واللغة الكورية بالعربية، في رحلة من ست محطات مع كلوفرز." },
 ];
 
 /** The English paths that have an Arabic twin (the homepage pair is separate). */

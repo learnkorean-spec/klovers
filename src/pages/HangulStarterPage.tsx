@@ -6,60 +6,70 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import KloverIcon from "@/components/KloverIcon";
 import { Link } from "react-router-dom";
 import kloversLogo from "@/assets/klovers-logo.jpg";
+import { toArabicDigits } from "@/lib/trustFigures";
 
-const CONSONANTS = [
-  { char: "ㄱ", rom: "g / k",  ex: "가 (ga)" },
-  { char: "ㄴ", rom: "n",      ex: "나 (na)" },
-  { char: "ㄷ", rom: "d / t",  ex: "다 (da)" },
-  { char: "ㄹ", rom: "r / l",  ex: "라 (ra)" },
-  { char: "ㅁ", rom: "m",      ex: "마 (ma)" },
-  { char: "ㅂ", rom: "b / p",  ex: "바 (ba)" },
-  { char: "ㅅ", rom: "s",      ex: "사 (sa)" },
-  { char: "ㅇ", rom: "– / ng", ex: "아 (a)" },
-  { char: "ㅈ", rom: "j",      ex: "자 (ja)" },
-  { char: "ㅊ", rom: "ch",     ex: "차 (cha)" },
-  { char: "ㅋ", rom: "k",      ex: "카 (ka)" },
-  { char: "ㅌ", rom: "t",      ex: "타 (ta)" },
-  { char: "ㅍ", rom: "p",      ex: "파 (pa)" },
-  { char: "ㅎ", rom: "h",      ex: "하 (ha)" },
+type LetterRow = { char: string; rom: string; ex: string; ar: string; exAr: string; noteAr?: string };
+
+/*
+ * Pronunciation in Arabic script for the Arabic sheet (28 Sep 2026), so the
+ * Arabic page carries no Latin romanization. Same conventions as the Arabic
+ * transliterations in src/constants/eras.ts (ㄱ = غ, final ㅇ = نغ, ㅐ = يه)
+ * and the «غا» «هان» «غوك» examples below. Arabic has no p and one letter
+ * for several Korean vowels, so `noteAr` adds a short hint where two
+ * letters would otherwise read the same. For Re's review: these are teaching
+ * choices, not a standard.
+ */
+const CONSONANTS: LetterRow[] = [
+  { char: "ㄱ", rom: "g / k",  ex: "가 (ga)",  ar: "غ / ك",     exAr: "가 «غا»" },
+  { char: "ㄴ", rom: "n",      ex: "나 (na)",  ar: "ن",         exAr: "나 «نا»" },
+  { char: "ㄷ", rom: "d / t",  ex: "다 (da)",  ar: "د / ت",     exAr: "다 «دا»" },
+  { char: "ㄹ", rom: "r / l",  ex: "라 (ra)",  ar: "ر / ل",     exAr: "라 «را»" },
+  { char: "ㅁ", rom: "m",      ex: "마 (ma)",  ar: "م",         exAr: "마 «ما»" },
+  { char: "ㅂ", rom: "b / p",  ex: "바 (ba)",  ar: "ب",         exAr: "바 «با»" },
+  { char: "ㅅ", rom: "s",      ex: "사 (sa)",  ar: "س",         exAr: "사 «سا»" },
+  { char: "ㅇ", rom: "– / ng", ex: "아 (a)",   ar: "صامت / نغ", exAr: "아 «آ»" },
+  { char: "ㅈ", rom: "j",      ex: "자 (ja)",  ar: "ج",         exAr: "자 «جا»" },
+  { char: "ㅊ", rom: "ch",     ex: "차 (cha)", ar: "تش",        exAr: "차 «تشا»", noteAr: "مع نَفَس" },
+  { char: "ㅋ", rom: "k",      ex: "카 (ka)",  ar: "ك",         exAr: "카 «كا»",  noteAr: "مع نَفَس" },
+  { char: "ㅌ", rom: "t",      ex: "타 (ta)",  ar: "ت",         exAr: "타 «تا»",  noteAr: "مع نَفَس" },
+  { char: "ㅍ", rom: "p",      ex: "파 (pa)",  ar: "ب",         exAr: "파 «با»",  noteAr: "مع نَفَس" },
+  { char: "ㅎ", rom: "h",      ex: "하 (ha)",  ar: "ه",         exAr: "하 «ها»" },
 ];
 
-const DOUBLE_CONSONANTS = [
-  { char: "ㄲ", rom: "kk",  ex: "까 (kka)" },
-  { char: "ㄸ", rom: "tt",  ex: "따 (tta)" },
-  { char: "ㅃ", rom: "pp",  ex: "빠 (ppa)" },
-  { char: "ㅆ", rom: "ss",  ex: "싸 (ssa)" },
-  { char: "ㅉ", rom: "jj",  ex: "짜 (jja)" },
+const DOUBLE_CONSONANTS: LetterRow[] = [
+  { char: "ㄲ", rom: "kk",  ex: "까 (kka)", ar: "كّ", exAr: "까 «كّا»" },
+  { char: "ㄸ", rom: "tt",  ex: "따 (tta)", ar: "تّ", exAr: "따 «تّا»" },
+  { char: "ㅃ", rom: "pp",  ex: "빠 (ppa)", ar: "بّ", exAr: "빠 «بّا»" },
+  { char: "ㅆ", rom: "ss",  ex: "싸 (ssa)", ar: "سّ", exAr: "싸 «سّا»" },
+  { char: "ㅉ", rom: "jj",  ex: "짜 (jja)", ar: "جّ", exAr: "짜 «جّا»" },
 ];
 
-const VOWELS = [
-  { char: "ㅏ", rom: "a",   ex: "아 (a)" },
-  { char: "ㅑ", rom: "ya",  ex: "야 (ya)" },
-  { char: "ㅓ", rom: "eo",  ex: "어 (eo)" },
-  { char: "ㅕ", rom: "yeo", ex: "여 (yeo)" },
-  { char: "ㅗ", rom: "o",   ex: "오 (o)" },
-  { char: "ㅛ", rom: "yo",  ex: "요 (yo)" },
-  { char: "ㅜ", rom: "u",   ex: "우 (u)" },
-  { char: "ㅠ", rom: "yu",  ex: "유 (yu)" },
-  { char: "ㅡ", rom: "eu",  ex: "으 (eu)" },
-  { char: "ㅣ", rom: "i",   ex: "이 (i)" },
+const VOWELS: LetterRow[] = [
+  { char: "ㅏ", rom: "a",   ex: "아 (a)",   ar: "آ",   exAr: "아 «آ»" },
+  { char: "ㅑ", rom: "ya",  ex: "야 (ya)",  ar: "يا",  exAr: "야 «يا»" },
+  { char: "ㅓ", rom: "eo",  ex: "어 (eo)",  ar: "أو",  exAr: "어 «أو»",  noteAr: "مفتوحة" },
+  { char: "ㅕ", rom: "yeo", ex: "여 (yeo)", ar: "يو",  exAr: "여 «يو»",  noteAr: "مفتوحة" },
+  { char: "ㅗ", rom: "o",   ex: "오 (o)",   ar: "أو",  exAr: "오 «أو»",  noteAr: "مستديرة" },
+  { char: "ㅛ", rom: "yo",  ex: "요 (yo)",  ar: "يو",  exAr: "요 «يو»",  noteAr: "مستديرة" },
+  { char: "ㅜ", rom: "u",   ex: "우 (u)",   ar: "أُو", exAr: "우 «أُو»", noteAr: "مضمومة" },
+  { char: "ㅠ", rom: "yu",  ex: "유 (yu)",  ar: "يُو", exAr: "유 «يُو»", noteAr: "مضمومة" },
+  { char: "ㅡ", rom: "eu",  ex: "으 (eu)",  ar: "أُ",  exAr: "으 «أُ»",  noteAr: "دون ضم الشفتين" },
+  { char: "ㅣ", rom: "i",   ex: "이 (i)",   ar: "إي",  exAr: "이 «إي»" },
 ];
 
-const COMPOUND_VOWELS = [
-  { char: "ㅐ", rom: "ae",  ex: "애 (ae)" },
-  { char: "ㅒ", rom: "yae", ex: "얘 (yae)" },
-  { char: "ㅔ", rom: "e",   ex: "에 (e)" },
-  { char: "ㅖ", rom: "ye",  ex: "예 (ye)" },
-  { char: "ㅘ", rom: "wa",  ex: "와 (wa)" },
-  { char: "ㅙ", rom: "wae", ex: "왜 (wae)" },
-  { char: "ㅚ", rom: "oe",  ex: "외 (oe)" },
-  { char: "ㅝ", rom: "wo",  ex: "워 (wo)" },
-  { char: "ㅞ", rom: "we",  ex: "웨 (we)" },
-  { char: "ㅟ", rom: "wi",  ex: "위 (wi)" },
-  { char: "ㅢ", rom: "ui",  ex: "의 (ui)" },
+const COMPOUND_VOWELS: LetterRow[] = [
+  { char: "ㅐ", rom: "ae",  ex: "애 (ae)",  ar: "إيه", exAr: "애 «إيه»" },
+  { char: "ㅒ", rom: "yae", ex: "얘 (yae)", ar: "ييه", exAr: "얘 «ييه»" },
+  { char: "ㅔ", rom: "e",   ex: "에 (e)",   ar: "إيه", exAr: "에 «إيه»", noteAr: "مثل ㅐ" },
+  { char: "ㅖ", rom: "ye",  ex: "예 (ye)",  ar: "ييه", exAr: "예 «ييه»", noteAr: "مثل ㅒ" },
+  { char: "ㅘ", rom: "wa",  ex: "와 (wa)",  ar: "وا",  exAr: "와 «وا»" },
+  { char: "ㅙ", rom: "wae", ex: "왜 (wae)", ar: "ويه", exAr: "왜 «ويه»" },
+  { char: "ㅚ", rom: "oe",  ex: "외 (oe)",  ar: "ويه", exAr: "외 «ويه»", noteAr: "مثل ㅙ" },
+  { char: "ㅝ", rom: "wo",  ex: "워 (wo)",  ar: "وو",  exAr: "워 «وو»" },
+  { char: "ㅞ", rom: "we",  ex: "웨 (we)",  ar: "ويه", exAr: "웨 «ويه»", noteAr: "مثل ㅙ" },
+  { char: "ㅟ", rom: "wi",  ex: "위 (wi)",  ar: "وي",  exAr: "위 «وي»" },
+  { char: "ㅢ", rom: "ui",  ex: "의 (ui)",  ar: "أُي", exAr: "의 «أُي»" },
 ];
-
-type LetterRow = { char: string; rom: string; ex: string };
 
 /** The rules page at the end of the printed sheet. */
 const RULES: { en: string; ar: string; ex: string }[] = [
@@ -72,7 +82,7 @@ const RULES: { en: string; ar: string; ex: string }[] = [
   { en: "Write each letter top to bottom, left to right.", ar: "يُكتب كل حرف من أعلى إلى أسفل، ومن اليسار إلى اليمين.", ex: "ㄱ · ㅏ · 가" },
 ];
 
-const LetterGrid = ({ items, label }: { items: LetterRow[]; label: string }) => (
+const LetterGrid = ({ items, label, isAr }: { items: LetterRow[]; label: string; isAr: boolean }) => (
   <div className="mb-10 print:mb-4 break-inside-avoid">
     <h2 className="text-lg font-black text-foreground mb-3 border-b border-border pb-1 print:mb-2">{label}</h2>
     <div dir="ltr" className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 print:grid-cols-7 gap-2 print:gap-1.5">
@@ -82,8 +92,18 @@ const LetterGrid = ({ items, label }: { items: LetterRow[]; label: string }) => 
           className="flex flex-col items-center bg-card border border-border rounded-xl p-3 print:p-1.5 print:rounded-lg hover:border-primary/50 transition-colors break-inside-avoid"
         >
           <span lang="ko" className="text-3xl print:text-2xl font-black text-foreground leading-none mb-1">{item.char}</span>
-          <span className="text-xs font-bold text-foreground">{item.rom}</span>
-          <span lang="ko" className="text-[10px] text-muted-foreground mt-0.5">{item.ex}</span>
+          {isAr ? (
+            <>
+              <span dir="rtl" className="text-xs font-bold text-foreground">{item.ar}</span>
+              {item.noteAr && <span dir="rtl" className="text-[10px] text-muted-foreground">{item.noteAr}</span>}
+              <span dir="rtl" className="text-[10px] text-muted-foreground mt-0.5">{item.exAr}</span>
+            </>
+          ) : (
+            <>
+              <span className="text-xs font-bold text-foreground">{item.rom}</span>
+              <span lang="ko" className="text-[10px] text-muted-foreground mt-0.5">{item.ex}</span>
+            </>
+          )}
         </div>
       ))}
     </div>
@@ -176,7 +196,7 @@ const HangulStarterPage = () => {
             <div className="flex flex-wrap gap-3 justify-center">
               <Button asChild variant="outline">
                 <a href={isAr ? "/hangul-starter-ar.pdf" : "/hangul-starter-en.pdf"} download>
-                  {tr("Download the free PDF", "تحميل الورقة المجانية PDF")}
+                  {tr("Download the free PDF", "تحميل الورقة المجانية للطباعة")}
                 </a>
               </Button>
               <Button asChild>
@@ -221,18 +241,22 @@ const HangulStarterPage = () => {
             <LetterGrid
               items={CONSONANTS}
               label={isAr ? "الحروف الساكنة الأساسية (١٤)" : "Basic Consonants (14)"}
+              isAr={isAr}
             />
             <LetterGrid
               items={DOUBLE_CONSONANTS}
               label={isAr ? "الحروف الساكنة المضاعفة (٥)" : "Double Consonants (5)"}
+              isAr={isAr}
             />
             <LetterGrid
               items={VOWELS}
               label={isAr ? "حروف المد الأساسية (١٠)" : "Basic Vowels (10)"}
+              isAr={isAr}
             />
             <LetterGrid
               items={COMPOUND_VOWELS}
               label={isAr ? "حروف المد المركبة (١١)" : "Compound Vowels (11)"}
+              isAr={isAr}
             />
 
             {/* Paper-only RULES page: how a Korean block is read and written. */}
@@ -248,7 +272,7 @@ const HangulStarterPage = () => {
               <ol className="space-y-3 text-sm text-foreground">
                 {RULES.map((r, i) => (
                   <li key={i} className="flex gap-3 break-inside-avoid border border-border rounded-xl p-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-klovers-yellow font-black text-charcoal">{i + 1}</span>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-klovers-yellow font-black text-charcoal">{isAr ? toArabicDigits(i + 1) : i + 1}</span>
                     <div>
                       <p className="font-bold">{isAr ? r.ar : r.en}</p>
                       <p className="mt-1 font-ko text-lg" lang="ko" dir="ltr">{r.ex}</p>
