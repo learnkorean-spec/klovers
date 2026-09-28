@@ -19,6 +19,9 @@
  * /learn-korean-arabic-speakers and /learn-korean-kdramas were in that list
  * until their pages were rewritten on 25 Sep 2026; since 28 Sep both
  * fragments mirror the live English copy.
+ * /affiliate (one-off 20% commission, no "recurring" promise) and
+ * /interview-training (AI without a vendor name, no locked demo) mirror the
+ * live pages since 28 Sep 2026.
  *
  * FAQ arrays feed the server-side FAQPage JSON-LD for the same routes, so the
  * markup matches the questions the page shows.
@@ -161,7 +164,7 @@ export const PLACEMENT_TEST_BODY_HTML = `<div id="placement-test-prerendered" la
 
 export const AFFILIATE_BODY_HTML = `<div id="affiliate-prerendered" lang="en" dir="ltr">
       <h1>Earn 20% Commission on Every Student You Refer</h1>
-      <p><strong>Affiliate Program.</strong> Partner with Klovers Korean Academy. Share your unique link — earn recurring commissions on each enrollment.</p>
+      <p><strong>Affiliate Program.</strong> Partner with Klovers: a unique link to share, and 20% of each new student's first payment.</p>
       <ul>
         <li><strong>20%</strong> commission rate</li>
         <li><strong>200+</strong> students taught over 13 years</li>
@@ -275,16 +278,14 @@ export const INTERVIEW_BODY_HTML = `<div id="interview-training-prerendered" lan
       <p>Enter your target job title (for example Software Engineer, Data Analyst or Marketing Manager), your years of experience, your industry, and the languages you speak. Industries include Technology, Finance &amp; Banking, Healthcare, Education, Manufacturing, Hospitality &amp; Tourism, Logistics &amp; Supply Chain, Retail &amp; E-commerce and more. A free account is required to generate questions.</p>
       <h2>Unlock 5 More Questions</h2>
       <p>Get 5 additional AI-generated interview questions personalized to your skills — with Korean translations, romanization, and text-to-speech. A one-time purchase.</p>
-      <h2>See How a Teacher Practices</h2>
-      <p>Watch a full demo of 41 real interview questions and answers prepared by a Klovers teacher. Password protected — for preview only.</p>
       <h2>Why practice with Klovers</h2>
       <ul>
-        <li><strong>AI-Powered</strong> — Gemini generates tailored Q&amp;A</li>
+        <li><strong>AI-Powered</strong> — Tailored Q&amp;A, generated with AI</li>
         <li><strong>Korean + English</strong> — Bilingual with romanization</li>
         <li><strong>Interview Ready</strong> — Real Korean interview format</li>
-        <li><strong>200+ students</strong> — Trusted by Klovers community</li>
+        <li><strong>200+ students taught</strong> — 13 years teaching</li>
       </ul>
-      <p><a href="/practice-interview">Demo teacher</a> · <a href="/courses">Courses</a> · <a href="/placement-test">Placement test</a> · <a href="/free-trial">Free trial</a> · <a href="/pricing">Pricing</a></p>
+      <p><a href="/courses">Courses</a> · <a href="/placement-test">Placement test</a> · <a href="/free-trial">Free trial</a> · <a href="/pricing">Pricing</a></p>
     </div>`;
 
 export const WELCOME_BACK_BODY_HTML = `<div id="welcome-back-prerendered" lang="en" dir="ltr">
