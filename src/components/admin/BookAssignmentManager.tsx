@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,19 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { BookOpen, Plus, Trash2, Search, Clock, CheckCircle2, Lock, Download } from "lucide-react";
-import { BOOKS, type BookId } from "@/constants/books";
+import { BookOpen, Plus, Trash2, Search, Clock, CheckCircle2, Lock, Download, ExternalLink } from "lucide-react";
+import { BOOKS, BOOK_COVERS, type BookId } from "@/constants/books";
 
 /**
  * Admin → Books.
+ *
+ * The top of the screen is the whole library (28 Sep 2026, Re: "add all the
+ * books, which for teaching and which for the store"), in three shelves:
+ *   Teaching — level books given free when a group starts
+ *   Store    — self-study editions sold in /shop (Stripe product book_id)
+ *   Free     — trial-class guides + the public Hangul starter sheets
+ * Each card shows whether its PDF is in storage, how many students have it,
+ * and — for store books — whether a Stripe product sells it yet.
  *
  * Level books (A0 Hangul, Level 1) are gifts for joining: it is assigned automatically when
  * a Hangul group is started (and to anyone seated into a group that is already
@@ -26,11 +34,43 @@ import { BOOKS, type BookId } from "@/constants/books";
  * Arabic groups get the Arabic edition, English groups the English one.
  * This screen is for exceptions only — assign by hand, remove, or download.
  */
-const EDITIONS: { id: BookId; label: string }[] = [
-  { id: "hangul-a0", label: "Arabic" },
-  { id: "hangul-a0-en", label: "English" },
-  { id: "book-1", label: "Level 1 · Arabic" },
+type Shelf = "teaching" | "store" | "free";
+
+const SHELVES: { id: Shelf; title: string; note: string }[] = [
+  { id: "teaching", title: "Teaching", note: "Level books — a free gift when a group starts (Arabic groups get the Arabic edition, English groups the English one)." },
+  { id: "store", title: "Store", note: "Self-study editions sold in /shop. Same lessons; answer key open to the reader; licence = personal use of the buyer." },
+  { id: "free", title: "Free", note: "Trial-class guides and the public Hangul starter sheets." },
 ];
+
+/** Public PDFs on the site itself (not in book_assignments). */
+const PUBLIC_FILES: { href: string; title: string; lang: "ar" | "en"; note: string }[] = [
+  { href: "/hangul-starter-ar.pdf", title: "Hangul starter sheet (Arabic)", lang: "ar", note: "Public download on /hangul-starter · 5 pages" },
+  { href: "/hangul-starter-en.pdf", title: "Hangul starter sheet (English)", lang: "en", note: "Public download on /hangul-starter · 5 pages" },
+];
+
+interface ShopListing { bookId: string | null; price: { amount: number; currency: string } }
+
+function formatMoney(amount: number, currency: string) {
+  try {
+    return new Intl.NumberFormat("en-GB", { style: "currency", currency: currency.toUpperCase() }).format(amount / 100);
+  } catch {
+    return `${(amount / 100).toFixed(2)} ${currency.toUpperCase()}`;
+  }
+}
+
+/** Status chip in the Klovers palette: live = neon-green edge, waiting = yellow fill. */
+function Chip({ tone, children }: { tone: "live" | "wait" | "plain"; children: ReactNode }) {
+  const cls =
+    tone === "live" ? "border-klovers-green bg-ivory text-charcoal"
+    : tone === "wait" ? "border-klovers-yellow bg-klovers-yellow text-charcoal"
+    : "border-border bg-muted text-muted-foreground";
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
+      {tone === "live" && <span className="h-1.5 w-1.5 rounded-full bg-klovers-green" aria-hidden="true" />}
+      {children}
+    </span>
+  );
+}
 
 interface Profile {
   user_id: string;
@@ -82,6 +122,8 @@ const BookAssignmentManager = () => {
   const [bookId, setBookId] = useState<BookId>("hangul-a0");
   const BOOK_ID = bookId;
   const BOOK = BOOKS[bookId];
+  const [filesInStorage, setFilesInStorage] = useState<Set<string> | null>(null);
+  const [shop, setShop] = useState<ShopListing[] | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -104,16 +146,27 @@ const BookAssignmentManager = () => {
 
   useEffect(() => { fetchData(); }, []);
 
+  // Which PDFs are really in storage, and which books the shop sells.
+  useEffect(() => {
+    supabase.storage.from("student-materials").list("books", { limit: 100 }).then(({ data }) => {
+      setFilesInStorage(new Set((data ?? []).map(f => `books/${f.name}`)));
+    });
+    supabase.functions.invoke("shop-products", { method: "GET" }).then(({ data }) => {
+      setShop(Array.isArray(data?.products) ? (data.products as ShopListing[]) : []);
+    });
+  }, []);
+
   const assignedUserIds = new Set(assignments.filter(a => a.book_id === BOOK_ID).map(a => a.user_id));
   const filteredProfiles = profiles.filter(p => {
     const q = userSearch.toLowerCase();
     return (p.name?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q)) && !assignedUserIds.has(p.user_id);
   });
 
-  const downloadPdf = async () => {
+  const downloadPdf = async (id: BookId = bookId) => {
+    const book = BOOKS[id];
     const { data, error } = await supabase.storage
       .from("student-materials")
-      .createSignedUrl(BOOK.path, 60 * 60, { download: BOOK.fileName });
+      .createSignedUrl(book.path, 60 * 60, { download: book.fileName });
     if (error || !data?.signedUrl) {
       toast({ title: "Could not prepare the PDF", description: error?.message, variant: "destructive" });
       return;
@@ -180,37 +233,80 @@ const BookAssignmentManager = () => {
         </Button>
       </div>
 
-      {/* Book info banner */}
-      <Card className="bg-muted/40 border-dashed">
-        <CardContent className="py-3 px-4 flex items-center gap-3">
-          <BookOpen className="h-8 w-8 text-foreground shrink-0" />
-          <div>
-            <div className="text-sm font-semibold">{BOOK.titleEn}</div>
-            <div className="text-xs text-muted-foreground">
-              Gift for joining: given automatically when a Hangul group starts, and to anyone seated into a running
-              Hangul group — Arabic groups get the Arabic edition, English groups the English one. No email is sent.
-              Pick the edition here before “Assign Book” or “Download PDF”; assign by hand only for exceptions.
-            </div>
-          </div>
-          <div className="ml-auto flex items-center gap-2 shrink-0">
-            {EDITIONS.map(e => (
-              <Button
-                key={e.id}
-                variant={bookId === e.id ? "default" : "outline"}
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => setBookId(e.id)}
-              >
-                {e.label}
-              </Button>
-            ))}
-            <Badge variant="secondary">{assignments.filter(a => a.book_id === bookId).length} assigned</Badge>
-            <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs" onClick={downloadPdf}>
-              <Download className="h-3 w-3" /> Download PDF
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Library: every book, by shelf */}
+      <div className="space-y-5">
+        {SHELVES.map(shelf => {
+          const ids = (Object.keys(BOOKS) as BookId[]).filter(id => BOOKS[id].use === shelf.id);
+          return (
+            <section key={shelf.id} className="space-y-2">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <h3 className="text-sm font-bold">{shelf.title}</h3>
+                <span className="text-xs text-muted-foreground">{shelf.note}</span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {ids.map(id => {
+                  const b = BOOKS[id];
+                  const selected = bookId === id;
+                  const count = assignments.filter(a => a.book_id === id).length;
+                  const hasFile = filesInStorage ? filesInStorage.has(b.path) : null;
+                  const listing = shop?.find(p => p.bookId === id);
+                  return (
+                    <Card key={id} className={selected ? "border-2 border-charcoal" : ""}>
+                      <CardContent className="p-3 flex gap-3">
+                        <img src={BOOK_COVERS[id]} alt="" width={60} height={78} loading="lazy"
+                          className="h-[78px] w-[60px] rounded object-cover shrink-0 bg-muted" />
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <div className="text-xs font-semibold leading-snug">{b.titleEn}</div>
+                          <div className="text-[11px] text-muted-foreground">{b.subtitleEn} · {b.lang === "ar" ? "Arabic" : "English"}</div>
+                          <div className="flex flex-wrap gap-1">
+                            {hasFile === false && <Chip tone="wait">PDF not uploaded</Chip>}
+                            {hasFile === true && <Chip tone="plain">PDF in storage</Chip>}
+                            <Chip tone="plain">{count} {shelf.id === "store" ? "bought / given" : "assigned"}</Chip>
+                            {shelf.id === "store" && shop !== null && (listing
+                              ? <Chip tone="live">In shop · {formatMoney(listing.price.amount, listing.price.currency)}</Chip>
+                              : <Chip tone="wait">Not in Stripe yet</Chip>)}
+                          </div>
+                          <div className="flex gap-1.5 pt-0.5">
+                            <Button variant={selected ? "default" : "outline"} size="sm" className="h-6 px-2 text-[11px]"
+                              onClick={() => setBookId(id)}>
+                              {selected ? "Selected" : "Select"}
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-6 px-2 text-[11px] gap-1"
+                              disabled={hasFile === false} onClick={() => downloadPdf(id)}>
+                              <Download className="h-3 w-3" /> PDF
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+                {shelf.id === "free" && PUBLIC_FILES.map(f => (
+                  <Card key={f.href}>
+                    <CardContent className="p-3 flex gap-3">
+                      <div className="h-[78px] w-[60px] rounded bg-klovers-yellow text-charcoal shrink-0 flex items-center justify-center text-lg font-bold" aria-hidden="true">한</div>
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="text-xs font-semibold leading-snug">{f.title}</div>
+                        <div className="text-[11px] text-muted-foreground">{f.note}</div>
+                        <div className="flex flex-wrap gap-1"><Chip tone="live">Public on the site</Chip></div>
+                        <Button asChild variant="outline" size="sm" className="h-6 px-2 text-[11px] gap-1">
+                          <a href={f.href} target="_blank" rel="noopener"><ExternalLink className="h-3 w-3" /> Open</a>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
+        <BookOpen className="h-3.5 w-3.5" />
+        Selected for “Assign Book”: <span className="font-semibold text-foreground">{BOOK.titleEn}</span>
+        <Badge variant="secondary">{assignments.filter(a => a.book_id === bookId).length} assigned</Badge>
+      </div>
 
       {/* Table */}
       {loading ? (
@@ -250,12 +346,12 @@ const BookAssignmentManager = () => {
                   </TableCell>
                   <TableCell>
                     {status === "available" && (
-                      <Badge className="gap-1 text-xs bg-green-100 text-green-800 border-green-200">
+                      <Badge variant="outline" className="gap-1 text-xs border-klovers-green bg-ivory text-charcoal">
                         <CheckCircle2 className="h-3 w-3" /> Live
                       </Badge>
                     )}
                     {status === "soon" && (
-                      <Badge className="gap-1 text-xs bg-amber-100 text-amber-800 border-amber-200">
+                      <Badge variant="outline" className="gap-1 text-xs border-klovers-yellow bg-klovers-yellow text-charcoal">
                         <Clock className="h-3 w-3" /> Soon
                       </Badge>
                     )}
@@ -266,7 +362,7 @@ const BookAssignmentManager = () => {
                     )}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {a.assigned_by === "auto:group-start" ? "Auto — group started" : a.assigned_by}
+                    {a.assigned_by === "auto:group-start" ? "Auto — group started" : a.assigned_by === "shop:stripe" ? "Shop — bought" : a.assigned_by}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground max-w-[140px] truncate">{a.notes ?? "—"}</TableCell>
                   <TableCell>

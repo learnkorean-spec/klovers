@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BOOKS, type BookId } from "@/constants/books";
+import { BOOKS, BOOK_COVERS as COVERS, type BookId } from "@/constants/books";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useDashCopy } from "./copy";
 import { BrandIcon } from "./primitives";
@@ -31,16 +31,6 @@ import { BrandIcon } from "./primitives";
  */
 type Row = { id: string; book_id: string; assigned_by?: string | null };
 
-/** Cover thumbnails (300×388 WebP, ~12 KB) in the public marketing-images bucket —
- *  the cover is not secret; the book itself stays private. */
-const COVER_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/marketing-images";
-const COVERS: Record<BookId, string> = {
-  "hangul-a0": `${COVER_BASE}/hangul-a0-cover.webp`,
-  "hangul-a0-en": `${COVER_BASE}/hangul-a0-en-cover.webp`,
-  "book-1": `${COVER_BASE}/book-1-cover.webp`,
-  "trial-guide-ar": `${COVER_BASE}/trial-guide-ar-cover.webp`,
-  "trial-guide-en": `${COVER_BASE}/trial-guide-en-cover.webp`,
-};
 
 const seenKey = (userId: string, bookId: string) => `klovers-book-popup:${userId}:${bookId}`;
 
