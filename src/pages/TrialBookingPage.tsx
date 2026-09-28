@@ -85,6 +85,38 @@ const TZ_CITY_AR: Record<string, string> = {
   "Asia/Ho_Chi_Minh": "هو تشي منه", "Europe/London": "لندن",
 };
 
+/**
+ * What the student reads when book-trial refuses a booking. The function
+ * answers in English (and a 500 carries a raw database message), so the
+ * Arabic page used to show «You already have a trial class booked…» as is.
+ * Arabic gets one plain, gender-neutral MSA sentence per known case; English
+ * keeps the server's friendly sentence, except for unexpected 500s.
+ */
+function bookingErrorText(
+  body: { error?: string; error_code?: string; book_again_from?: string } | null | undefined,
+  status: number | undefined,
+  isAr: boolean,
+  fallback: string,
+): string {
+  const msg = body?.error ?? "";
+  if (!isAr) return !msg || (status ?? 0) >= 500 ? fallback : msg;
+  if (body?.error_code === "slot_taken")
+    return "حُجز هذا الموعد قبل لحظات. يُرجى اختيار موعد آخر.";
+  if (body?.error_code === "rejoin_cooldown")
+    return body.book_again_from
+      ? `أُلغيت حصة تجريبية بهذا البريد مؤخرًا، ويمكن الحجز مرة أخرى ابتداءً من ${toArabicDigits(body.book_again_from)}. للحضور قبل ذلك يُرجى مراسلتنا على واتساب.`
+      : "أُلغيت حصة تجريبية بهذا البريد مؤخرًا، ويمكن الحجز مرة أخرى بعد شهر من تاريخ الإلغاء. للحضور قبل ذلك يُرجى مراسلتنا على واتساب.";
+  if (/already have a trial/i.test(msg))
+    return "توجد حصة تجريبية محجوزة بهذا البريد، وتفاصيلها في البريد الإلكتروني.";
+  if (/booking is closed/i.test(msg))
+    return "أُغلق الحجز لهذا الموعد، فالتسجيل يُغلق قبل الحصة بيوم. يُرجى اختيار موعد آخر.";
+  if (/overlaps/i.test(msg))
+    return "هذا الموعد يتعارض مع حصة مسجَّلة في الحساب. يُرجى اختيار موعد آخر أو مراسلتنا على واتساب.";
+  if (/invalid email/i.test(msg))
+    return "البريد الإلكتروني غير صحيح. يُرجى التأكد منه.";
+  return fallback;
+}
+
 function tzLabelAr(tz: string): string {
   const city = TZ_CITY_AR[tz];
   return city ? `بتوقيت ${city}` : "بالتوقيت المحلي";
@@ -423,19 +455,31 @@ const TrialBookingPage = () => {
       if (error) throw error;
       if (data?.error) {
         logLeadEvent({ source_type: "free_trial", cta_label: "booking_failed", metadata: { reason: data.error } });
-        toast({ title: t("trialBooking.bookingFailed"), description: data.error, variant: "destructive" });
+        toast({ title: t("trialBooking.bookingFailed"), description: bookingErrorText(data, undefined, language === "ar", t("trialBooking.tryAgain")), variant: "destructive" });
         setLoading(false);
         return;
       }
 
       setBookingResult(data.booking);
     } catch (err: any) {
-      // Detect 429 rate-limit: Supabase wraps it in FunctionsHttpError with status on .context
-      const is429 =
-        err?.context?.status === 429 ||
-        (typeof err?.message === "string" && err.message.includes("non-2xx"));
+      // supabase-js treats any non-2xx as FunctionsHttpError: the status is
+      // on err.context (the raw Response) and book-trial's JSON body is not
+      // read yet. Read it once, up front. The 429 check used to also match
+      // the generic "non-2xx" message, so every refusal (409 slot taken,
+      // already booked, booking closed…) was shown as "too many attempts".
+      const status: number | undefined = err?.context?.status;
+      let body: { error?: string; error_code?: string; book_again_from?: string } | null = null;
+      if (err?.context && typeof err.context.json === "function") {
+        try {
+          body = await err.context.json();
+        } catch {
+          // Body wasn't JSON or already consumed.
+        }
+      }
+      const is429 = status === 429 || (!body && typeof err?.message === "string" && err.message.includes("non-2xx"));
+      const alreadyBooked = typeof body?.error === "string" && /already have a trial/i.test(body.error);
 
-      if (is429) {
+      if (is429 || alreadyBooked) {
         // Before showing an error, check whether the booking actually landed
         // (the function may have succeeded on a prior tap before rate-limiting
         // kicked in). Select everything the success screen needs — this used
@@ -460,38 +504,28 @@ const TrialBookingPage = () => {
           }
         }
 
-        toast({
-          title: t("trialBooking.tooManyAttempts") ?? "Too many attempts",
-          description: t("trialBooking.tooManyAttemptsDesc") ?? "Please wait a moment, then check your dashboard — your booking may already be saved.",
-          variant: "destructive",
-        });
-        // Keep button disabled for 8 s so the student doesn't hammer again.
-        skipFinallyReset = true;
-        setTimeout(() => setLoading(false), 8000);
-        return;
+        if (is429) {
+          toast({
+            title: t("trialBooking.tooManyAttempts") ?? "Too many attempts",
+            description: t("trialBooking.tooManyAttemptsDesc") ?? "Please wait a moment, then check your dashboard — your booking may already be saved.",
+            variant: "destructive",
+          });
+          // Keep button disabled for 8 s so the student doesn't hammer again.
+          skipFinallyReset = true;
+          setTimeout(() => setLoading(false), 8000);
+          return;
+        }
       }
 
-      // book-trial now returns real status codes (400/409/500) for
-      // application-level failures instead of wrapping them in a 200 —
-      // supabase-js treats any non-2xx as FunctionsHttpError and routes the
-      // body through `error`, not `data`, so the specific friendly message
-      // book-trial sends (e.g. "that time was just taken") would otherwise
-      // be lost behind the generic fallback below. err.context is the raw
-      // Response, not yet read — same object err429 detection above already
-      // reads .status from.
-      if (err?.context && typeof err.context.json === "function") {
-        try {
-          const body = await err.context.json();
-          if (body?.error) {
-            logLeadEvent({ source_type: "free_trial", cta_label: "booking_failed", metadata: { reason: body.error } });
-            toast({ title: t("trialBooking.bookingFailed"), description: body.error, variant: "destructive" });
-            setLoading(false);
-            return;
-          }
-        } catch {
-          // Body wasn't JSON or already consumed — fall through to the
-          // generic message below.
-        }
+      if (body?.error) {
+        logLeadEvent({ source_type: "free_trial", cta_label: "booking_failed", metadata: { reason: body.error } });
+        toast({
+          title: t("trialBooking.bookingFailed"),
+          description: bookingErrorText(body, status, language === "ar", t("trialBooking.tryAgain")),
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
       }
 
       logLeadEvent({ source_type: "free_trial", cta_label: "booking_failed", metadata: { reason: err?.message || "unknown" } });
@@ -619,7 +653,7 @@ const TrialBookingPage = () => {
     }
   };
 
-  // ── Success state ──────────────────────────────────────────────────────────────────────
+  // ── Success state ──────────────────────────────────────────────────────────────────────────────────
   if (bookingResult) {
     const formattedDate = new Date(bookingResult.trial_date + "T00:00:00").toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
       weekday: "long",
@@ -938,7 +972,7 @@ const TrialBookingPage = () => {
     );
   }
 
-  // ── Slot picker state ──────────────────────────────────────────────────────────────────
+  // ── Slot picker state ──────────────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
       <Header />
