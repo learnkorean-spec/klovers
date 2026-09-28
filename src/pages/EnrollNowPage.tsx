@@ -317,11 +317,12 @@ const EnrollNowPage = () => {
         .neq("course_type", "private")
         .order("day_of_week");
       const rows = (data as any[]) || [];
-      if (rows.length === 0) { setLevelSlots([]); return; }
 
-      // Compute seats_left per package (same pattern as SchedulePicker)
+      // Compute seats_left per package (same pattern as SchedulePicker).
+      // A level with no configured package (Level 2/3 today) skips the queries
+      // and goes straight to the engine-suggested options below.
       const pkgIds = rows.map((r: any) => r.id);
-      const { data: groups } = await supabase
+      const { data: groups } = pkgIds.length === 0 ? { data: [] as any[] } : await supabase
         .from("pkg_groups")
         .select("id, package_id")
         .in("package_id", pkgIds)
@@ -351,7 +352,7 @@ const EnrollNowPage = () => {
       // fn_locked_group_packages() says which (function may not exist yet or may
       // fail: then nothing is dropped, i.e. the previous behaviour).
       let lockedIds = new Set<string>();
-      try {
+      if (rows.length > 0) try {
         const { data: lockedRows, error: lockedErr } = await supabase.rpc("fn_locked_group_packages" as any, { p_level: normalizedLevel });
         if (!lockedErr) lockedIds = new Set(((lockedRows as any[]) || []).map((x: any) => x.package_id));
       } catch { /* keep previous behaviour */ }
@@ -383,19 +384,23 @@ const EnrollNowPage = () => {
       const topSlots: { day: string; time: string; packageId: string; seatsLeft: number }[] =
         (ranked.length > 2 ? ranked.slice(0, 2) : ranked).map(({ demand, ...s }) => s);
 
-      // Fewer than two options left (a slot was taken by a private lesson):
-      // fill from the scoring engine — same Cairo hour as the class that is
-      // still offered where possible, on a day not already shown. Preference
-      // only (no package yet), same as private times.
-      if (topSlots.length < 2 && lockedIds.size > 0) {
+      // A student must always get TWO days to choose from. If fewer than two
+      // bookable groups are left (a slot was taken by a private lesson, or the
+      // level has no group configured yet), fill from the scoring engine: same
+      // Cairo hour as the class still offered where possible (15:00 otherwise),
+      // on days not already shown. Preference only (no package yet), same as
+      // private times.
+      if (topSlots.length < 2) {
         try {
           const { data: sug } = await supabase.rpc("fn_suggest_group_slots" as any, { p_level: normalizedLevel, p_count: 400 });
           const cands = ((sug as any[]) || []);
           const usedDow = new Set<number>(rows.map((r: any) => r.day_of_week as number));
-          const wantTime = String((usableRows[0] ?? rows[0]).start_time).slice(0, 5);
-          const pick = cands.find((c: any) => !usedDow.has(c.day_of_week) && c.start_time === wantTime)
-            ?? cands.find((c: any) => !usedDow.has(c.day_of_week));
-          if (pick) {
+          const wantTime = rows.length > 0 ? String((usableRows[0] ?? rows[0]).start_time).slice(0, 5) : "15:00";
+          while (topSlots.length < 2) {
+            const pick = cands.find((c: any) => !usedDow.has(c.day_of_week) && c.start_time === wantTime)
+              ?? cands.find((c: any) => !usedDow.has(c.day_of_week));
+            if (!pick) break;
+            usedDow.add(pick.day_of_week);
             const local = convertSlotToTimezone(pick.day_of_week, pick.start_time, pick.timezone || "Africa/Cairo", timezone);
             topSlots.push({ day: local.weekday, time: local.timeFormatted, packageId: `dynamic-${pick.day_of_week}-${pick.start_time}`, seatsLeft: 99 });
           }
