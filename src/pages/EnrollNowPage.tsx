@@ -368,6 +368,9 @@ const EnrollNowPage = () => {
           const local = convertSlotToTimezone(r.day_of_week, r.start_time, srcTz, timezone);
           const demand = pkgMemberCount[r.id] || 0;
           const seatsLeft = Math.max(0, (r.capacity || 5) - demand);
+          // A full group is not an option: leave it out so the student still
+          // gets two usable days (the engine backfills below).
+          if (seatsLeft <= 0) continue;
           slots.push({ day: local.weekday, time: local.timeFormatted, packageId: r.id, seatsLeft, demand });
         }
       }
