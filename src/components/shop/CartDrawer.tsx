@@ -8,6 +8,7 @@ import {
   cartActions, formatPrice, productName, startCheckout, useCart, type ShopProduct,
 } from "@/lib/shop";
 import { ProductImage } from "./ProductCard";
+import KloverIcon from "@/components/KloverIcon";
 
 /**
  * The bag. Lines whose product is no longer in the shop are dropped from
@@ -127,6 +128,25 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
                 </li>
               ))}
             </ul>
+
+            <div className="flex items-center gap-3 border-t border-border bg-muted/50 px-5 py-3">
+              <KloverIcon name="flashcard-ga" className="h-10 w-10" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">
+                  {isAr ? "هدية مجانية مع كل طلب" : "A free gift with every order"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isAr ? "ورقة الهانغول للمبتدئين، بصيغة PDF." : "The Hangul starter sheet, as a PDF."}
+                </p>
+              </div>
+              <a
+                href={isAr ? "/hangul-starter-ar.pdf" : "/hangul-starter-en.pdf"}
+                download
+                className="shrink-0 text-xs font-semibold text-primary hover:underline"
+              >
+                {isAr ? "تحميل" : "Download"}
+              </a>
+            </div>
 
             <div className="space-y-3 border-t border-border px-5 py-4">
               {currencies.size === 1 && (
