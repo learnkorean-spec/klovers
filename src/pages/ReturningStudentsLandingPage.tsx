@@ -296,9 +296,9 @@ const ReturningStudentsLandingPage = () => {
                   {!userId && (
                     <p className="text-xs text-center text-muted-foreground">
                       {isAr ? (
-                        <><Link to="/login" className="underline font-medium text-foreground">تسجيل الدخول</Link> للحصول على رابط إحالة شخصي</>
+                        <><Link to="/login?redirect=/welcome-back" className="underline font-medium text-foreground">تسجيل الدخول</Link> للحصول على رابط إحالة شخصي</>
                       ) : (
-                        <><Link to="/login" className="underline font-medium text-foreground">Log in</Link> to get your personal referral link</>
+                        <><Link to="/login?redirect=/welcome-back" className="underline font-medium text-foreground">Log in</Link> to get your personal referral link</>
                       )}
                     </p>
                   )}
