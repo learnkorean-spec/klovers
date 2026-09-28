@@ -62,7 +62,7 @@ export default function InterviewQACard({ qa, index, locked }: {
               <div className="h-3 bg-green-100 rounded w-2/3" />
             </div>
           </div>
-          <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-gray-900/60">
+          <div className="absolute inset-0 flex items-center justify-center bg-ivory/60 dark:bg-background/60">
             <div className="flex flex-col items-center gap-2 text-muted-foreground">
               <Lock className="h-8 w-8" />
               <span className="text-sm font-medium">Unlock for $5</span>

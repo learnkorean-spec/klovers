@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ERAS, getEra } from "@/constants/eras";
+import { toArabicDigits } from "@/lib/trustFigures";
 
 // Social scrapers (WhatsApp, Facebook, Twitter) don't reliably render SVG, so
 // the one era whose on-page image is an SVG (before-korea) gets a PNG here
@@ -103,7 +104,7 @@ const EraPage = () => {
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                {isAr ? `المحطة ${index + 1} من ${ERAS.length}` : `Station ${index + 1} of ${ERAS.length}`}
+                {isAr ? `المحطة ${toArabicDigits(index + 1)} من ${toArabicDigits(ERAS.length)}` : `Station ${index + 1} of ${ERAS.length}`}
               </p>
               <h1 className="font-display text-4xl md:text-6xl font-extrabold text-foreground leading-tight">
                 {isAr ? era.titleAr : era.titleEn}

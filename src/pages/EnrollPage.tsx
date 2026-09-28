@@ -236,14 +236,16 @@ const EnrollPage = () => {
                 />
 
                 <div>
-                  <label className="text-sm font-medium text-foreground block mb-1">{t("enrollForm.paymentReceipt")}</label>
+                  <label htmlFor="enroll-receipt" className="text-sm font-medium text-foreground block mb-1">{t("enrollForm.paymentReceipt")}</label>
                   <Input
+                    id="enroll-receipt"
+                    aria-describedby="enroll-receipt-hint"
                     type="file"
                     accept="image/*,.pdf"
                     onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
                     required
                   />
-                  <p className="text-xs text-muted-foreground mt-1">{t("enrollForm.receiptHint")}</p>
+                  <p id="enroll-receipt-hint" className="text-xs text-muted-foreground mt-1">{t("enrollForm.receiptHint")}</p>
                 </div>
 
                 <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading || !planType || !duration || !paymentMethod || price === null}>
@@ -271,7 +273,7 @@ const EnrollPage = () => {
                     onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "enroll_form_help" }); }}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-green-600 font-semibold hover:underline"
+                    className="text-foreground font-semibold underline underline-offset-2 hover:no-underline"
                   >
                     {t("enrollForm.whatsappUs")}
                   </a>

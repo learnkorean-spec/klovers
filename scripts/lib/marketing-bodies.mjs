@@ -11,11 +11,10 @@
  * it). Ampersands are escaped by hand; nothing here contains "$" or a
  * backtick, and the test next to this file keeps it that way.
  *
- * One route deliberately says LESS than the live page, not more:
- * /topik-exam-preparation. Its live copy carried claims that are wrong or
- * unverified (a TOPIK score table that does not match NIIED's cut-offs, a
- * past exam date). Static HTML is what AI answer engines quote, so that
- * fragment keeps only statements that are true.
+ * /topik-exam-preparation once said LESS than the live page, because the old
+ * live copy carried a wrong score table and a past exam date. The page was
+ * rewritten with NIIED's cut-offs, and since 28 Sep 2026 the fragment mirrors
+ * its English copy (same h1, sections and guide link).
  * /learn-korean-arabic-speakers and /learn-korean-kdramas were in that list
  * until their pages were rewritten on 25 Sep 2026; since 28 Sep both
  * fragments mirror the live English copy.
@@ -57,12 +56,17 @@ export const ABOUT_BODY_HTML = `<div id="about-prerendered" lang="en" dir="ltr">
 export const CONTACT_BODY_HTML = `<div id="contact-prerendered" lang="en" dir="ltr">
       <h1>Contact Us</h1>
       <p>Have questions? We'd love to hear from you.</p>
-      <h2>Chat on WhatsApp</h2>
+      <h2>Contact on WhatsApp</h2>
       <p>The fastest way to reach us. <a href="https://wa.me/201010003084">wa.me/201010003084</a></p>
-      <h2>Join our WhatsApp Community</h2>
-      <p>Connect with students, get updates &amp; tips. <a href="https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq">Join the Klovers WhatsApp community</a></p>
+      <h2>WhatsApp Community</h2>
+      <p>Community chat and updates. <a href="https://chat.whatsapp.com/BOg8xaXYnl00gjj6gnB9dq">WhatsApp Community</a></p>
       <h2>Or send us a message</h2>
-      <p>Write your name, email, subject and message and send it from this page; Reham replies by email or WhatsApp.</p>
+      <ul>
+        <li>Your Name</li>
+        <li>Your Email</li>
+        <li>Subject</li>
+        <li>Your Message</li>
+      </ul>
       <h2>Ready to Start Your Korean Journey?</h2>
       <p>Your first class is free. Meet your teacher, see how the class works, and decide if Klovers is right for you. No credit card · 30 minutes · A real teacher.</p>
       <ul>
@@ -219,20 +223,47 @@ export const ARABIC_SPEAKERS_BODY_HTML = `<div id="learn-korean-arabic-speakers-
     </div>`;
 
 export const TOPIK_BODY_HTML = `<div id="topik-exam-preparation-prerendered" lang="en" dir="ltr">
-      <h1>TOPIK Exam Preparation</h1>
-      <p>TOPIK (Test of Proficiency in Korean) is the official Korean language exam, run by Korea's National Institute for International Education (NIIED). It has two papers: TOPIK I for Levels 1-2 and TOPIK II for Levels 3-6. Your level is set by your total score, and a result is valid for two years from the results date.</p>
-      <h2>TOPIK levels and passing scores</h2>
-      <table><tr><th>Paper</th><th>Level</th><th>Minimum score</th></tr><tr><td>TOPIK I (out of 200)</td><td>Level 1</td><td>80</td></tr><tr><td>TOPIK I (out of 200)</td><td>Level 2</td><td>140</td></tr><tr><td>TOPIK II (out of 300)</td><td>Level 3</td><td>120</td></tr><tr><td>TOPIK II (out of 300)</td><td>Level 4</td><td>150</td></tr><tr><td>TOPIK II (out of 300)</td><td>Level 5</td><td>190</td></tr><tr><td>TOPIK II (out of 300)</td><td>Level 6</td><td>230</td></tr></table>
-      <p>Your level is decided by your total score, not by any single section. The level a university, employer or visa asks for depends on them - check their own requirement.</p>
-      <h2>Exam format</h2>
+      <h1>How the TOPIK exam works, and how to prepare</h1>
+      <p>The two tests, their sections and timing, the score each level needs, and a realistic way to get ready.</p>
+      <h2>Two tests, six levels</h2>
+      <h3>TOPIK I</h3>
+      <p>Levels 1–2 · scored out of 200</p>
       <ul>
-        <li><strong>TOPIK I:</strong> Listening (30 questions, 40 minutes) and Reading (40 questions, 60 minutes).</li>
-        <li><strong>TOPIK II:</strong> Listening (50 questions, 60 minutes) and Writing (4 questions, 50 minutes) in the first period; Reading (50 questions, 70 minutes) in the second.</li>
+        <li>Listening — 30 questions, 40 minutes</li>
+        <li>Reading — 40 questions, 60 minutes</li>
+        <li>All multiple choice · 100 minutes in total</li>
       </ul>
-      <p>Test dates, registration windows, fees and test centres change every year and differ by country - always check the official site, <a href="https://www.topik.go.kr" rel="noopener">topik.go.kr</a>, before you plan.</p>
-      <h2>How Klovers helps</h2>
-      <p>Klovers teaches live online Korean classes in small groups, in English or Arabic. Levels 1 to 6 each build toward the matching TOPIK level, and there is a dedicated TOPIK exam preparation class for students who have already booked a test date. The teacher, Reham Elshrkawy, studied Korean language and literature at the Faculty of Al-Alsun and has taught Korean for 13 years.</p>
-      <p><a href="/free-trial">Book a free trial class</a> · <a href="/placement-test">Take the free placement test</a> · <a href="/courses">Korean courses</a> · <a href="/pricing">Pricing</a> · <a href="/blog/topik-exam-preparation-complete-guide-2026">TOPIK preparation guide</a></p>
+      <h3>TOPIK II</h3>
+      <p>Levels 3–6 · scored out of 300</p>
+      <ul>
+        <li>Listening — 50 questions, 60 minutes</li>
+        <li>Writing — 4 questions (51–54), 50 minutes</li>
+        <li>Reading — 50 questions, 70 minutes</li>
+      </ul>
+      <table><tr><th>Paper</th><th>Level</th><th>Minimum score</th></tr><tr><td>TOPIK I (out of 200)</td><td>Level 1</td><td>80</td></tr><tr><td>TOPIK I (out of 200)</td><td>Level 2</td><td>140</td></tr><tr><td>TOPIK II (out of 300)</td><td>Level 3</td><td>120</td></tr><tr><td>TOPIK II (out of 300)</td><td>Level 4</td><td>150</td></tr><tr><td>TOPIK II (out of 300)</td><td>Level 5</td><td>190</td></tr><tr><td>TOPIK II (out of 300)</td><td>Level 6</td><td>230</td></tr></table>
+      <p>Your level is decided by your total score, not by any single section. Results are valid for two years. The level a university, employer or visa asks for depends on them — check their own requirement.</p>
+      <h2>Exam dates and registration</h2>
+      <p>TOPIK is held several times a year, but which sessions run, where, and when registration opens differs by country. We don't list dates here because they change — the official site always has the current ones: <a href="https://www.topik.go.kr" rel="noopener">topik.go.kr</a>.</p>
+      <h2>How to prepare</h2>
+      <h3>Take a past paper first</h3>
+      <p>Sit one full past paper under real timing. It shows which section is costing you points.</p>
+      <h3>Build the vocabulary the exam uses</h3>
+      <p>Most lost points in reading and listening are unknown words, not unknown grammar.</p>
+      <h3>Practise writing 51–54 on its own</h3>
+      <p>Each question has a set format. Short answers, a graph description and a 600–700 character essay all need separate practice.</p>
+      <h3>Finish with timed full papers</h3>
+      <p>In the last weeks, full papers under exam timing, then review every wrong answer.</p>
+      <p>Past papers are published free on the official TOPIK site.</p>
+      <h2>The Klovers TOPIK track</h2>
+      <p>Exam technique, for a TOPIK date you have already put in the calendar. Taught live by Reham, in English or Arabic.</p>
+      <ul>
+        <li>Past papers under real exam timing</li>
+        <li>Listening and reading strategy</li>
+        <li>Writing: questions 51–54</li>
+        <li>A study plan up to your exam date</li>
+      </ul>
+      <p>Classes cover the syllabus. Reaching exam standard needs study between them.</p>
+      <p><a href="/free-trial">Book a free class</a> · <a href="/placement-test">Find your level first</a> · <a href="/courses">See the TOPIK track</a> · <a href="/blog/topik-exam-guide">Read the full TOPIK guide</a></p>
     </div>`;
 
 export const KDRAMAS_BODY_HTML = `<div id="learn-korean-kdramas-prerendered" lang="en" dir="ltr">

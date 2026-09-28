@@ -336,7 +336,7 @@ const ERA_MODERN_KOREA_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
       <h2>Words from this era</h2>
       <ul>
         <li>한류 (hallyu) — the Korean wave</li>
-        <li>서울 (Seoul) — Seoul</li>
+        <li>서울 (Seoul) — Seoul, the capital</li>
         <li>드라마 (deurama) — drama</li>
         <li>영화 (yeonghwa) — movie</li>
         <li>노래 (norae) — song</li>

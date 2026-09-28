@@ -33,6 +33,13 @@ import GamesLeaderboard from "@/components/games/GamesLeaderboard";
 // has marked him awake, and never for guests. Before that, the clover egg.
 import { isClubyAwake } from "@/lib/clubyAwake";
 
+/** Arabic counted noun for "game": 3–10 take the plural «ألعاب», every other
+ *  count (11+, and the total in "x / y") takes the singular «لعبة». */
+const arGames = (n: number) => {
+  const m = n % 100;
+  return m >= 3 && m <= 10 ? "ألعاب" : "لعبة";
+};
+
 const EGG = "/assets/story/egg-0.webp";
 const EGG_TEASER = "/assets/story/egg-teaser.webp";
 const CLUBY_WAVE = "/assets/cluby/cluby-wave.webp";
@@ -457,7 +464,7 @@ const GamesPage = () => {
                       <KloverIcon name={world.icon} className="h-9 w-9" />
                       <h3 className="text-base md:text-lg font-bold text-foreground">{isAr ? world.nameAr : world.name}</h3>
                       <span className="text-xs text-muted-foreground">
-                        {isAr ? `${toArabicDigits(worldGames.length)} ألعاب` : `${worldGames.length} games`}
+                        {isAr ? `${toArabicDigits(worldGames.length)} ${arGames(worldGames.length)}` : `${worldGames.length} games`}
                       </span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

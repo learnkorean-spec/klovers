@@ -701,7 +701,7 @@ const TrialBookingPage = () => {
                 <div>
                   <p className="font-bold text-foreground">{localFormattedDate}</p>
                   <p className="text-sm text-muted-foreground">
-                    {localized.timeFormatted} · {bookingResult.duration_min} {t("mySchedule.minutes")} · {tzCity}
+                    {localized.timeFormatted} · {language === "ar" ? toArabicDigits(bookingResult.duration_min) : bookingResult.duration_min} {t("mySchedule.minutes")} · {tzCity}
                   </p>
                   {!isInSlotTz && (
                     <p className="text-[11px] text-muted-foreground/60">
@@ -803,7 +803,7 @@ const TrialBookingPage = () => {
             <div className="bg-gradient-to-b from-primary/10 to-transparent border border-primary/20 rounded-2xl p-6 mb-4 text-center">
               <div className="inline-flex items-center gap-2 text-xs font-bold bg-klovers-yellow text-charcoal border border-charcoal/20 px-3 py-1 rounded-full uppercase tracking-wider mb-4">
                 <KloverIcon name="lightbulb-sprout" className="h-3.5 w-3.5" />
-                {daysUntil > 0 ? (daysUntil === 1 ? t("trialBooking.whileWait").replace("{days}", String(daysUntil)) : t("trialBooking.whileWaitPlural").replace("{days}", String(daysUntil))) : t("trialBooking.trialToday")}
+                {daysUntil > 0 ? (daysUntil === 1 ? t("trialBooking.whileWait") : t("trialBooking.whileWaitPlural")).replace("{days}", language === "ar" ? toArabicDigits(daysUntil) : String(daysUntil)) : t("trialBooking.trialToday")}
               </div>
 
               <div className="space-y-3">
@@ -906,17 +906,26 @@ const TrialBookingPage = () => {
                 <Link2 className="h-4 w-4 text-foreground" />
                 {language === "ar" ? "صديق يحب الدراما الكورية؟" : "Got a friend who loves K-dramas?"}
               </p>
+              {/* Only a signed-in booker gets a ?ref= link; a guest shares the
+                  same public free-trial link as everyone, so it is not called
+                  "personal" for them. */}
               <p className="text-xs text-muted-foreground mb-3">
-                {language === "ar"
-                  ? "رابط شخصي للمشاركة: حصة مجانية للصديق، ومجتمع يكبر معًا."
-                  : "Share your personal link — they get a free class, you help grow the community."}
+                {user
+                  ? (language === "ar"
+                      ? "رابط شخصي للمشاركة: حصة مجانية للصديق، ومجتمع يكبر معًا."
+                      : "Share your personal link — they get a free class, you help grow the community.")
+                  : (language === "ar"
+                      ? "رابط الحصة المجانية للمشاركة: حصة مجانية للصديق، ومجتمع يكبر معًا."
+                      : "Share the free-class link — they get a free class, you help grow the community.")}
               </p>
               <div className="flex gap-2">
                 <input
                   readOnly
                   value={referralShareUrl}
                   className="flex-1 text-xs bg-background border border-border rounded-lg px-3 py-2 text-muted-foreground truncate"
-                  aria-label="Your referral link"
+                  aria-label={user
+                    ? (language === "ar" ? "رابط الإحالة" : "Your referral link")
+                    : (language === "ar" ? "رابط الحصة المجانية" : "Free-class link")}
                 />
                 <button
                   onClick={async () => {

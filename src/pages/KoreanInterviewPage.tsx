@@ -28,10 +28,8 @@ import { useSEO } from "@/hooks/useSEO";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trustCopy } from "@/lib/trustFigures";
-import {
-  Briefcase, Brain, Trophy, Sparkles, Lock,
-  Loader2, ChevronRight, Star, Globe,
-} from "lucide-react";
+import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import { Lock, Loader2, ChevronRight } from "lucide-react";
 
 const INDUSTRY_KEYS = [
   "indTechnology", "indFinance", "indHealthcare", "indEducation",
@@ -265,11 +263,11 @@ export default function KoreanInterviewPage() {
   const totalQuestions = questions.length;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
+    <div className="min-h-screen bg-background">
       <Header />
       <main>
         {/* ── Hero Section ── */}
-        <section className="relative overflow-hidden bg-secondary text-white">
+        <section className="relative overflow-hidden bg-charcoal text-ivory">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 text-8xl font-bold rotate-12">면접</div>
             <div className="absolute bottom-10 right-10 text-8xl font-bold -rotate-12">준비</div>
@@ -277,20 +275,20 @@ export default function KoreanInterviewPage() {
           </div>
           <div className="relative max-w-5xl mx-auto px-4 py-16 md:py-24 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <Badge className="bg-white/20 text-white border-white/30 text-sm">{t("koreanInterviewPage.heroBadgeAI")}</Badge>
-              <Badge className="bg-white/20 text-white border-white/30 text-sm">{t("koreanInterviewPage.heroBadgeKo")}</Badge>
+              <Badge className="bg-ivory/20 text-ivory border-ivory/30 text-sm">{t("koreanInterviewPage.heroBadgeAI")}</Badge>
+              <Badge className="bg-ivory/20 text-ivory border-ivory/30 text-sm">{t("koreanInterviewPage.heroBadgeKo")}</Badge>
             </div>
             <h1 className="text-3xl md:text-5xl font-bold mb-4">
               {t("koreanInterviewPage.heroTitle")}
             </h1>
-            <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8">
+            <p className="text-lg md:text-xl text-ivory/80 max-w-2xl mx-auto mb-8">
               {t("koreanInterviewPage.heroSubtitle")}
             </p>
             {/* The demo link (/practice-interview) is gone: that page is
                 password protected, so visitors landed on a lock. */}
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="#skill-form" className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-6 py-3 rounded-full hover:bg-[#E6E600] transition-colors">
-                <Sparkles className="h-5 w-5" /> {t("koreanInterviewPage.heroCtaStart")}
+              <a href="#skill-form" className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-6 py-3 rounded-full hover:bg-primary/90 transition-colors">
+                {t("koreanInterviewPage.heroCtaStart")}
               </a>
             </div>
           </div>
@@ -301,14 +299,14 @@ export default function KoreanInterviewPage() {
           <h2 className="text-2xl font-bold text-center mb-10">{t("koreanInterviewPage.howTitle")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Briefcase, title: t("koreanInterviewPage.step1Title"), desc: t("koreanInterviewPage.step1Desc") },
-              { icon: Brain, title: t("koreanInterviewPage.step2Title"), desc: t("koreanInterviewPage.step2Desc") },
-              { icon: Trophy, title: t("koreanInterviewPage.step3Title"), desc: t("koreanInterviewPage.step3Desc") },
-            ].map((step) => (
+              { icon: "game-checklist-pencil", title: t("koreanInterviewPage.step1Title"), desc: t("koreanInterviewPage.step1Desc") },
+              { icon: "lightbulb-sprout", title: t("koreanInterviewPage.step2Title"), desc: t("koreanInterviewPage.step2Desc") },
+              { icon: "game-crown", title: t("koreanInterviewPage.step3Title"), desc: t("koreanInterviewPage.step3Desc") },
+            ].map((step: { icon: KloverIconName; title: string; desc: string }) => (
               <Card key={step.title} className="rounded-xl text-center">
                 <CardContent className="p-6 space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
-                    <step.icon className="h-6 w-6 text-primary" />
+                  <div className="w-16 h-16 rounded-full bg-ivory flex items-center justify-center mx-auto">
+                    <KloverIcon name={step.icon} className="h-12 w-12" />
                   </div>
                   <h3 className="font-semibold">{step.title}</h3>
                   <p className="text-sm text-muted-foreground">{step.desc}</p>
@@ -319,12 +317,12 @@ export default function KoreanInterviewPage() {
         </section>
 
         {/* ── Skill Input Form ── */}
-        <section id="skill-form" className="bg-gray-50 dark:bg-gray-900 py-16">
+        <section id="skill-form" className="bg-ivory dark:bg-muted border-y border-border py-16">
           <div className="max-w-2xl mx-auto px-4">
             <Card className="rounded-2xl shadow-lg">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" /> {t("koreanInterviewPage.formTitle")}
+                  <KloverIcon name="game-checklist-pencil" className="h-7 w-7" /> {t("koreanInterviewPage.formTitle")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
@@ -378,7 +376,7 @@ export default function KoreanInterviewPage() {
                         className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                           selectedLangs.includes(lang.id)
                             ? "bg-muted border-border text-foreground dark:bg-secondary dark:border-border dark:text-secondary-foreground"
-                            : "bg-white border-gray-200 text-gray-600 hover:border-border dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
+                            : "bg-ivory border-border text-muted-foreground hover:border-foreground dark:bg-muted"
                         }`}
                       >
                         {t(`koreanInterviewPage.${lang.key}`)}
@@ -395,9 +393,9 @@ export default function KoreanInterviewPage() {
                   {generating ? (
                     <><Loader2 className="h-5 w-5 animate-spin" /> {t("koreanInterviewPage.btnGenerating")}</>
                   ) : questions.length > 0 ? (
-                    <><Sparkles className="h-5 w-5" /> {t("koreanInterviewPage.btnGenerateMore")}</>
+                    <>{t("koreanInterviewPage.btnGenerateMore")}</>
                   ) : (
-                    <><Sparkles className="h-5 w-5" /> {t("koreanInterviewPage.btnGenerate")}</>
+                    <>{t("koreanInterviewPage.btnGenerate")}</>
                   )}
                 </Button>
                 {!user && !authLoading && (
@@ -451,7 +449,7 @@ export default function KoreanInterviewPage() {
                           <div className="h-3 bg-muted/70 rounded w-2/3" />
                         </div>
                       </div>
-                      <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-gray-900/60">
+                      <div className="absolute inset-0 flex items-center justify-center bg-ivory/60 dark:bg-background/60">
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <Lock className="h-8 w-8" />
                           <span className="text-sm font-medium">{t("koreanInterviewPage.unlockFor5")}</span>
@@ -468,9 +466,8 @@ export default function KoreanInterviewPage() {
               <Card className="rounded-2xl mt-8 border-2 border-border bg-muted/50">
                 <CardContent className="p-6 text-center space-y-4">
                   <div className="flex items-center justify-center gap-2">
-                    <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                    <KloverIcon name="badge-blossom" className="h-8 w-8" />
                     <h3 className="text-lg font-bold">{t("koreanInterviewPage.upgradeTitle")}</h3>
-                    <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                   </div>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
                     {t("koreanInterviewPage.upgradeDesc")}
@@ -502,13 +499,13 @@ export default function KoreanInterviewPage() {
         <section className="max-w-5xl mx-auto px-4 py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { icon: Brain, label: t("koreanInterviewPage.trustAI"), desc: copy.aiDesc },
-              { icon: Globe, label: t("koreanInterviewPage.trustBilingual"), desc: t("koreanInterviewPage.trustBilingualDesc") },
-              { icon: Trophy, label: t("koreanInterviewPage.trustReady"), desc: t("koreanInterviewPage.trustReadyDesc") },
-              { icon: Star, label: trust.studentsShort, desc: trust.yearsTeaching },
-            ].map((item) => (
+              { icon: "lightbulb-sprout", label: t("koreanInterviewPage.trustAI"), desc: copy.aiDesc },
+              { icon: "globe-plane", label: t("koreanInterviewPage.trustBilingual"), desc: t("koreanInterviewPage.trustBilingualDesc") },
+              { icon: "game-crown", label: t("koreanInterviewPage.trustReady"), desc: t("koreanInterviewPage.trustReadyDesc") },
+              { icon: "student-girl-heart", label: trust.studentsShort, desc: trust.yearsTeaching },
+            ].map((item: { icon: KloverIconName; label: string; desc: string }) => (
               <div key={item.label} className="space-y-2">
-                <item.icon className="h-8 w-8 mx-auto text-primary" />
+                <KloverIcon name={item.icon} className="h-12 w-12 mx-auto" />
                 <p className="font-semibold text-sm">{item.label}</p>
                 <p className="text-xs text-muted-foreground">{item.desc}</p>
               </div>

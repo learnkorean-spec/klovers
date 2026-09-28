@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { toArabicDigits } from "@/lib/trustFigures";
 
 /**
  * /learn-korean-kdramas
@@ -122,7 +123,7 @@ const KDramaLearningPage = () => {
                 return (
                   <li key={s.en[0]} className="p-6 rounded-2xl border bg-card flex items-start gap-4">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-charcoal font-bold text-klovers-yellow">
-                      {i + 1}
+                      {isAr ? toArabicDigits(i + 1) : i + 1}
                     </span>
                     <div>
                       <h3 className="font-bold text-lg text-foreground">{title}</h3>
@@ -137,7 +138,7 @@ const KDramaLearningPage = () => {
               <div className="bg-muted p-4 rounded-xl text-sm text-foreground/80 space-y-1">
                 <p lang="ko" className="font-bold text-foreground">정말이야?</p>
                 <p>{tr("\"Really?\" — a character hears surprising news.", "«حقًّا؟» — شخصية تسمع خبرًا مفاجئًا.")}</p>
-                <p>{tr("Mine: 정말이야? 내일 시험이야? (Really? The exam is tomorrow?)", "جملة من تأليفي: 정말이야? 내일 시험이야؟ (حقًّا؟ الامتحان غدًا؟)")}</p>
+                <p>{tr("Mine: 정말이야? 내일 시험이야? (Really? The exam is tomorrow?)", "جملة من تأليفي: 정말이야? 내일 시험이야? (حقًّا؟ الامتحان غدًا؟)")}</p>
               </div>
             </div>
           </div>

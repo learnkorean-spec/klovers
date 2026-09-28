@@ -565,7 +565,7 @@ const PricingSection = () => {
           </div>
           <div className="flex flex-col items-center gap-1">
             <KloverIcon name="growth-chart" className="h-10 w-10" />
-            <p className="text-sm font-semibold text-foreground">{tr(`${RATING.value} ★ Google rating`, `${RATING.value} ★ تقييم جوجل`)}</p>
+            <p className="text-sm font-semibold text-foreground">{tr(`${RATING.value} ★ Google rating`, `تقييم ${toArabicDigits(RATING.value).replace(".", "٫")} على جوجل`)}</p>
             <p className="text-xs text-muted-foreground">{tr(`From ${RATING.count} Google reviews`, `من ${toArabicDigits(RATING.count)} مراجعات جوجل`)}</p>
           </div>
           <div className="flex flex-col items-center gap-1">

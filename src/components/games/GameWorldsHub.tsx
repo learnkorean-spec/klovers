@@ -21,7 +21,7 @@ import { leagueName } from "@/lib/dashboardLocale";
  *     two learners and, once he has hatched, Cluby): before the hatch the
  *     learners find the glowing clover egg (/assets/story/egg-teaser.webp),
  *     after it the three of them picnic by the Han river
- *     (/assets/cluby/picnic.webp). The headline sits over it and a white
+ *     (/assets/cluby/picnic.webp). The headline sits over it and an ivory
  *     strip underneath (card-coloured in dark mode) holds the
  *     league, XP bar and streak - all real.
  *  2. THREE CARDS - Next outfit, Today's Missions, Cluby's outfits.
@@ -61,6 +61,13 @@ interface Props {
   streak: number;
   onPlay: (gameId: string) => void;
 }
+
+/** Arabic counted noun for "game": 3–10 take the plural «ألعاب», every other
+ *  count (11+, and the total in "x / y") takes the singular «لعبة». */
+const arGames = (n: number) => {
+  const m = n % 100;
+  return m >= 3 && m <= 10 ? "ألعاب" : "لعبة";
+};
 
 const ASSET = "/assets/characters";
 /** Cluby in the canon 3D plush style (only shown once he has hatched). */
@@ -254,10 +261,10 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               clubyAwake ? "from-ivory/90 via-ivory/50" : "from-charcoal/80 via-charcoal/40",
             )}
           />
-          <div className={cn("relative px-5 pt-6 text-center md:px-8 md:pt-8", clubyAwake ? "text-charcoal" : "text-white")}>
-            <h1 className={cn("text-[11px] font-extrabold uppercase tracking-wider", clubyAwake ? "text-charcoal/70" : "text-white/80")}>{title}</h1>
+          <div className={cn("relative px-5 pt-6 text-center md:px-8 md:pt-8", clubyAwake ? "text-charcoal" : "text-ivory")}>
+            <h1 className={cn("text-[11px] font-extrabold uppercase tracking-wider", clubyAwake ? "text-charcoal/70" : "text-ivory/80")}>{title}</h1>
             <p className="mt-2 font-display text-3xl font-extrabold leading-tight md:text-4xl">{welcome}</p>
-            <p className={cn("mt-1 text-sm md:text-base", clubyAwake ? "text-charcoal/80" : "text-white/90")}>
+            <p className={cn("mt-1 text-sm md:text-base", clubyAwake ? "text-charcoal/80" : "text-ivory/90")}>
               {clubyAwake
                 ? (isAr ? "لعبٌ وتعلُّمٌ، وخطوةٌ أقرب إلى كوريا." : "Let's play, learn, and get closer to Korea!")
                 : (isAr ? "تستيقظ بيضة البرسيم قليلًا مع كل كلمة كورية جديدة…" : "The clover egg stirs a little more with every Korean word you learn…")}
@@ -370,7 +377,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <h2 className="font-bold text-foreground">{isAr ? "الزي التالي" : "Next outfit"}</h2>
             <p className="text-xs text-muted-foreground">
               {current
-                ? (isAr ? `${num(current.done)} / ${num(current.total)} ألعاب في ${currentWorldName}` : `${current.done} / ${current.total} games in ${currentWorldName}`)
+                ? (isAr ? `${num(current.done)} / ${num(current.total)} ${arGames(current.total)} في ${currentWorldName}` : `${current.done} / ${current.total} games in ${currentWorldName}`)
                 : ""}
             </p>
             <div className="mt-2 flex gap-1">
@@ -481,7 +488,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                         Fallback={Stop}
                         className={cn(
                           "aspect-[16/10] w-full rounded-2xl border-[3px] shadow-md",
-                          state === "current" ? "border-klovers-yellow" : "border-white",
+                          state === "current" ? "border-klovers-yellow" : "border-ivory",
                           state === "next" && "opacity-80",
                         )}
                       />
@@ -505,7 +512,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                         </span>
                       )}
                     </span>
-                    <span className="-mt-3 relative grid h-6 w-6 place-items-center rounded-full bg-charcoal text-[11px] font-extrabold text-white dark:bg-klovers-yellow dark:text-charcoal">
+                    <span className="-mt-3 relative grid h-6 w-6 place-items-center rounded-full bg-charcoal text-[11px] font-extrabold text-ivory dark:bg-klovers-yellow dark:text-charcoal">
                       {num(String(i + 1).padStart(2, "0"))}
                     </span>
                     <span className="mt-1 text-xs font-extrabold text-charcoal dark:text-foreground sm:text-sm">
@@ -557,7 +564,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
             <article key={s.world.key} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <div className="relative h-36">
                 <WorldPainting worldKey={s.world.key} Fallback={Scene} lazy className="absolute inset-0 h-full w-full" />
-                <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/55 to-transparent dark:from-card/90 dark:via-card/55 rtl:bg-gradient-to-l" />
+                <div className="absolute inset-0 bg-gradient-to-r from-ivory/90 via-ivory/55 to-transparent dark:from-card/90 dark:via-card/55 rtl:bg-gradient-to-l" />
                 {clubyAwake && (
                   <img
                     src={CLUBY_3D}
@@ -582,7 +589,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               <div className="flex flex-1 flex-col p-4 pt-3">
                 <div className="flex items-center gap-3">
                   <p className="shrink-0 text-xs font-semibold text-foreground">
-                    {isAr ? `${num(s.done)} / ${num(s.total)} ألعاب مكتملة` : `${s.done} / ${s.total} games completed`}
+                    {isAr ? `${num(s.done)} / ${num(s.total)} ${arGames(s.total)} مكتملة` : `${s.done} / ${s.total} games completed`}
                   </p>
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                     <div className={cn("h-full rounded-full", WORLD_BAR[s.world.key])} style={{ width: `${s.total ? (s.done / s.total) * 100 : 0}%` }} />

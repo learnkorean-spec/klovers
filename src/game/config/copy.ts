@@ -211,13 +211,14 @@ export const WORLD_COPY = {
     loadingLine: "ما زالت بيضة البرسيم نائمة، والساحة هادئة.",
     exit: "العودة إلى الموقع",
     lookHint: "النقر على المشهد يتيح النظر في الأرجاء",
-    // Arabic screens carry no Latin: keys by their Arabic names. W A S D and
-    // E still work (matched by physical key); Enter works for "use" too.
+    // Key caps are named as printed on the keyboard (Shift, Esc, E), the same
+    // as the controls card below; only the labels are Arabic. W A S D and E
+    // are matched by physical key; Enter works for "use" too.
     hints: {
       move: { keys: ["الأسهم"], label: "المشي لاستكشاف المكان" },
-      run: { keys: ["التبديل"], label: "الركض" },
+      run: { keys: ["Shift"], label: "الركض" },
       interact: { keys: ["E"], label: "" },
-      esc: { keys: ["الهروب"], label: "لتحرير الفأرة" },
+      esc: { keys: ["Esc"], label: "لتحرير الفأرة" },
       pressKey: "الضغط على E أو النقر هنا",
       tapButton: "الضغط على الزر",
     },
@@ -240,7 +241,7 @@ export const WORLD_COPY = {
       found: { text: "لقد وجدتني!" },
       follow: { text: "هيا بنا، من هنا." },
       "hangul-village": { text: "على كل باب حرف. هيا نقرأ واحدًا." },
-      "vocabulary-market": { text: "لافتة الخبّاز مفقودة. أيّ كلمة تناسبها؟" },
+      "vocabulary-market": { text: "لافتة الخبّازة مفقودة. أيّ كلمة تناسبها؟" },
       hub: { text: "من هنا تبدأ كل الطرق." },
       wordRight: { ko: "잘했어!", text: "أحسنت." },
       "talk-courtyard": { ko: "가자!", text: "هيا نرَ ما في الخارج!" },
@@ -267,7 +268,7 @@ export const WORLD_COPY = {
     },
     word: {
       title: "لافتة مفقودة",
-      line: "سقطت لافتة الخبّاز. أيّ كلمة تعود فوق الخبز؟",
+      line: "سقطت لافتة الخبّازة. أيّ كلمة تعود فوق الخبز؟",
       options: [
         { ko: "빵", right: true, feedback: "빵 (بّانغ): الخبز. عادت اللافتة إلى مكانها." },
         { ko: "밥", right: false, feedback: "밥 (باب) = الأرز المطبوخ. محاولة أخرى." },

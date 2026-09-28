@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { toArabicDigits } from "@/lib/trustFigures";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import { RETURNING_STUDENT_CODE, WHATSAPP_BASE, SITE_URL } from "@/lib/siteConfig";
@@ -55,7 +56,7 @@ const ReturningStudentsLandingPage = () => {
   useSEO({
     title: isAr ? "أهلًا بالعودة — عرض الطلاب العائدين" : "Welcome Back — Returning Students Offer",
     description: isAr
-      ? "خصم 20% للطلاب العائدين إلى كلوفرز، وخصم إضافي عند مشاركة الصفحة مع الأصدقاء. اختبار المستوى اختياري."
+      ? "خصم ٢٠٪ للطلاب العائدين إلى كلوفرز، وخصم إضافي عند مشاركة الصفحة مع الأصدقاء. اختبار المستوى اختياري."
       : "Returning Klovers students get 20% off. Enroll now, share with friends, and save up to 35%. No placement test required.",
     canonical: PAGE_URL,
   });
@@ -133,7 +134,7 @@ const ReturningStudentsLandingPage = () => {
   const handleWhatsAppShare = () => {
     const msg = encodeURIComponent(
       isAr
-        ? `عرض حصري للطلاب العائدين في كلوفرز! خصم 20%\n${shareUrl}`
+        ? `عرض حصري للطلاب العائدين في كلوفرز! خصم ٢٠٪\n${shareUrl}`
         : `Exclusive offer for returning Klovers students! 20% off\n${shareUrl}`
     );
     trackAndOpenWhatsApp(`https://wa.me/?text=${msg}`, { cta_label: "returning_share" });
@@ -282,12 +283,12 @@ const ReturningStudentsLandingPage = () => {
                       <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-charcoal dark:text-foreground">
                         <Check className="h-4 w-4 shrink-0 rounded-full bg-klovers-yellow p-0.5 text-charcoal" strokeWidth={3} aria-hidden="true" />
                         {isAr
-                          ? `تمت إضافة خصم إحالة بنسبة ${referralStats.bonusPercent}%`
+                          ? `تمت إضافة خصم إحالة بنسبة ${toArabicDigits(referralStats.bonusPercent)}٪`
                           : `You've earned +${referralStats.bonusPercent}% referral bonus!`}
                       </p>
                       <p className="text-xs text-charcoal/70 dark:text-muted-foreground mt-1">
                         {isAr
-                          ? `أصدقاء انضموا: ${referralStats.conversions} · زيارات للرابط: ${Math.max(0, referralStats.clicks - referralStats.conversions)}`
+                          ? `أصدقاء انضموا: ${toArabicDigits(referralStats.conversions)} · زيارات للرابط: ${toArabicDigits(Math.max(0, referralStats.clicks - referralStats.conversions))}`
                           : `${referralStats.conversions} friend${referralStats.conversions !== 1 ? "s" : ""} enrolled · ${Math.max(0, referralStats.clicks - referralStats.conversions)} link visitor${Math.max(0, referralStats.clicks - referralStats.conversions) !== 1 ? "s" : ""}`}
                       </p>
                     </div>

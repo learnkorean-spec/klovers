@@ -196,7 +196,9 @@ const LoginPage = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{t("auth.logIn")}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">{isAr ? "مرحبًا بالعودة، والتقدّم محفوظ." : "Welcome back — your progress is waiting for you."}</p>
+            {/* One welcome per screen: from lg up the story panel's caption
+                says it, so this line shows only below lg. */}
+            <p className="text-sm text-muted-foreground mt-1 lg:hidden">{isAr ? "مرحبًا بالعودة، والتقدّم محفوظ." : "Welcome back — your progress is waiting for you."}</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -234,16 +236,6 @@ const LoginPage = () => {
             </form>
           </CardContent>
         </Card>
-
-        <p className="text-xs text-muted-foreground text-center">
-          {isAr ? "أول زيارة إلى كلوفرز؟ " : "New to Klovers? "}
-          <Link
-            to={withRedirect("/signup", redirectTo)}
-            className="text-foreground font-semibold underline underline-offset-2"
-          >
-            {isAr ? "إنشاء حساب مجاني ←" : "Create a free account →"}
-          </Link>
-        </p>
 
         </div>
         </div>

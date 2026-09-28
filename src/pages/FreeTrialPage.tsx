@@ -286,9 +286,12 @@ const FreeTrialPage = () => {
               {/* Text column */}
               <div className="text-center md:text-start">
 
-                {/* World eyebrow, with the live dot: trials really are open */}
+                {/* World eyebrow. The live dot shows only while this page's
+                    class language has an open slot with a free seat. */}
                 <span className="inline-flex items-center gap-2 bg-klovers-yellow border-2 border-charcoal text-charcoal text-xs font-black tracking-[0.15em] uppercase px-3 py-1.5 rounded-full mb-5">
-                  <span className="w-2 h-2 rounded-full bg-klovers-green animate-pulse" aria-hidden="true" />
+                  {!slotsLoading && pageSlotsOpen.length > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-klovers-green animate-pulse" aria-hidden="true" />
+                  )}
                   {tr("Conversation Café · the first stop", "مقهى المحادثة · المحطة الأولى")}
                 </span>
 
