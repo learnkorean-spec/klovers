@@ -10,16 +10,18 @@ import LegalDocument, { type LegalContent } from "@/components/LegalDocument";
  * Supabase (auth, database, file storage, edge functions), Vercel (hosting),
  * Google Analytics 4 and the Meta Pixel (index.html, production host only),
  * Google Fonts (index.html), Resend (email, supabase/functions), Stripe
- * (create-checkout) and the AI gateway used by the interview-practice tools
- * (generate-korean-interview). If a service is added or removed, update this
- * list and the matching fragment in scripts/prerender-meta.mjs.
+ * (create-checkout) and OpenAI, which the interview-practice tools
+ * (generate-korean-interview) call directly through
+ * supabase/functions/_shared/ai.ts. Rechecked 28 Sep 2026: the old Lovable
+ * AI gateway is gone from the stack. If a service is added or removed, update
+ * this list and the matching fragment in scripts/prerender-meta.mjs.
  */
 
 const WHATSAPP = `+${WHATSAPP_NUMBER}`;
 
 const EN: LegalContent = {
   title: "Privacy Policy",
-  updated: "Last updated: 24 September 2026",
+  updated: "Last updated: 28 September 2026",
   intro:
     "This policy explains what personal information Klovers collects when you use kloversegy.com and our classes, why we collect it, who we share it with, and the choices you have.",
   sections: [
@@ -72,7 +74,7 @@ const EN: LegalContent = {
         "Meta — the Meta Pixel, for measuring advertising.",
         "Resend — sending our emails.",
         "Stripe — card payments made through our checkout.",
-        "An AI model provider, reached through an AI gateway — only the details you type into the interview-practice tools, to generate questions and feedback.",
+        "OpenAI — only the details you type into the interview-practice tools, to generate questions and feedback.",
         "WhatsApp and Telegram — when you choose to contact us there, those services' own policies apply.",
       ],
     },
@@ -111,7 +113,7 @@ const EN: LegalContent = {
 
 const AR: LegalContent = {
   title: "سياسة الخصوصية",
-  updated: "آخر تحديث: 24 سبتمبر 2026",
+  updated: "آخر تحديث: 28 سبتمبر 2026",
   intro:
     "توضح هذه السياسة المعلومات الشخصية التي تجمعها كلوفرز عند استخدامك موقع kloversegy.com وحصصنا، وسبب جمعها، والجهات التي نشاركها معها، والخيارات المتاحة لك.",
   sections: [
@@ -164,7 +166,7 @@ const AR: LegalContent = {
         "Meta — بكسل Meta لقياس الإعلانات.",
         "Resend — إرسال رسائل البريد الإلكتروني.",
         "Stripe — المدفوعات بالبطاقة عبر صفحة الدفع.",
-        "مزوّد نماذج ذكاء اصطناعي عبر بوابة ذكاء اصطناعي — ويقتصر ذلك على التفاصيل التي تكتبها في أدوات التدريب على المقابلات، لإنشاء الأسئلة والملاحظات.",
+        "OpenAI — ويقتصر ذلك على التفاصيل التي تُكتب في أدوات التدريب على المقابلات، لإنشاء الأسئلة والملاحظات.",
         "واتساب وتيليجرام — عندما تختار التواصل معنا عبرهما، تسري سياسات هاتين الخدمتين.",
       ],
     },
