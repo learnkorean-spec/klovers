@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -191,6 +192,21 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
             </div>
           </div>
         )}
+        {/* Not a trial — a paid private (1:1) class, booked from the teacher's
+            full availability rather than the four fixed group slots. Shown
+            here because "all trials full" is exactly when a student most
+            needs another path forward, not just a waitlist. */}
+        <div className="border-t border-border pt-4">
+          <p className="text-xs text-muted-foreground mb-2">
+            {tr("Don't want to wait? Book a private class instead — pick any time that works for you.", "لا تريدين الانتظار؟ يمكن حجز حصة خاصة بدلًا من ذلك، واختيار أي وقت مناسب من كل الأوقات المتاحة.")}
+          </p>
+          <Button variant="outline" size="sm" asChild className="w-full">
+            <Link to="/enroll-now?classType=private">
+              {tr("Book a private class", "حجز حصة خاصة")}
+            </Link>
+          </Button>
+        </div>
+
         <Button variant="outline" size="sm" onClick={onBack}>
           {tr("Go back", "الرجوع")}
         </Button>
@@ -280,6 +296,15 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
 
       <p className="text-xs text-muted-foreground text-center">
         {tr("All times shown in your local time zone", "جميع الأوقات معروضة بالتوقيت المحلي")} (<span dir="ltr">{userTz.replace(/_/g, " ")}</span>)
+      </p>
+
+      {/* Alternative path for a student who wants a time outside the four
+          fixed group slots — a paid private class instead of a free trial. */}
+      <p className="text-xs text-muted-foreground text-center">
+        {tr("Prefer a different time? ", "تفضّلين وقتًا آخر؟ ")}
+        <Link to="/enroll-now?classType=private" className="underline underline-offset-2 hover:text-foreground">
+          {tr("Book a private class", "حجز حصة خاصة")}
+        </Link>
       </p>
 
       <Button
