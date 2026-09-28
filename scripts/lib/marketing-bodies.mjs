@@ -11,15 +11,14 @@
  * it). Ampersands are escaped by hand; nothing here contains "$" or a
  * backtick, and the test next to this file keeps it that way.
  *
- * Two routes deliberately say LESS than the live page, not more:
- * /topik-exam-preparation and /learn-korean-kdramas. Their live copy carries
- * claims that are wrong or unverified (a TOPIK score table that does not
- * match NIIED's cut-offs, a past exam date, "500K+ fans", "40% faster",
- * month-by-month CEFR promises). Static HTML is what AI answer engines quote,
- * so these fragments keep only statements that are true; the live copy is to
- * be corrected to match (see docs, GEO audit follow-up).
- * /learn-korean-arabic-speakers was in that list until its page was rewritten
- * on 25 Sep 2026; since 28 Sep its fragment mirrors the live English copy.
+ * One route deliberately says LESS than the live page, not more:
+ * /topik-exam-preparation. Its live copy carried claims that are wrong or
+ * unverified (a TOPIK score table that does not match NIIED's cut-offs, a
+ * past exam date). Static HTML is what AI answer engines quote, so that
+ * fragment keeps only statements that are true.
+ * /learn-korean-arabic-speakers and /learn-korean-kdramas were in that list
+ * until their pages were rewritten on 25 Sep 2026; since 28 Sep both
+ * fragments mirror the live English copy.
  *
  * FAQ arrays feed the server-side FAQPage JSON-LD for the same routes, so the
  * markup matches the questions the page shows.
@@ -234,55 +233,33 @@ export const TOPIK_BODY_HTML = `<div id="topik-exam-preparation-prerendered" lan
     </div>`;
 
 export const KDRAMAS_BODY_HTML = `<div id="learn-korean-kdramas-prerendered" lang="en" dir="ltr">
-      <h1>Learn Korean Through K-Dramas</h1>
-      <p>The most effective way is the 4-Watch Method: watch each episode first with English subtitles to enjoy the story, then with Korean subtitles to notice the words, then with no subtitles to test your listening, then master one 3-minute scene. Combine dramas with a weekly live class for grammar and speaking.</p>
-      <h2>Why K-Dramas Are the Best Learning Tool</h2>
-      <h3>Natural Spoken Korean</h3>
-      <p>Real conversations, not textbook sentences. You learn how Koreans actually talk — slang, casual forms, emotional expressions.</p>
-      <h3>Emotional Memory Encoding</h3>
-      <p>When you're emotionally invested in a scene, your brain tags the words as 'important' and stores them longer.</p>
-      <h3>Repetition Without Boredom</h3>
-      <p>Dramas repeat phrases naturally. You hear 'I love you' 50 times across episodes without feeling like you're studying.</p>
-      <h3>Cultural Context</h3>
-      <p>Learn more than words — understand Korean culture, manners, social hierarchies, and why Koreans communicate the way they do.</p>
-      <h3>Motivation Stays High</h3>
-      <p>You WANT to understand because you're invested in the story. No cramming, no forcing yourself — you want more.</p>
-      <h3>Passively Builds Skills</h3>
-      <p>You improve listening, pronunciation patterns, rhythm, and intonation just by watching. Your ear trains automatically.</p>
-      <h2>The 4-Watch Method </h2>
-      <p>Follow it for any K-drama.</p>
-      <h3>Watch 1: English Subtitles — Enjoy the Story (1 hour per episode)</h3>
-      <p>Just relax and watch. Your job is to enjoy the plot, not study. Get invested in the characters and story. This builds motivation for later watches.</p>
-      <h3>Watch 2: Korean Subtitles — Notice the Words (1.5 hours per episode)</h3>
-      <p>Slower pace. Notice words you recognize. When you see a word in Korean text that matches the audio, your brain notes the connection. Don't pause — let it flow.</p>
-      <h3>Watch 3: No Subtitles — Test Your Listening (1 hour per episode)</h3>
-      <p>Now your listening is tested. How much you catch depends on your level and the drama. This struggle is good — it's the brain working hard to process.</p>
-      <h3>Scene-Based Deep Dive — Master 1 Scene (30 minutes)</h3>
-      <p>Pick ONE emotional 3-minute scene. Pause, repeat, write what you heard, repeat, listen again. By day 3, you'll have memorized the scene.</p>
-      <h2>Build the Drama Habit (30 Days to Results)</h2>
-      <table><tr><th>Days</th><th>Goal</th><th>Time</th></tr><tr><td>Days 1-5</td><td>Pick your drama &amp; watch episode 1 (English subtitles)</td><td>30 min daily</td></tr><tr><td>Days 6-10</td><td>Watch episodes 1-2 again (Korean subtitles)</td><td>45 min daily</td></tr><tr><td>Days 11-15</td><td>Rewatch no subtitles + pick 1 scene to master</td><td>1 hour daily</td></tr><tr><td>Days 16-20</td><td>Finish episode 2-3 fully, keep 1 phrase journal</td><td>1 hour daily</td></tr><tr><td>Days 21-30</td><td>Build momentum: 1-2 episodes per week with journal</td><td>1-2 hours daily</td></tr></table>
-      <h3>Keep a Drama Journal</h3>
-      <p>When you hear a phrase you like, write it:</p>
-      <ul><li>Phrase: "정말이야?" (Really?)</li><li>Context: Character's shocked reaction</li><li>My sentence: "정말이야? 한국어를 배웠어?" (Really? You learned Korean?)</li></ul>
-      <h2>Combine Dramas with Live Classes</h2>
-      <p>Drama watching is passive learning. Structured lessons add the active part: grammar, speaking and a teacher to ask.</p>
-      <table><tr><th>Dramas Alone</th><th>Klovers + Dramas</th><th>Textbooks Alone</th></tr><tr><td>Learn listening</td><td>Learn listening (yes)</td><td>Learn grammar</td></tr><tr><td>Learn vocabulary</td><td>Learn vocabulary (yes)</td><td>Learn vocabulary</td></tr><tr><td>Learn culture</td><td>Learn culture (yes)</td><td>Boring (no)</td></tr><tr><td>Don't learn grammar (no)</td><td>Learn grammar (yes)</td><td>Not realistic Korean (no)</td></tr><tr><td>Can't ask questions (no)</td><td>Ask questions (yes)</td><td>No cultural context (no)</td></tr></table>
-      <p><strong>Best Strategy:</strong> Take one live 60-minute Klovers class a week and watch K-dramas 3-4 times a week. Let lessons explain the grammar you hear in dramas, and let dramas reinforce what you learned in lessons.</p>
-      <h2>Frequently asked questions</h2>
-      <h3>How many episodes should I watch per week?</h3>
-      <p>Start with 1 episode per week (4 watches = 4 hours). Once you get the habit, move to 2-3 episodes per week. Quality beats quantity — one fully analyzed episode beats 5 passive episodes.</p>
-      <h3>What if the K-drama doesn't have Korean subtitles available?</h3>
-      <p>Netflix has Korean subtitles for most dramas. If not, use YouTube with auto-generated Korean subtitles (not perfect but helpful). Try: Viki, iQiyi, or WeTV apps which support Korean subtitles.</p>
-      <h3>Should I watch the full series or just clip scenes?</h3>
-      <p>Full series. Watching the full arc keeps you motivated (cliffhangers!), reinforces vocab across more situations, and the story engagement helps retention. Clips are too short to build the habit.</p>
-      <h3>How much new vocabulary do you realistically learn?</h3>
-      <p>It depends on the drama and on your level. Many words repeat across episodes, so key phrases and high-frequency words are the ones that stick.</p>
-      <h3>Is drama learning enough, or do I need formal lessons?</h3>
-      <p>Dramas teach listening and vocabulary brilliantly, but grammar and writing need structure. Combine dramas with a weekly live class for grammar and speaking.</p>
-      <h2>Start Learning Through K-Dramas Today</h2>
-      <p>Watch the shows you love, and let a weekly live class explain the grammar you hear.</p>
-      <h2>Next steps</h2>
-      <ul><li><a href="/free-trial">Book a free trial class</a></li><li><a href="/placement-test">Take the free placement test</a></li><li><a href="/courses">See all Korean courses</a></li><li><a href="/pricing">View pricing</a></li><li><a href="/enroll-now">Join Klovers</a></li></ul>
+      <h1>Learn Korean from the dramas you already watch</h1>
+      <p><strong>Culture Street · K-dramas.</strong> Watching alone will not teach you Korean, but studying one scene at a time will. Here is a way to do it that you can repeat with any show.</p>
+      <h2>One scene at a time</h2>
+      <ol>
+        <li><strong>Watch for the story</strong> — First watch with subtitles in your language. Enjoy it — you need to know what happens before you can study how it is said.</li>
+        <li><strong>Pick one short scene</strong> — Choose two or three minutes you liked. Short enough to replay many times.</li>
+        <li><strong>Replay it with Korean subtitles</strong> — Pause on each line. Write down the words and endings you recognise, and look up the rest.</li>
+        <li><strong>Say the lines out loud</strong> — Repeat each line after the actor, copying the rhythm. Then try the scene with no subtitles at all.</li>
+        <li><strong>Keep a phrase notebook</strong> — One line per phrase: the Korean, what it means, the scene it came from, and one sentence of your own with it.</li>
+      </ol>
+      <h3>A notebook line looks like this</h3>
+      <p><span lang="ko">정말이야?</span> — "Really?" — a character hears surprising news.</p>
+      <p>Mine: <span lang="ko">정말이야? 내일 시험이야?</span> (Really? The exam is tomorrow?)</p>
+      <h2>Choosing a drama to study</h2>
+      <h3>Easier to start with</h3>
+      <p>Modern stories set at work, at school or at home, with standard Seoul speech and everyday conversation — romantic comedies and slice-of-life shows are a good fit.</p>
+      <h3>Better saved for later</h3>
+      <p>Historical dramas (old-fashioned speech), shows in strong regional dialects, and fast thrillers full of slang or technical words — medical, legal, military.</p>
+      <h2>Where live classes fit</h2>
+      <ul>
+        <li>Dramas give you listening and real phrases. A class explains the grammar behind them.</li>
+        <li>You can bring a line you did not understand and ask about it.</li>
+        <li>One live class a week, plus a scene or two between classes, is a pace most people can keep.</li>
+      </ul>
+      <h2>Bring a scene to your first class</h2>
+      <p>The first class is free. Meet your teacher, try a real class, and ask about a line from the drama you are watching.</p>
+      <p><a href="/free-trial">Book a free class</a> · <a href="/placement-test">Find your level</a> · <a href="/blog/best-kdrama-learn-korean-difficulty-ranked">Drama picks by difficulty</a> · <a href="/courses">Courses</a> · <a href="/pricing">Pricing</a></p>
     </div>`;
 
 export const INTERVIEW_BODY_HTML = `<div id="interview-training-prerendered" lang="en" dir="ltr">
@@ -469,28 +446,6 @@ export const MARKETING_FAQ = {
     {
         "q": "What if I forgot my previous level?",
         "a": "Take our free placement test to find your current level. It's quick and completely optional."
-    }
-],
-  "/learn-korean-kdramas": [
-    {
-        "q": "How many episodes should I watch per week?",
-        "a": "Start with 1 episode per week (4 watches = 4 hours). Once you get the habit, move to 2-3 episodes per week. Quality beats quantity — one fully analyzed episode beats 5 passive episodes."
-    },
-    {
-        "q": "What if the K-drama doesn't have Korean subtitles available?",
-        "a": "Netflix has Korean subtitles for most dramas. If not, use YouTube with auto-generated Korean subtitles (not perfect but helpful). Try: Viki, iQiyi, or WeTV apps which support Korean subtitles."
-    },
-    {
-        "q": "Should I watch the full series or just clip scenes?",
-        "a": "Full series. Watching the full arc keeps you motivated (cliffhangers!), reinforces vocab across more situations, and the story engagement helps retention. Clips are too short to build the habit."
-    },
-    {
-        "q": "How much new vocabulary do you realistically learn?",
-        "a": "It depends on the drama and on your level. Many words repeat across episodes, so key phrases and high-frequency words are the ones that stick."
-    },
-    {
-        "q": "Is drama learning enough, or do I need formal lessons?",
-        "a": "Dramas teach listening and vocabulary brilliantly, but grammar and writing need structure. Combine dramas with a weekly live class for grammar and speaking."
     }
 ],
 };
