@@ -27,9 +27,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { trustCopy } from "@/lib/trustFigures";
 import {
-  Briefcase, Brain, Trophy, Sparkles, Lock, GraduationCap,
-  Loader2, ChevronRight, Star, Globe, ArrowRight,
+  Briefcase, Brain, Trophy, Sparkles, Lock,
+  Loader2, ChevronRight, Star, Globe,
 } from "lucide-react";
 
 const INDUSTRY_KEYS = [
@@ -60,8 +61,29 @@ const LANGUAGE_KEYS = [
   { id: "Turkish", key: "langTurkish" },
 ];
 
+/*
+ * Copy that overrides translations.ts on this page (28 Sep 2026).
+ * - trustAIDesc there names Gemini; the tool runs on OpenAI since Lovable was
+ *   removed, so the line says "AI" with no vendor name.
+ * - Failures used to show the raw server message ("AI API error: 500",
+ *   "Unauthorized") in English on the Arabic page; they now show one plain
+ *   sentence in the page language, and the real error goes to the console.
+ */
+const PAGE_COPY = {
+  en: {
+    aiDesc: "Tailored Q&A, generated with AI",
+    errorDesc: "Something went wrong. Please try again in a moment.",
+  },
+  ar: {
+    aiDesc: "أسئلة وأجوبة مخصّصة بالذكاء الاصطناعي",
+    errorDesc: "حدث خطأ. يُرجى المحاولة مرة أخرى بعد قليل.",
+  },
+} as const;
+
 export default function KoreanInterviewPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const copy = language === "ar" ? PAGE_COPY.ar : PAGE_COPY.en;
+  const trust = trustCopy(language);
   useSEO({
     title: "Korean Interview Training — AI-Powered | Klovers",
     description: "Practice Korean job interview questions with AI-generated personalized Q&A. Get 2 free questions, upgrade for more.",
@@ -195,7 +217,8 @@ export default function KoreanInterviewPage() {
         toast({ title: t("koreanInterviewPage.toastQuotaTitle"), description: t("koreanInterviewPage.toastQuotaDesc") });
       }
     } catch (e: any) {
-      toast({ title: t("koreanInterviewPage.toastGenFail"), description: e.message, variant: "destructive" });
+      console.error("generate-korean-interview failed", e);
+      toast({ title: t("koreanInterviewPage.toastGenFail"), description: copy.errorDesc, variant: "destructive" });
     } finally {
       setGenerating(false);
     }
@@ -225,7 +248,8 @@ export default function KoreanInterviewPage() {
         window.location.href = res.data.url;
       }
     } catch (e: any) {
-      toast({ title: t("koreanInterviewPage.toastCheckoutFail"), description: e.message, variant: "destructive" });
+      console.error("create-interview-checkout failed", e);
+      toast({ title: t("koreanInterviewPage.toastCheckoutFail"), description: copy.errorDesc, variant: "destructive" });
     } finally {
       setPurchasing(false);
     }
@@ -262,16 +286,12 @@ export default function KoreanInterviewPage() {
             <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-8">
               {t("koreanInterviewPage.heroSubtitle")}
             </p>
+            {/* The demo link (/practice-interview) is gone: that page is
+                password protected, so visitors landed on a lock. */}
             <div className="flex flex-wrap justify-center gap-4">
               <a href="#skill-form" className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-6 py-3 rounded-full hover:bg-[#E6E600] transition-colors">
                 <Sparkles className="h-5 w-5" /> {t("koreanInterviewPage.heroCtaStart")}
               </a>
-              <Link
-                to="/practice-interview"
-                className="inline-flex items-center gap-2 border-2 border-white/40 text-white font-semibold px-6 py-3 rounded-full hover:bg-white/10 transition-colors"
-              >
-                <GraduationCap className="h-5 w-5" /> {t("koreanInterviewPage.heroCtaDemo")}
-              </Link>
             </div>
           </div>
         </section>
@@ -370,7 +390,7 @@ export default function KoreanInterviewPage() {
                 <Button
                   onClick={handleGenerate}
                   disabled={generating}
-                  className="w-full gap-2 text-white h-12 text-base"
+                  className="w-full gap-2 text-primary-foreground h-12 text-base"
                 >
                   {generating ? (
                     <><Loader2 className="h-5 w-5 animate-spin" /> {t("koreanInterviewPage.btnGenerating")}</>
@@ -462,7 +482,7 @@ export default function KoreanInterviewPage() {
                   <Button
                     onClick={handlePurchase}
                     disabled={purchasing}
-                    className="gap-2 text-white px-8 h-12 text-base"
+                    className="gap-2 text-primary-foreground px-8 h-12 text-base"
                   >
                     {purchasing ? (
                       <><Loader2 className="h-5 w-5 animate-spin" /> {t("koreanInterviewPage.upgradeProcessing")}</>
@@ -476,30 +496,16 @@ export default function KoreanInterviewPage() {
           </section>
         )}
 
-        {/* ── Demo Teacher Section ── */}
-        <section className="bg-gray-50 dark:bg-gray-900 py-16">
-          <div className="max-w-3xl mx-auto px-4 text-center space-y-4">
-            <GraduationCap className="h-10 w-10 mx-auto text-primary" />
-            <h2 className="text-xl font-bold">{t("koreanInterviewPage.demoTitle")}</h2>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              {t("koreanInterviewPage.demoDesc")}
-            </p>
-            <Link to="/practice-interview">
-              <Button variant="outline" className="gap-2">
-                <GraduationCap className="h-4 w-4" /> {t("koreanInterviewPage.demoBtn")} <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </section>
-
         {/* ── Trust Signals ── */}
+        {/* The students tile reads from @/lib/trustFigures: 200+ is the
+            students Reham taught herself, never "the Klovers community". */}
         <section className="max-w-5xl mx-auto px-4 py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { icon: Brain, label: t("koreanInterviewPage.trustAI"), desc: t("koreanInterviewPage.trustAIDesc") },
+              { icon: Brain, label: t("koreanInterviewPage.trustAI"), desc: copy.aiDesc },
               { icon: Globe, label: t("koreanInterviewPage.trustBilingual"), desc: t("koreanInterviewPage.trustBilingualDesc") },
               { icon: Trophy, label: t("koreanInterviewPage.trustReady"), desc: t("koreanInterviewPage.trustReadyDesc") },
-              { icon: Star, label: t("koreanInterviewPage.trustStudents"), desc: t("koreanInterviewPage.trustStudentsDesc") },
+              { icon: Star, label: trust.studentsShort, desc: trust.yearsTeaching },
             ].map((item) => (
               <div key={item.label} className="space-y-2">
                 <item.icon className="h-8 w-8 mx-auto text-primary" />
