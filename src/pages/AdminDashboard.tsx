@@ -47,6 +47,7 @@ const GroupAttendanceManager = lazy(() => import("@/components/admin/GroupAttend
 const AdminNotifications = lazy(() => import("@/components/admin/AdminNotifications"));
 const AdminAttendancePanel = lazy(() => import("@/components/admin/AdminAttendancePanel"));
 const GroupMatcher = lazy(() => import("@/components/admin/GroupMatcher"));
+const RecommendedSlotsPanel = lazy(() => import("@/components/admin/RecommendedSlotsPanel"));
 const TeacherAvailabilityManager = lazy(() => import("@/components/admin/TeacherAvailabilityManager"));
 const MyStudentsManager = lazy(() => import("@/components/admin/MyStudentsManager"));
 const UpcomingPrivateClasses = lazy(() => import("@/components/admin/UpcomingPrivateClasses"));
@@ -1679,7 +1680,10 @@ const AdminDashboard = () => {
             </TabsContent>
 
             {/* GROUP MATCHER TAB */}
-            <TabsContent value="group-matcher">
+            <TabsContent value="group-matcher" className="space-y-4">
+              <TabErrorBoundary name="Recommended Slots">
+                <RecommendedSlotsPanel />
+              </TabErrorBoundary>
               <TabErrorBoundary name="Group Matcher">
                 <GroupMatcher />
               </TabErrorBoundary>
