@@ -335,9 +335,10 @@ export const WELCOME_BACK_BODY_HTML = `<div id="welcome-back-prerendered" lang="
 
 export const HANGUL_STARTER_BODY_HTML = `<div id="hangul-starter-prerendered" lang="en" dir="ltr">
       <h1>Free Hangul Starter Sheet</h1>
-      <p>Every Korean letter in one place — with correct pronunciation. Print it, save it, start today.</p>
+      <p><strong>Hangul Village · the first gate.</strong> Every sign in the village is written in these letters. Here they all are on one page, with the right sound for each. Print it, keep it, and read the first sign today.</p>
+      <p><a href="/hangul-starter-en.pdf">Download the free PDF</a> · <a href="/hangul-starter-ar.pdf">Arabic edition (PDF)</a> · <a href="/free-trial">Book a free class</a></p>
       <h2>How Korean syllable blocks work</h2>
-      <p>Korean is written in syllable blocks — each block = one syllable sound. Each block contains a consonant + vowel (+ optional final consonant). Examples: 가 = ㄱ + ㅏ ("ga"); 한 = ㅎ + ㅏ + ㄴ ("han"); 국 = ㄱ + ㅜ + ㄱ ("guk").</p>
+      <p>Korean is written in syllable blocks: each block is one syllable, a consonant plus a vowel, sometimes with a final consonant. Examples: 가 = ㄱ + ㅏ ("ga"); 한 = ㅎ + ㅏ + ㄴ ("han"); 국 = ㄱ + ㅜ + ㄱ ("guk").</p>
       <h2>Basic Consonants (14)</h2>
       <p>ㄱ g / k (가 ga) · ㄴ n (나 na) · ㄷ d / t (다 da) · ㄹ r / l (라 ra) · ㅁ m (마 ma) · ㅂ b / p (바 ba) · ㅅ s (사 sa) · ㅇ – / ng (아 a) · ㅈ j (자 ja) · ㅊ ch (차 cha) · ㅋ k (카 ka) · ㅌ t (타 ta) · ㅍ p (파 pa) · ㅎ h (하 ha)</p>
       <h2>Double Consonants (5)</h2>
@@ -346,13 +347,13 @@ export const HANGUL_STARTER_BODY_HTML = `<div id="hangul-starter-prerendered" la
       <p>ㅏ a (아) · ㅑ ya (야) · ㅓ eo (어) · ㅕ yeo (여) · ㅗ o (오) · ㅛ yo (요) · ㅜ u (우) · ㅠ yu (유) · ㅡ eu (으) · ㅣ i (이)</p>
       <h2>Compound Vowels (11)</h2>
       <p>ㅐ ae (애) · ㅒ yae (얘) · ㅔ e (에) · ㅖ ye (예) · ㅘ wa (와) · ㅙ wae (왜) · ㅚ oe (외) · ㅝ wo (워) · ㅞ we (웨) · ㅟ wi (위) · ㅢ ui (의)</p>
-      <h2>3 facts that make Hangul easy</h2>
+      <h2>Three facts that make the village easy</h2>
       <ul>
-        <li>Hangul was designed in 1443 — and made to be learned quickly: at Klovers it takes 4 classes.</li>
-        <li>Each letter's shape reflects how your mouth moves to say it.</li>
-        <li>You don't need to memorize everything before starting — your teacher will guide you through it.</li>
+        <li>King Sejong had Hangul designed in 1443 so that anyone could learn to read quickly.</li>
+        <li>Many consonants are drawn from the shape the mouth makes to say them.</li>
+        <li>No need to memorize it all first: at Klovers the alphabet is four live classes with the teacher.</li>
       </ul>
-      <p><strong>Start with a real teacher — free.</strong></p>
+      <p><strong>Start with a real teacher, free.</strong></p>
       <p><a href="/free-trial">Book a free class</a> · <a href="/placement-test">Placement test</a> · <a href="/courses">Courses</a> · <a href="/pricing">Pricing</a> · <a href="/blog">Blog</a></p>
     </div>`;
 
