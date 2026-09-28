@@ -268,7 +268,10 @@ const App = () => (
                 <Route path="/shop" element={<ShopPage />} />
                 <Route path="/shop/products/:slug" element={<ShopProductPage />} />
                 <Route path="/shop/:category" element={<ShopPage />} />
-                <Route path="/practice-interview" element={<InterviewTrainingPage />} />
+                {/* Re's own training panel. Admin sign-in only (28 Sep 2026):
+                    the old page hid it behind a password written in the shipped
+                    JS bundle, i.e. readable by any visitor. */}
+                <Route path="/practice-interview" element={<ProtectedRoute><InterviewTrainingPage /></ProtectedRoute>} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
                 <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} /><Route path="/admin/guide" element={<ProtectedRoute><AdminGuide /></ProtectedRoute>} />

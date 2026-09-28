@@ -441,6 +441,20 @@ const COURSES_BODY_HTML = `<div id="courses-prerendered" lang="en" dir="ltr">
       <p><a href="/free-trial">Book a free trial class</a> · <a href="/placement-test">Take the free placement test</a> · <a href="/pricing">Pricing</a></p>
     </div>`;
 
+// /shop (Klovers Supply). Same tradeoff as GAMES_BODY_HTML: copy is DUPLICATED
+// from src/pages/ShopPage.tsx (hero, shelf, "More than a file"). Products come
+// from Stripe at runtime, so no product names or prices here.
+const SHOP_BODY_HTML = `<div id="shop-prerendered" lang="en" dir="ltr">
+      <h1>Pack Your Korean Journey.</h1>
+      <p><strong>Learn it. Carry it. Live it.</strong></p>
+      <p>By the courtyard gate, Lina keeps a bag ready for the next lesson. These are the books that go in it, made to take Korean beyond the classroom.</p>
+      <h2>On the shelf</h2>
+      <p>Klovers books and study goods for learning Korean. The first book on the shelf teaches Hangul from zero.</p>
+      <h2>More than a file.</h2>
+      <p>Every Klovers book bought here waits under My books in the student dashboard, next to the classes, the games and the review that Cluby keeps.</p>
+      <p><a href="/free-trial">Book a free class</a> · <a href="/hangul-starter">Free Hangul starter sheet</a> · <a href="/courses">Courses</a></p>
+    </div>`;
+
 const PRICING_BODY_HTML = `<div id="pricing-prerendered" lang="en" dir="ltr">
       <h1>Klovers Pricing &amp; Plans</h1>
       <p>Klovers prices are set by country tier and shown in your local currency on this page. Choose your country to see your tier and price.</p>
@@ -808,12 +822,13 @@ const MARKETING_ROUTES = [
   // Klovers Supply (27 Sep 2026). Products come from Stripe at runtime, so
   // only the shop's own head is prerendered here; product pages set theirs
   // client-side (canonical + Product JSON-LD) in src/pages/ShopProductPage.tsx.
-  // Not in api/sitemap.xml.js until the first products are live.
+  // Listed in api/sitemap.xml.js since 28 Sep 2026 (PR #741).
   {
     path: "/shop",
     title: "Klovers Supply — Korean Books and Study Goods",
     description:
       "Klovers books and study goods that take Korean beyond the classroom. Digital books go straight to My books in the student dashboard.",
+    body: SHOP_BODY_HTML,
   },
   // "Journey through Korea's time" — five era pages, added 2026-09-22. IDs and
   // all copy come from src/constants/eras.ts (ERAS); keep this list in step
@@ -1245,10 +1260,13 @@ function buildHeadTags(route) {
   // slash. This must match api/sitemap.xml.js exactly or the canonical and
   // the sitemap entry disagree.
   const url = `${BASE_URL}${isHome ? "/" : route.path}`;
-  // An Arabic title that already carries «كلوفرز» gets no Latin suffix.
+  // One language per title: an Arabic title gets «كلوفرز», never Latin
+  // "Klovers"; a title already naming the brand gets no suffix at all.
   const fullTitle = route.title.includes(SITE_NAME) || route.title.includes("كلوفرز")
     ? route.title
-    : `${route.title} | ${SITE_NAME}`;
+    : /[؀-ۿ]/.test(route.title)
+      ? `${route.title} | كلوفرز`
+      : `${route.title} | ${SITE_NAME}`;
   const description = route.description || "";
   // route.image is opt-in (only the /journey/:eraId routes set it so far) and
   // falls back to the same DEFAULT_IMAGE every other marketing route already
@@ -1490,10 +1508,13 @@ let preloadDropped = 0;
 
 for (const route of routes) {
   const isHome = route.path === "/";
-  // An Arabic title that already carries «كلوفرز» gets no Latin suffix.
+  // One language per title: an Arabic title gets «كلوفرز», never Latin
+  // "Klovers"; a title already naming the brand gets no suffix at all.
   const fullTitle = route.title.includes(SITE_NAME) || route.title.includes("كلوفرز")
     ? route.title
-    : `${route.title} | ${SITE_NAME}`;
+    : /[؀-ۿ]/.test(route.title)
+      ? `${route.title} | كلوفرز`
+      : `${route.title} | ${SITE_NAME}`;
   const description = route.description || "";
   // "/ar" is the homepage in Arabic: it keeps what "/" keeps (the Organization
   // JSON-LD and the hero preload) but is written to dist/ar/index.html.
