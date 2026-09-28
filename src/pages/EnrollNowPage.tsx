@@ -1134,6 +1134,18 @@ const EnrollNowPage = () => {
                   >
                     {isAr ? "لا تناسبك هذه المواعيد؟ يمكنك طلب موعد آخر عبر واتساب" : "These times don't suit you? Ask for another time on WhatsApp"}
                   </a>
+                  {classType === "group" && (
+                    <div className="rounded-lg bg-muted p-3 text-sm flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-muted-foreground">
+                        {isAr
+                          ? "تفضّل اختيار وقتك بنفسك؟ الحصص الخاصة تعرض كل الأوقات المتاحة."
+                          : "Prefer to pick your own time? Private classes show every open time."}
+                      </span>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setClassType("private")}>
+                        {isAr ? "عرض الحصص الخاصة" : "See private classes"}
+                      </Button>
+                    </div>
+                  )}
                   </div>
                 )}
               </div>
