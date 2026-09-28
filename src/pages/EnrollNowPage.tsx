@@ -19,7 +19,7 @@ import SchedulePicker from "@/components/SchedulePicker";
 import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPrivateAvailability } from "@/lib/privateAvailability";
+import { fetchPrivateAvailability, formatTime12 } from "@/lib/privateAvailability";
 import { LEVEL_SELECT_OPTIONS, normalizeLevel, getLevelByKey } from "@/constants/levels";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
@@ -240,20 +240,55 @@ const EnrollNowPage = () => {
     }
     if (!selectedLevel) return;
 
-    // Private classes: fetch private availability (all days; see privateAvailability.ts).
-    // 29 Sep 2026 (Re: "times must be different in the days"): this used to
-    // dedupe down to one button per day, always keeping whichever time option
-    // came first — so every day showed the same 10:00 and 18:00 silently
-    // disappeared. Keep every day+time combination as its own slot instead.
+    // Private classes: real teacher availability, ranked group-demand-free
+    // first (29 Sep 2026 Phase 2 — spec "PRIVATE LESSON EXPERIENCE": private
+    // students should see ALL genuinely open teacher slots, locked ones
+    // excluded, slots with no group demand ranked first). Backed by
+    // fn_private_slot_options(), Phase 1's scoring function, which already
+    // excludes LOCKED conflicts (blocked windows, running private classes,
+    // running/full groups) — replaces the old static app_settings-only
+    // fetchPrivateAvailability(), kept below only as a fallback if the RPC
+    // is unreachable. Two spread times per day (earliest + latest open),
+    // same button count/shape as before ("times must be different in the
+    // days" fix stays intact).
     if (classType === "private") {
       const loadPrivate = async () => {
-        const { options } = await fetchPrivateAvailability();
-        const slots = options.map((opt) => ({
-          day: opt.weekday,
-          time: opt.timeFormatted,
-          packageId: `private-${opt.dayIndex}-${opt.time}`,
-          seatsLeft: 99, // private slots don't have seat limits in day picker
-        }));
+        let slots: { day: string; time: string; packageId: string; seatsLeft: number }[] = [];
+        try {
+          const { data, error } = await supabase.rpc("fn_private_slot_options" as any, { p_limit: 300 });
+          if (error) throw error;
+          const rows = (data as any[]) || [];
+          if (rows.length > 0) {
+            const byDay: Record<string, any[]> = {};
+            for (const r of rows) (byDay[r.day_name] ||= []).push(r);
+            for (const day of DAY_NAMES) {
+              const dayRows = (byDay[day] || []).slice().sort((a, b) => a.start_time.localeCompare(b.start_time));
+              if (dayRows.length === 0) continue;
+              const picks = dayRows.length > 1 && dayRows[0].start_time !== dayRows[dayRows.length - 1].start_time
+                ? [dayRows[0], dayRows[dayRows.length - 1]]
+                : [dayRows[0]];
+              for (const r of picks) {
+                slots.push({
+                  day: r.day_name,
+                  time: formatTime12(r.start_time),
+                  packageId: `private-${r.day_of_week}-${r.start_time}`,
+                  seatsLeft: 99,
+                });
+              }
+            }
+          }
+        } catch (e) {
+          console.error("fn_private_slot_options failed, falling back to static config:", e);
+        }
+        if (slots.length === 0) {
+          const { options } = await fetchPrivateAvailability();
+          slots = options.map((opt) => ({
+            day: opt.weekday,
+            time: opt.timeFormatted,
+            packageId: `private-${opt.dayIndex}-${opt.time}`,
+            seatsLeft: 99,
+          }));
+        }
         setLevelSlots(slots);
         if (initialLevelLoad && preferredDays.length > 0) {
           const matchSlot = slots.find(s => s.day === preferredDays[0]);
@@ -309,21 +344,35 @@ const EnrollNowPage = () => {
 
       // Deduplicate by admin-side day_of_week; convert each slot to the learner's timezone for display
       const seen = new Set<number>();
-      const slots: { day: string; time: string; packageId: string; seatsLeft: number }[] = [];
+      const slots: { day: string; time: string; packageId: string; seatsLeft: number; demand: number }[] = [];
       for (const r of rows) {
         if (!seen.has(r.day_of_week)) {
           seen.add(r.day_of_week);
           const srcTz = r.timezone || "Africa/Cairo";
           const local = convertSlotToTimezone(r.day_of_week, r.start_time, srcTz, timezone);
-          const seatsLeft = Math.max(0, (r.capacity || 5) - (pkgMemberCount[r.id] || 0));
-          slots.push({ day: local.weekday, time: local.timeFormatted, packageId: r.id, seatsLeft });
+          const demand = pkgMemberCount[r.id] || 0;
+          const seatsLeft = Math.max(0, (r.capacity || 5) - demand);
+          slots.push({ day: local.weekday, time: local.timeFormatted, packageId: r.id, seatsLeft, demand });
         }
       }
-      setLevelSlots(slots);
+      // 29 Sep 2026 Phase 2 (spec "GROUP COURSE BOOKING EXPERIENCE" +
+      // "GROUP CONCENTRATION"): show only the top two recommended times
+      // instead of every configured day, so new students concentrate into
+      // groups that are already forming rather than fragmenting further.
+      // Ranked by real existing demand (pkg_group_members count) first, then
+      // by remaining seats, then day order — all real, bookable
+      // schedule_packages rows; nothing here touches any existing enrollment.
+      const ranked = slots
+        .slice()
+        .sort((a, b) => b.demand - a.demand || b.seatsLeft - a.seatsLeft || rows.findIndex(r => r.id === a.packageId) - rows.findIndex(r => r.id === b.packageId));
+      const topSlots = (ranked.length > 2 ? ranked.slice(0, 2) : ranked).map(({ demand, ...s }) => s);
+      setLevelSlots(topSlots);
 
-      // On initial load, restore selectedPackageId from rehydrated preferredDays
+      // On initial load, restore selectedPackageId from rehydrated preferredDays.
+      // Check the shown top-2 first, then the full ranked list — a returning
+      // user's earlier pick may have since dropped out of the top-2.
       if (initialLevelLoad && preferredDays.length > 0) {
-        const matchSlot = slots.find(s => s.day === preferredDays[0]);
+        const matchSlot = topSlots.find(s => s.day === preferredDays[0]) || slots.find(s => s.day === preferredDays[0]);
         if (matchSlot) setSelectedPackageId(matchSlot.packageId);
         setInitialLevelLoad(false);
       } else {

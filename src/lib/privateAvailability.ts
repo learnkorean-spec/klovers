@@ -9,7 +9,7 @@ export interface PrivateSlotOption {
   timezone: string;
 }
 
-function formatTime12(t: string): string {
+export function formatTime12(t: string): string {
   const [h, m] = t.split(":").map(Number);
   const ampm = h >= 12 ? "PM" : "AM";
   const hour12 = h % 12 || 12;
