@@ -12,13 +12,20 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
 
 const ForgotPasswordPage = () => {
-  useSEO({ title: "Forgot Password | Klovers", description: "Reset your Klovers account password to regain access to your Korean lessons.", noindex: true });
+  useSEO({
+    title: document.documentElement.lang === "ar" ? "استعادة كلمة المرور | كلوفرز" : "Forgot Password | Klovers",
+    description: document.documentElement.lang === "ar"
+      ? "إرسال رابط لإعادة تعيين كلمة مرور حساب كلوفرز والعودة إلى الدروس."
+      : "Reset your Klovers account password to regain access to your Korean lessons.",
+    noindex: true,
+  });
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isAr = language === "ar";
 
   // Park the destination before the student leaves for her inbox. The reset
   // link comes back to /reset-password with no memory of where she was headed,
@@ -40,7 +47,18 @@ const ForgotPasswordPage = () => {
     });
 
     if (error) {
-      toast({ title: t("auth.loginFailed"), description: error.message, variant: "destructive" });
+      // Never show the raw server message (English, technical). The one case
+      // a visitor can act on is the rate limit: asking twice within a minute.
+      const rateLimited =
+        (error as { status?: number }).status === 429 ||
+        /seconds|rate limit/i.test(error.message ?? "");
+      toast({
+        title: isAr ? "تعذّر إرسال الرابط" : "The link could not be sent",
+        description: rateLimited
+          ? (isAr ? "طُلب رابط قبل لحظات. يمكن المحاولة مرة أخرى بعد دقيقة." : "A link was requested a moment ago. Please try again in a minute.")
+          : (isAr ? "يُرجى التأكد من البريد الإلكتروني والمحاولة مرة أخرى." : "Please check the email address and try again."),
+        variant: "destructive",
+      });
       setLoading(false);
       return;
     }
@@ -59,7 +77,7 @@ const ForgotPasswordPage = () => {
           </CardHeader>
           <CardContent>
             {sent ? (
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-4" role="status">
                 <p className="text-muted-foreground">
                   {t("auth.resetEmailSent")}
                 </p>
@@ -72,8 +90,12 @@ const ForgotPasswordPage = () => {
                 <p className="text-sm text-muted-foreground">
                   {t("auth.resetEmailPrompt")}
                 </p>
+                <label htmlFor="forgot-email" className="sr-only">{t("auth.email")}</label>
                 <Input
+                  id="forgot-email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   placeholder={t("auth.email")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -83,7 +105,7 @@ const ForgotPasswordPage = () => {
                   {loading ? t("auth.sending") : t("auth.sendResetLink")}
                 </Button>
                 <p className="text-sm text-center text-muted-foreground">
-                  <Link to={withRedirect("/login", redirectTo)} className="text-primary underline">{t("auth.backToLogin")}</Link>
+                  <Link to={withRedirect("/login", redirectTo)} className="text-foreground font-semibold underline">{t("auth.backToLogin")}</Link>
                 </p>
               </form>
             )}
