@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
             seo_score: article.seo_score,
             lang: "en",
             published: false,
-            author: "Klovers Team",
+            author: "Klovers",
           })
           .select("id")
           .single();
