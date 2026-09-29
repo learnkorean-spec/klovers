@@ -511,7 +511,7 @@ export default function GroupsToStart() {
           .eq("member_status", "active"),
         supabase
           .from("schedule_packages")
-          .select("id, level, day_of_week, start_time, duration_min, class_language"),
+          .select("id, level, day_of_week, start_time, duration_min, class_language, is_active"),
         // Every enrolment the membership guard would accept a seat against:
         // live, approved, group, and either paid or confirmed-unpaid. NOT
         // filtered to `matched_at is null` any more — that is the
@@ -589,6 +589,7 @@ export default function GroupsToStart() {
         ((pkgRes.data ?? []) as Array<{
           id: string; level: string | null; day_of_week: number | null;
           start_time: string | null; duration_min: number | null; class_language: string | null;
+          is_active: boolean | null;
         }>).map(p => [p.id, p]),
       );
 
@@ -604,7 +605,17 @@ export default function GroupsToStart() {
       const rows: GroupRow[] = ((groupsRes.data ?? []) as Array<{
         id: string; name: string | null; package_id: string | null; start_date: string | null;
         capacity: number | null; min_to_run: number | null; is_active: boolean; meeting_url: string | null; book_url: string | null;
-      }>).map(g => {
+      }>).filter(g => {
+        // 29 Sep 2026 — a group whose schedule slot is switched off, that has
+        // no members and never started, is a leftover of the slot clean-up
+        // (students cannot book it). Hidden here so this list only shows
+        // groups that can really fill. It comes back automatically if the
+        // slot is switched on again; a group with any member always shows.
+        const pkg = g.package_id ? packages.get(g.package_id) : undefined;
+        const slotOff = !!pkg && pkg.is_active === false;
+        const hasMembers = (membersByGroup.get(g.id)?.length ?? 0) > 0;
+        return !(slotOff && !hasMembers && !g.start_date);
+      }).map(g => {
         const p = g.package_id ? packages.get(g.package_id) : undefined;
         const title = g.name || "Group";
         // Every group is already named for its slot — "Level 1 · Monday 15:00
