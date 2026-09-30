@@ -28,7 +28,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays, Users, GraduationCap, Bell, Search, LayoutDashboard,
   ClipboardCheck, Clock, ChevronDown, FileText, Settings, LogOut, RefreshCw,
-  CalendarRange, History, Sun, Moon, Mail, Archive,
+  CalendarRange, History, Sun, Moon, Mail, Archive, Lock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,10 @@ export const ADMIN_NAV: {
     // timetable is not a screen inside AdminDashboard.tsx. It reads the four
     // scheduling tables live; see WeekTimetable.tsx.
     { id: "week", label: "The week", to: "/admin/week", icon: CalendarRange },
-    { id: "guide", label: "Sending guide", to: "/admin/guide", icon: CalendarRange },
+    // Re, 1 Oct 2026: the Sending guide slot now holds Connectors — the map of
+    // which login opens which platform. The guide explained trial batches that
+    // no longer exist; /admin/guide stays reachable from the Trials page links.
+    { id: "connectors", label: "Connectors", to: "/admin?tab=connectors", icon: Lock },
     // One free-text letter to one student, from the Klovers address. Listed
     // here rather than folded because the whole point of building it was that
     // there was no way to send such a letter without an engineer — a screen
@@ -103,7 +106,6 @@ export const ADMIN_NAV: {
         { id: "notifications", label: "Notifications", to: "/admin?tab=notifications" },
         { id: "scheduling", label: "Scheduling", to: "/admin?tab=scheduling" },
         { id: "settings", label: "Settings", to: "/admin?tab=settings" },
-        { id: "connectors", label: "Connectors", to: "/admin?tab=connectors" },
         { id: "league-users", label: "Leagues", to: "/admin?tab=league-users" },
         { id: "promos", label: "Promo codes", to: "/admin?tab=promos" },
         { id: "lead-funnel", label: "Lead funnel", to: "/admin?tab=lead-funnel" },
