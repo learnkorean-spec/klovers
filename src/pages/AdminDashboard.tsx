@@ -68,6 +68,7 @@ const LeagueUsersPanel = lazy(() => import("@/components/admin/LeagueUsersPanel"
 const LeadFunnelPanel = lazy(() => import("@/components/admin/LeadFunnelPanel"));
 const BookAssignmentManager = lazy(() => import("@/components/admin/BookAssignmentManager"));
 const PictureLibrary = lazy(() => import("@/components/admin/PictureLibrary"));
+const ConversationAudio = lazy(() => import("@/components/admin/ConversationAudio"));
 const AccountsMap = lazy(() => import("@/components/admin/AccountsMap"));
 const TrialClassesTab = lazy(() => import("@/components/admin/TrialClassesTab"));
 
@@ -1127,7 +1128,7 @@ const AdminDashboard = () => {
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
     { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "sales", "promos", "manage"] },
     { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
-    { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "pictures"] },
+    { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "pictures", "conversation-audio"] },
     { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings", "connectors"] },
   ];
 
@@ -1493,6 +1494,11 @@ const AdminDashboard = () => {
                     <Image className="h-3.5 w-3.5" /> Pictures
                   </TabsTrigger>
                 )}
+                {inActiveGroup("conversation-audio") && (
+                  <TabsTrigger value="conversation-audio" className={TAB_CLS}>
+                    <Volume2 className="h-3.5 w-3.5" /> Book audio
+                  </TabsTrigger>
+                )}
                 {inActiveGroup("blog") && (
                   <TabsTrigger value="blog" className={TAB_CLS}>Blog</TabsTrigger>
                 )}
@@ -1837,6 +1843,15 @@ const AdminDashboard = () => {
               <TabErrorBoundary name="Book Assignments">
                 <Suspense fallback={<TabLoader />}>
                   <BookAssignmentManager />
+                </Suspense>
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* BOOK CONVERSATION AUDIO TAB */}
+            <TabsContent value="conversation-audio">
+              <TabErrorBoundary name="Conversation Audio">
+                <Suspense fallback={<TabLoader />}>
+                  <ConversationAudio />
                 </Suspense>
               </TabErrorBoundary>
             </TabsContent>
