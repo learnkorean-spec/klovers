@@ -213,7 +213,7 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
               <a
                 href={isAr ? "/hangul-starter-ar.pdf" : "/hangul-starter-en.pdf"}
                 download
-                className="shrink-0 text-xs font-semibold text-primary hover:underline"
+                className="shrink-0 text-xs font-semibold text-foreground underline underline-offset-4 hover:opacity-80"
               >
                 {isAr ? "تحميل" : "Download"}
               </a>
