@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminLtr } from "@/hooks/admin/useAdminLtr";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  // Admin screens are English: always left to right, whatever the site language.
+  useAdminLtr();
   const [status, setStatus] = useState<"loading" | "authorized" | "unauthorized">("loading");
 
   useEffect(() => {
@@ -34,7 +37,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div dir="ltr" lang="en" className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground">Loading...</p>
       </div>
     );
@@ -44,7 +47,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/admin/login" replace />;
   }
 
-  return <>{children}</>;
+  return <div dir="ltr" lang="en">{children}</div>;
 };
 
 export default ProtectedRoute;
