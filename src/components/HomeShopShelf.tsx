@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKS, BOOK_COVERS, type BookId } from "@/constants/books";
 import { logEngagementEvent } from "@/lib/leadTracking";
-import { localPrice, type ShopPrice } from "@/lib/shopCurrency";
+import { currencyForLanguage, localPrice, type ShopPrice } from "@/lib/shopCurrency";
 
 /**
  * Homepage → the shop (28 Sep 2026, Re: "build the way to present the shop
@@ -63,7 +63,7 @@ const HomeShopShelf = () => {
       supabase.functions
         .invoke("shop-products", { method: "GET" })
         .then(({ data }) => setListings(Array.isArray(data?.products)
-          ? (data.products as Listing[]).map((l) => ({ ...l, price: localPrice(l.price) })) // USD, or EGP in Egypt
+          ? (data.products as Listing[]) // every currency kept; the page language picks one at render
           : []))
         .catch(() => setListings([]));
     }, { rootMargin: "300px" });
@@ -144,7 +144,7 @@ const HomeShopShelf = () => {
                   {listing ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-klovers-green bg-ivory px-3 py-1 text-sm font-bold text-charcoal">
                       <span className="h-2 w-2 rounded-full bg-klovers-green" aria-hidden="true" />
-                      {money(listing.price.amount, listing.price.currency, isAr)}
+                      {(() => { const p = localPrice(listing.price, currencyForLanguage(isAr)); return money(p.amount, p.currency, isAr); })()}
                     </span>
                   ) : listings !== null ? (
                     <span className="inline-block rounded-full bg-klovers-yellow px-3 py-1 text-xs font-bold text-charcoal">

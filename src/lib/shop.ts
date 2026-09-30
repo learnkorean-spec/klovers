@@ -11,10 +11,11 @@
  *
  * Only /shop routes import this module, so no other page pays for it.
  */
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { localPrice, shopCurrency, type ShopPrice } from "@/lib/shopCurrency";
+import { currencyForLanguage, localPrice, shopCurrency, type ShopCurrency, type ShopPrice } from "@/lib/shopCurrency";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { capture, type AnalyticsEvent } from "@/lib/analytics";
 import { logEngagementEvent } from "@/lib/leadTracking";
 
@@ -40,7 +41,7 @@ export interface ShopProduct {
   category: string | null;
   bookId: string | null;
   lang: "ar" | "en" | null;
-  /** Already in the visitor's currency (USD, or EGP in Egypt): see src/lib/shopCurrency.ts. */
+  /** In the page's currency (EGP on the Arabic page, USD on the English page) once it leaves useShopProducts: see src/lib/shopCurrency.ts. */
   price: ShopPrice;
 }
 
@@ -81,16 +82,26 @@ export function formatPrice(amount: number, currency: string, isAr: boolean) {
 export async function fetchShopProducts(): Promise<ShopProduct[]> {
   const { data, error } = await supabase.functions.invoke("shop-products", { method: "GET" });
   if (error || !data || !Array.isArray(data.products)) throw new Error("shop_unavailable");
-  // Every price on the page is in the visitor's currency: USD, or EGP in Egypt.
-  // Pictures are picked per page language at render time (productImages in
-  // src/lib/shopExtras.ts), so a cached catalogue never shows an English cover
-  // on the Arabic shop.
-  return (data.products as ShopProduct[]).map((p) => ({ ...p, price: localPrice(p.price) }));
+  // Kept with every currency Stripe has (price.options). The page's currency
+  // is picked in useShopProducts, per render, so switching the page language
+  // switches the prices at once — a cached catalogue never shows dollars on
+  // the Arabic page. Pictures work the same way (productImages in
+  // src/lib/shopExtras.ts).
+  return data.products as ShopProduct[];
 }
 
-/** The catalogue, shared by every /shop page and cached for five minutes. */
+/**
+ * The catalogue, shared by every /shop page and cached for five minutes.
+ * Prices come out in the page's currency: EGP on Arabic, USD on English.
+ */
 export function useShopProducts() {
-  return useQuery({ queryKey: ["shop-products"], queryFn: fetchShopProducts, staleTime: 5 * 60_000, retry: 1 });
+  const { language } = useLanguage();
+  const want: ShopCurrency = currencyForLanguage(language === "ar");
+  const select = useCallback(
+    (products: ShopProduct[]) => products.map((p) => ({ ...p, price: localPrice(p.price, want) })),
+    [want],
+  );
+  return useQuery({ queryKey: ["shop-products"], queryFn: fetchShopProducts, staleTime: 5 * 60_000, retry: 1, select });
 }
 
 export type CheckoutResult =
@@ -98,13 +109,14 @@ export type CheckoutResult =
   | { ok: true; free: true; downloads: { bookId: string; url: string }[]; signedIn: boolean }
   | { ok: false; reason: "sign_in" | "owned" | "unavailable" };
 
-export async function startCheckout(lines: CartLine[]): Promise<CheckoutResult> {
+/** `currency` is the one the bag showed, so Stripe charges exactly that. */
+export async function startCheckout(lines: CartLine[], currency: ShopCurrency = shopCurrency()): Promise<CheckoutResult> {
   const { data, error } = await supabase.functions.invoke("shop-checkout", {
     body: {
       items: lines.map((l) => ({ priceId: l.priceId, quantity: l.quantity })),
       lang: typeof document !== "undefined" && document.documentElement.lang === "en" ? "en" : "ar",
-      // Charge in the currency the shop showed (USD, or EGP in Egypt).
-      currency: shopCurrency(),
+      // Charge in the currency the bag showed (EGP on Arabic, USD on English).
+      currency,
     },
   });
   if (data?.free && Array.isArray(data.downloads)) {
