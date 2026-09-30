@@ -8,14 +8,49 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SchedulePicker from "@/components/SchedulePicker";
-import { ArrowLeft, CalendarDays, Clock, Users, AlertTriangle, CheckCircle2, Loader2, RefreshCw, ArrowRight } from "lucide-react";
+import { ArrowLeft, CalendarDays, AlertTriangle, CheckCircle2, Loader2, RefreshCw, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
 import { getLevelShortLabel } from "@/constants/levels";
 import { useLanguage } from "@/contexts/LanguageContext";
+import KloverIcon from "@/components/KloverIcon";
 
 const DAY_NAMES_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAY_NAMES_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+
+// Arabic city names for the time zones students and the teacher actually use.
+// Anything not listed falls back to the browser's own Arabic zone name, so an
+// Arabic page never shows a raw "Asia/Bangkok" id.
+const TZ_CITY_AR: Record<string, string> = {
+  "Africa/Cairo": "القاهرة", "Asia/Bangkok": "بانكوك", "Asia/Ho_Chi_Minh": "هو تشي منه",
+  "Asia/Riyadh": "الرياض", "Asia/Dubai": "دبي", "Asia/Kuwait": "الكويت", "Asia/Qatar": "الدوحة",
+  "Asia/Bahrain": "البحرين", "Asia/Muscat": "مسقط", "Asia/Amman": "عمّان", "Asia/Baghdad": "بغداد",
+  "Asia/Beirut": "بيروت", "Asia/Damascus": "دمشق", "Africa/Casablanca": "الدار البيضاء",
+  "Africa/Tunis": "تونس", "Africa/Algiers": "الجزائر", "Africa/Tripoli": "طرابلس",
+  "Africa/Khartoum": "الخرطوم", "Asia/Seoul": "سول", "Asia/Kuala_Lumpur": "كوالالمبور",
+  "Europe/London": "لندن", "Europe/Paris": "باريس", "Europe/Berlin": "برلين",
+  "America/New_York": "نيويورك", "America/Chicago": "شيكاغو", "America/Los_Angeles": "لوس أنجلوس",
+};
+
+function tzLabel(tz: string, language: string): string {
+  if (!tz) return "";
+  if (language === "ar") {
+    if (TZ_CITY_AR[tz]) return `توقيت ${TZ_CITY_AR[tz]}`;
+    try {
+      const name = new Intl.DateTimeFormat("ar", { timeZone: tz, timeZoneName: "longGeneric" })
+        .formatToParts(new Date()).find((x) => x.type === "timeZoneName")?.value;
+      if (name) return name;
+    } catch { /* fall through */ }
+    return "التوقيت المحلي";
+  }
+  return `${tz.split("/").pop()!.replace(/_/g, " ")} time`;
+}
+
+// "11:00 PM" -> "11:00 م" on the Arabic page.
+function localClock(clock: string, language: string): string {
+  if (language !== "ar") return clock;
+  return clock.replace(/\s*AM$/i, " ص").replace(/\s*PM$/i, " م");
+}
 
 // Copy for holding a seat, kept beside DAY_NAMES_AR/EN for the same reason they
 // are here: a handful of strings only this page says. group_full and
@@ -86,6 +121,7 @@ const MySchedulePage = () => {
   const [packageDetails, setPackageDetails] = useState<PackageDetails | null>(null);
 
   // Assignment
+  const [isPaid, setIsPaid] = useState(false);
   const [assignmentStatus, setAssignmentStatus] = useState<"pending" | "assigned" | "waitlisted" | "none">("none");
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
 
@@ -121,6 +157,7 @@ const MySchedulePage = () => {
       setUserLevel(level);
 
       const { data: enr } = await supabase.from("enrollments").select("timezone").eq("user_id", session.user.id).eq("approval_status", "APPROVED").eq("payment_status", "PAID").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      setIsPaid(!!enr);
       if ((enr as any)?.timezone) setUserTimezone((enr as any).timezone);
 
       // Load package preference
@@ -347,22 +384,28 @@ const MySchedulePage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4" /> {t("mySchedule.selectedPackage")}
+                  <KloverIcon name="calendar-blossom" className="h-7 w-7" /> {t("mySchedule.selectedPackage")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {(() => {
                   const uTz = getUserTimezone();
                   const lcl = convertSlotToTimezone(packageDetails.day_of_week, packageDetails.start_time, packageDetails.timezone, uTz);
+                  const dayName = DAY_NAMES[lcl.dayIndex] ?? DAY_NAMES[packageDetails.day_of_week];
+                  const sameZone = packageDetails.timezone === uTz;
                   return (
                 <div className="flex flex-wrap gap-3 items-center">
-                  <Badge variant="outline" className="text-sm">{getLevelShortLabel(packageDetails.level)}</Badge>
-                  <span className="text-sm text-foreground font-medium">{lcl.weekday}</span>
-                  <span className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> {lcl.timeFormatted} · {packageDetails.duration_min}min
+                  <Badge variant="outline" className="text-sm">{getLevelShortLabel(packageDetails.level, language)}</Badge>
+                  <span className="text-sm text-foreground font-medium">{dayName}</span>
+                  <span className="text-sm text-muted-foreground">
+                    <bdi>{localClock(lcl.timeFormatted, language)}</bdi> · <bdi>{packageDetails.duration_min} {t("mySchedule.minutes")}</bdi>
                   </span>
-                  <span className="text-xs text-muted-foreground">{uTz.replace(/_/g, " ")}</span>
-                  <span className="text-[11px] text-muted-foreground/70 basis-full">({DAY_NAMES[packageDetails.day_of_week]} {formatTime(packageDetails.start_time)} {packageDetails.timezone.replace(/_/g, " ")})</span>
+                  <span className="text-xs text-muted-foreground">{tzLabel(uTz, language)}</span>
+                  {!sameZone && (
+                    <span className="text-[11px] text-muted-foreground/70 basis-full">
+                      {t("mySchedule.classTimeIn").replace("{tz}", tzLabel(packageDetails.timezone, language))} {DAY_NAMES[packageDetails.day_of_week]} <bdi>{localClock(formatTime(packageDetails.start_time), language)}</bdi>
+                    </span>
+                  )}
                 </div>
                   );
                 })()}
@@ -387,7 +430,7 @@ const MySchedulePage = () => {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4" /> {t("mySchedule.assignmentStatus")}
+                <KloverIcon name="calendar-check" className="h-7 w-7" /> {t("mySchedule.assignmentStatus")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -407,10 +450,10 @@ const MySchedulePage = () => {
 
               {assignmentStatus === "pending" && (
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                  <Loader2 className="h-5 w-5 text-primary shrink-0 mt-0.5 animate-spin" />
+                  <KloverIcon name="klobi-reading" className="h-10 w-10" />
                   <div>
                     <p className="font-medium text-foreground">{t("mySchedule.awaitingAssignment")}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{t("mySchedule.awaitingDesc")}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t(isPaid ? "mySchedule.awaitingDesc" : "mySchedule.awaitingDescUnpaid")}</p>
                   </div>
                 </div>
               )}
@@ -434,9 +477,9 @@ const MySchedulePage = () => {
                         <div key={alt.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
                           <div>
                             <p className="text-sm font-medium text-foreground">
-                              {aLcl.weekday} · {aLcl.timeFormatted}
+                              {DAY_NAMES[aLcl.dayIndex] ?? DAY_NAMES[alt.day_of_week]} · <bdi>{localClock(aLcl.timeFormatted, language)}</bdi>
                             </p>
-                            <p className="text-xs text-muted-foreground">{alt.duration_min}{t("mySchedule.minutes")} · {aTz.replace(/_/g, " ")} · {alt.seats_left} {t("mySchedule.seatsLeft")}</p>
+                            <p className="text-xs text-muted-foreground"><bdi>{alt.duration_min} {t("mySchedule.minutes")}</bdi> · {tzLabel(aTz, language)} · {alt.seats_left} {t("mySchedule.seatsLeft")}</p>
                           </div>
                           <Button size="sm" disabled={assigning} onClick={() => handleAssignToAlternative(alt)}>
                             {assigning ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ArrowRight className="h-4 w-4 mr-1" /> {t("mySchedule.choose")}</>}
@@ -487,7 +530,7 @@ const MySchedulePage = () => {
                   onClick={() => setSelectedCourseType("group")}
                   className="p-6 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all text-center space-y-2"
                 >
-                  <Users className="h-8 w-8 mx-auto text-primary" />
+                  <KloverIcon name="student-girl-heart" className="h-12 w-12 mx-auto" />
                   <p className="font-semibold text-foreground">{t("mySchedule.groupClass")}</p>
                   <p className="text-xs text-muted-foreground">{t("mySchedule.groupClassDesc")}</p>
                 </button>
@@ -496,7 +539,7 @@ const MySchedulePage = () => {
                   onClick={() => setSelectedCourseType("private")}
                   className="p-6 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all text-center space-y-2"
                 >
-                  <Clock className="h-8 w-8 mx-auto text-primary" />
+                  <KloverIcon name="klobi-headphones" className="h-12 w-12 mx-auto" />
                   <p className="font-semibold text-foreground">{t("mySchedule.privateClass")}</p>
                   <p className="text-xs text-muted-foreground">{t("mySchedule.privateClassDesc")}</p>
                 </button>
