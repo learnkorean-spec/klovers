@@ -96,7 +96,7 @@ const UnitPlacementPage = () => {
       toast({
         title: isAr ? "تم استئناف الاختبار" : "Test resumed",
         description: isAr
-          ? "رجّعنا إجاباتك السابقة. التسجيلات الصوتية بتتعمل من جديد."
+          ? "استُعيدت الإجابات السابقة. التسجيلات الصوتية لا تُحفظ في المسودة، فيلزم تسجيلها من جديد."
           : "Your previous answers were restored. Audio recordings are not kept in the draft.",
       });
     } catch {
@@ -224,7 +224,7 @@ const UnitPlacementPage = () => {
         variant: "destructive",
         title: isAr ? "لم يتم الحفظ" : "Could not save",
         description: isAr
-          ? "النتيجة ظاهرة تحت، بس محصلش حفظ. جرّبي تاني أو صوّري الشاشة."
+          ? "النتيجة معروضة أدناه، لكن الحفظ لم يتم. تُرجى إعادة المحاولة أو حفظ صورة للشاشة."
           : "Your result is shown below but was not saved. Try again, or screenshot it.",
       });
     } else {
@@ -322,15 +322,15 @@ const UnitPlacementPage = () => {
                 )}
               </p>
               <ul className="space-y-1.5 list-disc ms-5 text-muted-foreground">
-                <li>{t("٦ أقسام اختيار من متعدد وقراءة — تتصحح تلقائيًا.", "6 multiple-choice and reading sections — graded automatically.")}</li>
-                <li>{t("٣ أسئلة كتابة بالكوري — تصحّحها المعلّمة.", "3 Korean writing questions — marked by your teacher.")}</li>
-                <li>{t("٥ أسئلة شفهية بالتسجيل الصوتي — تقيّمها المعلّمة. تقدري تتخطيها.", "5 spoken questions recorded with your microphone — assessed by your teacher. You may skip them.")}</li>
-                <li>{t("حوالي ٣٠ دقيقة. تقدري تقفلي الصفحة وترجعي، إجاباتك محفوظة.", "About 30 minutes. You can close the page and come back — your answers are saved.")}</li>
+                <li>{t("٦ أقسام اختيار من متعدد وقراءة — تُصحَّح تلقائيًا.", "6 multiple-choice and reading sections — graded automatically.")}</li>
+                <li>{t("٣ أسئلة كتابة بالكورية — تصحّحها المعلّمة.", "3 Korean writing questions — marked by your teacher.")}</li>
+                <li>{t("٥ أسئلة شفهية بالتسجيل الصوتي — تقيّمها المعلّمة، ويمكن تخطّيها.", "5 spoken questions recorded with your microphone — assessed by your teacher. You may skip them.")}</li>
+                <li>{t("نحو ٣٠ دقيقة. يمكن إغلاق الصفحة والعودة لاحقًا، فالإجابات محفوظة.", "About 30 minutes. You can close the page and come back — your answers are saved.")}</li>
                 <li>{t("دون قاموس أو ترجمة، فالنتيجة الصادقة هي التي تحدد المكان الصحيح.", "No dictionary or translator — an honest result is what puts you in the right place.")}</li>
               </ul>
               <div className="flex gap-2 pt-2">
                 <Button onClick={() => { setStartedAt(Date.now()); setPhase("test"); }}>
-                  {t("ابدئي الاختبار", "Start the test")}
+                  {t("بدء الاختبار", "Start the test")}
                   <ArrowRight className={cn("h-4 w-4", isAr ? "mr-2 rotate-180" : "ml-2")} />
                 </Button>
                 <Button variant="outline" onClick={() => navigate("/dashboard")}>
@@ -355,7 +355,7 @@ const UnitPlacementPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <CheckCircle2 className="h-6 w-6 text-primary" />
-                {t("نتيجتك", "Your result")}
+                {t("النتيجة", "Your result")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -412,7 +412,7 @@ const UnitPlacementPage = () => {
                 </p>
                 <p className="text-muted-foreground">
                   {t(
-                    "اتحفظوا للمدرّس. هيراجعهم ويأكد نقطة البداية — ممكن يعدّلها لو الإنتاج أضعف أو أقوى من الفهم.",
+                    "حُفظتا للمعلّمة، وستراجعهما لتأكيد نقطة البداية. وقد تتغيّر إن كان الإنتاج أضعف أو أقوى من الفهم.",
                     "Saved for your teacher. They will review them and confirm your starting point — it can move if your production is weaker or stronger than your comprehension.",
                   )}
                 </p>
@@ -420,7 +420,7 @@ const UnitPlacementPage = () => {
 
               <div className="flex gap-2">
                 <Button onClick={() => navigate("/dashboard")}>
-                  {t("رجوع للوحة التحكم", "Back to dashboard")}
+                  {t("العودة إلى لوحة التحكم", "Back to dashboard")}
                 </Button>
               </div>
             </CardContent>
@@ -493,7 +493,7 @@ const UnitPlacementPage = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {t(
-                    `أجبتِ على ${answeredInStep} من ${questionsBySection[sectionStep.id].length}. الأسئلة الفارغة جزء طبيعي من تحديد المستوى.`,
+                    `الإجابات: ${answeredInStep} من ${questionsBySection[sectionStep.id].length}. الأسئلة الفارغة جزء طبيعي من تحديد المستوى.`,
                     `${answeredInStep} of ${questionsBySection[sectionStep.id].length} answered. Leaving questions blank is a normal part of placement.`,
                   )}
                 </p>
@@ -562,7 +562,7 @@ const UnitPlacementPage = () => {
                             {recorded
                               ? <RotateCcw className="h-3.5 w-3.5 me-1.5" />
                               : <Mic className="h-3.5 w-3.5 me-1.5" />}
-                            {recorded ? t("سجّلي تاني", "Re-record") : t("سجّلي", "Record")}
+                            {recorded ? t("إعادة التسجيل", "Re-record") : t("تسجيل", "Record")}
                           </Button>
                         ) : (
                           <Button type="button" size="sm" variant="destructive" onClick={stopRecording}>
@@ -578,7 +578,7 @@ const UnitPlacementPage = () => {
                         )}
                         {recorded && (
                           <Badge variant="secondary" className="self-center">
-                            {t("متسجّل", "Recorded")}
+                            {t("مُسجَّل", "Recorded")}
                           </Badge>
                         )}
                       </div>
