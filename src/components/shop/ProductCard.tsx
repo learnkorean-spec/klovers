@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { formatPrice, productName, type ShopProduct } from "@/lib/shop";
-import { productImages, shopExtras } from "@/lib/shopExtras";
+import { productImages } from "@/lib/shopExtras";
 
 /** Stripe-hosted product photo, lazy and sized; the slot stays ivory without one. */
 export function ProductImage({ product, isAr, className = "", eager = false }: {
@@ -36,11 +36,6 @@ export function ProductCard({ product, isAr }: { product: ShopProduct; isAr: boo
           {product.bookId && (
             <span className="w-fit rounded-full bg-klovers-yellow px-2.5 py-0.5 text-[11px] font-semibold text-charcoal">
               {isAr ? "كتاب رقمي" : "Digital book"}
-            </span>
-          )}
-          {shopExtras(product.bookId)?.gift && (
-            <span className="w-fit rounded-full border border-klovers-green bg-ivory px-2.5 py-0.5 text-[11px] font-semibold text-charcoal">
-              {isAr ? "مجاني مع حساب جديد" : "Free with a new account"}
             </span>
           )}
         </div>

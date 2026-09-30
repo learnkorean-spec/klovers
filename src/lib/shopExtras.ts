@@ -8,7 +8,7 @@ export interface ShopExtras {
   facts: { en: string; ar: string }[];
   /** Inside pages shipped with the site (public/book-previews), shown after the Stripe photos. */
   previews?: string[];
-  /** Free through Cluby's gift (/gift/cluby) for any account. */
+  /** Free through Cluby's gift. Unused since 1 Oct 2026: only the Hangul starter sheet is free. */
   gift?: boolean;
 }
 
@@ -21,7 +21,7 @@ export const SHOP_EXTRAS: Record<string, ShopExtras> = {
       { en: "2 Korean words to trace", ar: "كلمتان كوريتان للكتابة" },
     ],
     previews: [1, 2, 3, 4].map((n) => `/book-previews/cluby-coloring-1-${n}.webp`),
-    gift: true,
+    // Not free (Re, 1 Oct 2026): only the Hangul starter sheet is free.
   },
   "hangul-a0-store": {
     previews: [1, 2, 3, 4].map((n) => `/book-previews/hangul-a0-store-${n}.webp`),

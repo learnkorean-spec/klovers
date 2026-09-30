@@ -178,21 +178,6 @@ export default function ShopProductPage() {
                     </Button>
                   </div>
 
-                  {extras?.gift && (
-                    <div className="mt-4 flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory p-4 dark:bg-card">
-                      <img src="/assets/cluby/cluby-wave.webp" alt="" width={314} height={440} loading="lazy"
-                        className="h-16 w-auto shrink-0 origin-bottom motion-safe:animate-cluby-jump" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-extrabold text-foreground">{tr("A gift from Cluby", "هدية من كلوبي")}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {tr("This book is free with a Klovers account.", "هذا الكتاب مجاني مع حساب في كلوفرز.")}
-                        </p>
-                      </div>
-                      <Button asChild className="h-10 shrink-0 rounded-full border-2 border-charcoal bg-klovers-yellow font-bold text-charcoal hover:bg-klovers-yellow hover:brightness-95">
-                        <Link to="/gift/cluby">{tr("Get it free", "الحصول عليه مجانًا")}</Link>
-                      </Button>
-                    </div>
-                  )}
 
                   {description && (
                     <div className="mt-8 border-t border-border pt-6">

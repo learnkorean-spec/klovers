@@ -299,21 +299,6 @@ export default function ShopPage() {
                   ))}
                 </ol>
 
-                {isAr && (
-                  <div className="mt-6 flex flex-col items-center gap-4 rounded-2xl border-2 border-charcoal bg-ivory p-5 text-center dark:bg-card sm:flex-row sm:text-start">
-                    <img src="/assets/cluby/cluby-wave.webp" alt="" width={314} height={440} loading="lazy"
-                      className="h-20 w-auto shrink-0 origin-bottom motion-safe:animate-cluby-jump" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-display text-lg font-extrabold text-foreground">هدية من كلوبي</p>
-                      <p className="text-sm text-muted-foreground">
-                        كتاب التلوين «كلوبي والبيضة المضيئة» مجاني مع حساب في كلوفرز: ١٥ صفحة للأعمار من ٤ إلى ٧.
-                      </p>
-                    </div>
-                    <Button asChild className="h-11 shrink-0 rounded-full border-2 border-charcoal bg-klovers-yellow font-bold text-charcoal hover:bg-klovers-yellow hover:brightness-95">
-                      <Link to="/gift/cluby">الحصول على الكتاب مجانًا</Link>
-                    </Button>
-                  </div>
-                )}
               </div>
             </section>
 
