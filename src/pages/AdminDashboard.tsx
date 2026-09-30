@@ -26,7 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, Users, FileCheck, Clock, Tag, Loader2, Image, Trophy, TrendingUp, Link, BookOpen, GraduationCap } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Package } from "lucide-react";
+import { ChevronDown, Package, Lock } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
@@ -68,6 +68,7 @@ const LeagueUsersPanel = lazy(() => import("@/components/admin/LeagueUsersPanel"
 const LeadFunnelPanel = lazy(() => import("@/components/admin/LeadFunnelPanel"));
 const BookAssignmentManager = lazy(() => import("@/components/admin/BookAssignmentManager"));
 const PictureLibrary = lazy(() => import("@/components/admin/PictureLibrary"));
+const AccountsMap = lazy(() => import("@/components/admin/AccountsMap"));
 const TrialClassesTab = lazy(() => import("@/components/admin/TrialClassesTab"));
 
 const TabLoader = () => (
@@ -1127,7 +1128,7 @@ const AdminDashboard = () => {
     { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "sales", "promos", "manage"] },
     { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
     { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "pictures"] },
-    { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings"] },
+    { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings", "accounts"] },
   ];
 
   // Development-only. A tab that is linked but ungrouped fails silently in
@@ -1523,6 +1524,11 @@ const AdminDashboard = () => {
                     <Settings className="h-3.5 w-3.5" /> Settings
                   </TabsTrigger>
                 )}
+                {inActiveGroup("accounts") && (
+                  <TabsTrigger value="accounts" className={TAB_CLS}>
+                    <Lock className="h-3.5 w-3.5" /> Accounts
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -1869,6 +1875,15 @@ const AdminDashboard = () => {
             <TabsContent value="settings">
               <TabErrorBoundary name="Settings">
                 <AdminSettings />
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* ACCOUNTS MAP TAB — which login opens which platform (admin-only table) */}
+            <TabsContent value="accounts">
+              <TabErrorBoundary name="Accounts map">
+                <Suspense fallback={<TabLoader />}>
+                  <AccountsMap />
+                </Suspense>
               </TabErrorBoundary>
             </TabsContent>
           </Tabs>
