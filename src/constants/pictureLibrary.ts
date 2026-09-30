@@ -28,6 +28,19 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "b2s_op_03", label: "افتتاح الحصة ٣ — آدم متأخّر والساعة" },
   { file: "b2s_op_04", label: "افتتاح الحصة ٤ — صباح، قهوة ودفتر" },
   { file: "b2s_op_05", label: "افتتاح الحصة ٥ — المطر على الشبّاك" },
+  // Klovers brand scenes (1 Oct 2026) — the canon look: Cluby in velvet
+  // with two horns and the ivory hanbok wrap, Lina in the yellow floral
+  // skirt, Adam in the yellow blazer. Landscape 16:9.
+  { file: "kb_terrace_tea", label: "براند — شاي على التراس وقت الغروب" },
+  { file: "kb_market_apples", label: "براند — لينا وكلوبي في سوق التفاح" },
+  { file: "kb_street_sign", label: "براند — آدم وكلوبي عند لافتة فارغة" },
+  { file: "kb_terrace_notebook", label: "براند — الكتابة في الدفتر على التراس" },
+  { file: "kb_han_picnic", label: "براند — نزهة على نهر الهان" },
+  { file: "kb_night_streetfood", label: "براند — أكل الشارع ليلًا" },
+  { file: "kb_campus_autumn", label: "براند — آدم في الحرم الجامعي، الخريف" },
+  { file: "kb_hanok_laptop", label: "براند — لينا وكلوبي على اللابتوب في هانوك" },
+  { file: "kb_office_seoul", label: "براند — مكتب يطلّ على سيول" },
+  { file: "kb_terrace_reading", label: "براند — القراءة معًا على التراس" },
 ];
 
 export const LIBRARY_ICONS: LibraryIcon[] = [
