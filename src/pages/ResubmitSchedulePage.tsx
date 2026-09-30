@@ -138,7 +138,8 @@ const ResubmitSchedulePage = () => {
       setSubmitted(true);
       toast({ title: t("resubmitSchedule.savedTitle"), description: t("resubmitSchedule.savedDesc") });
     } catch (err: any) {
-      toast({ title: t("common.error"), description: err.message, variant: "destructive" });
+      console.error("[resubmit-schedule]", err);
+      toast({ title: t("common.error"), description: t("enrollToasts.genericError"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

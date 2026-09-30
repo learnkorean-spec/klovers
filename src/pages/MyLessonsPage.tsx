@@ -208,7 +208,8 @@ const MyLessonsPage = () => {
         setSessions((ses.data ?? []) as unknown as SessionRow[]);
         setDueEnrollmentId((enr.data as { id?: string } | null)?.id ?? null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : c.loadFailed);
+        console.error("[my-lessons]", err);
+        setError(c.loadFailed);
       } finally {
         setLoading(false);
       }

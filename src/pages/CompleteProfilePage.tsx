@@ -79,10 +79,10 @@ const COPY = {
     phoneLabel: "رقم الهاتف",
     phonePlaceholder: "+20 100 123 4567",
     timezoneLabel: "المنطقة الزمنية",
-    timezoneHint: "تم تحديدها من جهازك. غيّرها إذا كانت غير صحيحة — نستخدمها لنخبرك بموعد الحصة بتوقيتك.",
-    signInPrompt: "لم تسجّل دخولك، لذلك ستُحفظ بياناتك كطلب استفسار لا في حسابك.",
-    signInLink: "سجّل دخولك أولاً",
-    notSignedInNote: "حُفظت بياناتك كطلب استفسار. سجّل دخولك ثم أعد ملء النموذج لحفظها في حسابك.",
+    timezoneHint: "تم تحديدها من الجهاز. يمكن تغييرها إذا كانت غير صحيحة، فهي تُستخدم لإبلاغ موعد الحصة بالتوقيت المحلي.",
+    signInPrompt: "لم يتم تسجيل الدخول، لذلك ستُحفظ البيانات كطلب استفسار لا في الحساب.",
+    signInLink: "تسجيل الدخول أولاً",
+    notSignedInNote: "حُفظت البيانات كطلب استفسار. يمكن تسجيل الدخول ثم إعادة ملء النموذج لحفظها في الحساب.",
   },
 } as const;
 
@@ -180,7 +180,7 @@ const CompleteProfilePage = () => {
         },
       });
 
-      if (error) throw new Error(error.message || t("completeProfile.saveFailedGeneric"));
+      if (error) { console.error("[complete-profile] save failed:", error); throw new Error(t("completeProfile.saveFailedGeneric")); }
 
       // The part that was missing. Only for a signed-in user, and only ever
       // their own row - RLS enforces that regardless of what is in the URL.
@@ -213,7 +213,8 @@ const CompleteProfilePage = () => {
 
       setDone(true);
     } catch (err: any) {
-      toast({ title: t("common.error"), description: err.message, variant: "destructive" });
+      console.error("[complete-profile]", err);
+      toast({ title: t("common.error"), description: t("completeProfile.saveFailedGeneric"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -225,8 +226,8 @@ const CompleteProfilePage = () => {
         <Header />
         <main className="pt-28 pb-20 px-4 flex flex-col items-center text-center">
           <div className="max-w-md mx-auto space-y-4">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            <div className="w-16 h-16 rounded-full bg-correct flex items-center justify-center mx-auto">
+              <CheckCircle2 className="h-8 w-8 text-correct-foreground" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">{t("completeProfile.doneTitle")}</h1>
             <p className="text-muted-foreground leading-relaxed">

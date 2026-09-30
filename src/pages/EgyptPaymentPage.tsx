@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import KloverIcon from "@/components/KloverIcon";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
@@ -217,9 +218,9 @@ const PaymentForm = ({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   const METHODS = [
-    { value: "vodafone_cash", label: t("payment.vodafoneCash"), icon: "📱" },
-    { value: "instapay", label: t("payment.instapay"), icon: "💳" },
-    { value: "bank_transfer", label: t("payment.bankTransfer"), icon: "🏦" },
+    { value: "vodafone_cash", label: t("payment.vodafoneCash"), icon: "globe-plane" },
+    { value: "instapay", label: t("payment.instapay"), icon: "badge-blossom" },
+    { value: "bank_transfer", label: t("payment.bankTransfer"), icon: "books-stack" },
   ];
 
   const copyAccount = () => {
@@ -258,7 +259,7 @@ const PaymentForm = ({
                     : "border-border hover:border-primary/50"
                 }`}
               >
-                <span className="text-xl block" aria-hidden="true">{m.icon}</span>
+                <KloverIcon name={m.icon as any} className="mx-auto h-8 w-8" />
                 <span className="text-xs font-medium text-foreground">{m.label}</span>
               </button>
             ))}
@@ -457,7 +458,8 @@ const EgyptPaymentPage = () => {
       track.purchase({ value: enrollment.amount, currency: enrollment.currency || "EGP" });
       toast({ title: t("payment.paymentSubmitted"), description: t("payment.paymentSubmittedDesc") });
     } catch (err: any) {
-      toast({ title: t("payment.error"), description: err.message, variant: "destructive" });
+      console.error("[payment]", err);
+      toast({ title: t("payment.error"), description: t("enrollToasts.genericError"), variant: "destructive" });
     } finally {
       setSubmitting(false);
       setUploadProgress(null);
@@ -494,7 +496,8 @@ const EgyptPaymentPage = () => {
       setEnrollment((prev) => prev ? { ...prev, receipt_url: path } : null);
       toast({ title: t("payment.receiptReplaced"), description: t("payment.receiptReplacedDesc") });
     } catch (err: any) {
-      toast({ title: t("payment.error"), description: err.message, variant: "destructive" });
+      console.error("[payment]", err);
+      toast({ title: t("payment.error"), description: t("enrollToasts.genericError"), variant: "destructive" });
     } finally {
       setReplacing(false);
     }
@@ -547,10 +550,10 @@ const EgyptPaymentPage = () => {
         {enrollment.approval_status === "APPROVED" && (
           <div className="space-y-4">
             {/* Success card */}
-            <Card className="border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800">
+            <Card className="border-correct bg-correct/10">
               <CardContent className="pt-6 text-center space-y-3">
-                <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mx-auto">
-                  <CheckCircle className="h-9 w-9 text-green-600" />
+                <div className="w-16 h-16 rounded-full bg-correct flex items-center justify-center mx-auto">
+                  <CheckCircle className="h-9 w-9 text-correct-foreground" />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground">{t("payment.youAreIn")}</h2>
                 <p className="text-muted-foreground text-sm max-w-xs mx-auto">

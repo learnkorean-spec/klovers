@@ -1,5 +1,6 @@
 import { useSearchParams } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
+import KloverIcon from "@/components/KloverIcon";
 
 export default function RsvpConfirmationPage() {
   // Transactional page: real content for the signed-in user, nothing a
@@ -26,8 +27,10 @@ export default function RsvpConfirmationPage() {
         />
 
         {/* Emoji */}
-        <div className="text-6xl mb-5">
-          {isYes ? "🎉" : "😢"}
+        <div className="mb-5 flex justify-center">
+          <span className="inline-flex rounded-2xl bg-[#FFF9EC] p-3">
+            <KloverIcon name={isYes ? "student-boy-thumbsup" : "calendar-blossom"} className="h-20 w-20" />
+          </span>
         </div>
 
         {/* Heading */}
@@ -47,7 +50,7 @@ export default function RsvpConfirmationPage() {
               </span>{" "}
               is confirmed.
               <br /><br />
-              We'll send you the class link closer to the date. See you there! 🇰🇷
+              We'll send you the class link closer to the date. See you there!
             </>
           ) : (
             <>
@@ -60,9 +63,7 @@ export default function RsvpConfirmationPage() {
 
         {/* RSVP confirmation badge */}
         <div className="inline-flex items-center gap-2 bg-[#111111] border border-[#2a2a2a] rounded-full px-4 py-2 text-sm mb-6">
-          <span className={isYes ? "text-green-400" : "text-red-400"}>
-            {isYes ? "✅" : "❌"}
-          </span>
+          <span aria-hidden="true" className={`inline-block h-3 w-3 rounded-full ${isYes ? "bg-correct" : "bg-wrong"}`} />
           <span className="text-[#888]">
             Attendance: <span className="text-white font-medium">{isYes ? "Confirmed" : "Declined"}</span>
           </span>
@@ -70,7 +71,7 @@ export default function RsvpConfirmationPage() {
 
         {/* Footer */}
         <div className="border-t border-[#2a2a2a] pt-5 mt-2">
-          <p className="text-[#999] text-[13px]">— The Klovers Team 🇰🇷</p>
+          <p className="text-[#999] text-[13px]">— The Klovers Team</p>
           <a
             href="https://kloversegy.com"
             className="text-[#FFFF00] text-[12px] hover:underline mt-1 inline-block"

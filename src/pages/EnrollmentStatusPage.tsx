@@ -7,6 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/useSEO";
 
+const CheckIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-10" /></svg>
+);
+
 interface Step {
   label: string;
   labelAr: string;
@@ -119,7 +123,7 @@ export default function EnrollmentStatusPage() {
           <div className="text-center space-y-1">
             <h1 className="text-2xl font-bold">{isAr ? "حالة تسجيلك" : "Your Enrollment Status"}</h1>
             <p className="text-muted-foreground text-sm">
-              {isAr ? "تابع رحلتك مع KLovers" : "Track your KLovers journey"}
+              {isAr ? "متابعة الرحلة مع كلوفرز" : "Track your Klovers journey"}
             </p>
           </div>
 
@@ -132,7 +136,7 @@ export default function EnrollmentStatusPage() {
           {!loading && !enrollment && (
             <Card><CardContent className="py-8 text-center space-y-4">
               <p className="text-muted-foreground">{isAr ? "لا يوجد تسجيل نشط." : "No active enrollment found."}</p>
-              <Button onClick={() => navigate("/enroll")}>{isAr ? "سجّل الآن" : "Enroll Now"}</Button>
+              <Button onClick={() => navigate("/enroll")}>{isAr ? "التسجيل الآن" : "Enroll Now"}</Button>
             </CardContent></Card>
           )}
 
@@ -144,13 +148,13 @@ export default function EnrollmentStatusPage() {
                   {steps.map((step, i) => (
                     <li key={i} className="flex gap-3 items-start">
                       <div className={`mt-0.5 w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-sm font-bold
-                        ${step.done ? "bg-green-500 text-white" : step.active ? "bg-yellow-400 text-black" : "bg-muted text-muted-foreground"}`}>
-                        {step.done ? "✓" : i + 1}
+                        ${step.done ? "bg-correct text-correct-foreground" : step.active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                        {step.done ? <CheckIcon /> : i + 1}
                       </div>
                       <div>
-                        <p className={`font-semibold text-sm ${step.done ? "text-green-700 dark:text-green-400" : step.active ? "text-foreground" : "text-muted-foreground"}`}>
+                        <p className={`font-semibold text-sm ${step.done ? "text-foreground" : step.active ? "text-foreground" : "text-muted-foreground"}`}>
                           {isAr ? step.labelAr : step.label}
-                          {step.active && <span className="ml-2 text-yellow-600 text-xs font-normal">{isAr ? "← أنت هنا" : "← you're here"}</span>}
+                          {step.active && <span className="ms-2 text-xs font-normal text-muted-foreground">{isAr ? "المرحلة الحالية" : "Current step"}</span>}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">{isAr ? step.detailAr : step.detail}</p>
                       </div>
@@ -159,12 +163,12 @@ export default function EnrollmentStatusPage() {
                 </ol>
 
                 {activeIdx !== -1 && (
-                  <div className="mt-6 p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-sm text-center">
-                    <p className="text-yellow-800 dark:text-yellow-300">
-                      {isAr ? "هل لديك سؤال؟ تواصل معنا مباشرة." : "Have a question? We're here."}
+                  <div className="mt-6 p-3 bg-muted border border-border rounded-lg text-sm text-center">
+                    <p className="text-foreground">
+                      {isAr ? "هل من سؤال؟ يمكن التواصل مباشرة." : "Have a question? We're here."}
                     </p>
-                    <a href={waUrl} className="inline-block mt-2 bg-[#25D366] text-white px-4 py-1.5 rounded-lg text-xs font-semibold no-underline">
-                      💬 {isAr ? "واتساب" : "WhatsApp"}
+                    <a href={waUrl} className="inline-block mt-2 bg-primary text-primary-foreground px-4 py-1.5 rounded-lg text-xs font-semibold no-underline">
+                      {isAr ? "واتساب" : "WhatsApp"}
                     </a>
                   </div>
                 )}

@@ -57,7 +57,7 @@ const UnsubscribePage = () => {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {isAr
-              ? "لإلغاء الاشتراك، افتح الرابط الموجود في أسفل الرسالة التي وصلتك مباشرة — لا تنسخه يدويًا."
+              ? "لإلغاء الاشتراك، يُفتح الرابط الموجود في أسفل الرسالة الواردة مباشرة، دون نسخه يدويًا."
               : "To unsubscribe, open the link at the bottom of the email you received directly rather than retyping it."}
           </p>
           {/*
@@ -72,7 +72,7 @@ const UnsubscribePage = () => {
             href={WHATSAPP_BASE}
             className="mt-5 inline-block rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted"
           >
-            {isAr ? "تواصل معنا على واتساب" : "Contact us on WhatsApp"}
+            {isAr ? "التواصل عبر واتساب" : "Contact us on WhatsApp"}
           </a>
         </div>
       </div>

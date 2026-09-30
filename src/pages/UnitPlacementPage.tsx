@@ -96,7 +96,7 @@ const UnitPlacementPage = () => {
       toast({
         title: isAr ? "تم استئناف الاختبار" : "Test resumed",
         description: isAr
-          ? "رجّعنا إجاباتك السابقة. التسجيلات الصوتية بتتعمل من جديد."
+          ? "استُعيدت الإجابات السابقة. لا تُحفظ التسجيلات الصوتية في المسودة، فيُعاد تسجيلها."
           : "Your previous answers were restored. Audio recordings are not kept in the draft.",
       });
     } catch {
@@ -135,7 +135,7 @@ const UnitPlacementPage = () => {
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setMicError(
         isAr
-          ? "هذا المتصفح لا يدعم التسجيل الصوتي. يُترك هذا القسم فارغًا، وتقيّمه المعلمة في الحصة."
+          ? "هذا المتصفح لا يدعم التسجيل الصوتي. يُترك هذا القسم فارغًا، ويقيّمه فريق التدريس في الحصة."
           : "This browser cannot record audio. Leave this section empty — your teacher will assess it live.",
       );
       return;
@@ -155,7 +155,7 @@ const UnitPlacementPage = () => {
     } catch {
       setMicError(
         isAr
-          ? "تعذّر الوصول إلى الميكروفون. يلزم السماح للمتصفح باستخدامه، أو ترك هذا القسم لتقيّمه المعلمة في الحصة."
+          ? "تعذّر الوصول إلى الميكروفون. يلزم السماح للمتصفح باستخدامه، أو ترك هذا القسم ليقيّمه فريق التدريس في الحصة."
           : "Microphone access was denied. Allow it in your browser, or skip this section and your teacher will assess it live.",
       );
       setRecordingId(null);
@@ -224,7 +224,7 @@ const UnitPlacementPage = () => {
         variant: "destructive",
         title: isAr ? "لم يتم الحفظ" : "Could not save",
         description: isAr
-          ? "النتيجة ظاهرة تحت، بس محصلش حفظ. جرّبي تاني أو صوّري الشاشة."
+          ? "النتيجة ظاهرة أدناه، لكن لم يتم حفظها. يمكن إعادة المحاولة أو التقاط صورة للشاشة."
           : "Your result is shown below but was not saved. Try again, or screenshot it.",
       });
     } else {
@@ -323,14 +323,14 @@ const UnitPlacementPage = () => {
               </p>
               <ul className="space-y-1.5 list-disc ms-5 text-muted-foreground">
                 <li>{t("٦ أقسام اختيار من متعدد وقراءة — تتصحح تلقائيًا.", "6 multiple-choice and reading sections — graded automatically.")}</li>
-                <li>{t("٣ أسئلة كتابة بالكوري — تصحّحها المعلّمة.", "3 Korean writing questions — marked by your teacher.")}</li>
-                <li>{t("٥ أسئلة شفهية بالتسجيل الصوتي — تقيّمها المعلّمة. تقدري تتخطيها.", "5 spoken questions recorded with your microphone — assessed by your teacher. You may skip them.")}</li>
-                <li>{t("حوالي ٣٠ دقيقة. تقدري تقفلي الصفحة وترجعي، إجاباتك محفوظة.", "About 30 minutes. You can close the page and come back — your answers are saved.")}</li>
+                <li>{t("٣ أسئلة كتابة بالكورية — يصحّحها فريق التدريس.", "3 Korean writing questions — marked by your teacher.")}</li>
+                <li>{t("٥ أسئلة شفهية بالتسجيل الصوتي — يقيّمها فريق التدريس. يمكن تخطيها.", "5 spoken questions recorded with your microphone — assessed by your teacher. You may skip them.")}</li>
+                <li>{t("حوالي ٣٠ دقيقة. يمكن إغلاق الصفحة والعودة لاحقًا، فالإجابات محفوظة.", "About 30 minutes. You can close the page and come back — your answers are saved.")}</li>
                 <li>{t("دون قاموس أو ترجمة، فالنتيجة الصادقة هي التي تحدد المكان الصحيح.", "No dictionary or translator — an honest result is what puts you in the right place.")}</li>
               </ul>
               <div className="flex gap-2 pt-2">
                 <Button onClick={() => { setStartedAt(Date.now()); setPhase("test"); }}>
-                  {t("ابدئي الاختبار", "Start the test")}
+                  {t("بدء الاختبار", "Start the test")}
                   <ArrowRight className={cn("h-4 w-4", isAr ? "mr-2 rotate-180" : "ml-2")} />
                 </Button>
                 <Button variant="outline" onClick={() => navigate("/dashboard")}>
@@ -386,8 +386,8 @@ const UnitPlacementPage = () => {
                       >
                         <span className="flex items-center gap-2">
                           {passed
-                            ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                            : <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />}
+                            ? <CheckCircle2 className="h-4 w-4 text-charcoal dark:text-foreground shrink-0" />
+                            : <AlertCircle className="h-4 w-4 text-wrong shrink-0" />}
                           <span>{isAr ? s.titleAr : s.titleEn}</span>
                         </span>
                         <Badge variant={passed ? "secondary" : "outline"} dir="ltr">
@@ -412,7 +412,7 @@ const UnitPlacementPage = () => {
                 </p>
                 <p className="text-muted-foreground">
                   {t(
-                    "اتحفظوا للمدرّس. هيراجعهم ويأكد نقطة البداية — ممكن يعدّلها لو الإنتاج أضعف أو أقوى من الفهم.",
+                    "حُفظت الإجابات لفريق التدريس، وسيراجعها ويؤكد نقطة البداية، وقد يعدّلها إذا كان مستوى الإنتاج أضعف أو أقوى من مستوى الفهم.",
                     "Saved for your teacher. They will review them and confirm your starting point — it can move if your production is weaker or stronger than your comprehension.",
                   )}
                 </p>
@@ -493,7 +493,7 @@ const UnitPlacementPage = () => {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {t(
-                    `أجبتِ على ${answeredInStep} من ${questionsBySection[sectionStep.id].length}. الأسئلة الفارغة جزء طبيعي من تحديد المستوى.`,
+                    `تمت الإجابة عن ${answeredInStep} من ${questionsBySection[sectionStep.id].length}. الأسئلة الفارغة جزء طبيعي من تحديد المستوى.`,
                     `${answeredInStep} of ${questionsBySection[sectionStep.id].length} answered. Leaving questions blank is a normal part of placement.`,
                   )}
                 </p>
@@ -534,12 +534,12 @@ const UnitPlacementPage = () => {
               <>
                 <p className="text-sm text-muted-foreground">
                   {t(
-                    "تسجيل الإجابة صوتيًا. وإن لم يعمل الميكروفون، يُترك هذا القسم لتقيّمه المعلمة في الحصة.",
+                    "تسجيل الإجابة صوتيًا. وإن لم يعمل الميكروفون، يُترك هذا القسم ليقيّمه فريق التدريس في الحصة.",
                     "Record your answer. If your microphone does not work, skip this section — your teacher will assess it live.",
                   )}
                 </p>
                 {micError && (
-                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-sm text-foreground bg-wrong/10 border border-wrong rounded-lg p-3">
                     {micError}
                   </p>
                 )}
@@ -562,7 +562,7 @@ const UnitPlacementPage = () => {
                             {recorded
                               ? <RotateCcw className="h-3.5 w-3.5 me-1.5" />
                               : <Mic className="h-3.5 w-3.5 me-1.5" />}
-                            {recorded ? t("سجّلي تاني", "Re-record") : t("سجّلي", "Record")}
+                            {recorded ? t("إعادة التسجيل", "Re-record") : t("تسجيل", "Record")}
                           </Button>
                         ) : (
                           <Button type="button" size="sm" variant="destructive" onClick={stopRecording}>
@@ -578,7 +578,7 @@ const UnitPlacementPage = () => {
                         )}
                         {recorded && (
                           <Badge variant="secondary" className="self-center">
-                            {t("متسجّل", "Recorded")}
+                            {t("تم التسجيل", "Recorded")}
                           </Badge>
                         )}
                       </div>

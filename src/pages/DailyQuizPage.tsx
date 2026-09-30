@@ -158,7 +158,8 @@ const DailyQuizPage = () => {
     setExercises(shuffled as ExerciseItem[]);
     setLoading(false);
     } catch (err) {
-      setFetchError(err instanceof Error ? err.message : t("dailyQuiz.loadFailed"));
+      console.error("[daily-quiz]", err);
+        setFetchError(t("dailyQuiz.loadFailed"));
       setLoading(false);
     }
   };
