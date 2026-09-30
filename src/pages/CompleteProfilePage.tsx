@@ -64,6 +64,10 @@ const COUNTRIES = [
  * copy to add seven strings is the wrong trade. `t()` returns the key itself
  * when a key is missing, so the alternative is a form labelled
  * "completeProfile.phoneLabel" in production.
+ *
+ * Arabic is neutral MSA with no gendered address (verbal nouns and passives),
+ * per the one-tone rule. saveError / profileSaveError replace the raw server
+ * message that used to be shown to the reader; the detail goes to the console.
  */
 const COPY = {
   en: {
@@ -74,15 +78,19 @@ const COPY = {
     signInPrompt: "You are not signed in, so this will be saved as an enquiry rather than to your account.",
     signInLink: "Sign in first",
     notSignedInNote: "Saved as an enquiry. Sign in and fill this in again to save it to your account.",
+    saveError: "Your details could not be saved. Please try again in a moment.",
+    profileSaveError: "Your enquiry was saved, but your account could not be updated. Please try again in a moment.",
   },
   ar: {
     phoneLabel: "رقم الهاتف",
     phonePlaceholder: "+20 100 123 4567",
     timezoneLabel: "المنطقة الزمنية",
-    timezoneHint: "تم تحديدها من جهازك. غيّرها إذا كانت غير صحيحة — نستخدمها لنخبرك بموعد الحصة بتوقيتك.",
-    signInPrompt: "لم تسجّل دخولك، لذلك ستُحفظ بياناتك كطلب استفسار لا في حسابك.",
-    signInLink: "سجّل دخولك أولاً",
-    notSignedInNote: "حُفظت بياناتك كطلب استفسار. سجّل دخولك ثم أعد ملء النموذج لحفظها في حسابك.",
+    timezoneHint: "حُدِّدت تلقائيًا من الجهاز، ويمكن تغييرها إن كانت غير صحيحة — تُستخدم لعرض موعد الحصة بالتوقيت الصحيح.",
+    signInPrompt: "لم يتمّ تسجيل الدخول، لذلك ستُحفظ البيانات طلبَ استفسار لا في الحساب.",
+    signInLink: "تسجيل الدخول أولًا",
+    notSignedInNote: "حُفظت البيانات طلبَ استفسار. ولحفظها في الحساب: تسجيل الدخول ثم إعادة ملء النموذج.",
+    saveError: "تعذّر حفظ البيانات. تُرجى إعادة المحاولة بعد قليل.",
+    profileSaveError: "حُفظ الطلب، لكن تعذّر تحديث الحساب. تُرجى إعادة المحاولة بعد قليل.",
   },
 } as const;
 
@@ -199,11 +207,12 @@ const CompleteProfilePage = () => {
         if (profileError) {
           // The lead was saved, so this is not a total failure - but the
           // reminder email keys off `profiles`, so staying quiet here would
-          // send them round the same loop again. Say it.
+          // send them round the same loop again. Say it - in plain words;
+          // the server message is for the console, not the reader.
           console.error("complete-profile: profile update failed:", profileError.message);
           toast({
             title: t("common.error"),
-            description: profileError.message,
+            description: tx("profileSaveError"),
             variant: "destructive",
           });
         } else {
@@ -213,7 +222,8 @@ const CompleteProfilePage = () => {
 
       setDone(true);
     } catch (err: any) {
-      toast({ title: t("common.error"), description: err.message, variant: "destructive" });
+      console.error("complete-profile: save failed:", err?.message ?? err);
+      toast({ title: t("common.error"), description: tx("saveError"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -225,8 +235,9 @@ const CompleteProfilePage = () => {
         <Header />
         <main className="pt-28 pb-20 px-4 flex flex-col items-center text-center">
           <div className="max-w-md mx-auto space-y-4">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            {/* Brand green is always a FILL with charcoal on it (tailwind.config.ts). */}
+            <div className="w-16 h-16 rounded-full bg-klovers-green flex items-center justify-center mx-auto">
+              <CheckCircle2 className="h-8 w-8 text-charcoal" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">{t("completeProfile.doneTitle")}</h1>
             <p className="text-muted-foreground leading-relaxed">
