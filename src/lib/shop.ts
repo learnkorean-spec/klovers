@@ -55,6 +55,8 @@ export function formatPrice(amount: number, currency: string, isAr: boolean) {
     return new Intl.NumberFormat(isAr ? "ar-EG" : "en-US", {
       style: "currency",
       currency: currency.toUpperCase(),
+      // 7 dollars reads "$7", not "$7.00"; 4.99 keeps its cents.
+      ...(amount % 100 === 0 ? { minimumFractionDigits: 0, maximumFractionDigits: 0 } : {}),
       // Arabic pages carry no Latin letters, so the currency is written out.
       currencyDisplay: isAr ? "name" : "symbol",
     }).format(amount / 100);
@@ -66,14 +68,11 @@ export function formatPrice(amount: number, currency: string, isAr: boolean) {
 export async function fetchShopProducts(): Promise<ShopProduct[]> {
   const { data, error } = await supabase.functions.invoke("shop-products", { method: "GET" });
   if (error || !data || !Array.isArray(data.products)) throw new Error("shop_unavailable");
-  // The free Hangul sheet has no Stripe photo: show its own cover from the site.
-  return (data.products as ShopProduct[]).map((p0) => {
-    // Every price on the page is in the visitor's currency: USD, or EGP in Egypt.
-    const p = { ...p0, price: localPrice(p0.price) };
-    return p.bookId === "hangul-starter" && p.images.length === 0
-      ? { ...p, images: [`${window.location.origin}/assets/shop/hangul-sheet-cover-${document.documentElement.lang === "en" ? "en" : "ar"}.webp`] }
-      : p;
-  });
+  // Every price on the page is in the visitor's currency: USD, or EGP in Egypt.
+  // Pictures are picked per page language at render time (productImages in
+  // src/lib/shopExtras.ts), so a cached catalogue never shows an English cover
+  // on the Arabic shop.
+  return (data.products as ShopProduct[]).map((p) => ({ ...p, price: localPrice(p.price) }));
 }
 
 /** The catalogue, shared by every /shop page and cached for five minutes. */

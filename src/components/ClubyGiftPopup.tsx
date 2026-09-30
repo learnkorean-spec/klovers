@@ -130,10 +130,10 @@ const ClubyGiftPopup = () => {
       : tr("The colouring book is waiting in the shop", "كتاب التلوين ينتظر في المتجر");
   const text =
     mode === "guest"
-      ? tr("“Cluby and the Glowing Egg”: 15 pages to colour, with the first two Korean words. Free with a new Klovers account.",
+      ? tr("“Cluby and the Glowing Egg” (Arabic edition): 15 pages to colour, with the first two Korean words. Free with a new Klovers account.",
            "«كلوبي والبيضة المضيئة»: ١٥ صفحة للتلوين، مع أول كلمتين كوريتين. الكتاب مجاني عند إنشاء حساب في كلوفرز.")
       : mode === "claim"
-        ? tr("“Cluby and the Glowing Egg”: 15 pages to colour, with the first two Korean words. Free for this account.",
+        ? tr("“Cluby and the Glowing Egg” (Arabic edition): 15 pages to colour, with the first two Korean words. Free for this account.",
              "«كلوبي والبيضة المضيئة»: ١٥ صفحة للتلوين، مع أول كلمتين كوريتين. الكتاب مجاني لهذا الحساب.")
         : tr("“Cluby and the Glowing Egg” is already in My books and has not been downloaded yet. Print it and start colouring.",
              "«كلوبي والبيضة المضيئة» موجود في «كتبي» ولم يُحمَّل بعد، وهو جاهز للطباعة والتلوين.");

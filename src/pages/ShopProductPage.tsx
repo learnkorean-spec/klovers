@@ -13,6 +13,7 @@ import { ShopBar } from "@/pages/ShopPage";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 import { capture } from "@/lib/analytics";
+import { productImages, shopExtras } from "@/lib/shopExtras";
 import {
   cartActions, formatPrice, productDescription, productName, useCart, useShopProducts, visibleIn,
 } from "@/lib/shop";
@@ -37,6 +38,8 @@ export default function ShopProductPage() {
   const inBag = !!product && cart.some((l) => l.priceId === product.price.id);
   const canonical = `https://kloversegy.com/shop/products/${product?.slug ?? slug}`;
   const name = product ? productName(product, isAr) : "";
+  const images = product ? productImages(product, isAr) : [];
+  const extras = shopExtras(product?.bookId);
   const description = product ? productDescription(product, isAr) : null;
 
   useSEO({
@@ -112,20 +115,20 @@ export default function ShopProductPage() {
                 {/* Gallery */}
                 <div>
                   <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-ivory dark:bg-muted">
-                    {product.images[imageIndex] && (
+                    {images[imageIndex] && (
                       <img
-                        src={product.images[imageIndex]}
+                        src={images[imageIndex]}
                         alt={name}
                         width={800}
                         height={1000}
                         loading="eager"
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-contain"
                       />
                     )}
                   </div>
-                  {product.images.length > 1 && (
-                    <div className="mt-3 flex gap-2">
-                      {product.images.map((src, i) => (
+                  {images.length > 1 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {images.map((src, i) => (
                         <button
                           key={src}
                           type="button"
@@ -134,7 +137,7 @@ export default function ShopProductPage() {
                           aria-pressed={i === imageIndex}
                           className={`h-20 w-16 overflow-hidden rounded-lg border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${i === imageIndex ? "border-charcoal dark:border-ivory" : "border-transparent"}`}
                         >
-                          <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
+                          <img src={src} alt="" loading="lazy" className="h-full w-full bg-ivory object-contain" />
                         </button>
                       ))}
                     </div>
@@ -160,11 +163,37 @@ export default function ShopProductPage() {
                       : tr("Available now.", "متوفر الآن.")}
                   </p>
 
+                  {extras && extras.facts.length > 0 && (
+                    <ul className="mt-4 flex flex-wrap gap-2" aria-label={tr("At a glance", "باختصار")}>
+                      {extras.facts.map((f) => (
+                        <li key={f.en} className="rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold text-foreground">
+                          {tr(f.en, f.ar)}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                     <Button className="h-12 flex-1 text-base font-semibold" onClick={add} disabled={inBag}>
                       {inBag ? tr("In your bag", "موجود في الحقيبة") : tr("Add to bag", "إضافة إلى الحقيبة")}
                     </Button>
                   </div>
+
+                  {extras?.gift && (
+                    <div className="mt-4 flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory p-4 dark:bg-card">
+                      <img src="/assets/cluby/cluby-wave.webp" alt="" width={314} height={440} loading="lazy"
+                        className="h-16 w-auto shrink-0 origin-bottom motion-safe:animate-cluby-jump" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-extrabold text-foreground">{tr("A gift from Cluby", "هدية من كلوبي")}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {tr("This book is free with a Klovers account.", "هذا الكتاب مجاني مع حساب في كلوفرز.")}
+                        </p>
+                      </div>
+                      <Button asChild className="h-10 shrink-0 rounded-full border-2 border-charcoal bg-klovers-yellow font-bold text-charcoal hover:bg-klovers-yellow hover:brightness-95">
+                        <Link to="/gift/cluby">{tr("Get it free", "الحصول عليه مجانًا")}</Link>
+                      </Button>
+                    </div>
+                  )}
 
                   {description && (
                     <div className="mt-8 border-t border-border pt-6">

@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { formatPrice, productName, type ShopProduct } from "@/lib/shop";
+import { productImages, shopExtras } from "@/lib/shopExtras";
 
 /** Stripe-hosted product photo, lazy and sized; the slot stays ivory without one. */
 export function ProductImage({ product, isAr, className = "", eager = false }: {
   product: ShopProduct; isAr: boolean; className?: string; eager?: boolean;
 }) {
-  const src = product.images[0];
+  const src = productImages(product, isAr)[0];
   return (
     <div className={`overflow-hidden bg-ivory dark:bg-muted ${className}`}>
       {src && (
@@ -16,7 +17,7 @@ export function ProductImage({ product, isAr, className = "", eager = false }: {
           decoding="async"
           width={640}
           height={800}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
         />
       )}
     </div>
@@ -31,11 +32,18 @@ export function ProductCard({ product, isAr }: { product: ShopProduct; isAr: boo
     >
       <ProductImage product={product} isAr={isAr} className="aspect-[4/5] rounded-xl" />
       <div className="flex flex-1 flex-col gap-1 px-1 pb-1 pt-3">
-        {product.bookId && (
-          <span className="w-fit rounded-full bg-klovers-yellow px-2.5 py-0.5 text-[11px] font-semibold text-charcoal">
-            {isAr ? "كتاب رقمي" : "Digital book"}
-          </span>
-        )}
+        <div className="flex flex-wrap gap-1.5">
+          {product.bookId && (
+            <span className="w-fit rounded-full bg-klovers-yellow px-2.5 py-0.5 text-[11px] font-semibold text-charcoal">
+              {isAr ? "كتاب رقمي" : "Digital book"}
+            </span>
+          )}
+          {shopExtras(product.bookId)?.gift && (
+            <span className="w-fit rounded-full border border-klovers-green bg-ivory px-2.5 py-0.5 text-[11px] font-semibold text-charcoal">
+              {isAr ? "مجاني مع حساب جديد" : "Free with a new account"}
+            </span>
+          )}
+        </div>
         <h3 className="font-display text-base font-semibold leading-snug text-foreground">
           {productName(product, isAr)}
         </h3>

@@ -279,6 +279,45 @@ export default function ShopPage() {
               </div>
             </section>
 
+            {/* 3b · How it works + what it costs (store review, 30 Sep 2026) */}
+            <section className="py-12 md:py-16" aria-labelledby="shop-how">
+              <div className="container mx-auto max-w-6xl px-4">
+                <h2 id="shop-how" className="font-display text-2xl font-bold text-foreground md:text-3xl">
+                  {tr("How it works", "كيف يصل الكتاب")}
+                </h2>
+                <ol className="mt-6 grid gap-3 md:grid-cols-3">
+                  {[
+                    { n: 1, en: "Pick a book and add it to the bag.", ar: "اختيار الكتاب وإضافته إلى الحقيبة." },
+                    { n: 2, en: "Pay safely by card: in Egyptian pounds inside Egypt, in US dollars everywhere else.", ar: "الدفع الآمن بالبطاقة: بالجنيه المصري داخل مصر، وبالدولار الأمريكي خارجها." },
+                    { n: 3, en: "The book waits in My books at once, ready to download and print.", ar: "يصل الكتاب فورًا إلى «كتبي»، جاهزًا للتحميل والطباعة." },
+                  ].map((step) => (
+                    <li key={step.n} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-klovers-yellow text-sm font-extrabold text-charcoal">
+                        {isAr ? String(step.n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]) : step.n}
+                      </span>
+                      <span className="text-sm leading-relaxed text-foreground">{tr(step.en, step.ar)}</span>
+                    </li>
+                  ))}
+                </ol>
+
+                {isAr && (
+                  <div className="mt-6 flex flex-col items-center gap-4 rounded-2xl border-2 border-charcoal bg-ivory p-5 text-center dark:bg-card sm:flex-row sm:text-start">
+                    <img src="/assets/cluby/cluby-wave.webp" alt="" width={314} height={440} loading="lazy"
+                      className="h-20 w-auto shrink-0 origin-bottom motion-safe:animate-cluby-jump" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-display text-lg font-extrabold text-foreground">هدية من كلوبي</p>
+                      <p className="text-sm text-muted-foreground">
+                        كتاب التلوين «كلوبي والبيضة المضيئة» مجاني مع حساب في كلوفرز: ١٥ صفحة للأعمار من ٤ إلى ٧.
+                      </p>
+                    </div>
+                    <Button asChild className="h-11 shrink-0 rounded-full border-2 border-charcoal bg-klovers-yellow font-bold text-charcoal hover:bg-klovers-yellow hover:brightness-95">
+                      <Link to="/gift/cluby">الحصول على الكتاب مجانًا</Link>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </section>
+
             {/* 4 · More than a file — Cluby keeps the books */}
             <section className="py-12 md:py-16">
               <div className="container mx-auto grid max-w-5xl items-center gap-8 px-4 md:grid-cols-2">
