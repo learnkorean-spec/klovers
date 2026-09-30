@@ -4,7 +4,8 @@
  * Products, prices and payments all live in Stripe; this file only asks the
  * two edge functions for them:
  *   shop-products  → the catalogue (Stripe products with klovers_shop=true)
- *   shop-checkout  → a Stripe Checkout page for the cart (signed-in buyers)
+ *   shop-checkout  → a Stripe Checkout page for the cart (signed-in buyers), or
+ *                    straight download links when everything in it is free
  * The metadata a Stripe product needs is documented in
  * supabase/functions/shop-products/index.ts.
  *
@@ -46,6 +47,8 @@ export function productDescription(p: ShopProduct, isAr: boolean) {
 }
 
 export function formatPrice(amount: number, currency: string, isAr: boolean) {
+  // A price of 0 is a free item (no card, no account): say so in words.
+  if (amount === 0) return isAr ? "مجاني" : "Free";
   try {
     return new Intl.NumberFormat(isAr ? "ar-EG" : "en-US", {
       style: "currency",
@@ -71,12 +74,16 @@ export function useShopProducts() {
 
 export type CheckoutResult =
   | { ok: true; url: string }
+  | { ok: true; free: true; downloads: { bookId: string; url: string }[]; signedIn: boolean }
   | { ok: false; reason: "sign_in" | "owned" | "unavailable" };
 
 export async function startCheckout(lines: CartLine[]): Promise<CheckoutResult> {
   const { data, error } = await supabase.functions.invoke("shop-checkout", {
     body: { items: lines.map((l) => ({ priceId: l.priceId, quantity: l.quantity })) },
   });
+  if (data?.free && Array.isArray(data.downloads)) {
+    return { ok: true, free: true, downloads: data.downloads, signedIn: !!data.signedIn };
+  }
   if (data?.url) return { ok: true, url: data.url as string };
   // functions.invoke hides the JSON body of a non-2xx reply inside error.context.
   let reason: string | undefined = data?.error;

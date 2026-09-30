@@ -22,12 +22,15 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  // Free bag: the download links that came back instead of a payment page.
+  const [downloads, setDownloads] = useState<{ bookId: string; url: string; name: string; signedIn: boolean }[] | null>(null);
 
   const lines = cart
     .map((l) => ({ line: l, product: products.find((p) => p.price.id === l.priceId) }))
     .filter((x): x is { line: typeof x.line; product: ShopProduct } => !!x.product);
   const currencies = new Set(lines.map((x) => x.product.price.currency));
   const subtotal = lines.reduce((s, x) => s + x.product.price.amount * x.line.quantity, 0);
+  const isFreeBag = lines.length > 0 && lines.every((x) => x.product.price.amount === 0 && !!x.product.bookId);
 
   // A manual, non-Stripe way to pay (Egypt: Vodafone Cash / Fawry / InstaPay
   // / bank transfer). The book is not delivered automatically here — Re
@@ -48,6 +51,27 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
     setNotice(null);
     capture({ event: "begin_checkout", items: lines.length, value: subtotal / 100, currency: [...currencies][0] ?? "" });
     const res = await startCheckout(lines.map((x) => x.line));
+    if (res.ok === true && "free" in res) {
+      const found = res.downloads.map((d) => {
+        const l = lines.find((x) => x.product.bookId === d.bookId);
+        return { ...d, name: l ? productName(l.product, isAr) : d.bookId, signedIn: res.signedIn };
+      });
+      capture({ event: "free_download", items: found.length });
+      lines.forEach((x) => cartActions.remove(x.line.priceId));
+      setDownloads(found);
+      setBusy(false);
+      // One book starts downloading by itself; several are left as links,
+      // because browsers block a burst of automatic downloads.
+      if (found.length === 1) {
+        const a = document.createElement("a");
+        a.href = found[0].url;
+        a.download = "";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      return;
+    }
     if (res.ok === true) {
       window.location.assign(res.url);
       return;
@@ -68,7 +92,7 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={(o) => { if (!o) setDownloads(null); onOpenChange(o); }}>
       <SheetContent side={isAr ? "left" : "right"} className="flex w-full flex-col gap-0 bg-background p-0 sm:max-w-md" dir={isAr ? "rtl" : "ltr"}>
         <SheetHeader className="border-b border-border py-4 pl-5 pr-12 text-start">
           <SheetTitle className="font-display text-lg">{isAr ? "الحقيبة" : "Your bag"}</SheetTitle>
@@ -77,7 +101,39 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
           </SheetDescription>
         </SheetHeader>
 
-        {lines.length === 0 ? (
+        {downloads ? (
+          <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-6">
+            <p className="font-display text-lg font-semibold text-foreground">
+              {isAr ? "الكتاب جاهز للتنزيل." : "Your book is ready."}
+            </p>
+            <ul className="space-y-2">
+              {downloads.map((d) => (
+                <li key={d.bookId}>
+                  <a
+                    href={d.url}
+                    download
+                    className="flex h-12 items-center justify-between rounded-lg border border-border px-4 text-sm font-semibold text-foreground hover:bg-accent"
+                  >
+                    <span className="truncate">{d.name}</span>
+                    <span className="shrink-0 text-primary-foreground rounded-full bg-primary px-3 py-1 text-xs">
+                      {isAr ? "تنزيل" : "Download"}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-muted-foreground">
+              {downloads[0]?.signedIn
+                ? (isAr ? "أُضيف أيضًا إلى «كتبي» في لوحة الطالب، ويمكن تنزيله منها في أي وقت." : "It was also added to My books on your dashboard, so it can be downloaded there any time.")
+                : (isAr ? "الرابط صالح لعشر دقائق. لحفظ الكتاب في «كتبي» وتنزيله لاحقًا يمكن إنشاء حساب مجاني." : "This link works for ten minutes. A free account keeps the book in My books for later.")}
+            </p>
+            {!downloads[0]?.signedIn && (
+              <Button variant="outline" onClick={() => navigate(`/signup?redirect=${encodeURIComponent("/shop")}`)}>
+                {isAr ? "إنشاء حساب مجاني" : "Create a free account"}
+              </Button>
+            )}
+          </div>
+        ) : lines.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
             <p className="font-display text-base font-semibold text-foreground">
               {isAr ? "الحقيبة فارغة." : "The bag is empty."}
@@ -164,7 +220,7 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
             </div>
 
             <div className="space-y-3 border-t border-border px-5 py-4">
-              {currencies.size === 1 && (
+              {currencies.size === 1 && !isFreeBag && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{isAr ? "المجموع" : "Subtotal"}</span>
                   <span className="font-semibold text-foreground">
@@ -174,18 +230,22 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
               )}
               {notice && <p role="alert" className="rounded-lg bg-muted px-3 py-2 text-sm text-foreground">{notice}</p>}
               <Button className="h-12 w-full text-base font-semibold" onClick={checkout} disabled={busy}>
-                {busy ? (isAr ? "جارٍ فتح صفحة الدفع…" : "Opening checkout…") : (isAr ? "الدفع الآمن" : "Checkout Securely")}
+                {isFreeBag
+                  ? (busy ? (isAr ? "جارٍ التجهيز…" : "Getting it ready…") : (isAr ? "إتمام الطلب وتنزيل مجاني" : "Check out and download free"))
+                  : (busy ? (isAr ? "جارٍ فتح صفحة الدفع…" : "Opening checkout…") : (isAr ? "الدفع الآمن" : "Checkout Securely"))}
               </Button>
-              <a
+              {!isFreeBag && <a
                 href={manualPayHref()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-11 w-full items-center justify-center rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-accent"
               >
                 {isAr ? "أو ادفع يدويًا من مصر (بدون بطاقة)" : "Or pay manually from Egypt (no card)"}
-              </a>
+              </a>}
               <p className="text-center text-xs text-muted-foreground">
-                {isAr
+                {isFreeBag
+                  ? (isAr ? "مجاني بالكامل، دون بطاقة ودون حساب." : "Completely free: no card and no account needed.")
+                  : isAr
                   ? "يتم الدفع عبر صفحة دفع آمنة، ويتطلّب الشراء تسجيل الدخول لإضافة الكتب إلى «كتبي». الدفع اليدوي عبر واتساب، ويُضاف الكتاب بعد تأكيد التحويل."
                   : "Payment happens on Stripe's secure page. Signing in is needed so books land in My books. Manual payment is over WhatsApp; the book is added after the transfer is confirmed."}
               </p>

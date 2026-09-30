@@ -363,7 +363,7 @@ const BookAssignmentManager = () => {
                     )}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {a.assigned_by === "auto:group-start" ? "Auto — group started" : a.assigned_by === "shop:stripe" ? "Shop — bought" : a.assigned_by}
+                    {a.assigned_by === "auto:group-start" ? "Auto — group started" : a.assigned_by === "shop:stripe" ? "Shop — bought" : a.assigned_by === "shop:free" ? "Shop — free" : a.assigned_by}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground max-w-[140px] truncate">{a.notes ?? "—"}</TableCell>
                   <TableCell>

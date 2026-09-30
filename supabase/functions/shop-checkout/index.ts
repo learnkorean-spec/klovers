@@ -8,6 +8,12 @@
  *
  * On payment, stripe-webhook (product_type = "shop") assigns the books and
  * tells the admin.
+ *
+ * FREE ITEMS (30 Sep 2026): when every line in the bag costs 0 in Stripe, no
+ * card page is opened and no account is needed. The books come back as short
+ * signed download links straight away (a visitor is not asked to sign in);
+ * a signed-in buyer also gets them added to "My books". A bag that mixes free
+ * and paid items still goes through Stripe and still needs sign-in.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
@@ -40,7 +46,6 @@ serve(async (req) => {
       { auth: { persistSession: false } },
     );
     const { data: { user } } = token ? await supabaseAdmin.auth.getUser(token) : { data: { user: null } };
-    if (!user?.email) return reply({ error: "sign_in" }, 401);
 
     // ── What she is buying ──
     const body = await req.json().catch(() => ({}));
@@ -51,6 +56,7 @@ serve(async (req) => {
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
     const bookIds: string[] = [];
     const seen = new Set<string>();
+    let allFree = true;
 
     for (const item of items) {
       const priceId = typeof item.priceId === "string" ? item.priceId : "";
@@ -62,10 +68,43 @@ serve(async (req) => {
       if (!price.active || !product?.active || m.klovers_shop !== "true") return reply({ error: "unavailable" }, 409);
       if (m.ships === "true") return reply({ error: "unavailable" }, 409); // no shipping yet
       const bookId = m.book_id?.trim() || "";
+      if (!(price.unit_amount === 0 && bookId && /^[a-z0-9-]+$/.test(bookId))) allFree = false;
       const qty = bookId ? 1 : Math.min(Math.max(Number(item.quantity) || 1, 1), 10);
       if (bookId) bookIds.push(bookId);
       lineItems.push({ price: priceId, quantity: qty });
     }
+
+    // ── Free bag: no card, no account. Hand back download links. ──
+    if (allFree) {
+      const downloads: { bookId: string; url: string }[] = [];
+      for (const bookId of bookIds) {
+        const { data: signed, error: signErr } = await supabaseAdmin.storage
+          .from("student-materials")
+          .createSignedUrl(`books/${bookId}.pdf`, 60 * 10, { download: `Klovers-${bookId}.pdf` });
+        if (signErr || !signed?.signedUrl) {
+          console.error("[shop-checkout] free download link failed", bookId, signErr?.message);
+          return reply({ error: "unavailable" }, 503);
+        }
+        downloads.push({ bookId, url: signed.signedUrl });
+      }
+      if (user?.id) {
+        const { error: assignErr } = await supabaseAdmin.from("book_assignments").upsert(
+          bookIds.map((book_id) => ({
+            user_id: user.id,
+            book_id,
+            available_from: new Date().toISOString(),
+            assigned_by: "shop:free",
+            notes: "Free in the shop",
+          })),
+          { onConflict: "user_id,book_id", ignoreDuplicates: true },
+        );
+        if (assignErr) console.error("[shop-checkout] free assignment failed:", assignErr.message);
+      }
+      return reply({ free: true, downloads, signedIn: !!user?.id });
+    }
+
+    // Anything that costs money needs an account so the book has somewhere to land.
+    if (!user?.email) return reply({ error: "sign_in" }, 401);
 
     // ── A book she already has is not sold twice ──
     if (bookIds.length > 0) {

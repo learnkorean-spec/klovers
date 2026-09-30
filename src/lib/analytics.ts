@@ -67,6 +67,7 @@ export type AnalyticsEvent =
   | { event: "product_view";            productId: string; price: number; currency: string }
   | { event: "add_to_cart";             productId: string; price: number; currency: string }
   | { event: "begin_checkout";          items: number; value: number; currency: string }
+  | { event: "free_download";           items: number }
   | { event: "purchase" };
 
 /**

@@ -153,7 +153,9 @@ export default function ShopProductPage() {
                     {formatPrice(product.price.amount, product.price.currency, isAr)}
                   </p>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    {product.bookId
+                    {product.price.amount === 0 && product.bookId
+                      ? tr("Free. Add it to the bag, check out and download it. No card and no account needed.", "مجاني. يُضاف إلى الحقيبة ثم يُتمّ الطلب ويُنزَّل مباشرة، دون بطاقة ودون حساب.")
+                      : product.bookId
                       ? tr("Available now. After payment the book is added to My books in the student dashboard.", "متوفر الآن. بعد الدفع يُضاف الكتاب إلى «كتبي» في لوحة الطالب.")
                       : tr("Available now.", "متوفر الآن.")}
                   </p>

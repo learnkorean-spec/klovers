@@ -39,7 +39,10 @@ function categoryCopy(cat: string) {
 
 export function ShopBar({ isAr, products }: { isAr: boolean; products: ShopProduct[] }) {
   const cart = useCart();
-  const [open, setOpen] = useState(false);
+  // /shop?bag=1 (from a story page's "add to bag") opens the bag straight away.
+  const [open, setOpen] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get("bag") === "1"; } catch { return false; }
+  });
   const count = cart.filter((l) => products.some((p) => p.price.id === l.priceId)).reduce((n, l) => n + l.quantity, 0);
   return (
     <>
