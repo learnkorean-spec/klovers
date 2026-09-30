@@ -699,7 +699,7 @@ const LessonDetailPage = () => {
                       showResults[ex.id]
                         ? selectedAnswers[ex.id] === ex.correct_index
                           ? "border-klovers-green"
-                          : "border-[#FF4FD8]/60"
+                          : "border-[#FF3131]/60"
                         : "border-border"
                     )}>
                       <p className="font-medium text-foreground mb-3">{idx + 1}. {ex.question}</p>
@@ -716,7 +716,7 @@ const LessonDetailPage = () => {
                               className={cn(
                                 "text-left px-4 py-3 rounded-lg border text-sm transition-all",
                                 revealed && isCorrect && "border-klovers-green bg-klovers-green/15 text-foreground font-medium",
-                                revealed && selected && !isCorrect && "border-[#FF4FD8] bg-[#FF4FD8]/10 text-foreground",
+                                revealed && selected && !isCorrect && "border-[#FF3131] bg-[#FF3131]/10 text-foreground",
                                 !revealed && "border-border hover:border-klovers-yellow hover:bg-klovers-yellow/10 text-foreground",
                                 revealed && !selected && !isCorrect && "opacity-40"
                               )}
@@ -736,11 +736,11 @@ const LessonDetailPage = () => {
                           "mt-3 p-3 rounded-lg text-sm",
                           selectedAnswers[ex.id] === ex.correct_index
                             ? "bg-klovers-green/10 text-foreground"
-                            : "bg-[#FF4FD8]/10 text-foreground"
+                            : "bg-[#FF3131]/10 text-foreground"
                         )}>
                           {selectedAnswers[ex.id] === ex.correct_index
                             ? <Check className="me-1.5 inline h-4 w-4 rounded-full bg-klovers-green p-0.5 align-[-3px] text-charcoal" strokeWidth={3} aria-hidden="true" />
-                            : <X className="me-1.5 inline h-4 w-4 rounded-full bg-[#FF4FD8] p-0.5 align-[-3px] text-charcoal" strokeWidth={3} aria-hidden="true" />}
+                            : <X className="me-1.5 inline h-4 w-4 rounded-full bg-[#FF3131] p-0.5 align-[-3px] text-charcoal" strokeWidth={3} aria-hidden="true" />}
                           {ex.explanation}
                         </div>
                       )}

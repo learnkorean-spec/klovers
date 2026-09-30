@@ -79,18 +79,19 @@ Type, loaded in index.html:
        games, the placement test and the admin screens, and never count toward
        the three brand colours (same idea as --destructive).
          correct   #0E7A4F  on ivory 5.1:1   (dark theme: #39FF14, 13.6:1 on ground)
-         wrong     #B800AB  text on white 5.8:1, on --wrong-surface 4.9:1
-         wrong-surface #FFE4FB
-         wrong-graphic #FF4FD8  Klovers Pink (Re, 24-25 Sep 2026). Border / x
-                   mark / flash / fill ONLY - never pink text (2.8:1 on
-                   white). Charcoal on it is 4.76:1. Always pair status colour with a check or x
+         wrong     #B80000  text on white 6.5:1, on --wrong-surface 5.9:1
+         wrong-surface #FFE5E5
+         wrong-graphic #FF3131  Klovers neon red (Re, 1 Oct 2026; replaces the
+                   pink #FF4FD8 of 24-25 Sep). Border / x mark / flash / fill
+                   ONLY - never red text on white (3.4:1). Charcoal on it is 3.7:1,
+                   fine for an x mark, not for small text. Always pair status colour with a check or x
                    shape, never colour alone. */
     --correct: 156.1 79.4% 26.7%;
     --correct-foreground: 0 0% 100%;
-    --wrong: 304.2 100% 36.1%;
+    --wrong: 0 100% 36.1%;
     --wrong-foreground: 0 0% 100%;
-    --wrong-surface: 308.9 100% 94.7%;
-    --wrong-graphic: 313.3 100% 65.5%;
+    --wrong-surface: 0 100% 94.9%;
+    --wrong-graphic: 0 100% 59.2%;
 
     /* LIVE — "happening now": the hero's next-class chip, the admin group card
        that is mid-class. A state, not decoration, which is why it is a token
@@ -224,8 +225,8 @@ Type, loaded in index.html:
     --correct-foreground: 60 14.3% 6.9%;
     --wrong: 44 36.6% 92%;
     --wrong-foreground: 60 14.3% 6.9%;
-    --wrong-surface: 307.8 36.5% 12.4%;
-    --wrong-graphic: 313.3 100% 65.5%;
+    --wrong-surface: 0 36.5% 12.4%;
+    --wrong-graphic: 0 100% 59.2%;
 
     /* On a dark ground the deep green disappears, so live IS the bright one
        here (13.6:1 on the ground). live-surface becomes a deep green panel

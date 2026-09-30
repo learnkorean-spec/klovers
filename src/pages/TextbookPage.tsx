@@ -217,8 +217,8 @@ const TextbookPage = () => {
               ))}
             </div>
           ) : fetchError ? (
-            <div className="text-center py-16 rounded-2xl border border-[#FF4FD8]/40 bg-[#FF4FD8]/5">
-              <AlertCircle className="mx-auto mb-3 h-8 w-8 text-wrong dark:text-[#FF4FD8]" aria-hidden="true" />
+            <div className="text-center py-16 rounded-2xl border border-[#FF3131]/40 bg-[#FF3131]/5">
+              <AlertCircle className="mx-auto mb-3 h-8 w-8 text-wrong dark:text-[#FF3131]" aria-hidden="true" />
               <p className="font-semibold text-foreground mb-1">{isAr ? "تعذّر تحميل الدروس" : "Failed to load lessons"}</p>
               <p className="text-sm text-muted-foreground mb-4">{isAr ? "يرجى التحقق من اتصالك والمحاولة مرة أخرى." : "Please check your connection and try again."}</p>
               <Button variant="outline" onClick={() => window.location.reload()}>

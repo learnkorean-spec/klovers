@@ -1352,7 +1352,7 @@ const PlacementTestPage = () => {
                       {!wasSkipped && (
                         <div className="ml-7 text-xs space-y-1 mb-2">
                           {!isCorrect && (
-                            <p className="text-wrong dark:text-[#FF4FD8]">
+                            <p className="text-wrong dark:text-[#FF3131]">
                               {isAr ? "الإجابة:" : "Your answer:"} {q.options[userAnswer] ?? "—"}
                             </p>
                           )}

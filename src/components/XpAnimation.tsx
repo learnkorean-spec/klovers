@@ -300,7 +300,7 @@ export function PerfectScoreOverlay({ score, total, onContinue }: {
 }) {
   const isAr = useIsAr();
   const confettiPieces = Array.from({ length: 30 }, (_, i) => i);
-  const colors = ["#FFFF00", "#39FF14", "#FF4FD8", "#2E2E2E", "#FFF9EC"];
+  const colors = ["#FFFF00", "#39FF14", "#FF3131", "#2E2E2E", "#FFF9EC"];
 
   return (
     <div

@@ -235,7 +235,7 @@ const MyLessonsPage = () => {
         <Header />
         <main id="main-content" className="pt-24 flex items-center justify-center px-4">
           <div className="text-center space-y-3 max-w-sm">
-            <AlertTriangle className="h-10 w-10 mx-auto text-wrong dark:text-[#FF4FD8]" />
+            <AlertTriangle className="h-10 w-10 mx-auto text-wrong dark:text-[#FF3131]" />
             <p className="text-sm text-muted-foreground">{error}</p>
             <Button onClick={() => window.location.reload()}>{c.refresh}</Button>
           </div>
@@ -304,7 +304,7 @@ const MyLessonsPage = () => {
           )}
 
           {dueEnrollmentId && (
-            <Card className="border-2 border-[#FF4FD8] bg-[#FF4FD8]/10 dark:bg-card">
+            <Card className="border-2 border-[#FF3131] bg-[#FF3131]/10 dark:bg-card">
               <CardContent className="pt-5 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Wallet className="h-4 w-4 shrink-0" />

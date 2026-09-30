@@ -245,7 +245,7 @@ const DailyQuizPage = () => {
         <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
           <div className="text-center space-y-3 max-w-sm">
             {/* needs Klovers icon: error state (was an emoji) */}
-            <AlertCircle className="mx-auto h-10 w-10 text-wrong dark:text-[#FF4FD8]" aria-hidden="true" />
+            <AlertCircle className="mx-auto h-10 w-10 text-wrong dark:text-[#FF3131]" aria-hidden="true" />
             <h2 className="font-semibold text-foreground">{t("dailyQuiz.loadErrorTitle")}</h2>
             <p className="text-sm text-muted-foreground">{fetchError}</p>
             <button onClick={() => fetchDailyQuiz()} className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80">{t("dailyQuiz.tryAgainBtn")}</button>
@@ -495,7 +495,7 @@ const DailyQuizPage = () => {
                         className={cn(
                           "flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-all",
                           showAnswer && isCorrect && "bg-klovers-green/15 dark:bg-klovers-green/10 border-klovers-green",
-                          showAnswer && selected && !isCorrect && "bg-[#FF4FD8]/10 border-[#FF4FD8]",
+                          showAnswer && selected && !isCorrect && "bg-[#FF3131]/10 border-[#FF3131]",
                           !showAnswer && "hover:border-klovers-yellow hover:bg-klovers-yellow/10"
                         )}
                       >
@@ -514,7 +514,7 @@ const DailyQuizPage = () => {
                           <span className="grid h-6 w-6 place-items-center rounded-full bg-klovers-green text-charcoal"><Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" /></span>
                         )}
                         {showAnswer && selected && !isCorrect && (
-                          <span className="grid h-6 w-6 place-items-center rounded-full bg-[#FF4FD8] text-charcoal"><X className="h-4 w-4" strokeWidth={3} aria-hidden="true" /></span>
+                          <span className="grid h-6 w-6 place-items-center rounded-full bg-[#FF3131] text-charcoal"><X className="h-4 w-4" strokeWidth={3} aria-hidden="true" /></span>
                         )}
                       </div>
                     );
