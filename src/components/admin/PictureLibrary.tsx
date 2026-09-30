@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Image as ImageIcon, LayoutGrid, Grid2x2, Download } from "lucide-react";
 import {
-  LIBRARY_BOOK, LIBRARY_SCENES, LIBRARY_ICONS, LIBRARY_SHEETS,
+  LIBRARY_BOOK, LIBRARY_SCENES, LIBRARY_ICONS, LIBRARY_SHEETS, LIBRARY_SITE, LIBRARY_SITE_GROUPS,
 } from "@/constants/pictureLibrary";
 
 /**
@@ -23,7 +23,7 @@ import {
  * To add pictures: drop the files into the right folder under
  * public/picture-library/ and add their entries to src/constants/pictureLibrary.ts.
  */
-type Kind = "all" | "scenes" | "icons" | "sheets";
+type Kind = "all" | "scenes" | "icons" | "sheets" | "blog" | "books" | "brand";
 
 const BASE = "/picture-library";
 
@@ -32,6 +32,9 @@ const KINDS: { id: Kind; label: string }[] = [
   { id: "scenes", label: "Scenes" },
   { id: "icons", label: "Icons" },
   { id: "sheets", label: "Source sheets" },
+  { id: "blog", label: "Blog" },
+  { id: "books", label: "Book covers" },
+  { id: "brand", label: "Brand" },
 ];
 
 export default function PictureLibrary() {
@@ -55,11 +58,17 @@ export default function PictureLibrary() {
     [term],
   );
 
-  const total = LIBRARY_SCENES.length + LIBRARY_ICONS.length + LIBRARY_SHEETS.length;
+  const site = useMemo(
+    () => LIBRARY_SITE.filter((p) => match(p.file, p.label ?? "", p.group)),
+    [term],
+  );
+
+  const total = LIBRARY_SCENES.length + LIBRARY_ICONS.length + LIBRARY_SHEETS.length + LIBRARY_SITE.length;
   const showing =
     (kind === "all" || kind === "scenes" ? scenes.length : 0) +
     (kind === "all" || kind === "icons" ? icons.length : 0) +
-    (kind === "all" || kind === "sheets" ? sheets.length : 0);
+    (kind === "all" || kind === "sheets" ? sheets.length : 0) +
+    site.filter((p) => kind === "all" || kind === p.group).length;
 
   const show = (k: Exclude<Kind, "all">) => kind === "all" || kind === k;
 
@@ -182,6 +191,48 @@ export default function PictureLibrary() {
           </div>
         </Section>
       )}
+
+      {LIBRARY_SITE_GROUPS.filter((g) => show(g.id)).map((g) => {
+        const items = site.filter((p) => p.group === g.id);
+        return (
+          <Section
+            key={g.id}
+            icon={<ImageIcon className="h-4 w-4" />}
+            title={g.title}
+            note={g.note}
+            count={items.length}
+          >
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {items.map((p) => {
+                const href = `${p.dir}/${p.file}`;
+                return (
+                  <Card key={href} className="overflow-hidden">
+                    <img
+                      src={href}
+                      alt={p.label ?? p.file}
+                      loading="lazy"
+                      className="aspect-[4/3] w-full max-w-full bg-muted object-cover"
+                    />
+                    <CardContent className="space-y-1 p-3">
+                      {p.label && <p className="text-sm font-medium" dir="rtl">{p.label}</p>}
+                      <div className="flex items-center justify-between gap-2">
+                        <code className="truncate text-xs text-muted-foreground">{p.file}</code>
+                        <a
+                          href={href}
+                          download
+                          className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          <Download className="h-3 w-3" /> Open
+                        </a>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </Section>
+        );
+      })}
 
       {showing === 0 && (
         <p className="py-10 text-center text-sm text-muted-foreground">
