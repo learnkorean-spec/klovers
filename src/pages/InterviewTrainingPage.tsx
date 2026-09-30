@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { GraduationCap } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSEO } from "@/hooks/useSEO";
 
 const RehamTrainingPanel = lazy(() => import("@/components/admin/RehamTrainingPanel"));
 
@@ -14,6 +15,8 @@ const RehamTrainingPanel = lazy(() => import("@/components/admin/RehamTrainingPa
  */
 export default function InterviewTrainingPage() {
   const { t } = useLanguage();
+  // Private admin page: keep it out of search results (dashboard scan42-pi-indexable).
+  useSEO({ title: "Interview training | Klovers", noindex: true });
 
   return (
     <div className="min-h-screen bg-ivory dark:bg-muted p-4 md:p-8">
@@ -25,7 +28,7 @@ export default function InterviewTrainingPage() {
           </h1>
           <p className="text-sm text-muted-foreground">{t("interviewTraining.gateTag")}</p>
         </div>
-        <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-klovers-green border-t-transparent rounded-full" /></div>}>
+        <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-charcoal border-t-transparent rounded-full" /></div>}>
           <RehamTrainingPanel />
         </Suspense>
       </div>

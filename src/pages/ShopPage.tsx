@@ -303,7 +303,7 @@ export default function ShopPage() {
                     {tr("I keep every page safe. — Cluby", "أحفظ كل صفحة. — كلوبي")}
                   </p>
                   <Button asChild variant="outline" className="mt-5 h-11">
-                    <Link to="/textbook">{tr("Continue Learning", "متابعة التعلّم")}</Link>
+                    <Link to="/free-trial">{tr("Book a free class", "حجز حصة مجانية")}</Link>
                   </Button>
                 </div>
               </div>
