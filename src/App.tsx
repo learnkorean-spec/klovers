@@ -24,6 +24,7 @@ import AuthProtectedRoute from "./components/AuthProtectedRoute";
 // Lazy-loaded pages — each becomes its own JS chunk
 const Index = lazy(() => import("./pages/Index"));
 const CoursesPage = lazy(() => import("./pages/CoursesPage"));
+const ConversationPage = lazy(() => import("./pages/ConversationPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
@@ -206,6 +207,8 @@ const App = () => (
                 <Route path="/ar/free-trial" element={<FreeTrialPage />} />
                 {/* The Arabic blog index (28 Sep 2026): Arabic articles only. */}
                 <Route path="/ar/blog" element={<BlogPage />} />
+                {/* Printed in the books as a QR — never change this path. */}
+                <Route path="/c/:code" element={<ConversationPage />} />
                 <Route path="/courses" element={<CoursesPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/about" element={<AboutPage />} />
