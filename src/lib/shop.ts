@@ -64,10 +64,10 @@ export function formatPrice(amount: number, currency: string, isAr: boolean) {
 export async function fetchShopProducts(): Promise<ShopProduct[]> {
   const { data, error } = await supabase.functions.invoke("shop-products", { method: "GET" });
   if (error || !data || !Array.isArray(data.products)) throw new Error("shop_unavailable");
-  // The free Hangul sheet has no Stripe photo: show the village picture from the site.
+  // The free Hangul sheet has no Stripe photo: show its own cover from the site.
   return (data.products as ShopProduct[]).map((p) =>
     p.bookId === "hangul-starter" && p.images.length === 0
-      ? { ...p, images: [`${window.location.origin}/assets/story/world-hangul-village.webp`] }
+      ? { ...p, images: [`${window.location.origin}/assets/shop/hangul-sheet-cover-${document.documentElement.lang === "en" ? "en" : "ar"}.webp`] }
       : p);
 }
 
