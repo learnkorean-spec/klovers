@@ -48,6 +48,7 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "kb_wall_sunset", label: "براند — على السور وقت الغروب" },
   { file: "kb_lantern_walk", label: "براند — المشي في شارع الفوانيس" },
   { file: "kb_terrace_talk", label: "براند — حديث على التراس" },
+  { file: "kb_cluby_plate", label: "براند — كلوبي على خلفية ماجنتا للقصّ" },
 ];
 
 export const LIBRARY_ICONS: LibraryIcon[] = [
