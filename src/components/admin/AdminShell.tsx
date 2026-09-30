@@ -93,6 +93,7 @@ export const ADMIN_NAV: {
         { id: "campaigns", label: "Campaigns", to: "/admin?tab=campaigns" },
         { id: "books", label: "Books", to: "/admin?tab=books" },
         { id: "trial-books", label: "Trial books", to: "/admin?tab=trial-books" },
+        { id: "pictures", label: "Pictures", to: "/admin?tab=pictures" },
       ],
     },
     {
