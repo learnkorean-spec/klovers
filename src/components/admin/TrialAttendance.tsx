@@ -119,8 +119,6 @@ type DryRun = {
 interface TrialAttendanceProps {
   /** How many days back to look. The card empties itself as sessions are marked. */
   days?: number;
-  /** Rows drawn per session before "Show all". */
-  limit?: number;
 }
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -169,7 +167,7 @@ const responseRank = (r: Row): number =>
 
 const sessionKey = (date: string | null, time: string | null) => `${date ?? ""}|${time ?? ""}`;
 
-const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
+const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
   const qc = useQueryClient();
   /** Sessions the admin has opened in full. Collapsed is the default. */
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -436,10 +434,17 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
 
       {sessions.map(s => {
         const isOpen = expanded.has(s.key);
-        const shown = isOpen ? s.rows : s.rows.slice(0, limit);
-        const hidden = s.rows.length - shown.length;
         const label = `${formatSlotDate(s.date)} · ${(s.time ?? "TBA").slice(0, 5)}`;
         const locked = s.isConfirmed;
+        // Collapsed by default (Re, 1 Oct 2026: "no need all names"). Folded, a
+        // session shows only the rows worth a look — who said yes and who is
+        // already marked — and a closed session shows none at all.
+        const shown = isOpen
+          ? s.rows
+          : locked
+            ? []
+            : s.rows.filter(r => r.attendance_response === "yes" || r.attended !== null);
+        const hidden = s.rows.length - shown.length;
 
         // The letters button names the next action rather than the feature.
         const nothingToSend = s.camePending === 0 && s.missedPending === 0;
@@ -569,7 +574,11 @@ const TrialAttendance = ({ days = 14, limit = 8 }: TrialAttendanceProps) => {
                 className="pt-1 text-xs text-muted-foreground underline underline-offset-2"
                 onClick={() => toggle(s.key)}
               >
-                {isOpen ? "Show fewer" : `Show all ${s.rows.length}`}
+                {isOpen
+                  ? "Hide names"
+                  : shown.length === 0
+                    ? `Show ${s.rows.length} name${s.rows.length === 1 ? "" : "s"}`
+                    : `+ ${hidden} more`}
               </button>
             )}
           </div>
