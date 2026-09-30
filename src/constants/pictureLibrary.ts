@@ -41,6 +41,13 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "kb_hanok_laptop", label: "براند — لينا وكلوبي على اللابتوب في هانوك" },
   { file: "kb_office_seoul", label: "براند — مكتب يطلّ على سيول" },
   { file: "kb_terrace_reading", label: "براند — القراءة معًا على التراس" },
+  { file: "kb_egg_moonlight", label: "براند — البيضة المضيئة تحت القمر" },
+  { file: "kb_lina_reading_v", label: "براند — لينا تقرأ على المقعد (طولي)" },
+  { file: "kb_lina_reading_h", label: "براند — لينا تقرأ على المقعد (عرضي)" },
+  { file: "kb_gate_walk_v", label: "براند — لينا وكلوبي عند البوّابة (طولي)" },
+  { file: "kb_wall_sunset", label: "براند — على السور وقت الغروب" },
+  { file: "kb_lantern_walk", label: "براند — المشي في شارع الفوانيس" },
+  { file: "kb_terrace_talk", label: "براند — حديث على التراس" },
 ];
 
 export const LIBRARY_ICONS: LibraryIcon[] = [
