@@ -363,11 +363,12 @@ const StudentDashboard = () => {
         setPlacementTest(ptData as PlacementTestResult);
       }
 
-      const { data: rosterRow } = await supabase
+      const { data: rosterRow, error: rosterErr } = await supabase
         .from("teacher_students")
         .select("id")
         .eq("user_id", session.user.id)
         .maybeSingle();
+      if (rosterErr) console.error("teacher_students lookup failed:", rosterErr.message);
       setIsPrivate(Boolean(rosterRow?.id));
 
       const { data: enrollmentData } = await supabase

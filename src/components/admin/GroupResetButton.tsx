@@ -87,8 +87,8 @@ export default function GroupResetButton({ groupId, title, onDone }: Props) {
       if (uErr) throw uErr;
 
       // Best-effort audit line; the reset itself has already succeeded.
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData.user?.id) {
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (!userErr && userData.user?.id) {
         await db.from("admin_audit_log").insert({
           admin_id: userData.user.id,
           action: "group_reset_to_waiting",
