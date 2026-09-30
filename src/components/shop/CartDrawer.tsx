@@ -33,7 +33,7 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
   const currencies = new Set(lines.map((x) => x.product.price.currency));
   const subtotal = lines.reduce((s, x) => s + x.product.price.amount * x.line.quantity, 0);
   const isFreeBag = lines.length > 0 && lines.every((x) => x.product.price.amount === 0 && !!x.product.bookId);
-  // Egypt (prices in EGP): pay by Vodafone Cash / InstaPay with a receipt, the
+  // Arabic page (prices in EGP): pay by Vodafone Cash / InstaPay with a receipt, the
   // same way as course fees (Re, 1 Oct 2026). Card checkout stays available.
   const isEgp = currencies.size === 1 && [...currencies][0].toLowerCase() === "egp";
 
@@ -55,7 +55,8 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
     setBusy(true);
     setNotice(null);
     trackShop({ event: "begin_checkout", items: lines.length, value: subtotal / 100, currency: [...currencies][0] ?? "" });
-    const res = await startCheckout(lines.map((x) => x.line));
+    const shown = [...currencies][0]?.toLowerCase();
+    const res = await startCheckout(lines.map((x) => x.line), shown === "egp" || shown === "usd" ? shown : undefined);
     if (res.ok === true && "free" in res) {
       const found = res.downloads.map((d) => {
         const l = lines.find((x) => x.product.bookId === d.bookId);
