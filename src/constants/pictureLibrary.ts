@@ -49,6 +49,8 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "kb_lantern_walk", label: "براند — المشي في شارع الفوانيس" },
   { file: "kb_terrace_talk", label: "براند — حديث على التراس" },
   { file: "kb_cluby_plate", label: "براند — كلوبي على خلفية ماجنتا للقصّ" },
+  { file: "kb_terrace_study", label: "براند — الاثنان يشيران إلى الكتاب مع كلوبي" },
+  { file: "kb_terrace_dream", label: "براند — الاثنان يتأمّلان والكتاب مفتوح" },
 ];
 
 export const LIBRARY_ICONS: LibraryIcon[] = [
@@ -221,6 +223,8 @@ export const LIBRARY_SHEETS: LibraryScene[] = [
   { file: "Q48", label: "لوحة الثمانٍ والأربعين (أربع لوحات في صورة)" },
   { file: "R32", label: "إعادة رسم الاثنتين والثلاثين" },
   { file: "P2_ALL", label: "الجزء الثاني — اللوحة الكاملة (٨٠ أيقونة)" },
+  { file: "kb_contact_01", label: "لوحة براند مجمّعة ١" },
+  { file: "kb_contact_02", label: "لوحة براند مجمّعة ٢" },
 ];
 
 // Pictures that already live elsewhere in public/ — referenced where they sit, never copied.
