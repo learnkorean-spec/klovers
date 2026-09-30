@@ -54,3 +54,33 @@ describe("blog-not-found handler", () => {
     expect(res.body).toContain('href="/"');
   });
 });
+
+describe("trailing punctuation from pasted links (1 Oct 2026)", async () => {
+  const { default: notFound } = await import("../api/not-found.js");
+  const cases = [
+    ["/shop%D8%8C", "/shop"],
+    ["/shop،", "/shop"],
+    ["/terms.", "/terms"],
+    ["/free-trial).", "/free-trial"],
+    ["/shop%D8%8C?x=1", "/shop?x=1"],
+  ];
+  for (const [from, to] of cases) {
+    it(`${from} -> ${to}`, () => {
+      const res = mockRes();
+      notFound({ url: from }, res);
+      expect(res.statusCode).toBe(301);
+      expect(res.headers.Location).toBe(to);
+    });
+  }
+  it("a normal unknown path is still a 404", () => {
+    const res = mockRes();
+    notFound({ url: "/no-such-page" }, res);
+    expect(res.statusCode).toBe(404);
+  });
+  it("blog slugs get the same treatment", () => {
+    const res = mockRes();
+    handler({ url: "/blog/some-post%D8%8C" }, res);
+    expect(res.statusCode).toBe(301);
+    expect(res.headers.Location).toBe("/blog/some-post");
+  });
+});

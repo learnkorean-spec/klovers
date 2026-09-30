@@ -11,7 +11,25 @@
 // Story mode (Re, 25 Sep 2026): same page as api/not-found.js (hanok-alley
 // scene, Cluby note, palette only, bilingual) with article wording. Keep the
 // two in step.
+// A link pasted into a sentence often carries the punctuation after it
+// ("kloversegy.com/shop،" in an Arabic message, "…/terms." in English), and
+// that used to land here as a 404 (Re, 1 Oct 2026). Such a URL is sent to the
+// same address without the trailing marks instead.
+const TRAILING_MARKS = /(?:%D8%8C|%D8%9B|%D8%9F|%C2%BB|%E2%80%9D|%E2%80%99|%22|%27|%29|%5D|[،؛؟».,;:!?'")\]])+$/i;
+export function cleanTrailingPunctuation(req, res) {
+  const url = req.url || "/";
+  const q = url.indexOf("?");
+  const path = q < 0 ? url : url.slice(0, q);
+  const clean = path.replace(TRAILING_MARKS, "");
+  if (clean === path) return false;
+  res.setHeader("Location", (clean || "/") + (q < 0 ? "" : url.slice(q)));
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.status(301).send("");
+  return true;
+}
+
 export default function handler(req, res) {
+  if (cleanTrailingPunctuation(req, res)) return;
   const html = `<!doctype html>
 <html lang="en">
 <head>
