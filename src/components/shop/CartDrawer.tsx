@@ -3,13 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { capture } from "@/lib/analytics";
 import {
   cartActions, formatPrice, productName, startCheckout, useCart, type ShopProduct,
+  trackShop,
 } from "@/lib/shop";
 import { ProductImage } from "./ProductCard";
 import KloverIcon from "@/components/KloverIcon";
 import { WHATSAPP_BASE, MANUAL_PAY_NUMBER } from "@/lib/siteConfig";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
  * The bag. Lines whose product is no longer in the shop are dropped from
@@ -31,6 +33,9 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
   const currencies = new Set(lines.map((x) => x.product.price.currency));
   const subtotal = lines.reduce((s, x) => s + x.product.price.amount * x.line.quantity, 0);
   const isFreeBag = lines.length > 0 && lines.every((x) => x.product.price.amount === 0 && !!x.product.bookId);
+  // Egypt (prices in EGP): pay by Vodafone Cash / InstaPay with a receipt, the
+  // same way as course fees (Re, 1 Oct 2026). Card checkout stays available.
+  const isEgp = currencies.size === 1 && [...currencies][0].toLowerCase() === "egp";
 
   // A manual, non-Stripe way to pay (Egypt: Vodafone Cash / Fawry / InstaPay
   // / bank transfer). The book is not delivered automatically here — Re
@@ -49,14 +54,14 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
   const checkout = async () => {
     setBusy(true);
     setNotice(null);
-    capture({ event: "begin_checkout", items: lines.length, value: subtotal / 100, currency: [...currencies][0] ?? "" });
+    trackShop({ event: "begin_checkout", items: lines.length, value: subtotal / 100, currency: [...currencies][0] ?? "" });
     const res = await startCheckout(lines.map((x) => x.line));
     if (res.ok === true && "free" in res) {
       const found = res.downloads.map((d) => {
         const l = lines.find((x) => x.product.bookId === d.bookId);
         return { ...d, name: l ? productName(l.product, isAr) : d.bookId, signedIn: res.signedIn };
       });
-      capture({ event: "free_download", items: found.length });
+      trackShop({ event: "free_download", items: found.length });
       lines.forEach((x) => cartActions.remove(x.line.priceId));
       setDownloads(found);
       setBusy(false);
@@ -229,30 +234,145 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
                 </div>
               )}
               {notice && <p role="alert" className="rounded-lg bg-muted px-3 py-2 text-sm text-foreground">{notice}</p>}
-              <Button className="h-12 w-full text-base font-semibold" onClick={checkout} disabled={busy}>
+              {!isFreeBag && isEgp && (
+                <EgyptPay
+                  isAr={isAr}
+                  total={subtotal}
+                  lines={lines}
+                  onDone={() => lines.forEach((x) => cartActions.remove(x.line.priceId))}
+                  onSignIn={() => navigate(`/login?redirect=${encodeURIComponent("/shop")}`)}
+                  whatsappHref={manualPayHref()}
+                />
+              )}
+              <Button variant={isEgp && !isFreeBag ? "outline" : "default"} className="h-12 w-full text-base font-semibold" onClick={checkout} disabled={busy}>
                 {isFreeBag
                   ? (busy ? (isAr ? "جارٍ التجهيز…" : "Getting it ready…") : (isAr ? "إتمام الطلب وتنزيل مجاني" : "Check out and download free"))
-                  : (busy ? (isAr ? "جارٍ فتح صفحة الدفع…" : "Opening checkout…") : (isAr ? "الدفع الآمن" : "Checkout Securely"))}
+                  : (busy ? (isAr ? "جارٍ فتح صفحة الدفع…" : "Opening checkout…") : isEgp ? (isAr ? "أو الدفع بالبطاقة" : "Or pay by card") : (isAr ? "الدفع الآمن" : "Checkout Securely"))}
               </Button>
-              {!isFreeBag && <a
-                href={manualPayHref()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-11 w-full items-center justify-center rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-accent"
-              >
-                {isAr ? "أو ادفع يدويًا من مصر (بدون بطاقة)" : "Or pay manually from Egypt (no card)"}
-              </a>}
+
               <p className="text-center text-xs text-muted-foreground">
                 {isFreeBag
                   ? (isAr ? "مجاني بالكامل، دون بطاقة ودون حساب." : "Completely free: no card and no account needed.")
                   : isAr
-                  ? "يتم الدفع عبر صفحة دفع آمنة، ويتطلّب الشراء تسجيل الدخول لإضافة الكتب إلى «كتبي». الدفع اليدوي عبر واتساب، ويُضاف الكتاب بعد تأكيد التحويل."
-                  : "Payment happens on Stripe's secure page. Signing in is needed so books land in My books. Manual payment is over WhatsApp; the book is added after the transfer is confirmed."}
+                  ? "الدفع بالبطاقة عبر صفحة دفع آمنة، ويتطلّب الشراء تسجيل الدخول لإضافة الكتب إلى «كتبي»."
+                  : "Card payment happens on a secure payment page. Signing in is needed so books land in My books."}
               </p>
             </div>
           </>
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+/**
+ * Egypt: pay the bag by Vodafone Cash or InstaPay, then upload the receipt —
+ * the same steps as paying a course (EgyptPaymentPage). The receipt goes to the
+ * private `receipts` bucket and a payment claim is filed with the RPC
+ * student_submit_payment_claim; its note ends in "[shop:<book ids>]". Re
+ * approves it in MONEY IN, which then calls edge function shop-manual-fulfil to
+ * put the books in My books.
+ */
+function EgyptPay({ isAr, total, lines, onDone, onSignIn, whatsappHref }: {
+  isAr: boolean;
+  total: number;
+  lines: { line: { priceId: string }; product: ShopProduct }[];
+  onDone: () => void;
+  onSignIn: () => void;
+  whatsappHref: string;
+}) {
+  const { user } = useAuth();
+  const [method, setMethod] = useState<"vodafone_cash" | "instapay">("vodafone_cash");
+  const [file, setFile] = useState<File | null>(null);
+  const [sender, setSender] = useState("");
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [problem, setProblem] = useState<string | null>(null);
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
+  const amount = total / 100;
+  const books = lines.map((x) => x.product.bookId).filter((b): b is string => !!b);
+
+  if (state === "sent") {
+    return (
+      <div role="status" className="rounded-xl border-2 border-klovers-green bg-ivory p-4 text-sm text-charcoal dark:bg-card dark:text-foreground">
+        <p className="font-bold">{tr("Receipt received.", "تم استلام الإيصال.")}</p>
+        <p className="mt-1">
+          {tr("The book is added to My books as soon as the transfer is confirmed.", "يُضاف الكتاب إلى «كتبي» فور تأكيد التحويل.")}
+        </p>
+      </div>
+    );
+  }
+
+  const submit = async () => {
+    setProblem(null);
+    if (!user) { onSignIn(); return; }
+    if (!file) { setProblem(tr("Please attach the receipt.", "يُرجى إرفاق صورة الإيصال.")); return; }
+    if (file.size > 5 * 1024 * 1024) { setProblem(tr("The file is larger than 5 MB.", "حجم الملف أكبر من ٥ ميجابايت.")); return; }
+    setState("sending");
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${user.id}/shop-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("receipts").upload(path, file, { upsert: false });
+    if (upErr) { setState("error"); setProblem(tr("The receipt could not be uploaded. Please try again.", "تعذّر رفع الإيصال. يُرجى المحاولة مرة أخرى.")); return; }
+    const names = lines.map((x) => productName(x.product, true)).join("، ");
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+    const { error: rpcErr } = await supabase.rpc("student_submit_payment_claim" as never, {
+      p_amount: amount,
+      p_currency: "EGP",
+      p_paid_on: today,
+      p_method: method,
+      p_sender_name: sender.trim() || null,
+      p_note: `متجر كلوفرز: ${names} [shop:${books.join(",")}]`,
+      p_bundle_id: null,
+      p_receipt_path: path,
+    } as never);
+    if (rpcErr) {
+      setState("error");
+      setProblem(tr("The payment could not be recorded. Please try again or message us on WhatsApp.", "تعذّر تسجيل الدفع. يُرجى المحاولة مرة أخرى أو التواصل عبر واتساب."));
+      return;
+    }
+    trackShop({ event: "begin_checkout", items: lines.length, value: amount, currency: "egp" }, "egypt_receipt_sent");
+    setState("sent");
+    onDone();
+  };
+
+  return (
+    <div className="space-y-3 rounded-xl border-2 border-charcoal bg-ivory p-4 text-charcoal dark:bg-card dark:text-foreground">
+      <p className="text-sm font-bold">{tr("Pay from Egypt: Vodafone Cash or InstaPay", "الدفع من مصر: فودافون كاش أو إنستاباي")}</p>
+      <ol className="list-decimal space-y-1 ps-5 text-sm">
+        <li>
+          {tr("Send ", "تحويل ")}<b>{formatPrice(total, "egp", isAr)}</b>{tr(" to ", " إلى الرقم ")}
+          <b dir="ltr" className="whitespace-nowrap">{MANUAL_PAY_NUMBER}</b>
+        </li>
+        <li>{tr("Attach a photo of the receipt and send it.", "إرفاق صورة الإيصال وإرساله.")}</li>
+        <li>{tr("The book arrives in My books once the transfer is confirmed.", "يصل الكتاب إلى «كتبي» بعد تأكيد التحويل.")}</li>
+      </ol>
+      <fieldset className="flex gap-2">
+        <legend className="sr-only">{tr("Payment method", "طريقة الدفع")}</legend>
+        {(["vodafone_cash", "instapay"] as const).map((m) => (
+          <label key={m} className={`flex-1 cursor-pointer rounded-lg border-2 px-3 py-2 text-center text-sm font-semibold ${method === m ? "border-charcoal bg-klovers-yellow text-charcoal" : "border-border"}`}>
+            <input type="radio" name="egypt-pay-method" value={m} checked={method === m} onChange={() => setMethod(m)} className="sr-only" />
+            {m === "vodafone_cash" ? tr("Vodafone Cash", "فودافون كاش") : tr("InstaPay", "إنستاباي")}
+          </label>
+        ))}
+      </fieldset>
+      <label className="block text-sm">
+        <span className="mb-1 block font-semibold">{tr("Receipt (photo or PDF)", "صورة الإيصال (صورة أو ملف PDF)")}</span>
+        <input id="egypt-pay-receipt" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="block w-full text-xs" />
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1 block font-semibold">{tr("Sender name or number (optional)", "اسم المُحوِّل أو رقمه (اختياري)")}</span>
+        <input id="egypt-pay-sender" type="text" value={sender} onChange={(e) => setSender(e.target.value)} maxLength={80}
+          className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" />
+      </label>
+      {problem && <p role="alert" className="text-sm font-semibold">{problem}</p>}
+      <Button className="h-11 w-full font-bold" onClick={submit} disabled={state === "sending"}>
+        {state === "sending"
+          ? tr("Sending…", "جارٍ الإرسال…")
+          : user ? tr("Send the receipt", "إرسال الإيصال") : tr("Sign in to send the receipt", "تسجيل الدخول لإرسال الإيصال")}
+      </Button>
+      <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="block text-center text-xs font-semibold underline underline-offset-4">
+        {tr("Bank transfer or a question? WhatsApp", "تحويل بنكي أو استفسار؟ واتساب")}
+      </a>
+    </div>
   );
 }

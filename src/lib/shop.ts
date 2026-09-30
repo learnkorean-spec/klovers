@@ -15,6 +15,19 @@ import { useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { localPrice, shopCurrency, type ShopPrice } from "@/lib/shopCurrency";
+import { capture, type AnalyticsEvent } from "@/lib/analytics";
+import { logEngagementEvent } from "@/lib/leadTracking";
+
+/**
+ * One shop step, sent to analytics AND kept in lead_events (source_type
+ * "shop") so the admin Books library can show the store funnel (1 Oct 2026):
+ * visits, product views, add to bag, checkout, Egypt receipts, purchases.
+ */
+export function trackShop(payload: AnalyticsEvent, label: string = payload.event): void {
+  capture(payload);
+  const { event: _event, ...meta } = payload as AnalyticsEvent & Record<string, unknown>;
+  void logEngagementEvent({ source_type: "shop", cta_label: label, metadata: { ...meta, local: shopCurrency() } });
+}
 
 export interface ShopProduct {
   id: string;

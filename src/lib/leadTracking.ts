@@ -72,7 +72,7 @@ export type GameEventType =
  * The rows are still written to lead_events — the signal is genuinely useful
  * for funnel analysis. What they are not is conversions.
  */
-export type EngagementEventType = "homepage" | "culture_section" | "blog_journey" | "pricing_page" | "cluby_gift";
+export type EngagementEventType = "homepage" | "culture_section" | "blog_journey" | "pricing_page" | "cluby_gift" | "shop";
 
 interface EventOpts<T extends string> {
   source_type: T;

@@ -166,11 +166,25 @@ const MoneyIn = () => {
       p_claim_id: id,
       p_approve: approve,
     } as never);
-    setBusy(null);
     if (rpcError) {
+      setBusy(null);
       setError(rpcError.message);
       return;
     }
+    // A shop order paid by hand from Egypt (note ends in "[shop:…]"): once the
+    // claim is approved, the books go into the buyer's My books.
+    const claim = claims.find((c) => c.id === id);
+    if (approve && claim?.note?.includes("[shop:")) {
+      const { data, error: fnError } = await supabase.functions.invoke("shop-manual-fulfil", { body: { claimId: id } });
+      if (fnError || !data?.ok) {
+        let reason = (data as { error?: string } | null)?.error;
+        if (!reason && fnError && "context" in fnError) {
+          try { reason = (await (fnError.context as Response).json())?.error; } catch { /* keep undefined */ }
+        }
+        setError(`Approved, but the books were not delivered (${reason ?? "error"}). Assign them by hand in Books.`);
+      }
+    }
+    setBusy(null);
     await Promise.all([
       loadClaims(),
       queryClient.invalidateQueries({ queryKey: ["admin", "private-budgets"] }),

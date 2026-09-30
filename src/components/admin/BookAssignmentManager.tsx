@@ -60,6 +60,41 @@ function formatMoney(amount: number, currency: string) {
 }
 
 /** Status chip in the Klovers palette: live = neon-green edge, waiting = yellow fill. */
+interface StoreStats {
+  visitors: Record<string, number>;
+  sales: { stripe: number; manual: number; free: number; stripe30: number; manual30: number; free30: number };
+  waiting: number;
+}
+
+/** Store funnel, last 30 days. Visitors are counted once per browser session per step. */
+function StoreFunnel({ s }: { s: StoreStats }) {
+  const v = (k: string) => s.visitors[k] ?? 0;
+  const steps: [string, number][] = [
+    ["Visited the shop", v("shop_view") + v("collection_view")],
+    ["Opened a book", v("product_view")],
+    ["Added to bag", v("add_to_cart")],
+    ["Went to card payment", v("begin_checkout")],
+    ["Sent an Egypt receipt", v("egypt_receipt_sent")],
+    ["Paid by card", s.sales.stripe30],
+    ["Paid by hand (Egypt)", s.sales.manual30],
+    ["Opened the review link", v("review_tap")],
+  ];
+  return (
+    <section className="rounded-xl border bg-card p-3 space-y-2">
+      <div className="flex items-baseline justify-between gap-2 flex-wrap">
+        <h3 className="text-sm font-bold">Store · last 30 days</h3>
+        <span className="text-xs text-muted-foreground">
+          All time: {s.sales.stripe} paid by card · {s.sales.manual} paid by hand · {s.sales.free} free downloads
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {steps.map(([label, n]) => <Chip key={label} tone={n > 0 ? "live" : "plain"}>{label}: {n}</Chip>)}
+        {s.waiting > 0 && <Chip tone="wait">{s.waiting} Egypt receipt{s.waiting === 1 ? "" : "s"} waiting in Money in</Chip>}
+      </div>
+    </section>
+  );
+}
+
 function Chip({ tone, children }: { tone: "live" | "wait" | "plain"; children: ReactNode }) {
   const cls =
     tone === "live" ? "border-klovers-green bg-ivory text-charcoal"
@@ -127,6 +162,8 @@ const BookAssignmentManager = () => {
   const [shop, setShop] = useState<ShopListing[] | null>(null);
   // Cluby's gift pop-up (30 Sep 2026): how many saw it, took the book, downloaded it.
   const [gift, setGift] = useState<{ shown: number; taps: number; claimed: number; downloads: number; people: number } | null>(null);
+  // Store funnel (1 Oct 2026): visitors per step, books sold by route, Egypt receipts waiting.
+  const [store, setStore] = useState<StoreStats | null>(null);
 
   useEffect(() => {
     // Counted by the edge function (service role): lead_events rows are not readable by admins here.
@@ -135,6 +172,13 @@ const BookAssignmentManager = () => {
       .then(({ data, error }) => {
         if (error || !data || typeof data.claimed !== "number") return;
         setGift(data as { shown: number; taps: number; claimed: number; downloads: number; people: number });
+      })
+      .catch(() => {});
+    supabase.functions
+      .invoke("shop-claim-gift", { body: { action: "shop_stats" } })
+      .then(({ data, error }) => {
+        if (error || !data?.visitors) return;
+        setStore(data as StoreStats);
       })
       .catch(() => {});
   }, []);
@@ -246,6 +290,8 @@ const BookAssignmentManager = () => {
           <Plus className="h-3.5 w-3.5" /> Assign Book
         </Button>
       </div>
+
+      {store && <StoreFunnel s={store} />}
 
       {/* Library: every book, by shelf */}
       <div className="space-y-5">

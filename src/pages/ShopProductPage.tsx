@@ -12,10 +12,9 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { ShopBar } from "@/pages/ShopPage";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
-import { capture } from "@/lib/analytics";
 import { productImages, shopExtras } from "@/lib/shopExtras";
 import {
-  cartActions, formatPrice, productDescription, productName, useCart, useShopProducts, visibleIn,
+  cartActions, formatPrice, productDescription, productName, trackShop, useCart, useShopProducts, visibleIn,
 } from "@/lib/shop";
 
 export default function ShopProductPage() {
@@ -73,14 +72,14 @@ export default function ShopProductPage() {
       },
     });
     document.head.appendChild(el);
-    capture({ event: "product_view", productId: product.id, price: product.price.amount / 100, currency: product.price.currency });
+    trackShop({ event: "product_view", productId: product.id, price: product.price.amount / 100, currency: product.price.currency });
     return () => el.remove();
   }, [product, name, description, canonical]);
 
   const add = () => {
     if (!product) return;
     cartActions.add(product);
-    capture({ event: "add_to_cart", productId: product.id, price: product.price.amount / 100, currency: product.price.currency });
+    trackShop({ event: "add_to_cart", productId: product.id, price: product.price.amount / 100, currency: product.price.currency });
   };
 
   return (

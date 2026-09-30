@@ -19,8 +19,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { CartDrawer } from "@/components/shop/CartDrawer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
-import { capture } from "@/lib/analytics";
-import { SHOP_CATEGORIES, cartActions, useCart, useShopProducts, visibleIn, type ShopProduct } from "@/lib/shop";
+import { SHOP_CATEGORIES, cartActions, trackShop, useCart, useShopProducts, visibleIn, type ShopProduct } from "@/lib/shop";
 import type { BrandIconName } from "@/lib/dashboardProgress";
 
 type Copy = { en: string; ar: string };
@@ -134,13 +133,13 @@ export default function ShopPage() {
   });
 
   useEffect(() => {
-    capture(cat ? { event: "collection_view", category: cat } : { event: "shop_view" });
+    trackShop(cat ? { event: "collection_view", category: cat } : { event: "shop_view" });
   }, [cat]);
 
   useEffect(() => {
     if (order === "success") {
       cartActions.clear();
-      capture({ event: "purchase" });
+      trackShop({ event: "purchase" });
     }
   }, [order]);
 

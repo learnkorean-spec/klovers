@@ -78,6 +78,38 @@ serve(async (req) => {
         people: new Set(downloads.map((r) => r.user_id).filter(Boolean)).size,
       });
     }
+    // Store funnel for the admin Books library (1 Oct 2026, store review "9/10"):
+    // visitors per step in the last 30 days (lead_events source_type "shop",
+    // one count per browser session), books delivered by route, and Egypt
+    // receipts still waiting for Re in MONEY IN.
+    if (action === "shop_stats") {
+      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      if (!isAdmin) return reply({ error: "forbidden" }, 403);
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const [{ data: ev }, { data: sold }, { count: waiting }] = await Promise.all([
+        admin.from("lead_events").select("cta_label, session_id").eq("source_type", "shop").gte("created_at", since).limit(50000),
+        admin.from("book_assignments").select("assigned_by, assigned_at").like("assigned_by", "shop:%").limit(50000),
+        admin.from("student_payment_claims").select("id", { count: "exact", head: true })
+          .eq("status", "pending").like("note", "%[shop:%"),
+      ]);
+      const visitors: Record<string, number> = {};
+      const seen = new Set<string>();
+      for (const r of (ev ?? []) as { cta_label: string | null; session_id: string }[]) {
+        const key = `${r.cta_label}|${r.session_id}`;
+        if (!r.cta_label || seen.has(key)) continue;
+        seen.add(key);
+        visitors[r.cta_label] = (visitors[r.cta_label] ?? 0) + 1;
+      }
+      const sales = { stripe: 0, manual: 0, free: 0, stripe30: 0, manual30: 0, free30: 0 };
+      for (const r of (sold ?? []) as { assigned_by: string; assigned_at: string | null }[]) {
+        const k = r.assigned_by.replace("shop:", "") as "stripe" | "manual" | "free";
+        if (!(k in sales)) continue;
+        sales[k] += 1;
+        if ((r.assigned_at ?? "") >= since) sales[`${k}30` as keyof typeof sales] += 1;
+      }
+      return reply({ visitors, sales, waiting: waiting ?? 0 });
+    }
+
     if (!GIFT_BOOKS.has(bookId)) return reply({ error: "not_a_gift" }, 400);
 
     const track = async (label: "claimed" | "downloaded", from: string) => {

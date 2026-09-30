@@ -4,6 +4,8 @@ import { BOOKS, BOOK_COVERS as COVERS, type BookId } from "@/constants/books";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useDashCopy } from "./copy";
 import { BrandIcon } from "./primitives";
+import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import { logEngagementEvent } from "@/lib/leadTracking";
 
 /**
  * "My books" — the PDFs a student has been given.
@@ -29,7 +31,20 @@ import { BrandIcon } from "./primitives";
  *
  * Renders nothing when the student has no book yet — no empty card.
  */
-type Row = { id: string; book_id: string; assigned_by?: string | null };
+type Row = { id: string; book_id: string; assigned_by?: string | null; assigned_at?: string | null };
+
+/**
+ * Real reviews only (store review, 1 Oct 2026): a week after a book bought in
+ * the shop (or Cluby's gift) reaches "My books", a small link asks for an
+ * opinion on WhatsApp. Re reads it and may quote it in the shop; nothing is
+ * written for the buyer.
+ */
+const REVIEW_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
+function asksForReview(r: Row): boolean {
+  if (!(r.assigned_by?.startsWith("shop:") || r.assigned_by === "gift:cluby")) return false;
+  const at = r.assigned_at ? Date.parse(r.assigned_at) : NaN;
+  return Number.isFinite(at) && Date.now() - at >= REVIEW_AFTER_MS;
+}
 
 
 const seenKey = (userId: string, bookId: string) => `klovers-book-popup:${userId}:${bookId}`;
@@ -73,7 +88,7 @@ export function MyBooksCard({ clubyAwake = false }: { clubyAwake?: boolean }) {
         if (userError || !user) return;
         const { data, error: rowsError } = await supabase
           .from("book_assignments")
-          .select("id, book_id, assigned_by")
+          .select("id, book_id, assigned_by, assigned_at")
           .eq("user_id", user.id)
           .lte("available_from", new Date().toISOString())
           .order("assigned_at", { ascending: true });
@@ -155,6 +170,17 @@ export function MyBooksCard({ clubyAwake = false }: { clubyAwake?: boolean }) {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold leading-snug text-foreground">{isAr ? book.titleAr : book.titleEn}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{isAr ? book.subtitleAr : book.subtitleEn}</p>
+                  {asksForReview(r) && (
+                    <a
+                      href={`${WHATSAPP_BASE}?text=${encodeURIComponent(isAr ? `رأيي في كتاب «${book.titleAr}»: ` : `My review of “${book.titleEn}”: `)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => { void logEngagementEvent({ source_type: "shop", cta_label: "review_tap", metadata: { book_id: id } }); }}
+                      className="mt-1 inline-block text-xs font-semibold text-foreground underline underline-offset-4"
+                    >
+                      {isAr ? "ما رأيك في الكتاب؟ رسالة قصيرة عبر واتساب" : "How is the book? Tell us on WhatsApp"}
+                    </a>
+                  )}
                 </div>
                 <button
                   type="button"
