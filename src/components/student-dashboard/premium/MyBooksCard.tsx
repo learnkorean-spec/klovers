@@ -109,6 +109,10 @@ export function MyBooksCard({ clubyAwake = false }: { clubyAwake?: boolean }) {
       setError(isAr ? "تعذّر تحميل الكتاب الآن. يُرجى المحاولة بعد قليل." : "The book could not be downloaded right now. Please try again shortly.");
       return;
     }
+    // Cluby's gift book: count the download (admin Books library shows the total).
+    if (bookId === "cluby-coloring-1") {
+      void supabase.functions.invoke("shop-claim-gift", { body: { bookId, action: "log_download" } }).catch(() => {});
+    }
     if (userId) markSeen(userId, bookId);
     setPopupBook(null);
     window.location.assign(data.signedUrl);

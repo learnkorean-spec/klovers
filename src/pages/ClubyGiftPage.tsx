@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 const GIFT_BOOK = "cluby-coloring-1";
 type State =
   | { kind: "working" }
-  | { kind: "done"; download: string | null; alreadyHad: boolean }
+  | { kind: "done"; alreadyHad: boolean }
   | { kind: "error" };
 
 const ClubyGiftPage = () => {
@@ -32,6 +32,18 @@ const ClubyGiftPage = () => {
   const { user, loading } = useAuth();
   const [state, setState] = useState<State>({ kind: "working" });
   const asked = useRef(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadFailed, setDownloadFailed] = useState(false);
+
+  // Every download goes through the edge function, which counts it (Re: track downloads).
+  const download = async () => {
+    setDownloading(true);
+    setDownloadFailed(false);
+    const { data, error } = await supabase.functions.invoke("shop-claim-gift", { body: { bookId: GIFT_BOOK, action: "download" } });
+    setDownloading(false);
+    if (error || !data?.url) { setDownloadFailed(true); return; }
+    window.location.href = data.url as string;
+  };
 
   useSEO({
     title: tr("Cluby's gift · Klovers", "هدية كلوبي · كلوفرز"),
@@ -46,7 +58,7 @@ const ClubyGiftPage = () => {
       .invoke("shop-claim-gift", { body: { bookId: GIFT_BOOK } })
       .then(({ data, error }) => {
         if (error || !data?.ok) return setState({ kind: "error" });
-        setState({ kind: "done", download: data.download ?? null, alreadyHad: !!data.alreadyHad });
+        setState({ kind: "done", alreadyHad: !!data.alreadyHad });
       })
       .catch(() => setState({ kind: "error" }));
   }, [loading, user]);
@@ -92,10 +104,17 @@ const ClubyGiftPage = () => {
                 )}
               </p>
               <div className="flex w-full flex-col gap-2">
-                {state.download && (
-                  <Button asChild className="h-11 rounded-full border-2 border-charcoal bg-klovers-yellow font-extrabold text-charcoal hover:bg-klovers-yellow hover:brightness-95">
-                    <a href={state.download}>{tr("Download the book", "تحميل الكتاب")}</a>
-                  </Button>
+                <Button
+                  onClick={download}
+                  disabled={downloading}
+                  className="h-11 rounded-full border-2 border-charcoal bg-klovers-yellow font-extrabold text-charcoal hover:bg-klovers-yellow hover:brightness-95"
+                >
+                  {downloading ? tr("Preparing the file…", "جارٍ تجهيز الملف…") : tr("Download the book", "تحميل الكتاب")}
+                </Button>
+                {downloadFailed && (
+                  <p role="alert" className="text-sm text-foreground">
+                    {tr("The file did not open. Please try again in a moment.", "لم يُفتح الملف. يُرجى المحاولة بعد لحظة.")}
+                  </p>
                 )}
                 <Button asChild variant="outline" className="h-11 rounded-full border-2 border-charcoal font-bold">
                   <Link to="/dashboard">{tr("Open My books", "فتح «كتبي»")}</Link>

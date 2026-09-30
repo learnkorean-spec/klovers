@@ -125,6 +125,19 @@ const BookAssignmentManager = () => {
   const BOOK = BOOKS[bookId];
   const [filesInStorage, setFilesInStorage] = useState<Set<string> | null>(null);
   const [shop, setShop] = useState<ShopListing[] | null>(null);
+  // Cluby's gift pop-up (30 Sep 2026): how many saw it, took the book, downloaded it.
+  const [gift, setGift] = useState<{ shown: number; taps: number; claimed: number; downloads: number; people: number } | null>(null);
+
+  useEffect(() => {
+    // Counted by the edge function (service role): lead_events rows are not readable by admins here.
+    supabase.functions
+      .invoke("shop-claim-gift", { body: { bookId: "cluby-coloring-1", action: "stats" } })
+      .then(({ data, error }) => {
+        if (error || !data || typeof data.claimed !== "number") return;
+        setGift(data as { shown: number; taps: number; claimed: number; downloads: number; people: number });
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -263,6 +276,13 @@ const BookAssignmentManager = () => {
                             {hasFile === false && <Chip tone="wait">PDF not uploaded</Chip>}
                             {hasFile === true && <Chip tone="plain">PDF in storage</Chip>}
                             <Chip tone="plain">{count} {shelf.id === "store" ? "bought / given" : "assigned"}</Chip>
+                            {id === "cluby-coloring-1" && gift && (
+                              <>
+                                <Chip tone="live">Gift: {gift.claimed} took it</Chip>
+                                <Chip tone="live">{gift.people} downloaded ({gift.downloads} downloads)</Chip>
+                                <Chip tone="plain">Pop-up seen {gift.shown} · tapped {gift.taps}</Chip>
+                              </>
+                            )}
                             {shelf.id === "store" && shop !== null && (listing
                               ? <Chip tone="live">In shop · {formatMoney(listing.price.amount, listing.price.currency)}</Chip>
                               : <Chip tone="wait">Not in Stripe yet</Chip>)}

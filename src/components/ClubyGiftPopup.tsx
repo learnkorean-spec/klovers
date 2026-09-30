@@ -3,38 +3,53 @@ import { Link, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { logEngagementEvent } from "@/lib/leadTracking";
 
 /**
- * Cluby's gift pop-up (Re, 30 Sep 2026): "add Cluby jumping in a pop-up to
- * follow the visitor to sign in and get the store book to check out for free".
+ * Cluby's gift pop-up (Re, 30 Sep 2026): Cluby hops in and offers the
+ * colouring book that waits in the shop — «كلوبي والبيضة المضيئة», 99 EGP there —
+ * for free.
  *
- * Visitors who are not signed in see Cluby hop in after a short while (or
- * once they have scrolled a little). The card offers the colouring book that
- * waits in the shop — «كلوبي والبيضة المضيئة», 99 EGP there — free with a new
- * account. The button leads to sign-up, which comes back to /gift/cluby, where
- * the book is added to "My books" (edge function shop-claim-gift).
+ * Who sees it (Re: "for signed-in too, and those who did not download the book;
+ * show to all"):
+ *   - visitors who are not signed in  → create an account (or sign in), then
+ *     /gift/cluby adds the book to "My books";
+ *   - signed-in accounts without the book → get it now on /gift/cluby;
+ *   - signed-in accounts that have the book but never downloaded it → a
+ *     reminder that it waits in "My books".
+ * Accounts that have downloaded it never see the pop-up again. Whether an
+ * account has the book / downloaded it comes from edge function
+ * shop-claim-gift (action "status").
  *
- * Closing the card leaves a small hopping Cluby in the corner that follows the
- * visitor from page to page; a tap opens the card again. The card itself opens
- * on its own at most once every three days.
+ * The card opens by itself after 12 s (or 45% scroll), at most once a day;
+ * closed, a small hopping Cluby stays in the corner and follows the visitor.
+ * Every opening and every button tap is logged (lead_events, source_type
+ * "cluby_gift"); claims and downloads are logged by the edge function, and the
+ * admin Books library shows the totals.
  *
  * Voice: Modern Standard Arabic, neutral in gender (buttons are verbal nouns).
- * One language per page: every line has an English twin.
  */
 
+const BOOK_ID = "cluby-coloring-1";
 const SEEN_KEY = "kl_cluby_gift_seen_at";
-const REOPEN_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
+const REOPEN_AFTER_MS = 24 * 60 * 60 * 1000;
 const OPEN_AFTER_MS = 12_000;
 const GIFT_PATH = "/gift/cluby";
 
-/** Pages where the gift would get in the way (forms, checkout, admin, the gift page itself). */
-const QUIET = /^\/(ar\/)?(login|signup|forgot-password|reset-password|gift|admin|dashboard|enroll|enroll-now|trial-booking|checkout|payment|profile|my-)/;
+/** Pages where the gift would get in the way (forms, payment, admin, the gift page itself). */
+const QUIET = /^\/(ar\/)?(login|signup|forgot-password|reset-password|gift|admin|enroll|enroll-now|trial-booking|checkout|payment|pay\/|complete-profile)/;
+
+type Mode = "guest" | "claim" | "download" | null;
 
 function readSeen(): number {
   try { return Number(localStorage.getItem(SEEN_KEY)) || 0; } catch { return 0; }
 }
 function markSeen() {
   try { localStorage.setItem(SEEN_KEY, String(Date.now())); } catch { /* memory only */ }
+}
+function track(label: string) {
+  try { void logEngagementEvent({ source_type: "cluby_gift", cta_label: label }); } catch { /* never blocks */ }
 }
 
 const ClubyGiftPopup = () => {
@@ -44,11 +59,30 @@ const ClubyGiftPopup = () => {
   const { user, loading } = useAuth();
   const { pathname } = useLocation();
 
+  const [mode, setMode] = useState<Mode>(null);
   const [open, setOpen] = useState(false);
   const [bubble, setBubble] = useState(() => readSeen() > 0);
 
-  const quiet = QUIET.test(pathname);
-  const eligible = !loading && !user && !quiet;
+  // Decide who this visitor is: guest, account without the book, or account
+  // that has the book but has not downloaded it (asked once per sign-in).
+  useEffect(() => {
+    if (loading) return;
+    if (!user) { setMode("guest"); return; }
+    let alive = true;
+    setMode(null);
+    supabase.functions
+      .invoke("shop-claim-gift", { body: { bookId: BOOK_ID, action: "status" } })
+      .then(({ data }) => {
+        if (!alive || !data) return;
+        if (!data.owned) setMode("claim");
+        else if (!data.downloaded) setMode("download");
+        else setMode(null);
+      })
+      .catch(() => { /* no pop-up when the status is unknown */ });
+    return () => { alive = false; };
+  }, [loading, user?.id]);
+
+  const eligible = mode !== null && !QUIET.test(pathname) && !pathname.startsWith("/admin");
 
   // Open by itself once the visitor has had a moment on the page.
   useEffect(() => {
@@ -60,6 +94,7 @@ const ClubyGiftPopup = () => {
       done = true;
       setOpen(true);
       markSeen();
+      track(`popup_shown_${mode}`);
     };
     const timer = window.setTimeout(show, OPEN_AFTER_MS);
     const onScroll = () => {
@@ -68,7 +103,7 @@ const ClubyGiftPopup = () => {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => { window.clearTimeout(timer); window.removeEventListener("scroll", onScroll); };
-  }, [eligible, open]);
+  }, [eligible, open, mode]);
 
   // Escape closes the card.
   useEffect(() => {
@@ -88,6 +123,26 @@ const ClubyGiftPopup = () => {
 
   const signUpHref = `/signup?redirect=${encodeURIComponent(GIFT_PATH)}`;
   const loginHref = `/login?redirect=${encodeURIComponent(GIFT_PATH)}`;
+
+  const title =
+    mode === "download"
+      ? tr("Your colouring book is waiting", "كتاب التلوين ينتظر في «كتبي»")
+      : tr("The colouring book is waiting in the shop", "كتاب التلوين ينتظر في المتجر");
+  const text =
+    mode === "guest"
+      ? tr("“Cluby and the Glowing Egg”: 15 pages to colour, with the first two Korean words. Free with a new Klovers account.",
+           "«كلوبي والبيضة المضيئة»: ١٥ صفحة للتلوين، مع أول كلمتين كوريتين. الكتاب مجاني عند إنشاء حساب في كلوفرز.")
+      : mode === "claim"
+        ? tr("“Cluby and the Glowing Egg”: 15 pages to colour, with the first two Korean words. Free for this account.",
+             "«كلوبي والبيضة المضيئة»: ١٥ صفحة للتلوين، مع أول كلمتين كوريتين. الكتاب مجاني لهذا الحساب.")
+        : tr("“Cluby and the Glowing Egg” is already in My books and has not been downloaded yet. Print it and start colouring.",
+             "«كلوبي والبيضة المضيئة» موجود في «كتبي» ولم يُحمَّل بعد، وهو جاهز للطباعة والتلوين.");
+  const cta =
+    mode === "guest"
+      ? tr("Create a free account and get the book", "إنشاء حساب مجاني والحصول على الكتاب")
+      : mode === "claim"
+        ? tr("Get the book free", "الحصول على الكتاب مجانًا")
+        : tr("Download the book", "تحميل الكتاب");
 
   return (
     <>
@@ -122,7 +177,7 @@ const ClubyGiftPopup = () => {
                 {tr("A gift from Cluby", "هدية من كلوبي")}
               </p>
               <h2 id="cluby-gift-title" className="text-lg font-extrabold leading-snug text-charcoal dark:text-foreground">
-                {tr("The colouring book is waiting in the shop", "كتاب التلوين ينتظر في المتجر")}
+                {title}
               </h2>
               <div className="flex items-center gap-3 text-start">
                 <img
@@ -132,27 +187,24 @@ const ClubyGiftPopup = () => {
                   height={388}
                   className="h-24 w-auto shrink-0 rounded-md border border-charcoal/20"
                 />
-                <p className="text-sm leading-relaxed text-charcoal/80 dark:text-muted-foreground">
-                  {tr(
-                    "“Cluby and the Glowing Egg”: 15 pages to colour, with the first two Korean words. Free with a new Klovers account.",
-                    "«كلوبي والبيضة المضيئة»: ١٥ صفحة للتلوين، مع أول كلمتين كوريتين. الكتاب مجاني عند إنشاء حساب في كلوفرز.",
-                  )}
-                </p>
+                <p className="text-sm leading-relaxed text-charcoal/80 dark:text-muted-foreground">{text}</p>
               </div>
               <Link
-                to={signUpHref}
-                onClick={() => { setOpen(false); markSeen(); }}
+                to={mode === "guest" ? signUpHref : GIFT_PATH}
+                onClick={() => { setOpen(false); markSeen(); track(`popup_cta_${mode}`); }}
                 className="rounded-full border-2 border-charcoal bg-klovers-yellow px-5 py-2.5 text-sm font-extrabold text-charcoal shadow-sm transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {tr("Create a free account and get the book", "إنشاء حساب مجاني والحصول على الكتاب")}
+                {cta}
               </Link>
-              <Link
-                to={loginHref}
-                onClick={() => { setOpen(false); markSeen(); }}
-                className="text-xs font-semibold text-charcoal underline underline-offset-4 dark:text-foreground"
-              >
-                {tr("Already have an account? Sign in", "يوجد حساب بالفعل؟ تسجيل الدخول")}
-              </Link>
+              {mode === "guest" && (
+                <Link
+                  to={loginHref}
+                  onClick={() => { setOpen(false); markSeen(); track("popup_cta_login"); }}
+                  className="text-xs font-semibold text-charcoal underline underline-offset-4 dark:text-foreground"
+                >
+                  {tr("Already have an account? Sign in", "يوجد حساب بالفعل؟ تسجيل الدخول")}
+                </Link>
+              )}
             </div>
           </div>
         </section>
@@ -162,7 +214,7 @@ const ClubyGiftPopup = () => {
       {!open && bubble && (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => { setOpen(true); track(`bubble_open_${mode}`); }}
           aria-label={tr("Open Cluby's gift", "فتح هدية كلوبي")}
           className="group fixed bottom-5 left-4 z-50 flex h-16 w-16 items-end justify-center rounded-full border-2 border-charcoal bg-klovers-yellow shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
