@@ -99,6 +99,17 @@ export const BOOKS = {
     subtitleAr: "نسخة الدراسة الذاتية · 78 صفحة",
     subtitleEn: "Self-study edition · 78 pages",
   },
+  "cluby-coloring-1": {
+    use: "store",
+    lang: "ar",
+    path: "books/cluby-coloring-1.pdf",
+    fileName: "Klovers-Cluby-Coloring-Book-1.pdf",
+    badge: "تلوين",
+    titleAr: "كلوبي والبيضة المضيئة — كتاب تلوين",
+    titleEn: "Cluby and the Glowing Egg — colouring book 1 (Arabic)",
+    subtitleAr: "قصة وتلوين للأعمار ٤–٧ · 15 صفحة",
+    subtitleEn: "Story colouring book, ages 4–7 · 15 pages",
+  },
   "topik-i-91-reading": {
     use: "topik",
     lang: "ko",
@@ -148,6 +159,8 @@ export const BOOK_COVERS: Record<BookId, string> = {
   // Store editions share the student editions' covers.
   "hangul-a0-store": `${COVER_BASE}/hangul-a0-cover.webp`,
   "hangul-a0-en-store": `${COVER_BASE}/hangul-a0-en-cover.webp`,
+  // Colouring books: covers shipped with the site.
+  "cluby-coloring-1": "/book-covers/cluby-coloring-1.webp",
   // TOPIK past papers: plain Klovers thumbnails shipped with the site.
   "topik-i-91-reading": "/book-covers/topik-i-91.webp",
   "topik-i-96-reading": "/book-covers/topik-i-96.webp",
