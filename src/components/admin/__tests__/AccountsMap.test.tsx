@@ -1,5 +1,5 @@
 /**
- * Admin → Accounts map.
+ * Admin → Connectors (the accounts map).
  *
  * The promises made to Re: the filter ("github") shows only those accounts
  * with their login email on top, and the editor refuses anything that looks
@@ -43,7 +43,7 @@ describe("AccountsMap", () => {
 
   it("groups accounts under the login that opens them", async () => {
     render(<AccountsMap />);
-    await screen.findByText("Accounts map");
+    await screen.findByText("Connectors");
     const tree = within(screen.getByTestId("accounts-tree"));
     expect(tree.getByText("owner@example.com")).toBeInTheDocument();
     expect(tree.getByText("Login not recorded")).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe("AccountsMap", () => {
 
   it("filter 'github' shows only GitHub accounts with their logins", async () => {
     render(<AccountsMap />);
-    await screen.findByText("Accounts map");
+    await screen.findByText("Connectors");
     fireEvent.change(screen.getByLabelText("Filter accounts"), { target: { value: "github" } });
     const tree = within(screen.getByTestId("accounts-tree"));
     expect(tree.getByText("GitHub · learnkorean-spec")).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe("AccountsMap", () => {
 
   it("quick filter chip does the same with one tap", async () => {
     render(<AccountsMap />);
-    await screen.findByText("Accounts map");
+    await screen.findByText("Connectors");
     fireEvent.click(screen.getByRole("button", { name: "Resend" }));
     const tree = within(screen.getByTestId("accounts-tree"));
     expect(tree.getByText("mail@example.com")).toBeInTheDocument();
@@ -74,7 +74,7 @@ describe("AccountsMap", () => {
 
   it("refuses to save a password or key", async () => {
     render(<AccountsMap />);
-    await screen.findByText("Accounts map");
+    await screen.findByText("Connectors");
     fireEvent.click(screen.getByLabelText("Edit Stripe"));
     fireEvent.change(screen.getByPlaceholderText("e.g. name@gmail.com"), { target: { value: "sk_live_abcdefghijklmnop" } });
     fireEvent.click(screen.getByRole("button", { name: /save/i }));
