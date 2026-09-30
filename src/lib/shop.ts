@@ -79,7 +79,10 @@ export type CheckoutResult =
 
 export async function startCheckout(lines: CartLine[]): Promise<CheckoutResult> {
   const { data, error } = await supabase.functions.invoke("shop-checkout", {
-    body: { items: lines.map((l) => ({ priceId: l.priceId, quantity: l.quantity })) },
+    body: {
+      items: lines.map((l) => ({ priceId: l.priceId, quantity: l.quantity })),
+      lang: typeof document !== "undefined" && document.documentElement.lang === "en" ? "en" : "ar",
+    },
   });
   if (data?.free && Array.isArray(data.downloads)) {
     return { ok: true, free: true, downloads: data.downloads, signedIn: !!data.signedIn };

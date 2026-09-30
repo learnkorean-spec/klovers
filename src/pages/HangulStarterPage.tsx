@@ -4,7 +4,8 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import KloverIcon from "@/components/KloverIcon";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import kloversLogo from "@/assets/klovers-logo.jpg";
 import { toArabicDigits } from "@/lib/trustFigures";
 
@@ -120,6 +121,34 @@ const HangulStarterPage = () => {
   const { language } = useLanguage();
   const isAr = language === "ar";
   const tr = (en: string, ar: string) => (isAr ? ar : en);
+  const navigate = useNavigate();
+  const [adding, setAdding] = useState(false);
+
+  /*
+   * 30 Sep 2026 — the free Hangul book is sold from the shop at price 0 (no
+   * card, no account). From this story page a visitor puts it in the bag and
+   * lands on the shop with the bag already open. The shop code is loaded only
+   * on this click, so the sheet itself stays light. If the product is not in
+   * the shop yet the visitor gets the PDF directly.
+   */
+  const addBookToBag = async () => {
+    setAdding(true);
+    try {
+      const shop = await import("@/lib/shop");
+      const products = await shop.fetchShopProducts();
+      const book = products.find((p) => p.slug === "hangul-starter-free" && shop.visibleIn(p, isAr));
+      if (book) {
+        shop.cartActions.add(book);
+        navigate("/shop?bag=1");
+      } else {
+        window.location.href = isAr ? "/hangul-starter-ar.pdf" : "/hangul-starter-en.pdf";
+      }
+    } catch {
+      window.location.href = isAr ? "/hangul-starter-ar.pdf" : "/hangul-starter-en.pdf";
+    } finally {
+      setAdding(false);
+    }
+  };
 
   useSEO({
     title: isAr ? "ورقة الهانغول المجانية: الأبجدية الكورية" : "Free Hangul Starter Sheet — Korean Alphabet | Klovers",
@@ -198,6 +227,9 @@ const HangulStarterPage = () => {
                 <a href={isAr ? "/hangul-starter-ar.pdf" : "/hangul-starter-en.pdf"} download>
                   {tr("Download the free PDF", "تحميل الورقة المجانية للطباعة")}
                 </a>
+              </Button>
+              <Button onClick={addBookToBag} disabled={adding}>
+                {adding ? tr("Opening the bag…", "جارٍ فتح الحقيبة…") : tr("Add the free book to your bag", "إضافة الكتاب المجاني إلى الحقيبة")}
               </Button>
               <Button asChild variant="outline">
                 <Link to="/free-trial">{tr("Book a free class", "حجز حصة مجانية")}</Link>

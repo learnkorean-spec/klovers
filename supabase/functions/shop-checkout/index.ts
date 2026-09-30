@@ -77,7 +77,14 @@ serve(async (req) => {
     // ── Free bag: no card, no account. Hand back download links. ──
     if (allFree) {
       const downloads: { bookId: string; url: string }[] = [];
+      const wantsEn = body?.lang === "en";
       for (const bookId of bookIds) {
+        // The free Hangul starter sheet is a public file (never in the private
+        // bucket and never a "My books" row): hand back its site address.
+        if (bookId === "hangul-starter") {
+          downloads.push({ bookId, url: `${ALLOWED_ORIGINS[0]}/hangul-starter-${wantsEn ? "en" : "ar"}.pdf` });
+          continue;
+        }
         const { data: signed, error: signErr } = await supabaseAdmin.storage
           .from("student-materials")
           .createSignedUrl(`books/${bookId}.pdf`, 60 * 10, { download: `Klovers-${bookId}.pdf` });
@@ -87,9 +94,9 @@ serve(async (req) => {
         }
         downloads.push({ bookId, url: signed.signedUrl });
       }
-      if (user?.id) {
+      if (user?.id && bookIds.some((b) => b !== "hangul-starter")) {
         const { error: assignErr } = await supabaseAdmin.from("book_assignments").upsert(
-          bookIds.map((book_id) => ({
+          bookIds.filter((b) => b !== "hangul-starter").map((book_id) => ({
             user_id: user.id,
             book_id,
             available_from: new Date().toISOString(),
