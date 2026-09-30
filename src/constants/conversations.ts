@@ -236,7 +236,7 @@ export function findConversation(code: string | undefined) {
 
 /** One OpenAI voice per character, so the three speakers stay apart. */
 export const VOICE_BY_SPEAKER: Record<string, string> = {
-  "민수": "onyx",   // Minsu, the barista
-  "아담": "alloy",  // Adam
-  "리나": "nova",   // Lina
+  "민수": "onyx",  // Minsu, the barista — the deepest of the three
+  "아담": "echo",  // Adam — male, lighter, clearly not Minsu
+  "리나": "nova",  // Lina — female
 };

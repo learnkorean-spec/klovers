@@ -97,6 +97,7 @@ export const ADMIN_NAV: {
         { id: "books", label: "Books", to: "/admin?tab=books" },
         { id: "trial-books", label: "Trial books", to: "/admin?tab=trial-books" },
         { id: "pictures", label: "Pictures", to: "/admin?tab=pictures" },
+        { id: "conversation-audio", label: "Book audio", to: "/admin?tab=conversation-audio" },
       ],
     },
     {
