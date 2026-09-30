@@ -19,6 +19,10 @@
  *
  * Price: the product's default price in Stripe. A product without an active
  * default price is not shown (never an invented price).
+ *
+ * Currencies (30 Sep 2026): the default price is in USD with an EGP currency
+ * option. price.options lists every currency the price has; the site shows
+ * EGP to visitors in Egypt and USD to everyone else (src/lib/shopCurrency.ts).
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
@@ -45,7 +49,17 @@ export interface ShopProduct {
   category: string | null;
   bookId: string | null;
   lang: "ar" | "en" | null;
-  price: { id: string; amount: number; currency: string };
+  price: { id: string; amount: number; currency: string; options: Record<string, number> };
+}
+
+/** Every currency a price can be paid in → its amount (minor units). */
+function priceOptions(price: Stripe.Price): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (price.unit_amount != null) out[price.currency] = price.unit_amount;
+  for (const [cur, opt] of Object.entries(price.currency_options ?? {})) {
+    if (opt?.unit_amount != null) out[cur] = opt.unit_amount;
+  }
+  return out;
 }
 
 function toShopProduct(p: Stripe.Product): ShopProduct | null {
@@ -65,7 +79,7 @@ function toShopProduct(p: Stripe.Product): ShopProduct | null {
     category: m.category?.trim().toLowerCase() || null,
     bookId: m.book_id?.trim() || null,
     lang: m.lang === "ar" || m.lang === "en" ? m.lang : null,
-    price: { id: price.id, amount: price.unit_amount, currency: price.currency },
+    price: { id: price.id, amount: price.unit_amount, currency: price.currency, options: priceOptions(price) },
   };
 }
 
@@ -76,7 +90,7 @@ serve(async (req) => {
   try {
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2025-08-27.basil" });
     const products: ShopProduct[] = [];
-    for await (const p of stripe.products.list({ active: true, limit: 100, expand: ["data.default_price"] })) {
+    for await (const p of stripe.products.list({ active: true, limit: 100, expand: ["data.default_price.currency_options"] })) {
       const sp = toShopProduct(p);
       if (sp) products.push(sp);
     }

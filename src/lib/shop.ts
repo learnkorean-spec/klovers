@@ -14,6 +14,7 @@
 import { useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { localPrice, shopCurrency, type ShopPrice } from "@/lib/shopCurrency";
 
 export interface ShopProduct {
   id: string;
@@ -26,7 +27,8 @@ export interface ShopProduct {
   category: string | null;
   bookId: string | null;
   lang: "ar" | "en" | null;
-  price: { id: string; amount: number; currency: string };
+  /** Already in the visitor's currency (USD, or EGP in Egypt): see src/lib/shopCurrency.ts. */
+  price: ShopPrice;
 }
 
 /** The journey categories, in order. A category shows only once it has products. */
@@ -65,10 +67,13 @@ export async function fetchShopProducts(): Promise<ShopProduct[]> {
   const { data, error } = await supabase.functions.invoke("shop-products", { method: "GET" });
   if (error || !data || !Array.isArray(data.products)) throw new Error("shop_unavailable");
   // The free Hangul sheet has no Stripe photo: show its own cover from the site.
-  return (data.products as ShopProduct[]).map((p) =>
-    p.bookId === "hangul-starter" && p.images.length === 0
+  return (data.products as ShopProduct[]).map((p0) => {
+    // Every price on the page is in the visitor's currency: USD, or EGP in Egypt.
+    const p = { ...p0, price: localPrice(p0.price) };
+    return p.bookId === "hangul-starter" && p.images.length === 0
       ? { ...p, images: [`${window.location.origin}/assets/shop/hangul-sheet-cover-${document.documentElement.lang === "en" ? "en" : "ar"}.webp`] }
-      : p);
+      : p;
+  });
 }
 
 /** The catalogue, shared by every /shop page and cached for five minutes. */
@@ -86,6 +91,8 @@ export async function startCheckout(lines: CartLine[]): Promise<CheckoutResult> 
     body: {
       items: lines.map((l) => ({ priceId: l.priceId, quantity: l.quantity })),
       lang: typeof document !== "undefined" && document.documentElement.lang === "en" ? "en" : "ar",
+      // Charge in the currency the shop showed (USD, or EGP in Egypt).
+      currency: shopCurrency(),
     },
   });
   if (data?.free && Array.isArray(data.downloads)) {

@@ -14,6 +14,10 @@
  * signed download links straight away (a visitor is not asked to sign in);
  * a signed-in buyer also gets them added to "My books". A bag that mixes free
  * and paid items still goes through Stripe and still needs sign-in.
+ *
+ * CURRENCY (30 Sep 2026): the page sends the currency it showed (usd, or egp
+ * for visitors in Egypt). When every price in the bag has that currency, the
+ * Stripe page charges in it; otherwise Stripe's default currency is used.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
@@ -57,16 +61,21 @@ serve(async (req) => {
     const bookIds: string[] = [];
     const seen = new Set<string>();
     let allFree = true;
+    const wantCurrency = body?.currency === "egp" || body?.currency === "usd" ? (body.currency as string) : null;
+    let everyPriceHasCurrency = !!wantCurrency;
 
     for (const item of items) {
       const priceId = typeof item.priceId === "string" ? item.priceId : "";
       if (!/^price_[A-Za-z0-9]+$/.test(priceId) || seen.has(priceId)) return reply({ error: "invalid" }, 400);
       seen.add(priceId);
-      const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
+      const price = await stripe.prices.retrieve(priceId, { expand: ["product", "currency_options"] });
       const product = price.product as Stripe.Product;
       const m = product?.metadata ?? {};
       if (!price.active || !product?.active || m.klovers_shop !== "true") return reply({ error: "unavailable" }, 409);
       if (m.ships === "true") return reply({ error: "unavailable" }, 409); // no shipping yet
+      if (wantCurrency && price.currency !== wantCurrency && !price.currency_options?.[wantCurrency]) {
+        everyPriceHasCurrency = false;
+      }
       const bookId = m.book_id?.trim() || "";
       if (!(price.unit_amount === 0 && bookId && /^[a-z0-9-]+$/.test(bookId))) allFree = false;
       const qty = bookId ? 1 : Math.min(Math.max(Number(item.quantity) || 1, 1), 10);
@@ -136,6 +145,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems,
+      ...(everyPriceHasCurrency && wantCurrency ? { currency: wantCurrency } : {}),
       customer_email: user.email,
       client_reference_id: user.id,
       metadata,

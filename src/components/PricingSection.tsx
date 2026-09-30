@@ -302,8 +302,12 @@ const PricingSection = () => {
             // 23 Sep 2026 every card read the selected country's row, so a
             // visitor from Vietnam saw 1,016,000 VND on Local, Regional and
             // Global alike. The other two cards show their own USD price.
+            // 30 Sep 2026 (Re): prices are in EGP for Egypt and in USD for every
+            // other country, so only Egypt reads its local row.
             const localRows =
-              tierForCountry(selectedCountry) === tierKey ? countryLocalPrices[selectedCountry] : undefined;
+              selectedCountry === "Egypt" && tierForCountry(selectedCountry) === tierKey
+                ? countryLocalPrices[selectedCountry]
+                : undefined;
 
             return (
               <Card

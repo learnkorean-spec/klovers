@@ -228,12 +228,21 @@ export default {
   				'0%': { transform: 'translateX(-50%)' },
   				'100%': { transform: 'translateX(0)' },
   			},
+  			// Cluby's gift hop: squash, jump, stretch, land (ClubyGiftPopup).
+  			'cluby-jump': {
+  				'0%, 100%': { transform: 'translateY(0) scale(1, 1)' },
+  				'12%': { transform: 'translateY(0) scale(1.08, 0.9)' },
+  				'38%': { transform: 'translateY(-22%) scale(0.95, 1.06)' },
+  				'58%': { transform: 'translateY(-22%) scale(1, 1)' },
+  				'82%': { transform: 'translateY(0) scale(1.06, 0.94)' },
+  			},
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
   			'scroll-left': 'scroll-left 35s linear infinite',
   			'scroll-right': 'scroll-right 35s linear infinite',
+  			'cluby-jump': 'cluby-jump 1.5s ease-in-out infinite',
   		},
   		boxShadow: {
   			'2xs': 'var(--shadow-2xs)',

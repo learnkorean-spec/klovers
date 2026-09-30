@@ -145,7 +145,8 @@ const ALL_COUNTRIES = [
 ];
 
 function getStartingPrice(country: string, isAr: boolean): string {
-  const local = countryLocalPrices[country]?.group[0];
+  // EGP for Egypt, USD for every other country (Re, 30 Sep 2026).
+  const local = country === "Egypt" ? countryLocalPrices[country]?.group[0] : undefined;
   if (local) {
     return isAr
       ? `${arNumber(local.local)} ${CURRENCY_AR[local.currency] ?? local.currency} شهريًا`

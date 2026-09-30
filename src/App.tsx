@@ -86,6 +86,8 @@ const EnrollmentStatusPage = lazy(() => import("./pages/EnrollmentStatusPage"));
 const HangulStarterPage = lazy(() => import("./pages/HangulStarterPage"));
 const ShopPage = lazy(() => import("./pages/ShopPage"));
 const ShopProductPage = lazy(() => import("./pages/ShopProductPage"));
+const ClubyGiftPage = lazy(() => import("./pages/ClubyGiftPage"));
+const ClubyGiftPopup = lazy(() => import("./components/ClubyGiftPopup"));
 const RsvpConfirmationPage = lazy(() => import("./pages/RsvpConfirmationPage"));
 const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
@@ -184,6 +186,8 @@ const App = () => (
           <PageViewTracker />
           <LanguageUrlSync />
           <InstallPrompt />
+          {/* Cluby's gift pop-up for visitors (30 Sep 2026): sign up, get the colouring book free. */}
+          <Suspense fallback={null}><ClubyGiftPopup /></Suspense>
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -267,6 +271,7 @@ const App = () => (
                 <Route path="/hangul-starter" element={<HangulStarterPage />} />
                 <Route path="/shop" element={<ShopPage />} />
                 <Route path="/shop/products/:slug" element={<ShopProductPage />} />
+                <Route path="/gift/cluby" element={<ClubyGiftPage />} />
                 <Route path="/shop/:category" element={<ShopPage />} />
                 {/* Re's own training panel. Admin sign-in only (28 Sep 2026):
                     the old page hid it behind a password written in the shipped

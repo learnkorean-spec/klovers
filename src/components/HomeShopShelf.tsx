@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKS, BOOK_COVERS, type BookId } from "@/constants/books";
 import { logEngagementEvent } from "@/lib/leadTracking";
+import { localPrice, type ShopPrice } from "@/lib/shopCurrency";
 
 /**
  * Homepage → the shop (28 Sep 2026, Re: "build the way to present the shop
@@ -24,7 +25,7 @@ import { logEngagementEvent } from "@/lib/leadTracking";
  * does not wait on it.
  */
 
-type Listing = { slug: string; bookId: string | null; lang: "ar" | "en" | null; price: { amount: number; currency: string } };
+type Listing = { slug: string; bookId: string | null; lang: "ar" | "en" | null; price: ShopPrice };
 
 /** Every edge dissolves into the ivory band, so the scene meets the page instead of sitting on it. */
 const FADE = "linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 82%, transparent)";
@@ -61,7 +62,9 @@ const HomeShopShelf = () => {
       try { logEngagementEvent({ source_type: "homepage", cta_label: "section_shop_shelf" }); } catch { /* analytics never blocks */ }
       supabase.functions
         .invoke("shop-products", { method: "GET" })
-        .then(({ data }) => setListings(Array.isArray(data?.products) ? (data.products as Listing[]) : []))
+        .then(({ data }) => setListings(Array.isArray(data?.products)
+          ? (data.products as Listing[]).map((l) => ({ ...l, price: localPrice(l.price) })) // USD, or EGP in Egypt
+          : []))
         .catch(() => setListings([]));
     }, { rootMargin: "300px" });
     obs.observe(el);

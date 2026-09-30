@@ -97,7 +97,8 @@ export const useStartingPrice = (): { amount: number; currency: string } | null 
   useMemo(() => {
     const country = ZONE_COUNTRY[zone()];
     if (!country) return null;
-    const local = localPrices[country]?.group?.[0];
+    // EGP for Egypt, USD for every other country (Re, 30 Sep 2026).
+    const local = country === "Egypt" ? localPrices[country]?.group?.[0] : undefined;
     if (local) return { amount: local.local, currency: local.currency };
     const tier = getTierForCountry(country);
     const usd = tier ? tierPrices[tier]?.group?.[1] : undefined;

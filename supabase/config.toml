@@ -21,6 +21,9 @@ verify_jwt = false
 [functions.shop-checkout]
 verify_jwt = false
 
+[functions.shop-claim-gift]
+verify_jwt = false
+
 [functions.payment-reminder]
 verify_jwt = false
 
