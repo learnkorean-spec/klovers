@@ -7,10 +7,15 @@
  * shown the pop-up too. The pop-up is src/components/ClubyGiftPopup.tsx, the
  * page that claims is /gift/cluby (src/pages/ClubyGiftPage.tsx).
  *
+ * 1 Oct 2026 (Re): the ONLY free item is the Hangul starter sheet (Arabic and
+ * English); the colouring book is paid. The pop-up and /gift/cluby page are
+ * gone (/gift/cluby now opens the book's shop page), and "claim" no longer
+ * gives the book to anyone new: a non-owner gets 403 not_free. People who
+ * claimed it before keep it and can still download it.
+ *
  * Actions (body.action, default "claim"), all need a signed-in account:
  *   status        → { owned, downloaded }   decides whether the pop-up shows
- *   claim         → adds the book to "My books" once (book_assignments,
- *                   assigned_by gift:cluby)
+ *   claim         → owners only now (see above); others get 403 not_free
  *   download      → a ten-minute download link; counts one download
  *   log_download  → counts a download made from the "My books" card
  *   stats         → admins only: pop-up seen / tapped, accounts that took the
@@ -146,24 +151,11 @@ serve(async (req) => {
       return reply({ ok: true });
     }
 
-    // claim (and download, which claims first when needed)
-    if (!owned) {
-      const { error: assignErr } = await admin.from("book_assignments").upsert(
-        [{
-          user_id: user.id,
-          book_id: bookId,
-          available_from: new Date().toISOString(),
-          assigned_by: "gift:cluby",
-          notes: "Cluby's welcome gift (pop-up)",
-        }],
-        { onConflict: "user_id,book_id", ignoreDuplicates: true },
-      );
-      if (assignErr) {
-        console.error("[shop-claim-gift] assignment failed:", assignErr.message);
-        return reply({ error: "unavailable" }, 503);
-      }
-      await track("claimed", "/gift/cluby");
-    }
+    // Re, 1 Oct 2026: the ONLY free item is the Hangul starter sheet (Arabic
+    // and English). The colouring book is paid, so no new account can claim
+    // it here any more. People who already claimed it keep it: they still
+    // pass (owned) and can download it below.
+    if (!owned) return reply({ error: "not_free" }, 403);
 
     if (action === "download") {
       const { data: signed, error: signErr } = await admin.storage
