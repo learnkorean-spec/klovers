@@ -1128,7 +1128,7 @@ const AdminDashboard = () => {
     { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "sales", "promos", "manage"] },
     { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
     { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "pictures"] },
-    { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings", "accounts"] },
+    { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings", "connectors"] },
   ];
 
   // Development-only. A tab that is linked but ungrouped fails silently in
@@ -1524,9 +1524,9 @@ const AdminDashboard = () => {
                     <Settings className="h-3.5 w-3.5" /> Settings
                   </TabsTrigger>
                 )}
-                {inActiveGroup("accounts") && (
-                  <TabsTrigger value="accounts" className={TAB_CLS}>
-                    <Lock className="h-3.5 w-3.5" /> Accounts
+                {inActiveGroup("connectors") && (
+                  <TabsTrigger value="connectors" className={TAB_CLS}>
+                    <Lock className="h-3.5 w-3.5" /> Connectors
                   </TabsTrigger>
                 )}
               </TabsList>
@@ -1878,9 +1878,9 @@ const AdminDashboard = () => {
               </TabErrorBoundary>
             </TabsContent>
 
-            {/* ACCOUNTS MAP TAB — which login opens which platform (admin-only table) */}
-            <TabsContent value="accounts">
-              <TabErrorBoundary name="Accounts map">
+            {/* CONNECTORS TAB (accounts map) — which login opens which platform (admin-only table) */}
+            <TabsContent value="connectors">
+              <TabErrorBoundary name="Connectors">
                 <Suspense fallback={<TabLoader />}>
                   <AccountsMap />
                 </Suspense>

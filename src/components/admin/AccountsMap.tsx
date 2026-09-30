@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 /**
- * Admin → Accounts map.
+ * Admin → Connectors (the accounts map).
  *
  * Re, 1 Oct 2026: one map of every account Klovers runs on, grouped by the
  * login that opens it — which email goes with GitHub, Vercel, Resend, GA4...
@@ -200,7 +200,7 @@ export default function AccountsMap() {
   if (loading) {
     return (
       <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading the accounts map
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading connectors
       </div>
     );
   }
@@ -208,7 +208,7 @@ export default function AccountsMap() {
   if (missingTable) {
     return (
       <div className="rounded-xl border-2 border-klovers-yellow bg-ivory p-5 text-sm text-charcoal">
-        <p className="font-semibold">The accounts map is not set up yet.</p>
+        <p className="font-semibold">Connectors are not set up yet.</p>
         <p className="mt-1">It appears once the admin_accounts_map migration has been applied (Apply Migrations: plan, then apply).</p>
       </div>
     );
@@ -218,7 +218,7 @@ export default function AccountsMap() {
     <div className="space-y-6 font-sans">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl font-bold text-foreground">Accounts map</h2>
+          <h2 className="font-display text-xl font-bold text-foreground">Connectors</h2>
           <p className="text-sm text-muted-foreground">
             Which login opens which platform. Logins only: passwords and keys never go here.
           </p>
