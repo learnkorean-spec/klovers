@@ -257,6 +257,14 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
                   ? "الدفع بالبطاقة عبر صفحة دفع آمنة، ويتطلّب الشراء تسجيل الدخول لإضافة الكتب إلى «كتبي»."
                   : "Card payment happens on a secure payment page. Signing in is needed so books land in My books."}
               </p>
+              {!isFreeBag && (
+                <p className="text-center text-xs text-muted-foreground">
+                  {isAr
+                    ? "الكتب ملفات رقمية: لا يُردّ ثمن الكتاب بعد تحميله، إلا إذا لم يعمل الملف أو دُفع ثمنه مرتين بالخطأ. "
+                    : "Books are digital files: a book is not refunded once downloaded, unless the file does not work or it was paid for twice by mistake. "}
+                  <Link to="/terms" className="underline underline-offset-4">{isAr ? "الشروط" : "Terms"}</Link>
+                </p>
+              )}
             </div>
           </>
         )}

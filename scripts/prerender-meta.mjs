@@ -542,18 +542,22 @@ const PRIVACY_BODY_HTML = `<div id="legal-prerendered" lang="en" dir="ltr">
 
 const TERMS_BODY_HTML = `<div id="legal-prerendered" lang="en" dir="ltr">
       <h1>Terms of Service</h1>
-      <p>Last updated: 24 September 2026</p>
+      <p>Last updated: 1 October 2026</p>
       <p>These terms apply when you use kloversegy.com or take classes with Klovers. By creating an account or booking a class, you agree to them.</p>
       <h2>The service</h2>
       <p>Klovers teaches live online classes with a teacher, in groups or privately. The first trial class is free. The site also offers learning materials, a placement test and practice games.</p>
       <h2>Your account</h2>
       <p>Please give accurate details and keep your password private. You are responsible for what happens under your account. Learners under 18 need the consent of a parent or guardian.</p>
       <h2>Payments</h2>
-      <p>We accept bank transfer, Vodafone Cash and InstaPay (Egypt), as well as international card or PayPal.</p>
+      <p>We accept bank transfer, Vodafone Cash and InstaPay (Egypt), and card payment through Stripe outside Egypt.</p>
       <p>Payments in Egypt are checked by hand before your enrolment is activated; card payments through Stripe are activated automatically. Every payment is one-time, with no automatic charges.</p>
       <h2>First class guarantee and refunds</h2>
       <p>If you are not satisfied after your first class, we will refund you or rebook you — no questions asked.</p>
       <p>After that, refunds are prorated for unused sessions.</p>
+      <h2>Digital books from the shop</h2>
+      <p>Books in the Klovers shop are digital files (PDF). A downloaded file cannot be returned, so a book is not refunded once it has been downloaded.</p>
+      <p>We refund the full price if the file does not work and we cannot fix it, or if the same book was paid for twice by mistake. To ask, message us on WhatsApp at +201010003084.</p>
+      <p>When a payment is refunded, the book is removed from My books.</p>
       <h2>Missed classes</h2>
       <p>Group classes are recorded and shared with enrolled students. Private students can reschedule with 24 hours' notice.</p>
       <h2>Conduct</h2>

@@ -18,7 +18,7 @@ const WHATSAPP = `+${WHATSAPP_NUMBER}`;
 
 const EN: LegalContent = {
   title: "Terms of Service",
-  updated: "Last updated: 28 September 2026",
+  updated: "Last updated: 1 October 2026",
   intro:
     "These terms apply when you use kloversegy.com or take classes with Klovers. By creating an account or booking a class, you agree to them.",
   sections: [
@@ -46,6 +46,14 @@ const EN: LegalContent = {
       paragraphs: [
         "If you are not satisfied after your first class, we will refund you or rebook you — no questions asked.",
         "After that, refunds are prorated for unused sessions.",
+      ],
+    },
+    {
+      heading: "Digital books from the shop",
+      paragraphs: [
+        "Books in the Klovers shop are digital files (PDF). A downloaded file cannot be returned, so a book is not refunded once it has been downloaded.",
+        `We refund the full price if the file does not work and we cannot fix it, or if the same book was paid for twice by mistake. To ask, message us on WhatsApp at ${WHATSAPP}.`,
+        "When a payment is refunded, the book is removed from My books.",
       ],
     },
     {
@@ -83,7 +91,7 @@ const EN: LegalContent = {
 
 const AR: LegalContent = {
   title: "الشروط والأحكام",
-  updated: "آخر تحديث: 28 سبتمبر 2026",
+  updated: "آخر تحديث: 1 أكتوبر 2026",
   intro:
     "تسري هذه الشروط عند استخدام موقع kloversegy.com أو حضور الحصص مع كلوفرز. ويُعدّ إنشاء حساب أو حجز حصة موافقةً عليها.",
   sections: [
@@ -111,6 +119,14 @@ const AR: LegalContent = {
       paragraphs: [
         "في حال عدم الرضا بعد الحصة الأولى، يُردّ المبلغ أو يُعاد حجز الحصة، دون أي أسئلة.",
         "بعد ذلك، يُحتسب المبلغ المسترد بشكل تناسبي عن الحصص غير المستخدمة.",
+      ],
+    },
+    {
+      heading: "الكتب الرقمية في المتجر",
+      paragraphs: [
+        "كتب متجر كلوفرز ملفات رقمية (PDF)، والملف المحمَّل لا يمكن إرجاعه، لذلك لا يُردّ ثمن الكتاب بعد تحميله.",
+        `يُردّ الثمن كاملًا إذا لم يعمل الملف ولم نتمكن من إصلاحه، أو إذا دُفع ثمن الكتاب نفسه مرتين بالخطأ. للطلب: رسالة عبر واتساب على الرقم ${WHATSAPP}.`,
+        "عند ردّ المبلغ، يُحذف الكتاب من «كتبي».",
       ],
     },
     {
