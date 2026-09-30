@@ -152,8 +152,11 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
             </Button>
           </div>
         ) : (
-          <>
-            <ul className="flex-1 divide-y divide-border overflow-y-auto px-5">
+          // ONE scroll area for items, gift and payment (1 Oct 2026): with the
+          // tall Egypt payment box below, a separately scrolling list shrank to
+          // a thin strip and the book names could not be read.
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <ul className="divide-y divide-border px-5">
               {lines.map(({ line, product }) => (
                 <li key={line.priceId} className="flex gap-3 py-4">
                   <ProductImage product={product} isAr={isAr} className="h-20 w-16 shrink-0 rounded-lg" />
@@ -267,7 +270,7 @@ export function CartDrawer({ open, onOpenChange, products, isAr }: {
                 </p>
               )}
             </div>
-          </>
+          </div>
         )}
       </SheetContent>
     </Sheet>
