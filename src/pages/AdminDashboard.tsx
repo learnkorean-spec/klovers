@@ -67,6 +67,7 @@ const LeadsPanel = lazy(() => import("@/components/admin/LeadsPanel").catch(() =
 const LeagueUsersPanel = lazy(() => import("@/components/admin/LeagueUsersPanel"));
 const LeadFunnelPanel = lazy(() => import("@/components/admin/LeadFunnelPanel"));
 const BookAssignmentManager = lazy(() => import("@/components/admin/BookAssignmentManager"));
+const PictureLibrary = lazy(() => import("@/components/admin/PictureLibrary"));
 const TrialClassesTab = lazy(() => import("@/components/admin/TrialClassesTab"));
 
 const TabLoader = () => (
@@ -1125,7 +1126,7 @@ const AdminDashboard = () => {
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
     { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "sales", "promos", "manage"] },
     { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
-    { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books"] },
+    { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "pictures"] },
     { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings"] },
   ];
 
@@ -1486,6 +1487,11 @@ const AdminDashboard = () => {
                     <Clock className="h-3.5 w-3.5" /> Trial Books
                   </TabsTrigger>
                 )}
+                {inActiveGroup("pictures") && (
+                  <TabsTrigger value="pictures" className={TAB_CLS}>
+                    <Image className="h-3.5 w-3.5" /> Pictures
+                  </TabsTrigger>
+                )}
                 {inActiveGroup("blog") && (
                   <TabsTrigger value="blog" className={TAB_CLS}>Blog</TabsTrigger>
                 )}
@@ -1825,6 +1831,15 @@ const AdminDashboard = () => {
               <TabErrorBoundary name="Book Assignments">
                 <Suspense fallback={<TabLoader />}>
                   <BookAssignmentManager />
+                </Suspense>
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* PICTURE LIBRARY TAB */}
+            <TabsContent value="pictures">
+              <TabErrorBoundary name="Picture Library">
+                <Suspense fallback={<TabLoader />}>
+                  <PictureLibrary />
                 </Suspense>
               </TabErrorBoundary>
             </TabsContent>
