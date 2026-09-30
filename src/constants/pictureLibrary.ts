@@ -21,6 +21,13 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "b2s_11", label: "الحصة ١١ — الخطة الكبيرة" },
   { file: "b2s_12", label: "الحصة ١٢ — المراجعة" },
   { file: "cover_b2", label: "غلاف كتاب ٢" },
+  // Lesson opener scenes (1 Oct 2026). Each lesson has its own opener
+  // picture so no lesson ever shows the same photograph twice.
+  { file: "b2s_op_01", label: "افتتاح الحصة ١ — عند فاترينة المعجّنات" },
+  { file: "b2s_op_02", label: "افتتاح الحصة ٢ — النتيجة الفارغة" },
+  { file: "b2s_op_03", label: "افتتاح الحصة ٣ — آدم متأخّر والساعة" },
+  { file: "b2s_op_04", label: "افتتاح الحصة ٤ — صباح، قهوة ودفتر" },
+  { file: "b2s_op_05", label: "افتتاح الحصة ٥ — المطر على الشبّاك" },
 ];
 
 export const LIBRARY_ICONS: LibraryIcon[] = [
