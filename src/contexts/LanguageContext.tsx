@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/tracking";
-import { arabicTwinOf, englishTwinOf, isArabicUrl } from "@/lib/arabicRoutes";
+import { arabicTwinOf, englishTwinOf, isArabicUrl, languageFromSearch } from "@/lib/arabicRoutes";
 
 type Language = "en" | "ar";
 
@@ -134,6 +134,10 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     // /ar is Arabic whatever was saved: the URL is the promise made to the
     // search result the visitor clicked.
     if (onArabicHome()) return "ar";
+    // ?lang=en (e.g. from the /en redirect in vercel.json) is an explicit
+    // choice and beats whatever this browser saved last time.
+    const asked = languageFromSearch(window.location.search);
+    if (asked) return asked;
     const saved = localStorage.getItem("k-lovers-lang");
     return (saved === "ar" ? "ar" : "en") as Language;
   });

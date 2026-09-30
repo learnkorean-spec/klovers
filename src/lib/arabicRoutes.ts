@@ -35,3 +35,16 @@ export const arabicMetaFor = (path: string) => {
   const en = englishTwinOf(path);
   return en ? ARABIC_PAGE_META.find((p) => p.path === en) ?? null : null;
 };
+
+/**
+ * An explicit language on the URL: "?lang=en" or "?lang=ar" (30 Sep 2026).
+ *
+ * The English site lives at "/" with no prefix, so people who type
+ * kloversegy.com/en got the not-found page. vercel.json now redirects /en and
+ * /en/... to the unprefixed URL with ?lang=en, and this lets that choice win
+ * over a saved Arabic preference instead of bouncing straight to /ar.
+ */
+export const languageFromSearch = (search: string): "en" | "ar" | null => {
+  const value = new URLSearchParams(search).get("lang");
+  return value === "en" || value === "ar" ? value : null;
+};

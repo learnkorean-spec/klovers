@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { arabicTwinOf, englishTwinOf, isArabicUrl, arabicMetaFor } from "./arabicRoutes";
+import { arabicTwinOf, englishTwinOf, isArabicUrl, arabicMetaFor, languageFromSearch } from "./arabicRoutes";
 
 describe("arabicRoutes", () => {
   it("pairs the homepage and the seven pages", () => {
@@ -21,5 +21,18 @@ describe("arabicRoutes", () => {
     expect(isArabicUrl("/pricing")).toBe(false);
     expect(isArabicUrl("/ar")).toBe(true);
     expect(arabicMetaFor("/ar")).toBeNull();
+  });
+});
+
+describe("languageFromSearch", () => {
+  it("reads an explicit ?lang choice", () => {
+    expect(languageFromSearch("?lang=en")).toBe("en");
+    expect(languageFromSearch("?utm_source=cv&lang=ar")).toBe("ar");
+  });
+
+  it("ignores anything else", () => {
+    expect(languageFromSearch("")).toBeNull();
+    expect(languageFromSearch("?lang=fr")).toBeNull();
+    expect(languageFromSearch("?language=en")).toBeNull();
   });
 });
