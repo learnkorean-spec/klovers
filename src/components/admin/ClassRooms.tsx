@@ -342,11 +342,10 @@ export default function ClassRooms() {
 
       <div className="grid gap-2 sm:grid-cols-2">
         {rooms.map(r => {
-          // Only the people who said yes carry the card. The rest are a
-          // number, not names: they have answered nothing.
-          const shown = (r.showsBookedToo ? r.names.filter(p => p.confirmed) : r.names).slice(0, NAMES_SHOWN);
-          const rest = (r.showsBookedToo ? r.confirmed : r.people) - shown.length;
-          const unanswered = r.people - r.confirmed;
+          // Trials (Re, 1 Oct 2026): no one is picked out on a trial room —
+          // no names, no "confirmed" badge, no ticks. The room is a count.
+          const shown = r.showsBookedToo ? [] : r.names.slice(0, NAMES_SHOWN);
+          const rest = r.showsBookedToo ? 0 : r.people - shown.length;
 
           return (
             <Card key={r.key} className={r.meetingUrl ? undefined : "border-destructive"}>
@@ -358,33 +357,28 @@ export default function ClassRooms() {
                 <div className="min-w-0 flex-1 space-y-0.5">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-sm font-semibold text-foreground">{r.title}</span>
-                    {r.confirmed > 0 && (
+                    {!r.showsBookedToo && r.confirmed > 0 && (
                       <Badge variant="secondary" className="text-[10px]">
                         {r.confirmed} {r.countWord}
                       </Badge>
                     )}
                     {/* A booking is a ceiling, not a turnout. The gap between
                         the two numbers is the thing worth acting on. */}
-                    {r.showsBookedToo && unanswered > 0 && (
+                    {r.showsBookedToo && (
                       <span className="text-[10px] text-muted-foreground">
-                        {r.confirmed === 0
-                          ? `nobody has confirmed yet · ${r.people} booked`
-                          : `of ${r.people} booked · ${unanswered} no reply`}
+                        {r.people === 0 ? "nobody booked yet" : `${r.people} booked`}
                       </span>
                     )}
                   </div>
                   <p className="text-[11px] text-muted-foreground">{r.kind}</p>
 
                   {shown.length > 0 && (
-                    // The names, not just the number — and on a trial only the
-                    // ones who said yes, because those are the people a missing
-                    // link would actually let down.
+                    // Group classes: the seated students, by name.
                     <p className="text-[11px] text-foreground/80">
                       {shown.map((p, i) => (
                         <span key={`${p.name}-${i}`}>
                           {i > 0 && <span className="text-muted-foreground">, </span>}
                           <span className={p.confirmed ? "font-semibold" : undefined}>{p.name}</span>
-                          {r.showsBookedToo && p.confirmed && <span className="text-muted-foreground"> ✓</span>}
                         </span>
                       ))}
                       {rest > 0 && (
