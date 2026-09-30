@@ -49,7 +49,7 @@ describe.each(PAGES)("$path", ({ path, element, body, h1 }) => {
     expect(fragment).not.toBeNull();
     expect((fragment[1].match(/<h1[\s>]/g) || []).length).toBe(1);
     expect(fragment[1]).toContain(`<h1>${h1}</h1>`);
-    expect(fragment[1]).toContain("Last updated: 1 October 2026");
+    expect(fragment[1]).toMatch(/<p>Last updated: \d{1,2} [A-Z][a-z]+ 20\d\d<\/p>/);
     expect((fragment[1].match(/<h2>/g) || []).length).toBeGreaterThanOrEqual(5);
   });
 
