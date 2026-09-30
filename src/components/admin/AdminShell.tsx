@@ -103,6 +103,7 @@ export const ADMIN_NAV: {
         { id: "notifications", label: "Notifications", to: "/admin?tab=notifications" },
         { id: "scheduling", label: "Scheduling", to: "/admin?tab=scheduling" },
         { id: "settings", label: "Settings", to: "/admin?tab=settings" },
+        { id: "accounts", label: "Accounts map", to: "/admin?tab=accounts" },
         { id: "league-users", label: "Leagues", to: "/admin?tab=league-users" },
         { id: "promos", label: "Promo codes", to: "/admin?tab=promos" },
         { id: "lead-funnel", label: "Lead funnel", to: "/admin?tab=lead-funnel" },
