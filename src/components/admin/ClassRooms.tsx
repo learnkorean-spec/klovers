@@ -139,6 +139,12 @@ export default function ClassRooms() {
 
         const members = (membersRes.data ?? []) as Array<{ group_id: string; user_id: string | null }>;
         const slotIds = ((trialRes.data ?? []) as Array<{ id: string }>).map(s => s.id);
+        // A trial room is a permanent row that rolls forward to its next date,
+        // so a slot id alone also matches every booking from its past dates.
+        // A booking belongs to the room only on the date the room now shows.
+        const slotDate = new Map(
+          ((trialRes.data ?? []) as Array<{ id: string; trial_date: string | null }>).map(s => [s.id, s.trial_date]),
+        );
 
         // Names for the seated students, and the trial bookings that were
         // never counted. Both are looked up by id rather than joined, because
@@ -154,8 +160,9 @@ export default function ClassRooms() {
           slotIds.length
             ? supabase
                 .from("trial_bookings")
-                .select("slot_id, name, email, status, attendance_response")
+                .select("slot_id, trial_date, name, email, status, attendance_response")
                 .in("slot_id", slotIds)
+                .gte("trial_date", todayStr)
                 .neq("status", "cancelled")
             : Promise.resolve({ data: [], error: null } as any),
         ]);
@@ -181,10 +188,10 @@ export default function ClassRooms() {
 
         const booked = new Map<string, Person[]>();
         for (const b of (bookingsRes.data ?? []) as Array<{
-          slot_id: string | null; name: string | null; email: string | null;
+          slot_id: string | null; trial_date: string | null; name: string | null; email: string | null;
           status: string | null; attendance_response: string | null;
         }>) {
-          if (!b.slot_id) continue;
+          if (!b.slot_id || b.trial_date !== slotDate.get(b.slot_id)) continue;
           const list = booked.get(b.slot_id) ?? [];
           list.push({
             name: personName(b.name, b.email),
