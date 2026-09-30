@@ -21,6 +21,15 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "b2s_11", label: "الحصة ١١ — الخطة الكبيرة" },
   { file: "b2s_12", label: "الحصة ١٢ — المراجعة" },
   { file: "cover_b2", label: "غلاف كتاب ٢" },
+  // The rest of the range, put on the same cover template 1 Oct 2026 — one
+  // skeleton, one title treatment, one chip, one footer, a different picture
+  // each. The level bubble carries a Latin digit: Arabic-Indic ٠ is a dot and
+  // read as a printing defect at shop-thumbnail size.
+  { file: "cover_a0_ar", label: "غلاف الهانغُل من الصفر — عربي" },
+  { file: "cover_a0_en", label: "غلاف الهانغُل من الصفر — إنجليزي" },
+  { file: "cover_hangul_starter", label: "غلاف ورقة الهانغُل المجانية" },
+  { file: "cover_trial_ar", label: "غلاف دليل الحصة التجريبية — عربي" },
+  { file: "cover_trial_en", label: "غلاف دليل الحصة التجريبية — إنجليزي" },
   // Lesson opener scenes (1 Oct 2026). Each lesson has its own opener
   // picture so no lesson ever shows the same photograph twice.
   { file: "b2s_op_01", label: "افتتاح الحصة ١ — عند فاترينة المعجّنات" },
