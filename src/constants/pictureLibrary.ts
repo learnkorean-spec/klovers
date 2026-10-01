@@ -26,6 +26,7 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   // each. The level bubble carries a Latin digit: Arabic-Indic ٠ is a dot and
   // read as a printing defect at shop-thumbnail size.
   { file: "cover_a0_ar", label: "غلاف الهانغُل من الصفر — عربي" },
+  { file: "cover_b1", label: "غلاف كتاب ١ — سوق المفردات" },
   { file: "cover_a0_en", label: "غلاف الهانغُل من الصفر — إنجليزي" },
   { file: "cover_hangul_starter", label: "غلاف ورقة الهانغُل المجانية" },
   { file: "cover_trial_ar", label: "غلاف دليل الحصة التجريبية — عربي" },

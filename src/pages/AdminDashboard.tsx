@@ -68,6 +68,7 @@ const LeagueUsersPanel = lazy(() => import("@/components/admin/LeagueUsersPanel"
 const LeadFunnelPanel = lazy(() => import("@/components/admin/LeadFunnelPanel"));
 const BookAssignmentManager = lazy(() => import("@/components/admin/BookAssignmentManager"));
 const PictureLibrary = lazy(() => import("@/components/admin/PictureLibrary"));
+const BookPlanBoard = lazy(() => import("@/components/admin/BookPlanBoard"));
 const ConversationAudio = lazy(() => import("@/components/admin/ConversationAudio"));
 const AccountsMap = lazy(() => import("@/components/admin/AccountsMap"));
 const TrialClassesTab = lazy(() => import("@/components/admin/TrialClassesTab"));
@@ -1489,6 +1490,11 @@ const AdminDashboard = () => {
                     <Clock className="h-3.5 w-3.5" /> Trial Books
                   </TabsTrigger>
                 )}
+                {inActiveGroup("book-plan") && (
+                  <TabsTrigger value="book-plan" className={TAB_CLS}>
+                    <BookOpen className="h-3.5 w-3.5" /> Book Plan
+                  </TabsTrigger>
+                )}
                 {inActiveGroup("pictures") && (
                   <TabsTrigger value="pictures" className={TAB_CLS}>
                     <Image className="h-3.5 w-3.5" /> Pictures
@@ -1852,6 +1858,15 @@ const AdminDashboard = () => {
               <TabErrorBoundary name="Conversation Audio">
                 <Suspense fallback={<TabLoader />}>
                   <ConversationAudio />
+                </Suspense>
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* BOOK PLAN TAB */}
+            <TabsContent value="book-plan">
+              <TabErrorBoundary name="Book Plan">
+                <Suspense fallback={<TabLoader />}>
+                  <BookPlanBoard />
                 </Suspense>
               </TabErrorBoundary>
             </TabsContent>
