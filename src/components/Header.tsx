@@ -112,7 +112,7 @@ const Header = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className={`px-2 xl:px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors inline-flex items-center gap-1.5 ${
+                className={`px-2 xl:px-3 py-2 min-h-11 rounded-md text-sm font-medium whitespace-nowrap transition-colors inline-flex items-center gap-1.5 ${
                   isActive(link.href)
                     ? "text-foreground bg-accent"
                     : "text-foreground/75 hover:text-foreground hover:bg-accent/50"
@@ -129,7 +129,7 @@ const Header = () => {
 
             {/* More dropdown */}
             <DropdownMenu>
-              <DropdownMenuTrigger className="px-2 xl:px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap text-foreground/75 hover:text-foreground hover:bg-accent/50 transition-colors inline-flex items-center gap-1">
+              <DropdownMenuTrigger className="px-2 xl:px-3 py-2 min-h-11 rounded-md text-sm font-medium whitespace-nowrap text-foreground/75 hover:text-foreground hover:bg-accent/50 transition-colors inline-flex items-center gap-1">
                 {isAr ? "المزيد" : "More"}
                 <ChevronDown className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
@@ -143,18 +143,30 @@ const Header = () => {
             </DropdownMenu>
           </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8" aria-label={isAr ? "تبديل الوضع الليلي" : "Toggle dark mode"}>
+          {/* Desktop Actions.
+
+              Every control here is min-h-11 (44px). The row is h-16 and
+              items-center, so they grow symmetrically about the centre line
+              and the header height does not move. `size="icon"` was the one
+              control that had to grow in WIDTH as well - it was h-8 w-8, and
+              an icon button with no label has no other hit area at all.
+
+              That costs 12px of width, so the gap between these controls
+              drops from 4px to 2px (8px to 6px at xl): three gaps, 6px handed
+              back. The cluster therefore ends up 6px wider, not zero - the nav
+              beside it is `min-w-0` and takes the difference, and 6px is well
+              inside the slack that leaves. */}
+          <div className="hidden lg:flex items-center gap-0.5 xl:gap-1.5 shrink-0">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="min-h-11 min-w-11" aria-label={isAr ? "تبديل الوضع الليلي" : "Toggle dark mode"}>
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-1.5 text-xs px-2 xl:px-3">
+            <Button variant="ghost" size="sm" onClick={toggleLanguage} className="min-h-11 gap-1.5 text-xs px-2 xl:px-3">
               <Globe className="h-3.5 w-3.5" />
               {t("header", "langToggle")}
             </Button>
 
             {!user && (
-              <Button size="sm" variant="outline" asChild className="gap-1.5 px-2.5 xl:px-3 border-foreground/30 text-foreground hover:bg-klovers-yellow hover:text-charcoal">
+              <Button size="sm" variant="outline" asChild className="min-h-11 gap-1.5 px-2.5 xl:px-3 border-foreground/30 text-foreground hover:bg-klovers-yellow hover:text-charcoal">
                 <Link
                   to="/free-trial"
                   onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "header_free_trial" }); } catch {} }}
@@ -168,7 +180,7 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+                  <button className="flex min-h-11 items-center gap-2 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                     {profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt={profile.name} className="h-8 w-8 rounded-full object-cover border border-border" />
                     ) : (
@@ -223,7 +235,7 @@ const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button size="sm" asChild className="rounded-full">
+              <Button size="sm" asChild className="min-h-11 rounded-full">
                 <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
                   {isAr ? "تسجيل الدخول" : "Sign In"}
                 </Link>
@@ -236,7 +248,7 @@ const Header = () => {
             <Link
               to="/world"
               state={{ from: location.pathname }}
-              className="lg:hidden inline-flex min-h-10 items-center gap-1.5 rounded-full border-2 border-charcoal bg-klovers-yellow ps-1.5 pe-3 text-xs font-bold text-charcoal"
+              className="lg:hidden inline-flex min-h-11 items-center gap-1.5 rounded-full border-2 border-charcoal bg-klovers-yellow ps-1.5 pe-3 text-xs font-bold text-charcoal"
             >
               <KloverIcon name="hanok-cherry-tree" className="h-7 w-7" />
               {isAr ? "العالم" : "World"}
@@ -254,7 +266,12 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Nav */}
+        {/* Mobile Nav.
+
+            Everything below is `lg:hidden`, so every control here is reached
+            by a thumb and is min-h-11 (44px). The short row (Schedule / Quiz /
+            Review) was the worst of them at 36px - three 36px targets in a
+            grid, which is the arrangement a thumb misses most often. */}
         {isMenuOpen && (
           <nav className="lg:hidden py-4 border-t border-border animate-in slide-in-from-top-2 duration-200">
             <div className="flex flex-col gap-1">
@@ -271,7 +288,7 @@ const Header = () => {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`px-3 py-2.5 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2 ${
+                  className={`px-3 py-2.5 min-h-11 rounded-md text-sm font-medium transition-colors inline-flex items-center gap-2 ${
                     isActive(link.href) ? "text-foreground bg-accent" : "text-foreground/75 hover:text-foreground hover:bg-accent/50"
                   }`}
                   onClick={() => setIsMenuOpen(false)}
@@ -287,37 +304,37 @@ const Header = () => {
 
               <div className="border-t border-border my-2" />
 
-              <Button variant="ghost" size="sm" onClick={toggleTheme} className="gap-2 justify-start">
+              <Button variant="ghost" size="sm" onClick={toggleTheme} className="min-h-11 gap-2 justify-start">
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 {theme === "dark" ? (isAr ? "الوضع النهاري" : "Light Mode") : (isAr ? "الوضع الليلي" : "Dark Mode")}
               </Button>
-              <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-2 justify-start">
+              <Button variant="ghost" size="sm" onClick={toggleLanguage} className="min-h-11 gap-2 justify-start">
                 <Globe className="h-4 w-4" />
                 {t("header", "langToggle")}
               </Button>
 
               {user ? (
                 <>
-                  <Button variant="outline" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="outline" asChild className="min-h-11 w-full" onClick={() => setIsMenuOpen(false)}>
                     <Link to="/dashboard"><LayoutDashboard className="h-4 w-4 me-2" />{isAr ? "لوحة التحكم" : "My Dashboard"}</Link>
                   </Button>
                   <div className="grid grid-cols-3 gap-2">
-                    <Button variant="ghost" size="sm" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" asChild className="min-h-11 w-full" onClick={() => setIsMenuOpen(false)}>
                       <Link to="/dashboard/schedule"><CalendarDays className="h-4 w-4 me-1" />{isAr ? "جدول" : "Schedule"}</Link>
                     </Button>
-                    <Button variant="ghost" size="sm" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" asChild className="min-h-11 w-full" onClick={() => setIsMenuOpen(false)}>
                       <Link to="/daily-quiz"><Zap className="h-4 w-4 me-1" />{isAr ? "اختبار" : "Quiz"}</Link>
                     </Button>
-                    <Button variant="ghost" size="sm" asChild className="w-full" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" asChild className="min-h-11 w-full" onClick={() => setIsMenuOpen(false)}>
                       <Link to="/review"><Brain className="h-4 w-4 me-1" />{isAr ? "مراجعة" : "Review"}</Link>
                     </Button>
                   </div>
-                  <Button variant="ghost" className="w-full justify-start text-destructive" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
+                  <Button variant="ghost" className="min-h-11 w-full justify-start text-destructive" onClick={() => { handleLogout(); setIsMenuOpen(false); }}>
                     <LogOut className="h-4 w-4 me-2" />{isAr ? "تسجيل الخروج" : "Logout"}
                   </Button>
                 </>
               ) : (
-                <Button asChild className="w-full rounded-full" onClick={() => setIsMenuOpen(false)}>
+                <Button asChild className="min-h-11 w-full rounded-full" onClick={() => setIsMenuOpen(false)}>
                   <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
                     {isAr ? "تسجيل الدخول" : "Sign In"}
                   </Link>
