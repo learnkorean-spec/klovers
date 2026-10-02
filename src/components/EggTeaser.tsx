@@ -127,6 +127,8 @@ const EggTeaser = () => {
               ? "طالبة وطالب ينظران إلى بيضة عاجية متوهجة فوق حجر في فناء هانوك ليلًا"
               : "Two learners looking at a glowing ivory egg resting on a stone in a hanok courtyard at night"
           }
+          width={1600}
+          height={900}
           loading="lazy"
           decoding="async"
           className="h-full w-full object-cover object-[50%_60%] transition-[filter] duration-300 group-hover:brightness-110"
@@ -176,7 +178,7 @@ const EggTeaser = () => {
             </button>
 
             {tapCount > 0 && (
-              <p className="text-xs font-semibold text-ivory/50">
+              <p className="text-xs font-semibold text-ivory/60">
                 {isAr
                   ? `عدد مرات اللمس: ${toArabicDigits(tapCount)}`
                   : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}
@@ -235,7 +237,7 @@ const EggTeaser = () => {
           </DialogHeader>
 
           <div className="flex flex-col items-center gap-3 pt-1">
-            <p className="text-xs font-semibold text-ivory/50">
+            <p className="text-xs font-semibold text-ivory/60">
               {isAr
                 ? `عدد مرات اللمس: ${toArabicDigits(tapCount)}`
                 : `Tapped ${tapCount} ${tapCount === 1 ? "time" : "times"}`}

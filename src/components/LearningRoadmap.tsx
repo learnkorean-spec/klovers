@@ -203,9 +203,15 @@ const LearningRoadmap = () => {
 
   return (
     <section className="relative overflow-hidden bg-background py-20 md:py-28">
+      {/* A radial-gradient, not `blur-3xl` on a filled disc. The section is
+          60rem wide by 30rem tall here, and a 64px blur over that makes the
+          compositor rasterise a blur pass each time it repaints - for a glow
+          that is pure decoration. Painting the falloff directly costs one
+          gradient. Same technique as WhyLearnKorean.tsx / CommunityBand.tsx. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[30rem] w-[60rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-klovers-yellow/20 blur-3xl lg:block"
+        className="pointer-events-none absolute left-1/2 top-1/2 hidden h-[30rem] w-[60rem] -translate-x-1/2 -translate-y-1/2 rounded-full lg:block"
+        style={{ backgroundImage: "radial-gradient(ellipse at center, hsl(var(--klovers-yellow) / 0.20), transparent 70%)" }}
       />
 
       <div className="container relative mx-auto px-4">
@@ -315,7 +321,7 @@ const LearningRoadmap = () => {
               <Button size="lg" asChild className="h-12 gap-2 rounded-full px-8 text-base font-bold">
                 <Link to="/placement-test">
                   {t("roadmap", "cta")}
-                  <ArrowRight className={`h-5 w-5 ${isAr ? "rotate-180" : ""}`} />
+                  <ArrowRight className={`h-5 w-5 ${isAr ? "rotate-180" : ""}`} aria-hidden="true" />
                 </Link>
               </Button>
               <p className="mt-3 text-sm text-muted-foreground">{t("roadmap", "ctaSub")}</p>

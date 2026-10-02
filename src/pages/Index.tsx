@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { logEngagementEvent } from "@/lib/leadTracking";
-import { CONTACT_EMAIL } from "@/lib/siteConfig";
 import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
@@ -78,82 +77,34 @@ const Index = () => {
     alternates: HOME_ALTERNATES,
   });
 
-  useEffect(() => {
-    const schema = {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      name: "Korean Language Courses at Klovers",
-      description: "Live online Korean classes for all levels, from Hangul to Level 6.",
-      url: "https://kloversegy.com/pricing",
-      itemListElement: [
-        {
-          "@type": "ListItem",
-          position: 1,
-          item: {
-            "@type": "Course",
-            name: "Group Korean Classes",
-            description: "Live online group Korean classes in small groups, taught in English or Arabic.",
-            provider: { "@type": "Organization", name: "Klovers", url: "https://kloversegy.com" },
-            url: "https://kloversegy.com/enroll-now?classType=group",
-            educationalLevel: "Beginner to Advanced",
-            inLanguage: "ko",
-            offers: { "@type": "Offer", price: "25", priceCurrency: "USD", availability: "https://schema.org/InStock" },
-          },
-        },
-        {
-          "@type": "ListItem",
-          position: 2,
-          item: {
-            "@type": "Course",
-            name: "Private Korean Classes",
-            description: "One-on-one private Korean lessons tailored to your goals and schedule.",
-            provider: { "@type": "Organization", name: "Klovers", url: "https://kloversegy.com" },
-            url: "https://kloversegy.com/enroll-now?classType=private",
-            educationalLevel: "Beginner to Advanced",
-            inLanguage: "ko",
-            offers: { "@type": "Offer", price: "50", priceCurrency: "USD", availability: "https://schema.org/InStock" },
-          },
-        },
-      ],
-    };
-    const el = document.createElement("script");
-    el.id = "home-course-jsonld";
-    el.setAttribute("type", "application/ld+json");
-    el.textContent = JSON.stringify(schema);
-    document.head.appendChild(el);
-
-    const bizSchema = {
-      "@context": "https://schema.org",
-      "@type": "EducationalOrganization",
-      name: "Klovers",
-      url: "https://kloversegy.com",
-      logo: "https://kloversegy.com/klovers-logo.jpg",
-      description: "Online Korean language school. Live classes in English and Arabic, small groups or private, from Hangul to Level 6.",
-      email: CONTACT_EMAIL,
-      telephone: "+201010003084",
-      sameAs: [
-        "https://www.facebook.com/kloversegy",
-        "https://www.tiktok.com/@kloversegy",
-        "https://www.instagram.com/kloversegy/",
-        "https://t.me/+Fu5T7d4wLMsxNDY9",
-      ],
-      hasOfferCatalog: {
-        "@type": "OfferCatalog",
-        name: "Korean Language Courses",
-        itemListElement: [
-          { "@type": "Offer", itemOffered: { "@type": "Course", name: "Group Korean Classes" } },
-          { "@type": "Offer", itemOffered: { "@type": "Course", name: "Private Korean Classes" } },
-        ],
-      },
-    };
-    const bizEl = document.createElement("script");
-    bizEl.id = "home-biz-jsonld";
-    bizEl.setAttribute("type", "application/ld+json");
-    bizEl.textContent = JSON.stringify(bizSchema);
-    document.head.appendChild(bizEl);
-
-    return () => { el.remove(); bizEl.remove(); };
-  }, []);
+  /*
+   * NO RUNTIME JSON-LD HERE. This used to append two blocks from a
+   * `useEffect`: an ItemList of two Courses (`home-course-jsonld`) and a second
+   * EducationalOrganization (`home-biz-jsonld`). Both were removed on 3 Oct
+   * 2026, for two separate reasons:
+   *
+   *  1. THE PRICES WERE NOT THE PRICES. Each Course carried an Offer of
+   *     "25"/"50" in USD, hardcoded. Klovers prices are set per country
+   *     (src/lib/stripePrices.ts): an Egyptian visitor is quoted 1200 EGP for
+   *     the group tier on /pricing, and the homepage itself says "prices
+   *     depend on your country". A search engine reads structured data as a
+   *     claim about the page, so this declared a price the page does not offer.
+   *
+   *  2. IT WAS A DUPLICATE, AND THE WORSE OF THE TWO. index.html already ships
+   *     a fuller EducationalOrganization + LocalBusiness - with the @id anchor,
+   *     foundingDate, areaServed, and a three-course OfferCatalog - and,
+   *     crucially, ships it in the STATIC HTML that crawlers read without
+   *     running JavaScript. Everything appended here only existed after
+   *     hydration, so Googlebot and a non-rendering crawler saw two different
+   *     sites, and the runtime copy disagreed with the static one on the
+   *     organization's own name and logo. Two organizations for one site is a
+   *     worse signal than one, however rich the second is.
+   *
+   * The static block in index.html is the single source of truth. If the
+   * homepage needs to state something new, add it there - not here.
+   * scripts/lib/brand-identity.test.mjs guards this: it fails if Index.tsx
+   * grows a JSON-LD block back.
+   */
 
   // ── Scroll depth + section visibility analytics ────────────────
   //

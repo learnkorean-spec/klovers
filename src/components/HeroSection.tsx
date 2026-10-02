@@ -111,8 +111,37 @@ const HeroSection = () => {
   const [videoReady, setVideoReady] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
 
+  /*
+   * THE HERO VIDEO IS 32.5 MB. It is a background loop behind a headline, so
+   * the default has to be "do not fetch it", and every escape hatch has to be
+   * explicit. Three gates, cheapest first:
+   *
+   *  1. `prefers-reduced-motion: reduce`. A full-bleed autoplaying loop is the
+   *     single thing that media query exists to stop. This gate was missing,
+   *     and the poster below already carries the same image, so the section
+   *     loses nothing but the movement.
+   *  2. `saveData`. A visitor who turned on data-saver in their browser has
+   *     asked, in the one place the browser lets them ask, not to spend 32.5 MB
+   *     on decoration. The old check only looked at connection TYPE, so someone
+   *     on wifi with data-saver on still paid for it.
+   *  3. The connection itself, as before.
+   *
+   * Known limit: this cannot make the file smaller. There is no ffmpeg in this
+   * workspace, so re-encoding the MP4 to a few MB has to happen off-machine -
+   * until then the only lever is who downloads it.
+   */
   useEffect(() => {
-    const conn = (navigator as Navigator & { connection?: { type?: string; effectiveType?: string } }).connection;
+    const reduced =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    const conn = (navigator as Navigator & {
+      connection?: { type?: string; effectiveType?: string; saveData?: boolean };
+    }).connection;
+    if (conn?.saveData) return;
+
     const isFast = !conn || conn.type === "wifi" || conn.effectiveType === "4g";
     if (!isFast) return;
 
@@ -243,7 +272,7 @@ const HeroSection = () => {
                 >
                   <KloverIcon name="game-lucky-bag" className="h-6 w-6" />
                   {isAr ? "حجز حصة مجانية" : "Book a Free Class"}
-                  <ArrowRight className="h-5 w-5 rtl:rotate-180" />
+                  <ArrowRight className="h-5 w-5 rtl:rotate-180" aria-hidden="true" />
                 </Link>
               </Button>
               {isAr && (
@@ -259,7 +288,7 @@ const HeroSection = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <MessageCircle className="h-5 w-5 text-klovers-yellow" />
+                    <MessageCircle className="h-5 w-5 text-klovers-yellow" aria-hidden="true" />
                     السؤال عبر واتساب
                   </a>
                 </Button>
@@ -273,9 +302,17 @@ const HeroSection = () => {
                 : "Small groups · English & Arabic · Beginner friendly"}
             </p>
 
-            {/* 5. ONE next class, in the visitor's own time. */}
+            {/* 5. ONE next class, in the visitor's own time.
+
+                The chip's scrim is bg-charcoal/75, not /55. It sits on the
+                photo, so the scrim is the only thing standing between ivory
+                text and a bright sky. At /55 the chip's own background lands
+                around L=0.17 over daylight, putting the ivory text at ~4.4:1
+                and the muted time-zone suffix near 2.7:1. At /75 the same text
+                is ~7:1 and ~4.9:1 - and the section reads the same, because the
+                scrim is already blurred and tinted. */}
             {nextClass && (
-              <div className="inline-flex items-center gap-2 bg-charcoal/55 border border-live-bright/40 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs sm:text-sm text-ivory">
+              <div className="inline-flex items-center gap-2 bg-charcoal/75 border border-live-bright/40 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs sm:text-sm text-ivory">
                 <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-bright opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-live-bright" />
@@ -283,7 +320,7 @@ const HeroSection = () => {
                 <span>
                   <span className="font-semibold text-live-bright">{isAr ? "أقرب حصة مجانية:" : "Next free class:"}</span>{" "}
                   {nextClass.day} · {nextClass.time} {isAr ? "بالتوقيت المحلي" : "your time"}
-                  {nextClass.zoneName && <span className="text-ivory/60"> ({nextClass.zoneName})</span>}
+                  {nextClass.zoneName && <span className="text-ivory/75"> ({nextClass.zoneName})</span>}
                 </span>
               </div>
             )}
@@ -327,7 +364,11 @@ const HeroSection = () => {
             >
               <KloverIcon name={icon} className="mb-3 h-12 w-12 sm:h-14 sm:w-14" />
               <h3 className="font-display text-sm sm:text-base font-bold text-charcoal">{title}</h3>
-              <p className="mt-1 text-xs sm:text-sm leading-relaxed text-charcoal/65">{body}</p>
+              {/* /80, not /65. The cards alternate bg-klovers-yellow and
+                  bg-ivory, and charcoal at 65% over those measures 4.39:1 and
+                  4.38:1 - both under AA for text this size. At /80 it is
+                  6.9:1 on either. */}
+              <p className="mt-1 text-xs sm:text-sm leading-relaxed text-charcoal/80">{body}</p>
             </div>
           ))}
         </div>

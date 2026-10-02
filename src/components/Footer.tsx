@@ -50,17 +50,17 @@ const Footer = () => {
             </p>
             <div className="space-y-1.5 text-background/70 text-sm">
               <a href={`mailto:${CONTACT_EMAIL}`} className="flex items-center gap-2 py-1 hover:text-primary transition-colors">
-                <Mail className="h-3.5 w-3.5 shrink-0" /> {CONTACT_EMAIL}
+                <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {CONTACT_EMAIL}
               </a>
               <a href="tel:+201010003084" className="flex items-center gap-2 py-1 hover:text-primary transition-colors">
-                <Phone className="h-3.5 w-3.5 shrink-0" /> +201010003084
+                <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> +201010003084
               </a>
             </div>
           </div>
 
           {/* Learn */}
           <div>
-            <h4 className="font-semibold mb-4 text-background">{isAr ? "تعلم" : "Learn"}</h4>
+            <h3 className="font-semibold mb-4 text-background">{isAr ? "تعلم" : "Learn"}</h3>
             <ul className="space-y-1">
               {learnLinks.map(({ to, label }) => (
                 <li key={to}>
@@ -74,7 +74,7 @@ const Footer = () => {
 
           {/* Company */}
           <div>
-            <h4 className="font-semibold mb-4 text-background">{isAr ? "الشركة" : "Company"}</h4>
+            <h3 className="font-semibold mb-4 text-background">{isAr ? "الشركة" : "Company"}</h3>
             <ul className="space-y-1">
               {companyLinks.map(({ to, label }) => (
                 <li key={to}>
@@ -88,7 +88,9 @@ const Footer = () => {
 
           {/* Community */}
           <div>
-            <h4 className="font-semibold mb-4 text-background">{t("footer", "joinCommunity")}</h4>
+            {/* h3, not h4. The page runs h1 (hero) then an h2 per section, so
+                an h4 here skipped a level for anyone navigating by headings. */}
+            <h3 className="font-semibold mb-4 text-background">{t("footer", "joinCommunity")}</h3>
             <p className="text-background/60 text-xs mb-4 leading-relaxed">
               {isAr ? "مجتمع يجمع متعلمي اللغة الكورية حول العالم، ومساحة للتواصل معهم." : "Join our community and connect with Korean learners worldwide."}
             </p>
@@ -102,7 +104,7 @@ const Footer = () => {
                   aria-label={label}
                   className="h-9 w-9 rounded-lg border border-background/25 flex items-center justify-center text-background/70 transition-all hover:bg-klovers-yellow hover:border-klovers-yellow hover:text-charcoal"
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                 </a>
               ))}
             </div>
@@ -117,7 +119,11 @@ const Footer = () => {
           "Korean Courses" only here. */}
       <div className="border-t border-background/15">
         <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-background/45 text-xs">
+          {/* /70, not /45. On the charcoal footer the old value measured
+              3.9:1 - under AA's 4.5:1 for text this size, on the copyright
+              line, which is the one piece of text a reader has no other way
+              to reach. /70 is 7.2:1. */}
+          <p className="text-background/70 text-xs">
             © {new Date().getFullYear()}{" "}
             {isAr ? "كلوفرز. جميع الحقوق محفوظة." : "Klovers. All rights reserved."}
           </p>

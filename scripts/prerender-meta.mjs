@@ -630,6 +630,15 @@ const MARKETING_ROUTES = [
       "Klovers: live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.",
     body: HOME_BODY_HTML,
     alternates: HOME_ALTERNATES,
+    // The homepage shares as the Seoul skyline, not as the 1:1 logo. useSEO
+    // already set this at runtime (DEFAULT_IMAGE in src/hooks/useSEO.ts), so a
+    // scraper that ran JavaScript and one that did not saw two different
+    // cards. The static HTML now carries the same 1200x630 image, with the
+    // dimensions, so the card is right before anything loads.
+    image: "/og-seoul-skyline.jpg",
+    imageWidth: 1200,
+    imageHeight: 630,
+    imageAlt: "Seoul skyline at dusk",
   },
   {
     // The Arabic homepage (24 Sep 2026) - the "/ar" half of the pair above,
@@ -652,6 +661,12 @@ const MARKETING_ROUTES = [
       "كلوفرز: حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
     body: HOME_BODY_HTML_AR,
     alternates: HOME_ALTERNATES,
+    // Same skyline and dimensions as "/" above. Only the alt text is Arabic -
+    // one language per page (Re, 27 Sep 2026).
+    image: "/og-seoul-skyline.jpg",
+    imageWidth: 1200,
+    imageHeight: 630,
+    imageAlt: "أفق مدينة سيول عند الغروب",
   },
   {
     path: "/courses",
@@ -1276,7 +1291,21 @@ function buildHeadTags(route) {
   // falls back to the same DEFAULT_IMAGE every other marketing route already
   // got, so this changes nothing for a route that does not set it.
   const image = absoluteUrl(isPost ? route.post.heroImage : route.image || null);
-  const imageAlt = isPost && route.post.heroAlt ? route.post.heroAlt : SITE_NAME;
+  const imageAlt = isPost && route.post.heroAlt ? route.post.heroAlt : route.imageAlt || SITE_NAME;
+  // Dimensions are opt-in per route, like `image` itself. index.html
+  // deliberately ships no og:image:width/height/type because one document is
+  // copied to every route and cannot know each one's size; a route that DOES
+  // know its image can say so here. Without these, Facebook and X reflow the
+  // card when the image finally loads, which is the layout jump the tags exist
+  // to prevent.
+  const imageDims =
+    route.imageWidth && route.imageHeight
+      ? [
+          `  <meta property="og:image:width" content="${attr(route.imageWidth)}" />`,
+          `  <meta property="og:image:height" content="${attr(route.imageHeight)}" />`,
+          `  <meta property="og:image:type" content="image/jpeg" />`,
+        ]
+      : [];
 
   // The document's own language, which is also what the <html> element and the
   // article wrapper declare. index.html hardcodes og:locale="en_US" for every
@@ -1289,6 +1318,7 @@ function buildHeadTags(route) {
     `  <meta property="og:url" content="${attr(url)}" />`,
     `  <meta property="og:image" content="${attr(image)}" />`,
     `  <meta property="og:image:alt" content="${attr(imageAlt)}" />`,
+    ...imageDims,
     `  <meta property="og:locale" content="${ogLocaleOf(lang)}" />`,
     `  <meta name="twitter:card" content="summary_large_image" />`,
     `  <meta name="twitter:image" content="${attr(image)}" />`,

@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { buildCountryLocalPrices, getTierForCountry, tierPrices } from "@/lib/stripePrices";
 import { logLeadEvent } from "@/lib/leadTracking";
+import { toArabicDigits } from "@/lib/trustFigures";
 
 /**
  * "Live group classes from X/month" - the homepage's one line about price.
@@ -110,11 +111,21 @@ const PriceTeaser = ({ className = "", source }: { className?: string; source: s
   const isAr = language === "ar";
   const price = useStartingPrice();
 
+  /*
+   * ONE NUMERAL SYSTEM PER SENTENCE. The Arabic line is "…يبدأ من X شهريًا ·
+   * ٤ حصص في الشهر": the count was Arabic-Indic and the price was Western, so
+   * an Egyptian reader saw "1,200 جنيه … · ٤ حصص" - the tell of a translation
+   * rather than a localisation. The Arabic branch now converts the whole
+   * figure, digits and all; English keeps toLocaleString for the thousands
+   * separator.
+   */
   const amount = price
     ? price.currency === "USD"
-      ? isAr ? `${price.amount} دولار` : `$${price.amount}`
+      ? isAr
+        ? `${toArabicDigits(price.amount.toLocaleString("en-US"))} دولار`
+        : `$${price.amount}`
       : isAr
-        ? `${price.amount.toLocaleString("en-US")} ${CURRENCY_AR[price.currency] ?? price.currency}`
+        ? `${toArabicDigits(price.amount.toLocaleString("en-US"))} ${CURRENCY_AR[price.currency] ?? price.currency}`
         : `${price.amount.toLocaleString("en-US")} ${price.currency}`
     : null;
 

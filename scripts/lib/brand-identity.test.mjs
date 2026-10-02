@@ -227,17 +227,43 @@ describe("sameAs points at profiles that still resolve", () => {
     for (const h of handles) expect(h).toBe(h.toLowerCase());
   });
 
-  it("the homepage JSON-LD claims the same profiles as index.html", () => {
-    // Index.tsx injects a second EducationalOrganization block at runtime with
-    // its own duplicate sameAs array. If the two disagree the page asserts two
-    // different identities at once — which is exactly what a rename produces
-    // when only one of them is updated.
-    const block = indexPageSrc.match(/sameAs: \[([\s\S]*?)\]/);
-    expect(block, "no sameAs array found in src/pages/Index.tsx").not.toBeNull();
-    const social = (u) => /facebook\.com|tiktok\.com|instagram\.com/.test(u);
-    const fromPage = [...block[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).filter(social);
-    const fromHtml = orgLd.sameAs.filter(social);
-    expect(fromPage).toEqual(fromHtml);
+  it("the homepage adds no second organization of its own", () => {
+    /*
+     * THIS ASSERTION USED TO POINT THE OTHER WAY, and the inversion is the fix.
+     *
+     * Index.tsx used to append its own EducationalOrganization from a
+     * useEffect, carrying a duplicate sameAs array. The old test read that
+     * array out of the source text and required it to MATCH index.html's, on
+     * the reasoning that two disagreeing copies would assert two identities
+     * after a rename.
+     *
+     * The reasoning was sound and the premise was the bug. Two copies of the
+     * same entity are a worse signal than one however well they agree, because
+     * the second one only exists after hydration — so a crawler that does not
+     * run JavaScript sees a different site from Googlebot, and the runtime
+     * block carried hardcoded USD offers besides (see the removal note in
+     * src/pages/Index.tsx). It was removed on 3 Oct 2026.
+     *
+     * So the guard now pins the property that actually matters: there is ONE
+     * organization, declared once, in the static HTML the crawlers read. If a
+     * future change reintroduces a runtime copy, this fails — which is the
+     * point, whether or not the copy agrees with index.html.
+     */
+    // Against the parsed block, not the raw text: the org declares
+    // `"@type": ["EducationalOrganization", "LocalBusiness"]`, so a regex over
+    // the source would have to guess at the array form.
+    expect(orgLd, "index.html must declare the one EducationalOrganization").toBeTruthy();
+    expect(orgLd.sameAs.length).toBeGreaterThan(0);
+
+    // Matched as CODE, never as the bare word. Index.tsx explains the removal
+    // in a comment that names both `EducationalOrganization` and `sameAs`, and
+    // a substring check would fail on that accurate documentation — or, worse,
+    // invite someone to delete the explanation to get green. Same trap the
+    // retired-handle assertion below calls out.
+    expect(indexPageSrc).not.toMatch(/"@type":\s*"EducationalOrganization"/);
+    expect(indexPageSrc).not.toMatch(/sameAs\s*:\s*\[/);
+    expect(indexPageSrc).not.toMatch(/setAttribute\(\s*["']type["']\s*,\s*["']application\/ld\+json/);
+    expect(indexPageSrc).not.toMatch(/createElement\(\s*["']script["']\s*\)/);
   });
 
   it("no retired handle survives in any social URL", () => {

@@ -7,6 +7,19 @@ import { useAuth } from "@/hooks/useAuth";
 
 const STORAGE_KEY = "klovers-returning-banner-dismissed";
 
+/*
+ * `localStorage` throws on ACCESS, not on write, wherever storage is blocked -
+ * Safari private browsing, "block all cookies", a locked-down webview. This
+ * component reads it inside a useState initialiser, which runs during the
+ * first render of the homepage, so an unguarded read is not a missing dismissal
+ * - it is a blank page for every visitor in those browsers. Wrapped here rather
+ * than by skipping the read: a visitor who cannot store the flag just sees the
+ * banner again, which is the mild failure.
+ */
+const readDismissed = (): boolean => {
+  try { return Boolean(localStorage.getItem(STORAGE_KEY)); } catch { return false; }
+};
+
 /**
  * WHO IS A RETURNING STUDENT, AND HOW THIS KNOWS
  *
@@ -59,7 +72,7 @@ const ReturningStudentBanner = () => {
   const isAr = language === "ar";
   const { user, loading } = useAuth();
   const [dismissed, setDismissed] = useState(() =>
-    Boolean(localStorage.getItem(STORAGE_KEY))
+    readDismissed()
   );
   const [isReturning, setIsReturning] = useState(false);
 
@@ -100,7 +113,7 @@ const ReturningStudentBanner = () => {
   if (dismissed || loading || !user || !isReturning) return null;
 
   const handleDismiss = () => {
-    localStorage.setItem(STORAGE_KEY, "1");
+    try { localStorage.setItem(STORAGE_KEY, "1"); } catch { /* see readDismissed */ }
     setDismissed(true);
   };
 
@@ -129,7 +142,7 @@ const ReturningStudentBanner = () => {
         className="absolute end-2 top-1/2 -translate-y-1/2 p-1 hover:bg-white/20 rounded-full transition-colors"
         aria-label={isAr ? "إغلاق" : "Dismiss"}
       >
-        <X className="h-4 w-4" />
+        <X className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );

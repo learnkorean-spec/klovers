@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -8,12 +9,43 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * The answers are the pricingPage.faq* strings that /pricing already shows, in
  * both languages - this adds no new claim to the site. Native <details> so the
  * text is in the DOM for crawlers and opens without JavaScript.
+ *
+ * 3 Oct 2026: the four Q&As now ship as FAQPage JSON-LD as well. They were
+ * already visible text with nothing machine-readable behind them, which is the
+ * one shape a question should never take - /pricing, /faq, /topik-exam-
+ * preparation and every blog post already declare theirs. Built from the same
+ * `t()` calls the <details> render, so the schema and the page cannot drift.
+ * No static FAQPage exists on "/" or "/ar" (see the route table in
+ * scripts/prerender-meta.mjs), so this is an addition, not a second copy;
+ * if one is ever prerendered, lib/jsonLdDedupe.ts drops the id-less one.
  */
 const FAQ_KEYS = [1, 5, 6, 2] as const;
 
 const HomeFAQ = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
+
+  // Serialised rather than the raw strings so the effect below keys off a
+  // value, not an identity - otherwise a re-created `t` would re-append the
+  // script on every render.
+  const faqJson = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_KEYS.map((n) => ({
+      "@type": "Question",
+      name: t(`pricingPage.faq${n}Q`),
+      acceptedAnswer: { "@type": "Answer", text: t(`pricingPage.faq${n}A`) },
+    })),
+  });
+
+  useEffect(() => {
+    const el = document.createElement("script");
+    el.id = "home-faq-jsonld";
+    el.setAttribute("type", "application/ld+json");
+    el.textContent = faqJson;
+    document.head.appendChild(el);
+    return () => { el.remove(); };
+  }, [faqJson]);
 
   return (
     <section id="home-faq" className="py-16 md:py-20 px-4" aria-labelledby="home-faq-title">

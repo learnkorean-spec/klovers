@@ -99,7 +99,7 @@ const StickyEnrollBar = () => {
           className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
         >
           {isAr ? "حجز حصة مجانية" : "Book Free Class"}
-          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+          <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
         </Link>
         {isAr && (
           <a
@@ -110,7 +110,7 @@ const StickyEnrollBar = () => {
             aria-label={document.documentElement.lang === "ar" ? "التواصل عبر واتساب" : "Chat on WhatsApp"}
             className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-klovers-yellow hover:bg-white/10 transition-colors"
           >
-            <MessageCircle className="h-5 w-5" />
+            <MessageCircle className="h-5 w-5" aria-hidden="true" />
           </a>
         )}
         <button
@@ -118,7 +118,7 @@ const StickyEnrollBar = () => {
           aria-label={isAr ? "إخفاء" : "Dismiss"}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-white/60 hover:text-white/90 transition-colors"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
     </div>

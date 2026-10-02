@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { EXAM_MAX } from "@/constants/topikPapers";
+import { toArabicDigits } from "@/lib/trustFigures";
 
 /**
  * The free placement test.
@@ -73,9 +75,24 @@ const PlacementTestCTA = () => {
       ref={sectionRef}
       className="py-20 px-4 relative overflow-hidden bg-gradient-to-b from-background to-muted/40"
     >
-      {/* Background blobs */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-klovers-yellow/40 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-80 h-80 bg-klovers-yellow/15 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl pointer-events-none" />
+      {/* Background glow.
+          Two radial-gradients, not two `blur-3xl` discs. A 64px blur over a
+          24rem layer makes the compositor rasterise a blur pass every time
+          this section repaints, and this section repaints for two seconds
+          (the bar animation below) - the most expensive thing on the page on
+          a low-end Android, which is a real device for this audience. This
+          paints the same soft falloff directly, no filter. Same technique as
+          WhyLearnKorean.tsx and CommunityBand.tsx. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-0 h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{ backgroundImage: "radial-gradient(circle, hsl(var(--klovers-yellow) / 0.40), transparent 70%)" }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 right-0 h-[20rem] w-[20rem] translate-x-1/3 translate-y-1/3 rounded-full"
+        style={{ backgroundImage: "radial-gradient(circle, hsl(var(--klovers-yellow) / 0.15), transparent 70%)" }}
+      />
 
       {/* Floating Korean characters */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden>
@@ -194,7 +211,10 @@ const PlacementTestCTA = () => {
                 </div>
 
                 <div className="px-5 py-3 bg-muted/50 border-t border-border flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{isAr ? "٥٢ سؤالًا · الإنهاء متاح في أي وقت" : "52 questions · finish early any time"}</span>
+                  {/* Read from the bank, not typed. topikPapers.ts throws at
+                      import if EXAM_MAX stops being 52, so this line and the
+                      real test can never disagree. */}
+                  <span className="text-xs text-muted-foreground">{isAr ? `${toArabicDigits(EXAM_MAX)} سؤالًا · الإنهاء متاح في أي وقت` : `${EXAM_MAX} questions · finish early any time`}</span>
                   <span className="text-xs font-bold text-foreground">{t("placementCta.free")}</span>
                 </div>
               </div>
