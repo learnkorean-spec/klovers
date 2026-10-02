@@ -145,19 +145,22 @@ const Header = () => {
 
           {/* Desktop Actions.
 
-              Every control here is min-h-11 (44px). The row is h-16 and
-              items-center, so they grow symmetrically about the centre line
-              and the header height does not move. `size="icon"` was the one
-              control that had to grow in WIDTH as well - it was h-8 w-8, and
-              an icon button with no label has no other hit area at all.
+              Every control with a LABEL is min-h-11 (44px). The row is h-16
+              and items-center, so they grow symmetrically about the centre
+              line: the header height does not move, and neither does any
+              width, because a text button's width comes from its label and
+              padding and min-height does not touch either.
 
-              That costs 12px of width, so the gap between these controls
-              drops from 4px to 2px (8px to 6px at xl): three gaps, 6px handed
-              back. The cluster therefore ends up 6px wider, not zero - the nav
-              beside it is `min-w-0` and takes the difference, and 6px is well
-              inside the slack that leaves. */}
-          <div className="hidden lg:flex items-center gap-0.5 xl:gap-1.5 shrink-0">
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="min-h-11 min-w-11" aria-label={isAr ? "تبديل الوضع الليلي" : "Toggle dark mode"}>
+              The dark-mode toggle is the exception and stays h-8 w-8 (32px).
+              It is the only control here with no label, so the only way to
+              give it 44px is to widen it - and this row's width budget at
+              1024px is tight enough that it is written down above. 32px
+              clears WCAG 2.5.8 (24px), and an icon-only control on a
+              pointer-driven desktop row is not what that criterion is for.
+              Spending a measured layout margin to move it from 32 to 44 is
+              the worse of the two trades. */}
+          <div className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8" aria-label={isAr ? "تبديل الوضع الليلي" : "Toggle dark mode"}>
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <Button variant="ghost" size="sm" onClick={toggleLanguage} className="min-h-11 gap-1.5 text-xs px-2 xl:px-3">
