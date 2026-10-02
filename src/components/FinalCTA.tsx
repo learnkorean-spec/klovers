@@ -88,29 +88,49 @@ const FinalCTA = () => {
 
         {/* The page flows into the sky, and the hill flows back into the page.
 
-            THE TOP FADE IS IVORY IN BOTH THEMES, not `from-background`. The
-            heading block (top-[11%]) sits on this gradient as `text-charcoal`:
-            7.94:1 on ivory, fine in LIGHT mode where --background IS ivory
-            (41 100% 96.3%). In DARK mode --background is near-black
-            (60 14.3% 6.9%), so `from-background` darkened the sky under
-            charcoal type - measured ~3.62:1 for the h2 and ~2.7:1 for the
-            `text-charcoal/80` subhead at 16-18px, both under the 4.5:1 AA
-            floor. `from-ivory` is the SAME colour light mode already renders
-            (light --background = --ivory), so light is untouched and only dark
-            is fixed. The BOTTOM fade stays `from-background`: it joins the
-            scene to the page below, not to a text block. */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[12%] bg-gradient-to-b from-ivory to-transparent" />
+            BOTH FADES ARE `from-background`, so neither can ever draw a hard
+            edge against the page in either theme.
+
+            The heading block (top-[11%]) is `text-charcoal`, so it needs a
+            LIGHT ground: measured 7.94:1 on ivory and ~3.62:1 for the h2 /
+            ~2.7:1 for the `text-charcoal/80` subhead where the ground is
+            near-black. `from-background` gives it that ground in light mode
+            for free, because light --background IS ivory (41 100% 96.3%).
+
+            Dark mode is the theme where those two needs pull apart - --background
+            is near-black (60 14.3% 6.9%), so a fade that matches the page
+            leaves charcoal type unreadable. This used to be solved by making
+            the top fade ivory in BOTH themes, which cost a visible band of
+            near-white where the dark page met the image: a permanent seam
+            traded for a contrast fix that only dark mode needed.
+
+            So the fade matches the page again, and the light ground is now
+            drawn where it is actually needed - a soft pool behind the heading,
+            dark mode only. Nothing to blend at the section's edge, and the
+            type keeps its ground. The pool is a radial gradient rather than
+            `backdrop-blur`, for the reason recorded elsewhere in this repo: a
+            blur over a large layer costs a pass on every repaint, and this
+            section repaints while its stamp animates. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[12%] bg-gradient-to-b from-background to-transparent" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-background to-transparent" />
 
         <div className={`absolute inset-x-0 top-[11%] px-4 text-center md:top-[8%] ${reveal("")}`}>
+          {/* The heading's ground, drawn only in dark mode — see the note on
+              the fade above. Light mode still gets it from the fade itself.
+              Widened past the text box so the pool has no edge of its own to
+              read as a rectangle. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-x-8 -top-8 bottom-0 hidden bg-[radial-gradient(70%_78%_at_50%_50%,rgba(255,249,236,0.94)_0%,rgba(255,249,236,0.72)_48%,rgba(255,249,236,0)_78%)] dark:block"
+          />
           <h2
-            className="mx-auto max-w-3xl text-[1.75rem] font-extrabold leading-tight text-charcoal sm:text-3xl lg:text-5xl"
+            className="relative mx-auto max-w-3xl text-[1.75rem] font-extrabold leading-tight text-charcoal sm:text-3xl lg:text-5xl"
             style={{ textShadow: "0 1px 14px rgba(255,249,236,0.65)" }}
           >
             {isAr ? "بداية الرحلة مع الكورية" : "Ready to Start Your Korean Journey?"}
           </h2>
           <p
-            className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-charcoal/80 lg:text-lg"
+            className="relative mx-auto mt-3 max-w-2xl text-base leading-relaxed text-charcoal/80 lg:text-lg"
             style={{ textShadow: "0 1px 10px rgba(255,249,236,0.6)" }}
           >
             {isAr
