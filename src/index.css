@@ -480,6 +480,14 @@ Type, loaded in index.html:
   100% { transform: scale(1)    translate(0, 0); }
 }
 .animate-ken-burns { animation: ken-burns 25s ease-in-out infinite; }
+/* Defence in depth. HeroSection applies this class as `motion-safe:` today, so
+   it is already correct there — but a bare `animate-ken-burns` somewhere else
+   would start a 25s infinite zoom with no way to stop it, which is the exact
+   motion the setting asks us not to start. Same treatment as .animate-stamp
+   and .animate-drift below. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ken-burns { animation: none; }
+}
 
 .animate-bounce-up {
   animation: bounce-up 1.5s ease-out forwards;

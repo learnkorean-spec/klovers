@@ -7,6 +7,7 @@ import { COURSE_CARDS } from "@/constants/courseCards";
 import { LEVEL_KEYS } from "@/constants/levels";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { journeyStops, worldLabel, WORLD_NAMES, type WorldId } from "@/lib/dashboardProgress";
+import { toArabicDigits } from "@/lib/trustFigures";
 import {
   JourneyScene,
   JourneySceneWide,
@@ -218,8 +219,13 @@ const LearningRoadmap = () => {
         <div className="mx-auto grid max-w-5xl gap-8">
 
           <div className="mx-auto w-full max-w-[26rem] text-start lg:max-w-none lg:text-center">
+            {/* The stop count is `STAGES.length`, the real array below, not a
+                typed "7" - the chip and the map can no longer disagree if a
+                level is added or removed. */}
             <span className="inline-block rounded-md bg-charcoal px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-ivory">
-              {isAr ? "٧ محطات · من الهانغول للمستوى ٦" : "7 stops · Hangul → Level 6"}
+              {isAr
+                ? `${toArabicDigits(STAGES.length)} محطات · من الهانغول للمستوى ٦`
+                : `${STAGES.length} stops · Hangul → Level 6`}
             </span>
             <h2 className="mt-4 text-4xl font-extrabold leading-tight text-foreground md:text-5xl">
               {t("roadmap", "title")}
@@ -237,7 +243,10 @@ const LearningRoadmap = () => {
             <p className="text-base text-muted-foreground md:text-lg">
               {t("roadmap", "subtitle")}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground/80">
+            {/* Full text-muted-foreground (6.65:1), not /80. At /80 over the
+                ivory ground this line measured 4.13:1 at `text-sm` - under the
+                4.5:1 AA floor for body text. */}
+            <p className="mt-1 text-sm text-muted-foreground">
               {isAr ? "الضغط على أي محطة يعرض تفاصيلها" : "Tap any stop on the path for its details"}
             </p>
           </div>

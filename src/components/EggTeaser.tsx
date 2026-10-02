@@ -245,7 +245,7 @@ const EggTeaser = () => {
             <button
               type="button"
               onClick={revealClue}
-              className="inline-flex min-h-10 items-center gap-2 rounded-full border-2 border-klovers-yellow px-6 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-klovers-yellow px-6 text-sm font-bold text-klovers-yellow transition-colors hover:bg-klovers-yellow hover:text-charcoal"
             >
               {isAr ? "كشف دليل آخر" : "Reveal another clue"}
             </button>

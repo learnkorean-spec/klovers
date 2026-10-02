@@ -86,8 +86,20 @@ const FinalCTA = () => {
           />
         </picture>
 
-        {/* The page flows into the sky, and the hill flows back into the page. */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[12%] bg-gradient-to-b from-background to-transparent" />
+        {/* The page flows into the sky, and the hill flows back into the page.
+
+            THE TOP FADE IS IVORY IN BOTH THEMES, not `from-background`. The
+            heading block (top-[11%]) sits on this gradient as `text-charcoal`:
+            7.94:1 on ivory, fine in LIGHT mode where --background IS ivory
+            (41 100% 96.3%). In DARK mode --background is near-black
+            (60 14.3% 6.9%), so `from-background` darkened the sky under
+            charcoal type - measured ~3.62:1 for the h2 and ~2.7:1 for the
+            `text-charcoal/80` subhead at 16-18px, both under the 4.5:1 AA
+            floor. `from-ivory` is the SAME colour light mode already renders
+            (light --background = --ivory), so light is untouched and only dark
+            is fixed. The BOTTOM fade stays `from-background`: it joins the
+            scene to the page below, not to a text block. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[12%] bg-gradient-to-b from-ivory to-transparent" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-background to-transparent" />
 
         <div className={`absolute inset-x-0 top-[11%] px-4 text-center md:top-[8%] ${reveal("")}`}>
@@ -124,6 +136,12 @@ const FinalCTA = () => {
             {/* Stub */}
             <div className="relative flex flex-row items-center justify-center gap-4 bg-klovers-yellow px-6 py-6 text-charcoal md:flex-col md:gap-1 md:py-10">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.25em] md:mb-1">{isAr ? "تذكرة دخول" : "Admit one"}</p>
+              {/* 30 is TYPED, and it can diverge. The real trial length is
+                  data: useUpcomingTrialSlots.ts reads `duration_min ?? 30`
+                  from the get_trial_availability RPC. No prop or context
+                  carries that slot into this component, so the number stays
+                  written here - if the duration changes in the database,
+                  change it here too. */}
               <p className="font-display text-6xl font-extrabold leading-none md:text-7xl">{isAr ? "٣٠" : "30"}</p>
               <div className="text-start md:text-center">
                 <p className="text-sm font-extrabold uppercase tracking-wide">{isAr ? "دقيقة" : "minutes"}</p>
@@ -181,6 +199,9 @@ const FinalCTA = () => {
                   </a>
                 </div>
 
+                {/* 30 minutes: typed, and it can diverge from the stub above.
+                    The real duration is `duration_min ?? 30` in
+                    useUpcomingTrialSlots.ts - see the note there. */}
                 <p className="text-xs text-ivory/60">
                   {isAr ? "بدون بطاقة بنكية · ٣٠ دقيقة · معلمة حقيقية" : "No credit card · 30 minutes · A real teacher"}
                 </p>

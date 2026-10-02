@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent } from "@/lib/leadTracking";
 import PriceTeaser from "@/components/PriceTeaser";
+import { toArabicDigits } from "@/lib/trustFigures";
 
 /**
  * "How we teach" - four steps.
@@ -43,7 +44,7 @@ const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] 
   {
     icon: "growth-chart",
     en: ["A Clear Path", "Hangul first, then Levels 1 to 6. You always know what comes next."],
-    ar: ["مسار واضح", "الهانغول أولًا، ثم المستويات من 1 إلى 6، والخطوة التالية واضحة دائمًا."],
+    ar: ["مسار واضح", "الهانغول أولًا، ثم المستويات من ١ إلى ٦، والخطوة التالية واضحة دائمًا."],
   },
 ];
 
@@ -79,7 +80,7 @@ const HowItWorks = () => {
               <div key={step.icon} className="relative pt-3">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
                   <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm border border-charcoal/25">
-                    {index + 1}
+                    {isAr ? toArabicDigits(index + 1) : index + 1}
                   </span>
                 </div>
                 <Card className="group hover:shadow-md transition-all duration-300 border-border hover:border-primary/40 text-center h-full">
@@ -120,7 +121,7 @@ const HowItWorks = () => {
             <ul className="space-y-2.5">
               {(isAr ? [
                 "تقديم النفس بالكورية، حتى دون معرفة أي حرف",
-                "قراءة أول 10 حروف هانغول ونطقها نطقًا صحيحًا",
+                "قراءة أول ١٠ حروف هانغول ونطقها نطقًا صحيحًا",
                 "محادثة قصيرة مباشرة مع باقي الطلاب",
                 "تحديد المستوى وشرح الخطوة التالية من المعلمة",
               ] : [

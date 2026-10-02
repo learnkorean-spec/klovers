@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 /*
@@ -12,6 +12,7 @@ import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
  * and roofs instead of faces.
  */
 const heroPoster = "/hero-world.jpg";
+const heroVideo = "/videos/hero-korea-video-new.mp4";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
@@ -75,8 +76,13 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
 /** This week's Cluby image on the hero card. Swap this one line per occasion. */
 const CLUBY_BADGE = {
   src: "/assets/cluby/cluby-hanbok.webp",
-  width: 980,
-  height: 1274,
+  // Halved from 980x1274 on 2026-10-03. The badge's box is 65x84 CSS px, or
+  // 92x120 from the md breakpoint up — so the largest it is ever drawn is
+  // 276x360 device pixels on a 3x screen. The file was 333 KB of pixels for a
+  // box that small; it is 48 KB now, and these are the dimensions the file
+  // actually has, so the reserved box stays exact. Ratio is unchanged.
+  width: 490,
+  height: 637,
 };
 
 const HeroSection = () => {
@@ -109,53 +115,50 @@ const HeroSection = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
 
   /*
-   * THE HERO VIDEO IS 32.5 MB. It is a background loop behind a headline, so
-   * the default has to be "do not fetch it", and every escape hatch has to be
-   * explicit. Three gates, cheapest first:
+   * THE HERO VIDEO IS 32.5 MB AND NOW LOADS ONLY ON A CLICK.
    *
-   *  1. `prefers-reduced-motion: reduce`. A full-bleed autoplaying loop is the
-   *     single thing that media query exists to stop. This gate was missing,
-   *     and the poster below already carries the same image, so the section
-   *     loses nothing but the movement.
-   *  2. `saveData`. A visitor who turned on data-saver in their browser has
-   *     asked, in the one place the browser lets them ask, not to spend 32.5 MB
-   *     on decoration. The old check only looked at connection TYPE, so someone
-   *     on wifi with data-saver on still paid for it.
-   *  3. The connection itself, as before.
+   * It used to start itself two seconds after load, behind three gates
+   * (reduced-motion, saveData, and a "not slow" connection test). The gates
+   * were right and the default was still wrong: on wifi, without data-saver,
+   * every visitor paid 32.5 MB - roughly 160x the weight of every other asset
+   * on the page combined - for a loop that plays behind a headline they are
+   * trying to read. A gate that most visitors pass is not a gate.
+   *
+   * So the default is now "not fetched". The poster below carries the same
+   * image, so the section is complete without it; the <video> renders with no
+   * `src` at all (which is what guarantees no request) and gets one only when
+   * someone presses Play. That is also the honest reading of WCAG 2.2.2: the
+   * motion is user-initiated, so it needs no pause control.
+   *
+   * `saveData` hides the button rather than honouring it on click. A visitor
+   * who turned data-saver on told the browser, in the only place the browser
+   * lets them, not to spend bytes on decoration - and a Play button is an
+   * invitation to spend 32.5 of them.
    *
    * Known limit: this cannot make the file smaller. There is no ffmpeg in this
-   * workspace, so re-encoding the MP4 to a few MB has to happen off-machine -
-   * until then the only lever is who downloads it.
+   * workspace, so re-encoding the MP4 to a few MB has to happen off-machine.
+   * Until then this is the lever: the video still exists for anyone who wants
+   * it, and nobody downloads it by accident.
    */
-  useEffect(() => {
-    const reduced =
-      typeof window !== "undefined" &&
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
+  const [offerVideo] = useState(() => {
+    try {
+      const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+      return !conn?.saveData;
+    } catch {
+      return true;
+    }
+  });
 
-    const conn = (navigator as Navigator & {
-      connection?: { type?: string; effectiveType?: string; saveData?: boolean };
-    }).connection;
-    if (conn?.saveData) return;
-
-    const isFast = !conn || conn.type === "wifi" || conn.effectiveType === "4g";
-    if (!isFast) return;
-
-    const timer = setTimeout(() => {
-      const video = videoRef.current;
-      if (!video) return;
-      setShowVideo(true);
-      video.src = "/videos/hero-korea-video-new.mp4";
-      video.load();
-      video.play().catch(() => {});
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const playVideo = () => {
+    const video = videoRef.current;
+    // `video.src` is "" until the first press, so this is idempotent.
+    if (!video || video.src) return;
+    video.src = heroVideo;
+    video.load();
+    video.play().catch(() => {});
+  };
 
   /** The board's four promise cards, under the photo. */
   const cards = [
@@ -175,7 +178,7 @@ const HeroSection = () => {
       icon: "globe-plane" as KloverIconName,
       tone: "bg-klovers-yellow",
       title: isAr ? "كورية حقيقية" : "Real-life Korean",
-      body: isAr ? "لغة للاستعمال اليومي" : "Useful, practical, cultural",
+      body: isAr ? "لغة يومية وعملية وثقافية" : "Useful, practical, cultural",
     },
     {
       icon: "namsan-tower" as KloverIconName,
@@ -193,36 +196,51 @@ const HeroSection = () => {
         id="home"
         className="relative min-h-[86svh] flex flex-col items-center justify-center pt-16 overflow-hidden bg-charcoal"
       >
+        {/* `decoding="async"` and not "sync": this is the LCP image and sync
+            decoding blocks the main thread to paint it. With fetchpriority
+            high and the preload in index.html it still arrives first - it
+            just no longer stalls everything else to do it. */}
         <img
           src={heroPoster}
           alt=""
           aria-hidden="true"
           loading="eager"
           fetchPriority="high"
-          decoding="sync"
-          className={`absolute inset-0 w-full h-full object-cover object-[97%_center] lg:object-center transition-opacity duration-1000 animate-ken-burns brightness-110 saturate-[1.15] ${
+          decoding="async"
+          className={`absolute inset-0 w-full h-full object-cover object-[97%_center] lg:object-center transition-opacity duration-1000 motion-safe:animate-ken-burns brightness-110 saturate-[1.15] ${
             videoReady ? "opacity-0" : "opacity-100"
           }`}
         />
-        {showVideo && (
-          <video
-            ref={videoRef}
-            poster={heroPoster}
-            preload="none"
-            loop
-            muted
-            playsInline
-            aria-hidden="true"
-            onCanPlay={() => setVideoReady(true)}
-            className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 ${
-              videoReady ? "opacity-100" : "opacity-0"
-            }`}
-          />
-        )}
+        {/* Always rendered, never sourced. A <video> with no `src` makes no
+            request, which is what makes "do not fetch 32.5 MB" the default
+            rather than a race against a timer. */}
+        <video
+          ref={videoRef}
+          preload="none"
+          loop
+          muted
+          playsInline
+          aria-hidden="true"
+          onCanPlay={() => setVideoReady(true)}
+          className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 ${
+            videoReady ? "opacity-100" : "opacity-0"
+          }`}
+        />
 
+        {/* THE SCRIM IS THE ONLY THING BETWEEN THE HEADLINE AND THE SKY.
+            The mid stop was 0.35, and 0.35 is not enough: sampled from
+            hero-world.jpg in the band the text actually occupies, the photo
+            behind the headline sits at L≈0.27-0.34, which put the ivory
+            paragraph at 2.4-3.4:1 and the yellow headline line at ~2.5:1 -
+            under AA for the paragraph, and under even the 3:1 large-text
+            threshold for the yellow, which is the single most-read line on
+            the page. At 0.55 the same band drops to L≈0.12: the paragraph
+            measures 5.2:1 and the yellow line 5.9:1, both clear of AA.
+            The top stop comes down from 0.6 to 0.55 so the field above the
+            text stays even rather than getting darker than it needs to be. */}
         <div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(to bottom, rgba(46,46,46,0.6) 0%, rgba(46,46,46,0.35) 45%, rgba(46,46,46,0.65) 100%)" }}
+          style={{ background: "linear-gradient(to bottom, rgba(46,46,46,0.55) 0%, rgba(46,46,46,0.55) 45%, rgba(46,46,46,0.70) 100%)" }}
         />
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] max-w-full rounded-full pointer-events-none"
@@ -232,7 +250,12 @@ const HeroSection = () => {
         <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pt-8 pb-24 sm:pb-32">
           <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-[4%] lg:max-w-2xl flex flex-col items-center gap-5 sm:gap-6">
 
-            {/* 1. Headline. Yellow as TYPE is correct here and only here. */}
+            {/* 1. Headline. Yellow as TYPE is correct here and only here - the
+                ground behind it is the charcoal scrim above, never a light
+                surface. It reads from the token now, not a typed "#FFFF00":
+                the two happen to be the same colour today, but a hardcoded
+                hex means the most prominent line on the page silently stops
+                following the brand the day the yellow changes. */}
             <h1
               className="font-display font-extrabold text-ivory leading-[1.08] tracking-tight w-full"
               style={{ textShadow: "0 4px 40px rgba(20,20,18,0.9), 0 2px 8px rgba(20,20,18,0.8)" }}
@@ -241,8 +264,8 @@ const HeroSection = () => {
                 {isAr ? "التحدّث بالكورية يبدأ" : "Start Speaking Korean"}
               </span>
               <span
-                className={`block mt-1 ${headlineSize}`}
-                style={{ color: "#FFFF00", textShadow: "0 0 60px rgba(255, 255, 0, 0.35), 0 4px 24px rgba(20,20,18,0.7)" }}
+                className={`block mt-1 ${headlineSize} text-klovers-yellow`}
+                style={{ textShadow: "0 0 60px rgba(255, 255, 0, 0.35), 0 4px 24px rgba(20,20,18,0.7)" }}
               >
                 {isAr ? "من الحصة الأولى" : "From Your First Live Class"}
               </span>
@@ -296,7 +319,11 @@ const HeroSection = () => {
             </div>
 
             {/* 4. Proof line. */}
-            <p className="text-ivory/80 text-sm font-medium" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
+            {/* /85, not /80. At /80 this line measured 4.54:1 against the
+                darkest band of the photo - passing, but by five hundredths,
+                and only after the scrim above was raised. /85 is 4.9:1 and
+                costs nothing visually. */}
+            <p className="text-ivory/85 text-sm font-medium" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
               {isAr
                 ? "مجموعات صغيرة · بالعربية أو الإنجليزية · مناسبة للمبتدئين"
                 : "Small groups · English & Arabic · Beginner friendly"}
@@ -324,8 +351,61 @@ const HeroSection = () => {
                 </span>
               </div>
             )}
+
+            {/* 6. How often the chip can change — and the door that is not
+                monthly at all.
+
+                The chip above is honest about the soonest class and silent
+                about the one after it. Trial classes run on an
+                admin-configured monthly window (supabase/functions/book-trial
+                constrains every booking to it), so a visitor who cannot make
+                the date shown has no way to tell whether the alternative is
+                next week or next quarter — and the honest answer is a month.
+                Saying so is the point of this line.
+
+                Deliberately NOT stated here: which days of the month. The
+                schedule is configuration, not a constant, so the page that
+                reads the live slots off the database (/free-trial) is the page
+                that names them. This line carries only what is true whenever
+                the window happens to fall.
+
+                Alongside it is the one route that is open every day of the
+                month: /placement-test is public, no account, no booking. It is
+                what someone who cannot wait a month should be given instead of
+                a dead end. */}
+            <p
+              className="text-ivory/85 text-xs sm:text-sm max-w-2xl"
+              style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}
+            >
+              {isAr
+                ? "الحصص التجريبية تُفتح مرة كل شهر. وإن لم يناسبك هذا الموعد، فاختبار تحديد المستوى مفتوح كل يوم: "
+                : "Trial classes open once a month. If this date does not suit you, the placement test is open every day: "}
+              <Link
+                to="/placement-test"
+                onClick={() => { try { logLeadEvent({ source_type: "placement_test", cta_label: "homepage_hero_placement", metadata: { language } }); } catch {} }}
+                className="font-semibold text-klovers-yellow underline underline-offset-4 hover:text-klovers-yellow/80"
+              >
+                {isAr ? "اختبر مستواك الآن" : "Take the placement test"}
+              </Link>
+            </p>
           </div>
         </div>
+
+        {/* The video's only door. Top-end, under the header and clear of the
+            centred content column on every breakpoint, because the button must
+            not become a sixth thing competing with the headline, paragraph,
+            action, proof line and next-class chip. It disappears once the
+            video is playing. */}
+        {offerVideo && !videoReady && (
+          <button
+            type="button"
+            onClick={playVideo}
+            className="absolute top-24 end-4 z-20 inline-flex min-h-11 items-center gap-2 rounded-full border border-ivory/35 bg-charcoal/70 px-4 text-xs font-semibold text-ivory backdrop-blur-sm transition-colors hover:border-ivory/60 hover:bg-charcoal/85"
+          >
+            <Play className="h-4 w-4 fill-current" aria-hidden="true" />
+            {isAr ? "تشغيل الفيديو" : "Play video"}
+          </button>
+        )}
       </section>
 
       {/* ── The board's four promise cards, lifted onto the cover ── */}
@@ -363,7 +443,12 @@ const HeroSection = () => {
               className={`rounded-2xl border border-charcoal/10 p-4 sm:p-5 ${tone} shadow-[0_18px_40px_-24px_rgba(46,46,46,0.75)]`}
             >
               <KloverIcon name={icon} className="mb-3 h-12 w-12 sm:h-14 sm:w-14" />
-              <h3 className="font-display text-sm sm:text-base font-bold text-charcoal">{title}</h3>
+              {/* h2, not h3. The document runs h1 (hero) then these four, and
+                  MeetTeacher's h2 only arrives after them - so the first
+                  heading a screen-reader user met after the h1 skipped a
+                  level. These are section-level statements in their own right
+                  and they come first, so they take h2. */}
+              <h2 className="font-display text-sm sm:text-base font-bold text-charcoal">{title}</h2>
               {/* /80, not /65. The cards alternate bg-klovers-yellow and
                   bg-ivory, and charcoal at 65% over those measures 4.39:1 and
                   4.38:1 - both under AA for text this size. At /80 it is

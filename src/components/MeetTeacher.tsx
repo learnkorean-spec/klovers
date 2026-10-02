@@ -65,8 +65,21 @@ const MeetTeacher = () => {
           {/* Photo column */}
           <div className="flex justify-center lg:justify-end">
             <div className="relative">
-              <div className="absolute -inset-6 rounded-3xl bg-klovers-yellow/50 blur-3xl" />
-              <div className="absolute -bottom-4 -right-4 w-full h-full rounded-3xl border-2 border-klovers-yellow" />
+              {/* A radial-gradient, not `blur-3xl` on a filled disc. A 64px
+                  blur over this layer makes the compositor rasterise a blur
+                  pass on every repaint, for a glow that is pure decoration.
+                  Painting the falloff directly costs one gradient - the same
+                  technique as PlacementTestCTA.tsx and LearningRoadmap.tsx. */}
+              <div
+                aria-hidden="true"
+                className="absolute -inset-6 rounded-3xl"
+                style={{ backgroundImage: "radial-gradient(circle, hsl(var(--klovers-yellow) / 0.50), transparent 70%)" }}
+              />
+              {/* -end-4, not -right-4. The frame trails the photo, and the
+                  photo column is positioned with the logical `lg:justify-end`;
+                  a physical -right-4 pinned the frame to the right in RTL too,
+                  landing it on the wrong side of the photo. */}
+              <div className="absolute -bottom-4 -end-4 w-full h-full rounded-3xl border-2 border-klovers-yellow" />
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white ring-1 ring-charcoal/10 w-64 sm:w-72 md:w-80 lg:w-96">
                 <img
                   src={rehamPhoto}
@@ -95,10 +108,13 @@ const MeetTeacher = () => {
           <div className="flex flex-col gap-8">
 
             <div className="space-y-4 text-muted-foreground text-base md:text-lg leading-relaxed">
+              {/* Both branches derive from @/lib/trustFigures now. The English
+                  one used to type "13 years" and "200 students" literally -
+                  that is exactly how one language drifts from the other. */}
               <p className="text-foreground font-medium">
                 {isAr
                   ? `تدرّس ريهام اللغة الكورية منذ ${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا، وتعلّم معها أكثر من ${toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))} طالب. تخرّجت في كلية الألسن، قسم اللغة الكورية وآدابها.`
-                  : "Reham has taught Korean for 13 years and has taught more than 200 students herself. She studied Korean language and literature at the Faculty of Al-Alsun."}
+                  : `Reham has taught Korean for ${TEACHING_YEARS_COUNT} years and has taught more than ${STUDENTS_TAUGHT.replace("+", "")} students herself. She studied Korean language and literature at the Faculty of Al-Alsun.`}
               </p>
               <p>
                 {isAr

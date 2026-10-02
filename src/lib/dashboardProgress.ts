@@ -13,6 +13,7 @@
 import { LEAGUES, BADGES, getLeague } from "@/constants/gamification";
 import { LEVELS, normalizeLevel } from "@/constants/levels";
 import { KLOVERS_WORLD } from "@/config/klovers-world";
+import { toArabicDigits } from "@/lib/trustFigures";
 
 // ── Brand icon library ──────────────────────────────────────────────────────
 /**
@@ -309,11 +310,11 @@ export interface JourneyStop {
   milestone: boolean;
 }
 
-/** "Seoul Journey · Part 2" / "رحلة سيول · الجزء 2". */
+/** "Seoul Journey · Part 2" / "رحلة سيول · الجزء ٢". */
 export function worldLabel(stop: Pick<JourneyStop, "world" | "part">, lang: "en" | "ar"): string {
   const name = WORLD_NAMES[stop.world][lang];
   if (stop.part === null) return name;
-  return lang === "ar" ? `${name} · الجزء ${stop.part}` : `${name} · Part ${stop.part}`;
+  return lang === "ar" ? `${name} · الجزء ${toArabicDigits(stop.part)}` : `${name} · Part ${stop.part}`;
 }
 
 /** Seven stops = the seven course levels in constants/levels.ts. */

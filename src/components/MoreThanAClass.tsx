@@ -90,7 +90,7 @@ const DOORS: Door[] = [
     titleEn: "Learning path",
     titleAr: "مسار التعلّم",
     bodyEn: "Hangul, then Levels 1 to 6. Always know what comes next.",
-    bodyAr: "الهانغول، ثم المستويات من 1 إلى 6.",
+    bodyAr: "الهانغول، ثم المستويات من ١ إلى ٦، وتعرف دائمًا الخطوة التالية.",
   },
 ];
 
@@ -109,7 +109,7 @@ const MoreThanAClass = () => {
       <div className="container mx-auto px-4">
         <div className="mx-auto mb-10 max-w-2xl text-center">
           <span className="mb-4 inline-block rounded-full border border-charcoal/10 bg-klovers-yellow px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-charcoal">
-            {isAr ? "أكثر من حصص مباشرة" : "More than live classes"}
+            {isAr ? "أكثر من مجرد حصص" : "More than live classes"}
           </span>
           <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-foreground md:text-4xl">
             {isAr ? "كل ما يلزم للاستمرار" : "Everything that keeps you going"}

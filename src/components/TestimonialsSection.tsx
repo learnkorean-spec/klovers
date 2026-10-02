@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Pause, Play } from "lucide-react";
 import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FACEBOOK_RECOMMENDATIONS, toArabicDigits } from "@/lib/trustFigures";
@@ -169,7 +171,15 @@ const reviewsFor = (lang: string) => {
 const noEmoji = (text: string) =>
   text.replace(/\p{Extended_Pictographic}|️/gu, "").replace(/\s{2,}/g, " ").trim();
 
-const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boolean }) => {
+const ReviewCard = ({
+  review,
+  isAr,
+  "aria-hidden": ariaHidden,
+}: {
+  review: (typeof reviews)[0];
+  isAr: boolean;
+  "aria-hidden"?: boolean;
+}) => {
   const initials = review.name
     .split(" ")
     .map((w) => w[0])
@@ -181,6 +191,7 @@ const ReviewCard = ({ review, isAr }: { review: (typeof reviews)[0]; isAr: boole
     <div
       className="flex-shrink-0 w-72 bg-card border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
       dir={review.lang === "ar" ? "rtl" : "ltr"}
+      aria-hidden={ariaHidden}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-start gap-3">
@@ -220,10 +231,12 @@ const ScrollRow = ({
   items,
   direction,
   isAr,
+  paused,
 }: {
   items: (typeof reviews)[0][];
   direction: "left" | "right";
   isAr: boolean;
+  paused: boolean;
 }) => {
   const doubled = [...items, ...items]; // duplicate for seamless loop
 
@@ -233,13 +246,30 @@ const ScrollRow = ({
       <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-background to-transparent z-10" />
       <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background to-transparent z-10" />
 
+      {/* `motion-safe:` and not a bare animation class - this rail starts on
+          its own and never stops, which is exactly the motion
+          `prefers-reduced-motion: reduce` is asking us not to start. The
+          reader who asked for less motion gets the same six cards, laid out
+          as a plain scrollable row, with nothing moving.
+
+          `animationPlayState` is what the Pause control drives. Hover-pause
+          alone would not be enough: a keyboard or touch user never hovers. */}
       <div
-        className={`flex gap-4 w-max ${
+        className={`flex gap-4 w-max motion-safe:${
           direction === "left" ? "animate-scroll-left" : "animate-scroll-right"
         }`}
+        style={paused ? { animationPlayState: "paused" } : undefined}
       >
         {doubled.map((r, i) => (
-          <ReviewCard key={i} review={r} isAr={isAr} />
+          // The second half exists only to make the loop seamless, so it is
+          // the same six reviews again. Without this a screen reader announces
+          // every review twice, verbatim.
+          <ReviewCard
+            key={i}
+            review={r}
+            isAr={isAr}
+            aria-hidden={i >= items.length ? true : undefined}
+          />
         ))}
       </div>
     </div>
@@ -250,6 +280,11 @@ const TestimonialsSection = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
   const shown = reviewsFor(isAr ? "ar" : "en");
+  // WCAG 2.2.2 (Pause, Stop, Hide): movement that starts on its own and runs
+  // longer than five seconds needs a mechanism to stop it. Hover alone is not
+  // that mechanism - a keyboard or touch reader never hovers - so this is a
+  // real control, next to the heading it belongs to.
+  const [paused, setPaused] = useState(false);
 
   return (
     <section className="py-20 md:py-28 bg-background overflow-hidden">
@@ -289,8 +324,11 @@ const TestimonialsSection = () => {
             rating invited the reading that 200 students had reviewed.
 
             The Google Business Profile is the one with stars - 5.0 from 7
-            reviews - and that one is quoted in the hero strip
-            (HeroSection.tsx). One number, one named source, each.
+            reviews - and that one is quoted in FinalCTA.tsx. It is
+            NOT in the hero: the hero strip used to carry it and now carries
+            the class-medium line ("Small groups · English & Arabic"), so this
+            pointer named a section that no longer shows the number.
+            One number, one named source, each.
 
             Written inline rather than through the dictionary because these
             two strings are a measurement with a date attached, like the hero
@@ -299,17 +337,35 @@ const TestimonialsSection = () => {
             translations.ts, unused. */}
         <div className="flex items-center justify-center gap-2 mt-4">
           <KloverIcon name="game-klobi-thumbsup" className="h-6 w-6" />
+          {/* Both numbers read from FACEBOOK_RECOMMENDATIONS. The percentage
+              was typed as a literal "100%"/"١٠٠٪" while the count beside it
+              came from the constant - so the one figure a reader would check
+              against Facebook was the one figure the page could not update. */}
           <span className="text-lg font-bold text-foreground">
-            {isAr ? "١٠٠٪ يوصون بها" : "100% recommend"}
+            {isAr
+              ? `${toArabicDigits(FACEBOOK_RECOMMENDATIONS.percent)}٪ يوصون بها`
+              : `${FACEBOOK_RECOMMENDATIONS.percent}% recommend`}
           </span>
           <span className="text-muted-foreground text-sm">
             {isAr ? `من ${toArabicDigits(FACEBOOK_RECOMMENDATIONS.count)} مراجعة على فيسبوك` : `from ${FACEBOOK_RECOMMENDATIONS.count} reviews on Facebook`}
           </span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setPaused((p) => !p)}
+          aria-pressed={paused}
+          className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-muted-foreground underline underline-offset-4 hover:text-foreground"
+        >
+          {paused ? <Play className="h-3.5 w-3.5" aria-hidden="true" /> : <Pause className="h-3.5 w-3.5" aria-hidden="true" />}
+          {paused
+            ? isAr ? "تشغيل حركة المراجعات" : "Resume review motion"
+            : isAr ? "إيقاف حركة المراجعات" : "Pause review motion"}
+        </button>
       </div>
 
       {/* One rail, in the reader's language. */}
-      <ScrollRow items={shown} direction="left" isAr={isAr} />
+      <ScrollRow items={shown} direction="left" isAr={isAr} paused={paused} />
     </section>
   );
 };

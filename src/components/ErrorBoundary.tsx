@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/react";
 import { Component, ErrorInfo, ReactNode } from "react";
+import { captureException } from "@/lib/sentry";
 
 interface Props {
   children: ReactNode;
@@ -19,12 +19,15 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Forward to Sentry with React component stack as extra context.
-    // Safe to call even when Sentry is not initialized.
-    Sentry.withScope((scope) => {
-      scope.setTag("errorBoundary", "app");
-      scope.setExtra("componentStack", errorInfo.componentStack);
-      Sentry.captureException(error);
+    // Forwarded with the React component stack as extra context. Sentry is
+    // imported on demand inside `captureException` (see src/lib/sentry.ts), so
+    // this stays correct whether or not the SDK ever loads — with no DSN
+    // configured it is a resolved promise and nothing else. The component
+    // stack is a string and is cheap to build, so it is passed unconditionally
+    // rather than only when a DSN exists.
+    captureException(error, {
+      tag: "app",
+      extra: { componentStack: errorInfo.componentStack },
     });
   }
 

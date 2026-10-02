@@ -473,9 +473,15 @@ const FreeTrialPage = () => {
                 {tr("Pick a table", "اختيار الموعد")}
               </h2>
               <p className="text-sm text-muted-foreground">
+                {/* The cadence is a rule, not a shortage, and it reads as one.
+                    Source: supabase/migrations/20260919150000_monthly_trial_weekend.sql
+                    — Re, 19 Sep 2026: trials run on the first Friday and the
+                    first Saturday of the month. Said without a count of seats,
+                    because that is configuration (trial_settings.capacity) and
+                    this page reads the live slots rather than assuming it. */}
                 {tr(
-                  "Trial classes open once a month, on the first Friday and Saturday. Times are shown in your own time zone.",
-                  "تُفتح الحصص التجريبية مرة كل شهر، في أول جمعة وسبت منه. والأوقات معروضة بالتوقيت المحلي.",
+                  "Trial classes open once a month, on the first Friday and Saturday, and run as real small-group classes — so the number of seats is small. Times are shown in your own time zone.",
+                  "تُفتح الحصص التجريبية مرة كل شهر، في أول جمعة وسبت منه، وتُدار كحصص حقيقية في مجموعات صغيرة — لذلك يكون عدد المقاعد محدودًا. والأوقات معروضة بالتوقيت المحلي.",
                 )}
               </p>
             </div>
@@ -502,13 +508,37 @@ const FreeTrialPage = () => {
                     "رسالة على واتساب تكفي لحجز أول مقعد يُفتح.",
                   )}
                 </p>
-                <Button
-                  variant="outline"
-                  className="font-bold"
-                  onClick={() => trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "free_trial_no_slots_whatsapp" })}
-                >
-                  {tr("Message on WhatsApp", "مراسلة على واتساب")}
-                </Button>
+                {/* Two ways on, because this is the one screen where a
+                    visitor can do nothing at all. Waiting for the next month
+                    is one answer; the placement test is the other, and it is
+                    the only thing on this page that is open on every date
+                    rather than one weekend a month. Without it the honest
+                    reading of this box is "come back later". */}
+                <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+                  <Button
+                    variant="outline"
+                    className="w-full font-bold sm:w-auto"
+                    onClick={() => trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "free_trial_no_slots_whatsapp" })}
+                  >
+                    {tr("Message on WhatsApp", "مراسلة على واتساب")}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full min-h-11 font-semibold sm:w-auto"
+                    onClick={() => {
+                      try { logLeadEvent({ source_type: "placement_test", cta_label: "free_trial_no_slots_placement" }); } catch {}
+                      navigate("/placement-test");
+                    }}
+                  >
+                    {tr("Or take the placement test", "أو ابدأ باختبار تحديد المستوى")}
+                  </Button>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {tr(
+                    "The placement test is open every day and needs no booking.",
+                    "اختبار تحديد المستوى مفتوح كل يوم ولا يحتاج حجزًا.",
+                  )}
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">

@@ -1,6 +1,7 @@
 import { Send, Facebook } from "lucide-react";
 import { logLeadEvent } from "@/lib/leadTracking";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { COMMUNITY, toArabicDigits } from "@/lib/trustFigures";
 
 /**
  * The community band: Telegram and Facebook, between the testimonials and the
@@ -77,10 +78,21 @@ const CommunityBand = () => {
       <div className="container relative mx-auto px-4">
         <div className="mx-auto flex max-w-5xl md:min-h-[320px] md:items-center md:justify-end lg:min-h-[380px]">
           <div className="w-full pb-7 pt-1 text-center md:w-1/2 md:py-12 md:ps-10 md:text-start">
+            {/* The figure comes from @/lib/trustFigures, derived exactly as
+                FinalCTA derives it for its community tile - it used to be
+                typed here as "2,000+" / "٢٠٠٠", the one place on the page
+                where the number could drift. */}
             <p className="text-xl font-extrabold leading-tight text-charcoal md:text-2xl">
-              {isAr ? "أكثر من ٢٠٠٠ متابع في مجتمع كلوفرز" : "Join 2,000+ people in the Klovers community"}
+              {isAr
+                ? `أكثر من ${toArabicDigits(COMMUNITY.replace(/[^0-9]/g, ""))} متابع في مجتمع كلوفرز`
+                : `Join ${COMMUNITY} people in the Klovers community`}
             </p>
-            <p className="mt-1 text-sm text-charcoal/65 md:text-base">
+            {/* /70, not /65. Charcoal at 65% over this band's bg-primary
+                (yellow) measured 4.40:1 in light and 4.00:1 over the dark
+                `dark:bg-klovers-yellow/90` - both under AA for text this size.
+                At /70 it is 5.10:1. The same pair was already lifted to /80 on
+                the hero's promise cards (HeroSection.tsx). */}
+            <p className="mt-1 text-sm text-charcoal/70 md:text-base">
               {isAr
                 ? "متابعونا على وسائل التواصل: أسئلة، وتدريب، ومتعلّمون يتعلّمون معًا"
                 : "Our followers across social media — questions, practice, and people learning alongside you"}

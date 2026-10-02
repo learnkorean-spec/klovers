@@ -95,21 +95,36 @@ const HomeExitNudge = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4 pointer-events-none animate-in slide-in-from-bottom-2 duration-300">
-      <div className="relative pointer-events-auto mx-auto max-w-lg bg-card border-2 border-primary/60 shadow-[0_20px_60px_rgba(0,0,0,0.25)] rounded-2xl overflow-hidden">
-        <button
-          onClick={() => setVisible(false)}
-          aria-label={isAr ? "إغلاق" : "Dismiss"}
-          className="absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-muted transition-colors z-10"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
+      <div className="pointer-events-auto mx-auto max-w-lg bg-card border-2 border-primary/60 shadow-[0_20px_60px_rgba(0,0,0,0.25)] rounded-2xl overflow-hidden">
+        {/* The dismiss control owns a row instead of floating over the card.
+
+            As an absolute 26x26 at `top-2 end-2` it already sat on the Start
+            button: that button's box reaches 16px in from the card's end edge
+            and is 44px tall, so the two overlapped by roughly 18x18px —
+            invisible, because the dismiss only paints on hover, but taking
+            taps meant for Start. Raising it to the 44px touch minimum (2.5.8
+            asks for 24; 44 is this project's standard) turned that into a
+            36x36 overlap, which is one button sitting on top of another.
+            Space it owns is the only arrangement where both can be honest; it
+            costs the card about 36px of height, and the text column no longer
+            has to reserve room for something floating over it. */}
+        <div className="flex justify-end pe-1 pt-1">
+          <button
+            type="button"
+            onClick={() => setVisible(false)}
+            aria-label={isAr ? "إغلاق" : "Dismiss"}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
         <Link
           to="/placement-test"
           onClick={handleClick}
-          className="group flex items-center gap-4 p-4 hover:bg-primary/5 transition-colors"
+          className="group flex items-center gap-4 px-4 pb-4 pt-1 hover:bg-primary/5 transition-colors"
         >
           <KloverIcon name="growth-chart" className="h-10 w-10 flex-shrink-0" />
-          <div className="flex-1 min-w-0 pr-6">
+          <div className="flex-1 min-w-0">
             <p className="font-bold text-foreground text-sm leading-tight">
               {isAr ? "قبل المغادرة: معرفة المستوى في الكورية" : "Before you go — find your Korean level"}
             </p>

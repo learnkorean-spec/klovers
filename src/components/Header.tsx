@@ -97,11 +97,11 @@ const Header = () => {
    */
   return (
     <>
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium focus:shadow-lg">{isAr ? "الانتقال إلى المحتوى" : "Skip to main content"}</a>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium focus:shadow-lg">{isAr ? "الانتقال إلى المحتوى" : "Skip to main content"}</a>
     <header className={`fixed top-0 left-0 right-0 z-50 bg-background transition-shadow duration-300 ${scrolled ? "shadow-sm" : ""} border-b border-border`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between gap-2 h-16">
-          <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="Klovers homepage">
+          <Link to="/" className="flex items-center gap-2 shrink-0" aria-label={isAr ? "الصفحة الرئيسية لكلوفرز" : "Klovers homepage"}>
             <img src={kloversLogo} alt={isAr ? "كلوفرز" : "Klovers"} className="h-9 w-9 rounded-full object-cover" loading="eager" />
             <span className="font-bold text-lg text-foreground">{isAr ? "كلوفرز" : "Klovers"}</span>
           </Link>
@@ -168,7 +168,7 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none">
+                  <button className="flex items-center gap-2 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                     {profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt={profile.name} className="h-8 w-8 rounded-full object-cover border border-border" />
                     ) : (
@@ -245,9 +245,9 @@ const Header = () => {
 
           {/* Mobile hamburger */}
           <button
-            className="lg:hidden p-2 rounded-md hover:bg-accent transition-colors"
+            className="lg:hidden inline-flex min-h-11 min-w-11 items-center justify-center rounded-md hover:bg-accent transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-label={isMenuOpen ? (isAr ? "إغلاق قائمة التنقل" : "Close navigation menu") : (isAr ? "فتح قائمة التنقل" : "Open navigation menu")}
             aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? <X className="h-5 w-5 text-foreground" /> : <Menu className="h-5 w-5 text-foreground" />}

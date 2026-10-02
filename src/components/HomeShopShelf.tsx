@@ -88,7 +88,16 @@ const HomeShopShelf = () => {
       <div className="container mx-auto grid max-w-6xl items-center gap-10 px-4 lg:grid-cols-2">
         {/* The scene: Lina packing her study tote on the hanok veranda (same image as the /shop hero). */}
         <picture className="block">
-          <source media="(min-width: 1024px)" srcSet="/assets/story/shop-hero-lina.webp" width={1600} height={900} />
+          {/* `<source>` takes srcSet/media/type — not width/height, which the
+              browser ignores there. They used to be set on it (1600x900), so
+              the only dimensions the layout engine actually saw were the
+              <img>'s 900x1125 — a 4:5 box — while a desktop visitor is served
+              the 16:9 file. Every desktop load reserved the wrong height and
+              then reflowed. The two files genuinely differ in shape
+              (shop-hero-lina.webp 1600x900, the mobile one 900x1125), so the
+              ratio is now stated in CSS per breakpoint, where it can match the
+              file each breakpoint actually gets. */}
+          <source media="(min-width: 1024px)" srcSet="/assets/story/shop-hero-lina.webp" />
           <img
             src="/assets/story/shop-hero-lina-mobile.webp"
             alt={tr(
@@ -99,7 +108,7 @@ const HomeShopShelf = () => {
             height={1125}
             loading="lazy"
             decoding="async"
-            className="mx-auto h-auto w-full max-w-sm object-cover sm:max-w-md lg:max-w-none rtl:-scale-x-100"
+            className="mx-auto aspect-[4/5] h-auto w-full max-w-sm object-cover sm:max-w-md lg:aspect-video lg:max-w-none rtl:-scale-x-100"
             style={SOFT_EDGE}
           />
         </picture>
@@ -123,7 +132,7 @@ const HomeShopShelf = () => {
             <div className="mt-8 flex items-end gap-4 border-b-4 border-charcoal/80 pb-3 dark:border-foreground/60">
               <img
                 src={BOOK_COVERS[bookId]}
-                alt={tr("Cover of Hangeul from Zero, Level A0", "غلاف كتاب الهانغُل من الصفر، المستوى A0")}
+                alt={isAr ? `غلاف كتاب ${book.titleAr}` : `Cover of ${book.titleEn}`}
                 width={300}
                 height={388}
                 loading="lazy"
@@ -132,10 +141,16 @@ const HomeShopShelf = () => {
               />
               <div className="min-w-0 pb-1">
                 <p className="font-display text-lg font-bold leading-snug">
-                  {tr("Hangeul from Zero · Level A0", "الهانغُل من الصفر · المستوى A0")}
+                  {isAr ? book.titleAr : book.titleEn}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {tr("Self-study edition · 78 pages · digital book", "نسخة الدراسة الذاتية · 78 صفحة · كتاب رقمي")}
+                  {/* Both lines are the book's own, from src/constants/books.ts.
+                      They used to be typed out here as well — the title with a
+                      "·" where books.ts writes an em dash, and the subtitle
+                      including its page count — so the shelf and the book it
+                      advertises were two independent copies of the same facts.
+                      Only the trailing format note is ours. */}
+                  {isAr ? `${book.subtitleAr} · كتاب رقمي` : `${book.subtitleEn} · digital book`}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {tr("Answer key included. Opens in My books after purchase.", "مع مفتاح الإجابات. يُفتح في «كتبي» بعد الشراء.")}

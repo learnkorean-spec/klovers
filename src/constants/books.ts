@@ -30,7 +30,7 @@ export const BOOKS = {
     badge: "A0",
     titleAr: "الكتاب الكوري للمبتدئين — المستوى A0",
     titleEn: "Korean for Beginners — Level A0",
-    subtitleAr: "تمهيد الهانغُل · 4 حصص",
+    subtitleAr: "تمهيد الهانغُل · ٤ حصص",
     subtitleEn: "Hangul primer · 4 classes",
   },
   "hangul-a0-en": {
@@ -41,7 +41,7 @@ export const BOOKS = {
     badge: "A0",
     titleAr: "الكتاب الكوري للمبتدئين — المستوى A0 (النسخة الإنجليزية)",
     titleEn: "Korean for Beginners — Level A0 (English edition)",
-    subtitleAr: "تمهيد الهانغُل · 4 حصص",
+    subtitleAr: "تمهيد الهانغُل · ٤ حصص",
     subtitleEn: "Hangul primer · 4 classes",
   },
   "book-1": {
@@ -50,9 +50,9 @@ export const BOOKS = {
     path: "books/book-1.pdf",
     fileName: "Klovers-Level-1-Korean.pdf",
     badge: "1",
-    titleAr: "الكورية: أول محادثة — المستوى 1",
+    titleAr: "الكورية: أول محادثة — المستوى ١",
     titleEn: "Korean: First Conversation — Level 1 (Arabic edition)",
-    subtitleAr: "سوق المفردات · 24 حصة",
+    subtitleAr: "سوق المفردات · ٢٤ حصة",
     subtitleEn: "Vocabulary Market · 24 classes",
   },
   "trial-guide-ar": {
@@ -63,7 +63,7 @@ export const BOOKS = {
     badge: "دليل",
     titleAr: "دليل الحصة التجريبية",
     titleEn: "Trial class guide (Arabic)",
-    subtitleAr: "ما يحدث في الحصة التجريبية · 7 صفحات",
+    subtitleAr: "ما يحدث في الحصة التجريبية · ٧ صفحات",
     subtitleEn: "What happens in the trial class · 7 pages",
   },
   "trial-guide-en": {
@@ -74,7 +74,7 @@ export const BOOKS = {
     badge: "Guide",
     titleAr: "دليل الحصة التجريبية (النسخة الإنجليزية)",
     titleEn: "Trial class guide",
-    subtitleAr: "ما يحدث في الحصة التجريبية · 7 صفحات",
+    subtitleAr: "ما يحدث في الحصة التجريبية · ٧ صفحات",
     subtitleEn: "What happens in the trial class · 7 pages",
   },
   "hangul-a0-store": {
@@ -85,7 +85,7 @@ export const BOOKS = {
     badge: "A0",
     titleAr: "الهانغُل من الصفر — المستوى A0",
     titleEn: "Hangeul from Zero — Level A0 (store, Arabic)",
-    subtitleAr: "نسخة الدراسة الذاتية · 78 صفحة",
+    subtitleAr: "نسخة الدراسة الذاتية · ٧٨ صفحة",
     subtitleEn: "Self-study edition · 78 pages",
   },
   "hangul-a0-en-store": {
@@ -96,7 +96,7 @@ export const BOOKS = {
     badge: "A0",
     titleAr: "الهانغُل من الصفر — المستوى A0 (النسخة الإنجليزية)",
     titleEn: "Hangeul from Zero — Level A0 (store, English)",
-    subtitleAr: "نسخة الدراسة الذاتية · 78 صفحة",
+    subtitleAr: "نسخة الدراسة الذاتية · ٧٨ صفحة",
     subtitleEn: "Self-study edition · 78 pages",
   },
   "cluby-coloring-1": {
@@ -107,7 +107,7 @@ export const BOOKS = {
     badge: "تلوين",
     titleAr: "كلوبي والبيضة المضيئة — كتاب تلوين",
     titleEn: "Cluby and the Glowing Egg — colouring book 1 (Arabic)",
-    subtitleAr: "قصة وتلوين للأعمار ٤–٧ · 15 صفحة",
+    subtitleAr: "قصة وتلوين للأعمار ٤–٧ · ١٥ صفحة",
     subtitleEn: "Story colouring book, ages 4–7 · 15 pages",
   },
   "topik-i-91-reading": {
@@ -116,9 +116,9 @@ export const BOOKS = {
     path: "books/topik-i-91-reading.pdf",
     fileName: "TOPIK-I-91-Reading.pdf",
     badge: "TOPIK",
-    titleAr: "توبيك 1 — القراءة، الامتحان 91",
+    titleAr: "توبيك ١ — القراءة، الامتحان ٩١",
     titleEn: "TOPIK I — Reading, test 91",
-    subtitleAr: "امتحان سابق رسمي · الأسئلة 31–70 · 17 صفحة",
+    subtitleAr: "امتحان سابق رسمي · الأسئلة ٣١–٧٠ · ١٧ صفحة",
     subtitleEn: "Official past paper · questions 31–70 · 17 pages",
   },
   "topik-i-96-reading": {
@@ -127,9 +127,9 @@ export const BOOKS = {
     path: "books/topik-i-96-reading.pdf",
     fileName: "TOPIK-I-96-Reading.pdf",
     badge: "TOPIK",
-    titleAr: "توبيك 1 — القراءة، الامتحان 96",
+    titleAr: "توبيك ١ — القراءة، الامتحان ٩٦",
     titleEn: "TOPIK I — Reading, test 96",
-    subtitleAr: "امتحان سابق رسمي · الأسئلة 31–70 · 17 صفحة",
+    subtitleAr: "امتحان سابق رسمي · الأسئلة ٣١–٧٠ · ١٧ صفحة",
     subtitleEn: "Official past paper · questions 31–70 · 17 pages",
   },
   "topik-i-102-reading": {
@@ -138,9 +138,9 @@ export const BOOKS = {
     path: "books/topik-i-102-reading.pdf",
     fileName: "TOPIK-I-102-Reading.pdf",
     badge: "TOPIK",
-    titleAr: "توبيك 1 — القراءة، الامتحان 102",
+    titleAr: "توبيك ١ — القراءة، الامتحان ١٠٢",
     titleEn: "TOPIK I — Reading, test 102",
-    subtitleAr: "امتحان سابق رسمي · الأسئلة 31–70 · 19 صفحة",
+    subtitleAr: "امتحان سابق رسمي · الأسئلة ٣١–٧٠ · ١٩ صفحة",
     subtitleEn: "Official past paper · questions 31–70 · 19 pages",
   },
 } as const;

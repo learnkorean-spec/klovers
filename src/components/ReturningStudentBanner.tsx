@@ -119,7 +119,7 @@ const ReturningStudentBanner = () => {
 
   return (
     <div className="bg-charcoal text-ivory relative border-y border-charcoal">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center pe-10">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center pe-14">
         <div className="flex items-center gap-2 flex-wrap justify-center">
           <span className="bg-ivory/20 text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">
             {isAr ? "أهلًا بالعودة" : "Welcome back"}
@@ -132,14 +132,14 @@ const ReturningStudentBanner = () => {
         </div>
         <Link
           to="/welcome-back"
-          className="inline-flex items-center gap-1.5 bg-secondary text-secondary-foreground text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-secondary/90 transition-colors shrink-0"
+          className="inline-flex min-h-11 items-center gap-1.5 bg-secondary text-secondary-foreground text-xs font-semibold px-4 py-1.5 rounded-full hover:bg-secondary/90 transition-colors shrink-0"
         >
           {isAr ? "عرض العودة" : "See your offer"}
         </Link>
       </div>
       <button
         onClick={handleDismiss}
-        className="absolute end-2 top-1/2 -translate-y-1/2 p-1 hover:bg-white/20 rounded-full transition-colors"
+        className="absolute end-2 top-1/2 -translate-y-1/2 inline-flex min-h-11 min-w-11 items-center justify-center hover:bg-white/20 rounded-full transition-colors"
         aria-label={isAr ? "إغلاق" : "Dismiss"}
       >
         <X className="h-4 w-4" aria-hidden="true" />

@@ -2,6 +2,7 @@ import { MessageCircle, Facebook, Phone, Mail } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
 import { CONTACT_EMAIL } from "@/lib/siteConfig";
+import { toArabicDigits } from "@/lib/trustFigures";
 
 const TiktokIcon = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
@@ -102,7 +103,7 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="h-9 w-9 rounded-lg border border-background/25 flex items-center justify-center text-background/70 transition-all hover:bg-klovers-yellow hover:border-klovers-yellow hover:text-charcoal"
+                  className="h-11 w-11 rounded-lg border border-background/25 flex items-center justify-center text-background/70 transition-all hover:bg-klovers-yellow hover:border-klovers-yellow hover:text-charcoal"
                 >
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </a>
@@ -124,7 +125,7 @@ const Footer = () => {
               line, which is the one piece of text a reader has no other way
               to reach. /70 is 7.2:1. */}
           <p className="text-background/70 text-xs">
-            © {new Date().getFullYear()}{" "}
+            © {isAr ? toArabicDigits(new Date().getFullYear()) : new Date().getFullYear()}{" "}
             {isAr ? "كلوفرز. جميع الحقوق محفوظة." : "Klovers. All rights reserved."}
           </p>
           <div className="flex items-center gap-4">

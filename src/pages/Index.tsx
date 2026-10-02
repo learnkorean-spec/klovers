@@ -114,18 +114,44 @@ const Index = () => {
   // logLeadEvent meant one person scrolling to the bottom of this page counted
   // as nine conversions (GA4 Realtime, 18 Sep 2026).
   useEffect(() => {
-    const milestones = new Set<number>();
+    const MILESTONES = [25, 50, 75, 90];
+    const hit = new Set<number>();
+
+    // Measured when the document actually changes height — not on every scroll
+    // event. `scrollHeight` is a layout read, and this handler used to perform
+    // one on every scroll frame, which forces a synchronous layout for the
+    // whole length of the page. The range is not static either: several
+    // sections below mount lazily, so it grows after first paint. Those mounts
+    // are exactly what a ResizeObserver on <body> reports, which is why it is
+    // here and not a one-off measurement at mount.
+    let scrollable = 0;
+    const measure = () => {
+      scrollable = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    };
+
     const onScroll = () => {
-      const pct = Math.round((window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100);
-      [25, 50, 75, 90].forEach((m) => {
-        if (pct >= m && !milestones.has(m)) {
-          milestones.add(m);
+      // All four reported, or a page with no scroll range to divide by (which
+      // is also the state a division by zero would have produced).
+      if (hit.size === MILESTONES.length || scrollable <= 0) return;
+      const pct = Math.round((window.scrollY / scrollable) * 100);
+      for (const m of MILESTONES) {
+        if (pct >= m && !hit.has(m)) {
+          hit.add(m);
           try { logEngagementEvent({ source_type: "homepage", cta_label: `scroll_depth_${m}` }); } catch {}
         }
-      });
+      }
     };
+
+    measure();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    ro?.observe(document.body);
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
   useEffect(() => {

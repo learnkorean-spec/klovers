@@ -1876,7 +1876,7 @@ export const translations = {
     },
     whyLearn: {
       title: "لماذا الكورية؟",
-      subtitle: "أبواب لفرص جديدة مع اللغة الكورية",
+      subtitle: "اللغة الكورية تفتح أبوابًا لفرص جديدة",
       items: [
         { title: "الثقافة الكورية", description: "متابعة الدراما والكيبوب بالكورية", icon: "culture" },
         { title: "الدراسة", description: "الوصول إلى الجامعات والمنح الكورية", icon: "study" },

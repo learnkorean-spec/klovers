@@ -224,7 +224,7 @@ const preparesEn = (l: Level): string =>
   l.topik ? ` Prepares you toward TOPIK ${l.topik}.` : "";
 
 const preparesAr = (l: Level): string =>
-  l.topik ? ` تجهيز لـ TOPIK ${ar(l.topik)}.` : "";
+  l.topik ? ` تحضير لاختبار TOPIK ${ar(l.topik)}.` : "";
 
 const levelCards: CourseCard[] = LEVELS.map((l) => {
   const copy = LEVEL_COPY[l.key];

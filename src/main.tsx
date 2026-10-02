@@ -3,23 +3,19 @@ import App from "./App.tsx";
 import "./index.css";
 import { ThemeProvider } from "./contexts/ThemeContext.tsx";
 import "./i18n/config";
-import { initSentry, Sentry } from "./lib/sentry";
+import { initSentry } from "./lib/sentry";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { installJsonLdDedupe } from "./lib/jsonLdDedupe";
 
-// Initialize Sentry as early as possible so it can capture init-time errors.
+// Sentry was initialised TWICE here: once through `initSentry()` and again
+// through a second `Sentry.init` in this file, each with its own integration
+// list and its own sample rates (tracesSampleRate 0.1 vs 0.2,
+// replaysOnErrorSampleRate 0.1 vs 1.0). The second call won silently, so the
+// configuration documented in src/lib/sentry.ts — the one with the
+// `ignoreErrors` and `beforeSend` filters — was never the one in effect
+// wherever a DSN is set. There is now one call, and one place that owns the
+// configuration.
 initSentry();
-
-const sentryDsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
-if (sentryDsn) {
-  Sentry.init({
-    dsn: sentryDsn,
-    environment: import.meta.env.MODE,
-    tracesSampleRate: 0.2,
-    replaysOnErrorSampleRate: 1.0,
-    integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
-  });
-}
 
 // Reload the page when a lazy-loaded chunk fails to fetch (stale deploy).
 // Vite fires this event when a dynamic import 404s after a new production build.
@@ -78,32 +74,19 @@ if (typeof window !== "undefined") {
 // copy of each @type (see src/lib/jsonLdDedupe.ts).
 installJsonLdDedupe();
 
+// One boundary, not two.
+//
+// This used to nest `<Sentry.ErrorBoundary>` around `<ErrorBoundary>`, and the
+// two rendered the same markup — the same "Something went wrong" heading, the
+// same message, the same "Try again" — so whichever caught a given error, the
+// reader saw the same screen. The outer one existed only to reach Sentry, and
+// it paid a static `@sentry/react` import for that. ErrorBoundary now reports
+// through `captureException`, which loads Sentry on demand, so the outer
+// boundary is gone and the SDK is no longer in the entry chunk.
 createRoot(document.getElementById("root")!).render(
-  <Sentry.ErrorBoundary
-    fallback={({ error, resetError }) => (
-      <div className="min-h-screen flex items-center justify-center p-8 text-center">
-        <div className="space-y-4 max-w-md">
-          <h2 className="text-xl font-semibold">Something went wrong</h2>
-          <p className="text-muted-foreground text-sm">
-            {error instanceof Error
-              ? error.message
-              : "An unexpected error occurred."}
-          </p>
-          <button
-            className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80 transition-opacity"
-            onClick={resetError}
-          >
-            Try again
-          </button>
-        </div>
-      </div>
-    )}
-    showDialog={false}
-  >
-    <ErrorBoundary>
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>
-    </ErrorBoundary>
-  </Sentry.ErrorBoundary>
+  <ErrorBoundary>
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
+  </ErrorBoundary>
 );
