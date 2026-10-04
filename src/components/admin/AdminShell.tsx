@@ -96,6 +96,7 @@ export const ADMIN_NAV: {
         { id: "campaigns", label: "Campaigns", to: "/admin?tab=campaigns" },
         { id: "books", label: "Books", to: "/admin?tab=books" },
         { id: "trial-books", label: "Trial books", to: "/admin?tab=trial-books" },
+        { id: "book-plan", label: "Book plan", to: "/admin?tab=book-plan" },
         { id: "pictures", label: "Pictures", to: "/admin?tab=pictures" },
         { id: "brand", label: "Brand", to: "/admin?tab=brand" },
         { id: "conversation-audio", label: "Book audio", to: "/admin?tab=conversation-audio" },

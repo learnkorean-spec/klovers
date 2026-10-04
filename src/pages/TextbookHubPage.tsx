@@ -100,7 +100,7 @@ const TextbookHubPage = () => {
           <div className="grid items-center gap-8 md:grid-cols-2">
             <div className="text-center md:text-start">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-klovers-yellow text-charcoal text-sm font-bold mb-6 border border-foreground/15">
-                <KloverIcon name="klobi-reading" className="h-5 w-5" />
+                <KloverIcon name="books-stack" className="h-5 w-5" />
                 {isAr ? "مكتبة الكتب" : "Book Library"}
               </div>
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">

@@ -71,7 +71,7 @@ const CARDS: Record<
   culture: {
     image: "/assets/world/why-culture.webp",
     badge: "bg-ivory",
-    icon: "klobi-headphones",
+    icon: "palace-blossoms",
     href: {
       ar: "/blog/best-kdrama-learn-korean-difficulty-ranked-ar",
       en: "/blog/best-kdrama-learn-korean-difficulty-ranked",

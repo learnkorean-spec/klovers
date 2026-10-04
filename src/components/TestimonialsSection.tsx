@@ -205,7 +205,7 @@ const ReviewCard = ({
             {/* What Facebook shows beside the name. Not a rating — see the
                 block comment at the top of this file. */}
             <div className="flex items-center gap-1.5 mt-0.5">
-              <KloverIcon name="game-klobi-thumbsup" className="h-4 w-4" />
+              <KloverIcon name="badge-blossom" className="h-4 w-4" />
               <span className="text-xs font-semibold text-foreground/80">
                 {isAr ? "توصية" : "Recommends"}
               </span>
@@ -336,7 +336,7 @@ const TestimonialsSection = () => {
             platform's number moves. `ratingSuffix` and `badge` are left in
             translations.ts, unused. */}
         <div className="flex items-center justify-center gap-2 mt-4">
-          <KloverIcon name="game-klobi-thumbsup" className="h-6 w-6" />
+          <KloverIcon name="badge-blossom" className="h-6 w-6" />
           {/* Both numbers read from FACEBOOK_RECOMMENDATIONS. The percentage
               was typed as a literal "100%"/"١٠٠٪" while the count beside it
               came from the constant - so the one figure a reader would check

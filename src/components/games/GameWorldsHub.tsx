@@ -70,7 +70,7 @@ const arGames = (n: number) => {
   return m >= 3 && m <= 10 ? "ألعاب" : "لعبة";
 };
 
-const ASSET = "/assets/characters";
+const ASSET = "/assets/cluby";
 /** Cluby in the canon 3D plush style (only shown once he has hatched). */
 const CLUBY_3D = "/assets/cluby/cluby-hanbok.webp";
 const CLUBY_3D_WAVE = "/assets/cluby/cluby-wave.webp";
@@ -83,11 +83,22 @@ const BANNER_AFTER_HATCH = "/assets/cluby/picnic.webp";
 
 type WorldKey = GameWorld["key"];
 
-/** Which Cluby stands in which world. */
+/**
+ * Which Cluby stands in which world.
+ *
+ * These were the flat 2D set in /assets/characters/ — the one place on the site
+ * still drawing him as a cartoon, in a file that defines the correct 3D pose for
+ * its own banner one line above. Re's standing rule settled it, so each world now
+ * wears a canon 3D pose. Three are stand-ins chosen for meaning rather than
+ * written for the world: reading for Hangul, the star for first words learned,
+ * the wave for a first conversation. World-specific poses are in the image pack
+ * (docs/CHATGPT-PROMPTS-REAL-CHARACTERS-AR.md, prompts 2-4) and changing one is a
+ * single line here.
+ */
 const WORLD_CLUBY: Record<WorldKey, string> = {
-  hangul_village: "cluby-scholar",
-  vocabulary_market: "cluby-market",
-  conversation_cafe: "cluby-cafe",
+  hangul_village: "cluby-reading",
+  vocabulary_market: "cluby-star",
+  conversation_cafe: "cluby-wave",
 };
 
 /** The story-canon painting for each world (same files as the homepage roadmap). */
