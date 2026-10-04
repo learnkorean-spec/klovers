@@ -313,28 +313,38 @@ export default function BrandSheetPanel() {
 
       <Card className="rounded-2xl border-destructive/40">
         <CardHeader className="pb-4">
-          <CardTitle className="text-base">Where the site currently breaks these rules</CardTitle>
+          <CardTitle className="text-base">What is still breaking these rules</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Known and waiting, not forgotten. Each one is a style break a future prompt would
-            otherwise repeat.
+            Kept current on purpose. A list that still names things already fixed is worse than no
+            list: it teaches whoever reads it to stop trusting it.
           </p>
         </CardHeader>
         <CardContent className="space-y-3 text-sm leading-relaxed">
           <p>
-            <code>src/components/games/GameWorldsHub.tsx</code> draws Cluby from{" "}
-            <code>/assets/characters/</code> — the flat 2D set — while the same file defines{" "}
-            <code>CLUBY_3D</code> correctly one line above.
+            <strong>Four flat 2D Cluby icons, still live.</strong>{" "}
+            <code>game-klobi-thumbsup</code> in <code>AffiliatePage</code> (64px) and{" "}
+            <code>TrialBookingPage</code> (56px); <code>klobi-reading</code> and{" "}
+            <code>klobi-headphones</code> in <code>MySchedulePage</code> (40 and 48px); and{" "}
+            <code>game-klobi-han</code> plus that same thumbs-up as the games fallback. All four are
+            redrawn in 3D — prompts 5 to 8 of the image pack, and each is a file swap.
           </p>
           <p>
-            <code>public/assets/icons/student-boy-thumbsup.webp</code> and{" "}
-            <code>student-girl-heart.webp</code> are illustrated faces used as trust badges across
-            the site. Under the standing rule these are the loudest break, and swap-shaped: the two
-            files are replaced, nothing else changes.
+            <strong>A drawn cover on 17 blog posts.</strong> Same rule, seventeen files, all in{" "}
+            <code>public/assets/blog/</code>. The pack's template puts no people in a blog cover at
+            all, which removes the who-is-this-character question instead of answering it.
           </p>
           <p>
-            Illustrated character art still in the repo and unused:{" "}
-            <code>src/assets/band/*.ts</code>, <code>src/assets/characters.ts</code> and{" "}
-            <code>public/assets/illustrations/</code>.
+            <strong>Three cartoon brand files.</strong> <code>klovers-mascot.png</code>,{" "}
+            <code>klovers-characters.png</code> (1.6 MB each, and identical) and{" "}
+            <code>characters/hanbok-pair.jpg</code> — one real portrait retires all three, and saves
+            about 3 MB besides.
+          </p>
+          <p className="text-muted-foreground">
+            <strong>Fixed, and no longer listed here:</strong> the flat 2D Cluby <em>set</em> the
+            game hub drew from <code>public/assets/characters/</code>; the two illustrated trust
+            icons (<code>student-boy-thumbsup</code> and <code>student-girl-heart</code>, now
+            photographs); the nine small sites those two used at 14 to 24px; 87 MB of dead art,
+            including the anime figures that sat inlined in the code itself.
           </p>
         </CardContent>
       </Card>
