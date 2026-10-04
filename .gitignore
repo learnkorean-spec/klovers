@@ -52,3 +52,12 @@ supabase/.temp/
 /pending-after.txt
 /verification.txt
 /db-push-dry-run.txt
+
+# Audit and analysis scratch output (4 Oct 2026). These are machine-written
+# dumps - screenshots of the live site, a saved sitemap, an image-style audit
+# directory, and a captured `tsc --noEmit` log - that sat untracked at the repo
+# root for over a week and were repeatedly one `git add .` away from being
+# committed as source. They are regenerable and never reviewed as a diff.
+/.audit/
+/.img-style-audit/
+/tsc.txt
