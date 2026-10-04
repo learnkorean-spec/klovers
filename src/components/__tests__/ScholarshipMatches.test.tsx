@@ -17,6 +17,16 @@ vi.mock("@/hooks/usePublishedScholarshipArticle", () => ({
 }));
 
 /**
+ * LanguageProvider imports the Supabase client, and that module throws
+ * "supabaseUrl is required" at import time when the env vars are missing — CI
+ * sets none. Every test in this repo that wraps a component in LanguageProvider
+ * mocks the client for exactly this reason (see AchievementMilestoneArabic); the
+ * first version of this file did not, so it passed here and failed on a clean
+ * checkout.
+ */
+vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+
+/**
  * ScholarshipMatches.test.tsx — the gate, which is the promise Re made to the
  * visitor: the names and the facts are public, the verdict is what an account
  * buys. That claim is only true while the component renders one way signed out

@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  NO_GUIDES,
+  SCHOLARSHIP_GUIDE_SLUGS,
+  publishedGuideSlugs,
+  type PublishedGuides,
+} from "@/lib/scholarshipGuide";
 
 /**
  * Is the scholarships guide in the journal published yet?
@@ -17,42 +23,21 @@ import { supabase } from "@/integrations/supabase/client";
  * exists. The day she publishes the article, every match block on the site
  * grows the link with no code change and no deploy.
  *
+ * THE DECISION IS NOT MADE HERE. `publishedGuideSlugs` in
+ * src/lib/scholarshipGuide.ts owns it, free of React and Supabase, because that
+ * file has to be testable on a clean checkout where this one cannot even be
+ * imported. This hook owns the query and the state; nothing else.
+ *
  * FAILING CLOSED: a network error, a missing row or a refused read all mean
  * "no link". A link is not worth an error surface, and silence is the correct
  * answer when we cannot prove the page is there.
  */
-
-/** The guide's two rows: the Arabic twin uses the `-ar` suffix convention. */
-export const SCHOLARSHIP_GUIDE_SLUGS = {
-  ar: "korean-scholarships-guide-ar",
-  en: "korean-scholarships-guide",
-} as const;
-
-export interface PublishedGuides {
-  ar: string | null;
-  en: string | null;
-}
-
-const NONE: PublishedGuides = { ar: null, en: null };
-
-/**
- * Pure: which of the two slugs the query actually returned. Kept separate from
- * the hook so the rule is testable without mounting React or mocking Supabase,
- * the same way useChurnPrevention's derivations are tested.
- */
-export function publishedGuideSlugs(rows: { slug?: string | null }[] | null | undefined): PublishedGuides {
-  if (!rows || rows.length === 0) return NONE;
-  const found = new Set(rows.map((r) => r?.slug).filter((s): s is string => typeof s === "string"));
-
-  return {
-    ar: found.has(SCHOLARSHIP_GUIDE_SLUGS.ar) ? SCHOLARSHIP_GUIDE_SLUGS.ar : null,
-    en: found.has(SCHOLARSHIP_GUIDE_SLUGS.en) ? SCHOLARSHIP_GUIDE_SLUGS.en : null,
-  };
-}
+export { SCHOLARSHIP_GUIDE_SLUGS, publishedGuideSlugs };
+export type { PublishedGuides };
 
 /** The published guide slugs, or two nulls until (and unless) they exist. */
 export function usePublishedScholarshipArticle(): PublishedGuides {
-  const [guides, setGuides] = useState<PublishedGuides>(NONE);
+  const [guides, setGuides] = useState<PublishedGuides>(NO_GUIDES);
 
   useEffect(() => {
     let cancelled = false;

@@ -2,16 +2,20 @@ import { describe, it, expect } from "vitest";
 import {
   publishedGuideSlugs,
   SCHOLARSHIP_GUIDE_SLUGS,
-} from "@/hooks/usePublishedScholarshipArticle";
+} from "@/lib/scholarshipGuide";
 
 /**
  * The rule that decides whether the match block links to the journal.
  *
  * It fails closed on purpose: the draft article must not produce a link until
  * Re publishes it, because a 404 on "read more about your scholarship" is worse
- * than no link. Pure mapping only — the query and the React state are the
- * hook's business, and neither needs Supabase or a mounted component to be
- * believed.
+ * than no link.
+ *
+ * THIS FILE MUST NOT IMPORT THE HOOK, and that is the point of the split. The
+ * hook imports the Supabase client, which throws "supabaseUrl is required" when
+ * the env vars are missing — and CI has none. The first version of this test
+ * imported the hook, passed on a machine with a `.env` and failed on every clean
+ * checkout. Nothing here touches React or Supabase, so nothing here can.
  */
 describe("publishedGuideSlugs", () => {
   it("returns both slugs when both rows are published", () => {
