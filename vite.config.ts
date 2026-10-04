@@ -11,6 +11,14 @@ export default defineConfig(() => ({
     hmr: {
       overlay: false,
     },
+    watch: {
+      // Atomic writers (editors, agent tooling) drop a hidden temp directory
+      // beside the file they are replacing. chokidar tries to watch it, the
+      // directory is gone by the time it opens it, and on Windows that is an
+      // EBUSY that takes the whole dev server down mid-edit. Ignoring them
+      // costs nothing: nothing real is ever named .*.tmpdir.
+      ignored: ["**/.*.tmpdir/**", "**/*.tmp"],
+    },
   },
   plugins: [
     react(),
