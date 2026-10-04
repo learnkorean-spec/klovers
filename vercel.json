@@ -122,6 +122,21 @@
       "source": "/blog/korean-learning-apps-comparison-2026-ar",
       "destination": "/blog/korean-learning-apps-comparison-2026-duolingo-rosetta-stone-ar",
       "permanent": true
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy-policy",
+      "permanent": true
+    },
+    {
+      "source": "/unit-placement",
+      "destination": "/placement-test",
+      "permanent": true
+    },
+    {
+      "source": "/gift/cluby",
+      "destination": "/shop/products/cluby-coloring-book-1",
+      "permanent": true
     }
   ],
   "rewrites": [
@@ -258,7 +273,7 @@
       ]
     },
     {
-      "source": "/(admin|dashboard|textbook|pay|profile|my-lessons|review|daily-quiz|complete-profile|trial-confirm|trial-booking|rsvp|progress-report|certificate|hangul-book|trial-book|enrollment-status|resubmit-schedule|practice-interview)",
+      "source": "/(admin|dashboard|textbook|pay|profile|my-lessons|review|daily-quiz|complete-profile|trial-confirm|trial-booking|rsvp|progress-report|certificate|hangul-book|trial-book|enrollment-status|resubmit-schedule|practice-interview|unsubscribe)",
       "headers": [
         {
           "key": "X-Robots-Tag",

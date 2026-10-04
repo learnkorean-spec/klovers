@@ -292,6 +292,7 @@ const NOINDEX_CRAWLABLE_ROUTES = [
   "/reset-password",
   "/my-lessons",
   "/practice-interview",
+  "/unsubscribe",
 ];
 
 const NOINDEX_BLOCKED_ROUTES = [
