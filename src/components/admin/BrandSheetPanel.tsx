@@ -333,18 +333,15 @@ export default function BrandSheetPanel() {
             <code>public/assets/blog/</code>. The pack's template puts no people in a blog cover at
             all, which removes the who-is-this-character question instead of answering it.
           </p>
-          <p>
-            <strong>Three cartoon brand files.</strong> <code>klovers-mascot.png</code>,{" "}
-            <code>klovers-characters.png</code> (1.6 MB each, and identical) and{" "}
-            <code>characters/hanbok-pair.jpg</code> — one real portrait retires all three, and saves
-            about 3 MB besides.
-          </p>
           <p className="text-muted-foreground">
             <strong>Fixed, and no longer listed here:</strong> the flat 2D Cluby <em>set</em> the
             game hub drew from <code>public/assets/characters/</code>; the two illustrated trust
             icons (<code>student-boy-thumbsup</code> and <code>student-girl-heart</code>, now
-            photographs); the nine small sites those two used at 14 to 24px; 87 MB of dead art,
-            including the anime figures that sat inlined in the code itself.
+            photographs); the nine small sites those two used at 14 to 24px; the three cartoon brand
+            files (<code>klovers-mascot.png</code>, its byte-identical twin{" "}
+            <code>klovers-characters.png</code>, and <code>characters/hanbok-pair.jpg</code>),
+            retired by one real portrait that also saves 3 MB; and 87 MB of dead art, including the
+            anime figures that sat inlined in the code itself.
           </p>
         </CardContent>
       </Card>

@@ -377,12 +377,16 @@ export const LIBRARY_SITE: SitePicture[] = [
   { group: "books", dir: "/book-photos", file: "food.jpg" },
   { group: "books", dir: "/book-photos", file: "street.jpg" },
   { group: "books", dir: "/book-photos", file: "teacher.jpg" },
-  { group: "brand", dir: "/characters", file: "hanbok-pair.jpg" },
+  // Brand and characters. Three cartoon files used to sit here — hanbok-pair.jpg,
+  // klovers-mascot.png and klovers-characters.png, the last two byte-identical: 3.2 MB
+  // for one drawing twice. Re's standing rule retired all three, and the portrait below
+  // is what replaced them — the same two learners and Cluby, as photographs. The old
+  // artwork lives on in git history rather than in the library, because a brand file
+  // that is superseded under a rule is not a version of the new one.
   { group: "brand", dir: "/assets/cluby", file: "learners-reference.webp", label: "ورقة الشخصيتين — المرجع الذي يُرفق في كل برومبت فيه بشر (آدم ولينا بكامل الجسم، بملابس الكانون)" },
+  { group: "brand", dir: "", file: "klovers-characters.webp", label: "البورتريه المعتمد — آدم ولينا وكلوبي (1600×900)، حلّ محل ثلاثة ملفات كاركتون" },
   { group: "brand", dir: "", file: "klovers-logo.jpg" },
-  { group: "brand", dir: "", file: "klovers-mascot.png" },
   { group: "brand", dir: "", file: "klovers-mascot.svg" },
-  { group: "brand", dir: "", file: "klovers-characters.png" },
   { group: "brand", dir: "", file: "hero-world.jpg" },
   { group: "brand", dir: "", file: "og-seoul-skyline.jpg" },
 ];
