@@ -205,8 +205,42 @@ describe("the standing rule reads the same in all four places", () => {
     expect(icon).toContain('"student-girl-heart"');
     expect(icon).toContain("`/assets/icons/${name}.webp`");
 
-    // And a live consumer, so the names are not merely declared somewhere.
-    const consumer = readFileSync(join(repoRoot, "src/components/FinalCTA.tsx"), "utf-8");
-    expect(consumer).toContain("student-boy-thumbsup");
+    // And a consumer that legitimately keeps the photograph: MeetTeacher renders
+    // it at 40px, which is where a face still reads.
+    const consumer = readFileSync(join(repoRoot, "src/components/MeetTeacher.tsx"), "utf-8");
+    expect(consumer).toContain("student-girl-heart");
+  });
+
+  it("keeps the face icons off every surface too small to read them", () => {
+    /**
+     * measured, not guessed: a photographed face is a smudge below about 32px, so
+     * on 5 Oct 2026 the small call sites were moved to the illustrated family and
+     * the photograph was kept only at 40px and up. This ratchet is that decision.
+     *
+     * Without it the next person who wants a friendly face on a 14px trust chip
+     * re-adds one, and nothing goes red until someone looks at a phone.
+     */
+    const smallSites = [
+      "src/components/EggTeaser.tsx",
+      "src/components/FinalCTA.tsx",
+      "src/components/student-dashboard/ReferFriendStrip.tsx",
+      "src/pages/ContactPage.tsx",
+      "src/pages/EnrollPage.tsx",
+      "src/pages/EnrollNowPage.tsx",
+      "src/pages/SignUpPage.tsx",
+      "src/pages/TrialBookingPage.tsx",
+      "src/pages/ReturningStudentsLandingPage.tsx",
+      "src/pages/StudentDashboard.tsx",
+    ];
+    const offenders = smallSites.filter((p) => {
+      const text = readFileSync(join(repoRoot, p), "utf-8");
+      return text.includes("student-boy-thumbsup") || text.includes("student-girl-heart");
+    });
+    expect(
+      offenders,
+      "these files render the face icons at 14-24px, where a photograph is unreadable.\n" +
+        "Use an illustrated icon there, or raise the size to 40px:\n" +
+        offenders.map((p) => `  ${p}`).join("\n"),
+    ).toEqual([]);
   });
 });

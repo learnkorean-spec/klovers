@@ -30,8 +30,11 @@ import { RETURNING_STUDENT_CODE, WHATSAPP_BASE, SITE_URL } from "@/lib/siteConfi
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 
 const STEP_ICONS = ["books-stack", "badge-blossom", "diploma-scroll"] as const;
-const REFERRAL_ICONS = ["student-girl-heart", "chat-annyeong", "badge-blossom"] as const;
-const WHY_ICONS = ["lightbulb-sprout", "books-stack", "student-boy-thumbsup", "game-crown"] as const;
+// The face icons are photographs now, and these two rows render at 16px inside a
+// Klovers-yellow tile: a photograph is unreadable there and has no outline to hold
+// its edge. The illustrated family is what those sizes and surfaces are for.
+const REFERRAL_ICONS = ["reward-gift", "chat-annyeong", "badge-blossom"] as const;
+const WHY_ICONS = ["lightbulb-sprout", "books-stack", "sprout", "game-crown"] as const;
 
 const PAGE_URL = `${SITE_URL}/welcome-back`;
 

@@ -155,7 +155,7 @@ const EnrollPage = () => {
             <div className="flex items-center justify-center gap-3 flex-wrap pt-1 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1"><KloverIcon name="badge-blossom" className="h-3.5 w-3.5" /> {trustCopy(language).ratingShort}</span>
               <span className="text-border">·</span>
-              <span className="inline-flex items-center gap-1"><KloverIcon name="student-girl-heart" className="h-3.5 w-3.5" /> {trustCopy(language).studentsShort}</span>
+              <span className="inline-flex items-center gap-1"><KloverIcon name="diploma-scroll" className="h-3.5 w-3.5" /> {trustCopy(language).studentsShort}</span>
               <span className="text-border">·</span>
               <span>{t("enrollForm.levels")}</span>
             </div>

@@ -183,7 +183,7 @@ const ContactPage = () => {
                 className="flex items-center gap-4 bg-card border border-border hover:border-primary/50 rounded-2xl px-6 py-4 transition-all hover:shadow-md"
               >
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <KloverIcon name="student-girl-heart" className="h-5 w-5 text-primary" />
+                  <KloverIcon name="chat-annyeong" className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-foreground text-sm">{isAr ? "مجتمع واتساب" : "WhatsApp Community"}</p>

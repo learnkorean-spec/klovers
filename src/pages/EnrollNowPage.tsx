@@ -901,7 +901,7 @@ const EnrollNowPage = () => {
                       classType === "group" ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                     }`}
                   >
-                    <KloverIcon name="student-girl-heart" className="h-6 w-6" />
+                    <KloverIcon name="books-stack" className="h-6 w-6" />
                     <span className="font-semibold text-foreground">{t("enrollNow.groupClasses")}</span>
                     <span className="text-xs text-muted-foreground">{t("enrollNow.learnWithOthers")}</span>
                   </button>
@@ -912,7 +912,7 @@ const EnrollNowPage = () => {
                       classType === "private" ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                     }`}
                   >
-                    <KloverIcon name="student-boy-thumbsup" className="h-6 w-6" />
+                    <KloverIcon name="lightbulb-sprout" className="h-6 w-6" />
                     <span className="font-semibold text-foreground">{t("enrollNow.privateClasses")}</span>
                     <span className="text-xs text-muted-foreground">{t("enrollNow.oneOnOne")}</span>
                   </button>
@@ -1216,7 +1216,9 @@ const EnrollNowPage = () => {
                   {/* Authenticated user info */}
                   <div className="bg-muted rounded-lg p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary border border-charcoal/25 flex items-center justify-center">
-                      <KloverIcon name="student-boy-thumbsup" className="h-5 w-5 text-primary-foreground" />
+                      {/* A member chip on a yellow disc: a photograph would lose its edge
+                          here, and this renders at 20px whatever the source. */}
+                      <KloverIcon name="badge-blossom" className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">{name || email}</p>

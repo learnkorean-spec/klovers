@@ -227,7 +227,7 @@ const SignUpPage = () => {
         <div className="flex items-center gap-3 flex-wrap justify-center text-sm text-muted-foreground">
           <span className="flex items-center gap-1.5 font-medium text-foreground"><KloverIcon name="growth-chart" className="h-3.5 w-3.5 fill-klovers-yellow text-foreground" /> {trust.ratingShort}</span>
           <span className="text-border">·</span>
-          <span className="flex items-center gap-1.5"><KloverIcon name="student-girl-heart" className="h-3.5 w-3.5" /> {trust.studentsShort}</span>
+          <span className="flex items-center gap-1.5"><KloverIcon name="diploma-scroll" className="h-3.5 w-3.5" /> {trust.studentsShort}</span>
           <span className="text-border">·</span>
           <span className="font-semibold text-foreground">{isAr ? "مجاني" : "Free to join"}</span>
         </div>

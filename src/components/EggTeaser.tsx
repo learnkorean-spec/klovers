@@ -87,7 +87,7 @@ const EGG_IMAGES = [
 
 const FEATURES = [
   { icon: "lightbulb-sprout" as KloverIconName, en: "Reveal a clue", ar: "كشف دليل جديد" },
-  { icon: "student-girl-heart" as KloverIconName, en: "Hatch it in your free account", ar: "الفقس داخل الحساب المجاني" },
+  { icon: "sprout" as KloverIconName, en: "Hatch it in your free account", ar: "الفقس داخل الحساب المجاني" },
 ];
 
 const SIGNUP_HREF = `/signup?redirect=${encodeURIComponent("/dashboard")}`;
@@ -278,7 +278,10 @@ const EggTeaser = () => {
                     onClick={() => setOpen(false)}
                     className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-klovers-yellow px-6 text-sm font-bold text-charcoal transition-opacity hover:opacity-90"
                   >
-                    <KloverIcon name="student-boy-thumbsup" className="h-6 w-6" />
+                    {/* A photographed face is a smudge at 24px, and this link sits on a
+                        Klovers-yellow button where a photograph has no outline to hold
+                        its edge. The illustrated family is drawn for exactly that tile. */}
+                    <KloverIcon name="chat-annyeong" className="h-6 w-6" />
                     {isAr ? "إنشاء حساب مجاني" : "Create a free account"}
                   </Link>
                   <p className="mt-2 text-xs text-ivory/60">

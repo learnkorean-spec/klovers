@@ -1175,7 +1175,7 @@ const StudentDashboard = () => {
               const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
               return (
                 <div className="flex flex-wrap items-center gap-3 bg-ivory dark:bg-card border border-charcoal/20 rounded-xl px-4 py-2.5">
-                  <KloverIcon name="student-girl-heart" className="h-8 w-8 sm:h-9 sm:w-9" />
+                  <KloverIcon name="reward-gift" className="h-8 w-8 sm:h-9 sm:w-9" />
                   <span className="flex-1 text-sm text-muted-foreground min-w-0 break-words">
                     <strong className="text-foreground">{t("dashboardPage.referTitle")}</strong> · {t("dashboardPage.referEarn")}
                     {referralCount > 0 && <> · <span className="text-charcoal dark:text-foreground font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}

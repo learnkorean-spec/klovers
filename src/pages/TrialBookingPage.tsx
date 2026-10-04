@@ -903,7 +903,7 @@ const TrialBookingPage = () => {
                   className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
-                    <KloverIcon name="student-girl-heart" className="h-5 w-5" />
+                    <KloverIcon name="reward-gift" className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground">
