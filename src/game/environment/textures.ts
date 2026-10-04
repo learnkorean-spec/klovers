@@ -36,7 +36,7 @@ export function useTiledTexture(paint: Paint, rx: number, ry: number) {
  * different tone, with soft joints and a little wear. Variation comes from
  * tone, not noise, so the floor reads as stone without shimmering.
  */
-export const paintPaving: Paint = (ctx, size) => slabs(ctx, size, NATURAL.paving, 4, 2, 0.11);
+export const paintPaving: Paint = (ctx, size) => slabs(ctx, size, NATURAL.paving, 4, 2, 0.17);
 
 /** Shared slab painter: rows × cols per tile, tone jitter per slab. */
 function slabs(ctx: CanvasRenderingContext2D, size: number, base: string, rows: number, cols: number, tone: number) {
@@ -88,4 +88,4 @@ export const paintPlanks: Paint = (ctx, size) => {
 
 
 /** Courtyard madang: larger, rougher slabs in a warmer earth tone. */
-export const paintMadang: Paint = (ctx, size) => slabs(ctx, size, NATURAL.madang, 3, 2, 0.13);
+export const paintMadang: Paint = (ctx, size) => slabs(ctx, size, NATURAL.madang, 3, 2, 0.19);

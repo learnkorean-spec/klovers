@@ -420,7 +420,14 @@ export default function World(props: WorldProps) {
       }}
     >
       <color attach="background" args={[LIGHT.haze]} />
-      <fog attach="fog" args={[LIGHT.haze, 28, 92]} />
+      {/*
+        Haze held back to the far end (5 Oct 2026). At 28 the near plane sat
+        close enough that the middle of a street was already milky, which
+        flattened the depth the buildings were built to give; the horizon
+        still fades, so a room keeps its air without losing its distance.
+        camera.far is 120, so nothing visible is ever cut off.
+      */}
+      <fog attach="fog" args={[LIGHT.haze, 40, 125]} />
       <Backdrop id={roomId} hx={BACKDROP[roomId].hx} hz={BACKDROP[roomId].hz} />
 
       {/* Warm late-afternoon light: a low golden sun with soft shadows, a

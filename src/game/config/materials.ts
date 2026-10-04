@@ -129,10 +129,16 @@ export const ACCENT = new MeshBasicMaterial({ color: new Color(PALETTE.yellow), 
  */
 export const NATURAL = {
   stoneWarm: "#CBC2AF",
-  /** Packed earth of a madang (courtyard floor). */
-  madang: "#C9BEA8",
-  /** Dressed stone paving of streets and squares. */
-  paving: "#C8BFAD",
+  /**
+   * Packed earth of a madang (courtyard floor). Kept clearly warmer and
+   * darker than the paving on purpose (5 Oct 2026): the two used to sit
+   * within a few points of each other and a courtyard full of both read as
+   * one flat beige plane, which is most of what "the floor looks flat"
+   * meant. Earth and dressed stone are different materials and now look it.
+   */
+  madang: "#C2AA84",
+  /** Dressed stone paving of streets and squares: cooler, lighter, greyer. */
+  paving: "#D3CDC0",
   pine: "#4E7A4C",
   /** Plaster reads ivory under warm light without blowing out to white. */
   plaster: "#F7F1E5",
