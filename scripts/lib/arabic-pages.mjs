@@ -222,6 +222,15 @@ export const ARABIC_PAGES = [
         <li><strong>راقب المواعيد:</strong> البكالوريوس في سبتمبر–أكتوبر، والدراسات العليا في فبراير–مارس.</li>
       </ol>
       <p>المواعيد والمبالغ تُعلن من جديد في كل دورة، فتأكد منها على الصفحة الرسمية قبل أن تبني عليها خطة.</p>
+      <h2>المصادر الرسمية</h2>
+      <ul>
+        <li><a href="https://www.studyinkorea.go.kr/en/plan/scholarship.do?tab=gks-tab1" rel="noopener">NIIED وStudy in Korea — برامج GKS</a></li>
+        <li><a href="https://overseas.mofa.go.kr/eg-ko/brd/m_11508/view.do?seq=1343892" rel="noopener">السفارة الكورية بالقاهرة — حصص مصر</a></li>
+        <li><a href="https://admission.kaist.ac.kr/intl-undergraduate/support/scholarships/kaist" rel="noopener">KAIST — صفحة المنحة</a></li>
+        <li><a href="https://kf.or.kr/kfEng/cm/cntnts/cntntsView.do?cntntsId=1637&amp;mi=2221" rel="noopener">مؤسسة كوريا — زمالة تدريب اللغة الكورية</a></li>
+        <li><a href="https://www.koica.go.kr/ciat/7806/subview.do" rel="noopener">KOICA — برنامج المنح</a></li>
+        <li><a href="https://www.studyinkorea.go.kr/en/plan/scholarship.do?tab=gks-tab3" rel="noopener">برنامج الطلاب المتبادلين GKS</a></li>
+      </ul>
       <p><a href="/ar/free-trial">حجز حصة تجريبية مجانية</a> · <a href="/ar/placement-test">اختبار تحديد المستوى المجاني</a> · <a href="/ar/courses">الدورات</a></p>
     </div>`,
   },

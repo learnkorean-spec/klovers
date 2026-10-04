@@ -64,6 +64,21 @@ describe("the Arabic copy", () => {
     }
   });
 
+  it("the scholarships page names its sources in the Arabic crawlable copy", () => {
+    // Same defect as the English fragment: the official links lived only in the
+    // React card, so the Arabic static HTML made six claims with no sources.
+    const body = ARABIC_PAGES.find((p) => p.path === "/scholarships").body;
+    for (const host of [
+      "studyinkorea.go.kr",
+      "koica.go.kr",
+      "kf.or.kr",
+      "admission.kaist.ac.kr",
+      "overseas.mofa.go.kr",
+    ]) {
+      expect(body.includes(host), host).toBe(true);
+    }
+  });
+
   it("the FAQ markup is exactly the Arabic FAQ the page shows", () => {
     const block = translations.slice(translations.lastIndexOf("faqPage: {"));
     const shown = [...block.matchAll(/\{ question: "(.*?)", answer: "(.*?)", category:/g)].map((m) => ({

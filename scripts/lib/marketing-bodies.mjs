@@ -425,6 +425,15 @@ export const SCHOLARSHIPS_BODY_HTML = `<div id="scholarships-prerendered" lang="
         <li><strong>Watch the deadlines:</strong> undergraduate applications close around September–October, graduate around February–March.</li>
       </ol>
       <p>Dates and amounts are re-issued every cycle. Confirm them on the official page before you plan around them.</p>
+      <h2>Official sources</h2>
+      <ul>
+        <li><a href="https://www.studyinkorea.go.kr/en/plan/scholarship.do?tab=gks-tab1" rel="noopener">NIIED / Study in Korea — the GKS programmes</a></li>
+        <li><a href="https://overseas.mofa.go.kr/eg-ko/brd/m_11508/view.do?seq=1343892" rel="noopener">Korean Embassy in Cairo — Egypt's quotas</a></li>
+        <li><a href="https://admission.kaist.ac.kr/intl-undergraduate/support/scholarships/kaist" rel="noopener">KAIST — scholarship page</a></li>
+        <li><a href="https://kf.or.kr/kfEng/cm/cntnts/cntntsView.do?cntntsId=1637&amp;mi=2221" rel="noopener">The Korea Foundation — Korean Language Training Fellowship</a></li>
+        <li><a href="https://www.koica.go.kr/ciat/7806/subview.do" rel="noopener">KOICA — Scholarship Program</a></li>
+        <li><a href="https://www.studyinkorea.go.kr/en/plan/scholarship.do?tab=gks-tab3" rel="noopener">GKS Exchange Students Program</a></li>
+      </ul>
       <p><a href="/free-trial">Start with the language</a> · <a href="/placement-test">Find your level</a> · <a href="/courses">See the levels</a> · <a href="/blog/topik-exam-guide">Read the TOPIK guide</a></p>
     </div>`;
 

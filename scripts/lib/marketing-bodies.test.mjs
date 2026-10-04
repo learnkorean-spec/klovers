@@ -49,4 +49,21 @@ describe("marketing-bodies", () => {
     }
     expect(t).not.toMatch(/KIIEC|April 19, 2026/);
   });
+
+  it("links the scholarship claims to the funding bodies in the crawlable copy", () => {
+    // The whole point of /scholarships is that a reader can check every claim
+    // at the source. The links used to exist only inside the React card, so a
+    // crawler that runs no JavaScript — the audience this file exists for —
+    // saw six claims and no sources at all.
+    const s = bodies.SCHOLARSHIPS_BODY_HTML;
+    for (const host of [
+      "studyinkorea.go.kr",
+      "koica.go.kr",
+      "kf.or.kr",
+      "admission.kaist.ac.kr",
+      "overseas.mofa.go.kr",
+    ]) {
+      expect(s.includes(host), host).toBe(true);
+    }
+  });
 });
