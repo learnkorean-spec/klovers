@@ -184,6 +184,11 @@ What the rule does not decide: an illustrated *place, object or historic scene*
 `src/config/klovers-world.ts` (`visualSystem.standingRule`) is the source of
 truth and wins if the two ever disagree.
 
+**See also:** `docs/IMAGE-STYLE-AUDIT-AR.md` — the picture-by-picture audit
+behind this rule, with the exact files and the order to fix them, and
+`docs/CHATGPT-PROMPTS-REAL-CHARACTERS-AR.md` for the prompts that produce the
+replacements.
+
 ### Brand colours
 
 Three brand colours plus one status colour (Re, Sep 2026; `src/index.css`
