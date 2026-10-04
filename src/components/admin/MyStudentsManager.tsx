@@ -1339,11 +1339,15 @@ const MyStudentsManager = () => {
 
         {toConfirm.length > 0 && (
           <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-            <p className="flex items-center gap-2 text-sm font-semibold">
+            {/* A <div>, not a <p>: <Badge> renders a <div>, and a <div> inside
+                a <p> is invalid HTML — React reports it as a
+                validateDOMNesting warning, and a real browser's parser would
+                close the paragraph early. */}
+            <div className="flex items-center gap-2 text-sm font-semibold">
               <CalendarCheck className="h-4 w-4" />
               To confirm
               <Badge variant="secondary">{toConfirm.length}</Badge>
-            </p>
+            </div>
             <p className="text-xs text-muted-foreground">
               Classes your schedule says have happened. Nothing is counted until you say so.
             </p>

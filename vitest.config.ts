@@ -23,6 +23,14 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    // Headroom for a parallel run, not slack for slow tests. The suite is 74
+    // files of jsdom + React; on an 8-core box the slowest individual tests
+    // (batch catch-up) measure 4.4-4.9s under full-suite load while taking
+    // ~1.1s alone, so the 5s Vitest default is already marginal here and CI's
+    // runner has fewer cores than that. A genuine hang is still caught: these
+    // values are two to three times the worst measured time, and a real stall
+    // does not resolve at 15s.
+    testTimeout: 15000,
     setupFiles: ["./src/test/setup.ts"],
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",

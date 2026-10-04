@@ -189,7 +189,33 @@ beforeEach(() => {
   vi.clearAllMocks();
   upsertClassMutate.mockResolvedValue(undefined);
   deleteBundleMutate.mockResolvedValue({ auditLogged: true });
-  vi.useFakeTimers({ shouldAdvanceTime: true });
+  // ONLY `Date` is faked. The frozen "now" is all this file needs — nothing
+  // here calls advanceTimersByTime/runAllTimers, and no assertion is
+  // timer-driven.
+  //
+  // Faking every timer instead (the previous `useFakeTimers({ shouldAdvanceTime:
+  // true })`) broke `waitFor`. RTL decides whether to drive its own timeout
+  // with the fake or the real clock by calling `jestFakeTimersAreEnabled()`,
+  // which returns false unless a `jest` global exists — Vitest exposes `vi`,
+  // not `jest`. So waitFor always took its REAL-timers branch, scheduling
+  // setTimeout(1000) and setInterval(50) onto the FAKE clock, where the only
+  // thing advancing it was shouldAdvanceTime's real 20ms tick. Under CPU
+  // contention that tick starves, the fake clock lags real time, waitFor's own
+  // 1000ms timeout never fires, and Vitest's real 5000ms test timeout lands
+  // first: "Test timed out in 5000ms". It hit whichever of the six
+  // `await waitFor(mutation)` tests lost the race that run.
+  //
+  // Leaving setTimeout/setInterval/performance real fixes it at the source:
+  // waitFor gets genuine timers, resolves in milliseconds via its
+  // MutationObserver, and cannot be starved. A real failure still surfaces as
+  // "Timed out in waitFor", which is the message worth having.
+  //
+  // This does NOT make the file green. In a full `npm test` this file still
+  // times out around the CountryCombobox tests, for a separate reason: opening
+  // that popover makes the run wait tens of seconds while doing almost no work
+  // (CPU profiles of a single such test: ~4s of real JS in a 92s run, both
+  // npx and the Vitest main process >95% idle).
+  vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(NOW);
   students = [solafa()];
   balances = new Map([["solafa", balance()]]);
