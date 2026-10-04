@@ -119,14 +119,20 @@ const ScholarshipsPage = () => {
               </Button>
             </div>
 
+            {/* The campus, not the learner (Re, 4 Oct 2026). A scholarships page
+                is about where the money takes you; the portrait of Adam already
+                lives on the "Why Korean" study card, so this page shows the
+                place instead — the cherry-blossom walkway at a Korean
+                university, with no foreground face competing with the six
+                programmes underneath it. */}
             <img
-              src="/assets/world/why-study.webp"
+              src="/assets/world/scholarships-campus.webp"
               alt={tr(
-                "Adam, one of the Klovers learners, walking through a Korean campus in autumn",
-                "آدم، أحد متعلّمي كلوفرز، يسير في حرم جامعي كوري في الخريف",
+                "A Korean campus walkway in spring, cherry blossom overhead, students walking toward the university building",
+                "ممر جامعي كوري في الربيع، أشجار الكرز فوق الممر، وطلاب يسيرون نحو مبنى الجامعة",
               )}
-              width={1200}
-              height={800}
+              width={1024}
+              height={576}
               decoding="async"
               className="mt-10 aspect-[16/7] w-full rounded-3xl border border-ivory/15 object-cover"
             />

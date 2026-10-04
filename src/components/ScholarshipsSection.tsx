@@ -33,13 +33,13 @@ import { SCHOLARSHIP_KINDS, VERIFIED_AT } from "@/constants/koreaScholarships";
 
 const COPY = {
   ar: {
-    imageAlt: "آدم، أحد متعلّمي كلوفرز، يسير في حرم جامعي كوري في الخريف",
+    imageAlt: "ممر جامعي كوري في الربيع، أشجار الكرز فوق الممر، وطلاب يسيرون نحو مبنى الجامعة",
     clubyAlt: "كلوبي، رفيق المذاكرة، يقرأ كتابًا",
     clubyNote: "المنحة تبدأ بورقة واحدة: اقرأ الدليل الرسمي قبل أي شيء آخر.",
     covers: "تغطي المنح",
   },
   en: {
-    imageAlt: "Adam, one of the Klovers learners, walking through a Korean campus in autumn",
+    imageAlt: "A Korean campus walkway in spring, cherry blossom overhead, students walking toward the university building",
     clubyAlt: "Cluby, the study companion, reading a book",
     clubyNote: "A scholarship starts with one page: read the official guideline first.",
     covers: "The six programmes cover",
@@ -122,12 +122,18 @@ const ScholarshipsSection = () => {
             </p>
           </div>
 
-          {/* Adam, on a Korean campus. No text is set over the photograph. */}
+          {/* The campus, not the learner. Re, 4 Oct 2026: the shot of Adam in
+              the yellow blazer was the same face the "Why Korean" study card
+              already carries, and a scholarships section is about the place
+              the money takes you. This is the cherry-blossom walkway at a
+              Korean university, no foreground face, so it reads as the
+              destination rather than as one more portrait. The old file is
+              still the study card's — this is a second asset, not a swap. */}
           <img
-            src="/assets/world/why-study.webp"
+            src="/assets/world/scholarships-campus.webp"
             alt={copy.imageAlt}
-            width={1200}
-            height={800}
+            width={1024}
+            height={576}
             loading="lazy"
             decoding="async"
             className="aspect-[4/3] w-full rounded-3xl object-cover"
