@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { KOREA_SCHOLARSHIPS } from "@/constants/koreaScholarships";
-import { monthsBetween, matchScholarships, countReachable, type MatchInput } from "@/lib/scholarshipMatch";
+import { monthsBetween, matchScholarships, countReachable, studyTimeline, type MatchInput } from "@/lib/scholarshipMatch";
 
 /**
  * scholarshipMatch.test.ts — the numbers a learner is shown about their own
@@ -173,5 +173,26 @@ describe("countReachable — the number the locked box shows", () => {
     const n = countReachable(matchScholarships(graduate));
     expect(n).toBeGreaterThan(countReachable(matchScholarships(schoolLeaver)));
     expect(n).toBeLessThanOrEqual(KOREA_SCHOLARSHIPS.length);
+  });
+});
+
+describe("studyTimeline — the months that are true for everyone", () => {
+  it("names the next rung and how long it takes", () => {
+    expect(studyTimeline("hangul")).toEqual({ currentKey: "hangul", nextKey: "l1", monthsToNext: 6 });
+    expect(studyTimeline("l3")).toEqual({ currentKey: "l3", nextKey: "l4", monthsToNext: 6 });
+  });
+
+  it("says the ladder is finished at the top, rather than inventing a rung", () => {
+    expect(studyTimeline("l6")).toEqual({ currentKey: "l6", nextKey: null, monthsToNext: null });
+  });
+
+  it("returns null for a level it cannot measure", () => {
+    expect(studyTimeline(null)).toBeNull();
+    expect(studyTimeline("")).toBeNull();
+    expect(studyTimeline("nonsense")).toBeNull();
+  });
+
+  it("reads a legacy spelling the same way the rest of the app does", () => {
+    expect(studyTimeline("level_2")).toEqual({ currentKey: "l2", nextKey: "l3", monthsToNext: 6 });
   });
 });

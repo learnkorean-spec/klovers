@@ -4,7 +4,15 @@ import { Lock, GraduationCap, CheckCircle2, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { KOREA_SCHOLARSHIPS } from "@/constants/koreaScholarships";
-import { countReachable, matchScholarships, monthsBetween, type DegreeIntent, type MatchRow } from "@/lib/scholarshipMatch";
+import { getLevelShortLabel } from "@/constants/levels";
+import {
+  countReachable,
+  matchScholarships,
+  monthsBetween,
+  studyTimeline,
+  type DegreeIntent,
+  type MatchRow,
+} from "@/lib/scholarshipMatch";
 
 /**
  * "Which scholarships can your level reach?" — the payoff screen of the
@@ -97,6 +105,7 @@ const ScholarshipMatches = ({ levelKey, signedIn, levelLabel }: Props) => {
    * instead of pretending to have matched anything.
    */
   const hasLevel = monthsBetween(levelKey, "l1") !== null;
+  const timeline = studyTimeline(levelKey);
   if (!hasLevel) {
     return (
       <section className="rounded-xl border border-border bg-card p-4 space-y-3 text-start">
@@ -144,6 +153,31 @@ const ScholarshipMatches = ({ levelKey, signedIn, levelLabel }: Props) => {
           </p>
         </div>
       </div>
+
+      {/* The months that are TRUE for everyone. Most of these programmes ask
+          for no Korean at application, so a learner would see "0 months" almost
+          everywhere; this is the number that is always real and always ours —
+          24 classes a level at one class a week — and it is labelled as the
+          Klovers timeline, never as a requirement of anybody's scholarship. */}
+      {timeline && (
+        <p className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed">
+          <span className="font-bold">
+            {timeline.nextKey
+              ? t("خطتك في كلوفرز: ", "Your Klovers timeline: ")
+              : t("أنت في أعلى درجة في المسار. ", "You are at the top of the ladder. ")}
+          </span>
+          {timeline.nextKey &&
+            t(
+              `من ${getLevelShortLabel(timeline.currentKey, "ar")} إلى ${getLevelShortLabel(timeline.nextKey, "ar")} في نحو ${timeline.monthsToNext} شهور — المستوى ٢٤ حصة، وحصة واحدة في الأسبوع.`,
+              `from ${getLevelShortLabel(timeline.currentKey, "en")} to ${getLevelShortLabel(timeline.nextKey, "en")} in about ${timeline.monthsToNext} months — a level is 24 classes, one class a week.`,
+            )}
+          {!timeline.nextKey &&
+            t(
+              "والمسار كامل من الهانغول حتى المستوى السادس.",
+              "The full path runs from Hangul to Level 6.",
+            )}
+        </p>
+      )}
 
       {/* The one question the level cannot answer. */}
       <div>

@@ -372,3 +372,39 @@ export function matchScholarships(input: MatchInput): MatchRow[] {
 export function countReachable(rows: MatchRow[]): number {
   return rows.filter((r) => r.status !== "not_for_you").length;
 }
+
+export interface StudyStep {
+  /** The level the learner is on now. */
+  currentKey: string;
+  /** The next rung of the ladder, or null at the top of it. */
+  nextKey: string | null;
+  /** Whole months of Klovers study to finish that next rung. */
+  monthsToNext: number | null;
+}
+
+/**
+ * The learner's own next rung, so that "how many months" is a real answer for
+ * EVERYONE, not only for the one programme that asks for Korean up front.
+ *
+ * WHY THIS EXISTS
+ *
+ * Five of the six programmes need no Korean at application, so the honest
+ * `monthsToLanguage` is 0 for them and the number a learner wanted to see would
+ * have been missing almost everywhere. This is the number that IS always true
+ * and always ours: 24 classes a level at one class a week, straight out of
+ * `LEVELS`. It is presented as the Klovers timeline — never as a scholarship
+ * requirement, because it is not one.
+ *
+ * Returns null for a level that cannot be measured, so the caller shows the
+ * placement test instead of a figure.
+ */
+export function studyTimeline(levelKey: string | null | undefined): StudyStep | null {
+  const current = normalizeLevel(String(levelKey ?? ""));
+  const idx = ladderIndex(current);
+  if (idx < 0) return null;
+
+  const next = LEVELS[idx + 1];
+  if (!next) return { currentKey: current, nextKey: null, monthsToNext: null };
+
+  return { currentKey: current, nextKey: next.key, monthsToNext: monthsBetween(current, next.key) };
+}
