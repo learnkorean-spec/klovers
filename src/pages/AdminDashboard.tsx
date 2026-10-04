@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, Users, FileCheck, Clock, Tag, Loader2, Image, Trophy, TrendingUp, Link, BookOpen, GraduationCap } from "lucide-react";
+import { Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, Users, FileCheck, Clock, Tag, Loader2, Image, Palette, Trophy, TrendingUp, Link, BookOpen, GraduationCap } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Package, Lock } from "lucide-react";
 import {
@@ -70,6 +70,7 @@ const BookAssignmentManager = lazy(() => import("@/components/admin/BookAssignme
 const PictureLibrary = lazy(() => import("@/components/admin/PictureLibrary"));
 const BookPlanBoard = lazy(() => import("@/components/admin/BookPlanBoard"));
 const ConversationAudio = lazy(() => import("@/components/admin/ConversationAudio"));
+const BrandSheetPanel = lazy(() => import("@/components/admin/BrandSheetPanel"));
 const AccountsMap = lazy(() => import("@/components/admin/AccountsMap"));
 const TrialClassesTab = lazy(() => import("@/components/admin/TrialClassesTab"));
 
@@ -1129,7 +1130,7 @@ const AdminDashboard = () => {
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
     { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "sales", "promos", "manage"] },
     { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
-    { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "pictures", "conversation-audio"] },
+    { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "pictures", "brand", "conversation-audio"] },
     { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings", "connectors"] },
   ];
 
@@ -1498,6 +1499,11 @@ const AdminDashboard = () => {
                 {inActiveGroup("pictures") && (
                   <TabsTrigger value="pictures" className={TAB_CLS}>
                     <Image className="h-3.5 w-3.5" /> Pictures
+                  </TabsTrigger>
+                )}
+                {inActiveGroup("brand") && (
+                  <TabsTrigger value="brand" className={TAB_CLS}>
+                    <Palette className="h-3.5 w-3.5" /> Brand
                   </TabsTrigger>
                 )}
                 {inActiveGroup("conversation-audio") && (
@@ -1876,6 +1882,15 @@ const AdminDashboard = () => {
               <TabErrorBoundary name="Picture Library">
                 <Suspense fallback={<TabLoader />}>
                   <PictureLibrary />
+                </Suspense>
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* BRAND SHEET TAB */}
+            <TabsContent value="brand">
+              <TabErrorBoundary name="Brand Sheet">
+                <Suspense fallback={<TabLoader />}>
+                  <BrandSheetPanel />
                 </Suspense>
               </TabErrorBoundary>
             </TabsContent>
