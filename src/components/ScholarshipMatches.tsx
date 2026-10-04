@@ -224,7 +224,9 @@ const ScholarshipMatches = ({ levelKey, signedIn, levelLabel }: Props) => {
                         {row.monthsToLanguage === null ? (
                           <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                         ) : row.monthsToLanguage === 0 ? (
-                          <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-klovers-green" aria-hidden="true" />
+                          // Neon green is a FILL, never text (brand palette): the
+                          // tick's body is green, the glyph on it is charcoal.
+                          <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 fill-klovers-green text-charcoal" aria-hidden="true" />
                         ) : (
                           <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                         )}
