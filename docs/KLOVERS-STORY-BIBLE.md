@@ -57,7 +57,7 @@ hero, "More than a class", the community band, the final CTA, and the 404
 pages. To a stranger he is a known quantity, not a discovery.
 
 **Never on the egg-teaser beat.** That beat is where the mystery is on the
-table, so Cluby stays in the egg there — this is homepage narrative slot 7's
+table, so Cluby stays in the egg there — this is homepage narrative slot 8's
 `explicitlyExclude`, and the exception above does not touch it.
 
 ## 3. Human character relationship
@@ -229,11 +229,21 @@ never "you failed" or "bad answer."
 | 4 | Learning journey | male learner + Cluby | Progression |
 | 5 | Practice / games | Cluby | Practice and reward |
 | 6 | Culture | female learner + Cluby | Real-world Korea |
-| 7 | Egg teaser | male + female learner (Cluby explicitly excluded) | Origin-mystery teaser |
-| 8 | Final CTA | Cluby | Invite the visitor forward |
+| 7 | Scholarships | male learner + Cluby (supporting) | Real-world study path |
+| 8 | Egg teaser | male + female learner (Cluby explicitly excluded) | Origin-mystery teaser |
+| 9 | Final CTA | Cluby | Invite the visitor forward |
 
 Rule of thumb: at most one primary character per ordinary section; using all
 three together is reserved for major story moments.
+
+Slot 7 (**Scholarships**, Re, 4 Oct 2026) is the study path given a
+destination: the six programmes an Arabic speaker in Egypt can apply to, each
+linked to the funding body's own page. The male learner owns it because this
+canon already gives him structure, strategy and explanation, and an
+application deadline is exactly that. It reuses **Culture Street / Seoul
+Journey** — no new world was invented for it, and no story trigger fires on the
+homepage, which only teases. If it ever becomes a dashboard goal, it needs a
+real learner-data trigger first.
 
 ## 11. Logged-in product narrative
 

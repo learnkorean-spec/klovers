@@ -19,6 +19,9 @@ export const ARABIC_PAGE_META = [
   // The blog index (28 Sep 2026): /blog lists the English articles only and
   // /ar/blog the Arabic ones. Same title and description as BlogPage's Arabic useSEO.
   { path: "/blog", title: "مجلة كلوفرز: كوريا واللغة الكورية", description: "مقالات وكلمات وقصص وتجارب عن كوريا واللغة الكورية بالعربية، في رحلة من ست محطات مع كلوفرز." },
+  // Scholarships in Korea (4 Oct 2026). Same title and description as
+  // ScholarshipsPage's Arabic useSEO, so the static head and the live page agree.
+  { path: "/scholarships", title: "منح كوريا: ستة برامج رسمية | كلوفرز", description: "ست منح كورية رسمية: منحة الحكومة الكورية، وKAIST، ومؤسسة كوريا، وKOICA، والتبادل الطلابي — التغطية والشروط والمواعيد والمصادر الرسمية." },
 ];
 
 /** The English paths that have an Arabic twin (the homepage pair is separate). */

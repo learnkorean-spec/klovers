@@ -390,6 +390,44 @@ export const HANGUL_STARTER_BODY_HTML = `<div id="hangul-starter-prerendered" la
     </div>`;
 
 
+/**
+ * Scholarships in Korea (4 Oct 2026).
+ *
+ * Mirrors src/constants/koreaScholarships.ts and the live page. It carries no
+ * monthly allowance for GKS or KOICA on purpose: both funding bodies publish
+ * their amounts in an annual PDF guideline rather than in HTML, and the
+ * official university pages disagree with each other on the GKS figure, so the
+ * fragment states what is covered and links to the provider instead of quoting
+ * a number a reader might plan around. The KAIST, Korea Foundation and GKS
+ * exchange figures ARE printed, because a single provider page states each one.
+ */
+export const SCHOLARSHIPS_BODY_HTML = `<div id="scholarships-prerendered" lang="en" dir="ltr">
+      <h1>Scholarships in Korea: six official programmes</h1>
+      <p>Six Korean government and university scholarships, what each one covers, who qualifies and when to apply — every card linked to the funding body's own page. Facts verified on 4 October 2026.</p>
+      <h2>Global Korea Scholarship (GKS)</h2>
+      <p>Two tracks: undergraduate for applicants under 25, graduate for applicants under 40. The award covers round-trip airfare, a full year of Korean language training, tuition, a monthly allowance and health insurance, and no TOPIK level is required to apply. Egypt holds its own annual quota on both tracks, and applications go through the Korean embassy or directly to a GKS-designated university. For Egypt the embassy window ran 15–30 September in the 2026 cycle.</p>
+      <h3>What the page does not print</h3>
+      <p>The monthly allowance is set out in NIIED's annual guideline PDF, not on its website, and official university pages quote different figures for the same year. Read the current guideline for the number that applies to your cycle.</p>
+      <h2>KAIST Scholarship</h2>
+      <p>Tuition exempt for eight semesters, KRW 350,000 a month, and medical insurance — granted automatically to every admitted international undergraduate, provided the student keeps a GPA above 2.7 out of 4.3 after the first year. Instruction is in English, and no TOPIK level is required.</p>
+      <h2>Korean Language Training Fellowship — The Korea Foundation</h2>
+      <p>A language-only fellowship, not a degree: six months extendable to twelve, with a monthly living allowance, a one-time travel allowance, tuition and health insurance. The Middle East is named as an eligible region, and applicants must already understand and speak basic Korean.</p>
+      <h2>KOICA Scholarship Program</h2>
+      <p>A fully funded master's for public-sector officials, with official government nomination required, running seventeen months. KOICA re-issues the list of eligible countries every year, so it has to be confirmed with the KOICA office or the Korean embassy in Cairo before applying.</p>
+      <h2>GKS Exchange Students Program</h2>
+      <p>One semester in Korea with a monthly allowance and round-trip economy airfare, for students enrolled at a university that holds an agreement with a designated Korean university, in a degree exchange programme. Students cannot apply directly: their home university nominates them.</p>
+      <h2>The route, in five steps</h2>
+      <ol>
+        <li><strong>Choose the track:</strong> embassy or university, each with its own deadline.</li>
+        <li><strong>Read the current guideline:</strong> the annual PDF carries the amounts and the eligible-country list.</li>
+        <li><strong>Sort the language proof:</strong> GKS does not ask for TOPIK at application and includes a language year; KOICA and KAIST run in English.</li>
+        <li><strong>Prepare the documents:</strong> transcripts, apostilled certificates, recommendation letters and a study plan.</li>
+        <li><strong>Watch the deadlines:</strong> undergraduate applications close around September–October, graduate around February–March.</li>
+      </ol>
+      <p>Dates and amounts are re-issued every cycle. Confirm them on the official page before you plan around them.</p>
+      <p><a href="/free-trial">Start with the language</a> · <a href="/placement-test">Find your level</a> · <a href="/courses">See the levels</a> · <a href="/blog/topik-exam-guide">Read the TOPIK guide</a></p>
+    </div>`;
+
 export const MARKETING_FAQ = {
   "/faq": [
     {

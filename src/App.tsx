@@ -78,6 +78,9 @@ const AffiliatePage = lazy(() => import("./pages/AffiliatePage"));
 const LearnKoreanArabicSpeakersPage = lazy(() => import("./pages/LearnKoreanArabicSpeakersPage"));
 const TopikExamPage = lazy(() => import("./pages/TopikExamPage"));
 const KDramaLearningPage = lazy(() => import("./pages/KDramaLearningPage"));
+// The scholarships page carries a real Arabic twin (/ar/scholarships), listed in
+// scripts/lib/arabic-page-meta.mjs and scripts/lib/arabic-pages.mjs.
+const ScholarshipsPage = lazy(() => import("./pages/ScholarshipsPage"));
 const InterviewTrainingPage = lazy(() => import("./pages/InterviewTrainingPage"));
 const KoreanInterviewPage = lazy(() => import("./pages/KoreanInterviewPage"));
 const ReturningStudentsLandingPage = lazy(() => import("./pages/ReturningStudentsLandingPage"));
@@ -203,6 +206,8 @@ const App = () => (
                 <Route path="/ar/free-trial" element={<FreeTrialPage />} />
                 {/* The Arabic blog index (28 Sep 2026): Arabic articles only. */}
                 <Route path="/ar/blog" element={<BlogPage />} />
+                {/* The scholarships page has an Arabic twin too. */}
+                <Route path="/ar/scholarships" element={<ScholarshipsPage />} />
                 {/* Printed in the books as a QR — never change this path. */}
                 <Route path="/c/:code" element={<ConversationPage />} />
                 <Route path="/courses" element={<CoursesPage />} />
@@ -258,6 +263,7 @@ const App = () => (
                 <Route path="/learn-korean-arabic-speakers" element={<LearnKoreanArabicSpeakersPage />} />
                 <Route path="/topik-exam-preparation" element={<TopikExamPage />} />
                 <Route path="/learn-korean-kdramas" element={<KDramaLearningPage />} />
+                <Route path="/scholarships" element={<ScholarshipsPage />} />
                 <Route path="/interview-training" element={<KoreanInterviewPage />} />
                 <Route path="/welcome-back" element={<ReturningStudentsLandingPage />} />
                 {/* The old web book (HangulBookPage) was removed on 27 Sep 2026 (Re: it is

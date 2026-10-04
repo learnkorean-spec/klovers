@@ -111,7 +111,7 @@ describe("KLOVERS_WORLD — internal consistency", () => {
     ]);
   });
 
-  it("keeps slot 7 excluding Cluby, which is what the egg teaser depends on", () => {
+  it("keeps the egg-teaser excluding Cluby, which is what the egg teaser depends on", () => {
     const teaser = KLOVERS_WORLD.homepageNarrative.find((s) => s.section === "egg-teaser");
     expect(teaser).toBeDefined();
     expect(teaser!.explicitlyExclude).toContain("cluby");
@@ -166,6 +166,7 @@ describe("homepage narrative — the front page still tells the story", () => {
     "learning-journey": "LearningRoadmap",
     "practice-games": "HomeGamesSection",
     culture: "MoreThanAClass",
+    scholarships: "ScholarshipsSection",
     "egg-teaser": "EggTeaser",
     "final-cta": "FinalCTA",
   };

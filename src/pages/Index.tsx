@@ -20,6 +20,9 @@ const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"
 const PlacementTestCTA = lazy(() => import("@/components/PlacementTestCTA"));
 const MoreThanAClass = lazy(() => import("@/components/MoreThanAClass"));
 const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
+// Homepage narrative slot 7: the scholarships panel. The egg teaser stays the
+// last story beat before the final CTA, so this sits above it.
+const ScholarshipsSection = lazy(() => import("@/components/ScholarshipsSection"));
 const HomeShopShelf = lazy(() => import("@/components/HomeShopShelf"));
 const EggTeaser = lazy(() => import("@/components/EggTeaser"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
@@ -160,6 +163,7 @@ const Index = () => {
       { id: "placement-cta", label: "section_placement_cta" },
       { id: "testimonials", label: "section_testimonials" },
       { id: "meet-teacher", label: "section_meet_teacher" },
+      { id: "scholarships", label: "section_scholarships" },
       { id: "egg-teaser", label: "section_egg_teaser" },
       { id: "final-cta", label: "section_final_cta" },
     ];
@@ -233,7 +237,13 @@ const Index = () => {
         <Suspense fallback={<SectionFallback />}>
           <HomeFAQ />
         </Suspense>
-        {/* Story — homepageNarrative slot 7, "egg-teaser" (origin mystery, no Cluby) */}
+        {/* Study in Korea — the six scholarship programmes, with their sources */}
+        <div id="scholarships">
+          <Suspense fallback={<SectionFallback />}>
+            <ScholarshipsSection />
+          </Suspense>
+        </div>
+        {/* Story — homepageNarrative slot 8, "egg-teaser" (origin mystery, no Cluby) */}
         <div id="egg-teaser">
           <Suspense fallback={<SectionFallback />}>
             <EggTeaser />

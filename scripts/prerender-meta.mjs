@@ -42,6 +42,7 @@ import {
   KDRAMAS_BODY_HTML,
   MARKETING_FAQ,
   PLACEMENT_TEST_BODY_HTML,
+  SCHOLARSHIPS_BODY_HTML,
   TOPIK_BODY_HTML,
   WELCOME_BACK_BODY_HTML,
 } from "./lib/marketing-bodies.mjs";
@@ -830,6 +831,15 @@ const MARKETING_ROUTES = [
       "Returning Klovers students get 20% off their next enrollment, plus extra savings when friends join. Pick up where you left off.",
     body: WELCOME_BACK_BODY_HTML,
     faq: MARKETING_FAQ["/welcome-back"],
+  },
+  // Korean scholarships (4 Oct 2026). The Arabic twin is built from
+  // scripts/lib/arabic-pages.mjs below, like the other seven pairs.
+  {
+    path: "/scholarships",
+    title: "Korean Scholarships: Six Official Programmes",
+    description:
+      "Six official Korean scholarships — GKS, KAIST, the Korea Foundation, KOICA and exchange — what each covers, who qualifies, when to apply, and the official source.",
+    body: SCHOLARSHIPS_BODY_HTML,
   },
   {
     path: "/hangul-starter",

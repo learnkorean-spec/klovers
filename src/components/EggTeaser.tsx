@@ -13,15 +13,17 @@ import {
 } from "@/components/ui/dialog";
 
 /**
- * Homepage narrative slot 7 — "egg-teaser" (src/config/klovers-world.ts,
+ * Homepage narrative slot 8 — "egg-teaser" (src/config/klovers-world.ts,
  * KLOVERS_WORLD.homepageNarrative). storyFunction: origin_mystery_teaser.
+ * It moved from 7 to 8 on 4 Oct 2026, when the scholarships panel took
+ * slot 7; it is still the last story beat before the final CTA.
  *
  * Canon: the homepage only TEASES. The popup shows the egg waking —
  * dormant → small crack → glow — with the same egg images the student
  * dashboard uses (public/assets/story/egg-0/1/2.webp), but it never hatches
  * here: hatching happens on the student dashboard, from the student's real
  * learning (Re, 24 Sep 2026). Cluby is not drawn in this beat
- * (homepageNarrative slot 7), though Re allows him on public pages
+ * (homepageNarrative slot 8), though Re allows him on public pages
  * before he hatches (25 Sep 2026).
  *
  * 25 Sep 2026 (Arabic voice): Re chose Modern Standard Arabic, neutral in

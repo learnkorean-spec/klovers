@@ -51,6 +51,11 @@ const STATIC_PAGES = [
   { loc: "/topik-exam-preparation", priority: "0.9", changefreq: "monthly" },
   { loc: "/learn-korean-kdramas", priority: "0.8", changefreq: "monthly" },
   { loc: "/interview-training", priority: "0.8", changefreq: "monthly" },
+  // Korean scholarships (4 Oct 2026). High intent for the Arabic market —
+  // "منح كوريا" is a real search — and the only page on the site that names
+  // providers and links every claim to the funding body itself. Its Arabic twin
+  // is added by the loop below from scripts/lib/arabic-page-meta.mjs.
+  { loc: "/scholarships", priority: "0.9", changefreq: "monthly" },
   // Returning-student offer. Re, 25 Sep 2026: the 20% offer and its code stay
   // public and go into marketing, so the page is listed again.
   { loc: "/welcome-back", priority: "0.7", changefreq: "monthly" },

@@ -107,7 +107,7 @@ export const KLOVERS_WORLD = {
      * Marketing is different on purpose. The homepage teases, and homepageNarrative
      * puts Cluby in the hero, the games beat, the culture section and the final
      * CTA — to a visitor who has an egg they have never hatched. He is a known
-     * quantity there, not a discovery. The egg-teaser beat (slot 7) still
+     * quantity there, not a discovery. The egg-teaser beat (slot 8) still
      * excludes him, because THAT is the beat where the mystery is on the table.
      */
     clubyVisibility: {
@@ -759,8 +759,43 @@ export const KLOVERS_WORLD = {
         "real_world_korea",
     },
 
+    /**
+     * Scholarships in Korea (Re, 4 Oct 2026).
+     *
+     * The study path the learner is already walking, given a destination: the
+     * six scholarship programmes an Arabic speaker in Egypt can actually apply
+     * to, each one linked to the funding body's own page.
+     *
+     * WHO OWNS IT: the male learner. Adam already carries structure, strategy
+     * and explanation in this canon, and a scholarship application is exactly
+     * that — deadlines, documents, eligibility. Cluby rides along as the
+     * supporting character (he is reading, one note, one line), which is the
+     * same shape as the culture beat above: one primary character, one
+     * companion, never the trio.
+     *
+     * NO NEW WORLD. This beat is delivered inside Culture Street / Seoul
+     * Journey, the two worlds already defined below. Inventing a "university
+     * road" world would be new lore for a marketing section, which section 9
+     * of the story bible forbids.
+     *
+     * NO STORY TRIGGER ON THE HOMEPAGE. Marketing teases; the logged-in
+     * product is where a learner experiences story. If this ever becomes a
+     * dashboard goal ("my university plan"), it needs a real trigger — course
+     * level or a placement result — before it ships as a story feature.
+     */
     {
       order: 7,
+      section: "scholarships",
+      characters: [
+        "maleLearner",
+        "cluby",
+      ],
+      storyFunction:
+        "real_world_study_path",
+    },
+
+    {
+      order: 8,
       section: "egg-teaser",
       characters: [
         "maleLearner",
@@ -774,7 +809,7 @@ export const KLOVERS_WORLD = {
     },
 
     {
-      order: 8,
+      order: 9,
       section: "final-cta",
       characters: [
         "cluby",
