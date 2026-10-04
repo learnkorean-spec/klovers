@@ -259,7 +259,7 @@ function isCrawlable(path, rules) {
   return !best || best.type === "allow";
 }
 
-// X-Robots-Tag on auth-only routes (live only).
+// X-Robots-Tag on routes that must never be indexed (live only).
 //
 // These routes also set <meta name="robots" content="noindex, nofollow"> from
 // JavaScript via useSEO({ noindex: true }). That meta tag only exists after the
@@ -267,20 +267,61 @@ function isCrawlable(path, rules) {
 // response header carries the same instruction with no JS execution required,
 // which is the point of adding it — and the point of asserting it here.
 //
+// The list is split by what robots.txt does with each route, because the two
+// mechanisms only work together in one of the two arrangements:
+//
+//   crawlable + header  → the crawler fetches, reads the header, drops the URL.
+//                         This is the only arrangement that can REMOVE a URL
+//                         that is already in the index (docs/SEO_DIAGNOSIS.md §9).
+//   disallowed + header → the crawler never fetches, so it never reads the
+//                         header; blocking is what keeps the URL out. The header
+//                         is defence in depth for anything that does not consult
+//                         robots.txt. Fine for URLs that were never indexed, and
+//                         it saves crawl budget, but it can never deindex.
+//
+// So a route belongs in the blocked list only while there is nothing to deindex.
+// If Search Console ever reports one of them as indexed, move it to the
+// crawlable list — that is the fix, not another Disallow rule.
+//
 // Header-only, so it cannot be checked from dist/; skipped in dist mode exactly
 // like the www redirect above.
-const NOINDEX_ROUTES = [
+const NOINDEX_CRAWLABLE_ROUTES = [
   "/login",
   "/signup",
   "/forgot-password",
   "/reset-password",
-  "/admin/login",
+  "/my-lessons",
+  "/practice-interview",
 ];
 
-// Public auth pages: must NOT be disallowed.
-const MUST_CRAWL = NOINDEX_ROUTES.filter((r) => !r.startsWith("/admin"));
-// Admin login: must stay disallowed.
-const MUST_BLOCK = NOINDEX_ROUTES.filter((r) => r.startsWith("/admin"));
+const NOINDEX_BLOCKED_ROUTES = [
+  "/admin/login",
+  "/admin",
+  "/dashboard",
+  "/dashboard/schedule",
+  "/profile",
+  "/pay/example-enrollment-id",
+  "/resubmit-schedule",
+  "/textbook",
+  "/review",
+  "/daily-quiz",
+  "/complete-profile",
+  "/trial-confirm",
+  "/trial-booking",
+  "/rsvp",
+  "/progress-report",
+  "/certificate",
+  "/hangul-book",
+  "/trial-book",
+  "/enrollment-status",
+];
+
+const NOINDEX_ROUTES = [...NOINDEX_CRAWLABLE_ROUTES, ...NOINDEX_BLOCKED_ROUTES];
+
+// Must NOT be disallowed — the header is the enforcement.
+const MUST_CRAWL = NOINDEX_CRAWLABLE_ROUTES;
+// Must stay disallowed — the block is the enforcement.
+const MUST_BLOCK = NOINDEX_BLOCKED_ROUTES;
 
 const robotsRules = robotsErr ? [] : starGroupRules(robotsTxt);
 const wronglyBlocked = robotsErr ? [] : MUST_CRAWL.filter((r) => !isCrawlable(r, robotsRules));
@@ -345,7 +386,7 @@ const summary = [
   ["robots.txt names 1 sitemap", robotsErr ? `error: ${robotsErr}` : robotsSitemaps.join(", ") || "(none)", tick(robotsOk)],
   ["www 301/308 -> apex", wwwDetail, tick(wwwOk)],
   ["robots.txt matches noindex strategy", crawlableDetail, tick(crawlableOk)],
-  ["auth routes: X-Robots-Tag noindex", noindexDetail, tick(noindexOk)],
+  ["noindex routes: X-Robots-Tag", noindexDetail, tick(noindexOk)],
 ];
 
 const w0 = Math.max(...summary.map((r) => r[0].length));
