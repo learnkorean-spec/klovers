@@ -248,7 +248,21 @@ const HeroSection = () => {
         />
 
         <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 text-center pt-8 pb-24 sm:pb-32">
-          <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-[4%] lg:max-w-2xl flex flex-col items-center gap-5 sm:gap-6">
+          {/*
+            4 Oct 2026: `lg:max-w-2xl` -> `lg:max-w-4xl`.
+
+            The note above says the headline column is 5xl "so the halves stay
+            on one line at desktop width too", but the column was capped at 2xl
+            (672px). At the lg size of clamp(2.25rem, 5vw, 3.75rem) - 60px at
+            1440 - "Start Speaking Korean" needs about 700px, so the h1 broke
+            into FOUR lines on every desktop, not the two the note describes:
+            Start Speaking / Korean / From Your First Live / Class.
+
+            4xl is 896px, which fits the longer half ("From Your First Live
+            Class", ~870px) on one line. The paragraph is unaffected: it carries
+            its own max-w-2xl below.
+          */}
+          <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-[4%] lg:max-w-4xl flex flex-col items-center gap-5 sm:gap-6">
 
             {/* 1. Headline. Yellow as TYPE is correct here and only here - the
                 ground behind it is the charcoal scrim above, never a light
@@ -329,65 +343,10 @@ const HeroSection = () => {
                 : "Small groups · English & Arabic · Beginner friendly"}
             </p>
 
-            {/* 5. ONE next class, in the visitor's own time.
+            {/* 5 and 6 (the next-class chip and the monthly-window caveat) moved
+                below the promise cards on 4 Oct 2026 - see the note there. */}
 
-                The chip's scrim is bg-charcoal/75, not /55. It sits on the
-                photo, so the scrim is the only thing standing between ivory
-                text and a bright sky. At /55 the chip's own background lands
-                around L=0.17 over daylight, putting the ivory text at ~4.4:1
-                and the muted time-zone suffix near 2.7:1. At /75 the same text
-                is ~7:1 and ~4.9:1 - and the section reads the same, because the
-                scrim is already blurred and tinted. */}
-            {nextClass && (
-              <div className="inline-flex items-center gap-2 bg-charcoal/75 border border-live-bright/40 backdrop-blur-sm rounded-full px-4 py-1.5 text-xs sm:text-sm text-ivory">
-                <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-bright opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-live-bright" />
-                </span>
-                <span>
-                  <span className="font-semibold text-live-bright">{isAr ? "أقرب حصة مجانية:" : "Next free class:"}</span>{" "}
-                  {nextClass.day} · {nextClass.time} {isAr ? "بالتوقيت المحلي" : "your time"}
-                  {nextClass.zoneName && <span className="text-ivory/75"> ({nextClass.zoneName})</span>}
-                </span>
-              </div>
-            )}
-
-            {/* 6. How often the chip can change — and the door that is not
-                monthly at all.
-
-                The chip above is honest about the soonest class and silent
-                about the one after it. Trial classes run on an
-                admin-configured monthly window (supabase/functions/book-trial
-                constrains every booking to it), so a visitor who cannot make
-                the date shown has no way to tell whether the alternative is
-                next week or next quarter — and the honest answer is a month.
-                Saying so is the point of this line.
-
-                Deliberately NOT stated here: which days of the month. The
-                schedule is configuration, not a constant, so the page that
-                reads the live slots off the database (/free-trial) is the page
-                that names them. This line carries only what is true whenever
-                the window happens to fall.
-
-                Alongside it is the one route that is open every day of the
-                month: /placement-test is public, no account, no booking. It is
-                what someone who cannot wait a month should be given instead of
-                a dead end. */}
-            <p
-              className="text-ivory/85 text-xs sm:text-sm max-w-2xl"
-              style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}
-            >
-              {isAr
-                ? "الحصص التجريبية تُفتح مرة كل شهر. وإن لم يناسبك هذا الموعد، فاختبار تحديد المستوى مفتوح كل يوم: "
-                : "Trial classes open once a month. If this date does not suit you, the placement test is open every day: "}
-              <Link
-                to="/placement-test"
-                onClick={() => { try { logLeadEvent({ source_type: "placement_test", cta_label: "homepage_hero_placement", metadata: { language } }); } catch {} }}
-                className="font-semibold text-klovers-yellow underline underline-offset-4 hover:text-klovers-yellow/80"
-              >
-                {isAr ? "اختبر مستواك الآن" : "Take the placement test"}
-              </Link>
-            </p>
+            {/* 6 (the monthly-window caveat) also moved below the cards. */}
           </div>
         </div>
 
@@ -456,6 +415,54 @@ const HeroSection = () => {
               <p className="mt-1 text-xs sm:text-sm leading-relaxed text-charcoal/80">{body}</p>
             </div>
           ))}
+        </div>
+
+        {/* ── The next class, and the one caveat that keeps it honest ──
+
+            These two used to sit in the hero column, between the proof line
+            and the Play button. The hero's own note (23 Sep 2026) says FIVE
+            THINGS, NO MORE - headline, one paragraph, one action, one proof
+            line, and at most ONE next-class line. By 3 Oct 2026 the first
+            screen carried seven, with the chip and a paragraph of caveat
+            competing with the headline for the reader's first glance.
+
+            They move together, not one at a time: the chip is only honest
+            because the paragraph explains that the trial window is monthly.
+            Split apart, "Next free class: Friday, Nov 6" reads like any date
+            the visitor could book.
+
+            Restyled, because this is now the page background rather than the
+            photo scrim they were written against: ivory-on-charcoal here would
+            be invisible, so they use theme tokens and follow light and dark
+            mode. The ping is motion-safe now too - it is decorative, and it
+            ran regardless of prefers-reduced-motion before. */}
+        <div className="mt-8 flex flex-col items-center gap-3 text-center">
+          {nextClass && (
+            <div className="inline-flex items-center gap-2 rounded-full border border-live-bright/40 bg-card px-4 py-1.5 text-xs text-foreground sm:text-sm">
+              <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-live-bright opacity-75 motion-safe:animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-live-bright" />
+              </span>
+              <span>
+                <span className="font-semibold text-foreground">{isAr ? "أقرب حصة مجانية:" : "Next free class:"}</span>{" "}
+                {nextClass.day} · {nextClass.time} {isAr ? "بالتوقيت المحلي" : "your time"}
+                {nextClass.zoneName && <span className="text-muted-foreground"> ({nextClass.zoneName})</span>}
+              </span>
+            </div>
+          )}
+
+          <p className="max-w-2xl text-xs text-muted-foreground sm:text-sm">
+            {isAr
+              ? "الحصص التجريبية تُفتح مرة كل شهر. وإن لم يناسبك هذا الموعد، فاختبار تحديد المستوى مفتوح كل يوم: "
+              : "Trial classes open once a month. If this date does not suit you, the placement test is open every day: "}
+            <Link
+              to="/placement-test"
+              onClick={() => { try { logLeadEvent({ source_type: "placement_test", cta_label: "homepage_hero_placement", metadata: { language } }); } catch {} }}
+              className="font-semibold text-foreground underline underline-offset-4 hover:text-foreground/80"
+            >
+              {isAr ? "اختبر مستواك الآن" : "Take the placement test"}
+            </Link>
+          </p>
         </div>
       </div>
     </>

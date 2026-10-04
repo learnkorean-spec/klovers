@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * One bottom-anchored overlay at a time.
@@ -18,10 +18,16 @@
  * intended maximum: WhatsApp, plus whichever of these wins.
  *
  * Priority is the array below, highest first:
- * 1. exitNudge - the visitor is leaving; this is the last ask.
- * 2. stickyBar - the standing ask while they read.
- * 3. installPrompt - useful, but it is not why anyone came to the page.
- * 4. interviewChip - a feature promo, and the one to sacrifice.
+ * 1. consent - the cookie notice. Not a marketing ask at all: it is the one
+ *    overlay the visitor must answer before analytics may run, so it outranks
+ *    every pitch below it and they all wait. Added 4 Oct 2026, when the notice
+ *    was still pinned to the TOP with z-[150] and painted over the fixed
+ *    header: on desktop it hid the whole nav, and on a phone it hid the logo
+ *    and the first line of the h1.
+ * 2. exitNudge - the visitor is leaving; this is the last ask.
+ * 3. stickyBar - the standing ask while they read.
+ * 4. installPrompt - useful, but it is not why anyone came to the page.
+ * 5. interviewChip - a feature promo, and the one to sacrifice.
  *
  * In practice the chip now appears only once the enrol bar has been
  * dismissed. That is the intended trade, not an oversight: if the chip should
@@ -41,9 +47,9 @@
  * in the tree, and wrapping the app in a provider to coordinate four
  * booleans would be the heavier change.
  */
-export type BottomSlot = "exitNudge" | "stickyBar" | "installPrompt" | "interviewChip";
+export type BottomSlot = "consent" | "exitNudge" | "stickyBar" | "installPrompt" | "interviewChip";
 
-const PRIORITY: BottomSlot[] = ["exitNudge", "stickyBar", "installPrompt", "interviewChip"];
+const PRIORITY: BottomSlot[] = ["consent", "exitNudge", "stickyBar", "installPrompt", "interviewChip"];
 
 const claimed = new Set<BottomSlot>();
 const listeners = new Set<() => void>();

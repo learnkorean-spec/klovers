@@ -28,6 +28,57 @@
         border: 0;
       }
     </style>
+
+    <!--
+      No JavaScript at all (4 Oct 2026).
+
+      The rule above is what stops the prerendered body flashing as raw text
+      before React replaces it (see the note above it). With scripting switched
+      off nothing ever replaces it - so the same rule also made a no-JS visit a
+      completely blank ivory page, with the content sitting in the document and
+      unreadable.
+
+      This override lives in <noscript>, so it applies only to a browser that
+      is not going to run the app; the styled page is untouched. It restores
+      normal flow and a readable measure instead of the 1px clip, and gives the
+      plain HTML enough typography to be worth reading - the stylesheet that
+      would normally do that is loaded by the app.
+    -->
+    <noscript>
+      <style>
+        #root > [id$="-prerendered"] {
+          position: static !important;
+          width: auto !important;
+          height: auto !important;
+          margin: 0 auto !important;
+          padding: 2rem 1.25rem 4rem !important;
+          overflow: visible !important;
+          clip: auto !important;
+          white-space: normal !important;
+          max-width: 44rem;
+          line-height: 1.7;
+        }
+        #root > [id$="-prerendered"] h1 {
+          font-size: 1.75rem;
+          line-height: 1.25;
+          margin: 0 0 1rem;
+        }
+        #root > [id$="-prerendered"] h2 {
+          font-size: 1.25rem;
+          line-height: 1.3;
+          margin: 2rem 0 0.5rem;
+        }
+        #root > [id$="-prerendered"] ul {
+          padding-left: 1.25rem;
+        }
+        #root > [id$="-prerendered"] li {
+          margin: 0.4rem 0;
+        }
+        #root > [id$="-prerendered"] a {
+          text-decoration: underline;
+        }
+      </style>
+    </noscript>
     <meta name="description" content="Learn Korean online with Klovers — interactive lessons, a real, experienced teacher, placement tests, and gamified learning for all levels." />
     <meta name="author" content="Klovers" />
     <meta name="robots" content="index, follow" />
