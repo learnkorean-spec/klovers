@@ -82,8 +82,8 @@
  * bytes the database holds.
  */
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { dirname, join } from "node:path";
 
 import { writeProposal } from "../lib/content-edit.mjs";
 import { createReadOnlyStore } from "../lib/content-edit-supabase-store.mjs";
@@ -232,24 +232,17 @@ export function validateEdits(edits) {
 }
 
 /**
- * Direct-run guard, in a form that works on Windows as well as Linux.
+ * Direct-run guard, in the form that works on Windows as well as Linux.
  *
- * The other scripts in this directory compare `import.meta.url` to
+ * The other proposal scripts compared `import.meta.url` to
  * `` `file://${process.argv[1]}` ``, which is false on Windows — argv[1] is
- * `D:\...` while import.meta.url is `file:///D:/...` — so the script silently
- * does nothing there and exits 0. Comparing resolved paths instead works on
- * both, which matters because the machine this repo is developed on is Windows.
+ * `D:\...` while import.meta.url is `file:///D:/...` — so those scripts did
+ * nothing there and exited 0. `pathToFileURL` is the normalisation that makes
+ * the comparison hold on both, and is what scripts/content-audit.mjs already
+ * used. The same rule is now asserted for every script under scripts/ by
+ * scripts/direct-run-guard.test.mjs.
  */
-const isDirectRun = (() => {
-  if (!process.argv[1]) return false;
-  try {
-    return resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-  } catch {
-    return false;
-  }
-})();
-
-if (isDirectRun) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   validateEdits(EDITS);
 
   const store = createReadOnlyStore();
