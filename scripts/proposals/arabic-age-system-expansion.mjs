@@ -240,7 +240,7 @@ export function validateEdits(edits) {
  * nothing there and exited 0. `pathToFileURL` is the normalisation that makes
  * the comparison hold on both, and is what scripts/content-audit.mjs already
  * used. The same rule is now asserted for every script under scripts/ by
- * scripts/direct-run-guard.test.mjs.
+ * scripts/check-direct-run-guards.mjs (`npm run check:guards`).
  */
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   validateEdits(EDITS);

@@ -13,6 +13,7 @@
     "content:rehearsal": "node scripts/content-edit-rehearsal.mjs",
     "seo:check": "node scripts/seo-check.mjs --dist dist",
     "seo:check:live": "node scripts/seo-check.mjs --base https://kloversegy.com",
+    "check:guards": "node scripts/check-direct-run-guards.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
