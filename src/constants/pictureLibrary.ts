@@ -51,6 +51,25 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "kb_home_hangul_village_v1", label: "قرية الهانغل — آدم وكلوبي عند اللافتة — مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
   { file: "kb_home_market_v1", label: "سوق المفردات — لينا وكلوبي والتفاح — مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
   { file: "kb_home_conv_cafe_v1", label: "مقهى المحادثة — آدم ولينا وكلوبي على السور — مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
+  // Homepage batch 2 (Re, 4 Oct 2026): the SAME TEN SCENES as batch 1 above,
+  // regenerated in KLOVERS REAL once the standing rule settled that the theme is
+  // always the real scenes. The names carry the pairing on purpose — every _v2 sits
+  // directly under the _v1 it answers, so a scene is never regenerated twice.
+  //
+  // Candidates, not placements: none of these is wired to a page yet. The one thing
+  // to check before any of them goes live is Cluby's eyes — they are closed (happy
+  // squint) in most of these, and the brand sheet's on-model panel tests open brown
+  // eyes, which is exactly the test the first three hero takes were held to.
+  { file: "kb_home_hero_v2", label: "الصفحة الرئيسية — الثلاثة يقرأون على شرفة هانوك وقت الغروب (hero) — KLOVERS REAL" },
+  { file: "kb_home_career_v2", label: "لماذا الكورية — العمل: آدم ولينا أمام اللابتوب بإطلالة سيول — KLOVERS REAL" },
+  { file: "kb_home_culture_v2", label: "لماذا الكورية — الثقافة: لينا على اللابتوب في غرفة هانوك — KLOVERS REAL" },
+  { file: "kb_home_study_v2", label: "لماذا الكورية — الدراسة: آدم بين أشجار الجنكة يحمل كتبه — KLOVERS REAL" },
+  { file: "kb_home_travel_v2", label: "لماذا الكورية — السفر: كشك الطعام الليلي بين الفوانيس — KLOVERS REAL" },
+  { file: "kb_home_picnic_v2", label: "نزهة على نهر الهان مع كلوبي وأفق سيول — KLOVERS REAL" },
+  { file: "kb_home_cafe_v2", label: "كيف نبدأ — لينا تكتب وآدم يشير إلى الدفتر — KLOVERS REAL" },
+  { file: "kb_home_hangul_village_v2", label: "قرية الهانغل — آدم وكلوبي عند اللافتة الفارغة — KLOVERS REAL" },
+  { file: "kb_home_market_v2", label: "سوق المفردات — لينا وكلوبي والتفاح في السوق — KLOVERS REAL" },
+  { file: "kb_home_conv_cafe_v2", label: "مقهى المحادثة — آدم يتحدث ولينا تسمع وكلوبي على السور — KLOVERS REAL" },
 ];
 
 export const LIBRARY_ICONS: LibraryIcon[] = [
