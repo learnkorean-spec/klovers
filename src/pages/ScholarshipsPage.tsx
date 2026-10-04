@@ -96,8 +96,14 @@ const ScholarshipsPage = () => {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button size="lg" asChild className="h-12 rounded-full font-bold">
-                <Link to={isAr ? "/ar/free-trial" : "/free-trial"}>
-                  {tr("Start with the language", "ابدأ باللغة")}
+                {/* The match first, the class second. Someone reading a
+                    scholarships page came for a scholarship, and the one thing
+                    that decides which of these they can reach is their level —
+                    so the level test leads and the free class follows. The
+                    wording is the same string as the homepage teaser and the
+                    locked box, so all three invitations read identically. */}
+                <Link to={isAr ? "/ar/placement-test" : "/placement-test"}>
+                  {t("scholarships", "teaserCta")}
                   <ArrowRight className={`h-5 w-5 ${isAr ? "rotate-180" : ""}`} aria-hidden="true" />
                 </Link>
               </Button>
@@ -107,8 +113,8 @@ const ScholarshipsPage = () => {
                 asChild
                 className="h-12 rounded-full border-ivory/40 bg-transparent font-bold text-ivory hover:bg-ivory/10"
               >
-                <Link to={isAr ? "/ar/placement-test" : "/placement-test"}>
-                  {tr("Find your level", "اعرف مستواك")}
+                <Link to={isAr ? "/ar/free-trial" : "/free-trial"}>
+                  {tr("Start with the language", "ابدأ باللغة")}
                 </Link>
               </Button>
             </div>
@@ -162,6 +168,32 @@ const ScholarshipsPage = () => {
               {KOREA_SCHOLARSHIPS.map((item) => (
                 <ScholarshipCard key={item.id} item={item} t={t} />
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* The point of maximum intent: someone who has just read all six.
+            Until this band existed the page offered them a free class or the
+            course levels, and never the one question they are holding — which
+            of these is mine. The facts stay public here; only the match waits
+            for a level. */}
+        <section className="pb-14 md:pb-20">
+          <div className="container mx-auto max-w-5xl px-4">
+            <div className="rounded-3xl border border-charcoal/15 bg-ivory p-6 text-center md:p-8">
+              <p className="text-lg font-extrabold text-charcoal md:text-xl">
+                {tr("Which of these can your level reach?", "أي من هذه المنح يستطيع مستواك الوصول إليها؟")}
+              </p>
+              <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-charcoal/75">
+                {tr(
+                  "All six programmes are listed here for everyone. The match — which ones are yours, and how many months stand between you and each — is worked out from your real level once you have taken the free placement test.",
+                  "البرامج الستة معروضة هنا للجميع. أما المطابقة — أيها يناسبك، وكم شهرًا يفصلك عن كل واحدة — فتُحسب من مستواك الحقيقي بعد اختبار تحديد المستوى المجاني.",
+                )}
+              </p>
+              <Button size="lg" asChild className="mt-5 h-12 rounded-full px-8 font-bold">
+                <Link to={isAr ? "/ar/placement-test" : "/placement-test"}>
+                  {t("scholarships", "teaserCta")}
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
