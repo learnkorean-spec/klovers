@@ -56,20 +56,28 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   // always the real scenes. The names carry the pairing on purpose — every _v2 sits
   // directly under the _v1 it answers, so a scene is never regenerated twice.
   //
-  // Candidates, not placements: none of these is wired to a page yet. The one thing
-  // to check before any of them goes live is Cluby's eyes — they are closed (happy
-  // squint) in most of these, and the brand sheet's on-model panel tests open brown
-  // eyes, which is exactly the test the first three hero takes were held to.
-  { file: "kb_home_hero_v2", label: "الصفحة الرئيسية — الثلاثة يقرأون على شرفة هانوك وقت الغروب (hero) — KLOVERS REAL" },
-  { file: "kb_home_career_v2", label: "لماذا الكورية — العمل: آدم ولينا أمام اللابتوب بإطلالة سيول — KLOVERS REAL" },
-  { file: "kb_home_culture_v2", label: "لماذا الكورية — الثقافة: لينا على اللابتوب في غرفة هانوك — KLOVERS REAL" },
-  { file: "kb_home_study_v2", label: "لماذا الكورية — الدراسة: آدم بين أشجار الجنكة يحمل كتبه — KLOVERS REAL" },
-  { file: "kb_home_travel_v2", label: "لماذا الكورية — السفر: كشك الطعام الليلي بين الفوانيس — KLOVERS REAL" },
-  { file: "kb_home_picnic_v2", label: "نزهة على نهر الهان مع كلوبي وأفق سيول — KLOVERS REAL" },
-  { file: "kb_home_cafe_v2", label: "كيف نبدأ — لينا تكتب وآدم يشير إلى الدفتر — KLOVERS REAL" },
-  { file: "kb_home_hangul_village_v2", label: "قرية الهانغل — آدم وكلوبي عند اللافتة الفارغة — KLOVERS REAL" },
-  { file: "kb_home_market_v2", label: "سوق المفردات — لينا وكلوبي والتفاح في السوق — KLOVERS REAL" },
-  { file: "kb_home_conv_cafe_v2", label: "مقهى المحادثة — آدم يتحدث ولينا تسمع وكلوبي على السور — KLOVERS REAL" },
+  // NINE OF THE TEN ARE NOW LIVE, each installed over the file it replaces and
+  // resized to that file's own dimensions (the ratios matched exactly, so nothing was
+  // cropped). The library keeps the full-size source under the same name it always had.
+  //
+  // The hero take is the exception and is still a candidate: hero-ar.webp holds an
+  // earlier trio (library name trio-a, never filed here), so overwriting it would
+  // throw away a picture Re chose deliberately. Nothing renders hero-ar yet either —
+  // it is a waiting asset — so there is no visual gain to weigh against that loss.
+  //
+  // One caveat, recorded rather than left to whoever places the rest: Cluby's eyes are
+  // closed (happy squint) in most of these, and the brand sheet's on-model panel tests
+  // open brown eyes — the same test that settled the first three hero takes.
+  { file: "kb_home_hero_v2", label: "الصفحة الرئيسية — الثلاثة يقرأون على شرفة هانوك وقت الغروب (hero) — مرشّحة: خانة الهيرو العربي تحمل نسخة أقدم" },
+  { file: "kb_home_career_v2", label: "لماذا الكورية — العمل: آدم ولينا أمام اللابتوب بإطلالة سيول — مستخدَمة: why-career.webp" },
+  { file: "kb_home_culture_v2", label: "لماذا الكورية — الثقافة: لينا على اللابتوب في غرفة هانوك — مستخدَمة: why-culture.webp" },
+  { file: "kb_home_study_v2", label: "لماذا الكورية — الدراسة: آدم بين أشجار الجنكة يحمل كتبه — مستخدَمة: why-study.webp" },
+  { file: "kb_home_travel_v2", label: "لماذا الكورية — السفر: كشك الطعام الليلي بين الفوانيس — مستخدَمة: why-travel.webp" },
+  { file: "kb_home_picnic_v2", label: "نزهة على نهر الهان مع كلوبي وأفق سيول — مستخدَمة: cluby/picnic.webp" },
+  { file: "kb_home_cafe_v2", label: "كيف نبدأ — لينا تكتب وآدم يشير إلى الدفتر — مستخدَمة: cluby/cafe.webp (‏٨ مواضع)" },
+  { file: "kb_home_hangul_village_v2", label: "قرية الهانغل — آدم وكلوبي عند لافتة فارغة، وهو ما يطابق الكانون: العلامات تصير مقروءة تدريجيًا — مستخدَمة: story/world-hangul-village.webp" },
+  { file: "kb_home_market_v2", label: "سوق المفردات — لينا وكلوبي والتفاح (‏사과، مثال الكانون نفسه) — مستخدَمة: story/world-vocabulary-market.webp" },
+  { file: "kb_home_conv_cafe_v2", label: "مقهى المحادثة — آدم يتحدث ولينا تسمع وكلوبي على السور — مستخدَمة: story/world-conversation-cafe.webp" },
 ];
 
 export const LIBRARY_ICONS: LibraryIcon[] = [
