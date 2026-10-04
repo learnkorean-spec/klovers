@@ -157,6 +157,33 @@ is deliberately very slow. Rules:
   oversaturated environments, random mascot variants, random colours outside
   the palette below.
 
+### Standing rule: the theme is always the real scenes
+
+**Re, 5 Oct 2026.** There is one theme, and it is photographic. The rule carries
+**no size exception** — a 40px trust badge is the same theme as a 1600px hero —
+so an illustrated or anime face is out even where it is small enough to read as
+decoration.
+
+That retires:
+
+- the two illustrated trust icons, `student-boy-thumbsup` and
+  `student-girl-heart`, used at 23 call sites including the homepage;
+- the flat 2D Cluby set in `public/assets/characters/`, which
+  `GameWorldsHub.tsx` still renders next to its own correctly-defined
+  `CLUBY_3D`;
+- the drawn blog covers, and the illustrated character art left in
+  `src/assets/band/*.ts`, `src/assets/characters.ts` and
+  `public/assets/illustrations/`.
+
+The Book A-0 cover art being illustrated does **not** license an illustrated
+style in the product; it is source material for the characters, not a style.
+
+What the rule does not decide: an illustrated *place, object or historic scene*
+— an era painting, a folk-tale monster — is a different question.
+
+`src/config/klovers-world.ts` (`visualSystem.standingRule`) is the source of
+truth and wins if the two ever disagree.
+
 ### Brand colours
 
 Three brand colours plus one status colour (Re, Sep 2026; `src/index.css`

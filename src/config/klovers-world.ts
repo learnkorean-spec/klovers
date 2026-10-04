@@ -629,6 +629,32 @@ export const KLOVERS_WORLD = {
     interface:
       "clean_premium_professional_web_ui",
 
+    /**
+     * Re, 5 Oct 2026 — "the theme is always the real scenes."
+     *
+     * WHAT THIS SETTLES
+     *
+     * There is ONE theme and it is photographic. That was arguable before only
+     * because the Book A-0 cover art Re supplied is illustrated, which made an
+     * illustrated face defensible at icon size — and two of them are live today
+     * as the site's trust badges (public/assets/icons/student-boy-thumbsup.webp
+     * and student-girl-heart.webp, at 23 call sites). They are defensible no
+     * longer.
+     *
+     * NO SIZE EXCEPTION. A 40px trust badge is the same theme as a 1600px hero,
+     * so "too small to matter" is not a carve-out. The same sentence retires the
+     * flat 2D Cluby set in public/assets/characters/ — which GameWorldsHub.tsx
+     * still renders — and the drawn blog covers.
+     *
+     * WHAT IT DOES NOT DECIDE. These fields answer the CHARACTER question. An
+     * illustrated place, object or historic scene (an era painting, a folk-tale
+     * monster) is a different question and is not settled here.
+     */
+    standingRule: "always_the_real_scenes",
+
+    /** No size carves an exception out of the rule above. */
+    illustrationExceptionAtSmallSizes: false,
+
     forbiddenStyles: [
       "flat_cartoon_everywhere",
       "anime",
@@ -636,6 +662,8 @@ export const KLOVERS_WORLD = {
       "oversaturated_ui",
       "random_illustration_styles",
       "generic_saas_visual_identity",
+      "illustrated_or_anime_characters_at_any_size",
+      "flat_2d_mascot_set",
     ],
   },
 

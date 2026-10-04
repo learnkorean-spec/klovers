@@ -12,9 +12,16 @@
   and the 3D plush Cluby (brown eyes).
   Colours: #FFFF00 yellow, #2E2E2E charcoal, #FFF9EC ivory,
   #39FF14 neon green (progress / correct / live, a fill with charcoal on it),
-  #FF4FD8 neon pink (wrong, a fill with charcoal on it). #B800AB retired.
+  #FF3131 neon red (wrong: border, x mark, flash or fill; charcoal on it).
+  #FF4FD8 pink and #B800AB retired.
   Fonts: Poppins, Inter, Cairo, Noto Sans KR, Hi Melody, Caveat (Latin only).
   3D Cluby + scene images live in /assets/cluby/.
+  5 Oct 2026: the wrong-answer colour is corrected to the neon red #FF3131 (the
+  1 Oct change; the pink #FF4FD8 was two weeks stale here), and the Adam & Lina
+  section is added. The sheet had no page at all for the two learners, which is
+  how illustrated anime faces survived as the site's trust icons. Admin -> Brand
+  shows the short form and repeats the two prompt lines below;
+  scripts/lib/brand-sheet-panel.test.mjs fails if the copies drift apart.
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +30,7 @@
   html,body{margin:0}
   /* Single light theme on purpose: this sheet documents the light brand ground. */
   :root{
-    --yellow:#FFFF00; --charcoal:#2E2E2E; --ivory:#FFF9EC; --green:#39FF14; --wrong:#FF4FD8;
+    --yellow:#FFFF00; --charcoal:#2E2E2E; --ivory:#FFF9EC; --green:#39FF14; --wrong:#FF3131;
     --paper:#FFFFFF; --line:#E9E1CC; --muted:#6B665A; --ink-soft:#4A4740; --mist:#F8F1E2;
     --display:"Poppins","Cairo",system-ui,sans-serif;
     --body:"Inter","Cairo",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -206,7 +213,7 @@
       <div class="chips">
         <span class="chip y">#FFFF00 main</span>
         <span class="chip g">#39FF14 progress</span>
-        <span class="chip" style="background:var(--wrong);color:var(--charcoal)">#FF4FD8 wrong</span>
+        <span class="chip" style="background:var(--wrong);color:var(--charcoal)">#FF3131 wrong</span>
         <span class="chip o">#2E2E2E · #FFF9EC</span>
       </div>
     </div>
@@ -218,17 +225,24 @@
     </div>
   </header>
 
+  <section id="rule" style="background:var(--charcoal);border-color:var(--charcoal);color:var(--ivory)">
+    <div>
+      <h2><span class="tag" style="background:var(--yellow);color:var(--charcoal)">Standing rule</span> The theme is always the real scenes</h2>
+      <p class="lede" style="color:#D9D3C3;max-width:78ch">One theme, and it is photographic. There is <b>no size exception</b>: a 40px trust badge is the same theme as a 1600px hero, so an illustrated or anime face is out even where it is small enough to read as decoration. That retires the two illustrated trust icons (<b>student-boy-thumbsup</b>, <b>student-girl-heart</b>), the flat 2D Cluby set in <b>public/assets/characters/</b>, and the drawn blog covers. The Book A-0 cover being illustrated does not license an illustrated style in the product — it is source material for the characters, not a style. <b>Re, 5 Oct 2026.</b> Canon: <b>src/config/klovers-world.ts</b> &rarr; <b>visualSystem.standingRule</b>, which wins if the two disagree.</p>
+    </div>
+  </section>
+
   <section id="palette">
     <div>
       <h2><span class="tag">Colour</span> The palette</h2>
-      <p class="lede">Yellow leads. Neon green means “you did it” or “it's live”; neon pink means “not quite”. Charcoal and ivory carry everything else, so the two brights stay special.</p>
+      <p class="lede">Yellow leads. Neon green means “you did it” or “it's live”; neon red means “not quite”. Charcoal and ivory carry everything else, so the two brights stay special.</p>
     </div>
     <div class="palette">
       <div class="sw y"><div><div class="name">Klovers Yellow</div><div class="hex">#FFFF00</div></div><div class="role"><b>Main.</b> Primary buttons, highlights, markers behind words, bands, badges on charcoal.</div><div class="pct">10%</div></div>
       <div class="sw c"><div><div class="name">Charcoal</div><div class="hex">#2E2E2E</div></div><div class="role">All text, outlines, dark cards, the hero scrim, the footer. The only colour allowed on top of yellow or green.</div><div class="pct">25%</div></div>
       <div class="sw i"><div><div class="name">Ivory</div><div class="hex">#FFF9EC</div></div><div class="role">Page ground and soft panels. Warmer than white, so the yellow glows.</div><div class="pct">60%</div></div>
       <div class="sw g"><div><div class="name">Klovers Green</div><div class="hex">#39FF14</div></div><div class="role"><b>Progress &amp; live only.</b> XP bars, correct answers, done ticks, the next-free-class dot. Always a fill.</div><div class="pct">5%</div></div>
-      <div class="sw w"><div><div class="name">Klovers Pink</div><div class="hex">#FF4FD8</div></div><div class="role"><b>Mistakes only.</b> Wrong answers, missed classes. Always a fill, charcoal on top.</div><div class="pct">&lt;1%</div></div>
+      <div class="sw w"><div><div class="name">Klovers Red</div><div class="hex">#FF3131</div></div><div class="role"><b>Mistakes only.</b> Border, x mark, flash or fill — never small red text. Charcoal on top. Replaced the pink #FF4FD8 on 1 Oct 2026.</div><div class="pct">&lt;1%</div></div>
     </div>
     <div class="ratio" aria-hidden="true">
       <span style="width:60%;background:var(--ivory)"></span><span style="width:25%;background:var(--charcoal)"></span><span style="width:10%;background:var(--yellow)"></span><span style="width:5%;background:var(--green)"></span>
@@ -241,6 +255,7 @@
       <span class="ret"><i style="background:#FFC8D6"></i>#FFC8D6 blush</span>
       <span class="ret"><i style="background:#FF5C8A"></i>#FF5C8A rose</span>
       <span class="ret"><i style="background:#FFB7A1"></i>#FFB7A1 peach</span>
+      <span class="ret"><i style="background:#FF4FD8"></i>#FF4FD8 pink</span>
       <span class="ret"><i style="background:#25D366"></i>#25D366 green</span>
       <span class="ret"><i style="background:#B800AB"></i>#B800AB old wrong</span>
     </div>
@@ -291,6 +306,23 @@
     </div>
   </section>
 
+  <section id="learners">
+    <div>
+      <h2><span class="tag">People</span> Adam &amp; Lina · آدم ولينا</h2>
+      <p class="lede">The two learners on the site. Every picture with people in it is a photograph of these two — nobody else, no invented third face, no stock stranger. They are friends and study companions, never a couple.</p>
+    </div>
+    <div class="blend">
+      <div class="rule"><div class="demo"><img class="soft" src="/assets/cluby/cafe.webp" alt="Adam and Lina studying at a café table with Cluby" style="width:100%;height:100%;object-fit:cover"></div><span class="verdict do">KLOVERS REAL</span><p>Photorealistic people, natural skin and real fabric, golden-hour Korea. Both of them, as friends.</p></div>
+      <div class="rule"><div class="demo"><img src="/assets/illustrations/hero-boy.webp" alt="An illustrated, anime-style drawing of the male learner" style="width:100%;height:100%;object-fit:contain"></div><span class="verdict dont">Off-model</span><p>Anime / illustrated faces. Wrong for the site — this is the style to replace, in the small icons and in the drawn blog covers.</p></div>
+    </div>
+    <div class="prompt">
+      <span class="kicker" style="color:#D9D3C3">Paste into every Adam &amp; Lina prompt</span>
+      <code id="learners-line">Adam: a man in his early 20s, not Korean and not East Asian, wavy dark-brown hair, a Klovers-yellow tailored blazer over an ivory t-shirt, ivory trousers, white sneakers. Lina: a woman in her early 20s, not Korean and not East Asian, long wavy auburn-copper hair, light freckles, an ivory hanbok-inspired wrap top with white floral embroidery, a Klovers-yellow midi skirt with a yellow floral sash, ivory flats. Photorealistic people with natural skin texture and real fabric. Friends and study companions, never a couple.</code>
+      <button class="copy" id="copy-learners" type="button">Copy the line</button>
+    </div>
+    <p class="note">What the canon fixes (<b>src/config/klovers-world.ts</b>): photorealistic people with natural skin and fabric, and both learners are <b>not Korean and not East Asian</b>. Anything past that — features, skin tone — is not yet decided, so no prompt should invent it. Admin → Brand repeats these two lines and a test keeps the copies identical.</p>
+  </section>
+
   <section id="scenes">
     <div>
       <h2><span class="tag">Imagery</span> Scenes that melt into the page</h2>
@@ -328,7 +360,7 @@
         <div class="top"><div class="tile c"><img src="/assets/icons/chat-annyeong.webp" alt=""></div><div><div class="kicker">Quiz · question 6</div><h3>How do you say “thank you”?</h3></div></div>
         <div class="answer ok"><span class="ko">감사합니다</span><span class="pill c">Correct! +10 XP</span></div>
         <div class="answer no"><span class="ko">안녕하세요</span><span class="pill c">Try again</span></div>
-        <p class="note">Correct = neon green fill. Wrong = neon pink fill. Charcoal text on both, and the word always says which.</p>
+        <p class="note">Correct = neon green fill. Wrong = neon red fill. Charcoal text on both, and the word always says which.</p>
       </article>
       <article class="card">
         <div class="top"><div class="tile y"><img src="/assets/icons/calendar-check.webp" alt=""></div><div><div class="kicker">Homepage hero chip</div><h3>Next free class</h3></div></div>
@@ -403,19 +435,19 @@
         </div>
       </div>
     </div>
-    <p class="note">Icons that still show the old flat 2D mascot (klobi-reading, game-klobi-thumbsup) are left out: they break the one-Cluby rule and will be redrawn in 3D.</p>
+    <p class="note">Icons that still show the old flat 2D mascot (klobi-reading, game-klobi-thumbsup) are left out: they break the one-Cluby rule and will be redrawn in 3D. The two illustrated <b>student-boy-thumbsup</b> and <b>student-girl-heart</b> faces break the standing rule above and are to be replaced with photographs of Adam and Lina — the same file names, so the 23 call sites need no edit.</p>
   </section>
 
   <section id="rules">
     <div>
       <h2><span class="tag">Rules</span> Colour &amp; icon rules</h2>
-      <p class="lede">All three brights — yellow, green and pink — are so light that nothing but charcoal can sit on them. That one fact explains most of these rules.</p>
+      <p class="lede">All three brights — yellow, green and red — force charcoal on top: white is unreadable on every one of them. Red is the weakest of the three at 3.7:1, which is why it never carries small text.</p>
     </div>
     <div class="rules">
       <div class="rule"><div class="demo" style="background:var(--green);color:var(--charcoal)">+10 XP</div><span class="verdict do">Do</span><p>Green as a <b>fill</b>, charcoal on top.</p></div>
       <div class="rule"><div class="demo" style="background:var(--ivory);color:var(--green)">+10 XP</div><span class="verdict dont">Don't</span><p>Green text on ivory or white — it disappears (1.3:1).</p></div>
       <div class="rule"><div class="demo" style="background:var(--ivory);color:var(--yellow);text-shadow:none">Book now</div><span class="verdict dont">Don't</span><p>Yellow text on a light ground. Put the yellow <i>behind</i> the words as a marker instead.</p></div>
-      <div class="rule"><div class="demo" style="background:var(--wrong);color:var(--charcoal)">Try again</div><span class="verdict do">Do</span><p>Pink as a <b>fill</b>, charcoal on top — the same rule as green. Never pink text.</p></div>
+      <div class="rule"><div class="demo" style="background:var(--wrong);color:var(--charcoal)">Try again</div><span class="verdict do">Do</span><p>Red as a <b>fill</b> or an x mark with charcoal on top — the same rule as green. Never red text.</p></div>
       <div class="rule"><div class="demo" style="background:var(--ivory);display:flex;gap:10px;justify-content:center"><span class="tile y" style="width:46px;height:46px"><img src="/assets/icons/books-stack.webp" alt="" style="width:37px;height:37px"></span><span class="tile y" style="width:46px;height:46px"><img src="/assets/icons/bibimbap.webp" alt="" style="width:37px;height:37px"></span></div><span class="verdict do">Do</span><p>Icons on a tile, about 80% of the tile, same corner radius along a row.</p></div>
       <div class="rule"><div class="demo" style="background:var(--ivory);font-size:24px">🔥 ⭐ 📚</div><span class="verdict dont">Don't</span><p>Emoji as UI icons — they bring foreign colours into the chrome. Emoji inside copy is fine.</p></div>
     </div>
@@ -427,8 +459,8 @@
           <tr><td>Charcoal on Green</td><td><span class="sample" style="background:#39FF14;color:#2E2E2E">Correct!</span></td><td class="num">13.6 : 1</td><td>Progress, correct, live ✓</td></tr>
           <tr><td>Yellow on Charcoal</td><td><span class="sample" style="background:#2E2E2E;color:#FFFF00">Level 3</span></td><td class="num">12.7 : 1</td><td>Badges, hero line ✓</td></tr>
           <tr><td>Charcoal on Ivory</td><td><span class="sample" style="background:#FFF9EC;color:#2E2E2E;border:1px solid #E9E1CC">Body text</span></td><td class="num">12.4 : 1</td><td>Everything you read ✓</td></tr>
-          <tr><td>Charcoal on Pink</td><td><span class="sample" style="background:#FF4FD8;color:#2E2E2E">Try again</span></td><td class="num">4.8 : 1</td><td>Wrong answers, missed ✓</td></tr>
-          <tr><td>Pink on White</td><td><span class="sample" style="background:#FFFFFF;color:#FF4FD8;border:1px solid #E9E1CC">Wrong</span></td><td class="num">2.8 : 1</td><td>Never ✗</td></tr>
+          <tr><td>Charcoal on Red</td><td><span class="sample" style="background:#FF3131;color:#2E2E2E">Try again</span></td><td class="num">3.7 : 1</td><td>An x mark or a flash ✓ — not small text</td></tr>
+          <tr><td>Red on White</td><td><span class="sample" style="background:#FFFFFF;color:#FF3131;border:1px solid #E9E1CC">Wrong</span></td><td class="num">3.4 : 1</td><td>Never ✗</td></tr>
           <tr><td>Green on White</td><td><span class="sample" style="background:#FFFFFF;color:#39FF14;border:1px solid #E9E1CC">Done</span></td><td class="num">1.7 : 1</td><td>Never ✗</td></tr>
           <tr><td>White on Yellow</td><td><span class="sample" style="background:#FFFF00;color:#FFFFFF;border:1px solid #E9E1CC">Hello</span></td><td class="num">1.07 : 1</td><td>Never ✗</td></tr>
         </tbody>
@@ -456,18 +488,22 @@
     <p class="note">Never invent prices, reviews or numbers. No TOPIK on the homepage. Customer messages open with what the reader gains — never an apology.</p>
   </section>
 
-  <footer>Klovers brand sheet · updated 24 Sep 2026 · #FFFF00 · #2E2E2E · #FFF9EC · #39FF14 · #FF4FD8</footer>
+  <footer>Klovers brand sheet · updated 5 Oct 2026 · #FFFF00 · #2E2E2E · #FFF9EC · #39FF14 · #FF3131 wrong</footer>
 </main>
 
 <script>
   (function(){
-    var btn=document.getElementById('copy-btn'), line=document.getElementById('cluby-line');
-    function selectLine(){ var r=document.createRange(); r.selectNodeContents(line); var s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }
-    btn.addEventListener('click',function(){
-      var text=line.textContent;
-      try{
-        navigator.clipboard.writeText(text).then(function(){ btn.textContent='Copied'; setTimeout(function(){btn.textContent='Copy the line';},1600); },function(){ selectLine(); btn.textContent='Selected — press Ctrl+C'; });
-      }catch(e){ selectLine(); btn.textContent='Selected — press Ctrl+C'; }
+    /* One handler per prompt block: Cluby's line and the learners' line. */
+    document.querySelectorAll('.prompt').forEach(function(block){
+      var btn=block.querySelector('.copy'), line=block.querySelector('code');
+      if(!btn||!line) return;
+      function selectLine(){ var r=document.createRange(); r.selectNodeContents(line); var s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+      btn.addEventListener('click',function(){
+        var text=line.textContent;
+        try{
+          navigator.clipboard.writeText(text).then(function(){ btn.textContent='Copied'; setTimeout(function(){btn.textContent='Copy the line';},1600); },function(){ selectLine(); btn.textContent='Selected — press Ctrl+C'; });
+        }catch(e){ selectLine(); btn.textContent='Selected — press Ctrl+C'; }
+      });
     });
   })();
 </script>
