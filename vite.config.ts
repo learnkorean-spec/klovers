@@ -25,6 +25,12 @@ export default defineConfig(() => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    // One React and one three, forced. /world mounts a react-reconciler
+    // renderer, and a second copy of React anywhere in the graph surfaces as
+    // "Invalid hook call" inside <Canvas> — the whole route dies with it.
+    // npm reports a single hoisted react; the bundler still has to be told,
+    // because the dep optimizer will otherwise inline its own copy.
+    dedupe: ["react", "react-dom", "react-reconciler", "three", "@react-three/fiber"],
   },
   build: {
     // Increase chunk size warning limit (avoids noise, not a problem for SPA)
