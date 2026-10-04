@@ -321,27 +321,22 @@ export default function BrandSheetPanel() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm leading-relaxed">
           <p>
-            <strong>Four flat 2D Cluby icons, still live.</strong>{" "}
-            <code>game-klobi-thumbsup</code> in <code>AffiliatePage</code> (64px) and{" "}
-            <code>TrialBookingPage</code> (56px); <code>klobi-reading</code> and{" "}
-            <code>klobi-headphones</code> in <code>MySchedulePage</code> (40 and 48px); and{" "}
-            <code>game-klobi-han</code> plus that same thumbs-up as the games fallback. All four are
-            redrawn in 3D — prompts 5 to 8 of the image pack, and each is a file swap.
-          </p>
-          <p>
             <strong>A drawn cover on 17 blog posts.</strong> Same rule, seventeen files, all in{" "}
             <code>public/assets/blog/</code>. The pack's template puts no people in a blog cover at
             all, which removes the who-is-this-character question instead of answering it.
           </p>
           <p className="text-muted-foreground">
-            <strong>Fixed, and no longer listed here:</strong> the flat 2D Cluby <em>set</em> the
-            game hub drew from <code>public/assets/characters/</code>; the two illustrated trust
-            icons (<code>student-boy-thumbsup</code> and <code>student-girl-heart</code>, now
-            photographs); the nine small sites those two used at 14 to 24px; the three cartoon brand
-            files (<code>klovers-mascot.png</code>, its byte-identical twin{" "}
-            <code>klovers-characters.png</code>, and <code>characters/hanbok-pair.jpg</code>),
-            retired by one real portrait that also saves 3 MB; and 87 MB of dead art, including the
-            anime figures that sat inlined in the code itself.
+            <strong>Fixed, and no longer listed here:</strong> every 2D drawing of Cluby — the flat
+            set the game hub drew from <code>public/assets/characters/</code>, and the four flat
+            mascot icons (<code>klobi-reading</code>, <code>klobi-headphones</code>,{" "}
+            <code>game-klobi-thumbsup</code>, <code>game-klobi-han</code>), now 3D plush renders at
+            the same file names; the two illustrated trust icons (<code>student-boy-thumbsup</code>{" "}
+            and <code>student-girl-heart</code>, now photographs); the nine small sites those two
+            used at 14 to 24px; the three cartoon brand files (<code>klovers-mascot.png</code>, its
+            byte-identical twin <code>klovers-characters.png</code>, and{" "}
+            <code>characters/hanbok-pair.jpg</code>), retired by one real portrait that also saves 3
+            MB; and 87 MB of dead art, including the anime figures that sat inlined in the code
+            itself.
           </p>
         </CardContent>
       </Card>
