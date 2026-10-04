@@ -432,14 +432,20 @@ export default function World(props: WorldProps) {
 
       {/* Warm late-afternoon light: a low golden sun with soft shadows, a
           warm sky/ground bounce, and a faint cool fill from the other side
-          so shadows keep their shape without going black. Two lights only. */}
-      <hemisphereLight args={[LIGHT.skyBounce, LIGHT.groundBounce, 0.8]} />
-      <directionalLight position={[-12, 6, -3]} intensity={0.55} color={LIGHT.fill} />
+          so shadows keep their shape without going black. Two lights only.
+
+          Rebalanced 5 Oct 2026. The ambient floor (0.8 bounce + 0.55 fill)
+          sat close enough to the sun's 3.1 that lit and shaded faces barely
+          differed, which is what "flat lighting" meant in this room. Dropping
+          the floor and lifting the sun models the timber and the eaves, while
+          the warm bounce keeps shade coloured instead of black. */}
+      <hemisphereLight args={[LIGHT.skyBounce, LIGHT.groundBounce, 0.6]} />
+      <directionalLight position={[-12, 6, -3]} intensity={0.42} color={LIGHT.fill} />
       <directionalLight
         key={roomId}
         castShadow={quality.shadows}
         position={[14, 7.6, 4.5]}
-        intensity={3.1}
+        intensity={3.5}
         color={LIGHT.sun}
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
