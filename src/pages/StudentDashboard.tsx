@@ -74,6 +74,7 @@ import { DashboardHero } from "@/components/student-dashboard/premium/DashboardH
 import { ContinueLearningCard } from "@/components/student-dashboard/premium/ContinueLearningCard";
 import { TodaysMissions } from "@/components/student-dashboard/premium/TodaysMissions";
 import { LearningJourneyMap } from "@/components/student-dashboard/premium/LearningJourneyMap";
+import ScholarshipMatches from "@/components/ScholarshipMatches";
 import { CollectionCard } from "@/components/student-dashboard/premium/CollectionCard";
 import { EggStatusCard } from "@/components/student-dashboard/premium/EggStatusCard";
 import { RecentAchievements } from "@/components/student-dashboard/premium/RecentAchievements";
@@ -896,6 +897,13 @@ const StudentDashboard = () => {
 
           {/* C. Learning journey */}
           <LearningJourneyMap stops={journey.stops} currentIndex={journey.currentIndex} continueHref={continueHref} />
+
+          {/* C2. Which Korean scholarships this level can reach (4 Oct 2026).
+              Right under the journey map, because that is the question the map
+              answers next: the road, then where the road can lead. The level is
+              the one the placement test wrote to course_level_key, so this is
+              never a level the student claims for herself. */}
+          <ScholarshipMatches levelKey={profileLevel} signedIn />
 
           {/* E | G + F. Collection & next unlock; beside it the upcoming class,
               then recent achievements (tertiary). Mobile order: E, G, F. */}

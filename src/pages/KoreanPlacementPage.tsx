@@ -28,6 +28,7 @@ import {
   Target, Clock, Save, Ban,
 } from "lucide-react";
 import KloverIcon from "@/components/KloverIcon";
+import ScholarshipMatches from "@/components/ScholarshipMatches";
 import {
   EXAM_SECTIONS, EXAM_QUESTIONS, EXAM_MAX, EXAM_BOOK_KEY, gradeExam,
   type ExamQuestion, type ExamResult,
@@ -1046,6 +1047,21 @@ const KoreanPlacementPage = () => {
                   </p>
                 </div>
               )}
+
+              {/* Which scholarships this level can reach (4 Oct 2026). It sits
+                  ABOVE the sign-in ask on purpose: it is the reason to press
+                  that button, and the reason is stronger than the promise. A
+                  visitor gets the six programme names and a lock where the
+                  verdict goes — the names and the official facts are public on
+                  /scholarships either way; what an account buys is the match.
+                  The stage chips are asked here because the level alone cannot
+                  answer them: the undergraduate GKS disqualifies anyone who
+                  already holds a degree. */}
+              <ScholarshipMatches
+                levelKey={info.levelKey}
+                signedIn={!!userId}
+                levelLabel={isAr ? info.labelAr : info.labelEn}
+              />
 
               {/* The first ask for a visitor who is not signed in, and the only
                   one that saves anything. Her answers are already parked in
