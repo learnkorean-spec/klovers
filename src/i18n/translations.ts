@@ -35,6 +35,11 @@ export const translations = {
       eyebrow: "Study in Korea",
       title: "Scholarships in Korea, without the guesswork",
       subtitle: "Six official programmes, what each one actually covers, and the page the numbers come from.",
+      // The homepage is a teaser (Re, 4 Oct 2026): the MATCH is earned with a
+      // placement result, the FACTS stay public on /scholarships.
+      teaser: "Six government and university programmes in Korea. Start with the free placement test — then we show you which ones your level can reach, and how many months stand between you and each one.",
+      teaserCta: "Find the scholarship that fits your level",
+      teaserLocked: "The six programmes are public on the scholarships page. Your match, and the months left to reach it, appear after the placement test and are saved to your account.",
       filterAll: "All",
       covers: "What it covers",
       figures: "Confirmed amounts",
@@ -1922,6 +1927,11 @@ export const translations = {
       eyebrow: "الدراسة في كوريا",
       title: "منح كوريا: ما تغطيه كل منحة فعلًا",
       subtitle: "ستة برامج رسمية، وما يغطيه كل برنامج، والصفحة الرسمية التي جاءت منها الأرقام.",
+      // الرئيسية تلمّح فقط (ري، ٤ أكتوبر ٢٠٢٦): المطابقة تُستحق بنتيجة تحديد
+      // مستوى حقيقية، أما المعلومات نفسها فتبقى متاحة للجميع على صفحة المنح.
+      teaser: "ستة برامج حكومية وجامعية في كوريا. ابدأ باختبار تحديد المستوى المجاني، وبعدها نعرض لك المنح التي يستطيع مستواك الوصول إليها، وكم شهرًا يفصلك عن كل واحدة.",
+      teaserCta: "اعرف المنحة المناسبة لمستواك",
+      teaserLocked: "البرامج الستة متاحة للجميع على صفحة المنح. أما المطابقة وعدد الأشهر المتبقية فتظهر بعد اختبار تحديد المستوى، وتُحفظ في حسابك.",
       filterAll: "الكل",
       covers: "ما تغطيه المنحة",
       figures: "المبالغ المؤكدة",

@@ -806,10 +806,22 @@ export const KLOVERS_WORLD = {
      * road" world would be new lore for a marketing section, which section 9
      * of the story bible forbids.
      *
-     * NO STORY TRIGGER ON THE HOMEPAGE. Marketing teases; the logged-in
-     * product is where a learner experiences story. If this ever becomes a
-     * dashboard goal ("my university plan"), it needs a real trigger — course
-     * level or a placement result — before it ships as a story feature.
+     * THE HOMEPAGE TEASES; THE LEVEL EARNS THE ANSWER (Re, 4 Oct 2026). The
+     * front page used to render all six programmes in full. It now states that
+     * six programmes exist and sends the visitor to the free placement test.
+     * Which programmes a visitor's level can reach, and how many months stand
+     * between them and each one, are shown against a REAL level —
+     * `profiles.course_level_key`, written by the placement test itself —
+     * never against a level the visitor claims for himself. That is section
+     * 8's rule (progression from real learning data) and section 11's
+     * (marketing teases; the logged-in product is where the learner
+     * experiences it).
+     *
+     * The FACTS stay public on /scholarships: what each programme covers, the
+     * amounts one official page states, the sources and the verification date.
+     * Gating the match is a product decision; gating the facts about other
+     * people's money would not be honest, and that page is also the one search
+     * engines index.
      */
     {
       order: 7,

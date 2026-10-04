@@ -268,14 +268,21 @@ never "you failed" or "bad answer."
 Rule of thumb: at most one primary character per ordinary section; using all
 three together is reserved for major story moments.
 
-Slot 7 (**Scholarships**, Re, 4 Oct 2026) is the study path given a
-destination: the six programmes an Arabic speaker in Egypt can apply to, each
-linked to the funding body's own page. The male learner owns it because this
-canon already gives him structure, strategy and explanation, and an
-application deadline is exactly that. It reuses **Culture Street / Seoul
-Journey** — no new world was invented for it, and no story trigger fires on the
-homepage, which only teases. If it ever becomes a dashboard goal, it needs a
-real learner-data trigger first.
+Slot 7 (**Scholarships**, Re, 4 Oct 2026) gives the study path a destination:
+the six programmes an Arabic speaker in Egypt can apply to, each linked to the
+funding body's own page. The male learner owns it because this canon already
+gives him structure, strategy and explanation, and an application deadline is
+exactly that. It reuses **Culture Street / Seoul Journey** — no new world was
+invented for it.
+
+**The homepage teases; a real level earns the answer.** The front page says six
+programmes exist and sends the visitor to the free placement test. Which
+programmes that visitor's level can reach — and how many months stand between
+them and each one — are shown against `profiles.course_level_key`, the level
+the test itself wrote, never against a level the visitor claims. The facts
+themselves stay public on `/scholarships`, in both languages, with their
+sources: gating the match is a product decision, gating the facts about other
+people's money would not be honest.
 
 ## 11. Logged-in product narrative
 
