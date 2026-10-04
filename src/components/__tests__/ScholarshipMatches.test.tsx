@@ -1,9 +1,20 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import ScholarshipMatches from "../ScholarshipMatches";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { KOREA_SCHOLARSHIPS } from "@/constants/koreaScholarships";
+
+/**
+ * The journal link is driven by a query against `blog_posts.published` (the
+ * draft article must not produce a 404), so the hook is stubbed here and the
+ * query's own mapping is tested next to the hook. Everything else in this file
+ * is the real component.
+ */
+const guide = vi.hoisted(() => ({ value: { ar: null as string | null, en: null as string | null } }));
+vi.mock("@/hooks/usePublishedScholarshipArticle", () => ({
+  usePublishedScholarshipArticle: () => guide.value,
+}));
 
 /**
  * ScholarshipMatches.test.tsx — the gate, which is the promise Re made to the
@@ -140,5 +151,38 @@ describe("the block is not English-only", () => {
     expect(screen.getByText(/خطتك في كلوفرز/)).toBeInTheDocument();
     expect(screen.getAllByText("بعد التسجيل")).toHaveLength(KOREA_SCHOLARSHIPS.length);
     expect(screen.queryByText("After sign-in")).toBeNull();
+  });
+});
+
+describe("the journal link exists only while the article really does", () => {
+  it("is absent while the guide is still a draft", () => {
+    guide.value = { ar: null, en: null };
+    draw({ levelKey: "hangul", signedIn: true });
+    expect(screen.queryByText(/scholarships guide in the journal/)).toBeNull();
+  });
+
+  it("points at the post once it is published", () => {
+    guide.value = { ar: null, en: "korean-scholarships-guide" };
+    draw({ levelKey: "hangul", signedIn: true });
+    expect(screen.getByRole("link", { name: /scholarships guide in the journal/ })).toHaveAttribute(
+      "href",
+      "/blog/korean-scholarships-guide",
+    );
+  });
+
+  it("uses the Arabic twin's own URL on the Arabic site", () => {
+    guide.value = { ar: "korean-scholarships-guide-ar", en: null };
+    localStorage.setItem("k-lovers-lang", "ar");
+    draw({ levelKey: "hangul", signedIn: true });
+    expect(screen.getByRole("link", { name: /دليل المنح الكامل في المجلة/ })).toHaveAttribute(
+      "href",
+      "/blog/korean-scholarships-guide-ar",
+    );
+  });
+
+  it("shows the link to a visitor who has not signed in, because reading is not gated", () => {
+    guide.value = { ar: null, en: "korean-scholarships-guide" };
+    draw({ levelKey: "hangul", signedIn: false });
+    expect(screen.getByRole("link", { name: /scholarships guide in the journal/ })).toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { KOREA_SCHOLARSHIPS } from "@/constants/koreaScholarships";
 import { getLevelShortLabel } from "@/constants/levels";
+import { usePublishedScholarshipArticle } from "@/hooks/usePublishedScholarshipArticle";
 import {
   countReachable,
   matchScholarships,
@@ -106,6 +107,8 @@ const ScholarshipMatches = ({ levelKey, signedIn, levelLabel }: Props) => {
    */
   const hasLevel = monthsBetween(levelKey, "l1") !== null;
   const timeline = studyTimeline(levelKey);
+  const guides = usePublishedScholarshipArticle();
+  const guideSlug = isAr ? guides.ar : guides.en;
   if (!hasLevel) {
     return (
       <section className="rounded-xl border border-border bg-card p-4 space-y-3 text-start">
@@ -305,6 +308,19 @@ const ScholarshipMatches = ({ levelKey, signedIn, levelLabel }: Props) => {
             </Link>
           </Button>
         </>
+      )}
+
+      {/* The journal, once it is actually there (see the hook): the link exists
+          only while `blog_posts.published` says so, so the draft article cannot
+          produce a 404. Outside the `degree &&` block on purpose — reading is
+          not gated, and a visitor deciding whether to sign in is exactly who
+          should be able to read the full guide first. */}
+      {guideSlug && (
+        <Button asChild size="sm" variant="ghost" className="w-full">
+          <Link to={`/blog/${guideSlug}`}>
+            {t("اقرأ دليل المنح الكامل في المجلة", "Read the full scholarships guide in the journal")}
+          </Link>
+        </Button>
       )}
     </section>
   );
