@@ -101,3 +101,46 @@ describe("the homepage head is one string, not two copies of it", () => {
     expect(declared("HOME_TITLE_AR").startsWith("كلوفرز")).toBe(true);
   });
 });
+
+/**
+ * THE PRICE IN THE CRAWLER COPY IS A THIRD COPY OF A NUMBER THAT LIVES IN CODE.
+ *
+ * The prerendered homepage now states the USD price, because a crawler that
+ * runs no JavaScript is the one reader who cannot be shown a price by
+ * PriceTeaser - and until 4 Oct 2026 the homepage said only "priced by
+ * country", so the delivered HTML carried no figure at all.
+ *
+ * That number is written in scripts/prerender-meta.mjs and owned by
+ * src/lib/stripePrices.ts. This is exactly the shape that drifted before (see
+ * the head note above), so it is asserted rather than left to review: change
+ * the global group price in stripePrices and this fails until the crawler copy
+ * says the same thing.
+ */
+const stripe = readFileSync(join(root, "src/lib/stripePrices.ts"), "utf-8");
+
+const globalGroupMonthlyUsd = () => {
+  const m = stripe.match(/global:\s*\{\s*group:\s*\{\s*1:\s*\{[^}]*amount:\s*(\d+)/);
+  expect(m, "the global group 1-month USD amount is no longer readable in stripePrices.ts").not.toBeNull();
+  return Number(m[1]);
+};
+
+const ARABIC_INDIC = "٠١٢٣٤٥٦٧٨٩";
+const toArabicIndic = (n) => String(n).replace(/\d/g, (d) => ARABIC_INDIC[Number(d)]);
+
+describe("the price the crawler is told is the price the code charges", () => {
+  it("the English crawler copy states the global USD group price", () => {
+    const usd = globalGroupMonthlyUsd();
+    const body = readFileSync(join(root, "scripts/prerender-meta.mjs"), "utf-8");
+    const homeBody = body.slice(body.indexOf("const HOME_BODY_HTML ="), body.indexOf("const HOME_BODY_HTML_AR ="));
+    expect(homeBody, `HOME_BODY_HTML should quote $${usd}`).toContain(`$${usd}`);
+  });
+
+  it("the Arabic crawler copy states it in Arabic-Indic digits", () => {
+    const usd = globalGroupMonthlyUsd();
+    const body = readFileSync(join(root, "scripts/prerender-meta.mjs"), "utf-8");
+    const homeBodyAr = body.slice(body.indexOf("const HOME_BODY_HTML_AR ="));
+    expect(homeBodyAr, `the Arabic body should quote ${toArabicIndic(usd)}`).toContain(
+      toArabicIndic(usd),
+    );
+  });
+});

@@ -364,7 +364,8 @@ const ERA_MODERN_KOREA_BODY = `<div id="era-prerendered" lang="en" dir="ltr">
 const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
       <h1>Start Speaking Korean From Your First Live Class</h1>
       <p>Live online Korean classes with a real teacher, in small groups, and a clear path from beginner to confident conversation. Classes are taught in English or in Arabic.</p>
-      <p><a href="/free-trial">Book a free class</a> or <a href="/placement-test">take the free placement test</a> to find your level. Group classes are priced by country - <a href="/pricing">see pricing</a>.</p>
+      <p><a href="/free-trial">Book a free class</a> or <a href="/placement-test">take the free placement test</a> to find your level.</p>
+      <p>Live group classes are priced in US dollars, at $60 a month for 4 live classes. Some countries have local pricing - Egypt is priced in Egyptian pounds - and <a href="/pricing">the pricing page</a> shows the price for your country.</p>
       <h2>How we teach</h2>
       <ul>
         <li><strong>Clear explanations</strong> - every point explained simply, in English or Arabic.</li>
@@ -393,7 +394,8 @@ const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
 const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
       <h1>التحدث بالكورية من أول حصة مباشرة</h1>
       <p>حصص لغة كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، ومسار واضح من البداية حتى التحدث بثقة. تُقدَّم الحصص بالعربية أو بالإنجليزية.</p>
-      <p><a href="/ar/free-trial">حجز حصة مجانية</a> أو <a href="/ar/placement-test">إجراء اختبار تحديد المستوى المجاني</a> لمعرفة المستوى. تختلف أسعار المجموعات حسب البلد - <a href="/ar/pricing">عرض الأسعار</a>.</p>
+      <p><a href="/ar/free-trial">حجز حصة مجانية</a> أو <a href="/ar/placement-test">إجراء اختبار تحديد المستوى المجاني</a> لمعرفة المستوى.</p>
+      <p>أسعار الحصص الجماعية بالدولار الأمريكي: ٦٠ دولارًا شهريًا مقابل ٤ حصص مباشرة. بعض البلدان لها سعر محلي - ومصر سعرها بالجنيه المصري - و<a href="/ar/pricing">صفحة الأسعار</a> تعرض سعر بلدك.</p>
       <h2>طريقة التدريس</h2>
       <ul>
         <li><strong>شرح واضح</strong> - تُشرح كل نقطة ببساطة، بالعربية أو بالإنجليزية.</li>

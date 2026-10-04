@@ -93,17 +93,39 @@ const zone = (): string => {
   }
 };
 
-/** The visitor's starting group price, or null when we cannot name one. */
-export const useStartingPrice = (): { amount: number; currency: string } | null =>
+/**
+ * The visitor's starting group price.
+ *
+ * This used to return null whenever the timezone did not name a country, and
+ * the teaser then rendered "Prices depend on your country" - so the visitors we
+ * could not place saw no number at all. That includes every crawler, and anyone
+ * in a zone ZONE_COUNTRY does not map (it leaves out Asia/Bangkok on purpose,
+ * for one).
+ *
+ * It now always names a price. An unplaceable visitor falls back to the global
+ * tier in USD: that is what the dollar-paying market is actually charged, it is
+ * the top tier so the figure is never lower than a real price, and `resolved`
+ * tells the teaser whether to point at the country picker.
+ *
+ * Egypt still gets EGP by default (Re, 30 Sep 2026) - that is the home market
+ * and the one currency the local table exists for. Every other country is
+ * already quoted in USD, so the default is dollars for everyone else.
+ */
+export const useStartingPrice = (): { amount: number; currency: string; resolved: boolean } | null =>
   useMemo(() => {
     const country = ZONE_COUNTRY[zone()];
-    if (!country) return null;
-    // EGP for Egypt, USD for every other country (Re, 30 Sep 2026).
-    const local = country === "Egypt" ? localPrices[country]?.group?.[0] : undefined;
-    if (local) return { amount: local.local, currency: local.currency };
-    const tier = getTierForCountry(country);
-    const usd = tier ? tierPrices[tier]?.group?.[1] : undefined;
-    return typeof usd === "number" ? { amount: usd, currency: "USD" } : null;
+    if (country) {
+      // EGP for Egypt, USD for every other country (Re, 30 Sep 2026).
+      const local = country === "Egypt" ? localPrices[country]?.group?.[0] : undefined;
+      if (local) return { amount: local.local, currency: local.currency, resolved: true };
+      const tier = getTierForCountry(country);
+      const usd = (tier ? tierPrices[tier]?.group?.[1] : undefined) ?? tierPrices.global?.group?.[1];
+      if (typeof usd === "number") return { amount: usd, currency: "USD", resolved: true };
+    }
+    const fallback = tierPrices.global?.group?.[1];
+    return typeof fallback === "number"
+      ? { amount: fallback, currency: "USD", resolved: false }
+      : null;
   }, []);
 
 const PriceTeaser = ({ className = "", source }: { className?: string; source: string }) => {
@@ -148,7 +170,14 @@ const PriceTeaser = ({ className = "", source }: { className?: string; source: s
         onClick={() => { try { logLeadEvent({ source_type: "pricing", cta_label: `${source}_view_pricing`, metadata: { language } }); } catch {} }}
         className="inline-flex min-h-11 items-center gap-1 align-middle font-semibold text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground/70"
       >
-        {isAr ? "عرض الأسعار" : "View pricing"}
+        {/* We could not place the visitor, so the figure above is the USD one.
+            Say so, and make the country picker the way out of it - the link is
+            already where they choose. */}
+        {!price
+          ? isAr ? "عرض الأسعار" : "View pricing"
+          : price.resolved
+            ? isAr ? "عرض الأسعار" : "View pricing"
+            : isAr ? "الأسعار بالدولار — اختر بلدك للسعر المحلي" : "Prices in USD — choose your country for local pricing"}
         <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
       </Link>
     </p>
