@@ -378,6 +378,7 @@ export const LIBRARY_SITE: SitePicture[] = [
   { group: "books", dir: "/book-photos", file: "street.jpg" },
   { group: "books", dir: "/book-photos", file: "teacher.jpg" },
   { group: "brand", dir: "/characters", file: "hanbok-pair.jpg" },
+  { group: "brand", dir: "/assets/cluby", file: "learners-reference.webp", label: "ورقة الشخصيتين — المرجع الذي يُرفق في كل برومبت فيه بشر (آدم ولينا بكامل الجسم، بملابس الكانون)" },
   { group: "brand", dir: "", file: "klovers-logo.jpg" },
   { group: "brand", dir: "", file: "klovers-mascot.png" },
   { group: "brand", dir: "", file: "klovers-mascot.svg" },
