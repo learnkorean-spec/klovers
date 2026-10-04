@@ -61,3 +61,27 @@ supabase/.temp/
 /.audit/
 /.img-style-audit/
 /tsc.txt
+
+# Local scratch and unreferenced art, kept on disk and out of git (4 Oct 2026).
+# Nothing here is deleted by these rules - it is only kept from being committed
+# by accident, which is what CLAUDE.md asks for: no unreferenced modules in a
+# code PR.
+#
+# A second, unreferenced icon library. The icon contract that ships is the 20
+# numbered 1024px PNGs, mapped by ICON_FILE in
+# src/components/student-dashboard/premium/primitives.tsx; nothing imports this
+# .webp set, so a 404 on it in production is correct.
+/public/assets/icons/library/*.webp
+/public/assets/icons/library/*@2x.webp
+#
+# The illustrated/anime art the canon now retires
+# (KLOVERS_WORLD.visual.forbiddenStyles: illustrated_or_anime_characters_at_any_size,
+# flat_2d_mascot_set). hero-boy.webp is un-ignored again below on purpose: it is
+# tracked, because public/brand-sheet.html shows it as the off-model example.
+/public/assets/illustrations/*
+!/public/assets/illustrations/hero-boy.webp
+#
+# A saved handover package and its screenshots, and the 25 Sep QA spreadsheet.
+# Neither is source. A deliberate `git add -f` still overrides any line here.
+/Claude outputs/
+/Klovers_Website_QA_GEO_2026-09-25.xlsx
