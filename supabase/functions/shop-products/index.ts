@@ -56,8 +56,16 @@ export interface ShopProduct {
 function priceOptions(price: Stripe.Price): Record<string, number> {
   const out: Record<string, number> = {};
   if (price.unit_amount != null) out[price.currency] = price.unit_amount;
-  for (const [cur, opt] of Object.entries(price.currency_options ?? {})) {
-    if (opt?.unit_amount != null) out[cur] = opt.unit_amount;
+
+  // TYPED EXPLICITLY, and that is the fix rather than a style choice.
+  // `price.currency_options ?? {}` widens the value side to `{}`, so
+  // Object.entries hands back `[string, {}]` and `opt.unit_amount` does not
+  // exist as a property at all: TS2339, "Property 'unit_amount' does not exist
+  // on type '{}'". The fallback is what loses the type, so the fallback is what
+  // gets the annotation.
+  const options: Record<string, Stripe.Price.CurrencyOption> = price.currency_options ?? {};
+  for (const [cur, opt] of Object.entries(options)) {
+    if (opt.unit_amount != null) out[cur] = opt.unit_amount;
   }
   return out;
 }
