@@ -16,6 +16,7 @@
  * That is what lets the `plan` job in the workflow run without any Supabase
  * credential at all.
  */
+import { pathToFileURL } from "node:url";
 import { readFileSync } from "fs";
 
 const mdCell = (v) => {
@@ -93,7 +94,7 @@ async function main() {
 
 // Only run as a CLI when invoked directly — importing renderProposalSummary
 // for the unit test must not also execute main().
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((err) => {
     console.error(`\n${err.message}\n`);
     process.exit(1);

@@ -26,6 +26,7 @@
  * and nothing else — no database write happens here. See
  * docs/GATE2_STEP1_TITLES.md for the full review table.
  */
+import { pathToFileURL } from "node:url";
 import { writeProposal } from "../lib/content-edit.mjs";
 import { createReadOnlyStore } from "../lib/content-edit-supabase-store.mjs";
 
@@ -467,7 +468,7 @@ export function validateEdits(edits) {
 
 // Only runs when this file is executed directly (`node scripts/proposals/titles.mjs`),
 // not when EDITS/validateEdits are imported elsewhere.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   validateEdits(EDITS);
   const store = createReadOnlyStore();
   const edits = EDITS.map((e) => ({ ...e, column: "title" }));

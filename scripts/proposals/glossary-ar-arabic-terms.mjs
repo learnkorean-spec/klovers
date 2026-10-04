@@ -50,6 +50,7 @@
  * The body content is untouched — this batch changes what the search result
  * says, not what the article says.
  */
+import { pathToFileURL } from "node:url";
 import { writeProposal } from "../lib/content-edit.mjs";
 import { createReadOnlyStore } from "../lib/content-edit-supabase-store.mjs";
 
@@ -131,7 +132,7 @@ export function validateEdits(edits) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   validateEdits(EDITS);
 
   const store = createReadOnlyStore();

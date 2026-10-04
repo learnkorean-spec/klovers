@@ -46,6 +46,7 @@
  * strings copied verbatim from the database, and an exact match is the
  * cleanest statement of "this row still has the defect I saw".
  */
+import { pathToFileURL } from "node:url";
 import { writeProposal } from "../lib/content-edit.mjs";
 import { createReadOnlyStore } from "../lib/content-edit-supabase-store.mjs";
 
@@ -135,7 +136,7 @@ export function validateEdits(edits) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   validateEdits(EDITS);
   const store = createReadOnlyStore();
   const edits = [];

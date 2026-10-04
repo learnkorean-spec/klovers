@@ -56,6 +56,7 @@
  * Usage: node scripts/proposals/descriptions-batch2.mjs
  * Needs SUPABASE_URL and SUPABASE_ANON_KEY. Read-only; writes a proposal file.
  */
+import { pathToFileURL } from "node:url";
 import { writeProposal } from "../lib/content-edit.mjs";
 import { createReadOnlyStore } from "../lib/content-edit-supabase-store.mjs";
 
@@ -419,7 +420,7 @@ export function validateEdits(edits) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   validateEdits(EDITS);
 
   const store = createReadOnlyStore();

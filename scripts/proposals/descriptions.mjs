@@ -30,6 +30,7 @@
  * Needs SUPABASE_URL and SUPABASE_ANON_KEY — the anon key is public and this
  * only reads. Writes a proposal; nothing reaches the database here.
  */
+import { pathToFileURL } from "node:url";
 import { writeProposal } from "../lib/content-edit.mjs";
 import { createReadOnlyStore } from "../lib/content-edit-supabase-store.mjs";
 
@@ -255,7 +256,7 @@ export function validateEdits(edits) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   validateEdits(EDITS);
 
   const store = createReadOnlyStore();
