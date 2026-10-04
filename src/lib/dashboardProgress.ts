@@ -17,8 +17,25 @@ import { toArabicDigits } from "@/lib/trustFigures";
 
 // ── Brand icon library ──────────────────────────────────────────────────────
 /**
- * The Klovers icon library (Design System → Icons). Files live in
- * public/assets/icons/library/<name>.webp (96px) + <name>@2x.webp (192px).
+ * The Klovers icon library (Design System → Icons).
+ *
+ * THESE ARE CONCEPT NAMES, NOT FILE NAMES. Which drawing a name resolves to is
+ * decided in exactly one place —
+ * src/components/student-dashboard/premium/primitives.tsx, `ICON_FILE` — and
+ * several concepts deliberately share one drawing ("grammar" and "notebook" are
+ * both 14-practice; "namsan", "hanok", "subway" and "bibimbap" are all
+ * 09-worlds).
+ *
+ * The set that ships is the 20 numbered 1024px PNGs Re supplied
+ * (`01-klubi.png` … `20-settings.png`), served through the Vercel image
+ * optimizer at w=320 in production.
+ *
+ * A second, unreferenced set sits next to them on some checkouts —
+ * `public/assets/icons/library/<name>.webp` + `<name>@2x.webp`, one per concept
+ * name. Nothing imports it, it is not in git, and it does NOT ship; a 404 on
+ * `…/streak.webp` in production is therefore correct and is not a missing
+ * asset. This comment used to describe that set as the live one, which sent a
+ * reader hunting a deploy gap that did not exist.
  */
 export type BrandIconName =
   | "hangul-card" | "conversation" | "headphones" | "notebook" | "open-book"
