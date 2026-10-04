@@ -106,8 +106,22 @@ const WelcomeModal = ({ open, onClose }: WelcomeModalProps) => {
           <div className="inline-flex h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-ivory border border-charcoal/20 items-center justify-center mb-2 sm:mb-3">
             <BrandIcon name="open-book" className="h-12 w-12 sm:h-16 sm:w-16" />
           </div>
+          {/* No 🇰🇷 emoji here. Windows and most Linux desktops ship no colour
+              flag font, so the emoji draws as the bare letters "KR" beside the
+              wordmark — it reads as a typo, not as a flag. The illustrated flag
+              from the icon set is the same mark at every size on every platform,
+              and at 24px only the flag itself is legible, which is the point. */}
           <h2 className="text-xl font-extrabold text-primary-foreground mb-1">
-            {isAr ? "مرحباً بك في Klovers! 🇰🇷" : "Welcome to Klovers! 🇰🇷"}
+            {isAr ? "مرحباً بك في Klovers!" : "Welcome to Klovers!"}
+            <img
+              src="/assets/icons/flag-korea.webp"
+              srcSet="/assets/icons/flag-korea@2x.webp 2x"
+              alt=""
+              aria-hidden="true"
+              width={48}
+              height={48}
+              className="ms-1.5 inline-block h-6 w-6 align-[-0.25em]"
+            />
           </h2>
           <p className="text-primary-foreground/80 text-sm">
             {isAr ? "إليك كيف تبدأ رحلتك الكورية" : "Here's how to kick off your Korean journey"}

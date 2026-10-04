@@ -158,7 +158,7 @@ const SituationPickGame = ({ onGameComplete }: { onGameComplete?: (score: number
         <div className="w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
           <Trophy className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
         </div>
-        <h2 className="text-2xl font-bold">Cultural Expert! 🇰🇷</h2>
+        <h2 className="text-2xl font-bold">Cultural Expert!</h2>
         <p className="text-muted-foreground">{score}/{totalRounds} correct ({pct}%)</p>
         <div className="text-3xl">{pct >= 80 ? "🌟 You'd fit right in Korea!" : pct >= 60 ? "👍 Getting culturally fluent!" : "📚 Study the culture more!"}</div>
         <Button onClick={restart} className="gap-2"><RotateCcw className="h-4 w-4" /> Play Again</Button>

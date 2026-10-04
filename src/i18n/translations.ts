@@ -11,7 +11,7 @@ export const translations = {
       langToggle: "العربية",
     },
     hero: {
-      badge: "🇰🇷 Taught entirely in Arabic",
+      badge: "Taught entirely in Arabic",
       title1: "Learn Korean —",
       title2: "From Anywhere in the World",
       subtitle: "Live Korean classes with a TOPIK-experienced teacher, taught entirely in Arabic — so it actually clicks, not just gets memorized.",
@@ -956,7 +956,7 @@ export const translations = {
       cta: "Start Free Interview Prep",
     },
     completeProfile: {
-      badge: "🇰🇷 Complete Your Profile",
+      badge: "Complete Your Profile",
       pageTitle: "One step closer to Korean!",
       pageSubtitle: "Fill in a few details so we can match you with the perfect class.",
       nameLabel: "Your Name *",

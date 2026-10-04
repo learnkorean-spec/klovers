@@ -57,7 +57,7 @@ export const dashboardPageExtra = {
     wordOfDay: "Word of the day",
     claimXp: "Claim +25 XP",
     claimedXp: "✓ +25 XP",
-    discoverKorea: "🇰🇷 Discover Korea",
+    discoverKorea: "Discover Korea",
     referTitle: "Refer a friend",
     referEarn: "earn 150 XP",
     referJoined: "{{count}} joined",

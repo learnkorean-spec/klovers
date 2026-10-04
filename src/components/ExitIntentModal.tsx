@@ -186,7 +186,7 @@ const ExitIntentModal = () => {
                   {isAr ? "قبل ما تمشي" : "Before you go"}
                 </p>
                 <h3 className="text-lg font-black text-foreground leading-tight">
-                  {isAr ? "خد ورقة هانغول مجانًا 🇰🇷" : "Free Hangul Starter Sheet 🇰🇷"}
+                  {isAr ? "خد ورقة هانغول مجانًا" : "Free Hangul Starter Sheet"}
                 </h3>
               </div>
             </div>

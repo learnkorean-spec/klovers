@@ -218,7 +218,7 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
                     {card.text}
                   </span>
                 ) : (
-                  <span className="text-2xl">🇰🇷</span>
+                  <span className="text-2xl font-bold text-primary" lang="ko">한</span>
                 )}
               </Card>
             </button>
