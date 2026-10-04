@@ -293,6 +293,11 @@ const NOINDEX_CRAWLABLE_ROUTES = [
   "/my-lessons",
   "/practice-interview",
   "/unsubscribe",
+  // Both set noindex through useSEO() today, which only exists after the SPA
+  // bundle runs. Neither is disallowed in robots.txt, so a crawler that does
+  // not execute JavaScript was being told "index, follow" by the shell.
+  "/enroll",
+  "/world",
 ];
 
 const NOINDEX_BLOCKED_ROUTES = [
