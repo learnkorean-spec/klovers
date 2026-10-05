@@ -3,6 +3,36 @@ import react from "@vitejs/plugin-react-swc";
 import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import path from "path";
 
+/**
+ * The app bundle downloads at LOW priority (6 Oct 2026).
+ *
+ * The homepage paints its hero from plain HTML now (#kl-hero-shell in
+ * index.html), so the first paint needs only the HTML, the stylesheet and the
+ * hero picture. Vite emits the entry <script type="module"> and its
+ * <link rel="modulepreload"> tags, which Chrome fetches at HIGH priority.
+ * Lighthouse's mobile simulation counts every high-priority request that
+ * starts before the first paint as something the paint waited for. With
+ * ~200 KB of brotli JS in that set, it put FCP at 4.3s and LCP at 4.7s, even
+ * though the real paint was ~1s (PageSpeed mobile 71).
+ *
+ * fetchpriority="low" lets the picture and the CSS go first on a slow
+ * connection. The JS still starts at once and in parallel, so the app is
+ * barely later to become interactive. Build only - the dev server's HTML is
+ * left alone.
+ */
+const lowPriorityAppBundle = () => ({
+  name: "klovers-low-priority-app-bundle",
+  apply: "build" as const,
+  transformIndexHtml: {
+    order: "post" as const,
+    handler(html: string) {
+      return html
+        .replace(/<script type="module" crossorigin src=/g, '<script type="module" crossorigin fetchpriority="low" src=')
+        .replace(/<link rel="modulepreload" crossorigin href=/g, '<link rel="modulepreload" crossorigin fetchpriority="low" href=');
+    },
+  },
+});
+
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
   server: {
@@ -22,6 +52,7 @@ export default defineConfig(() => ({
   },
   plugins: [
     react(),
+    lowPriorityAppBundle(),
     ViteImageOptimizer({
       jpg: { quality: 80 },
       jpeg: { quality: 80 },
