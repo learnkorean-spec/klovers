@@ -94,9 +94,13 @@ export function WordStories({ words, isAr, resolve }: { words: WordStory[]; isAr
               <Ko className={cn("block pt-3 text-center font-black leading-none tracking-tight sm:pt-0 sm:text-7xl", w.ko.length > 2 ? "text-4xl" : "text-5xl", isOpen ? "text-charcoal" : "text-primary")}>
                 {w.ko}
               </Ko>
-              <p className={cn("mt-3 text-center text-sm font-medium", isOpen ? "text-charcoal/70" : "text-ivory/70")} dir="ltr">
-                {w.rom}
-              </p>
+              {/* Latin romanisation only on the English page: an Arabic page
+                  shows the Korean word and its Arabic meaning (5 Oct 2026). */}
+              {!isAr && (
+                <p className={cn("mt-3 text-center text-sm font-medium", isOpen ? "text-charcoal/70" : "text-ivory/70")} dir="ltr">
+                  {w.rom}
+                </p>
+              )}
               <h3 className="mt-3 text-center font-display text-[0.95rem] font-bold leading-snug sm:mt-4 sm:text-lg">{w.hook[L]}</h3>
               <div id={`word-${i}`} hidden={!isOpen} className="mt-3 text-center text-sm leading-relaxed">
                 {w.meaning[L]}
@@ -155,7 +159,7 @@ export function DramaLines({ lines, isAr, resolve }: { lines: Expression[]; isAr
                 <span aria-hidden="true" className="absolute inset-x-0 top-0 h-3 bg-black/60" />
                 <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-3 bg-black/60" />
                 <span className="absolute top-5 start-5 rounded bg-ivory/10 px-2 py-0.5 tabular-nums text-[11px] font-semibold text-ivory/70" dir="ltr">
-                  SCENE {String(i + 1).padStart(2, "0")}
+                  {isAr ? "مشهد" : "SCENE"} {String(i + 1).padStart(2, "0")}
                 </span>
                 <div className="text-center">
                   <Ko className="block text-3xl font-black text-ivory drop-shadow sm:text-4xl">{l.ko}</Ko>
@@ -164,8 +168,12 @@ export function DramaLines({ lines, isAr, resolve }: { lines: Expression[]; isAr
               </div>
               <div className="p-5">
                 <p className="text-sm text-ivory/70">
-                  <span dir="ltr" className="font-medium">{l.rom}</span>
-                  <span aria-hidden="true"> · </span>
+                  {!isAr && (
+                    <>
+                      <span dir="ltr" className="font-medium">{l.rom}</span>
+                      <span aria-hidden="true"> · </span>
+                    </>
+                  )}
                   {isAr ? "حرفيًا: " : "Literally: "}
                   {l.literal[L]}
                 </p>
@@ -210,7 +218,7 @@ export function SpeakPhrases({ phrases, isAr, resolve }: { phrases: Expression[]
                 {/* The Korean line, as the other person's message bubble. */}
                 <div className="rounded-3xl rounded-ss-md bg-muted px-5 py-3.5">
                   <Ko className="block text-xl font-black text-foreground sm:text-3xl">{p.ko}</Ko>
-                  <span className="mt-1 block text-xs font-medium text-muted-foreground" dir="ltr">{p.rom}</span>
+                  {!isAr && <span className="mt-1 block text-xs font-medium text-muted-foreground" dir="ltr">{p.rom}</span>}
                 </div>
                 {p.register && (
                   <span className="shrink-0 rounded-full border border-border px-2.5 py-1 text-[11px] font-bold text-foreground/80">

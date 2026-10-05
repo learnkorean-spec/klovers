@@ -117,7 +117,7 @@ export function KoreanWord({ item, from, isAr, children }: { item: VocabItem; fr
       </PopoverTrigger>
       <PopoverContent className="w-72 rounded-2xl p-4" dir={isAr ? "rtl" : "ltr"}>
         <Ko className="block text-3xl font-black">{item.ko}</Ko>
-        {item.rom && <p className="mt-1 text-sm text-muted-foreground">{item.rom}</p>}
+        {item.rom && !isAr && <p className="mt-1 text-sm text-muted-foreground">{item.rom}</p>}
         {item.meaning && <p className="mt-2 text-base font-semibold leading-snug">{item.meaning}</p>}
         <div className="mt-4 flex items-center gap-2">
           <SpeakButton text={item.ko} isAr={isAr} />
