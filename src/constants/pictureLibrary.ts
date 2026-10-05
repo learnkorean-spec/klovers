@@ -78,6 +78,13 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "kb_home_hangul_village_v2", label: "قرية الهانغل — آدم وكلوبي عند لافتة فارغة، وهو ما يطابق الكانون: العلامات تصير مقروءة تدريجيًا — مستخدَمة: story/world-hangul-village.webp" },
   { file: "kb_home_market_v2", label: "سوق المفردات — لينا وكلوبي والتفاح (‏사과، مثال الكانون نفسه) — مستخدَمة: story/world-vocabulary-market.webp" },
   { file: "kb_home_conv_cafe_v2", label: "مقهى المحادثة — آدم يتحدث ولينا تسمع وكلوبي على السور — مستخدَمة: story/world-conversation-cafe.webp" },
+  // Hero re-takes and two portraits, shared 5 Oct 2026. The other ten pictures in that
+  // upload were byte-for-byte the _v2 scenes already above, so they are not filed twice.
+  { file: "kb_home_hero_v3a", label: "الهيرو — الثلاثة يقرأون على الشرفة، عينا كلوبي مفتوحتان بنيّتان — مرشّحة: خلل بكسلات في زاوية السماء العليا اليمنى (تُقصّ أو تُمدّد السماء)" },
+  { file: "kb_home_hero_v3b", label: "الهيرو — الثلاثة يقرأون على الشرفة، كلوبي مغمض العينين ضاحكًا — مرشّحة: خلل بكسلات في زاوية السماء العليا اليمنى (تُقصّ أو تُمدّد السماء)" },
+  { file: "kb_home_hero_v3c", label: "الهيرو — الثلاثة يقرأون على الشرفة، عينا كلوبي مفتوحتان — مرشّحة: زاوية السماء العليا اليمنى شفافة وفيها خلل (تُقصّ أو تُمدّد السماء)" },
+  { file: "kb_lina_bust_real", label: "لينا — نصفية بالنمط الحقيقي، يدها على صدرها وتبتسم (الأصل بخلفية شفافة، محفوظة هنا على عاجي)" },
+  { file: "kb_adam_bust_real", label: "آدم — نصفية بالنمط الحقيقي، إبهام مرفوع (الأصل بخلفية شفافة، محفوظة هنا على عاجي)" },
 ];
 
 export const LIBRARY_ICONS: LibraryIcon[] = [
