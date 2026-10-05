@@ -33,7 +33,7 @@ const FAQPage = () => {
   const { t, tArray, language } = useLanguage();
   const isAr = language === "ar";
   useSEO({
-    title: isAr ? "الأسئلة الشائعة" : "FAQ",
+    title: isAr ? "الأسئلة الشائعة" : "Korean Classes FAQ: Levels, Schedule and Payment",
     description: isAr
       ? "إجابات عن تعلّم الكورية مع كلوفرز: الدورات، والمعلّمة، والمواعيد، وطرق الدفع."
       : "Got questions about learning Korean with Klovers? Find answers about courses, the teacher, scheduling, and payments.",

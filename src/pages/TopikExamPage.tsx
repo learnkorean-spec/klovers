@@ -51,7 +51,7 @@ const TopikExamPage = () => {
     title: isAr ? "التحضير لاختبار TOPIK: الشكل والدرجات وخطة الدراسة" : "TOPIK Exam Preparation: Format, Scoring & Study Plan",
     description: isAr
       ? "كيف يعمل اختبار TOPIK للغة الكورية: المستويان الأول والثاني، والأقسام، والتوقيت، والدرجة المطلوبة لكل مستوى، مع مسار كلوفرز للتحضير بنماذج سابقة وتدريب على الكتابة."
-      : "How the TOPIK Korean exam works: TOPIK I and II, sections, timing and the score needed for each level, plus the Klovers TOPIK track with past papers and writing practice.",
+      : "How the TOPIK exam works: TOPIK I and II, sections, timing and the score for each level, plus the Klovers TOPIK track with past papers and writing practice.",
     canonical: "https://kloversegy.com/topik-exam-preparation",
   });
 

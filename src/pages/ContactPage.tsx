@@ -67,10 +67,10 @@ const ContactPage = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
   useSEO({
-    title: isAr ? "التواصل" : "Contact Us",
+    title: isAr ? "التواصل" : "Contact Us: Questions About Korean Classes",
     description: isAr
       ? "التواصل مع كلوفرز للاستفسار عن الدورات والتسجيل وأي سؤال آخر."
-      : "Get in touch with Klovers. We would love to hear from you about courses, enrollment, or any questions.",
+      : "Get in touch with Klovers about Korean courses, enrollment or any other question. Send a message or write to us on WhatsApp and we will reply.",
     canonical: "https://kloversegy.com/contact",
   });
   const { toast } = useToast();

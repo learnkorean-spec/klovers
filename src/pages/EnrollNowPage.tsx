@@ -115,10 +115,10 @@ const EnrollNowPage = () => {
   const { t, tArray, language } = useLanguage();
   const isAr = language === "ar";
   useSEO({
-    title: isAr ? "التسجيل في حصص الكورية" : "Enroll Now | Klovers",
+    title: isAr ? "التسجيل في حصص الكورية" : "Enroll in Korean Classes | Klovers",
     description: isAr
       ? "التسجيل في كلوفرز: اختيار نوع الحصة والجدول، ثم بدء التحدث بالكورية بثقة."
-      : "Join Klovers — choose your class type, schedule, and start speaking Korean with confidence.",
+      : "Join Klovers: choose your class type and schedule, then start speaking Korean with confidence in live online classes with a real teacher.",
     canonical: "https://kloversegy.com/enroll-now",
   });
   const localDayNames: string[] = tArray("enrollNow", "dayNames").length === 7

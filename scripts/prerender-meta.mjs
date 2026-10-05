@@ -687,7 +687,7 @@ const MARKETING_ROUTES = [
   },
   {
     path: "/about",
-    title: "About Us",
+    title: "About Us: Meet Your Korean Teacher",
     description:
       "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years and more than 200 students.",
     body: ABOUT_BODY_HTML,
@@ -695,15 +695,15 @@ const MARKETING_ROUTES = [
   },
   {
     path: "/contact",
-    title: "Contact Us",
+    title: "Contact Us: Questions About Korean Classes",
     description:
-      "Get in touch with Klovers. We would love to hear from you about courses, enrollment, or any questions.",
+      "Get in touch with Klovers about Korean courses, enrollment or any other question. Send a message or write to us on WhatsApp and we will reply.",
     body: CONTACT_BODY_HTML,
     pageLd: { "@type": "ContactPage", mainEntity: { "@id": `${BASE_URL}/#organization` } },
   },
   {
     path: "/faq",
-    title: "FAQ",
+    title: "Korean Classes FAQ: Levels, Schedule and Payment",
     description:
       "Got questions about learning Korean with Klovers? Find answers about courses, the teacher, scheduling, and payments.",
     body: FAQ_BODY_HTML,
@@ -711,9 +711,9 @@ const MARKETING_ROUTES = [
   },
   {
     path: "/enroll-now",
-    title: "Enroll Now | Klovers",
+    title: "Enroll in Korean Classes | Klovers",
     description:
-      "Join Klovers — choose your class type, schedule, and start speaking Korean with confidence.",
+      "Join Klovers: choose your class type and schedule, then start speaking Korean with confidence in live online classes with a real teacher.",
     body: ENROLL_NOW_BODY_HTML,
   },
   {
@@ -773,7 +773,7 @@ const MARKETING_ROUTES = [
     path: "/affiliate",
     title: "Affiliate Program",
     description:
-      "Join the Klovers affiliate program. Earn commissions by referring students to our Korean language courses.",
+      "Join the Klovers affiliate program. Earn 20% of each referred student's first payment for our Korean language courses.",
     body: AFFILIATE_BODY_HTML,
     faq: MARKETING_FAQ["/affiliate"],
   },
@@ -800,7 +800,7 @@ const MARKETING_ROUTES = [
     path: "/topik-exam-preparation",
     title: "TOPIK Exam Preparation: Format, Scoring & Study Plan",
     description:
-      "How the TOPIK Korean exam works: TOPIK I and II, sections, timing and the score needed for each level, plus the Klovers TOPIK track with past papers and writing practice.",
+      "How the TOPIK exam works: TOPIK I and II, sections, timing and the score for each level, plus the Klovers TOPIK track with past papers and writing practice.",
     body: TOPIK_BODY_HTML,
     // faq removed 27 Sep 2026 (no visible FAQ section).
     articleLd: true,
@@ -811,7 +811,7 @@ const MARKETING_ROUTES = [
     path: "/learn-korean-kdramas",
     title: "Learn Korean Through K-Dramas",
     description:
-      "A simple, repeatable way to study Korean with K-dramas: one scene at a time, with Korean subtitles, shadowing and a phrase notebook, and how live classes fill in the grammar.",
+      "A simple way to study Korean with K-dramas: one scene at a time, Korean subtitles, shadowing and a phrase notebook, with live classes to fill in the grammar.",
     body: KDRAMAS_BODY_HTML,
     // faq removed 27 Sep 2026 (no visible FAQ section).
     articleLd: true,
@@ -840,7 +840,7 @@ const MARKETING_ROUTES = [
     path: "/scholarships",
     title: "Korean Scholarships: Six Official Programmes",
     description:
-      "Six official Korean scholarships — GKS, KAIST, the Korea Foundation, KOICA and exchange — what each covers, who qualifies, when to apply, and the official source.",
+      "Six official Korean scholarships: GKS, KAIST, the Korea Foundation, KOICA and exchange. What each covers, who qualifies, when to apply and the official source.",
     body: SCHOLARSHIPS_BODY_HTML,
   },
   {

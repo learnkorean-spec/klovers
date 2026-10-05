@@ -32,7 +32,7 @@ const AboutPage = () => {
   const { t, tArray, language } = useLanguage();
   const isAr = language === "ar";
   useSEO({
-    title: isAr ? "من نحن" : "About Us",
+    title: isAr ? "من نحن" : "About Us: Meet Your Korean Teacher",
     description: isAr
       ? `أسّست كلوفرز ريهام الشرقاوي، خريجة الألسن قسم اللغة والأدب الكوري، وتدرّس الكورية منذ ${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا لأكثر من ${toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))} طالب.`
       : "Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years and more than 200 students.",

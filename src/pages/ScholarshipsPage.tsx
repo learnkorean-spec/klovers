@@ -41,7 +41,7 @@ const ScholarshipsPage = () => {
     title: isAr ? "منح كوريا: ستة برامج رسمية | كلوفرز" : "Korean Scholarships: Six Official Programmes | Klovers",
     description: isAr
       ? "ست منح كورية رسمية بالتفصيل: منحة الحكومة الكورية، وKAIST، ومؤسسة كوريا، وKOICA، والتبادل الطلابي — بما تغطيه كل منحة وشروطها ومواعيدها ومصادرها الرسمية."
-      : "Six official Korean scholarships in detail: Global Korea Scholarship, KAIST, the Korea Foundation, KOICA and exchange — what each covers, who qualifies, when to apply, and the official source.",
+      : "Six official Korean scholarships: GKS, KAIST, the Korea Foundation, KOICA and exchange. What each covers, who qualifies, when to apply and the official source.",
     canonical: isAr ? "https://kloversegy.com/ar/scholarships" : "https://kloversegy.com/scholarships",
     alternates: {
       en: "https://kloversegy.com/scholarships",
