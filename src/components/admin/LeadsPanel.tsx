@@ -32,13 +32,17 @@ import { useStudentOverview, buildOverviewByEmail } from "@/hooks/admin/useStude
 import { useScheduleWeekdays } from "@/hooks/admin/useScheduleWeekdays";
 import type { Lead } from "@/types/admin";
 import { ACTIVE_TRIAL_STATUS_LIST } from "@/constants/trialStatus";
+import { fetchAllPages } from "@/lib/fetchAllPages";
 
 // "churned" sits after "enrolled" because that is the order it happens in: a
 // student who paid, attended and then stopped. It is NOT "lost", which in
 // every other row means a prospect who never enrolled at all — filing the two
 // together is what would send a win-back campaign to people who were never
 // students, and miss the ones who were.
-const STATUS_OPTIONS = ["new", "trial_booked", "contacted", "enrolled", "churned", "rejected", "lost"];
+// "confirmed" is a legacy value: the old Approve button wrote it, and 11 leads
+// still carry it. Without it in this list their status cell renders blank and
+// they cannot be filtered. New approvals write "trial_booked" instead.
+const STATUS_OPTIONS = ["new", "trial_booked", "confirmed", "contacted", "enrolled", "churned", "rejected", "lost"];
 
 const LeadsPanel: React.FC = () => {
   const queryClient = useQueryClient();
@@ -207,8 +211,9 @@ const LeadsPanel: React.FC = () => {
       return;
     }
     let linked = 0;
-    const { data: profiles } = await supabase.from("profiles").select("user_id, email");
-    if (!profiles) return;
+    const { data: profiles, error: profilesErr } = await fetchAllPages<{ user_id: string; email: string }>((f, t) =>
+      supabase.from("profiles").select("id, user_id, email").order("id").range(f, t) as never);
+    if (profilesErr) { toast({ title: "Could not read profiles", description: profilesErr.message, variant: "destructive" }); return; }
     const profileByEmail: Record<string, string> = {};
     for (const p of (profiles ?? []) as { user_id: string; email: string }[]) {
       if (p.email) profileByEmail[p.email.toLowerCase().trim()] = p.user_id;

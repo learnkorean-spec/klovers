@@ -21,6 +21,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllPages } from "@/lib/fetchAllPages";
 
 export const WEEK_DAYS = 7;
 
@@ -131,44 +132,58 @@ export function useWeekReview(days: number = WEEK_DAYS) {
         notificationsRes,
         emailsRes,
       ] = await Promise.all([
-        supabase
+        fetchAllPages<any>((f, t) => supabase
           .from("profiles")
           .select("id, user_id, name, email, country, level, language, created_at")
           .gte("created_at", since)
-          .order("created_at", { ascending: false }),
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(f, t) as never),
         // Every live dated booking, tallied in memory — the same shape Today
         // uses, so the two screens cannot disagree about a session.
-        supabase
+        fetchAllPages<any>((f, t) => supabase
           .from("trial_bookings")
-          .select("trial_date, start_time, class_language, attendance_response, attendance_email_sent_at")
+          .select("id, trial_date, start_time, class_language, attendance_response, attendance_email_sent_at")
           .neq("status", "cancelled")
-          .not("trial_date", "is", null),
-        supabase
+          .not("trial_date", "is", null)
+          .order("id")
+          .range(f, t) as never),
+        fetchAllPages<any>((f, t) => supabase
           .from("enrollments")
           .select("id, user_id, plan_type, duration, classes_included, amount, currency, payment_status, approval_status, created_at")
           .is("deleted_at", null)
           .gte("created_at", since)
-          .order("created_at", { ascending: false }),
-        supabase
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(f, t) as never),
+        fetchAllPages<any>((f, t) => supabase
           .from("student_class_sessions")
           .select("id, student_id, session_date, start_time, outcome")
           .gte("session_date", windowKey)
-          .order("session_date", { ascending: false }),
+          .order("session_date", { ascending: false })
+          .order("id")
+          .range(f, t) as never),
         supabase.from("teacher_students").select("id, full_name"),
-        supabase
+        fetchAllPages<any>((f, t) => supabase
           .from("admin_audit_log")
           .select("id, admin_id, action, field, old_value, new_value, created_at")
           .gte("created_at", since)
-          .order("created_at", { ascending: false }),
-        supabase
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(f, t) as never),
+        fetchAllPages<any>((f, t) => supabase
           .from("admin_notifications")
           .select("id, type, message, read, created_at")
           .gte("created_at", since)
-          .order("created_at", { ascending: false }),
-        supabase
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(f, t) as never),
+        fetchAllPages<any>((f, t) => supabase
           .from("email_logs")
-          .select("template")
-          .gte("created_at", since),
+          .select("id, template")
+          .gte("created_at", since)
+          .order("id")
+          .range(f, t) as never),
       ]);
 
       for (const r of [profilesRes, bookingsRes, enrollmentsRes, sessionsRes, studentsRes, auditRes, notificationsRes, emailsRes]) {

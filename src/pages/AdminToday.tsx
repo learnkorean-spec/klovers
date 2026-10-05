@@ -353,11 +353,6 @@ const AdminToday = () => {
   return (
     <AdminShell
       activeId="today"
-      badges={{
-        trials: counts?.waitingTotal,
-        enrollments: counts?.awaitingPayment,
-        notifications: counts?.notifications,
-      }}
     >
       <main id="main-content">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 space-y-8">
