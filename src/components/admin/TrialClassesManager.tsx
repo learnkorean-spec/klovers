@@ -24,6 +24,7 @@ import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import { useAllTrialSlots } from "@/hooks/useTrialAdmin";
 import AddTrialClassDialog from "@/components/admin/trial/AddTrialClassDialog";
 import TrialSlotProposals from "@/components/admin/trial/TrialSlotProposals";
+import NewTraffic from "@/components/admin/trial/NewTraffic";
 import TrialAttendanceRoster from "@/components/admin/trial/TrialAttendanceRoster";
 import { pickRebookTargets } from "@/components/admin/trial/rebookTargets";
 import { emailLanguageFor } from "@/components/admin/trial/emailLanguage";
@@ -1007,6 +1008,9 @@ const TrialClassesManager = () => {
           renders nothing unless one is waiting, and it is the only place a
           suggestion can be turned into a real class — the email that announced
           it carries no button. */}
+      {/* Fresh arrivals first: is new traffic coming in, and where does it stall? */}
+      <NewTraffic />
+
       <TrialSlotProposals />
 
       {/* Who said yes, who said no, who never answered and who was never
