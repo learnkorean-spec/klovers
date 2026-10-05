@@ -83,6 +83,12 @@ const TabLoader = () => (
 
 const STATUS_OPTIONS = ["new", "trial_booked", "contacted", "enrolled", "rejected", "lost"];
 
+// Mobile tab names come from the sidebar's own labels, so a screen is called
+// the same thing everywhere instead of an auto-capitalised id ("Seo Orchestration").
+const TAB_LABELS: Record<string, string> = Object.fromEntries(
+  [...ADMIN_NAV.primary, ...ADMIN_NAV.secondary, ...ADMIN_NAV.folded.flatMap((g) => g.items)].map((i) => [i.id, i.label]),
+);
+
 // Error boundary for lazy-loaded tab components
 class TabErrorBoundary extends Component<
   { name: string; children: ReactNode },
@@ -152,6 +158,7 @@ import { useAttendanceRequests } from "@/hooks/admin/useAttendanceRequests";
 import { useReferralStats } from "@/hooks/admin/useReferralStats";
 import { useTrialStats } from "@/hooks/admin/useTrialStats";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { ADMIN_NAV } from "@/components/admin/AdminShell";
 
 const AdminDashboard = () => {
   const { t } = useTranslation("admin");
@@ -1250,7 +1257,7 @@ const AdminDashboard = () => {
                     <SelectContent>
                       {currentGroup.tabs.map(t => (
                         <SelectItem key={t} value={t}>
-                          {t.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+                          {TAB_LABELS[t] ?? t.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
                         </SelectItem>
                       ))}
                     </SelectContent>

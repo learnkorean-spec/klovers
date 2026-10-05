@@ -75,6 +75,24 @@ export const EnrollmentsTab = memo(function EnrollmentsTab({
   //   ?status=<list>     opens that list (under_review, pending_payment, …)
   //   ?status=attention  or no param: the first list with work in it, in the
   //                      same order the Need Attention count uses.
+  // The filters that apply on top of a status list, defined once so the "(N)"
+  // on each tab and the cards under it can never disagree.
+  const matchesOtherFilters = (e: Enrollment) => {
+    const isLegacy = (!e.level || e.level.trim() === "") && !e.preferred_day && (!e.preferred_days || e.preferred_days.length === 0);
+    const isActionable = e.approval_status === "PENDING_PAYMENT" || e.approval_status === "UNDER_REVIEW";
+    if (!showLegacyEnrollments && isLegacy && !isActionable) return false;
+    if (showOverdueOnly && !e.negative_since) return false;
+    if (debouncedEnrollmentSearch) {
+      const q = debouncedEnrollmentSearch.toLowerCase();
+      const name = e.profiles?.name?.toLowerCase() ?? "";
+      const email = e.profiles?.email?.toLowerCase() ?? "";
+      const plan = e.plan_type?.toLowerCase() ?? "";
+      if (!name.includes(q) && !email.includes(q) && !plan.includes(q)) return false;
+    }
+    return true;
+  };
+  const countFor = (status: string) => enrollments.filter((e) => e.approval_status === status && matchesOtherFilters(e)).length;
+
   const [searchParams] = useSearchParams();
   const wantedStatus = searchParams.get("status");
   const STATUS_TABS = ["under_review", "pending_payment", "pending", "approved", "rejected"];
@@ -224,11 +242,11 @@ export const EnrollmentsTab = memo(function EnrollmentsTab({
               })()}
               <TabsList className="flex gap-2 overflow-x-auto whitespace-nowrap pb-3 h-auto bg-transparent p-0 w-full">
                 {[
-                  { value: "under_review", label: t("enrollments.underReview"), count: enrollments.filter(e => e.approval_status === "UNDER_REVIEW").length },
-                  { value: "pending_payment", label: t("enrollments.pendingPayment"), count: enrollments.filter(e => e.approval_status === "PENDING_PAYMENT").length },
-                  { value: "pending", label: t("enrollments.pending"), count: enrollments.filter(e => e.approval_status === "PENDING").length },
-                  { value: "approved", label: t("enrollments.approved"), count: enrollments.filter(e => e.approval_status === "APPROVED").length },
-                  { value: "rejected", label: t("enrollments.rejected"), count: enrollments.filter(e => e.approval_status === "REJECTED").length },
+                  { value: "under_review", label: t("enrollments.underReview"), count: countFor("UNDER_REVIEW") },
+                  { value: "pending_payment", label: t("enrollments.pendingPayment"), count: countFor("PENDING_PAYMENT") },
+                  { value: "pending", label: t("enrollments.pending"), count: countFor("PENDING") },
+                  { value: "approved", label: t("enrollments.approved"), count: countFor("APPROVED") },
+                  { value: "rejected", label: t("enrollments.rejected"), count: countFor("REJECTED") },
                 ].map(tab => (
                   <TabsTrigger key={tab.value} value={tab.value} className="shrink-0 rounded-full px-4 py-2 text-xs border border-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary bg-background gap-1.5">
                     {tab.label} ({tab.count})
@@ -237,25 +255,13 @@ export const EnrollmentsTab = memo(function EnrollmentsTab({
               </TabsList>
 
               {(["pending_payment", "under_review", "pending", "approved", "rejected"] as const).map((tab) => {
-                const isLegacy = (e: Enrollment) => (!e.level || e.level.trim() === '') && (!e.preferred_day && (!e.preferred_days || e.preferred_days.length === 0));
                 const filtered = enrollments.filter((e) => {
                   const matchesTab = tab === "pending_payment" ? e.approval_status === "PENDING_PAYMENT"
                     : tab === "under_review" ? e.approval_status === "UNDER_REVIEW"
                     : tab === "pending" ? e.approval_status === "PENDING"
                     : tab === "approved" ? e.approval_status === "APPROVED"
                     : e.approval_status === "REJECTED";
-                  if (!matchesTab) return false;
-                  const isActionable = e.approval_status === "PENDING_PAYMENT" || e.approval_status === "UNDER_REVIEW";
-                  if (!showLegacyEnrollments && isLegacy(e) && !isActionable) return false;
-                  if (showOverdueOnly && !e.negative_since) return false;
-                  if (debouncedEnrollmentSearch) {
-                    const q = debouncedEnrollmentSearch.toLowerCase();
-                    const name = e.profiles?.name?.toLowerCase() ?? "";
-                    const email = e.profiles?.email?.toLowerCase() ?? "";
-                    const plan = e.plan_type?.toLowerCase() ?? "";
-                    if (!name.includes(q) && !email.includes(q) && !plan.includes(q)) return false;
-                  }
-                  return true;
+                  return matchesTab && matchesOtherFilters(e);
                 });
                 const isActionableTab = tab === "under_review" || tab === "pending_payment";
                 const enrollPageCount = Math.ceil(filtered.length / PAGE_SIZE);

@@ -11,6 +11,7 @@ import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
 import type { Enrollment } from "@/types/admin";
+import { fetchAllPages } from "@/lib/fetchAllPages";
 
 /*
  * Sales Analytics — group enrollments only.
@@ -67,12 +68,16 @@ const SalesAnalytics = () => {
     const load = async () => {
       try {
         const [eRes, lRes, pRes] = await Promise.all([
-          supabase
-            .from("enrollments")
-            .select("id,user_id,plan_type,duration,classes_included,amount,currency,payment_status,approval_status,payment_provider,created_at,level,enrollment_status,sessions_remaining,sessions_total,unit_price,payment_date,deleted_at")
-            .is("deleted_at", null),
-          supabase.from("leads").select("id"),
-          supabase.from("profiles").select("user_id,name,email"),
+          fetchAllPages<Row>((f, t) =>
+            supabase
+              .from("enrollments")
+              .select("id,user_id,plan_type,duration,classes_included,amount,currency,payment_status,approval_status,payment_provider,created_at,level,enrollment_status,sessions_remaining,sessions_total,unit_price,payment_date,deleted_at")
+              .is("deleted_at", null)
+              .order("id")
+              .range(f, t) as never),
+          fetchAllPages<{ id: string }>((f, t) => supabase.from("leads").select("id").order("id").range(f, t) as never),
+          fetchAllPages<{ user_id: string; name: string | null; email: string | null }>((f, t) =>
+            supabase.from("profiles").select("id,user_id,name,email").order("id").range(f, t) as never),
         ]);
         if (eRes.error) throw eRes.error;
         if (lRes.error) throw lRes.error;

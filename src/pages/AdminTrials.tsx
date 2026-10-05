@@ -37,6 +37,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import AdminShell from "@/components/admin/AdminShell";
 
 const BRAND = "#FFFF00";
 
@@ -201,6 +202,7 @@ export default function AdminTrials() {
   }, [rows, q]);
 
   return (
+    <AdminShell activeId="trials">
     <div dir="rtl" className="min-h-screen bg-background text-foreground">
       <header className="bg-[#111] px-5 py-8 text-white">
         <div className="mx-auto max-w-3xl">
@@ -368,5 +370,6 @@ export default function AdminTrials() {
         </footer>
       </main>
     </div>
+    </AdminShell>
   );
 }

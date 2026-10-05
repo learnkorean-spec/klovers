@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchAllPages } from "@/lib/fetchAllPages";
 
 interface ReferrerBreakdown {
   userId: string;
@@ -13,14 +14,11 @@ export function useReferralStats() {
     queryKey: ["admin", "referral-stats"],
     queryFn: async () => {
       const [convResult, clickResult] = await Promise.all([
-        supabase
-          .from("referral_conversions")
-          .select("referrer_user_id, converted_at")
-          .limit(5000),
-        supabase
-          .from("referral_clicks")
-          .select("referrer_user_id, clicked_at")
-          .limit(5000),
+        // `.limit(5000)` never worked: the server caps at 1000 and says nothing.
+        fetchAllPages<{ referrer_user_id: string; converted_at: string }>((f, t) =>
+          supabase.from("referral_conversions").select("id, referrer_user_id, converted_at").order("id").range(f, t) as never),
+        fetchAllPages<{ referrer_user_id: string; clicked_at: string }>((f, t) =>
+          supabase.from("referral_clicks").select("id, referrer_user_id, clicked_at").order("id").range(f, t) as never),
       ]);
 
       if (convResult.error) throw convResult.error;
