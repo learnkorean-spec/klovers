@@ -123,12 +123,17 @@
     <meta name="apple-mobile-web-app-title" content="Klovers" />
     <meta name="theme-color" content="#FFFF00" />
 
-    <!-- Preconnect to external origins for faster resource loading -->
+    <!--
+      Preconnect only to what the first paint needs (6 Oct 2026). Supabase is
+      read during the first render; the fonts are preconnected below. Google
+      Analytics and the Meta Pixel used to be preconnected too, but both load
+      seconds after the page (see _klAfterLoad below), so opening their
+      connections early only took bandwidth from the hero on a slow phone.
+      PageSpeed also flagged "more than 4 preconnects".
+    -->
     <link rel="preconnect" href="https://ewtdgpbybkceokfohhyg.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://ewtdgpbybkceokfohhyg.supabase.co" />
-    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-    <link rel="preconnect" href="https://connect.facebook.net" crossorigin />
     <link rel="dns-prefetch" href="https://connect.facebook.net" />
 
     <!-- LCP hero image — preloaded from stable public path to avoid render-blocking discovery -->
@@ -187,6 +192,24 @@
     -->
     <script>
       window.__klIsProdHost = /(^|\.)kloversegy\.com$/.test(window.location.hostname);
+      /*
+        Run fn after the page has finished loading, then waited, then the
+        browser is idle (6 Oct 2026). requestIdleCallback alone fired about
+        15ms after the HTML arrived, so on a slow phone the 110 KB Meta Pixel
+        script and gtag downloaded alongside the app bundle and the hero
+        picture - PageSpeed mobile measured LCP at 8.5s. Analytics still loads
+        on every visit; it just no longer races the first paint.
+      */
+      window._klAfterLoad = function (fn, delay) {
+        var go = function () {
+          setTimeout(function () {
+            if ('requestIdleCallback' in window) { requestIdleCallback(fn, { timeout: 4000 }); }
+            else { fn(); }
+          }, delay);
+        };
+        if (document.readyState === 'complete') { go(); }
+        else { window.addEventListener('load', go, { once: true }); }
+      };
     </script>
 
     <!--
@@ -226,10 +249,7 @@
         gtag('js', new Date());
         gtag('config', 'G-L4JG9ZP7HL');
       };
-      if (window.__klIsProdHost) {
-        if ('requestIdleCallback' in window) { requestIdleCallback(_loadGA); }
-        else { setTimeout(_loadGA, 2000); }
-      }
+      if (window.__klIsProdHost) { window._klAfterLoad(_loadGA, 1500); }
     </script>
 
     <!-- Meta Pixel — deferred; replace PIXEL_ID in .env: VITE_META_PIXEL_ID=your_id -->
@@ -248,10 +268,7 @@
           fbq('track', 'PageView');
         }
       };
-      if (window.__klIsProdHost) {
-        if ('requestIdleCallback' in window) { requestIdleCallback(_loadPixel); }
-        else { setTimeout(_loadPixel, 2500); }
-      }
+      if (window.__klIsProdHost) { window._klAfterLoad(_loadPixel, 3000); }
     </script>
     <!-- Meta Pixel noscript moved to body — <img> inside <head><noscript> is invalid HTML -->
 
