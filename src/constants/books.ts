@@ -147,18 +147,29 @@ export const BOOKS = {
 
 export type BookId = keyof typeof BOOKS;
 
-/** Cover thumbnails (300×388 WebP, ~12 KB) in the public marketing-images bucket —
- *  the cover is not secret; the book itself stays private. */
-const COVER_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/marketing-images";
+/**
+ * Cover thumbnails (300px wide WebP, ~20 KB), shipped with the site.
+ *
+ * These were remade on 5 Oct 2026 from the restyled covers. The range was put
+ * on one cover template on 1 Oct, but these thumbnails still pointed at the
+ * pre-restyle files in the marketing-images bucket — so Admin -> Book Plan
+ * showed the new aligned covers while the shop shelf, the Books screen and a
+ * student's My Books all showed the old mismatched ones. Re spotted it from
+ * the shelf.
+ *
+ * They are generated from public/picture-library/scenes/cover_*.jpg, which is
+ * where a restyled cover lands first. Restyle a cover and this is the second
+ * place to update; nothing derives it automatically.
+ */
 export const BOOK_COVERS: Record<BookId, string> = {
-  "hangul-a0": `${COVER_BASE}/hangul-a0-cover.webp`,
-  "hangul-a0-en": `${COVER_BASE}/hangul-a0-en-cover.webp`,
-  "book-1": `${COVER_BASE}/book-1-cover.webp`,
-  "trial-guide-ar": `${COVER_BASE}/trial-guide-ar-cover.webp`,
-  "trial-guide-en": `${COVER_BASE}/trial-guide-en-cover.webp`,
+  "hangul-a0": "/book-covers/hangul-a0.webp",
+  "hangul-a0-en": "/book-covers/hangul-a0-en.webp",
+  "book-1": "/book-covers/book-1.webp",
+  "trial-guide-ar": "/book-covers/trial-guide-ar.webp",
+  "trial-guide-en": "/book-covers/trial-guide-en.webp",
   // Store editions share the student editions' covers.
-  "hangul-a0-store": `${COVER_BASE}/hangul-a0-cover.webp`,
-  "hangul-a0-en-store": `${COVER_BASE}/hangul-a0-en-cover.webp`,
+  "hangul-a0-store": "/book-covers/hangul-a0.webp",
+  "hangul-a0-en-store": "/book-covers/hangul-a0-en.webp",
   // Colouring books: covers shipped with the site.
   "cluby-coloring-1": "/book-covers/cluby-coloring-1.webp",
   // TOPIK past papers: plain Klovers thumbnails shipped with the site.
