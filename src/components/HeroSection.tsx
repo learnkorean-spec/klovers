@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MessageCircle, Play } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 /*
@@ -40,6 +40,10 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
  * ARABIC (25 Sep 2026, brand guard): neutral Modern Standard Arabic. Buttons
  * and card lines use verbal nouns; no verb addresses the reader as male or
  * female, and no Egyptian dialect.
+ *
+ * 6 Oct 2026 (brand-guard sweep): the WhatsApp button uses the Klovers chat
+ * icon, not lucide MessageCircle, and the placement link is a verbal noun
+ * (اختبار المستوى الآن) instead of the masculine imperative اختبر مستواك.
  *
  * The section is dark in BOTH themes (photo under a charcoal scrim), which is
  * why it uses live-bright and ivory/charcoal literals.
@@ -325,7 +329,7 @@ const HeroSection = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <MessageCircle className="h-5 w-5 text-klovers-yellow" aria-hidden="true" />
+                    <KloverIcon name="chat-annyeong" className="h-6 w-6" />
                     السؤال عبر واتساب
                   </a>
                 </Button>
@@ -453,14 +457,14 @@ const HeroSection = () => {
 
           <p className="max-w-2xl text-xs text-muted-foreground sm:text-sm">
             {isAr
-              ? "الحصص التجريبية تُفتح مرة كل شهر. وإن لم يناسبك هذا الموعد، فاختبار تحديد المستوى مفتوح كل يوم: "
+              ? "الحصص التجريبية تُفتح مرة كل شهر. وإن لم يكن هذا الموعد مناسبًا، فاختبار تحديد المستوى مفتوح كل يوم: "
               : "Trial classes open once a month. If this date does not suit you, the placement test is open every day: "}
             <Link
               to="/placement-test"
               onClick={() => { try { logLeadEvent({ source_type: "placement_test", cta_label: "homepage_hero_placement", metadata: { language } }); } catch {} }}
               className="font-semibold text-foreground underline underline-offset-4 hover:text-foreground/80"
             >
-              {isAr ? "اختبر مستواك الآن" : "Take the placement test"}
+              {isAr ? "اختبار المستوى الآن" : "Take the placement test"}
             </Link>
           </p>
         </div>
