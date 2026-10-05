@@ -92,7 +92,7 @@ export const STAGES: JourneyStage[] = [
     icon: "game-headphones-music",
     guide: {
       pose: "headphones",
-      line: { ar: "المرة الجاية وأنت بتتفرج، هتسمعها من غير ترجمة.", en: "Next episode, you'll catch these without subtitles." },
+      line: { ar: "في الحلقة القادمة ستُفهَم هذه العبارات من غير ترجمة.", en: "Next episode, you'll catch these without subtitles." },
     },
   },
   {
@@ -280,7 +280,7 @@ export const DRAMA_LINES: Expression[] = [
     ko: "왜 그래?",
     rom: "wae geurae?",
     literal: { ar: "لماذا هكذا؟", en: "Why like that?" },
-    meaning: { ar: "مالك؟ / إيه اللي حصل؟", en: "What's wrong with you?" },
+    meaning: { ar: "ما بك؟ / ماذا حدث؟", en: "What's wrong with you?" },
     context: {
       ar: "لماذا تسمعها طوال الوقت؟ لأنها رد الفعل الأول حين يتصرف أحد بغرابة أو يبدو منزعجاً.",
       en: "Why you hear it constantly: it's the first reaction when someone acts strangely or looks upset.",
@@ -292,7 +292,7 @@ export const DRAMA_LINES: Expression[] = [
     ko: "어떡해",
     rom: "eotteokhae",
     literal: { ar: "ماذا أفعل؟", en: "What do I do?" },
-    meaning: { ar: "يا ويلي! / أعمل إيه دلوقتي؟", en: "Oh no! What now?" },
+    meaning: { ar: "يا للهول! / ماذا أفعل الآن؟", en: "Oh no! What now?" },
     context: {
       ar: "لحظة الذعر أو التعاطف: خبر سيئ، موقف محرج، أو حين تشعر بالأسف لأجل أحد.",
       en: "Panic or sympathy: bad news, an awkward moment, or feeling sorry for someone.",
@@ -304,7 +304,7 @@ export const DRAMA_LINES: Expression[] = [
     ko: "보고 싶어",
     rom: "bogo sipeo",
     literal: { ar: "أريد أن أراك", en: "I want to see you" },
-    meaning: { ar: "وحشتني / اشتقت لك", en: "I miss you" },
+    meaning: { ar: "اشتقتُ إليك", en: "I miss you" },
     context: {
       ar: "الكورية لا تقول «افتقدتك» مباشرة — بل «أريد أن أراك». أصدق جملة في مشاهد الوداع.",
       en: "Korean doesn't say “I miss you” — it says “I want to see you”. The line of every farewell scene.",
@@ -316,7 +316,7 @@ export const DRAMA_LINES: Expression[] = [
     ko: "가지 마",
     rom: "gaji ma",
     literal: { ar: "لا تذهب", en: "Don't go" },
-    meaning: { ar: "ما تمشيش!", en: "Don't go!" },
+    meaning: { ar: "لا تذهب!", en: "Don't go!" },
     context: {
       ar: "النهاية \u2066-지 마\u2069 تحوّل أي فعل إلى نهي ودّي: 울지 마 «لا تبكِ»، 걱정하지 마 «لا تقلق».",
       en: "-지 마 turns any verb into a casual “don't”: 울지 마 “don't cry”, 걱정하지 마 “don't worry”.",
@@ -422,7 +422,7 @@ export const QUIZ: QuizQuestion[] = [
     ],
     answer: "b",
     explain: {
-      ar: "هي تحية اهتمام مثل «عامل إيه؟». الرد: 네, 먹었어요.",
+      ar: "هي تحية اهتمام مثل «كيف حالك؟». الرد: 네, 먹었어요.",
       en: "It's a caring “how are you?”. Reply: 네, 먹었어요.",
     },
   },
