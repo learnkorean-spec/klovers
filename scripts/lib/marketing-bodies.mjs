@@ -55,7 +55,17 @@ export const ABOUT_BODY_HTML = `<div id="about-prerendered" lang="en" dir="ltr">
 
 export const CONTACT_BODY_HTML = `<div id="contact-prerendered" lang="en" dir="ltr">
       <h1>Contact Us</h1>
-      <p>Have questions? We'd love to hear from you.</p>
+      <p>Have questions? We'd love to hear from you. Messages go straight to the teacher, Reham, and we reply by WhatsApp or email. All classes are live and online, so you can join from any country.</p>
+      <h2>What you can ask us about</h2>
+      <ul>
+        <li>Which level fits you and where to start</li>
+        <li>Group class times and private class scheduling</li>
+        <li>Payment in Egypt and outside Egypt</li>
+        <li>Digital books in the shop and under My books</li>
+        <li>TOPIK exam preparation</li>
+      </ul>
+      <h2>Email</h2>
+      <p>kloversegy@gmail.com</p>
       <h2>Contact on WhatsApp</h2>
       <p>The fastest way to reach us. <a href="https://wa.me/201010003084">wa.me/201010003084</a></p>
       <h2>WhatsApp Community</h2>
