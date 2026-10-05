@@ -38,6 +38,15 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "b2s_op_03", label: "افتتاح الحصة ٣ — آدم متأخّر والساعة" },
   { file: "b2s_op_04", label: "افتتاح الحصة ٤ — صباح، قهوة ودفتر" },
   { file: "b2s_op_05", label: "افتتاح الحصة ٥ — المطر على الشبّاك" },
+  // Classes 7-11 had no opener of their own, so each lesson showed its dialogue
+  // photograph twice (fixed 5 Oct 2026). These are brand scenes reused as
+  // openers — no new generation needed, and they are on-palette, which the
+  // b2s_07..11 dialogue photographs are not.
+  { file: "b2s_op_07", label: "افتتاح الحصة ٧ — التجربة · السفر" },
+  { file: "b2s_op_08", label: "افتتاح الحصة ٨ — الواجب والإذن · الكتب" },
+  { file: "b2s_op_09", label: "افتتاح الحصة ٩ — الممنوع · اللافتة" },
+  { file: "b2s_op_10", label: "افتتاح الحصة ١٠ — الوعد والاختيار · المقهى" },
+  { file: "b2s_op_11", label: "افتتاح الحصة ١١ — النيّة والقرار · المستقبل" },
   { file: "b2s_op_01_alt", label: "افتتاح الحصة ١ — نسخة بديلة عند فاترينة المعجّنات (مرجع وشوش؛ الملابس خارج البراند)" },
   // Homepage batch 1 (1 Oct 2026): brand clothes and scenes right, but the faces
   // came out in the soft illustrated style, not KLOVERS REAL — kept, not placed.
