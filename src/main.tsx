@@ -2,7 +2,10 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { ThemeProvider } from "./contexts/ThemeContext.tsx";
-import "./i18n/config";
+// i18next is NOT imported here (6 Oct 2026). Only the admin dashboard uses
+// it (AdminDashboard.tsx, StudentsTab.tsx and EnrollmentsTab.tsx each import
+// "@/i18n/config" themselves), so loading it here put i18next and
+// react-i18next in every visitor's first download for nothing.
 import { initSentry } from "./lib/sentry";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { installJsonLdDedupe } from "./lib/jsonLdDedupe";
