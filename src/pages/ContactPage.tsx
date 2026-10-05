@@ -69,7 +69,7 @@ const ContactPage = () => {
   useSEO({
     title: isAr ? "التواصل" : "Contact Us: Questions About Korean Classes",
     description: isAr
-      ? "التواصل مع كلوفرز للاستفسار عن الدورات والتسجيل وأي سؤال آخر."
+      ? "للتواصل مع كلوفرز بشأن دورات الكورية والتسجيل وأي سؤال آخر: يمكن إرسال رسالة أو مراسلتنا على واتساب، وسنردّ في أقرب وقت."
       : "Get in touch with Klovers about Korean courses, enrollment or any other question. Send a message or write to us on WhatsApp and we will reply.",
     canonical: "https://kloversegy.com/contact",
   });

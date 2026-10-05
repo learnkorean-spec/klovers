@@ -163,14 +163,15 @@ const AR: LegalContent = {
 };
 
 const TermsPage = () => {
-  useSEO({
-    title: "Terms of Service",
-    description:
-      "The terms for Klovers' live online Korean classes: accounts, payments, the first class guarantee, refunds, missed classes and conduct.",
-    canonical: "https://kloversegy.com/terms",
-  });
   const { language } = useLanguage();
   const isAr = language === "ar";
+  useSEO({
+    title: isAr ? "شروط الخدمة" : "Terms of Service",
+    description: isAr
+      ? "شروط حصص كلوفرز المباشرة للغة الكورية عبر الإنترنت: الحسابات والمدفوعات وضمان الحصة الأولى والاسترداد والحصص الفائتة وقواعد السلوك."
+      : "The terms for Klovers' live online Korean classes: accounts, payments, the first class guarantee, refunds, missed classes and conduct.",
+    canonical: "https://kloversegy.com/terms",
+  });
   return <LegalDocument content={isAr ? AR : EN} isAr={isAr} />;
 };
 

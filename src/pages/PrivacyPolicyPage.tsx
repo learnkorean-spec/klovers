@@ -204,14 +204,15 @@ const AR: LegalContent = {
 };
 
 const PrivacyPolicyPage = () => {
-  useSEO({
-    title: "Privacy Policy",
-    description:
-      "How Klovers collects, uses and protects your personal information, which services we share it with, and how to access or delete it.",
-    canonical: "https://kloversegy.com/privacy-policy",
-  });
   const { language } = useLanguage();
   const isAr = language === "ar";
+  useSEO({
+    title: isAr ? "سياسة الخصوصية" : "Privacy Policy",
+    description: isAr
+      ? "كيف تجمع كلوفرز بياناتك الشخصية وتستخدمها وتحميها، والخدمات التي تُشارَك معها، وطريقة الاطلاع عليها أو حذفها."
+      : "How Klovers collects, uses and protects your personal information, which services we share it with, and how to access or delete it.",
+    canonical: "https://kloversegy.com/privacy-policy",
+  });
   return <LegalDocument content={isAr ? AR : EN} isAr={isAr} />;
 };
 

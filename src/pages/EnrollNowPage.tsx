@@ -117,7 +117,7 @@ const EnrollNowPage = () => {
   useSEO({
     title: isAr ? "التسجيل في حصص الكورية" : "Enroll in Korean Classes | Klovers",
     description: isAr
-      ? "التسجيل في كلوفرز: اختيار نوع الحصة والجدول، ثم بدء التحدث بالكورية بثقة."
+      ? "التسجيل في كلوفرز: اختيار نوع الحصة والجدول، ثم بدء التحدث بالكورية بثقة في حصص مباشرة عبر الإنترنت مع معلمة حقيقية."
       : "Join Klovers: choose your class type and schedule, then start speaking Korean with confidence in live online classes with a real teacher.",
     canonical: "https://kloversegy.com/enroll-now",
   });
