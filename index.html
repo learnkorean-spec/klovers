@@ -434,22 +434,47 @@
   </head>
   <body>
     <!--
-      Homepage hero shell (6 Oct 2026). Until the app's JavaScript ran, the
-      homepage painted nothing: PageSpeed mobile measured FCP 4.1s and LCP
-      8.5s, nearly all of it waiting for the bundle. On "/" and "/ar" this
-      shell paints the hero photo and its scrim straight from the HTML - the
-      same picture, crop, filter and scrim as HeroSection.tsx - so the largest
-      paint happens as soon as the picture arrives. The real hero renders on
-      top of it and removes it on mount (HeroSection useEffect). No text here,
-      so a saved language never shows the wrong words for a moment. A 15s
-      timer removes it too, in case the app never starts. Other routes never
-      fill it, so they never fetch the picture.
+      Homepage hero shell (6 Oct 2026, revised the same day).
+
+      Until the app's JavaScript ran, the homepage painted nothing (PageSpeed
+      mobile: FCP 4.1s, LCP 8.5s). On "/" and "/ar" this shell paints the first
+      screen straight from the HTML: the hero photo with the same crop, filter
+      and scrim as HeroSection.tsx, plus the headline and the paragraph in the
+      visitor's language. The language follows the same rules as
+      LanguageProvider: /ar is Arabic, then ?lang=, then the saved choice.
+      The real hero renders over it and removes it on mount (HeroSection
+      useEffect). A 15s timer also removes it, in case the app never starts.
+      Other routes never fill it, so they never fetch the picture.
+
+      Two things measured on 6 Oct shaped this version:
+      - Text, not only the photo. With a photo-only shell, React's own text
+        could still be the first contentful paint, so Lighthouse charged all
+        of the app's start-up work to FCP (4.5s). The headline here paints
+        as soon as the CSS arrives.
+      - The shell covers the WHOLE viewport (100vh), not 86svh. LCP takes a
+        new candidate only when a later element is strictly larger. A
+        86svh shell let React's hero photo, painted ~2s later, become the
+        LCP. A shell that already fills the screen cannot be outgrown.
+
+      KEEP THE COPY IN STEP with HeroSection.tsx (headline + paragraph).
     -->
     <style>
-      #kl-hero-shell { position: absolute; top: 0; left: 0; right: 0; height: 86vh; height: 86svh; overflow: hidden; background: #2E2E2E; pointer-events: none; }
-      #kl-hero-shell img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 97% center; filter: brightness(1.1) saturate(1.15); }
-      #kl-hero-shell div { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(46,46,46,0.55) 0%, rgba(46,46,46,0.55) 45%, rgba(46,46,46,0.70) 100%); }
-      @media (min-width: 1024px) { #kl-hero-shell img { object-position: center; } }
+      #kl-hero-shell { position: absolute; top: 0; left: 0; right: 0; height: 100vh; overflow: hidden; background: #2E2E2E; pointer-events: none; z-index: 0; }
+      #kl-hero-shell .kl-s-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 97% center; filter: brightness(1.1) saturate(1.15); }
+      #kl-hero-shell .kl-s-scrim { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(46,46,46,0.55) 0%, rgba(46,46,46,0.55) 45%, rgba(46,46,46,0.70) 100%); }
+      #kl-hero-shell .kl-s-box { position: relative; height: 86vh; height: 86svh; display: flex; align-items: center; justify-content: center; padding: 6rem 1rem 6rem; box-sizing: border-box; text-align: center; }
+      #kl-hero-shell .kl-s-col { max-width: 64rem; width: 100%; }
+      #kl-hero-shell h2 { margin: 0; font-family: Poppins, system-ui, -apple-system, "Segoe UI", sans-serif; font-weight: 800; line-height: 1.08; letter-spacing: -0.02em; color: #FFF9EC; text-shadow: 0 4px 40px rgba(20,20,18,0.9), 0 2px 8px rgba(20,20,18,0.8); }
+      #kl-hero-shell h2 span { display: block; font-size: clamp(1.625rem, 7vw, 2.25rem); }
+      #kl-hero-shell h2 span + span { margin-top: 0.25rem; color: #FFFF00; }
+      #kl-hero-shell p { margin: 1.25rem auto 0; max-width: 42rem; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 1rem; line-height: 1.625; color: rgba(255,249,236,0.9); text-shadow: 0 1px 10px rgba(20,20,18,0.85); }
+      #kl-hero-shell[dir="rtl"] h2, #kl-hero-shell[dir="rtl"] p { font-family: Cairo, system-ui, -apple-system, "Segoe UI", sans-serif; }
+      @media (min-width: 640px) { #kl-hero-shell p { font-size: 1.125rem; } }
+      @media (min-width: 768px) { #kl-hero-shell h2 span { font-size: clamp(2.25rem, 5vw, 3.75rem); } }
+      @media (min-width: 1024px) {
+        #kl-hero-shell .kl-s-img { object-position: center; }
+        #kl-hero-shell .kl-s-col { margin-left: auto; margin-right: 4%; max-width: 56rem; }
+      }
     </style>
     <div id="kl-hero-shell" aria-hidden="true" hidden></div>
     <script>
@@ -458,18 +483,47 @@
         if (path !== "" && path !== "/ar") return;
         var shell = document.getElementById("kl-hero-shell");
         if (!shell) return;
+
+        var ar = path === "/ar";
+        if (!ar) {
+          var m = /[?&]lang=(en|ar)\b/.exec(window.location.search);
+          if (m) { ar = m[1] === "ar"; }
+          else { try { ar = localStorage.getItem("k-lovers-lang") === "ar"; } catch (e) { ar = false; } }
+        }
+
         var local = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$|\.local$/.test(window.location.hostname);
         var srcset = local ? "" : [828, 1200, 1920].map(function (w) {
           return "/_vercel/image?url=%2Fhero-world.jpg&w=" + w + "&q=70 " + w + "w";
         }).join(", ");
         var img = document.createElement("img");
+        img.className = "kl-s-img";
         img.alt = "";
         img.decoding = "async";
         img.setAttribute("fetchpriority", "high");
         if (srcset) { img.sizes = "(max-width: 767px) 155vh, 100vw"; img.srcset = srcset; }
         img.src = "/hero-world.jpg";
         shell.appendChild(img);
-        shell.appendChild(document.createElement("div"));
+
+        var scrim = document.createElement("div");
+        scrim.className = "kl-s-scrim";
+        shell.appendChild(scrim);
+
+        var copy = ar
+          ? ["التحدّث بالكورية يبدأ", "من الحصة الأولى", "حصص كورية مباشرة أونلاين مع معلمة حقيقية، في مجموعات صغيرة، ومسار واضح من البداية حتى التحدث بثقة."]
+          : ["Start Speaking Korean", "From Your First Live Class", "Live online Korean classes with a real teacher, small groups, and a clear path from beginner to confident conversation."];
+        var box = document.createElement("div");
+        box.className = "kl-s-box";
+        var col = document.createElement("div");
+        col.className = "kl-s-col";
+        var h = document.createElement("h2");
+        var l1 = document.createElement("span"); l1.textContent = copy[0];
+        var l2 = document.createElement("span"); l2.textContent = copy[1];
+        h.appendChild(l1); h.appendChild(l2);
+        var p = document.createElement("p"); p.textContent = copy[2];
+        col.appendChild(h); col.appendChild(p); box.appendChild(col); shell.appendChild(box);
+
+        shell.setAttribute("dir", ar ? "rtl" : "ltr");
+        shell.setAttribute("lang", ar ? "ar" : "en");
         shell.hidden = false;
         setTimeout(function () { if (shell.parentNode) shell.parentNode.removeChild(shell); }, 15000);
       })();
