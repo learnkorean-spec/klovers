@@ -42,6 +42,19 @@ describe("book covers", () => {
       .toEqual([]);
   });
 
+  it("every BOOKS entry has a cover", () => {
+    const src = readFileSync(SRC, "utf8");
+    const body = src.slice(src.indexOf("export const BOOKS"), src.indexOf("} as const;"));
+    const ids = [...body.matchAll(/^  "([^"]+)": \{/gm)].map((m) => m[1]);
+    const covers = src.slice(src.indexOf("export const BOOK_COVERS"));
+    const mapped = new Set(
+      [...covers.slice(0, covers.indexOf("};")).matchAll(/^  "([^"]+)":/gm)].map((m) => m[1]),
+    );
+    const uncovered = ids.filter((id) => !mapped.has(id));
+    expect(uncovered, `BOOKS entries with no cover in BOOK_COVERS:\n${uncovered.join("\n")}`)
+      .toEqual([]);
+  });
+
   it("covers are small enough for a list thumbnail", () => {
     const heavy = paths
       .filter((p) => existsSync(join(ROOT, "public", p)))

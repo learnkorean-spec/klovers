@@ -80,9 +80,9 @@ export const BOOK_SHELF: PlannedBook[] = [
   {
     cover: "cover_b2",
     titleAr: "المستوى ٢ · مقهى المحادثة",
-    noteAr: "١٢ حصة من ٢٤ · القواعد ٣٣–٥١ · ١٣٨ صفحة",
+    noteAr: "٢٤ حصة · القواعد ٣٣–٦٥ · ٢٩٣ صفحة · ينتظر الصور",
     state: "partial",
-    statusAr: "نصف مبنيّ",
+    statusAr: "ينتظر الصور",
   },
   {
     titleAr: "المستوى ٣",
@@ -104,7 +104,7 @@ export interface PlannedLevel {
 export const BOOK_LADDER: PlannedLevel[] = [
   { nameAr: "تأسيس الهانغول", topik: null, classes: 4, statusAr: "منشور", state: "done" },
   { nameAr: "المستوى الأول", topik: 1, classes: 24, statusAr: "مكتمل", state: "done" },
-  { nameAr: "المستوى الثاني", topik: 2, classes: 24, statusAr: "١٢ حصة من ٢٤", state: "partial" },
+  { nameAr: "المستوى الثاني", topik: 2, classes: 24, statusAr: "مكتوب · ينتظر الصور", state: "partial" },
   { nameAr: "المستوى الثالث", topik: 3, classes: 24, statusAr: "لم يُبدأ", state: "missing" },
   { nameAr: "المستوى الرابع", topik: 4, classes: 24, statusAr: "لم يُبدأ", state: "missing" },
   { nameAr: "المستوى الخامس", topik: 5, classes: 24, statusAr: "لم يُبدأ", state: "missing" },
@@ -172,9 +172,10 @@ export const BOOK_BLOCKERS: PlanBlocker[] = [
       "كتاب لغة لا يُسلَّم لطالب قبل أن تقرأ مؤلفته كل سطر كوري فيه. هذا أوّل ما يمنع البيع.",
   },
   {
-    titleAr: "كتاب ٢ نصف مبنيّ",
+    titleAr: "صور الحصص ١٣–٢٤",
     bodyAr:
-      "اثنتا عشرة حصة من أربع وعشرين. والحصص ١٣–٢٤ لم يُكتب محتواها بعد — كتابة لا تنضيد.",
+      "المحتوى مكتوب والصفحات مبنيّة، لكنّ ١٤٣ أيقونة و١٢ مشهدًا لم تُولَّد بعد. "
+      + "بطاقات المفردات تطبع مربّعات فارغة حتى تصل.",
   },
   {
     titleAr: "المستوى الأول والثاني لا يتشابهان",
