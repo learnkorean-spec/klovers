@@ -120,7 +120,7 @@ const EggTeaser = () => {
         type="button"
         onClick={revealClue}
         aria-label={isAr ? "لمس البيضة" : "Tap the egg"}
-        className="group relative block aspect-[4/3] max-h-[620px] w-full cursor-pointer overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-klovers-yellow md:aspect-[16/9]"
+        className="group relative block aspect-[4/3] max-h-[460px] w-full cursor-pointer overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-klovers-yellow md:aspect-[16/9]"
       >
         <img
           src="/assets/story/egg-teaser.webp"
@@ -142,7 +142,7 @@ const EggTeaser = () => {
         />
       </button>
 
-      <div className="relative px-4 pb-16 pt-8 md:pb-20 md:pt-10">
+      <div className="relative px-4 pb-12 pt-6 md:pb-14 md:pt-8">
         <div className="mx-auto max-w-2xl">
           {/* Eyebrow: plain dashes either side, no icon */}
           <div className="flex items-center justify-center gap-3">
@@ -202,7 +202,7 @@ const EggTeaser = () => {
           </div>
 
           {/* Feature row */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
             {FEATURES.map(({ icon, en, ar }) => (
               <div key={en} className="flex items-center gap-2 text-xs font-semibold text-ivory/60">
                 <KloverIcon name={icon} className="h-6 w-6" />
