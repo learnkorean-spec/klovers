@@ -53,6 +53,8 @@ const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 const EraPage = lazy(() => import("./pages/EraPage"));
+// The /journey hub (5 Oct 2026): the five era stations on one page; /journey used to 404.
+const JourneyHubPage = lazy(() => import("./pages/JourneyHubPage"));
 const MySchedulePage = lazy(() => import("./pages/MySchedulePage"));
 const ResubmitSchedulePage = lazy(() => import("./pages/ResubmitSchedulePage"));
 const AdminResetPage = lazy(() => import("./pages/AdminResetPage"));
@@ -201,6 +203,11 @@ const App = () => (
                 <Route path="/ar/blog" element={<BlogPage />} />
                 {/* The scholarships page has an Arabic twin too. */}
                 <Route path="/ar/scholarships" element={<ScholarshipsPage />} />
+                {/* Arabic twins added 5 Oct 2026 (GEO re-score): contact and the three landing pages. */}
+                <Route path="/ar/contact" element={<ContactPage />} />
+                <Route path="/ar/learn-korean-arabic-speakers" element={<LearnKoreanArabicSpeakersPage />} />
+                <Route path="/ar/topik-exam-preparation" element={<TopikExamPage />} />
+                <Route path="/ar/learn-korean-kdramas" element={<KDramaLearningPage />} />
                 {/* Printed in the books as a QR — never change this path. */}
                 <Route path="/c/:code" element={<ConversationPage />} />
                 <Route path="/courses" element={<CoursesPage />} />
@@ -228,6 +235,7 @@ const App = () => (
                 <Route path="/pay/:enrollmentId" element={<AuthProtectedRoute><EgyptPaymentPage /></AuthProtectedRoute>} />
                 <Route path="/blog" element={<BlogPage />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/journey" element={<JourneyHubPage />} />
                 <Route path="/journey/:eraId" element={<EraPage />} />
                 <Route path="/dashboard/schedule" element={<AuthProtectedRoute><MySchedulePage /></AuthProtectedRoute>} />
                 <Route path="/resubmit-schedule" element={<AuthProtectedRoute><ResubmitSchedulePage /></AuthProtectedRoute>} />
