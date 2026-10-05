@@ -36,7 +36,7 @@ const SESSIONS: Session[] = [
 const STEPS = [
   <>افتحي <Link to="/admin?tab=trials" className="underline decoration-2 underline-offset-4">تبويب الحصص التجريبية</Link>.</>,
   <>من قايمة <Ui>All statuses</Ui> اختاري <Ui>Pending</Ui> — بتخفي الحجوزات الملغية.</>,
-  <>انزلي تحت قسم <Ui>TBA — Unscheduled</Ui> خالص. كل اللي فيه ملغي، وزراره بيقول <Ui>(0)</Ui> عن حق.</>,
+  <>انزلي تحت قسم <Ui>TBA — Unscheduled</Ui> خالص. اللي فيه دلوقتي الحجوزات الجارية بس (الملغي مخفي)، وزراره بيعد اللي لسه ما اتبعتلوش.</>,
   <>دوّري على عنوان الحصة — مثلًا <Ui>Saturday, Sep 19, 2026</Ui>.</>,
   <>اضغطي <Ui go>Ask them to confirm</Ui> جنب العنوان. <b>ده مش إرسال</b> — بيفتح قايمة بالأسماء والعدد.</>,
   <>طابقي العدد مع الجدول فوق. لو مختلف، اقفلي من غير ضغط.</>,

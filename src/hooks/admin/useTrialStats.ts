@@ -21,8 +21,10 @@ export function useTrialStats() {
       const weekIso = weekAhead.toISOString().slice(0, 10);
 
       const [pendingRes, upcomingRes, weekRes, totalRes] = await Promise.all([
-        // Only count future non-TBA pending bookings (exclude legacy sentinel rows)
-        supabase.from("trial_bookings").select("id", { count: "exact", head: true }).eq("status", "pending").eq("is_tba", false).gte("trial_date", todayIso).neq("trial_date", "2099-12-31").neq("start_time", "TBA"),
+        // Pending that is still live: waiting for a date (TBA) or dated today
+        // or later. Past-dated pending bookings are not ongoing and are
+        // hidden from the trial list, so they are not counted here either.
+        supabase.from("trial_bookings").select("id", { count: "exact", head: true }).eq("status", "pending").or(`trial_date.is.null,trial_date.gte.${todayIso}`).neq("trial_date", "2099-12-31"),
         // ACTIVE_TRIAL_STATUS_LIST, not ["pending","confirmed"]: the short list
         // omits awaiting_attendance and confirmed_attendance, which between them
         // are every booking the current flow writes — so these two counts read

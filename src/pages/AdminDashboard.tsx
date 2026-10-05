@@ -45,7 +45,6 @@ const StudentManager = lazy(() => import("@/components/admin/StudentManager"));
 const LifecycleFunnel = lazy(() => import("@/components/admin/LifecycleFunnel"));
 const GroupAttendanceManager = lazy(() => import("@/components/admin/GroupAttendanceManager"));
 const AdminNotifications = lazy(() => import("@/components/admin/AdminNotifications"));
-const AdminAttendancePanel = lazy(() => import("@/components/admin/AdminAttendancePanel"));
 const GroupMatcher = lazy(() => import("@/components/admin/GroupMatcher"));
 const RecommendedSlotsPanel = lazy(() => import("@/components/admin/RecommendedSlotsPanel"));
 const TeacherAvailabilityManager = lazy(() => import("@/components/admin/TeacherAvailabilityManager"));
@@ -83,147 +82,6 @@ const TabLoader = () => (
 // Lead, Enrollment, AttendanceReq, OverviewRow — imported from @/types/admin
 
 const STATUS_OPTIONS = ["new", "trial_booked", "contacted", "enrolled", "rejected", "lost"];
-
-// ── Trial Interest Confirmation Campaign Card ─────────────────────────────────
-function TrialInterestConfirmationCard() {
-  const [testEmail, setTestEmail] = useState("reham.elshrkawy@gmail.com");
-  const [testName, setTestName] = useState("Reham");
-  const [testSending, setTestSending] = useState(false);
-  const [testSent, setTestSent] = useState(false);
-  const [bulkSending, setBulkSending] = useState(false);
-  const [confirmBulk, setConfirmBulk] = useState(false);
-
-  const sendTest = async () => {
-    setTestSending(true);
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        "send-trial-interest-confirmation",
-        { body: { test_email: testEmail, test_name: testName } },
-      );
-      if (error) throw error;
-      setTestSent(true);
-      toast({
-        title: "Test email sent! ✅",
-        description: `Sent to ${testEmail}. Check inbox before sending to all users.`,
-      });
-      console.log("[trial-interest-confirmation] test result:", data);
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setTestSending(false);
-    }
-  };
-
-  const sendAll = async () => {
-    setBulkSending(true);
-    setConfirmBulk(false);
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        "send-trial-interest-confirmation",
-        { body: { send_all: true } },
-      );
-      if (error) throw error;
-      toast({
-        title: "Campaign sent! 🎉",
-        description: `Sent: ${data?.sent ?? 0} / ${data?.total ?? 0} students.`,
-      });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setBulkSending(false);
-    }
-  };
-
-  return (
-    <Card className="rounded-2xl border-2 border-yellow-300">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          🇰🇷 Trial Interest Confirmation Email
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Bilingual (Arabic/English) email for students who registered interest but haven't
-          attended a trial class yet. Confirms interest, shares trial dates (Thu 4 Jun / Fri 5 Jun / Sun 7 Jun 2026),
-          and drives bookings.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-5">
-
-        {/* Schedule summary */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm space-y-1">
-          <p className="font-semibold text-yellow-900">Trial Schedule included in email:</p>
-          <p className="text-yellow-800">📅 Thursday 4 June 2026 — 7:00 PM Egypt</p>
-          <p className="text-yellow-800">📅 Friday 5 June 2026 — 7:00 PM Egypt</p>
-          <p className="text-yellow-800">📅 Sunday 7 June 2026 — 6:00 PM Egypt</p>
-          <p className="text-xs text-yellow-700 mt-1">
-            Join link is read from <strong>Admin → Settings → Zoom/Meet URL</strong>.
-            Add your Google Meet link there before sending to all users.
-          </p>
-        </div>
-
-        {/* Test section */}
-        <div className="space-y-3">
-          <p className="text-sm font-medium">Step 1 — Send test email first</p>
-          <div className="flex gap-2 flex-wrap">
-            <Input
-              value={testEmail}
-              onChange={(e) => setTestEmail(e.target.value)}
-              placeholder="test@email.com"
-              className="max-w-xs"
-            />
-            <Input
-              value={testName}
-              onChange={(e) => setTestName(e.target.value)}
-              placeholder="Name"
-              className="max-w-[140px]"
-            />
-          </div>
-          <Button onClick={sendTest} disabled={testSending || !testEmail} variant="outline">
-            <Mail className="h-4 w-4 mr-2" />
-            {testSending ? "Sending…" : testSent ? "✅ Test Sent — Send Again" : "Send Test Email"}
-          </Button>
-        </div>
-
-        <hr className="border-dashed" />
-
-        {/* Bulk section */}
-        <div className="space-y-3">
-          <p className="text-sm font-medium">
-            Step 2 — Send to all users{" "}
-            <span className="text-muted-foreground font-normal">(only after test is confirmed)</span>
-          </p>
-          {!confirmBulk ? (
-            <Button
-              onClick={() => setConfirmBulk(true)}
-              disabled={bulkSending || !testSent}
-              variant={testSent ? "default" : "outline"}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              {bulkSending ? "Sending to all…" : "Send to All Users"}
-            </Button>
-          ) : (
-            <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-800 flex-1">
-                ⚠️ This will email <strong>all subscribed users</strong>. Are you sure?
-              </p>
-              <Button size="sm" onClick={sendAll} disabled={bulkSending} className="bg-red-600 hover:bg-red-700 text-white">
-                {bulkSending ? "Sending…" : "Yes, Send to All"}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setConfirmBulk(false)}>
-                Cancel
-              </Button>
-            </div>
-          )}
-          {!testSent && (
-            <p className="text-xs text-muted-foreground">
-              Send and verify the test email first to unlock bulk send.
-            </p>
-          )}
-        </div>
-
-      </CardContent>
-    </Card>
-  );
-}
 
 // Error boundary for lazy-loaded tab components
 class TabErrorBoundary extends Component<
@@ -524,7 +382,9 @@ const AdminDashboard = () => {
   const handleDeleteStudent = async (userId: string) => {
     const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
     if (error) { toast({ title: "Error", description: "Failed to delete student.", variant: "destructive" }); return; }
-    queryClient.invalidateQueries({ queryKey: ["admin", "student-overview"] });
+    // Enrollments, attendance, funnel and KPI counts all depend on this
+    // profile, so refresh every admin query, not only the student list.
+    queryClient.invalidateQueries({ queryKey: ["admin"] });
     toast({ title: "Deleted", description: "Student record removed." });
   };
 
@@ -535,15 +395,19 @@ const AdminDashboard = () => {
       let resubmitLink: string | undefined;
       if (rejectReason === "time_slots_unavailable") {
         const token = crypto.randomUUID().replace(/-/g, "");
-        await supabase.from("schedule_resubmission_requests").insert({
+        const { error: resubErr } = await supabase.from("schedule_resubmission_requests").insert({
           enrollment_id: rejectTarget.id,
           user_id: rejectTarget.user_id,
           email: rejectTarget.profiles?.email || "",
           token,
         });
+        // No saved request means the link in the email would lead nowhere.
+        if (resubErr) throw resubErr;
         resubmitLink = `${window.location.origin}/resubmit-schedule?token=${token}`;
       }
-      await handleEnrollmentAction(rejectTarget, "REJECTED");
+      // Reject first, and only tell the student if it actually saved.
+      const rejected = await handleEnrollmentAction(rejectTarget, "REJECTED");
+      if (!rejected) return;
       const { error: emailError } = await supabase.functions.invoke("send-confirmation-email", {
         body: {
           template: "rejection",
@@ -834,9 +698,11 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleEnrollmentAction = async (enrollment: Enrollment, action: "APPROVED" | "REJECTED") => {
+  // Resolves true only when the change was actually saved, so callers never
+  // email a student or navigate on the strength of a failed update.
+  const handleEnrollmentAction = async (enrollment: Enrollment, action: "APPROVED" | "REJECTED"): Promise<boolean> => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session) return false;
 
     // Block approval until matcher has placed the student (matched_at is set by the
     // matcher functions and is the authoritative signal that placement is complete).
@@ -846,7 +712,7 @@ const AdminDashboard = () => {
         description: "Assign the student to a class slot first (run the Matcher tab), then approve.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     // Block approval for manual/Egypt payments that have no receipt on file.
@@ -858,7 +724,7 @@ const AdminDashboard = () => {
         description: "Cannot approve — no payment receipt has been uploaded. Ask the student to submit their receipt first.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     const updates: Record<string, unknown> = {
@@ -882,15 +748,15 @@ const AdminDashboard = () => {
       const price = Number(editedPrice);
       if (isNaN(price)) {
         toast({ title: "Invalid price", description: "Unit price must be a valid number.", variant: "destructive" });
-        return;
+        return false;
       }
       if (price <= 0) {
         toast({ title: "Invalid price", description: "Unit price must be greater than zero.", variant: "destructive" });
-        return;
+        return false;
       }
       if (price > MAX_UNIT_PRICE) {
         toast({ title: "Invalid price", description: "Unit price seems too high. Please verify.", variant: "destructive" });
-        return;
+        return false;
       }
       updates.unit_price = price;
     }
@@ -907,15 +773,16 @@ const AdminDashboard = () => {
       });
       if (approveError) {
         toast({ title: "Error", description: approveError.message || "Failed to approve enrollment.", variant: "destructive" });
-        return;
+        return false;
       }
     } else {
       const { error } = await supabase.from("enrollments").update(updates).eq("id", enrollment.id);
-      if (error) { toast({ title: "Error", description: "Failed to update enrollment.", variant: "destructive" }); return; }
+      if (error) { toast({ title: "Error", description: "Failed to update enrollment.", variant: "destructive" }); return false; }
     }
 
     toast({ title: `Enrollment ${action.toLowerCase()}` });
     invalidateAll();
+    return true;
   };
 
   const handleBulkApprove = async () => {
@@ -929,6 +796,9 @@ const AdminDashboard = () => {
     for (const id of ids) {
       const enrollment = enrollments.find(e => e.id === id);
       if (!enrollment) continue;
+      // Only undecided enrollments can be bulk-approved: a selection can
+      // outlive the tab, search or filter it was made under.
+      if (enrollment.approval_status === "APPROVED" || enrollment.approval_status === "REJECTED") { failed++; continue; }
       // Skip enrollments not yet placed by the matcher
       if (!enrollment.matched_at) { failed++; continue; }
       // Skip manual-payment enrollments missing a receipt
@@ -1420,6 +1290,9 @@ const AdminDashboard = () => {
                 {inActiveGroup("trials") && (
                   <TabsTrigger value="trials" className={TAB_CLS}>
                     <Users className="h-3.5 w-3.5" /> Trial Classes
+                    {trialStats.pending > 0 && (
+                      <Badge variant="secondary" className="h-4 min-w-4 px-1 text-[9px] rounded-full">{trialStats.pending}</Badge>
+                    )}
                   </TabsTrigger>
                 )}
                 {inActiveGroup("lead-funnel") && (
@@ -1787,8 +1660,7 @@ const AdminDashboard = () => {
                 </Card>
 
                 {/* Trial Interest Confirmation Campaign */}
-                <TrialInterestConfirmationCard />
-              </div>
+                              </div>
             </TabsContent>
 
 

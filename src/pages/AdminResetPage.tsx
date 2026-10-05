@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const AdminResetPage = () => {
   const [loading, setLoading] = useState(false);
+  // Typed confirmation: one click must never be enough to wipe every student.
+  const [typed, setTyped] = useState("");
   const navigate = useNavigate();
 
   const handleFactoryReset = async () => {
@@ -69,9 +72,13 @@ const AdminResetPage = () => {
                   This cannot be reversed.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+              <div className="space-y-2">
+                <p className="text-sm">Type <strong>RESET</strong> to enable the button.</p>
+                <Input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="RESET" autoComplete="off" />
+              </div>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleFactoryReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                <AlertDialogCancel onClick={() => setTyped("")}>Cancel</AlertDialogCancel>
+                <AlertDialogAction disabled={typed !== "RESET"} onClick={handleFactoryReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                   Yes, Reset Everything
                 </AlertDialogAction>
               </AlertDialogFooter>

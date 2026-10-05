@@ -31,6 +31,7 @@ import { useLeads } from "@/hooks/admin/useLeads";
 import { useStudentOverview, buildOverviewByEmail } from "@/hooks/admin/useStudentOverview";
 import { useScheduleWeekdays } from "@/hooks/admin/useScheduleWeekdays";
 import type { Lead } from "@/types/admin";
+import { ACTIVE_TRIAL_STATUS_LIST } from "@/constants/trialStatus";
 
 // "churned" sits after "enrolled" because that is the order it happens in: a
 // student who paid, attended and then stopped. It is NOT "lost", which in
@@ -53,7 +54,8 @@ const LeadsPanel: React.FC = () => {
 
   // ── Local UI state ───────────────────────────────────────────────
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("confirmed");
+  // Opens on "new": fresh arrivals are what the badge counts and what needs a first reply.
+  const [statusFilter, setStatusFilter] = useState("new");
   const [planFilter, setPlanFilter] = useState("all");
   const [leadsSort, setLeadsSort] = useState<{ col: string; dir: "asc" | "desc" }>({ col: "created_at", dir: "desc" });
   const [leadsPage, setLeadsPage] = useState(0);
@@ -249,10 +251,12 @@ const LeadsPanel: React.FC = () => {
         .update({ status: "confirmed", confirmed_at: new Date().toISOString() } as any)
         .eq("email", lead.email.toLowerCase())
         .eq("status", "pending");
-      if (tbErr) console.error("trial_bookings update error:", tbErr.message);
+      // Do not mark the lead or send an email on top of a booking that did not change.
+      if (tbErr) throw tbErr;
 
-      // 2. Update lead status
-      await updateLeadViaFn(lead.id, { status: "confirmed" });
+      // 2. The lead stays "trial_booked". "confirmed" is not one of the lead
+      // statuses the panel can filter or show.
+      await updateLeadViaFn(lead.id, { status: "trial_booked" });
 
       // 3. Fetch booking details for the email
       const { data: booking } = await supabase
@@ -288,11 +292,15 @@ const LeadsPanel: React.FC = () => {
 
   const handleRejectTrial = useCallback(async (lead: Lead) => {
     try {
-      await supabase
+      // Every live status, not just pending/confirmed: signed-in bookings are
+      // awaiting_attendance, and a short list matches none of them while still
+      // reporting success, leaving the seat blocked.
+      const { error: cancelErr } = await supabase
         .from("trial_bookings")
         .update({ status: "cancelled" } as any)
         .eq("email", lead.email.toLowerCase())
-        .in("status", ["pending", "confirmed"]);
+        .in("status", ACTIVE_TRIAL_STATUS_LIST);
+      if (cancelErr) throw cancelErr;
       await updateLeadViaFn(lead.id, { status: "rejected" });
       queryClient.invalidateQueries({ queryKey: ["admin", "leads"] });
       toast({ title: "Trial rejected", description: `${lead.name}'s trial has been cancelled.` });

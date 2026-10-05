@@ -235,9 +235,12 @@ const TrialClassesManager = () => {
 
   const loading = loadingBookings || loadingSlots;
   const upcomingSlots = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().slice(0, 10);
+    // Admin timezone, like futureSlots below: a UTC slice of local midnight is
+    // a day off for part of every evening and morning.
+    const todayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: getAdminTimezone(),
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
     return activeSlots
       .filter((s) => s.trial_date && s.trial_date >= todayStr)
       .sort((a, b) => (a.trial_date ?? "").localeCompare(b.trial_date ?? ""))
@@ -334,6 +337,9 @@ const TrialClassesManager = () => {
     queryClient.invalidateQueries({ queryKey: ["admin", "trial-bookings"] });
     queryClient.invalidateQueries({ queryKey: ["admin", "trial-slots"] });
     queryClient.invalidateQueries({ queryKey: ["admin", "trial-stats"] });
+    // The schedule tab and proposals read the trial-admin keys; refresh them
+    // together so the two views cannot disagree until the next poll.
+    queryClient.invalidateQueries({ queryKey: ["trial-admin"] });
     // Clear stale slot selections so re-confirms always use fresh upcoming slots.
     setTrialSlotMap({});
   };
@@ -705,29 +711,6 @@ const TrialClassesManager = () => {
     setBulkBusy(false);
   };
 
-  const handleAcceptAllPending = async () => {
-    const pending = bookings.filter((b) => b.status === "pending");
-    if (pending.length === 0) {
-      toast({ title: "Nothing to accept", description: "No pending bookings." });
-      return;
-    }
-    setBulkBusy(true);
-    try {
-      const ids = pending.map((p) => p.id);
-      const { error } = await supabase
-        .from("trial_bookings")
-        .update({ status: "awaiting_attendance" } as any)
-        .in("id", ids);
-      if (error) throw error;
-      toast({ title: "All pending accepted", description: `${ids.length} booking${ids.length === 1 ? "" : "s"} marked confirmed.` });
-      fetchData();
-    } catch (err: any) {
-      toast({ title: "Bulk accept failed", description: err.message, variant: "destructive" });
-    } finally {
-      setBulkBusy(false);
-    }
-  };
-
   // ── Repeat detection (same email with more than one ACTIVE booking).
   // Cancelled history doesn't count — otherwise the badge never clears even
   // after a genuine duplicate is resolved (e.g. via "Clear duplicates").
@@ -927,7 +910,13 @@ const TrialClassesManager = () => {
     }
   };
 
-  const pendingCount = bookings.filter((b) => b.status === "pending").length;
+  // Ongoing = not cancelled, and not dated before today. These are the
+  // bookings the list shows by default, so the header counts match the page.
+  const isOngoing = (b: TrialBooking) =>
+    b.status !== "cancelled" &&
+    (isTbaBooking(b) || !b.trial_date || new Date(`${b.trial_date}T00:00:00`) >= startOfToday);
+  const ongoingCount = bookings.filter(isOngoing).length;
+  const pendingCount = bookings.filter((b) => b.status === "pending" && isOngoing(b)).length;
 
   if (loading) return <p className="text-muted-foreground text-center py-8">Loading trial bookings...</p>;
 
@@ -1141,7 +1130,7 @@ const TrialClassesManager = () => {
         <div className="flex items-center gap-3">
           <h3 className="text-base font-semibold">
             All Trial Bookings
-            <span className="ml-2 text-xs text-muted-foreground font-normal">({bookings.length} total · {pendingCount} pending)</span>
+            <span className="ml-2 text-xs text-muted-foreground font-normal">({ongoingCount} ongoing · {pendingCount} pending · {bookings.length} all-time)</span>
           </h3>
         </div>
         <div className="flex flex-wrap items-center gap-2">

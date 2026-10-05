@@ -189,7 +189,12 @@ const AdminToday = () => {
           supabase
             .from("enrollments")
             .select("*", { count: "exact", head: true })
-            .ilike("approval_status", "pending%"),
+            // "Approved but not yet paid" lives in payment_status. The old
+            // filter looked for "pending%" in approval_status, a column that
+            // never holds it, so this card read 0 while a payment was owed.
+            .eq("approval_status", "APPROVED")
+            .eq("payment_status", "PENDING_PAYMENT")
+            .is("deleted_at", null),
           // Unread business updates only. Without the two filters this counted
           // every row the table had ever held — a number that only grows — and
           // the bell beside it was stuck on "99+" no matter how much she read.
@@ -231,7 +236,13 @@ const AdminToday = () => {
           supabase.from("pkg_groups").select("id, package_id"),
         ]);
 
-        if (notificationsToday.error) throw notificationsToday.error;
+        // Any failed request must surface as the banner. A rejected count
+        // comes back as null, and `?? 0` below would present it as real data.
+        const failed = [
+          waitingAll, waitingAr, waitingEn, unlevelled, payments,
+          notifications, notificationsToday, oldest, slotRows, packagesRes, pkgGroupsRes,
+        ].find((r) => r.error);
+        if (failed?.error) throw failed.error;
 
         if (cancelled) return;
 
@@ -357,12 +368,9 @@ const AdminToday = () => {
               <p className="text-sm text-muted-foreground">{today}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button asChild variant="outline">
-                <Link to="/admin?tab=trials">Open trials</Link>
-              </Button>
               <Button asChild>
                 <Link to="/admin?tab=trials">
-                  Invite students <ArrowRight className="ml-1.5 h-4 w-4" />
+                  Open trials <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Link>
               </Button>
             </div>

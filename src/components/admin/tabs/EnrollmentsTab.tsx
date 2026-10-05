@@ -42,7 +42,7 @@ interface Props {
   sendingResend: Set<string>;
   onResendPaymentEmail: (e: Enrollment) => Promise<void>;
   onResendApprovalEmail: (e: Enrollment) => Promise<void>;
-  onEnrollmentAction: (e: Enrollment, action: "APPROVED" | "REJECTED") => Promise<void>;
+  onEnrollmentAction: (e: Enrollment, action: "APPROVED" | "REJECTED") => Promise<boolean | void>;
   onReject: (e: Enrollment) => void;
   onRevert: (e: Enrollment) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -178,7 +178,7 @@ export const EnrollmentsTab = memo(function EnrollmentsTab({
           ) : (
             // Keyed on the URL status so a second tile click (a different
             // ?status=) re-opens on that list instead of keeping the old one.
-            <Tabs key={wantedStatus ?? "auto"} defaultValue={initialStatus} onValueChange={() => setEnrollmentPage(() => 0)}>
+            <Tabs key={wantedStatus ?? "auto"} defaultValue={initialStatus} onValueChange={() => { setEnrollmentPage(() => 0); setSelectedEnrollmentIds(() => new Set()); }}>
               <div className="flex gap-2 mb-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -309,7 +309,7 @@ export const EnrollmentsTab = memo(function EnrollmentsTab({
                           onSendPaymentMethodReminder={onSendPaymentMethodReminder}
                           resolvedLevelFallback={resolvedLevelFallback}
                           onApprove={(en) => onEnrollmentAction(en, "APPROVED")}
-                          onApproveAndMatch={async (en) => { await onEnrollmentAction(en, "APPROVED"); setAdminTab("group-matcher"); }}
+                          onApproveAndMatch={async (en) => { const ok = await onEnrollmentAction(en, "APPROVED"); if (ok !== false) setAdminTab("group-matcher"); }}
                           onReject={onReject}
                           onRevert={onRevert}
                           onDelete={onDelete}

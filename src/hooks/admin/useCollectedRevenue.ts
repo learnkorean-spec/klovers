@@ -34,6 +34,8 @@ export interface CollectedRevenue {
   currency: string;
   /** How many enrollments the total is made of — shown under the tile. */
   count: number;
+  /** Paid enrollments in a different currency, left out of `total`. */
+  otherCurrencyCount: number;
 }
 
 export async function fetchCollectedRevenue(): Promise<CollectedRevenue> {
@@ -46,6 +48,7 @@ export async function fetchCollectedRevenue(): Promise<CollectedRevenue> {
       .select("amount, currency")
       .eq("payment_status", "PAID")
       .eq("approval_status", "APPROVED")
+      .is("deleted_at", null)
       .order("id", { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
 
@@ -56,10 +59,19 @@ export async function fetchCollectedRevenue(): Promise<CollectedRevenue> {
     if (data.length < PAGE_SIZE) break;
   }
 
+  // One tile, one currency: summing EGP and USD into a single figure labelled
+  // with whichever came first is wrong. Use the currency with the most rows
+  // and report how many were left out.
+  const perCurrency = new Map<string, number>();
+  for (const r of rows) perCurrency.set(r.currency ?? "EGP", (perCurrency.get(r.currency ?? "EGP") ?? 0) + 1);
+  const currency = [...perCurrency.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "EGP";
+  const mine = rows.filter((r) => (r.currency ?? "EGP") === currency);
+
   return {
-    total: rows.reduce((sum, r) => sum + (r.amount ?? 0), 0),
-    currency: rows.find(r => r.currency)?.currency ?? "EGP",
-    count: rows.length,
+    total: mine.reduce((sum, r) => sum + (r.amount ?? 0), 0),
+    currency,
+    count: mine.length,
+    otherCurrencyCount: rows.length - mine.length,
   };
 }
 

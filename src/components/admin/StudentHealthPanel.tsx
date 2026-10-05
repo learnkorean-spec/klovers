@@ -16,8 +16,11 @@ const waLink = (name: string, email: string) =>
 const StudentHealthPanel = ({ overviewRows }: Props) => {
   const [openCard, setOpenCard] = useState<string | null>(null);
 
+  // Same population as the KPI strip: ACTIVE in the overview. The two used to
+  // differ (APPROVED here, ACTIVE there), so the same student could be at-risk
+  // on one screen and absent on the other.
   const activeRows = useMemo(
-    () => overviewRows.filter(r => r.approval_status === "APPROVED" && r.derived_status !== "COMPLETED"),
+    () => overviewRows.filter(r => r.derived_status === "ACTIVE"),
     [overviewRows]
   );
 
@@ -26,9 +29,12 @@ const StudentHealthPanel = ({ overviewRows }: Props) => {
     [activeRows]
   );
 
+  // Out of sessions means the overview already calls them COMPLETED, so this
+  // list has to start from approved students, not from the ACTIVE ones — it
+  // was empty by construction before.
   const expiring = useMemo(
-    () => activeRows.filter(r => r.sessions_remaining === 0),
-    [activeRows]
+    () => overviewRows.filter(r => r.approval_status === "APPROVED" && r.sessions_remaining === 0),
+    [overviewRows]
   );
 
   const avgUnitPrice = useMemo(() => {
