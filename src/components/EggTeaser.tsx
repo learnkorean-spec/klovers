@@ -188,7 +188,7 @@ const EggTeaser = () => {
             )}
 
             {user ? (
-              <Link to="/dashboard" className="text-xs font-semibold text-ivory/70 underline-offset-4 hover:text-klovers-yellow hover:underline">
+              <Link to="/dashboard" className="inline-block py-1.5 text-xs font-semibold text-ivory/70 underline-offset-4 hover:text-klovers-yellow hover:underline">
                 {isAr ? "عرض البيضة في لوحة التحكم" : "See your egg on your dashboard"}
               </Link>
             ) : (
