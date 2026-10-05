@@ -130,7 +130,9 @@ interface TrialSlot {
   updated_at?: string | null;
 }
 
-type TimeFilter = "all" | "upcoming" | "past";
+// "all" = ongoing only (upcoming sessions + unscheduled). "everything" also
+// includes sessions whose date has already passed.
+type TimeFilter = "all" | "upcoming" | "past" | "everything";
 type StatusFilter =
   | "all"
   | "pending"
@@ -750,7 +752,8 @@ const TrialClassesManager = () => {
     return bookings.filter((b) => {
       if (statusFilter !== "all" && b.status !== statusFilter) return false;
       if (languageFilter !== "all" && (b.class_language ?? null) !== languageFilter) return false;
-      if (timeFilter !== "all") {
+      if (timeFilter === "all" && b.trial_date && !isTbaBooking(b) && new Date(`${b.trial_date}T00:00:00`) < startOfToday) return false;
+      if (timeFilter === "upcoming" || timeFilter === "past") {
         // TBA rows have no date; exclude from upcoming/past filters.
         if (!b.trial_date || isTbaBooking(b)) return false;
         const d = new Date(`${b.trial_date}T00:00:00`);
@@ -1141,7 +1144,8 @@ const TrialClassesManager = () => {
           <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
             <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All time</SelectItem>
+              <SelectItem value="all">Ongoing only</SelectItem>
+              <SelectItem value="everything">All time (incl. past)</SelectItem>
               <SelectItem value="upcoming">Upcoming only</SelectItem>
               <SelectItem value="past">Past only</SelectItem>
             </SelectContent>
