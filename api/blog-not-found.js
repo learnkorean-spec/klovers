@@ -65,11 +65,11 @@ export default function handler(req, res) {
 <div>
 <a class="brand" href="/">Klovers</a><br />
 <span class="code">404</span>
-<h1>This article took a wrong turn.<br /><span class="ar" lang="ar" dir="rtl">المقال ده خد طريق غلط.</span></h1>
+<h1>This article took a wrong turn.<br /><span class="ar" lang="ar" dir="rtl">يبدو أن هذا المقال سلك طريقًا خاطئًا.</span></h1>
 <p>Even Cluby gets lost in these alleys sometimes. This article doesn't exist or has moved.</p>
-<p class="ar" lang="ar" dir="rtl">حتى كلوبي ساعات بيتوه في الحواري دي. المقال ده مش موجود أو اتنقل.</p>
+<p class="ar" lang="ar" dir="rtl">حتى كلوبي يضلّ الطريق أحيانًا في هذه الأزقة. هذا المقال غير موجود أو نُقل إلى عنوان آخر.</p>
 <a class="cta" href="/">Back home &middot; <span lang="ar">الرئيسية</span></a>
-<p class="links"><a href="/blog">All articles &middot; <span lang="ar">كل المقالات</span></a> &middot; <a href="/courses">Courses &middot; <span lang="ar">الكورسات</span></a> &middot; <a href="/free-trial">Free trial &middot; <span lang="ar">حصة مجانية</span></a></p>
+<p class="links"><a href="/blog">All articles &middot; <span lang="ar">كل المقالات</span></a> &middot; <a href="/courses">Courses &middot; <span lang="ar">الدورات</span></a> &middot; <a href="/free-trial">Free trial &middot; <span lang="ar">حصة مجانية</span></a></p>
 </div>
 <figure>
 <img src="/assets/cluby/scene-hanok.webp" width="1080" height="1350" alt="Cluby and a Klovers learner walking through a hanok alley" />

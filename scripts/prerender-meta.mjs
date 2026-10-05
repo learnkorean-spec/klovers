@@ -1165,6 +1165,9 @@ for (const page of ARABIC_PAGES) {
     alternates: { en: page.path, ar: `/ar${page.path}` },
     ...(page.path === "/faq" ? { faq: ARABIC_FAQ } : {}),
     ...(en.pageLd ? { pageLd: { ...en.pageLd, inLanguage: "ar" } } : {}),
+    // The three landing pages are Articles in English; their twins are too
+    // (5 Oct 2026: they shipped with no JSON-LD at all).
+    ...(en.articleLd ? { articleLd: true, published: en.published, modified: en.modified } : {}),
   });
 }
 
