@@ -228,28 +228,28 @@ export function getCountdownPostTemplate(daysLeft: number, levelLabel: string): 
 export type PostLang = "en" | "ar";
 
 const HOOKS_AR = [
-  (g: GroupData) => `🚀 ${getLevelLabel(g.level)} — يبدأ ${g.day_name} الساعة ${g.start_time}`,
-  (g: GroupData) => `🇰🇷 جاهز تتعلم كوري؟ ${getLevelLabel(g.level)} مفتوح!`,
-  (g: GroupData) => `✨ جروب جديد! ${getLevelLabel(g.level)} — ${g.day_name} الساعة ${g.start_time}`,
+  (g: GroupData) => `${getLevelLabel(g.level)} — يبدأ ${g.day_name} الساعة ${g.start_time}`,
+  (g: GroupData) => `حان وقت تعلّم الكورية: ${getLevelLabel(g.level)} مفتوح للتسجيل.`,
+  (g: GroupData) => `مجموعة جديدة: ${getLevelLabel(g.level)} — ${g.day_name} الساعة ${g.start_time}`,
 ];
 
 const BENEFITS_AR = [
-  "اتعلم تقرأ وتتكلم وتبني جمل كوري حقيقية من أول أسبوع.",
-  "مجموعة صغيرة = اهتمام شخصي وممارسة حقيقية.",
-  "منهج منظم يخليك تتكلم كوري بسرعة.",
+  "قراءة الكورية والتحدث بها وبناء جمل حقيقية منذ الأسبوع الأول.",
+  "مجموعة صغيرة تعني اهتمامًا شخصيًا وممارسة حقيقية.",
+  "منهج منظم يجعل التحدث بالكورية أسرع وأسهل.",
 ];
 
 const CTAS_AR = [
-  "احجز مكانك النهارده.",
-  "الأماكن بتخلص — سجّل دلوقتي!",
-  "ماتفوتش الفرصة — سجّل اليوم.",
+  "حجز المقعد متاح اليوم.",
+  "المقاعد محدودة، والتسجيل مفتوح الآن.",
+  "التسجيل مفتوح اليوم.",
 ];
 
 const HASHTAGS_AR = "#تعلم_الكورية #كورس_كوري #كلوفرز #اللغة_الكورية";
 
 export function generateCaptionsAR(group: GroupData): string[] {
   return [0, 1, 2].map(i => {
-    const seatsLine = group.seats_left <= 3 ? `\nفاضل بس ${group.seats_left} مقعد${group.seats_left === 1 ? "" : "!"}` : "";
+    const seatsLine = group.seats_left <= 3 ? `\nتبقّى ${group.seats_left} ${group.seats_left === 1 ? "مقعد واحد" : "مقاعد فقط"}` : "";
     return `${HOOKS_AR[i](group)}${seatsLine}\n\n${BENEFITS_AR[i]}\n\n${CTAS_AR[i]}\n\n${HASHTAGS_AR}`;
   });
 }
@@ -258,9 +258,9 @@ export function getGroupPostTemplateAR(group: GroupData): PostTemplate {
   const levelLabel = getLevelLabel(group.level);
   const isUrgent = group.seats_left <= 5;
   const urgencyLine = group.seats_left <= 3
-    ? `\n🔴 فاضل بس ${group.seats_left} مقعد!`
+    ? `\nتبقّى ${group.seats_left} ${group.seats_left === 1 ? "مقعد واحد" : "مقاعد فقط"}`
     : group.seats_left <= 6
-    ? `\n⚡ ${group.seats_left} أماكن متاحة`
+    ? `\n${group.seats_left} مقاعد متاحة`
     : "";
   return {
     mainText: levelLabel,
@@ -281,8 +281,8 @@ export function getDiscountPostTemplateAR(discountPct: number, code: string): Po
 
 export function getReferralPostTemplateAR(): PostTemplate {
   return {
-    mainText: "وصّي صاحبك",
-    subtitle: "احصل على حصة مجانية\nشارك الرابط",
+    mainText: "أخبروا أصدقاءكم",
+    subtitle: "حصة مجانية\nشاركوا الرابط",
     extra: "#كلوفرز  #تعلم_الكورية  #أكاديمية_كلوفرز",
     isUrgent: false,
   };
