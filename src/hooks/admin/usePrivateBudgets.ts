@@ -80,11 +80,10 @@ export async function fetchPrivateBudgets(): Promise<PrivateBudgets> {
       .from("student_bundles")
       .select(
         "id, student_id, label, total_price, currency, purchased_on, paid_on, " +
-        "teacher_students!inner(status, full_name)"
+        "teacher_students(full_name)"
       )
       .neq("status", "cancelled")
       .is("voided_at", null)
-      .eq("teacher_students.status", "active")
       .order("id", { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
 

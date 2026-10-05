@@ -6,26 +6,7 @@ import { useFunnelCounts } from "@/hooks/admin/useFunnelCounts";
 import { scrollToAdminTabs } from "@/lib/admin/scrollToAdminTabs";
 
 interface FunnelProps {
-  /**
-   * @deprecated Ignored. The counts come from useFunnelCounts, which asks
-   * Postgres for exact numbers instead of measuring fetched arrays.
-   *
-   * These props are still accepted because AdminDashboard.tsx passes them and
-   * the tooling that produced this change cannot edit that file with a partial
-   * diff. Remove them there and here in the same change.
-   */
-  leadsCount?: number;
-  registeredCount?: number;
-  enrolledCount?: number;
-  activeCount?: number;
-  completedCount?: number;
-
   pendingCount?: number;
-  /**
-   * @deprecated Ignored. Every card is now a link (see `to` below), and the
-   * Enrolled card opens Enrollments whether or not anything is pending.
-   */
-  onPendingClick?: () => void;
 }
 
 /*

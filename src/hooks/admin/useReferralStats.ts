@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAllPages } from "@/lib/fetchAllPages";
+import { REFERRAL_CONVERSION_BONUS_PCT, REFERRAL_CLICK_BONUS_PCT, REFERRAL_MAX_BONUS_PCT } from "@/lib/admin-utils";
 
 interface ReferrerBreakdown {
   userId: string;
@@ -48,7 +49,7 @@ export function useReferralStats() {
         const conv = convByUser.get(uid) ?? 0;
         const clk = clicksByUser.get(uid) ?? 0;
         const shareOnly = Math.max(0, clk - conv);
-        const bonus = Math.min(conv * 5 + shareOnly * 2, 15);
+        const bonus = Math.min(conv * REFERRAL_CONVERSION_BONUS_PCT + shareOnly * REFERRAL_CLICK_BONUS_PCT, REFERRAL_MAX_BONUS_PCT);
         perUser.push({ userId: uid, conversions: conv, clicks: clk, bonusPercent: bonus });
       }
       perUser.sort((a, b) => b.conversions - a.conversions || b.clicks - a.clicks);

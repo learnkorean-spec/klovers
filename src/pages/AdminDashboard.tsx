@@ -147,7 +147,7 @@ import { ClassLinkDialog } from "@/components/admin/dialogs/ClassLinkDialog";
 import { ReceiptModal } from "@/components/admin/dialogs/ReceiptModal";
 import { RejectEnrollmentDialog } from "@/components/admin/dialogs/RejectEnrollmentDialog";
 import { ManualEnrollDialog } from "@/components/admin/dialogs/ManualEnrollDialog";
-import { formatTime, ADMIN_PAGE_SIZE as PAGE_SIZE, MAX_UNIT_PRICE, AT_RISK_SESSION_THRESHOLD } from "@/lib/admin-utils";
+import { formatTime, ADMIN_PAGE_SIZE as PAGE_SIZE, MAX_UNIT_PRICE, AT_RISK_SESSION_THRESHOLD, REFERRAL_CONVERSION_BONUS_PCT, REFERRAL_CLICK_BONUS_PCT, REFERRAL_MAX_BONUS_PCT } from "@/lib/admin-utils";
 import type { ProfileEntry } from "@/hooks/admin/useProfiles";
 import { StudentsTab } from "@/components/admin/tabs/StudentsTab";
 import { EnrollmentsTab } from "@/components/admin/tabs/EnrollmentsTab";
@@ -440,7 +440,6 @@ const AdminDashboard = () => {
   };
 
   // Stable callbacks so memoized hero children don't re-render on every tick.
-  const goToEnrollmentsTab = useCallback(() => setAdminTab("enrollments"), [setAdminTab]);
 
   // View a receipt URL stored on an enrollment — handles stripe: sentinel,
   // plain http(s) URLs, and storage object keys (resolved via signed URL).
@@ -1079,15 +1078,7 @@ const AdminDashboard = () => {
             isLoading={overviewLoading}
           />
 
-          <LifecycleFunnel
-            leadsCount={lifecycleLeads}
-            registeredCount={overviewRows.length}
-            enrolledCount={lifecycleConfirmedTotal}
-            activeCount={lifecycleActive}
-            completedCount={lifecycleCompleted + lifecycleLocked}
-            pendingCount={actionableEnrollments}
-            onPendingClick={goToEnrollmentsTab}
-          />
+          <LifecycleFunnel pendingCount={actionableEnrollments} />
 
           {/* Collapsible Insights — student health + referral program */}
           {(overviewRows.length > 0 || referralStats.total > 0 || referralStats.totalClicks > 0) && (
@@ -1125,17 +1116,17 @@ const AdminDashboard = () => {
                 <div className="rounded-lg bg-muted/50 px-3 py-2 text-center">
                   <p className="text-lg font-bold text-foreground">{referralStats.total}</p>
                   <p className="text-[10px] text-muted-foreground">Friends Enrolled</p>
-                  <p className="text-[10px] text-green-600 dark:text-green-400 font-medium">+5% each</p>
+                  <p className="text-[10px] text-green-600 dark:text-green-400 font-medium">+{REFERRAL_CONVERSION_BONUS_PCT}% each</p>
                 </div>
                 <div className="rounded-lg bg-muted/50 px-3 py-2 text-center">
                   <p className="text-lg font-bold text-foreground">{Math.max(0, referralStats.totalClicks - referralStats.total)}</p>
                   <p className="text-[10px] text-muted-foreground">Link-Only Visitors</p>
-                  <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">+2% each</p>
+                  <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">+{REFERRAL_CLICK_BONUS_PCT}% each</p>
                 </div>
                 <div className="rounded-lg bg-muted/50 px-3 py-2 text-center">
                   <p className="text-lg font-bold text-foreground">{referralStats.perUser.length}</p>
                   <p className="text-[10px] text-muted-foreground">Active Referrers</p>
-                  <p className="text-[10px] text-muted-foreground">max 15% bonus</p>
+                  <p className="text-[10px] text-muted-foreground">max {REFERRAL_MAX_BONUS_PCT}% bonus</p>
                 </div>
               </div>
 
@@ -1170,7 +1161,7 @@ const AdminDashboard = () => {
                     </table>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-2 italic">
-                    Formula: (enrolled x 5%) + (click-only visitors x 2%), capped at 15%. Stacks with 20% promo code for up to 35% total.
+                    Formula: (enrolled x {REFERRAL_CONVERSION_BONUS_PCT}%) + (click-only visitors x {REFERRAL_CLICK_BONUS_PCT}%), capped at {REFERRAL_MAX_BONUS_PCT}%. Stacks with the 20% promo code for up to {REFERRAL_MAX_BONUS_PCT + 20}% total.
                   </p>
                 </div>
               )}
@@ -1432,6 +1423,7 @@ const AdminDashboard = () => {
 
             {/* STUDENTS TAB */}
             <TabsContent value="students">
+              <TabErrorBoundary name="Students">
               <StudentsTab
                 overviewRows={overviewRows}
                 filteredUsers={filteredUsers}
@@ -1459,10 +1451,12 @@ const AdminDashboard = () => {
                 onManualEnroll={openManualEnroll}
                 invalidateAll={invalidateAll}
               />
+            </TabErrorBoundary>
             </TabsContent>
 
             {/* ENROLLMENTS TAB */}
             <TabsContent value="enrollments">
+              <TabErrorBoundary name="Enrollments">
               <EnrollmentsTab
                 enrollments={enrollments}
                 loading={loading}
@@ -1498,6 +1492,7 @@ const AdminDashboard = () => {
                 leadsByEmail={leadsByEmail}
                 invalidateAll={invalidateAll}
               />
+            </TabErrorBoundary>
             </TabsContent>
             <TabsContent value="leads">
               <TabErrorBoundary name="Leads">
@@ -1581,7 +1576,6 @@ const AdminDashboard = () => {
                       attendanceReqs={attendanceReqs}
                       onAttendanceAction={handleAttendanceAction}
                       onRevertAttendance={handleRevertAttendance}
-                      userGroupMap={{}}
                       onUpdated={invalidateAll}
                     />
                   </TabErrorBoundary>
@@ -1625,12 +1619,16 @@ const AdminDashboard = () => {
 
             {/* SEO ORCHESTRATION TAB */}
             <TabsContent value="seo-orchestration">
-              <SeoOrchestrationPanel />
+              <TabErrorBoundary name="SEO">
+                <SeoOrchestrationPanel />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* IMAGE AUDIT TAB */}
             <TabsContent value="image-audit">
+              <TabErrorBoundary name="Image audit">
               <ImageAuditPanel />
+              </TabErrorBoundary>
             </TabsContent>
 
             {/* CAMPAIGNS TAB */}
