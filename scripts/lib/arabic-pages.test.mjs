@@ -24,12 +24,12 @@ const allow = new RegExp(`^${vercel.rewrites.find((r) => r.destination === "/app
 const DIALECT = /(^|\s)(مش|دلوقتي|عشان|لسه|إزاي|كده|بتاع|أوي|معانا|احجز|اعمل|شوف)(\s|$)/;
 
 describe("the Arabic twins exist end to end", () => {
-  it("lists nineteen pages, all with the same paths in meta and bodies", () => {
+  it("lists twenty pages, all with the same paths in meta and bodies", () => {
     expect(ARABIC_PAGE_META.map((p) => p.path)).toEqual(ARABIC_PAGES.map((p) => p.path));
     // seven marketing pages + the blog index, then the scholarships page (4 Oct 2026),
     // then contact and the three landing pages (5 Oct 2026), then the shop and
     // the journey hub with its five stations (6 Oct 2026).
-    expect(ARABIC_PAGES).toHaveLength(19);
+    expect(ARABIC_PAGES).toHaveLength(20);
   });
 
   it("the Arabic blog index gets its article list from the prerender (28 Sep 2026)", () => {

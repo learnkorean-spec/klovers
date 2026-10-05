@@ -200,7 +200,7 @@ export const ARABIC_PAGES = [
       <p>عدم القدرة على قراءة الحروف الكورية بعد ليس رسوبًا، بل هو بالضبط المستوى الذي تبدأ منه الدروس.</p>
       <h2>بعد النتيجة</h2>
       <p>عرض المستوى وتفصيل الإجابات، وحفظ النتيجة، واختيار موعد المجموعة، أو حجز الحصة التجريبية المجانية.</p>
-      <p><a href="/ar/free-trial">حجز حصة تجريبية مجانية</a> · <a href="/hangul-starter">ورقة الهانغول المجانية</a> · <a href="/ar/courses">الدورات</a> · <a href="/ar/pricing">الأسعار</a></p>
+      <p><a href="/ar/free-trial">حجز حصة تجريبية مجانية</a> · <a href="/ar/hangul-starter">ورقة الهانغول المجانية</a> · <a href="/ar/courses">الدورات</a> · <a href="/ar/pricing">الأسعار</a></p>
     </div>`,
   },
   {
@@ -417,7 +417,47 @@ export const ARABIC_PAGES = [
       </ul>
       <h2>مجانًا قبل الشراء</h2>
       <p>ورقة البداية في الهانغول مجانية للتحميل بالعربية والإنجليزية، وأول حصة مباشرة مجانية أيضًا.</p>
-      <p><a href="/ar/free-trial">حجز حصة مجانية</a> · <a href="/hangul-starter">ورقة الهانغول المجانية</a> · <a href="/ar/courses">الدورات</a> · <a href="/terms">الشروط</a></p>
+      <p><a href="/ar/free-trial">حجز حصة مجانية</a> · <a href="/ar/hangul-starter">ورقة الهانغول المجانية</a> · <a href="/ar/courses">الدورات</a> · <a href="/terms">الشروط</a></p>
+    </div>`,
+  },
+  {
+    // The free Hangul starter sheet (6 Oct 2026). No pronunciation in Arabic
+    // letters, by Re's decision: letters and example syllables in Hangul only.
+    path: "/hangul-starter",
+    title: "ورقة الهانغول المجانية: الأبجدية الكورية | كلوفرز",
+    description: "تعلُّم الأبجدية الكورية (الهانغول) مجانًا: الحروف الساكنة والمتحركة كاملة مع مقطع مثال لكل حرف وشرح مبسّط، وقابلة للطباعة.",
+    body: `<div id="hangul-starter-prerendered" lang="ar" dir="rtl">
+      <h1>ورقة الهانغول المجانية</h1>
+      <p><strong>قرية الهانغول · البوابة الأولى.</strong> كل لافتة في القرية مكتوبة بهذه الحروف. وهنا تجتمع كلها في صفحة واحدة، مع مقطع مثال لكل حرف. طباعتها أو حفظها، ثم قراءة أول لافتة اليوم.</p>
+      <p><a href="/hangul-starter-ar.pdf">تحميل الورقة المجانية للطباعة</a> · <a href="/ar/free-trial">حجز حصة مجانية</a></p>
+      <h2>كيف تُبنى المقاطع الكورية</h2>
+      <p>تُكتب الكورية في مربعات، وكل مربع مقطع صوتي واحد: حرف ساكن وحرف مدّ، وأحيانًا حرف ساكن أخير. أمثلة: <span lang="ko">가</span> = <span lang="ko">ㄱ + ㅏ</span>، و<span lang="ko">한</span> = <span lang="ko">ㅎ + ㅏ + ㄴ</span>، و<span lang="ko">국</span> = <span lang="ko">ㄱ + ㅜ + ㄱ</span>.</p>
+      <h2>الحروف الساكنة الأساسية (١٤)</h2>
+      <p><span lang="ko">ㄱ</span> (<span lang="ko">가</span>) · <span lang="ko">ㄴ</span> (<span lang="ko">나</span>) · <span lang="ko">ㄷ</span> (<span lang="ko">다</span>) · <span lang="ko">ㄹ</span> (<span lang="ko">라</span>) · <span lang="ko">ㅁ</span> (<span lang="ko">마</span>) · <span lang="ko">ㅂ</span> (<span lang="ko">바</span>) · <span lang="ko">ㅅ</span> (<span lang="ko">사</span>) · <span lang="ko">ㅇ</span> (<span lang="ko">아</span>) · <span lang="ko">ㅈ</span> (<span lang="ko">자</span>) · <span lang="ko">ㅊ</span> (<span lang="ko">차</span>) · <span lang="ko">ㅋ</span> (<span lang="ko">카</span>) · <span lang="ko">ㅌ</span> (<span lang="ko">타</span>) · <span lang="ko">ㅍ</span> (<span lang="ko">파</span>) · <span lang="ko">ㅎ</span> (<span lang="ko">하</span>)</p>
+      <h2>الحروف الساكنة المضاعفة (٥)</h2>
+      <p><span lang="ko">ㄲ</span> (<span lang="ko">까</span>) · <span lang="ko">ㄸ</span> (<span lang="ko">따</span>) · <span lang="ko">ㅃ</span> (<span lang="ko">빠</span>) · <span lang="ko">ㅆ</span> (<span lang="ko">싸</span>) · <span lang="ko">ㅉ</span> (<span lang="ko">짜</span>)</p>
+      <h2>حروف المد الأساسية (١٠)</h2>
+      <p><span lang="ko">ㅏ</span> (<span lang="ko">아</span>) · <span lang="ko">ㅑ</span> (<span lang="ko">야</span>) · <span lang="ko">ㅓ</span> (<span lang="ko">어</span>) · <span lang="ko">ㅕ</span> (<span lang="ko">여</span>) · <span lang="ko">ㅗ</span> (<span lang="ko">오</span>) · <span lang="ko">ㅛ</span> (<span lang="ko">요</span>) · <span lang="ko">ㅜ</span> (<span lang="ko">우</span>) · <span lang="ko">ㅠ</span> (<span lang="ko">유</span>) · <span lang="ko">ㅡ</span> (<span lang="ko">으</span>) · <span lang="ko">ㅣ</span> (<span lang="ko">이</span>)</p>
+      <h2>حروف المد المركبة (١١)</h2>
+      <p><span lang="ko">ㅐ</span> (<span lang="ko">애</span>) · <span lang="ko">ㅒ</span> (<span lang="ko">얘</span>) · <span lang="ko">ㅔ</span> (<span lang="ko">에</span>) · <span lang="ko">ㅖ</span> (<span lang="ko">예</span>) · <span lang="ko">ㅘ</span> (<span lang="ko">와</span>) · <span lang="ko">ㅙ</span> (<span lang="ko">왜</span>) · <span lang="ko">ㅚ</span> (<span lang="ko">외</span>) · <span lang="ko">ㅝ</span> (<span lang="ko">워</span>) · <span lang="ko">ㅞ</span> (<span lang="ko">웨</span>) · <span lang="ko">ㅟ</span> (<span lang="ko">위</span>) · <span lang="ko">ㅢ</span> (<span lang="ko">의</span>)</p>
+      <h2>سبع قواعد في قرية الهانغول</h2>
+      <ol>
+        <li>كل مقطع مربع واحد: حرف ساكن وحرف مدّ، وأحيانًا حرف ساكن أخير. <span lang="ko">가 · 한 · 국</span></li>
+        <li>يُقرأ المربع من اليسار إلى اليمين، ثم من أعلى إلى أسفل. <span lang="ko">한 = ㅎ → ㅏ → ㄴ</span></li>
+        <li>حروف المدّ الطويلة تُكتب يمين الحرف الساكن، والمسطّحة تُكتب تحته. <span lang="ko">가 · 거 · 고 · 구</span></li>
+        <li>لا يبدأ المربع بحرف مدّ وحده، بل يسبقه ㅇ صامت. <span lang="ko">아 · 오 · 이</span></li>
+        <li>في آخر المربع لا يكون ㅇ صامتًا، بل يعطي المقطع صوتًا أنفيًا. <span lang="ko">강 · 방 · 공</span></li>
+        <li>الحرف الأخير يُنطق بسبعة أصوات فقط: ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ ㅇ. <span lang="ko">옷 → [옫] · 부엌 → [부억]</span></li>
+        <li>يُكتب كل حرف من أعلى إلى أسفل، ومن اليسار إلى اليمين. <span lang="ko">ㄱ · ㅏ · 가</span></li>
+      </ol>
+      <h2>ثلاث حقائق تجعل القرية سهلة</h2>
+      <ul>
+        <li>صُمّم الهانغول بأمر الملك سيجونغ عام ١٤٤٣ م، ليتعلّم أي أحد القراءة بسرعة.</li>
+        <li>كثير من الحروف الساكنة مرسوم على شكل الفم عند نطقها.</li>
+        <li>لا حاجة إلى حفظ كل شيء أولًا: الأبجدية في كلوفرز أربع حصص مباشرة مع المعلمة.</li>
+      </ul>
+      <p><strong>البداية مع معلمة حقيقية، مجانًا.</strong></p>
+      <p><a href="/ar/free-trial">حجز حصة مجانية</a> · <a href="/ar/placement-test">اختبار تحديد المستوى</a> · <a href="/ar/courses">الدورات</a> · <a href="/ar/pricing">الأسعار</a> · <a href="/ar/blog">المجلة</a></p>
     </div>`,
   },
   // The journey hub and its five stations (6 Oct 2026), generated from eras.ts.

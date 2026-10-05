@@ -147,7 +147,8 @@ const HangulStarterPage = () => {
     description: isAr
       ? "تعلُّم الأبجدية الكورية (الهانغول) مجانًا: الحروف الساكنة والمتحركة كاملة مع مقطع مثال لكل حرف وشرح مبسّط، وقابلة للطباعة."
       : "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide — explained simply. Printable.",
-    canonical: "https://kloversegy.com/hangul-starter",
+    canonical: isAr ? "https://kloversegy.com/ar/hangul-starter" : "https://kloversegy.com/hangul-starter",
+    alternates: { en: "https://kloversegy.com/hangul-starter", ar: "https://kloversegy.com/ar/hangul-starter" },
   });
 
   return (
@@ -177,7 +178,7 @@ const HangulStarterPage = () => {
           <p className="text-base text-foreground/80 mb-6 max-w-md">
             {tr(
               "Every Korean letter on one sheet, with its sound, and the rules for reading a block.",
-              "كل الحروف الكورية في ورقة واحدة، مع نطق كل حرف، وقواعد قراءة المقطع.",
+              "كل الحروف الكورية في ورقة واحدة، مع مقطع مثال لكل حرف وقواعد قراءة المقطع.",
             )}
           </p>
           <img
@@ -211,7 +212,7 @@ const HangulStarterPage = () => {
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto leading-relaxed">
               {tr(
                 "Every sign in the village is written in these letters. Here they all are on one page, with the right sound for each. Print it, keep it, and read the first sign today.",
-                "كل لافتة في القرية مكتوبة بهذه الحروف. وهنا تجتمع كلها في صفحة واحدة، مع النطق الصحيح لكل حرف. طباعتها أو حفظها، ثم قراءة أول لافتة اليوم.",
+                "كل لافتة في القرية مكتوبة بهذه الحروف. وهنا تجتمع كلها في صفحة واحدة، مع مقطع مثال لكل حرف. طباعتها أو حفظها، ثم قراءة أول لافتة اليوم.",
               )}
             </p>
             <div className="flex flex-wrap gap-3 justify-center">

@@ -33,6 +33,7 @@ export const ARABIC_PAGE_META = [
   // Klovers Supply (6 Oct 2026). Same title and description as ShopPage's
   // Arabic useSEO for the shop index, so the static head and the live page agree.
   { path: "/shop", title: "متجر كلوفرز — كتب ومستلزمات لتعلّم الكورية", description: "كتب ومستلزمات من كلوفرز تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب." },
+  { path: "/hangul-starter", title: "ورقة الهانغول المجانية: الأبجدية الكورية | كلوفرز", description: "تعلُّم الأبجدية الكورية (الهانغول) مجانًا: الحروف الساكنة والمتحركة كاملة مع مقطع مثال لكل حرف وشرح مبسّط، وقابلة للطباعة." },
   // The journey hub and its five stations (6 Oct 2026), from arabic-journey.mjs.
   ...JOURNEY_ARABIC_PAGES.map(({ path, title, description }) => ({ path, title, description })),
 ];
