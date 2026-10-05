@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Link } from "react-router-dom";
@@ -33,6 +33,12 @@ import PriceTeaser from "@/components/PriceTeaser";
  * empty sky, and the ticket overlaps the bottom fade. The phone gets its own
  * 4:5 crop with more sky. The aspect ratio is fixed per breakpoint so the
  * heading's percentage offset lands in the sky before the image loads.
+ *
+ * 5 Oct 2026 (homepage length): at wide screens the 16:9 scene grew to
+ * ~1,200px tall. It is now capped at 720px from md (object-cover crops the
+ * edges of sky and grass; the heading still sits in the sky), and the
+ * bottom padding is smaller. The WhatsApp link uses the Klovers chat icon
+ * instead of a generic lucide one (brand-guard sweep).
  *
  * Numbers are static on purpose: a count-up renders every intermediate value
  * as a finished claim. They come from @/lib/trustFigures, the one place every
@@ -69,7 +75,7 @@ const FinalCTA = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden bg-background pb-20 md:pb-28"
+      className="relative overflow-hidden bg-background pb-16 md:pb-20"
     >
       {/* ── The scene: Cluby pointing at Seoul, heading in the sky ── */}
       <div className="relative">
@@ -82,7 +88,7 @@ const FinalCTA = () => {
             height={900}
             loading="lazy"
             decoding="async"
-            className="block aspect-[4/5] w-full object-cover md:aspect-[16/9]"
+            className="block aspect-[4/5] w-full object-cover md:aspect-[16/9] md:max-h-[720px]"
           />
         </picture>
 
@@ -214,7 +220,7 @@ const FinalCTA = () => {
                     rel="noopener noreferrer"
                     className={QUIET_LINK}
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <KloverIcon name="chat-annyeong" className="h-5 w-5" />
                     {isAr ? "أو التواصل عبر واتساب" : "or message us on WhatsApp"}
                   </a>
                 </div>
