@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { ARABIC_PAGES, ARABIC_FAQ, ARABIC_PAGE_META, BLOG_INDEX_ARTICLES_MARKER } from "./arabic-pages.mjs";
+import { ERAS } from "../../src/constants/eras.ts";
 import { buildSitemap } from "../../api/sitemap.xml.js";
 
 /**
@@ -23,11 +24,12 @@ const allow = new RegExp(`^${vercel.rewrites.find((r) => r.destination === "/app
 const DIALECT = /(^|\s)(مش|دلوقتي|عشان|لسه|إزاي|كده|بتاع|أوي|معانا|احجز|اعمل|شوف)(\s|$)/;
 
 describe("the Arabic twins exist end to end", () => {
-  it("lists thirteen pages, all with the same paths in meta and bodies", () => {
+  it("lists nineteen pages, all with the same paths in meta and bodies", () => {
     expect(ARABIC_PAGE_META.map((p) => p.path)).toEqual(ARABIC_PAGES.map((p) => p.path));
     // seven marketing pages + the blog index, then the scholarships page (4 Oct 2026),
-    // then contact and the three landing pages (5 Oct 2026).
-    expect(ARABIC_PAGES).toHaveLength(13);
+    // then contact and the three landing pages (5 Oct 2026), then the shop and
+    // the journey hub with its five stations (6 Oct 2026).
+    expect(ARABIC_PAGES).toHaveLength(19);
   });
 
   it("the Arabic blog index gets its article list from the prerender (28 Sep 2026)", () => {
@@ -39,8 +41,10 @@ describe("the Arabic twins exist end to end", () => {
   });
 
   it.each(ARABIC_PAGES.map((p) => p.path))("%s has an Arabic route in the app and in vercel.json", (path) => {
-    expect(app).toMatch(new RegExp(`<Route path="/ar${path}" element=`));
-    expect(app).toMatch(new RegExp(`<Route path="${path}" element=`));
+    // The five journey stations share one dynamic route (/journey/:eraId).
+    const route = path.startsWith("/journey/") ? "/journey/:eraId" : path;
+    expect(app).toMatch(new RegExp(`<Route path="/ar${route}" element=`));
+    expect(app).toMatch(new RegExp(`<Route path="${route}" element=`));
     expect(allow.test(`/ar${path}`)).toBe(true);
   });
 
@@ -108,5 +112,22 @@ describe("the sitemap pairs every twin", () => {
       expect(b).toContain(`hreflang="ar" href="https://kloversegy.com/ar${path}"`);
       expect(b).toContain(`hreflang="x-default" href="https://kloversegy.com${path}"`);
     }
+  });
+});
+
+describe("the journey twins follow eras.ts (6 Oct 2026)", () => {
+  const body = (path) => ARABIC_PAGES.find((p) => p.path === path).body;
+  it.each(ERAS.map((e) => e.id))("/journey/%s carries the Arabic story, milestones and words of eras.ts", (id) => {
+    const era = ERAS.find((e) => e.id === id);
+    const html = body(`/journey/${id}`);
+    const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    for (const para of era.storyAr) expect(html).toContain(esc(para));
+    for (const m of era.milestones) expect(html).toContain(esc(m.textAr));
+    for (const w of era.words) expect(html).toContain(esc(w.ko));
+    expect(html).toContain(esc(era.introAr));
+  });
+  it("the hub lists all five stations with Arabic links", () => {
+    const html = body("/journey");
+    for (const e of ERAS) expect(html).toContain(`href="/ar/journey/${e.id}"`);
   });
 });

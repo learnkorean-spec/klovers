@@ -26,7 +26,8 @@ export default function JourneyHubPage() {
     description: isAr
       ? "خمس محطات من تاريخ كوريا: من أسطورة دانغون ومملكة سيلا وعصر جوسون والهانغول، إلى بيت الهانوك والموجة الكورية اليوم."
       : "Five stations of Korean history: the Dangun legend, Silla, the Joseon era and Hangul, the hanok house, and today's Korean wave.",
-    canonical: "https://kloversegy.com/journey",
+    canonical: isAr ? "https://kloversegy.com/ar/journey" : "https://kloversegy.com/journey",
+    alternates: { en: "https://kloversegy.com/journey", ar: "https://kloversegy.com/ar/journey" },
   });
 
   return (

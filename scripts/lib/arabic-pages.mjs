@@ -24,6 +24,8 @@
  * Arabic FAQ from src/i18n/translations.ts (faqPage.items), and a test fails
  * if the two drift apart. No "$" and no backticks anywhere in this file.
  */
+import { JOURNEY_ARABIC_PAGES } from "./arabic-journey.mjs";
+
 
 export const ARABIC_PAGES = [
   {
@@ -418,6 +420,8 @@ export const ARABIC_PAGES = [
       <p><a href="/ar/free-trial">حجز حصة مجانية</a> · <a href="/hangul-starter">ورقة الهانغول المجانية</a> · <a href="/ar/courses">الدورات</a> · <a href="/terms">الشروط</a></p>
     </div>`,
   },
+  // The journey hub and its five stations (6 Oct 2026), generated from eras.ts.
+  ...JOURNEY_ARABIC_PAGES,
 ];
 
 /** Where the prerender writes the Arabic article list into the /blog body. */

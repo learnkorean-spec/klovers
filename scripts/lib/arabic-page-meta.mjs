@@ -9,6 +9,8 @@
  * src/lib/arabicRoutes.ts, and (by test) src/App.tsx and vercel.json.
  */
 
+import { JOURNEY_ARABIC_PAGES } from "./arabic-journey.mjs";
+
 export const ARABIC_PAGE_META = [
   { path: "/courses", title: "دورات الكورية من الهانغول إلى المستوى ٦ | كلوفرز", description: "دورات كلوفرز للغة الكورية من الهانغول حتى المستوى السادس: حصص مباشرة مع معلمة حقيقية، ٦٠ دقيقة أسبوعيًا، في مجموعات صغيرة، بالعربية أو بالإنجليزية." },
   { path: "/pricing", title: "أسعار دورات الكورية وخططها | كلوفرز", description: "أسعار كلوفرز حسب البلد وبالعملة المحلية: حصص جماعية مرة أسبوعيًا لشهر أو ٣ أو ٦ أشهر، وحصص خاصة بجدولة مرنة." },
@@ -31,6 +33,8 @@ export const ARABIC_PAGE_META = [
   // Klovers Supply (6 Oct 2026). Same title and description as ShopPage's
   // Arabic useSEO for the shop index, so the static head and the live page agree.
   { path: "/shop", title: "متجر كلوفرز — كتب ومستلزمات لتعلّم الكورية", description: "كتب ومستلزمات من كلوفرز تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب." },
+  // The journey hub and its five stations (6 Oct 2026), from arabic-journey.mjs.
+  ...JOURNEY_ARABIC_PAGES.map(({ path, title, description }) => ({ path, title, description })),
 ];
 
 /** The English paths that have an Arabic twin (the homepage pair is separate). */

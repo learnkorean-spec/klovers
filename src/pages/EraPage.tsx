@@ -44,7 +44,10 @@ const EraPage = () => {
     // useSEO appends " | Klovers" itself.
     title: era ? (isAr ? era.titleAr : era.titleEn) : "Journey through Korea's time",
     description: era ? (isAr ? era.metaDescAr : era.metaDescEn) : "A journey through Korea's history and culture, one era at a time.",
-    canonical: era ? `https://kloversegy.com/journey/${era.id}` : undefined,
+    canonical: era ? `https://kloversegy.com${isAr ? "/ar" : ""}/journey/${era.id}` : undefined,
+    alternates: era
+      ? { en: `https://kloversegy.com/journey/${era.id}`, ar: `https://kloversegy.com/ar/journey/${era.id}` }
+      : undefined,
     ogImage: era
       ? OG_IMAGE_OVERRIDES[era.id] ?? (era.image ? `https://kloversegy.com${era.image}` : undefined)
       : undefined,
