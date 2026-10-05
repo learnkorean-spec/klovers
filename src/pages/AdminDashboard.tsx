@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, Users, FileCheck, Clock, Tag, Loader2, Image, Palette, Trophy, TrendingUp, Link, BookOpen, GraduationCap } from "lucide-react";
+import { Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, Users, FileCheck, Clock, Tag, Loader2, Image, Palette, Trophy, TrendingUp, Link, BookOpen, GraduationCap, Volume2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Package, Lock } from "lucide-react";
 import {
