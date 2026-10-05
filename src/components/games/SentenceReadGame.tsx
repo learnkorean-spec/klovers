@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RotateCcw, Trophy, Sparkles, ArrowRight, BookOpen } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useGameData, GameExerciseItem } from "@/hooks/useGameData";
 
 interface Question { question: string; answer: string; options: string[]; explanation: string; }
@@ -37,6 +38,7 @@ function buildQuestions(exercises: GameExerciseItem[]): Question[] {
 }
 
 const SentenceReadGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
+  const { language } = useLanguage();
   const { exercises, loading: gameDataLoading } = useGameData();
   const totalRounds = 10;
   const exercisesRef = useRef(exercises);
@@ -103,7 +105,7 @@ const SentenceReadGame = ({ onGameComplete }: { onGameComplete?: (score: number,
         <div className="flex items-center justify-between">
           <Badge variant="outline">Round {round + 1}/{totalRounds}</Badge>
           <div className="flex items-center gap-2">
-            {usingLesson && <Badge variant="outline" className="text-xs">📚 From your lessons</Badge>}
+            {usingLesson && <Badge variant="outline" className="text-xs gap-1"><BookOpen className="h-3 w-3" aria-hidden="true" />{language === "ar" ? "من دروسك" : "From your lessons"}</Badge>}
             <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" />{score * 5} XP</Badge>
           </div>
         </div>

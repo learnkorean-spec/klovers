@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Gamepad2, RotateCcw, Trophy, Timer, Sparkles } from "lucide-react";
+import { Gamepad2, RotateCcw, Trophy, Timer, Sparkles, BookOpen } from "lucide-react";
 import { useGameData, GameVocabItem } from "@/hooks/useGameData";
 import { MATCH_FALLBACK_VOCAB } from "@/constants/fallbackVocab";
 
@@ -42,7 +42,7 @@ function buildPairs(vocab: GameVocabItem[]): Pair[] {
 }
 
 const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, total: number) => void }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { vocab, loading: gameDataLoading } = useGameData();
 
   // Keep vocab in a ref so initGame can read the latest value without being
@@ -175,7 +175,8 @@ const KoreanMatchGame = ({ onGameComplete }: { onGameComplete?: (score: number, 
           </p>
           {usingLessonVocab && (
             <Badge variant="outline" className="text-xs gap-1">
-              📚 From your lessons
+              <BookOpen className="h-3 w-3" aria-hidden="true" />
+              {language === "ar" ? "من دروسك" : "From your lessons"}
             </Badge>
           )}
         </div>

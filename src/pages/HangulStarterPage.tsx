@@ -179,9 +179,9 @@ const HangulStarterPage = () => {
           <p className="text-sm font-bold tracking-[0.25em] text-foreground/70 mb-2">
             {tr("KLOVERS · HANGUL VILLAGE", "كلوفرز · قرية الهانغول")}
           </p>
-          <h1 className="font-display text-4xl font-black text-foreground mb-2">
+          <h2 className="font-display text-4xl font-black text-foreground mb-2">
             {tr("Hangul starter sheet", "ورقة الهانغول")}
-          </h1>
+          </h2>
           <p className="text-base text-foreground/80 mb-6 max-w-md">
             {tr(
               "Every Korean letter on one sheet, with its sound, and the rules for reading a block.",
