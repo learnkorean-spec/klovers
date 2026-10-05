@@ -136,8 +136,17 @@
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
     <link rel="dns-prefetch" href="https://connect.facebook.net" />
 
-    <!-- LCP hero image — preloaded from stable public path to avoid render-blocking discovery -->
-    <link rel="preload" as="image" href="/hero-world.jpg" fetchpriority="high" />
+    <!--
+      LCP hero image. 6 Oct 2026: the preload carries the same srcset and sizes
+      as the hero <img> (HeroSection.tsx) and the static shell below, so the
+      browser fetches ONE file and all three reuse it. The widths come from
+      Vercel Image Optimization ("images" in vercel.json), which serves AVIF or
+      WebP: 21 KB at 828w and 59 KB at full size, against 196 KB for the JPG.
+      Phones show the photo height-first (object-cover on an 86svh box), so
+      the phone slot is 155vh wide, not 100vw. href stays the plain JPG for
+      browsers that ignore imagesrcset.
+    -->
+    <link rel="preload" as="image" href="/hero-world.jpg" imagesrcset="/_vercel/image?url=%2Fhero-world.jpg&amp;w=828&amp;q=70 828w, /_vercel/image?url=%2Fhero-world.jpg&amp;w=1200&amp;q=70 1200w, /_vercel/image?url=%2Fhero-world.jpg&amp;w=1920&amp;q=70 1920w" imagesizes="(max-width: 767px) 155vh, 100vw" fetchpriority="high" />
 
     <!--
       Fonts — the brand type system from the Klovers concept board:
@@ -424,6 +433,47 @@
 
   </head>
   <body>
+    <!--
+      Homepage hero shell (6 Oct 2026). Until the app's JavaScript ran, the
+      homepage painted nothing: PageSpeed mobile measured FCP 4.1s and LCP
+      8.5s, nearly all of it waiting for the bundle. On "/" and "/ar" this
+      shell paints the hero photo and its scrim straight from the HTML - the
+      same picture, crop, filter and scrim as HeroSection.tsx - so the largest
+      paint happens as soon as the picture arrives. The real hero renders on
+      top of it and removes it on mount (HeroSection useEffect). No text here,
+      so a saved language never shows the wrong words for a moment. A 15s
+      timer removes it too, in case the app never starts. Other routes never
+      fill it, so they never fetch the picture.
+    -->
+    <style>
+      #kl-hero-shell { position: absolute; top: 0; left: 0; right: 0; height: 86vh; height: 86svh; overflow: hidden; background: #2E2E2E; pointer-events: none; }
+      #kl-hero-shell img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 97% center; filter: brightness(1.1) saturate(1.15); }
+      #kl-hero-shell div { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(46,46,46,0.55) 0%, rgba(46,46,46,0.55) 45%, rgba(46,46,46,0.70) 100%); }
+      @media (min-width: 1024px) { #kl-hero-shell img { object-position: center; } }
+    </style>
+    <div id="kl-hero-shell" aria-hidden="true" hidden></div>
+    <script>
+      (function () {
+        var path = window.location.pathname.replace(/\/+$/, "");
+        if (path !== "" && path !== "/ar") return;
+        var shell = document.getElementById("kl-hero-shell");
+        if (!shell) return;
+        var local = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$|\.local$/.test(window.location.hostname);
+        var srcset = local ? "" : [828, 1200, 1920].map(function (w) {
+          return "/_vercel/image?url=%2Fhero-world.jpg&w=" + w + "&q=70 " + w + "w";
+        }).join(", ");
+        var img = document.createElement("img");
+        img.alt = "";
+        img.decoding = "async";
+        img.setAttribute("fetchpriority", "high");
+        if (srcset) { img.sizes = "(max-width: 767px) 155vh, 100vw"; img.srcset = srcset; }
+        img.src = "/hero-world.jpg";
+        shell.appendChild(img);
+        shell.appendChild(document.createElement("div"));
+        shell.hidden = false;
+        setTimeout(function () { if (shell.parentNode) shell.parentNode.removeChild(shell); }, 15000);
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

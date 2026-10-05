@@ -12,6 +12,19 @@ import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
  * and roofs instead of faces.
  */
 const heroPoster = "/hero-world.jpg";
+/*
+ * 6 Oct 2026 (mobile LCP): the same photo through Vercel Image Optimization
+ * ("images" in vercel.json) - AVIF/WebP, 21 KB at 828w and 59 KB at full
+ * size instead of the 196 KB JPG. index.html preloads EXACTLY this srcset and
+ * sizes, and its static hero shell uses them too, so the browser downloads
+ * one file. Keep the three in step. Phones crop height-first (object-cover on
+ * an 86svh box), so the phone slot is 155vh wide. /_vercel/image only exists
+ * on Vercel, so the dev server keeps the plain JPG.
+ */
+const HERO_SRCSET = import.meta.env.PROD
+  ? [828, 1200, 1920].map((w) => `/_vercel/image?url=%2Fhero-world.jpg&w=${w}&q=70 ${w}w`).join(", ")
+  : undefined;
+const HERO_SIZES = "(max-width: 767px) 155vh, 100vw";
 const heroVideo = "/videos/hero-korea-video-new.mp4";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent, trackAndOpenWhatsApp } from "@/lib/leadTracking";
@@ -117,6 +130,12 @@ const HeroSection = () => {
     return { day, time, zoneName };
   }, [slots, isAr]);
 
+  // The static hero shell in index.html painted the photo before this
+  // component existed. Now the real hero is on screen, so the shell goes.
+  useEffect(() => {
+    document.getElementById("kl-hero-shell")?.remove();
+  }, []);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
 
@@ -206,6 +225,8 @@ const HeroSection = () => {
             just no longer stalls everything else to do it. */}
         <img
           src={heroPoster}
+          srcSet={HERO_SRCSET}
+          sizes={HERO_SRCSET ? HERO_SIZES : undefined}
           alt=""
           aria-hidden="true"
           loading="eager"
