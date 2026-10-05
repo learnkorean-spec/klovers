@@ -767,7 +767,10 @@ const TrialClassesManager = () => {
   const sessions = useMemo(() => {
     const groups: Record<string, TrialBooking[]> = {};
     filtered.forEach((b) => {
-      // Cancelled bookings move to Unscheduled so admin can reschedule them.
+      // The Unscheduled card shows ongoing trials only. Cancelled bookings
+      // are hidden unless the admin explicitly picks the "Cancelled only"
+      // status filter, in which case they are listed there.
+      if (b.status === "cancelled" && statusFilter !== "cancelled") return;
       const key = (isTbaBooking(b) || b.status === "cancelled") ? TBA_KEY : `${b.trial_date}__${b.start_time}`;
       (groups[key] ||= []).push(b);
     });
@@ -785,7 +788,7 @@ const TrialClassesManager = () => {
         if (b.isTba) return 1;
         return (b.date || "").localeCompare(a.date || "") || (b.time || "").localeCompare(a.time || "");
       });
-  }, [filtered]);
+  }, [filtered, statusFilter]);
 
   /**
    * Ask ONE student whether they are coming.
