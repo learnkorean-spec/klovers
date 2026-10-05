@@ -22,6 +22,12 @@ export const ARABIC_PAGE_META = [
   // Scholarships in Korea (4 Oct 2026). Same title and description as
   // ScholarshipsPage's Arabic useSEO, so the static head and the live page agree.
   { path: "/scholarships", title: "منح كوريا: ستة برامج رسمية | كلوفرز", description: "ست منح كورية رسمية: منحة الحكومة الكورية، وKAIST، ومؤسسة كوريا، وKOICA، والتبادل الطلابي — التغطية والشروط والمواعيد والمصادر الرسمية." },
+  // Contact and the three landing pages (5 Oct 2026, GEO re-score). Same
+  // title and description as their bodies in arabic-pages.mjs.
+  { path: "/contact", title: "التواصل مع كلوفرز بشأن دورات الكورية", description: "التواصل مع كلوفرز بشأن دورات اللغة الكورية والتسجيل والدفع، عبر واتساب أو نموذج الرسائل أو البريد الإلكتروني، والرد يصل في أقرب وقت." },
+  { path: "/learn-korean-arabic-speakers", title: "تعلّم الكورية للناطقين بالعربية | كلوفرز", description: "تعلّم الكورية انطلاقًا من العربية: ما تمنحه العربية مسبقًا، وما هو جديد، ومسار كلوفرز من الهانغول إلى المستوى السادس مع شرح بالعربية." },
+  { path: "/topik-exam-preparation", title: "التحضير لاختبار TOPIK: الأقسام والدرجات | كلوفرز", description: "كيف يعمل اختبار TOPIK: الاختباران الأول والثاني، والأقسام والتوقيت، والدرجة المطلوبة لكل مستوى، ومسار كلوفرز للتحضير بنماذج سابقة وتدريب على الكتابة." },
+  { path: "/learn-korean-kdramas", title: "تعلّم الكورية من المسلسلات الكورية | كلوفرز", description: "طريقة بسيطة لدراسة الكورية بالمسلسلات: مشهد واحد في كل مرة، وترجمة كورية، وترديد بصوت عالٍ، ودفتر عبارات، مع حصص مباشرة لشرح القواعد." },
 ];
 
 /** The English paths that have an Arabic twin (the homepage pair is separate). */

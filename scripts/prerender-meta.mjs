@@ -87,6 +87,23 @@ function blogAuthorLd(name) {
 }
 const DEFAULT_IMAGE = `${BASE_URL}/klovers-logo.jpg`;
 
+/**
+ * The <title> a route ships with (one source for the head and the emit loop).
+ * One language per title: an Arabic title gets «كلوفرز», never Latin
+ * "Klovers"; a title already naming the brand gets no suffix at all.
+ * 5 Oct 2026 (re-score): 37 titles ran past 65 characters, almost all because
+ * the " | Klovers" suffix pushed a long article title over. When the suffix
+ * would do that, the title ships without it - the brand is already in the
+ * og:site_name, the JSON-LD and the URL, and a cut-off title loses the words
+ * a searcher actually reads.
+ */
+const TITLE_MAX = 65;
+function brandTitle(title) {
+  if (title.includes(SITE_NAME) || title.includes("كلوفرز")) return title;
+  const full = /[؀-ۿ]/.test(title) ? `${title} | كلوفرز` : `${title} | ${SITE_NAME}`;
+  return [...full].length > TITLE_MAX ? title : full;
+}
+
 // Build-time credentials. Vercel already defines the VITE_* pair for the app
 // itself, so the non-prefixed names are only an override for local runs.
 const SUPABASE_URL =
@@ -455,7 +472,31 @@ const SHOP_BODY_HTML = `<div id="shop-prerendered" lang="en" dir="ltr">
       <p>Klovers books and study goods for learning Korean. The first book on the shelf teaches Hangul from zero.</p>
       <h2>More than a file.</h2>
       <p>Every Klovers book bought here waits under My books in the student dashboard, next to the classes, the games and the review that Cluby keeps.</p>
-      <p><a href="/free-trial">Book a free class</a> · <a href="/hangul-starter">Free Hangul starter sheet</a> · <a href="/courses">Courses</a></p>
+      <h2>How digital books work</h2>
+      <ul>
+        <li>Books are digital files (PDF), ready to read on a phone, a tablet or paper once printed.</li>
+        <li>After payment the book appears under My books in the student dashboard, where it can be downloaded again at any time.</li>
+        <li>A downloaded file cannot be returned, so a book is not refunded once downloaded. The full price is refunded if the file does not work and cannot be fixed, or if the same book was paid for twice by mistake.</li>
+      </ul>
+      <h2>Free before you buy</h2>
+      <p>The Hangul starter sheet is free to download, in English and in Arabic, and the first live class is free too.</p>
+      <p><a href="/free-trial">Book a free class</a> · <a href="/hangul-starter">Free Hangul starter sheet</a> · <a href="/courses">Courses</a> · <a href="/terms">Terms</a></p>
+    </div>`;
+
+// /journey (5 Oct 2026): the hub of the five era stations. Same order and
+// words as ERAS in src/constants/eras.ts and the era routes below.
+const JOURNEY_BODY_HTML = `<div id="journey-prerendered" lang="en" dir="ltr">
+      <h1>A journey through Korea's time</h1>
+      <p>Every Korean word comes from a real place and a real time. Five stations, from the first legend to today, each with its own words.</p>
+      <ol>
+        <li><h2><a href="/journey/before-korea">Before Korea</a></h2><p>Legend, to the 4th century CE. The legend of Dangun, the first kingdom of Gojoseon, four centuries of Chinese rule in the north, and the Three Kingdoms: where Korea's story begins.</p></li>
+        <li><h2><a href="/journey/ancient-korea">Ancient Korea</a></h2><p>Silla, 57 BCE to 935 CE. The kingdom of gold crowns, star-watching towers and Buddhist temples that lasted almost a thousand years.</p></li>
+        <li><h2><a href="/journey/joseon">The Joseon Era</a></h2><p>1392 to 1897. Kings, Confucian scholars, the yangban class, and King Sejong's invention of Hangul.</p></li>
+        <li><h2><a href="/journey/traditional-life">Traditional Life</a></h2><p>Hanok villages. Inside the traditional Korean house: mountain-and-river placement, ondol floor heating, the cool maru hall, and clay tile roofs.</p></li>
+        <li><h2><a href="/journey/modern-korea">Modern Korea</a></h2><p>1950s to today. Hallyu, the Korean wave: from Winter Sonata to Gangnam Style, Parasite and Squid Game, and why so many people now learn Korean.</p></li>
+      </ol>
+      <p>The first live class is free, in English or Arabic.</p>
+      <p><a href="/free-trial">Book a free class</a> · <a href="/blog">The Klovers journal</a> · <a href="/courses">Courses</a></p>
     </div>`;
 
 const PRICING_BODY_HTML = `<div id="pricing-prerendered" lang="en" dir="ltr">
@@ -465,9 +506,21 @@ const PRICING_BODY_HTML = `<div id="pricing-prerendered" lang="en" dir="ltr">
       <p>Small live groups, once a week, following the structured curriculum. Plans run for 1 month (4 classes), 3 months (12 classes) or 6 months (24 classes); longer plans cost less per month.</p>
       <h2>Private classes</h2>
       <p>One-to-one lessons with flexible scheduling, at your own pace.</p>
+      <h2>What every plan includes</h2>
+      <ul>
+        <li>Live 60-minute classes with the teacher, once a week, in English or Arabic</li>
+        <li>The structured path from Hangul Foundation to Level 6</li>
+        <li>Group classes are recorded and shared with enrolled students, so a missed class can be caught up</li>
+        <li>A student dashboard with attendance, current level and remaining classes, plus free practice games and vocabulary review</li>
+        <li>A Klovers certificate of completion after each level</li>
+      </ul>
       <h2>Payment and guarantee</h2>
       <p>Pay by bank transfer, Vodafone Cash or InstaPay (Egypt), or by card through Stripe outside Egypt. Payments in Egypt are checked before activation, and nothing is charged automatically. If you are not happy after your first paid class, we refund or rebook you. Full terms are on the <a href="/terms">Terms of Service</a> page.</p>
-      <p><a href="/free-trial">Book a free trial class</a> · <a href="/courses">Courses</a> · <a href="/faq">FAQ</a></p>
+      <h2>Discounts and flexible payment</h2>
+      <p>New students get 10% off their first enrollment, and returning students have their own offer on the <a href="/welcome-back">Welcome Back</a> page. Private students can reschedule a class with 24 hours' notice. To pay in installments, message us on WhatsApp.</p>
+      <h2>Not sure which plan?</h2>
+      <p>Start with the free trial class or the free placement test: both show which level fits, and the price page then shows that plan in your currency.</p>
+      <p><a href="/free-trial">Book a free trial class</a> · <a href="/placement-test">Free placement test</a> · <a href="/courses">Courses</a> · <a href="/faq">FAQ</a></p>
     </div>`;
 
 const FREE_TRIAL_BODY_HTML = `<div id="free-trial-prerendered" lang="en" dir="ltr">
@@ -479,7 +532,17 @@ const FREE_TRIAL_BODY_HTML = `<div id="free-trial-prerendered" lang="en" dir="lt
         <li>A placement check to find your level</li>
         <li>Personal recommendations for your next step</li>
       </ol>
-      <p><a href="/trial-booking">Pick your session</a> · <a href="/courses">Courses</a> · <a href="/pricing">Pricing</a></p>
+      <h2>Who the free class is for</h2>
+      <p>Complete beginners who have never read Hangul, and learners who already know some Korean and want to find the right level. The class is taught in English or in Arabic: choose the session in your language.</p>
+      <h2>What you need</h2>
+      <ul>
+        <li>A stable internet connection and a computer, tablet or phone</li>
+        <li>About 30 minutes, and nothing to prepare: the class starts from 안녕하세요</li>
+        <li>An email address for the class link, and a WhatsApp number for reminders</li>
+      </ul>
+      <h2>After the trial</h2>
+      <p>There is nothing to pay and no obligation. If you want to continue, the teacher recommends a starting level, and the <a href="/pricing">pricing page</a> shows the plans in your currency. Not ready to book yet? The free <a href="/placement-test">placement test</a> and the <a href="/hangul-starter">Hangul starter sheet</a> are open to everyone.</p>
+      <p><a href="/trial-booking">Pick your session</a> · <a href="/courses">Courses</a> · <a href="/pricing">Pricing</a> · <a href="/faq">FAQ</a></p>
     </div>`;
 
 // ── Legal page body fragments ───────────────────────────────────────────────
@@ -867,6 +930,17 @@ const MARKETING_ROUTES = [
   // are additive fields buildHeadTags/the emit loop only read for routes that
   // set them, so this cannot change behavior for any of the routes above.
   {
+    // The hub (5 Oct 2026). /journey used to answer 404 while its five
+    // stations existed; src/pages/JourneyHubPage.tsx renders the same list.
+    path: "/journey",
+    title: "A Journey Through Korea's Time",
+    description:
+      "Five stations of Korean history: the Dangun legend, Silla, the Joseon era and Hangul, the hanok house, and today's Korean wave.",
+    image: "/assets/story/world-culture-street.webp",
+    body: JOURNEY_BODY_HTML,
+    breadcrumb: [{ name: "Home", item: BASE_URL }],
+  },
+  {
     path: "/journey/before-korea",
     title: "Before Korea",
     description:
@@ -1048,6 +1122,26 @@ try {
 // 28 Sep 2026: the blog index is the seventh pair. /ar/blog's body is the
 // Arabic shell from arabic-pages.mjs with the Arabic article list (from the
 // database, fetched above) written where the marker sits.
+// Every indexable marketing page carries at least a page-level JSON-LD node
+// (5 Oct 2026 re-score: 17 pages shipped none). Routes that already declare
+// pageLd, articleLd or an FAQ keep theirs; the rest get a plain typed page
+// that names Klovers as publisher. The Arabic twins inherit it below with
+// inLanguage "ar".
+const DEFAULT_PAGE_TYPE = {
+  "/courses": "CollectionPage",
+  "/blog": "Blog",
+  "/shop": "CollectionPage",
+  "/journey": "CollectionPage",
+};
+for (const route of MARKETING_ROUTES) {
+  if (route.pageLd || route.articleLd || route.faq || route.noindex) continue;
+  if (route.path === "/" || route.homeTwin) continue;
+  route.pageLd = {
+    "@type": DEFAULT_PAGE_TYPE[route.path] || "WebPage",
+    publisher: { "@id": `${BASE_URL}/#organization` },
+  };
+}
+
 for (const route of MARKETING_ROUTES) {
   const ar = arabicTwinOf(route.path);
   if (ar) route.alternates = { en: route.path, ar };
@@ -1293,11 +1387,7 @@ function buildHeadTags(route) {
   const url = `${BASE_URL}${isHome ? "/" : route.path}`;
   // One language per title: an Arabic title gets «كلوفرز», never Latin
   // "Klovers"; a title already naming the brand gets no suffix at all.
-  const fullTitle = route.title.includes(SITE_NAME) || route.title.includes("كلوفرز")
-    ? route.title
-    : /[؀-ۿ]/.test(route.title)
-      ? `${route.title} | كلوفرز`
-      : `${route.title} | ${SITE_NAME}`;
+  const fullTitle = brandTitle(route.title);
   const description = route.description || "";
   // route.image is opt-in (only the /journey/:eraId routes set it so far) and
   // falls back to the same DEFAULT_IMAGE every other marketing route already
@@ -1556,11 +1646,7 @@ for (const route of routes) {
   const isHome = route.path === "/";
   // One language per title: an Arabic title gets «كلوفرز», never Latin
   // "Klovers"; a title already naming the brand gets no suffix at all.
-  const fullTitle = route.title.includes(SITE_NAME) || route.title.includes("كلوفرز")
-    ? route.title
-    : /[؀-ۿ]/.test(route.title)
-      ? `${route.title} | كلوفرز`
-      : `${route.title} | ${SITE_NAME}`;
+  const fullTitle = brandTitle(route.title);
   const description = route.description || "";
   // "/ar" is the homepage in Arabic: it keeps what "/" keeps (the Organization
   // JSON-LD and the hero preload) but is written to dist/ar/index.html.
