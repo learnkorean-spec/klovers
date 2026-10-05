@@ -208,6 +208,8 @@ const App = () => (
                 <Route path="/ar/learn-korean-arabic-speakers" element={<LearnKoreanArabicSpeakersPage />} />
                 <Route path="/ar/topik-exam-preparation" element={<TopikExamPage />} />
                 <Route path="/ar/learn-korean-kdramas" element={<KDramaLearningPage />} />
+                {/* Klovers Supply index (6 Oct 2026). Category pages stay English-URL only. */}
+                <Route path="/ar/shop" element={<ShopPage />} />
                 {/* Printed in the books as a QR — never change this path. */}
                 <Route path="/c/:code" element={<ConversationPage />} />
                 <Route path="/courses" element={<CoursesPage />} />

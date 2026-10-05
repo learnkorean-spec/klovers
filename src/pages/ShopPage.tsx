@@ -129,7 +129,9 @@ export default function ShopPage() {
       ? tr(`${catCopy.line.en}. Klovers books and study goods for learning Korean.`, `${catCopy.line.ar}. كتب ومستلزمات من كلوفرز لتعلّم الكورية.`)
       : tr("Klovers books and study goods that take Korean beyond the classroom. Digital books go straight to My books in the student dashboard.",
            "كتب ومستلزمات من كلوفرز تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب."),
-    canonical: cat ? `https://kloversegy.com/shop/${cat}` : "https://kloversegy.com/shop",
+    // The shop index has an Arabic twin (6 Oct 2026); category pages do not.
+    canonical: cat ? `https://kloversegy.com/shop/${cat}` : isAr ? "https://kloversegy.com/ar/shop" : "https://kloversegy.com/shop",
+    ...(cat ? {} : { alternates: { en: "https://kloversegy.com/shop", ar: "https://kloversegy.com/ar/shop" } }),
   });
 
   useEffect(() => {

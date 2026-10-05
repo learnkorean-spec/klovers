@@ -28,6 +28,9 @@ export const ARABIC_PAGE_META = [
   { path: "/learn-korean-arabic-speakers", title: "تعلّم الكورية للناطقين بالعربية | كلوفرز", description: "تعلّم الكورية انطلاقًا من العربية: ما تمنحه العربية مسبقًا، وما هو جديد، ومسار كلوفرز من الهانغول إلى المستوى السادس مع شرح بالعربية." },
   { path: "/topik-exam-preparation", title: "التحضير لاختبار TOPIK: الأقسام والدرجات | كلوفرز", description: "كيف يعمل اختبار TOPIK: الاختباران الأول والثاني، والأقسام والتوقيت، والدرجة المطلوبة لكل مستوى، ومسار كلوفرز للتحضير بنماذج سابقة وتدريب على الكتابة." },
   { path: "/learn-korean-kdramas", title: "تعلّم الكورية من المسلسلات الكورية | كلوفرز", description: "طريقة بسيطة لدراسة الكورية بالمسلسلات: مشهد واحد في كل مرة، وترجمة كورية، وترديد بصوت عالٍ، ودفتر عبارات، مع حصص مباشرة لشرح القواعد." },
+  // Klovers Supply (6 Oct 2026). Same title and description as ShopPage's
+  // Arabic useSEO for the shop index, so the static head and the live page agree.
+  { path: "/shop", title: "متجر كلوفرز — كتب ومستلزمات لتعلّم الكورية", description: "كتب ومستلزمات من كلوفرز تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب." },
 ];
 
 /** The English paths that have an Arabic twin (the homepage pair is separate). */
