@@ -176,12 +176,11 @@ export function getReferralPostTemplate(): PostTemplate {
 
 // ─── Testimonial / Social Proof ───
 
+// 5 Oct 2026: the five invented student quotes (names and results made up)
+// were removed. This slot now carries only a fact that is real: the Google
+// rating shown on the site. Add genuine student quotes here once collected.
 const TESTIMONIALS = [
-  { quote: "I passed TOPIK 2!", student: "Mona, Level 4" },
-  { quote: "Reading menus now!", student: "Sara, Level 2" },
-  { quote: "Best Korean class!", student: "Ahmed, Level 1" },
-  { quote: "Worth every penny!", student: "Rana, Level 3" },
-  { quote: "Fluent in 1 year!", student: "Nour, Advanced" },
+  { quote: "Rated 5.0 on Google", student: "from 7 Google reviews" },
 ];
 
 export function getTestimonialPostTemplate(index = 0): PostTemplate {
@@ -289,11 +288,7 @@ export function getReferralPostTemplateAR(): PostTemplate {
 }
 
 const TESTIMONIALS_AR = [
-  { quote: "نجحت في TOPIK 2!", student: "منى، المستوى ٤" },
-  { quote: "بقيت أقرأ المنيو!", student: "سارة، المستوى ٢" },
-  { quote: "أحسن كلاس كوري!", student: "أحمد، المستوى ١" },
-  { quote: "تستاهل كل قرش!", student: "رنا، المستوى ٣" },
-  { quote: "بتكلم كوري في سنة!", student: "نور، متقدم" },
+  { quote: "تقييم ٥٫٠ على جوجل", student: "من ٧ مراجعات على جوجل" },
 ];
 
 export function getTestimonialPostTemplateAR(index = 0): PostTemplate {
