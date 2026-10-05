@@ -63,6 +63,8 @@ const STATIC_PAGES = [
   // "Journey through Korea's time" — five era pages, added 2026-09-22.
   // Content and IDs live in src/constants/eras.ts; keep this list in step
   // with ERAS there and with MARKETING_ROUTES in scripts/prerender-meta.mjs.
+  // The /journey hub (5 Oct 2026) lists the five stations below.
+  { loc: "/journey", priority: "0.7", changefreq: "monthly" },
   { loc: "/journey/before-korea", priority: "0.6", changefreq: "monthly" },
   { loc: "/journey/ancient-korea", priority: "0.6", changefreq: "monthly" },
   { loc: "/journey/joseon", priority: "0.6", changefreq: "monthly" },
