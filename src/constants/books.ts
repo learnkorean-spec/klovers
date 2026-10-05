@@ -55,6 +55,17 @@ export const BOOKS = {
     subtitleAr: "سوق المفردات · ٢٤ حصة",
     subtitleEn: "Vocabulary Market · 24 classes",
   },
+  "book-2": {
+    use: "teaching",
+    lang: "ar",
+    path: "books/book-2.pdf",
+    fileName: "Klovers-Level-2-Korean.pdf",
+    badge: "2",
+    titleAr: "الكوريّة: مقهى المحادثة — المستوى ٢",
+    titleEn: "Korean: Conversation Café — Level 2 (Arabic edition)",
+    subtitleAr: "مقهى المحادثة · ٢٤ حصة",
+    subtitleEn: "Conversation Café · 24 classes",
+  },
   "trial-guide-ar": {
     use: "free",
     lang: "ar",
@@ -165,6 +176,7 @@ export const BOOK_COVERS: Record<BookId, string> = {
   "hangul-a0": "/book-covers/hangul-a0.webp",
   "hangul-a0-en": "/book-covers/hangul-a0-en.webp",
   "book-1": "/book-covers/book-1.webp",
+  "book-2": "/book-covers/book-2.webp",
   "trial-guide-ar": "/book-covers/trial-guide-ar.webp",
   "trial-guide-en": "/book-covers/trial-guide-en.webp",
   // Store editions share the student editions' covers.
