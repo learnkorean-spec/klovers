@@ -20,6 +20,16 @@
  *   free     — trial-class guides
  *   topik    — official TOPIK past papers (NIIED), kept for teachers and for
  *              TOPIK practice; assigned to a student by hand only
+ *
+ * `titleAr` / `titleEn` are the titles PRINTED ON THE COVER, not descriptions
+ * of the book. Four of them drifted and were corrected on 6 Oct 2026: the A0
+ * teaching pair said "الكتاب الكوري للمبتدئين" while their covers say
+ * "الهانغُل من الصفر", and the trial pair said "دليل الحصة التجريبية" while
+ * their covers say "حصتك التجريبية" / "Your First Korean Class". A student
+ * reading a title here that is not the title on the file they downloaded has
+ * no way to tell the two apart. The store editions were already right, which
+ * is how the drift was found. If a cover is restyled, this is the second
+ * place to update.
  */
 export const BOOKS = {
   "hangul-a0": {
@@ -28,8 +38,8 @@ export const BOOKS = {
     path: "books/hangul-a0.pdf",
     fileName: "Klovers-A0-Hangul.pdf",
     badge: "A0",
-    titleAr: "الكتاب الكوري للمبتدئين — المستوى A0",
-    titleEn: "Korean for Beginners — Level A0",
+    titleAr: "الهانغُل من الصفر — المستوى A0",
+    titleEn: "Hangeul from Zero — Level A0 (Arabic edition)",
     subtitleAr: "تمهيد الهانغُل · ٤ حصص",
     subtitleEn: "Hangul primer · 4 classes",
   },
@@ -39,8 +49,8 @@ export const BOOKS = {
     path: "books/hangul-a0-en.pdf",
     fileName: "Klovers-A0-Hangul-English.pdf",
     badge: "A0",
-    titleAr: "الكتاب الكوري للمبتدئين — المستوى A0 (النسخة الإنجليزية)",
-    titleEn: "Korean for Beginners — Level A0 (English edition)",
+    titleAr: "الهانغُل من الصفر — المستوى A0 (النسخة الإنجليزية)",
+    titleEn: "Hangeul from Zero — Level A0",
     subtitleAr: "تمهيد الهانغُل · ٤ حصص",
     subtitleEn: "Hangul primer · 4 classes",
   },
@@ -72,8 +82,8 @@ export const BOOKS = {
     path: "books/trial-guide-ar.pdf",
     fileName: "Klovers-Trial-Guide-AR.pdf",
     badge: "دليل",
-    titleAr: "دليل الحصة التجريبية",
-    titleEn: "Trial class guide (Arabic)",
+    titleAr: "حصتك التجريبية",
+    titleEn: "Your First Korean Class (Arabic edition)",
     subtitleAr: "ما يحدث في الحصة التجريبية · ٧ صفحات",
     subtitleEn: "What happens in the trial class · 7 pages",
   },
@@ -83,8 +93,8 @@ export const BOOKS = {
     path: "books/trial-guide-en.pdf",
     fileName: "Klovers-Trial-Guide-EN.pdf",
     badge: "Guide",
-    titleAr: "دليل الحصة التجريبية (النسخة الإنجليزية)",
-    titleEn: "Trial class guide",
+    titleAr: "حصتك التجريبية (النسخة الإنجليزية)",
+    titleEn: "Your First Korean Class",
     subtitleAr: "ما يحدث في الحصة التجريبية · ٧ صفحات",
     subtitleEn: "What happens in the trial class · 7 pages",
   },
