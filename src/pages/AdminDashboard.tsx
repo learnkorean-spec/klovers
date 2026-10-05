@@ -350,6 +350,8 @@ const AdminDashboard = () => {
           sessions_remaining: sessions,
           sessions_total: sessions,
           amount,
+          // The DB trigger also sets this for manual rows; sending it keeps the types honest.
+          unit_price: sessions > 0 ? amount / sessions : 0,
           currency: enrollForm.currency,
           payment_provider: "manual",
           payment_status: "PAID",

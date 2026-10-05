@@ -97,7 +97,10 @@ function buildEnrollmentSparkline(rows: OverviewRow[]): { v: number }[] {
  * wrong in the first place. Below 10,000 the full number fits in the tile, so
  * show it; above that, a rounded K/M reads more easily than seven digits.
  */
-function formatMoney(n: number): string {
+/** Legacy records predate multi-currency and carry no currency column; they were all taken in EGP. */
+const LEGACY_CURRENCY = "EGP";
+
+function formatCompact(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 10_000) return `${(n / 1_000).toFixed(0)}K`;
   return n.toLocaleString("en-US");
@@ -126,7 +129,7 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
     const [leadCurrency, ...otherCurrencies] = privateBudgets?.byCurrency ?? [];
     const privateSublabel = privateBudgets
       ? [
-          ...otherCurrencies.map(c => `${formatMoney(c.total)} ${c.currency}`),
+          ...otherCurrencies.map(c => `${formatCompact(c.total)} ${c.currency}`),
           `${privateBudgets.students} student${privateBudgets.students === 1 ? "" : "s"}`,
         ].join(" · ")
       : "entered by hand";
@@ -157,7 +160,7 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         // because that is all it has ever counted — private students go through
         // no checkout and have no enrollment row, so they are in the tile next
         // to this one, not in this total.
-        value: revenue ? `${formatMoney(revenue.total)} ${revenue.currency}` : "—",
+        value: revenue ? `${formatCompact(revenue.total)} ${revenue.currency}` : "—",
         label: GROUP_REVENUE_LABEL,
         sublabel: revenue ? `paid · ${revenue.count} enrollments` : "paid enrollments",
         to: "/admin?tab=sales",
@@ -167,7 +170,7 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         icon: Wallet,
         iconBg: "bg-klovers-yellow",
         iconColor: "text-charcoal",
-        value: leadCurrency ? `${formatMoney(leadCurrency.total)} ${leadCurrency.currency}` : "—",
+        value: leadCurrency ? `${formatCompact(leadCurrency.total)} ${leadCurrency.currency}` : "—",
         label: PRIVATE_BUDGETS_LABEL,
         sublabel: privateSublabel,
         // Private students and their bundles are kept in My students.
@@ -181,7 +184,7 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         value: legacy ? legacy.students : "—",
         label: LEGACY_LABEL,
         sublabel: legacy
-          ? `${legacy.sessions.toLocaleString("en-US")} sessions · paid ${formatMoney(legacy.paid)} EGP`
+          ? `${legacy.sessions.toLocaleString("en-US")} sessions · paid ${formatCompact(legacy.paid)} ${LEGACY_CURRENCY}`
           : "historical students",
         to: "/admin?tab=legacy",
         opens: "Legacy Data",

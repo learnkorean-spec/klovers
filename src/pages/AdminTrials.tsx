@@ -156,7 +156,7 @@ export default function AdminTrials() {
         .order("trial_date", { ascending: true });
       if (!alive) return;
       if (err) { setError(err.message); return; }
-      setRows((data ?? []) as Booking[]);
+      setRows((data ?? []) as unknown as Booking[]);
     })();
     return () => { alive = false; };
   }, []);
