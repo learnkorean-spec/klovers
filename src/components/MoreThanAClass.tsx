@@ -156,9 +156,9 @@ const MoreThanAClass = () => {
           {/* The hanok-alley scene, end side, large screens only. */}
           <img
             src="/assets/cluby/scene-hanok.webp"
-            alt={isAr ? "متعلّمة مع كلوبي في زقاق بيوت هانوك تقليدية" : "A learner and Cluby in a hanok alley"}
-            width={1080}
-            height={1350}
+            alt={isAr ? "لينا وكلوبي يعبران بوابة هانوك تقليدية" : "Lina and Cluby stepping through a hanok gate"}
+            width={1086}
+            height={1448}
             loading="lazy"
             decoding="async"
             className="hidden h-auto w-full lg:block"

@@ -94,18 +94,18 @@ const HomeShopShelf = () => {
               <img>'s 900x1125 — a 4:5 box — while a desktop visitor is served
               the 16:9 file. Every desktop load reserved the wrong height and
               then reflowed. The two files genuinely differ in shape
-              (shop-hero-lina.webp 1600x900, the mobile one 900x1125), so the
+              (shop-hero-lina.webp 1600x900, the mobile one 1086x1448), so the
               ratio is now stated in CSS per breakpoint, where it can match the
               file each breakpoint actually gets. */}
           <source media="(min-width: 1024px)" srcSet="/assets/story/shop-hero-lina.webp" />
           <img
             src="/assets/story/shop-hero-lina-mobile.webp"
             alt={tr(
-              "Lina packing a study tote with a book, notebook and flashcards on a hanok veranda at sunset",
-              "لينا تجهّز حقيبة الدراسة بكتاب ودفتر وبطاقات على شرفة بيت كوري تقليدي عند الغروب",
+              "Lina sitting on a bench at a hanok courtyard gate with her book bag beside her",
+              "لينا تجلس على مقعد عند بوابة فناء هانوك وحقيبة كتبها بجانبها",
             )}
-            width={900}
-            height={1125}
+            width={1086}
+            height={1448}
             loading="lazy"
             decoding="async"
             className="mx-auto aspect-[4/5] h-auto w-full max-w-sm object-cover sm:max-w-md lg:aspect-video lg:max-w-none rtl:-scale-x-100"

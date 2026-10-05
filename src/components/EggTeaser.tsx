@@ -42,7 +42,7 @@ import {
  * 25 Sep 2026 (no overlap): Re — "the egg is not shown from the picture and
  * i hate the overlap". The ring, the "Tap here" pill and the heading all sat
  * ON the photo's egg. The photo (public/assets/story/egg-teaser.webp, 16:9,
- * egg centred at ~50% / 61%) is now its own block with NOTHING on top of it:
+ * egg centred at ~48% / 77% since the 5 Oct 2026 retake) is now its own block with NOTHING on top of it:
  *   - 4:3 on mobile (crops the sides only, egg stays centred and larger),
  *     16:9 from md, capped at 620px tall; object-position 50% 60% keeps the
  *     egg in frame when the cap crops top/bottom.
@@ -133,7 +133,7 @@ const EggTeaser = () => {
           height={900}
           loading="lazy"
           decoding="async"
-          className="h-full w-full object-cover object-[50%_60%] transition-[filter] duration-300 group-hover:brightness-110"
+          className="h-full w-full object-cover object-[50%_72%] transition-[filter] duration-300 group-hover:brightness-110"
         />
         {/* Thin fade only at the very bottom, below the stone */}
         <div
