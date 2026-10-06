@@ -112,7 +112,7 @@ const WelcomeModal = ({ open, onClose }: WelcomeModalProps) => {
               from the icon set is the same mark at every size on every platform,
               and at 24px only the flag itself is legible, which is the point. */}
           <h2 className="text-xl font-extrabold text-primary-foreground mb-1">
-            {isAr ? "مرحباً بك في Klovers!" : "Welcome to Klovers!"}
+            {isAr ? "أهلًا بك في كلوفرز!" : "Welcome to Klovers!"}
             <img
               src="/assets/icons/flag-korea.webp"
               srcSet="/assets/icons/flag-korea@2x.webp 2x"
