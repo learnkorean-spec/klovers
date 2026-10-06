@@ -63,6 +63,7 @@ export function MyBooksCard(_props: { clubyAwake?: boolean }) {
   const isAr = lang === "ar";
   const [rows, setRows] = useState<Row[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -111,6 +112,16 @@ export function MyBooksCard(_props: { clubyAwake?: boolean }) {
   // Books bought in the shop are not a joining gift (27 Sep 2026).
   const allBought = rows.every((r) => r.assigned_by?.startsWith("shop:"));
 
+  // Short card (Re, 6 Oct 2026: the dashboard is too crowded): only the books in
+  // the page language show at first; the other edition and the trial guides sit
+  // behind one button instead of four download rows.
+  const inPageLanguage = rows.filter((r) => {
+    const l = (BOOKS[r.book_id as BookId] as { lang?: string }).lang;
+    return !l || l === lang;
+  });
+  const visibleRows = showAll || inPageLanguage.length === 0 ? rows : inPageLanguage;
+  const hiddenCount = rows.length - visibleRows.length;
+
   return (
     <>
       <section
@@ -135,7 +146,7 @@ export function MyBooksCard(_props: { clubyAwake?: boolean }) {
           </div>
         </div>
         <ul className="mt-3 space-y-2.5">
-          {rows.map((r) => {
+          {visibleRows.map((r) => {
             const id = r.book_id as BookId;
             const book = BOOKS[id];
             return (
@@ -168,6 +179,15 @@ export function MyBooksCard(_props: { clubyAwake?: boolean }) {
             );
           })}
         </ul>
+        {hiddenCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowAll(true)}
+            className="mt-3 text-sm font-semibold text-foreground underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
+          >
+            {isAr ? `عرض كل الكتب (${hiddenCount})` : `Show all books (${hiddenCount})`}
+          </button>
+        )}
         {error && <p className="mt-2 text-xs text-destructive" role="alert">{error}</p>}
       </section>
     </>
