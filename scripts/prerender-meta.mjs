@@ -515,7 +515,7 @@ const PRICING_BODY_HTML = `<div id="pricing-prerendered" lang="en" dir="ltr">
         <li>A Klovers certificate of completion after each level</li>
       </ul>
       <h2>Payment and guarantee</h2>
-      <p>Pay by bank transfer, Vodafone Cash or InstaPay (Egypt), or by card through Stripe outside Egypt. Payments in Egypt are checked before activation, and nothing is charged automatically. If you are not happy after your first paid class, we refund or rebook you. Full terms are on the <a href="/terms">Terms of Service</a> page.</p>
+      <p>Pay by Vodafone Cash or InstaPay (Egypt), or by card through Stripe. Payments in Egypt are checked before activation, and nothing is charged automatically. If you are not happy after your first paid class, we refund or rebook you. Full terms are on the <a href="/terms">Terms of Service</a> page.</p>
       <h2>Discounts and flexible payment</h2>
       <p>New students get 10% off their first enrollment, and returning students have their own offer on the <a href="/welcome-back">Welcome Back</a> page. Private students can reschedule a class with 24 hours' notice. To pay in installments, message us on WhatsApp.</p>
       <h2>Not sure which plan?</h2>
@@ -615,7 +615,7 @@ const TERMS_BODY_HTML = `<div id="legal-prerendered" lang="en" dir="ltr">
       <h2>Your account</h2>
       <p>Please give accurate details and keep your password private. You are responsible for what happens under your account. Learners under 18 need the consent of a parent or guardian.</p>
       <h2>Payments</h2>
-      <p>We accept bank transfer, Vodafone Cash and InstaPay (Egypt), and card payment through Stripe outside Egypt.</p>
+      <p>We accept Vodafone Cash and InstaPay (Egypt) and card payment through Stripe.</p>
       <p>Payments in Egypt are checked by hand before your enrolment is activated; card payments through Stripe are activated automatically. Every payment is one-time, with no automatic charges.</p>
       <h2>First class guarantee and refunds</h2>
       <p>If you are not satisfied after your first class, we will refund you or rebook you — no questions asked.</p>

@@ -24,7 +24,7 @@ import { LEVEL_SELECT_OPTIONS, normalizeLevel, getLevelByKey } from "@/constants
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp, logLeadEvent } from "@/lib/leadTracking";
 import { getAttribution } from "@/lib/leadSession";
-import { type TierKey, type ClassType, type Duration, tierCountries, DURATION_CLASSES, normalizeCountry, resolveCurrency, getPriceFor, formatMoney } from "@/lib/stripePrices";
+import { type TierKey, type ClassType, type Duration, tierCountries, DURATION_CLASSES, normalizeCountry, resolveCurrency, getPriceFor, formatMoney, tierPrices } from "@/lib/stripePrices";
 import { toast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -473,10 +473,21 @@ const EnrollNowPage = () => {
     return match?.tier ?? null;
   }, [resolvedCountry]);
 
-  const priced = useMemo(
-    () => (duration ? getPriceFor(selectedCountry, timezone, classType, duration) : null),
-    [selectedCountry, timezone, classType, duration],
-  );
+  // Egyptian students may pay by card (Re, 6 Oct 2026). Stripe charges the
+  // dollar tier price, so that path shows USD and the same first-time discount
+  // create-checkout applies; Vodafone Cash / InstaPay stay in EGP.
+  const egyptCard = isEgypt && egyptPaymentMethod === "card";
+  const payByCard = !isEgypt || egyptCard;
+  // A code is only valid in one currency: drop it when the method (EGP <-> USD) changes.
+  useEffect(() => { setPromoApplied(null); }, [payByCard]);
+  const priced = useMemo(() => {
+    if (!duration) return null;
+    if (egyptCard) {
+      const usd = tier ? tierPrices[tier]?.[classType]?.[duration] : undefined;
+      return typeof usd === "number" ? { amount: usd, currency: "USD" } : null;
+    }
+    return getPriceFor(selectedCountry, timezone, classType, duration);
+  }, [selectedCountry, timezone, classType, duration, egyptCard, tier]);
   const originalPrice = priced?.amount ?? null;
   const currency = priced?.currency ?? resolveCurrency(selectedCountry, timezone);
 
@@ -491,7 +502,7 @@ const EnrollNowPage = () => {
     return p ? money(p.amount, p.currency) : "—";
   };
 
-  const discountAmount = isFirstTime && originalPrice && !isEgypt ? Math.round(originalPrice * 0.1 * 100) / 100 : 0;
+  const discountAmount = isFirstTime && originalPrice && payByCard ? Math.round(originalPrice * 0.1 * 100) / 100 : 0;
   const promoDiscountAmount = useMemo(() => {
     if (!promoApplied || !originalPrice) return 0;
     const base = originalPrice - discountAmount;
@@ -719,7 +730,7 @@ const EnrollNowPage = () => {
       setPromoLoading(false);
       return;
     }
-    if (data.currency && data.currency !== (isEgypt ? "EGP" : "USD")) {
+    if (data.currency && data.currency !== (payByCard ? "USD" : "EGP")) {
       setPromoError(isAr ? `هذا الرمز صالح فقط للدفع بعملة ${CURRENCY_AR[data.currency] ?? data.currency}.` : `This code is only valid for ${data.currency} payments.`);
       setPromoLoading(false);
       return;
@@ -738,7 +749,7 @@ const EnrollNowPage = () => {
     }
     if (!tier || !duration || !finalPrice || !userId) return;
 
-    if (isEgypt) {
+    if (isEgypt && !egyptCard) {
       // Submit lead async before Egypt order
       submitLead();
       await handleEgyptOrder();
@@ -994,7 +1005,7 @@ const EnrollNowPage = () => {
                 </>
               )}
 
-              {isFirstTime && !isEgypt && (
+              {isFirstTime && payByCard && (
                 <div className="bg-accent rounded-lg p-3 flex items-center gap-2 text-sm">
                   <KloverIcon name="badge-blossom" className="h-5 w-5 text-primary flex-shrink-0" />
                   <span className="text-accent-foreground font-medium">{t("enrollNow.welcomeDiscount")}</span>
@@ -1275,7 +1286,7 @@ const EnrollNowPage = () => {
                     <span className="text-muted-foreground">
                       {classType === "group" ? t("enrollNow.group") : t("enrollNow.private")} · {monthsLabel(duration)} ({classesLabel(durationClasses[duration])})
                     </span>
-                    <span className={`font-bold text-foreground ${isFirstTime && !isEgypt ? "line-through text-muted-foreground" : ""}`}>
+                    <span className={`font-bold text-foreground ${isFirstTime && payByCard ? "line-through text-muted-foreground" : ""}`}>
                       {money(originalPrice, currency)}
                     </span>
                   </div>
@@ -1369,7 +1380,7 @@ const EnrollNowPage = () => {
                     {[
                       { value: "vodafone_cash", label: isAr ? "فودافون كاش" : "Vodafone Cash" },
                       { value: "instapay",      label: isAr ? "إنستا باي" : "InstaPay" },
-                      { value: "bank_transfer", label: isAr ? "تحويل بنكي" : "Bank Transfer" },
+                      { value: "card",          label: isAr ? "بطاقة (Visa / Mastercard)" : "Card (Visa / Mastercard)" },
                     ].map((m) => (
                       <button
                         key={m.value}
@@ -1398,7 +1409,7 @@ const EnrollNowPage = () => {
                 disabled={!duration || loading || (isEgypt && !egyptPaymentMethod)}
                 onClick={handlePay}
               >
-                {loading ? (isEgypt ? t("enrollNow.creatingOrder") : t("enrollNow.redirectingPayment")) : isEgypt ? (
+                {loading ? (!payByCard ? t("enrollNow.creatingOrder") : t("enrollNow.redirectingPayment")) : !payByCard ? (
                   <>
                     <KloverIcon name="badge-blossom" className="mr-2 h-4 w-4" />
                     {t("enrollNow.confirmOrder")} ({finalPrice !== null ? money(finalPrice, currency) : "—"})
@@ -1412,7 +1423,7 @@ const EnrollNowPage = () => {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
-                {isEgypt
+                {!payByCard
                   ? t("enrollNow.redirectReceipt")
                   : userId
                     ? t("enrollNow.securePaymentSignedIn")

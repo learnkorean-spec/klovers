@@ -37,7 +37,7 @@ const EN: LegalContent = {
     {
       heading: "Payments",
       paragraphs: [
-        "We accept bank transfer, Vodafone Cash and InstaPay (Egypt), and card payment through Stripe outside Egypt.",
+        "We accept Vodafone Cash and InstaPay (Egypt) and card payment through Stripe.",
         "Payments in Egypt are checked by hand before your enrolment is activated; card payments through Stripe are activated automatically. Every payment is one-time, with no automatic charges.",
       ],
     },
@@ -110,7 +110,7 @@ const AR: LegalContent = {
     {
       heading: "الدفع",
       paragraphs: [
-        "نقبل التحويل البنكي وفودافون كاش وإنستا باي (في مصر)، والدفع بالبطاقة عبر Stripe خارج مصر.",
+        "نقبل فودافون كاش وإنستا باي (في مصر)، والدفع بالبطاقة عبر Stripe.",
         "تُراجَع المدفوعات داخل مصر يدويًا قبل تفعيل الاشتراك، ويُفعَّل الدفع بالبطاقة عبر Stripe تلقائيًا. وكل دفعة تتم مرة واحدة، دون أي سحب تلقائي.",
       ],
     },

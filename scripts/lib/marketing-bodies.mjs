@@ -109,7 +109,7 @@ export const FAQ_BODY_HTML = `<div id="faq-prerendered" lang="en" dir="ltr">
       <p>Group classes (once/week) let you learn alongside peers in a collaborative environment at an affordable price. Private classes (1-on-1) offer personalized lessons, flexible scheduling, and faster progression tailored to your goals.</p>
       <h2>Payment &amp; Pricing</h2>
       <h3>What payment methods do you accept?</h3>
-      <p>In Egypt: bank transfer, Vodafone Cash or InstaPay. Upload the receipt and the enrollment is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically.</p>
+      <p>In Egypt: Vodafone Cash or InstaPay with a receipt upload (activated after a manual check), or card payment through Stripe (activated automatically). Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically.</p>
       <h3>Can I pay in installments?</h3>
       <p>Plans are 1, 3 or 6 months, and longer plans cost less per class. For paying in installments or another flexible arrangement, message us on WhatsApp.</p>
       <h2>Progress &amp; Certification</h2>
@@ -133,7 +133,7 @@ export const ENROLL_NOW_BODY_HTML = `<div id="enroll-now-prerendered" lang="en" 
       <ol>
         <li><strong>Choose Plan</strong> — pick Group Classes (learn with others) or Private Classes (1-on-1 sessions), your country, and a duration. Your pricing tier is set by your country.</li>
         <li><strong>Schedule</strong> — Schedule Preferences: help us find the best time for your classes. Choose your Korean level, timezone and preferred day. Private classes are only available on days without group classes.</li>
-        <li><strong>Pay &amp; Enroll</strong> — Review &amp; Pay. In Egypt: bank transfer, Vodafone Cash or InstaPay; upload the receipt and the enrollment is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically.</li>
+        <li><strong>Pay &amp; Enroll</strong> — Review &amp; Pay. In Egypt: Vodafone Cash or InstaPay with a receipt upload (activated after a manual check), or card payment through Stripe (activated automatically). Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically.</li>
       </ol>
       <p>Your schedule will be confirmed within 24 hours after payment.</p>
       <h2>What happens next?</h2>
@@ -228,7 +228,7 @@ export const ARABIC_SPEAKERS_BODY_HTML = `<div id="learn-korean-arabic-speakers-
         <li><strong>Levels 1 to 6</strong> — 24 classes per level, about 6 months each</li>
         <li><strong>One class a week</strong> — 60 minutes, live, in a small group or privately</li>
       </ul>
-      <p>Your teacher is Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years. She explains in Arabic or English and compares Korean with Arabic wherever that makes a point clearer. In Egypt: bank transfer, Vodafone Cash or InstaPay, with a receipt upload; the enrollment is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically.</p>
+      <p>Your teacher is Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years. She explains in Arabic or English and compares Korean with Arabic wherever that makes a point clearer. In Egypt: Vodafone Cash or InstaPay with a receipt upload (activated after a manual check), or card payment through Stripe (activated automatically). Outside Egypt: card payment through Stripe, activated automatically.</p>
       <p><a href="/free-trial">Book a free class</a> · <a href="/placement-test">Find your level</a> · <a href="/courses">See all levels</a> · <a href="/pricing">Pricing</a> · <a href="/blog/korean-for-arabic-speakers-difficulty-guide">Is Korean hard for Arabic speakers?</a></p>
     </div>`;
 
@@ -475,7 +475,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "What payment methods do you accept?",
-        "a": "In Egypt: bank transfer, Vodafone Cash or InstaPay. Upload the receipt and the enrollment is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically."
+        "a": "In Egypt: Vodafone Cash or InstaPay with a receipt upload (activated after a manual check), or card payment through Stripe (activated automatically). Outside Egypt: card payment through Stripe, activated automatically. Every payment is one-time; nothing renews or charges automatically."
     },
     {
         "q": "Can I pay in installments?",
