@@ -112,15 +112,38 @@ function getTierForCountry(country: string | null): TierKey | null {
   return null;
 }
 
-// UAE and Saudi students pay in their own currency (Re, 6 Oct 2026). The
+// Students in the global tier (UAE, Saudi, Gulf, UK, EU, Canada, Australia,
+// Japan, Korea, China) pay in their own currency (Re, 6 Oct 2026). The United
+// States has no local row and stays in dollars. The
 // amounts are the published AED / SAR rows in src/lib/stripePrices.ts
 // (COUNTRY_LOCAL_PRICES) -- change both files together. They are sent to
 // Stripe as an inline price, so nothing has to exist in the Stripe dashboard;
 // stripe-webhook recognises these sessions from the metadata below.
-const LOCAL_CARD_PRICES: Record<string, { currency: "aed" | "sar"; group: number[]; private: number[] }> = {
-  "UAE":          { currency: "aed", group: [220, 624, 1100], private: [440, 1210, 2130] },
-  "Saudi Arabia": { currency: "sar", group: [225, 638, 1125], private: [450, 1238, 2175] },
+const LOCAL_CARD_PRICES: Record<string, { currency: string; group: number[]; private: number[] }> = {
+  "UAE":            { currency: "aed", group: [220,     624,    1100],   private: [440,    1210,    2130] },
+  "Saudi Arabia":   { currency: "sar", group: [225,     638,    1125],   private: [450,    1238,    2175] },
+  "Qatar":          { currency: "qar", group: [218,     619,    1092],   private: [436,    1200,    2110] },
+  "Bahrain":        { currency: "bhd", group: [22.6,   63.9,   112.8],  private: [45.1,   124.6,   218.5] },
+  "Oman":           { currency: "omr", group: [23.1,   65.5,   115.5],  private: [46.2,   127,     223] },
+  "Kuwait":         { currency: "kwd", group: [18.4,   52.2,    92.1],  private: [36.8,   101.3,   178] },
+  "United Kingdom": { currency: "gbp", group: [47,     134,     237],   private: [95,     261,     458] },
+  "Germany":        { currency: "eur", group: [55,     156,     276],   private: [110,    304,     534] },
+  "France":         { currency: "eur", group: [55,     156,     276],   private: [110,    304,     534] },
+  "Canada":         { currency: "cad", group: [83,     235,     414],   private: [165,    455,     800] },
+  "Australia":      { currency: "aud", group: [93,     264,     465],   private: [186,    512,     899] },
+  "Japan":          { currency: "jpy", group: [8940,  25330,  44700],   private: [17880, 49170,   86420] },
+  "South Korea":    { currency: "krw", group: [82500, 233750, 412500],  private: [165000, 453750, 797500] },
+  "China":          { currency: "cny", group: [436,   1236,    2181],   private: [872,   2399,    4217] },
 };
+// Stripe wants the amount in the currency's smallest unit: x100 for most,
+// x1 for the zero-decimal yen and won, x1000 (in steps of 10) for the Gulf dinars.
+const ZERO_DECIMAL = ["jpy", "krw"];
+const THREE_DECIMAL = ["bhd", "kwd", "omr"];
+function toMinorUnits(amount: number, currency: string): number {
+  if (ZERO_DECIMAL.includes(currency)) return Math.round(amount);
+  if (THREE_DECIMAL.includes(currency)) return Math.round(amount * 100) * 10;
+  return Math.round(amount * 100);
+}
 const DURATION_INDEX: Record<number, number> = { 1: 0, 3: 1, 6: 2 };
 
 /** ISO 3166-1 alpha-2 → the country name tierCountries uses. Review flag only. */
@@ -371,7 +394,7 @@ serve(async (req) => {
       ? {
           price_data: {
             currency: localRow.currency,
-            unit_amount: Math.round(localAmount * 100),
+            unit_amount: toMinorUnits(localAmount, localRow.currency),
             product_data: {
               name: `Klovers Korean - ${priceEntry.classesIncluded} ${classType} classes (${Number(duration)} month${Number(duration) === 1 ? "" : "s"})`,
             },
@@ -380,10 +403,10 @@ serve(async (req) => {
         }
       : null;
 
-    const session = await stripe.checkout.sessions.create({
+    const buildSession = (lineItem: Stripe.Checkout.SessionCreateParams.LineItem): Stripe.Checkout.SessionCreateParams => ({
       customer: customerId,
       customer_email: customerId ? undefined : email,
-      line_items: [localLineItem ?? { price: priceEntry.priceId, quantity: 1 }],
+      line_items: [lineItem],
       mode: "payment",
       ...(discounts.length > 0 ? { discounts } : {}),
       success_url: `${origin}/dashboard?payment=success`,
@@ -410,6 +433,21 @@ serve(async (req) => {
         referral_bonus_percent: String(referralExtra),
       },
     });
+
+    const usdItem = { price: priceEntry.priceId, quantity: 1 };
+    let session: Stripe.Checkout.Session;
+    if (localLineItem) {
+      try {
+        session = await stripe.checkout.sessions.create(buildSession(localLineItem));
+      } catch (localErr) {
+        // Stripe refused the local currency (not enabled on the account, say):
+        // charge the dollar tier price rather than lose the sale.
+        console.error("local-currency checkout failed, falling back to USD:", pricingCountry, localErr);
+        session = await stripe.checkout.sessions.create(buildSession(usdItem));
+      }
+    } else {
+      session = await stripe.checkout.sessions.create(buildSession(usdItem));
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

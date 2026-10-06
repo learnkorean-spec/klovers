@@ -284,7 +284,11 @@ serve(async (req) => {
       }
 
       // Use actual amount paid (after discount) from Stripe
-      const actualAmount = (session.amount_total ?? plan.amount * 100) / 100;
+      // amount_total is in the currency's smallest unit: 1 for yen / won, 1000 for
+      // the Gulf dinars, 100 for everything else.
+      const cur = (session.currency || "usd").toLowerCase();
+      const minorDivisor = ["jpy", "krw"].includes(cur) ? 1 : ["bhd", "kwd", "omr"].includes(cur) ? 1000 : 100;
+      const actualAmount = (session.amount_total ?? plan.amount * minorDivisor) / minorDivisor;
       const unitPrice = plan.classesIncluded > 0 ? actualAmount / plan.classesIncluded : 0;
 
       // Parse schedule from flat metadata fields (new format)
