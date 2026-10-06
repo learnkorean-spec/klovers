@@ -177,7 +177,7 @@ const PriceTeaser = ({ className = "", source }: { className?: string; source: s
           ? isAr ? "عرض الأسعار" : "View pricing"
           : price.resolved
             ? isAr ? "عرض الأسعار" : "View pricing"
-            : isAr ? "الأسعار بالدولار — اختر بلدك للسعر المحلي" : "Prices in USD — choose your country for local pricing"}
+            : isAr ? "الأسعار بالدولار — اختيار البلد يُظهر السعر المحلي" : "Prices in USD — choose your country for local pricing"}
         <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
       </Link>
     </p>

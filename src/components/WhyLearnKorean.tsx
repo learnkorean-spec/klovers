@@ -83,10 +83,10 @@ const CARDS: Record<
 const COPY = {
   ar: {
     eyebrow: "لغة جديدة ← آفاق أوسع",
-    bandTitle: "ابدأ رحلتك في تعلم الكورية اليوم",
+    bandTitle: "رحلة تعلّم الكورية تبدأ اليوم",
     bandSub: "اختيار المستوى، واكتشاف الطريق مع كلوفرز",
-    bandCta: "ابدأ الآن",
-    more: "اقرأ المقال",
+    bandCta: "البدء الآن",
+    more: "قراءة المقال",
   },
   en: {
     eyebrow: "A new language → a wider world",

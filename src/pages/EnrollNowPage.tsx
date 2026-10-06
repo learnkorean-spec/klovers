@@ -205,6 +205,9 @@ const EnrollNowPage = () => {
 
   // Level-specific slot days+times from schedule_packages (includes packageId)
   const [levelSlots, setLevelSlots] = useState<{ day: string; time: string; packageId: string; seatsLeft: number }[]>([]);
+  // True from the moment a level is picked until its times arrive, so the
+  // "no live schedule" note never flashes before the real slots load.
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(p("packageId") || null);
 
   // Draft cleanup is deferred — only clear after successful payment initiation (see handlePay)
@@ -242,6 +245,7 @@ const EnrollNowPage = () => {
       setPreferredDays([]);
       setSelectedPackageId(null);
     }
+    setSlotsLoading(Boolean(selectedLevel));
     if (!selectedLevel) return;
 
     // Private classes: real teacher availability, ranked group-demand-free
@@ -302,7 +306,7 @@ const EnrollNowPage = () => {
           setInitialLevelLoad(false);
         }
       };
-      loadPrivate();
+      loadPrivate().finally(() => setSlotsLoading(false));
       return;
     }
 
@@ -424,7 +428,7 @@ const EnrollNowPage = () => {
         setInitialLevelLoad(false);
       }
     };
-    fetchLevelSlots();
+    fetchLevelSlots().finally(() => setSlotsLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLevel, classType]); // intentional: initialLevelLoad/preferredDays are read+written inside; adding them causes infinite loop
 
@@ -840,6 +844,25 @@ const EnrollNowPage = () => {
   };
 
   const levelLabelAr = selectedLevel ? getLevelByKey(normalizeLevel(selectedLevel))?.shortLabel_ar ?? "" : "";
+
+  // Order summary in the page language: the level as its label (not the raw
+  // key "l1"), the days as local day names with the time the student chose, and
+  // the timezone without underscores.
+  const summaryLevel = LEVEL_SELECT_OPTIONS.find((l) => l.value === selectedLevel)?.label ?? selectedLevel;
+  // "7:00 PM" -> "7:00 م" on the Arabic page.
+  const timeInPageLanguage = (tm: string) =>
+    isAr ? tm.replace(/\s*PM/i, " م").replace(/\s*AM/i, " ص") : tm;
+  const summaryDays = preferredDays
+    .map((d) => {
+      const idx = DAY_NAMES.indexOf(d);
+      const name = idx >= 0 ? (localDayNames[idx] ?? d) : d;
+      const slot = classType === "private"
+        ? levelSlots.find((s) => s.packageId === selectedPackageId) ?? levelSlots.find((s) => s.day === d)
+        : levelSlots.find((s) => s.day === d);
+      const time = slot?.time ? timeInPageLanguage(slot.time) : "";
+      return time ? `${name} ${time}` : name;
+    })
+    .join(isAr ? "، " : ", ");
   const pillMessage = isAr ? "مرحبًا، لديّ سؤال قبل التسجيل في كلوفرز." : "Hi! I have a question before enrolling in Klovers.";
 
   const stepLabels = [t("enrollNow.choosePlan"), t("enrollNow.schedule"), t("enrollNow.payEnroll")];
@@ -976,7 +999,7 @@ const EnrollNowPage = () => {
                 {t("enrollNow.next")} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Button>
               {!canProceedStep1 && (
-                <p className="text-xs text-destructive text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   {!selectedCountry ? t("enrollNow.selectCountryError") : !duration ? t("enrollNow.chooseDurationError") : ""}
                 </p>
               )}
@@ -1035,6 +1058,8 @@ const EnrollNowPage = () => {
                 )}
                 {!selectedLevel ? (
                   <p className="text-sm text-muted-foreground italic">{t("enrollNow.selectLevelFirst")}</p>
+                ) : slotsLoading ? (
+                  <p className="text-sm text-muted-foreground italic" role="status">{t("enrollNow.loadingSlots")}</p>
                 ) : levelSlots.length === 0 && classType === "private" ? (
                   <div className="space-y-3">
                     <div className="bg-accent dark:bg-muted border border-charcoal/20 dark:border-border rounded-lg p-3 text-sm text-charcoal dark:text-foreground">
@@ -1115,7 +1140,7 @@ const EnrollNowPage = () => {
                         >
                           <span className="font-semibold">{translatedDay}</span>
                           <span className={`text-xs ${isFull ? "text-destructive font-semibold" : isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                            {isFull ? t("enrollNow.full") : time}
+                            {isFull ? t("enrollNow.full") : timeInPageLanguage(time)}
                           </span>
                         </button>
                       );
@@ -1158,7 +1183,7 @@ const EnrollNowPage = () => {
                 {t("enrollNow.next")} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Button>
               {!canProceedStep2 && (
-                <p className="text-xs text-destructive text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   {!selectedLevel
                     ? t("enrollNow.selectLevelError")
                     : preferredDays.length === 0
@@ -1325,9 +1350,9 @@ const EnrollNowPage = () => {
               {/* Schedule Summary */}
               <div className="bg-muted rounded-lg p-4 space-y-1">
                 <p className="text-sm font-medium text-foreground">{t("enrollNow.schedulePreferencesSummary")}</p>
-                <p className="text-xs text-muted-foreground">{t("enrollNow.level")}: {selectedLevel}</p>
-                <p className="text-xs text-muted-foreground">{t("enrollNow.days")}: {preferredDays.join(", ")}</p>
-                <p className="text-xs text-muted-foreground">{t("enrollNow.timezone")}: {timezone}</p>
+                <p className="text-xs text-muted-foreground">{t("enrollNow.level")}: {summaryLevel}</p>
+                <p className="text-xs text-muted-foreground">{t("enrollNow.days")}: {summaryDays}</p>
+                <p className="text-xs text-muted-foreground">{t("enrollNow.timezone")}: <span dir="ltr">{timezone.replace(/_/g, " ")}</span></p>
               </div>
 
               {/* Egypt payment method selector */}

@@ -198,7 +198,7 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
             needs another path forward, not just a waitlist. */}
         <div className="border-t border-border pt-4">
           <p className="text-xs text-muted-foreground mb-2">
-            {tr("Don't want to wait? Book a private class instead — pick any time that works for you.", "لا تريدين الانتظار؟ يمكن حجز حصة خاصة بدلًا من ذلك، واختيار أي وقت مناسب من كل الأوقات المتاحة.")}
+            {tr("Don't want to wait? Book a private class instead — pick any time that works for you.", "لتفادي الانتظار، يمكن حجز حصة خاصة بدلًا من ذلك، واختيار أي وقت مناسب من كل الأوقات المتاحة.")}
           </p>
           <Button variant="outline" size="sm" asChild className="w-full">
             <Link to="/enroll-now?classType=private">
@@ -227,8 +227,6 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
     const { dateStr: localDateStr, timeFormatted, weekday } = convertDateTimeToTimezone(sessionDate, s.start_time, srcTz, userTz);
     const [ly, lm, ld] = localDateStr.split("-").map(Number);
     const localDate = new Date(ly, lm - 1, ld);
-    const cap = s.capacity ?? DEFAULT_CAPACITY;
-    const spotsLeft = cap - s.booked_count;
     if (isAr) {
       const dayAr = localDate.toLocaleDateString("ar-EG", { weekday: "long" });
       const dateAr = localDate.toLocaleDateString("ar-EG", { month: "long", day: "numeric" });
@@ -240,11 +238,12 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
       const timeAr = tm
         ? `${hour}:${tm[2]} ${isPm ? "م" : "ص"}`.replace(/[0-9]/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)])
         : timeFormatted;
-      const spotsAr = String(spotsLeft).replace(/[0-9]/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
-      return `${dayAr}، ${dateAr}، الساعة ${timeAr} · الأماكن المتبقية: ${spotsAr}`;
+      // No seat count in the list (6 Oct 2026): capacity is internal, and "25 left"
+      // made a small-group class look like a lecture hall.
+      return `${dayAr}، ${dateAr}، الساعة ${timeAr}`;
     }
     const dateLabel = localDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    return `${weekday}, ${dateLabel} at ${timeFormatted} — ${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`;
+    return `${weekday}, ${dateLabel} at ${timeFormatted}`;
   };
 
   /**
@@ -301,7 +300,7 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
       {/* Alternative path for a student who wants a time outside the four
           fixed group slots — a paid private class instead of a free trial. */}
       <p className="text-xs text-muted-foreground text-center">
-        {tr("Prefer a different time? ", "تفضّلين وقتًا آخر؟ ")}
+        {tr("Prefer a different time? ", "هل يناسبك وقت آخر؟ ")}
         <Link to="/enroll-now?classType=private" className="underline underline-offset-2 hover:text-foreground">
           {tr("Book a private class", "حجز حصة خاصة")}
         </Link>

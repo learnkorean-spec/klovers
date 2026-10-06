@@ -114,7 +114,7 @@ const ScholarshipsPage = () => {
                 className="h-12 rounded-full border-ivory/40 bg-transparent font-bold text-ivory hover:bg-ivory/10"
               >
                 <Link to={isAr ? "/ar/free-trial" : "/free-trial"}>
-                  {tr("Start with the language", "ابدأ باللغة")}
+                  {tr("Start with the language", "البداية باللغة")}
                 </Link>
               </Button>
             </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { X, Download } from "lucide-react";
 import { capture } from "@/lib/analytics";
 import { useBottomSlot } from "@/lib/bottomLayer";
@@ -15,8 +16,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * bar rather than beside them. It now takes its turn through the shared
  * bottom layer like the other three (see src/lib/bottomLayer.ts).
  *
+ * Never inside the booking and payment steps (6 Oct 2026): a second box asking
+ * for something else in the middle of choosing a class or paying is a reason to
+ * leave. It waits until the student is on another page.
+ *
  * Analytics: fires `pwa_installed` on successful install.
  */
+const FUNNEL_PATHS = ["/enroll", "/enroll-now", "/trial-booking", "/trial-book", "/free-trial", "/checkout", "/login", "/signup", "/sign-up", "/forgot-password"];
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -47,7 +53,9 @@ export default function InstallPrompt() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  const allowed = useBottomSlot("installPrompt", visible && prompt !== null);
+  const { pathname } = useLocation();
+  const inFunnel = FUNNEL_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`) || pathname.endsWith(p));
+  const allowed = useBottomSlot("installPrompt", visible && prompt !== null && !inFunnel);
 
   const handleInstall = async () => {
     if (!prompt) return;
