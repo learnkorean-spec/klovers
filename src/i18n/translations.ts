@@ -418,7 +418,7 @@ export const translations = {
       steps: [
         { title: "Create Your Account", description: "Sign up on our platform to get started with your Korean learning journey.", buttonText: "Sign Up" },
         { title: "Choose Your Plan & Pay", description: "Select your preferred plan (Group or Private), duration, and complete the payment.", buttonText: "View Pricing" },
-        { title: "Upload Receipt & Get Approved", description: "Upload your payment receipt through the enrollment page. The receipt is reviewed and the account activated." },
+        { title: "Confirm Your Payment", description: "In Egypt, upload your payment receipt on the enrollment page and it is reviewed before activation. Outside Egypt, card payment activates the enrollment automatically." },
       ],
       enrollNow: "Enroll Now",
     },
@@ -561,6 +561,7 @@ export const translations = {
       enterEmailError: "Please enter your email address.",
       redirectReceipt: "You'll be redirected to upload your payment receipt.",
       securePayment: "Secure payment via Stripe. Your account will be created automatically after payment.",
+      securePaymentSignedIn: "Secure payment via Stripe. Your enrollment is activated automatically after payment.",
       loadingSlots: "Loading the available times…",
       noLiveSchedule: "No live schedule for this level yet — pick your preferred day and we'll create slots based on student demand!",
       dayNames: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -2311,7 +2312,7 @@ export const translations = {
       steps: [
         { title: "إنشاء حساب", description: "التسجيل على المنصة لبدء رحلة تعلّم الكورية.", buttonText: "إنشاء حساب" },
         { title: "اختيار الخطة والدفع", description: "اختيار الخطة (جماعية أو خاصة) والمدة، ثم إتمام الدفع.", buttonText: "عرض الأسعار" },
-        { title: "رفع الإيصال والتفعيل", description: "رفع إيصال الدفع عبر صفحة التسجيل، ثم يُراجَع الإيصال ويُفعَّل الحساب." },
+        { title: "تأكيد الدفع والتفعيل", description: "داخل مصر: رفع إيصال الدفع عبر صفحة التسجيل ثم مراجعته قبل التفعيل. خارج مصر: الدفع بالبطاقة يُفعِّل التسجيل تلقائيًا." },
       ],
       enrollNow: "التسجيل الآن",
     },
@@ -2454,6 +2455,7 @@ export const translations = {
       enterEmailError: "يُرجى إدخال البريد الإلكتروني.",
       redirectReceipt: "تُفتح بعد ذلك صفحة رفع إيصال الدفع.",
       securePayment: "دفع آمن عبر Stripe. يُنشأ الحساب تلقائيًا بعد الدفع.",
+      securePaymentSignedIn: "دفع آمن عبر Stripe. يُفعَّل التسجيل تلقائيًا بعد الدفع.",
       loadingSlots: "جارٍ تحميل المواعيد المتاحة…",
       noLiveSchedule: "لا يوجد جدول لهذا المستوى حتى الآن. اختيار اليوم المفضل يساعد في إنشاء مواعيد بناءً على طلبات الطلاب.",
       dayNames: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],

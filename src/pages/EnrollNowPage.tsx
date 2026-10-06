@@ -443,10 +443,16 @@ const EnrollNowPage = () => {
       const metaName = session.user.user_metadata?.name || "";
       const { data: profile } = await supabase
         .from("profiles")
-        .select("name, country")
+        .select("name, country, course_level_key, level")
         .eq("user_id", session.user.id)
         .maybeSingle();
       setProfileCountry((profile as any)?.country || "");
+      // Prefill the level the placement test (or the student) already set,
+      // unless one came in through the URL or was already picked.
+      const knownLevel = normalizeLevel((profile as any)?.course_level_key || (profile as any)?.level || "");
+      if (knownLevel && LEVEL_SELECT_OPTIONS.some((l) => l.value === knownLevel)) {
+        setSelectedLevel((cur) => cur || knownLevel);
+      }
       const profileName = (profile as any)?.name || "";
       const fallbackName = (session.user.email || "").split("@")[0];
       setName(profileName || metaName || fallbackName);
@@ -1408,7 +1414,9 @@ const EnrollNowPage = () => {
               <p className="text-xs text-center text-muted-foreground">
                 {isEgypt
                   ? t("enrollNow.redirectReceipt")
-                  : t("enrollNow.securePayment")}
+                  : userId
+                    ? t("enrollNow.securePaymentSignedIn")
+                    : t("enrollNow.securePayment")}
               </p>
 
               {/* Trust badges */}
@@ -1441,19 +1449,7 @@ const EnrollNowPage = () => {
                 ))}
               </div>
 
-              {/* WhatsApp fallback */}
-              <p className="text-xs text-center text-muted-foreground pt-1">
-                {isAr ? "مساعدة في التسجيل؟" : "Need help enrolling?"}{" "}
-                <a
-                  href={WHATSAPP_BASE}
-                  onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(WHATSAPP_BASE, { cta_label: "enroll_help" }); }}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground font-semibold underline underline-offset-2 hover:no-underline"
-                >
-                  {isAr ? "التواصل عبر واتساب" : "WhatsApp us"}
-                </a>
-              </p>
+              {/* WhatsApp help: the sticky pill below is the single entry point (audit, 6 Oct 2026) */}
                 </>
               )}
             </CardContent>
