@@ -20,6 +20,24 @@ import path from "path";
  * barely later to become interactive. Build only - the dev server's HTML is
  * left alone.
  */
+/** Inline boot script used by lowPriorityAppBundle (see the note there). */
+const bootEntry = (src: string) =>
+  [
+    `const go = () => import(${JSON.stringify(src)});`,
+    `const shell = document.getElementById("kl-hero-shell");`,
+    `const img = shell && !shell.hidden ? shell.querySelector("img") : null;`,
+    `if (!img) { go(); } else {`,
+    `  const loaded = img.complete ? Promise.resolve() : new Promise((r) => {`,
+    `    img.addEventListener("load", r, { once: true });`,
+    `    img.addEventListener("error", r, { once: true });`,
+    `    setTimeout(r, 2500);`,
+    `  });`,
+    `  loaded`,
+    `    .then(() => (img.decode ? img.decode().catch(() => {}) : null))`,
+    `    .then(() => requestAnimationFrame(() => setTimeout(go, 0)));`,
+    `}`,
+  ].join("");
+
 const lowPriorityAppBundle = () => ({
   name: "klovers-low-priority-app-bundle",
   apply: "build" as const,
@@ -27,7 +45,21 @@ const lowPriorityAppBundle = () => ({
     order: "post" as const,
     handler(html: string) {
       return html
-        .replace(/<script type="module" crossorigin src=/g, '<script type="module" crossorigin fetchpriority="low" src=')
+        // The entry no longer runs straight from a <script src> (6 Oct 2026,
+        // pass 6). On "/" and "/ar" the hero shell must PAINT before any app
+        // code runs: Lighthouse charges every task that runs before the first
+        // paint (and before the LCP photo paints) to FCP and LCP, and
+        // evaluating the bundle is the biggest of them. A tiny inline module
+        // imports the entry once the shell photo has loaded, decoded and been
+        // given a frame to paint (capped at 2.5s). On every other route it
+        // imports straight away, exactly as before. The entry still downloads
+        // at once (modulepreload + the import), only its execution waits.
+        .replace(
+          /<script type="module" crossorigin src="([^"]+)"><\/script>/,
+          (_m, src: string) =>
+            `<script type="module">${bootEntry(src)}</script>` +
+            `<link rel="modulepreload" crossorigin fetchpriority="low" href="${src}">`,
+        )
         .replace(/<link rel="modulepreload" crossorigin href=/g, '<link rel="modulepreload" crossorigin fetchpriority="low" href=');
     },
   },
