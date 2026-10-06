@@ -8,12 +8,12 @@ const WA_NUMBER = WHATSAPP_NUMBER;
 /**
  * The floating WhatsApp bubble.
  *
- * 23 Sep 2026: it steps aside while any bottom bar holds the floor
- * (StickyEnrollBar, HomeExitNudge, InstallPrompt - src/lib/bottomLayer.ts).
- * The homepage review found the bubble, the sticky bar and the bar's
- * character cluster covering card text on every screen. With this, only one
- * floating element is ever up at a time; the sticky bar carries its own
- * WhatsApp icon, so support stays one tap away the whole time.
+ * 23 Sep 2026: it used to step aside while a bottom bar held the floor
+ * (StickyEnrollBar, HomeExitNudge, InstallPrompt - src/lib/bottomLayer.ts),
+ * because the bubble and the bars covered card text.
+ * 6 Oct 2026 (Re): the help icon must always be there. It now stays visible
+ * and rides up above the bar instead of disappearing, so a student is never
+ * more than one tap from asking for help.
  */
 const WhatsAppButton = () => {
   const { t, language } = useLanguage();
@@ -21,14 +21,12 @@ const WhatsAppButton = () => {
   const bottomBarUp = useAnyBottomSlotActive();
   const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(t("whatsappFab.message"))}`;
 
-  if (bottomBarUp) return null;
-
   return (
     <button
       type="button"
       onClick={() => trackAndOpenWhatsApp(waUrl, { cta_label: "floating_fab" })}
       aria-label={t("whatsappFab.ariaLabel")}
-      className="group fixed bottom-6 right-5 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-klovers-yellow border-2 border-charcoal shadow-lg hover:brightness-95 hover:scale-105 active:scale-95 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+      className={`group fixed right-5 z-50 ${bottomBarUp ? "bottom-28 sm:bottom-24" : "bottom-6"} flex items-center justify-center w-14 h-14 rounded-full bg-klovers-yellow border-2 border-charcoal shadow-lg hover:brightness-95 hover:scale-105 active:scale-95 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none`}
     >
       {/* Tooltip label — desktop only */}
       <span
