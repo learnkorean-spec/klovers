@@ -112,6 +112,17 @@ function getTierForCountry(country: string | null): TierKey | null {
   return null;
 }
 
+// UAE and Saudi students pay in their own currency (Re, 6 Oct 2026). The
+// amounts are the published AED / SAR rows in src/lib/stripePrices.ts
+// (COUNTRY_LOCAL_PRICES) -- change both files together. They are sent to
+// Stripe as an inline price, so nothing has to exist in the Stripe dashboard;
+// stripe-webhook recognises these sessions from the metadata below.
+const LOCAL_CARD_PRICES: Record<string, { currency: "aed" | "sar"; group: number[]; private: number[] }> = {
+  "UAE":          { currency: "aed", group: [220, 624, 1100], private: [440, 1210, 2130] },
+  "Saudi Arabia": { currency: "sar", group: [225, 638, 1125], private: [450, 1238, 2175] },
+};
+const DURATION_INDEX: Record<number, number> = { 1: 0, 3: 1, 6: 2 };
+
 /** ISO 3166-1 alpha-2 → the country name tierCountries uses. Review flag only. */
 const ISO_TO_COUNTRY: Record<string, string> = {
   EG: "Egypt", MA: "Morocco", TN: "Tunisia", DZ: "Algeria", LY: "Libya",
@@ -354,10 +365,25 @@ serve(async (req) => {
       }
     }
 
+    const localRow = pricingCountry ? LOCAL_CARD_PRICES[pricingCountry] : undefined;
+    const localAmount = localRow?.[classType as ClassType]?.[DURATION_INDEX[Number(duration)]];
+    const localLineItem = localRow && typeof localAmount === "number"
+      ? {
+          price_data: {
+            currency: localRow.currency,
+            unit_amount: Math.round(localAmount * 100),
+            product_data: {
+              name: `Klovers Korean - ${priceEntry.classesIncluded} ${classType} classes (${Number(duration)} month${Number(duration) === 1 ? "" : "s"})`,
+            },
+          },
+          quantity: 1,
+        }
+      : null;
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : email,
-      line_items: [{ price: priceEntry.priceId, quantity: 1 }],
+      line_items: [localLineItem ?? { price: priceEntry.priceId, quantity: 1 }],
       mode: "payment",
       ...(discounts.length > 0 ? { discounts } : {}),
       success_url: `${origin}/dashboard?payment=success`,

@@ -479,7 +479,7 @@ const EnrollNowPage = () => {
   const egyptCard = isEgypt && egyptPaymentMethod === "card";
   const payByCard = !isEgypt || egyptCard;
   // A code is only valid in one currency: drop it when the method (EGP <-> USD) changes.
-  useEffect(() => { setPromoApplied(null); }, [payByCard]);
+  useEffect(() => { setPromoApplied(null); }, [payByCard, selectedCountry]);
   const priced = useMemo(() => {
     if (!duration) return null;
     if (egyptCard) {
@@ -730,7 +730,7 @@ const EnrollNowPage = () => {
       setPromoLoading(false);
       return;
     }
-    if (data.currency && data.currency !== (payByCard ? "USD" : "EGP")) {
+    if (data.currency && data.currency !== currency) {
       setPromoError(isAr ? `هذا الرمز صالح فقط للدفع بعملة ${CURRENCY_AR[data.currency] ?? data.currency}.` : `This code is only valid for ${data.currency} payments.`);
       setPromoLoading(false);
       return;

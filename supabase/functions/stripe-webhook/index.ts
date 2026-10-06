@@ -267,6 +267,15 @@ serve(async (req) => {
         }
       }
 
+      // Inline-priced sessions (UAE / Saudi, paid in AED / SAR) carry no price
+      // id from our table; create-checkout stamps tier, class_type and duration
+      // into the metadata, so the plan comes from there instead.
+      if (!plan && meta?.tier && meta?.class_type && meta?.duration) {
+        plan = Object.values(priceIdToPlan).find(
+          (p) => p.tier === meta.tier && p.classType === meta.class_type && String(p.duration) === String(meta.duration),
+        ) ?? null;
+      }
+
       if (!plan) {
         console.error("Could not derive plan from Stripe line items");
         return new Response(JSON.stringify({ received: true, warning: "Unknown price" }), {
@@ -376,7 +385,7 @@ serve(async (req) => {
         .eq("user_id", userId);
 
       const enrollmentId = newEnrollment?.id;
-      console.log(`Enrollment created: ${plan.classesIncluded} classes, $${actualAmount}, id: ${enrollmentId}`);
+      console.log(`Enrollment created: ${plan.classesIncluded} classes, ${actualAmount} ${(session.currency || "usd").toUpperCase()}, id: ${enrollmentId}`);
 
       // Auto-assign to slot/group
       if (enrollmentId) {
