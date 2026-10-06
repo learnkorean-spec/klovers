@@ -86,10 +86,42 @@ installJsonLdDedupe();
 // it paid a static `@sentry/react` import for that. ErrorBoundary now reports
 // through `captureException`, which loads Sentry on demand, so the outer
 // boundary is gone and the SDK is no longer in the entry chunk.
-createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
-  </ErrorBoundary>
-);
+const mount = () =>
+  createRoot(document.getElementById("root")!).render(
+    <ErrorBoundary>
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
+
+/**
+ * Homepage: let the hero shell's photo paint before the app mounts
+ * (6 Oct 2026).
+ *
+ * index.html paints the hero (photo, headline, paragraph) from plain HTML on
+ * "/" and "/ar" (#kl-hero-shell). On a fast connection the app used to mount
+ * and remove the shell BEFORE its photo had arrived, so the photo's first
+ * paint happened inside React's hero instead. Lighthouse then counted all of
+ * the app's start-up work as part of the Largest Contentful Paint (PageSpeed
+ * mobile LCP 5.2s, render delay 0.8-2.2s).
+ *
+ * So on those two pages the app waits for the shell photo to load and paint
+ * (two animation frames), capped at 2.5s. The visitor sees the full first
+ * screen the whole time. On a slow phone the JS takes longer than the photo
+ * anyway, so nothing is delayed there. Every other route mounts at once.
+ */
+const shellImg = document.querySelector<HTMLImageElement>("#kl-hero-shell img");
+if (shellImg && !shellImg.complete) {
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    requestAnimationFrame(() => requestAnimationFrame(mount));
+  };
+  shellImg.addEventListener("load", start, { once: true });
+  shellImg.addEventListener("error", start, { once: true });
+  window.setTimeout(start, 2500);
+} else {
+  mount();
+}
