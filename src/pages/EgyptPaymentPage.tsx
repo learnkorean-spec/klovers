@@ -220,7 +220,6 @@ const PaymentForm = ({
   const METHODS = [
     { value: "vodafone_cash", label: t("payment.vodafoneCash"), icon: "globe-plane" },
     { value: "instapay", label: t("payment.instapay"), icon: "badge-blossom" },
-    { value: "bank_transfer", label: t("payment.bankTransfer"), icon: "books-stack" },
   ];
 
   const copyAccount = () => {

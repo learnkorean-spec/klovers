@@ -193,8 +193,8 @@ const LearnKoreanArabicSpeakersPage = () => {
             </div>
             <p className="mt-6 text-base text-foreground/80 leading-relaxed">
               {tr(
-                "Your teacher is Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years. She explains in Arabic or English and compares Korean with Arabic wherever that makes a point clearer. In Egypt: bank transfer, Vodafone Cash or InstaPay, with a receipt upload; the subscription is activated after a manual check. Outside Egypt: card payment through Stripe, activated automatically.",
-                "المعلمة ريهام الشرقاوي، خريجة كلية الألسن قسم اللغة الكورية وآدابها، وتدرّس الكورية منذ ١٣ عامًا. تشرح بالعربية أو الإنجليزية، وتقارن الكورية بالعربية حين يوضّح ذلك الفكرة. داخل مصر: تحويل بنكي أو فودافون كاش أو إنستا باي، مع رفع الإيصال، ويُفعَّل الاشتراك بعد مراجعة يدوية. خارج مصر: الدفع بالبطاقة عبر Stripe ويُفعَّل تلقائيًا.",
+                "Your teacher is Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for 13 years. She explains in Arabic or English and compares Korean with Arabic wherever that makes a point clearer. In Egypt: Vodafone Cash or InstaPay with a receipt upload (activated after a manual check), or card payment through Stripe (activated automatically). Outside Egypt: card payment through Stripe, activated automatically.",
+                "المعلمة ريهام الشرقاوي، خريجة كلية الألسن قسم اللغة الكورية وآدابها، وتدرّس الكورية منذ ١٣ عامًا. تشرح بالعربية أو الإنجليزية، وتقارن الكورية بالعربية حين يوضّح ذلك الفكرة. داخل مصر: فودافون كاش أو إنستا باي مع رفع الإيصال (ويُفعَّل الاشتراك بعد مراجعة يدوية)، أو الدفع بالبطاقة عبر Stripe (ويُفعَّل تلقائيًا). خارج مصر: الدفع بالبطاقة عبر Stripe ويُفعَّل تلقائيًا.",
               )}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
