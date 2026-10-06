@@ -880,7 +880,6 @@ const EnrollNowPage = () => {
       return time ? `${name} ${time}` : name;
     })
     .join(isAr ? "، " : ", ");
-  const pillMessage = isAr ? "مرحبًا، لديّ سؤال قبل التسجيل في كلوفرز." : "Hi! I have a question before enrolling in Klovers.";
 
   const stepLabels = [t("enrollNow.choosePlan"), t("enrollNow.schedule"), t("enrollNow.payEnroll")];
 
@@ -1468,18 +1467,6 @@ const EnrollNowPage = () => {
         )}
       </main>
       <Footer />
-
-      {/* Sticky WhatsApp help pill — shown during checkout */}
-      <a
-        href={`${WHATSAPP_BASE}?text=${encodeURIComponent(pillMessage)}`}
-        onClick={(e) => { e.preventDefault(); trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(pillMessage)}`, { cta_label: "enroll_questions_pill" }); }}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-klovers-green text-charcoal text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg hover:bg-klovers-green/90 transition-colors"
-        aria-label={isAr ? "المحادثة عبر واتساب" : "Chat on WhatsApp"}
-      >
-        {isAr ? "أسئلة؟" : "Questions?"}
-      </a>
     </div>
   );
 };
