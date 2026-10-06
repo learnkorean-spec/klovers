@@ -19,20 +19,36 @@ import path from "path";
  * connection. The JS still starts at once and in parallel, so the app is
  * barely later to become interactive. Build only - the dev server's HTML is
  * left alone.
+ *
+ * THE MAIN STYLESHEET DOES NOT BLOCK THE FIRST PAINT EITHER (6 Oct 2026,
+ * pass 7). PageSpeed mobile 69 (after pass 6) showed real FCP 0.8s / LCP 1.3s
+ * but a SIMULATED LCP of 5.9s: the simulation waits for every render-blocking
+ * byte, and the ~238 KB stylesheet is the biggest one. The hero shell styles
+ * itself with the inline <style> in index.html, so the first screen needs none
+ * of that file. The link below is switched to media="print" and flipped to
+ * "all" when it has loaded (same trick index.html uses for the Google Fonts
+ * stylesheet). The boot script waits for it before it imports the app, so
+ * React never renders unstyled. A <noscript> copy keeps no-JS visits styled.
  */
 /** Inline boot script used by lowPriorityAppBundle (see the note there). */
 const bootEntry = (src: string) =>
   [
     `const go = () => import(${JSON.stringify(src)});`,
+    `const css = document.querySelector("link[data-kl-css]");`,
+    `const cssReady = !css || css.media === "all" ? Promise.resolve() : new Promise((r) => {`,
+    `  css.addEventListener("load", r, { once: true });`,
+    `  css.addEventListener("error", () => { css.media = "all"; r(); }, { once: true });`,
+    `  setTimeout(() => { css.media = "all"; r(); }, 4000);`,
+    `});`,
     `const shell = document.getElementById("kl-hero-shell");`,
     `const img = shell && !shell.hidden ? shell.querySelector("img") : null;`,
-    `if (!img) { go(); } else {`,
+    `if (!img) { cssReady.then(go); } else {`,
     `  const loaded = img.complete ? Promise.resolve() : new Promise((r) => {`,
     `    img.addEventListener("load", r, { once: true });`,
     `    img.addEventListener("error", r, { once: true });`,
     `    setTimeout(r, 2500);`,
     `  });`,
-    `  loaded`,
+    `  Promise.all([loaded, cssReady])`,
     `    .then(() => (img.decode ? img.decode().catch(() => {}) : null))`,
     `    .then(() => requestAnimationFrame(() => setTimeout(go, 0)));`,
     `}`,
@@ -60,7 +76,16 @@ const lowPriorityAppBundle = () => ({
             `<script type="module">${bootEntry(src)}</script>` +
             `<link rel="modulepreload" crossorigin fetchpriority="low" href="${src}">`,
         )
-        .replace(/<link rel="modulepreload" crossorigin href=/g, '<link rel="modulepreload" crossorigin fetchpriority="low" href=');
+        .replace(/<link rel="modulepreload" crossorigin href=/g, '<link rel="modulepreload" crossorigin fetchpriority="low" href=')
+        // Pass 7: the main stylesheet stops blocking the first paint. Only the
+        // hashed /assets/*.css that Vite emits is touched (the Google Fonts
+        // link in index.html is already non-blocking and has no crossorigin).
+        .replace(
+          /<link rel="stylesheet"( crossorigin)? href="(\/assets\/[^"]+\.css)">/g,
+          (_m, cors: string | undefined, href: string) =>
+            `<link rel="stylesheet"${cors ?? ""} href="${href}" media="print" data-kl-css onload="this.media='all'">` +
+            `<noscript><link rel="stylesheet"${cors ?? ""} href="${href}"></noscript>`,
+        );
     },
   },
 });
