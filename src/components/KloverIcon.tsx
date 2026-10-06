@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -59,26 +60,50 @@ export type KloverIconName =
   | "game-subway"
   | "game-time-dates"
   | "game-topik-sheet"
-  | "game-virtual-korea";
+  | "game-virtual-korea"
+  // Drawn from the 1024px icon library (public/assets/icons/library):
+  | "reward-gift";
 
 interface KloverIconProps {
   name: KloverIconName;
   className?: string;
 }
 
-const KloverIcon = ({ name, className }: KloverIconProps) => (
-  <img
-    src={`/assets/icons/${name}.webp`}
-    srcSet={`/assets/icons/${name}@2x.webp 2x`}
-    alt=""
-    aria-hidden="true"
-    width={128}
-    height={128}
-    loading="lazy"
-    decoding="async"
-    draggable={false}
-    className={cn("shrink-0 select-none object-contain", className)}
-  />
-);
+/**
+ * Names whose drawing lives only in the 1024px icon library. There is no
+ * 128px WebP for them, so they go through Vercel's image optimizer instead
+ * (the same path BrandIcon uses). Before this map, "reward-gift" pointed at a
+ * /assets/icons/reward-gift.webp that never existed and showed a broken image.
+ */
+const LIBRARY_FILE: Partial<Record<KloverIconName, string>> = {
+  "reward-gift": "08-rewards",
+};
+
+function librarySrc(file: string, width: number) {
+  const path = `/assets/icons/library/${file}.png`;
+  return import.meta.env.PROD ? `/_vercel/image?url=${encodeURIComponent(path)}&w=${width}&q=75` : path;
+}
+
+const KloverIcon = ({ name, className }: KloverIconProps) => {
+  const [failed, setFailed] = useState(false);
+  // A missing file collapses to an empty slot rather than a broken-image glyph.
+  if (failed) return <span aria-hidden="true" className={cn("inline-block shrink-0", className)} />;
+  const libraryFile = LIBRARY_FILE[name];
+  return (
+    <img
+      src={libraryFile ? librarySrc(libraryFile, 320) : `/assets/icons/${name}.webp`}
+      srcSet={libraryFile ? undefined : `/assets/icons/${name}@2x.webp 2x`}
+      alt=""
+      aria-hidden="true"
+      width={128}
+      height={128}
+      loading="lazy"
+      decoding="async"
+      draggable={false}
+      onError={() => setFailed(true)}
+      className={cn("shrink-0 select-none object-contain", className)}
+    />
+  );
+};
 
 export default KloverIcon;
