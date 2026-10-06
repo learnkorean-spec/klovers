@@ -154,6 +154,9 @@ const COUNTRY_LOCAL_PRICES: Record<string, CountryLocal> = {
 
 const DURATIONS: Duration[] = [1, 3, 6];
 
+/** Countries whose card payment is taken in their own currency. Mirrors LOCAL_CARD_PRICES in create-checkout. */
+const CARD_IN_LOCAL_CURRENCY = ["UAE", "Saudi Arabia"];
+
 /** Every country that has a price, local or otherwise, sorted for a picker. */
 export const PRICED_COUNTRIES: string[] = (Object.values(tierCountries) as string[][])
   .flat()
@@ -352,6 +355,14 @@ export function getPriceFor(
     const local = COUNTRY_LOCAL_PRICES["Egypt"];
     const amount = local?.[classType]?.[DURATIONS.indexOf(duration)];
     return typeof amount === "number" ? { amount, currency: local.currency } : null;
+  }
+
+  // UAE and Saudi pay in dirhams / riyals: create-checkout charges the same
+  // AED / SAR rows the pricing page shows (Re, 6 Oct 2026).
+  if (CARD_IN_LOCAL_CURRENCY.includes(resolved)) {
+    const local = COUNTRY_LOCAL_PRICES[resolved];
+    const localAmount = local?.[classType]?.[DURATIONS.indexOf(duration)];
+    if (typeof localAmount === "number") return { amount: localAmount, currency: local.currency };
   }
 
   const tier = getTierForCountry(resolved);
