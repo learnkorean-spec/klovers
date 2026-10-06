@@ -1065,7 +1065,7 @@ const TrialBookingPage = () => {
               {/* Show the existing level (read-only) when we already have it */}
               {!needsLevel && profileLoaded && selectedLevel && (
                 <p className="text-xs text-muted-foreground mb-4">
-                  {t("trialBooking.yourLevelIs")} <span className="font-medium text-foreground">{getLevelShortLabel(selectedLevel)}</span>
+                  {t("trialBooking.yourLevelIs")} <span className="font-medium text-foreground">{getLevelShortLabel(selectedLevel, language)}</span>
                 </p>
               )}
 

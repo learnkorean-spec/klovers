@@ -907,6 +907,12 @@ const StudentDashboard = () => {
 
           {/* E | G + F. Collection & next unlock; beside it the upcoming class,
               then recent achievements (tertiary). Mobile order: E, G, F. */}
+          <details className="group rounded-[20px] border border-foreground/10 bg-card">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-display text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-[20px]">
+              {language === "ar" ? "المجموعة والإنجازات" : "Collection and achievements"}
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <div className="space-y-4 px-5 pb-5">
           <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
             <CollectionCard earned={learning.data?.badges ?? []} milestones={learning.data?.milestones ?? []} clubyAwake={clubyAwake} />
             <div className="space-y-4">
@@ -914,6 +920,8 @@ const StudentDashboard = () => {
               <RecentAchievements earned={learning.data?.badges ?? []} />
             </div>
           </div>
+            </div>
+          </details>
 
           {/* H. Secondary — account, classes, package */}
           <section aria-labelledby="dash-account-title" className="space-y-4 pt-4">
@@ -1128,6 +1136,12 @@ const StudentDashboard = () => {
           </section>
 
           {/* H. More practice — tertiary */}
+          <details className="group rounded-[20px] border border-foreground/10 bg-card">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-display text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-[20px]">
+              {language === "ar" ? "مزيد من التدريب واستكشاف كوريا" : "More practice and Discover Korea"}
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <div className="space-y-4 px-5 pb-5">
           <section aria-labelledby="practice-extras-heading" className="space-y-4 pt-2">
             <h2 id="practice-extras-heading" className="font-display text-base font-semibold text-foreground">{dc("morePractice")}</h2>
             <Suspense fallback={<div className="h-20 bg-muted/40 rounded-xl animate-pulse" />}>
@@ -1196,6 +1210,8 @@ const StudentDashboard = () => {
               );
             })()}
           </section>
+            </div>
+          </details>
 
           {/* H. Learning insights — collapsed; its charts only load when opened */}
           <details

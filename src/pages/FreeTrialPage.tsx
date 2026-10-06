@@ -530,7 +530,7 @@ const FreeTrialPage = () => {
                       navigate("/placement-test");
                     }}
                   >
-                    {tr("Or take the placement test", "أو ابدأ باختبار تحديد المستوى")}
+                    {tr("Or take the placement test", "أو البدء باختبار تحديد المستوى")}
                   </Button>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">

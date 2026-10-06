@@ -71,7 +71,7 @@ export function AnalyticsSection() {
           <CardContent>
             {weeklyXp.length === 0 ? (
               <div className="h-80 flex items-center justify-center text-muted-foreground">
-                <p>{tr("No XP data yet. Start learning to see your progress!", "لا توجد نقاط بعد. ابدأ التعلّم لترى تقدّمك!")}</p>
+                <p>{tr("No XP data yet. Start learning to see your progress!", "لا توجد نقاط بعد. يظهر التقدّم هنا مع بدء التعلّم.")}</p>
               </div>
             ) : (
               <>
@@ -184,7 +184,7 @@ export function AnalyticsSection() {
             vocabMastery.reviewing === 0 &&
             vocabMastery.mastered === 0 ? (
               <div className="h-80 flex items-center justify-center text-muted-foreground">
-                <p>{tr("Start reviewing vocabulary to track mastery!", "ابدأ مراجعة المفردات لتتابع إتقانك!")}</p>
+                <p>{tr("Start reviewing vocabulary to track mastery!", "يظهر الإتقان هنا مع بدء مراجعة المفردات.")}</p>
               </div>
             ) : (
               <>

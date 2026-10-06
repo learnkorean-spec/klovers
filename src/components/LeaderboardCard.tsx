@@ -171,7 +171,7 @@ export function LeaderboardCard() {
               </div>
             ) : streakLeaderboard.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
-                {tr("No active streaks yet. Start learning daily!", "لا توجد أيام متتالية نشطة بعد. ابدأ التعلّم يوميًا!")}
+                {tr("No active streaks yet. Start learning daily!", "لا توجد أيام متتالية نشطة بعد. تبدأ السلسلة بالتعلّم اليومي.")}
               </p>
             ) : (
               <div className="space-y-2">
@@ -211,7 +211,7 @@ export function LeaderboardCard() {
               </div>
             ) : weeklyLeaderboard.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
-                {tr("No activity this week yet. Start learning!", "لا يوجد نشاط هذا الأسبوع بعد. ابدأ التعلّم!")}
+                {tr("No activity this week yet. Start learning!", "لا يوجد نشاط هذا الأسبوع بعد. يبدأ النشاط مع أول درس.")}
               </p>
             ) : (
               <div className="space-y-2">

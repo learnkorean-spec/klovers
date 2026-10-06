@@ -267,7 +267,7 @@ const ResubmitSchedulePage = () => {
                             </div>
                             <p className="text-[11px] text-muted-foreground/70">({DAY_NAMES[pkg.day_of_week]} {formatTime(pkg.start_time)} {pkg.timezone.replace(/_/g, " ")})</p>
                           </div>
-                          <Badge variant="outline">{getLevelShortLabel(pkg.level)}</Badge>
+                          <Badge variant="outline">{getLevelShortLabel(pkg.level, language)}</Badge>
                         </div>
                           );
                         })()}
