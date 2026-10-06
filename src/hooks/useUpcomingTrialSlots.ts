@@ -72,9 +72,26 @@ function resolveInstant(date: string, time: string, tz: string): Date | null {
 // hero and the free-trial page both want this and neither should pay twice.
 let inFlight: Promise<UpcomingTrialSlot[]> | null = null;
 
+/** A request that never answers must not leave the page on grey boxes forever (6 Oct 2026). */
+const SLOTS_TIMEOUT_MS = 8000;
+
 async function loadSlots(): Promise<UpcomingTrialSlot[]> {
-  const { data, error } = await supabase.rpc("get_trial_availability", { p_language: null });
-  if (error || !data) return [];
+  let result: { data: unknown; error: unknown };
+  try {
+    result = await Promise.race([
+      supabase.rpc("get_trial_availability", { p_language: null }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("slots timeout")), SLOTS_TIMEOUT_MS)),
+    ]);
+  } catch {
+    // Timed out or the network failed: forget this attempt so the next mount retries.
+    inFlight = null;
+    return [];
+  }
+  const { data, error } = result;
+  if (error || !data) {
+    inFlight = null;
+    return [];
+  }
   const now = Date.now();
   return (data as AvailabilityRow[])
     .map((row) => {
@@ -103,10 +120,25 @@ export function useUpcomingTrialSlots() {
 
   useEffect(() => {
     let alive = true;
-    inFlight ??= loadSlots();
-    inFlight
-      .then((rows) => { if (alive) { setSlots(rows); setLoading(false); } })
-      .catch(() => { if (alive) setLoading(false); });
+    let retried = false;
+    const run = () => {
+      inFlight ??= loadSlots();
+      inFlight
+        .then((rows) => {
+          if (!alive) return;
+          // inFlight is cleared only when the request failed (not when nothing
+          // is open): try once more before telling the visitor nothing is open.
+          if (rows.length === 0 && inFlight === null && !retried) {
+            retried = true;
+            setTimeout(() => { if (alive) run(); }, 1500);
+            return;
+          }
+          setSlots(rows);
+          setLoading(false);
+        })
+        .catch(() => { if (alive) setLoading(false); });
+    };
+    run();
     return () => { alive = false; };
   }, []);
 
