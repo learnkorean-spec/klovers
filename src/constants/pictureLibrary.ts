@@ -20,6 +20,17 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "b2s_10", label: "الحصة ١٠ — الطلب" },
   { file: "b2s_11", label: "الحصة ١١ — الخطة الكبيرة" },
   { file: "b2s_12", label: "الحصة ١٢ — المراجعة" },
+  // Re generated these on 8 Oct 2026, nine of the twelve the book was waiting
+  // for. 18, 23 and 24 are still missing.
+  { file: "b2s_13", label: "الحصة ١٣ — نصيحة من مين-سو" },
+  { file: "b2s_14", label: "الحصة ١٤ — يبدو أنّ المطر سينزل" },
+  { file: "b2s_15", label: "الحصة ١٥ — المقهى قبل الفتح" },
+  { file: "b2s_16", label: "الحصة ١٦ — أيّهما أحسن؟" },
+  { file: "b2s_17", label: "الحصة ١٧ — هديّة لجدّة لينا" },
+  { file: "b2s_19", label: "الحصة ١٩ — أليس كذلك؟" },
+  { file: "b2s_20", label: "الحصة ٢٠ — بين الأصدقاء" },
+  { file: "b2s_21", label: "الحصة ٢١ — دفتر الشواذّ" },
+  { file: "b2s_22", label: "الحصة ٢٢ — كنت ذاهبًا، لكن…" },
   { file: "cover_b2", label: "غلاف كتاب ٢" },
   // The rest of the range, put on the same cover template 1 Oct 2026 — one
   // skeleton, one title treatment, one chip, one footer, a different picture

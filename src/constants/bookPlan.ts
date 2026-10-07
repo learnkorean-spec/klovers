@@ -80,7 +80,7 @@ export const BOOK_SHELF: PlannedBook[] = [
   {
     cover: "cover_b2",
     titleAr: "المستوى ٢ · مقهى المحادثة",
-    noteAr: "٢٤ حصة · القواعد ٣٣–٦٥ · ٢٩٣ صفحة · ينتظر ١٢ مشهدًا",
+    noteAr: "٢٤ حصة · القواعد ٣٣–٦٥ · ٢٩٣ صفحة · ينتظر ٣ مشاهد",
     state: "partial",
     statusAr: "ينتظر المشاهد",
     bookId: "book-2",
@@ -105,7 +105,7 @@ export interface PlannedLevel {
 export const BOOK_LADDER: PlannedLevel[] = [
   { nameAr: "تأسيس الهانغول", topik: null, classes: 4, statusAr: "منشور", state: "done" },
   { nameAr: "المستوى الأول", topik: 1, classes: 24, statusAr: "مكتمل", state: "done" },
-  { nameAr: "المستوى الثاني", topik: 2, classes: 24, statusAr: "مكتوب · ينتظر ١٢ مشهدًا", state: "partial" },
+  { nameAr: "المستوى الثاني", topik: 2, classes: 24, statusAr: "مكتوب · ينتظر ٣ مشاهد", state: "partial" },
   { nameAr: "المستوى الثالث", topik: 3, classes: 24, statusAr: "لم يُبدأ", state: "missing" },
   { nameAr: "المستوى الرابع", topik: 4, classes: 24, statusAr: "لم يُبدأ", state: "missing" },
   { nameAr: "المستوى الخامس", topik: 5, classes: 24, statusAr: "لم يُبدأ", state: "missing" },
@@ -173,10 +173,12 @@ export const BOOK_BLOCKERS: PlanBlocker[] = [
       "كتاب لغة لا يُسلَّم لطالب قبل أن تقرأ مؤلفته كل سطر كوري فيه. هذا أوّل ما يمنع البيع.",
   },
   {
-    titleAr: "مشاهد الحصص ١٣–٢٤",
+    titleAr: "مشاهد الحصص ١٨ و٢٣ و٢٤",
     bodyAr:
       "الأربع والعشرون حصة مكتوبة وكل أيقوناتها مركّبة — لا بطاقة فارغة في الكتاب. "
-      + "الناقص اثنا عشر مشهد محادثة، b2s_13 إلى b2s_24.",
+      + "وصلت تسعة مشاهد في ٨ أكتوبر ٢٠٢٦ (١٣–١٧ و١٩–٢٢) وركّبت في النسختين. "
+      + "الناقص ثلاثة: b2s_18 وb2s_23 وb2s_24 — صفحات المراجعة الثالثة، "
+      + "ونقل الكلام، والمراجعة الختامية.",
   },
   {
     titleAr: "شعاران في المدى الواحد",
