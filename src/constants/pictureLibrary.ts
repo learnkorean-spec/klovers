@@ -31,6 +31,15 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "b2s_20", label: "الحصة ٢٠ — بين الأصدقاء" },
   { file: "b2s_21", label: "الحصة ٢١ — دفتر الشواذّ" },
   { file: "b2s_22", label: "الحصة ٢٢ — كنت ذاهبًا، لكن…" },
+  // 8 Oct 2026, الدفعة الثانية — بها اكتملت صور كتاب ٢.
+  { file: "b2s_18", label: "الحصة ١٨ — المراجعة الثالثة" },
+  { file: "b2s_23", label: "الحصة ٢٣ — سمعت أنّ…" },
+  { file: "b2s_24", label: "الحصة ٢٤ — المراجعة الختامية" },
+  // Variants Re generated alongside them. Not in the book — each class already
+  // has its picture — kept so they are never lost and never asked for twice.
+  { file: "b2s_19_alt", label: "بديل الحصة ١٩ — مين-سو يقدّم الخبز" },
+  { file: "b2s_21_alt", label: "بديل الحصة ٢١ — الدفتر المفتوح" },
+  { file: "b2s_22_alt", label: "بديل الحصة ٢٢ — لينا تصل والمطر خلفها" },
   { file: "cover_b2", label: "غلاف كتاب ٢" },
   // The rest of the range, put on the same cover template 1 Oct 2026 — one
   // skeleton, one title treatment, one chip, one footer, a different picture
@@ -59,6 +68,29 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "b2s_op_10", label: "افتتاح الحصة ١٠ — الوعد والاختيار · المقهى" },
   { file: "b2s_op_11", label: "افتتاح الحصة ١١ — النيّة والقرار · المستقبل" },
   { file: "b2s_op_01_alt", label: "افتتاح الحصة ١ — نسخة بديلة عند فاترينة المعجّنات (مرجع وشوش؛ الملابس خارج البراند)" },
+  // Book 1 — سوق المفردات. First ten dialogue scenes, 8 Oct 2026. The book's
+  // own generator was lost, so these wait on Book 1 being rebuilt on the Book 2
+  // generator (classes 2–24 still to author). Saved now so they survive that.
+  { file: "b1s_01", label: "كتاب ١ · الحصة ١ — أوّل لقاء في السوق" },
+  { file: "b1s_02", label: "كتاب ١ · الحصة ٢ — صباح في المقهى" },
+  { file: "b1s_03", label: "كتاب ١ · الحصة ٣ — المدرسة والمكتبة والمقهى" },
+  { file: "b1s_04", label: "كتاب ١ · الحصة ٤ — الحقيبة والشمسيّة والساعة" },
+  { file: "b1s_05", label: "كتاب ١ · الحصة ٥ — التفّاح والفراولة" },
+  { file: "b1s_06", label: "كتاب ١ · الحصة ٦ — المراجعة الأولى" },
+  { file: "b1s_07", label: "كتاب ١ · الحصة ٧ — الأسعار والأرقام" },
+  { file: "b1s_08", label: "كتاب ١ · الحصة ٨ — الطلب عند الكاشير" },
+  { file: "b1s_09", label: "كتاب ١ · الحصة ٩ — سؤال داخل الفصل" },
+  { file: "b1s_10", label: "كتاب ١ · الحصة ١٠ — تفضّلوا بالجلوس" },
+  // Brand scenes with no character, usable anywhere (site, posts, later classes).
+  { file: "kb_seoul_metro", label: "محطة مترو سيول — مشهد براند بلا شخصيات" },
+  { file: "kb_street_food_night", label: "عربة تبوكي ليلًا — مشهد براند بلا شخصيات" },
+  // Re sent two more as stacked pairs; split here. Each half is 1672x466, a
+  // banner band rather than a full scene — right for a page header or a post,
+  // too short for a book opener.
+  { file: "kb_seoul_metro_v2", label: "محطة مترو سيول ٢ — شريط عريض (بانر)" },
+  { file: "kb_seoul_metro_v3", label: "محطة مترو سيول ٣ — شريط عريض (بانر)" },
+  { file: "kb_street_food_night_v2", label: "عربة تبوكي ٢ — شريط عريض (بانر)" },
+  { file: "kb_street_food_night_v3", label: "عربة تبوكي ٣ — شريط عريض (بانر)" },
   // Homepage batch 1 (1 Oct 2026): brand clothes and scenes right, but the faces
   // came out in the soft illustrated style, not KLOVERS REAL — kept, not placed.
   { file: "kb_home_hero_v1", label: "الصفحة الرئيسية — الشرفة وقت الغروب (hero) — مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
