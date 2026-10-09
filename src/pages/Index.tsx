@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { logEngagementEvent } from "@/lib/leadTracking";
 import { useSEO } from "@/hooks/useSEO";
@@ -67,6 +67,50 @@ const SectionFallback = () => (
   </div>
 );
 
+/**
+ * MOUNT A BELOW-THE-FOLD SECTION ONLY WHEN IT IS NEAR THE SCREEN (9 Oct 2026).
+ *
+ * React.lazy only splits the CODE. Every lazy section above was still rendered
+ * on mount, so on a phone the browser downloaded and ran twelve section chunks
+ * (plus the images and effects inside them) during start-up: PageSpeed mobile
+ * showed 16 long tasks and Total Blocking Time of 290-810ms.
+ *
+ * This wrapper renders nothing, at a reserved height, until the placeholder is
+ * within 800px of the viewport. Then the section mounts and its chunk loads, so
+ * a visitor scrolling normally meets it already in place. A 10s timer mounts any
+ * section that is still waiting, so a crawler that renders the page without
+ * scrolling, or a browser with no IntersectionObserver, still gets all of the
+ * content. Sections that sit inside an element with an id (#meet-teacher ...)
+ * keep that element, so the scroll analytics below and in-page links work as
+ * before.
+ */
+const NearViewport = ({ minHeight = 420, children }: { minHeight?: number; children: ReactNode }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (show) return;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setShow(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setShow(true); },
+      { rootMargin: "800px 0px" },
+    );
+    obs.observe(el);
+    const timer = window.setTimeout(() => setShow(true), 10000);
+    return () => {
+      obs.disconnect();
+      window.clearTimeout(timer);
+    };
+  }, [show]);
+
+  if (show) return <>{children}</>;
+  return <div ref={ref} aria-hidden="true" style={{ minHeight }} />;
+};
+
 const Index = () => {
   const { language } = useLanguage();
   const { pathname } = useLocation();
@@ -109,7 +153,7 @@ const Index = () => {
    * grows a JSON-LD block back.
    */
 
-  // ── Scroll depth + section visibility analytics ────────────────
+  // ── Scroll depth + section visibility analytics ──────────────────────
   //
   // logEngagementEvent, NOT logLeadEvent. Both of these effects fire without
   // the visitor choosing anything, and logLeadEvent mirrors every call to the
@@ -195,65 +239,87 @@ const Index = () => {
 
         {/* Desire — the teacher, verified facts only */}
         <div id="meet-teacher" style={{ minHeight: 400 }}>
-          <Suspense fallback={<SectionFallback />}>
-            <MeetTeacher />
-          </Suspense>
+          <NearViewport minHeight={400}>
+            <Suspense fallback={<SectionFallback />}>
+              <MeetTeacher />
+            </Suspense>
+          </NearViewport>
         </div>
         {/* Interest — how the classes work, with the real starting price */}
         <div id="how-it-works" style={{ minHeight: 480 }}>
-          <Suspense fallback={<SectionFallback />}>
-            <HowItWorks />
-          </Suspense>
+          <NearViewport minHeight={480}>
+            <Suspense fallback={<SectionFallback />}>
+              <HowItWorks />
+            </Suspense>
+          </NearViewport>
         </div>
         {/* Desire — show the clear path forward */}
-        <Suspense fallback={<SectionFallback />}>
-          <LearningRoadmap />
-        </Suspense>
+        <NearViewport>
+          <Suspense fallback={<SectionFallback />}>
+            <LearningRoadmap />
+          </Suspense>
+        </NearViewport>
         {/* Action — low-friction free placement test */}
         <div id="placement-cta" style={{ minHeight: 400 }}>
-          <Suspense fallback={<SectionFallback />}>
-            <PlacementTestCTA />
-          </Suspense>
+          <NearViewport minHeight={400}>
+            <Suspense fallback={<SectionFallback />}>
+              <PlacementTestCTA />
+            </Suspense>
+          </NearViewport>
         </div>
         {/* Why Klovers — the ecosystem, one compact section */}
-        <Suspense fallback={<SectionFallback />}>
-          <MoreThanAClass />
-        </Suspense>
+        <NearViewport>
+          <Suspense fallback={<SectionFallback />}>
+            <MoreThanAClass />
+          </Suspense>
+        </NearViewport>
         {/* Desire — reinforces motivation after seeing proof */}
         <WhyLearnKorean />
         {/* Desire — real reviews, in the reader's language */}
         <div id="testimonials" style={{ minHeight: 400 }}>
-          <Suspense fallback={<SectionFallback />}>
-            <TestimonialsSection />
-          </Suspense>
+          <NearViewport minHeight={400}>
+            <Suspense fallback={<SectionFallback />}>
+              <TestimonialsSection />
+            </Suspense>
+          </NearViewport>
         </div>
         {/* The community band — 2,000+ on social media (see CommunityBand.tsx). */}
         <CommunityBand />
         {/* The shop door — Lina's bag by the courtyard gate, the first book on the shelf */}
-        <Suspense fallback={<SectionFallback />}>
-          <HomeShopShelf />
-        </Suspense>
+        <NearViewport>
+          <Suspense fallback={<SectionFallback />}>
+            <HomeShopShelf />
+          </Suspense>
+        </NearViewport>
         {/* Objections — the four questions asked before a first booking */}
-        <Suspense fallback={<SectionFallback />}>
-          <HomeFAQ />
-        </Suspense>
+        <NearViewport>
+          <Suspense fallback={<SectionFallback />}>
+            <HomeFAQ />
+          </Suspense>
+        </NearViewport>
         {/* Study in Korea — the six scholarship programmes, with their sources */}
         <div id="scholarships">
-          <Suspense fallback={<SectionFallback />}>
-            <ScholarshipsSection />
-          </Suspense>
+          <NearViewport>
+            <Suspense fallback={<SectionFallback />}>
+              <ScholarshipsSection />
+            </Suspense>
+          </NearViewport>
         </div>
         {/* Story — homepageNarrative slot 8, "egg-teaser" (origin mystery, no Cluby) */}
         <div id="egg-teaser">
-          <Suspense fallback={<SectionFallback />}>
-            <EggTeaser />
-          </Suspense>
+          <NearViewport>
+            <Suspense fallback={<SectionFallback />}>
+              <EggTeaser />
+            </Suspense>
+          </NearViewport>
         </div>
         {/* Action — final, low-pressure invitation */}
         <div id="final-cta">
-          <Suspense fallback={<SectionFallback />}>
-            <FinalCTA />
-          </Suspense>
+          <NearViewport>
+            <Suspense fallback={<SectionFallback />}>
+              <FinalCTA />
+            </Suspense>
+          </NearViewport>
         </div>
       </main>
       <Footer />
