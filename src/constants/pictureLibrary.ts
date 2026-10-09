@@ -67,6 +67,8 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "b2s_op_09", label: "افتتاح الحصة ٩ — الممنوع · اللافتة" },
   { file: "b2s_op_10", label: "افتتاح الحصة ١٠ — الوعد والاختيار · المقهى" },
   { file: "b2s_op_11", label: "افتتاح الحصة ١١ — النيّة والقرار · المستقبل" },
+  { file: "b2s_op_06", label: "افتتاح الحصة ٦ — نهاية الوحدة الأولى" },
+  { file: "b2s_op_12", label: "افتتاح الحصة ١٢ — كومة الدفاتر المنتهية" },
   { file: "b2s_op_01_alt", label: "افتتاح الحصة ١ — نسخة بديلة عند فاترينة المعجّنات (مرجع وشوش؛ الملابس خارج البراند)" },
   // Book 1 — سوق المفردات. First ten dialogue scenes, 8 Oct 2026. The book's
   // own generator was lost, so these wait on Book 1 being rebuilt on the Book 2
