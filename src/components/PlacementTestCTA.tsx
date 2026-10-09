@@ -191,7 +191,10 @@ const PlacementTestCTA = () => {
                           {lvl.label}
                         </span>
                         {idx === activeLevel && idx < LEVELS.length - 1 && (
-                          <span className="text-[10px] bg-klovers-yellow text-charcoal px-2 py-0.5 rounded-full font-medium animate-pulse border border-charcoal/10">
+                          {/* No animate-pulse (9 Oct 2026): it fades the chip's opacity, and
+                              Lighthouse measured colour contrast mid-fade (color-contrast
+                              failed, Accessibility 96). Charcoal on yellow is solid. */}
+                          <span className="text-[10px] bg-klovers-yellow text-charcoal px-2 py-0.5 rounded-full font-medium border border-charcoal/10">
                             {t("placementCta.detecting")}
                           </span>
                         )}
