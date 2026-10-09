@@ -23,6 +23,11 @@ import { toArabicDigits } from "@/lib/trustFigures";
  * 24 Sep 2026: the 3D Cluby, holding a gold star, perches on the end-side top
  * corner of the test card. The "instant" badge moved to the start-side corner
  * so the two do not sit on top of each other.
+ *
+ * 9 Oct 2026: the "detecting" chip no longer uses animate-pulse. The pulse
+ * fades the chip's opacity, and Lighthouse measured colour contrast while it
+ * was faded (color-contrast failed, mobile Accessibility 96). Charcoal on
+ * yellow is solid.
  */
 const PlacementTestCTA = () => {
   const { t, language } = useLanguage();
@@ -191,9 +196,6 @@ const PlacementTestCTA = () => {
                           {lvl.label}
                         </span>
                         {idx === activeLevel && idx < LEVELS.length - 1 && (
-                          {/* No animate-pulse (9 Oct 2026): it fades the chip's opacity, and
-                              Lighthouse measured colour contrast mid-fade (color-contrast
-                              failed, Accessibility 96). Charcoal on yellow is solid. */}
                           <span className="text-[10px] bg-klovers-yellow text-charcoal px-2 py-0.5 rounded-full font-medium border border-charcoal/10">
                             {t("placementCta.detecting")}
                           </span>
