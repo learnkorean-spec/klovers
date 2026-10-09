@@ -94,6 +94,11 @@ const Header = () => {
    * use slightly tighter padding/gaps and the "Free" chip beside Games waits
    * for xl. That keeps the row inside the viewport in Arabic and when signed
    * in (avatar + name). Colours and type are unchanged.
+   *
+   * LOGO ALT (9 Oct 2026). The logo image has alt="" because the link already
+   * has an aria-label and the brand name is written beside it. With the same
+   * word as alt, Lighthouse flagged image-redundant-alt (mobile Accessibility
+   * 96) and a screen reader read the name twice.
    */
   return (
     <>
@@ -102,7 +107,7 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between gap-2 h-16">
           <Link to="/" className="flex items-center gap-2 shrink-0" aria-label={isAr ? "الصفحة الرئيسية لكلوفرز" : "Klovers homepage"}>
-            <img src={kloversLogo} alt={isAr ? "كلوفرز" : "Klovers"} className="h-9 w-9 rounded-full object-cover" loading="eager" />
+            <img src={kloversLogo} alt="" className="h-9 w-9 rounded-full object-cover" loading="eager" />
             <span className="font-bold text-lg text-foreground">{isAr ? "كلوفرز" : "Klovers"}</span>
           </Link>
 
