@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 
 /** Line ids the function knows (supabase/functions/world-voice/lines.ts). */
-export type VoiceLine = "minsu" | "adam" | "lina" | "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader";
+export type VoiceLine = "minsu" | "adam" | "lina" | "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper";
 
 const VERSION = "v1";
 const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;

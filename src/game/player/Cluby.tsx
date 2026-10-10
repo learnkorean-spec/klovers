@@ -218,23 +218,42 @@ export default function Cluby({ story, player, layout, guide, interests }: Props
             {m(mint)}
           </mesh>
         ))}
-        {/* Body, Klovers-yellow wrap skirt, ivory mini-hanbok top */}
+        {/* Plush body */}
         <mesh castShadow position={[0, 0.24, 0]} scale={[1, 1.1, 0.95]}>
           <sphereGeometry args={[0.17, 18, 14]} />
           {m(mint)}
         </mesh>
-        <mesh position={[0, 0.15, 0]}>
-          <cylinderGeometry args={[0.15, 0.2, 0.12, 18]} />
+        {/* Ivory mini-hanbok top (jeogori): a short jacket that follows the
+            round body from the chest to the waist, with a darker collar band
+            and a yellow ribbon tie (goreum). */}
+        <mesh castShadow position={[0, 0.24, 0]} scale={[1, 1.1, 0.95]}>
+          <sphereGeometry args={[0.176, 20, 12, 0, Math.PI * 2, Math.PI * 0.3, Math.PI * 0.26]} />
+          {m(std(PALETTE.ivory, 0.95))}
+        </mesh>
+        {[-1, 1].map((sd) => (
+          <mesh key={sd} position={[sd * 0.04, 0.315, 0.152]} rotation={[-0.35, 0, -sd * 0.55]}>
+            <boxGeometry args={[0.022, 0.11, 0.012]} />
+            {m(std("#E9E1CF", 0.9))}
+          </mesh>
+        ))}
+        <mesh position={[0.035, 0.27, 0.17]} rotation={[0.1, 0, -0.35]}>
+          <boxGeometry args={[0.018, 0.075, 0.01]} />
           {m(std(PALETTE.yellow, 0.8))}
         </mesh>
-        <mesh position={[0, 0.29, 0]} scale={[1, 1, 0.95]}>
-          <cylinderGeometry args={[0.172, 0.172, 0.13, 18]} />
-          {m(std(PALETTE.ivory, 0.9))}
+        {/* Klovers-yellow wrap skirt (chima): from the waist, flaring to the
+            feet, with the green four-leaf clover on the front. */}
+        <mesh castShadow position={[0, 0.125, 0]} scale={[1, 1, 0.92]}>
+          <cylinderGeometry args={[0.168, 0.205, 0.17, 22, 1, true]} />
+          {m(std(PALETTE.yellow, 0.85))}
         </mesh>
-        {/* Four-leaf clover emblem */}
+        <mesh position={[0, 0.205, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.92, 1]}>
+          <torusGeometry args={[0.168, 0.012, 6, 24]} />
+          {m(std(PALETTE.yellow, 0.85))}
+        </mesh>
+        {/* Four-leaf clover emblem on the skirt */}
         {[[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([sx, sy], i) => (
-          <mesh key={i} position={[sx * 0.013, 0.3 + sy * 0.013, 0.166]}>
-            <sphereGeometry args={[0.014, 8, 6]} />
+          <mesh key={i} position={[sx * 0.015, 0.12 + sy * 0.015, 0.194]}>
+            <sphereGeometry args={[0.016, 8, 6]} />
             <meshBasicMaterial color={PALETTE.cloverGreen} toneMapped={false} />
           </mesh>
         ))}

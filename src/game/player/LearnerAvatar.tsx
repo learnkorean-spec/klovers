@@ -15,7 +15,7 @@ interface AvatarProps {
 /* Body proportions (metres, feet at y = 0, front is +z). */
 const HIP_Y = 0.92;
 const SHOULDER_Y = 1.43;
-const HEAD_Y = 1.66;
+const HEAD_Y = 1.7;
 const HEAD_R = 0.13;
 /** Radians of stride per metre travelled — keeps feet from sliding. */
 const STRIDE_PER_METRE = 1.9;
@@ -33,6 +33,12 @@ export default function LearnerAvatar({ player, avatar }: AvatarProps) {
   const armL = useRef<Group>(null);
   const armR = useRef<Group>(null);
   const skirt = useRef<Group>(null);
+  const kneeL = useRef<Group>(null);
+  const kneeR = useRef<Group>(null);
+  const elbowL = useRef<Group>(null);
+  const elbowR = useRef<Group>(null);
+  const head = useRef<Group>(null);
+  const eyes = useRef<Group>(null);
   const phase = useRef(0);
   const amp = useRef(0);
   const lean = useRef(0);
@@ -55,9 +61,29 @@ export default function LearnerAvatar({ player, avatar }: AvatarProps) {
 
     if (legL.current) legL.current.rotation.x = legSwing;
     if (legR.current) legR.current.rotation.x = -legSwing;
+    // Knees bend on the leg that swings forward (never backward).
+    const kneeK = 0.25 + 0.9 * amp.current;
+    if (kneeL.current) kneeL.current.rotation.x = Math.max(0, -Math.cos(phase.current)) * amp.current * kneeK * 1.6;
+    if (kneeR.current) kneeR.current.rotation.x = Math.max(0, Math.cos(phase.current)) * amp.current * kneeK * 1.6;
     if (armL.current) armL.current.rotation.x = -armSwing;
     if (armR.current) armR.current.rotation.x = armSwing;
+    // Elbows: softly bent at rest, more when running.
+    const elbow = -(0.16 + 0.9 * run01 * amp.current);
+    if (elbowL.current) elbowL.current.rotation.x = elbow;
+    if (elbowR.current) elbowR.current.rotation.x = elbow;
     if (skirt.current) skirt.current.rotation.z = s * amp.current * 0.06;
+
+    // Life at rest: an unhurried look around, and a blink every few seconds.
+    const t = performance.now() / 1000;
+    if (head.current) {
+      const look = moving ? 0 : Math.sin(t * 0.37) * 0.28 + Math.sin(t * 0.13) * 0.12;
+      head.current.rotation.y += (look - head.current.rotation.y) * damp(3, dt);
+      head.current.rotation.x = moving ? 0.05 : Math.sin(t * 0.21) * 0.04;
+    }
+    if (eyes.current) {
+      const blink = t % 3.7 < 0.12 ? 0.15 : 1;
+      eyes.current.scale.y = blink;
+    }
 
     if (body.current) {
       const bob = moving
@@ -70,11 +96,11 @@ export default function LearnerAvatar({ player, avatar }: AvatarProps) {
 
   return (
     <group ref={body}>
-      <Legs look={look} left={legL} right={legR} />
+      <Legs look={look} left={legL} right={legR} kneeL={kneeL} kneeR={kneeR} />
       <Torso look={look} skirt={skirt} />
-      <Arm look={look} side={-1} group={armL} />
-      <Arm look={look} side={1} group={armR} />
-      <Head look={look} />
+      <Arm look={look} side={-1} group={armL} elbow={elbowL} />
+      <Arm look={look} side={1} group={armR} elbow={elbowR} />
+      <Head look={look} head={head} eyes={eyes} />
     </group>
   );
 }
@@ -84,28 +110,68 @@ function Mat({ color, rough = 0.8 }: { color: string; rough?: number }) {
   return <primitive object={std(color, rough)} attach="material" />;
 }
 
-function Legs({ look, left, right }: { look: AvatarLook; left: MutableRefObject<Group | null>; right: MutableRefObject<Group | null> }) {
+function Legs({
+  look,
+  left,
+  right,
+  kneeL,
+  kneeR,
+}: {
+  look: AvatarLook;
+  left: MutableRefObject<Group | null>;
+  right: MutableRefObject<Group | null>;
+  kneeL: MutableRefObject<Group | null>;
+  kneeR: MutableRefObject<Group | null>;
+}) {
   const trousers = look.lower.kind === "trousers";
   const legColor = trousers ? look.lower.color : look.skin;
-  const r = trousers ? 0.082 : 0.062;
+  // Thigh tapers into the knee, the shin into the ankle (two segments, so
+  // the knee bends): the legs stop reading as two straight sticks.
+  const thighR = trousers ? 0.085 : 0.066;
+  const shinR = trousers ? 0.07 : 0.052;
+  const KNEE = 0.45;
   return (
     <>
-      {([-1, 1] as const).map((side) => (
-        <group key={side} ref={side < 0 ? left : right} position={[side * 0.1, HIP_Y, 0]}>
-          <mesh castShadow position={[0, -0.45, 0]}>
-            <capsuleGeometry args={[r, 0.74, 4, 12]} />
+      {/* Hips: the trousers' seat joins both legs (a skirt covers it). */}
+      {trousers && (
+        <>
+          <mesh castShadow position={[0, HIP_Y + 0.02, 0]} scale={[1, 1, 0.72]}>
+            <cylinderGeometry args={[0.19, 0.18, 0.18, 18]} />
             <Mat color={legColor} />
           </mesh>
-          {/* Shoe: Adam's white sneakers, Lina's ivory flats */}
-          <mesh castShadow position={[0, -HIP_Y + (trousers ? 0.06 : 0.045), 0.05]}>
-            <boxGeometry args={[0.12, trousers ? 0.09 : 0.06, 0.27]} />
-            <Mat color={look.shoes} rough={0.6} />
+          <mesh position={[0, HIP_Y + 0.1, 0]} scale={[1, 1, 0.72]}>
+            <cylinderGeometry args={[0.193, 0.193, 0.035, 18]} />
+            <Mat color="#6B4A33" rough={0.6} />
           </mesh>
-          {/* Sole: a thin warm-grey strip so the shoe reads against the ground */}
-          <mesh position={[0, -HIP_Y + 0.009, 0.05]}>
-            <boxGeometry args={[0.126, 0.018, 0.28]} />
-            <Mat color="#B9B0A2" rough={0.9} />
+        </>
+      )}
+      {([-1, 1] as const).map((side) => (
+        <group key={side} ref={side < 0 ? left : right} position={[side * 0.1, HIP_Y, 0]}>
+          <mesh castShadow position={[0, -KNEE / 2, 0]}>
+            <capsuleGeometry args={[thighR, KNEE - thighR * 1.2, 4, 12]} />
+            <Mat color={legColor} />
           </mesh>
+          <group ref={side < 0 ? kneeL : kneeR} position={[0, -KNEE, 0]}>
+            <mesh castShadow position={[0, -0.21, 0]}>
+              <capsuleGeometry args={[shinR, 0.36, 4, 12]} />
+              <Mat color={legColor} />
+            </mesh>
+            {/* Shoe: a rounded toe on a flat sole (sneakers / flats) */}
+            <group position={[0, -(HIP_Y - KNEE) + 0.005, 0.03]}>
+              <mesh castShadow position={[0, trousers ? 0.05 : 0.035, -0.02]}>
+                <boxGeometry args={[0.11, trousers ? 0.09 : 0.055, 0.2]} />
+                <Mat color={look.shoes} rough={0.6} />
+              </mesh>
+              <mesh castShadow position={[0, trousers ? 0.04 : 0.03, 0.08]} scale={[1, trousers ? 0.75 : 0.5, 1.1]}>
+                <sphereGeometry args={[0.058, 12, 8]} />
+                <Mat color={look.shoes} rough={0.6} />
+              </mesh>
+              <mesh position={[0, 0.006, 0.02]}>
+                <boxGeometry args={[0.118, 0.014, 0.29]} />
+                <Mat color="#B9B0A2" rough={0.9} />
+              </mesh>
+            </group>
+          </group>
         </group>
       ))}
     </>
@@ -122,16 +188,20 @@ function Torso({ look, skirt }: { look: AvatarLook; skirt: MutableRefObject<Grou
           <cylinderGeometry args={[0.22, 0.2, 0.62, 20]} />
           <Mat color={look.top} />
         </mesh>
-        <mesh castShadow position={[0, 1.45, 0]} scale={[1, 0.35, 0.62]}>
+        <mesh castShadow position={[0, 1.44, 0]} scale={[1, 0.3, 0.62]}>
           <sphereGeometry args={[0.22, 20, 12]} />
           <Mat color={look.top} />
         </mesh>
         {[-1, 1].map((side) => (
-          <mesh key={side} castShadow position={[side * 0.228, 1.41, 0]}>
-            <sphereGeometry args={[0.07, 14, 10]} />
+          <mesh key={side} castShadow position={[side * 0.215, 1.41, 0]}>
+            <sphereGeometry args={[0.066, 14, 10]} />
             <Mat color={look.top} />
           </mesh>
         ))}
+        <mesh position={[0, 1.495, -0.01]} rotation={[Math.PI / 2 - 0.25, 0, 0]}>
+          <torusGeometry args={[0.07, 0.022, 8, 18]} />
+          <Mat color={look.top} />
+        </mesh>
         {look.inner && (
           <mesh position={[0, 1.32, 0.147]} rotation={[-0.06, 0, 0]}>
             <boxGeometry args={[0.12, 0.26, 0.012]} />
@@ -141,8 +211,8 @@ function Torso({ look, skirt }: { look: AvatarLook; skirt: MutableRefObject<Grou
         {/* Lapel edges and buttons */}
         {[-1, 1].map((side) => (
           <mesh key={side} position={[side * 0.055, 1.3, 0.149]} rotation={[-0.06, 0, -side * 0.3]}>
-            <boxGeometry args={[0.018, 0.3, 0.014]} />
-            <Mat color={PALETTE.charcoal} rough={0.6} />
+            <boxGeometry args={[0.03, 0.3, 0.014]} />
+            <Mat color="#D9D400" rough={0.75} />
           </mesh>
         ))}
         {[1.07, 0.97].map((y) => (
@@ -163,7 +233,7 @@ function Torso({ look, skirt }: { look: AvatarLook; skirt: MutableRefObject<Grou
         <cylinderGeometry args={[0.2, 0.17, 0.5, 20]} />
         <Mat color={look.top} rough={0.9} />
       </mesh>
-      <mesh castShadow position={[0, 1.46, 0]} scale={[1, 0.35, 0.7]}>
+      <mesh castShadow position={[0, 1.45, 0]} scale={[1, 0.3, 0.7]}>
         <sphereGeometry args={[0.2, 20, 12]} />
         <Mat color={look.top} rough={0.9} />
       </mesh>
@@ -215,31 +285,51 @@ function Torso({ look, skirt }: { look: AvatarLook; skirt: MutableRefObject<Grou
   );
 }
 
-function Arm({ look, side, group }: { look: AvatarLook; side: -1 | 1; group: MutableRefObject<Group | null> }) {
+function Arm({ look, side, group, elbow }: { look: AvatarLook; side: -1 | 1; group: MutableRefObject<Group | null>; elbow: MutableRefObject<Group | null> }) {
   const slim = look.lower.kind === "skirt";
-  const x = side * (slim ? 0.222 : 0.27);
+  const x = side * (slim ? 0.222 : 0.255);
+  const r = slim ? 0.05 : 0.058;
   return (
-    <group ref={group} position={[x, SHOULDER_Y - (slim ? 0.03 : 0), 0]} rotation={[0, 0, side * 0.07]}>
-      <mesh castShadow position={[0, -0.27, 0]}>
-        <capsuleGeometry args={[slim ? 0.05 : 0.058, 0.42, 4, 10]} />
+    <group ref={group} position={[x, SHOULDER_Y - (slim ? 0.03 : 0), 0]} rotation={[0, 0, side * 0.08]}>
+      {/* Upper arm, then the forearm from a bending elbow, then a hand. */}
+      <mesh castShadow position={[0, -0.14, 0]}>
+        <capsuleGeometry args={[r, 0.2, 4, 10]} />
         <Mat color={look.sleeves} rough={0.85} />
       </mesh>
-      <mesh castShadow position={[0, -0.57, 0.012]} scale={[0.85, 1.2, 0.72]}>
-        <sphereGeometry args={[0.052, 12, 10]} />
-        <Mat color={look.skin} rough={0.7} />
-      </mesh>
+      <group ref={elbow} position={[0, -0.29, 0]}>
+        <mesh castShadow position={[0, -0.12, 0]}>
+          <capsuleGeometry args={[r * 0.9, 0.18, 4, 10]} />
+          <Mat color={look.sleeves} rough={0.85} />
+        </mesh>
+        {/* Cuff: a darker edge where the sleeve ends */}
+        <mesh position={[0, -0.235, 0]}>
+          <cylinderGeometry args={[r * 0.93, r * 0.93, 0.025, 10]} />
+          <Mat color={slim ? PALETTE.white : PALETTE.ivory} rough={0.8} />
+        </mesh>
+        {/* Hand: a flattened palm with the thumb toward the body */}
+        <group position={[0, -0.3, 0.01]}>
+          <mesh castShadow scale={[0.7, 1.15, 0.45]}>
+            <sphereGeometry args={[0.05, 12, 10]} />
+            <Mat color={look.skin} rough={0.7} />
+          </mesh>
+          <mesh position={[-side * 0.028, 0.012, 0.018]} rotation={[0, 0, side * 0.5]}>
+            <capsuleGeometry args={[0.012, 0.03, 3, 6]} />
+            <Mat color={look.skin} rough={0.7} />
+          </mesh>
+        </group>
+      </group>
     </group>
   );
 }
 
-function Head({ look }: { look: AvatarLook }) {
+function Head({ look, head, eyes }: { look: AvatarLook; head: MutableRefObject<Group | null>; eyes: MutableRefObject<Group | null> }) {
   return (
     <group>
-      <mesh castShadow position={[0, 1.54, 0]}>
-        <cylinderGeometry args={[0.052, 0.058, 0.13, 12]} />
+      <mesh castShadow position={[0, 1.56, 0]}>
+        <cylinderGeometry args={[0.05, 0.058, 0.16, 12]} />
         <Mat color={look.skin} rough={0.7} />
       </mesh>
-      <group position={[0, HEAD_Y, 0]}>
+      <group ref={head} position={[0, HEAD_Y, 0]}>
         <mesh castShadow scale={[0.95, 1.08, 1]}>
           <sphereGeometry args={[HEAD_R, 24, 18]} />
           <Mat color={look.skin} rough={0.7} />
@@ -251,32 +341,43 @@ function Head({ look }: { look: AvatarLook }) {
             <Mat color={look.skin} rough={0.7} />
           </mesh>
         ))}
-        {/* Eyes, brows, nose */}
+        {/* Eyes (white, iris, catch-light — they blink), brows, nose */}
+        <group ref={eyes} position={[0, 0.012, 0]}>
+          {[-1, 1].map((side) => (
+            <group key={side}>
+              <mesh position={[side * 0.043, 0, 0.112]} scale={[1.35, 0.85, 0.6]}>
+                <sphereGeometry args={[0.017, 12, 8]} />
+                <Mat color="#F7F3EC" rough={0.4} />
+              </mesh>
+              <mesh position={[side * 0.043, -0.001, 0.12]}>
+                <sphereGeometry args={[0.0115, 10, 8]} />
+                <Mat color="#3B2618" rough={0.3} />
+              </mesh>
+              {/* Catch-light: keeps the eyes alive at a distance */}
+              <mesh position={[side * 0.043 + 0.004, 0.004, 0.131]}>
+                <sphereGeometry args={[0.0035, 6, 4]} />
+                <Mat color={PALETTE.white} rough={0.2} />
+              </mesh>
+            </group>
+          ))}
+        </group>
         {[-1, 1].map((side) => (
           <group key={side}>
-            <mesh position={[side * 0.043, 0.012, 0.118]}>
-              <sphereGeometry args={[0.016, 10, 8]} />
-              <Mat color={PALETTE.charcoal} rough={0.3} />
-            </mesh>
-            {/* Catch-light: keeps the eyes alive at a distance */}
-            <mesh position={[side * 0.043 + 0.005, 0.018, 0.132]}>
-              <sphereGeometry args={[0.0045, 6, 4]} />
-              <Mat color={PALETTE.white} rough={0.2} />
-            </mesh>
             <mesh position={[side * 0.045, 0.045, 0.118]} rotation={[0, 0, side * -0.12]}>
               <boxGeometry args={[0.04, 0.009, 0.01]} />
               <Mat color={look.hair} />
             </mesh>
           </group>
         ))}
-        <mesh position={[0, -0.022, 0.13]}>
-          <sphereGeometry args={[0.017, 10, 8]} />
+        {/* Nose: a small bridge and tip, barely darker than the face */}
+        <mesh position={[0, -0.012, 0.124]} rotation={[0.35, 0, 0]} scale={[0.6, 1.4, 0.7]}>
+          <sphereGeometry args={[0.014, 10, 8]} />
           <Mat color={look.skin} rough={0.7} />
         </mesh>
         {/* A small, friendly smile (lower half of a thin ring) */}
         <mesh position={[0, -0.052, 0.117]} rotation={[0, 0, Math.PI]}>
-          <torusGeometry args={[0.02, 0.0045, 6, 12, Math.PI]} />
-          <Mat color={PALETTE.charcoal} rough={0.6} />
+          <torusGeometry args={[0.017, 0.0032, 6, 12, Math.PI]} />
+          <Mat color="#8C4A3C" rough={0.6} />
         </mesh>
         {look.freckles &&
           [

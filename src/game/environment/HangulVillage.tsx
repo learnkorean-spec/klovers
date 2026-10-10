@@ -165,6 +165,8 @@ function Well() {
 
 export default function HangulVillage({ marketOpen, letters }: { marketOpen: boolean; letters: string[] }) {
   const paving = useTiledTexture(paintPaving, HW, HL);
+  // The next two letters still to find carry the yellow edge (a pointer, not decoration).
+  const nextLetters = (VILLAGE_LETTERS as readonly string[]).filter((l) => !letters.includes(l)).slice(0, 2);
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
@@ -191,7 +193,7 @@ export default function HangulVillage({ marketOpen, letters }: { marketOpen: boo
         <group key={`${s.x}${s.z}`} position={[s.x, 2.58, s.z]}>
           <Sway amp={0.045} speed={1.1 + (i % 3) * 0.17} phase={i * 1.7} axis="z">
             <group position={[0, -0.46, 0]}>
-              {(VILLAGE_LETTERS as readonly string[]).includes(s.letter) && !letters.includes(s.letter) && (
+              {nextLetters.includes(s.letter) && (
                 // A sign still to be discovered up close: a thin yellow edge.
                 <mesh position={[0, 0, 0]} scale={[0.74, 0.74, 0.012]}>
                   <boxGeometry />

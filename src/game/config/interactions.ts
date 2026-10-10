@@ -31,11 +31,13 @@ export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "sa
 export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help";
 
 /** Learning cards (words and letters). Text per language: copy.learn[id]. */
-export type LearnId = "seokdeung" | "nieun" | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "jido";
+export type LearnId =
+  | "seokdeung" | "beotnamu" | "nieun" | "digeut" | "mieum" | "o" | "umul"
+  | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan";
 /** One-question cards. Text per language: copy.quiz[id]. */
-export type QuizId = "a";
+export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang";
 /** People's short lines. Text per language: copy.say[id]. */
-export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader";
+export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper";
 
 export interface Interactable {
   id: string;
@@ -74,8 +76,12 @@ export interface Interactable {
   whileOpen?: RoomId;
 }
 
-/** The village's three discoverable letters, in the order they are met. */
-export const VILLAGE_LETTERS = ["ㄱ", "ㄴ", "ㅏ"] as const;
+/**
+ * The village's discoverable letters (one on every door), in the order a
+ * learner walking up the street meets them. Only the next two still to find
+ * carry the thin yellow edge, so yellow stays a pointer, not decoration.
+ */
+export const VILLAGE_LETTERS = ["ㄱ", "ㄴ", "ㅏ", "ㅓ", "ㄷ", "ㅗ", "ㄹ", "ㅜ", "ㅁ"] as const;
 
 /** Sign fronts on the street: a little in from each house's veranda edge. */
 const signX = (side: -1 | 1) => side * (VILLAGE.halfWidth - 0.6);
@@ -108,12 +114,23 @@ export const INTERACTABLES: Interactable[] = [
   { id: "talk-friend", room: "courtyard", kind: "talk", action: "talk", who: "friend", x: FRIEND_SPOT.x, z: FRIEND_SPOT.z, radius: 1.9 },
   // The stone lantern by the north gate, on the way out.
   { id: "learn-lantern", room: "courtyard", kind: "learn", action: "inspect", learn: "seokdeung", x: PROPS.lanterns[1].x - 0.75, z: PROPS.lanterns[1].z + 0.45, radius: 1.3 },
+  // The flowering hero tree in the north-west corner.
+  { id: "learn-tree", room: "courtyard", kind: "learn", action: "inspect", learn: "beotnamu", x: PROPS.beds[0].x + 0.4, z: PROPS.beds[0].z + 1.7, radius: 1.4 },
 
   /* ── Hangul Village: letters on the doors, people in the street ── */
   { id: "talk-minsu", room: "hangul-village", kind: "talk", action: "talk", who: "minsu", x: MINSU_SPOT.x, z: MINSU_SPOT.z, radius: 1.9, npc: "v-minsu" },
   { id: "letter-giyeok", room: "hangul-village", kind: "letter", action: "learn", letter: "ㄱ", x: signX(-1), z: signZ(0), radius: 1.7 },
   { id: "learn-nieun", room: "hangul-village", kind: "learn", action: "learn", learn: "nieun", letter: "ㄴ", x: signX(-1), z: signZ(1), radius: 1.6 },
   { id: "quiz-a", room: "hangul-village", kind: "quiz", action: "learn", quiz: "a", letter: "ㅏ", x: signX(1), z: signZ(0), radius: 1.6 },
+  // The rest of the street: a card, then a question, in turn — never the same twice in a row.
+  { id: "quiz-eo", room: "hangul-village", kind: "quiz", action: "learn", quiz: "eo", letter: "ㅓ", x: signX(1), z: signZ(1), radius: 1.5 },
+  { id: "learn-digeut", room: "hangul-village", kind: "learn", action: "learn", learn: "digeut", letter: "ㄷ", x: signX(-1), z: signZ(2), radius: 1.5 },
+  { id: "learn-o", room: "hangul-village", kind: "learn", action: "learn", learn: "o", letter: "ㅗ", x: signX(1), z: signZ(2), radius: 1.4 },
+  { id: "quiz-rieul", room: "hangul-village", kind: "quiz", action: "learn", quiz: "rieul", letter: "ㄹ", x: signX(-1), z: signZ(3), radius: 1.5 },
+  { id: "quiz-u", room: "hangul-village", kind: "quiz", action: "learn", quiz: "u", letter: "ㅜ", x: signX(1), z: signZ(3), radius: 1.3 },
+  { id: "learn-mieum", room: "hangul-village", kind: "learn", action: "learn", learn: "mieum", letter: "ㅁ", x: signX(-1), z: signZ(4), radius: 1.5 },
+  // The well in the middle of the street.
+  { id: "learn-well", room: "hangul-village", kind: "learn", action: "inspect", learn: "umul", x: VILLAGE.well.x - 1.3, z: VILLAGE.well.z - 0.6, radius: 1.1 },
   { id: "say-auntie", room: "hangul-village", kind: "say", action: "talk", say: "auntie", npc: "v-well-1", x: npc("v-well-1").x + 0.4, z: npc("v-well-1").z - 1.0, radius: 1.5 },
   { id: "say-vendor", room: "hangul-village", kind: "say", action: "talk", say: "vendor", npc: "v-vendor", x: npc("v-vendor").x - 0.1, z: npc("v-vendor").z + 1.6, radius: 1.5 },
 
@@ -126,9 +143,16 @@ export const INTERACTABLES: Interactable[] = [
   { id: "learn-kkot", room: "vocabulary-market", kind: "learn", action: "learn", learn: "kkot", word: "꽃", ...stallFront(1, stallZ(1, "꽃")), radius: 1.5 },
   { id: "learn-sagwa", room: "vocabulary-market", kind: "learn", action: "learn", learn: "sagwa", word: "사과", x: MARKET.crates.x + 0.3, z: MARKET.crates.z + MARKET.crates.size / 2 + 0.55, radius: 1.3 },
   { id: "say-shopkeeper", room: "vocabulary-market", kind: "say", action: "talk", say: "shopkeeper", npc: shopkeeper.id, x: stallFront(1, 0).x, z: shopkeeper.z + 0.2, radius: 1.2, priority: 1 },
+  // A shopper asking the price; fruit on the produce table; a word to check.
+  { id: "say-shopper", room: "vocabulary-market", kind: "say", action: "talk", say: "shopper", npc: "m-shopper", x: npc("m-shopper").x + 0.9, z: npc("m-shopper").z, radius: 1.1 },
+  { id: "learn-gwail", room: "vocabulary-market", kind: "learn", action: "learn", learn: "gwail", word: "과일", x: MARKET.tables[0][0], z: MARKET.tables[0][1] + MARKET.tables[0][3] / 2 + 0.6, radius: 1.2 },
+  { id: "quiz-ppang", room: "vocabulary-market", kind: "quiz", action: "learn", quiz: "ppang", x: MARKET.crates.x - 0.3, z: MARKET.crates.z - MARKET.crates.size / 2 - 0.55, radius: 1.2 },
 
   /* ── KLOVERS Hub: every gate can be walked up to ── */
   { id: "learn-map", room: "hub", kind: "learn", action: "inspect", learn: "jido", x: 0, z: HUB.post.size / 2 + 0.75, radius: 1.3 },
+  { id: "learn-board", room: "hub", kind: "learn", action: "inspect", learn: "gesipan", x: HUB.board.x - 0.9, z: HUB.board.z, radius: 1.2 },
+  // A signpost question on the far side of the pavilion: which way is the market?
+  { id: "quiz-sijang", room: "hub", kind: "quiz", action: "learn", quiz: "sijang", x: 0, z: -HUB.post.size / 2 - 0.75, radius: 1.3 },
   { id: "say-hub-friend", room: "hub", kind: "say", action: "talk", say: "hubFriend", npc: "h-talk-2", x: npc("h-talk-2").x + 0.9, z: npc("h-talk-2").z + 0.6, radius: 1.4 },
   { id: "say-hub-reader", room: "hub", kind: "say", action: "talk", say: "hubReader", npc: "h-bench-1", x: npc("h-bench-1").x + 1.15, z: npc("h-bench-1").z, radius: 1.3 },
   ...HUB.gates

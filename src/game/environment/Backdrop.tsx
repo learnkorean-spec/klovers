@@ -1,5 +1,7 @@
-import { useMemo } from "react";
-import { BackSide, Color, Float32BufferAttribute, MeshBasicMaterial, SphereGeometry } from "three";
+import { useLayoutEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { BackSide, CanvasTexture, Color, Float32BufferAttribute, type Group, type InstancedMesh, MeshBasicMaterial, Object3D, PlaneGeometry, SphereGeometry } from "three";
+import { REDUCED_MOTION } from "../systems/motion";
 import { MAT } from "../config/materials";
 import Batch from "./Batch";
 import { Kit, jitter, tree } from "./kit";
@@ -13,7 +15,7 @@ import { Kit, jitter, tree } from "./kit";
 
 export const SKY = {
   zenith: "#7EA7D1",
-  mid: "#F5CDA2",
+  mid: "#F3D7B6",
   horizon: "#F8D8AC",
 } as const;
 
@@ -36,6 +38,75 @@ const SKY_GEOMETRY = (() => {
   return g;
 })();
 const SKY_MATERIAL = new MeshBasicMaterial({ vertexColors: true, side: BackSide, fog: false, depthWrite: false, toneMapped: false });
+
+/**
+ * Soft late-afternoon clouds: one painted canvas (a few overlapping warm-white
+ * puffs with a peach underside), drawn as flat cards on a ring far out in the
+ * sky. One draw call; they drift very slowly. They give the sky depth and
+ * scale — the "real place" feeling — at almost no cost.
+ */
+const CLOUD_MATERIAL = (() => {
+  let map: CanvasTexture | null = null;
+  try {
+    const c = document.createElement("canvas");
+    c.width = 256;
+    c.height = 128;
+    const ctx = c.getContext("2d");
+    if (ctx) {
+      const puff = (x: number, y: number, r: number, a: number) => {
+        const g = ctx.createRadialGradient(x, y, r * 0.15, x, y, r);
+        g.addColorStop(0, `rgba(255,250,242,${a})`);
+        g.addColorStop(0.6, `rgba(255,240,224,${a * 0.55})`);
+        g.addColorStop(1, "rgba(255,236,214,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      };
+      const puffs: [number, number, number, number][] = [
+        [70, 78, 42, 0.8], [110, 62, 52, 0.9], [155, 70, 46, 0.85], [195, 82, 34, 0.7], [128, 86, 44, 0.7], [45, 90, 26, 0.55], [222, 92, 22, 0.5],
+      ];
+      for (const [x, y, r, a] of puffs) puff(x, y, r, a);
+      map = new CanvasTexture(c);
+    }
+  } catch {
+    map = null;
+  }
+  return new MeshBasicMaterial({ map, transparent: true, depthWrite: false, fog: false, toneMapped: false, opacity: 0.85 });
+})();
+const CLOUD_PLANE = new PlaneGeometry(1, 0.5);
+const CLOUDS: { a: number; y: number; s: number }[] = Array.from({ length: 11 }, (_, i) => ({
+  a: (i / 11) * Math.PI * 2 + jitter(i * 5, 0.25),
+  y: 20 + Math.abs(jitter(i * 9, 12)),
+  s: 26 + Math.abs(jitter(i * 13, 14)),
+}));
+
+function Clouds() {
+  const ref = useRef<InstancedMesh>(null);
+  const spin = useRef<Group>(null);
+  useLayoutEffect(() => {
+    const m = ref.current;
+    if (!m) return;
+    const o = new Object3D();
+    CLOUDS.forEach((c, i) => {
+      const r = 82;
+      o.position.set(Math.sin(c.a) * r, c.y, Math.cos(c.a) * r);
+      o.lookAt(0, c.y * 0.6, 0);
+      o.scale.set(c.s, c.s, 1);
+      o.updateMatrix();
+      m.setMatrixAt(i, o.matrix);
+    });
+    m.instanceMatrix.needsUpdate = true;
+  }, []);
+  useFrame((_, dt) => {
+    if (spin.current && !REDUCED_MOTION) spin.current.rotation.y += Math.min(dt, 0.1) * 0.004;
+  });
+  return (
+    <group ref={spin}>
+      <instancedMesh ref={ref} args={[CLOUD_PLANE, CLOUD_MATERIAL, CLOUDS.length]} renderOrder={-1} frustumCulled={false} dispose={null} />
+    </group>
+  );
+}
 
 const kits = new Map<string, Kit>();
 
@@ -87,6 +158,7 @@ export default function Backdrop({ id, hx, hz }: { id: string; hx: number; hz: n
   return (
     <>
       <mesh geometry={SKY_GEOMETRY} material={SKY_MATERIAL} renderOrder={-1} frustumCulled={false} dispose={null} />
+      <Clouds />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, 0]} receiveShadow>
         <circleGeometry args={[96, 32]} />
         <primitive object={MAT.stone} attach="material" />

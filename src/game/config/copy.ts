@@ -49,7 +49,7 @@ export const WORLD_COPY = {
       "talk-vocabulary-market": { ko: "이게 뭐예요?", text: "What's this? Everything here has a Korean name." },
       "talk-hub": { ko: "어디로 갈까?", text: "Where to? New worlds start from here." },
       "talk-conversation-cafe": { ko: "커피 한 잔!", text: "One coffee, please!" },
-      letters: { ko: "잘했어!", text: "All three letters found!" },
+      letters: { ko: "잘했어!", text: "Every letter on the street found!" },
     },
     egg: {
       title: "The clover egg",
@@ -170,6 +170,13 @@ export const WORLD_COPY = {
       kkot: { ko: "꽃", roman: "kkot", meaning: "flower", example: { ko: "꽃이 예뻐요.", gloss: "The flower is pretty." } },
       sagwa: { ko: "사과", roman: "sagwa", meaning: "apple", note: "사과 also means an apology.", example: { ko: "사과 주세요.", gloss: "An apple, please." } },
       jido: { ko: "지도", roman: "jido", meaning: "map", note: "KLOVERS World: the courtyard, the village, the market, the café — and this square in the middle." },
+      beotnamu: { ko: "벚나무", roman: "beonnamu", meaning: "cherry tree", note: "Its blossoms, 벚꽃, turn Korea pink every April.", example: { ko: "나무", gloss: "namu — tree" } },
+      digeut: { ko: "ㄷ", roman: "digeut · 디귿", meaning: "the d sound", note: "A soft d, halfway to t.", example: { ko: "다", gloss: "da — all" } },
+      mieum: { ko: "ㅁ", roman: "mieum · 미음", meaning: "the m sound", note: "Its square shape draws closed lips.", example: { ko: "마", gloss: "ma" } },
+      o: { ko: "ㅗ", roman: "o · 오", meaning: "the o sound", note: "The short stroke points up: o, lips rounded.", example: { ko: "오", gloss: "o — five" } },
+      umul: { ko: "우물", roman: "umul", meaning: "well", note: "The village well was where neighbours met and talked." },
+      gwail: { ko: "과일", roman: "gwail", meaning: "fruit", example: { ko: "과일 좋아해요.", gloss: "I like fruit." } },
+      gesipan: { ko: "게시판", roman: "gesipan", meaning: "notice board", note: "Korean schools and offices pin their news on one." },
     },
     quiz: {
       a: {
@@ -181,6 +188,51 @@ export const WORLD_COPY = {
           { label: "i", right: false, feedback: "That one is ㅣ. Here the short stroke points right: a." },
         ],
       },
+      eo: {
+        ko: "ㅓ",
+        question: "Which sound is this?",
+        options: [
+          { label: "eo", right: true, feedback: "Yes: ㅓ is eo, an open o, as in up. 어 — eo." },
+          { label: "a", right: false, feedback: "That one is ㅏ: its short stroke points right. Here it points left: eo." },
+          { label: "o", right: false, feedback: "That one is ㅗ: its short stroke points up. Here it points left: eo." },
+        ],
+      },
+      rieul: {
+        ko: "ㄹ",
+        question: "Which sound is this?",
+        options: [
+          { label: "r / l", right: true, feedback: "Yes: ㄹ is a light r between vowels and an l at the end. 라 — ra." },
+          { label: "n", right: false, feedback: "That one is ㄴ. Look at the zigzag: r / l." },
+          { label: "m", right: false, feedback: "That one is ㅁ, a square. Look at the zigzag: r / l." },
+        ],
+      },
+      u: {
+        ko: "ㅜ",
+        question: "Which sound is this?",
+        options: [
+          { label: "u", right: true, feedback: "Yes: ㅜ is u, as in moon; the short stroke points down. 우 — u." },
+          { label: "o", right: false, feedback: "That one is ㅗ: its short stroke points up. Here it points down: u." },
+          { label: "i", right: false, feedback: "That one is ㅣ, a single upright line. Here: u." },
+        ],
+      },
+      ppang: {
+        ko: "빵",
+        question: "What does this word mean?",
+        options: [
+          { label: "bread", right: true, feedback: "Yes: 빵 is bread." },
+          { label: "water", right: false, feedback: "Water is 물. Try again." },
+          { label: "book", right: false, feedback: "A book is 책. Try again." },
+        ],
+      },
+      sijang: {
+        ko: "시장",
+        question: "Where does this sign point?",
+        options: [
+          { label: "the market", right: true, feedback: "Yes: 시장 is the market." },
+          { label: "the café", right: false, feedback: "The café is 카페. Try again." },
+          { label: "the village", right: false, feedback: "A village is 마을. Try again." },
+        ],
+      },
     },
     /** People's short lines: Korean, meaning, one note from Cluby. */
     say: {
@@ -190,6 +242,7 @@ export const WORLD_COPY = {
       baker: { name: "The baker", ko: "고마워요! 빵 드세요.", gloss: "Thank you! Have some bread.", note: "고마워요 — a warm, friendly thank-you." },
       hubFriend: { name: "Student", ko: "어디 가요?", gloss: "Where are you going?", note: "어디 means where; 가요 means go." },
       hubReader: { name: "Reader", ko: "한국어를 공부해요.", gloss: "I'm studying Korean.", note: "공부 means study." },
+      shopper: { name: "Shopper", ko: "이거 얼마예요?", gloss: "How much is this?", note: "얼마 means how much." },
     },
     card: {
       listen: "Listen",
@@ -249,7 +302,7 @@ export const WORLD_COPY = {
       "talk-vocabulary-market": { ko: "이게 뭐예요?", text: "ما هذا؟ لكل شيء هنا اسم كوري." },
       "talk-hub": { ko: "어디로 갈까?", text: "إلى أين؟ من هنا تبدأ عوالم جديدة." },
       "talk-conversation-cafe": { ko: "커피 한 잔!", text: "فنجان قهوة، من فضلك!" },
-      letters: { ko: "잘했어!", text: "اكتُشفت الحروف الثلاثة!" },
+      letters: { ko: "잘했어!", text: "اكتُشفت كل حروف الشارع!" },
     },
     egg: {
       title: "بيضة البرسيم",
@@ -370,6 +423,13 @@ export const WORLD_COPY = {
       kkot: { ko: "꽃", roman: "كّوت", meaning: "زهرة", example: { ko: "꽃이 예뻐요.", gloss: "الزهرة جميلة." } },
       sagwa: { ko: "사과", roman: "ساغوا", meaning: "تفاحة", note: "وكلمة 사과 تعني أيضًا: اعتذار.", example: { ko: "사과 주세요.", gloss: "تفاحةً، من فضلك." } },
       jido: { ko: "지도", roman: "جيدو", meaning: "خريطة", note: "عالم كلوفرز: الساحة، والقرية، والسوق، والمقهى، وهذه الساحة في الوسط." },
+      beotnamu: { ko: "벚나무", roman: "بون نامو", meaning: "شجرة الكرز", note: "تكسو أزهارها (벚꽃) كوريا باللون الوردي كل أبريل.", example: { ko: "나무", gloss: "نامو: شجرة" } },
+      digeut: { ko: "ㄷ", roman: "ديغوت · 디귿", meaning: "صوت الدال", note: "دال خفيفة، بين الدال والتاء.", example: { ko: "다", gloss: "دا: الكل" } },
+      mieum: { ko: "ㅁ", roman: "ميئوم · 미음", meaning: "صوت الميم", note: "شكله المربع يرسم الشفتين وهما مغلقتان.", example: { ko: "마", gloss: "ما" } },
+      o: { ko: "ㅗ", roman: "أو · 오", meaning: "صوت o", note: "الخط القصير يتجه إلى الأعلى: صوت o مع ضم الشفتين.", example: { ko: "오", gloss: "أو: خمسة" } },
+      umul: { ko: "우물", roman: "أومول", meaning: "بئر", note: "كانت بئر القرية مكانًا يلتقي فيه الجيران ويتحدثون." },
+      gwail: { ko: "과일", roman: "غوائيل", meaning: "فاكهة", example: { ko: "과일 좋아해요.", gloss: "أحب الفاكهة." } },
+      gesipan: { ko: "게시판", roman: "كيشيبان", meaning: "لوحة الإعلانات", note: "تعلّق المدارس والمكاتب الكورية أخبارها على لوحة كهذه." },
     },
     quiz: {
       a: {
@@ -381,6 +441,51 @@ export const WORLD_COPY = {
           { label: "إي", right: false, feedback: "هذا صوت ㅣ. هنا الخط القصير يتجه يمينًا: آ." },
         ],
       },
+      eo: {
+        ko: "ㅓ",
+        question: "أيّ صوت هذا؟",
+        options: [
+          { label: "eo", right: true, feedback: "صحيح: ㅓ صوت eo، واو مفتوحة قريبة من الألف. 어: eo." },
+          { label: "آ", right: false, feedback: "هذا صوت ㅏ: خطه القصير يتجه يمينًا، وهنا يتجه يسارًا: eo." },
+          { label: "o", right: false, feedback: "هذا صوت ㅗ: خطه القصير يتجه إلى الأعلى، وهنا يتجه يسارًا: eo." },
+        ],
+      },
+      rieul: {
+        ko: "ㄹ",
+        question: "أيّ صوت هذا؟",
+        options: [
+          { label: "ر / ل", right: true, feedback: "صحيح: ㄹ راء خفيفة بين حرفين متحرّكين، ولام في آخر المقطع. 라: را." },
+          { label: "ن", right: false, feedback: "هذا صوت ㄴ. انظر إلى الخط المتعرّج: ر / ل." },
+          { label: "م", right: false, feedback: "هذا صوت ㅁ، وشكله مربع. انظر إلى الخط المتعرّج: ر / ل." },
+        ],
+      },
+      u: {
+        ko: "ㅜ",
+        question: "أيّ صوت هذا؟",
+        options: [
+          { label: "u", right: true, feedback: "صحيح: ㅜ صوت u الممدود، والخط القصير يتجه إلى الأسفل. 우: أوو." },
+          { label: "o", right: false, feedback: "هذا صوت ㅗ: خطه القصير يتجه إلى الأعلى، وهنا إلى الأسفل: u." },
+          { label: "إي", right: false, feedback: "هذا صوت ㅣ: خط واحد قائم. وهنا: u." },
+        ],
+      },
+      ppang: {
+        ko: "빵",
+        question: "ما معنى هذه الكلمة؟",
+        options: [
+          { label: "خبز", right: true, feedback: "صحيح: 빵 تعني الخبز." },
+          { label: "ماء", right: false, feedback: "الماء هو 물. محاولة أخرى." },
+          { label: "كتاب", right: false, feedback: "الكتاب هو 책. محاولة أخرى." },
+        ],
+      },
+      sijang: {
+        ko: "시장",
+        question: "إلى أين تشير هذه اللافتة؟",
+        options: [
+          { label: "السوق", right: true, feedback: "صحيح: 시장 تعني السوق." },
+          { label: "المقهى", right: false, feedback: "المقهى هو 카페. محاولة أخرى." },
+          { label: "القرية", right: false, feedback: "القرية هي 마을. محاولة أخرى." },
+        ],
+      },
     },
     say: {
       auntie: { name: "الجارة", ko: "안녕하세요!", gloss: "مرحبًا!", note: "هذه تحية كورية شائعة." },
@@ -389,6 +494,7 @@ export const WORLD_COPY = {
       baker: { name: "الخبّازة", ko: "고마워요! 빵 드세요.", gloss: "شكرًا! تفضّلوا بالخبز.", note: "고마워요: شكر ودود." },
       hubFriend: { name: "طالب", ko: "어디 가요?", gloss: "إلى أين الوجهة؟", note: "어디 تعني أين، و가요 تعني الذهاب." },
       hubReader: { name: "قارئة", ko: "한국어를 공부해요.", gloss: "أدرس اللغة الكورية.", note: "공부 تعني الدراسة." },
+      shopper: { name: "متسوّقة", ko: "이거 얼마예요?", gloss: "بكم هذا؟", note: "얼마 تعني: كم، عند السؤال عن السعر." },
     },
     card: {
       listen: "استماع",

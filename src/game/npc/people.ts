@@ -100,7 +100,7 @@ function merge(list: BufferGeometry[]): BufferGeometry {
 export function buildPerson(spec: PersonSpec, pose: Pose): PersonParts {
   const HIP = 0.88;
   const SH = 1.36;
-  const HEAD = 1.58;
+  const HEAD = 1.61;
   const seated = pose === "sit" || pose === "sitRead";
   const dy = seated ? -0.4 : 0; // a seated body drops onto the seat
   const core: BufferGeometry[] = [];
@@ -108,7 +108,11 @@ export function buildPerson(spec: PersonSpec, pose: Pose): PersonParts {
 
   // Torso and clothing.
   core.push(part(cyl(0.2, 0.17, 0.52, 14), spec.top, [0, 1.1 + dy, 0], [0, 0, 0], [1, 1, 0.72]));
-  core.push(part(ball(0.2, 14, 8), spec.top, [0, 1.36 + dy, 0], [0, 0, 0], [1, 0.4, 0.72]));
+  core.push(part(ball(0.2, 14, 8), spec.top, [0, 1.35 + dy, 0], [0, 0, 0], [1, 0.32, 0.72]));
+  // Shoulders: rounded caps where the arms meet the body.
+  for (const sx of [-1, 1]) core.push(part(ball(0.062, 10, 8), spec.top, [sx * 0.2, 1.33 + dy, 0]));
+  // Hips: trousers join both legs in a seat (a skirt covers it).
+  if (!skirt && !seated) core.push(part(cyl(0.18, 0.17, 0.16, 14), spec.lower.color, [0, 0.88, 0], [0, 0, 0], [1, 1, 0.72]));
   if (spec.over) core.push(part(box(0.3, 0.5, 0.03), spec.over, [0, 1.05 + dy, 0.13]));
   if (spec.lanyard) {
     for (const sx of [-1, 1]) core.push(part(box(0.014, 0.3, 0.01), spec.lanyard, [sx * 0.045, 1.28 + dy, 0.142], [-0.12, 0, sx * 0.16]));
@@ -116,10 +120,15 @@ export function buildPerson(spec: PersonSpec, pose: Pose): PersonParts {
   }
   if (skirt) core.push(part(cyl(0.17, 0.3, 0.55, 14), spec.lower.color, [0, (seated ? 0.62 : 0.6) + dy + (seated ? 0.18 : 0), seated ? 0.12 : 0], seated ? [-0.9, 0, 0] : [0, 0, 0], [1, 1, 0.85]));
   // Neck, head, face.
-  core.push(part(cyl(0.05, 0.055, 0.12, 8), spec.skin, [0, 1.47 + dy, 0]));
+  core.push(part(cyl(0.048, 0.055, 0.16, 8), spec.skin, [0, 1.48 + dy, 0]));
   core.push(part(ball(0.125, 14, 12), spec.skin, [0, HEAD + dy, 0], [0, 0, 0], [0.95, 1.08, 1]));
+  // Ears and a small nose: the head stops reading as a ball.
+  for (const sx of [-1, 1]) core.push(part(ball(0.028, 6, 5), spec.skin, [sx * 0.118, HEAD - 0.005 + dy, 0], [0, 0, 0], [0.5, 1, 0.7]));
+  core.push(part(ball(0.013, 6, 5), spec.skin, [0, HEAD - 0.015 + dy, 0.12], [0.35, 0, 0], [0.6, 1.4, 0.7]));
   for (const sx of [-1, 1]) {
-    core.push(part(ball(0.014, 6, 5), "#2E2E2E", [sx * 0.04, HEAD + 0.012 + dy, 0.112]));
+    // Eye whites behind a dark iris: eyes read at a distance.
+    core.push(part(ball(0.016, 8, 6), "#F4EFE6", [sx * 0.04, HEAD + 0.012 + dy, 0.106], [0, 0, 0], [1.35, 0.85, 0.6]));
+    core.push(part(ball(0.011, 6, 5), "#3B2618", [sx * 0.04, HEAD + 0.011 + dy, 0.114]));
     core.push(part(box(0.035, 0.008, 0.01), spec.hair === "#E9E4DA" ? "#8A8580" : spec.hair, [sx * 0.042, HEAD + 0.04 + dy, 0.113], [0, 0, -sx * 0.1]));
   }
   core.push(part(box(0.03, 0.008, 0.01), "#8C5A4A", [0, HEAD - 0.058 + dy, 0.114]));
@@ -148,8 +157,11 @@ export function buildPerson(spec: PersonSpec, pose: Pose): PersonParts {
       core.push(part(cap(legR, 0.34), legColor, [sx * 0.1, 0.24, 0.42]));
       core.push(part(box(0.11, 0.08, 0.24), spec.shoes, [sx * 0.1, 0.04, 0.47]));
     } else {
-      target.push(part(cap(legR, 0.72), legColor, [sx * 0.1 + off[0] * 0, HIP - 0.45 + off[1], 0]));
-      target.push(part(box(0.11, 0.09, 0.25), spec.shoes, [sx * 0.1, 0.045 + off[1], 0.05]));
+      // Thigh tapering into the shin; a shoe with a rounded toe.
+      target.push(part(cap(legR, 0.34), legColor, [sx * 0.1, HIP - 0.22 + off[1], 0]));
+      target.push(part(cap(legR * 0.82, 0.36), legColor, [sx * 0.1, HIP - 0.64 + off[1], 0]));
+      target.push(part(box(0.11, 0.085, 0.19), spec.shoes, [sx * 0.1, 0.043 + off[1], 0.02]));
+      target.push(part(ball(0.056, 8, 6), spec.shoes, [sx * 0.1, 0.035 + off[1], 0.11], [0, 0, 0], [1, 0.7, 1.1]));
     }
   });
   if (pose === "walk") {
@@ -169,7 +181,7 @@ export function buildPerson(spec: PersonSpec, pose: Pose): PersonParts {
           part(cap(0.044, 0.16), spec.skin, [0, -0.37, 0]),
         ]
       : [part(cap(0.055, len - 0.1), armColor, [0, -len / 2, 0])];
-    const h = part(ball(0.05, 8, 6), spec.skin, [0, -len + 0.02, 0.01]);
+    const h = part(ball(0.05, 8, 6), spec.skin, [0, -len + 0.01, 0.01], [0, 0, 0], [0.72, 1.15, 0.5]);
     const rot = new Matrix4().makeRotationFromEuler(new Euler(rx, 0, rz));
     pieces.forEach((g) => g.applyMatrix4(rot));
     h.applyMatrix4(rot);
