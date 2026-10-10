@@ -15,6 +15,11 @@ export interface PlayerState {
   frozen: boolean;
   /** True while a web-UI card is open: input is ignored. */
   paused: boolean;
+  /**
+   * Tap-to-go: walk by itself to this point (a tapped sign) and stop within
+   * `stop` metres. Any key or the joystick takes the controls back.
+   */
+  autoTarget: { id: string; x: number; z: number; stop: number } | null;
 }
 
 export interface CameraState {
@@ -41,6 +46,7 @@ export function createPlayerState(): PlayerState {
     animation: "idle",
     frozen: false,
     paused: false,
+    autoTarget: null,
   };
 }
 

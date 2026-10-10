@@ -22,6 +22,7 @@ export default function Friend({ avatar, x, z, yaw, player }: { avatar: AvatarId
     animation: "idle",
     frozen: false,
     paused: false,
+    autoTarget: null,
   });
   const root = useRef<Group>(null);
   const facing = useRef(yaw);

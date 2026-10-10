@@ -18,6 +18,8 @@ interface PlayerProps {
   camera: MutableRefObject<CameraState>;
   layout: RoomLayout;
   avatar: AvatarId;
+  /** Tap-to-go reached its sign (the page then uses it). */
+  onArrive?: (id: string) => void;
 }
 
 /**
@@ -27,8 +29,12 @@ interface PlayerProps {
  * Runs before the camera (priority −2 vs −1) so the camera always follows
  * this frame's position. Negative priorities keep R3F's automatic rendering.
  */
-export default function Player({ input, player, camera, layout, avatar }: PlayerProps) {
+export default function Player({ input, player, camera, layout, avatar, onArrive }: PlayerProps) {
   const root = useRef<Group>(null);
+  const arrive = useRef(onArrive);
+  arrive.current = onArrive;
+  /** Tap-to-go: progress check, so a walk blocked by a wall gives up. */
+  const auto = useRef<{ goal: object | null; t: number; best: number }>({ goal: null, t: 0, best: Infinity });
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, MAX_DT);
@@ -57,6 +63,33 @@ export default function Player({ input, player, camera, layout, avatar }: Player
       if (st.strength > 0) {
         wish = { x: st.x, z: st.z };
         targetSpeed = st.strength > 0.92 ? PLAYER.runSpeed : PLAYER.walkSpeed * Math.max(0.45, st.strength);
+      }
+    }
+    // Tap-to-go: any input of the learner's own takes over at once.
+    const goal = p.autoTarget;
+    if (goal && (wish.x !== 0 || wish.z !== 0 || still)) p.autoTarget = null;
+    else if (goal) {
+      const dx = goal.x - p.position.x;
+      const dz = goal.z - p.position.z;
+      const d = Math.hypot(dx, dz);
+      const a = auto.current;
+      if (a.goal !== goal) {
+        a.goal = goal;
+        a.best = Infinity;
+        a.t = 0;
+      }
+      if (d < a.best - 0.15) {
+        a.best = d;
+        a.t = 0;
+      } else a.t += dt;
+      if (d <= goal.stop || a.t > 1.2) {
+        // There (or stuck): face it and hand over.
+        p.autoTarget = null;
+        if (d > 0.05) p.yaw = yawFromDirection(dx, dz);
+        if (d <= goal.stop + 0.8) arrive.current?.(goal.id);
+      } else {
+        wish = { x: dx / d, z: dz / d };
+        targetSpeed = PLAYER.walkSpeed;
       }
     }
     p.velocity = stepVelocity(p.velocity, wish, targetSpeed, PLAYER.acceleration, PLAYER.deceleration, dt);

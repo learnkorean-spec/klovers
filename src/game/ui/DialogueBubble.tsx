@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSpeech } from "@/hooks/useSpeech";
 import { playVoice, stopVoice, type VoiceLine } from "../systems/voice";
+import { canListen, listenFor, type SayResult } from "../systems/sayIt";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import type { LearnId, SayId } from "../config/interactions";
 import type { AvatarId } from "../player/characters";
@@ -57,6 +58,20 @@ export default function DialogueBubble({
   const copy = WORLD_COPY[lang];
   const { speakKorean } = useSpeech({ rate: 0.85 });
   const speakable = useMemo(canSpeak, []);
+  const listenable = useMemo(canListen, []);
+  /** Guided practice: 0 listen first, 1 then say it. */
+  const [step, setStep] = useState<0 | 1>(0);
+  const [hearing, setHearing] = useState(false);
+  const [result, setResult] = useState<SayResult | null>(null);
+  const stopListening = useRef<() => void>(() => {});
+  const bubbleKey = bubble.kind === "learn" ? bubble.id : bubble.kind === "say" ? bubble.id : bubble.who;
+  useEffect(() => {
+    setStep(0);
+    setResult(null);
+    setHearing(false);
+    stopListening.current();
+  }, [bubbleKey]);
+  useEffect(() => () => stopListening.current(), []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -87,7 +102,7 @@ export default function DialogueBubble({
       <>
         <p className="text-xs font-semibold tracking-wide text-charcoal/60">{t.roman}</p>
         <p className="font-display text-lg font-bold leading-tight">{t.meaning}</p>
-        {t.note && <p className="text-sm text-charcoal/75">{t.note}</p>}
+        {t.note && <p className="text-sm text-charcoal/75 [@media(max-height:500px)]:hidden">{t.note}</p>}
         {t.example && (
           <p className="rounded-xl bg-white px-3 py-1.5 text-sm">
             <span lang="ko" dir="ltr" className="font-ko font-bold">
@@ -125,7 +140,7 @@ export default function DialogueBubble({
       <>
         <p className="font-semibold">{hello.gloss}</p>
         <p className="text-sm text-charcoal/80">{bubble.who === "minsu" ? c.minsuLine : c.friendLine}</p>
-        <p className="text-xs text-charcoal/65">{c.note}</p>
+        <p className="text-xs text-charcoal/65 [@media(max-height:500px)]:hidden">{c.note}</p>
       </>
     );
   }
@@ -146,7 +161,44 @@ export default function DialogueBubble({
         {ko}
       </p>
       {lines}
-      <div className="flex items-center gap-2 pt-1">
+      {listenable && (
+        // The two steps, always named: hear it, then say it.
+        <ol dir={lang === "ar" ? "rtl" : "ltr"} className="flex items-center gap-1.5 pt-1 text-[11px] font-bold text-charcoal/60" aria-label={copy.card.steps.join(" → ")}>
+          {copy.card.steps.map((label, i) => (
+            <li key={label} className="flex items-center gap-1.5">
+              {i > 0 && <span aria-hidden="true" className="text-charcoal/35">{lang === "ar" ? "←" : "→"}</span>}
+              <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 ${step === i ? "bg-klovers-yellow text-charcoal" : ""}`}>
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-charcoal text-[10px] text-ivory">{i + 1}</span>
+                {label}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+      {(hearing || result) && (
+        <p role="status" className="min-h-5 text-sm font-semibold">
+          {hearing
+            ? copy.card.listening
+            : result && "score" in result
+              ? result.score >= 0.8
+                ? copy.card.great
+                : result.score >= 0.5
+                  ? copy.card.near
+                  : copy.card.again
+              : result && "error" in result && result.error === "blocked"
+                ? copy.card.micBlocked
+                : copy.card.again}
+          {!hearing && result && "heard" in result && result.score < 0.8 && (
+            <span className="block text-xs font-normal text-charcoal/65">
+              {copy.card.heard}:{" "}
+              <span lang="ko" dir="ltr" className="font-ko">
+                {result.heard}
+              </span>
+            </span>
+          )}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
         {(speakable || line) && (
           <button
             type="button"
@@ -158,11 +210,41 @@ export default function DialogueBubble({
                 speakKorean(ko, voice === "male" ? { gender: "male", pitch: hasMaleKoreanVoice() ? 1 : 0.6 } : voice ? { gender: "female" } : undefined);
               if (line) playVoice(line, browser);
               else browser();
+              if (listenable) setStep(1);
               e.currentTarget.blur();
             }}
-            className="min-h-9 rounded-full bg-charcoal px-4 text-xs font-bold text-ivory focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow"
+            className={`min-h-10 rounded-full px-4 text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow ${
+              step === 0 || !listenable ? "bg-charcoal text-ivory" : "border-2 border-charcoal text-charcoal"
+            }`}
           >
+            {listenable && <span className="me-1">1</span>}
             {copy.card.listen}
+          </button>
+        )}
+        {listenable && (
+          <button
+            type="button"
+            disabled={hearing}
+            onClick={(e) => {
+              e.currentTarget.blur();
+              stopVoice();
+              if (canSpeak()) window.speechSynthesis.cancel();
+              setStep(1);
+              setResult(null);
+              setHearing(true);
+              const l = listenFor(ko);
+              stopListening.current = l.stop;
+              void l.done.then((r) => {
+                setHearing(false);
+                setResult(r);
+              });
+            }}
+            className={`min-h-10 rounded-full px-4 text-xs font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-charcoal disabled:opacity-70 ${
+              step === 1 ? "bg-charcoal text-ivory motion-safe:animate-pulse" : "border-2 border-charcoal text-charcoal"
+            } ${hearing ? "!animate-none bg-klovers-yellow !text-charcoal" : ""}`}
+          >
+            <span className="me-1">2</span>
+            {copy.card.say}
           </button>
         )}
         <button
@@ -171,7 +253,7 @@ export default function DialogueBubble({
             onClose();
             e.currentTarget.blur();
           }}
-          className="min-h-9 rounded-full border-2 border-charcoal/30 px-4 text-xs font-bold text-charcoal focus-visible:outline focus-visible:outline-2 focus-visible:outline-charcoal"
+          className="min-h-10 rounded-full border-2 border-charcoal/30 px-4 text-xs font-bold text-charcoal focus-visible:outline focus-visible:outline-2 focus-visible:outline-charcoal"
         >
           {copy.card.close}
         </button>

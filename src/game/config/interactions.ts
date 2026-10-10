@@ -182,11 +182,25 @@ export const INTERACTABLES: Interactable[] = [
 
 type IsOpen = (r: RoomId) => boolean;
 
-function usable(it: Interactable, room: RoomId, isOpen: IsOpen): boolean {
+export function usable(it: Interactable, room: RoomId, isOpen: IsOpen): boolean {
   if (it.room !== room) return false;
   if (it.whileLocked && isOpen(it.whileLocked)) return false;
   if (it.whileOpen && !isOpen(it.whileOpen)) return false;
   return true;
+}
+
+/**
+ * The few usable things around the learner (nearest first, within `range`
+ * metres), for the tappable signs that guide a learner to them.
+ */
+export function nearbyInteractables(room: RoomId, x: number, z: number, isOpen: IsOpen, max = 3, range = 9, list = INTERACTABLES): Interactable[] {
+  return list
+    .filter((it) => usable(it, room, isOpen))
+    .map((it) => ({ it, d: Math.hypot(it.x - x, it.z - z) }))
+    .filter((e) => e.d <= range)
+    .sort((a, b) => a.d - b.d)
+    .slice(0, max)
+    .map((e) => e.it);
 }
 
 /** Nearest interactable in this room within its radius, if any. */

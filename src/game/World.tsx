@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, RingGeometry, type Mesh, type WebGLRenderer } from "three";
-import { INTERACTABLES, pickInteractable, type Interactable } from "./config/interactions";
+import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, RingGeometry, Vector3, type Mesh, type WebGLRenderer } from "three";
+import { INTERACTABLES, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
 import { findPortal, HUB, MARKET, ROOMS, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
 import ThirdPersonCamera from "./camera/ThirdPersonCamera";
@@ -83,6 +83,8 @@ export interface WorldApi {
   point: (x: number, z: number) => void;
   /** Walk through an open gate now (E at the gate). */
   enter: (to: RoomId, arrive: string) => void;
+  /** Tap-to-go: walk by itself to this thing (a tapped sign). */
+  goTo: (it: Interactable) => void;
 }
 
 export interface WorldProps {
@@ -124,6 +126,12 @@ export interface WorldProps {
   onDiscover?: (key: DiscoveryKey) => void;
   /** The learner has stood still a while (true), or moved again (false). */
   onIdle?: (idle: boolean) => void;
+  /** The few usable things around the learner changed (tappable signs). */
+  onNearby?: (list: Interactable[]) => void;
+  /** The page's sign elements by id: moved over their things every frame. */
+  beaconEls?: MutableRefObject<Map<string, HTMLElement>>;
+  /** Tap-to-go arrived at this thing. */
+  onArrive?: (id: string) => void;
 }
 
 declare global {
@@ -323,7 +331,13 @@ export default function World(props: WorldProps) {
   }, []);
 
   useEffect(() => {
-    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }) });
+    const goTo = (it: Interactable) => {
+      const p = player.current;
+      if (p.frozen || p.paused) return;
+      const at = spotOf(it);
+      p.autoTarget = { id: it.id, x: at.x, z: at.z, stop: Math.max(0.9, it.radius * 0.55) };
+    };
+    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }), goTo });
   }, [hatch, finishHatch, celebrate, clubyTalk, pulseEgg, point, travel]);
 
   // New room mounted: learner at the arrival point, camera behind, Cluby beside.
@@ -477,7 +491,7 @@ export default function World(props: WorldProps) {
       {objectiveSpot ? <ObjectiveMarker x={objectiveSpot.x} z={objectiveSpot.z} /> : null}
       <FocusCue focus={focusRef} />
       {/* Frame priorities: player moves (−2), watchers read (−1.5), camera follows (−1). */}
-      <Player input={input} player={player} camera={camera} layout={layout} avatar={avatar} />
+      <Player input={input} player={player} camera={camera} layout={layout} avatar={avatar} onArrive={(id) => cb.current.onArrive?.(id)} />
       {/* On a first visit, he points toward the current objective; after
           that, he guides no one who already knows the way. */}
       <Cluby story={story} player={player} layout={layout} guide={objectiveSpot ?? (props.objective === undefined ? guideFor(roomId, access) : null)} interests={interestsIn(roomId)} />
@@ -495,6 +509,9 @@ export default function World(props: WorldProps) {
         onIdle={(idle) => cb.current.onIdle?.(idle)}
       />
       <DiscoveryWatcher key={`d-${roomId}`} room={roomId} player={player} onDiscover={(k) => cb.current.onDiscover?.(k)} />
+      {props.beaconEls && (
+        <BeaconWatcher key={`b-${roomId}`} room={roomId} player={player} story={story} access={access} els={props.beaconEls} onNearby={(l) => cb.current.onNearby?.(l)} />
+      )}
       <Stats glRef={glRef} />
       <WatercolorDriver />
     </Canvas>
@@ -649,6 +666,65 @@ function FocusCue({ focus }: { focus: MutableRefObject<Interactable | null> }) {
     CUE_MAT.opacity = 0.28 + 0.3 * k;
   });
   return <mesh ref={ref} geometry={CUE_GEO} material={CUE_MAT} visible={false} renderOrder={3} />;
+}
+
+/** Where a thing really is (a person's line stands at the person). */
+function spotOf(it: Interactable): { x: number; z: number } {
+  const who = it.npc ? NPC_AT.get(it.npc) : it.kind === "talk" && it.who === "friend" ? FRIEND_SPOT : null;
+  return who ? { x: who.x, z: who.z } : { x: it.x, z: it.z };
+}
+
+/**
+ * Guidance: the few usable things nearby, each with a small tappable sign
+ * floating over it (DOM, owned by the page). This lists them now and then
+ * and moves the signs over their things every frame, without re-rendering.
+ */
+function BeaconWatcher({ room, player, story, access, els, onNearby }: {
+  room: RoomId;
+  player: MutableRefObject<PlayerState>;
+  story: MutableRefObject<StoryState>;
+  access: WorldAccess;
+  els: MutableRefObject<Map<string, HTMLElement>>;
+  onNearby: (list: Interactable[]) => void;
+}) {
+  const { camera, size } = useThree();
+  const list = useRef<Interactable[]>([]);
+  const key = useRef("");
+  const t = useRef(0);
+  const v = useMemo(() => new Vector3(), []);
+  const report = useRef(onNearby);
+  report.current = onNearby;
+  useEffect(() => () => report.current([]), []);
+  useFrame((_, dt) => {
+    const p = player.current;
+    t.current -= dt;
+    if (t.current <= 0) {
+      t.current = 0.3;
+      const egg = story.current.egg;
+      const l = p.frozen
+        ? []
+        : nearbyInteractables(room, p.position.x, p.position.z, (r) => access.open.has(r)).filter((it) => !(it.kind === "egg" && (egg === "open" || egg === "hatching")));
+      const k = l.map((i) => i.id).join(",");
+      if (k !== key.current) {
+        key.current = k;
+        list.current = l;
+        report.current(l);
+      }
+    }
+    for (const it of list.current) {
+      const el = els.current.get(it.id);
+      if (!el) continue;
+      const at = spotOf(it);
+      const h = it.npc || it.kind === "talk" ? 2.15 : it.kind === "egg" ? 1.9 : it.kind === "door" || it.kind === "locked" || it.kind === "link" ? 2.6 : 1.7;
+      v.set(at.x, h, at.z).project(camera);
+      const sx = (v.x * 0.5 + 0.5) * size.width;
+      const sy = (-v.y * 0.5 + 0.5) * size.height;
+      const off = v.z > 1 || sx < 8 || sx > size.width - 8 || sy < 40 || sy > size.height - 8;
+      el.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(-50%, -100%)`;
+      el.style.visibility = off ? "hidden" : "visible";
+    }
+  }, -0.5);
+  return null;
 }
 
 /** Notices the first step into a discovery spot in this room. */

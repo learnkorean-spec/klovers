@@ -142,6 +142,9 @@ const WorldPage = () => {
   const [fading, setFading] = useState(false);
   const [room, setRoom] = useState<RoomId | null>(null);
   const [focus, setFocus] = useState<Interactable | null>(null);
+  /** Guidance: the few usable things nearby, each with a tappable sign. */
+  const [nearby, setNearby] = useState<Interactable[]>([]);
+  const beaconEls = useRef(new Map<string, HTMLElement>());
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
   const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId } | null>(null);
@@ -389,6 +392,17 @@ const WorldPage = () => {
     }
   }, [focus, card, sequence, bubble, clubyAwake, saved, patch, complete, navigate, access.signedIn, findLetter, learnWord]);
 
+  // Tap-to-go: arriving at a tapped sign uses the thing at once.
+  const focusNow = useRef(focus);
+  focusNow.current = focus;
+  const interactNow = useRef(interact);
+  interactNow.current = interact;
+  const arrived = useCallback((id: string) => {
+    window.setTimeout(() => {
+      if (focusNow.current?.id === id) interactNow.current();
+    }, 160);
+  }, []);
+
   // Walking away from a person or a word puts its note away.
   useEffect(() => {
     if (bubble && focus?.id !== bubble.at) setBubble(null);
@@ -455,6 +469,17 @@ const WorldPage = () => {
   const objective = currentObjective({ met: saved.met, done: saved.objectivesDone }, marketOpen);
   const progress = useMemo(() => ({ met: saved.met, done: saved.objectivesDone }), [saved.met, saved.objectivesDone]);
   const objectiveCount = objective === "meetCharacters" ? `${saved.met.filter((m) => m === "friend" || m === "minsu").length}/2` : undefined;
+
+  /** A sign's words: the verb, and what or who it is. */
+  const signText = (it: Interactable): { verb: string; sub?: string; subKo?: boolean } => {
+    const verb = copy.prompts[it.kind === "word" && saved.breadSign ? "talk" : it.action];
+    if (it.kind === "learn" && it.learn) return { verb, sub: (copy.learn[it.learn] as { ko: string }).ko, subKo: true };
+    if ((it.kind === "quiz" || it.kind === "letter") && it.letter) return { verb, sub: it.letter, subKo: true };
+    if (it.kind === "say" && it.say) return { verb, sub: copy.say[it.say].name };
+    if (it.kind === "talk" && it.who) return { verb, sub: it.who === "minsu" ? copy.names.minsu : copy.names[avatar === "lina" ? "adam" : "lina"] };
+    if ((it.kind === "door" || it.kind === "locked") && it.to) return { verb, sub: copy.rooms[it.to]?.name };
+    return { verb };
+  };
 
   const promptLabel = !focus || (bubble && bubble.at === focus.id)
     ? null
@@ -523,8 +548,50 @@ const WorldPage = () => {
                 objective={objective}
                 progress={progress}
                 onDiscover={discover}
+                onNearby={setNearby}
+                beaconEls={beaconEls}
+                onArrive={arrived}
               />
             </Suspense>
+            {/* Guidance: a small sign over each thing nearby — tap (or click)
+                to walk there and use it. The one already in reach has the
+                round button instead. */}
+            {ready && !card && !bubble && !sequence && !welcoming && (
+              <div className="pointer-events-none absolute inset-0 z-[6] overflow-hidden" dir="ltr">
+                {nearby
+                  .filter((it) => it.id !== focus?.id)
+                  .map((it) => {
+                    const t = signText(it);
+                    return (
+                      <button
+                        key={it.id}
+                        type="button"
+                        ref={(el) => {
+                          if (el) beaconEls.current.set(it.id, el);
+                          else beaconEls.current.delete(it.id);
+                        }}
+                        style={{ visibility: "hidden" }}
+                        aria-label={`${copy.goTo} ${t.sub ?? t.verb}`}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.currentTarget.blur();
+                          api.current?.goTo(it);
+                        }}
+                        className="pointer-events-auto absolute left-0 top-0 flex min-h-9 items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-klovers-yellow bg-charcoal/85 py-1 pe-3 ps-1 text-xs font-bold text-ivory shadow-lg will-change-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow"
+                      >
+                        <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-klovers-yellow motion-safe:animate-pulse" style={{ margin: "0 0.25rem" }} />
+                        <span dir={lang === "ar" ? "rtl" : "ltr"}>{t.verb}</span>
+                        {t.sub && (
+                          <span lang={t.subKo ? "ko" : undefined} dir={t.subKo ? "ltr" : lang === "ar" ? "rtl" : "ltr"} className={`font-normal text-ivory/80 ${t.subKo ? "font-ko" : ""}`}>
+                            {t.sub}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
             {/* Draft watercolour preview (?style=wc / wcall): paper grain over the scene. */}
             {watercolorMode() !== "off" && (
               <div

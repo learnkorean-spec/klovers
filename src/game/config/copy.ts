@@ -247,7 +247,17 @@ export const WORLD_COPY = {
     card: {
       listen: "Listen",
       close: "Close",
+      say: "Say it",
+      steps: ["Listen", "Say it"],
+      listening: "Listening… say it now",
+      great: "Clear — well said!",
+      near: "Very close — once more?",
+      again: "Not heard clearly — listen, then try again.",
+      heard: "Heard",
+      micBlocked: "The microphone is off — allow it in the browser to practise.",
     },
+    /** Tappable signs over nearby things (tap: walk there and use it). */
+    goTo: "Walk to",
     found: {
       lettersLabel: "Letters",
       word: "A new word discovered",
@@ -499,7 +509,16 @@ export const WORLD_COPY = {
     card: {
       listen: "استماع",
       close: "إغلاق",
+      say: "ترديد",
+      steps: ["الاستماع", "الترديد"],
+      listening: "جارٍ الاستماع… حان وقت النطق",
+      great: "نطق واضح، رائع!",
+      near: "قريب جدًا — محاولة أخرى؟",
+      again: "لم يصل الصوت بوضوح — الاستماع أولًا ثم المحاولة من جديد.",
+      heard: "المسموع",
+      micBlocked: "الميكروفون غير مفعّل — يلزم السماح به في المتصفح للتدريب.",
     },
+    goTo: "الذهاب إلى",
     found: {
       lettersLabel: "الحروف",
       word: "اكتُشفت كلمة جديدة",
