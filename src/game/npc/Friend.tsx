@@ -36,7 +36,7 @@ export default function Friend({ avatar, x, z, yaw, player }: { avatar: AvatarId
   });
   const pos = useMemo(() => [x, 0, z] as [number, number, number], [x, z]);
   return (
-    <group ref={root} position={pos} rotation={[0, yaw, 0]}>
+    <group ref={root} position={pos} rotation={[0, yaw, 0]} userData={{ character: true }}>
       <LearnerAvatar player={still} avatar={other} />
       <ShadowBlob size={0.9} />
     </group>

@@ -15,6 +15,7 @@ import DialogueBubble, { type Bubble } from "@/game/ui/DialogueBubble";
 import WorldHud, { type Speech } from "@/game/ui/WorldHud";
 import { ControlsCard, DiscoveryToast, FoundToast, HelpButton, LettersChip, ObjectiveChip, WayHint, WelcomeCard, type TutorialStep } from "@/game/ui/Onboarding";
 import { cheer } from "@/game/systems/reactions";
+import { watercolorMode } from "@/game/systems/styleMode";
 import { currentObjective, type ObjectiveId } from "@/game/config/objectives";
 import type { DiscoveryKey } from "@/game/config/discoveries";
 // Type-only: erased at build time, so the 3D chunk stays lazy.
@@ -524,6 +525,17 @@ const WorldPage = () => {
                 onDiscover={discover}
               />
             </Suspense>
+            {/* Draft watercolour preview (?style=wc / wcall): paper grain over the scene. */}
+            {watercolorMode() !== "off" && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 z-[5] opacity-20 mix-blend-multiply"
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.47  0 0 0 0 0.38  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\"), radial-gradient(ellipse at center, rgba(255,250,240,0) 55%, rgba(170,140,110,0.22) 100%)",
+                }}
+              />
+            )}
             {ready && (
               <WorldHud
                 lang={lang}

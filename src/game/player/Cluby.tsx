@@ -208,7 +208,7 @@ export default function Cluby({ story, player, layout, guide, interests }: Props
   const m = (o: ReturnType<typeof std>) => <primitive object={o} attach="material" />;
 
   return (
-    <group ref={root} visible={false}>
+    <group ref={root} visible={false} userData={{ character: true }}>
       <ShadowBlob size={0.5} />
       <group ref={body}>
         {/* Feet */}

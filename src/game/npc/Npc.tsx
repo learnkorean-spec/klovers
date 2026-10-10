@@ -135,7 +135,7 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
 
   const sc = spec.scale ?? 1;
   return (
-    <group ref={root} position={[n.x, 0, n.z]} rotation={[0, n.yaw, 0]} scale={sc}>
+    <group ref={root} position={[n.x, 0, n.z]} rotation={[0, n.yaw, 0]} scale={sc} userData={{ character: true }}>
       <group ref={body}>
         <mesh geometry={parts.core} material={PEOPLE_MATERIAL} castShadow dispose={null} />
         {parts.armL && <mesh ref={armL} geometry={parts.armL} material={PEOPLE_MATERIAL} position={[-0.25, parts.shoulderY, 0]} castShadow dispose={null} />}

@@ -27,6 +27,11 @@ import { createStoryState, HATCH, type StoryState } from "./systems/story";
 import type { WorldState } from "./systems/worldState";
 import Backdrop, { SKY } from "./environment/Backdrop";
 import GroundWear from "./environment/GroundWear";
+import { applyWatercolor, WATERCOLOR_SCREEN, watercolorMode } from "./systems/watercolor";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 
 /**
  * Light colours (not brand colours): golden sun, warm sky bounce, earth
@@ -491,6 +496,7 @@ export default function World(props: WorldProps) {
       />
       <DiscoveryWatcher key={`d-${roomId}`} room={roomId} player={player} onDiscover={(k) => cb.current.onDiscover?.(k)} />
       <Stats glRef={glRef} />
+      <WatercolorDriver />
     </Canvas>
   );
 }
@@ -659,6 +665,43 @@ function DiscoveryWatcher({ room, player, onDiscover }: { room: RoomId; player: 
       }
     }
   });
+  return null;
+}
+
+/**
+ * Draft watercolour finish (?style=wc / ?style=wcall): re-applied now and
+ * then, so whatever a room change mounts is painted too. Off by default.
+ */
+function WatercolorDriver() {
+  const { scene, gl, camera, size } = useThree();
+  const mode = useMemo(watercolorMode, []);
+  const t = useRef(0);
+  const composer = useMemo(() => {
+    if (mode === "off") return null;
+    const c = new EffectComposer(gl);
+    c.addPass(new RenderPass(scene, camera));
+    const pass = new ShaderPass(WATERCOLOR_SCREEN);
+    c.addPass(pass);
+    c.addPass(new OutputPass());
+    return { c, pass };
+  }, [mode, gl, scene, camera]);
+  useEffect(() => {
+    if (!composer) return;
+    composer.c.setSize(size.width, size.height);
+    const dpr = gl.getPixelRatio();
+    composer.pass.uniforms.resolution.value = [size.width * dpr, size.height * dpr];
+  }, [composer, size, gl]);
+  useEffect(() => () => composer?.c.dispose(), [composer]);
+  // Positive priority: this frame callback takes over drawing (preview only).
+  useFrame((_, dt) => {
+    if (!composer) return;
+    t.current -= dt;
+    if (t.current <= 0) {
+      t.current = 1;
+      applyWatercolor(scene, mode);
+    }
+    composer.c.render();
+  }, mode === "off" ? 0 : 1);
   return null;
 }
 

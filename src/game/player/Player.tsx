@@ -92,7 +92,7 @@ export default function Player({ input, player, camera, layout, avatar }: Player
   }, -2);
 
   return (
-    <group ref={root}>
+    <group ref={root} userData={{ character: true }}>
       {/* Built from primitives to the canon look of Adam or Lina. Swap for a
           rigged GLB with the same props later (see player/animation.ts). */}
       <LearnerAvatar player={player} avatar={avatar} />
