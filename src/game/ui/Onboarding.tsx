@@ -2,6 +2,10 @@ import { useEffect, useRef } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import type { ObjectiveId } from "../config/objectives";
 import type { DiscoveryKey } from "../config/discoveries";
+import { AVATARS, type AvatarId } from "../player/characters";
+
+/** First person ("eyes") or over the shoulder ("behind"). */
+export type WorldView = "eyes" | "behind";
 
 /**
  * First-visit onboarding pieces, all DOM (no 3D cost):
@@ -16,23 +20,69 @@ import type { DiscoveryKey } from "../config/discoveries";
 
 const cap = "rounded-md border border-charcoal/25 bg-white px-1.5 py-0.5 font-display text-[11px] font-bold text-charcoal";
 
-export function WelcomeCard({ lang, onStart }: { lang: WorldLang; onStart: () => void }) {
-  const c = WORLD_COPY[lang].onboarding;
+export function WelcomeCard({
+  lang,
+  onStart,
+  avatar,
+  onAvatar,
+  view,
+  onView,
+}: {
+  lang: WorldLang;
+  onStart: () => void;
+  avatar: AvatarId;
+  onAvatar: (id: AvatarId) => void;
+  view: WorldView;
+  onView: (v: WorldView) => void;
+}) {
+  const copy = WORLD_COPY[lang];
+  const c = copy.onboarding;
   const btnRef = useRef<HTMLButtonElement>(null);
   useEffect(() => btnRef.current?.focus(), []);
+  const choice = (on: boolean) =>
+    `min-h-10 flex-1 rounded-full border-2 px-3 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal ${
+      on ? "border-charcoal bg-charcoal text-ivory" : "border-charcoal/25 text-charcoal hover:border-charcoal/60"
+    }`;
   return (
-    <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-charcoal/45 p-4">
+    <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-charcoal/45 p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="world-welcome-title"
-        className="flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl bg-ivory p-7 text-center text-charcoal shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95"
+        className="flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl bg-ivory p-7 text-center text-charcoal shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 [@media(max-height:500px)]:gap-2 [@media(max-height:500px)]:p-4"
       >
         <span aria-hidden="true" className="h-1.5 w-12 rounded-full bg-klovers-yellow" />
-        <h2 id="world-welcome-title" className="font-display text-2xl font-bold leading-tight">
+        <h2 id="world-welcome-title" className="font-display text-2xl font-bold leading-tight [@media(max-height:500px)]:text-lg">
           {c.welcomeTitle}
         </h2>
-        <p className="text-sm text-charcoal/80">{c.welcomeLine}</p>
+        <p className="text-sm text-charcoal/80 [@media(max-height:500px)]:hidden">{c.welcomeLine}</p>
+        {/* 1 · who walks; 2 · how the world is seen. */}
+        <div role="group" aria-label={c.chooseAvatar} className="flex w-full flex-col gap-1.5">
+          <p className="text-xs font-bold text-charcoal/60">
+            <span className="me-1">1</span>
+            {c.chooseAvatar}
+          </p>
+          <div className="flex gap-2">
+            {(Object.keys(AVATARS) as AvatarId[]).map((id) => (
+              <button key={id} type="button" aria-pressed={avatar === id} onClick={() => onAvatar(id)} className={choice(avatar === id)}>
+                {AVATARS[id].name[lang]}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div role="group" aria-label={c.chooseView} className="flex w-full flex-col gap-1.5">
+          <p className="text-xs font-bold text-charcoal/60">
+            <span className="me-1">2</span>
+            {c.chooseView}
+          </p>
+          <div className="flex gap-2">
+            {(["eyes", "behind"] as const).map((v) => (
+              <button key={v} type="button" aria-pressed={view === v} onClick={() => onView(v)} className={choice(view === v)}>
+                {v === "eyes" ? copy.view.eyesLong : copy.view.behindLong}
+              </button>
+            ))}
+          </div>
+        </div>
         <button
           ref={btnRef}
           type="button"

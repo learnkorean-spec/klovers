@@ -43,7 +43,7 @@ const FRAG_BODY = `
     float l = max(dot(c, vec3(0.299, 0.587, 0.114)), 1e-3);
     // Washes: pull the value toward a few soft bands.
     float band = (floor(l * 4.0) + smoothstep(0.3, 0.7, fract(l * 4.0))) / 4.0;
-    c *= mix(1.0, band / l, 0.5);
+    c *= mix(1.0, band / l, 0.35);
     // Transparent pigment: lighter and a little more saturated than paint.
     l = dot(c, vec3(0.299, 0.587, 0.114));
     c = mix(vec3(l), c, 1.3);
@@ -51,7 +51,7 @@ const FRAG_BODY = `
     // Blooms: large uneven patches with a slight warm/cool shift, then grain.
     float bloom = wcNoise(q * 0.45) * 0.6 + wcNoise(q * 1.6) * 0.4;
     float grain = wcNoise(q * 16.0);
-    c *= mix(vec3(0.9, 0.94, 1.02), vec3(1.06, 1.0, 0.93), bloom);
+    c *= mix(vec3(0.95, 0.97, 1.01), vec3(1.03, 1.0, 0.96), bloom);
     c *= 0.93 + 0.12 * grain;
     // Pigment pools at the edge of each wash (where the surface turns away).
     float rim = 1.0 - abs(dot(normalize(normal), normalize(vViewPosition)));
@@ -146,11 +146,41 @@ export const WATERCOLOR_SCREEN = {
     float h(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     float n(vec2 p) { vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
       return mix(mix(h(i), h(i + vec2(1, 0)), u.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), u.x), u.y); }
+    float fbm(vec2 p) { return n(p) * 0.5 + n(p * 2.03 + 1.7) * 0.3 + n(p * 4.1 + 3.1) * 0.2; }
     float lum(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
+
+    // Kuwahara (4 quadrants, radius 2 px — small enough that signs stay readable): flat, brush-like patches of colour
+    // with crisp borders — the "painted" part of the look.
+    vec3 kuwahara(vec2 uv, vec2 px) {
+      vec3 m[4]; vec3 s2[4];
+      for (int k = 0; k < 4; k++) { m[k] = vec3(0.0); s2[k] = vec3(0.0); }
+      for (int j = 0; j <= 2; j++) {
+        for (int i = 0; i <= 2; i++) {
+          vec3 a = texture2D(tDiffuse, uv + px * vec2(-i, -j)).rgb; m[0] += a; s2[0] += a * a;
+          vec3 b = texture2D(tDiffuse, uv + px * vec2(i, -j)).rgb;  m[1] += b; s2[1] += b * b;
+          vec3 c = texture2D(tDiffuse, uv + px * vec2(i, j)).rgb;   m[2] += c; s2[2] += c * c;
+          vec3 d = texture2D(tDiffuse, uv + px * vec2(-i, j)).rgb;  m[3] += d; s2[3] += d * d;
+        }
+      }
+      vec3 best = m[0] / 9.0; float bestV = 1e9;
+      for (int k = 0; k < 4; k++) {
+        vec3 mean = m[k] / 9.0;
+        vec3 v = abs(s2[k] / 9.0 - mean * mean);
+        float vs = v.r + v.g + v.b;
+        if (vs < bestV) { bestV = vs; best = mean; }
+      }
+      return best;
+    }
+
     void main() {
       vec2 px = 1.0 / resolution;
-      vec2 w = (vec2(n(vUv * 90.0), n(vUv * 90.0 + 7.3)) - 0.5) * px * 3.0;
+      vec2 fragPx = vUv * resolution;
+      // Wet paper: the image drifts a little, unevenly.
+      vec2 w = (vec2(fbm(fragPx / 40.0), fbm(fragPx / 40.0 + 9.2)) - 0.5) * px * 3.5;
       vec2 uv = vUv + w;
+      vec3 c = kuwahara(uv, px);
+
+      // Borders between washes (Sobel on luminance), slightly broken.
       float tl = lum(texture2D(tDiffuse, uv + px * vec2(-1, 1)).rgb);
       float t = lum(texture2D(tDiffuse, uv + px * vec2(0, 1)).rgb);
       float tr = lum(texture2D(tDiffuse, uv + px * vec2(1, 1)).rgb);
@@ -161,18 +191,24 @@ export const WATERCOLOR_SCREEN = {
       float br = lum(texture2D(tDiffuse, uv + px * vec2(1, -1)).rgb);
       float gx = -tl - 2.0 * l - bl + tr + 2.0 * r + br;
       float gy = -tl - 2.0 * t - tr + bl + 2.0 * b + br;
-      float edge = smoothstep(0.06, 0.3, length(vec2(gx, gy)));
-      // A little bleed: blend toward a soft neighbourhood average.
-      vec3 c = texture2D(tDiffuse, uv).rgb;
-      vec3 soft = (texture2D(tDiffuse, uv + px * vec2(1.5, 0.5)).rgb + texture2D(tDiffuse, uv - px * vec2(1.5, 0.5)).rgb
-        + texture2D(tDiffuse, uv + px * vec2(-0.5, 1.5)).rgb + texture2D(tDiffuse, uv - px * vec2(-0.5, 1.5)).rgb) * 0.25;
-      c = mix(c, soft, 0.35);
-      // Pigment pools along the borders (darker, same hue), broken by grain.
-      float g = 0.6 + 0.4 * n(vUv * resolution * 0.35);
-      c = mix(c, c * c * 0.9, edge * 0.75 * g);
-      // Keep the washes clear and bright, not muddy.
+      float edge = smoothstep(0.08, 0.35, length(vec2(gx, gy))) * (0.55 + 0.45 * n(fragPx / 3.0));
+
+      // Transparent pigment: a touch more colour, then lifted toward paper.
       float lc = lum(c);
-      c = mix(vec3(lc), c, 1.12);
+      c = mix(vec3(lc), c, 1.15);
+      // Wet edge: pigment pools at the border of each wash (same hue, deeper).
+      c = mix(c, c * c * 0.92, edge * 0.6);
+      // Granulation: darker washes show the paper's tooth more.
+      float tooth = fbm(fragPx / 2.2);
+      c *= 1.0 - (1.0 - lc) * 0.22 * tooth;
+      // Paper: warm white, fibres in the lights, a soft unpainted margin.
+      vec3 paper = vec3(1.0, 0.982, 0.945);
+      float fibre = fbm(fragPx * vec2(0.9, 0.12)) * 0.5 + fbm(fragPx * vec2(0.12, 0.9)) * 0.5;
+      c *= mix(vec3(1.0), paper, 0.6) * (0.965 + 0.035 * fibre);
+      c = mix(c, paper, smoothstep(0.82, 1.0, lc) * 0.45);
+      vec2 q = vUv - 0.5;
+      float margin = smoothstep(0.44, 0.8, length(q * vec2(1.0, 1.25)) + (fbm(fragPx / 60.0) - 0.5) * 0.12);
+      c = mix(c, paper, margin * 0.4);
       gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
     }
   `,

@@ -18,6 +18,9 @@ interface CameraProps {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
+/** Eye height in first person (the avatars stand about 1.75 m). */
+const POV_EYE = 1.6;
+
 /**
  * Passages the camera may back out through: every always-open gate (a
  * portal with no lock) continues a short way past the wall (OPENING_DEPTH),
@@ -72,6 +75,7 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
   portrait.current = size.width < size.height;
   const openings = useMemo(() => cameraOpenings(layout), [layout]);
   const lastLayout = useRef(layout);
+  const bob = useRef(0);
   const firstLook = useRef(onFirstLook);
   firstLook.current = onFirstLook;
 
@@ -165,6 +169,28 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
     const dt = Math.min(rawDt, MAX_DT);
     const c = camera.current;
     const p = player.current.position;
+
+    // First person: the learner's own eyes. No lag (lag in first person is
+    // what makes people queasy) and no walls to back away from. Story
+    // moments (focus) still frame the scene from outside.
+    if (c.pov && !c.focus && c.yawTarget === null) {
+      const look = (c.pitch - CAMERA.startPitch) * 1.6;
+      const fx = -Math.sin(c.yaw) * Math.cos(look);
+      const fy = -Math.sin(look);
+      const fz = -Math.cos(c.yaw) * Math.cos(look);
+      // A gentle step bob while walking.
+      const v = player.current.velocity;
+      const speed = Math.hypot(v.x, v.z);
+      bob.current += dt * speed * 2.6;
+      const y = p.y + POV_EYE + Math.sin(bob.current) * Math.min(speed, 3) * 0.008;
+      cam.position.set(p.x - Math.sin(c.yaw) * 0.12, y, p.z - Math.cos(c.yaw) * 0.12);
+      desired.current.set(cam.position.x + fx, cam.position.y + fy, cam.position.z + fz);
+      cam.lookAt(desired.current);
+      initialised.current = false;
+      c.snap = false;
+      lastLayout.current = layout;
+      return;
+    }
 
     if (c.focus) desired.current.set(c.focus.x, c.focus.y, c.focus.z);
     else {

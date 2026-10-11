@@ -4,6 +4,7 @@ import { playVoice, stopVoice, type VoiceLine } from "../systems/voice";
 import { canListen, listenFor, type SayResult } from "../systems/sayIt";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import type { LearnId, SayId } from "../config/interactions";
+import type { InfoId } from "../config/rooms";
 import type { AvatarId } from "../player/characters";
 
 /**
@@ -15,11 +16,13 @@ import type { AvatarId } from "../player/characters";
  *  say   a person's line (name · Korean · meaning · Cluby's note)
  *  talk  a named character's greeting (the other learner, Minsu)
  *  learn a word or a letter (Korean · how it sounds · meaning · example)
+ *  info  a Klovers House board (Korean name · what it is · link to the page)
  */
 export type Bubble =
   | { kind: "say"; id: SayId }
   | { kind: "talk"; who: "friend" | "minsu" }
-  | { kind: "learn"; id: LearnId };
+  | { kind: "learn"; id: LearnId }
+  | { kind: "info"; id: InfoId };
 
 interface LearnText {
   ko: string;
@@ -47,6 +50,7 @@ export default function DialogueBubble({
   avatar,
   clubyHere,
   onClose,
+  onOpenInfo,
 }: {
   lang: WorldLang;
   bubble: Bubble;
@@ -54,6 +58,8 @@ export default function DialogueBubble({
   /** Cluby is awake and following: the note is his. Otherwise it is just a note. */
   clubyHere: boolean;
   onClose: () => void;
+  /** Info boards: go to that part of the site. */
+  onOpenInfo?: (id: InfoId) => void;
 }) {
   const copy = WORLD_COPY[lang];
   const { speakKorean } = useSpeech({ rate: 0.85 });
@@ -64,7 +70,7 @@ export default function DialogueBubble({
   const [hearing, setHearing] = useState(false);
   const [result, setResult] = useState<SayResult | null>(null);
   const stopListening = useRef<() => void>(() => {});
-  const bubbleKey = bubble.kind === "learn" ? bubble.id : bubble.kind === "say" ? bubble.id : bubble.who;
+  const bubbleKey = bubble.kind === "talk" ? bubble.who : bubble.id;
   useEffect(() => {
     setStep(0);
     setResult(null);
@@ -94,7 +100,27 @@ export default function DialogueBubble({
   /** A recorded line for this speaker, if there is one. */
   let line: VoiceLine | undefined;
 
-  if (bubble.kind === "learn") {
+  if (bubble.kind === "info") {
+    const t = copy.info[bubble.id];
+    ko = t.ko;
+    big = true;
+    lines = (
+      <>
+        <p className="text-xs font-semibold tracking-wide text-charcoal/60">{t.roman}</p>
+        <p className="font-display text-lg font-bold leading-tight">{t.title}</p>
+        <p className="text-sm text-charcoal/80">{t.line}</p>
+        {onOpenInfo && (
+          <button
+            type="button"
+            onClick={() => onOpenInfo(bubble.id)}
+            className="mt-1 min-h-10 rounded-full border-2 border-klovers-yellow bg-charcoal px-5 text-sm font-bold text-ivory focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow"
+          >
+            {copy.infoOpen}
+          </button>
+        )}
+      </>
+    );
+  } else if (bubble.kind === "learn") {
     const t = copy.learn[bubble.id] as LearnText;
     ko = t.ko;
     big = true;
@@ -154,7 +180,7 @@ export default function DialogueBubble({
       // centre (over-the-shoulder camera), so the note sits to the right —
       // on a portrait phone, under the top bar. Short screens get a compact
       // card that always fits.
-      className="pointer-events-auto absolute left-1/2 top-[6rem] flex max-h-[calc(100dvh-9rem)] w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 flex-col items-center gap-1.5 overflow-y-auto rounded-3xl border-b-4 border-klovers-yellow bg-ivory/95 px-5 pb-3 pt-3 text-center text-charcoal shadow-xl motion-safe:animate-in motion-safe:fade-in landscape:left-auto landscape:right-[max(1rem,4vw)] landscape:top-1/2 landscape:-translate-y-1/2 landscape:translate-x-0 [@media(max-height:500px)]:max-h-[calc(100dvh-5.5rem)] [@media(max-height:500px)]:gap-1 [@media(max-height:500px)]:py-2"
+      className="pointer-events-auto absolute left-1/2 top-[6rem] flex max-h-[calc(100dvh-9rem)] w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 flex-col items-center gap-1.5 overflow-y-auto rounded-3xl border-b-4 border-klovers-yellow bg-ivory/95 px-5 pb-3 pt-3 text-center text-charcoal shadow-xl motion-safe:animate-in motion-safe:fade-in landscape:left-auto landscape:right-[max(1rem,4vw)] landscape:top-1/2 landscape:-translate-y-1/2 landscape:translate-x-0 [@media(max-height:500px)]:max-h-[calc(100dvh-5.5rem)] [@media(max-height:500px)]:landscape:top-[calc(50%+1.6rem)] [@media(max-height:500px)]:gap-1 [@media(max-height:500px)]:py-2"
     >
       {name && <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-charcoal/60">{name}</p>}
       <p lang="ko" dir="ltr" className={`font-ko font-bold leading-snug ${big ? "text-5xl [@media(max-height:500px)]:text-3xl" : "text-2xl [@media(max-height:500px)]:text-xl"}`} style={{ wordBreak: "keep-all" }}>

@@ -32,6 +32,7 @@ interface Opening {
 const SOUTH_GATES: { along: number; sign: string; id: string }[] = [
   { id: "village", along: HUB.southGates.village, sign: "한글 마을" },
   { id: "market", along: HUB.southGates.market, sign: "시장" },
+  { id: "house", along: HUB.southGates.house, sign: HUB.houseSign },
 ];
 
 const OPENINGS: Opening[] = [
@@ -325,7 +326,7 @@ export default function Hub({ cafeOpen, marketOpen }: { cafeOpen: boolean; marke
       gatehouse(k, pose.x, pose.z, pose.rotY, { open: usable, accent: usable, barred: g.kind === "future" });
     }
     for (const g of SOUTH_GATES) {
-      const usable = g.id === "village" || marketOpen;
+      const usable = g.id !== "market" || marketOpen;
       gatehouse(k, g.along, H + 0.08, Math.PI, { open: usable, accent: usable });
     }
     return k;

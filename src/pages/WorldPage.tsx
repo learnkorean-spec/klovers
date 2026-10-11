@@ -5,7 +5,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
 import { VILLAGE_LETTERS, type Interactable, type QuizId } from "@/game/config/interactions";
-import type { NoticeKey, RoomId } from "@/game/config/rooms";
+import type { InfoId, NoticeKey, RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { useWorldAccess } from "@/game/systems/useWorldAccess";
 import { hasWebGL, isTouchFirst } from "@/game/systems/webgl";
@@ -13,7 +13,7 @@ import { loadWorldState, saveWorldState, type WorldState } from "@/game/systems/
 import InteractionCard, { type CardKind } from "@/game/ui/InteractionCard";
 import DialogueBubble, { type Bubble } from "@/game/ui/DialogueBubble";
 import WorldHud, { type Speech } from "@/game/ui/WorldHud";
-import { ControlsCard, DiscoveryToast, FoundToast, HelpButton, LettersChip, ObjectiveChip, WayHint, WelcomeCard, type TutorialStep } from "@/game/ui/Onboarding";
+import { ControlsCard, DiscoveryToast, FoundToast, HelpButton, LettersChip, ObjectiveChip, WayHint, WelcomeCard, type TutorialStep, type WorldView } from "@/game/ui/Onboarding";
 import { cheer } from "@/game/systems/reactions";
 import { watercolorMode } from "@/game/systems/styleMode";
 import { currentObjective, type ObjectiveId } from "@/game/config/objectives";
@@ -22,6 +22,16 @@ import type { DiscoveryKey } from "@/game/config/discoveries";
 import type { SpeechKey, WorldApi } from "@/game/World";
 
 const AVATAR_KEY = "klovers-world-avatar";
+const VIEW_KEY = "klovers-world-view";
+
+/** Remembered view (first person by default) — a per-browser convenience. */
+function readView(): WorldView {
+  try {
+    return localStorage.getItem(VIEW_KEY) === "behind" ? "behind" : "eyes";
+  } catch {
+    return "eyes";
+  }
+}
 
 /** Each place's number on its arrival card (the order a learner meets them). */
 const ROOM_NUMBER: Record<RoomId, number> = {
@@ -30,6 +40,21 @@ const ROOM_NUMBER: Record<RoomId, number> = {
   "vocabulary-market": 3,
   hub: 4,
   "conversation-cafe": 5,
+  "klovers-house": 6,
+};
+
+/** Where each Klovers House board leads on the site. */
+const INFO_ROUTE: Record<InfoId, (signedIn: boolean) => string> = {
+  about: () => "/about",
+  courses: () => "/courses",
+  trial: () => "/free-trial",
+  placement: () => "/placement-test",
+  textbook: (signedIn) => (signedIn ? "/textbook" : "/hangul-book"),
+  shop: () => "/shop",
+  games: () => "/games",
+  blog: () => "/blog",
+  topik: () => "/topik-exam-preparation",
+  scholarships: () => "/scholarships",
 };
 
 /** Remembered character choice — a per-browser convenience only. */
@@ -176,7 +201,7 @@ const WorldPage = () => {
   // games (only rooms open to everyone), else the courtyard. Read once.
   const [startRoom] = useState<RoomId>(() => {
     const r = loadWorldState().lastRoom;
-    return r === "hangul-village" || r === "hub" ? r : "courtyard";
+    return r === "hangul-village" || r === "hub" || r === "klovers-house" ? r : "courtyard";
   });
   const [locked, setLocked] = useState(false);
   const api = useRef<WorldApi | null>(null);
@@ -185,6 +210,16 @@ const WorldPage = () => {
   // Cluby is shown only once he has really hatched (the dashboard's egg
   // stage, recorded per browser by lib/clubyAwake) — or in an admin preview.
   const clubyAwake = access.preview || (access.signedIn && isClubyAwake());
+
+  const [view, setView] = useState<WorldView>(readView);
+  const chooseView = useCallback((v: WorldView) => {
+    setView(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      /* private mode: this visit only */
+    }
+  }, []);
 
   const chooseAvatar = useCallback((id: AvatarId) => {
     setAvatar(id);
@@ -361,6 +396,9 @@ const WorldPage = () => {
       case "say":
         if (it.say) setBubble({ kind: "say", id: it.say, at: it.id });
         break;
+      case "info":
+        if (it.info) setBubble({ kind: "info", id: it.info, at: it.id });
+        break;
       case "talk":
         if (it.who) {
           setBubble({ kind: "talk", who: it.who, at: it.id });
@@ -391,6 +429,16 @@ const WorldPage = () => {
         break;
     }
   }, [focus, card, sequence, bubble, clubyAwake, saved, patch, complete, navigate, access.signedIn, findLetter, learnWord]);
+
+  // A Klovers House board: out to that page; the world reopens in the house.
+  const openInfo = useCallback(
+    (id: InfoId) => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      patch({ lastRoom: "klovers-house" });
+      navigate(INFO_ROUTE[id](access.signedIn));
+    },
+    [patch, navigate, access.signedIn],
+  );
 
   // Tap-to-go: arriving at a tapped sign uses the thing at once.
   const focusNow = useRef(focus);
@@ -476,6 +524,7 @@ const WorldPage = () => {
     if (it.kind === "learn" && it.learn) return { verb, sub: (copy.learn[it.learn] as { ko: string }).ko, subKo: true };
     if ((it.kind === "quiz" || it.kind === "letter") && it.letter) return { verb, sub: it.letter, subKo: true };
     if (it.kind === "say" && it.say) return { verb, sub: copy.say[it.say].name };
+    if (it.kind === "info" && it.info) return { verb, sub: copy.info[it.info].title };
     if (it.kind === "talk" && it.who) return { verb, sub: it.who === "minsu" ? copy.names.minsu : copy.names[avatar === "lina" ? "adam" : "lina"] };
     if ((it.kind === "door" || it.kind === "locked") && it.to) return { verb, sub: copy.rooms[it.to]?.name };
     return { verb };
@@ -551,6 +600,7 @@ const WorldPage = () => {
                 onNearby={setNearby}
                 beaconEls={beaconEls}
                 onArrive={arrived}
+                view={view}
               />
             </Suspense>
             {/* Guidance: a small sign over each thing nearby — tap (or click)
@@ -610,6 +660,8 @@ const WorldPage = () => {
                 onExit={exit}
                 avatar={avatar}
                 onAvatar={chooseAvatar}
+                view={view}
+                onView={chooseView}
                 banner={room ? { eyebrow: introBanner ? copy.worldTitle : undefined, number: ROOM_NUMBER[room], title: copy.rooms[room].name, line: copy.rooms[room].line } : null}
                 notice={null}
                 preview={access.preview}
@@ -645,7 +697,7 @@ const WorldPage = () => {
                         }}
                       />
                     )}
-                    {bubble && !card && <DialogueBubble lang={lang} bubble={bubble} avatar={avatar} clubyHere={clubyAwake && saved.hatchSeen} onClose={() => setBubble(null)} />}
+                    {bubble && !card && <DialogueBubble lang={lang} bubble={bubble} avatar={avatar} clubyHere={clubyAwake && saved.hatchSeen} onClose={() => setBubble(null)} onOpenInfo={openInfo} />}
                     {found && !card && <FoundToast text={found.text} ko={found.ko} />}
                     {way && !card && !bubble && <WayHint lang={lang} ko="한글 마을" name={copy.rooms["hangul-village"].name} />}
                     {toast && !card && !bubble && <DiscoveryToast lang={lang} discovery={toast} />}
@@ -668,6 +720,10 @@ const WorldPage = () => {
             {welcoming && (
               <WelcomeCard
                 lang={lang}
+                avatar={avatar}
+                onAvatar={chooseAvatar}
+                view={view}
+                onView={chooseView}
                 onStart={() => {
                   patch({ welcomed: true });
                   arrive(room ?? startRoom, true);

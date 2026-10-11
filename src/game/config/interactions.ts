@@ -1,4 +1,4 @@
-import { HUB, hubGateSpot, MARKET, ROOMS, VILLAGE, type NoticeKey, type RoomId } from "./rooms";
+import { boardSpot, HOUSE, HUB, hubGateSpot, MARKET, ROOMS, VILLAGE, type InfoId, type NoticeKey, type RoomId } from "./rooms";
 import { FRIEND_SPOT, MINSU_SPOT, NPCS } from "./npcs";
 import { PROPS } from "./world";
 
@@ -22,18 +22,20 @@ import { PROPS } from "./world";
  * - cluby    Cluby himself (added at run time: he moves)
  * - link     a door out to a page of the site (Hub)
  * - door     a gate into a world that IS open: E walks through
+ * - info     a board in Klovers House: a part of the site, its Korean
+ *            name, what it is for, and a link to it
  * - locked   a gate to a world that is not open yet (or not built yet):
  *            inspecting it says, kindly, what opens it
  */
-export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked";
+export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info";
 
 /** The verb on the prompt ([E] Inspect, the round button's label …). */
-export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help";
+export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read";
 
 /** Learning cards (words and letters). Text per language: copy.learn[id]. */
 export type LearnId =
   | "seokdeung" | "beotnamu" | "nieun" | "digeut" | "mieum" | "o" | "umul"
-  | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan";
+  | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan" | "annaeso";
 /** One-question cards. Text per language: copy.quiz[id]. */
 export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang";
 /** People's short lines. Text per language: copy.say[id]. */
@@ -58,6 +60,7 @@ export interface Interactable {
   learn?: LearnId;
   quiz?: QuizId;
   say?: SayId;
+  info?: InfoId;
   /** The person speaking (turns to face the learner, reacts). */
   npc?: string;
   /** A Hangul letter counted by the village's three-letter discovery. */
@@ -164,6 +167,12 @@ export const INTERACTABLES: Interactable[] = [
         : { id: g.id, room: "hub", kind: "locked", action: "inspect", x: spot.x, z: spot.z, radius: 1.8, notice: hubNotice[g.id] };
     }),
 
+  // The information house's gate (always open), and inside: its own word
+  // under the door, then one board per part of the site.
+  { id: "door-house", room: "hub", kind: "door", action: "enter", to: "klovers-house", arrive: "fromHub", x: HUB.southGates.house, z: HUB.half - 1.3, radius: 1.1 },
+  { id: "learn-annaeso", room: "klovers-house", kind: "learn", action: "inspect", learn: "annaeso", x: 1.7, z: HOUSE.halfDepth - 1.2, radius: 0.9 },
+  ...HOUSE.boards.map((b): Interactable => ({ id: `info-${b.id}`, room: "klovers-house", kind: "info", action: "read", info: b.id, ...boardSpot(b), radius: b.id === "about" ? 1.6 : 1.35, priority: 1 })),
+
   // Every gate into a world that may be locked: inspect it while it is,
   // walk through it (or press E) once it is open.
   ...Object.values(ROOMS).flatMap((room) =>
@@ -190,15 +199,22 @@ export function usable(it: Interactable, room: RoomId, isOpen: IsOpen): boolean 
 }
 
 /**
- * The few usable things around the learner (nearest first, within `range`
- * metres), for the tappable signs that guide a learner to them.
+ * The few usable things around the learner, for the tappable signs that
+ * guide a learner to them: within `range` metres, nearest first — and what
+ * lies ahead (along `yaw`, the way the view looks) counts as nearer.
  */
-export function nearbyInteractables(room: RoomId, x: number, z: number, isOpen: IsOpen, max = 3, range = 9, list = INTERACTABLES): Interactable[] {
+export function nearbyInteractables(room: RoomId, x: number, z: number, isOpen: IsOpen, max = 4, range = 10, list = INTERACTABLES, yaw?: number): Interactable[] {
+  const fx = yaw === undefined ? 0 : -Math.sin(yaw);
+  const fz = yaw === undefined ? 0 : -Math.cos(yaw);
   return list
     .filter((it) => usable(it, room, isOpen))
-    .map((it) => ({ it, d: Math.hypot(it.x - x, it.z - z) }))
+    .map((it) => {
+      const d = Math.hypot(it.x - x, it.z - z);
+      const ahead = d > 0.01 ? ((it.x - x) * fx + (it.z - z) * fz) / d : 0;
+      return { it, d, score: d - 5 * ahead };
+    })
     .filter((e) => e.d <= range)
-    .sort((a, b) => a.d - b.d)
+    .sort((a, b) => a.score - b.score)
     .slice(0, max)
     .map((e) => e.it);
 }

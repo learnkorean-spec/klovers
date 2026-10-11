@@ -36,6 +36,8 @@ export interface CameraState {
   /** Story moments: swing the orbit to this yaw / pitch. */
   yawTarget: number | null;
   pitchTarget: number | null;
+  /** First-person view: the camera is the learner's eyes (own body hidden). */
+  pov: boolean;
 }
 
 export function createPlayerState(): PlayerState {
@@ -61,5 +63,6 @@ export function createCameraState(): CameraState {
     focus: null,
     yawTarget: null,
     pitchTarget: null,
+    pov: false,
   };
 }

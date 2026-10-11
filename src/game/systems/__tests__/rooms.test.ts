@@ -49,7 +49,7 @@ describe("KLOVERS World rooms", () => {
 
   it("every gate into a later canon world carries a locked notice", () => {
     const gated = new Set(["vocabulary-market", "conversation-cafe"]);
-    const order: Record<string, number> = { courtyard: 0, "hangul-village": 1, hub: 1.5, "vocabulary-market": 2, "conversation-cafe": 3 };
+    const order: Record<string, number> = { courtyard: 0, "hangul-village": 1, hub: 1.5, "vocabulary-market": 2, "conversation-cafe": 3, "klovers-house": 1.6 };
     for (const room of Object.values(ROOMS)) {
       for (const portal of room.portals) {
         // Going back never needs a lock; going forward into a gated world does.
@@ -64,7 +64,7 @@ describe("KLOVERS World access (real level only)", () => {
   it("guests and learners without a level get the courtyard and Hangul Village", () => {
     for (const lvl of [null, "", "not-a-level"]) {
       const a = worldAccess(lvl, false);
-      expect([...a.open].sort()).toEqual(["courtyard", "hangul-village", "hub"]);
+      expect([...a.open].sort()).toEqual(["courtyard", "hangul-village", "hub", "klovers-house"]);
       expect(a.preview).toBe(false);
     }
   });
@@ -139,7 +139,7 @@ describe("guest path (the Hub is open to everyone)", () => {
         }
       }
     }
-    expect([...reach].sort()).toEqual(["courtyard", "hangul-village", "hub"]);
+    expect([...reach].sort()).toEqual(["courtyard", "hangul-village", "hub", "klovers-house"]);
   });
 
   it("four progression states open exactly the right worlds", () => {

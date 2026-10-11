@@ -1,3 +1,5 @@
+import { STUDENTS_TAUGHT, TEACHING_YEARS_COUNT, toArabicDigits } from "@/lib/trustFigures";
+
 /**
  * All words the World shows, per language. Arabic is Modern Standard Arabic
  * and gender-neutral (verbal nouns on buttons, nothing aimed at the reader as
@@ -34,6 +36,7 @@ export const WORLD_COPY = {
       learn: "Learn",
       enter: "Enter",
       help: "Help",
+      read: "Read",
     },
     speech: {
       hello: { ko: "안녕!", text: "annyeong — hello" },
@@ -42,12 +45,14 @@ export const WORLD_COPY = {
       "hangul-village": { text: "A letter on every door. Let's read one." },
       "vocabulary-market": { text: "The baker's sign is gone. Which word goes there?" },
       hub: { text: "Every path starts here." },
+      "klovers-house": { text: "Everything Klovers does is on these walls." },
       wordRight: { ko: "잘했어!", text: "Well done." },
       // Talking to Cluby: one short line per place.
       "talk-courtyard": { ko: "가자!", text: "Let's see what's outside!" },
       "talk-hangul-village": { ko: "한글!", text: "Look — letters everywhere." },
       "talk-vocabulary-market": { ko: "이게 뭐예요?", text: "What's this? Everything here has a Korean name." },
       "talk-hub": { ko: "어디로 갈까?", text: "Where to? New worlds start from here." },
+      "talk-klovers-house": { ko: "뭐 볼까?", text: "What shall we look at? Every board opens a page." },
       "talk-conversation-cafe": { ko: "커피 한 잔!", text: "One coffee, please!" },
       letters: { ko: "잘했어!", text: "Every letter on the street found!" },
     },
@@ -88,6 +93,8 @@ export const WORLD_COPY = {
     entryCta: "Enter KLOVERS World",
     entryNote: "Works on phones and computers.",
     avatarLabel: "Walk as",
+    /** First person ("eyes") or over the shoulder ("behind"). */
+    view: { label: "View", eyes: "Eyes", behind: "Behind", eyesLong: "Through the character's eyes", behindLong: "From behind the character" },
     rooms: {
       courtyard: { name: "The hanok courtyard", line: "The clover egg is still asleep." },
       "hangul-village": {
@@ -102,6 +109,10 @@ export const WORLD_COPY = {
       "conversation-cafe": {
         name: "Conversation Café",
         line: "A table for two and a menu in Korean. This is where words turn into talk.",
+      },
+      "klovers-house": {
+        name: "Klovers House",
+        line: "Who we are — and every part of the site, one board each.",
       },
     },
     notices: {
@@ -119,6 +130,8 @@ export const WORLD_COPY = {
       welcomeTitle: "Welcome to KLOVERS World",
       welcomeLine: "Explore the village, meet the characters and practise Korean as you go.",
       letsGo: "Let's go",
+      chooseAvatar: "Choose a character",
+      chooseView: "Choose the view",
       controlsTitle: "Controls",
       help: "Controls",
       close: "Close",
@@ -177,6 +190,7 @@ export const WORLD_COPY = {
       umul: { ko: "우물", roman: "umul", meaning: "well", note: "The village well was where neighbours met and talked." },
       gwail: { ko: "과일", roman: "gwail", meaning: "fruit", example: { ko: "과일 좋아해요.", gloss: "I like fruit." } },
       gesipan: { ko: "게시판", roman: "gesipan", meaning: "notice board", note: "Korean schools and offices pin their news on one." },
+      annaeso: { ko: "안내소", roman: "annaeso", meaning: "information centre", note: "Every Korean station and museum has one. This one shows where everything on the Klovers site is." },
     },
     quiz: {
       a: {
@@ -244,6 +258,20 @@ export const WORLD_COPY = {
       hubReader: { name: "Reader", ko: "한국어를 공부해요.", gloss: "I'm studying Korean.", note: "공부 means study." },
       shopper: { name: "Shopper", ko: "이거 얼마예요?", gloss: "How much is this?", note: "얼마 means how much." },
     },
+    /** Klovers House: one board per part of the site (config/rooms HOUSE). */
+    info: {
+      about: { ko: "우리는 클로버스", roman: "urineun keullobeoseu", title: "We are Klovers", line: `Korean for Arabic speakers, from the first letter to TOPIK. Klovers was founded by Reham Elshrkawy, an Al-Alsun Korean language and literature graduate who has taught Korean for ${TEACHING_YEARS_COUNT} years and more than ${STUDENTS_TAUGHT.replace("+", "")} students.` },
+      courses: { ko: "수업", roman: "sueop", title: "Courses", line: "Live Korean classes online, level by level — from Hangul up to TOPIK." },
+      trial: { ko: "무료 수업", roman: "muryo sueop", title: "Free trial class", line: "Book a free class to meet the teacher and see how a lesson feels." },
+      placement: { ko: "레벨 테스트", roman: "rebel teseuteu", title: "Placement test", line: "A free test that shows which level to start from." },
+      textbook: { ko: "교재", roman: "gyojae", title: "Textbook", line: "The Klovers books, lesson by lesson, with exercises." },
+      shop: { ko: "가게", roman: "gage", title: "Shop", line: "Klovers books and study materials to order." },
+      games: { ko: "게임", roman: "geim", title: "Games", line: "Short games that practise the letters and words from class." },
+      blog: { ko: "블로그", roman: "beullogeu", title: "Blog", line: "Articles on Korean, K-drama phrases and study tips." },
+      topik: { ko: "토픽 시험", roman: "topik siheom", title: "TOPIK preparation", line: "Getting ready for TOPIK, the official Korean proficiency test." },
+      scholarships: { ko: "장학금", roman: "janghakgeum", title: "Scholarships in Korea", line: "Study scholarships in Korea open to Arabic speakers, with their official sources." },
+    },
+    infoOpen: "Open the page",
     card: {
       listen: "Listen",
       close: "Close",
@@ -298,6 +326,7 @@ export const WORLD_COPY = {
       learn: "تعلّم",
       enter: "دخول",
       help: "مساعدة",
+      read: "قراءة",
     },
     speech: {
       hello: { ko: "안녕!", text: "أنيونغ: مرحبًا" },
@@ -306,11 +335,13 @@ export const WORLD_COPY = {
       "hangul-village": { text: "على كل باب حرف. هيا نقرأ واحدًا." },
       "vocabulary-market": { text: "لافتة الخبّازة مفقودة. أيّ كلمة تناسبها؟" },
       hub: { text: "من هنا تبدأ كل الطرق." },
+      "klovers-house": { text: "كل ما تقدّمه كلوفرز على هذه الجدران." },
       wordRight: { ko: "잘했어!", text: "أحسنت." },
       "talk-courtyard": { ko: "가자!", text: "هيا نرَ ما في الخارج!" },
       "talk-hangul-village": { ko: "한글!", text: "الحروف في كل مكان حولنا." },
       "talk-vocabulary-market": { ko: "이게 뭐예요?", text: "ما هذا؟ لكل شيء هنا اسم كوري." },
       "talk-hub": { ko: "어디로 갈까?", text: "إلى أين؟ من هنا تبدأ عوالم جديدة." },
+      "talk-klovers-house": { ko: "뭐 볼까?", text: "ماذا نرى أولًا؟ كل لوحة تفتح صفحة." },
       "talk-conversation-cafe": { ko: "커피 한 잔!", text: "فنجان قهوة، من فضلك!" },
       letters: { ko: "잘했어!", text: "اكتُشفت كل حروف الشارع!" },
     },
@@ -351,6 +382,7 @@ export const WORLD_COPY = {
     entryCta: "دخول عالم كلوفرز",
     entryNote: "يعمل على الجوال والحاسوب.",
     avatarLabel: "الشخصية",
+    view: { label: "المنظور", eyes: "عين الشخصية", behind: "من الخلف", eyesLong: "بعين الشخصية", behindLong: "من خلف الشخصية" },
     rooms: {
       courtyard: { name: "ساحة الهانوك", line: "ما زالت بيضة البرسيم نائمة." },
       "hangul-village": {
@@ -365,6 +397,10 @@ export const WORLD_COPY = {
       "conversation-cafe": {
         name: "مقهى المحادثة",
         line: "طاولة لشخصين وقائمة بالكورية. هنا تتحوّل الكلمات إلى حديث.",
+      },
+      "klovers-house": {
+        name: "بيت كلوفرز",
+        line: "من نحن، وكل أقسام الموقع: لوحة لكل قسم.",
       },
     },
     notices: {
@@ -382,6 +418,8 @@ export const WORLD_COPY = {
       welcomeTitle: "مرحبًا بك في عالم كلوفرز",
       welcomeLine: "استكشاف القرية، والتعرّف على الشخصيات، والتدرّب على الكورية أثناء الرحلة.",
       letsGo: "لنبدأ",
+      chooseAvatar: "اختيار الشخصية",
+      chooseView: "اختيار المنظور",
       controlsTitle: "التحكم",
       help: "التحكم",
       close: "إغلاق",
@@ -440,6 +478,7 @@ export const WORLD_COPY = {
       umul: { ko: "우물", roman: "أومول", meaning: "بئر", note: "كانت بئر القرية مكانًا يلتقي فيه الجيران ويتحدثون." },
       gwail: { ko: "과일", roman: "غوائيل", meaning: "فاكهة", example: { ko: "과일 좋아해요.", gloss: "أحب الفاكهة." } },
       gesipan: { ko: "게시판", roman: "كيشيبان", meaning: "لوحة الإعلانات", note: "تعلّق المدارس والمكاتب الكورية أخبارها على لوحة كهذه." },
+      annaeso: { ko: "안내소", roman: "آنّيسو", meaning: "مكتب الاستعلامات", note: "في كل محطة ومتحف كوري مكتب كهذا، وهذا المكتب يدلّ على كل أقسام موقع كلوفرز." },
     },
     quiz: {
       a: {
@@ -506,6 +545,19 @@ export const WORLD_COPY = {
       hubReader: { name: "قارئة", ko: "한국어를 공부해요.", gloss: "أدرس اللغة الكورية.", note: "공부 تعني الدراسة." },
       shopper: { name: "متسوّقة", ko: "이거 얼마예요?", gloss: "بكم هذا؟", note: "얼마 تعني: كم، عند السؤال عن السعر." },
     },
+    info: {
+      about: { ko: "우리는 클로버스", roman: "أورينون كُلّوبوسو", title: "نحن كلوفرز", line: `الكورية لمتحدثي العربية، من أول حرف حتى التوبيك. أسّست كلوفرز ريهام الشرقاوي، خريجة الألسن قسم اللغة والأدب الكوري، وتدرّس الكورية منذ ${toArabicDigits(TEACHING_YEARS_COUNT)} عامًا لأكثر من ${toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))} طالب.` },
+      courses: { ko: "수업", roman: "سوأوب", title: "الدورات", line: "حصص كورية مباشرة عبر الإنترنت، مستوى بعد مستوى، من الهانغول حتى التوبيك." },
+      trial: { ko: "무료 수업", roman: "موريو سوأوب", title: "حصة تجريبية مجانية", line: "حجز حصة مجانية للتعرّف على المعلّمة وعلى شكل الحصة." },
+      placement: { ko: "레벨 테스트", roman: "ريبيل تيسوتو", title: "اختبار تحديد المستوى", line: "اختبار مجاني يحدّد المستوى المناسب للبداية." },
+      textbook: { ko: "교재", roman: "كيوجي", title: "الكتاب", line: "كتب كلوفرز درسًا بعد درس، مع التمارين." },
+      shop: { ko: "가게", roman: "كاكي", title: "المتجر", line: "كتب كلوفرز ومواد الدراسة للطلب." },
+      games: { ko: "게임", roman: "كيم", title: "الألعاب", line: "ألعاب قصيرة لتدريب الحروف والكلمات من الحصص." },
+      blog: { ko: "블로그", roman: "بولّوغو", title: "المدوّنة", line: "مقالات عن الكورية وعبارات الدراما الكورية ونصائح للدراسة." },
+      topik: { ko: "토픽 시험", roman: "توبيك سيهوم", title: "التحضير للتوبيك", line: "الاستعداد لاختبار التوبيك، الاختبار الرسمي للكفاءة في اللغة الكورية." },
+      scholarships: { ko: "장학금", roman: "جانغهاكغوم", title: "منح الدراسة في كوريا", line: "منح دراسية في كوريا متاحة لمتحدثي العربية، مع مصادرها الرسمية." },
+    },
+    infoOpen: "فتح الصفحة",
     card: {
       listen: "استماع",
       close: "إغلاق",

@@ -18,12 +18,15 @@ const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p
  * - hub               → the KLOVERS Hub: not a world, a crossroads to every
  *                       world and to the site's own pages
  * - conversation-cafe → worlds[2], "conversation_readiness_milestone"
+ * - klovers-house     → the Hub's information house (안내소): not a world.
+ *                       Who Klovers is, and one board per section of the
+ *                       site, each with its Korean name and a link. Open to all.
  * A gate into a locked world stays shut and shows a notice. What unlocks a
  * world is the learner's real course level (systems/access.ts) — the same
  * level → world map the dashboard journey uses. Never open one for free.
  */
 
-export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe";
+export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house";
 
 /** Notices shown at a gate whose world is still locked (or not built yet). */
 export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon";
@@ -302,7 +305,9 @@ export interface HubGate {
 export const HUB = {
   half: 11,
   /** The two gates in the south wall, back toward the village and the market. */
-  southGates: { village: -5, market: 5 },
+  southGates: { village: -5, market: 5, house: 0 },
+  /** The information house's gate sign (안내소: information centre). */
+  houseSign: "안내소",
   /** The wayfinding pavilion on its octagonal base (collider is the base). */
   post: { x: 0, z: 0, size: 3.4 },
   /** Planting beds: a tree corner by the market gate, shrubs by the garden gate. */
@@ -363,6 +368,7 @@ const KLOVERS_HUB: RoomLayout = {
     fromVillage: { x: HUB.southGates.village, z: HUB.half - 3.2, yaw: Math.PI - 0.32 },
     fromMarket: { x: HUB.southGates.market, z: HUB.half - 3.2, yaw: Math.PI + 0.32 },
     fromCafe: { x: 0, z: -HUB.half + 2.2, yaw: 0 },
+    fromHouse: { x: 0, z: HUB.half - 3, yaw: Math.PI },
   },
   portals: [
     {
@@ -377,6 +383,12 @@ const KLOVERS_HUB: RoomLayout = {
       to: "vocabulary-market",
       arrive: "fromHub",
       lockedNotice: "marketLocked",
+    },
+    {
+      id: "hub-house-gate",
+      zone: box(HUB.southGates.house, HUB.half - 0.55, 3, 1.1),
+      to: "klovers-house",
+      arrive: "fromHub",
     },
     {
       id: "hub-cafe",
@@ -436,12 +448,84 @@ const CONVERSATION_CAFE: RoomLayout = {
   shadowExtent: 11,
 };
 
+/* ───────────────────────── Klovers House ───────────────────────── */
+
+/**
+ * The information house (안내소), 14 m × 12 m, open to the sky like the
+ * café. "Who we are" faces the door; every other board names one section of
+ * the site in Korean, says what it is for, and links to it. The door in the
+ * south wall leads back to the Hub.
+ */
+export type InfoId = "about" | "courses" | "trial" | "placement" | "textbook" | "shop" | "games" | "blog" | "topik" | "scholarships";
+
+export const HOUSE = {
+  halfWidth: 7,
+  halfDepth: 6,
+  /** Boards: id, centre x/z, facing yaw (three.js rotation.y), width. */
+  boards: [
+    { id: "courses", x: -4.3, z: -5.55, yaw: 0, w: 2.2 },
+    { id: "about", x: 0, z: -5.55, yaw: 0, w: 3.0 },
+    { id: "trial", x: 4.3, z: -5.55, yaw: 0, w: 2.2 },
+    { id: "placement", x: -6.55, z: -2.6, yaw: Math.PI / 2, w: 2.0 },
+    { id: "textbook", x: -6.55, z: 0.4, yaw: Math.PI / 2, w: 2.0 },
+    { id: "shop", x: -6.55, z: 3.4, yaw: Math.PI / 2, w: 2.0 },
+    { id: "games", x: 6.55, z: -2.6, yaw: -Math.PI / 2, w: 2.0 },
+    { id: "blog", x: 6.55, z: 0.4, yaw: -Math.PI / 2, w: 2.0 },
+    { id: "topik", x: 6.55, z: 3.4, yaw: -Math.PI / 2, w: 2.0 },
+    { id: "scholarships", x: -4.6, z: 5.55, yaw: Math.PI, w: 2.0 },
+  ] as { id: InfoId; x: number; z: number; yaw: number; w: number }[],
+  /** The Korean on each board (real words; the cards teach them). */
+  signs: {
+    about: "우리는 클로버스",
+    courses: "수업",
+    trial: "무료 수업",
+    placement: "레벨 테스트",
+    textbook: "교재",
+    shop: "가게",
+    games: "게임",
+    blog: "블로그",
+    topik: "토픽 시험",
+    scholarships: "장학금",
+  } as Record<InfoId, string>,
+  /** A round clover dais in the middle (solid). */
+  dais: { x: 0, z: 0.4, r: 1.3 },
+  sign: "안내소",
+} as const;
+
+/** Where the learner stands to read a board: a step out from it. */
+export function boardSpot(b: { x: number; z: number; yaw: number }, out = 1.35): { x: number; z: number } {
+  return { x: b.x + Math.sin(b.yaw) * out, z: b.z + Math.cos(b.yaw) * out };
+}
+
+const KLOVERS_HOUSE: RoomLayout = {
+  id: "klovers-house",
+  bounds: { minX: -HOUSE.halfWidth, maxX: HOUSE.halfWidth, minZ: -HOUSE.halfDepth, maxZ: HOUSE.halfDepth },
+  colliders: [
+    box(HOUSE.dais.x, HOUSE.dais.z, HOUSE.dais.r * 2, HOUSE.dais.r * 2),
+    ...HOUSE.boards.map((b) => (Math.abs(Math.sin(b.yaw)) > 0.5 ? box(b.x, b.z, 0.5, b.w) : box(b.x, b.z, b.w, 0.5))),
+  ],
+  cameraColliders: [],
+  spawns: {
+    fromHub: { x: 0, z: HOUSE.halfDepth - 2.2, yaw: Math.PI },
+  },
+  portals: [
+    {
+      id: "house-door",
+      zone: box(0, HOUSE.halfDepth - 0.55, 3, 1.1),
+      to: "hub",
+      arrive: "fromHouse",
+    },
+  ],
+  shadowExtent: 11,
+};
+
 export const ROOMS: Record<RoomId, RoomLayout> = {
   courtyard: COURTYARD,
   "hangul-village": HANGUL_VILLAGE,
   "vocabulary-market": VOCABULARY_MARKET,
   hub: KLOVERS_HUB,
   "conversation-cafe": CONVERSATION_CAFE,
+  "klovers-house": KLOVERS_HOUSE,
 };
 
 /** The portal whose zone contains the point, if any (first match wins). */

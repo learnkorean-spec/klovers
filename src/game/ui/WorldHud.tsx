@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { WorldView } from "./Onboarding";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { AVATARS, type AvatarId } from "../player/characters";
 import Joystick from "./Joystick";
@@ -20,6 +21,8 @@ interface HudProps {
   onExit: () => void;
   avatar: AvatarId;
   onAvatar: (id: AvatarId) => void;
+  view: WorldView;
+  onView: (v: WorldView) => void;
   /** Room name card, shown briefly after arriving in a room. */
   banner: (Line & { eyebrow?: string; number?: number }) | null;
   /** A gate that is shut, or a door to a world still ahead. */
@@ -140,6 +143,26 @@ export default function WorldHud(p: HudProps) {
                 }`}
               >
                 {AVATARS[id].name[p.lang]}
+              </button>
+            ))}
+          </div>
+          {/* How the world is seen: through the character's eyes, or from behind. */}
+          <div role="group" aria-label={copy.view.label} className="pointer-events-auto flex items-center gap-1 rounded-full bg-charcoal/85 p-1 text-xs text-ivory sm:ps-3">
+            <span className="hidden pe-1 font-semibold sm:inline">{copy.view.label}</span>
+            {(["eyes", "behind"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={p.view === v}
+                onClick={(e) => {
+                  p.onView(v);
+                  e.currentTarget.blur();
+                }}
+                className={`min-h-8 rounded-full px-3 text-xs font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow ${
+                  p.view === v ? "bg-klovers-yellow text-charcoal" : "text-ivory hover:bg-ivory/10"
+                }`}
+              >
+                {copy.view[v]}
               </button>
             ))}
           </div>

@@ -98,7 +98,7 @@ describe("world onboarding — the welcome and the objective", () => {
   it("welcomes in both languages and the button starts the visit", () => {
     const onStart = vi.fn();
     for (const lang of LANGS) {
-      const { unmount } = render(<WelcomeCard lang={lang} onStart={onStart} />);
+      const { unmount } = render(<WelcomeCard lang={lang} onStart={onStart} avatar="adam" onAvatar={() => {}} view="eyes" onView={() => {}} />);
       expect(screen.getByRole("dialog")).toBeTruthy();
       expect(screen.getByText(WORLD_COPY[lang].onboarding.welcomeTitle)).toBeTruthy();
       const cta = screen.getByRole("button", { name: WORLD_COPY[lang].onboarding.letsGo });

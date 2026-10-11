@@ -4,7 +4,7 @@ import type { Group } from "three";
 import type { RoomLayout } from "../config/rooms";
 import { MAX_DT, PLAYER } from "../config/world";
 import { resolveCollisions } from "../systems/collision";
-import { NO_INPUT, stepVelocity, stepYaw, stickDirection, wishDirection, yawFromDirection, type MoveInput } from "../systems/movement";
+import { angleDelta, damp, NO_INPUT, stepVelocity, stepYaw, stickDirection, wishDirection, yawFromDirection, type MoveInput } from "../systems/movement";
 import { touchStick } from "../systems/touchInput";
 import type { CameraState, PlayerState } from "../systems/state";
 import { resolveAnimation } from "./animation";
@@ -34,7 +34,7 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
   const arrive = useRef(onArrive);
   arrive.current = onArrive;
   /** Tap-to-go: progress check, so a walk blocked by a wall gives up. */
-  const auto = useRef<{ goal: object | null; t: number; best: number }>({ goal: null, t: 0, best: Infinity });
+  const auto = useRef<{ goal: object | null; t: number; best: number; detour: number; side: number; tries: number }>({ goal: null, t: 0, best: Infinity, detour: 0, side: 1, tries: 0 });
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, MAX_DT);
@@ -49,6 +49,8 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
       if (root.current) {
         root.current.position.set(p.position.x, 0, p.position.z);
         root.current.rotation.y = p.yaw;
+        const c = camera.current;
+        root.current.visible = !(c.pov && !c.focus && c.yawTarget === null);
       }
       return;
     }
@@ -77,16 +79,37 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
         a.goal = goal;
         a.best = Infinity;
         a.t = 0;
+        a.detour = 0;
+        a.tries = 0;
       }
       if (d < a.best - 0.15) {
         a.best = d;
         a.t = 0;
       } else a.t += dt;
-      if (d <= goal.stop || a.t > 1.2) {
-        // There (or stuck): face it and hand over.
+      // Blocked (a table, a dais): step round it sideways for a moment, the
+      // other way the next time; give up after a few tries.
+      if (a.t > 0.45 && a.detour <= 0) {
+        a.tries += 1;
+        if (a.tries % 2 === 0) a.side = -a.side;
+        a.detour = 0.8;
+        a.t = 0;
+      }
+      if (d <= goal.stop || a.tries > 4) {
+        // There (or truly stuck): face it and hand over.
         p.autoTarget = null;
         if (d > 0.05) p.yaw = yawFromDirection(dx, dz);
         if (d <= goal.stop + 0.8) arrive.current?.(goal.id);
+      } else if (a.detour > 0) {
+        a.detour -= dt;
+        if (a.detour <= 0) {
+          a.t = 0;
+          a.best = d;
+        }
+        const sx = (-dz / d) * a.side * 0.9 + (dx / d) * 0.35;
+        const sz = (dx / d) * a.side * 0.9 + (dz / d) * 0.35;
+        const m = Math.hypot(sx, sz);
+        wish = { x: sx / m, z: sz / m };
+        targetSpeed = PLAYER.walkSpeed;
       } else {
         wish = { x: dx / d, z: dz / d };
         targetSpeed = PLAYER.walkSpeed;
@@ -117,10 +140,19 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
       p.yaw = stepYaw(p.yaw, yawFromDirection(wish.x, wish.z), PLAYER.turnRate, dt);
     }
     p.animation = resolveAnimation(speed, PLAYER.walkSpeed);
+    // Walking by itself to a tapped sign: the view turns with the walk, so
+    // the learner sees where they are going (most of all in first person).
+    if (p.autoTarget && speed > 0.3) {
+      const c = camera.current;
+      c.yaw += angleDelta(c.yaw, p.yaw + Math.PI) * damp(3, dt);
+    }
 
     if (root.current) {
       root.current.position.set(p.position.x, 0, p.position.z);
       root.current.rotation.y = p.yaw;
+      // First person: the learner is the camera, so their own body is hidden.
+      const c = camera.current;
+      root.current.visible = !(c.pov && !c.focus && c.yawTarget === null);
     }
   }, -2);
 

@@ -29,8 +29,8 @@ export interface WorldAccess {
 /** Rooms that are canon worlds; anything else (the courtyard) is always open. */
 const WORLD_ROOMS: readonly RoomId[] = ["hangul-village", "vocabulary-market", "conversation-cafe"];
 
-/** Rooms that are never gated: the courtyard and the Hub are not worlds. */
-const ALWAYS: RoomId[] = ["courtyard", "hangul-village", "hub"];
+/** Rooms that are never gated: the courtyard, the Hub and its information house are not worlds. */
+const ALWAYS: RoomId[] = ["courtyard", "hangul-village", "hub", "klovers-house"];
 
 export const GUEST_ACCESS: WorldAccess = { open: new Set<RoomId>(ALWAYS), preview: false, signedIn: false };
 

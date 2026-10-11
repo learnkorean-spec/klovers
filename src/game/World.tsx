@@ -12,6 +12,7 @@ import ObjectiveMarker from "./environment/ObjectiveMarker";
 import Friend from "./npc/Friend";
 import Npc from "./npc/Npc";
 import ConversationCafe from "./environment/ConversationCafe";
+import KloversHouse from "./environment/KloversHouse";
 import HangulVillage from "./environment/HangulVillage";
 import Hub from "./environment/Hub";
 import Lobby from "./environment/Lobby";
@@ -22,7 +23,7 @@ import type { AvatarId } from "./player/characters";
 import type { WorldAccess } from "./systems/access";
 import { useMoveInput } from "./systems/input";
 import { pickQuality } from "./systems/quality";
-import { createCameraState, createPlayerState, type PlayerState } from "./systems/state";
+import { createCameraState, createPlayerState, type CameraState, type PlayerState } from "./systems/state";
 import { createStoryState, HATCH, type StoryState } from "./systems/story";
 import type { WorldState } from "./systems/worldState";
 import Backdrop, { SKY } from "./environment/Backdrop";
@@ -55,6 +56,7 @@ const BACKDROP: Record<RoomId, { hx: number; hz: number }> = {
   "vocabulary-market": { hx: 14.5, hz: 10.5 },
   hub: { hx: 17.5, hz: 18 },
   "conversation-cafe": { hx: 9, hz: 8 },
+  "klovers-house": { hx: 9, hz: 8 },
 };
 
 /** Length of the fade to and from ivory on a room change, ms. */
@@ -64,8 +66,8 @@ export type WorldNotice = NoticeKey;
 
 /** Short things Cluby says (text lives in config/copy.ts, per language). */
 export type SpeechKey =
-  | "hello" | "found" | "follow" | "hangul-village" | "vocabulary-market" | "hub" | "wordRight" | "letters"
-  | "talk-courtyard" | "talk-hangul-village" | "talk-vocabulary-market" | "talk-hub" | "talk-conversation-cafe";
+  | "hello" | "found" | "follow" | "hangul-village" | "vocabulary-market" | "hub" | "klovers-house" | "wordRight" | "letters"
+  | "talk-courtyard" | "talk-hangul-village" | "talk-vocabulary-market" | "talk-hub" | "talk-conversation-cafe" | "talk-klovers-house";
 
 /** Commands the page can give the scene (HTML UI → 3D). */
 export interface WorldApi {
@@ -132,6 +134,8 @@ export interface WorldProps {
   beaconEls?: MutableRefObject<Map<string, HTMLElement>>;
   /** Tap-to-go arrived at this thing. */
   onArrive?: (id: string) => void;
+  /** "eyes": first person (the learner's own view); "behind": over the shoulder. */
+  view?: "eyes" | "behind";
 }
 
 declare global {
@@ -188,6 +192,13 @@ export default function World(props: WorldProps) {
   useEffect(() => {
     player.current.paused = !!props.paused;
   }, [props.paused]);
+
+  useEffect(() => {
+    const c = camera.current;
+    c.pov = props.view === "eyes";
+    // Switching back to behind: drop in behind the learner at once.
+    c.snap = true;
+  }, [props.view]);
 
   // Egg phase from real progress only: still, unless Cluby is really awake.
   useEffect(() => {
@@ -369,7 +380,7 @@ export default function World(props: WorldProps) {
         cb.current.onRoomChange?.(roomId);
         // One Cluby line on the first visit to a place — never more.
         const sv = savedRef.current;
-        const greetable = roomId === "hangul-village" || roomId === "vocabulary-market" || roomId === "hub";
+        const greetable = roomId === "hangul-village" || roomId === "vocabulary-market" || roomId === "hub" || roomId === "klovers-house";
         if (greetable && cl.mode === "follow" && !sv.greeted.includes(roomId)) {
           timers.current.push(window.setTimeout(() => say(roomId as SpeechKey, 3200), 900));
           cb.current.onSave?.({ ...sv, greeted: [...sv.greeted, roomId] });
@@ -483,6 +494,7 @@ export default function World(props: WorldProps) {
       {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} words={saved.words} />}
       {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} />}
       {roomId === "conversation-cafe" && <ConversationCafe />}
+      {roomId === "klovers-house" && <KloversHouse />}
       {/* The people of this room only; they leave with it. */}
       {NPCS.filter((n) => n.room === roomId).map((n) => (
         <Npc key={n.id} n={n} player={player} />
@@ -510,7 +522,7 @@ export default function World(props: WorldProps) {
       />
       <DiscoveryWatcher key={`d-${roomId}`} room={roomId} player={player} onDiscover={(k) => cb.current.onDiscover?.(k)} />
       {props.beaconEls && (
-        <BeaconWatcher key={`b-${roomId}`} room={roomId} player={player} story={story} access={access} els={props.beaconEls} onNearby={(l) => cb.current.onNearby?.(l)} />
+        <BeaconWatcher key={`b-${roomId}`} room={roomId} player={player} view={camera} story={story} access={access} els={props.beaconEls} onNearby={(l) => cb.current.onNearby?.(l)} />
       )}
       <Stats glRef={glRef} />
       <WatercolorDriver />
@@ -679,9 +691,10 @@ function spotOf(it: Interactable): { x: number; z: number } {
  * floating over it (DOM, owned by the page). This lists them now and then
  * and moves the signs over their things every frame, without re-rendering.
  */
-function BeaconWatcher({ room, player, story, access, els, onNearby }: {
+function BeaconWatcher({ room, player, view, story, access, els, onNearby }: {
   room: RoomId;
   player: MutableRefObject<PlayerState>;
+  view: MutableRefObject<CameraState>;
   story: MutableRefObject<StoryState>;
   access: WorldAccess;
   els: MutableRefObject<Map<string, HTMLElement>>;
@@ -703,7 +716,7 @@ function BeaconWatcher({ room, player, story, access, els, onNearby }: {
       const egg = story.current.egg;
       const l = p.frozen
         ? []
-        : nearbyInteractables(room, p.position.x, p.position.z, (r) => access.open.has(r)).filter((it) => !(it.kind === "egg" && (egg === "open" || egg === "hatching")));
+        : nearbyInteractables(room, p.position.x, p.position.z, (r) => access.open.has(r), 4, 10, INTERACTABLES, view.current.yaw).filter((it) => !(it.kind === "egg" && (egg === "open" || egg === "hatching")));
       const k = l.map((i) => i.id).join(",");
       if (k !== key.current) {
         key.current = k;
@@ -711,6 +724,8 @@ function BeaconWatcher({ room, player, story, access, els, onNearby }: {
         report.current(l);
       }
     }
+    // Signs never sit on top of each other: a later one steps up a line.
+    const placed: { x: number; y: number; w: number }[] = [];
     for (const it of list.current) {
       const el = els.current.get(it.id);
       if (!el) continue;
@@ -718,8 +733,17 @@ function BeaconWatcher({ room, player, story, access, els, onNearby }: {
       const h = it.npc || it.kind === "talk" ? 2.15 : it.kind === "egg" ? 1.9 : it.kind === "door" || it.kind === "locked" || it.kind === "link" ? 2.6 : 1.7;
       v.set(at.x, h, at.z).project(camera);
       const sx = (v.x * 0.5 + 0.5) * size.width;
-      const sy = (-v.y * 0.5 + 0.5) * size.height;
-      const off = v.z > 1 || sx < 8 || sx > size.width - 8 || sy < 40 || sy > size.height - 8;
+      let sy = (-v.y * 0.5 + 0.5) * size.height;
+      const w = el.offsetWidth || 110;
+      for (let k = 0; k < placed.length; k++) {
+        const o = placed[k];
+        if (Math.abs(o.x - sx) < (o.w + w) / 2 + 6 && Math.abs(o.y - sy) < 40) {
+          sy = o.y - 42;
+          k = -1;
+        }
+      }
+      const off = v.z > 1 || sx - w / 2 < 4 || sx + w / 2 > size.width - 4 || sy < 70 || sy > size.height - 8;
+      if (!off) placed.push({ x: sx, y: sy, w });
       el.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(-50%, -100%)`;
       el.style.visibility = off ? "hidden" : "visible";
     }
@@ -755,10 +779,12 @@ function WatercolorDriver() {
   const composer = useMemo(() => {
     if (mode === "off") return null;
     const c = new EffectComposer(gl);
+    // Painted on the finished (tone-mapped, display) image, so paper white
+    // stays white instead of being tone-mapped to grey.
     c.addPass(new RenderPass(scene, camera));
+    c.addPass(new OutputPass());
     const pass = new ShaderPass(WATERCOLOR_SCREEN);
     c.addPass(pass);
-    c.addPass(new OutputPass());
     return { c, pass };
   }, [mode, gl, scene, camera]);
   useEffect(() => {
