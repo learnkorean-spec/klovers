@@ -97,6 +97,28 @@ export default function WorldHud(p: HudProps) {
   const prompt = useSteadyPrompt(p.prompt);
   /** When the round button last acted on a touch (its click then does nothing). */
   const pressedAt = useRef(0);
+  // A touch screen that also has a keyboard or mouse (a touch laptop, a PC
+  // that reports touch): name the E key and the click as well as the tap.
+  const [hasKeys, setHasKeys] = useState(() => {
+    try {
+      return window.matchMedia("(any-pointer: fine)").matches || window.matchMedia("(any-hover: hover)").matches;
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    if (hasKeys) return;
+    const on = (e: Event) => {
+      if (e instanceof PointerEvent && e.pointerType !== "mouse") return;
+      setHasKeys(true);
+    };
+    window.addEventListener("keydown", on);
+    window.addEventListener("pointermove", on);
+    return () => {
+      window.removeEventListener("keydown", on);
+      window.removeEventListener("pointermove", on);
+    };
+  }, [hasKeys]);
 
 
   return (
@@ -267,8 +289,18 @@ export default function WorldHud(p: HudProps) {
           className="pointer-events-auto absolute flex touch-none select-none items-center gap-2 p-1 motion-safe:animate-in motion-safe:zoom-in-90"
         >
           {/* How to use it, beside the disc (never above it: the side column lives there). */}
-          <span dir="auto" className="rounded-full bg-klovers-yellow px-2.5 py-1 text-xs font-bold text-charcoal shadow">
-            {h.tapButton}
+          <span dir={p.lang === "ar" ? "rtl" : "ltr"} className="flex items-center gap-1.5 rounded-full bg-klovers-yellow px-2.5 py-1 text-xs font-bold text-charcoal shadow">
+            {hasKeys ? (
+              <>
+                <span>{h.pressPrefix}</span>
+                <kbd className="rounded-md border border-charcoal/40 bg-white px-1.5 py-0.5 font-display text-[11px] font-bold" dir="ltr">
+                  E
+                </kbd>
+                <span>{h.clickButton}</span>
+              </>
+            ) : (
+              h.tapButton
+            )}
           </span>
           <span className="flex flex-col items-center gap-1.5">
             <span className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-charcoal/70 shadow-lg ring-4 ring-klovers-yellow backdrop-blur-sm active:scale-95">

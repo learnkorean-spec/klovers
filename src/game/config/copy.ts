@@ -20,7 +20,10 @@ export const WORLD_COPY = {
       esc: { keys: ["Esc"], label: "frees the mouse" },
       /** Always shown with the prompt: how to use it. */
       pressKey: "Press E or click",
-      tapButton: "Tap the button",
+      tapButton: "Tap the round button",
+      /** Touch screen with a keyboard or mouse too (a touch laptop): both ways. */
+      pressPrefix: "Press",
+      clickButton: "or click the round button",
     },
     joystick: "Move",
     dragToMove: "Drag to move",
@@ -311,7 +314,9 @@ export const WORLD_COPY = {
       interact: { keys: ["E"], label: "" },
       esc: { keys: ["Esc"], label: "لتحرير الفأرة" },
       pressKey: "الضغط على E أو النقر هنا",
-      tapButton: "الضغط على الزر",
+      tapButton: "الضغط على الزر الدائري",
+      pressPrefix: "الضغط على",
+      clickButton: "أو النقر على الزر الدائري",
     },
     joystick: "المشي",
     dragToMove: "سحب الإصبع للمشي",
