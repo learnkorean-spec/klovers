@@ -2,6 +2,9 @@ import { useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Vector3, type Group } from "three";
 import LearnerAvatar from "../player/LearnerAvatar";
+import RealAvatar from "../player/RealAvatar";
+import { REAL_PEOPLE } from "../systems/styleMode";
+import { Suspense } from "react";
 import type { AvatarId } from "../player/characters";
 import { angleDelta, damp } from "../systems/movement";
 import type { PlayerState } from "../systems/state";
@@ -38,7 +41,13 @@ export default function Friend({ avatar, x, z, yaw, player }: { avatar: AvatarId
   const pos = useMemo(() => [x, 0, z] as [number, number, number], [x, z]);
   return (
     <group ref={root} position={pos} rotation={[0, yaw, 0]} userData={{ character: true }}>
-      <LearnerAvatar player={still} avatar={other} />
+      {REAL_PEOPLE ? (
+        <Suspense fallback={<LearnerAvatar player={still} avatar={other} />}>
+          <RealAvatar key={other} player={still} avatar={other} greet={player} />
+        </Suspense>
+      ) : (
+        <LearnerAvatar player={still} avatar={other} />
+      )}
       <ShadowBlob size={0.9} />
     </group>
   );

@@ -10,6 +10,9 @@ import type { CameraState, PlayerState } from "../systems/state";
 import { resolveAnimation } from "./animation";
 import ShadowBlob from "../npc/ShadowBlob";
 import LearnerAvatar from "./LearnerAvatar";
+import RealAvatar from "./RealAvatar";
+import { REAL_PEOPLE } from "../systems/styleMode";
+import { Suspense } from "react";
 import type { AvatarId } from "./characters";
 
 interface PlayerProps {
@@ -171,7 +174,13 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
     <group ref={root} userData={{ character: true }}>
       {/* Built from primitives to the canon look of Adam or Lina. Swap for a
           rigged GLB with the same props later (see player/animation.ts). */}
-      <LearnerAvatar player={player} avatar={avatar} />
+      {REAL_PEOPLE ? (
+        <Suspense fallback={<LearnerAvatar player={player} avatar={avatar} />}>
+          <RealAvatar key={avatar} player={player} avatar={avatar} />
+        </Suspense>
+      ) : (
+        <LearnerAvatar player={player} avatar={avatar} />
+      )}
       <ShadowBlob size={0.95} />
     </group>
   );

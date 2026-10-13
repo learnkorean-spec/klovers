@@ -10,3 +10,6 @@ export function watercolorMode(): WatercolorMode {
   const s = new URLSearchParams(window.location.search).get("style");
   return s === "wc" || s === "wcall" ? s : "off";
 }
+
+/** Real (rigged) people by default; /world?avatar=classic shows the simple figures. */
+export const REAL_PEOPLE = typeof window === "undefined" || new URLSearchParams(window.location.search).get("avatar") !== "classic";
