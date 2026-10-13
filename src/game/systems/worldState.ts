@@ -34,13 +34,24 @@ export interface WorldState {
    */
   words: string[];
   letters: string[];
+  /** Missions finished (config/missions.ts), and best race times in seconds. Exploration only. */
+  missionsDone: string[];
+  bestTimes: Record<string, number>;
+  /** The mission being played, and the steps used so far in it. */
+  mission: { id: string; done: string[] } | null;
 }
 
 const KEY = "klovers-world-state";
-const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false, tutorialDone: false, welcomed: false, met: [], objectivesDone: [], discovered: [], lastRoom: null, words: [], letters: [] };
+const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false, tutorialDone: false, welcomed: false, met: [], objectivesDone: [], discovered: [], lastRoom: null, words: [], letters: [], missionsDone: [], bestTimes: {}, mission: null };
 
 function strings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+}
+
+function times(v: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (v && typeof v === "object") for (const [k, n] of Object.entries(v)) if (typeof n === "number" && n > 0) out[k] = n;
+  return out;
 }
 
 export function loadWorldState(): WorldState {
@@ -60,6 +71,11 @@ export function loadWorldState(): WorldState {
       lastRoom: typeof v.lastRoom === "string" ? (v.lastRoom as RoomId) : null,
       words: strings(v.words),
       letters: strings(v.letters),
+      missionsDone: strings(v.missionsDone),
+      bestTimes: times(v.bestTimes),
+      mission: v.mission && typeof v.mission === "object" && typeof (v.mission as { id?: unknown }).id === "string"
+        ? { id: (v.mission as { id: string }).id, done: strings((v.mission as { done?: unknown }).done) }
+        : null,
     };
   } catch {
     return { ...EMPTY };

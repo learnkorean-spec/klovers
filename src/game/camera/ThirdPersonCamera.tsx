@@ -80,10 +80,12 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
   firstLook.current = onFirstLook;
 
   // Portrait phones see a narrow slice at the desktop FOV: widen it there.
+  const baseFov = useRef<number>(CAMERA.fov);
   useEffect(() => {
     if (!("fov" in cam)) return;
     const persp = cam as typeof cam & { fov: number };
-    persp.fov = size.width < size.height ? CAMERA.fovPortrait : size.height < 500 ? CAMERA.fovLandscapePhone : CAMERA.fov;
+    baseFov.current = size.width < size.height ? CAMERA.fovPortrait : size.height < 500 ? CAMERA.fovLandscapePhone : CAMERA.fov;
+    persp.fov = baseFov.current;
     cam.updateProjectionMatrix();
   }, [cam, size.width, size.height]);
 
@@ -169,6 +171,18 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
     const dt = Math.min(rawDt, MAX_DT);
     const c = camera.current;
     const p = player.current.position;
+
+    // Running: the view widens a little (the open-world sprint feel).
+    if ("fov" in cam) {
+      const persp = cam as typeof cam & { fov: number };
+      const v = player.current.velocity;
+      const run = clamp((Math.hypot(v.x, v.z) - 3.4) / 2.6, 0, 1);
+      const want = baseFov.current + run * 7;
+      if (Math.abs(persp.fov - want) > 0.05) {
+        persp.fov += (want - persp.fov) * damp(5, dt);
+        cam.updateProjectionMatrix();
+      }
+    }
 
     // First person: the learner's own eyes. No lag (lag in first person is
     // what makes people queasy) and no walls to back away from. Story

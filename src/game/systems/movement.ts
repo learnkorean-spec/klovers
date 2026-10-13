@@ -9,6 +9,8 @@ export interface MoveInput {
   left: boolean;
   right: boolean;
   run: boolean;
+  /** Space: a small hop (no gameplay, just the feel of a body in the world). */
+  jump?: boolean;
 }
 
 export const NO_INPUT: MoveInput = { forward: false, back: false, left: false, right: false, run: false };

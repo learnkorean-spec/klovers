@@ -74,8 +74,8 @@ describe("onboarding copy", () => {
     for (const lang of ["en", "ar"] as const) {
       const c = WORLD_COPY[lang];
       expect(c.onboarding.welcomeTitle.length).toBeGreaterThan(0);
-      expect(c.onboarding.desktop).toHaveLength(4);
-      expect(c.onboarding.touch).toHaveLength(3);
+      expect(c.onboarding.desktop).toHaveLength(6);
+      expect(c.onboarding.touch).toHaveLength(4);
       for (const o of OBJECTIVE_ORDER) expect(c.objective[o].length).toBeGreaterThan(0);
       for (const d of DISCOVERIES) expect(c.discoveries[d.key].line.length).toBeGreaterThan(0);
     }

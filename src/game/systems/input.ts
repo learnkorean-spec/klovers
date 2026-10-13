@@ -19,6 +19,7 @@ const BINDINGS: Record<string, keyof MoveInput> = {
   ArrowRight: "right",
   ShiftLeft: "run",
   ShiftRight: "run",
+  Space: "jump",
 };
 
 export function useMoveInput() {
@@ -33,7 +34,7 @@ export function useMoveInput() {
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
       state.current[action] = down;
       // Arrow keys would otherwise scroll the page behind the canvas.
-      if (e.code.startsWith("Arrow")) e.preventDefault();
+      if (e.code.startsWith("Arrow") || e.code === "Space") e.preventDefault();
     };
     const onDown = (e: KeyboardEvent) => set(e, true);
     const onUp = (e: KeyboardEvent) => set(e, false);

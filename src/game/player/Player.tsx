@@ -34,6 +34,8 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
   const arrive = useRef(onArrive);
   arrive.current = onArrive;
   /** Tap-to-go: progress check, so a walk blocked by a wall gives up. */
+  /** Hop: height above the floor and upward speed. */
+  const hop = useRef({ y: 0, vy: 0 });
   const auto = useRef<{ goal: object | null; t: number; best: number; detour: number; side: number; tries: number }>({ goal: null, t: 0, best: Infinity, detour: 0, side: 1, tries: 0 });
 
   useFrame((_, rawDt) => {
@@ -140,6 +142,15 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
       p.yaw = stepYaw(p.yaw, yawFromDirection(wish.x, wish.z), PLAYER.turnRate, dt);
     }
     p.animation = resolveAnimation(speed, PLAYER.walkSpeed);
+    // Space: a small hop; the camera rides along (position.y).
+    const hp = hop.current;
+    if (keys.jump && hp.y <= 0 && hp.vy <= 0) hp.vy = 4.4;
+    if (hp.y > 0 || hp.vy > 0) {
+      hp.vy -= 15 * dt;
+      hp.y = Math.max(0, hp.y + hp.vy * dt);
+      if (hp.y === 0) hp.vy = 0;
+    }
+    p.position.y = hp.y;
     // Walking by itself to a tapped sign: the view turns with the walk, so
     // the learner sees where they are going (most of all in first person).
     if (p.autoTarget && speed > 0.3) {
@@ -148,7 +159,7 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
     }
 
     if (root.current) {
-      root.current.position.set(p.position.x, 0, p.position.z);
+      root.current.position.set(p.position.x, hp.y, p.position.z);
       root.current.rotation.y = p.yaw;
       // First person: the learner is the camera, so their own body is hidden.
       const c = camera.current;

@@ -87,6 +87,8 @@ export interface WorldApi {
   enter: (to: RoomId, arrive: string) => void;
   /** Tap-to-go: walk by itself to this thing (a tapped sign). */
   goTo: (it: Interactable) => void;
+  /** Where the learner is and which way the view looks (the minimap). */
+  pose: () => { room: RoomId; x: number; z: number; yaw: number; camYaw: number };
 }
 
 export interface WorldProps {
@@ -134,6 +136,8 @@ export interface WorldProps {
   beaconEls?: MutableRefObject<Map<string, HTMLElement>>;
   /** Tap-to-go arrived at this thing. */
   onArrive?: (id: string) => void;
+  /** A chosen mission's marker (wins over the first-visit objective's). */
+  marker?: { x: number; z: number } | null;
   /** "eyes": first person (the learner's own view); "behind": over the shoulder. */
   view?: "eyes" | "behind";
 }
@@ -342,13 +346,20 @@ export default function World(props: WorldProps) {
   }, []);
 
   useEffect(() => {
+    const pose = () => ({
+      room: roomRef.current,
+      x: player.current.position.x,
+      z: player.current.position.z,
+      yaw: player.current.yaw,
+      camYaw: camera.current.yaw,
+    });
     const goTo = (it: Interactable) => {
       const p = player.current;
       if (p.frozen || p.paused) return;
       const at = spotOf(it);
       p.autoTarget = { id: it.id, x: at.x, z: at.z, stop: Math.max(0.9, it.radius * 0.55) };
     };
-    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }), goTo });
+    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }), goTo, pose });
   }, [hatch, finishHatch, celebrate, clubyTalk, pulseEgg, point, travel]);
 
   // New room mounted: learner at the arrival point, camera behind, Cluby beside.
@@ -500,7 +511,7 @@ export default function World(props: WorldProps) {
         <Npc key={n.id} n={n} player={player} />
       ))}
       {roomId === "courtyard" && <Friend avatar={avatar} x={FRIEND_SPOT.x} z={FRIEND_SPOT.z} yaw={Math.atan2(-FRIEND_SPOT.x, -FRIEND_SPOT.z) + 0.5} player={player} />}
-      {objectiveSpot ? <ObjectiveMarker x={objectiveSpot.x} z={objectiveSpot.z} /> : null}
+      {props.marker ? <ObjectiveMarker x={props.marker.x} z={props.marker.z} /> : objectiveSpot ? <ObjectiveMarker x={objectiveSpot.x} z={objectiveSpot.z} /> : null}
       <FocusCue focus={focusRef} />
       {/* Frame priorities: player moves (−2), watchers read (−1.5), camera follows (−1). */}
       <Player input={input} player={player} camera={camera} layout={layout} avatar={avatar} onArrive={(id) => cb.current.onArrive?.(id)} />

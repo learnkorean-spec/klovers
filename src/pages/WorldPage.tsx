@@ -15,6 +15,8 @@ import DialogueBubble, { type Bubble } from "@/game/ui/DialogueBubble";
 import WorldHud, { type Speech } from "@/game/ui/WorldHud";
 import { ControlsCard, DiscoveryToast, FoundToast, HelpButton, LettersChip, ObjectiveChip, WayHint, WelcomeCard, type TutorialStep, type WorldView } from "@/game/ui/Onboarding";
 import { cheer } from "@/game/systems/reactions";
+import { MISSIONS, missionTarget, type MissionId } from "@/game/config/missions";
+import { FullMap, MiniMap, MissionChip, MissionsButton, MissionsCard, type Pose } from "@/game/ui/MapAndMissions";
 import { watercolorMode } from "@/game/systems/styleMode";
 import { currentObjective, type ObjectiveId } from "@/game/config/objectives";
 import type { DiscoveryKey } from "@/game/config/discoveries";
@@ -292,6 +294,99 @@ const WorldPage = () => {
     foundTimer.current = window.setTimeout(() => setFound(null), 2600);
   }, []);
 
+  /* ── Missions and the map ── */
+  const [missionsOpen, setMissionsOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const activeMission = saved.mission ? MISSIONS.find((m) => m.id === saved.mission?.id) ?? null : null;
+  const isOpenRoom = useCallback((r: RoomId) => access.open.has(r), [access.open]);
+  const pose = useCallback((): Pose | null => api.current?.pose() ?? null, []);
+  const stepsLeft = useMemo(
+    () => new Set(activeMission ? activeMission.steps.filter((id) => !(saved.mission?.done ?? []).includes(id)) : []),
+    [activeMission, saved.mission],
+  );
+  const targetRef = useRef<{ x: number; z: number } | null>(null);
+  const [marker, setMarker] = useState<{ x: number; z: number } | null>(null);
+  const remaining = useRef(0);
+  /** A card or the map is open: the race clock waits (set where `paused` is known). */
+  const pausedRef = useRef(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  const startMission = useCallback(
+    (id: MissionId) => {
+      const m = MISSIONS.find((x) => x.id === id);
+      if (!m) return;
+      patch({ mission: { id, done: [] } });
+      remaining.current = m.seconds ?? 0;
+      setTimeLeft(m.seconds ?? null);
+      setMissionsOpen(false);
+    },
+    [patch],
+  );
+  const stopMission = useCallback(() => {
+    patch({ mission: null });
+    setTimeLeft(null);
+    targetRef.current = null;
+    setMarker(null);
+  }, [patch]);
+
+  /** Something was used: if it is a step of the mission being played, tick it off. */
+  const markStep = useCallback(
+    (id: string) => {
+      const cur = savedRef.current.mission;
+      if (!cur) return;
+      const m = MISSIONS.find((x) => x.id === cur.id);
+      if (!m || !m.steps.includes(id) || cur.done.includes(id)) return;
+      const done = [...cur.done, id];
+      if (done.length < m.steps.length) {
+        patch({ mission: { id: cur.id, done } });
+        return;
+      }
+      const best = { ...savedRef.current.bestTimes };
+      if (m.seconds) {
+        const t = Math.max(1, Math.round(m.seconds - remaining.current));
+        best[m.id] = Math.min(best[m.id] ?? Infinity, t);
+      }
+      const finished = savedRef.current.missionsDone.includes(m.id) ? savedRef.current.missionsDone : [...savedRef.current.missionsDone, m.id];
+      patch({ mission: null, missionsDone: finished, bestTimes: best });
+      setTimeLeft(null);
+      targetRef.current = null;
+      setMarker(null);
+      note(`${copy.missionUi.complete} · ${copy.missions[m.id].title}`);
+      api.current?.celebrate();
+    },
+    [patch, note, copy],
+  );
+
+  // Four times a second: where the mission marker points, and the race clock
+  // (it runs only in the race's own place, and stops while a card is open).
+  useEffect(() => {
+    if (!activeMission) return;
+    let last = performance.now();
+    const t = window.setInterval(() => {
+      const now = performance.now();
+      const dt = (now - last) / 1000;
+      last = now;
+      const p = api.current?.pose();
+      if (!p) return;
+      const done = savedRef.current.mission?.done ?? [];
+      const tg = missionTarget(activeMission, done, p.room, p.x, p.z, isOpenRoom);
+      targetRef.current = tg;
+      setMarker((old) => (tg && old && Math.abs(old.x - tg.x) < 0.05 && Math.abs(old.z - tg.z) < 0.05 ? old : tg ? { x: tg.x, z: tg.z } : null));
+      if (activeMission.seconds && p.room === activeMission.room && !document.hidden) {
+        if (!pausedRef.current) remaining.current -= dt;
+        setTimeLeft(Math.max(0, Math.ceil(remaining.current)));
+        if (remaining.current <= 0) {
+          patch({ mission: null });
+          setTimeLeft(null);
+          targetRef.current = null;
+          setMarker(null);
+          note(copy.missionUi.timeUp);
+        }
+      }
+    }, 250);
+    return () => window.clearInterval(t);
+  }, [activeMission, isOpenRoom, patch, note, copy]);
+
   /** A market word met: its stall sign goes up (exploration only). */
   const learnWord = useCallback(
     (ko: string) => {
@@ -369,6 +464,7 @@ const WorldPage = () => {
       if (!it || it.id === bubble.at) return;
     }
     if (!it) return;
+    markStep(it.id);
     if (document.pointerLockElement && it.kind !== "say" && it.kind !== "learn" && it.kind !== "talk" && it.kind !== "cluby") document.exitPointerLock();
     if (it.npc) cheer(it.npc, 1200);
     switch (it.kind) {
@@ -428,7 +524,7 @@ const WorldPage = () => {
         navigate(it.link === "games" ? "/games" : access.signedIn ? "/textbook" : "/courses");
         break;
     }
-  }, [focus, card, sequence, bubble, clubyAwake, saved, patch, complete, navigate, access.signedIn, findLetter, learnWord]);
+  }, [focus, card, sequence, bubble, clubyAwake, saved, patch, complete, navigate, access.signedIn, findLetter, learnWord, markStep]);
 
   // A Klovers House board: out to that page; the world reopens in the house.
   const openInfo = useCallback(
@@ -466,6 +562,11 @@ const WorldPage = () => {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.repeat || card) return;
+      if (e.code === "KeyM" && !missionsOpen) {
+        setMapOpen((v) => !v);
+        return;
+      }
+      if (mapOpen || missionsOpen) return;
       if (e.code === "KeyE" || e.code === "Enter" || e.code === "NumpadEnter") {
         if (sequence) api.current?.skip();
         else interact();
@@ -473,7 +574,7 @@ const WorldPage = () => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [interact, sequence, card]);
+  }, [interact, sequence, card, mapOpen, missionsOpen]);
 
   useEffect(() => {
     const onLock = () => setLocked(!!document.pointerLockElement);
@@ -502,6 +603,7 @@ const WorldPage = () => {
 
   // Onboarding: welcome once, then the controls taught one at a time.
   const welcoming = ready && !saved.welcomed && !sequence;
+  pausedRef.current = card !== null || welcoming || missionsOpen || mapOpen;
   const tutorialStep: TutorialStep = saved.tutorialDone ? "done" : !moved ? "move" : !looked ? "look" : "done";
   useEffect(() => {
     if (tutorialStep === "done" && !saved.tutorialDone && saved.welcomed) patch({ tutorialDone: true });
@@ -593,7 +695,7 @@ const WorldPage = () => {
                 onFocus={setFocus}
                 onSpeech={setSpeechKey}
                 onSequence={setSequence}
-                paused={card !== null || welcoming}
+                paused={card !== null || welcoming || missionsOpen || mapOpen}
                 objective={objective}
                 progress={progress}
                 onDiscover={discover}
@@ -601,6 +703,7 @@ const WorldPage = () => {
                 beaconEls={beaconEls}
                 onArrive={arrived}
                 view={view}
+                marker={marker}
               />
             </Suspense>
             {/* Guidance: a small sign over each thing nearby — tap (or click)
@@ -674,9 +777,23 @@ const WorldPage = () => {
                     // On a short screen a word or a person's line takes the side
                     // column's place for a moment, so the two never overlap.
                     <div className={`flex flex-col items-start gap-2 ${bubble ? "max-sm:hidden [@media(max-height:500px)]:hidden" : ""}`}>
-                      <ObjectiveChip lang={lang} objective={objective} count={objectiveCount} justDone={justDone} nudge={nudge} />
+                      {activeMission ? (
+                        <MissionChip
+                          lang={lang}
+                          id={activeMission.id}
+                          count={activeMission.steps.length - stepsLeft.size}
+                          total={activeMission.steps.length}
+                          timeLeft={timeLeft}
+                          onOpen={() => setMissionsOpen(true)}
+                        />
+                      ) : (
+                        <ObjectiveChip lang={lang} objective={objective} count={objectiveCount} justDone={justDone} nudge={nudge} />
+                      )}
                       {currentRoom === "hangul-village" && <LettersChip lang={lang} letters={VILLAGE_LETTERS} found={saved.letters} />}
-                      {!showControls && <HelpButton lang={lang} onClick={() => setHelpOpen(true)} />}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <MissionsButton lang={lang} onClick={() => setMissionsOpen(true)} />
+                        {!showControls && <HelpButton lang={lang} onClick={() => setHelpOpen(true)} />}
+                      </div>
                     </div>
                   ) : null
                 }
@@ -715,6 +832,33 @@ const WorldPage = () => {
                     /* fine: this visit only */
                   }
                 }}
+              />
+            )}
+            {/* The walking map: a round radar that turns with the view. On a
+                phone it sits under the top-right controls (the joystick owns
+                the bottom-left); on a computer, bottom-left. */}
+            {ready && !welcoming && !card && !missionsOpen && !mapOpen && !sequence && (
+              <div
+                className={`pointer-events-none absolute z-[11] ${isTouch ? "end-4 top-[7.4rem]" : "bottom-5 left-5"}`}
+                
+              >
+                <MiniMap lang={lang} showKey={!isTouch} size={isTouch ? 96 : 150} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onOpen={() => setMapOpen(true)} />
+              </div>
+            )}
+            {mapOpen && <FullMap lang={lang} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onClose={() => setMapOpen(false)} />}
+            {missionsOpen && (
+              <MissionsCard
+                lang={lang}
+                isOpen={isOpenRoom}
+                active={activeMission?.id ?? null}
+                done={saved.missionsDone}
+                best={saved.bestTimes}
+                onStart={startMission}
+                onStop={() => {
+                  stopMission();
+                  setMissionsOpen(false);
+                }}
+                onClose={() => setMissionsOpen(false)}
               />
             )}
             {welcoming && (
