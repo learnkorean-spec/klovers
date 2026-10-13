@@ -587,11 +587,12 @@ const DeletedBundleHistory = ({ studentId }: { studentId: string }) => {
  * action already lives, not one dialog deeper. This is that surface.
  */
 const BundleManager = ({
-  studentId, onAddBundle, onEditBundle, onVoidBundle, onDeleteBundle, deletingBundleId,
+  studentId, onAddBundle, onEditBundle, onDuplicateBundle, onVoidBundle, onDeleteBundle, deletingBundleId,
 }: {
   studentId: string;
   onAddBundle: () => void;
   onEditBundle: (b: StudentBundle) => void;
+  onDuplicateBundle: (b: StudentBundle) => void;
   onVoidBundle: (b: StudentBundle) => void;
   onDeleteBundle: (b: StudentBundle) => void;
   deletingBundleId: string | null;
@@ -665,6 +666,10 @@ const BundleManager = ({
                 <div className="flex flex-wrap items-center gap-2 pt-0.5">
                   <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={() => onEditBundle(b)}>
                     <Pencil className="h-3 w-3 mr-1" /> Edit
+                  </Button>
+                  {/* Same package again, new dates: the add flow closes the previous bundle. */}
+                  <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs" onClick={() => onDuplicateBundle(b)}>
+                    <Copy className="h-3 w-3 mr-1" /> Duplicate
                   </Button>
                   {b.status === "cancelled" ? (
                     // Delete only ever appears once a bundle is voided AND
@@ -1138,6 +1143,26 @@ const MyStudentsManager = () => {
       currency: b.currency,
       purchased_on: b.purchased_on,
       coverage_start: b.coverage_start,
+    });
+  };
+
+  /**
+   * Same package as an existing bundle, for the next period: label, classes,
+   * price, currency and source are copied; dates start today. Saving goes
+   * through the add flow, which closes off the previous bundle.
+   */
+  const openDuplicateBundleDialog = (b: StudentBundle) => {
+    const today = localDateKey(new Date(), ADMIN_TIMEZONE);
+    setBundleDraft({
+      student_id: b.student_id,
+      mode: b.source,
+      catalog_key: b.catalog_key,
+      label: b.label,
+      total_classes: String(b.total_classes),
+      total_price: String(b.total_price),
+      currency: b.currency,
+      purchased_on: today,
+      coverage_start: today,
     });
   };
 
@@ -2225,6 +2250,7 @@ const MyStudentsManager = () => {
               studentId={manageBundlesFor.id}
               onAddBundle={() => openBundleDialog(manageBundlesFor)}
               onEditBundle={openEditBundleDialog}
+              onDuplicateBundle={openDuplicateBundleDialog}
               onVoidBundle={b => setVoidDraft({ bundle: b, reason: "" })}
               onDeleteBundle={setConfirmDeleteBundle}
               deletingBundleId={deleteBundle.isPending ? confirmDeleteBundle?.id ?? null : null}
