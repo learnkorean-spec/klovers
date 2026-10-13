@@ -18,12 +18,11 @@ import { ROOMS, type RoomId } from "../config/rooms";
 export type Pose = { room: RoomId; x: number; z: number; yaw: number; camYaw: number };
 
 const C = {
-  outside: "#3A3530",
-  floor: "#EFE5D0",
-  block: "#7A5C43",
+  outside: "#E6DDCB",
+  floor: "#FFFBF2",
+  block: "#D2C3A8",
   gateOpen: "#FFFF00",
-  gateShut: "#9C958C",
-  dot: "#FFF9EC",
+  gateShut: "#B9B2A6",
   ink: "#2E2E2E",
   yellow: "#FFFF00",
 };
@@ -34,7 +33,7 @@ interface DrawOpts {
   cx: number;
   cz: number;
   scale: number;
-  /** Rotation of the map (the camera yaw on the minimap; 0 = north up). */
+  /** Rotation of the map (the camera yaw: the way ahead is always up). */
   rot: number;
   w: number;
   h: number;
@@ -43,8 +42,23 @@ interface DrawOpts {
   target: { x: number; z: number } | null;
   /** Round radar: the target clamps to this radius (px) when far. */
   clampR?: number;
+  /** Destination names at the open gates. */
+  gateName?: (r: RoomId) => string;
+  t: number;
 }
 
+/** World point → screen point under the map's turn and zoom. */
+function toScreen(o: DrawOpts, x: number, z: number): [number, number] {
+  const dx = x - o.cx;
+  const dz = z - o.cz;
+  return [o.w / 2 + (dx * Math.cos(o.rot) - dz * Math.sin(o.rot)) * o.scale, o.h / 2 + (dx * Math.sin(o.rot) + dz * Math.cos(o.rot)) * o.scale];
+}
+
+/**
+ * Deliberately plain: light ground, soft buildings, yellow doorways, the
+ * learner as a big yellow dot with a pointer, and one pin for where to go.
+ * No other marks — the map answers "where am I, where do I go".
+ */
 function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
   const room = ROOMS[o.pose.room];
   const { w, h, scale } = o;
@@ -60,63 +74,95 @@ function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
   ctx.fillRect(b.minX, b.minZ, b.maxX - b.minX, b.maxZ - b.minZ);
   ctx.fillStyle = C.block;
   for (const c of room.colliders) ctx.fillRect(c.minX, c.minZ, c.maxX - c.minX, c.maxZ - c.minZ);
+  const px = 1 / scale;
   for (const p of room.portals) {
     const open = !p.lockedNotice || o.isOpen(p.to);
-    ctx.fillStyle = open ? C.gateOpen : C.gateShut;
     const z = p.zone;
+    ctx.fillStyle = open ? C.gateOpen : C.gateShut;
+    ctx.strokeStyle = C.ink;
+    ctx.lineWidth = 1.5 * px;
     ctx.fillRect(z.minX, z.minZ, z.maxX - z.minX, z.maxZ - z.minZ);
+    ctx.strokeRect(z.minX, z.minZ, z.maxX - z.minX, z.maxZ - z.minZ);
   }
-  const px = 1 / scale;
+  // Only the things the current mission needs, as yellow dots.
   for (const it of INTERACTABLES) {
-    if (it.room !== o.pose.room) continue;
-    const step = o.steps.has(it.id);
+    if (it.room !== o.pose.room || !o.steps.has(it.id)) continue;
     ctx.beginPath();
-    ctx.arc(it.x, it.z, (step ? 4.2 : 2.4) * px, 0, Math.PI * 2);
-    ctx.fillStyle = step ? C.yellow : C.dot;
+    ctx.arc(it.x, it.z, 4.5 * px, 0, Math.PI * 2);
+    ctx.fillStyle = C.yellow;
     ctx.fill();
-    ctx.lineWidth = 1.2 * px;
+    ctx.lineWidth = 1.6 * px;
     ctx.strokeStyle = C.ink;
     ctx.stroke();
   }
-  // The learner: an arrow the way the body faces.
-  ctx.save();
-  ctx.translate(o.pose.x, o.pose.z);
-  ctx.rotate(-o.pose.yaw);
+  ctx.restore();
+
+  // Destination names beside open doorways (upright, whatever the turn).
+  if (o.gateName) {
+    ctx.font = "700 10px Cairo, Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const p of room.portals) {
+      if (p.lockedNotice && !o.isOpen(p.to)) continue;
+      const [sx, sy] = toScreen(o, (p.zone.minX + p.zone.maxX) / 2, (p.zone.minZ + p.zone.maxZ) / 2);
+      if (sx < 10 || sx > w - 10 || sy < 8 || sy > h - 8) continue;
+      const label = o.gateName(p.to);
+      const tw = ctx.measureText(label).width + 10;
+      ctx.fillStyle = "rgba(46,46,46,0.85)";
+      ctx.fillRect(sx - tw / 2, sy - 8, tw, 16);
+      ctx.fillStyle = "#FFF9EC";
+      ctx.fillText(label, sx, sy + 0.5);
+    }
+  }
+
+  // Where to go: a yellow pin with a soft pulse, held at the rim when far.
+  if (o.target) {
+    let [sx, sy] = toScreen(o, o.target.x, o.target.z);
+    const ox = sx - w / 2;
+    const oy = sy - h / 2;
+    const r = Math.hypot(ox, oy);
+    if (o.clampR && r > o.clampR) {
+      sx = w / 2 + (ox * o.clampR) / r;
+      sy = h / 2 + (oy * o.clampR) / r;
+    }
+    const pulse = 0.5 + 0.5 * Math.sin(o.t * 4);
+    ctx.beginPath();
+    ctx.arc(sx, sy, 9 + pulse * 5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,0,${0.35 - pulse * 0.2})`;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(sx, sy, 7, 0, Math.PI * 2);
+    ctx.fillStyle = C.yellow;
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = C.ink;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(sx, sy, 2.2, 0, Math.PI * 2);
+    ctx.fillStyle = C.ink;
+    ctx.fill();
+  }
+
+  // The learner: a big yellow dot, pointing the way the body faces.
+  const [lx, ly] = toScreen(o, o.pose.x, o.pose.z);
+  const fx = Math.sin(o.pose.yaw);
+  const fz = Math.cos(o.pose.yaw);
+  const ax = fx * Math.cos(o.rot) - fz * Math.sin(o.rot);
+  const ay = fx * Math.sin(o.rot) + fz * Math.cos(o.rot);
   ctx.beginPath();
-  ctx.moveTo(0, 7 * px);
-  ctx.lineTo(4.6 * px, -4.6 * px);
-  ctx.lineTo(0, -2.4 * px);
-  ctx.lineTo(-4.6 * px, -4.6 * px);
+  ctx.moveTo(lx + ax * 15, ly + ay * 15);
+  ctx.lineTo(lx - ay * 6, ly + ax * 6);
+  ctx.lineTo(lx + ay * 6, ly - ax * 6);
   ctx.closePath();
   ctx.fillStyle = C.ink;
   ctx.fill();
-  ctx.lineWidth = 1.6 * px;
-  ctx.strokeStyle = C.yellow;
+  ctx.beginPath();
+  ctx.arc(lx, ly, 7.5, 0, Math.PI * 2);
+  ctx.fillStyle = C.yellow;
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = C.ink;
   ctx.stroke();
-  ctx.restore();
-  ctx.restore();
-
-  // The way to go: a yellow diamond, held at the rim when it is far.
-  if (o.target) {
-    const dx = o.target.x - o.cx;
-    const dz = o.target.z - o.cz;
-    let sx = (dx * Math.cos(o.rot) - dz * Math.sin(o.rot)) * scale;
-    let sy = (dx * Math.sin(o.rot) + dz * Math.cos(o.rot)) * scale;
-    const r = Math.hypot(sx, sy);
-    if (o.clampR && r > o.clampR) {
-      sx *= o.clampR / r;
-      sy *= o.clampR / r;
-    }
-    ctx.save();
-    ctx.translate(w / 2 + sx, h / 2 + sy);
-    ctx.rotate(Math.PI / 4);
-    ctx.fillStyle = C.yellow;
-    ctx.strokeStyle = C.ink;
-    ctx.lineWidth = 2;
-    ctx.fillRect(-5.5, -5.5, 11, 11);
-    ctx.strokeRect(-5.5, -5.5, 11, 11);
-    ctx.restore();
-  }
 }
 
 function useCanvasLoop(
@@ -159,48 +205,73 @@ interface MapProps {
 
 export function MiniMap({ lang, pose, isOpen, steps, target, size, onOpen, showKey = true }: MapProps & { size: number; onOpen: () => void; showKey?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const c = WORLD_COPY[lang].map;
+  const distRef = useRef<HTMLSpanElement>(null);
+  const copy = WORLD_COPY[lang];
+  const c = copy.map;
   useCanvasLoop(ref, { w: size, h: size }, (ctx, w, h) => {
     const p = pose();
     if (!p) return;
-    draw(ctx, { pose: p, cx: p.x, cz: p.z, scale: w / 2 / 15, rot: p.camYaw, w, h, isOpen, steps, target: target(), clampR: w / 2 - 9 });
+    const tg = target();
+    draw(ctx, {
+      pose: p, cx: p.x, cz: p.z, scale: w / 2 / 13, rot: p.camYaw, w, h, isOpen, steps, target: tg, clampR: w / 2 - 12,
+      gateName: (r) => copy.rooms[r].name, t: performance.now() / 1000,
+    });
+    // How far the pin is, in metres (written straight to the DOM, no re-render).
+    const el = distRef.current;
+    if (el) {
+      const d = tg ? Math.round(Math.hypot(tg.x - p.x, tg.z - p.z)) : null;
+      el.textContent = d !== null && d > 1 ? `${lang === "ar" ? toArabic(d) : d} ${c.metres}` : "";
+      el.style.display = el.textContent ? "" : "none";
+    }
   });
   return (
-    <button
-      type="button"
-      aria-label={`${c.button} (${c.key})`}
-      onClick={(e) => {
-        e.currentTarget.blur();
-        onOpen();
-      }}
-      onPointerDown={(e) => e.stopPropagation()}
-      className="pointer-events-auto relative shrink-0 overflow-hidden rounded-full border-[3px] border-charcoal bg-charcoal shadow-lg ring-2 ring-klovers-yellow focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-klovers-yellow"
-      style={{ width: size, height: size }}
-    >
-      <canvas ref={ref} style={{ width: size, height: size, display: "block" }} />
-      <span className="absolute inset-x-0 bottom-1 mx-auto w-fit rounded-full bg-charcoal/80 px-2 text-[10px] font-bold leading-4 text-ivory">
-        {c.button}
-        {showKey && <kbd className="ms-1 font-display">{c.key}</kbd>}
+    <div className="flex flex-col items-center gap-1">
+      <button
+        type="button"
+        aria-label={`${c.button} (${c.key})`}
+        onClick={(e) => {
+          e.currentTarget.blur();
+          onOpen();
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        className="pointer-events-auto relative shrink-0 overflow-hidden rounded-full border-[3px] border-charcoal bg-ivory shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-klovers-yellow"
+        style={{ width: size, height: size }}
+      >
+        <canvas ref={ref} style={{ width: size, height: size, display: "block" }} />
+      </button>
+      <span className="flex items-center gap-1.5 rounded-full bg-charcoal/85 px-2.5 py-0.5 text-[11px] font-bold text-ivory">
+        <span ref={distRef} className="rounded-full bg-klovers-yellow px-1.5 text-charcoal" style={{ display: "none" }} />
+        <span>{c.button}</span>
+        {showKey && <kbd className="font-display text-ivory/70">{c.key}</kbd>}
       </span>
-    </button>
+    </div>
   );
 }
 
-const ROOM_ORDER: RoomId[] = ["courtyard", "hangul-village", "hub", "klovers-house", "vocabulary-market", "conversation-cafe"];
+const toArabic = (n: number) => String(n).replace(/[0-9]/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
 
-export function FullMap({ lang, pose, isOpen, steps, target, onClose }: MapProps & { onClose: () => void }) {
+/** The places as a simple picture: boxes joined by paths, laid out as they lie. */
+const NODES: Record<RoomId, { x: number; y: number }> = {
+  "vocabulary-market": { x: 90, y: 60 },
+  "conversation-cafe": { x: 290, y: 60 },
+  "hangul-village": { x: 90, y: 175 },
+  hub: { x: 290, y: 175 },
+  courtyard: { x: 90, y: 290 },
+  "klovers-house": { x: 290, y: 290 },
+};
+const LINKS: [RoomId, RoomId][] = [
+  ["courtyard", "hangul-village"],
+  ["hangul-village", "vocabulary-market"],
+  ["hangul-village", "hub"],
+  ["vocabulary-market", "hub"],
+  ["hub", "conversation-cafe"],
+  ["hub", "klovers-house"],
+];
+
+export function FullMap({ lang, pose, isOpen, onClose, missionRoom }: Omit<MapProps, "steps" | "target"> & { onClose: () => void; missionRoom?: RoomId | null }) {
   const copy = WORLD_COPY[lang];
   const c = copy.map;
-  const ref = useRef<HTMLCanvasElement>(null);
-  const side = Math.min(520, Math.round(Math.min(window.innerWidth * 0.62, window.innerHeight * 0.68)));
   const here = pose()?.room ?? "courtyard";
-  useCanvasLoop(ref, { w: side, h: side }, (ctx, w, h) => {
-    const p = pose();
-    if (!p) return;
-    const b = ROOMS[p.room].bounds;
-    const span = Math.max(b.maxX - b.minX, b.maxZ - b.minZ) + 3;
-    draw(ctx, { pose: p, cx: (b.minX + b.maxX) / 2, cz: (b.minZ + b.maxZ) / 2, scale: w / span, rot: 0, w, h, isOpen, steps, target: target() });
-  });
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.code === "KeyM") onClose();
@@ -208,35 +279,64 @@ export function FullMap({ lang, pose, isOpen, steps, target, onClose }: MapProps
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+  const BW = 150;
+  const BH = 64;
   return (
     <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-charcoal/55 p-4" onPointerDown={(e) => e.stopPropagation()}>
-      <div role="dialog" aria-modal="true" aria-label={c.title} className="flex max-h-full flex-wrap items-start justify-center gap-4 rounded-3xl bg-ivory p-4 text-charcoal shadow-2xl">
-        <div className="flex flex-col items-center gap-2">
-          <p className="font-display text-lg font-bold">
-            {c.title} · {copy.rooms[here].name}
-          </p>
-          <canvas ref={ref} className="rounded-2xl" style={{ width: side, height: side }} />
-        </div>
-        <div className="flex min-w-[11rem] flex-col gap-2">
-          <ul className="flex flex-col gap-1.5">
-            {ROOM_ORDER.map((r) => (
-              <li
-                key={r}
-                className={`flex items-center justify-between gap-3 rounded-xl px-3 py-1.5 text-sm ${r === here ? "bg-charcoal text-ivory" : "bg-white"} ${isOpen(r) ? "" : "opacity-55"}`}
-              >
-                <span className="font-semibold">{copy.rooms[r].name}</span>
-                <span className="text-[11px] font-bold">{r === here ? c.here : isOpen(r) ? "" : c.locked}</span>
-              </li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            onClick={onClose}
-            className="mt-1 min-h-10 rounded-full border-2 border-charcoal bg-klovers-yellow px-5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal"
-          >
-            {c.close}
-          </button>
-        </div>
+      <div role="dialog" aria-modal="true" aria-label={c.title} className="flex w-full max-w-md flex-col items-center gap-3 rounded-3xl bg-ivory p-4 text-charcoal shadow-2xl">
+        <p className="font-display text-lg font-bold">{c.title}</p>
+        <svg viewBox="0 0 380 350" className="w-full max-w-[380px]" style={{ maxHeight: "60vh" }} role="img" aria-label={`${c.here}: ${copy.rooms[here].name}`}>
+          {LINKS.map(([a, b]) => {
+            const open = isOpen(a) && isOpen(b);
+            return (
+              <line
+                key={a + b}
+                x1={NODES[a].x}
+                y1={NODES[a].y}
+                x2={NODES[b].x}
+                y2={NODES[b].y}
+                stroke={open ? "#2E2E2E" : "#B9B2A6"}
+                strokeWidth={open ? 5 : 3}
+                strokeDasharray={open ? undefined : "6 6"}
+                strokeLinecap="round"
+              />
+            );
+          })}
+          {(Object.keys(NODES) as RoomId[]).map((r) => {
+            const n = NODES[r];
+            const open = isOpen(r);
+            const isHere = r === here;
+            const isGoal = missionRoom === r && !isHere;
+            return (
+              <g key={r} transform={`translate(${n.x - BW / 2} ${n.y - BH / 2})`}>
+                <rect
+                  width={BW}
+                  height={BH}
+                  rx={16}
+                  fill={isHere ? "#FFFF00" : open ? "#FFFFFF" : "#E6DDCB"}
+                  stroke={isGoal ? "#2E2E2E" : open ? "#2E2E2E" : "#B9B2A6"}
+                  strokeWidth={isGoal ? 4 : 2}
+                  strokeDasharray={isGoal ? "8 5" : undefined}
+                />
+                <text x={BW / 2} y={isHere || isGoal || !open ? 26 : 37} textAnchor="middle" fontSize="15" fontWeight="700" fill={open ? "#2E2E2E" : "#8A8378"}>
+                  {copy.rooms[r].name}
+                </text>
+                {(isHere || isGoal || !open) && (
+                  <text x={BW / 2} y={48} textAnchor="middle" fontSize="12" fontWeight="700" fill="#2E2E2E" opacity={open ? 1 : 0.6}>
+                    {isHere ? c.here : isGoal ? c.goal : c.locked}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+        <button
+          type="button"
+          onClick={onClose}
+          className="min-h-10 rounded-full border-2 border-charcoal bg-klovers-yellow px-6 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-charcoal"
+        >
+          {c.close}
+        </button>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 import { isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
-import { VILLAGE_LETTERS, type Interactable, type QuizId } from "@/game/config/interactions";
+import { INTERACTABLES, VILLAGE_LETTERS, type Interactable, type QuizId } from "@/game/config/interactions";
 import type { InfoId, NoticeKey, RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { useWorldAccess } from "@/game/systems/useWorldAccess";
@@ -305,6 +305,12 @@ const WorldPage = () => {
     [activeMission, saved.mission],
   );
   const targetRef = useRef<{ x: number; z: number } | null>(null);
+  /** The place of the next thing the mission needs (the full map marks it). */
+  const missionRoom = useMemo(() => {
+    if (!activeMission) return null;
+    const next = activeMission.steps.find((id) => stepsLeft.has(id));
+    return next ? (INTERACTABLES.find((i) => i.id === next)?.room ?? null) : null;
+  }, [activeMission, stepsLeft]);
   const [marker, setMarker] = useState<{ x: number; z: number } | null>(null);
   const remaining = useRef(0);
   /** A card or the map is open: the race clock waits (set where `paused` is known). */
@@ -842,10 +848,10 @@ const WorldPage = () => {
                 className={`pointer-events-none absolute z-[11] ${isTouch ? "end-4 top-[7.4rem]" : "bottom-5 left-5"}`}
                 
               >
-                <MiniMap lang={lang} showKey={!isTouch} size={isTouch ? 96 : 150} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onOpen={() => setMapOpen(true)} />
+                <MiniMap lang={lang} showKey={!isTouch} size={isTouch ? 100 : 160} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onOpen={() => setMapOpen(true)} />
               </div>
             )}
-            {mapOpen && <FullMap lang={lang} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onClose={() => setMapOpen(false)} />}
+            {mapOpen && <FullMap lang={lang} pose={pose} isOpen={isOpenRoom} missionRoom={missionRoom} onClose={() => setMapOpen(false)} />}
             {missionsOpen && (
               <MissionsCard
                 lang={lang}

@@ -10,6 +10,11 @@ import { REDUCED_MOTION } from "../systems/motion";
 import { CAST } from "./cast";
 import { buildPerson, PEOPLE_MATERIAL, type PersonSpec } from "./people";
 import ShadowBlob from "./ShadowBlob";
+import { Suspense } from "react";
+import RiggedBody, { type BodyControl } from "../player/RiggedBody";
+import AvatarBoundary from "../player/AvatarBoundary";
+import { REAL_PEOPLE } from "../systems/styleMode";
+import { realCast } from "./realCast";
 
 const WALK_SPEED = 1.15;
 /** People who can be spoken to notice the learner inside this distance. */
@@ -44,6 +49,9 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
   const walk = useRef({ t: 0, dir: 1, pause: 0, yaw: n.yaw, x: n.x, z: n.z });
   const talker = TALKERS.has(n.id);
   const seated = n.pose === "sit" || n.pose === "sitRead";
+  const real = useMemo(() => (REAL_PEOPLE ? realCast(n.cast) : null), [n.cast]);
+  const control = useRef<BodyControl>({ clip: seated ? "sit" : n.pose === "talk" ? "talk" : n.pose === "browse" ? "look" : "idle", once: null, rate: 0.8 });
+  const waved = useRef(false);
 
   useFrame(({ clock }, rawDt) => {
     const g = root.current;
@@ -73,6 +81,7 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
       g.position.set(w.x, 0, w.z);
       g.rotation.y = w.yaw;
       const moving = w.pause <= 0 ? 1 : 0;
+      control.current.clip = moving ? "walk" : "idle";
       const s = Math.sin(t * 6.2) * 0.45 * moving * calm;
       if (legL.current) legL.current.rotation.x = s;
       if (legR.current) legR.current.rotation.x = -s;
@@ -100,6 +109,10 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
 
     // A reaction (answered, or pleased): a wave and a small lift.
     const cheer = cheerAmount(n.id, performance.now());
+    if (cheer > 0 && !waved.current) {
+      waved.current = true;
+      control.current.once = "wave";
+    } else if (cheer <= 0) waved.current = false;
     if (cheer > 0) {
       if (body.current) body.current.position.y = Math.abs(Math.sin(t * 9)) * 0.05 * cheer * calm;
       if (armR.current) {
@@ -136,6 +149,21 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
   const sc = spec.scale ?? 1;
   return (
     <group ref={root} position={[n.x, 0, n.z]} rotation={[0, n.yaw, 0]} scale={sc} userData={{ character: true }}>
+      {real ? (
+        <AvatarBoundary fallback={simpleBody()}>
+          <Suspense fallback={simpleBody()}>
+            <RiggedBody model={real.model} rules={real.rules} female={real.female} control={control} />
+          </Suspense>
+        </AvatarBoundary>
+      ) : (
+        simpleBody()
+      )}
+      <ShadowBlob size={seated ? 1.0 : 0.85} stretch={seated ? 1.1 : 1} />
+    </group>
+  );
+
+  function simpleBody() {
+    return (
       <group ref={body}>
         <mesh geometry={parts.core} material={PEOPLE_MATERIAL} castShadow dispose={null} />
         {parts.armL && <mesh ref={armL} geometry={parts.armL} material={PEOPLE_MATERIAL} position={[-0.25, parts.shoulderY, 0]} castShadow dispose={null} />}
@@ -143,7 +171,6 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
         {parts.legL && <mesh ref={legL} geometry={parts.legL} material={PEOPLE_MATERIAL} position={[-0.1, parts.hipY, 0]} castShadow dispose={null} />}
         {parts.legR && <mesh ref={legR} geometry={parts.legR} material={PEOPLE_MATERIAL} position={[0.1, parts.hipY, 0]} castShadow dispose={null} />}
       </group>
-      <ShadowBlob size={seated ? 1.0 : 0.85} stretch={seated ? 1.1 : 1} />
-    </group>
-  );
+    );
+  }
 }
