@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, RingGeometry, Vector3, type Mesh, type WebGLRenderer } from "three";
+import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, PMREMGenerator, RingGeometry, Vector3, type Mesh, type Texture, type WebGLRenderer } from "three";
+import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
+import { upgradeMaterialDetails } from "./config/materials";
 import { INTERACTABLES, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
 import { findPortal, HUB, MARKET, ROOMS, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
@@ -535,6 +537,7 @@ export default function World(props: WorldProps) {
       {props.beaconEls && (
         <BeaconWatcher key={`b-${roomId}`} room={roomId} player={player} view={camera} story={story} access={access} els={props.beaconEls} onNearby={(l) => cb.current.onNearby?.(l)} />
       )}
+      <SkyLight />
       <Stats glRef={glRef} />
       <WatercolorDriver />
     </Canvas>
@@ -815,6 +818,39 @@ function WatercolorDriver() {
     }
     composer.c.render();
   }, mode === "off" ? 0 : 1);
+  return null;
+}
+
+/**
+ * Real sky light: a photographed late-afternoon sky (Poly Haven, CC0) lights
+ * every surface softly from all around and gives glossy things something to
+ * reflect. The painted backdrop stays the visible sky. Loaded after the
+ * first frame; nothing changes if it cannot load.
+ */
+function SkyLight() {
+  const { gl, scene } = useThree();
+  useEffect(() => {
+    let live = true;
+    let env: Texture | null = null;
+    upgradeMaterialDetails();
+    new HDRLoader()
+      .loadAsync("/assets/world/tex/sky_1k.hdr")
+      .then((hdr) => {
+        if (!live) return;
+        const pm = new PMREMGenerator(gl);
+        env = pm.fromEquirectangular(hdr).texture;
+        hdr.dispose();
+        pm.dispose();
+        scene.environment = env;
+        scene.environmentIntensity = 0.45;
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+      if (scene.environment === env) scene.environment = null;
+      env?.dispose();
+    };
+  }, [gl, scene]);
   return null;
 }
 

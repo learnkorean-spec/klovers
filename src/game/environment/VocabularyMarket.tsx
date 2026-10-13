@@ -8,7 +8,7 @@ import Instanced, { type Part } from "./Instanced";
 import Batch from "./Batch";
 import { Kit, basket, bunting, gutter, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
-import { paintPaving, useTiledTexture } from "./textures";
+import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
 
 /**
  * Vocabulary Market — the second world (canon: worlds[1]).
@@ -266,6 +266,7 @@ function useStringLights() {
 
 export default function VocabularyMarket({ nextOpen, breadSign, words }: { nextOpen: boolean; breadSign: boolean; words: string[] }) {
   const paving = useTiledTexture(paintPaving, HW, HD);
+  const photo = usePhotoFloor("paving", HW, HD);
   // Signs already up when the market opened stay still; new ones swing in.
   const atMount = useRef(new Set([...words, ...(breadSign ? ["빵"] : [])]));
   const stalls = useStallParts();
@@ -274,7 +275,7 @@ export default function VocabularyMarket({ nextOpen, breadSign, words }: { nextO
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[HW * 2, HD * 2]} />
-        <meshStandardMaterial map={paving} roughness={0.95} />
+        <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#F4EBDD" : "#ffffff"} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[80, 80]} />

@@ -1,4 +1,4 @@
-import { CanvasTexture, Color, MeshBasicMaterial, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, type Texture } from "three";
+import { CanvasTexture, Color, MeshBasicMaterial, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, TextureLoader, type Texture } from "three";
 import { PALETTE } from "./world";
 
 /**
@@ -95,6 +95,53 @@ export interface StdOptions {
 }
 
 const cache = new Map<string, MeshStandardMaterial>();
+/** Materials by detail kind, so the photographed details can replace the painted ones. */
+const byDetail = new Map<Detail, MeshStandardMaterial[]>();
+
+const PHOTO: Record<Detail, { map: string; normal?: string; scale: number } | null> = {
+  plaster: { map: "plaster_detail", normal: "plaster_nor", scale: 0.35 },
+  tile: { map: "roof_detail", normal: "roof_nor", scale: 0.6 },
+  stone: { map: "stone_detail", normal: "paving_nor", scale: 0.5 },
+  grain: { map: "grain_detail", normal: "planks_nor", scale: 0.35 },
+  fabric: null,
+};
+let upgraded = false;
+
+/**
+ * Swap the small painted detail maps for photographed ones (Poly Haven,
+ * CC0): real plaster tooth, roof tiles, stone and wood grain, with a light
+ * normal map for relief. Runs once, after the world is showing; if a photo
+ * fails to load, the painted detail simply stays.
+ */
+export function upgradeMaterialDetails(): void {
+  if (upgraded || typeof window === "undefined") return;
+  upgraded = true;
+  const loader = new TextureLoader();
+  const load = (name: string, srgb: boolean) =>
+    loader.loadAsync(`/assets/world/tex/${name}.webp`).then((t) => {
+      t.wrapS = RepeatWrapping;
+      t.wrapT = RepeatWrapping;
+      t.anisotropy = 8;
+      if (srgb) t.colorSpace = SRGBColorSpace;
+      return t;
+    });
+  (Object.keys(PHOTO) as Detail[]).forEach((kind) => {
+    const spec = PHOTO[kind];
+    if (!spec) return;
+    Promise.all([load(spec.map, true), spec.normal ? load(spec.normal, false) : Promise.resolve(null)])
+      .then(([map, normal]) => {
+        for (const m of byDetail.get(kind) ?? []) {
+          m.map = map;
+          if (normal) {
+            m.normalMap = normal;
+            m.normalScale.set(spec.scale, spec.scale);
+          }
+          m.needsUpdate = true;
+        }
+      })
+      .catch(() => undefined);
+  });
+}
 
 /** A cached lit material for this colour and finish. */
 export function std(color: string, roughness = 0.8, extra: Omit<StdOptions, "roughness"> & { detail?: Detail } = {}): MeshStandardMaterial {
@@ -107,7 +154,12 @@ export function std(color: string, roughness = 0.8, extra: Omit<StdOptions, "rou
       metalness: extra.metalness ?? 0,
       flatShading: extra.flatShading ?? false,
     });
-    if (extra.detail) m.map = detail(extra.detail);
+    if (extra.detail) {
+      m.map = detail(extra.detail);
+      const list = byDetail.get(extra.detail) ?? [];
+      list.push(m);
+      byDetail.set(extra.detail, list);
+    }
     if (extra.emissive) {
       m.emissive = new Color(extra.emissive);
       m.emissiveIntensity = extra.emissiveIntensity ?? 1;

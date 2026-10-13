@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from "react";
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from "three";
+import { useEffect, useMemo, useState } from "react";
+import { CanvasTexture, RepeatWrapping, SRGBColorSpace, TextureLoader, type Texture } from "three";
 import { NATURAL } from "../config/materials";
 import { PALETTE } from "../config/world";
 
@@ -89,3 +89,63 @@ export const paintPlanks: Paint = (ctx, size) => {
 
 /** Courtyard madang: larger, rougher slabs in a warmer earth tone. */
 export const paintMadang: Paint = (ctx, size) => slabs(ctx, size, NATURAL.madang, 3, 2, 0.19);
+
+/* ── Photographic floors (Poly Haven, CC0), loaded after the room shows ── */
+
+type PhotoKind = "paving" | "planks";
+type PhotoSet = { map: Texture; normal: Texture; rough: Texture };
+const photoCache = new Map<PhotoKind, Promise<PhotoSet>>();
+const TEX = "/assets/world/tex/";
+
+function loadPhoto(kind: PhotoKind): Promise<PhotoSet> {
+  let p = photoCache.get(kind);
+  if (!p) {
+    const loader = new TextureLoader();
+    const one = (name: string, srgb: boolean) =>
+      loader.loadAsync(`${TEX}${kind}_${name}.webp`).then((t) => {
+        t.wrapS = RepeatWrapping;
+        t.wrapT = RepeatWrapping;
+        t.anisotropy = 8;
+        if (srgb) t.colorSpace = SRGBColorSpace;
+        return t;
+      });
+    p = Promise.all([one("diff", true), one("nor", false), one("rough", false)]).then(([map, normal, rough]) => ({ map, normal, rough }));
+    photoCache.set(kind, p);
+  }
+  return p;
+}
+
+/**
+ * A real photographed floor (stone paving or wood planks), repeated `rx` ×
+ * `ry` times. Null until it has loaded — the painted floor shows meanwhile,
+ * and stays if the photos cannot load.
+ */
+export function usePhotoFloor(kind: PhotoKind, rx: number, ry: number): PhotoSet | null {
+  const [set, setSet] = useState<PhotoSet | null>(null);
+  useEffect(() => {
+    let live = true;
+    let made: PhotoSet | null = null;
+    loadPhoto(kind)
+      .then((base) => {
+        if (!live) return;
+        const c = (t: Texture) => {
+          const k = t.clone();
+          k.repeat.set(rx, ry);
+          k.needsUpdate = true;
+          return k;
+        };
+        made = { map: c(base.map), normal: c(base.normal), rough: c(base.rough) };
+        setSet(made);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+      if (made) {
+        made.map.dispose();
+        made.normal.dispose();
+        made.rough.dispose();
+      }
+    };
+  }, [kind, rx, ry]);
+  return set;
+}

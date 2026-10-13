@@ -6,7 +6,7 @@ import { HUB, hubGateSpot, type HubGate } from "../config/rooms";
 import Batch from "./Batch";
 import { Kit, bed, grass, gutter, hanokHouse, hanokRoof, noticeBoard, pine, platform, pot, shopfront, stoneLantern, tree, wallRun, gatehouse, flowers, pathStrip } from "./kit";
 import { Gate, Signboard } from "./parts";
-import { paintPaving, useTiledTexture } from "./textures";
+import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
 
 /**
  * Room 4 — the KLOVERS Hub: the square every path leads to.
@@ -316,6 +316,7 @@ function CloverFinial() {
 
 export default function Hub({ cafeOpen, marketOpen }: { cafeOpen: boolean; marketOpen: boolean }) {
   const paving = useTiledTexture(paintPaving, H, H);
+  const photo = usePhotoFloor("paving", H, H);
   // Gates open and shut with the learner's real access, so they are a kit of
   // their own, rebuilt only when access changes.
   const gates = useMemo(() => {
@@ -335,7 +336,7 @@ export default function Hub({ cafeOpen, marketOpen }: { cafeOpen: boolean; marke
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[H * 2, H * 2]} />
-        <meshStandardMaterial map={paving} roughness={0.95} />
+        <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#F4EBDD" : "#ffffff"} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[110, 110]} />

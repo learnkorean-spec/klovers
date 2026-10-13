@@ -2,7 +2,7 @@ import { DoubleSide } from "three";
 import { CAFE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import { GateWall, Signboard } from "./parts";
-import { paintPlanks, useTiledTexture } from "./textures";
+import { paintPlanks, useTiledTexture, usePhotoFloor } from "./textures";
 import { ACCENT, std } from "../config/materials";
 
 /**
@@ -172,11 +172,12 @@ function BeamsAndLamps() {
 
 export default function ConversationCafe() {
   const planks = useTiledTexture(paintPlanks, HW / 1.5, HD / 1.5);
+  const photo = usePhotoFloor("planks", HW / 1.5, HD / 1.5);
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[HW * 2, HD * 2]} />
-        <meshStandardMaterial map={planks} roughness={0.8} />
+        <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? planks} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.8} color={photo ? "#FFF4E6" : "#ffffff"} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[70, 70]} />
