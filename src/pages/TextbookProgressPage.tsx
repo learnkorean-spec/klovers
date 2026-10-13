@@ -129,6 +129,11 @@ const TextbookProgressPage = () => {
               <p className="text-sm text-muted-foreground">
                 {completedLessons} / {lessons.length} {isAr ? "مهمة مكتملة" : "missions completed"}
               </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {isAr
+                  ? "رحلتك على لوحة الطالب تتبع مستواك، وهذه المهام تتبع ما تُنجزه في الكتاب."
+                  : "Your journey on the dashboard follows your level; these missions follow what you finish in the book."}
+              </p>
             </div>
             <div className="flex items-center gap-4">
               <XpBadge xp={progress.totalXp} className="text-base px-3 py-1" />
