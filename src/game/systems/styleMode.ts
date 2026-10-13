@@ -13,3 +13,6 @@ export function watercolorMode(): WatercolorMode {
 
 /** Real (rigged) people by default; /world?avatar=classic shows the simple figures. */
 export const REAL_PEOPLE = typeof window === "undefined" || new URLSearchParams(window.location.search).get("avatar") !== "classic";
+
+/** Real modelled props (Sketchfab, CC BY) by default; /world?props=classic keeps the simple ones. */
+export const REAL_PROPS = typeof window === "undefined" || new URLSearchParams(window.location.search).get("props") !== "classic";

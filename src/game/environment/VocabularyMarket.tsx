@@ -8,6 +8,8 @@ import Instanced, { type Part } from "./Instanced";
 import Batch from "./Batch";
 import { Kit, basket, bunting, gutter, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
+import ModelProp, { type PropPlacement } from "./ModelProp";
+import { REAL_PROPS } from "../systems/styleMode";
 import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
 
 /**
@@ -22,6 +24,16 @@ import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
  */
 
 const HW = MARKET.halfWidth;
+
+/** On each produce table: a flat bamboo tray in the middle, a basket of cabbages at each end. */
+const TABLE_TOP = 0.8;
+const TRAYS: PropPlacement[] = MARKET.tables.map(([x, z]) => ({ x, z, y: TABLE_TOP, width: 0.62 }));
+const TABLE_BASKETS: PropPlacement[] = MARKET.tables.flatMap(([x, z, w, d]) =>
+  [-0.3, 0.3].map((t) => ({ x: w >= d ? x + t * w : x, z: w >= d ? z : z + t * d, y: TABLE_TOP, width: 0.5 })),
+);
+const CABBAGES: PropPlacement[] = TABLE_BASKETS.flatMap((b, i) =>
+  [[-0.08, 0.02], [0.08, -0.03], [0, 0.09]].map(([dx, dz], j) => ({ x: b.x + dx, z: b.z + dz, y: TABLE_TOP + 0.05, height: 0.2, rotY: i * 1.3 + j * 2.1 })),
+);
 const HD = MARKET.halfDepth;
 const LAMP_SPOTS = MARKET.lamps.map((l) => ({ x: l.x, z: l.z }));
 
@@ -212,11 +224,13 @@ const MARKET_KIT: Kit = (() => {
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.box("woodDark", [x + sx * (w / 2 - 0.08), 0.36, z + sz * (d / 2 - 0.08)], [0.07, 0.72, 0.07]);
     k.box("fabric", [x, 0.79, z], [w * 0.8, 0.02, d * 0.8]);
     const along = w >= d;
-    for (const t of [-0.3, 0.3]) {
-      const bx = along ? x + t * w : x;
-      const bz = along ? z : z + t * d;
-      basket(k, bx, bz, 0.62, (["fruitRed", "fruitOrange", "leaf", "woodLight"] as MatKey[])[(i * 2 + (t > 0 ? 1 : 0)) % 4], 0.8);
-    }
+    // Real bamboo baskets of cabbage replace these when the props load.
+    if (!REAL_PROPS)
+      for (const t of [-0.3, 0.3]) {
+        const bx = along ? x + t * w : x;
+        const bz = along ? z : z + t * d;
+        basket(k, bx, bz, 0.62, (["fruitRed", "fruitOrange", "leaf", "woodLight"] as MatKey[])[(i * 2 + (t > 0 ? 1 : 0)) % 4], 0.8);
+      }
     // A crate at the table's end.
     k.box("woodLight", along ? [x - w / 2 - 0.35, 0.2, z] : [x, 0.2, z - d / 2 - 0.35], [0.5, 0.4, 0.5], true, [0, 0.3, 0]);
     k.add("woodDark", "cyl", [x, 1.6, z], [0.07, 3.2, 0.07]);
@@ -273,6 +287,13 @@ export default function VocabularyMarket({ nextOpen, breadSign, words }: { nextO
   const strings = useStringLights();
   return (
     <group>
+      {REAL_PROPS && (
+        <>
+          <ModelProp name="tray" at={TRAYS} />
+          <ModelProp name="basket" at={TABLE_BASKETS} />
+          <ModelProp name="cabbage" at={CABBAGES} />
+        </>
+      )}
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[HW * 2, HD * 2]} />
         <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#F4EBDD" : "#ffffff"} />

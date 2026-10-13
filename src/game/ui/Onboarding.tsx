@@ -3,6 +3,7 @@ import { WORLD_COPY, type WorldLang } from "../config/copy";
 import type { ObjectiveId } from "../config/objectives";
 import type { DiscoveryKey } from "../config/discoveries";
 import { AVATARS, type AvatarId } from "../player/characters";
+import { MODEL_CREDITS, OTHER_SOURCES } from "../config/credits";
 
 /** First person ("eyes") or over the shoulder ("behind"). */
 export type WorldView = "eyes" | "behind";
@@ -168,6 +169,23 @@ export function ControlsCard({
           </li>
         ))}
       </ul>
+      {replay && (
+        // CC BY credits for the 3D models used in the world.
+        <details className="mt-2 text-[11px] text-charcoal/70">
+          <summary className="cursor-pointer font-bold">{c.credits}</summary>
+          <ul className="mt-1 flex flex-col gap-0.5" dir="ltr">
+            {MODEL_CREDITS.map((m) => (
+              <li key={m.url}>
+                <a href={m.url} target="_blank" rel="noopener noreferrer" className="underline">
+                  {m.title}
+                </a>{" "}
+                — {m.author} · {m.license}
+              </li>
+            ))}
+            <li>{OTHER_SOURCES}</li>
+          </ul>
+        </details>
+      )}
     </div>
   );
 }
