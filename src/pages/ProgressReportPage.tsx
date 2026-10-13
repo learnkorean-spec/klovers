@@ -6,6 +6,7 @@ import { Download, Printer, CheckCircle2, CalendarDays, Zap } from "lucide-react
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 import { CONTACT_EMAIL } from "@/lib/siteConfig";
+import { getLevelShortLabel } from "@/constants/levels";
 
 interface ReportData {
   name: string;
@@ -140,7 +141,7 @@ const ProgressReportPage = () => {
           {/* Level info */}
           <div style={{ background: "#FFF9EC", border: "2px solid #FFFF00", borderRadius: 10, padding: "16px 20px", marginBottom: 24 }}>
             <p style={{ margin: "0 0 4px", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "#2E2E2E" }}>{isAr ? "المستوى الحالي" : "Current Level"}</p>
-            <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#2E2E2E" }}>{data.level}</p>
+            <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#2E2E2E" }}>{getLevelShortLabel(data.level, isAr ? "ar" : "en") || data.level}</p>
             {data.placementScore && <p style={{ margin: "4px 0 0", color: "rgba(46,46,46,0.7)", fontSize: 13 }}>{isAr ? "اختبار تحديد المستوى:" : "Placement test:"} {data.placementScore}/100 · {data.placementLevel}</p>}
           </div>
 
@@ -148,8 +149,8 @@ const ProgressReportPage = () => {
           <div style={{ borderLeft: "3px solid #FFFF00", paddingLeft: 16, marginBottom: 32 }}>
             <p style={{ margin: "0 0 8px", color: "#2E2E2E", lineHeight: 1.6 }}>
               {isAr
-                ? <>عمل رائع يا <strong>{data.name.split(" ")[0]}</strong>! الاستمرارية مفتاح إتقان الكورية، وحتى 10 دقائق من التمرين اليومي تتراكم لتصبح طلاقة مع الوقت.</>
-                : <>Keep up the great work, <strong>{data.name.split(" ")[0]}</strong>! Consistency is the key to mastering Korean. Even 10 minutes of daily practice compounds into fluency over time.</>
+                ? <>عمل رائع يا <strong>{data.name.split(" ")[0]}</strong>! الاستمرارية مفتاح إتقان الكورية، وحتى 10 دقائق من التمرين اليومي تتراكم مع الوقت.</>
+                : <>Keep up the great work, <strong>{data.name.split(" ")[0]}</strong>! Consistency is the key to mastering Korean. Even 10 minutes of daily practice adds up over time.</>
               }
             </p>
             <p style={{ margin: 0, color: "rgba(46,46,46,0.7)", fontSize: 13 }}><span lang="ko" style={{ fontFamily: "'Noto Sans KR', sans-serif" }}>화이팅!</span> — Reham &amp; the Klovers team</p>
