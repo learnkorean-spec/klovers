@@ -1,56 +1,52 @@
 /**
- * The private lessons already on the calendar, and one click to answer for
- * each.
- *
- * The confirm queue in My Students only ever looks backwards, so until this
- * card existed the rows the weekly generator writes were invisible: fourteen
- * real lessons sitting in the database that no screen in the admin mentioned.
+ * The next seven days of private lessons as a timetable: one column per day,
+ * each lesson shown by student name at its time. Read-only on purpose; answering
+ * for a lesson stays in the confirm queue on My Students.
  */
-import { useMemo, useState } from "react";
-import { CalendarClock, Loader2 } from "lucide-react";
+import { useMemo } from "react";
+import { CalendarClock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import {
-  useMyStudents,
-  useResolveScheduledSession,
-  useUpcomingScheduledSessions,
-} from "@/hooks/admin/useMyStudents";
+import { useMyStudents, useUpcomingScheduledSessions } from "@/hooks/admin/useMyStudents";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
 import { getAdminTimezone } from "@/lib/viewerTimezone";
 import { TIMEZONE } from "@/constants/scheduling";
-import {
-  formatSessionDate,
-  localDateKey,
-  type SessionOutcome,
-  type StudentClassSession,
-} from "@/types/students";
+import { localDateKey, type StudentClassSession } from "@/types/students";
 
-/** Re reads her own day in Cairo whatever clock the lesson was scheduled on. */
-const CAIRO_TZ = "Africa/Cairo";
+const DAYS = 7;
+
+/** Small fixed palette so each student keeps the same colour across the week. */
+const STUDENT_TONES = [
+  "border-blue-500 bg-blue-50 dark:bg-blue-950/40",
+  "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40",
+  "border-amber-500 bg-amber-50 dark:bg-amber-950/40",
+  "border-violet-500 bg-violet-50 dark:bg-violet-950/40",
+  "border-rose-500 bg-rose-50 dark:bg-rose-950/40",
+] as const;
+
+/** Adds whole days to a YYYY-MM-DD key without touching any timezone. */
+const addDays = (dateKey: string, days: number): string => {
+  const d = new Date(`${dateKey}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+const dayLabel = (dateKey: string): string =>
+  new Date(`${dateKey}T00:00:00Z`).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 
 const UpcomingPrivateClasses = () => {
   const { data: sessions = [], isLoading } = useUpcomingScheduledSessions();
   const { data: students = [] } = useMyStudents();
-  const resolve = useResolveScheduledSession();
-
-  // Which row is mid-flight, not merely whether the mutation is running: two
-  // rows share one mutation hook, so `resolve.isPending` alone would grey out
-  // every button on the card for a click on one of them.
-  const [pendingId, setPendingId] = useState<string | null>(null);
 
   const studentName = useMemo(
     () => new Map(students.map(s => [s.id, s.full_name])),
     [students],
   );
 
-  /**
-   * start_time is stored on the clock of the class that owns it, not in UTC
-   * and not in Cairo, so the zone has to come from the class row. Falling back
-   * to the teacher's configured zone rather than a literal keeps a lesson whose
-   * class row has since been closed from being read on the wrong clock.
-   */
   const classTimezone = useMemo(() => {
     const map = new Map<string, string>();
     for (const s of students) {
@@ -62,103 +58,88 @@ const UpcomingPrivateClasses = () => {
   const todayKey = localDateKey(new Date(), TIMEZONE);
   const teacherTz = getAdminTimezone();
 
-  const byDate = useMemo(() => {
-    const groups = new Map<string, StudentClassSession[]>();
-    for (const s of sessions) {
-      if (s.session_date < todayKey) continue;
-      const list = groups.get(s.session_date) ?? [];
-      list.push(s);
-      groups.set(s.session_date, list);
-    }
-    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b));
-  }, [sessions, todayKey]);
+  const days = useMemo(
+    () => Array.from({ length: DAYS }, (_, i) => addDays(todayKey, i)),
+    [todayKey],
+  );
 
-  const answer = async (session: StudentClassSession, outcome: SessionOutcome) => {
-    setPendingId(session.id);
-    try {
-      await resolve.mutateAsync({ id: session.id, outcome });
-      toast({
-        title: outcome === "attended" ? "Class counted" : "Marked as not held",
-        description: `${studentName.get(session.student_id) ?? "Student"} · ${formatSessionDate(session.session_date)}`,
-      });
-    } catch (err) {
-      toast({
-        title: "Couldn't save that",
-        description: err instanceof Error ? err.message : "Try again in a moment.",
-        variant: "destructive",
-      });
-    } finally {
-      setPendingId(null);
+  const byDay = useMemo(() => {
+    const groups = new Map<string, StudentClassSession[]>(days.map(d => [d, []]));
+    for (const s of sessions) {
+      const list = groups.get(s.session_date);
+      if (list) list.push(s);
     }
-  };
+    for (const list of groups.values()) {
+      list.sort((a, b) => a.start_time.localeCompare(b.start_time));
+    }
+    return groups;
+  }, [sessions, days]);
+
+  const toneFor = useMemo(() => {
+    const ids = [...new Set(sessions.map(s => s.student_id))].sort();
+    const map = new Map(ids.map((id, i) => [id, STUDENT_TONES[i % STUDENT_TONES.length]]));
+    return (id: string) => map.get(id) ?? STUDENT_TONES[0];
+  }, [sessions]);
+
+  const total = days.reduce((n, d) => n + (byDay.get(d)?.length ?? 0), 0);
 
   return (
     <Card className="mb-6">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <CalendarClock className="h-4 w-4 text-primary" />
-          Upcoming private classes
-          {byDate.length > 0 && (
-            <Badge variant="secondary">{byDate.reduce((n, [, rows]) => n + rows.length, 0)}</Badge>
-          )}
+          Private classes, next 7 days
+          {total > 0 && <Badge variant="secondary">{total}</Badge>}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading…
-          </div>
-        ) : byDate.length === 0 ? (
-          // Nothing here is a normal Sunday, not a failure: the generator fills
-          // this list once a week and it empties as the week is answered for.
+          <p className="text-sm text-muted-foreground py-2">Loading…</p>
+        ) : total === 0 ? (
           <p className="text-sm text-muted-foreground py-2">
-            Nothing on the calendar yet — the weekly generator runs Mondays at 02:00.
+            No private classes in the next 7 days.
           </p>
         ) : (
-          <div className="space-y-4">
-            {byDate.map(([date, rows]) => (
-              <div key={date} className="space-y-1.5">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {formatSessionDate(date)}
-                </p>
-                {rows.map(row => {
-                  const sourceTz = classTimezone.get(row.class_id ?? "") ?? TIMEZONE;
-                  const hhmm = row.start_time.slice(0, 5);
-                  const local = convertDateTimeToTimezone(date, hhmm, sourceTz, teacherTz);
-                  const cairo = convertDateTimeToTimezone(date, hhmm, sourceTz, CAIRO_TZ);
-                  const busy = pendingId === row.id;
-                  return (
-                    <div
-                      key={row.id}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/30 px-3 py-2 text-sm"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-medium text-foreground truncate">
-                          {studentName.get(row.student_id) ?? "Unknown student"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {local.timeFormatted} {teacherTz} · {cairo.timeFormatted} Cairo
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" disabled={busy} onClick={() => answer(row, "attended")}>
-                          {busy && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
-                          Attended
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={busy}
-                          onClick={() => answer(row, "cancelled_no_charge")}
+          <div className="grid grid-cols-7 gap-2 overflow-x-auto">
+            {days.map(date => {
+              const rows = byDay.get(date) ?? [];
+              const isToday = date === todayKey;
+              return (
+                <div key={date} className="min-w-[110px] space-y-1.5">
+                  <p
+                    className={`text-xs font-semibold pb-1 border-b ${
+                      isToday ? "text-primary border-primary" : "text-muted-foreground border-border"
+                    }`}
+                  >
+                    {dayLabel(date)}
+                  </p>
+                  {rows.length === 0 ? (
+                    <p className="text-xs text-muted-foreground/60">—</p>
+                  ) : (
+                    rows.map(row => {
+                      const sourceTz = classTimezone.get(row.class_id ?? "") ?? TIMEZONE;
+                      const local = convertDateTimeToTimezone(
+                        date,
+                        row.start_time.slice(0, 5),
+                        sourceTz,
+                        teacherTz,
+                      );
+                      return (
+                        <div
+                          key={row.id}
+                          className={`rounded-md border-l-4 px-2 py-1.5 ${toneFor(row.student_id)}`}
                         >
-                          Cancelled
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                          <p className="text-[11px] text-muted-foreground">{local.timeFormatted}</p>
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {studentName.get(row.student_id) ?? "Unknown"}
+                          </p>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </CardContent>
