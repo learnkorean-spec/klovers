@@ -5,6 +5,7 @@ import LearnerAvatar from "../player/LearnerAvatar";
 import RealAvatar from "../player/RealAvatar";
 import { REAL_PEOPLE } from "../systems/styleMode";
 import { Suspense } from "react";
+import AvatarBoundary from "../player/AvatarBoundary";
 import type { AvatarId } from "../player/characters";
 import { angleDelta, damp } from "../systems/movement";
 import type { PlayerState } from "../systems/state";
@@ -42,9 +43,11 @@ export default function Friend({ avatar, x, z, yaw, player }: { avatar: AvatarId
   return (
     <group ref={root} position={pos} rotation={[0, yaw, 0]} userData={{ character: true }}>
       {REAL_PEOPLE ? (
+        <AvatarBoundary fallback={<LearnerAvatar player={still} avatar={other} />}>
         <Suspense fallback={<LearnerAvatar player={still} avatar={other} />}>
           <RealAvatar key={other} player={still} avatar={other} greet={player} />
         </Suspense>
+        </AvatarBoundary>
       ) : (
         <LearnerAvatar player={still} avatar={other} />
       )}

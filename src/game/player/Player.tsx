@@ -13,6 +13,7 @@ import LearnerAvatar from "./LearnerAvatar";
 import RealAvatar from "./RealAvatar";
 import { REAL_PEOPLE } from "../systems/styleMode";
 import { Suspense } from "react";
+import AvatarBoundary from "./AvatarBoundary";
 import type { AvatarId } from "./characters";
 
 interface PlayerProps {
@@ -175,9 +176,11 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
       {/* Built from primitives to the canon look of Adam or Lina. Swap for a
           rigged GLB with the same props later (see player/animation.ts). */}
       {REAL_PEOPLE ? (
+        <AvatarBoundary fallback={<LearnerAvatar player={player} avatar={avatar} />}>
         <Suspense fallback={<LearnerAvatar player={player} avatar={avatar} />}>
           <RealAvatar key={avatar} player={player} avatar={avatar} />
         </Suspense>
+        </AvatarBoundary>
       ) : (
         <LearnerAvatar player={player} avatar={avatar} />
       )}
