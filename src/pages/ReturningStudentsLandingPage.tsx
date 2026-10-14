@@ -59,7 +59,8 @@ const ReturningStudentsLandingPage = () => {
     description: isAr
       ? "خصم ٢٠٪ للطلاب العائدين إلى كلوفرز، وخصم إضافي عند مشاركة الصفحة مع الأصدقاء. اختبار المستوى اختياري."
       : "Returning Klovers students get 20% off. Enroll now, share with friends, and save up to 35%. No placement test required.",
-    canonical: PAGE_URL,
+    canonical: isAr ? `${SITE_URL}/ar/welcome-back` : PAGE_URL,
+    alternates: { en: PAGE_URL, ar: `${SITE_URL}/ar/welcome-back` },
   });
 
   useEffect(() => {

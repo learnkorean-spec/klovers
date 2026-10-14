@@ -211,6 +211,14 @@ const App = () => (
                 {/* Klovers Supply index (6 Oct 2026). Category pages stay English-URL only. */}
                 <Route path="/ar/shop" element={<ShopPage />} />
                 <Route path="/ar/hangul-starter" element={<HangulStarterPage />} />
+                {/* Enrolment, games, affiliate, interview training, welcome back and the two legal pages (15 Oct 2026). */}
+                <Route path="/ar/enroll-now" element={<EnrollNowPage />} />
+                <Route path="/ar/games" element={<GamesPage />} />
+                <Route path="/ar/affiliate" element={<AffiliatePage />} />
+                <Route path="/ar/interview-training" element={<KoreanInterviewPage />} />
+                <Route path="/ar/welcome-back" element={<ReturningStudentsLandingPage />} />
+                <Route path="/ar/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/ar/terms" element={<TermsPage />} />
                 {/* The journey hub and its five stations (6 Oct 2026). */}
                 <Route path="/ar/journey" element={<JourneyHubPage />} />
                 <Route path="/ar/journey/:eraId" element={<EraPage />} />

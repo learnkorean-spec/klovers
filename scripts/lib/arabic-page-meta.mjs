@@ -34,6 +34,15 @@ export const ARABIC_PAGE_META = [
   // Arabic useSEO for the shop index, so the static head and the live page agree.
   { path: "/shop", title: "متجر كلوفرز — كتب ومستلزمات لتعلّم الكورية", description: "كتب ومستلزمات من كلوفرز تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب." },
   { path: "/hangul-starter", title: "ورقة الهانغول المجانية: الأبجدية الكورية | كلوفرز", description: "تعلُّم الأبجدية الكورية (الهانغول) مجانًا: الحروف الساكنة والمتحركة كاملة مع مقطع مثال لكل حرف وشرح مبسّط، وقابلة للطباعة." },
+  // Seven more twins (15 Oct 2026). Each title and description is the page's
+  // own Arabic useSEO, so the static head and the live page agree.
+  { path: "/enroll-now", title: "التسجيل في حصص الكورية", description: "التسجيل في كلوفرز: اختيار نوع الحصة والجدول، ثم بدء التحدث بالكورية بثقة في حصص مباشرة عبر الإنترنت مع معلمة حقيقية." },
+  { path: "/games", title: "ألعاب تعلّم الكورية", description: "تدريب على الكورية بألعاب تفاعلية في كلوفرز: الذاكرة، والهانغول، وترتيب الكلمات، وغيرها." },
+  { path: "/affiliate", title: "برنامج الشركاء: عمولة ٢٠٪", description: "الانضمام إلى برنامج شركاء كلوفرز: رابط إحالة خاص وعمولة ٢٠٪ من أول دفعة لكل طالب جديد في دورات اللغة الكورية." },
+  { path: "/interview-training", title: "التدريب على مقابلة العمل بالكورية", description: "تدريب على أسئلة مقابلات العمل بالكورية: أسئلة وأجوبة مخصّصة بالذكاء الاصطناعي، مع سؤالين مجانيين وإمكانية فتح أسئلة إضافية." },
+  { path: "/welcome-back", title: "أهلًا بالعودة — عرض الطلاب العائدين", description: "خصم ٢٠٪ للطلاب العائدين إلى كلوفرز، وخصم إضافي عند مشاركة الصفحة مع الأصدقاء. اختبار المستوى اختياري." },
+  { path: "/privacy-policy", title: "سياسة الخصوصية", description: "كيف تجمع كلوفرز بياناتك الشخصية وتستخدمها وتحميها، والخدمات التي تُشارَك معها، وطريقة الاطلاع عليها أو حذفها." },
+  { path: "/terms", title: "شروط الخدمة", description: "شروط حصص كلوفرز المباشرة للغة الكورية عبر الإنترنت: الحسابات والمدفوعات وضمان الحصة الأولى والاسترداد والحصص الفائتة وقواعد السلوك." },
   // The journey hub and its five stations (6 Oct 2026), from arabic-journey.mjs.
   ...JOURNEY_ARABIC_PAGES.map(({ path, title, description }) => ({ path, title, description })),
 ];

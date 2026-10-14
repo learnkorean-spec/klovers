@@ -148,7 +148,7 @@ type CelebrationStep =
 const GamesPage = () => {
   const { t, language } = useLanguage();
   const isAr = language === "ar";
-  useSEO({ title: isAr ? "ألعاب تعلّم الكورية" : "Korean Learning Games", description: isAr ? "تدريب على الكورية بألعاب تفاعلية في كلوفرز: الذاكرة، والهانغول، وترتيب الكلمات، وغيرها." : "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.", canonical: "https://kloversegy.com/games" });
+  useSEO({ title: isAr ? "ألعاب تعلّم الكورية" : "Korean Learning Games", description: isAr ? "تدريب على الكورية بألعاب تفاعلية في كلوفرز: الذاكرة، والهانغول، وترتيب الكلمات، وغيرها." : "Practice Korean with interactive games on Klovers. Memory match, Hangul quiz, word scramble, and more fun vocabulary games.", canonical: isAr ? "https://kloversegy.com/ar/games" : "https://kloversegy.com/games", alternates: { en: "https://kloversegy.com/games", ar: "https://kloversegy.com/ar/games" } });
   const [activeGame, setActiveGame] = useState<string>("match");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignupNudge, setShowSignupNudge] = useState(false);

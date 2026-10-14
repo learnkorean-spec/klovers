@@ -13,11 +13,11 @@ describe("arabicRoutes", () => {
   });
 
   it("does not invent twins", () => {
-    expect(arabicTwinOf("/games")).toBeNull();
+    expect(arabicTwinOf("/world")).toBeNull();
     // Articles keep their own URLs; only the blog index is paired.
     expect(arabicTwinOf("/blog/korean-numbers-guide")).toBeNull();
     expect(englishTwinOf("/ar/blog/korean-numbers-guide-ar")).toBeNull();
-    expect(englishTwinOf("/ar/games")).toBeNull();
+    expect(englishTwinOf("/ar/world")).toBeNull();
     expect(isArabicUrl("/pricing")).toBe(false);
     expect(isArabicUrl("/ar")).toBe(true);
     expect(arabicMetaFor("/ar")).toBeNull();

@@ -90,7 +90,8 @@ export default function KoreanInterviewPage() {
     description: isAr
       ? "تدريب على أسئلة مقابلات العمل بالكورية: أسئلة وأجوبة مخصّصة بالذكاء الاصطناعي، مع سؤالين مجانيين وإمكانية فتح أسئلة إضافية."
       : "Practice Korean job interview questions with AI-generated personalized Q&A. Get 2 free questions, upgrade for more.",
-    canonical: "https://kloversegy.com/interview-training",
+    canonical: isAr ? "https://kloversegy.com/ar/interview-training" : "https://kloversegy.com/interview-training",
+    alternates: { en: "https://kloversegy.com/interview-training", ar: "https://kloversegy.com/ar/interview-training" },
   });
 
   const [searchParams] = useSearchParams();

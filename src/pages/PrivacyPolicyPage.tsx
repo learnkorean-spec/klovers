@@ -211,7 +211,8 @@ const PrivacyPolicyPage = () => {
     description: isAr
       ? "كيف تجمع كلوفرز بياناتك الشخصية وتستخدمها وتحميها، والخدمات التي تُشارَك معها، وطريقة الاطلاع عليها أو حذفها."
       : "How Klovers collects, uses and protects your personal information, which services we share it with, and how to access or delete it.",
-    canonical: "https://kloversegy.com/privacy-policy",
+    canonical: isAr ? "https://kloversegy.com/ar/privacy-policy" : "https://kloversegy.com/privacy-policy",
+    alternates: { en: "https://kloversegy.com/privacy-policy", ar: "https://kloversegy.com/ar/privacy-policy" },
   });
   return <LegalDocument content={isAr ? AR : EN} isAr={isAr} />;
 };
