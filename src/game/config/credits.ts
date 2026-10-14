@@ -9,5 +9,11 @@ export const MODEL_CREDITS = [
   { what: "Cabbage", title: "Korean_Cabbage", author: "KOREA HERITAGE SERVICE [KHS]", url: "https://sketchfab.com/3d-models/0c1a22aaf22847ceb019ca1d88895210", license: "CC BY 4.0" },
 ] as const;
 
+/** CC BY 4.0 asks for a link to the licence… */
+export const LICENSE_URL = "https://creativecommons.org/licenses/by/4.0/";
+
+/** …and a note of any changes made to the work. */
+export const MODEL_CHANGES = "Models were compressed and resized for the web; nothing else was changed.";
+
 /** Other sources (no credit required, listed anyway). */
 export const OTHER_SOURCES = "People and motions: Mixamo (Adobe). Floors, details and sky: Poly Haven (CC0).";
