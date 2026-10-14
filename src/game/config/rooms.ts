@@ -1,5 +1,6 @@
 import { BOUNDS, box, CAMERA_COLLIDERS, COLLIDERS, PLAYER, ROOM, type Box2 } from "./world";
 import { FRIEND_SPOT, npcColliderSpots } from "./npcs";
+import { REAL_PROPS } from "../systems/styleMode";
 
 /** People who stand still are solid (a small circle-ish box). */
 const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p.x, p.z, 0.6, 0.6));
@@ -358,10 +359,22 @@ const hubProps = [
   ...HUB.flowerBeds.map(([x, z]) => box(x, z, 1.35, 1.35)),
 ];
 
+/** The stone pillars beside each real (modelled) future gate are solid. */
+const hubGatePillars: Box2[] = REAL_PROPS
+  ? HUB.gates
+      .filter((g) => g.kind === "future")
+      .flatMap((g) => {
+        const s = hubGateSpot(g, 0.12);
+        return [-1, 1].map((side) =>
+          g.wall === "north" ? box(s.x + side * 1.5, s.z, 0.75, 0.62) : box(s.x, s.z + side * 1.5, 0.62, 0.75),
+        );
+      })
+  : [];
+
 const KLOVERS_HUB: RoomLayout = {
   id: "hub",
   bounds: { minX: -HUB.half, maxX: HUB.half, minZ: -HUB.half, maxZ: HUB.half },
-  colliders: [hubPost, ...hubProps, ...people("hub")],
+  colliders: [hubPost, ...hubProps, ...hubGatePillars, ...people("hub")],
   cameraColliders: [hubPost],
   spawns: {
     // Turned a little toward the pavilion, so the landmark leads the view.

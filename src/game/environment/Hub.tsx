@@ -6,7 +6,7 @@ import { HUB, hubGateSpot, type HubGate } from "../config/rooms";
 import Batch from "./Batch";
 import { Kit, bed, grass, gutter, hanokHouse, hanokRoof, noticeBoard, pine, platform, pot, shopfront, stoneLantern, tree, wallRun, gatehouse, flowers, pathStrip } from "./kit";
 import { Gate, Signboard } from "./parts";
-import ModelProp from "./ModelProp";
+import ModelProp, { type PropPlacement } from "./ModelProp";
 import { REAL_PROPS } from "../systems/styleMode";
 import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
 
@@ -166,6 +166,24 @@ function gatePose(g: HubGate): { x: number; z: number; rotY: number } {
   if (g.wall === "west") return { x: s.x, z: s.z, rotY: Math.PI / 2 };
   return { x: s.x, z: s.z, rotY: -Math.PI / 2 };
 }
+
+/** The real gate model at each gate to a world still ahead. */
+const FUTURE_GATES: PropPlacement[] = HUB.gates
+  .filter((g) => g.kind === "future")
+  .map((g) => {
+    const p = gatePose(g);
+    return { x: p.x, z: p.z, rotY: p.rotY + Math.PI / 2, height: 4.6 };
+  });
+
+/** The gate's frame is narrower than the opening: a short run of real hanok wall on each side. */
+const GATE_PILLARS: PropPlacement[] = HUB.gates
+  .filter((g) => g.kind === "future")
+  .flatMap((g) => {
+    const p = gatePose(g);
+    const ax = Math.cos(p.rotY);
+    const az = -Math.sin(p.rotY);
+    return [-1, 1].map((side) => ({ x: p.x + ax * side * 1.5, z: p.z + az * side * 1.5, rotY: p.rotY, height: 2.7 }));
+  });
 
 /** One arm per destination, turned toward it, stacked up the pillar. */
 function Signpost() {
@@ -354,32 +372,8 @@ export default function Hub({ cafeOpen, marketOpen }: { cafeOpen: boolean; marke
         <Signboard text="게시판" w={0.9} h={0.3} aspect={3} />
       </group>
       <Batch kit={gates} />
-      {REAL_PROPS && (
-        <ModelProp
-          name="gate-small"
-          at={HUB.gates.filter((g) => g.kind === "future").map((g) => {
-            const p = gatePose(g);
-            return { x: p.x, z: p.z, rotY: p.rotY + Math.PI / 2, height: 4.6 };
-          })}
-        />
-      )}
-      {/* The real gate's door frame is narrower than the opening: plaster closes the sides. */}
-      {REAL_PROPS &&
-        HUB.gates
-          .filter((g) => g.kind === "future")
-          .flatMap((g) => {
-            const p = gatePose(g);
-            return [-1, 1].map((side) => {
-              const ax = Math.cos(p.rotY);
-              const az = -Math.sin(p.rotY);
-              return (
-                <mesh key={`${g.id}${side}`} castShadow receiveShadow position={[p.x + ax * side * 1.5, 1.4, p.z + az * side * 1.5]} rotation={[0, p.rotY, 0]}>
-                  <boxGeometry args={[0.75, 2.8, 0.4]} />
-                  <primitive object={MAT.plaster} attach="material" />
-                </mesh>
-              );
-            });
-          })}
+      {REAL_PROPS && <ModelProp name="gate-small" at={FUTURE_GATES} />}
+      {REAL_PROPS && <ModelProp name="wall-pillar" at={GATE_PILLARS} />}
       {HUB.gates.map((g) => (
         <Gate key={g.id} {...gatePose(g)} sign={g.sign} />
       ))}
