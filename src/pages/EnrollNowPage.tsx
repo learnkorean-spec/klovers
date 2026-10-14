@@ -119,7 +119,8 @@ const EnrollNowPage = () => {
     description: isAr
       ? "التسجيل في كلوفرز: اختيار نوع الحصة والجدول، ثم بدء التحدث بالكورية بثقة في حصص مباشرة عبر الإنترنت مع معلمة حقيقية."
       : "Join Klovers: choose your class type and schedule, then start speaking Korean with confidence in live online classes with a real teacher.",
-    canonical: "https://kloversegy.com/enroll-now",
+    canonical: isAr ? "https://kloversegy.com/ar/enroll-now" : "https://kloversegy.com/enroll-now",
+    alternates: { en: "https://kloversegy.com/enroll-now", ar: "https://kloversegy.com/ar/enroll-now" },
   });
   const localDayNames: string[] = tArray("enrollNow", "dayNames").length === 7
     ? tArray("enrollNow", "dayNames") as string[]

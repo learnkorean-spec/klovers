@@ -86,7 +86,8 @@ export default function AffiliatePage() {
     description: isAr
       ? "الانضمام إلى برنامج شركاء كلوفرز: رابط إحالة خاص وعمولة ٢٠٪ من أول دفعة لكل طالب جديد في دورات اللغة الكورية."
       : "Join the Klovers affiliate program. Earn 20% of each referred student's first payment for our Korean language courses.",
-    canonical: "https://kloversegy.com/affiliate",
+    canonical: isAr ? "https://kloversegy.com/ar/affiliate" : "https://kloversegy.com/affiliate",
+    alternates: { en: "https://kloversegy.com/affiliate", ar: "https://kloversegy.com/ar/affiliate" },
   });
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);

@@ -170,7 +170,8 @@ const TermsPage = () => {
     description: isAr
       ? "شروط حصص كلوفرز المباشرة للغة الكورية عبر الإنترنت: الحسابات والمدفوعات وضمان الحصة الأولى والاسترداد والحصص الفائتة وقواعد السلوك."
       : "The terms for Klovers' live online Korean classes: accounts, payments, the first class guarantee, refunds, missed classes and conduct.",
-    canonical: "https://kloversegy.com/terms",
+    canonical: isAr ? "https://kloversegy.com/ar/terms" : "https://kloversegy.com/terms",
+    alternates: { en: "https://kloversegy.com/terms", ar: "https://kloversegy.com/ar/terms" },
   });
   return <LegalDocument content={isAr ? AR : EN} isAr={isAr} />;
 };

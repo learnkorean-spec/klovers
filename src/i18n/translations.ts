@@ -2587,7 +2587,7 @@ export const translations = {
       negationTitle: "صيغ النفي",
       negationDesc: "التفريق بين 안 و못 و-지 않다",
       errorcatchTitle: "اكتشاف الخطأ",
-      errorcatchDesc: "ابحث عن الخطأ في جملة كورية — أو أثبّت أنه لا خطأ فيها",
+      errorcatchDesc: "البحث عن الخطأ في جملة كورية، أو إثبات أنها خالية من الأخطاء",
       situationTitle: "الاختيار حسب الموقف",
       situationDesc: "اختيار العبارة الكورية المناسبة للحظة",
       grammarpatternTitle: "أنماط القواعد",
