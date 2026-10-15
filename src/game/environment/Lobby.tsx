@@ -3,6 +3,8 @@ import { MAT } from "../config/materials";
 import { PROPS, ROOM } from "../config/world";
 import type { StoryState } from "../systems/story";
 import Batch from "./Batch";
+import ModelProp, { type PropPlacement } from "./ModelProp";
+import { REAL_PROPS } from "../systems/styleMode";
 import CloverEgg from "./CloverEgg";
 import { Kit, bed, flowers, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, shrub, steppingStones, stoneLantern, tree, wallRun } from "./kit";
 import { Gate, Signboard } from "./parts";
@@ -18,10 +20,20 @@ import { paintMadang, useTiledTexture } from "./textures";
  * 한글 마을 — the way into Hangul Village. Hanok halls close the east and
  * west sides, a tiled wall the south; a flowering tree in its bed, green
  * beds against the halls, pines, platforms and onggi pots give the corners
- * a use instead of emptiness. Everything but the egg and the gate is one
- * Kit, drawn as a few dozen instanced meshes.
+ * a use instead of emptiness. Behind the arrival point, the house's own
+ * front gate stands shut in the south wall. Everything but the egg and the
+ * two gates is one Kit, drawn as a few dozen instanced meshes.
  */
 const { halfWidth: HW, halfDepth: HD } = ROOM;
+
+/**
+ * The house's front gate (솟을대문, a raised gate between two gate rooms), shut,
+ * in the south wall behind where the learner arrives: the way the two friends
+ * came in. A real model (KCISA, CC BY), at the same scale as the Hub's gates
+ * from the same house. Its outer face, with the name board, looks out.
+ */
+const MAIN_GATE = { halfWidth: 3.75, height: 4.4 } as const;
+const MAIN_GATE_AT: PropPlacement[] = [{ x: 0, z: HD + 0.2 + 2.35, rotY: -Math.PI / 2, height: MAIN_GATE.height }];
 
 const COURTYARD_KIT: Kit = (() => {
   const k = new Kit();
@@ -34,7 +46,13 @@ const COURTYARD_KIT: Kit = (() => {
   // North wall either side of the gate; south wall behind the arrival point.
   wallRun(k, -HW - 0.4, -HD - 0.2, -1.85, -HD - 0.2);
   wallRun(k, 1.85, -HD - 0.2, HW + 0.4, -HD - 0.2);
-  wallRun(k, -HW - 0.4, HD + 0.2, HW + 0.4, HD + 0.2);
+  if (REAL_PROPS) {
+    // The house's front gate stands in the middle of the south wall.
+    wallRun(k, -HW - 0.4, HD + 0.2, -MAIN_GATE.halfWidth, HD + 0.2);
+    wallRun(k, MAIN_GATE.halfWidth, HD + 0.2, HW + 0.4, HD + 0.2);
+  } else {
+    wallRun(k, -HW - 0.4, HD + 0.2, HW + 0.4, HD + 0.2);
+  }
   // Village roofs beyond the north wall: the promise of what is next.
   hanokHouse(k, { x: -6.5, z: -HD - 4.2, w: 6, d: 4.2, h: 2.4, face: "+z" });
   hanokHouse(k, { x: 6.8, z: -HD - 4.6, w: 5.4, d: 4.4, h: 2.8, face: "+z", roofH: 1.3 });
@@ -55,8 +73,8 @@ const COURTYARD_KIT: Kit = (() => {
   tree(k, -8.9, -7.9, 1.25, true, 5);
   shrub(k, -7.0, -7.7, 0.7, 9, "blossom");
   // Beyond the south wall and the halls: green crowns over the roofs.
-  tree(k, -3.5, HD + 2.6, 1.3, false, 21);
-  tree(k, 4.5, HD + 2.4, 1.15, false, 23);
+  tree(k, -6.4, HD + 2.8, 1.3, false, 21);
+  tree(k, 6.7, HD + 2.6, 1.15, false, 23);
   // Small life at the foot of walls and lanterns.
   for (const [gx, gz, gs] of [[-2.9, -6.0, 0.8], [2.9, -6.0, 0.8], [-3.7, 3.3, 0.7], [3.7, 3.3, 0.7], [-10.5, -4.3, 0.9], [10.5, 6.0, 0.9]] as const) grass(k, gx, gz, gs, gx * 3 + gz);
   rock(k, -9.6, 4.6, 0.9, 3);
@@ -88,6 +106,7 @@ export default function Lobby({ story }: { story: MutableRefObject<StoryState> }
         <primitive object={MAT.stone} attach="material" />
       </mesh>
       <Batch kit={COURTYARD_KIT} />
+      {REAL_PROPS && <ModelProp name="gate-main" at={MAIN_GATE_AT} />}
       {/* The way on: the only yellow-framed opening in the room. */}
       <Gate x={0} z={-HD - 0.02} rotY={0} sign="한글 마을" />
       <group position={[PROPS.board.x - 0.05, 2.35, PROPS.board.z]} rotation={[0, -Math.PI / 2, 0]}>
