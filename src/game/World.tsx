@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, PMREMGenerator, RingGeometry, Vector3, type Mesh, type Texture, type WebGLRenderer } from "three";
+import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, PMREMGenerator, RingGeometry, Vector3, type Mesh, type Scene, type Texture, type WebGLRenderer } from "three";
 import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { upgradeMaterialDetails } from "./config/materials";
 import { INTERACTABLES, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
@@ -160,6 +160,8 @@ declare global {
       goto: (room: RoomId) => boolean;
       /** Stand the player at a point in the current room (checks only). */
       place: (x: number, z: number) => void;
+      /** The live scene, for exporting a room's geometry to bake (scripts/world-bake). */
+      scene: () => Scene | null;
     };
   }
 }
@@ -193,6 +195,7 @@ export default function World(props: WorldProps) {
   const timers = useRef<number[]>([]);
   const sequence = useRef<"none" | "hatch">("none");
   const glRef = useRef<WebGLRenderer | null>(null);
+  const sceneRef = useRef<Scene | null>(null);
   /** What the learner can use right now (drawn as a small ring under it). */
   const focusRef = useRef<Interactable | null>(null);
 
@@ -430,6 +433,7 @@ export default function World(props: WorldProps) {
           textures: info?.memory.textures ?? 0,
         };
       },
+      scene: () => sceneRef.current,
       place: (x: number, z: number) => {
         player.current.position.x = x;
         player.current.position.z = z;
@@ -539,7 +543,7 @@ export default function World(props: WorldProps) {
         <BeaconWatcher key={`b-${roomId}`} room={roomId} player={player} view={camera} story={story} access={access} els={props.beaconEls} onNearby={(l) => cb.current.onNearby?.(l)} />
       )}
       <SkyLight />
-      <Stats glRef={glRef} />
+      <Stats glRef={glRef} sceneRef={sceneRef} />
       <WatercolorDriver />
       {quality.post && watercolorMode() === "off" && <PostDriver />}
     </Canvas>
@@ -868,8 +872,9 @@ function SkyLight() {
 }
 
 /** Hands the renderer to the debug probe (draw calls, GPU memory). */
-function Stats({ glRef }: { glRef: MutableRefObject<WebGLRenderer | null> }) {
+function Stats({ glRef, sceneRef }: { glRef: MutableRefObject<WebGLRenderer | null>; sceneRef: MutableRefObject<Scene | null> }) {
   const gl = useThree((s) => s.gl);
   glRef.current = gl;
+  sceneRef.current = useThree((s) => s.scene);
   return null;
 }

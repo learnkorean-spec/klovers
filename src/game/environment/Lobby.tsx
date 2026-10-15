@@ -6,6 +6,7 @@ import Batch from "./Batch";
 import ModelProp, { type PropPlacement } from "./ModelProp";
 import { REAL_PROPS } from "../systems/styleMode";
 import CloverEgg from "./CloverEgg";
+import { BakedShade, useBakedFloor } from "./BakedFloor";
 import { Kit, bed, flowers, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, shrub, steppingStones, stoneLantern, tree, wallRun } from "./kit";
 import { Gate, Signboard } from "./parts";
 import { paintMadang, useTiledTexture } from "./textures";
@@ -95,12 +96,16 @@ const COURTYARD_KIT: Kit = (() => {
 
 export default function Lobby({ story }: { story: MutableRefObject<StoryState> }) {
   const paving = useTiledTexture(paintMadang, HW, HD);
+  // Baked from the courtyard with the real gate (REAL_PROPS); the plain
+  // wall of ?props=classic casts nearly the same shade.
+  const baked = useBakedFloor("court");
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[HW * 2, HD * 2]} />
-        <meshStandardMaterial map={paving} roughness={0.95} />
+        <meshStandardMaterial key={baked.ao ? "baked" : "plain"} map={paving} roughness={0.95} aoMap={baked.ao} aoMapIntensity={1} />
       </mesh>
+      {baked.shade && <BakedShade map={baked.shade} w={HW * 2} d={HD * 2} />}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[90, 90]} />
         <primitive object={MAT.stone} attach="material" />
