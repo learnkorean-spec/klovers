@@ -35,6 +35,41 @@ interface Part {
   matrix: Matrix4;
 }
 
+const MIRROR_X = new Matrix4().makeScale(-1, 1, 1);
+
+/** Whether a geometry is the loader's own (cached for the next visit), not a copy made here. */
+function isShared(gltf: GLTF, g: BufferGeometry): boolean {
+  let found = false;
+  gltf.scene.traverse((o) => {
+    if ((o as Mesh).geometry === g) found = true;
+  });
+  return found;
+}
+
+/**
+ * Some models place a part with a mirroring transform (the KCISA small
+ * gate: x scale −2.9). A plain mesh copes — three.js turns the faces round
+ * when an object's matrix is mirrored — but instances cannot, so the faces
+ * came out inside-out: lit from the wrong side, and solid black to the
+ * contact shade. Build the mirror into a copy of the geometry instead, so
+ * every instance matrix is an ordinary one.
+ */
+function unmirror(part: Part): Part {
+  if (part.matrix.determinant() >= 0) return part;
+  const geometry = part.geometry.clone();
+  geometry.applyMatrix4(MIRROR_X);
+  const index = geometry.getIndex();
+  if (index) {
+    for (let i = 0; i < index.count; i += 3) {
+      const b = index.getX(i + 1);
+      index.setX(i + 1, index.getX(i + 2));
+      index.setX(i + 2, b);
+    }
+    index.needsUpdate = true;
+  }
+  return { geometry, material: part.material, matrix: part.matrix.clone().multiply(MIRROR_X) };
+}
+
 /**
  * Every copy of a model is drawn together: one InstancedMesh per sub-mesh,
  * so twelve cabbages cost one draw call (two with shadows), not twelve.
@@ -52,10 +87,12 @@ function Model({ name, at }: { name: string; at: PropPlacement[] }) {
       if (!m.isMesh) return;
       const mats = Array.isArray(m.material) ? m.material : [m.material];
       for (const mat of mats) if (mat instanceof MeshStandardMaterial) mat.metalness = Math.min(mat.metalness, 0.2);
-      parts.push({ geometry: m.geometry, material: m.material, matrix: m.matrixWorld.clone() });
+      parts.push(unmirror({ geometry: m.geometry, material: m.material, matrix: m.matrixWorld.clone() }));
     });
     return { box, size, parts };
   }, [gltf]);
+  // Mirrored parts got geometry copies of their own: free them with the room.
+  useEffect(() => () => base.parts.forEach((p) => !isShared(gltf, p.geometry) && p.geometry.dispose()), [base, gltf]);
   const meshes = useMemo(() => {
     // Where each copy goes: placed, turned, fitted to size, centred on x/z, feet on the floor.
     const placed = at.map((p) => {

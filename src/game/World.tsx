@@ -35,6 +35,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { createPost } from "./systems/post";
 
 /**
  * Light colours (not brand colours): golden sun, warm sky bounce, earth
@@ -540,6 +541,7 @@ export default function World(props: WorldProps) {
       <SkyLight />
       <Stats glRef={glRef} />
       <WatercolorDriver />
+      {quality.post && watercolorMode() === "off" && <PostDriver />}
     </Canvas>
   );
 }
@@ -818,6 +820,17 @@ function WatercolorDriver() {
     }
     composer.c.render();
   }, mode === "off" ? 0 : 1);
+  return null;
+}
+
+/** The desktop finish (systems/post.ts): takes over drawing when it is on. */
+function PostDriver() {
+  const { scene, gl, camera, size } = useThree();
+  const post = useMemo(() => createPost(gl, scene, camera, size.width, size.height), [gl, scene, camera]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => post?.setSize(size.width, size.height), [post, size]);
+  useEffect(() => () => post?.dispose(), [post]);
+  // Positive priority takes over drawing; without the finish, R3F draws as before.
+  useFrame(() => post?.render(), post ? 1 : 0);
   return null;
 }
 
