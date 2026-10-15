@@ -24,16 +24,16 @@ const CLIPS: Clip[] = ["idle", "walk", "run", "talk", "wave", "jump", "sit", "lo
 const ONCE = new Set<Clip>(["wave", "jump"]);
 
 /** Recolour clothes by mesh name. The fabric stays: see `dye`. `keepMap` tints the texture as it is (hair). */
-export type DressRule = { match: RegExp; color: string; keepMap?: boolean };
+export type DressRule = { match: RegExp; color: string; keepMap?: boolean; /** How much of the texture's light and dark shows (default 0.6). */ contrast?: number };
 
 /** Small greyscale copies of textures, read once, for measuring brightness. */
-const pixels = new WeakMap<Texture, { w: number; h: number; lum: Float32Array } | null>();
+const pixels = new WeakMap<Texture, { w: number; h: number; lum: Float32Array; alpha: Uint8Array } | null>();
 
 const toLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 
 function readLuminance(tex: Texture) {
   if (pixels.has(tex)) return pixels.get(tex) ?? null;
-  let out: { w: number; h: number; lum: Float32Array } | null = null;
+  let out: { w: number; h: number; lum: Float32Array; alpha: Uint8Array } | null = null;
   try {
     const img = tex.image as CanvasImageSource | undefined;
     if (img && typeof document !== "undefined") {
@@ -47,8 +47,10 @@ function readLuminance(tex: Texture) {
         ctx.drawImage(img, 0, 0, w, h);
         const d = ctx.getImageData(0, 0, w, h).data;
         const lum = new Float32Array(w * h);
+        const alpha = new Uint8Array(w * h);
+        for (let i = 0; i < w * h; i++) alpha[i] = d[i * 4 + 3];
         for (let i = 0; i < w * h; i++) lum[i] = 0.2126 * toLinear(d[i * 4] / 255) + 0.7152 * toLinear(d[i * 4 + 1] / 255) + 0.0722 * toLinear(d[i * 4 + 2] / 255);
-        out = { w, h, lum };
+        out = { w, h, lum, alpha };
       }
     }
   } catch {
@@ -58,21 +60,35 @@ function readLuminance(tex: Texture) {
   return out;
 }
 
-/** Mean (linear) brightness of the texture where this mesh's UVs fall. */
+/**
+ * Mean (linear) brightness of the texture where this mesh is drawn: sampled
+ * at triangle centres (corners of hair cards sit on their see-through
+ * edges), each sample weighted by how opaque the texture is there.
+ */
 function meanUnder(geometry: BufferGeometry, tex: Texture): number | null {
   const px = readLuminance(tex);
   const uv = geometry.getAttribute("uv");
   if (!px || !uv) return null;
-  const step = Math.max(1, Math.floor(uv.count / 600));
+  const index = geometry.getIndex();
+  const tris = index ? index.count / 3 : uv.count / 3;
+  const step = Math.max(1, Math.floor(tris / 1500));
   let sum = 0;
-  let n = 0;
-  for (let i = 0; i < uv.count; i += step) {
-    const x = Math.min(px.w - 1, Math.max(0, Math.floor((uv.getX(i) % 1) * px.w)));
-    const y = Math.min(px.h - 1, Math.max(0, Math.floor((uv.getY(i) % 1) * px.h)));
-    sum += px.lum[y * px.w + x];
-    n++;
+  let weight = 0;
+  for (let t = 0; t < tris; t += step) {
+    let u = 0;
+    let v = 0;
+    for (let k = 0; k < 3; k++) {
+      const i = index ? index.getX(t * 3 + k) : t * 3 + k;
+      u += uv.getX(i) / 3;
+      v += uv.getY(i) / 3;
+    }
+    const x = Math.min(px.w - 1, Math.max(0, Math.floor((((u % 1) + 1) % 1) * px.w)));
+    const y = Math.min(px.h - 1, Math.max(0, Math.floor((((v % 1) + 1) % 1) * px.h)));
+    const a = px.alpha[y * px.w + x] / 255;
+    sum += px.lum[y * px.w + x] * a;
+    weight += a;
   }
-  return n ? sum / n : null;
+  return weight > 0.5 ? sum / weight : null;
 }
 
 /**
@@ -81,18 +97,19 @@ function meanUnder(geometry: BufferGeometry, tex: Texture): number | null {
  * own average so the result averages to the colour asked for. A flat colour
  * with only the normal map left read as plastic.
  */
-function dye(mat: MeshStandardMaterial, color: string, ref: number) {
+function dye(mat: MeshStandardMaterial, color: string, ref: number, contrast = 0.6) {
   mat.color = new Color(color);
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.dyeRef = { value: Math.max(ref, 0.002) };
+    shader.uniforms.dyeContrast = { value: contrast };
     shader.fragmentShader = shader.fragmentShader
-      .replace("void main() {", "uniform float dyeRef;\nvoid main() {")
+      .replace("void main() {", "uniform float dyeRef;\nuniform float dyeContrast;\nvoid main() {")
       .replace(
         "#include <map_fragment>",
         `#ifdef USE_MAP
   vec4 dyeTex = texture2D( map, vMapUv );
   float dyeLum = dot( dyeTex.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
-  diffuseColor.rgb *= clamp( pow( dyeLum / dyeRef, 0.6 ), 0.45, 1.3 );
+  diffuseColor.rgb *= clamp( pow( dyeLum / dyeRef, dyeContrast ), 0.45, 1.3 );
 #endif`,
       );
   };
@@ -129,12 +146,15 @@ function prepare(root: Group, rules: DressRule[]) {
       // Hair came in at roughness ≈0.16 once its fake metal was gone: a
       // wet, plastic shine. Real hair has a soft sheen.
       mat.roughness = 0.62;
+      // Layered cards shadow each other into dark patches: hair still casts
+      // on the body and the ground, but does not take shadows itself.
+      m.receiveShadow = false;
     }
     const rule = rules.find((r) => r.match.test(m.name));
     if (rule) {
       const ref = !rule.keepMap && mat.map ? meanUnder(m.geometry, mat.map) : null;
       if (rule.keepMap) mat.color = new Color(rule.color);
-      else if (ref !== null) dye(mat, rule.color, ref);
+      else if (ref !== null) dye(mat, rule.color, ref, rule.contrast);
       else {
         // Could not read the texture: the old flat colour.
         mat.map = null;
