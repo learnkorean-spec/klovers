@@ -85,3 +85,6 @@ supabase/.temp/
 # Neither is source. A deliberate `git add -f` still overrides any line here.
 /Claude outputs/
 /Klovers_Website_QA_GEO_2026-09-25.xlsx
+
+Book prep/
+Klovers Books/
