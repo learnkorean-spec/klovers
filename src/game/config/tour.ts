@@ -3,8 +3,9 @@ import type { WorldLang } from "./copy";
 import { VILLAGE, type TourStop } from "./rooms";
 
 /**
- * The Klovers tour, at the start of Hangul Village: six slides, one board
- * each along the street, walked in order (VILLAGE.tour). The words are the site's own —
+ * The Klovers tour, an exhibition along the Hangul Village street: what
+ * each of its six boards says (VILLAGE.tour; drawn on the boards by
+ * environment/TourExhibit). The words are the site's own —
  * the About page, the homepage ("Why Klovers", "How it works", "Why
  * Korean"), the courses and free-trial pages (src/i18n/translations.ts,
  * src/pages/AboutPage.tsx) — so the world never says more than the site

@@ -16,6 +16,8 @@ import Npc from "./npc/Npc";
 import ConversationCafe from "./environment/ConversationCafe";
 import KloversHouse from "./environment/KloversHouse";
 import HangulVillage from "./environment/HangulVillage";
+import TourExhibit from "./environment/TourExhibit";
+import type { WorldLang } from "./config/copy";
 import Hub from "./environment/Hub";
 import Lobby from "./environment/Lobby";
 import VocabularyMarket from "./environment/VocabularyMarket";
@@ -90,12 +92,8 @@ export interface WorldApi {
   enter: (to: RoomId, arrive: string) => void;
   /** Tap-to-go: walk by itself to this thing (a tapped sign). */
   goTo: (it: Interactable) => void;
-  /**
-   * The Klovers tour: walk to this board and frame it; null lets the camera
-   * go. `clear`: which side of the screen the slide covers (−1 left, 1
-   * right, 0 below), so the board is framed on the other side.
-   */
-  tourTo: (stop: TourStop | null, clear?: -1 | 0 | 1) => void;
+  /** Read a Klovers tour board: walk to it and frame it close; null lets the camera go. */
+  tourTo: (stop: TourStop | null) => void;
   /** Where the learner is and which way the view looks (the minimap). */
   pose: () => { room: RoomId; x: number; z: number; yaw: number; camYaw: number };
 }
@@ -149,6 +147,10 @@ export interface WorldProps {
   marker?: { x: number; z: number } | null;
   /** "eyes": first person (the learner's own view); "behind": over the shoulder. */
   view?: "eyes" | "behind";
+  /** The page's language: the tour boards are written in it. */
+  lang?: WorldLang;
+  /** A tour board was stood at and read (Hangul Village). */
+  onTourSeen?: (stop: TourStop) => void;
 }
 
 declare global {
@@ -204,8 +206,8 @@ export default function World(props: WorldProps) {
   const sceneRef = useRef<Scene | null>(null);
   /** What the learner can use right now (drawn as a small ring under it). */
   const focusRef = useRef<Interactable | null>(null);
-  /** The tour board being framed (its reading spot); the camera lets go when the learner walks off. */
-  const tourFrame = useRef<{ x: number; z: number } | null>(null);
+  /** The tour board being framed (its reading spot, and the distance to give back); let go when the learner walks off. */
+  const tourFrame = useRef<{ x: number; z: number; distance: number } | null>(null);
 
   useEffect(() => {
     player.current.paused = !!props.paused;
@@ -373,10 +375,11 @@ export default function World(props: WorldProps) {
       const at = spotOf(it);
       p.autoTarget = { id: it.id, x: at.x, z: at.z, stop: Math.max(0.9, it.radius * 0.55) };
     };
-    const tourTo = (stop: TourStop | null, clear: -1 | 0 | 1 = 0) => {
+    const tourTo = (stop: TourStop | null) => {
       const c = camera.current;
       const p = player.current;
       const b = stop ? VILLAGE.tour.find((x) => x.id === stop) : null;
+      if (tourFrame.current) c.distance = tourFrame.current.distance;
       tourFrame.current = null;
       if (!b || roomRef.current !== "hangul-village") {
         c.focus = null;
@@ -385,20 +388,16 @@ export default function World(props: WorldProps) {
         return;
       }
       const at = tourSpot(b);
-      p.autoTarget = { id: `tour-${b.id}`, x: at.x, z: at.z, stop: 0.3 };
-      // Frame the board like a slide: a little to the side of the learner
-      // (who stands between the camera and it otherwise), the aim a touch
-      // below the board so it sits above a phone's lower sheet.
-      const yaw = Math.atan2(at.x - b.x, at.z - b.z) + (b.x < 0 ? -0.55 : 0.55);
-      // Aim to the side of the board, so it sits in the open part of the
-      // picture, clear of the slide column (computer); on a phone the slide
-      // is a sheet below, so straight on.
-      const fx = b.x * 0.7 + at.x * 0.3 + Math.cos(yaw) * 1.0 * clear;
-      const fz = b.z * 0.7 + at.z * 0.3 - Math.sin(yaw) * 1.0 * clear;
-      c.focus = { x: fx, y: 1.15, z: fz };
-      c.yawTarget = yaw;
-      c.pitchTarget = 0.12;
-      tourFrame.current = { x: at.x, z: at.z };
+      // Its own id: arriving must not "use" the board again (tap-to-go
+      // would, and that would put the board straight back down).
+      p.autoTarget = { id: `reading-${b.id}`, x: at.x, z: at.z, stop: 0.3 };
+      // Frame the board like a page held up to read: its middle, from a
+      // little to one side (the learner stands in front of it), close.
+      c.focus = { x: b.x, y: 1.5, z: b.z };
+      c.yawTarget = Math.atan2(at.x - b.x, at.z - b.z) + (b.x < 0 ? -0.42 : 0.42);
+      c.pitchTarget = 0.06;
+      tourFrame.current = { x: at.x, z: at.z, distance: c.distance };
+      c.distance = 3.3;
     };
     cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }), goTo, tourTo, pose });
   }, [hatch, finishHatch, celebrate, clubyTalk, pulseEgg, point, travel]);
@@ -544,6 +543,7 @@ export default function World(props: WorldProps) {
       <GroundWear key={`w-${roomId}`} bounds={layout.bounds} seed={roomId.length * 7} />
       {roomId === "courtyard" && <Lobby story={story} />}
       {roomId === "hangul-village" && <HangulVillage marketOpen={access.open.has("vocabulary-market")} letters={saved.letters} />}
+      {roomId === "hangul-village" && <TourExhibit lang={props.lang ?? "en"} player={player} onSeen={(s) => cb.current.onTourSeen?.(s)} />}
       {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} words={saved.words} />}
       {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} />}
       {roomId === "conversation-cafe" && <ConversationCafe />}
@@ -738,14 +738,15 @@ function FocusCue({ focus }: { focus: MutableRefObject<Interactable | null> }) {
 
 /** Where a thing really is (a person's line stands at the person). */
 /** Walking well away from a framed tour board gives the camera back. */
-function TourFrameWatcher({ frame, player, camera }: { frame: MutableRefObject<{ x: number; z: number } | null>; player: MutableRefObject<PlayerState>; camera: MutableRefObject<CameraState> }) {
+function TourFrameWatcher({ frame, player, camera }: { frame: MutableRefObject<{ x: number; z: number; distance: number } | null>; player: MutableRefObject<PlayerState>; camera: MutableRefObject<CameraState> }) {
   useFrame(() => {
     const f = frame.current;
     if (!f) return;
     const p = player.current;
-    if (p.autoTarget || Math.hypot(p.position.x - f.x, p.position.z - f.z) < 2.5) return;
+    if (p.autoTarget || Math.hypot(p.position.x - f.x, p.position.z - f.z) < 1.6) return;
     frame.current = null;
     const c = camera.current;
+    c.distance = f.distance;
     c.focus = null;
     c.yawTarget = null;
     c.pitchTarget = null;

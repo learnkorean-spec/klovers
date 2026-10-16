@@ -19,7 +19,9 @@ export interface WorldState {
   tutorialDone: boolean;
   /** The welcome card has been seen. */
   welcomed: boolean;
-  /** The information house's tour has been seen or skipped (config/tour.ts). */
+  /** The Klovers tour boards stood at and read (Hangul Village). */
+  tourSeen: string[];
+  /** All the tour's boards have been read: the marker stops leading to them. */
   tourDone: boolean;
   /** Characters greeted in the world ("friend", "minsu"). */
   met: string[];
@@ -44,7 +46,7 @@ export interface WorldState {
 }
 
 const KEY = "klovers-world-state";
-const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false, tutorialDone: false, welcomed: false, tourDone: false, met: [], objectivesDone: [], discovered: [], lastRoom: null, words: [], letters: [], missionsDone: [], bestTimes: {}, mission: null };
+const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false, tutorialDone: false, welcomed: false, tourSeen: [], tourDone: false, met: [], objectivesDone: [], discovered: [], lastRoom: null, words: [], letters: [], missionsDone: [], bestTimes: {}, mission: null };
 
 function strings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
@@ -67,6 +69,7 @@ export function loadWorldState(): WorldState {
       breadSign: v.breadSign === true,
       tutorialDone: v.tutorialDone === true,
       welcomed: v.welcomed === true,
+      tourSeen: strings(v.tourSeen),
       tourDone: v.tourDone === true,
       met: strings(v.met),
       objectivesDone: strings(v.objectivesDone) as ObjectiveId[],

@@ -135,26 +135,32 @@ export const VILLAGE = {
   entranceSign: "한글 마을",
   marketSign: "시장",
   /**
-   * The Klovers tour (config/tour.ts): six boards along the street, walked
-   * in order from the courtyard gate toward the market, alternating sides —
-   * who we are, what makes Klovers different, the courses, how we teach,
-   * why Korean, how to start. Each faces the street; x/z is the board's
-   * centre, yaw its facing (three.js rotation.y), w its width.
+   * The Klovers tour (config/tour.ts, environment/TourExhibit.tsx): six
+   * boards along the street, an exhibition walked in order from the
+   * courtyard gate toward the market, alternating sides — who we are, what
+   * makes Klovers different, the courses, how we teach, why Korean, how to
+   * start. Each faces the street; x/z is the board's centre, yaw its facing
+   * (three.js rotation.y), w its width (the panel is 1.5 m tall).
    */
   tour: [
-    { id: "about", x: -3.85, z: 7.0, yaw: Math.PI / 2, w: 1.5, sign: "우리는 클로버스" },
-    { id: "why", x: 3.85, z: 3.0, yaw: -Math.PI / 2, w: 1.4, sign: "왜 클로버스?" },
-    { id: "courses", x: -3.85, z: -0.2, yaw: Math.PI / 2, w: 1.4, sign: "수업" },
-    { id: "method", x: 3.7, z: -1.9, yaw: -Math.PI / 2, w: 1.4, sign: "공부 방법" },
-    { id: "korean", x: -3.85, z: -5.6, yaw: Math.PI / 2, w: 1.4, sign: "한국어" },
-    { id: "trial", x: 3.85, z: -8.5, yaw: -Math.PI / 2, w: 1.4, sign: "시작해요" },
+    { id: "about", x: -3.85, z: 7.0, yaw: Math.PI / 2, w: 2.4, sign: "우리는 클로버스" },
+    { id: "why", x: 3.85, z: 3.2, yaw: -Math.PI / 2, w: 2.4, sign: "왜 클로버스?" },
+    { id: "courses", x: -3.85, z: -0.2, yaw: Math.PI / 2, w: 2.4, sign: "수업" },
+    { id: "method", x: 3.7, z: -1.9, yaw: -Math.PI / 2, w: 2.4, sign: "공부 방법" },
+    { id: "korean", x: -3.85, z: -5.6, yaw: Math.PI / 2, w: 2.4, sign: "한국어" },
+    { id: "trial", x: 3.85, z: -8.5, yaw: -Math.PI / 2, w: 2.4, sign: "시작해요" },
+  ],
+  /** Yellow posts beside two boards that lead out to the site. */
+  tourLinks: [
+    { id: "courses", x: -3.75, z: -1.95, yaw: Math.PI / 2, sign: "수업 보기", href: "/courses" },
+    { id: "trial", x: 3.7, z: -6.85, yaw: -Math.PI / 2, sign: "무료 수업", href: "/free-trial" },
   ],
 } as const;
 
 export type TourStop = (typeof VILLAGE.tour)[number]["id"];
 
 /** Where the learner stands to read a tour board: a step out into the street. */
-export function tourSpot(b: { x: number; z: number; yaw: number }, out = 1.5): { x: number; z: number } {
+export function tourSpot(b: { x: number; z: number; yaw: number }, out = 1.9): { x: number; z: number } {
   return { x: b.x + Math.sin(b.yaw) * out, z: b.z + Math.cos(b.yaw) * out };
 }
 
@@ -187,8 +193,9 @@ const HANGUL_VILLAGE: RoomLayout = {
     box(VILLAGE.bedLeft.x, VILLAGE.bedLeft.z, VILLAGE.bedLeft.w + 0.1, VILLAGE.bedLeft.d + 0.1),
     box(4.35, 9.3, 0.9, 1.3),
     box(-4.5, -8.2, 0.5, 0.5),
-    // The tour boards (thin, along the kerb).
-    ...VILLAGE.tour.map((b) => box(b.x, b.z, 0.3, b.w + 0.2)),
+    // The tour boards (thin, along the kerb) and their link posts.
+    ...VILLAGE.tour.map((b) => box(b.x, b.z, 0.3, b.w + 0.25)),
+    ...VILLAGE.tourLinks.map((l) => box(l.x, l.z, 0.3, 0.3)),
     ...people("hangul-village"),
   ],
   cameraColliders: [...lamps, ...archPosts],

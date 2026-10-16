@@ -61,8 +61,10 @@ export interface Interactable {
   quiz?: QuizId;
   say?: SayId;
   info?: InfoId;
-  /** A Klovers tour board (opens the tour at its slide). */
+  /** A Klovers tour board (reading it frames it close). */
   tour?: TourStop;
+  /** A page of the site this leads out to (kind "link"). */
+  href?: string;
   /** The person speaking (turns to face the learner, reacts). */
   npc?: string;
   /** A Hangul letter counted by the village's three-letter discovery. */
@@ -173,7 +175,8 @@ export const INTERACTABLES: Interactable[] = [
   // under the door, then one board per part of the site.
   { id: "door-house", room: "hub", kind: "door", action: "enter", to: "klovers-house", arrive: "fromHub", x: HUB.southGates.house, z: HUB.half - 1.3, radius: 1.1 },
   { id: "learn-annaeso", room: "klovers-house", kind: "learn", action: "inspect", learn: "annaeso", x: 1.7, z: HOUSE.halfDepth - 1.2, radius: 0.9 },
-  ...VILLAGE.tour.map((b): Interactable => ({ id: `tour-${b.id}`, room: "hangul-village", kind: "tour", action: "read", tour: b.id, ...tourSpot(b), radius: 1.3 })),
+  ...VILLAGE.tour.map((b): Interactable => ({ id: `tour-${b.id}`, room: "hangul-village", kind: "tour", action: "read", tour: b.id, ...tourSpot(b), radius: 1.6 })),
+  ...VILLAGE.tourLinks.map((l): Interactable => ({ id: `tourlink-${l.id}`, room: "hangul-village", kind: "link", action: "enter", href: l.href, x: l.x + Math.sin(l.yaw) * 0.9, z: l.z + Math.cos(l.yaw) * 0.9, radius: 1.1, priority: 1 })),
   ...HOUSE.boards.map((b): Interactable => ({ id: `info-${b.id}`, room: "klovers-house", kind: "info", action: "read", info: b.id, ...boardSpot(b), radius: b.id === "about" ? 1.6 : 1.35, priority: 1 })),
 
   // Every gate into a world that may be locked: inspect it while it is,

@@ -46,7 +46,8 @@ export const NPCS: NpcPlacement[] = [
   { id: "v-well-1", room: "hangul-village", cast: "auntie", pose: "talk", x: 1.5, z: 1.4, yaw: face(1.5, 1.4, 2.3, 2.1), phase: 0.3 },
   { id: "v-well-2", room: "hangul-village", cast: "elder", pose: "stand", x: 2.3, z: 2.1, yaw: face(2.3, 2.1, 1.5, 1.4), phase: 1.9 },
   { id: "v-vendor", room: "hangul-village", cast: "vendor", pose: "stand", x: 3.7, z: -5.2, yaw: -Math.PI / 2, phase: 0.8 },
-  { id: "v-walker", room: "hangul-village", cast: "walker", pose: "walk", x: -2.3, z: 7.4, yaw: Math.PI, path: [[-2.3, 7.4], [-2.3, -9]] },
+  // Walks the middle of the street, clear of the tour boards' reading spots.
+  { id: "v-walker", room: "hangul-village", cast: "walker", pose: "walk", x: -1.25, z: 7.4, yaw: Math.PI, path: [[-1.25, 7.4], [-1.25, -9]] },
   { id: "v-sign", room: "hangul-village", cast: "student1", pose: "browse", x: -3.7, z: 1.8, yaw: face(-3.7, 1.8, -4.7, 0.9), phase: 2.6 },
   { id: "v-bench", room: "hangul-village", cast: "readerB", pose: "sitRead", x: 3.95, z: 7.1, yaw: -Math.PI / 2, phase: 1.4 },
 

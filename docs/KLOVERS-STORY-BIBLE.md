@@ -293,10 +293,11 @@ the learner actually **experiences** it.
 hatches → Hangul Village → Vocabulary Market → Conversation Café.
 
 **KLOVERS World, first visit:** the egg sleeps in the courtyard; its gate
-leads to Hangul Village, which opens with a short, skippable tour read like
-a presentation — six boards along the street, next/back walking to each:
-who Klovers is, what makes it different, the courses, how we teach, why
-Korean, how to start. Then the learner plays. Site's own words; no new lore;
+leads to Hangul Village, whose street is an exhibition walked like a
+presentation — six boards that unroll as the learner comes near, written
+in the world itself: who Klovers is, what makes it different, the courses,
+how we teach, why Korean, how to start. A yellow marker leads from board
+to board; the learner is free to play throughout. Site's own words; no new lore;
 no world order or unlock changes; the egg still hatches only on real
 progress, and Cluby is untouched.
 
