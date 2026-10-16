@@ -286,8 +286,10 @@ Deno.serve(async (req) => {
     const tomorrowCairo = shiftDateKey(todayCairo, 1);
 
     // ── Headline numbers ────────────────────────────────────────────────────
-    const { data: hdr } = await supabase.rpc("exec_funnel_digest_headline_v1", {}).select();
-    void hdr; // best-effort RPC; fall back to inline counts below
+    // (16 Oct 2026) A call to exec_funnel_digest_headline_v1 used to sit here.
+    // That function does not exist in the database (404 on every run) and its
+    // result was discarded, so it only added a wasted round-trip to a slow
+    // database. The counts below are the real source.
 
     // Cairo-local yesterday's midnight-to-midnight window, expressed as the
     // UTC instants it actually spans.
