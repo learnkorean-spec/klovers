@@ -22,6 +22,7 @@ import { rememberRedirect, withRedirect } from "@/lib/authRedirect";
 import { countryFromTimezone } from "@/lib/stripePrices";
 import { trustCopy } from "@/lib/trustFigures";
 import KloverIcon from "@/components/KloverIcon";
+import { withTimeout, isServiceOutage } from "@/lib/withTimeout";
 
 /** Icons for the three benefit pills, in the order of the pill labels. */
 const PILL_ICONS = ["growth-chart", "game-crown", "books-stack"] as const;
@@ -73,7 +74,9 @@ const SignUpPage = () => {
     // Treat "not_sure" as no level — we'll prompt again on the trial booking page.
     const persistedLevel = level && level !== "not_sure" ? level : "";
 
-    const { data, error } = await supabase.auth.signUp({
+    let signUpResult: Awaited<ReturnType<typeof supabase.auth.signUp>>;
+    try {
+      signUpResult = await withTimeout(supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
       options: {
@@ -93,11 +96,23 @@ const SignUpPage = () => {
           ? `${window.location.origin}${redirectTo}`
           : `${window.location.origin}/dashboard`,
       },
-    });
+      }), 20_000, "signup");
+    } catch (err) {
+      toast({
+        title: t("auth.signUpFailed") || "Sign up failed",
+        description: isServiceOutage(err) ? t("auth.serviceBusy") : t("auth.signUpFailed") || "Sign up failed",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+    const { data, error } = signUpResult;
 
     if (error) {
       let description = t("auth.signUpFailed") || "Sign up failed";
-      if (error.message?.includes("already registered")) {
+      if (isServiceOutage(error)) {
+        description = t("auth.serviceBusy");
+      } else if (error.message?.includes("already registered")) {
         description = t("auth.accountExists") || "An account with this email already exists. Try logging in.";
       } else if (error.message?.includes("rate limit")) {
         description = t("auth.rateLimited") || "Too many attempts. Please try again later.";
@@ -116,10 +131,15 @@ const SignUpPage = () => {
     // For email-confirmation flows the level is preserved in user_metadata and
     // synced on first authenticated load.
     if (persistedLevel && data.session && data.user) {
-      await supabase
-        .from("profiles")
-        .update({ level: persistedLevel })
-        .eq("user_id", data.user.id);
+      try {
+        await withTimeout(
+          supabase.from("profiles").update({ level: persistedLevel }).eq("user_id", data.user.id),
+          8_000,
+          "level write",
+        );
+      } catch {
+        // Non-critical — the level is also in user_metadata and synced later.
+      }
     }
 
     // Store where this student is, on the same auto-confirm path the level
@@ -166,9 +186,13 @@ const SignUpPage = () => {
     // Record referral if this signup came via a referral link
     if (referrerId && data.user) {
       try {
-        await supabase.functions.invoke("record-referral", {
-          body: { referrerId, referredEmail: email.trim().toLowerCase() },
-        });
+        await withTimeout(
+          supabase.functions.invoke("record-referral", {
+            body: { referrerId, referredEmail: email.trim().toLowerCase() },
+          }),
+          8_000,
+          "referral",
+        );
         localStorage.removeItem("referrer_id");
       } catch {
         // Non-critical — don't block signup on referral failure

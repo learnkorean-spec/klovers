@@ -28,8 +28,8 @@ export async function attachSessionToUser(): Promise<void> {
 
   const call = (async () => {
     try {
-      await supabase.rpc("attach_session_to_user", { p_session: sessionId });
-      attached.add(sessionId);
+      const { error } = await supabase.rpc("attach_session_to_user", { p_session: sessionId });
+      if (!error) attached.add(sessionId); // a 5xx comes back as { error }: stay retryable
     } catch {
       /* swallow — stays retryable, nothing the visitor can act on */
     } finally {

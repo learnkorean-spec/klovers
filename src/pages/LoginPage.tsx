@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trustCopy } from "@/lib/trustFigures";
 import { safeRedirect, withRedirect } from "@/lib/authRedirect";
+import { withTimeout, isServiceOutage } from "@/lib/withTimeout";
 
 const LoginPage = () => {
   useSEO({ title: document.documentElement.lang === "ar" ? "تسجيل الدخول | كلوفرز" : "Login | Klovers", description: document.documentElement.lang === "ar" ? "تسجيل الدخول إلى حساب كلوفرز للوصول إلى الدروس ولوحة الطالب." : "Sign in to your Klovers account to access your Korean lessons, progress tracker, and student dashboard.", noindex: true });
@@ -27,7 +28,12 @@ const LoginPage = () => {
   // If user is already authenticated (e.g. returning from OAuth), redirect immediately
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      let session = null;
+      try {
+        ({ data: { session } } = await supabase.auth.getSession());
+      } catch {
+        return; // backend unreachable: just show the form
+      }
       if (session) {
         const savedRedirect = safeRedirect(localStorage.getItem("enroll_redirect"));
         const finalRedirect = redirectTo || savedRedirect || "/dashboard";
@@ -51,44 +57,72 @@ const LoginPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    try {
+      await runLogin();
+    } catch (err) {
+      toast({
+        title: t("auth.loginFailed"),
+        description: isServiceOutage(err) ? t("auth.serviceBusy") : t("auth.invalidCredentials"),
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const runLogin = async () => {
+    const { data, error } = await withTimeout(
+      supabase.auth.signInWithPassword({ email, password }),
+      20_000,
+      "login",
+    );
 
     if (error) {
       let description = t("auth.invalidCredentials");
-      if (error.message?.includes("Email not confirmed")) {
+      if (isServiceOutage(error)) {
+        description = t("auth.serviceBusy");
+      } else if (error.message?.includes("Email not confirmed")) {
         description = t("auth.emailNotConfirmed");
       }
       toast({ title: t("auth.loginFailed"), description, variant: "destructive" });
-      setLoading(false);
       return;
     }
 
     // Check if admin
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", data.user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+    let roleData: { role: string } | null = null;
+    try {
+      ({ data: roleData } = await withTimeout(
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .eq("role", "admin")
+          .maybeSingle(),
+        10_000,
+        "role check",
+      ));
+    } catch { /* slow backend: continue as a student; admins can open /admin directly */ }
 
     if (roleData) {
       navigate("/admin");
     } else {
-      // Stamp reset_version on profile
-      try {
-        const { data: setting } = await supabase
-          .from("app_settings")
-          .select("value")
-          .eq("key", "app_reset_version")
-          .single();
-        if (setting?.value) {
-          await supabase
-            .from("profiles")
-            .update({ reset_version: setting.value } as any)
-            .eq("user_id", data.user.id);
-        }
-      } catch { /* ignore */ }
+      // Stamp reset_version on profile. Not awaited: bookkeeping must never
+      // hold a signed-in student on the login spinner.
+      void (async () => {
+        try {
+          const { data: setting } = await supabase
+            .from("app_settings")
+            .select("value")
+            .eq("key", "app_reset_version")
+            .single();
+          if (setting?.value) {
+            await supabase
+              .from("profiles")
+              .update({ reset_version: setting.value } as any)
+              .eq("user_id", data.user.id);
+          }
+        } catch { /* ignore */ }
+      })();
 
       // Post-login: sync enroll_draft to enrollment if present
       try {
@@ -103,19 +137,27 @@ const LoginPage = () => {
             if (draft.preferred_time || draft.time) schedUpdate.preferred_time = draft.preferred_time || draft.time;
             if (draft.timezone || draft.tz) schedUpdate.timezone = draft.timezone || draft.tz;
 
-            const { data: pending } = await supabase
-              .from("enrollments")
-              .select("id, level")
-              .eq("user_id", data.user.id)
-              .in("status", ["PENDING", "PENDING_PAYMENT"] as any)
-              .order("created_at", { ascending: false })
-              .limit(1);
+            const { data: pending } = await withTimeout(
+              supabase
+                .from("enrollments")
+                .select("id, level")
+                .eq("user_id", data.user.id)
+                .in("status", ["PENDING", "PENDING_PAYMENT"] as any)
+                .order("created_at", { ascending: false })
+                .limit(1),
+              8_000,
+              "draft sync",
+            );
 
             if (pending && pending.length > 0 && (!pending[0].level || pending[0].level === "")) {
-              await supabase
-                .from("enrollments")
-                .update(schedUpdate as any)
-                .eq("id", pending[0].id);
+              await withTimeout(
+                supabase
+                  .from("enrollments")
+                  .update(schedUpdate as any)
+                  .eq("id", pending[0].id),
+                8_000,
+                "draft sync",
+              );
             }
             localStorage.removeItem("enroll_draft");
           }

@@ -20,17 +20,34 @@ export function useAuth(): AuthState {
   });
 
   useEffect(() => {
-    // Get current session immediately
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Get current session immediately. getSession() waits on a token refresh
+    // when the stored token has expired; if the backend is down (17 Oct 2026)
+    // that never settles, so stop "loading" after 6 s and treat the visitor as
+    // signed out until onAuthStateChange says otherwise.
+    let settled = false;
+    const settle = (session: Session | null) => {
+      settled = true;
       setState({ user: session?.user ?? null, session, loading: false });
-    });
+    };
+    const fallback = setTimeout(() => {
+      if (!settled) setState((s) => (s.loading ? { ...s, loading: false } : s));
+    }, 6000);
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => settle(session))
+      .catch(() => {
+        if (!settled) setState((s) => ({ ...s, loading: false }));
+      });
 
     // Keep in sync with all future auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setState({ user: session?.user ?? null, session, loading: false });
+      settle(session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(fallback);
+      subscription.unsubscribe();
+    };
   }, []);
 
   return state;

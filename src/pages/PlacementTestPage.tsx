@@ -240,7 +240,6 @@ const PlacementTestPage = () => {
   const startTimeRef    = useRef<number | null>(null);
   const finalTimeRef    = useRef(0);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => { logLeadEvent({ source_type: "placement_test", cta_label: "test_started" }); }, []);
   useEffect(() => { skippedRef.current = skipped; }, [skipped]);
   useEffect(() => { autoAdvanceRef.current = autoAdvance; }, [autoAdvance]);
   // Cleanup advance timer when page or phase changes

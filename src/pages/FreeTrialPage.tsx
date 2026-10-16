@@ -210,7 +210,7 @@ const FreeTrialPage = () => {
   }, [slots, isAr]);
 
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const referredBy = searchParams.get("ref") || "";
 
@@ -277,7 +277,6 @@ const FreeTrialPage = () => {
 
   const handleBookCta = () => {
     logLeadEvent({ source_type: "free_trial", cta_label: "free_trial_landing_primary" });
-    if (loading) return;
     // Everyone goes straight to the booking page (24 Sep 2026). A guest books
     // there with name + email; no account or password first.
     navigate("/trial-booking");

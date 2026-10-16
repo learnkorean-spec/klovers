@@ -192,3 +192,23 @@ describe("retired Arabic duplicates (fix/duplicate-arabic-slugs)", () => {
     expect(blogLocs).toEqual([]);
   });
 });
+
+describe("sitemap build-cache fallback", () => {
+  it("reads the committed cache into rows the builder accepts", async () => {
+    const { loadCachedPosts } = await import("../api/sitemap.xml.js");
+    const rows = loadCachedPosts();
+    expect(rows.length).toBeGreaterThan(50);
+    for (const r of rows) {
+      expect(typeof r.slug).toBe("string");
+      expect(["en", "ar"]).toContain(r.lang);
+    }
+    const { xml } = buildSitemap(rows, TODAY);
+    expect(xml).toContain("<urlset");
+    expect(locs(xml).filter((u) => u.includes("/blog/")).length).toBeGreaterThan(50);
+  });
+
+  it("returns an empty list, not a throw, when the cache is missing", async () => {
+    const { loadCachedPosts } = await import("../api/sitemap.xml.js");
+    expect(loadCachedPosts("/nonexistent/cache.json")).toEqual([]);
+  });
+});

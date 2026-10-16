@@ -10,6 +10,9 @@
 // 2026-04-08 for four months. Because Vercel serves static files before
 // rewrites, that stale file was the one being served while this function sat
 // unused at /api/sitemap.xml (docs/SEO_DIAGNOSIS.md, finding #4).
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import { RETIRED_SLUGS } from "../scripts/lib/retired-arabic-slugs.mjs";
 import { ARABIC_TWIN_PATHS } from "../scripts/lib/arabic-page-meta.mjs";
@@ -214,6 +217,45 @@ ${[...staticTags, ...postTags].join("\n")}
   return { xml, duplicateArabic };
 }
 
+/**
+ * Published posts as recorded by the last build (scripts/prerender-meta.mjs
+ * rewrites this file whenever it can read the database). Shaped like the rows
+ * the live query returns. Never throws: an empty list means "no fallback".
+ */
+const CACHE_CANDIDATES = () => {
+  const list = [join(process.cwd(), "scripts", "prerender-routes.cache.json")];
+  try {
+    list.push(fileURLToPath(new URL("../scripts/prerender-routes.cache.json", import.meta.url)));
+  } catch {
+    // import.meta.url is not a file: URL in some test environments.
+  }
+  return list;
+};
+
+export function loadCachedPosts(files = CACHE_CANDIDATES()) {
+  for (const file of [].concat(files)) {
+    const rows = readCache(file);
+    if (rows.length) return rows;
+  }
+  return [];
+}
+
+function readCache(file) {
+  try {
+    const { routes = [] } = JSON.parse(readFileSync(file, "utf-8"));
+    return routes
+      .filter((r) => r && r.post && r.post.slug)
+      .map((r) => ({
+        slug: r.post.slug,
+        lang: r.post.lang || "en",
+        updated_at: r.post.updatedAt || null,
+        published_at: r.post.publishedAt || null,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export default async function handler(req, res) {
   const today = new Date().toISOString().split("T")[0];
 
@@ -237,6 +279,21 @@ export default async function handler(req, res) {
     .abortSignal(AbortSignal.timeout(10_000));
 
   if (error) {
+    // 17 Oct 2026: the database was unreachable for 16+ hours, so every crawler
+    // fetch got a 503. Fall back to the blog list the build wrote into
+    // scripts/prerender-routes.cache.json (the same list the prerendered pages
+    // were made from) and still answer a complete, valid sitemap. Cached only
+    // briefly, so the live list returns as soon as the database answers again.
+    const cached = loadCachedPosts();
+    if (cached.length) {
+      console.warn(`sitemap: database unavailable (${error.message}); served ${cached.length} posts from the build cache`);
+      const { xml } = buildSitemap(cached, today);
+      res.setHeader("Content-Type", "application/xml; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=3600");
+      res.setHeader("X-Sitemap-Source", "build-cache");
+      res.status(200).send(xml);
+      return;
+    }
     res.setHeader("Retry-After", "3600");
     res.setHeader("Cache-Control", "no-store");
     res.status(503).send(`sitemap: ${error.message}`);

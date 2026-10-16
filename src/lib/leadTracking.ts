@@ -168,21 +168,24 @@ export async function logEngagementEvent(opts: EventOpts<EngagementEventType>): 
 }
 
 /**
- * Log a WhatsApp click then open the URL.
- * Races the insert against a 600ms timeout so the redirect never feels laggy.
+ * Open WhatsApp, then log the click.
+ *
+ * The window opens synchronously, inside the click, before any await: Safari
+ * (and iOS in-app browsers) block window.open once the user gesture has passed,
+ * and the old "await the insert (up to 600 ms), then open" order also delayed
+ * every click whenever the database was slow (17 Oct 2026 outage). The log
+ * still runs; the current tab stays open, so the request completes.
  */
 export async function trackAndOpenWhatsApp(
   url: string,
   ctx: { cta_label?: string; metadata?: Record<string, unknown> } = {},
 ): Promise<void> {
-  const insert = logLeadEvent({
+  if (typeof window !== "undefined") {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+  await logLeadEvent({
     source_type: "whatsapp",
     cta_label: ctx.cta_label,
     metadata: ctx.metadata,
   });
-  const timeout = new Promise<void>((resolve) => setTimeout(resolve, 600));
-  await Promise.race([insert, timeout]);
-  if (typeof window !== "undefined") {
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
 }

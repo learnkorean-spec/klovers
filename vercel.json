@@ -11,7 +11,7 @@
     ],
     "domains": [
       "images.unsplash.com",
-      "pmiubsqfjeyxvrobaecn.supabase.co"
+      "ewtdgpbybkceokfohhyg.supabase.co"
     ],
     "formats": [
       "image/avif",
@@ -28,7 +28,8 @@
   "functions": {
     "api/**/*.js": {
       "memory": 1024,
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "scripts/prerender-routes.cache.json"
     }
   },
   "redirects": [

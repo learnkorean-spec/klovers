@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { withTimeout } from "@/lib/withTimeout";
 
 const AuthProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
@@ -8,8 +9,14 @@ const AuthProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setStatus(session ? "authenticated" : "unauthenticated");
+      try {
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 8000, "session");
+        setStatus(session ? "authenticated" : "unauthenticated");
+      } catch {
+        // Backend unreachable: keep whatever onAuthStateChange reported, else
+        // send her to login (which explains the outage) rather than "Loading…" forever.
+        setStatus((s) => (s === "loading" ? "unauthenticated" : s));
+      }
     };
 
     check();
