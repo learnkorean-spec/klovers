@@ -292,6 +292,14 @@ the learner actually **experiences** it.
 **New student flow:** egg discovery → egg reacts → egg cracks → Cluby
 hatches → Hangul Village → Vocabulary Market → Conversation Café.
 
+**KLOVERS World, first visit:** the egg sleeps in the courtyard; its gate
+leads to Hangul Village, which opens with a short, skippable tour read like
+a presentation — six boards along the street, next/back walking to each:
+who Klovers is, what makes it different, the courses, how we teach, why
+Korean, how to start. Then the learner plays. Site's own words; no new lore;
+no world order or unlock changes; the egg still hatches only on real
+progress, and Cluby is untouched.
+
 **Existing student flow:** never force a learner who already has real
 progress to replay the beginner discovery sequence. Instead: "You've already
 learned enough to wake him" — unlock Cluby directly and map the story state

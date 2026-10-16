@@ -4,7 +4,7 @@ import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, PMREMGene
 import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { upgradeMaterialDetails } from "./config/materials";
 import { INTERACTABLES, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
-import { findPortal, HUB, MARKET, ROOMS, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn } from "./config/rooms";
+import { findPortal, HUB, MARKET, ROOMS, tourSpot, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn, type TourStop } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
 import ThirdPersonCamera from "./camera/ThirdPersonCamera";
 import { DISCOVERIES, type DiscoveryKey } from "./config/discoveries";
@@ -90,6 +90,12 @@ export interface WorldApi {
   enter: (to: RoomId, arrive: string) => void;
   /** Tap-to-go: walk by itself to this thing (a tapped sign). */
   goTo: (it: Interactable) => void;
+  /**
+   * The Klovers tour: walk to this board and frame it; null lets the camera
+   * go. `clear`: which side of the screen the slide covers (−1 left, 1
+   * right, 0 below), so the board is framed on the other side.
+   */
+  tourTo: (stop: TourStop | null, clear?: -1 | 0 | 1) => void;
   /** Where the learner is and which way the view looks (the minimap). */
   pose: () => { room: RoomId; x: number; z: number; yaw: number; camYaw: number };
 }
@@ -198,6 +204,8 @@ export default function World(props: WorldProps) {
   const sceneRef = useRef<Scene | null>(null);
   /** What the learner can use right now (drawn as a small ring under it). */
   const focusRef = useRef<Interactable | null>(null);
+  /** The tour board being framed (its reading spot); the camera lets go when the learner walks off. */
+  const tourFrame = useRef<{ x: number; z: number } | null>(null);
 
   useEffect(() => {
     player.current.paused = !!props.paused;
@@ -365,7 +373,34 @@ export default function World(props: WorldProps) {
       const at = spotOf(it);
       p.autoTarget = { id: it.id, x: at.x, z: at.z, stop: Math.max(0.9, it.radius * 0.55) };
     };
-    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }), goTo, pose });
+    const tourTo = (stop: TourStop | null, clear: -1 | 0 | 1 = 0) => {
+      const c = camera.current;
+      const p = player.current;
+      const b = stop ? VILLAGE.tour.find((x) => x.id === stop) : null;
+      tourFrame.current = null;
+      if (!b || roomRef.current !== "hangul-village") {
+        c.focus = null;
+        c.yawTarget = null;
+        c.pitchTarget = null;
+        return;
+      }
+      const at = tourSpot(b);
+      p.autoTarget = { id: `tour-${b.id}`, x: at.x, z: at.z, stop: 0.3 };
+      // Frame the board like a slide: a little to the side of the learner
+      // (who stands between the camera and it otherwise), the aim a touch
+      // below the board so it sits above a phone's lower sheet.
+      const yaw = Math.atan2(at.x - b.x, at.z - b.z) + (b.x < 0 ? -0.55 : 0.55);
+      // Aim to the side of the board, so it sits in the open part of the
+      // picture, clear of the slide column (computer); on a phone the slide
+      // is a sheet below, so straight on.
+      const fx = b.x * 0.7 + at.x * 0.3 + Math.cos(yaw) * 1.0 * clear;
+      const fz = b.z * 0.7 + at.z * 0.3 - Math.sin(yaw) * 1.0 * clear;
+      c.focus = { x: fx, y: 1.15, z: fz };
+      c.yawTarget = yaw;
+      c.pitchTarget = 0.12;
+      tourFrame.current = { x: at.x, z: at.z };
+    };
+    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }), goTo, tourTo, pose });
   }, [hatch, finishHatch, celebrate, clubyTalk, pulseEgg, point, travel]);
 
   // New room mounted: learner at the arrival point, camera behind, Cluby beside.
@@ -520,6 +555,7 @@ export default function World(props: WorldProps) {
       {roomId === "courtyard" && <Friend avatar={avatar} x={FRIEND_SPOT.x} z={FRIEND_SPOT.z} yaw={Math.atan2(-FRIEND_SPOT.x, -FRIEND_SPOT.z) + 0.5} player={player} />}
       {props.marker ? <ObjectiveMarker x={props.marker.x} z={props.marker.z} /> : objectiveSpot ? <ObjectiveMarker x={objectiveSpot.x} z={objectiveSpot.z} /> : null}
       <FocusCue focus={focusRef} />
+      <TourFrameWatcher frame={tourFrame} player={player} camera={camera} />
       {/* Frame priorities: player moves (−2), watchers read (−1.5), camera follows (−1). */}
       <Player input={input} player={player} camera={camera} layout={layout} avatar={avatar} onArrive={(id) => cb.current.onArrive?.(id)} />
       {/* On a first visit, he points toward the current objective; after
@@ -701,6 +737,22 @@ function FocusCue({ focus }: { focus: MutableRefObject<Interactable | null> }) {
 }
 
 /** Where a thing really is (a person's line stands at the person). */
+/** Walking well away from a framed tour board gives the camera back. */
+function TourFrameWatcher({ frame, player, camera }: { frame: MutableRefObject<{ x: number; z: number } | null>; player: MutableRefObject<PlayerState>; camera: MutableRefObject<CameraState> }) {
+  useFrame(() => {
+    const f = frame.current;
+    if (!f) return;
+    const p = player.current;
+    if (p.autoTarget || Math.hypot(p.position.x - f.x, p.position.z - f.z) < 2.5) return;
+    frame.current = null;
+    const c = camera.current;
+    c.focus = null;
+    c.yawTarget = null;
+    c.pitchTarget = null;
+  }, -1.4);
+  return null;
+}
+
 function spotOf(it: Interactable): { x: number; z: number } {
   const who = it.npc ? NPC_AT.get(it.npc) : it.kind === "talk" && it.who === "friend" ? FRIEND_SPOT : null;
   return who ? { x: who.x, z: who.z } : { x: it.x, z: it.z };
@@ -750,7 +802,7 @@ function BeaconWatcher({ room, player, view, story, access, els, onNearby }: {
       const el = els.current.get(it.id);
       if (!el) continue;
       const at = spotOf(it);
-      const h = it.npc || it.kind === "talk" ? 2.15 : it.kind === "egg" ? 1.9 : it.kind === "door" || it.kind === "locked" || it.kind === "link" ? 2.6 : 1.7;
+      const h = it.npc || it.kind === "talk" ? 2.15 : it.kind === "egg" ? 1.9 : it.kind === "door" || it.kind === "locked" || it.kind === "link" || it.kind === "tour" ? 2.6 : 1.7;
       v.set(at.x, h, at.z).project(camera);
       const sx = (v.x * 0.5 + 0.5) * size.width;
       let sy = (-v.y * 0.5 + 0.5) * size.height;

@@ -1,7 +1,7 @@
 import { HOUSE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import { ACCENT, std } from "../config/materials";
-import { GateWall, Signboard } from "./parts";
+import { GateWall, InfoBoard as Board } from "./parts";
 import { paintPlanks, useTiledTexture, usePhotoFloor } from "./textures";
 
 /**
@@ -48,34 +48,6 @@ function Walls() {
 }
 
 /** A board on two posts with a small tiled cap and a thin yellow rail. */
-function Board({ text, w, tall }: { text: string; w: number; tall?: boolean }) {
-  const h = tall ? 1.25 : 0.95;
-  const y = tall ? 1.75 : 1.65;
-  const aspect = w / h;
-  return (
-    <group>
-      {[-1, 1].map((s) => (
-        <mesh key={s} castShadow position={[s * (w / 2 + 0.06), (y + h / 2 + 0.12) / 2, -0.04]}>
-          <boxGeometry args={[0.1, y + h / 2 + 0.12, 0.1]} />
-          <primitive object={std(PALETTE.woodDark, 0.75)} attach="material" />
-        </mesh>
-      ))}
-      <group position={[0, y, 0]}>
-        <Signboard text={text} w={w} h={h} aspect={aspect} />
-      </group>
-      {/* The yellow rail: these boards are the ones to walk up to. */}
-      <mesh position={[0, y - h / 2 - 0.08, 0.02]}>
-        <boxGeometry args={[w, 0.05, 0.03]} />
-        <primitive object={ACCENT} attach="material" />
-      </mesh>
-      <mesh castShadow position={[0, y + h / 2 + 0.16, -0.04]}>
-        <boxGeometry args={[w + 0.5, 0.08, 0.42]} />
-        <primitive object={std(PALETTE.charcoal, 0.7)} attach="material" />
-      </mesh>
-    </group>
-  );
-}
-
 /** The stone dais and the clover on it (four yellow leaves). */
 function CloverDais() {
   const { x, z, r } = HOUSE.dais;

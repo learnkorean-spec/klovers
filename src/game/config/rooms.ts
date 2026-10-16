@@ -14,7 +14,11 @@ const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p
  *
  * Story placement (src/config/klovers-world.ts):
  * - courtyard         → originStory.discovery (the egg sleeps here)
- * - hangul-village    → worlds[0], "initial_learning_world": open to all
+ * - hangul-village    → worlds[0], "initial_learning_world": open to all.
+ *                       On a first visit it opens with the Klovers tour
+ *                       (config/tour.ts): six boards along the street, read
+ *                       like slides — who Klovers is, the courses, how we
+ *                       teach, why Korean, how to start. Skippable.
  * - vocabulary-market → worlds[1], "core_hangul_milestone_completed"
  * - hub               → the KLOVERS Hub: not a world, a crossroads to every
  *                       world and to the site's own pages
@@ -130,7 +134,29 @@ export const VILLAGE = {
   ] as [number, number, number][],
   entranceSign: "한글 마을",
   marketSign: "시장",
+  /**
+   * The Klovers tour (config/tour.ts): six boards along the street, walked
+   * in order from the courtyard gate toward the market, alternating sides —
+   * who we are, what makes Klovers different, the courses, how we teach,
+   * why Korean, how to start. Each faces the street; x/z is the board's
+   * centre, yaw its facing (three.js rotation.y), w its width.
+   */
+  tour: [
+    { id: "about", x: -3.85, z: 7.0, yaw: Math.PI / 2, w: 1.5, sign: "우리는 클로버스" },
+    { id: "why", x: 3.85, z: 3.0, yaw: -Math.PI / 2, w: 1.4, sign: "왜 클로버스?" },
+    { id: "courses", x: -3.85, z: -0.2, yaw: Math.PI / 2, w: 1.4, sign: "수업" },
+    { id: "method", x: 3.7, z: -1.9, yaw: -Math.PI / 2, w: 1.4, sign: "공부 방법" },
+    { id: "korean", x: -3.85, z: -5.6, yaw: Math.PI / 2, w: 1.4, sign: "한국어" },
+    { id: "trial", x: 3.85, z: -8.5, yaw: -Math.PI / 2, w: 1.4, sign: "시작해요" },
+  ],
 } as const;
+
+export type TourStop = (typeof VILLAGE.tour)[number]["id"];
+
+/** Where the learner stands to read a tour board: a step out into the street. */
+export function tourSpot(b: { x: number; z: number; yaw: number }, out = 1.5): { x: number; z: number } {
+  return { x: b.x + Math.sin(b.yaw) * out, z: b.z + Math.cos(b.yaw) * out };
+}
 
 const VB: Box2 = {
   minX: -VILLAGE.halfWidth,
@@ -161,6 +187,8 @@ const HANGUL_VILLAGE: RoomLayout = {
     box(VILLAGE.bedLeft.x, VILLAGE.bedLeft.z, VILLAGE.bedLeft.w + 0.1, VILLAGE.bedLeft.d + 0.1),
     box(4.35, 9.3, 0.9, 1.3),
     box(-4.5, -8.2, 0.5, 0.5),
+    // The tour boards (thin, along the kerb).
+    ...VILLAGE.tour.map((b) => box(b.x, b.z, 0.3, b.w + 0.2)),
     ...people("hangul-village"),
   ],
   cameraColliders: [...lamps, ...archPosts],

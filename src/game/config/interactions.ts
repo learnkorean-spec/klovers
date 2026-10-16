@@ -1,4 +1,4 @@
-import { boardSpot, HOUSE, HUB, hubGateSpot, MARKET, ROOMS, VILLAGE, type InfoId, type NoticeKey, type RoomId } from "./rooms";
+import { boardSpot, HOUSE, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
 import { FRIEND_SPOT, MINSU_SPOT, NPCS } from "./npcs";
 import { PROPS } from "./world";
 
@@ -27,7 +27,7 @@ import { PROPS } from "./world";
  * - locked   a gate to a world that is not open yet (or not built yet):
  *            inspecting it says, kindly, what opens it
  */
-export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info";
+export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour";
 
 /** The verb on the prompt ([E] Inspect, the round button's label …). */
 export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read";
@@ -61,6 +61,8 @@ export interface Interactable {
   quiz?: QuizId;
   say?: SayId;
   info?: InfoId;
+  /** A Klovers tour board (opens the tour at its slide). */
+  tour?: TourStop;
   /** The person speaking (turns to face the learner, reacts). */
   npc?: string;
   /** A Hangul letter counted by the village's three-letter discovery. */
@@ -171,6 +173,7 @@ export const INTERACTABLES: Interactable[] = [
   // under the door, then one board per part of the site.
   { id: "door-house", room: "hub", kind: "door", action: "enter", to: "klovers-house", arrive: "fromHub", x: HUB.southGates.house, z: HUB.half - 1.3, radius: 1.1 },
   { id: "learn-annaeso", room: "klovers-house", kind: "learn", action: "inspect", learn: "annaeso", x: 1.7, z: HOUSE.halfDepth - 1.2, radius: 0.9 },
+  ...VILLAGE.tour.map((b): Interactable => ({ id: `tour-${b.id}`, room: "hangul-village", kind: "tour", action: "read", tour: b.id, ...tourSpot(b), radius: 1.3 })),
   ...HOUSE.boards.map((b): Interactable => ({ id: `info-${b.id}`, room: "klovers-house", kind: "info", action: "read", info: b.id, ...boardSpot(b), radius: b.id === "about" ? 1.6 : 1.35, priority: 1 })),
 
   // Every gate into a world that may be locked: inspect it while it is,

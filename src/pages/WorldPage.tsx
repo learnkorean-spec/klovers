@@ -20,6 +20,8 @@ import { FullMap, MiniMap, MissionChip, MissionsButton, MissionsCard, type Pose 
 import { watercolorMode } from "@/game/systems/styleMode";
 import { currentObjective, type ObjectiveId } from "@/game/config/objectives";
 import type { DiscoveryKey } from "@/game/config/discoveries";
+import { tourSlides } from "@/game/config/tour";
+import TourPanel from "@/game/ui/TourPanel";
 // Type-only: erased at build time, so the 3D chunk stays lazy.
 import type { SpeechKey, WorldApi } from "@/game/World";
 
@@ -44,6 +46,9 @@ const ROOM_NUMBER: Record<RoomId, number> = {
   "conversation-cafe": 5,
   "klovers-house": 6,
 };
+
+/** Where the Klovers tour left off when the learner went out to a page (this tab only). */
+const TOUR_AT = "klovers-world-tour-at";
 
 /** Where each Klovers House board leads on the site. */
 const INFO_ROUTE: Record<InfoId, (signedIn: boolean) => string> = {
@@ -296,6 +301,12 @@ const WorldPage = () => {
 
   /* ── Missions and the map ── */
   const [missionsOpen, setMissionsOpen] = useState(false);
+  /** The Klovers tour (Hangul Village): the slide shown, or null when not touring. */
+  const [tour, setTour] = useState<number | null>(null);
+  const tourRef = useRef<number | null>(null);
+  tourRef.current = tour;
+  /** Opens the tour at a board's slide (set once the tour's callbacks exist, below). */
+  const openTourAt = useRef<(stop: string) => void>(() => undefined);
   const [mapOpen, setMapOpen] = useState(false);
   const activeMission = saved.mission ? MISSIONS.find((m) => m.id === saved.mission?.id) ?? null : null;
   const isOpenRoom = useCallback((r: RoomId) => access.open.has(r), [access.open]);
@@ -501,6 +512,9 @@ const WorldPage = () => {
       case "info":
         if (it.info) setBubble({ kind: "info", id: it.info, at: it.id });
         break;
+      case "tour":
+        if (it.tour) openTourAt.current(it.tour);
+        break;
       case "talk":
         if (it.who) {
           setBubble({ kind: "talk", who: it.who, at: it.id });
@@ -548,10 +562,84 @@ const WorldPage = () => {
   const interactNow = useRef(interact);
   interactNow.current = interact;
   const arrived = useCallback((id: string) => {
+    // On the tour, the slide is the note: arriving at its board opens nothing else.
+    if (tourRef.current !== null) return;
     window.setTimeout(() => {
       if (focusNow.current?.id === id) interactNow.current();
     }, 160);
   }, []);
+
+  // ── The Klovers tour (config/tour.ts), at the start of Hangul Village ──
+  const slides = useMemo(() => tourSlides(lang), [lang]);
+  const goToSlide = useCallback(
+    (i: number) => {
+      const s = slides[i];
+      if (!s) return;
+      setTour(i);
+      setBubble(null);
+      // The slide is a column at the screen's end on a computer (right in
+      // English, left in Arabic), a sheet below on a phone.
+      const wide = window.matchMedia("(min-width: 640px)").matches;
+      api.current?.tourTo(s.stop, !wide ? 0 : lang === "ar" ? -1 : 1);
+    },
+    [slides, lang],
+  );
+  const startTour = useCallback(
+    (from = 0) => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      setTour(from);
+      // A moment for the arrival fade, then walk to the board.
+      window.setTimeout(() => goToSlide(from), 500);
+    },
+    [goToSlide],
+  );
+  openTourAt.current = (stop: string) => {
+    const i = slides.findIndex((x) => x.stop === stop);
+    if (i >= 0) startTour(i);
+  };
+  /** Seen or skipped: the learner stays in the village, free to explore (the "game"). */
+  const endTour = useCallback(() => {
+    setTour(null);
+    api.current?.tourTo(null);
+    try {
+      sessionStorage.removeItem(TOUR_AT);
+    } catch {
+      /* storage unavailable */
+    }
+    patch({ tourDone: true });
+  }, [patch]);
+  const openFromTour = useCallback(
+    (to: string) => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      try {
+        if (tourRef.current !== null) sessionStorage.setItem(TOUR_AT, String(tourRef.current));
+      } catch {
+        /* storage unavailable */
+      }
+      patch({ lastRoom: "hangul-village" });
+      navigate(to);
+    },
+    [patch, navigate],
+  );
+  // The first arrival in the village starts the tour (or resumes it after a
+  // trip out to a page); leaving the village puts the slides away.
+  useEffect(() => {
+    if (currentRoom !== "hangul-village") {
+      if (tourRef.current !== null) {
+        setTour(null);
+        api.current?.tourTo(null);
+      }
+      return;
+    }
+    if (savedRef.current.tourDone || tourRef.current !== null) return;
+    let from = 0;
+    try {
+      from = Math.min(slides.length - 1, Math.max(0, Number(sessionStorage.getItem(TOUR_AT) ?? 0) || 0));
+    } catch {
+      from = 0;
+    }
+    startTour(from);
+  }, [currentRoom, slides.length, startTour]);
 
   // Walking away from a person or a word puts its note away.
   useEffect(() => {
@@ -620,7 +708,7 @@ const WorldPage = () => {
     const t = window.setTimeout(() => setTutorialGone(true), 900);
     return () => window.clearTimeout(t);
   }, [saved.tutorialDone, tutorialGone]);
-  const showControls = helpOpen || (saved.welcomed && !tutorialGone && !room && !card);
+  const showControls = helpOpen || (saved.welcomed && !tutorialGone && !room && !card && tour === null);
   const marketOpen = access.open.has("vocabulary-market");
   const objective = currentObjective({ met: saved.met, done: saved.objectivesDone }, marketOpen);
   const progress = useMemo(() => ({ met: saved.met, done: saved.objectivesDone }), [saved.met, saved.objectivesDone]);
@@ -633,6 +721,7 @@ const WorldPage = () => {
     if ((it.kind === "quiz" || it.kind === "letter") && it.letter) return { verb, sub: it.letter, subKo: true };
     if (it.kind === "say" && it.say) return { verb, sub: copy.say[it.say].name };
     if (it.kind === "info" && it.info) return { verb, sub: copy.info[it.info].title };
+    if (it.kind === "tour" && it.tour) return { verb, sub: slides.find((x) => x.stop === it.tour)?.title };
     if (it.kind === "talk" && it.who) return { verb, sub: it.who === "minsu" ? copy.names.minsu : copy.names[avatar === "lina" ? "adam" : "lina"] };
     if ((it.kind === "door" || it.kind === "locked") && it.to) return { verb, sub: copy.rooms[it.to]?.name };
     return { verb };
@@ -715,7 +804,7 @@ const WorldPage = () => {
             {/* Guidance: a small sign over each thing nearby — tap (or click)
                 to walk there and use it. The one already in reach has the
                 round button instead. */}
-            {ready && !card && !bubble && !sequence && !welcoming && (
+            {ready && !card && !bubble && !sequence && !welcoming && tour === null && (
               <div className="pointer-events-none absolute inset-0 z-[6] overflow-hidden" dir="ltr">
                 {nearby
                   .filter((it) => it.id !== focus?.id)
@@ -775,11 +864,11 @@ const WorldPage = () => {
                 notice={null}
                 preview={access.preview}
                 speech={speech}
-                prompt={card ? null : promptLabel}
+                prompt={card || tour !== null ? null : promptLabel}
                 onInteract={interact}
                 showMoveHint={(saved.welcomed && tutorialStep === "move") || nudge}
                 side={
-                  saved.welcomed && !welcoming ? (
+                  saved.welcomed && !welcoming && tour === null ? (
                     // On a short screen a word or a person's line takes the side
                     // column's place for a moment, so the two never overlap.
                     <div className={`flex flex-col items-start gap-2 ${bubble ? "max-sm:hidden [@media(max-height:500px)]:hidden" : ""}`}>
@@ -798,6 +887,15 @@ const WorldPage = () => {
                       {currentRoom === "hangul-village" && <LettersChip lang={lang} letters={VILLAGE_LETTERS} found={saved.letters} />}
                       <div className="flex flex-wrap items-center gap-2">
                         <MissionsButton lang={lang} onClick={() => setMissionsOpen(true)} />
+                        {currentRoom === "hangul-village" && tour === null && (
+                          <button
+                            type="button"
+                            onClick={() => startTour(0)}
+                            className="pointer-events-auto min-h-10 rounded-full border-2 border-klovers-yellow bg-charcoal/85 px-4 text-sm font-bold text-ivory backdrop-blur focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow"
+                          >
+                            {lang === "ar" ? "جولة كلوفرز" : "Klovers tour"}
+                          </button>
+                        )}
                         {!showControls && <HelpButton lang={lang} onClick={() => setHelpOpen(true)} />}
                       </div>
                     </div>
@@ -879,6 +977,9 @@ const WorldPage = () => {
                   arrive(room ?? startRoom, true);
                 }}
               />
+            )}
+            {ready && tour !== null && currentRoom === "hangul-village" && !card && !welcoming && (
+              <TourPanel lang={lang} slides={slides} index={tour} onGo={goToSlide} onSkip={endTour} onFinish={endTour} onOpen={openFromTour} />
             )}
             {card && (
               <InteractionCard

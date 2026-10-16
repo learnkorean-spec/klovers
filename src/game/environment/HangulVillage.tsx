@@ -3,7 +3,7 @@ import { VILLAGE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Batch from "./Batch";
 import { Kit, bed, cart, curvedRoofOn, grass, hanokHouse, hanokRoof, jitter, platform, pot, shrub, steppingStones, tree, wallRun, gatehouse, flowerBox } from "./kit";
-import { Gate, GateWall, Lamps, Signboard, Sway } from "./parts";
+import { Gate, GateWall, InfoBoard, Lamps, Signboard, Sway } from "./parts";
 import { VILLAGE_LETTERS } from "../config/interactions";
 import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
 import { curvedRoof } from "./shapes";
@@ -178,6 +178,12 @@ export default function HangulVillage({ marketOpen, letters }: { marketOpen: boo
         <planeGeometry args={[90, 90]} />
         <primitive object={MAT.stone} attach="material" />
       </mesh>
+      {/* The Klovers tour: six boards along the street (config/rooms VILLAGE.tour). */}
+      {VILLAGE.tour.map((b) => (
+        <group key={b.id} position={[b.x, 0, b.z]} rotation={[0, b.yaw, 0]}>
+          <InfoBoard text={b.sign.includes(" ") ? b.sign.replace(" ", "\n") : b.sign} w={b.w} />
+        </group>
+      ))}
       {/* Kerbs */}
       {[-1, 1].map((s) => (
         <mesh key={s} receiveShadow position={[s * (HW + 0.15), 0.08, 0]} scale={[0.3, 0.16, HL * 2]}>

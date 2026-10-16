@@ -873,6 +873,18 @@ export const KLOVERS_WORLD = {
       "conversation_cafe",
     ],
 
+    /**
+     * KLOVERS World, first visit (Re, 16 Oct 2026): the egg sleeps in the
+     * courtyard as always; its gate leads to Hangul Village, which opens with
+     * a short, skippable tour read like a presentation — six boards along the
+     * street (next/back walk to each and frame it): who Klovers is, what makes
+     * it different, the courses, how we teach, why Korean, how to start.
+     * Then the learner is free to play. Its words are the site's own. It adds
+     * no lore, opens nothing early and changes no world order or unlock rule;
+     * the egg still hatches only on real progress, and Cluby is untouched.
+     */
+    worldFirstVisitTour: "hangul_village_opens_with_tour",
+
     existingStudentFlow: {
       rule:
         "Never force experienced users to replay beginner progression.",
