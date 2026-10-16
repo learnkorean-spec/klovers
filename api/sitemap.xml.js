@@ -224,14 +224,22 @@ export default async function handler(req, res) {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // The database is on a small plan and sometimes takes tens of seconds to
+  // answer (16 Oct 2026: seven 60 s function timeouts on this route in a week,
+  // each one a failed Googlebot fetch). Give up after 10 s and answer 503 with
+  // Retry-After, which crawlers treat as "come back later", instead of hanging
+  // until Vercel kills the function.
   const { data: posts, error } = await supabase
     .from("blog_posts")
     .select("slug, updated_at, published_at, lang")
     .eq("published", true)
-    .order("published_at", { ascending: false });
+    .order("published_at", { ascending: false })
+    .abortSignal(AbortSignal.timeout(10_000));
 
   if (error) {
-    res.status(500).send(`sitemap: ${error.message}`);
+    res.setHeader("Retry-After", "3600");
+    res.setHeader("Cache-Control", "no-store");
+    res.status(503).send(`sitemap: ${error.message}`);
     return;
   }
 
@@ -248,6 +256,9 @@ export default async function handler(req, res) {
   }
 
   res.setHeader("Content-Type", "application/xml; charset=utf-8");
-  res.setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+  // s-maxage lets Vercel's edge keep the sitemap for an hour, so crawlers are
+  // served the cached copy instead of each fetch querying the database.
+  // max-age alone (the old value) only applied to browsers.
+  res.setHeader("Cache-Control", "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400");
   res.status(200).send(xml);
 }
