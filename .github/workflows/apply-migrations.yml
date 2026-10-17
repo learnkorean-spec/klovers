@@ -99,7 +99,7 @@ env:
 jobs:
   plan:
     name: ${{ inputs.mode == 'apply' && 'Plan (for review before apply)' || 'Plan (no changes)' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       count: ${{ steps.plan.outputs.count }}
     steps:
@@ -205,7 +205,7 @@ jobs:
     name: Apply pending migrations
     needs: plan
     if: inputs.mode == 'apply' && needs.plan.outputs.count != '0'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # This is the lock. A required reviewer on this environment must approve
     # the run before any step below executes - see the note at the top of
     # this file for what has to exist in repo Settings for that to be real.
@@ -379,7 +379,7 @@ jobs:
   repair:
     name: Record one version as already applied (no execution)
     if: inputs.mode == 'repair-only'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Same lock as apply. Marking a version "applied" when it was not is
     # just as dangerous as a bad apply - a later real migration could then
     # build on a foundation that was never actually laid - so this gets the

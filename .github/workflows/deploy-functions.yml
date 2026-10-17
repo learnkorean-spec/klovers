@@ -13,7 +13,7 @@ jobs:
   # PR - which removing that dispatch alone would not do.
   guard:
     name: Check migration hold
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       held: ${{ steps.check.outputs.held }}
     steps:
@@ -47,7 +47,7 @@ jobs:
   # migration file that has not been applied, and the message says what to do.
   migrate:
     name: Check migration state
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: guard
     if: needs.guard.outputs.held != 'true'
     env:
@@ -117,7 +117,7 @@ jobs:
   # be inherited through `needs: migrate`.
   deploy-functions:
     name: Deploy Edge Functions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: guard
     if: needs.guard.outputs.held != 'true'
     env:

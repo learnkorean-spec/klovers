@@ -59,7 +59,7 @@ concurrency:
 jobs:
   generate:
     name: Generate (read-only, no credential)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
