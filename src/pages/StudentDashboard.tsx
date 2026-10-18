@@ -831,6 +831,7 @@ const StudentDashboard = () => {
               </p>
             </CardContent>
           </Card>
+          {attendanceDates.length > 0 && <AttendanceHistoryCard dates={attendanceDates} />}
         </div>
       );
   })() : (
@@ -926,11 +927,10 @@ const StudentDashboard = () => {
                       <p className="font-semibold text-amber-900 dark:text-amber-200">{tInterpolate(t("dashboardPage.paymentDueTitle"), { amount })}</p>
                       <p className="text-amber-800 dark:text-amber-300">{t("dashboardPage.paymentDueBody")}</p>
                     </div>
-                    {pe.approval_status === "PENDING_PAYMENT" ? (
-                      <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal shrink-0 px-3" onClick={() => navigate(`/pay/${pe.id}`)}>{t("dashboardPage.paymentDuePay")}</Button>
-                    ) : (
-                      <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal shrink-0 px-3" onClick={() => trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(waText)}`, { cta_label: "dashboard_payment_due" })}>{t("dashboardPage.paymentDueWhatsApp")}</Button>
-                    )}
+                    <div className="flex gap-2 shrink-0">
+                      <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal px-3" onClick={() => navigate(`/pay/${pe.id}`)}>{t("dashboardPage.paymentDuePay")}</Button>
+                      <Button size="sm" variant="outline" className="min-h-11 text-xs px-3" onClick={() => trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(waText)}`, { cta_label: "dashboard_payment_due" })}>{t("dashboardPage.paymentDueWhatsApp")}</Button>
+                    </div>
                   </div>
                 );
                 return;

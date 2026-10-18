@@ -30,6 +30,8 @@ interface EnrollmentData {
   amount: number;
   currency: string;
   approval_status: string;
+  /** Missing when loaded through the get_enrollment_for_payment fallback. */
+  payment_status?: string | null;
   due_at: string | null;
   classes_included: number;
   receipt_url: string;
@@ -374,7 +376,7 @@ const EgyptPaymentPage = () => {
       let data: any = null;
       const { data: direct, error: directErr } = await supabase
         .from("enrollments")
-        .select("id, plan_type, class_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date")
+        .select("id, plan_type, class_type, duration, amount, currency, approval_status, payment_status, due_at, classes_included, receipt_url, payment_method, payment_date")
         .eq("id", enrollmentId!)
         .maybeSingle();
 
@@ -437,7 +439,7 @@ const EgyptPaymentPage = () => {
         if (rpcError.message?.includes("PENDING_PAYMENT")) {
           const { data: refreshed } = await supabase
             .from("enrollments")
-            .select("id, plan_type, class_type, duration, amount, currency, approval_status, due_at, classes_included, receipt_url, payment_method, payment_date")
+            .select("id, plan_type, class_type, duration, amount, currency, approval_status, payment_status, due_at, classes_included, receipt_url, payment_method, payment_date")
             .eq("id", enrollment.id)
             .single();
           if (refreshed) {
@@ -515,13 +517,21 @@ const EgyptPaymentPage = () => {
 
   if (!enrollment) return null;
 
+  // Placed in a class before paying: approved, but payment_status says not
+  // PAID yet. She still owes the money, so she gets the payment form too.
+  const approvedUnpaid =
+    enrollment.approval_status === "APPROVED" &&
+    enrollment.payment_status != null &&
+    enrollment.payment_status !== "PAID";
+  const canPay = enrollment.approval_status === "PENDING_PAYMENT" || approvedUnpaid;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main id="main-content" className="container mx-auto px-4 pt-24 pb-12 max-w-lg">
         <OrderSummary enrollment={enrollment} />
 
-        {enrollment.approval_status === "PENDING_PAYMENT" && (
+        {canPay && (
           <>
             {uploadProgress !== null && (
               <div className="mb-4 space-y-1">
@@ -546,7 +556,7 @@ const EgyptPaymentPage = () => {
           />
         )}
 
-        {enrollment.approval_status === "APPROVED" && (
+        {enrollment.approval_status === "APPROVED" && !approvedUnpaid && (
           <div className="space-y-4">
             {/* Success card */}
             <Card className="border-correct bg-correct/10">
