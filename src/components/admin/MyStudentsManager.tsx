@@ -864,6 +864,35 @@ const MyStudentsManager = () => {
   }, [students]);
 
   /**
+   * Private students who are actually taught TOGETHER, in the same session —
+   * same meeting link, same weekday/time/length — even though each has their
+   * own teacher_students row (and their own bundle/billing). Naira and Renad
+   * Elsenduony are the example that prompted this: two separate private-student
+   * rows that share one Sunday 22:30 Meet link. Nothing in the data model marks
+   * this explicitly, so it's derived here from the match rather than stored —
+   * purely a display grouping, it changes no billing or scheduling logic.
+   */
+  const classmatesByStudent = useMemo(() => {
+    const map = new Map<string, string[]>();
+    const active = students.filter(s => s.status === "active" && s.meeting_url);
+    for (const a of active) {
+      const mates: string[] = [];
+      for (const b of active) {
+        if (a.id === b.id || a.meeting_url !== b.meeting_url) continue;
+        const shareClass = a.classes.some(ca =>
+          b.classes.some(cb =>
+            ca.weekday === cb.weekday &&
+            trimSeconds(ca.start_time) === trimSeconds(cb.start_time) &&
+            ca.duration_minutes === cb.duration_minutes,
+          ));
+        if (shareClass) mates.push(b.full_name);
+      }
+      if (mates.length) map.set(a.id, mates);
+    }
+    return map;
+  }, [students]);
+
+  /**
    * Every occurrence the weekly schedule implies over the window, per student,
    * paired with its confirmation. Rebuilt from the schedule each render rather
    * than stored, so editing a class immediately changes what is offered.
@@ -1703,6 +1732,16 @@ const MyStudentsManager = () => {
                   )}
                   {student.status !== "active" && (
                     <Badge className={STATUS_BADGE[student.status]}>{STATUS_LABEL[student.status]}</Badge>
+                  )}
+                  {(classmatesByStudent.get(student.id)?.length ?? 0) > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] bg-sky-50 text-sky-900 border-sky-300 dark:bg-sky-950/30 dark:text-sky-200"
+                      title="Same class, same meeting link"
+                    >
+                      <Users className="h-3 w-3 mr-1" />
+                      With {classmatesByStudent.get(student.id)!.join(", ")}
+                    </Badge>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5">
