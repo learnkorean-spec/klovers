@@ -905,11 +905,14 @@ const AdminDashboard = () => {
   };
 
   // Computed badge counts
-  const actionableEnrollments = enrollments.filter(e =>
+  // Deleted rows are closed, never actionable. Without this a row closed by
+  // soft-delete kept the "Action needed" banner lit forever (13 Sep 2026
+  // hold-a-place row, still counted on 18 Oct).
+  const actionableEnrollments = enrollments.filter(e => !(e as { deleted_at?: string | null }).deleted_at && (
     e.approval_status === "UNDER_REVIEW" ||
     e.approval_status === "PENDING_PAYMENT" ||
     (e.approval_status === "PENDING" && e.admin_review_required)
-  ).length;
+  )).length;
   const pendingAttendance = attendanceReqs.filter(a => a.status === "PENDING").length;
 
   // === UNIFIED DATASET from DB view ===
