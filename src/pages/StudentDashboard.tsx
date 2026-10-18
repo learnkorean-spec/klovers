@@ -102,6 +102,26 @@ interface ChecklistItem {
   completed: boolean;
 }
 
+interface PendingEnrollment {
+  id: string;
+  plan_type: string;
+  approval_status: string;
+  payment_status: string | null;
+  amount: string | number | null;
+  currency: string | null;
+}
+
+/** Placed in a class (or waiting to pay) but not paid yet: the student owes money. */
+const isPaymentDue = (pe: PendingEnrollment) =>
+  pe.payment_status !== "PAID" &&
+  (pe.approval_status === "APPROVED" || pe.approval_status === "PENDING_PAYMENT");
+
+const formatMoney = (amount: string | number | null, currency: string | null) => {
+  const n = Number(amount);
+  if (!amount || Number.isNaN(n)) return "";
+  return `${n.toLocaleString("en-US")} ${currency || "EGP"}`;
+};
+
 interface AttendanceDate {
   date: string;
   source: string;
@@ -252,7 +272,7 @@ const StudentDashboard = () => {
   const [showWelcome, setShowWelcome] = useState(false);
   const [weeklyXp, setWeeklyXp] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
-      const [pendingEnrollments, setPendingEnrollments] = useState<{ id: string; plan_type: string; approval_status: string }[]>([]);
+      const [pendingEnrollments, setPendingEnrollments] = useState<PendingEnrollment[]>([]);
   // Full upcoming-session list (single source of truth — passed to both
   // StudentPrimaryAction ([0]) and UpcomingSessionsCard, so the RPC + zoom
   // URL are each fetched exactly once).
@@ -316,12 +336,18 @@ const StudentDashboard = () => {
       setReferralCount(refCount || 0);
 
       // Pending enrollments
+      // Also approved-but-unpaid: admin placed the student in a group before
+      // payment arrived (approval_status APPROVED, payment_status not PAID).
+      // Those rows matched neither query before, so the student saw no
+      // payment notice and no class at all.
       const { data: pendingEnrollData } = await supabase
         .from("enrollments")
-        .select("id, plan_type, approval_status")
+        .select("id, plan_type, approval_status, payment_status, amount, currency")
         .eq("user_id", session.user.id)
-        .in("approval_status", ["PENDING_PAYMENT", "UNDER_REVIEW", "PENDING"]);
-      setPendingEnrollments(pendingEnrollData || []);
+        .is("deleted_at", null)
+        .or("approval_status.in.(PENDING_PAYMENT,UNDER_REVIEW,PENDING),and(approval_status.eq.APPROVED,payment_status.neq.PAID)")
+        .order("created_at", { ascending: true });
+      setPendingEnrollments((pendingEnrollData || []) as PendingEnrollment[]);
 
       // Weekly XP: from Monday 00:00 local time
       const now = new Date();
@@ -455,6 +481,21 @@ const StudentDashboard = () => {
         }
             } else {
         setHasNoData(true);
+        // Group attendance is recorded per student, not per enrollment, so a
+        // student who attends before paying still sees the classes she came to.
+        const { data: pkgOnly } = await supabase
+          .from("pkg_attendance")
+          .select("session_id, pkg_group_sessions(session_date)")
+          .eq("user_id", session.user.id)
+          .eq("admin_approved", true);
+        setAttendanceDates(
+          (pkgOnly || [])
+            .flatMap(r => {
+              const s = r.pkg_group_sessions as { session_date: string } | null;
+              return s?.session_date ? [{ date: s.session_date, source: "Group" }] : [];
+            })
+            .sort((a, b) => a.date.localeCompare(b.date)),
+        );
       }
 
       // ── Upcoming sessions + Zoom URL (single source of truth — powers both
@@ -749,6 +790,22 @@ const StudentDashboard = () => {
       />
       <MyTrialClassCard />
     </section>
+  ) : pendingLatest && isPaymentDue(pendingLatest) && pendingLatest.approval_status === "APPROVED" ? (
+    <div className="space-y-3">
+      <Card className="border-charcoal/20 bg-ivory dark:bg-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarCheck className="h-5 w-5" aria-hidden="true" /> {t("dashboardPage.classPlaceConfirmedTitle")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            {tInterpolate(t("dashboardPage.classPlaceConfirmedBody"), { plan: planLabel(pendingLatest.plan_type) })}
+          </p>
+        </CardContent>
+      </Card>
+      {attendanceDates.length > 0 && <AttendanceHistoryCard dates={attendanceDates} />}
+    </div>
   ) : pendingLatest ? (() => {
     const pending = pendingLatest;
     const label =
@@ -858,6 +915,26 @@ const StudentDashboard = () => {
               }
             }
             pendingEnrollments.forEach(pe => {
+              if (isPaymentDue(pe)) {
+                const amount = formatMoney(pe.amount, pe.currency);
+                const plan = planLabel(pe.plan_type);
+                const waText = tInterpolate(t("dashboardPage.paymentDueWhatsAppMsg"), { amount, plan });
+                alerts.push(
+                  <div key={pe.id} role="alert" className="flex flex-col sm:flex-row sm:items-center gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 rounded-xl px-3 py-3 text-sm">
+                    <AlertCircle className="h-5 w-5 text-amber-700 dark:text-amber-400 shrink-0" aria-hidden="true" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-amber-900 dark:text-amber-200">{tInterpolate(t("dashboardPage.paymentDueTitle"), { amount })}</p>
+                      <p className="text-amber-800 dark:text-amber-300">{t("dashboardPage.paymentDueBody")}</p>
+                    </div>
+                    {pe.approval_status === "PENDING_PAYMENT" ? (
+                      <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal shrink-0 px-3" onClick={() => navigate(`/pay/${pe.id}`)}>{t("dashboardPage.paymentDuePay")}</Button>
+                    ) : (
+                      <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal shrink-0 px-3" onClick={() => trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(waText)}`, { cta_label: "dashboard_payment_due" })}>{t("dashboardPage.paymentDueWhatsApp")}</Button>
+                    )}
+                  </div>
+                );
+                return;
+              }
               const label = pe.approval_status === "PENDING_PAYMENT" ? t("dashboardPage.awaitingPayment") : pe.approval_status === "UNDER_REVIEW" ? t("dashboardPage.underReview") : t("dashboardPage.pendingLabel");
               alerts.push(
                 <div key={pe.id} className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2 text-sm">
