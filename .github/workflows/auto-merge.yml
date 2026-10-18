@@ -30,7 +30,7 @@ concurrency:
 jobs:
   merge:
     name: Merge if CI passed
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # DISABLED 2026-08-24. Measured against real deployment history: a
     # bot-merged PR (merged_by = github-actions[bot], same mechanism this job
     # uses) blocked the Vercel production deploy 4 times out of 9, with no

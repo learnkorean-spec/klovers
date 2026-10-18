@@ -25,7 +25,7 @@ concurrency:
 jobs:
   seo-check:
     name: Check kloversegy.com
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       SITE: https://kloversegy.com
       # An Arabic post. Arabic slugs are not <loc> entries in the sitemap by
@@ -159,7 +159,7 @@ jobs:
 
   lighthouse:
     name: Core Web Vitals (Lighthouse)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Independent of the seo-check job above: neither depends on the other,
     # and a Lighthouse failure never fails this workflow (see the note on
     # scripts/lighthouse-budget.mjs below). Its own job so the fast,

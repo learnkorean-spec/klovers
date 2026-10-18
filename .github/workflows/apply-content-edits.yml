@@ -76,7 +76,7 @@ jobs:
   plan:
     name: Plan (no credential, no changes)
     if: inputs.mode == 'plan'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Validate inputs
         run: |
@@ -159,7 +159,7 @@ jobs:
   apply:
     name: Apply (writes to production)
     if: inputs.mode == 'apply'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # This is the lock. A required reviewer on this environment must approve
     # the run before any step below executes — see the note at the top of
     # this file for what has to exist in repo Settings for that to be real.
@@ -311,7 +311,7 @@ jobs:
   rollback:
     name: Rollback (writes to production)
     if: inputs.mode == 'rollback'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       actions: read # only rollback needs this, to pull a backup artifact from a prior run

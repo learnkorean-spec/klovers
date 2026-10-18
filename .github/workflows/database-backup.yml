@@ -56,7 +56,7 @@ env:
 jobs:
   backup:
     name: Dump, encrypt, verify restore
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Never run from a fork: it has no secrets and would only fail noisily.
     if: github.repository == 'learnkorean-spec/klovers'
 
