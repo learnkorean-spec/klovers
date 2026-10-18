@@ -94,6 +94,27 @@ describe("buildExpectedSessions", () => {
     expect(older.confirmed).toBeNull();
   });
 
+  it("still counts a lesson recorded at the class's old time after the class is moved", () => {
+    // 18 Oct 2026: Sunday 22:00 moved to 22:30; every lesson recorded at 22:00
+    // reappeared as "to confirm" (27 phantom rows) and invited a double count.
+    const out = buildExpectedSessions(
+      [cls({ start_time: "22:30:00", effective_from: "2026-08-17" })],
+      [session({ start_time: "22:00:00" })],
+      { timeZone: TZ, now: SUNDAY_NOON },
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0].confirmed?.outcome).toBe("attended");
+  });
+
+  it("does not borrow another class's lesson on the same date", () => {
+    const out = buildExpectedSessions(
+      [cls({ start_time: "22:30:00", effective_from: "2026-08-17" })],
+      [session({ start_time: "18:00:00", class_id: "some-other-class" })],
+      { timeZone: TZ, now: SUNDAY_NOON },
+    );
+    expect(out[0].confirmed).toBeNull();
+  });
+
   it("matches a confirmation even though Postgres returns HH:MM:SS", () => {
     const out = buildExpectedSessions(
       [cls({ effective_from: "2026-08-17" })],

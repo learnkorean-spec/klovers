@@ -311,6 +311,13 @@ export function buildExpectedSessions(
 ): ExpectedSession[] {
   const { timeZone, now = new Date() } = opts;
   const bySlot = new Map(confirmed.map(s => [`${s.session_date}|${s.start_time.slice(0, 5)}`, s]));
+  // Same class, same date, recorded at the class's OLD start time. Moving a
+  // weekly class (22:00 -> 22:30) must not turn every lesson already recorded
+  // at 22:00 back into "to confirm": that showed 27 phantom classes on
+  // 18 Oct 2026 and invited a second, double-counted confirmation.
+  const byClassDate = new Map(
+    confirmed.filter(s => s.class_id).map(s => [`${s.session_date}|${s.class_id}`, s]),
+  );
   const out: ExpectedSession[] = [];
 
   // How far back to walk: the earliest effective_from among these classes, not
@@ -348,7 +355,7 @@ export function buildExpectedSessions(
         if (timeToMinutes(start) + c.duration_minutes > timeToMinutes(nowHM)) continue;
       }
 
-      const row = bySlot.get(`${dateKey}|${start}`) ?? null;
+      const row = bySlot.get(`${dateKey}|${start}`) ?? byClassDate.get(`${dateKey}|${c.id}`) ?? null;
 
       out.push({
         student_id: c.student_id,
