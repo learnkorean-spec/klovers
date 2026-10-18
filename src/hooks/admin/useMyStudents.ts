@@ -690,3 +690,112 @@ export function useUnconfirmSession() {
     onSuccess: () => invalidateCredits(qc),
   });
 }
+
+/**
+ * Group-class students, for the "My Students" page's "Group" filter.
+ *
+ * These are a different data model from `useMyStudents` above (which is
+ * `teacher_students` — private 1:1 students only): group students live in
+ * `pkg_group_members` / `pkg_groups` / `schedule_packages` / `enrollments`,
+ * they all share ONE fixed schedule per group (no per-student custom time),
+ * and their "balance" is `enrollments.sessions_remaining`, not a bundle. This
+ * hook is deliberately read-only and does not touch `teacher_students`,
+ * `teacher_student_classes`, bundles, or session confirmation — none of that
+ * machinery applies to group students, and the trial-availability engine
+ * reads `teacher_student_classes` directly, which this never writes to.
+ *
+ * Query shape mirrors `GroupAttendanceManager.fetchEnrichedGroups`.
+ */
+export type GroupStudent = {
+  id: string; // `${group_id}:${user_id}` — group students have no single-row id of their own
+  user_id: string;
+  group_id: string;
+  full_name: string;
+  email: string;
+  level: string;
+  day_of_week: number | null;
+  start_time: string | null;
+  timezone: string | null;
+  meeting_url: string | null;
+  sessions_total: number | null;
+  sessions_remaining: number | null;
+  member_status: string | null;
+};
+
+export function useGroupStudents() {
+  return useQuery<GroupStudent[]>({
+    queryKey: ["admin", "group-students"],
+    queryFn: async () => {
+      const { data: pkgGroups, error: groupsErr } = await supabase
+        .from("pkg_groups")
+        .select("id, name, package_id, meeting_url, is_active, schedule_packages(level, day_of_week, start_time, timezone)")
+        .eq("is_active", true);
+      if (groupsErr) throw groupsErr;
+      if (!pkgGroups || pkgGroups.length === 0) return [];
+
+      const groupIds = pkgGroups.map(g => g.id);
+      const { data: members, error: membersErr } = await supabase
+        .from("pkg_group_members")
+        .select("group_id, user_id, member_status")
+        .in("group_id", groupIds)
+        .eq("member_status", "active");
+      if (membersErr) throw membersErr;
+      if (!members || members.length === 0) return [];
+
+      const userIds = [...new Set(members.map(m => m.user_id))];
+      const [profilesRes, enrollmentsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, name, email").in("user_id", userIds),
+        supabase
+          .from("enrollments")
+          .select("user_id, package_id, sessions_total, sessions_remaining, approval_status, payment_status, created_at")
+          .in("user_id", userIds)
+          .eq("approval_status", "APPROVED")
+          .eq("payment_status", "PAID")
+          .order("created_at", { ascending: false }),
+      ]);
+      if (profilesRes.error) throw profilesRes.error;
+      if (enrollmentsRes.error) throw enrollmentsRes.error;
+
+      const profileMap = new Map<string, { name: string; email: string }>();
+      (profilesRes.data ?? []).forEach(p => profileMap.set(p.user_id, { name: p.name, email: p.email }));
+
+      // Latest matching enrollment per (user, package) — already sorted desc.
+      const enrollmentMap = new Map<string, { sessions_total: number; sessions_remaining: number }>();
+      (enrollmentsRes.data ?? []).forEach(e => {
+        const key = `${e.user_id}:${e.package_id}`;
+        if (!enrollmentMap.has(key)) {
+          enrollmentMap.set(key, { sessions_total: e.sessions_total, sessions_remaining: e.sessions_remaining });
+        }
+      });
+
+      const groupById = new Map(pkgGroups.map(g => [g.id, g]));
+      const result: GroupStudent[] = [];
+      for (const m of members) {
+        const group = groupById.get(m.group_id);
+        if (!group) continue;
+        const pkg = (group.schedule_packages ?? {}) as {
+          level?: string; day_of_week?: number; start_time?: string; timezone?: string;
+        };
+        const profile = profileMap.get(m.user_id);
+        const enr = enrollmentMap.get(`${m.user_id}:${group.package_id}`);
+        result.push({
+          id: `${m.group_id}:${m.user_id}`,
+          user_id: m.user_id,
+          group_id: m.group_id,
+          full_name: profile?.name ?? "Unknown",
+          email: profile?.email ?? "",
+          level: pkg.level ?? "",
+          day_of_week: pkg.day_of_week ?? null,
+          start_time: pkg.start_time ?? null,
+          timezone: pkg.timezone ?? null,
+          meeting_url: group.meeting_url ?? null,
+          sessions_total: enr?.sessions_total ?? null,
+          sessions_remaining: enr?.sessions_remaining ?? null,
+          member_status: m.member_status,
+        });
+      }
+      return result.sort((a, b) => a.full_name.localeCompare(b.full_name));
+    },
+    staleTime: 60_000,
+  });
+}

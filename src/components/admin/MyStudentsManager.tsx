@@ -31,7 +31,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, Pencil, Trash2, Clock, Loader2, GraduationCap, AlertTriangle,
-  Video, Copy, Check, CalendarCheck, X, Wallet, History, Ban, ShieldAlert,
+  Video, Copy, Check, CalendarCheck, X, Wallet, History, Ban, ShieldAlert, Users,
 } from "lucide-react";
 import { ADMIN_TIMEZONE } from "@/constants/scheduling";
 import {
@@ -40,6 +40,7 @@ import {
   useBundleBalances, useRecentSessions, useAllStudentSessions, useStudentBundles,
   useAllBundles, useBundleEdits, useAddBundle, useUpdateBundle, useDeleteBundle,
   useDeletedBundles, useConfirmSessions, useUnconfirmSession, useBundleSessionSummaries,
+  useGroupStudents, type GroupStudent,
   type ConfirmSessionInput,
 } from "@/hooks/admin/useMyStudents";
 import {
@@ -53,6 +54,7 @@ import {
 import {
   getBundleOptions, getCurrencyForCountry, currencyChoicesFor, type BundleOption,
 } from "@/lib/stripePrices";
+import { getLevelShortLabel } from "@/constants/levels";
 import { CountryCombobox } from "@/components/admin/CountryCombobox";
 
 const SUBJECT_BADGE: Record<StudentSubject, string> = {
@@ -793,9 +795,15 @@ const initialsOf = (name: string) =>
   name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "?";
 
 type StudentFilter = "all" | "unpaid" | "low" | "confirm";
+// Private students (teacher_students) and group students (pkg_group_members)
+// are two different data models — see useGroupStudents' comment. This filter
+// is what "both must be together and just a filter group and private" means:
+// one page, one search box, one switch between the two kinds. "all" shows both.
+type StudentKind = "all" | "private" | "group";
 
 const MyStudentsManager = () => {
   const { data: students = [], isLoading } = useMyStudents();
+  const { data: groupStudents = [], isLoading: isGroupLoading } = useGroupStudents();
   const createStudent = useCreateStudent();
   const updateStudent = useUpdateStudent();
   const deleteStudent = useDeleteStudent();
@@ -847,6 +855,7 @@ const MyStudentsManager = () => {
   const [query, setQuery] = useState("");
   const [showAllToConfirm, setShowAllToConfirm] = useState(false);
   const [filter, setFilter] = useState<StudentFilter>("all");
+  const [kind, setKind] = useState<StudentKind>("all");
 
   const totals = useMemo(() => {
     const active = students.filter(s => s.status === "active");
@@ -936,6 +945,7 @@ const MyStudentsManager = () => {
   }, [students, studentState]);
 
   const visibleStudents = useMemo(() => {
+    if (kind === "group") return [];
     const q = query.trim().toLowerCase();
     return students
       .filter(st => !q || st.full_name.toLowerCase().includes(q) || (st.country ?? "").toLowerCase().includes(q))
@@ -952,7 +962,18 @@ const MyStudentsManager = () => {
         const nb = studentState.get(b.id)?.needsAction ? 0 : 1;
         return na - nb || a.full_name.localeCompare(b.full_name);
       });
-  }, [students, studentState, query, filter]);
+  }, [students, studentState, query, filter, kind]);
+
+  // Group students aren't touched by the private filter chips (unpaid/low/
+  // confirm are bundle concepts group students don't have) — only the kind
+  // switch and the shared search box apply to them.
+  const visibleGroupStudents = useMemo(() => {
+    if (kind === "private") return [];
+    const q = query.trim().toLowerCase();
+    return groupStudents.filter(
+      gs => !q || gs.full_name.toLowerCase().includes(q) || gs.email.toLowerCase().includes(q),
+    );
+  }, [groupStudents, query, kind]);
 
   const openStudentEdit = (student: MyStudentWithClasses) => setStudentDraft({
     id: student.id,
@@ -1480,7 +1501,7 @@ const MyStudentsManager = () => {
           </div>
         )}
 
-        {!isLoading && students.length > 0 && (
+        {(!isLoading && students.length > 0) || groupStudents.length > 0 ? (
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="relative sm:w-64">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -1488,32 +1509,59 @@ const MyStudentsManager = () => {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Find a student"
-                aria-label="Find a student by name or country"
+                aria-label="Find a student by name, country or email"
                 className="pl-8 h-9"
               />
             </div>
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Show students">
-              {filterChips.map(chip => (
+            {/* Private vs group students are two different data models (see
+                useGroupStudents) shown together on one page; this is the
+                switch between them, independent of the private-only chips
+                below. */}
+            <div className="flex gap-1.5" role="group" aria-label="Private or group students">
+              {([
+                { id: "all" as StudentKind, label: "All" },
+                { id: "private" as StudentKind, label: "Private" },
+                { id: "group" as StudentKind, label: "Group" },
+              ]).map(opt => (
                 <button
-                  key={chip.id}
+                  key={opt.id}
                   type="button"
-                  onClick={() => setFilter(chip.id)}
-                  aria-pressed={filter === chip.id}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 h-8 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    filter === chip.id
-                      ? "bg-charcoal text-ivory border-charcoal dark:bg-foreground dark:text-background"
+                  onClick={() => setKind(opt.id)}
+                  aria-pressed={kind === opt.id}
+                  className={`inline-flex items-center gap-1 rounded-full border px-3 h-8 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    kind === opt.id
+                      ? "bg-klovers-yellow text-charcoal border-klovers-yellow"
                       : "bg-background text-foreground hover:border-charcoal/40"
                   }`}
                 >
-                  {chip.label}
-                  {chip.count !== undefined && (
-                    <span className={`tabular-nums ${filter === chip.id ? "opacity-80" : "text-muted-foreground"}`}>{chip.count}</span>
-                  )}
+                  {opt.label}
                 </button>
               ))}
             </div>
+            {kind !== "group" && (
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Show students">
+                {filterChips.map(chip => (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={() => setFilter(chip.id)}
+                    aria-pressed={filter === chip.id}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 h-8 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      filter === chip.id
+                        ? "bg-charcoal text-ivory border-charcoal dark:bg-foreground dark:text-background"
+                        : "bg-background text-foreground hover:border-charcoal/40"
+                    }`}
+                  >
+                    {chip.label}
+                    {chip.count !== undefined && (
+                      <span className={`tabular-nums ${filter === chip.id ? "opacity-80" : "text-muted-foreground"}`}>{chip.count}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        ) : null}
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -1523,7 +1571,7 @@ const MyStudentsManager = () => {
           </div>
         )}
 
-        {!isLoading && students.length === 0 && (
+        {!isLoading && students.length === 0 && groupStudents.length === 0 && (
           <p className="text-sm text-muted-foreground py-6">
             No students yet. Add one and their weekly classes will be kept clear of trials.
           </p>
@@ -1608,13 +1656,15 @@ const MyStudentsManager = () => {
           </div>
         )}
 
-        {!isLoading && students.length > 0 && visibleStudents.length === 0 && (
+        {!isLoading && (students.length > 0 || groupStudents.length > 0) &&
+          visibleStudents.length === 0 && visibleGroupStudents.length === 0 && (
           <div className="rounded-lg border border-dashed py-8 text-center space-y-2">
             <p className="text-sm text-muted-foreground">No student matches this view.</p>
-            <Button variant="outline" size="sm" onClick={() => { setQuery(""); setFilter("all"); }}>Show all students</Button>
+            <Button variant="outline" size="sm" onClick={() => { setQuery(""); setFilter("all"); setKind("all"); }}>Show all students</Button>
           </div>
         )}
 
+        {visibleStudents.length > 0 && (
         <div className="grid gap-3 xl:grid-cols-2 items-start">
         {visibleStudents.map(student => {
           const studentBundles = allBundles?.get(student.id) ?? [];
@@ -1788,6 +1838,78 @@ const MyStudentsManager = () => {
           );
         })}
         </div>
+        )}
+
+        {isGroupLoading && kind !== "private" && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading group students…
+          </div>
+        )}
+
+        {visibleGroupStudents.length > 0 && (
+          <div className="space-y-2">
+            {kind === "all" && students.length > 0 && (
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground pt-1">
+                <Users className="h-4 w-4" /> Group students
+              </p>
+            )}
+            <div className="grid gap-3 xl:grid-cols-2 items-start">
+              {visibleGroupStudents.map(gs => (
+                <article
+                  key={gs.id}
+                  aria-label={gs.full_name}
+                  className="rounded-lg border border-l-4 border-l-sky-400 bg-card p-4 space-y-3 min-w-0"
+                >
+                  <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
+                    <div
+                      aria-hidden="true"
+                      className="h-10 w-10 shrink-0 rounded-full bg-sky-100 text-sky-900 flex items-center justify-center text-sm font-bold dark:bg-sky-950 dark:text-sky-200"
+                    >
+                      {initialsOf(gs.full_name)}
+                    </div>
+                    <div className="min-w-[10rem] flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <h3 className="font-semibold text-base leading-tight truncate">{gs.full_name}</h3>
+                        <Badge variant="outline" className="text-[10px]">
+                          <Users className="h-3 w-3 mr-1" /> Group
+                        </Badge>
+                        {gs.level && (
+                          <Badge variant="outline" className="text-[10px]">{getLevelShortLabel(gs.level)}</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        {gs.day_of_week !== null && gs.start_time ? (
+                          <span>{DAY_NAMES[gs.day_of_week]} {formatClassRange(trimSeconds(gs.start_time), 60)}</span>
+                        ) : (
+                          <span>Schedule not set</span>
+                        )}
+                      </p>
+                    </div>
+                    {gs.meeting_url && (
+                      <Button asChild size="sm" variant="outline" className="h-8 shrink-0 ml-auto">
+                        <a href={gs.meeting_url} target="_blank" rel="noopener noreferrer" title={gs.meeting_url}>
+                          <Video className="h-3.5 w-3.5 mr-1" /> Join
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                  {gs.sessions_remaining !== null && (
+                    <p className="text-sm text-muted-foreground">
+                      {gs.sessions_remaining} of {gs.sessions_total ?? "?"} classes left
+                      {gs.sessions_remaining <= 2 && (
+                        <Badge className="ml-2 bg-amber-100 text-amber-800 border-amber-400">running low</Badge>
+                      )}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Group student — edit their class time or group from Scheduling or Group Attendance.
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
 
       {/* Student dialog */}
