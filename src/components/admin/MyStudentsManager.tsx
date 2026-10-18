@@ -11,6 +11,7 @@
  * (start + duration) and shown as one line. It is never split into two entries.
  */
 import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -761,6 +762,38 @@ const SessionLedger = ({
   );
 };
 
+/** Weekday (0 = Sunday) and "HH:MM" right now in the admin's timezone. */
+function nowInAdminTz(): { weekday: number; hhmm: string } {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: ADMIN_TIMEZONE, weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(new Date());
+  const get = (t: string) => parts.find(p => p.type === t)?.value ?? "";
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return { weekday: Math.max(0, days.indexOf(get("weekday"))), hhmm: `${get("hour").replace("24", "00")}:${get("minute")}` };
+}
+
+/** The student's next weekly class from now, with how many days away it is. */
+function nextClassOf(classes: StudentClassSchedule[], now = nowInAdminTz()) {
+  let best: { cls: StudentClassSchedule; daysAway: number } | null = null;
+  for (const cls of classes) {
+    let daysAway = (cls.weekday - now.weekday + 7) % 7;
+    if (daysAway === 0 && trimSeconds(cls.start_time) <= now.hhmm) daysAway = 7;
+    if (!best || daysAway < best.daysAway ||
+        (daysAway === best.daysAway && cls.start_time < best.cls.start_time)) {
+      best = { cls, daysAway };
+    }
+  }
+  return best;
+}
+
+const whenLabel = (daysAway: number, weekday: number) =>
+  daysAway === 0 ? "Today" : daysAway === 1 ? "Tomorrow" : DAY_NAMES[weekday];
+
+const initialsOf = (name: string) =>
+  name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") || "?";
+
+type StudentFilter = "all" | "unpaid" | "low" | "confirm";
+
 const MyStudentsManager = () => {
   const { data: students = [], isLoading } = useMyStudents();
   const createStudent = useCreateStudent();
@@ -811,6 +844,9 @@ const MyStudentsManager = () => {
   const [catchUpShowOlder, setCatchUpShowOlder] = useState(false);
   const [historyFor, setHistoryFor] = useState<MyStudentWithClasses | null>(null);
   const [manageBundlesFor, setManageBundlesFor] = useState<MyStudentWithClasses | null>(null);
+  const [query, setQuery] = useState("");
+  const [showAllToConfirm, setShowAllToConfirm] = useState(false);
+  const [filter, setFilter] = useState<StudentFilter>("all");
 
   const totals = useMemo(() => {
     const active = students.filter(s => s.status === "active");
@@ -859,6 +895,75 @@ const MyStudentsManager = () => {
 
   const unconfirmedCount = (studentId: string) =>
     (expectedByStudent.get(studentId) ?? []).filter(o => !o.confirmed).length;
+
+  /**
+   * What each student needs from Re right now, computed once for the card,
+   * the summary tiles and the filters, so all three always agree.
+   */
+  const studentState = useMemo(() => {
+    const map = new Map<string, {
+      unpaid: boolean; remaining: number | null; low: boolean; out: boolean; pending: number;
+      owed: { amount: number; currency: string } | null; needsAction: boolean;
+    }>();
+    for (const st of students) {
+      const active = activeBundleFor(allBundles?.get(st.id) ?? []);
+      const bal = balances?.get(st.id);
+      const remaining = bal ? bal.remaining_classes : null;
+      const unpaid = !!active && !active.paid_on;
+      const out = remaining !== null && remaining <= 0;
+      const low = remaining !== null && remaining > 0 && remaining <= 2;
+      const pending = (expectedByStudent.get(st.id) ?? []).filter(o => !o.confirmed).length;
+      map.set(st.id, {
+        unpaid, remaining, low, out, pending,
+        owed: unpaid && active ? { amount: Number(active.total_price) || 0, currency: active.currency || "EGP" } : null,
+        needsAction: unpaid || out || low || (pending > 0 && (allBundles?.get(st.id)?.length ?? 0) > 0),
+      });
+    }
+    return map;
+  }, [students, allBundles, balances, expectedByStudent]);
+
+  const summary = useMemo(() => {
+    const owedByCurrency = new Map<string, number>();
+    let unpaid = 0, low = 0;
+    for (const st of students) {
+      const x = studentState.get(st.id);
+      if (!x) continue;
+      if (x.owed) { unpaid++; owedByCurrency.set(x.owed.currency, (owedByCurrency.get(x.owed.currency) ?? 0) + x.owed.amount); }
+      if (x.low || x.out) low++;
+    }
+    const owed = [...owedByCurrency.entries()].map(([cur, amt]) => formatMoney(amt, cur)).join(" + ");
+    return { unpaid, low, owed };
+  }, [students, studentState]);
+
+  const visibleStudents = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return students
+      .filter(st => !q || st.full_name.toLowerCase().includes(q) || (st.country ?? "").toLowerCase().includes(q))
+      .filter(st => {
+        const x = studentState.get(st.id);
+        if (!x || filter === "all") return true;
+        if (filter === "unpaid") return x.unpaid;
+        if (filter === "low") return x.low || x.out;
+        return x.pending > 0;
+      })
+      // Students who need something from Re come first; then by name.
+      .sort((a, b) => {
+        const na = studentState.get(a.id)?.needsAction ? 0 : 1;
+        const nb = studentState.get(b.id)?.needsAction ? 0 : 1;
+        return na - nb || a.full_name.localeCompare(b.full_name);
+      });
+  }, [students, studentState, query, filter]);
+
+  const openStudentEdit = (student: MyStudentWithClasses) => setStudentDraft({
+    id: student.id,
+    full_name: student.full_name,
+    subject: student.subject,
+    status: student.status,
+    note: student.note ?? "",
+    meeting_url: student.meeting_url ?? "",
+    country: student.country ?? "",
+    currency: student.currency ?? "",
+  });
 
   /**
    * Counted sessions per bundle, from the same recentSessions fetch that
@@ -1325,27 +1430,89 @@ const MyStudentsManager = () => {
     }
   };
 
+  const filterChips: { id: StudentFilter; label: string; count?: number }[] = [
+    { id: "all", label: "All", count: students.length },
+    { id: "unpaid", label: "Unpaid", count: summary.unpaid },
+    { id: "low", label: "Running low", count: summary.low },
+    { id: "confirm", label: "Unconfirmed", count: toConfirm.length },
+  ];
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" /> My Students
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <GraduationCap className="h-5 w-5" /> My students
             </CardTitle>
             <CardDescription>
-              Your ongoing private students. Their classes block that time for trials
-              automatically — all times are your own ({ADMIN_TIMEZONE.replace(/_/g, " ")}).
+              Your private students. Their classes keep that time free of trials. Times are yours
+              ({ADMIN_TIMEZONE.replace(/_/g, " ")}).
             </CardDescription>
           </div>
-          <Button onClick={() => setStudentDraft(emptyStudent())}>
+          <Button onClick={() => setStudentDraft(emptyStudent())} className="bg-klovers-yellow text-charcoal hover:bg-klovers-yellow/90">
             <Plus className="h-4 w-4 mr-1" /> Add student
           </Button>
         </div>
-        {!isLoading && (
-          <p className="text-xs text-muted-foreground pt-1">
-            {totals.active} active · {totals.hours} teaching hours a week
-          </p>
+
+        {!isLoading && students.length > 0 && (
+          // Each tile is also the filter for what it counts, so the number is
+          // never a dead end: one click shows exactly who it means.
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            {[
+              { id: "all" as StudentFilter, value: String(totals.active), label: "active students", sub: `${totals.hours} teaching hours a week`, tone: "" },
+              { id: "unpaid" as StudentFilter, value: String(summary.unpaid), label: summary.unpaid === 1 ? "bundle unpaid" : "bundles unpaid", sub: summary.owed ? `${summary.owed} to collect` : "All paid", tone: summary.unpaid > 0 ? "border-wrong/50 bg-wrong-surface" : "" },
+              { id: "confirm" as StudentFilter, value: String(toConfirm.length), label: toConfirm.length === 1 ? "class to confirm" : "classes to confirm", sub: toConfirm.length ? "Mark done or not held" : "Nothing waiting", tone: toConfirm.length > 0 ? "border-amber-400 bg-amber-50 dark:bg-amber-950/30" : "" },
+              { id: "low" as StudentFilter, value: String(summary.low), label: "running low", sub: "2 classes or fewer left", tone: summary.low > 0 ? "border-amber-400" : "" },
+            ].map(tile => (
+              <button
+                key={tile.id}
+                type="button"
+                onClick={() => setFilter(f => (f === tile.id ? "all" : tile.id))}
+                aria-pressed={filter === tile.id}
+                className={`text-left rounded-lg border px-3 py-2.5 transition-colors hover:border-charcoal/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${tile.tone} ${filter === tile.id && tile.id !== "all" ? "ring-2 ring-charcoal dark:ring-foreground" : ""}`}
+              >
+                <span className="block text-2xl font-bold leading-tight text-foreground tabular-nums">{tile.value}</span>
+                <span className="block text-sm font-medium text-foreground">{tile.label}</span>
+                <span className="block text-xs text-muted-foreground">{tile.sub}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && students.length > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <div className="relative sm:w-64">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <Input
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Find a student"
+                aria-label="Find a student by name or country"
+                className="pl-8 h-9"
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Show students">
+              {filterChips.map(chip => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => setFilter(chip.id)}
+                  aria-pressed={filter === chip.id}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 h-8 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    filter === chip.id
+                      ? "bg-charcoal text-ivory border-charcoal dark:bg-foreground dark:text-background"
+                      : "bg-background text-foreground hover:border-charcoal/40"
+                  }`}
+                >
+                  {chip.label}
+                  {chip.count !== undefined && (
+                    <span className={`tabular-nums ${filter === chip.id ? "opacity-80" : "text-muted-foreground"}`}>{chip.count}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </CardHeader>
 
@@ -1362,22 +1529,20 @@ const MyStudentsManager = () => {
           </p>
         )}
 
-        {toConfirm.length > 0 && (
-          <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+        {toConfirm.length > 0 && (filter === "all" || filter === "confirm") && (
+          <div className="rounded-lg border border-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 space-y-2">
             {/* A <div>, not a <p>: <Badge> renders a <div>, and a <div> inside
-                a <p> is invalid HTML — React reports it as a
-                validateDOMNesting warning, and a real browser's parser would
-                close the paragraph early. */}
-            <div className="flex items-center gap-2 text-sm font-semibold">
+                a <p> is invalid HTML. */}
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <CalendarCheck className="h-4 w-4" />
               To confirm
-              <Badge variant="secondary">{toConfirm.length}</Badge>
+              <Badge className="bg-charcoal text-ivory hover:bg-charcoal">{toConfirm.length}</Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Classes your schedule says have happened. Nothing is counted until you say so.
+              Your schedule says these happened. Nothing is counted until you mark it.
             </p>
             <div className="space-y-1">
-              {toConfirm.slice(0, 8).map(({ student, occ, bundle }) => (
+              {toConfirm.slice(0, showAllToConfirm ? toConfirm.length : 5).map(({ student, occ, bundle }) => (
                 <div
                   key={`${student.id}|${occ.session_date}|${occ.start_time}`}
                   className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-background px-3 py-2 text-sm"
@@ -1430,74 +1595,115 @@ const MyStudentsManager = () => {
                   )}
                 </div>
               ))}
-              {toConfirm.length > 8 && (
-                <p className="text-xs text-muted-foreground pt-1">
-                  …and {toConfirm.length - 8} more — use Catch up on the student to do them together.
-                </p>
+              {toConfirm.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllToConfirm(v => !v)}
+                  className="text-xs font-medium text-foreground underline underline-offset-2 pt-1"
+                >
+                  {showAllToConfirm ? "Show fewer" : `Show all ${toConfirm.length}`}
+                </button>
               )}
             </div>
           </div>
         )}
 
-        {students.map(student => {
+        {!isLoading && students.length > 0 && visibleStudents.length === 0 && (
+          <div className="rounded-lg border border-dashed py-8 text-center space-y-2">
+            <p className="text-sm text-muted-foreground">No student matches this view.</p>
+            <Button variant="outline" size="sm" onClick={() => { setQuery(""); setFilter("all"); }}>Show all students</Button>
+          </div>
+        )}
+
+        <div className="grid gap-3 xl:grid-cols-2 items-start">
+        {visibleStudents.map(student => {
           const studentBundles = allBundles?.get(student.id) ?? [];
           const activeBundle = activeBundleFor(studentBundles);
           const activeBundleNumber = activeBundle ? numberBundles(studentBundles).get(activeBundle.id) : undefined;
+          const st = studentState.get(student.id);
+          const next = nextClassOf(student.classes);
+          // The left edge carries the one thing to act on, so a scan down the
+          // page finds it without reading: red = bundle used up, yellow =
+          // unpaid or running low, none = nothing needed.
+          const rail = st?.out ? "border-l-wrong" : st?.unpaid || st?.low ? "border-l-amber-400" : "border-l-border";
           return (
-          <div key={student.id} className="rounded-lg border p-4 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold">{student.full_name}</span>
-                <Badge variant="outline" className={SUBJECT_BADGE[student.subject]}>
-                  {SUBJECT_LABEL[student.subject]}
-                </Badge>
-                {student.country && (
-                  <Badge variant="outline" className="text-[10px]">
-                    {student.country}
-                    {student.currency ? ` · ${student.currency}` : ""}
-                  </Badge>
-                )}
-                {student.status !== "active" && (
-                  <Badge className={STATUS_BADGE[student.status]}>{STATUS_LABEL[student.status]}</Badge>
-                )}
+          <article
+            key={student.id}
+            aria-label={student.full_name}
+            className={`rounded-lg border border-l-4 ${rail} bg-card p-4 space-y-3 min-w-0`}
+          >
+            <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
+              <div
+                aria-hidden="true"
+                className="h-10 w-10 shrink-0 rounded-full bg-charcoal text-klovers-yellow flex items-center justify-center text-sm font-bold dark:bg-foreground dark:text-background"
+              >
+                {initialsOf(student.full_name)}
               </div>
-              <div className="flex gap-1">
-                <Button
-                  variant="ghost" size="sm"
-                  onClick={() => setStudentDraft({
-                    id: student.id,
-                    full_name: student.full_name,
-                    subject: student.subject,
-                    status: student.status,
-                    note: student.note ?? "",
-                    meeting_url: student.meeting_url ?? "",
-                    country: student.country ?? "",
-                    currency: student.currency ?? "",
-                  })}
-                >
+              <div className="min-w-[10rem] flex-1 space-y-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <h3 className="font-semibold text-base leading-tight truncate">{student.full_name}</h3>
+                  <Badge variant="outline" className={SUBJECT_BADGE[student.subject]}>
+                    {SUBJECT_LABEL[student.subject]}
+                  </Badge>
+                  {student.country && (
+                    <Badge variant="outline" className="text-[10px]">
+                      {student.country}
+                      {student.currency ? ` · ${student.currency}` : ""}
+                    </Badge>
+                  )}
+                  {student.status !== "active" && (
+                    <Badge className={STATUS_BADGE[student.status]}>{STATUS_LABEL[student.status]}</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {next ? (
+                    <span>
+                      Next class{" "}
+                      <span className={`font-medium ${next.daysAway === 0 ? "text-foreground" : "text-foreground/90"}`}>
+                        {whenLabel(next.daysAway, next.cls.weekday)} {formatClassRange(trimSeconds(next.cls.start_time), next.cls.duration_minutes)}
+                      </span>
+                    </span>
+                  ) : (
+                    <span>No weekly class set</span>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-0.5 shrink-0 ml-auto">
+                {student.meeting_url && (
+                  <Button asChild size="sm" variant="outline" className="h-8">
+                    <a href={student.meeting_url} target="_blank" rel="noopener noreferrer" title={student.meeting_url}>
+                      <Video className="h-3.5 w-3.5 mr-1" /> Join
+                    </a>
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label={`Edit ${student.full_name}`} onClick={() => openStudentEdit(student)}>
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(student)}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label={`Delete ${student.full_name}`} onClick={() => setConfirmDelete(student)}>
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </Button>
               </div>
             </div>
 
-            <p className="text-xs text-muted-foreground">{formatWeeklySummary(student.classes)}</p>
-
-            <MeetingLinkRow
-              url={student.meeting_url}
-              onEdit={() => setStudentDraft({
-                id: student.id,
-                full_name: student.full_name,
-                subject: student.subject,
-                status: student.status,
-                note: student.note ?? "",
-                meeting_url: student.meeting_url ?? "",
-                country: student.country ?? "",
-                currency: student.currency ?? "",
-              })}
-            />
+            {st && (st.unpaid || st.pending > 0) && (
+              <div className="flex flex-wrap gap-1.5">
+                {st.owed && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-wrong-surface border border-wrong/40 px-2.5 py-0.5 text-xs font-medium text-foreground">
+                    <Wallet className="h-3 w-3" aria-hidden="true" /> Owes {formatMoney(st.owed.amount, st.owed.currency)}
+                  </span>
+                )}
+                {st.pending > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => openCatchUp(student)}
+                    className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-400 px-2.5 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <CalendarCheck className="h-3 w-3" aria-hidden="true" /> {st.pending} to confirm
+                  </button>
+                )}
+              </div>
+            )}
 
             <BundleBox
               balance={balances?.get(student.id)}
@@ -1515,64 +1721,73 @@ const MyStudentsManager = () => {
               onHistory={() => setHistoryFor(student)}
             />
 
+            <div className="rounded-md border">
+              <p className="px-3 pt-2 text-sm font-medium">Weekly schedule & link</p>
+              {(
+                <div className="px-3 pb-3 pt-1.5 space-y-2.5">
+                  <MeetingLinkRow url={student.meeting_url} onEdit={() => openStudentEdit(student)} />
             <div className="space-y-1.5">
-              {student.classes.map(c => (
-                <div key={c.id} className="flex items-center justify-between gap-2 rounded-md bg-muted/40 px-3 py-2 text-sm">
-                  <span className="flex items-center gap-2">
-                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="font-medium w-24">{DAY_NAMES[c.weekday]}</span>
-                    <span>{formatClassRange(trimSeconds(c.start_time), c.duration_minutes)}</span>
-                    {crossesMidnight(trimSeconds(c.start_time), c.duration_minutes) && (
-                      // One class, one row. The badge explains the "+1 day" above
-                      // so it never reads as two separate classes.
-                      <Badge variant="outline" className="text-[10px]">runs past midnight</Badge>
-                    )}
-                    {/* Surfaced here, not only inside the dialog — a wrong start
-                        date silently empties the confirm strip, so it has to be
-                        visible at a glance rather than found by opening Edit. */}
-                    <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                      since {formatSessionDate(c.effective_from)}
-                    </Badge>
-                  </span>
-                  <span className="flex gap-1">
-                    <Button
-                      variant="ghost" size="sm" aria-label="Edit class"
-                      onClick={() => {
-                        setApplyDateToAll(false);
-                        setClassDraft({
-                          id: c.id,
-                          student_id: student.id,
-                          weekday: c.weekday,
-                          start_time: trimSeconds(c.start_time),
-                          duration_minutes: c.duration_minutes,
-                          effective_from: c.effective_from,
-                        });
-                      }}
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button variant="ghost" size="sm" aria-label="Remove class" onClick={() => removeClass(c)}>
-                      <Trash2 className="h-3 w-3 text-destructive" />
-                    </Button>
-                  </span>
+                  {student.classes.map(c => (
+                    <div key={c.id} className="flex items-center justify-between gap-2 rounded-md bg-muted/40 px-3 py-2 text-sm">
+                      <span className="flex items-center gap-2">
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="font-medium w-24">{DAY_NAMES[c.weekday]}</span>
+                        <span>{formatClassRange(trimSeconds(c.start_time), c.duration_minutes)}</span>
+                        {crossesMidnight(trimSeconds(c.start_time), c.duration_minutes) && (
+                          // One class, one row. The badge explains the "+1 day" above
+                          // so it never reads as two separate classes.
+                          <Badge variant="outline" className="text-[10px]">runs past midnight</Badge>
+                        )}
+                        {/* Surfaced here, not only inside the dialog — a wrong start
+                            date silently empties the confirm strip, so it has to be
+                            visible at a glance rather than found by opening Edit. */}
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                          since {formatSessionDate(c.effective_from)}
+                        </Badge>
+                      </span>
+                      <span className="flex gap-1">
+                        <Button
+                          variant="ghost" size="sm" aria-label="Edit class"
+                          onClick={() => {
+                            setApplyDateToAll(false);
+                            setClassDraft({
+                              id: c.id,
+                              student_id: student.id,
+                              weekday: c.weekday,
+                              start_time: trimSeconds(c.start_time),
+                              duration_minutes: c.duration_minutes,
+                              effective_from: c.effective_from,
+                            });
+                          }}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="sm" aria-label="Remove class" onClick={() => removeClass(c)}>
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      </span>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline" size="sm"
+                    onClick={() => {
+                      setApplyDateToAll(false);
+                      setClassDraft({
+                        student_id: student.id, weekday: 1, start_time: "19:00", duration_minutes: 90,
+                        effective_from: localDateKey(new Date(), ADMIN_TIMEZONE),
+                      });
+                    }}
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add a class
+                  </Button>
                 </div>
-              ))}
-              <Button
-                variant="outline" size="sm"
-                onClick={() => {
-                  setApplyDateToAll(false);
-                  setClassDraft({
-                    student_id: student.id, weekday: 1, start_time: "19:00", duration_minutes: 90,
-                    effective_from: localDateKey(new Date(), ADMIN_TIMEZONE),
-                  });
-                }}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1" /> Add a class
-              </Button>
+                </div>
+              )}
             </div>
-          </div>
+          </article>
           );
         })}
+        </div>
       </CardContent>
 
       {/* Student dialog */}

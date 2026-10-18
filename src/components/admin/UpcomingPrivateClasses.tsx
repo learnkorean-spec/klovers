@@ -100,7 +100,10 @@ const UpcomingPrivateClasses = () => {
             No private classes in the next 7 days.
           </p>
         ) : (
-          <div className="grid grid-cols-7 gap-2 overflow-x-auto">
+          // Scrolls sideways on a phone instead of crushing seven columns
+          // into 390px, where names were cut to three letters.
+          <div className="overflow-x-auto -mx-1 px-1 pb-1">
+          <div className="grid grid-cols-7 gap-2 min-w-[790px]">
             {days.map(date => {
               const rows = byDay.get(date) ?? [];
               const isToday = date === todayKey;
@@ -140,6 +143,7 @@ const UpcomingPrivateClasses = () => {
                 </div>
               );
             })}
+          </div>
           </div>
         )}
       </CardContent>
