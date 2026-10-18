@@ -180,7 +180,10 @@ export function useUpsertClass() {
       }
       const { error } = await supabase
         .from("teacher_student_classes")
-        .insert({ ...input, timezone: "Asia/Kuala_Lumpur" });
+        // The page states every class time is the teacher's own clock
+        // (ADMIN_TIMEZONE, Bangkok). Labelling new rows Kuala_Lumpur put each
+        // new class an hour off; all 10 existing rows are Asia/Bangkok.
+        .insert({ ...input, timezone: TIMEZONE });
       if (error) throw error;
     },
     onSuccess: () => invalidateStudentsAndAvailability(qc),
