@@ -915,7 +915,11 @@ const StudentDashboard = () => {
                 );
               }
             }
-            pendingEnrollments.forEach(pe => {
+            // A roster student's money lives on her bundle, and StudentSelfService
+            // already shows what she owes with its own receipt upload. An old
+            // enrollments row (e.g. from the site's enrol flow) must not add a
+            // second, conflicting payment notice that pays into the wrong record.
+            if (!isPrivate) pendingEnrollments.forEach(pe => {
               if (isPaymentDue(pe)) {
                 const amount = formatMoney(pe.amount, pe.currency);
                 const plan = planLabel(pe.plan_type);
