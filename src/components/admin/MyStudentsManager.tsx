@@ -974,10 +974,19 @@ const MyStudentsManager = () => {
   }, [students, studentState]);
 
   const visibleStudents = useMemo(() => {
-    if (kind === "group") return [];
     const q = query.trim().toLowerCase();
     return students
       .filter(st => !q || st.full_name.toLowerCase().includes(q) || (st.country ?? "").toLowerCase().includes(q))
+      .filter(st => {
+        // "Group" here means taught WITH someone else (shares a session with
+        // another private student, per classmatesByStudent) — a private
+        // billing relationship, but not a solo 1:1. "Private" is everyone
+        // else: a true 1-on-1. "All" ignores this split entirely.
+        const grouped = (classmatesByStudent.get(st.id)?.length ?? 0) > 0;
+        if (kind === "group") return grouped;
+        if (kind === "private") return !grouped;
+        return true;
+      })
       .filter(st => {
         const x = studentState.get(st.id);
         if (!x || filter === "all") return true;
@@ -991,7 +1000,7 @@ const MyStudentsManager = () => {
         const nb = studentState.get(b.id)?.needsAction ? 0 : 1;
         return na - nb || a.full_name.localeCompare(b.full_name);
       });
-  }, [students, studentState, query, filter, kind]);
+  }, [students, studentState, query, filter, kind, classmatesByStudent]);
 
   // Group students aren't touched by the private filter chips (unpaid/low/
   // confirm are bundle concepts group students don't have) — only the kind
@@ -1694,6 +1703,12 @@ const MyStudentsManager = () => {
         )}
 
         {visibleStudents.length > 0 && (
+        <div className="space-y-2">
+        {kind === "group" && (
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            <Users className="h-4 w-4" /> Taught together (private billing)
+          </p>
+        )}
         <div className="grid gap-3 xl:grid-cols-2 items-start">
         {visibleStudents.map(student => {
           const studentBundles = allBundles?.get(student.id) ?? [];
@@ -1877,6 +1892,7 @@ const MyStudentsManager = () => {
           );
         })}
         </div>
+        </div>
         )}
 
         {isGroupLoading && kind !== "private" && (
@@ -1887,9 +1903,9 @@ const MyStudentsManager = () => {
 
         {visibleGroupStudents.length > 0 && (
           <div className="space-y-2">
-            {kind === "all" && students.length > 0 && (
+            {((kind === "all" && students.length > 0) || (kind === "group" && visibleStudents.length > 0)) && (
               <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground pt-1">
-                <Users className="h-4 w-4" /> Group students
+                <Users className="h-4 w-4" /> Group students (pkg enrollment)
               </p>
             )}
             <div className="grid gap-3 xl:grid-cols-2 items-start">
