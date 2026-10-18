@@ -203,11 +203,17 @@ const BlogManager = () => {
   const [translating, setTranslating] = useState<string | null>(null);
 
   const liveScore = calculateSeoScore(editing, keywordsInput);
+  const [loadingEdit, setLoadingEdit] = useState<string | null>(null);
 
+  // List view never needs the full article body (6-7 KB each, x223 posts):
+  // fetching it on every admin page load was the single largest contributor
+  // to Supabase egress overage. Content loads on demand in openEdit instead.
   const fetchPosts = async () => {
     const { data } = await supabase
       .from("blog_posts")
-      .select("*")
+      .select(
+        "id,title,slug,description,keywords,article_type,hero_image,hero_alt,hero_caption,hero_image_2,hero_alt_2,hero_caption_2,cta_text,cta_url,author,lang,published,published_at,created_at,updated_at,seo_score"
+      )
       .order("created_at", { ascending: false });
     setPosts((data as BlogPost[]) || []);
     setLoading(false);
@@ -224,9 +230,20 @@ const BlogManager = () => {
     setDialogOpen(true);
   };
 
-  const openEdit = (post: BlogPost) => {
-    setEditing({ ...post });
-    setKeywordsInput((post.keywords || []).join(", "));
+  const openEdit = async (post: BlogPost) => {
+    setLoadingEdit(post.id);
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .select("*")
+      .eq("id", post.id)
+      .single();
+    setLoadingEdit(null);
+    if (error || !data) {
+      toast({ title: "Couldn't load post content", description: error?.message, variant: "destructive" });
+      return;
+    }
+    setEditing({ ...(data as BlogPost) });
+    setKeywordsInput(((data as BlogPost).keywords || []).join(", "));
     setDialogOpen(true);
   };
 
@@ -493,8 +510,8 @@ const BlogManager = () => {
                     <Button variant="ghost" size="icon" onClick={() => togglePublish(post)} title={post.published ? "Unpublish" : "Publish"}>
                       {post.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(post)}>
-                      <Pencil className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(post)} disabled={loadingEdit === post.id}>
+                      <Pencil className={`h-4 w-4 ${loadingEdit === post.id ? "animate-pulse" : ""}`} />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
