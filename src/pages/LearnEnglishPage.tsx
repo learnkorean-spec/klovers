@@ -39,7 +39,45 @@ const LearnEnglishPage = () => {
       en: "https://kloversegy.com/learn-english",
       ar: "https://kloversegy.com/ar/learn-english",
     },
+    // Own hero image for link previews (19 Oct 2026, SEO/GEO pass) — not the
+    // site-wide Seoul skyline default.
+    ogImage: "https://images.unsplash.com/photo-1758525225676-329ddcedf78f?fm=jpg&q=80&w=1200&auto=format&fit=crop",
   });
+
+  const faq = [
+    {
+      q: tr(
+        "Can these lessons help me pass IELTS, TOEFL, or a job interview?",
+        "هل يمكن أن تساعدني هذه الدروس في اجتياز IELTS أو TOEFL أو مقابلة عمل؟",
+      ),
+      a: tr(
+        "Yes — lessons are built around your actual goal, whether that's an exam section, interview questions, or everyday work English, not a fixed textbook order.",
+        "نعم — تُبنى الدروس حول هدفك الفعلي، سواء كان قسمًا في اختبار، أو أسئلة مقابلة، أو إنجليزية العمل اليومية، لا ترتيب كتاب ثابت.",
+      ),
+    },
+    {
+      q: tr(
+        "I already study Korean at Klovers — can I add English lessons too?",
+        "أدرس الكورية بالفعل في كلوفرز — هل يمكنني إضافة دروس الإنجليزية أيضًا؟",
+      ),
+      a: tr(
+        "Yes — this is the same teacher's personal 1:1 lessons, separate from your Korean classes. Message us and we'll fit a schedule around both.",
+        "نعم — هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية. راسلنا ونرتّب جدولًا يناسب الاثنين.",
+      ),
+    },
+  ];
+
+  // BreadcrumbList, Course and FAQPage JSON-LD for this route are baked into
+  // the prerendered static HTML by scripts/prerender-meta.mjs (breadcrumb /
+  // pageLd / faq fields on the /learn-english MARKETING_ROUTES entry, with
+  // an Arabic-translated twin for /ar/learn-english) rather than injected
+  // here client-side. src/lib/jsonLdDedupe.ts removes any id-less (static)
+  // block once the client adds one declaring the same @type, so a client
+  // useEffect here would silently delete the version that non-JS AI
+  // crawlers (GPTBot, ClaudeBot, PerplexityBot) actually see — exactly the
+  // audience this page's GEO pass (19 Oct 2026) is for. Keep this page's
+  // structured data static-only; the `faq` array above only drives the
+  // visible "Common questions" section.
 
   const audience = [
     tr("Need English for work, interviews, or a new job", "تحتاج الإنجليزية للعمل، أو المقابلات، أو وظيفة جديدة"),
@@ -228,6 +266,23 @@ const LearnEnglishPage = () => {
                 ar: "مرحبًا، أرغب في حجز حصة إنجليزية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني — هل يمكننا الاتفاق على موعد آخر؟",
               }}
             />
+          </div>
+        </section>
+
+        {/* Common questions — visible text backing the FAQPage schema above */}
+        <section className="py-16 border-b">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-3xl font-bold mb-8 text-foreground">
+              {tr("Common questions", "أسئلة شائعة")}
+            </h2>
+            <div className="space-y-6">
+              {faq.map(({ q, a }) => (
+                <div key={q}>
+                  <h3 className="font-bold text-lg text-foreground">{q}</h3>
+                  <p className="mt-1 text-foreground/70 leading-relaxed">{a}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

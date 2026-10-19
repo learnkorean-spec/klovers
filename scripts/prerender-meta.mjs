@@ -893,6 +893,22 @@ const MARKETING_ROUTES = [
     articleLd: false,
     published: "2026-10-19",
     modified: "2026-10-19",
+    // Own hero image for link previews, not the site-wide Seoul skyline
+    // default — matches the ogImage the page itself sets at runtime in
+    // LearnHungarianPage.tsx (19 Oct 2026 SEO/GEO pass), so a scraper that
+    // runs JavaScript and one that does not see the same card, per the
+    // homepage's own note above about that exact mismatch.
+    image: "https://images.unsplash.com/photo-1728463460723-61de554e49ba?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    imageAlt: "Budapest at dusk",
+    breadcrumb: [{ name: "Home", item: BASE_URL }],
+    faq: MARKETING_FAQ["/learn-hungarian"],
+    pageLd: {
+      "@type": "Course",
+      provider: { "@type": "Person", name: "Reham Elshrkawy", url: `${BASE_URL}/about` },
+      inLanguage: ["hu", "ar", "en"],
+      courseMode: "online",
+      teaches: "Hungarian, for a move, a Balassi Institute or Stipendium Hungaricum scholarship, or a Hungarian family",
+    },
   },
   {
     path: "/learn-english",
@@ -903,6 +919,20 @@ const MARKETING_ROUTES = [
     articleLd: false,
     published: "2026-10-19",
     modified: "2026-10-19",
+    // Own hero image for link previews (19 Oct 2026 SEO/GEO pass) — matches
+    // the ogImage LearnEnglishPage.tsx sets at runtime; see the note on the
+    // Hungarian route above for why the two must agree.
+    image: "https://images.unsplash.com/photo-1758525225676-329ddcedf78f?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    imageAlt: "Open notebook with English study notes",
+    breadcrumb: [{ name: "Home", item: BASE_URL }],
+    faq: MARKETING_FAQ["/learn-english"],
+    pageLd: {
+      "@type": "Course",
+      provider: { "@type": "Person", name: "Reham Elshrkawy", url: `${BASE_URL}/about` },
+      inLanguage: ["en", "ar"],
+      courseMode: "online",
+      teaches: "English, for work, interviews, travel, or IELTS/TOEFL exam preparation",
+    },
   },
   {
     path: "/learn-arabic",
@@ -913,6 +943,20 @@ const MARKETING_ROUTES = [
     articleLd: false,
     published: "2026-10-19",
     modified: "2026-10-19",
+    // Own hero image for link previews (19 Oct 2026 SEO/GEO pass) — matches
+    // the ogImage LearnArabicPage.tsx sets at runtime; see the note on the
+    // Hungarian route above for why the two must agree.
+    image: "https://images.unsplash.com/photo-1762249236589-b97477bb4cf2?fm=jpg&q=80&w=1200&auto=format&fit=crop",
+    imageAlt: "Street scene in Cairo, Egypt",
+    breadcrumb: [{ name: "Home", item: BASE_URL }],
+    faq: MARKETING_FAQ["/learn-arabic"],
+    pageLd: {
+      "@type": "Course",
+      provider: { "@type": "Person", name: "Reham Elshrkawy", url: `${BASE_URL}/about` },
+      inLanguage: ["ar", "en"],
+      courseMode: "online",
+      teaches: "Egyptian Arabic, spoken conversation for living in, working with, or visiting Egypt",
+    },
   },
   // Added in A1 — live routes that were missing from the prerender list.
   {
@@ -1196,7 +1240,8 @@ for (const page of ARABIC_PAGES) {
     description: page.description,
     body,
     alternates: { en: page.path, ar: `/ar${page.path}` },
-    ...(page.path === "/faq" ? { faq: ARABIC_FAQ } : {}),
+    ...(page.path === "/faq" ? { faq: ARABIC_FAQ } : page.faq ? { faq: page.faq } : {}),
+    ...(en.breadcrumb ? { breadcrumb: [{ name: "الرئيسية", item: `${BASE_URL}/ar` }] } : {}),
     ...(en.pageLd ? { pageLd: { ...en.pageLd, inLanguage: "ar" } } : {}),
     // The three landing pages are Articles in English; their twins are too
     // (5 Oct 2026: they shipped with no JSON-LD at all).

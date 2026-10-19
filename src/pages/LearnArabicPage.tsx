@@ -40,7 +40,45 @@ const LearnArabicPage = () => {
       en: "https://kloversegy.com/learn-arabic",
       ar: "https://kloversegy.com/ar/learn-arabic",
     },
+    // Own hero image for link previews (19 Oct 2026, SEO/GEO pass) — not the
+    // site-wide Seoul skyline default.
+    ogImage: "https://images.unsplash.com/photo-1762249236589-b97477bb4cf2?fm=jpg&q=80&w=1200&auto=format&fit=crop",
   });
+
+  const faq = [
+    {
+      q: tr(
+        "I'm already learning Korean at Klovers — can I also book these Arabic lessons?",
+        "أدرس الكورية بالفعل في كلوفرز — هل يمكنني حجز هذه الدروس العربية أيضًا؟",
+      ),
+      a: tr(
+        "Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers who end up living in, working with, or visiting Egypt.",
+        "نعم — هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية الجماعية. وهذا جمع شائع للناطقين بالكورية الذين ينتهي بهم الأمر بالعيش في مصر أو العمل معها أو زيارتها.",
+      ),
+    },
+    {
+      q: tr(
+        "Do I need to know any Arabic already to start?",
+        "هل أحتاج إلى معرفة سابقة بالعربية للبدء؟",
+      ),
+      a: tr(
+        "No — lessons start from zero spoken Arabic, even if you've studied Classical Arabic before. Everything is explained in English first.",
+        "لا — تبدأ الدروس من الصفر في العربية المنطوقة، حتى لو درست الفصحى من قبل. يُشرح كل شيء بالإنجليزية أولًا.",
+      ),
+    },
+  ];
+
+  // BreadcrumbList, Course and FAQPage JSON-LD for this route are baked into
+  // the prerendered static HTML by scripts/prerender-meta.mjs (breadcrumb /
+  // pageLd / faq fields on the /learn-arabic MARKETING_ROUTES entry, with an
+  // Arabic-translated twin for /ar/learn-arabic) rather than injected here
+  // client-side. src/lib/jsonLdDedupe.ts removes any id-less (static) block
+  // once the client adds one declaring the same @type, so a client useEffect
+  // here would silently delete the version that non-JS AI crawlers (GPTBot,
+  // ClaudeBot, PerplexityBot) actually see — exactly the audience this
+  // page's GEO pass (19 Oct 2026) is for. Keep this page's structured data
+  // static-only; the `faq` array above only drives the visible "Common
+  // questions" section.
 
   const audience = [
     tr("Moving to, or already living in, Egypt for work or family", "الانتقال إلى مصر أو الإقامة فيها للعمل أو الأسرة"),
@@ -229,6 +267,23 @@ const LearnArabicPage = () => {
                 ar: "مرحبًا، أرغب في حجز حصة عربية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني — هل يمكننا الاتفاق على موعد آخر؟",
               }}
             />
+          </div>
+        </section>
+
+        {/* Common questions — visible text backing the FAQPage schema above */}
+        <section className="py-16 border-b">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-3xl font-bold mb-8 text-foreground">
+              {tr("Common questions", "أسئلة شائعة")}
+            </h2>
+            <div className="space-y-6">
+              {faq.map(({ q, a }) => (
+                <div key={q}>
+                  <h3 className="font-bold text-lg text-foreground">{q}</h3>
+                  <p className="mt-1 text-foreground/70 leading-relaxed">{a}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

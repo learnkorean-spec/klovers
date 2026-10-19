@@ -49,7 +49,46 @@ const LearnHungarianPage = () => {
       en: "https://kloversegy.com/learn-hungarian",
       ar: "https://kloversegy.com/ar/learn-hungarian",
     },
+    // Its own hero image for link previews, not the site-wide Seoul skyline
+    // default (19 Oct 2026, SEO/GEO pass) — a Korean-skyline preview card for
+    // a Hungarian-lessons link reads as a mismatch or a broken share.
+    ogImage: "https://images.unsplash.com/photo-1728463460723-61de554e49ba?fm=jpg&q=80&w=1200&auto=format&fit=crop",
   });
+
+  const faq = [
+    {
+      q: tr(
+        "Can these lessons help with a Balassi Institute or Stipendium Hungaricum scholarship application?",
+        "هل يمكن أن تساعد هذه الدروس في التقدّم لمنحة من معهد بالاسي أو منحة Stipendium Hungaricum؟",
+      ),
+      a: tr(
+        "Yes — I studied Hungarian myself on a Balassi Institute scholarship, so lessons can focus on the language level and paperwork these applications actually ask for, alongside general conversation.",
+        "نعم — درست المجرية بنفسي بمنحة من معهد بالاسي، فيمكن أن تركّز الدروس على مستوى اللغة والأوراق التي تطلبها هذه المنح فعليًا، إلى جانب المحادثة العامة.",
+      ),
+    },
+    {
+      q: tr(
+        "Do I need to know any Hungarian already to start?",
+        "هل أحتاج إلى معرفة سابقة بالمجرية للبدء؟",
+      ),
+      a: tr(
+        "No — lessons start from zero. Everything is explained in Arabic or English first, so you're never lost in a language you don't speak yet.",
+        "لا — تبدأ الدروس من الصفر. يُشرح كل شيء بالعربية أو الإنجليزية أولًا، فلن تشعر بالضياع في لغة لا تتحدثها بعد.",
+      ),
+    },
+  ];
+
+  // BreadcrumbList, Course and FAQPage JSON-LD for this route are baked into
+  // the prerendered static HTML by scripts/prerender-meta.mjs (breadcrumb /
+  // pageLd / faq fields on the /learn-hungarian MARKETING_ROUTES entry, with
+  // an Arabic-translated twin for /ar/learn-hungarian) rather than injected
+  // here client-side. src/lib/jsonLdDedupe.ts removes any id-less (static)
+  // block once the client adds one declaring the same @type, so a client
+  // useEffect here would silently delete the version that non-JS AI
+  // crawlers (GPTBot, ClaudeBot, PerplexityBot) actually see — exactly the
+  // audience this page's GEO pass (19 Oct 2026) is for. Keep this page's
+  // structured data static-only; the `faq` array below only drives the
+  // visible "Common questions" section.
 
   const audience = [
     tr("Moving to Hungary for work, study or family", "الانتقال إلى المجر للعمل أو الدراسة أو الأسرة"),
@@ -238,6 +277,23 @@ const LearnHungarianPage = () => {
                 ar: "مرحبًا، أرغب في حجز حصة مجرية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني — هل يمكننا الاتفاق على موعد آخر؟",
               }}
             />
+          </div>
+        </section>
+
+        {/* Common questions — visible text backing the FAQPage schema above */}
+        <section className="py-16 border-b">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-3xl font-bold mb-8 text-foreground">
+              {tr("Common questions", "أسئلة شائعة")}
+            </h2>
+            <div className="space-y-6">
+              {faq.map(({ q, a }) => (
+                <div key={q}>
+                  <h3 className="font-bold text-lg text-foreground">{q}</h3>
+                  <p className="mt-1 text-foreground/70 leading-relaxed">{a}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

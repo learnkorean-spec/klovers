@@ -34,6 +34,9 @@ describe("marketing-bodies", () => {
       "/learn-korean-arabic-speakers": bodies.ARABIC_SPEAKERS_BODY_HTML,
       "/topik-exam-preparation": bodies.TOPIK_BODY_HTML,
       "/learn-korean-kdramas": bodies.KDRAMAS_BODY_HTML,
+      "/learn-hungarian": bodies.LEARN_HUNGARIAN_BODY_HTML,
+      "/learn-english": bodies.LEARN_ENGLISH_BODY_HTML,
+      "/learn-arabic": bodies.LEARN_ARABIC_BODY_HTML,
     };
     for (const [route, items] of Object.entries(bodies.MARKETING_FAQ)) {
       const visible = decode(byRoute[route]);

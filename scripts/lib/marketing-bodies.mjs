@@ -325,6 +325,11 @@ export const LEARN_HUNGARIAN_BODY_HTML = `<div id="learn-hungarian-prerendered" 
       <h2>Not a textbook — a guide who's done this</h2>
       <p>Between Cairo and Budapest I spent years learning Hungarian the hard way, long before I taught it to anyone. I also worked for years doing Korean-Arabic interpreting and international operations, so I know what it means when a deadline or a document genuinely has to be right.</p>
       <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — Hungarian lessons follow the same one-on-one, real-conversation approach.</p>
+      <h2>Common questions</h2>
+      <h3>Can these lessons help with a Balassi Institute or Stipendium Hungaricum scholarship application?</h3>
+      <p>Yes — I studied Hungarian myself on a Balassi Institute scholarship, so lessons can focus on the language level and paperwork these applications actually ask for, alongside general conversation.</p>
+      <h3>Do I need to know any Hungarian already to start?</h3>
+      <p>No — lessons start from zero. Everything is explained in Arabic or English first, so you're never lost in a language you don't speak yet.</p>
       <p><a href="/contact?subject=Hungarian+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
     </div>`;
 
@@ -347,6 +352,11 @@ export const LEARN_ENGLISH_BODY_HTML = `<div id="learn-english-prerendered" lang
       <h2>Not a textbook — a guide who's done this</h2>
       <p>Years of Korean-Arabic interpreting and international operations meant English was never optional for me — it was the language a deadline or a document had to be right in. That's the same standard I bring to a lesson.</p>
       <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — English lessons follow the same one-on-one, real-conversation approach.</p>
+      <h2>Common questions</h2>
+      <h3>Can these lessons help me pass IELTS, TOEFL, or a job interview?</h3>
+      <p>Yes — lessons are built around your actual goal, whether that's an exam section, interview questions, or everyday work English, not a fixed textbook order.</p>
+      <h3>I already study Korean at Klovers — can I add English lessons too?</h3>
+      <p>Yes — this is the same teacher's personal 1:1 lessons, separate from your Korean classes. Message us and we'll fit a schedule around both.</p>
       <p><a href="/contact?subject=English+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
     </div>`;
 
@@ -369,6 +379,11 @@ export const LEARN_ARABIC_BODY_HTML = `<div id="learn-arabic-prerendered" lang="
       <h2>Not a textbook — a guide who's done this</h2>
       <p>Years of Korean-Arabic interpreting and international operations taught me exactly where a translation breaks down between languages — the same gap that makes textbook Arabic feel nothing like the street outside.</p>
       <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — Arabic lessons follow the same one-on-one, real-conversation approach.</p>
+      <h2>Common questions</h2>
+      <h3>I'm already learning Korean at Klovers — can I also book these Arabic lessons?</h3>
+      <p>Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers who end up living in, working with, or visiting Egypt.</p>
+      <h3>Do I need to know any Arabic already to start?</h3>
+      <p>No — lessons start from zero spoken Arabic, even if you've studied Classical Arabic before. Everything is explained in English first.</p>
       <p><a href="/contact?subject=Arabic+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
     </div>`;
 
@@ -602,6 +617,36 @@ export const MARKETING_FAQ = {
     {
         "q": "What if I forgot my previous level?",
         "a": "Take our free placement test to find your current level. It's quick and completely optional."
+    }
+],
+  "/learn-hungarian": [
+    {
+        "q": "Can these lessons help with a Balassi Institute or Stipendium Hungaricum scholarship application?",
+        "a": "Yes — I studied Hungarian myself on a Balassi Institute scholarship, so lessons can focus on the language level and paperwork these applications actually ask for, alongside general conversation."
+    },
+    {
+        "q": "Do I need to know any Hungarian already to start?",
+        "a": "No — lessons start from zero. Everything is explained in Arabic or English first, so you're never lost in a language you don't speak yet."
+    }
+],
+  "/learn-english": [
+    {
+        "q": "Can these lessons help me pass IELTS, TOEFL, or a job interview?",
+        "a": "Yes — lessons are built around your actual goal, whether that's an exam section, interview questions, or everyday work English, not a fixed textbook order."
+    },
+    {
+        "q": "I already study Korean at Klovers — can I add English lessons too?",
+        "a": "Yes — this is the same teacher's personal 1:1 lessons, separate from your Korean classes. Message us and we'll fit a schedule around both."
+    }
+],
+  "/learn-arabic": [
+    {
+        "q": "I'm already learning Korean at Klovers — can I also book these Arabic lessons?",
+        "a": "Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers who end up living in, working with, or visiting Egypt."
+    },
+    {
+        "q": "Do I need to know any Arabic already to start?",
+        "a": "No — lessons start from zero spoken Arabic, even if you've studied Classical Arabic before. Everything is explained in English first."
     }
 ],
 };
