@@ -40,6 +40,7 @@ import {
   HANGUL_STARTER_BODY_HTML,
   INTERVIEW_BODY_HTML,
   KDRAMAS_BODY_HTML,
+  LEARN_HUNGARIAN_BODY_HTML,
   MARKETING_FAQ,
   PLACEMENT_TEST_BODY_HTML,
   SCHOLARSHIPS_BODY_HTML,
@@ -880,6 +881,16 @@ const MARKETING_ROUTES = [
     articleLd: true,
     published: "2026-04-08",
     modified: "2026-09-25",
+  },
+  {
+    path: "/learn-hungarian",
+    title: "Learn Hungarian in Arabic or English — with Reham Elshrkawy",
+    description:
+      "One-on-one online Hungarian lessons, explained in Arabic or English, with a teacher who lived in Budapest and knows exactly what a beginner needs — for a move, a Hungarian scholarship, or a Hungarian family.",
+    body: LEARN_HUNGARIAN_BODY_HTML,
+    articleLd: false,
+    published: "2026-10-19",
+    modified: "2026-10-19",
   },
   // Added in A1 — live routes that were missing from the prerender list.
   {

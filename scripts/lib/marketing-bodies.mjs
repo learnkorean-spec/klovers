@@ -306,6 +306,28 @@ export const KDRAMAS_BODY_HTML = `<div id="learn-korean-kdramas-prerendered" lan
       <p><a href="/free-trial">Book a free class</a> · <a href="/placement-test">Find your level</a> · <a href="/blog/best-kdrama-learn-korean-difficulty-ranked">Drama picks by difficulty</a> · <a href="/courses">Courses</a> · <a href="/pricing">Pricing</a></p>
     </div>`;
 
+export const LEARN_HUNGARIAN_BODY_HTML = `<div id="learn-hungarian-prerendered" lang="en" dir="ltr">
+      <h1>Learn Hungarian, explained in Arabic or English</h1>
+      <p><strong>Hungarian lessons · Cairo to Budapest.</strong> I lived in Budapest, studied Hungarian at Ain Shams University on a Balassi Institute scholarship, and have been teaching it ever since. I know what it's like to hold a form in Hungarian and not understand it — I'd rather be the person who explains the next one.</p>
+      <h2>Who these lessons are for</h2>
+      <ul>
+        <li>Moving to Hungary for work, study or family</li>
+        <li>Applying for a Balassi Institute or Stipendium Hungaricum scholarship</li>
+        <li>Married into, or dating into, a Hungarian family</li>
+        <li>Just curious about a language almost nobody around you speaks</li>
+      </ul>
+      <h2>How lessons work</h2>
+      <ol>
+        <li><strong>A free 20-minute call</strong> — We talk about why you're learning Hungarian and where you're starting from — zero is completely fine.</li>
+        <li><strong>Lessons explained in Arabic or English</strong> — Hungarian grammar is unlike Arabic or English, so every rule is explained in a language you already think in — not in Hungarian itself.</li>
+        <li><strong>Built around what you actually need</strong> — Scholarship paperwork, everyday survival phrases, or conversation with family — the lessons follow your actual situation, not a fixed textbook order.</li>
+      </ol>
+      <h2>Not a textbook — a guide who's done this</h2>
+      <p>Between Cairo and Budapest I spent years learning Hungarian the hard way, long before I taught it to anyone. I also worked for years doing Korean-Arabic interpreting and international operations, so I know what it means when a deadline or a document genuinely has to be right.</p>
+      <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — Hungarian lessons follow the same one-on-one, real-conversation approach.</p>
+      <p><a href="/contact?subject=Hungarian+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
+    </div>`;
+
 export const INTERVIEW_BODY_HTML = `<div id="interview-training-prerendered" lang="en" dir="ltr">
       <h1>Ace Your Korean Job Interview</h1>
       <p><strong>AI-Powered · 면접 준비.</strong> Get personalized Korean interview questions with model answers, pronunciation guides, and text-to-speech — all tailored to your skills. Start free with 2 questions.</p>
