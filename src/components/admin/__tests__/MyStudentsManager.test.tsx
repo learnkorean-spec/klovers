@@ -105,6 +105,11 @@ vi.mock("@/hooks/admin/useMyStudents", () => ({
   useDeletedBundles: () => ({ data: deletedBundles }),
   useConfirmSessions: () => ({ mutateAsync: confirmMutate, isPending: false }),
   useUnconfirmSession: () => ({ mutateAsync: unconfirmMutate, isPending: false }),
+  // Group (pkg enrollment) students are a separate read-only data model from
+  // the private students this file otherwise exercises -- see useGroupStudents'
+  // own comment. No test here sets up pkg_groups fixtures, so an empty list is
+  // the correct default, not a stand-in for real coverage.
+  useGroupStudents: () => ({ data: [], isLoading: false }),
 }));
 
 // Real module touches the Supabase client at import time (createClient(...)),
