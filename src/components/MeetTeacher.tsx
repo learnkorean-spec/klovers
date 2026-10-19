@@ -185,6 +185,26 @@ const MeetTeacher = () => {
                 </Link>
               </Button>
             </div>
+
+            {/* Her personal 1:1 lessons (Hungarian, English, Arabic — 19 Oct
+                2026). A quiet text line, not another button, so it never
+                competes with the Korean group-class CTA above it — these are
+                a separate, lighter offering for a different need. */}
+            <p className="text-sm text-muted-foreground -mt-4">
+              {isAr ? "تدرّس ريهام أيضًا دروسًا فردية في " : "Reham also teaches 1:1 lessons in "}
+              <Link to="/learn-hungarian" className="font-medium text-foreground underline underline-offset-2 hover:text-primary">
+                {isAr ? "المجرية" : "Hungarian"}
+              </Link>
+              {isAr ? "، و" : ", "}
+              <Link to="/learn-english" className="font-medium text-foreground underline underline-offset-2 hover:text-primary">
+                {isAr ? "الإنجليزية" : "English"}
+              </Link>
+              {isAr ? "، و" : " and "}
+              <Link to="/learn-arabic" className="font-medium text-foreground underline underline-offset-2 hover:text-primary">
+                {isAr ? "العربية" : "Arabic"}
+              </Link>
+              .
+            </p>
           </div>
 
         </div>
