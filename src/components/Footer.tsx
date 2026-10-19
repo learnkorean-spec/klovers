@@ -18,6 +18,13 @@ const Footer = () => {
     ? [{ to: "/hangul-starter", label: "ورقة هانغول المجانية" }, { to: "/textbook", label: "الكتاب المدرسي" }, { to: "/games", label: "الألعاب" }, { to: "/review", label: "مراجعة المفردات" }, { to: "/placement-test", label: "اختبار تحديد المستوى" }, { to: "/shop", label: "متجر كلوفرز" }]
     : [{ to: "/hangul-starter", label: "Free Hangul Sheet" }, { to: "/textbook", label: "Textbook" }, { to: "/games", label: "Games" }, { to: "/review", label: "Vocabulary Review" }, { to: "/placement-test", label: "Placement Test" }, { to: "/shop", label: "Klovers Supply" }];
 
+  // Reham's personal 1:1 lessons (19 Oct 2026) — a separate, lighter-weight
+  // offering from the Korean group courses above, so these get their own
+  // footer column rather than being folded into "Learn".
+  const personalLessonLinks = isAr
+    ? [{ to: "/learn-hungarian", label: "المجرية (دروس فردية)" }, { to: "/learn-english", label: "الإنجليزية (دروس فردية)" }, { to: "/learn-arabic", label: "العربية (دروس فردية)" }]
+    : [{ to: "/learn-hungarian", label: "Hungarian (1:1)" }, { to: "/learn-english", label: "English (1:1)" }, { to: "/learn-arabic", label: "Arabic (1:1)" }];
+
   const companyLinks = isAr
     ? [{ to: "/courses", label: "الدورات" }, { to: "/pricing", label: "الأسعار" }, { to: "/about", label: "من نحن" }, { to: "/blog", label: "المدونة" }, { to: "/contact", label: "تواصل معنا" }, { to: "/faq", label: "الأسئلة الشائعة" }]
     : [{ to: "/courses", label: "Courses" }, { to: "/pricing", label: "Pricing" }, { to: "/about", label: "About" }, { to: "/blog", label: "Blog" }, { to: "/contact", label: "Contact" }, { to: "/faq", label: "FAQ" }];
@@ -39,7 +46,7 @@ const Footer = () => {
     <footer className="bg-foreground text-background">
       {/* Main footer */}
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 mb-10">
 
           {/* Brand */}
           <div className="sm:col-span-2 md:col-span-1">
@@ -64,6 +71,20 @@ const Footer = () => {
             <h3 className="font-semibold mb-4 text-background">{isAr ? "تعلم" : "Learn"}</h3>
             <ul className="space-y-1">
               {learnLinks.map(({ to, label }) => (
+                <li key={to}>
+                  <Link to={to} className="inline-block py-1 text-background/65 hover:text-primary text-sm transition-colors">
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Personal lessons (Hungarian, English, Arabic — 19 Oct 2026) */}
+          <div>
+            <h3 className="font-semibold mb-4 text-background">{isAr ? "دروس فردية" : "Personal Lessons"}</h3>
+            <ul className="space-y-1">
+              {personalLessonLinks.map(({ to, label }) => (
                 <li key={to}>
                   <Link to={to} className="inline-block py-1 text-background/65 hover:text-primary text-sm transition-colors">
                     {label}

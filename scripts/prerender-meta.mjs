@@ -42,6 +42,7 @@ import {
   KDRAMAS_BODY_HTML,
   LEARN_HUNGARIAN_BODY_HTML,
   LEARN_ENGLISH_BODY_HTML,
+  LEARN_ARABIC_BODY_HTML,
   MARKETING_FAQ,
   PLACEMENT_TEST_BODY_HTML,
   SCHOLARSHIPS_BODY_HTML,
@@ -899,6 +900,16 @@ const MARKETING_ROUTES = [
     description:
       "One-on-one online English lessons, explained in Arabic, focused on real conversation and speaking confidence — for work, interviews, travel, or exam preparation.",
     body: LEARN_ENGLISH_BODY_HTML,
+    articleLd: false,
+    published: "2026-10-19",
+    modified: "2026-10-19",
+  },
+  {
+    path: "/learn-arabic",
+    title: "Learn Egyptian Arabic, explained in English — with Reham Elshrkawy",
+    description:
+      "One-on-one online Egyptian Arabic lessons, explained in English, for people living in or visiting Egypt, or anyone who wants real spoken Arabic rather than textbook Classical Arabic alone.",
+    body: LEARN_ARABIC_BODY_HTML,
     articleLd: false,
     published: "2026-10-19",
     modified: "2026-10-19",

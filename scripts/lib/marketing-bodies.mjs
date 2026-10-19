@@ -350,6 +350,28 @@ export const LEARN_ENGLISH_BODY_HTML = `<div id="learn-english-prerendered" lang
       <p><a href="/contact?subject=English+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
     </div>`;
 
+export const LEARN_ARABIC_BODY_HTML = `<div id="learn-arabic-prerendered" lang="en" dir="ltr">
+      <h1>Learn Egyptian Arabic, explained in English</h1>
+      <p><strong>Arabic lessons · spoken Egyptian Arabic, not textbook only.</strong> I'm a native Egyptian Arabic speaker who's spent years explaining languages across cultures — Korean-Arabic interpreting, international operations, and teaching students in more than fifteen countries. I know exactly what gets lost between a textbook and an actual conversation.</p>
+      <h2>Who these lessons are for</h2>
+      <ul>
+        <li>Moving to, or already living in, Egypt for work or family</li>
+        <li>Visiting often and tired of not understanding the street around you</li>
+        <li>Studied Classical Arabic before but can't actually hold a conversation</li>
+        <li>Just curious about Egyptian Arabic after films, shows, or a trip</li>
+      </ul>
+      <h2>How lessons work</h2>
+      <ol>
+        <li><strong>A free 20-minute call</strong> — We talk about why you're learning Arabic and where you're starting from — zero is completely fine.</li>
+        <li><strong>Real spoken Egyptian Arabic, explained in English</strong> — Egyptian Arabic sounds nothing like a Classical-Arabic textbook, so every phrase is explained in English first, then practiced the way people actually speak it.</li>
+        <li><strong>Built around what you actually need</strong> — The market, a taxi, your neighbors, a work meeting — the lessons follow your actual situation, not a fixed textbook order.</li>
+      </ol>
+      <h2>Not a textbook — a guide who's done this</h2>
+      <p>Years of Korean-Arabic interpreting and international operations taught me exactly where a translation breaks down between languages — the same gap that makes textbook Arabic feel nothing like the street outside.</p>
+      <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — Arabic lessons follow the same one-on-one, real-conversation approach.</p>
+      <p><a href="/contact?subject=Arabic+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
+    </div>`;
+
 export const INTERVIEW_BODY_HTML = `<div id="interview-training-prerendered" lang="en" dir="ltr">
       <h1>Ace Your Korean Job Interview</h1>
       <p><strong>AI-Powered · 면접 준비.</strong> Get personalized Korean interview questions with model answers, pronunciation guides, and text-to-speech — all tailored to your skills. Start free with 2 questions.</p>

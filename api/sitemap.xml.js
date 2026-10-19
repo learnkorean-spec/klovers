@@ -54,11 +54,12 @@ const STATIC_PAGES = [
   { loc: "/topik-exam-preparation", priority: "0.9", changefreq: "monthly" },
   { loc: "/learn-korean-kdramas", priority: "0.8", changefreq: "monthly" },
   { loc: "/interview-training", priority: "0.8", changefreq: "monthly" },
-  // Hungarian and English lessons (19 Oct 2026) — both have an Arabic twin via
-  // arabic-pages.mjs, which is what the loop below (ARABIC_TWIN_PATHS)
-  // requires an entry here for.
+  // Hungarian, English and Arabic lessons (19 Oct 2026) — all three have an
+  // Arabic twin via arabic-pages.mjs, which is what the loop below
+  // (ARABIC_TWIN_PATHS) requires an entry here for.
   { loc: "/learn-hungarian", priority: "0.7", changefreq: "monthly" },
   { loc: "/learn-english", priority: "0.7", changefreq: "monthly" },
+  { loc: "/learn-arabic", priority: "0.7", changefreq: "monthly" },
   // Korean scholarships (4 Oct 2026). High intent for the Arabic market —
   // "منح كوريا" is a real search — and the only page on the site that names
   // providers and links every claim to the funding body itself. Its Arabic twin

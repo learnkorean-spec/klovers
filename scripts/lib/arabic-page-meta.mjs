@@ -36,6 +36,9 @@ export const ARABIC_PAGE_META = [
   // English lessons (19 Oct 2026). Same title and description as
   // LearnEnglishPage's Arabic useSEO.
   { path: "/learn-english", title: "تعلّم الإنجليزية بشرح بالعربية — مع ريهام الشرقاوي", description: "دروس إنجليزية فردية عبر الإنترنت، بشرح بالعربية، تركّز على المحادثة الحقيقية والثقة في الحديث — للعمل، أو المقابلات، أو السفر، أو التحضير للامتحانات." },
+  // Arabic lessons for non-native speakers (19 Oct 2026). Same title and
+  // description as LearnArabicPage's Arabic useSEO.
+  { path: "/learn-arabic", title: "تعلّم العربية المصرية بشرح بالإنجليزية — مع ريهام الشرقاوي", description: "دروس عربية مصرية فردية عبر الإنترنت، بشرح بالإنجليزية، للمقيمين في مصر أو زائريها أو المهتمين باللهجة المصرية الحقيقية للمحادثة، لا الفصحى الكتابية فقط." },
   // Klovers Supply (6 Oct 2026). Same title and description as ShopPage's
   // Arabic useSEO for the shop index, so the static head and the live page agree.
   { path: "/shop", title: "متجر كلوفرز — كتب ومستلزمات لتعلّم الكورية", description: "كتب ومستلزمات من كلوفرز تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب." },
