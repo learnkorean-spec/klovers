@@ -110,32 +110,35 @@ Deno.serve(async (req) => {
     if (cb) {
       const chatId: number | undefined = cb.message?.chat?.id;
       const messageId: number | undefined = cb.message?.message_id;
-      const match = typeof cb.data === "string" ? cb.data.match(/^att:(yes|no):([0-9a-fA-F-]{36})$/) : null;
+      // "att:" = confirming attendance of a lesson that already happened
+      // (telegram-attendance-ask). "resched:" = confirming/declining a
+      // newly proposed class time (Re messaging the group directly about a
+      // reschedule) -- same buttons, different semantics, see below.
+      const match = typeof cb.data === "string"
+        ? cb.data.match(/^(att|resched):(yes|no):([0-9a-fA-F-]{36})$/)
+        : null;
 
       if (!chatId || !messageId || !match) {
         await answerCallbackQuery(cfg.bot_token, cb.id);
         return new Response("ok");
       }
 
-      const attended = match[1] === "yes";
-      const sessionId = match[2];
+      const kind = match[1] as "att" | "resched";
+      const yes = match[2] === "yes";
+      const sessionId = match[3];
 
-      const { data: link } = await supabase
-        .from("telegram_links")
-        .select("teacher_student_id")
-        .eq("chat_id", chatId)
-        .maybeSingle();
-
-      if (!link?.teacher_student_id) {
-        await answerCallbackQuery(cfg.bot_token, cb.id, "اللينك ده مش شغال.");
-        return new Response("ok");
-      }
-
+      // Resolve by session id FIRST, not by chat_id: a shared group (e.g.
+      // two sisters, each her own teacher_students row) can have more than
+      // one telegram_links row pointing at the SAME chat_id, so looking the
+      // student up by chat_id alone is ambiguous -- `.maybeSingle()` would
+      // error on the second matching row and silently break every tap in
+      // that group. The session id baked into the button already says
+      // exactly which student this question is about; chat_id is only
+      // checked afterward, as a "this button belongs in this chat" guard.
       const { data: session } = await supabase
         .from("student_class_sessions")
-        .select("session_date")
+        .select("id, session_date, student_id, note")
         .eq("id", sessionId)
-        .eq("student_id", link.teacher_student_id)
         .maybeSingle();
 
       if (!session) {
@@ -143,34 +146,67 @@ Deno.serve(async (req) => {
         return new Response("ok");
       }
 
-      const { error: rpcError } = await supabase.rpc("telegram_confirm_private_session", {
-        p_session_id: sessionId,
-        p_teacher_student_id: link.teacher_student_id,
-        p_attended: attended,
-      });
-      if (rpcError) {
-        console.error("telegram_confirm_private_session failed", rpcError);
-        await answerCallbackQuery(cfg.bot_token, cb.id, "في مشكلة، جربي تاني بعدين.");
+      const { data: link } = await supabase
+        .from("telegram_links")
+        .select("teacher_student_id, chat_id")
+        .eq("teacher_student_id", session.student_id)
+        .maybeSingle();
+
+      if (!link || link.chat_id !== chatId) {
+        await answerCallbackQuery(cfg.bot_token, cb.id, "اللينك ده مش شغال.");
         return new Response("ok");
       }
 
       const { data: student } = await supabase.from("teacher_students")
-        .select("full_name").eq("id", link.teacher_student_id).maybeSingle();
+        .select("full_name").eq("id", session.student_id).maybeSingle();
       const name = student?.full_name ?? "";
+      const dateLabel = new Date(session.session_date + "T12:00:00Z")
+        .toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+
+      if (kind === "att") {
+        const { error: rpcError } = await supabase.rpc("telegram_confirm_private_session", {
+          p_session_id: sessionId,
+          p_teacher_student_id: session.student_id,
+          p_attended: yes,
+        });
+        if (rpcError) {
+          console.error("telegram_confirm_private_session failed", rpcError);
+          await answerCallbackQuery(cfg.bot_token, cb.id, "في مشكلة، جربي تاني بعدين.");
+          return new Response("ok");
+        }
+
+        await answerCallbackQuery(cfg.bot_token, cb.id);
+        await editMessageText(
+          cfg.bot_token, chatId, messageId,
+          yes ? `تمام، سجّلنا إن ${name || "الطالبة"} حضرت ✅ (هتتأكد من المدرّسة).`
+              : `تمام، سجّلنا إن ${name || "الطالبة"} معندهاش ❌`,
+        );
+        await sendMessage(cfg.bot_token, cfg.admin_chat_id,
+          yes
+            ? `📋 ${name || "طالبة"} قالت إنها حضرت حصة ${dateLabel} (عبر تيليجرام) — أكدي في اللوحة`
+            : `⚠️ ${name || "طالبة"} قالت إنها معندهاش حصة ${dateLabel} (عبر تيليجرام) — راجعيها`);
+        return new Response("ok");
+      }
+
+      // kind === "resched": the class hasn't happened yet, so this is a
+      // yes/no RSVP to a proposed time, not an attendance claim -- nothing
+      // to count via telegram_confirm_private_session. Just log the reply
+      // on the session and tell Re.
+      const noteLine = `[telegram ${new Date().toISOString()}] ${name || "الطالبة"} ${yes ? "وافقت على" : "معندهاش في"} ميعاد ${dateLabel}`;
+      await supabase.from("student_class_sessions")
+        .update({ note: session.note ? `${session.note}\n${noteLine}` : noteLine })
+        .eq("id", sessionId);
 
       await answerCallbackQuery(cfg.bot_token, cb.id);
       await editMessageText(
         cfg.bot_token, chatId, messageId,
-        attended ? `تمام، سجّلنا إن ${name || "الطالبة"} حضرت ✅ (هتتأكد من المدرّسة).`
-                 : `تمام، سجّلنا إن ${name || "الطالبة"} معندهاش ❌`,
+        yes ? `تمام، سجّلنا موافقة ${name || "الطالبة"} على حصة ${dateLabel} ✅`
+            : `تمام، سجّلنا إن ${name || "الطالبة"} معندهاش في ${dateLabel} ❌`,
       );
-      const dateLabel = new Date(session.session_date + "T12:00:00Z")
-        .toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
       await sendMessage(cfg.bot_token, cfg.admin_chat_id,
-        attended
-          ? `📋 ${student?.full_name ?? "طالبة"} قالت إنها حضرت حصة ${dateLabel} (عبر تيليجرام) — أكدي في اللوحة`
-          : `⚠️ ${student?.full_name ?? "طالبة"} قالت إنها معندهاش حصة ${dateLabel} (عبر تيليجرام) — راجعيها`);
-
+        yes
+          ? `✅ ${name || "طالبة"} أكدت حصة ${dateLabel} (عبر تيليجرام)`
+          : `⚠️ ${name || "طالبة"} قالت معندهاش في ${dateLabel} — راجعيها`);
       return new Response("ok");
     }
 
