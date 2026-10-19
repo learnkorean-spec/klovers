@@ -41,13 +41,21 @@ async function askAttendance(
   token: string,
   chatId: number,
   sessionId: string,
+  studentName: string,
 ) {
+  // Re, 20 Oct 2026: a shared class group (e.g. two sisters who each have
+  // their own student record) can have more than one student linked to the
+  // SAME chat_id -- without naming her, "did you attend?" is ambiguous to
+  // whoever reads it there.
+  const text = studentName
+    ? `حصة ${studentName} النهاردة خلصت 👋\nهل حضرت الحصة؟`
+    : "حصتك النهاردة خلصت 👋\nهل حضرتي الحصة؟";
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       chat_id: chatId,
-      text: "حصتك النهاردة خلصت 👋\nهل حضرتي الحصة؟",
+      text,
       reply_markup: {
         inline_keyboard: [[
           { text: "✅ آه، حضرت", callback_data: `att:yes:${sessionId}` },
@@ -89,7 +97,7 @@ Deno.serve(async (req) => {
   for (const row of (candidates ?? []) as {
     session_id: string; teacher_student_id: string; full_name: string; chat_id: number;
   }[]) {
-    const sent = await askAttendance(cfg.bot_token, row.chat_id, row.session_id);
+    const sent = await askAttendance(cfg.bot_token, row.chat_id, row.session_id, row.full_name);
     if (sent) {
       const { error: updErr } = await supabase
         .from("student_class_sessions")

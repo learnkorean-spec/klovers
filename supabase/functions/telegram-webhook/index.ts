@@ -154,15 +154,16 @@ Deno.serve(async (req) => {
         return new Response("ok");
       }
 
+      const { data: student } = await supabase.from("teacher_students")
+        .select("full_name").eq("id", link.teacher_student_id).maybeSingle();
+      const name = student?.full_name ?? "";
+
       await answerCallbackQuery(cfg.bot_token, cb.id);
       await editMessageText(
         cfg.bot_token, chatId, messageId,
-        attended ? "تمام، سجّلنا إنك حضرتي ✅ (هتتأكد من المدرّسة)."
-                 : "تمام، سجّلنا إنك معنديش ❌",
+        attended ? `تمام، سجّلنا إن ${name || "الطالبة"} حضرت ✅ (هتتأكد من المدرّسة).`
+                 : `تمام، سجّلنا إن ${name || "الطالبة"} معندهاش ❌`,
       );
-
-      const { data: student } = await supabase.from("teacher_students")
-        .select("full_name").eq("id", link.teacher_student_id).maybeSingle();
       const dateLabel = new Date(session.session_date + "T12:00:00Z")
         .toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
       await sendMessage(cfg.bot_token, cfg.admin_chat_id,
