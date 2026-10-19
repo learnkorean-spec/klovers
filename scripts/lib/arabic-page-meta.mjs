@@ -32,7 +32,7 @@ export const ARABIC_PAGE_META = [
   { path: "/learn-korean-kdramas", title: "تعلّم الكورية من المسلسلات الكورية | كلوفرز", description: "طريقة بسيطة لدراسة الكورية بالمسلسلات: مشهد واحد في كل مرة، وترجمة كورية، وترديد بصوت عالٍ، ودفتر عبارات، مع حصص مباشرة لشرح القواعد." },
   // Hungarian lessons (19 Oct 2026). Same title and description as
   // LearnHungarianPage's Arabic useSEO.
-  { path: "/learn-hungarian", title: "تعلّم المجرية بالعربية أو الإنجليزية — مع ريهام الشرقاوي", description: "دروس مجرية فردية عبر الإنترنت، بشرح بالعربية أو الإنجليزية، مع معلمة عاشت في بودابست وتعرف تمامًا ما تحتاجه المبتدئة: من أجل السفر، أو منحة مجرية، أو أسرة مجرية." },
+  { path: "/learn-hungarian", title: "تعلّم المجرية بالعربية أو الإنجليزية — مع ريهام الشرقاوي", description: "دروس مجرية فردية عبر الإنترنت، بشرح بالعربية أو الإنجليزية، مع معلمة عاشت في بودابست وتعرف تمامًا ما يحتاجه المبتدئ: من أجل السفر، أو منحة مجرية، أو أسرة مجرية." },
   // Klovers Supply (6 Oct 2026). Same title and description as ShopPage's
   // Arabic useSEO for the shop index, so the static head and the live page agree.
   { path: "/shop", title: "متجر كلوفرز — كتب ومستلزمات لتعلّم الكورية", description: "كتب ومستلزمات من كلوفرز تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب." },

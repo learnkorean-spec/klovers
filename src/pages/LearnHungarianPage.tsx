@@ -35,7 +35,7 @@ const LearnHungarianPage = () => {
       ? "تعلّم المجرية بالعربية أو الإنجليزية — مع ريهام الشرقاوي"
       : "Learn Hungarian in Arabic or English — with Reham Elshrkawy",
     description: isAr
-      ? "دروس مجرية فردية عبر الإنترنت، بشرح بالعربية أو الإنجليزية، مع معلمة عاشت في بودابست وتعرف تمامًا ما تحتاجه المبتدئة: من أجل السفر، أو منحة مجرية، أو أسرة مجرية."
+      ? "دروس مجرية فردية عبر الإنترنت، بشرح بالعربية أو الإنجليزية، مع معلمة عاشت في بودابست وتعرف تمامًا ما يحتاجه المبتدئ: من أجل السفر، أو منحة مجرية، أو أسرة مجرية."
       : "One-on-one online Hungarian lessons, explained in Arabic or English, with a teacher who lived in Budapest and knows exactly what a beginner needs — for a move, a Hungarian scholarship, or a Hungarian family.",
     canonical: isAr ? "https://kloversegy.com/ar/learn-hungarian" : "https://kloversegy.com/learn-hungarian",
     alternates: {
@@ -48,7 +48,7 @@ const LearnHungarianPage = () => {
     tr("Moving to Hungary for work, study or family", "الانتقال إلى المجر للعمل أو الدراسة أو الأسرة"),
     tr("Applying for a Balassi Institute or Stipendium Hungaricum scholarship", "التقدّم لمنحة من معهد بالاسي أو منحة Stipendium Hungaricum"),
     tr("Married into, or dating into, a Hungarian family", "الزواج من أسرة مجرية أو الارتباط بها"),
-    tr("Just curious about a language almost nobody around you speaks", "الفضول لتعلّم لغة لا يتحدث بها أحد من حولكِ تقريبًا"),
+    tr("Just curious about a language almost nobody around you speaks", "الفضول لتعلّم لغة لا يتحدث بها أحد من حولك تقريبًا"),
   ];
 
   const steps = [
@@ -56,21 +56,21 @@ const LearnHungarianPage = () => {
       title: tr("A free 20-minute call", "مكالمة تعارف مجانية مدتها عشرون دقيقة"),
       body: tr(
         "We talk about why you're learning Hungarian and where you're starting from — zero is completely fine.",
-        "نتحدث عن سبب رغبتكِ في تعلّم المجرية ومستواكِ الحالي — البدء من الصفر أمر طبيعي تمامًا.",
+        "نتحدث عن سبب رغبتك في تعلّم المجرية ومستواك الحالي — البدء من الصفر أمر طبيعي تمامًا.",
       ),
     },
     {
       title: tr("Lessons explained in Arabic or English", "دروس تُشرح بالعربية أو الإنجليزية"),
       body: tr(
         "Hungarian grammar is unlike Arabic or English, so every rule is explained in a language you already think in — not in Hungarian itself.",
-        "قواعد المجرية مختلفة تمامًا عن العربية والإنجليزية، لذا تُشرح كل قاعدة بلغة تفكّرين بها بالفعل، لا بالمجرية نفسها.",
+        "قواعد المجرية مختلفة تمامًا عن العربية والإنجليزية، لذا تُشرح كل قاعدة بلغة تفكر بها بالفعل، لا بالمجرية نفسها.",
       ),
     },
     {
       title: tr("Built around what you actually need", "مبنية على ما تحتاجينه فعلًا"),
       body: tr(
         "Scholarship paperwork, everyday survival phrases, or conversation with family — the lessons follow your actual situation, not a fixed textbook order.",
-        "أوراق المنحة، أو عبارات الحياة اليومية، أو الحديث مع الأسرة — تتبع الدروس وضعكِ الفعلي لا ترتيب كتاب ثابت.",
+        "أوراق المنحة، أو عبارات الحياة اليومية، أو الحديث مع الأسرة — تتبع الدروس وضعك الفعلي لا ترتيب كتاب ثابت.",
       ),
     },
   ];
@@ -91,13 +91,13 @@ const LearnHungarianPage = () => {
                 <h1 className="mt-5 text-4xl md:text-5xl font-bold text-foreground leading-tight">
                   {tr(
                     "Learn Hungarian, explained in Arabic or English",
-                    "تعلّمي المجرية بشرح بالعربية أو الإنجليزية",
+                    "تعلّم المجرية بشرح بالعربية أو الإنجليزية",
                   )}
                 </h1>
                 <p className="mt-5 text-lg md:text-xl text-foreground/70 leading-relaxed">
                   {tr(
                     "I lived in Budapest, studied Hungarian at Ain Shams University on a Balassi Institute scholarship, and have been teaching it ever since. I know what it's like to hold a form in Hungarian and not understand it — I'd rather be the person who explains the next one.",
-                    "عشت في بودابست، ودرست المجرية في جامعة عين شمس بمنحة من معهد بالاسي، وأدرّسها منذ ذلك الوقت. أعرف شعور أن تمسكي بورقة بالمجرية ولا تفهميها — وأفضّل أن أكون من يشرح لكِ الورقة التالية.",
+                    "عشت في بودابست، ودرست المجرية في جامعة عين شمس بمنحة من معهد بالاسي، وأدرّسها منذ ذلك الوقت. أعرف شعور أن تمسك بورقة بالمجرية ولا تفهمها — وأفضّل أن أكون من يشرح الورقة التالية.",
                   )}
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -107,13 +107,13 @@ const LearnHungarianPage = () => {
                     className="rounded-full font-bold bg-[#a9502f] hover:bg-[#8f4227] text-white"
                   >
                     <Link to="/contact?subject=Hungarian+lessons">
-                      {tr("Message me about lessons", "راسليني بخصوص الدروس")}
+                      {tr("Message me about lessons", "راسلني بخصوص الدروس")}
                       <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" asChild className="rounded-full">
                     <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">
-                      {tr("Read my story", "اقرئي قصتي")}
+                      {tr("Read my story", "اقرأ قصتي")}
                     </Link>
                   </Button>
                 </div>
@@ -214,22 +214,22 @@ const LearnHungarianPage = () => {
         <section className="py-20 bg-foreground text-background">
           <div className="container mx-auto px-4 max-w-4xl text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              {tr("Tell me what you're working toward", "أخبريني بما تسعين إليه")}
+              {tr("Tell me what you're working toward", "أخبرني بما تسعى إليه")}
             </h2>
             <p className="text-lg mb-8 text-background/80 max-w-2xl mx-auto">
               {tr(
                 "A scholarship deadline, a move, a family — send a message and we'll start from there.",
-                "موعد منحة، أو سفر، أو أسرة — أرسلي رسالة ولنبدأ من وضعكِ فعليًا.",
+                "موعد منحة، أو سفر، أو أسرة — أرسل رسالة ولنبدأ من وضعك فعليًا.",
               )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-[#a9502f] hover:bg-[#8f4227] text-white rounded-full font-bold" asChild>
                 <Link to="/contact?subject=Hungarian+lessons" className="flex items-center gap-2">
-                  {tr("Message me about lessons", "راسليني بخصوص الدروس")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                  {tr("Message me about lessons", "راسلني بخصوص الدروس")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="bg-transparent text-background border-background hover:bg-background/10 hover:text-background rounded-full" asChild>
-                <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">{tr("Read my story", "اقرئي قصتي")}</Link>
+                <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">{tr("Read my story", "اقرأ قصتي")}</Link>
               </Button>
             </div>
           </div>
