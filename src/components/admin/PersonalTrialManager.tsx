@@ -235,8 +235,8 @@ const PersonalTrialManager = () => {
             <div className="rounded-lg border border-dashed py-8 text-center">
               <p className="text-sm font-medium">No upcoming slots</p>
               <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
-                Add a few dated time slots above — students will see them on /learn-hungarian (and future
-                personal-lesson pages) as soon as they're added.
+                Add a few dated time slots above — students will see them on /learn-hungarian,
+                /learn-english and /learn-arabic as soon as they're added.
               </p>
             </div>
           ) : (
