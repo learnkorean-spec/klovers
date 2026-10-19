@@ -174,9 +174,10 @@ Deno.serve(async (req) => {
     }
 
     const msg = update?.message;
-    if (!msg?.chat?.id || msg.chat.type !== "private") return new Response("ok");
+    if (!msg?.chat?.id) return new Response("ok");
 
     const chatId: number = msg.chat.id;
+    const isPrivate = msg.chat.type === "private";
     const text: string = (msg.text ?? "").trim();
     const from = msg.from;
     const tgName = displayName(from);
@@ -185,6 +186,58 @@ Deno.serve(async (req) => {
     if (String(chatId) === String(cfg.admin_chat_id)) return new Response("ok");
 
     const startMatch = text.match(/^\/start(?:@\w+)?(?:\s+([A-Za-z0-9_-]{1,64}))?$/);
+
+    // Re, 19 Oct 2026: some students share one class group with a sibling
+    // (e.g. "Solafa and Lamar" — one teacher_students row, one group chat).
+    // /start with a code works the same in that group as it does 1:1: it
+    // just points the row's chat_id at the GROUP instead of a private chat,
+    // so the attendance question (and everything else) goes there. Anything
+    // OTHER than that linking command in a non-private chat is this group's
+    // own business (homework photos, etc.) and is ignored below.
+    if (startMatch && !isPrivate) {
+      const code = startMatch[1];
+      if (code) {
+        const { data: link } = await supabase
+          .from("telegram_links")
+          .select("id, teacher_student_id, user_id, chat_id")
+          .eq("link_code", code)
+          .maybeSingle();
+
+        if (!link) {
+          await sendMessage(cfg.bot_token, chatId, "اللينك ده مش شغال 🙏 اطلب من المدرّسة لينك ربط جديد.");
+          return new Response("ok");
+        }
+
+        let studentName = "";
+        if (link.teacher_student_id) {
+          const { data } = await supabase.from("teacher_students")
+            .select("full_name").eq("id", link.teacher_student_id).maybeSingle();
+          studentName = data?.full_name ?? "";
+        }
+
+        const alreadySameChat = link.chat_id === chatId;
+        const { error } = await supabase.from("telegram_links").update({
+          chat_id: chatId,
+          tg_username: null,
+          tg_first_name: msg.chat.title ?? null,
+          linked_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }).eq("id", link.id);
+        if (error) throw error;
+
+        await sendMessage(cfg.bot_token, chatId,
+          `تم ربط جروب "${msg.chat.title ?? "الجروب"}" بحساب ${studentName || "الطالبة"} في Klovers بنجاح ✅\nهتوصل هنا مواعيد الحصص والتنبيهات المهمة.`);
+
+        if (!alreadySameChat) {
+          await sendMessage(cfg.bot_token, cfg.admin_chat_id,
+            `🔗 ${studentName || "طالب"} ربط جروب "${msg.chat.title ?? ""}" على تيليجرام` +
+            (link.chat_id && link.chat_id !== chatId ? "\n⚠️ اللينك كان مربوط بحساب تاني قبل كده، واتنقل للجروب الجديد." : ""));
+        }
+      }
+      return new Response("ok");
+    }
+
+    if (!isPrivate) return new Response("ok");
 
     if (startMatch) {
       const code = startMatch[1];
