@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -77,6 +77,39 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      admin_accounts_map: {
+        Row: {
+          detail: string
+          id: string
+          login: string
+          service: string
+          sort_order: number
+          status: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          detail?: string
+          id?: string
+          login?: string
+          service: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          detail?: string
+          id?: string
+          login?: string
+          service?: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
       }
       admin_attendance_log: {
         Row: {
@@ -579,6 +612,852 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts_backup_20260927_en: {
+        Row: {
+          article_type: string | null
+          author: string | null
+          backed_up_at: string | null
+          content: string | null
+          created_at: string | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          featured: boolean | null
+          hero_alt: string | null
+          hero_alt_2: string | null
+          hero_caption: string | null
+          hero_caption_2: string | null
+          hero_image: string | null
+          hero_image_2: string | null
+          id: string | null
+          keywords: string[] | null
+          lang: string | null
+          published: boolean | null
+          published_at: string | null
+          seo_priority: number | null
+          seo_score: number | null
+          slug: string | null
+          title: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          article_type?: string | null
+          author?: string | null
+          backed_up_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          article_type?: string | null
+          author?: string | null
+          backed_up_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20260927_msa: {
+        Row: {
+          article_type: string | null
+          author: string | null
+          backed_up_at: string | null
+          content: string | null
+          created_at: string | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          featured: boolean | null
+          hero_alt: string | null
+          hero_alt_2: string | null
+          hero_caption: string | null
+          hero_caption_2: string | null
+          hero_image: string | null
+          hero_image_2: string | null
+          id: string | null
+          keywords: string[] | null
+          lang: string | null
+          published: boolean | null
+          published_at: string | null
+          seo_priority: number | null
+          seo_score: number | null
+          slug: string | null
+          title: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          article_type?: string | null
+          author?: string | null
+          backed_up_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          article_type?: string | null
+          author?: string | null
+          backed_up_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20260927_restore: {
+        Row: {
+          article_type: string | null
+          author: string | null
+          backed_up_at: string | null
+          content: string | null
+          created_at: string | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          featured: boolean | null
+          hero_alt: string | null
+          hero_alt_2: string | null
+          hero_caption: string | null
+          hero_caption_2: string | null
+          hero_image: string | null
+          hero_image_2: string | null
+          id: string | null
+          keywords: string[] | null
+          lang: string | null
+          published: boolean | null
+          published_at: string | null
+          seo_priority: number | null
+          seo_score: number | null
+          slug: string | null
+          title: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          article_type?: string | null
+          author?: string | null
+          backed_up_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          article_type?: string | null
+          author?: string | null
+          backed_up_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261005_topik1_ar: {
+        Row: {
+          article_type: string | null
+          author: string | null
+          content: string | null
+          created_at: string | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          featured: boolean | null
+          hero_alt: string | null
+          hero_alt_2: string | null
+          hero_caption: string | null
+          hero_caption_2: string | null
+          hero_image: string | null
+          hero_image_2: string | null
+          id: string | null
+          keywords: string[] | null
+          lang: string | null
+          published: boolean | null
+          published_at: string | null
+          seo_priority: number | null
+          seo_score: number | null
+          slug: string | null
+          title: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          article_type?: string | null
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          article_type?: string | null
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261005_topik1_en: {
+        Row: {
+          article_type: string | null
+          author: string | null
+          content: string | null
+          created_at: string | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          featured: boolean | null
+          hero_alt: string | null
+          hero_alt_2: string | null
+          hero_caption: string | null
+          hero_caption_2: string | null
+          hero_image: string | null
+          hero_image_2: string | null
+          id: string | null
+          keywords: string[] | null
+          lang: string | null
+          published: boolean | null
+          published_at: string | null
+          seo_priority: number | null
+          seo_score: number | null
+          slug: string | null
+          title: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          article_type?: string | null
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          article_type?: string | null
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261008_heroes: {
+        Row: {
+          article_type: string | null
+          author: string | null
+          content: string | null
+          created_at: string | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          featured: boolean | null
+          hero_alt: string | null
+          hero_alt_2: string | null
+          hero_caption: string | null
+          hero_caption_2: string | null
+          hero_image: string | null
+          hero_image_2: string | null
+          id: string | null
+          keywords: string[] | null
+          lang: string | null
+          published: boolean | null
+          published_at: string | null
+          seo_priority: number | null
+          seo_score: number | null
+          slug: string | null
+          title: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          article_type?: string | null
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          article_type?: string | null
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261008_streetfood_ar: {
+        Row: {
+          article_type: string | null
+          author: string | null
+          content: string | null
+          created_at: string | null
+          cta_text: string | null
+          cta_url: string | null
+          description: string | null
+          featured: boolean | null
+          hero_alt: string | null
+          hero_alt_2: string | null
+          hero_caption: string | null
+          hero_caption_2: string | null
+          hero_image: string | null
+          hero_image_2: string | null
+          id: string | null
+          keywords: string[] | null
+          lang: string | null
+          published: boolean | null
+          published_at: string | null
+          seo_priority: number | null
+          seo_score: number | null
+          slug: string | null
+          title: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          article_type?: string | null
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          article_type?: string | null
+          author?: string | null
+          content?: string | null
+          created_at?: string | null
+          cta_text?: string | null
+          cta_url?: string | null
+          description?: string | null
+          featured?: boolean | null
+          hero_alt?: string | null
+          hero_alt_2?: string | null
+          hero_caption?: string | null
+          hero_caption_2?: string | null
+          hero_image?: string | null
+          hero_image_2?: string | null
+          id?: string | null
+          keywords?: string[] | null
+          lang?: string | null
+          published?: boolean | null
+          published_at?: string | null
+          seo_priority?: number | null
+          seo_score?: number | null
+          slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_arlinks: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_batch4: {
+        Row: {
+          content: string | null
+          description: string | null
+          id: string | null
+          slug: string | null
+          title: string | null
+        }
+        Insert: {
+          content?: string | null
+          description?: string | null
+          id?: string | null
+          slug?: string | null
+          title?: string | null
+        }
+        Update: {
+          content?: string | null
+          description?: string | null
+          id?: string | null
+          slug?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_batch5: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_claims: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_claims2: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_claims3: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_gender: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_h1: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+          title: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+          title?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_jaket: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_meta: {
+        Row: {
+          hero_alt: string | null
+          id: string | null
+          slug: string | null
+          title: string | null
+        }
+        Insert: {
+          hero_alt?: string | null
+          id?: string | null
+          slug?: string | null
+          title?: string | null
+        }
+        Update: {
+          hero_alt?: string | null
+          id?: string | null
+          slug?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_meta2: {
+        Row: {
+          description: string | null
+          id: string | null
+          slug: string | null
+          title: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string | null
+          slug?: string | null
+          title?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string | null
+          slug?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_qmark: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts_backup_20261014_teachers: {
+        Row: {
+          content: string | null
+          id: string | null
+          slug: string | null
+        }
+        Insert: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Update: {
+          content?: string | null
+          id?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       book_assignments: {
         Row: {
           assigned_at: string
@@ -699,6 +1578,68 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_books: {
+        Row: {
+          created_at: string
+          id: number
+          is_active: boolean
+          language: string
+          level: string
+          notes: string | null
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          is_active?: boolean
+          language?: string
+          level: string
+          notes?: string | null
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          is_active?: boolean
+          language?: string
+          level?: string
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      class_reminder_sends: {
+        Row: {
+          sent_at: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          sent_at?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          sent_at?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_reminder_sends_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "pkg_group_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -1389,6 +2330,7 @@ export type Database = {
           created_at: string
           duration: string | null
           email: string
+          email_unsubscribed: boolean
           gclid: string | null
           goal: string | null
           id: string
@@ -1399,6 +2341,8 @@ export type Database = {
           source: string | null
           status: string
           timezone: string | null
+          unsubscribe_token: string
+          unsubscribed_at: string | null
           user_id: string | null
           utm_campaign: string | null
           utm_content: string | null
@@ -1410,6 +2354,7 @@ export type Database = {
           created_at?: string
           duration?: string | null
           email: string
+          email_unsubscribed?: boolean
           gclid?: string | null
           goal?: string | null
           id?: string
@@ -1420,6 +2365,8 @@ export type Database = {
           source?: string | null
           status?: string
           timezone?: string | null
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
           user_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
@@ -1431,6 +2378,7 @@ export type Database = {
           created_at?: string
           duration?: string | null
           email?: string
+          email_unsubscribed?: boolean
           gclid?: string | null
           goal?: string | null
           id?: string
@@ -1441,6 +2389,8 @@ export type Database = {
           source?: string | null
           status?: string
           timezone?: string | null
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
           user_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
@@ -1461,6 +2411,454 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "course_levels"
             referencedColumns: ["key"]
+          },
+        ]
+      }
+      legacy_import_batches: {
+        Row: {
+          commit_result: Json | null
+          committed_at: string | null
+          committed_by: string | null
+          created_at: string
+          created_by: string | null
+          file_sha256: string
+          id: string
+          legacy_marker: boolean
+          month_year_map: Json
+          rolled_back_at: string | null
+          rolled_back_by: string | null
+          source_file: string
+          status: string
+          summary: Json
+        }
+        Insert: {
+          commit_result?: Json | null
+          committed_at?: string | null
+          committed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_sha256: string
+          id?: string
+          legacy_marker?: boolean
+          month_year_map?: Json
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+          source_file: string
+          status?: string
+          summary?: Json
+        }
+        Update: {
+          commit_result?: Json | null
+          committed_at?: string | null
+          committed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_sha256?: string
+          id?: string
+          legacy_marker?: boolean
+          month_year_map?: Json
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+          source_file?: string
+          status?: string
+          summary?: Json
+        }
+        Relationships: []
+      }
+      legacy_import_staging: {
+        Row: {
+          batch_id: string
+          entity: string
+          legacy_marker: boolean
+          payload: Json
+          source_key: string
+        }
+        Insert: {
+          batch_id: string
+          entity: string
+          legacy_marker?: boolean
+          payload: Json
+          source_key: string
+        }
+        Update: {
+          batch_id?: string
+          entity?: string
+          legacy_marker?: boolean
+          payload?: Json
+          source_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legacy_import_staging_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legacy_issues: {
+        Row: {
+          category: string
+          created_at: string
+          dedupe_key: string
+          id: string
+          import_batch_id: string | null
+          legacy_marker: boolean
+          legacy_student_id: string | null
+          month_label: string | null
+          problem: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source_file: string | null
+          source_row: number | null
+          source_sheet: string | null
+          status: string
+          student_label: string | null
+          suggested_action: string | null
+          year: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          import_batch_id?: string | null
+          legacy_marker?: boolean
+          legacy_student_id?: string | null
+          month_label?: string | null
+          problem: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_file?: string | null
+          source_row?: number | null
+          source_sheet?: string | null
+          status?: string
+          student_label?: string | null
+          suggested_action?: string | null
+          year?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          import_batch_id?: string | null
+          legacy_marker?: boolean
+          legacy_student_id?: string | null
+          month_label?: string | null
+          problem?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_file?: string | null
+          source_row?: number | null
+          source_sheet?: string | null
+          status?: string
+          student_label?: string | null
+          suggested_action?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legacy_issues_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legacy_issues_legacy_student_id_fkey"
+            columns: ["legacy_student_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_student_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legacy_issues_legacy_student_id_fkey"
+            columns: ["legacy_student_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legacy_monthly_records: {
+        Row: {
+          currency: string
+          exclude_reason: string | null
+          excluded: boolean
+          id: string
+          import_batch_id: string | null
+          imported_at: string
+          late_count: number
+          legacy_marker: boolean
+          legacy_student_id: string
+          month: number | null
+          month_label: string
+          origin_file: string | null
+          origin_row: number | null
+          original_student_name: string | null
+          present_count: number | null
+          price_per_class: number | null
+          price_source: string | null
+          raw_statuses: string[]
+          record_kind: string
+          recorded_paid: number | null
+          session_charges: number | null
+          source_balance: number | null
+          source_file: string | null
+          source_key: string
+          source_row: number | null
+          source_session_charges: number | null
+          source_sheet: string | null
+          source_type: string
+          year: number | null
+        }
+        Insert: {
+          currency?: string
+          exclude_reason?: string | null
+          excluded?: boolean
+          id?: string
+          import_batch_id?: string | null
+          imported_at?: string
+          late_count?: number
+          legacy_marker?: boolean
+          legacy_student_id: string
+          month?: number | null
+          month_label: string
+          origin_file?: string | null
+          origin_row?: number | null
+          original_student_name?: string | null
+          present_count?: number | null
+          price_per_class?: number | null
+          price_source?: string | null
+          raw_statuses?: string[]
+          record_kind: string
+          recorded_paid?: number | null
+          session_charges?: number | null
+          source_balance?: number | null
+          source_file?: string | null
+          source_key: string
+          source_row?: number | null
+          source_session_charges?: number | null
+          source_sheet?: string | null
+          source_type?: string
+          year?: number | null
+        }
+        Update: {
+          currency?: string
+          exclude_reason?: string | null
+          excluded?: boolean
+          id?: string
+          import_batch_id?: string | null
+          imported_at?: string
+          late_count?: number
+          legacy_marker?: boolean
+          legacy_student_id?: string
+          month?: number | null
+          month_label?: string
+          origin_file?: string | null
+          origin_row?: number | null
+          original_student_name?: string | null
+          present_count?: number | null
+          price_per_class?: number | null
+          price_source?: string | null
+          raw_statuses?: string[]
+          record_kind?: string
+          recorded_paid?: number | null
+          session_charges?: number | null
+          source_balance?: number | null
+          source_file?: string | null
+          source_key?: string
+          source_row?: number | null
+          source_session_charges?: number | null
+          source_sheet?: string | null
+          source_type?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legacy_monthly_records_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legacy_monthly_records_legacy_student_id_fkey"
+            columns: ["legacy_student_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_student_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legacy_monthly_records_legacy_student_id_fkey"
+            columns: ["legacy_student_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legacy_students: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string
+          display_name: string
+          id: string
+          import_batch_id: string | null
+          imported_at: string
+          legacy_marker: boolean
+          linked_at: string | null
+          linked_by: string | null
+          name_key: string
+          note: string | null
+          original_names: string[]
+          original_student_name: string | null
+          source_file: string | null
+          source_row: number | null
+          source_sheet: string | null
+          source_type: string
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          import_batch_id?: string | null
+          imported_at?: string
+          legacy_marker?: boolean
+          linked_at?: string | null
+          linked_by?: string | null
+          name_key: string
+          note?: string | null
+          original_names?: string[]
+          original_student_name?: string | null
+          source_file?: string | null
+          source_row?: number | null
+          source_sheet?: string | null
+          source_type?: string
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          import_batch_id?: string | null
+          imported_at?: string
+          legacy_marker?: boolean
+          linked_at?: string | null
+          linked_by?: string | null
+          name_key?: string
+          note?: string | null
+          original_names?: string[]
+          original_student_name?: string | null
+          source_file?: string | null
+          source_row?: number | null
+          source_sheet?: string | null
+          source_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legacy_students_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legacy_year_aggregates: {
+        Row: {
+          counted_sessions: number
+          currency: string
+          id: string
+          import_batch_id: string | null
+          imported_at: string
+          kind: string
+          late_unresolved: number
+          legacy_marker: boolean
+          legacy_student_id: string
+          price_per_session: number | null
+          price_source: string
+          recorded_paid: number | null
+          session_value: number
+          source_file: string | null
+          source_key: string
+          source_row: number | null
+          source_sheet: string | null
+          source_type: string
+          year: number
+        }
+        Insert: {
+          counted_sessions?: number
+          currency?: string
+          id?: string
+          import_batch_id?: string | null
+          imported_at?: string
+          kind: string
+          late_unresolved?: number
+          legacy_marker?: boolean
+          legacy_student_id: string
+          price_per_session?: number | null
+          price_source: string
+          recorded_paid?: number | null
+          session_value?: number
+          source_file?: string | null
+          source_key: string
+          source_row?: number | null
+          source_sheet?: string | null
+          source_type?: string
+          year: number
+        }
+        Update: {
+          counted_sessions?: number
+          currency?: string
+          id?: string
+          import_batch_id?: string | null
+          imported_at?: string
+          kind?: string
+          late_unresolved?: number
+          legacy_marker?: boolean
+          legacy_student_id?: string
+          price_per_session?: number | null
+          price_source?: string
+          recorded_paid?: number | null
+          session_value?: number
+          source_file?: string | null
+          source_key?: string
+          source_row?: number | null
+          source_sheet?: string | null
+          source_type?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legacy_year_aggregates_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legacy_year_aggregates_legacy_student_id_fkey"
+            columns: ["legacy_student_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_student_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legacy_year_aggregates_legacy_student_id_fkey"
+            columns: ["legacy_student_id"]
+            isOneToOne: false
+            referencedRelation: "legacy_students"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1741,6 +3139,13 @@ export type Database = {
             referencedRelation: "matching_slots"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "level_slot_config_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "v_matching_slots_status"
+            referencedColumns: ["id"]
+          },
         ]
       }
       marketing_posts: {
@@ -1869,6 +3274,86 @@ export type Database = {
           },
         ]
       }
+      personal_trial_bookings: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          language: string
+          name: string
+          notes: string | null
+          slot_id: string
+          status: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          language: string
+          name: string
+          notes?: string | null
+          slot_id: string
+          status?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          language?: string
+          name?: string
+          notes?: string | null
+          slot_id?: string
+          status?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_trial_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "personal_trial_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_trial_slots: {
+        Row: {
+          capacity: number
+          created_at: string
+          duration_min: number
+          id: string
+          is_active: boolean
+          slot_date: string
+          start_time: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          duration_min?: number
+          id?: string
+          is_active?: boolean
+          slot_date: string
+          start_time: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          duration_min?: number
+          id?: string
+          is_active?: boolean
+          slot_date?: string
+          start_time?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pkg_attendance: {
         Row: {
           admin_approved: boolean
@@ -1938,6 +3423,7 @@ export type Database = {
           joined_at: string
           member_status: string
           user_id: string
+          welcome_email_sent_at: string | null
         }
         Insert: {
           class_link_sent_at?: string | null
@@ -1946,6 +3432,7 @@ export type Database = {
           joined_at?: string
           member_status?: string
           user_id: string
+          welcome_email_sent_at?: string | null
         }
         Update: {
           class_link_sent_at?: string | null
@@ -1954,6 +3441,7 @@ export type Database = {
           joined_at?: string
           member_status?: string
           user_id?: string
+          welcome_email_sent_at?: string | null
         }
         Relationships: [
           {
@@ -1996,31 +3484,37 @@ export type Database = {
       }
       pkg_groups: {
         Row: {
+          book_url: string | null
           capacity: number
           created_at: string
           id: string
           is_active: boolean
           meeting_url: string | null
+          min_to_run: number
           name: string
           package_id: string
           start_date: string | null
         }
         Insert: {
+          book_url?: string | null
           capacity?: number
           created_at?: string
           id?: string
           is_active?: boolean
           meeting_url?: string | null
+          min_to_run?: number
           name: string
           package_id: string
           start_date?: string | null
         }
         Update: {
+          book_url?: string | null
           capacity?: number
           created_at?: string
           id?: string
           is_active?: boolean
           meeting_url?: string | null
+          min_to_run?: number
           name?: string
           package_id?: string
           start_date?: string | null
@@ -2410,7 +3904,9 @@ export type Database = {
           created_by: string
           group_id: string | null
           id: string
+          image_urls: string[] | null
           last_error: string | null
+          media_type: string | null
           meta_result: Json | null
           platforms: string[]
           posted_at: string | null
@@ -2426,7 +3922,9 @@ export type Database = {
           created_by: string
           group_id?: string | null
           id?: string
+          image_urls?: string[] | null
           last_error?: string | null
+          media_type?: string | null
           meta_result?: Json | null
           platforms?: string[]
           posted_at?: string | null
@@ -2442,7 +3940,9 @@ export type Database = {
           created_by?: string
           group_id?: string | null
           id?: string
+          image_urls?: string[] | null
           last_error?: string | null
+          media_type?: string | null
           meta_result?: Json | null
           platforms?: string[]
           posted_at?: string | null
@@ -2528,22 +4028,25 @@ export type Database = {
           bundle_id: string
           changes: Json
           edited_at: string
-          edited_by: string
+          edited_by: string | null
           id: string
+          system_actor: string | null
         }
         Insert: {
           bundle_id: string
           changes: Json
           edited_at?: string
-          edited_by: string
+          edited_by?: string | null
           id?: string
+          system_actor?: string | null
         }
         Update: {
           bundle_id?: string
           changes?: Json
           edited_at?: string
-          edited_by?: string
+          edited_by?: string | null
           id?: string
+          system_actor?: string | null
         }
         Relationships: [
           {
@@ -2567,6 +4070,7 @@ export type Database = {
           note: string | null
           paid_note: string | null
           paid_on: string | null
+          payment_ask_sent_at: string | null
           payment_confirmation_sent_at: string | null
           purchased_on: string
           source: string
@@ -2589,6 +4093,7 @@ export type Database = {
           note?: string | null
           paid_note?: string | null
           paid_on?: string | null
+          payment_ask_sent_at?: string | null
           payment_confirmation_sent_at?: string | null
           purchased_on?: string
           source?: string
@@ -2611,6 +4116,7 @@ export type Database = {
           note?: string | null
           paid_note?: string | null
           paid_on?: string | null
+          payment_ask_sent_at?: string | null
           payment_confirmation_sent_at?: string | null
           purchased_on?: string
           source?: string
@@ -2645,6 +4151,7 @@ export type Database = {
           outcome: string
           session_date: string
           start_time: string
+          student_confirmed_at: string | null
           student_id: string
           updated_at: string
         }
@@ -2660,6 +4167,7 @@ export type Database = {
           outcome?: string
           session_date: string
           start_time: string
+          student_confirmed_at?: string | null
           student_id: string
           updated_at?: string
         }
@@ -2675,6 +4183,7 @@ export type Database = {
           outcome?: string
           session_date?: string
           start_time?: string
+          student_confirmed_at?: string | null
           student_id?: string
           updated_at?: string
         }
@@ -2929,6 +4438,78 @@ export type Database = {
           },
         ]
       }
+      student_payment_claims: {
+        Row: {
+          amount: number
+          bundle_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          method: string
+          note: string | null
+          paid_on: string
+          receipt_path: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_name: string | null
+          status: string
+          student_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bundle_id?: string | null
+          created_at?: string
+          currency: string
+          id?: string
+          method: string
+          note?: string | null
+          paid_on: string
+          receipt_path?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_name?: string | null
+          status?: string
+          student_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bundle_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string
+          note?: string | null
+          paid_on?: string
+          receipt_path?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_name?: string | null
+          status?: string
+          student_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_payment_claims_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "student_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_payment_claims_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_schedule_preferences: {
         Row: {
           created_at: string
@@ -3024,6 +4605,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "student_slot_preferences_assigned_slot_id_fkey"
+            columns: ["assigned_slot_id"]
+            isOneToOne: false
+            referencedRelation: "v_matching_slots_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "student_slot_preferences_enrollment_id_fkey"
             columns: ["enrollment_id"]
             isOneToOne: true
@@ -3066,8 +4654,29 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "student_slot_preferences_slot_1_id_fkey"
+            columns: ["slot_1_id"]
+            isOneToOne: false
+            referencedRelation: "v_matching_slots_status"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "student_slot_preferences_slot_2_id_fkey"
             columns: ["slot_2_id"]
+            isOneToOne: false
+            referencedRelation: "matching_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_slot_preferences_slot_2_id_fkey"
+            columns: ["slot_2_id"]
+            isOneToOne: false
+            referencedRelation: "v_matching_slots_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_slot_preferences_slot_3_id_fkey"
+            columns: ["slot_3_id"]
             isOneToOne: false
             referencedRelation: "matching_slots"
             referencedColumns: ["id"]
@@ -3076,7 +4685,7 @@ export type Database = {
             foreignKeyName: "student_slot_preferences_slot_3_id_fkey"
             columns: ["slot_3_id"]
             isOneToOne: false
-            referencedRelation: "matching_slots"
+            referencedRelation: "v_matching_slots_status"
             referencedColumns: ["id"]
           },
         ]
@@ -3507,6 +5116,53 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_links: {
+        Row: {
+          chat_id: number | null
+          created_at: string
+          id: string
+          link_code: string
+          linked_at: string | null
+          teacher_student_id: string | null
+          tg_first_name: string | null
+          tg_username: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          chat_id?: number | null
+          created_at?: string
+          id?: string
+          link_code?: string
+          linked_at?: string | null
+          teacher_student_id?: string | null
+          tg_first_name?: string | null
+          tg_username?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          chat_id?: number | null
+          created_at?: string
+          id?: string
+          link_code?: string
+          linked_at?: string | null
+          teacher_student_id?: string | null
+          tg_first_name?: string | null
+          tg_username?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_links_teacher_student_id_fkey"
+            columns: ["teacher_student_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       textbook_lessons: {
         Row: {
           book: string
@@ -3579,6 +5235,27 @@ export type Database = {
         }
         Relationships: []
       }
+      trial_attendance_confirmations: {
+        Row: {
+          confirmed_at: string
+          confirmed_by: string | null
+          start_time: string
+          trial_date: string
+        }
+        Insert: {
+          confirmed_at?: string
+          confirmed_by?: string | null
+          start_time: string
+          trial_date: string
+        }
+        Update: {
+          confirmed_at?: string
+          confirmed_by?: string | null
+          start_time?: string
+          trial_date?: string
+        }
+        Relationships: []
+      }
       trial_booking_status_transitions: {
         Row: {
           from_status: string
@@ -3602,8 +5279,12 @@ export type Database = {
           attendance_confirmed_at: string | null
           attendance_email_sent_at: string | null
           attendance_followup_manual_at: string | null
+          attendance_marked_at: string | null
+          attendance_marked_by: string | null
           attendance_responded_at: string | null
           attendance_response: string | null
+          attended: boolean | null
+          attended_letter_sent_at: string | null
           calendar_url: string | null
           cancel_reason: string | null
           cancelled_at: string | null
@@ -3635,6 +5316,7 @@ export type Database = {
           next_trial_month: string | null
           phone: string | null
           rebook_email_sent_at: string | null
+          reminder_sent_at: string | null
           rollover_notified_at: string | null
           rollover_status: string | null
           slot_chosen_at: string | null
@@ -3653,8 +5335,12 @@ export type Database = {
           attendance_confirmed_at?: string | null
           attendance_email_sent_at?: string | null
           attendance_followup_manual_at?: string | null
+          attendance_marked_at?: string | null
+          attendance_marked_by?: string | null
           attendance_responded_at?: string | null
           attendance_response?: string | null
+          attended?: boolean | null
+          attended_letter_sent_at?: string | null
           calendar_url?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
@@ -3686,6 +5372,7 @@ export type Database = {
           next_trial_month?: string | null
           phone?: string | null
           rebook_email_sent_at?: string | null
+          reminder_sent_at?: string | null
           rollover_notified_at?: string | null
           rollover_status?: string | null
           slot_chosen_at?: string | null
@@ -3704,8 +5391,12 @@ export type Database = {
           attendance_confirmed_at?: string | null
           attendance_email_sent_at?: string | null
           attendance_followup_manual_at?: string | null
+          attendance_marked_at?: string | null
+          attendance_marked_by?: string | null
           attendance_responded_at?: string | null
           attendance_response?: string | null
+          attended?: boolean | null
+          attended_letter_sent_at?: string | null
           calendar_url?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
@@ -3737,6 +5428,7 @@ export type Database = {
           next_trial_month?: string | null
           phone?: string | null
           rebook_email_sent_at?: string | null
+          reminder_sent_at?: string | null
           rollover_notified_at?: string | null
           rollover_status?: string | null
           slot_chosen_at?: string | null
@@ -3918,6 +5610,39 @@ export type Database = {
           },
         ]
       }
+      trial_rooms: {
+        Row: {
+          calendar_event_id: string | null
+          class_language: string | null
+          created_at: string
+          day_of_week: number | null
+          id: string
+          is_spare: boolean
+          label: string
+          meeting_url: string
+        }
+        Insert: {
+          calendar_event_id?: string | null
+          class_language?: string | null
+          created_at?: string
+          day_of_week?: number | null
+          id?: string
+          is_spare?: boolean
+          label: string
+          meeting_url: string
+        }
+        Update: {
+          calendar_event_id?: string | null
+          class_language?: string | null
+          created_at?: string
+          day_of_week?: number | null
+          id?: string
+          is_spare?: boolean
+          label?: string
+          meeting_url?: string
+        }
+        Relationships: []
+      }
       trial_settings: {
         Row: {
           booking_lead_minutes: number
@@ -3930,10 +5655,12 @@ export type Database = {
           rejoin_cooldown_days: number
           rollover_interval_days: number
           rollover_lead_hours: number
+          rollover_mode: string
           slot_minutes: number
           suggestion_weeks: number
           trial_block_days: number
           trial_block_start_dow: number
+          trial_weekdays: number[]
           updated_at: string
           window_end_day: number | null
           window_start_day: number | null
@@ -3949,10 +5676,12 @@ export type Database = {
           rejoin_cooldown_days?: number
           rollover_interval_days?: number
           rollover_lead_hours?: number
+          rollover_mode?: string
           slot_minutes?: number
           suggestion_weeks?: number
           trial_block_days?: number
           trial_block_start_dow?: number
+          trial_weekdays?: number[]
           updated_at?: string
           window_end_day?: number | null
           window_start_day?: number | null
@@ -3968,10 +5697,12 @@ export type Database = {
           rejoin_cooldown_days?: number
           rollover_interval_days?: number
           rollover_lead_hours?: number
+          rollover_mode?: string
           slot_minutes?: number
           suggestion_weeks?: number
           trial_block_days?: number
           trial_block_start_dow?: number
+          trial_weekdays?: number[]
           updated_at?: string
           window_end_day?: number | null
           window_start_day?: number | null
@@ -4411,6 +6142,16 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_funnel_overview: {
+        Row: {
+          derived_status: string | null
+          email: string | null
+          name: string | null
+          private_only: boolean | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       admin_student_overview: {
         Row: {
           amount: number | null
@@ -4540,6 +6281,53 @@ export type Database = {
         }
         Relationships: []
       }
+      legacy_facts: {
+        Row: {
+          late: number | null
+          legacy_student_id: string | null
+          origin: string | null
+          paid: number | null
+          sessions: number | null
+          value: number | null
+          year: number | null
+        }
+        Relationships: []
+      }
+      legacy_student_summary: {
+        Row: {
+          auth_user_id: string | null
+          display_name: string | null
+          historical_value: number | null
+          id: string | null
+          late_unresolved: number | null
+          linked_at: string | null
+          linked_email: string | null
+          linked_name: string | null
+          name_key: string | null
+          open_issues: number | null
+          original_names: string[] | null
+          recorded_paid: number | null
+          sessions_2022: number | null
+          sessions_2023: number | null
+          sessions_2024: number | null
+          sessions_2025: number | null
+          total_sessions: number | null
+          years_active: number[] | null
+        }
+        Relationships: []
+      }
+      legacy_year_summary: {
+        Row: {
+          counted_sessions: number | null
+          historical_value: number | null
+          late_unresolved: number | null
+          recorded_paid: number | null
+          unique_students: number | null
+          unresolved_records: number | null
+          year: number | null
+        }
+        Relationships: []
+      }
       v_campaign_delivery: {
         Row: {
           bounced: number | null
@@ -4556,6 +6344,73 @@ export type Database = {
           untrackable: number | null
         }
         Relationships: []
+      }
+      v_matching_slots_status: {
+        Row: {
+          course_level: string | null
+          created_at: string | null
+          current_count: number | null
+          day: string | null
+          id: string | null
+          max_students: number | null
+          min_students: number | null
+          package_id: string | null
+          slot_state: string | null
+          status: string | null
+          time: string | null
+          timezone: string | null
+        }
+        Insert: {
+          course_level?: string | null
+          created_at?: string | null
+          current_count?: number | null
+          day?: string | null
+          id?: string | null
+          max_students?: number | null
+          min_students?: number | null
+          package_id?: string | null
+          slot_state?: never
+          status?: string | null
+          time?: string | null
+          timezone?: string | null
+        }
+        Update: {
+          course_level?: string | null
+          created_at?: string | null
+          current_count?: number | null
+          day?: string | null
+          id?: string | null
+          max_students?: number | null
+          min_students?: number | null
+          package_id?: string | null
+          slot_state?: never
+          status?: string | null
+          time?: string | null
+          timezone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matching_slots_course_level_fkey_course_levels"
+            columns: ["course_level"]
+            isOneToOne: false
+            referencedRelation: "active_course_levels"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "matching_slots_course_level_fkey_course_levels"
+            columns: ["course_level"]
+            isOneToOne: false
+            referencedRelation: "course_levels"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "matching_slots_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       v_teacher_schedule_admin: {
         Row: {
@@ -4719,6 +6574,23 @@ export type Database = {
         Args: { p_enrollment_id: string; p_session_date: string }
         Returns: number
       }
+      admin_review_payment_claim: {
+        Args: { p_approve: boolean; p_claim_id: string; p_note?: string }
+        Returns: undefined
+      }
+      admin_send_bundle_payment_ask: {
+        Args: { p_bundle_id: string }
+        Returns: undefined
+      }
+      admin_telegram_link_code: {
+        Args: { p_teacher_student_id?: string; p_user_id?: string }
+        Returns: {
+          chat_id: number
+          link_code: string
+          linked_at: string
+          tg_username: string
+        }[]
+      }
       advance_trial_slots: {
         Args: never
         Returns: {
@@ -4769,6 +6641,17 @@ export type Database = {
         }[]
       }
       backfill_missing_enrollments: { Args: never; Returns: Json }
+      book_personal_trial_slot: {
+        Args: {
+          p_email: string
+          p_language: string
+          p_name: string
+          p_notes: string
+          p_slot_id: string
+          p_whatsapp: string
+        }
+        Returns: string
+      }
       book_trial_with_capacity_check: {
         Args: {
           p_day_of_week: number
@@ -4861,6 +6744,10 @@ export type Database = {
       deduct_credit: { Args: { _user_id: string }; Returns: number }
       ensure_pkg_groups_for_packages: { Args: never; Returns: number }
       factory_reset_data: { Args: never; Returns: string }
+      first_dow_of_month: {
+        Args: { p_any_date: string; p_dow: number }
+        Returns: string
+      }
       fn_add_teacher_slot: {
         Args: {
           p_duration_minutes?: number
@@ -4914,8 +6801,27 @@ export type Database = {
       }
       fn_alert_unconfirmed_sessions: { Args: never; Returns: number }
       fn_approve_trial_slot_proposal: {
-        Args: { p_id: string; p_meeting_url: string }
+        Args: { p_id: string; p_meeting_url?: string }
         Returns: string
+      }
+      fn_class_reminders_due: {
+        Args: never
+        Returns: {
+          duration_min: number
+          email: string
+          email_unsubscribed: boolean
+          group_name: string
+          language: string
+          level: string
+          meeting_url: string
+          name: string
+          session_date: string
+          session_id: string
+          start_time: string
+          timezone: string
+          unsubscribe_token: string
+          user_id: string
+        }[]
       }
       fn_clear_teacher_slots: {
         Args: {
@@ -4970,9 +6876,67 @@ export type Database = {
       }
       fn_delete_teacher_slot: { Args: { p_slot_id: string }; Returns: boolean }
       fn_first_trial_block_date: { Args: { p_month: string }; Returns: string }
+      fn_generate_group_sessions: {
+        Args: { p_weeks?: number }
+        Returns: number
+      }
       fn_generate_scheduled_sessions: {
         Args: { p_horizon_days?: number }
         Returns: number
+      }
+      fn_legacy_commit_batch: { Args: { p_batch_id: string }; Returns: Json }
+      fn_legacy_link_account: {
+        Args: { p_legacy_student_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      fn_legacy_require_admin: { Args: never; Returns: string }
+      fn_legacy_rollback_batch: {
+        Args: { p_batch_id: string; p_force?: boolean }
+        Returns: Json
+      }
+      fn_legacy_search_accounts: {
+        Args: { p_query: string }
+        Returns: {
+          email: string
+          linked_legacy_name: string
+          linked_legacy_student_id: string
+          name: string
+          user_id: string
+        }[]
+      }
+      fn_legacy_set_issue_status: {
+        Args: { p_issue_id: string; p_note?: string; p_status: string }
+        Returns: undefined
+      }
+      fn_legacy_stage_batch: {
+        Args: {
+          p_file_sha256: string
+          p_month_year_map: Json
+          p_payload: Json
+          p_source_file: string
+        }
+        Returns: Json
+      }
+      fn_legacy_unlink_account: {
+        Args: { p_legacy_student_id: string }
+        Returns: undefined
+      }
+      fn_locked_group_packages: {
+        Args: { p_level: string }
+        Returns: {
+          package_id: string
+        }[]
+      }
+      fn_private_slot_options: {
+        Args: { p_limit?: number }
+        Returns: {
+          day_name: string
+          day_of_week: number
+          group_demand_count: number
+          is_recommended: boolean
+          start_time: string
+          timezone: string
+        }[]
       }
       fn_propose_trial_slot: { Args: { p_language: string }; Returns: string }
       fn_propose_trial_slots: { Args: never; Returns: number }
@@ -5056,10 +7020,12 @@ export type Database = {
           rejoin_cooldown_days: number
           rollover_interval_days: number
           rollover_lead_hours: number
+          rollover_mode: string
           slot_minutes: number
           suggestion_weeks: number
           trial_block_days: number
           trial_block_start_dow: number
+          trial_weekdays: number[]
           updated_at: string
           window_end_day: number | null
           window_start_day: number | null
@@ -5084,6 +7050,19 @@ export type Database = {
           booked_name: string
           booking_id: string
           starts_at: string
+        }[]
+      }
+      fn_suggest_group_slots: {
+        Args: { p_count?: number; p_level: string }
+        Returns: {
+          day_name: string
+          day_of_week: number
+          duration_min: number
+          existing_demand: number
+          reasons: string[]
+          score: number
+          start_time: string
+          timezone: string
         }[]
       }
       fn_suggest_trial_slots: {
@@ -5122,6 +7101,10 @@ export type Database = {
       fn_trial_language_is_full: {
         Args: { p_language: string }
         Returns: boolean
+      }
+      fn_trial_room_for: {
+        Args: { p_class_language: string; p_day_of_week: number }
+        Returns: string
       }
       fn_trial_slot_conflicts: {
         Args: {
@@ -5492,16 +7475,33 @@ export type Database = {
         Args: { _enrollment_id: string }
         Returns: string
       }
+      next_monthly_trial_date: {
+        Args: { p_dow: number; p_from: string }
+        Returns: string
+      }
       next_weekday_date: {
         Args: { _dow: number; _tz?: string }
         Returns: string
       }
       normalize_level: { Args: { raw: string }; Returns: string }
       notification_category: { Args: { _type: string }; Returns: string }
+      placement_level_key: { Args: { p_level: string }; Returns: string }
       public_display_name: { Args: { p_name: string }; Returns: string }
       purge_cron_health: { Args: never; Returns: undefined }
       reassign_student_slot: {
         Args: { _enrollment_id: string; _new_slot_id: string }
+        Returns: undefined
+      }
+      recompute_lesson_milestones: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      recompute_streak_milestones: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      recompute_xp_milestones: {
+        Args: { p_user_id: string }
         Returns: undefined
       }
       reject_attendance_request: {
@@ -5566,6 +7566,14 @@ export type Database = {
         Args: { _enrollment_id: string }
         Returns: undefined
       }
+      roll_bundle_if_overdrawn: {
+        Args: { p_bundle_id: string }
+        Returns: string
+      }
+      roll_enrolment_if_overdrawn: {
+        Args: { p_enrollment_id: string; p_from?: string }
+        Returns: string
+      }
       run_self_verification: { Args: never; Returns: Json }
       run_trial_min_group_checks: { Args: never; Returns: undefined }
       save_session_attendance: {
@@ -5581,8 +7589,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      send_bundle_payment_ask: {
+        Args: { p_bundle_id: string }
+        Returns: undefined
+      }
       send_class_feedback_emails: { Args: never; Returns: undefined }
       send_daily_numbers_digest: { Args: never; Returns: undefined }
+      send_enrolment_payment_ask: {
+        Args: { p_enrollment_id: string }
+        Returns: undefined
+      }
       send_forming_escalation_emails: { Args: never; Returns: undefined }
       send_forming_group_emails: { Args: never; Returns: undefined }
       send_payment_ask_emails: { Args: never; Returns: undefined }
@@ -5590,6 +7606,10 @@ export type Database = {
       send_pre_class_reminders: { Args: never; Returns: undefined }
       send_receipt_nudge_emails: { Args: never; Returns: undefined }
       send_rejection_followup_emails: { Args: never; Returns: undefined }
+      student_confirm_private_session: {
+        Args: { p_session_id: string }
+        Returns: undefined
+      }
       student_submit_attendance: {
         Args: { p_enrollment_id: string; p_session_date?: string }
         Returns: {
@@ -5597,6 +7617,19 @@ export type Database = {
           sessions_remaining: number
           status: string
         }[]
+      }
+      student_submit_payment_claim: {
+        Args: {
+          p_amount: number
+          p_bundle_id?: string
+          p_currency: string
+          p_method: string
+          p_note?: string
+          p_paid_on: string
+          p_receipt_path?: string
+          p_sender_name?: string
+        }
+        Returns: string
       }
       submit_egypt_payment: {
         Args: {
@@ -5636,18 +7669,31 @@ export type Database = {
         }
         Returns: string
       }
+      telegram_bot_config: {
+        Args: never
+        Returns: {
+          admin_chat_id: string
+          bot_token: string
+          webhook_secret: string
+        }[]
+      }
       trigger_abandoned_checkout_recovery: { Args: never; Returns: undefined }
       trigger_class_reminder_1h: { Args: never; Returns: undefined }
       trigger_class_reminder_24h: { Args: never; Returns: undefined }
+      trigger_class_reminders: { Args: never; Returns: undefined }
       trigger_funnel_digest: { Args: never; Returns: undefined }
       trigger_send_attendance_confirmations: { Args: never; Returns: undefined }
+      trigger_teacher_brief: { Args: never; Returns: undefined }
       trigger_trial_followups: { Args: never; Returns: undefined }
       trigger_trial_guide: { Args: never; Returns: undefined }
+      trigger_trial_reminder: { Args: never; Returns: undefined }
       trigger_trial_rollover_notifications: { Args: never; Returns: undefined }
+      trigger_weekly_report: { Args: never; Returns: undefined }
       unmatch_student_slot: {
         Args: { _enrollment_id: string }
         Returns: undefined
       }
+      unsubscribe_by_token: { Args: { p_token: string }; Returns: string }
       update_student_preferences: {
         Args: {
           _enrollment_id: string

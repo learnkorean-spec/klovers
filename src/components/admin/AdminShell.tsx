@@ -28,7 +28,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarDays, Users, GraduationCap, Bell, Search, LayoutDashboard,
   ClipboardCheck, Clock, ChevronDown, FileText, Settings, LogOut, RefreshCw,
-  CalendarRange, History, Sun, Moon, Mail, Archive, Lock,
+  CalendarRange, History, Sun, Moon, Mail, Archive, Lock, CalendarPlus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,10 @@ export const ADMIN_NAV: {
     { id: "my-students", label: "My students", to: "/admin?tab=my-students", icon: LayoutDashboard },
     { id: "placement-tests", label: "Placement tests", to: "/admin?tab=placement-tests", icon: ClipboardCheck },
     { id: "availability", label: "Availability", to: "/admin?tab=availability", icon: Clock },
+    // Reham's own personal 1:1 lessons (Hungarian, Arabic-for-foreigners,
+    // English) — a separate, lighter booking system from the Korean trials
+    // above; see PersonalTrialManager.tsx.
+    { id: "personal-trials", label: "Personal Trials", to: "/admin?tab=personal-trials", icon: CalendarPlus },
     { id: "email", label: "Email delivery", to: "/admin/email", icon: Mail },
     // Historical students 2022-2025, admin only. Rendered by AdminEntry (not
     // AdminDashboard) as its own screen with sub-tabs; see LegacyDataPanel.tsx.

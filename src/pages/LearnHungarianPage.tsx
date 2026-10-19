@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import PersonalTrialBooking from "@/components/PersonalTrialBooking";
 
 /**
  * /learn-hungarian and /ar/learn-hungarian
@@ -21,8 +22,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * mismatch rather than reassurance. It keeps the shared Header/Footer (same
  * trusted domain, same site) but uses a quieter, neutral palette of its own.
  *
- * No booking-automation package exists for Hungarian yet (schedule_packages
- * only covers Korean), so the CTA is the contact form, not /free-trial.
+ * Trial booking (19 Oct 2026): schedule_packages/trial_slots only cover the
+ * Korean group-class system, so this uses a separate, lighter system built
+ * for Reham's own solo lessons — PersonalTrialBooking + the
+ * book-personal-trial Edge Function + personal_trial_slots/bookings — shared
+ * across all three personal-teacher languages (Hungarian, Arabic-for-
+ * foreigners, English) from the start, since it's the same teacher's
+ * calendar either way. A WhatsApp fallback is always visible alongside it
+ * for when no open slot matches.
  */
 
 const LearnHungarianPage = () => {
@@ -207,6 +214,30 @@ const LearnHungarianPage = () => {
                 )}
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* Trial booking */}
+        <section className="py-16 border-b bg-muted/30">
+          <div className="container mx-auto px-4 max-w-2xl">
+            <h2 className="text-3xl font-bold mb-2 text-foreground text-center">
+              {tr("Book your free trial lesson", "احجز حصتك التجريبية المجانية")}
+            </h2>
+            <p className="text-foreground/70 text-center mb-8">
+              {tr(
+                "Pick a time that works for you — or message us directly if nothing matches.",
+                "اختر موعدًا يناسبك — أو راسلنا مباشرة إن لم يناسبك أي موعد.",
+              )}
+            </p>
+            <PersonalTrialBooking
+              language="hungarian"
+              accentColor="#a9502f"
+              accentHoverColor="#8f4227"
+              whatsappMessage={{
+                en: "Hi! I'd like to book a free trial Hungarian lesson but none of the available times work for me — can we find another time?",
+                ar: "مرحبًا، أرغب في حجز حصة مجرية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني — هل يمكننا الاتفاق على موعد آخر؟",
+              }}
+            />
           </div>
         </section>
 

@@ -26,7 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, Users, FileCheck, Clock, Tag, Loader2, Image, Palette, Trophy, TrendingUp, Link, BookOpen, GraduationCap, Volume2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Package, Lock } from "lucide-react";
+import { ChevronDown, Package, Lock, CalendarPlus } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
@@ -48,6 +48,7 @@ const AdminNotifications = lazy(() => import("@/components/admin/AdminNotificati
 const GroupMatcher = lazy(() => import("@/components/admin/GroupMatcher"));
 const RecommendedSlotsPanel = lazy(() => import("@/components/admin/RecommendedSlotsPanel"));
 const TeacherAvailabilityManager = lazy(() => import("@/components/admin/TeacherAvailabilityManager"));
+const PersonalTrialManager = lazy(() => import("@/components/admin/PersonalTrialManager"));
 const MyStudentsManager = lazy(() => import("@/components/admin/MyStudentsManager"));
 const UpcomingPrivateClasses = lazy(() => import("@/components/admin/UpcomingPrivateClasses"));
 const StudentPreferenceDashboard = lazy(() => import("@/components/admin/StudentPreferenceDashboard"));
@@ -1009,7 +1010,7 @@ const AdminDashboard = () => {
   // a group, so they were findable and still went to the wrong place.
   // The assertion under this list fails loudly if it happens again.
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
-    { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "lead-funnel", "sales", "promos", "manage"] },
+    { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "personal-trials", "lead-funnel", "sales", "promos", "manage"] },
     { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
     { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "book-plan", "pictures", "brand", "conversation-audio"] },
     { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings", "connectors"] },
@@ -1298,6 +1299,11 @@ const AdminDashboard = () => {
                     )}
                   </TabsTrigger>
                 )}
+                {inActiveGroup("personal-trials") && (
+                  <TabsTrigger value="personal-trials" className={TAB_CLS}>
+                    <CalendarPlus className="h-3.5 w-3.5" /> Personal Trials
+                  </TabsTrigger>
+                )}
                 {inActiveGroup("lead-funnel") && (
                   <TabsTrigger value="lead-funnel" className={TAB_CLS}>
                     <TrendingUp className="h-3.5 w-3.5" /> Funnel Analytics
@@ -1503,6 +1509,15 @@ const AdminDashboard = () => {
               <TabErrorBoundary name="Leads">
                 <Suspense fallback={<TabLoader />}>
                   <LeadsPanel />
+                </Suspense>
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* PERSONAL TRIAL LESSONS TAB — Hungarian, Arabic, English (Reham's own 1:1 lessons) */}
+            <TabsContent value="personal-trials">
+              <TabErrorBoundary name="Personal Trials">
+                <Suspense fallback={<TabLoader />}>
+                  <PersonalTrialManager />
                 </Suspense>
               </TabErrorBoundary>
             </TabsContent>
