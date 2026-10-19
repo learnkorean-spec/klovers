@@ -11,11 +11,21 @@ import PersonalTrialBooking from "@/components/PersonalTrialBooking";
  * /learn-arabic and /ar/learn-arabic
  *
  * Added 19 Oct 2026, completing the trio planned alongside /learn-hungarian
- * and /learn-english: Reham teaches Arabic (spoken Egyptian Arabic, in
- * practice) to non-native speakers one-on-one, explained in English. Unlike
- * the other two pages, the primary audience here doesn't already speak
- * Arabic — but the site's own bilingual toggle still applies for anyone who
- * reads this in Arabic (a friend sharing the link, a bilingual visitor).
+ * and /learn-english: Reham teaches Arabic to non-native speakers
+ * one-on-one, explained in English. Unlike the other two pages, the primary
+ * audience here doesn't already speak Arabic — but the site's own bilingual
+ * toggle still applies for anyone who reads this in Arabic (a friend sharing
+ * the link, a bilingual visitor).
+ *
+ * Repositioned 20 Oct 2026 (Re): the original copy framed this as Egyptian
+ * dialect only, for people connected to Egypt specifically. Re's instruction
+ * was explicit — this is Arabic lessons for foreigners from anywhere in the
+ * world, covering BOTH Modern Standard Arabic (Fusha) and spoken dialect
+ * (Egyptian, which Reham teaches as a native speaker and which is the
+ * dialect most widely understood across the Arab world thanks to Egyptian
+ * film and TV), not an Egypt-only offering. The "which one do I need"
+ * question is now its own FAQ entry rather than left for the visitor to
+ * guess.
  *
  * Same quiet, non-Klovers visual identity as the other two personal-lesson
  * pages, its own distinct palette, and the same shared trial-booking system
@@ -30,11 +40,11 @@ const LearnArabicPage = () => {
 
   useSEO({
     title: isAr
-      ? "تعلّم العربية المصرية بشرح بالإنجليزية — مع ريهام الشرقاوي"
-      : "Learn Egyptian Arabic, explained in English — with Reham Elshrkawy",
+      ? "تعلّم العربية الفصحى أو العامية المصرية — مع ريهام الشرقاوي"
+      : "Learn Arabic — Standard (Fusha) or Egyptian Dialect — with Reham Elshrkawy",
     description: isAr
-      ? "دروس عربية مصرية فردية عبر الإنترنت، بشرح بالإنجليزية، للمقيمين في مصر أو زائريها أو المهتمين باللهجة المصرية الحقيقية للمحادثة، لا الفصحى الكتابية فقط."
-      : "One-on-one online Egyptian Arabic lessons, explained in English, for people living in or visiting Egypt, or anyone who wants real spoken Arabic rather than textbook Classical Arabic alone.",
+      ? "دروس عربية فردية عبر الإنترنت لغير الناطقين بها من أي مكان في العالم، بشرح بالإنجليزية — الفصحى أو العامية المصرية المنطوقة، مع معلمة أصلية."
+      : "One-on-one online Arabic lessons for non-native speakers anywhere in the world, explained in English — Modern Standard Arabic (Fusha) for reading, writing and formal use, or spoken Egyptian dialect for real conversation, with a native teacher who has taught students in more than fifteen countries.",
     canonical: isAr ? "https://kloversegy.com/ar/learn-arabic" : "https://kloversegy.com/learn-arabic",
     alternates: {
       en: "https://kloversegy.com/learn-arabic",
@@ -48,12 +58,22 @@ const LearnArabicPage = () => {
   const faq = [
     {
       q: tr(
+        "What's the difference between Standard Arabic (Fusha) and Egyptian dialect — which should I learn?",
+        "ما الفرق بين الفصحى والعامية المصرية — وأيهما يجب أن أتعلم؟",
+      ),
+      a: tr(
+        "Fusha is the formal, written Arabic used in media, religious texts and official documents, and it's the same everywhere in the Arab world. Egyptian dialect is how people actually speak day to day, and it's the dialect most widely understood across the Arab world, thanks to Egyptian film and TV. Many students learn both — we'll figure out the right mix for your goal.",
+        "الفصحى هي العربية الرسمية المكتوبة المستخدمة في الإعلام والنصوص الدينية والمستندات الرسمية، وهي نفسها في كل أنحاء العالم العربي. أما العامية المصرية فهي كيف يتحدث الناس فعليًا يوميًا، وهي اللهجة الأكثر فهمًا في العالم العربي بفضل السينما والتلفزيون المصري. كثير من الطلاب يتعلمون الاثنين معًا — يمكننا تحديد المزيج المناسب لهدفك.",
+      ),
+    },
+    {
+      q: tr(
         "I'm already learning Korean at Klovers — can I also book these Arabic lessons?",
         "أدرس الكورية بالفعل في كلوفرز — هل يمكنني حجز هذه الدروس العربية أيضًا؟",
       ),
       a: tr(
-        "Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers who end up living in, working with, or visiting Egypt.",
-        "نعم — هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية الجماعية. وهذا جمع شائع للناطقين بالكورية الذين ينتهي بهم الأمر بالعيش في مصر أو العمل معها أو زيارتها.",
+        "Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself.",
+        "نعم — هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية الجماعية. وهذا جمع شائع للناطقين بالكورية المهتمين بالعربية، سواء للسفر أو العمل أو لمجرد اللغة نفسها.",
       ),
     },
     {
@@ -62,8 +82,8 @@ const LearnArabicPage = () => {
         "هل أحتاج إلى معرفة سابقة بالعربية للبدء؟",
       ),
       a: tr(
-        "No — lessons start from zero spoken Arabic, even if you've studied Classical Arabic before. Everything is explained in English first.",
-        "لا — تبدأ الدروس من الصفر في العربية المنطوقة، حتى لو درست الفصحى من قبل. يُشرح كل شيء بالإنجليزية أولًا.",
+        "No — lessons start from zero, whether you're learning Fusha or spoken dialect, even if you've studied Classical Arabic before. Everything is explained in English first.",
+        "لا — تبدأ الدروس من الصفر، سواء كنت تتعلم الفصحى أو العامية المنطوقة، حتى لو درست الفصحى من قبل. يُشرح كل شيء بالإنجليزية أولًا.",
       ),
     },
   ];
@@ -81,32 +101,44 @@ const LearnArabicPage = () => {
   // questions" section.
 
   const audience = [
-    tr("Moving to, or already living in, Egypt for work or family", "الانتقال إلى مصر أو الإقامة فيها للعمل أو الأسرة"),
-    tr("Visiting often and tired of not understanding the street around you", "تزور مصر كثيرًا وتشعر بالتعب من عدم فهم ما يدور حولك في الشارع"),
-    tr("Studied Classical Arabic before but can't actually hold a conversation", "درست العربية الفصحى من قبل لكنك لا تستطيع فعليًا إجراء محادثة"),
-    tr("Just curious about Egyptian Arabic after films, shows, or a trip", "الفضول لتعلّم العربية المصرية بعد مشاهدة أفلام أو مسلسلات أو بعد رحلة"),
+    tr(
+      "Want to speak Arabic for travel, work, or family — wherever in the world you are",
+      "ترغب في التحدث بالعربية للسفر أو العمل أو الأسرة — أينما كنت في العالم",
+    ),
+    tr(
+      "Need Modern Standard Arabic (Fusha) for study, media, religious texts, or formal use",
+      "تحتاج الفصحى للدراسة أو الإعلام أو النصوص الدينية أو الاستخدام الرسمي",
+    ),
+    tr(
+      "Want real spoken Egyptian dialect — the version most widely understood across the Arab world",
+      "ترغب في العامية المصرية المنطوقة الحقيقية — وهي اللهجة الأكثر فهمًا في العالم العربي",
+    ),
+    tr(
+      "Studied Classical Arabic before but can't actually hold a conversation",
+      "درست الفصحى من قبل لكنك لا تستطيع فعليًا إجراء محادثة",
+    ),
   ];
 
   const steps = [
     {
       title: tr("A free 20-minute call", "مكالمة تعارف مجانية مدتها عشرون دقيقة"),
       body: tr(
-        "We talk about why you're learning Arabic and where you're starting from — zero is completely fine.",
-        "نتحدث عن سبب رغبتك في تعلّم العربية ومستواك الحالي — البدء من الصفر أمر طبيعي تمامًا.",
+        "We talk about your goal — Fusha, Egyptian dialect, or both — and where you're starting from. Zero is completely fine.",
+        "نتحدث عن هدفك: الفصحى أو العامية المصرية أو كلاهما، ومستواك الحالي — البدء من الصفر أمر طبيعي تمامًا.",
       ),
     },
     {
-      title: tr("Real spoken Egyptian Arabic, explained in English", "عربية مصرية حقيقية منطوقة، بشرح بالإنجليزية"),
+      title: tr("Explained in English, in the register you actually need", "تُشرح بالإنجليزية، بالمستوى الذي تحتاجه فعليًا"),
       body: tr(
-        "Egyptian Arabic sounds nothing like a Classical-Arabic textbook, so every phrase is explained in English first, then practiced the way people actually speak it.",
-        "العربية المصرية تختلف تمامًا عن الفصحى في الكتب، لذا تُشرح كل عبارة بالإنجليزية أولًا، ثم تُمارَس بالطريقة التي يتحدث بها الناس فعلًا.",
+        "Fusha grammar and script, or real spoken dialect — every phrase is explained in English first, then practiced the way it's actually used.",
+        "قواعد الفصحى والكتابة، أو العامية المنطوقة الحقيقية — تُشرح كل عبارة بالإنجليزية أولًا، ثم تُمارَس بالطريقة المستخدمة فعليًا.",
       ),
     },
     {
       title: tr("Built around what you actually need", "مبنية على ما تحتاجه فعلًا"),
       body: tr(
-        "The market, a taxi, your neighbors, a work meeting — the lessons follow your actual situation, not a fixed textbook order.",
-        "السوق، أو سيارة الأجرة، أو الجيران، أو اجتماع عمل — تتبع الدروس وضعك الفعلي لا ترتيب كتاب ثابت.",
+        "Exam prep, reading religious texts, travel, work, family, or everyday conversation — the lessons follow your actual goal, not a fixed textbook order.",
+        "التحضير لاختبار، أو قراءة نصوص دينية، أو السفر، أو العمل، أو الأسرة، أو المحادثة اليومية — تتبع الدروس هدفك الفعلي لا ترتيب كتاب ثابت.",
       ),
     },
   ];
@@ -122,18 +154,18 @@ const LearnArabicPage = () => {
               <div>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3d4f7d]/30 bg-[#3d4f7d]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#3d4f7d]">
                   <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-                  {tr("Arabic lessons · spoken Egyptian Arabic, not textbook only", "دروس عربية · لهجة مصرية منطوقة لا كتابًا فقط")}
+                  {tr("Arabic lessons · Standard Arabic or Egyptian dialect, for learners worldwide", "دروس عربية · الفصحى أو العامية المصرية، لمتعلمين من كل أنحاء العالم")}
                 </span>
                 <h1 className="mt-5 text-4xl md:text-5xl font-bold text-foreground leading-tight">
                   {tr(
-                    "Learn Egyptian Arabic, explained in English",
-                    "تعلّم العربية المصرية بشرح بالإنجليزية",
+                    "Learn Arabic — Standard (Fusha) or Egyptian Dialect",
+                    "تعلّم العربية الفصحى أو العامية المصرية",
                   )}
                 </h1>
                 <p className="mt-5 text-lg md:text-xl text-foreground/70 leading-relaxed">
                   {tr(
-                    "I'm a native Egyptian Arabic speaker who's spent years explaining languages across cultures — Korean-Arabic interpreting, international operations, and teaching students in more than fifteen countries. I know exactly what gets lost between a textbook and an actual conversation.",
-                    "أنا متحدثة أصلية للعربية المصرية، أمضيت سنوات في شرح اللغات بين الثقافات — ترجمة كورية-عربية، وعمليات دولية، وتدريس طلاب في أكثر من خمس عشرة دولة. أعرف بالضبط ما يضيع بين الكتاب المدرسي والمحادثة الفعلية.",
+                    "I'm a native Egyptian Arabic speaker who's spent years explaining languages across cultures — Korean-Arabic interpreting, international operations, and teaching students in more than fifteen countries. Whether you need Modern Standard Arabic for reading, writing and formal use, or real spoken Egyptian dialect for conversation, I'll help you find the one that matches what you're actually trying to do.",
+                    "أنا متحدثة أصلية للعربية المصرية، أمضيت سنوات في شرح اللغات بين الثقافات — ترجمة كورية-عربية، وعمليات دولية، وتدريس طلاب في أكثر من خمس عشرة دولة. سواء احتجت الفصحى للقراءة والكتابة والاستخدام الرسمي، أو العامية المصرية المنطوقة للمحادثة الحقيقية، سأساعدك على تحديد ما يناسب هدفك فعليًا.",
                   )}
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -232,8 +264,8 @@ const LearnArabicPage = () => {
               </h2>
               <p className="text-foreground/70 leading-relaxed mb-4">
                 {tr(
-                  "Years of Korean-Arabic interpreting and international operations taught me exactly where a translation breaks down between languages — the same gap that makes textbook Arabic feel nothing like the street outside.",
-                  "سنوات من الترجمة الكورية-العربية والعمليات الدولية علّمتني بالضبط أين تنهار الترجمة بين اللغات — الفجوة نفسها التي تجعل العربية الكتابية لا تشبه إطلاقًا ما يُسمع في الشارع.",
+                  "Years of Korean-Arabic interpreting and international operations taught me exactly where a translation breaks down between languages — the same gap that makes textbook Arabic feel nothing like real use, whether you're writing formally or speaking day to day.",
+                  "سنوات من الترجمة الكورية-العربية والعمليات الدولية علّمتني بالضبط أين تنهار الترجمة بين اللغات — نفس الفجوة التي تجعل العربية الفصحى في الكتب لا تشبه الاستخدام الفعلي، سواء في الكتابة الرسمية أو في العامية المنطوقة.",
                 )}
               </p>
               <p className="text-foreground/70 leading-relaxed">
@@ -295,8 +327,8 @@ const LearnArabicPage = () => {
             </h2>
             <p className="text-lg mb-8 text-background/80 max-w-2xl mx-auto">
               {tr(
-                "A move to Egypt, a trip, or just real conversation — send a message and we'll start from there.",
-                "انتقال إلى مصر، أو رحلة، أو مجرد محادثة حقيقية — أرسل رسالة ولنبدأ من وضعك فعليًا.",
+                "Fusha for study or formal use, Egyptian dialect for real conversation, or both — send a message and we'll start from there.",
+                "الفصحى للدراسة أو الاستخدام الرسمي، أو العامية المصرية للمحادثة الحقيقية، أو كلاهما معًا — أرسل رسالة ولنبدأ من وضعك فعليًا.",
               )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

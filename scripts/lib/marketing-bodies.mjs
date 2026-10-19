@@ -361,29 +361,31 @@ export const LEARN_ENGLISH_BODY_HTML = `<div id="learn-english-prerendered" lang
     </div>`;
 
 export const LEARN_ARABIC_BODY_HTML = `<div id="learn-arabic-prerendered" lang="en" dir="ltr">
-      <h1>Learn Egyptian Arabic, explained in English</h1>
-      <p><strong>Arabic lessons · spoken Egyptian Arabic, not textbook only.</strong> I'm a native Egyptian Arabic speaker who's spent years explaining languages across cultures — Korean-Arabic interpreting, international operations, and teaching students in more than fifteen countries. I know exactly what gets lost between a textbook and an actual conversation.</p>
+      <h1>Learn Arabic — Standard (Fusha) or Egyptian Dialect</h1>
+      <p><strong>Arabic lessons · Standard Arabic or Egyptian dialect, for learners worldwide.</strong> I'm a native Egyptian Arabic speaker who's spent years explaining languages across cultures — Korean-Arabic interpreting, international operations, and teaching students in more than fifteen countries. Whether you need Modern Standard Arabic for reading, writing and formal use, or real spoken Egyptian dialect for conversation, I'll help you find the one that matches what you're actually trying to do.</p>
       <h2>Who these lessons are for</h2>
       <ul>
-        <li>Moving to, or already living in, Egypt for work or family</li>
-        <li>Visiting often and tired of not understanding the street around you</li>
+        <li>Want to speak Arabic for travel, work, or family — wherever in the world you are</li>
+        <li>Need Modern Standard Arabic (Fusha) for study, media, religious texts, or formal use</li>
+        <li>Want real spoken Egyptian dialect — the version most widely understood across the Arab world</li>
         <li>Studied Classical Arabic before but can't actually hold a conversation</li>
-        <li>Just curious about Egyptian Arabic after films, shows, or a trip</li>
       </ul>
       <h2>How lessons work</h2>
       <ol>
-        <li><strong>A free 20-minute call</strong> — We talk about why you're learning Arabic and where you're starting from — zero is completely fine.</li>
-        <li><strong>Real spoken Egyptian Arabic, explained in English</strong> — Egyptian Arabic sounds nothing like a Classical-Arabic textbook, so every phrase is explained in English first, then practiced the way people actually speak it.</li>
-        <li><strong>Built around what you actually need</strong> — The market, a taxi, your neighbors, a work meeting — the lessons follow your actual situation, not a fixed textbook order.</li>
+        <li><strong>A free 20-minute call</strong> — We talk about your goal — Fusha, Egyptian dialect, or both — and where you're starting from. Zero is completely fine.</li>
+        <li><strong>Explained in English, in the register you actually need</strong> — Fusha grammar and script, or real spoken dialect — every phrase is explained in English first, then practiced the way it's actually used.</li>
+        <li><strong>Built around what you actually need</strong> — Exam prep, reading religious texts, travel, work, family, or everyday conversation — the lessons follow your actual goal, not a fixed textbook order.</li>
       </ol>
       <h2>Not a textbook — a guide who's done this</h2>
-      <p>Years of Korean-Arabic interpreting and international operations taught me exactly where a translation breaks down between languages — the same gap that makes textbook Arabic feel nothing like the street outside.</p>
+      <p>Years of Korean-Arabic interpreting and international operations taught me exactly where a translation breaks down between languages — the same gap that makes textbook Arabic feel nothing like real use, whether you're writing formally or speaking day to day.</p>
       <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — Arabic lessons follow the same one-on-one, real-conversation approach.</p>
       <h2>Common questions</h2>
+      <h3>What's the difference between Standard Arabic (Fusha) and Egyptian dialect — which should I learn?</h3>
+      <p>Fusha is the formal, written Arabic used in media, religious texts and official documents, and it's the same everywhere in the Arab world. Egyptian dialect is how people actually speak day to day, and it's the dialect most widely understood across the Arab world, thanks to Egyptian film and TV. Many students learn both — we'll figure out the right mix for your goal.</p>
       <h3>I'm already learning Korean at Klovers — can I also book these Arabic lessons?</h3>
-      <p>Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers who end up living in, working with, or visiting Egypt.</p>
+      <p>Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself.</p>
       <h3>Do I need to know any Arabic already to start?</h3>
-      <p>No — lessons start from zero spoken Arabic, even if you've studied Classical Arabic before. Everything is explained in English first.</p>
+      <p>No — lessons start from zero, whether you're learning Fusha or spoken dialect, even if you've studied Classical Arabic before. Everything is explained in English first.</p>
       <p><a href="/contact?subject=Arabic+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
     </div>`;
 
@@ -641,12 +643,16 @@ export const MARKETING_FAQ = {
 ],
   "/learn-arabic": [
     {
+        "q": "What's the difference between Standard Arabic (Fusha) and Egyptian dialect — which should I learn?",
+        "a": "Fusha is the formal, written Arabic used in media, religious texts and official documents, and it's the same everywhere in the Arab world. Egyptian dialect is how people actually speak day to day, and it's the dialect most widely understood across the Arab world, thanks to Egyptian film and TV. Many students learn both — we'll figure out the right mix for your goal."
+    },
+    {
         "q": "I'm already learning Korean at Klovers — can I also book these Arabic lessons?",
-        "a": "Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers who end up living in, working with, or visiting Egypt."
+        "a": "Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself."
     },
     {
         "q": "Do I need to know any Arabic already to start?",
-        "a": "No — lessons start from zero spoken Arabic, even if you've studied Classical Arabic before. Everything is explained in English first."
+        "a": "No — lessons start from zero, whether you're learning Fusha or spoken dialect, even if you've studied Classical Arabic before. Everything is explained in English first."
     }
 ],
 };

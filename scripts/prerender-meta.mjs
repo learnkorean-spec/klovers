@@ -936,16 +936,19 @@ const MARKETING_ROUTES = [
   },
   {
     path: "/learn-arabic",
-    title: "Learn Egyptian Arabic, explained in English — with Reham Elshrkawy",
+    title: "Learn Arabic — Standard (Fusha) or Egyptian Dialect — with Reham Elshrkawy",
     description:
-      "One-on-one online Egyptian Arabic lessons, explained in English, for people living in or visiting Egypt, or anyone who wants real spoken Arabic rather than textbook Classical Arabic alone.",
+      "One-on-one online Arabic lessons for non-native speakers anywhere in the world, explained in English — Modern Standard Arabic (Fusha) for reading, writing and formal use, or spoken Egyptian dialect for real conversation, with a native teacher who has taught students in more than fifteen countries.",
     body: LEARN_ARABIC_BODY_HTML,
     articleLd: false,
     published: "2026-10-19",
-    modified: "2026-10-19",
+    modified: "2026-10-20",
     // Own hero image for link previews (19 Oct 2026 SEO/GEO pass) — matches
     // the ogImage LearnArabicPage.tsx sets at runtime; see the note on the
-    // Hungarian route above for why the two must agree.
+    // Hungarian route above for why the two must agree. Kept on repositioning
+    // (20 Oct 2026, Re: foreigners worldwide, Fusha and dialect, not just
+    // Egypt) — the teacher is still a native Egyptian speaker, so the image
+    // still fits; only the audience/copy changed.
     image: "https://images.unsplash.com/photo-1762249236589-b97477bb4cf2?fm=jpg&q=80&w=1200&auto=format&fit=crop",
     imageAlt: "Street scene in Cairo, Egypt",
     breadcrumb: [{ name: "Home", item: BASE_URL }],
@@ -955,7 +958,7 @@ const MARKETING_ROUTES = [
       provider: { "@type": "Person", name: "Reham Elshrkawy", url: `${BASE_URL}/about` },
       inLanguage: ["ar", "en"],
       courseMode: "online",
-      teaches: "Egyptian Arabic, spoken conversation for living in, working with, or visiting Egypt",
+      teaches: "Arabic — Modern Standard Arabic (Fusha) and Egyptian dialect, for learners worldwide",
     },
   },
   // Added in A1 — live routes that were missing from the prerender list.
