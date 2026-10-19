@@ -56,6 +56,8 @@ import {
 } from "@/lib/stripePrices";
 import { getLevelShortLabel } from "@/constants/levels";
 import { CountryCombobox } from "@/components/admin/CountryCombobox";
+import { TelegramLinkButton } from "@/components/admin/TelegramLinkButton";
+import { useTelegramLinks } from "@/hooks/admin/useTelegramLinks";
 
 const SUBJECT_BADGE: Record<StudentSubject, string> = {
   korean: "bg-yellow-100 text-yellow-900 border-yellow-300",
@@ -804,6 +806,7 @@ type StudentKind = "all" | "private" | "group";
 const MyStudentsManager = () => {
   const { data: students = [], isLoading } = useMyStudents();
   const { data: groupStudents = [], isLoading: isGroupLoading } = useGroupStudents();
+  const { data: telegramLinks } = useTelegramLinks();
   const createStudent = useCreateStudent();
   const updateStudent = useUpdateStudent();
   const deleteStudent = useDeleteStudent();
@@ -1774,6 +1777,13 @@ const MyStudentsManager = () => {
                 </p>
               </div>
               <div className="flex items-center gap-0.5 shrink-0 ml-auto">
+                <span className="mr-1">
+                  <TelegramLinkButton
+                    target={{ kind: "private", teacherStudentId: student.id }}
+                    link={telegramLinks?.byStudent.get(student.id)}
+                    studentName={student.full_name}
+                  />
+                </span>
                 {student.meeting_url && (
                   <Button asChild size="sm" variant="outline" className="h-8">
                     <a href={student.meeting_url} target="_blank" rel="noopener noreferrer" title={student.meeting_url}>
@@ -1941,13 +1951,20 @@ const MyStudentsManager = () => {
                         )}
                       </p>
                     </div>
-                    {gs.meeting_url && (
-                      <Button asChild size="sm" variant="outline" className="h-8 shrink-0 ml-auto">
-                        <a href={gs.meeting_url} target="_blank" rel="noopener noreferrer" title={gs.meeting_url}>
-                          <Video className="h-3.5 w-3.5 mr-1" /> Join
-                        </a>
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0 ml-auto">
+                      <TelegramLinkButton
+                        target={{ kind: "group", userId: gs.user_id }}
+                        link={telegramLinks?.byUser.get(gs.user_id)}
+                        studentName={gs.full_name}
+                      />
+                      {gs.meeting_url && (
+                        <Button asChild size="sm" variant="outline" className="h-8">
+                          <a href={gs.meeting_url} target="_blank" rel="noopener noreferrer" title={gs.meeting_url}>
+                            <Video className="h-3.5 w-3.5 mr-1" /> Join
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   {gs.sessions_remaining !== null && (
                     <p className="text-sm text-muted-foreground">

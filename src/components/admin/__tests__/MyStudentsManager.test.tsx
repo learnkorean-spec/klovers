@@ -107,6 +107,16 @@ vi.mock("@/hooks/admin/useMyStudents", () => ({
   useUnconfirmSession: () => ({ mutateAsync: unconfirmMutate, isPending: false }),
 }));
 
+// Real module touches the Supabase client at import time (createClient(...)),
+// which throws in this env with no VITE_SUPABASE_URL set. Mocked like every
+// other data hook above so importing it never reaches that line.
+vi.mock("@/hooks/admin/useTelegramLinks", () => ({
+  TELEGRAM_BOT_USERNAME: "learnkoreanwithkloversbot",
+  telegramStartUrl: (code: string) => `https://t.me/learnkoreanwithkloversbot?start=${code}`,
+  useTelegramLinks: () => ({ data: { byStudent: new Map(), byUser: new Map() } }),
+  useTelegramLinkCode: () => ({ mutateAsync: vi.fn().mockResolvedValue("code"), isPending: false }),
+}));
+
 import MyStudentsManager from "../MyStudentsManager";
 
 const TZ = "Asia/Kuala_Lumpur";
