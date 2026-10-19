@@ -328,6 +328,28 @@ export const LEARN_HUNGARIAN_BODY_HTML = `<div id="learn-hungarian-prerendered" 
       <p><a href="/contact?subject=Hungarian+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
     </div>`;
 
+export const LEARN_ENGLISH_BODY_HTML = `<div id="learn-english-prerendered" lang="en" dir="ltr">
+      <h1>Learn English, explained in Arabic</h1>
+      <p><strong>English lessons · real conversation, not just grammar.</strong> I've used English professionally for years — interpreting, international operations, and running an academy that teaches across three languages. I know exactly where Arabic speakers get stuck, because I've watched it happen for years, not guessed at it.</p>
+      <h2>Who these lessons are for</h2>
+      <ul>
+        <li>Need English for work, interviews, or a new job</li>
+        <li>Preparing for IELTS, TOEFL, or study abroad</li>
+        <li>Can read fairly well but freeze up when speaking</li>
+        <li>Traveling, moving abroad, or just want real conversational fluency</li>
+      </ul>
+      <h2>How lessons work</h2>
+      <ol>
+        <li><strong>A free 20-minute call</strong> — We talk about why you're learning English and where you're starting from — beginner to advanced, it's fine either way.</li>
+        <li><strong>Grammar explained in Arabic, practice in English</strong> — Rules that never quite made sense in a classroom get explained plainly in Arabic first, then practiced out loud until they're automatic.</li>
+        <li><strong>Built around what you actually need</strong> — Job interviews, exam sections, or everyday conversation — the lessons follow your actual situation, not a fixed textbook order.</li>
+      </ol>
+      <h2>Not a textbook — a guide who's done this</h2>
+      <p>Years of Korean-Arabic interpreting and international operations meant English was never optional for me — it was the language a deadline or a document had to be right in. That's the same standard I bring to a lesson.</p>
+      <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — English lessons follow the same one-on-one, real-conversation approach.</p>
+      <p><a href="/contact?subject=English+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
+    </div>`;
+
 export const INTERVIEW_BODY_HTML = `<div id="interview-training-prerendered" lang="en" dir="ltr">
       <h1>Ace Your Korean Job Interview</h1>
       <p><strong>AI-Powered · 면접 준비.</strong> Get personalized Korean interview questions with model answers, pronunciation guides, and text-to-speech — all tailored to your skills. Start free with 2 questions.</p>

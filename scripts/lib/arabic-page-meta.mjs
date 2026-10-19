@@ -33,6 +33,9 @@ export const ARABIC_PAGE_META = [
   // Hungarian lessons (19 Oct 2026). Same title and description as
   // LearnHungarianPage's Arabic useSEO.
   { path: "/learn-hungarian", title: "تعلّم المجرية بالعربية أو الإنجليزية — مع ريهام الشرقاوي", description: "دروس مجرية فردية عبر الإنترنت، بشرح بالعربية أو الإنجليزية، مع معلمة عاشت في بودابست وتعرف تمامًا ما يحتاجه المبتدئ: من أجل السفر، أو منحة مجرية، أو أسرة مجرية." },
+  // English lessons (19 Oct 2026). Same title and description as
+  // LearnEnglishPage's Arabic useSEO.
+  { path: "/learn-english", title: "تعلّم الإنجليزية بشرح بالعربية — مع ريهام الشرقاوي", description: "دروس إنجليزية فردية عبر الإنترنت، بشرح بالعربية، تركّز على المحادثة الحقيقية والثقة في الحديث — للعمل، أو المقابلات، أو السفر، أو التحضير للامتحانات." },
   // Klovers Supply (6 Oct 2026). Same title and description as ShopPage's
   // Arabic useSEO for the shop index, so the static head and the live page agree.
   { path: "/shop", title: "متجر كلوفرز — كتب ومستلزمات لتعلّم الكورية", description: "كتب ومستلزمات من كلوفرز تحمل الكورية إلى ما بعد الحصة. الكتب الرقمية تُضاف مباشرة إلى «كتبي» في لوحة الطالب." },

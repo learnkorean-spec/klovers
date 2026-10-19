@@ -81,6 +81,7 @@ const LearnKoreanArabicSpeakersPage = lazy(() => import("./pages/LearnKoreanArab
 const TopikExamPage = lazy(() => import("./pages/TopikExamPage"));
 const KDramaLearningPage = lazy(() => import("./pages/KDramaLearningPage"));
 const LearnHungarianPage = lazy(() => import("./pages/LearnHungarianPage"));
+const LearnEnglishPage = lazy(() => import("./pages/LearnEnglishPage"));
 // The scholarships page carries a real Arabic twin (/ar/scholarships), listed in
 // scripts/lib/arabic-page-meta.mjs and scripts/lib/arabic-pages.mjs.
 const ScholarshipsPage = lazy(() => import("./pages/ScholarshipsPage"));
@@ -210,6 +211,7 @@ const App = () => (
                 <Route path="/ar/topik-exam-preparation" element={<TopikExamPage />} />
                 <Route path="/ar/learn-korean-kdramas" element={<KDramaLearningPage />} />
                 <Route path="/ar/learn-hungarian" element={<LearnHungarianPage />} />
+                <Route path="/ar/learn-english" element={<LearnEnglishPage />} />
                 {/* Klovers Supply index (6 Oct 2026). Category pages stay English-URL only. */}
                 <Route path="/ar/shop" element={<ShopPage />} />
                 <Route path="/ar/hangul-starter" element={<HangulStarterPage />} />
@@ -281,6 +283,7 @@ const App = () => (
                 <Route path="/topik-exam-preparation" element={<TopikExamPage />} />
                 <Route path="/learn-korean-kdramas" element={<KDramaLearningPage />} />
                 <Route path="/learn-hungarian" element={<LearnHungarianPage />} />
+                <Route path="/learn-english" element={<LearnEnglishPage />} />
                 <Route path="/scholarships" element={<ScholarshipsPage />} />
                 <Route path="/interview-training" element={<KoreanInterviewPage />} />
                 <Route path="/welcome-back" element={<ReturningStudentsLandingPage />} />
