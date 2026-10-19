@@ -14,6 +14,13 @@
 // Anything else a linked student writes to the bot is forwarded to Re, so a
 // reply to a reminder never disappears into a bot nobody reads.
 //
+// Re, 19 Oct 2026: also handles the inline Yes/No buttons from
+// telegram-attendance-ask ("did you attend your lesson?"). That's a
+// callback_query update, not a message -- handled in its own branch below.
+// Tapping an answer is a CLAIM (see telegram_confirm_private_session): it
+// never counts the class itself, it only tells Re what the student says so
+// she can confirm it the way she already confirms a web self-service claim.
+//
 // SECURITY
 // --------
 // Telegram is registered with a secret_token (setWebhook); every genuine
@@ -53,6 +60,24 @@ async function sendMessage(token: string, chatId: number | string, text: string)
   if (!res.ok) console.error("telegram sendMessage failed", res.status, await res.text());
 }
 
+async function answerCallbackQuery(token: string, callbackQueryId: string, text?: string) {
+  const res = await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
+  });
+  if (!res.ok) console.error("telegram answerCallbackQuery failed", res.status, await res.text());
+}
+
+async function editMessageText(token: string, chatId: number, messageId: number, text: string) {
+  const res = await fetch(`https://api.telegram.org/bot${token}/editMessageText`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, message_id: messageId, text }),
+  });
+  if (!res.ok) console.error("telegram editMessageText failed", res.status, await res.text());
+}
+
 function displayName(from: { first_name?: string; last_name?: string; username?: string } | undefined) {
   if (!from) return "";
   const full = [from.first_name, from.last_name].filter(Boolean).join(" ");
@@ -80,6 +105,74 @@ Deno.serve(async (req) => {
   // update over and over.
   try {
     const update = await req.json();
+
+    const cb = update?.callback_query;
+    if (cb) {
+      const chatId: number | undefined = cb.message?.chat?.id;
+      const messageId: number | undefined = cb.message?.message_id;
+      const match = typeof cb.data === "string" ? cb.data.match(/^att:(yes|no):([0-9a-fA-F-]{36})$/) : null;
+
+      if (!chatId || !messageId || !match) {
+        await answerCallbackQuery(cfg.bot_token, cb.id);
+        return new Response("ok");
+      }
+
+      const attended = match[1] === "yes";
+      const sessionId = match[2];
+
+      const { data: link } = await supabase
+        .from("telegram_links")
+        .select("teacher_student_id")
+        .eq("chat_id", chatId)
+        .maybeSingle();
+
+      if (!link?.teacher_student_id) {
+        await answerCallbackQuery(cfg.bot_token, cb.id, "اللينك ده مش شغال.");
+        return new Response("ok");
+      }
+
+      const { data: session } = await supabase
+        .from("student_class_sessions")
+        .select("session_date")
+        .eq("id", sessionId)
+        .eq("student_id", link.teacher_student_id)
+        .maybeSingle();
+
+      if (!session) {
+        await answerCallbackQuery(cfg.bot_token, cb.id, "الحصة دي مش لاقيها.");
+        return new Response("ok");
+      }
+
+      const { error: rpcError } = await supabase.rpc("telegram_confirm_private_session", {
+        p_session_id: sessionId,
+        p_teacher_student_id: link.teacher_student_id,
+        p_attended: attended,
+      });
+      if (rpcError) {
+        console.error("telegram_confirm_private_session failed", rpcError);
+        await answerCallbackQuery(cfg.bot_token, cb.id, "في مشكلة، جربي تاني بعدين.");
+        return new Response("ok");
+      }
+
+      await answerCallbackQuery(cfg.bot_token, cb.id);
+      await editMessageText(
+        cfg.bot_token, chatId, messageId,
+        attended ? "تمام، سجّلنا إنك حضرتي ✅ (هتتأكد من المدرّسة)."
+                 : "تمام، سجّلنا إنك معنديش ❌",
+      );
+
+      const { data: student } = await supabase.from("teacher_students")
+        .select("full_name").eq("id", link.teacher_student_id).maybeSingle();
+      const dateLabel = new Date(session.session_date + "T12:00:00Z")
+        .toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+      await sendMessage(cfg.bot_token, cfg.admin_chat_id,
+        attended
+          ? `📋 ${student?.full_name ?? "طالبة"} قالت إنها حضرت حصة ${dateLabel} (عبر تيليجرام) — أكدي في اللوحة`
+          : `⚠️ ${student?.full_name ?? "طالبة"} قالت إنها معندهاش حصة ${dateLabel} (عبر تيليجرام) — راجعيها`);
+
+      return new Response("ok");
+    }
+
     const msg = update?.message;
     if (!msg?.chat?.id || msg.chat.type !== "private") return new Response("ok");
 
