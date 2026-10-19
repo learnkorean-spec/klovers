@@ -179,12 +179,12 @@ Deno.serve(async (req) => {
         await editMessageText(
           cfg.bot_token, chatId, messageId,
           yes ? `تمام، سجّلنا إن ${name || "الطالبة"} حضرت ✅ (هتتأكد من المدرّسة).`
-              : `تمام، سجّلنا إن ${name || "الطالبة"} معندهاش ❌`,
+              : `تمام، سجّلنا إن ${name || "الطالبة"} ماحضرتش ❌`,
         );
         await sendMessage(cfg.bot_token, cfg.admin_chat_id,
           yes
             ? `📋 ${name || "طالبة"} قالت إنها حضرت حصة ${dateLabel} (عبر تيليجرام) — أكدي في اللوحة`
-            : `⚠️ ${name || "طالبة"} قالت إنها معندهاش حصة ${dateLabel} (عبر تيليجرام) — راجعيها`);
+            : `⚠️ ${name || "طالبة"} قالت إنها ماحضرتش حصة ${dateLabel} (عبر تيليجرام) — راجعيها`);
         return new Response("ok");
       }
 

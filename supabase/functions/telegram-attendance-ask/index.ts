@@ -2,7 +2,7 @@
 // that has just ended. Re, 19 Oct 2026: "solafa finished a class and
 // connected [to] the bot, must get a msg to mark her attendance."
 //
-// Invoked every 15 minutes by the `telegram-attendance-asks` pg_cron job via
+// Invoked once daily by the `telegram-attendance-asks-daily` pg_cron job via
 // public.trigger_telegram_attendance_asks() -> app_private.invoke_edge(). The
 // candidate list (public.telegram_attendance_ask_candidates()) already does
 // the "has this class actually ended, in its own timezone" math and excludes
@@ -46,10 +46,12 @@ async function askAttendance(
   // Re, 20 Oct 2026: a shared class group (e.g. two sisters who each have
   // their own student record) can have more than one student linked to the
   // SAME chat_id -- without naming her, "did you attend?" is ambiguous to
-  // whoever reads it there.
+  // whoever reads it there. Greet by name on its own line (not mid-sentence)
+  // -- an emoji right after Arabic mid-sentence garbles under Telegram's
+  // bidi rendering, e.g. "...خلصت وقتها 👋\nهل" rendered as "...8هل".
   const text = studentName
-    ? `حصة ${studentName} النهاردة خلصت 👋\nهل حضرت الحصة؟`
-    : "حصتك النهاردة خلصت 👋\nهل حضرتي الحصة؟";
+    ? `هاي ${studentName} 👋\nحصتك النهاردة خلصت وقتها.\nهل حضرتِ الحصة؟`
+    : "هاي 👋\nحصتك النهاردة خلصت وقتها.\nهل حضرتِ الحصة؟";
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -59,7 +61,11 @@ async function askAttendance(
       reply_markup: {
         inline_keyboard: [[
           { text: "✅ آه، حضرت", callback_data: `att:yes:${sessionId}` },
-          { text: "❌ لأ، معنديش", callback_data: `att:no:${sessionId}` },
+          // Re, 20 Oct 2026: "معنديش" ("I don't have one") answers "do you
+          // have a class", not "did you attend one" -- wrong tense for a
+          // lesson that's already over. "ماحضرتش" ("I didn't attend") is
+          // the correct negation of "حضرت" above.
+          { text: "❌ لأ، ماحضرتش", callback_data: `att:no:${sessionId}` },
         ]],
       },
     }),
