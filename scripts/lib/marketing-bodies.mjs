@@ -361,7 +361,7 @@ export const LEARN_ENGLISH_BODY_HTML = `<div id="learn-english-prerendered" lang
     </div>`;
 
 export const LEARN_ARABIC_BODY_HTML = `<div id="learn-arabic-prerendered" lang="en" dir="ltr">
-      <h1>Learn Arabic — Standard (Fusha) or Egyptian Dialect</h1>
+      <h1>Speak Real Arabic. Connect for Real.</h1>
       <p><strong>Arabic lessons · Standard Arabic or Egyptian dialect, for learners worldwide.</strong> I'm a native Egyptian Arabic speaker who's spent years explaining languages across cultures — Korean-Arabic interpreting, international operations, and teaching students in more than fifteen countries. Whether you need Modern Standard Arabic for reading, writing and formal use, or real spoken Egyptian dialect for conversation, I'll help you find the one that matches what you're actually trying to do.</p>
       <h2>Who these lessons are for</h2>
       <ul>
