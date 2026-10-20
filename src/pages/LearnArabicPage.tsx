@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Globe } from "lucide-react";
+import { ArrowRight, Globe, LayoutDashboard } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import cairoRooftop from "@/assets/arabic-cairo-rooftop.jpg";
@@ -87,6 +88,11 @@ const MkatubLogoMark = ({ className = "" }: { className?: string }) => (
 );
 
 const MkatubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; toggleLanguage: () => void }) => {
+  // Re, 21 Oct 2026: fixing the trade-off this page's own header/footer
+  // introduced — a logged-in Klovers student lost one-tap access to their
+  // dashboard here. Keep the mkatub look for everyone, but surface a
+  // compact dashboard link to a signed-in user instead of nothing.
+  const { user } = useAuth();
   const navLinks = [
     { href: "#dialects", label: tr("Dialects", "اللهجات") },
     { href: "#meet-tutor", label: tr("Tutor", "المعلمة") },
@@ -116,6 +122,14 @@ const MkatubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; t
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          {user && (
+            <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs" title={tr("My Dashboard", "لوحة التحكم")}>
+              <Link to="/dashboard">
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{tr("Dashboard", "لوحة التحكم")}</span>
+              </Link>
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-1.5 text-xs">
             <Globe className="h-3.5 w-3.5" />
             {tr("العربية", "English")}
