@@ -78,3 +78,52 @@ export function extractRelatedBlock(markdown: string): ExtractedRelated {
 
   return { body: stripHtmlComments(body), slugs };
 }
+
+export interface MarkdownSplit {
+  /** Everything before the inserted element. */
+  before: string;
+  /** Everything from the split point onward. */
+  after: string;
+}
+
+/** Matches the start of a top-level (`## `) heading line. */
+const H2_START = /\n(?=##\s)/g;
+
+/**
+ * Finds a point roughly `fraction` of the way through an article's markdown
+ * to insert something (an early CTA, an ad slot, …) without cutting a
+ * section in half — the split always lands right before a top-level `##`
+ * heading, never mid-paragraph or mid-section.
+ *
+ * Most readers who leave an article leave well before the end (the behavior
+ * this exists to work around), so a conversion prompt placed only at the
+ * bottom reaches a shrinking fraction of them. This lets the same CTA also
+ * appear after the intro/first section instead of only at the foot.
+ *
+ * Returns `null` when the article has too few sections (fewer than 3
+ * top-level headings) for an early split to land anywhere sensible — a
+ * short article keeps its single CTA at the end rather than getting a
+ * second one crammed in right next to it.
+ */
+export function splitMarkdownAtHeading(markdown: string, fraction: number): MarkdownSplit | null {
+  const source = (markdown || "").trim();
+  if (!source) return null;
+
+  const headingStarts: number[] = [];
+  H2_START.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = H2_START.exec(source)) !== null) headingStarts.push(m.index + 1);
+
+  if (headingStarts.length < 3) return null;
+
+  const target = source.length * fraction;
+  // Never split at the very first heading (nothing would precede the CTA)
+  // or the very last one (nothing meaningful would follow it).
+  const splitAt = headingStarts.find((idx, i) => i > 0 && i < headingStarts.length - 1 && idx >= target);
+  if (splitAt === undefined) return null;
+
+  return {
+    before: source.slice(0, splitAt).trim(),
+    after: source.slice(splitAt).trim(),
+  };
+}

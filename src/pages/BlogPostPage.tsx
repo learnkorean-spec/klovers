@@ -14,7 +14,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
-import { extractRelatedBlock } from "@/lib/markdownContent";
+import { extractRelatedBlock, splitMarkdownAtHeading } from "@/lib/markdownContent";
 import { buildFaqJsonLd } from "../../scripts/lib/faq-parser.mjs";
 import { extractArticleVocab, articleLevel } from "@/lib/articleVocab";
 import { stageForSlug } from "@/constants/blogJourney";
@@ -458,6 +458,13 @@ const BlogPostPage = () => {
   // links would appear twice.
   const articleMarkdown = useMemo(() => extractRelatedBlock(post?.content ?? "").body, [post?.content]);
 
+  // Most readers who leave an article leave well before the end, so the
+  // conversion CTA that used to live only at the foot now also appears
+  // after roughly the first 20% (intro + first section) — wherever that
+  // lands without cutting a section in half. Returns null for short/
+  // unstructured articles, which then keep a single CTA at the bottom.
+  const earlySplit = useMemo(() => splitMarkdownAtHeading(articleMarkdown, 0.2), [articleMarkdown]);
+
   const cards = relatedPosts.slice(0, CARD_LIMIT);
   const extraLinks = relatedPosts.slice(CARD_LIMIT);
 
@@ -530,6 +537,33 @@ const BlogPostPage = () => {
       </div>
     );
   }
+
+  // CTA block — custom if set, default otherwise. 200+, not 500+: this
+  // fallback renders on every article that has no cta_text of its own, so
+  // it is the widest-reach copy of the student figure on the site. Same
+  // claim as the hero strip in HeroSection.tsx - every student taught
+  // across 13 years. Defined once and rendered at two positions (see
+  // earlySplit above) so both copies always stay in sync.
+  const ctaBlock = (
+    <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center space-y-4">
+      <p className="text-sm font-bold text-foreground uppercase tracking-widest">
+        {post.cta_text ? (isAr ? "هل حان وقت البدء؟" : "Ready to start?") : (isAr ? "تعلّم الكورية يبدأ اليوم" : "Start learning Korean today")}
+      </p>
+      <h3 className="text-xl font-bold text-foreground">
+        {post.cta_text || (isAr ? "اكتشاف المستوى عبر اختبار تحديد المستوى المجاني، مع معلمة درّست أكثر من 200 طالب على مدى 13 عامًا." : "Find your level with our free placement test with a teacher who has taught 200+ students over 13 years.")}
+      </h3>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
+        <Button asChild size="lg" className="gap-2">
+          <Link to={post.cta_url || "/placement-test"}>
+            {post.cta_url ? (isAr ? "البدء الآن" : "Get Started") : (isAr ? "اختبار تحديد المستوى المجاني" : "Take the Free Placement Test")} <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
+        <Button asChild size="lg" variant="outline" className="gap-2">
+          <Link to="/enroll">{isAr ? "عرض الدورات والأسعار" : "View Courses & Pricing"}</Link>
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -623,30 +657,54 @@ const BlogPostPage = () => {
           )}
 
           {/* Article body */}
-          <div className={`prose prose-base max-w-none font-sans
-            prose-headings:font-sans prose-headings:font-bold prose-headings:text-foreground prose-headings:tracking-tight
-            prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pt-6 prose-h2:border-t prose-h2:border-border
-            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-            prose-h4:text-lg prose-h4:mt-6 prose-h4:mb-2
-            prose-p:text-foreground/90 prose-p:leading-[1.85] prose-p:my-5 prose-p:text-[1.05rem]
-            prose-a:text-foreground prose-a:font-semibold prose-a:underline prose-a:decoration-primary prose-a:decoration-2 prose-a:underline-offset-2 hover:prose-a:decoration-foreground
-            prose-strong:text-foreground prose-strong:font-bold
-            prose-em:text-foreground/80
-            prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:px-5 prose-blockquote:py-3 prose-blockquote:rounded-r-lg prose-blockquote:not-italic prose-blockquote:text-foreground/80
-            prose-li:text-foreground/90 prose-li:text-[1.05rem] prose-li:leading-relaxed prose-li:my-1.5
-            prose-ul:my-5 prose-ol:my-5
-            prose-ul:list-disc prose-ol:list-decimal
-            prose-code:font-mono prose-code:text-[0.9em] prose-code:bg-muted prose-code:text-foreground prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
-            prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:rounded-xl prose-pre:shadow-sm
-            prose-img:rounded-xl prose-img:shadow-md prose-img:my-8 prose-img:mx-auto
-            prose-hr:border-border prose-hr:my-10
-            prose-table:w-full prose-th:bg-muted/60 prose-th:text-foreground prose-th:font-semibold prose-td:text-foreground/80 prose-td:border-border prose-th:border-border
-            ${isRtl ? "text-right" : ""}
-          `}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-              {articleMarkdown}
-            </ReactMarkdown>
-          </div>
+          {(() => {
+            const proseClassName = `prose prose-base max-w-none font-sans
+              prose-headings:font-sans prose-headings:font-bold prose-headings:text-foreground prose-headings:tracking-tight
+              prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pt-6 prose-h2:border-t prose-h2:border-border
+              prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+              prose-h4:text-lg prose-h4:mt-6 prose-h4:mb-2
+              prose-p:text-foreground/90 prose-p:leading-[1.85] prose-p:my-5 prose-p:text-[1.05rem]
+              prose-a:text-foreground prose-a:font-semibold prose-a:underline prose-a:decoration-primary prose-a:decoration-2 prose-a:underline-offset-2 hover:prose-a:decoration-foreground
+              prose-strong:text-foreground prose-strong:font-bold
+              prose-em:text-foreground/80
+              prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:px-5 prose-blockquote:py-3 prose-blockquote:rounded-r-lg prose-blockquote:not-italic prose-blockquote:text-foreground/80
+              prose-li:text-foreground/90 prose-li:text-[1.05rem] prose-li:leading-relaxed prose-li:my-1.5
+              prose-ul:my-5 prose-ol:my-5
+              prose-ul:list-disc prose-ol:list-decimal
+              prose-code:font-mono prose-code:text-[0.9em] prose-code:bg-muted prose-code:text-foreground prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+              prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:rounded-xl prose-pre:shadow-sm
+              prose-img:rounded-xl prose-img:shadow-md prose-img:my-8 prose-img:mx-auto
+              prose-hr:border-border prose-hr:my-10
+              prose-table:w-full prose-th:bg-muted/60 prose-th:text-foreground prose-th:font-semibold prose-td:text-foreground/80 prose-td:border-border prose-th:border-border
+              ${isRtl ? "text-right" : ""}
+            `;
+
+            if (earlySplit) {
+              return (
+                <>
+                  <div className={proseClassName}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                      {earlySplit.before}
+                    </ReactMarkdown>
+                  </div>
+                  {ctaBlock}
+                  <div className={proseClassName}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                      {earlySplit.after}
+                    </ReactMarkdown>
+                  </div>
+                </>
+              );
+            }
+
+            return (
+              <div className={proseClassName}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                  {articleMarkdown}
+                </ReactMarkdown>
+              </div>
+            );
+          })()}
           <ArticleEndSentinel slug={post.slug} />
 
           <ArticleLearnedToday vocab={vocab} slug={post.slug} isAr={isRtl} hasNextStop={Boolean(nextStop)} />
@@ -655,25 +713,13 @@ const BlogPostPage = () => {
               200+, not 500+: this fallback renders on every article that has no
               cta_text of its own, so it is the widest-reach copy of the student
               figure on the site. Same claim as the hero strip in
-              HeroSection.tsx - every student taught across 13 years. */}
-          <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center space-y-4">
-            <p className="text-sm font-bold text-foreground uppercase tracking-widest">
-              {post.cta_text ? (isAr ? "هل حان وقت البدء؟" : "Ready to start?") : (isAr ? "تعلّم الكورية يبدأ اليوم" : "Start learning Korean today")}
-            </p>
-            <h3 className="text-xl font-bold text-foreground">
-              {post.cta_text || (isAr ? "اكتشاف المستوى عبر اختبار تحديد المستوى المجاني، مع معلمة درّست أكثر من 200 طالب على مدى 13 عامًا." : "Find your level with our free placement test with a teacher who has taught 200+ students over 13 years.")}
-            </h3>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
-              <Button asChild size="lg" className="gap-2">
-                <Link to={post.cta_url || "/placement-test"}>
-                  {post.cta_url ? (isAr ? "البدء الآن" : "Get Started") : (isAr ? "اختبار تحديد المستوى المجاني" : "Take the Free Placement Test")} <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="gap-2">
-                <Link to="/enroll">{isAr ? "عرض الدورات والأسعار" : "View Courses & Pricing"}</Link>
-              </Button>
-            </div>
-          </div>
+              HeroSection.tsx - every student taught across 13 years.
+
+              Re, 21 Oct 2026: most readers leave before reaching the bottom of
+              the article, so this same block is now also inserted after
+              roughly the first 20% (see earlySplit above/ctaBlock below) —
+              not just here at the foot. */}
+          {ctaBlock}
 
           {/* Share row */}
           <div className="mt-8 pt-6 border-t border-border flex items-center gap-3 flex-wrap">

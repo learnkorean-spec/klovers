@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   stripHtmlComments,
   extractRelatedBlock,
+  splitMarkdownAtHeading,
   RELATED_MARKER_START,
   RELATED_MARKER_END,
 } from "./markdownContent";
@@ -97,5 +98,49 @@ describe("extractRelatedBlock", () => {
 
   it("is safe on empty input", () => {
     expect(extractRelatedBlock("")).toEqual({ body: "", slugs: [] });
+  });
+});
+
+describe("splitMarkdownAtHeading", () => {
+  const fourSections = [
+    "Intro paragraph with no heading above it.",
+    "## First section",
+    "Body of the first section, long enough to carry some weight in the split.",
+    "## Second section",
+    "Body of the second section.",
+    "## Third section",
+    "Body of the third section.",
+  ].join("\n\n");
+
+  it("splits right before a heading, never mid-section", () => {
+    const split = splitMarkdownAtHeading(fourSections, 0.2);
+    expect(split).not.toBeNull();
+    expect(split!.before.endsWith("some weight in the split.")).toBe(true);
+    expect(split!.after.startsWith("## Second section")).toBe(true);
+    // Nothing lost or duplicated across the split.
+    expect(split!.before + "\n\n" + split!.after).toBe(fourSections);
+  });
+
+  it("never splits at the very first heading even when the target fraction is tiny", () => {
+    const split = splitMarkdownAtHeading(fourSections, 0.01);
+    expect(split!.before).toContain("## First section");
+  });
+
+  it("returns null rather than split at (or past) the very last heading", () => {
+    expect(splitMarkdownAtHeading(fourSections, 0.99)).toBeNull();
+  });
+
+  it("returns null for an article with fewer than 3 top-level headings", () => {
+    const twoSections = "Intro.\n\n## Only section\n\nBody.";
+    expect(splitMarkdownAtHeading(twoSections, 0.2)).toBeNull();
+  });
+
+  it("returns null for an article with no headings at all", () => {
+    expect(splitMarkdownAtHeading("Just a paragraph, no structure.", 0.2)).toBeNull();
+  });
+
+  it("is safe on empty and undefined-ish input", () => {
+    expect(splitMarkdownAtHeading("", 0.2)).toBeNull();
+    expect(splitMarkdownAtHeading(undefined as unknown as string, 0.2)).toBeNull();
   });
 });
