@@ -694,7 +694,7 @@ const MARKETING_ROUTES = [
     // `body` gives crawlers that never run JavaScript the page's real text
     // (the review measured 76 characters of body text in the raw HTML).
     path: "/",
-    title: "Klovers — Live Online Korean Classes in Small Groups",
+    title: "Klovers: Live Online Korean Classes in Small Groups",
     description:
       "Klovers: live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.",
     body: HOME_BODY_HTML,
@@ -725,7 +725,7 @@ const MARKETING_ROUTES = [
     path: "/ar",
     lang: "ar",
     homeTwin: true,
-    title: "كلوفرز — حصص كورية مباشرة في مجموعات صغيرة",
+    title: "كلوفرز: حصص كورية مباشرة في مجموعات صغيرة",
     description:
       "كلوفرز: حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.",
     body: HOME_BODY_HTML_AR,

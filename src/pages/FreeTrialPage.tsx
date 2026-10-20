@@ -192,7 +192,7 @@ const FreeTrialPage = () => {
       {
         "@context": "https://schema.org",
         "@type": "Event",
-        "name": isAr ? "حصة كورية تجريبية مجانية — كلوفرز" : "Free Korean Trial Class — Klovers",
+        "name": isAr ? "حصة كورية تجريبية مجانية من كلوفرز" : "Free Korean Trial Class by Klovers",
         "description": isAr
           ? "حصة كورية مباشرة مدتها ٣٠ دقيقة مع معلّمة حقيقية. مجانية ودون بطاقة دفع."
           : "Join a 30-minute live Korean class with a real teacher. Free, no credit card needed.",
@@ -479,8 +479,8 @@ const FreeTrialPage = () => {
                     because that is configuration (trial_settings.capacity) and
                     this page reads the live slots rather than assuming it. */}
                 {tr(
-                  "Trial classes open once a month, on the first Friday and Saturday, and run as real small-group classes — so the number of seats is small. Times are shown in your own time zone.",
-                  "تُفتح الحصص التجريبية مرة كل شهر، في أول جمعة وسبت منه، وتُدار كحصص حقيقية في مجموعات صغيرة — لذلك يكون عدد المقاعد محدودًا. والأوقات معروضة بالتوقيت المحلي.",
+                  "Trial classes open once a month, on the first Friday and Saturday, and run as real small-group classes, so the number of seats is small. Times are shown in your own time zone.",
+                  "تُفتح الحصص التجريبية مرة كل شهر، في أول جمعة وسبت منه، وتُدار كحصص حقيقية في مجموعات صغيرة، لذلك يكون عدد المقاعد محدودًا. والأوقات معروضة بالتوقيت المحلي.",
                 )}
               </p>
             </div>

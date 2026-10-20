@@ -18,7 +18,7 @@ import { useBottomSlot } from "@/lib/bottomLayer";
 const englishFaqs = [
   {
     q: "Do I need any experience to start?",
-    a: "Absolutely not. We start from the very basics — Hangul letters, pronunciation, and everyday phrases. If you're a total beginner you'll be in the right place.",
+    a: "Absolutely not. We start from the very basics: Hangul letters, pronunciation, and everyday phrases. If you're a total beginner you'll be in the right place.",
   },
   {
     q: "What if I miss a class?",
@@ -38,7 +38,7 @@ const englishFaqs = [
   },
   {
     q: "Which platform do the classes use?",
-    a: "All live classes run on Google Meet. You'll receive the link before each session. No download required — you can join from any browser.",
+    a: "All live classes run on Google Meet. You'll receive the link before each session. No download required, you can join from any browser.",
   },
 ];
 

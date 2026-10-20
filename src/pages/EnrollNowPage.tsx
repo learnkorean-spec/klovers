@@ -86,7 +86,7 @@ const EnrollNowPage = () => {
     el.textContent = JSON.stringify({
       "@context": "https://schema.org",
       "@type": "Course",
-      "name": "Korean Language Classes — Klovers",
+      "name": "Korean Language Classes by Klovers",
       "description": "Live Korean classes with a real teacher. Group and private options available for all levels.",
       "provider": {
         "@type": "Organization",
@@ -1086,7 +1086,7 @@ const EnrollNowPage = () => {
                       href={`${WHATSAPP_BASE}?text=${encodeURIComponent(
                         isAr
                           ? `مرحبًا كلوفرز، أرغب في حصة خاصة${levelLabelAr ? ` في ${levelLabelAr}` : " في الكورية"}. لا تتوفر أيام للحصص الخاصة في الجدول الحالي، فهل يمكن ترتيب موعد مناسب؟`
-                          : `Hi Klovers — I'd like a private ${selectedLevel || "Korean"} class. The current schedule has no private days available yet — can we arrange a time?`
+                          : `Hi Klovers, I'd like a private ${selectedLevel || "Korean"} class. The current schedule has no private days available yet, can we arrange a time?`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -1120,7 +1120,7 @@ const EnrollNowPage = () => {
                       href={`${WHATSAPP_BASE}?text=${encodeURIComponent(
                         isAr
                           ? `مرحبًا كلوفرز، أرغب في طلب حصة${levelLabelAr ? ` في ${levelLabelAr}` : " في الكورية"}${preferredDays.length ? ` في أيام: ${preferredDays.map((d) => localDayNames[DAY_NAMES.indexOf(d)] ?? d).join("، ")}` : ""}. هذا الموعد غير متوفر في الجدول الحالي.`
-                          : `Hi Klovers — I'd like to request a ${selectedLevel || "Korean"} class${preferredDays.length ? ` on ${preferredDays.join(", ")}` : ""}. The current schedule doesn't have this yet.`
+                          : `Hi Klovers, I'd like to request a ${selectedLevel || "Korean"} class${preferredDays.length ? ` on ${preferredDays.join(", ")}` : ""}. The current schedule doesn't have this yet.`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -1168,7 +1168,7 @@ const EnrollNowPage = () => {
                     href={`${WHATSAPP_BASE}?text=${encodeURIComponent(
                       isAr
                         ? `مرحبًا كلوفرز، المواعيد المعروضة لا تناسبني${levelLabelAr ? ` في ${levelLabelAr}` : ""}${classType === "private" ? " (حصة خاصة)" : ""}. هل يمكن ترتيب موعد آخر؟ توقيتي: ${timezone}`
-                        : `Hi Klovers — the times shown don't suit me${selectedLevel ? ` for ${selectedLevel}` : ""}${classType === "private" ? " (private)" : ""}. Can we arrange another time? My timezone: ${timezone}`
+                        : `Hi Klovers, the times shown don't suit me${selectedLevel ? ` for ${selectedLevel}` : ""}${classType === "private" ? " (private)" : ""}. Can we arrange another time? My timezone: ${timezone}`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -1448,7 +1448,7 @@ const EnrollNowPage = () => {
                 {[
                   { step: "1", icon: "game-checklist-pencil" as const, title: isAr ? "تأكيد الدفع" : "Payment confirmed", desc: isAr ? "يصل إيصال الدفع بالبريد الإلكتروني." : "You get an email receipt." },
                   { step: "2", icon: "calendar-check" as const, title: isAr ? "تحديد الموعد" : "Schedule matched", desc: isAr ? "نؤكد موعد الحصة المناسب." : "We confirm your class slot." },
-                  { step: "3", icon: "chat-annyeonghaseyo" as const, title: isAr ? "الحصة الأولى!" : "First class!", desc: isAr ? "يصل رابط الحصة، والتعلّم يبدأ." : "We send your meeting link — ready to learn!" },
+                  { step: "3", icon: "chat-annyeonghaseyo" as const, title: isAr ? "الحصة الأولى!" : "First class!", desc: isAr ? "يصل رابط الحصة، والتعلّم يبدأ." : "We send your meeting link. Time to learn!" },
                 ].map(({ step: s, icon, title, desc }) => (
                   <div key={s} className="flex items-start gap-3">
                     <div className="w-7 h-7 rounded-full bg-primary border border-charcoal/25 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary-foreground">{s}</div>

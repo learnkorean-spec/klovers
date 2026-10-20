@@ -34,7 +34,7 @@ const COMPARISONS: {
   {
     titleEn: "Endings that show a word's job",
     titleAr: "نهايات تُظهر وظيفة الكلمة",
-    bodyEn: "Arabic case endings tell you which word is the subject and which is the object. Korean does the same job with small particles after the word — 는 for the topic, 을/를 for the object.",
+    bodyEn: "Arabic case endings tell you which word is the subject and which is the object. Korean does the same job with small particles after the word: 는 for the topic, 을/를 for the object.",
     bodyAr: "في العربية تُميّز علامات الإعراب الفاعل من المفعول به. والكورية تؤدي الوظيفة نفسها بأدوات صغيرة بعد الكلمة: 는 للموضوع، و을/를 للمفعول به.",
     arabic: "أقرأُ الكتابَ",
     korean: "나는 책을 읽어요",
@@ -44,7 +44,7 @@ const COMPARISONS: {
   {
     titleEn: "Speaking politely changes the verb",
     titleAr: "التأدّب في الكلام يغيّر الفعل",
-    bodyEn: "Arabic speakers already switch register — حضرتك or إنت, فصحى or عامية. Korean builds politeness into the verb ending, so the idea is familiar even though the form is new.",
+    bodyEn: "Arabic speakers already switch register: حضرتك or إنت, فصحى or عامية. Korean builds politeness into the verb ending, so the idea is familiar even though the form is new.",
     bodyAr: "اعتاد الناطق بالعربية تغيير أسلوب كلامه: «حضرتك» أو «أنت»، فصحى أو عامية. والكورية تضع التأدّب في نهاية الفعل، فالفكرة مألوفة وإن كان الشكل جديدًا.",
     arabic: "إزيّك؟ / إزيّ حضرتك؟",
     korean: "안녕? / 안녕하세요?",
@@ -63,7 +63,7 @@ const DIFFERENCES: { en: string; ar: string }[] = [
     ar: "الصفة تأتي قبل الاسم: 빨간 책 (كتاب أحمر)، على عكس العربية.",
   },
   {
-    en: "Hangul is read left to right, in syllable blocks. It has 24 basic letters and is quick to learn — we teach it in four classes.",
+    en: "Hangul is read left to right, in syllable blocks. It has 24 basic letters and is quick to learn; we teach it in four classes.",
     ar: "يُقرأ الهانغول من اليسار إلى اليمين، في مقاطع على شكل مربعات. فيه ٢٤ حرفًا أساسيًا وتعلّمه سريع؛ ونُدرّسه في ٤ حصص.",
   },
   {
@@ -102,7 +102,7 @@ const LearnKoreanArabicSpeakersPage = () => {
             </h1>
             <p className="mt-4 max-w-2xl text-base md:text-lg text-ivory/80 leading-relaxed">
               {tr(
-                "Some of it will feel familiar, some of it is new. Here is which is which, and how we teach it — with explanations in Arabic.",
+                "Some of it will feel familiar, some of it is new. Here is which is which, and how we teach it, with explanations in Arabic.",
                 "بعضها سيبدو مألوفًا، وبعضها جديد. هنا يتّضح هذا من ذاك، وطريقة تدريسه، بشرح بالعربية.",
               )}
             </p>

@@ -69,11 +69,11 @@ const LearnArabicPage = () => {
 
   useSEO({
     title: isAr
-      ? "تعلّم العربية الفصحى أو العامية المصرية — مع ريهام الشرقاوي"
-      : "Learn Arabic — Standard (Fusha) or Egyptian Dialect — with Reham Elshrkawy",
+      ? "تعلّم العربية الفصحى أو العامية المصرية مع ريهام الشرقاوي"
+      : "Learn Arabic: Standard (Fusha) or Egyptian Dialect, with Reham Elshrkawy",
     description: isAr
-      ? "دروس عربية فردية عبر الإنترنت لغير الناطقين بها من أي مكان في العالم، بشرح بالإنجليزية — الفصحى أو العامية المصرية المنطوقة، مع معلمة أصلية."
-      : "One-on-one online Arabic lessons for non-native speakers anywhere in the world, explained in English — Modern Standard Arabic (Fusha) for reading, writing and formal use, or spoken Egyptian dialect for real conversation, with a native teacher who has taught students in more than fifteen countries.",
+      ? "دروس عربية فردية عبر الإنترنت لغير الناطقين بها من أي مكان في العالم، بشرح بالإنجليزية، الفصحى أو العامية المصرية المنطوقة، مع معلمة أصلية."
+      : "One-on-one online Arabic lessons for non-native speakers anywhere in the world, explained in English: Modern Standard Arabic (Fusha) for reading, writing and formal use, or spoken Egyptian dialect for real conversation, with a native teacher who has taught students in more than fifteen countries.",
     canonical: isAr ? "https://kloversegy.com/ar/learn-arabic" : "https://kloversegy.com/learn-arabic",
     alternates: {
       en: "https://kloversegy.com/learn-arabic",
@@ -88,22 +88,22 @@ const LearnArabicPage = () => {
   const faq = [
     {
       q: tr(
-        "What's the difference between Standard Arabic (Fusha) and Egyptian dialect — which should I learn?",
-        "ما الفرق بين الفصحى والعامية المصرية — وأيهما يجب أن أتعلم؟",
+        "What's the difference between Standard Arabic (Fusha) and Egyptian dialect, and which should I learn?",
+        "ما الفرق بين الفصحى والعامية المصرية، وأيهما يجب أن أتعلم؟",
       ),
       a: tr(
-        "Fusha is the formal, written Arabic used in media, religious texts and official documents, and it's the same everywhere in the Arab world. Egyptian dialect is how people actually speak day to day, and it's the dialect most widely understood across the Arab world, thanks to Egyptian film and TV. Many students learn both — we'll figure out the right mix for your goal.",
-        "الفصحى هي العربية الرسمية المكتوبة المستخدمة في الإعلام والنصوص الدينية والمستندات الرسمية، وهي نفسها في كل أنحاء العالم العربي. أما العامية المصرية فهي كيف يتحدث الناس فعليًا يوميًا، وهي اللهجة الأكثر فهمًا في العالم العربي بفضل السينما والتلفزيون المصري. كثير من الطلاب يتعلمون الاثنين معًا — يمكننا تحديد المزيج المناسب لهدفك.",
+        "Fusha is the formal, written Arabic used in media, religious texts and official documents, and it's the same everywhere in the Arab world. Egyptian dialect is how people actually speak day to day, and it's the dialect most widely understood across the Arab world, thanks to Egyptian film and TV. Many students learn both, so we'll figure out the right mix for your goal.",
+        "الفصحى هي العربية الرسمية المكتوبة المستخدمة في الإعلام والنصوص الدينية والمستندات الرسمية، وهي نفسها في كل أنحاء العالم العربي. أما العامية المصرية فهي كيف يتحدث الناس فعليًا يوميًا، وهي اللهجة الأكثر فهمًا في العالم العربي بفضل السينما والتلفزيون المصري. كثير من الطلاب يتعلمون الاثنين معًا، ويمكننا تحديد المزيج المناسب لهدفك.",
       ),
     },
     {
       q: tr(
-        "I'm already learning Korean at Klovers — can I also book these Arabic lessons?",
-        "أدرس الكورية بالفعل في كلوفرز — هل يمكنني حجز هذه الدروس العربية أيضًا؟",
+        "I'm already learning Korean at Klovers, can I also book these Arabic lessons?",
+        "أدرس الكورية بالفعل في كلوفرز، هل يمكنني حجز هذه الدروس العربية أيضًا؟",
       ),
       a: tr(
-        "Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself.",
-        "نعم — هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية الجماعية. وهذا جمع شائع للناطقين بالكورية المهتمين بالعربية، سواء للسفر أو العمل أو لمجرد اللغة نفسها.",
+        "Yes, this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself.",
+        "نعم، هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية الجماعية. وهذا جمع شائع للناطقين بالكورية المهتمين بالعربية، سواء للسفر أو العمل أو لمجرد اللغة نفسها.",
       ),
     },
     {
@@ -112,8 +112,8 @@ const LearnArabicPage = () => {
         "هل أحتاج إلى معرفة سابقة بالعربية للبدء؟",
       ),
       a: tr(
-        "No — lessons start from zero, whether you're learning Fusha or spoken dialect, even if you've studied Classical Arabic before. Everything is explained in English first.",
-        "لا — تبدأ الدروس من الصفر، سواء كنت تتعلم الفصحى أو العامية المنطوقة، حتى لو درست الفصحى من قبل. يُشرح كل شيء بالإنجليزية أولًا.",
+        "No, lessons start from zero whether you're learning Fusha or spoken dialect, even if you've studied Classical Arabic before. Everything is explained in English first.",
+        "لا، تبدأ الدروس من الصفر سواء كنت تتعلم الفصحى أو العامية المنطوقة، حتى لو درست الفصحى من قبل. يُشرح كل شيء بالإنجليزية أولًا.",
       ),
     },
   ];
@@ -132,16 +132,16 @@ const LearnArabicPage = () => {
 
   const audience = [
     tr(
-      "Want to speak Arabic for travel, work, or family — wherever in the world you are",
-      "ترغب في التحدث بالعربية للسفر أو العمل أو الأسرة — أينما كنت في العالم",
+      "Want to speak Arabic for travel, work, or family, wherever in the world you are",
+      "ترغب في التحدث بالعربية للسفر أو العمل أو الأسرة، أينما كنت في العالم",
     ),
     tr(
       "Need Modern Standard Arabic (Fusha) for study, media, religious texts, or formal use",
       "تحتاج الفصحى للدراسة أو الإعلام أو النصوص الدينية أو الاستخدام الرسمي",
     ),
     tr(
-      "Want real spoken Egyptian dialect — the version most widely understood across the Arab world",
-      "ترغب في العامية المصرية المنطوقة الحقيقية — وهي اللهجة الأكثر فهمًا في العالم العربي",
+      "Want real spoken Egyptian dialect, the version most widely understood across the Arab world",
+      "ترغب في العامية المصرية المنطوقة الحقيقية، وهي اللهجة الأكثر فهمًا في العالم العربي",
     ),
     tr(
       "Studied Classical Arabic before but can't actually hold a conversation",
@@ -153,22 +153,22 @@ const LearnArabicPage = () => {
     {
       title: tr("A free 20-minute call", "مكالمة تعارف مجانية مدتها عشرون دقيقة"),
       body: tr(
-        "We talk about your goal — Fusha, Egyptian dialect, or both — and where you're starting from. Zero is completely fine.",
-        "نتحدث عن هدفك: الفصحى أو العامية المصرية أو كلاهما، ومستواك الحالي — البدء من الصفر أمر طبيعي تمامًا.",
+        "We talk about your goal, Fusha, Egyptian dialect, or both, and where you're starting from. Zero is completely fine.",
+        "نتحدث عن هدفك: الفصحى أو العامية المصرية أو كلاهما، ومستواك الحالي، البدء من الصفر أمر طبيعي تمامًا.",
       ),
     },
     {
       title: tr("Explained in English, in the register you actually need", "تُشرح بالإنجليزية، بالمستوى الذي تحتاجه فعليًا"),
       body: tr(
-        "Fusha grammar and script, or real spoken dialect — every phrase is explained in English first, then practiced the way it's actually used.",
-        "قواعد الفصحى والكتابة، أو العامية المنطوقة الحقيقية — تُشرح كل عبارة بالإنجليزية أولًا، ثم تُمارَس بالطريقة المستخدمة فعليًا.",
+        "Fusha grammar and script, or real spoken dialect: every phrase is explained in English first, then practiced the way it's actually used.",
+        "قواعد الفصحى والكتابة، أو العامية المنطوقة الحقيقية: تُشرح كل عبارة بالإنجليزية أولًا، ثم تُمارَس بالطريقة المستخدمة فعليًا.",
       ),
     },
     {
       title: tr("Built around what you actually need", "مبنية على ما تحتاجه فعلًا"),
       body: tr(
-        "Exam prep, reading religious texts, travel, work, family, or everyday conversation — the lessons follow your actual goal, not a fixed textbook order.",
-        "التحضير لاختبار، أو قراءة نصوص دينية، أو السفر، أو العمل، أو الأسرة، أو المحادثة اليومية — تتبع الدروس هدفك الفعلي لا ترتيب كتاب ثابت.",
+        "Exam prep, reading religious texts, travel, work, family, or everyday conversation: the lessons follow your actual goal, not a fixed textbook order.",
+        "التحضير لاختبار، أو قراءة نصوص دينية، أو السفر، أو العمل، أو الأسرة، أو المحادثة اليومية: تتبع الدروس هدفك الفعلي لا ترتيب كتاب ثابت.",
       ),
     },
   ];
@@ -199,8 +199,8 @@ const LearnArabicPage = () => {
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-relaxed text-background/80">
               {tr(
-                "I'm a native Egyptian Arabic speaker who's spent years explaining languages across cultures — Korean-Arabic interpreting, international operations, and teaching students in more than fifteen countries. Whether you need Modern Standard Arabic for reading, writing and formal use, or real spoken Egyptian dialect for conversation, I'll help you find the one that matches what you're actually trying to do.",
-                "أنا متحدثة أصلية للعربية المصرية، أمضيت سنوات في شرح اللغات بين الثقافات — ترجمة كورية-عربية، وعمليات دولية، وتدريس طلاب في أكثر من خمس عشرة دولة. سواء احتجت الفصحى للقراءة والكتابة والاستخدام الرسمي، أو العامية المصرية المنطوقة للمحادثة الحقيقية، سأساعدك على تحديد ما يناسب هدفك فعليًا.",
+                "I'm a native Egyptian Arabic speaker who's spent years explaining languages across cultures: Korean-Arabic interpreting, international operations, and teaching students in more than fifteen countries. Whether you need Modern Standard Arabic for reading, writing and formal use, or real spoken Egyptian dialect for conversation, I'll help you find the one that matches what you're actually trying to do.",
+                "أنا متحدثة أصلية للعربية المصرية، أمضيت سنوات في شرح اللغات بين الثقافات: ترجمة كورية-عربية، وعمليات دولية، وتدريس طلاب في أكثر من خمس عشرة دولة. سواء احتجت الفصحى للقراءة والكتابة والاستخدام الرسمي، أو العامية المصرية المنطوقة للمحادثة الحقيقية، سأساعدك على تحديد ما يناسب هدفك فعليًا.",
               )}
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
@@ -238,8 +238,8 @@ const LearnArabicPage = () => {
                 </p>
                 <p className="mt-4 leading-relaxed text-[#4A3F35]">
                   {tr(
-                    "The formal, written register — reading, writing, religious texts, media, and official documents. The same everywhere in the Arab world.",
-                    "المستوى الرسمي المكتوب — القراءة والكتابة والنصوص الدينية والإعلام والمستندات الرسمية. نفسه في كل أنحاء العالم العربي.",
+                    "The formal, written register: reading, writing, religious texts, media, and official documents. The same everywhere in the Arab world.",
+                    "المستوى الرسمي المكتوب: القراءة والكتابة والنصوص الدينية والإعلام والمستندات الرسمية. نفسه في كل أنحاء العالم العربي.",
                   )}
                 </p>
               </div>
@@ -249,16 +249,16 @@ const LearnArabicPage = () => {
                 </p>
                 <p className="mt-4 leading-relaxed text-[#4A3F35]">
                   {tr(
-                    "Real spoken Egyptian dialect — how people actually talk, and the dialect most widely understood across the Arab world, thanks to Egyptian film and TV.",
-                    "العامية المصرية المنطوقة الحقيقية — كيف يتحدث الناس فعليًا، وهي اللهجة الأكثر فهمًا في العالم العربي بفضل السينما والتلفزيون المصري.",
+                    "Real spoken Egyptian dialect: how people actually talk, and the dialect most widely understood across the Arab world, thanks to Egyptian film and TV.",
+                    "العامية المصرية المنطوقة الحقيقية: كيف يتحدث الناس فعليًا، وهي اللهجة الأكثر فهمًا في العالم العربي بفضل السينما والتلفزيون المصري.",
                   )}
                 </p>
               </div>
             </div>
             <p className="mt-6 italic text-[#5B4636]">
               {tr(
-                "Most students want a mix of both — that's exactly what the free call is for.",
-                "معظم الطلاب يريدون مزيجًا من الاثنين — ولهذا بالضبط نُخصص المكالمة المجانية.",
+                "Most students want a mix of both, and that's exactly what the free call is for.",
+                "معظم الطلاب يريدون مزيجًا من الاثنين، ولهذا بالضبط نُخصص المكالمة المجانية.",
               )}
             </p>
           </div>
@@ -325,14 +325,14 @@ const LearnArabicPage = () => {
             <div>
               <p className="text-2xl italic leading-snug" style={displayFont(isAr)}>
                 {tr(
-                  "“I know exactly where a translation breaks down between languages — the same gap that makes textbook Arabic feel nothing like real use.”",
-                  "«أعرف بالضبط أين تنهار الترجمة بين اللغات — نفس الفجوة التي تجعل العربية الفصحى في الكتب لا تشبه الاستخدام الفعلي.»",
+                  "“I know exactly where a translation breaks down between languages. It's the same gap that makes textbook Arabic feel nothing like real use.”",
+                  "«أعرف بالضبط أين تنهار الترجمة بين اللغات، وهي نفس الفجوة التي تجعل العربية الفصحى في الكتب لا تشبه الاستخدام الفعلي.»",
                 )}
               </p>
               <p className="mt-5 leading-relaxed text-background/75">
                 {tr(
-                  "Years of Korean-Arabic interpreting and international operations taught me exactly where that gap is, whether you're writing formally or speaking day to day. I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — Arabic lessons follow the same one-on-one, real-conversation approach.",
-                  "سنوات من الترجمة الكورية-العربية والعمليات الدولية علّمتني بالضبط مكان هذه الفجوة، سواء في الكتابة الرسمية أو في العامية المنطوقة. أسست وأدير أيضًا كلوفرز، أكاديمية إلكترونية تُدرّس الكورية لطلاب في أكثر من خمس عشرة دولة منذ عام 2013 — وتتبع دروس العربية الأسلوب نفسه القائم على الحصص الفردية والمحادثة الحقيقية.",
+                  "Years of Korean-Arabic interpreting and international operations taught me exactly where that gap is, in formal writing and in everyday speech. I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013, and Arabic lessons follow the same one-on-one, real-conversation approach.",
+                  "سنوات من الترجمة الكورية-العربية والعمليات الدولية علّمتني بالضبط مكان هذه الفجوة، سواء في الكتابة الرسمية أو في العامية المنطوقة. أسست وأدير أيضًا كلوفرز، أكاديمية إلكترونية تُدرّس الكورية لطلاب في أكثر من خمس عشرة دولة منذ عام 2013، وتتبع دروس العربية الأسلوب نفسه القائم على الحصص الفردية والمحادثة الحقيقية.",
                 )}
               </p>
             </div>
@@ -349,8 +349,8 @@ const LearnArabicPage = () => {
             </h2>
             <p className="text-foreground/70 text-center mb-8">
               {tr(
-                "Pick a time that works for you — or message us directly if nothing matches.",
-                "اختر موعدًا يناسبك — أو راسلنا مباشرة إن لم يناسبك أي موعد.",
+                "Pick a time that works for you, or message us directly if nothing matches.",
+                "اختر موعدًا يناسبك، أو راسلنا مباشرة إن لم يناسبك أي موعد.",
               )}
             </p>
             <PersonalTrialBooking
@@ -358,8 +358,8 @@ const LearnArabicPage = () => {
               accentColor={LAPIS}
               accentHoverColor={LAPIS_DEEP}
               whatsappMessage={{
-                en: "Hi! I'd like to book a free trial Arabic lesson but none of the available times work for me — can we find another time?",
-                ar: "مرحبًا، أرغب في حجز حصة عربية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني — هل يمكننا الاتفاق على موعد آخر؟",
+                en: "Hi! I'd like to book a free trial Arabic lesson but none of the available times work for me. Can we find another time?",
+                ar: "مرحبًا، أرغب في حجز حصة عربية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني. هل يمكننا الاتفاق على موعد آخر؟",
               }}
             />
           </div>
@@ -390,8 +390,8 @@ const LearnArabicPage = () => {
             </h2>
             <p className="mt-5 text-lg text-background/75 max-w-xl mx-auto">
               {tr(
-                "Fusha for study or formal use, Egyptian dialect for real conversation, or both — send a message and we'll start from there.",
-                "الفصحى للدراسة أو الاستخدام الرسمي، أو العامية المصرية للمحادثة الحقيقية، أو كلاهما معًا — أرسل رسالة ولنبدأ من وضعك فعليًا.",
+                "Fusha for study or formal use, Egyptian dialect for real conversation, or both: send a message and we'll start from there.",
+                "الفصحى للدراسة أو الاستخدام الرسمي، أو العامية المصرية للمحادثة الحقيقية، أو كلاهما معًا: أرسل رسالة ولنبدأ من وضعك فعليًا.",
               )}
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">

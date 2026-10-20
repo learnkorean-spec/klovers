@@ -521,7 +521,7 @@ const TrialBookingPage = () => {
         if (is429) {
           toast({
             title: t("trialBooking.tooManyAttempts") ?? "Too many attempts",
-            description: t("trialBooking.tooManyAttemptsDesc") ?? "Please wait a moment, then check your dashboard — your booking may already be saved.",
+            description: t("trialBooking.tooManyAttemptsDesc") ?? "Please wait a moment, then check your dashboard. Your booking may already be saved.",
             variant: "destructive",
           });
           // Keep button disabled for 8 s so the student doesn't hammer again.
@@ -819,7 +819,7 @@ const TrialBookingPage = () => {
                 <KloverIcon name="lightbulb-sprout" className="h-3.5 w-3.5" />
                 {daysUntil > 0
                   ? (language === "ar"
-                      ? `في الانتظار — ${arabicDaysLeft(daysUntil)}`
+                      ? `في الانتظار، ${arabicDaysLeft(daysUntil)}`
                       : (daysUntil === 1 ? t("trialBooking.whileWait") : t("trialBooking.whileWaitPlural")).replace("{days}", String(daysUntil)))
                   : t("trialBooking.trialToday")}
               </div>
@@ -931,10 +931,10 @@ const TrialBookingPage = () => {
                 {user
                   ? (language === "ar"
                       ? "رابط شخصي للمشاركة: حصة مجانية للصديق، ومجتمع يكبر معًا."
-                      : "Share your personal link — they get a free class, you help grow the community.")
+                      : "Share your personal link. They get a free class, you help grow the community.")
                   : (language === "ar"
                       ? "رابط الحصة المجانية للمشاركة: حصة مجانية للصديق، ومجتمع يكبر معًا."
-                      : "Share the free-class link — they get a free class, you help grow the community.")}
+                      : "Share the free-class link. They get a free class, you help grow the community.")}
               </p>
               <div className="flex gap-2">
                 <input
@@ -1099,8 +1099,8 @@ const TrialBookingPage = () => {
                     />
                     <p className="text-xs text-muted-foreground">
                       {language === "ar"
-                        ? "لا حاجة لحساب أو كلمة مرور — يُرسَل رابط الحصة إلى البريد الإلكتروني."
-                        : "No account or password needed — we email you the class link."}
+                        ? "لا حاجة لحساب أو كلمة مرور، يُرسَل رابط الحصة إلى البريد الإلكتروني."
+                        : "No account or password needed, we email you the class link."}
                     </p>
                   </div>
                 </div>
@@ -1185,7 +1185,7 @@ const TrialBookingPage = () => {
                 <p className="text-[11px] text-muted-foreground">
                   {language === "ar"
                     ? "اختير تلقائيًا حسب البلد، ويمكن تغييره"
-                    : "Auto-selected based on your country — you can change it"}
+                    : "Auto-selected based on your country, you can change it"}
                 </p>
               </div>
 

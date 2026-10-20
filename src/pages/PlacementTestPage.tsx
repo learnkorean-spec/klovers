@@ -49,7 +49,7 @@ const LEVEL_META: Record<string, { emoji: string; tagline: string; description: 
   hangul: { emoji: "🌱", tagline: "Absolute Beginner", description: "You're just starting out. Our Foundation class will teach you Hangul, basic greetings, and everyday words.", nextLabel: "Level 1" },
   l1:    { emoji: "🌿", tagline: "Beginner", description: "You know the basics. Our Level 1 class builds simple sentences, numbers, and daily conversations.", nextLabel: "Level 2", prevLabel: "Foundation" },
   l2:    { emoji: "📚", tagline: "Elementary", description: "You can handle simple exchanges. Our Level 2 class covers grammar patterns and real-life dialogues.", nextLabel: "Level 3", prevLabel: "Level 1" },
-  l3:    { emoji: "🎯", tagline: "Intermediate", description: "You're comfortable in Korean. Our intermediate classes dive into nuanced grammar and natural speech.", nextLabel: "Level 5", prevLabel: "Level 2" },
+  l3:    { emoji: "🎯", tagline: "Intermediate", description: "You're comfortable in Korean. Our intermediate classes cover nuanced grammar and natural speech.", nextLabel: "Level 5", prevLabel: "Level 2" },
   l5:    { emoji: "🏆", tagline: "Advanced", description: "You speak Korean fluently. Our advanced classes polish academic and professional Korean for TOPIK II.", prevLabel: "Level 4" },
 };
 

@@ -48,7 +48,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
-    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">Your account is set up and ready. Whether you're a complete beginner or brushing up your skills, we're here to guide you every step of the way.</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">Your account is set up and ready. New to Korean or brushing up on what you already know, we're here to help.</p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
       <a href="{{dashboard_url}}" style="background:#000000;color:#FFFF00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Start Learning Korean →</a>
     </td></tr></table>
@@ -80,7 +80,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
-    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">We're excited to announce a new Korean course! Whether you're just starting or ready for the next level, we have something for you.</p>
+    <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">We've just added a new Korean course, for beginners and for students ready to move up a level.</p>
     <div style="background:#f3f4f6;border-radius:8px;padding:20px;margin:0 0 24px;">
       <p style="margin:0 0 8px;font-weight:700;color:#111827;">📖 Course Details:</p>
       <p style="margin:0;color:#374151;font-size:14px;line-height:1.8;">• Level: [Edit level here]<br>• Schedule: [Edit schedule here]<br>• Duration: [Edit duration here]<br>• Spots Available: [Edit spots here]</p>
@@ -89,7 +89,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{{courses_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">View Courses →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">— The Klovers Team</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">The Klovers Team</p>
   </td></tr>
 </table>
 </td></tr></table>
@@ -151,7 +151,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
       <a href="{{courses_url}}" style="background:#000000;color:#FFDD00;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;display:inline-block;">Claim Offer →</a>
     </td></tr></table>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">— The Klovers Team</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">The Klovers Team</p>
   </td></tr>
 </table>
 </td></tr></table>
@@ -233,20 +233,20 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   </td></tr>
   <tr><td style="padding:40px;">
     <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">{{greeting}}</p>
-    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">We're thrilled to announce that <strong>Klovers' interactive Korean Textbook</strong> is now available — and it's completely <strong>free</strong>! 🎉</p>
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 18px;">Klovers' interactive Korean Textbook is now available, and it's completely <strong>free</strong>! 🎉</p>
 
     <div style="background:#FFFDE7;border-left:4px solid #FFFF00;border-radius:4px;padding:20px;margin:0 0 24px;">
       <p style="margin:0 0 12px;font-weight:700;color:#111827;font-size:15px;">✨ What's inside:</p>
       <p style="margin:0;color:#374151;font-size:14px;line-height:2;">
-        📚 <strong>75 structured lessons</strong> — from Hangul basics to intermediate grammar<br>
-        🎯 <strong>5 sections per lesson</strong> — Vocabulary, Grammar, Dialogue, Exercises & Reading<br>
-        🏆 <strong>XP & streaks</strong> — gamified progress to keep you motivated<br>
-        🖼️ <strong>Visual scenes</strong> — AI-generated illustrations for each topic<br>
-        📊 <strong>TOPIK-aligned</strong> — covers Level 1 (45 lessons) and Level 2 (30 lessons)
+        📚 <strong>75 structured lessons:</strong> from Hangul basics to intermediate grammar<br>
+        🎯 <strong>5 sections per lesson:</strong> Vocabulary, Grammar, Dialogue, Exercises & Reading<br>
+        🏆 <strong>XP & streaks:</strong> gamified progress to keep you motivated<br>
+        🖼️ <strong>Visual scenes:</strong> AI-generated illustrations for each topic<br>
+        📊 <strong>TOPIK-aligned:</strong> covers Level 1 (45 lessons) and Level 2 (30 lessons)
       </p>
     </div>
 
-    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 24px;">Whether you're a complete beginner or preparing for TOPIK, this textbook will guide you step-by-step. Track your progress, earn XP, and level up your Korean!</p>
+    <p style="color:#374151;font-size:16px;line-height:1.7;margin:0 0 24px;">Start from scratch or use it to prepare for TOPIK, this textbook guides you step by step. Track your progress, earn XP, and level up your Korean.</p>
 
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:10px 0 12px;">
       <a href="https://kloversegy.com/textbook" style="background:#FFFF00;color:#000000;text-decoration:none;padding:16px 40px;border-radius:8px;font-size:17px;font-weight:700;display:inline-block;border:2px solid #000000;">Start Learning Now →</a>
@@ -276,7 +276,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">{{greeting}}</p>
     <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">[Your message here]</p>
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0;">
-    <p style="color:#6B7280;font-size:14px;margin:0;">— The Klovers Team</p>
+    <p style="color:#6B7280;font-size:14px;margin:0;">The Klovers Team</p>
   </td></tr>
 </table>
 </td></tr></table>
