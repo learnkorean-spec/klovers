@@ -201,8 +201,8 @@ const LearnArabicPage = () => {
           <img
             src={cairoRooftop}
             alt={tr(
-              "A Cairo rooftop terrace at sunset, with minarets on the skyline",
-              "شرفة على سطح في القاهرة عند الغروب، والمآذن تلوح في الأفق",
+              "Friends talking over tea on a Cairo rooftop terrace at sunset, pyramids and minarets on the skyline",
+              "أصدقاء يتحدثون على شرفة في القاهرة عند الغروب، والأهرامات والمآذن تلوح في الأفق",
             )}
             className="absolute inset-0 h-full w-full object-cover object-[center_25%]"
           />
