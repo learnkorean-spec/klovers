@@ -56,7 +56,7 @@ const BlogPage = () => {
     title: isAr ? "مجلة كلوفرز: كوريا واللغة الكورية" : "Klovers Journal: Discover Korea, Learn Korean",
     description: isAr
       ? "مقالات وكلمات وقصص وتجارب عن كوريا واللغة الكورية بالعربية، في رحلة من ست محطات مع كلوفرز."
-      : "Articles, words, stories and experiences about Korea and the Korean language — a six-stop journey with Klovers.",
+      : "Articles, words, stories and experiences about Korea and the Korean language: a six-stop journey with Klovers.",
     canonical: "https://kloversegy.com/blog",
   });
 

@@ -38,7 +38,7 @@ const SCENES: Scene[] = [
     blankIndex: 1,
     options: ["네, 잘 지냈어요. 당신은요?", "네, 잘 지냈어요. 어떻게 지냈어요?", "아니요, 잘 못 지냈어요.", "네, 반가워요!"],
     correct: "네, 잘 지냈어요. 어떻게 지냈어요?",
-    explanation: "어떻게 지냈어요? = 'How have you been?' — the natural follow-up when replying to this greeting.",
+    explanation: "어떻게 지냈어요? = 'How have you been?': the natural follow-up when replying to this greeting.",
   },
   {
     title: "Asking for Directions 🗺️",
@@ -86,7 +86,7 @@ const SCENES: Scene[] = [
     blankIndex: 1,
     options: ["좋아요! 몇 시에요?", "영화를 좋아해요.", "토요일은 바빠요.", "잘 모르겠어요."],
     correct: "좋아요! 몇 시에요?",
-    explanation: "좋아요! = Great! / Sounds good! 몇 시에요? = What time? — a natural follow-up to accepting plans.",
+    explanation: "좋아요! = Great! / Sounds good! 몇 시에요? = What time?: a natural follow-up to accepting plans.",
   },
   {
     title: "Shopping 🛍️",
@@ -102,7 +102,7 @@ const SCENES: Scene[] = [
   },
   {
     title: "Introducing Yourself 🤝",
-    context: "First day of Korean class — introducing yourself.",
+    context: "First day of Korean class: introducing yourself.",
     dialogue: [
       { speaker: "A", text: "안녕하세요! 이름이 뭐예요?", english: "Hello! What's your name?" },
       { speaker: "B", text: "___", english: "My name is Sara. Nice to meet you." },

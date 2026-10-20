@@ -36,9 +36,9 @@ export function getUrgencyLabel(seatsLeft: number): GroupData["urgency_label"] {
 // ─── Organic Post Captions ───
 
 const HOOKS = [
-  (g: GroupData) => `🚀 ${getLevelLabel(g.level)} — Starting ${g.day_name} ${g.start_time}`,
+  (g: GroupData) => `🚀 ${getLevelLabel(g.level)}: Starting ${g.day_name} ${g.start_time}`,
   (g: GroupData) => `🇰🇷 Ready to learn Korean? ${getLevelLabel(g.level)} is open!`,
-  (g: GroupData) => `✨ New group alert! ${getLevelLabel(g.level)} — ${g.day_name}s at ${g.start_time}`,
+  (g: GroupData) => `✨ New group alert! ${getLevelLabel(g.level)}: ${g.day_name}s at ${g.start_time}`,
 ];
 
 const BENEFITS = [
@@ -49,8 +49,8 @@ const BENEFITS = [
 
 const CTAS = [
   "Reserve your seat today.",
-  "Spots are filling up — register now!",
-  "Don't miss out — enroll today.",
+  "Spots are filling up. Register now!",
+  "Don't miss out. Enroll today.",
 ];
 
 const HASHTAGS = "#LearnKorean #KoreanCourse #Klovers #KoreanLanguage #StudyKorean";
@@ -74,8 +74,8 @@ export function generateAdCopy(group: GroupData) {
   ];
 
   const headlines = [
-    `${level} — ${group.day_name} ${group.start_time}`,
-    `Learn Korean — Only ${group.seats_left} Seats Left`,
+    `${level}: ${group.day_name} ${group.start_time}`,
+    `Learn Korean: Only ${group.seats_left} Seats Left`,
     `${level} Starts This ${group.day_name}`,
   ];
 
@@ -187,7 +187,7 @@ export function getTestimonialPostTemplate(index = 0): PostTemplate {
   const t = TESTIMONIALS[index % TESTIMONIALS.length];
   return {
     mainText: `"${t.quote}"`,
-    subtitle: `— ${t.student}\nKlovers Academy`,
+    subtitle: `${t.student}\nKlovers Academy`,
     extra: "#StudentSuccess  #Klovers  #KoreanResults",
     isUrgent: false,
   };
@@ -198,7 +198,7 @@ export function getTestimonialPostTemplate(index = 0): PostTemplate {
 const FAQ_ITEMS = [
   { q: "Can I learn Korean online?", a: "Yes! Small groups,\nstructured lessons" },
   { q: "How fast will I progress?", a: "Read Korean in 4 weeks\nwith our curriculum" },
-  { q: "Is it worth learning Korean?", a: "K-dramas, K-pop, travel —\nopen new worlds" },
+  { q: "Is it worth learning Korean?", a: "K-dramas, K-pop, travel:\nopen new worlds" },
 ];
 
 export function getFAQPostTemplate(index = 0): PostTemplate {
@@ -227,9 +227,9 @@ export function getCountdownPostTemplate(daysLeft: number, levelLabel: string): 
 export type PostLang = "en" | "ar";
 
 const HOOKS_AR = [
-  (g: GroupData) => `${getLevelLabel(g.level)} — يبدأ ${g.day_name} الساعة ${g.start_time}`,
+  (g: GroupData) => `${getLevelLabel(g.level)}: يبدأ ${g.day_name} الساعة ${g.start_time}`,
   (g: GroupData) => `حان وقت تعلّم الكورية: ${getLevelLabel(g.level)} مفتوح للتسجيل.`,
-  (g: GroupData) => `مجموعة جديدة: ${getLevelLabel(g.level)} — ${g.day_name} الساعة ${g.start_time}`,
+  (g: GroupData) => `مجموعة جديدة: ${getLevelLabel(g.level)}: ${g.day_name} الساعة ${g.start_time}`,
 ];
 
 const BENEFITS_AR = [
@@ -295,7 +295,7 @@ export function getTestimonialPostTemplateAR(index = 0): PostTemplate {
   const t = TESTIMONIALS_AR[index % TESTIMONIALS_AR.length];
   return {
     mainText: `"${t.quote}"`,
-    subtitle: `— ${t.student}\nأكاديمية كلوفرز`,
+    subtitle: `${t.student}\nأكاديمية كلوفرز`,
     extra: "#نجاح_الطلاب  #كلوفرز  #نتائج_الكوري",
     isUrgent: false,
   };
@@ -304,7 +304,7 @@ export function getTestimonialPostTemplateAR(index = 0): PostTemplate {
 const FAQ_ITEMS_AR = [
   { q: "ممكن أتعلم كوري أونلاين؟", a: "أيوه! مجموعات صغيرة\nوحصص منظمة" },
   { q: "هتقدم بسرعة قد إيه؟", a: "هتقرأ كوري في ٤ أسابيع\nمع المنهج بتاعنا" },
-  { q: "يستاهل أتعلم كوري؟", a: "دراما، كيبوب، سفر —\nافتح عوالم جديدة" },
+  { q: "يستاهل أتعلم كوري؟", a: "دراما، كيبوب، سفر:\nافتح عوالم جديدة" },
 ];
 
 export function getFAQPostTemplateAR(index = 0): PostTemplate {
@@ -348,9 +348,9 @@ export function getTipPostTemplate(index = 0, lang: PostLang = "en"): PostTempla
 }
 
 const CULTURE_FACTS = [
-  { titleEN: "K-Drama Secret", titleAR: "سر الدراما الكورية", factEN: "Korean dramas use honorifics to show social hierarchy — learn Korean to catch every nuance!", factAR: "الدراما الكورية بتستخدم ألقاب الاحترام — اتعلم كوري عشان تفهم كل التفاصيل!" },
-  { titleEN: "Hangul in 2 Hours", titleAR: "هانغول في ساعتين", factEN: "The Korean alphabet was designed to be easy to learn — most students read it in under 2 hours!", factAR: "الأبجدية الكورية اتصممت عشان تكون سهلة — أغلب الطلاب بيقرأوها في أقل من ساعتين!" },
-  { titleEN: "K-Pop Power", titleAR: "قوة الكيبوب", factEN: "BTS sings in Korean — imagine understanding every word without subtitles!", factAR: "BTS بيغنوا بالكوري — تخيل تفهم كل كلمة من غير ترجمة!" },
+  { titleEN: "K-Drama Secret", titleAR: "سر الدراما الكورية", factEN: "Korean dramas use honorifics to show social hierarchy. Learn Korean to catch every nuance!", factAR: "الدراما الكورية بتستخدم ألقاب الاحترام، اتعلم كوري عشان تفهم كل التفاصيل!" },
+  { titleEN: "Hangul in 2 Hours", titleAR: "هانغول في ساعتين", factEN: "The Korean alphabet was designed to be easy to learn: most students read it in under 2 hours!", factAR: "الأبجدية الكورية اتصممت عشان تكون سهلة: أغلب الطلاب بيقرأوها في أقل من ساعتين!" },
+  { titleEN: "K-Pop Power", titleAR: "قوة الكيبوب", factEN: "BTS sings in Korean: imagine understanding every word without subtitles!", factAR: "BTS بيغنوا بالكوري: تخيل تفهم كل كلمة من غير ترجمة!" },
 ];
 
 export function getCulturePostTemplate(index = 0, lang: PostLang = "en"): PostTemplate {
@@ -710,7 +710,7 @@ const RE_ENGAGEMENT_SCHEDULE: MonthlyPostType[] = [
 ];
 
 export const CAMPAIGN_CONFIGS: CampaignConfig[] = [
-  { id: "balanced",        name: "Balanced",        icon: "⚖️", description: "Mixed AIDA — equal blend of sales, engagement & awareness", schedule: MONTHLY_SCHEDULE },
+  { id: "balanced",        name: "Balanced",        icon: "⚖️", description: "Mixed AIDA: equal blend of sales, engagement & awareness", schedule: MONTHLY_SCHEDULE },
   { id: "engagement",      name: "Engagement",      icon: "💬", description: "Build community with tips, culture & student stories", schedule: ENGAGEMENT_SCHEDULE },
   { id: "enrollment",      name: "Enrollment",      icon: "🎯", description: "Drive registrations with seat alerts, countdowns & promos", schedule: ENROLLMENT_SCHEDULE },
   { id: "brand_awareness", name: "Brand Awareness",  icon: "📢", description: "Grow visibility with testimonials & K-culture hooks", schedule: BRAND_AWARENESS_SCHEDULE },
@@ -758,7 +758,7 @@ export function generateMonthlyPlan(
           ? (isAR ? getGroupPostTemplateAR(g) : getGroupPostTemplate(g))
           : (isAR ? getDiscountPostTemplateAR(discountPct, discountCode) : getDiscountPostTemplate(discountPct, discountCode));
         caption = g
-          ? `📢 ${getLevelLabel(g.level)} — ${g.seats_left} seat${g.seats_left !== 1 ? "s" : ""} left!\n\n🗓 Every ${g.day_name} at ${g.start_time} · ${g.duration_min} min\n✅ Join ${sc} students · Small groups · Certified teacher\n\n📲 ${url(type)}\n\n#LearnKorean #Klovers #KoreanCourse`
+          ? `📢 ${getLevelLabel(g.level)}: ${g.seats_left} seat${g.seats_left !== 1 ? "s" : ""} left!\n\n🗓 Every ${g.day_name} at ${g.start_time} · ${g.duration_min} min\n✅ Join ${sc} students · Small groups · Certified teacher\n\n📲 ${url(type)}\n\n#LearnKorean #Klovers #KoreanCourse`
           : `📢 New Korean course spots open!\n\n✅ ${sc} students already enrolled. Small groups, a real, experienced teacher.\n\n📲 ${url(type)}\n\n#LearnKorean #Klovers`;
         break;
       }
@@ -768,7 +768,7 @@ export function generateMonthlyPlan(
           ? (isAR ? getGroupPostTemplateAR(g) : getInvitePostTemplate(g))
           : (isAR ? getReferralPostTemplateAR() : getReferralPostTemplate());
         caption = g
-          ? `👋 Know someone who'd love to learn Korean?\n\n${getLevelLabel(g.level)} — ${g.day_name} ${g.start_time}\n\nTag them ⬇️ or DM us on WhatsApp!\n\n📲 ${waUrl(type)}\n\n#LearnKorean #Klovers #KoreanClasses`
+          ? `👋 Know someone who'd love to learn Korean?\n\n${getLevelLabel(g.level)}: ${g.day_name} ${g.start_time}\n\nTag them ⬇️ or DM us on WhatsApp!\n\n📲 ${waUrl(type)}\n\n#LearnKorean #Klovers #KoreanClasses`
           : `👋 Tag a friend who needs Korean in their life! 🇰🇷\n\nDM us to get started →\n\n📲 ${waUrl(type)}\n\n#LearnKorean #Klovers`;
         break;
       }
@@ -786,14 +786,14 @@ export function generateMonthlyPlan(
         template = isAR ? getTestimonialPostTemplateAR(testimonialIdx) : getTestimonialPostTemplate(testimonialIdx);
         const t = isAR ? TESTIMONIALS_AR[testimonialIdx % TESTIMONIALS_AR.length] : TESTIMONIALS[testimonialIdx % TESTIMONIALS.length];
         testimonialIdx++;
-        caption = `🌟 "${t.quote}" — ${t.student}\n\nJoin ${sc} students writing their Korean success story 🇰🇷\n\n📲 Free trial: ${trial}\n\n#StudentSuccess #Klovers #LearnKorean`;
+        caption = `🌟 "${t.quote}" · ${t.student}\n\nJoin ${sc} students writing their Korean success story 🇰🇷\n\n📲 Free trial: ${trial}\n\n#StudentSuccess #Klovers #LearnKorean`;
         break;
       }
       case "faq": {
         template = isAR ? getFAQPostTemplateAR(faqIdx) : getFAQPostTemplate(faqIdx);
         const faq = isAR ? FAQ_ITEMS_AR[faqIdx % FAQ_ITEMS_AR.length] : FAQ_ITEMS[faqIdx % FAQ_ITEMS.length];
         faqIdx++;
-        caption = `❓ ${faq.q}\n\n${faq.a.replace("\n", " — ")}\n\n${sc} students chose Klovers — a real, experienced teacher, small groups, proven curriculum.\n\n📲 Try free: ${trial}\n\n#KoreanFAQ #LearnKorean #Klovers`;
+        caption = `❓ ${faq.q}\n\n${faq.a.replace("\n", ": ")}\n\n${sc} students chose Klovers: a real, experienced teacher, small groups, proven curriculum.\n\n📲 Try free: ${trial}\n\n#KoreanFAQ #LearnKorean #Klovers`;
         break;
       }
       case "countdown": {
@@ -863,7 +863,7 @@ export function generatePublishingCopy(post: {
   const date = post.scheduledDate
     ? new Date(post.scheduledDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
     : "";
-  return `=== Day ${post.day} — ${label} ===\n📅 ${date}\n\n${post.caption}\n\n---`;
+  return `=== Day ${post.day}: ${label} ===\n📅 ${date}\n\n${post.caption}\n\n---`;
 }
 
 export function generateReelPublishingCopy(post: {
@@ -878,7 +878,7 @@ export function generateReelPublishingCopy(post: {
     ? new Date(post.scheduledDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
     : "";
   const rs = post.reelScript;
-  return `=== Day ${post.day} — ${label} (REEL) ===\n📅 ${date}\n\n🎬 SLIDE 1 (Hook — 3 sec):\n${rs.slide1}\n\n🎬 SLIDE 2 (Content — 5 sec):\n${rs.slide2}\n\n🎬 SLIDE 3 (CTA — 3 sec):\n${rs.slide3}\n\n🎵 Audio: ${rs.audioSuggestion}\n📸 Background: ${rs.bgQuery}\n\n---`;
+  return `=== Day ${post.day}: ${label} (REEL) ===\n📅 ${date}\n\n🎬 SLIDE 1 (Hook: 3 sec):\n${rs.slide1}\n\n🎬 SLIDE 2 (Content: 5 sec):\n${rs.slide2}\n\n🎬 SLIDE 3 (CTA: 3 sec):\n${rs.slide3}\n\n🎵 Audio: ${rs.audioSuggestion}\n📸 Background: ${rs.bgQuery}\n\n---`;
 }
 
 // ─── Story Script (3-slide) ───

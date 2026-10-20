@@ -144,7 +144,7 @@ const MyTrialClassCard = () => {
   const days = daysUntil(local.dateStr);
 
   const calendarUrl = buildGoogleCalendarUrl({
-    title: "Free Korean Trial Class — Klovers Academy",
+    title: "Free Korean Trial Class by Klovers Academy",
     date: booking.trial_date,
     time: booking.start_time,
     durationMin: TRIAL_DURATION_MIN,

@@ -272,7 +272,7 @@ const GrammarPatternGame = ({ onGameComplete }: { onGameComplete?: (score: numbe
       <div className="flex flex-col items-center gap-6 py-10 text-center px-4 max-w-md mx-auto">
         <div className="text-6xl">{level.emoji}</div>
         <h2 className="text-2xl font-bold">Level {level.level} Complete!</h2>
-        <p className="text-muted-foreground text-sm">{level.title} — {level.description}</p>
+        <p className="text-muted-foreground text-sm">{level.title}: {level.description}</p>
         {currentLevel + 1 < LEVELS.length && (
           <Card className="p-4 w-full text-left bg-primary/5 border-primary/20">
             <p className="text-xs text-muted-foreground mb-1">Next up:</p>

@@ -390,7 +390,7 @@ const StudentSelfService = ({ userId }: Props) => {
       return;
     }
     toast({
-      title: tr("Thank you — sent", "شكرًا — تم الإرسال"),
+      title: tr("Thank you: sent", "شكرًا: تم الإرسال"),
       description: tr("Your teacher will confirm it shortly.", "ستؤكّده المعلّمة قريبًا."),
     });
     setShowForm(false);
@@ -466,7 +466,7 @@ const StudentSelfService = ({ userId }: Props) => {
                   <p className="text-sm font-medium">{formatDate(s.session_date, isAr)}</p>
                   <p className="text-xs text-muted-foreground">
                     {s.student_confirmed_at
-                      ? tr("Sent — waiting for your teacher", "تم الإرسال — بانتظار المعلّمة")
+                      ? tr("Sent, waiting for your teacher", "تم الإرسال، بانتظار المعلّمة")
                       : tr("Did this lesson happen?", "هل تمّ حضور هذه الحصة؟")}
                   </p>
                 </div>
@@ -548,7 +548,7 @@ const StudentSelfService = ({ userId }: Props) => {
               <div className="flex items-center gap-2 rounded-lg border border-correct/30 bg-correct/10 p-3 text-correct">
                 <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <p className="text-sm font-medium">
-                  {tr("Received — thank you.", "تم الاستلام — شكرًا.")}
+                  {tr("Received, thank you.", "تم الاستلام، شكرًا.")}
                 </p>
               </div>
             )
@@ -573,7 +573,7 @@ const StudentSelfService = ({ userId }: Props) => {
               className="h-auto min-h-10 w-full whitespace-normal"
               onClick={openClaimForm}
             >
-              {tr("I have paid — upload the receipt", "تمّ الدفع — رفع صورة الإيصال")}
+              {tr("I have paid: upload the receipt", "تمّ الدفع: رفع صورة الإيصال")}
             </Button>
           ) : (
             <div className="space-y-2 rounded-lg border bg-ivory p-3 dark:bg-card">

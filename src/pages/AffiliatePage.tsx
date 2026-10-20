@@ -82,7 +82,7 @@ export default function AffiliatePage() {
     return local ?? baseT(key);
   };
   useSEO({
-    title: isAr ? "برنامج الشركاء: عمولة ٢٠٪" : "Affiliate Program — Earn 20% Commission",
+    title: isAr ? "برنامج الشركاء: عمولة ٢٠٪" : "Affiliate Program: Earn 20% Commission",
     description: isAr
       ? "الانضمام إلى برنامج شركاء كلوفرز: رابط إحالة خاص وعمولة ٢٠٪ من أول دفعة لكل طالب جديد في دورات اللغة الكورية."
       : "Join the Klovers affiliate program. Earn 20% of each referred student's first payment for our Korean language courses.",

@@ -378,7 +378,7 @@ const KoreanPlacementPage = () => {
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setMicError(isAr
         ? "لا يدعم هذا المتصفح التسجيل الصوتي. يمكن تخطّي هذا القسم، وستقيّمه المعلّمة في الحصة."
-        : "This browser cannot record audio. Skip this part — your teacher will assess it live.");
+        : "This browser cannot record audio. Skip this part, your teacher will assess it live.");
       return;
     }
     try {
@@ -655,7 +655,7 @@ const KoreanPlacementPage = () => {
     const canvas = document.createElement("canvas");
     drawPlacementCard(canvas, {
       levelEmoji: meta.emoji,
-      levelLabel: isAr ? info.labelKo : `${info.labelKo} — ${info.labelEn}`,
+      levelLabel: isAr ? info.labelKo : `${info.labelKo}: ${info.labelEn}`,
       tagline: isAr ? info.labelAr : meta.tagline,
       score: res.score,
       total: res.max,
@@ -674,7 +674,7 @@ const KoreanPlacementPage = () => {
     const canvas = document.createElement("canvas");
     drawPlacementCertificate(canvas, {
       levelEmoji: meta.emoji,
-      levelLabel: isAr ? info.labelKo : `${info.labelKo} — ${info.labelEn}`,
+      levelLabel: isAr ? info.labelKo : `${info.labelKo}: ${info.labelEn}`,
       tagline: isAr ? info.labelAr : meta.tagline,
       score: res.score,
       total: res.max,
@@ -824,8 +824,8 @@ const KoreanPlacementPage = () => {
   if (phase === "intro") {
     const FEATURES = [
       { icon: Target, text: t("أسئلة بصيغ امتحان TOPIK الحقيقي", "Questions in the real TOPIK reading formats") },
-      { icon: Clock,  text: t("٥٢ سؤالًا، مع إمكانية الإنهاء مبكرًا", `${EXAM_MAX} questions — and you can finish early`) },
-      { icon: Save,   text: t("الإغلاق والعودة لاحقًا: التقدّم محفوظ", "Close it and come back — saved") },
+      { icon: Clock,  text: t("٥٢ سؤالًا، مع إمكانية الإنهاء مبكرًا", `${EXAM_MAX} questions, and you can finish early`) },
+      { icon: Save,   text: t("الإغلاق والعودة لاحقًا: التقدّم محفوظ", "Close it and come back, saved") },
       { icon: Ban,    text: t("دون قاموس أو مترجم", "No dictionary, no translator") },
     ];
 
@@ -883,7 +883,7 @@ const KoreanPlacementPage = () => {
 
                   <p className="text-muted-foreground leading-relaxed max-w-md mx-auto">
                     {t("أسئلة قراءة بصيغ امتحان TOPIK الحقيقي: اختبار واحد من ٥٢ سؤالًا، يبدأ بالأسهل ويغطّي المستويات من الأول إلى الرابع، ويمكن إنهاؤه في أي لحظة بعد أن تتجاوز الأسئلةُ المستوى الحالي.",
-                       `Reading questions in the real TOPIK formats. One test of ${EXAM_MAX} questions, easiest first, covering levels 1 to 4 — and once the questions are past you, you can finish it yourself.`)}
+                       `Reading questions in the real TOPIK formats. One test of ${EXAM_MAX} questions, easiest first, covering levels 1 to 4, and once the questions are past you, you can finish it yourself.`)}
                   </p>
                 </div>
 
@@ -912,7 +912,7 @@ const KoreanPlacementPage = () => {
                   </div>
                   <p className="text-[11px] text-muted-foreground text-center mt-2">
                     {t("الإجابة عمّا يمكن الإجابة عنه، والمجموع هو ما يحدّد المستوى، تمامًا كدرجات القطع في TOPIK نفسه. لا يوجد قسم يُنهي الاختبار فجأة.",
-                       "You answer what you can and your total decides the level, the way TOPIK's own cut scores work — no section ends the test on you.")}
+                       "You answer what you can and your total decides the level, the way TOPIK's own cut scores work. No section ends the test on you.")}
                   </p>
                 </div>
 
@@ -942,7 +942,7 @@ const KoreanPlacementPage = () => {
                     </span>
                     <span className="block text-xs text-muted-foreground leading-snug mt-0.5">
                       {t("يمكن البدء دون تسجيل، وسيظهر هذا الخيار مجددًا في النهاية.",
-                         "You can start without it — we'll ask again at the end.")}
+                         "You can start without it, we'll ask again at the end.")}
                     </span>
                   </button>
                 )}
@@ -965,11 +965,11 @@ const KoreanPlacementPage = () => {
                   >
                     <span className="block text-sm font-bold leading-snug">
                       {t("لا أستطيع قراءة الهانغول بعد: عرض مستواي",
-                         "I can't read Hangul yet — show me my level")}
+                         "I can't read Hangul yet, show me my level")}
                     </span>
                     <span className="block text-xs text-muted-foreground leading-snug mt-0.5">
                       {t("دون أسئلة: انتقال مباشر إلى النتيجة.",
-                         "No questions — this takes you straight to your result.")}
+                         "No questions, this takes you straight to your result.")}
                     </span>
                   </button>
                 </div>
@@ -1199,7 +1199,7 @@ const KoreanPlacementPage = () => {
           <div ref={topRef} />
           <Card dir={isAr ? "rtl" : "ltr"}>
             <CardContent className="pt-6 space-y-5">
-              <h2 className="text-lg font-bold">{t("الكتابة والصوت — للمعلّمة", "Writing and voice — for your teacher")}</h2>
+              <h2 className="text-lg font-bold">{t("الكتابة والصوت للمعلّمة", "Writing and voice: for your teacher")}</h2>
               <p className="text-sm text-muted-foreground">
                 {t("لا يوجد تصحيح آلي هنا؛ المعلّمة هي من تراجع.", "Nothing here is auto-graded. Your teacher reviews it.")}
               </p>
@@ -1308,7 +1308,7 @@ const KoreanPlacementPage = () => {
             {step === 0 && (
               <p className="text-sm">
                 {t("الإجابة عمّا يمكن الإجابة عنه. لا يوقف أي قسم الاختبار، وبدءًا من القسم الثالث يصبح قرار المتابعة أو التوقف اختياريًا.",
-                   "Answer what you can. No section stops the test — and from the third section onward it is you who decides whether to carry on.")}
+                   "Answer what you can. No section stops the test, and from the third section onward it is you who decides whether to carry on.")}
               </p>
             )}
 
@@ -1318,10 +1318,10 @@ const KoreanPlacementPage = () => {
               <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
                 <p className="text-sm text-muted-foreground">
                   {t("قراءة الحروف الكورية غير ممكنة بعد؟ هذا ليس رسوبًا، بل هو بالضبط المستوى الذي نبدأ منه.",
-                     "Cannot read the Korean alphabet yet? That is not a fail — it is exactly where we start.")}
+                     "Cannot read the Korean alphabet yet? That is not a fail, it is exactly where we start.")}
                 </p>
                 <Button type="button" variant="outline" size="sm" onClick={handleCannotReadHangul}>
-                  {t("لا أستطيع قراءة الهانغول بعد: عرض مستواي", "I cannot read Hangul yet — show my level")}
+                  {t("لا أستطيع قراءة الهانغول بعد: عرض مستواي", "I cannot read Hangul yet, show my level")}
                 </Button>
               </div>
             )}
@@ -1343,7 +1343,7 @@ const KoreanPlacementPage = () => {
                 page is asking her to make. */}
             {section.mayStopAfter && (
               <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => stopHere(section.id)}>
-                {t("هذا أقصى ما أستطيع: عرض مستواي", "That's as far as I can go — show me my level")}
+                {t("هذا أقصى ما أستطيع: عرض مستواي", "That's as far as I can go, show me my level")}
               </Button>
             )}
             <Button onClick={nextSection}>

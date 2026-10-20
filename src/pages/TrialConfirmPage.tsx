@@ -57,7 +57,7 @@ const COPY = {
     greetingNoName: "Confirm your trial class",
     intro: "Please confirm you'll be attending this trial class.",
     introEither:
-      "Let us know whether you'll be there. Either answer helps — we'll hold your seat or free it up.",
+      "Let us know whether you'll be there. Either answer helps: we'll hold your seat or free it up.",
     introChoose: "Pick the day that suits you, then confirm. Both run the same class.",
     pickHeading: "Choose your day",
     seatsLeft: (n: number) => (n === 1 ? "1 seat left" : `${n} seats left`),
@@ -81,7 +81,7 @@ const COPY = {
     declinedAlready:
       "You told us you can't make this session, so your seat was released. You can book another time whenever you're ready.",
     declinedChanged: "Changed your mind? You can still tell us you're coming.",
-    slotFull: "That day filled up while you were deciding. Please pick another — your seat is still safe.",
+    slotFull: "That day filled up while you were deciding. Please pick another, your seat is still safe.",
     slotGone: "That day is no longer available. Please pick another one below.",
     bookAnother: "Book another time",
     accountTitle: "Keep everything in one place",

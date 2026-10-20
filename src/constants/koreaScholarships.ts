@@ -77,8 +77,8 @@ export const KOREA_SCHOLARSHIPS: Scholarship[] = [
   {
     id: "gks-undergraduate",
     name: {
-      ar: "منحة الحكومة الكورية — البكالوريوس (GKS-U)",
-      en: "Global Korea Scholarship — Undergraduate (GKS-U)",
+      ar: "منحة الحكومة الكورية: البكالوريوس (GKS-U)",
+      en: "Global Korea Scholarship: Undergraduate (GKS-U)",
     },
     provider: {
       ar: "وزارة التعليم الكورية، عبر المعهد الوطني للتعليم الدولي (NIIED)",
@@ -114,11 +114,11 @@ export const KOREA_SCHOLARSHIPS: Scholarship[] = [
     },
     timeline: {
       ar: "التقديم في سبتمبر–أكتوبر من كل عام. في مصر كانت نافذة مسار السفارة ١٥–٣٠ سبتمبر في دورة ٢٠٢٦، وهي أقصر من الموعد العام، وللمسار الجامعي موعد مختلف.",
-      en: "Applications run September to October each year. For Egypt the embassy track closed 15–30 September in the 2026 cycle — narrower than the global window — and the university track follows a different date.",
+      en: "Applications run September to October each year. For Egypt the embassy track closed 15–30 September in the 2026 cycle (narrower than the global window), and the university track follows a different date.",
     },
     note: {
       ar: "لمصر حصة سنوية في هذا المسار: مقعدان في دورة ٢٠٢٦ (مقعد للمسار العام ومقعد لمسار R-GKS).",
-      en: "Egypt has its own annual quota on this track: two places in the 2026 cycle — one general and one R-GKS.",
+      en: "Egypt has its own annual quota on this track: two places in the 2026 cycle, one general and one R-GKS.",
     },
     whoFor: {
       ar: "لطلاب الثانوية المتفوقين الذين يريدون دراسة البكالوريوس في كوريا بتمويل حكومي كامل.",
@@ -128,8 +128,8 @@ export const KOREA_SCHOLARSHIPS: Scholarship[] = [
   {
     id: "gks-graduate",
     name: {
-      ar: "منحة الحكومة الكورية — الدراسات العليا (GKS-G)",
-      en: "Global Korea Scholarship — Graduate (GKS-G)",
+      ar: "منحة الحكومة الكورية: الدراسات العليا (GKS-G)",
+      en: "Global Korea Scholarship: Graduate (GKS-G)",
     },
     provider: {
       ar: "وزارة التعليم الكورية، عبر المعهد الوطني للتعليم الدولي (NIIED)",
@@ -193,8 +193,8 @@ export const KOREA_SCHOLARSHIPS: Scholarship[] = [
       en: ["A full tuition exemption", "A monthly allowance", "National health insurance"],
     },
     figures: {
-      ar: "إعفاء من الرسوم لثمانية فصول دراسية، و٣٥٠٬٠٠٠ وون شهريًا، وتأمين صحي — حسب صفحة المنحة في موقع KAIST.",
-      en: "Tuition exempt for eight semesters, KRW 350,000 a month, and medical insurance — as stated on KAIST's own scholarship page.",
+      ar: "إعفاء من الرسوم لثمانية فصول دراسية، و٣٥٠٬٠٠٠ وون شهريًا، وتأمين صحي، حسب صفحة المنحة في موقع KAIST.",
+      en: "Tuition exempt for eight semesters, KRW 350,000 a month, and medical insurance, as stated on KAIST's own scholarship page.",
     },
     eligibility: {
       ar: "يُمنح تلقائيًا لكل طالب دولي مقبول في مرحلة البكالوريوس، بشرط الحفاظ على معدل ٢٫٧ من ٤٫٣ بعد السنة الأولى.",
@@ -216,8 +216,8 @@ export const KOREA_SCHOLARSHIPS: Scholarship[] = [
   {
     id: "kf-language",
     name: {
-      ar: "زمالة تدريب اللغة الكورية — مؤسسة كوريا",
-      en: "Korean Language Training Fellowship — The Korea Foundation",
+      ar: "زمالة تدريب اللغة الكورية: مؤسسة كوريا",
+      en: "Korean Language Training Fellowship: The Korea Foundation",
     },
     provider: {
       ar: "مؤسسة كوريا (The Korea Foundation)",
@@ -240,8 +240,8 @@ export const KOREA_SCHOLARSHIPS: Scholarship[] = [
       ],
     },
     figures: {
-      ar: "١٬٠٠٠٬٠٠٠ وون شهريًا لحاملي البكالوريوس أو من لديهم أقل من ثلاث سنوات خبرة، و١٬٢٠٠٬٠٠٠ وون لحاملي الماجستير أو الدكتوراه أو من لديهم ثلاث سنوات خبرة فأكثر، مع ٣٠٠٬٠٠٠ وون بدل سفر — حسب صفحة الزمالة في موقع المؤسسة.",
-      en: "KRW 1,000,000 a month for bachelor's holders or those with under three years of experience, and KRW 1,200,000 for doctoral candidates or those with three years or more, plus a KRW 300,000 travel allowance — as stated on the Foundation's own page.",
+      ar: "١٬٠٠٠٬٠٠٠ وون شهريًا لحاملي البكالوريوس أو من لديهم أقل من ثلاث سنوات خبرة، و١٬٢٠٠٬٠٠٠ وون لحاملي الماجستير أو الدكتوراه أو من لديهم ثلاث سنوات خبرة فأكثر، مع ٣٠٠٬٠٠٠ وون بدل سفر، حسب صفحة الزمالة في موقع المؤسسة.",
+      en: "KRW 1,000,000 a month for bachelor's holders or those with under three years of experience, and KRW 1,200,000 for doctoral candidates or those with three years or more, plus a KRW 300,000 travel allowance, as stated on the Foundation's own page.",
     },
     eligibility: {
       ar: "زمالة للغة فقط وليست درجة علمية: ستة أشهر قابلة للتمديد إلى اثني عشر. تشمل منطقة الشرق الأوسط بالاسم. غير متاحة لمن يخطط للالتحاق ببرنامج درجة في كوريا أو من سبق أن حصل عليها.",
@@ -332,8 +332,8 @@ export const KOREA_SCHOLARSHIPS: Scholarship[] = [
       en: ["A monthly allowance", "Round-trip economy airfare"],
     },
     figures: {
-      ar: "٦٣٠٬٠٠٠ وون شهريًا، وتذكرة طيران ذهابًا وعودة بالدرجة الاقتصادية حسب التكلفة الفعلية — حسب صفحة البرنامج الرسمية.",
-      en: "KRW 630,000 a month, and round-trip economy airfare at actual cost — as stated on the programme's official page.",
+      ar: "٦٣٠٬٠٠٠ وون شهريًا، وتذكرة طيران ذهابًا وعودة بالدرجة الاقتصادية حسب التكلفة الفعلية، حسب صفحة البرنامج الرسمية.",
+      en: "KRW 630,000 a month, and round-trip economy airfare at actual cost, as stated on the programme's official page.",
     },
     eligibility: {
       ar: "أن يكون الطالب مسجلًا في جامعة أجنبية لها اتفاق مع إحدى الجامعات الكورية المعتمدة، وبمعدل ٨٠٪ أو أعلى، وفي برنامج تبادل يؤدي إلى درجة. الدراسة في كوريا حاليًا أو الحصول على منحة كورية سابقة يمنع التقديم.",

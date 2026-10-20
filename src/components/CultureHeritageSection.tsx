@@ -89,7 +89,7 @@ const TILES: Tile[] = [
     kickerAr: "أعياد",
     titleEn: "Seollal & Chuseok",
     titleAr: "سولال وتشوسوك",
-    blurbEn: "Korea's two biggest holidays — the rituals, the foods, and the words every learner should know.",
+    blurbEn: "Korea's two biggest holidays: the rituals, the foods, and the words every learner should know.",
     blurbAr: "أهم عيدين في الثقافة الكورية: طقوسهما وأطباقهما الخاصة.",
     slugEn: "korean-traditional-holidays-chuseok-seollal",
     slugAr: "korean-traditional-holidays-chuseok-seollal-ar",
@@ -115,7 +115,7 @@ const TILES: Tile[] = [
     kickerAr: "اللغة والاحترام",
     titleEn: "Why Korean Has 7 Speech Levels",
     titleAr: "لماذا للكورية ٧ مستويات كلام؟",
-    blurbEn: "Formal, polite, casual — how the language itself encodes who you're speaking to.",
+    blurbEn: "Formal, polite, casual: how the language itself encodes who you're speaking to.",
     blurbAr: "الرسمي والمهذب والعادي: كيف تعكس اللغة نفسها علاقتك بمن تتحدث معه.",
     slugEn: "korean-speech-levels-honorifics-guide",
     slugAr: "korean-speech-levels-honorifics-guide-ar",
@@ -128,7 +128,7 @@ const TILES: Tile[] = [
     kickerAr: "الموجة الكورية",
     titleEn: "Learning Korean Through K-Pop",
     titleAr: "تعلّم الكورية عبر الكيبوب",
-    blurbEn: "Millions of fans are already absorbing Korean by accident — how to turn that into real fluency.",
+    blurbEn: "Millions of fans are already absorbing Korean by accident: how to turn that into real fluency.",
     blurbAr: "ملايين المعجبين يتعلّمون الكورية دون أن يشعروا، فكيف يتحوّل ذلك إلى طلاقة حقيقية؟",
     slugEn: "learn-korean-through-kpop-bts-blackpink",
     slugAr: "learn-korean-through-kpop-bts-blackpink-ar",
@@ -141,8 +141,8 @@ const TILES: Tile[] = [
     kickerAr: "فولكلور",
     titleEn: "Korean Zodiac & Fortune-Telling",
     titleAr: "الأبراج والتنجيم الكوري",
-    blurbEn: "Saju, the 12 animal signs, and gunghap compatibility readings — still very much alive today.",
-    blurbAr: "الساجو، والحيوانات الاثني عشرية، وقراءات التوافق — تقليد ما زال حاضرًا اليوم.",
+    blurbEn: "Saju, the 12 animal signs, and gunghap compatibility readings, still very much alive today.",
+    blurbAr: "الساجو، والحيوانات الاثني عشرية، وقراءات التوافق، تقليد ما زال حاضرًا اليوم.",
     slugEn: "korean-zodiac-fortune-telling-guide",
     slugAr: "korean-zodiac-fortune-telling-guide-ar",
     altEn: "Traditional Korean zodiac animal illustrations representing fortune telling",
@@ -154,7 +154,7 @@ const TILES: Tile[] = [
     kickerAr: "أكل الشارع",
     titleEn: "A Taste of Korean Street Food",
     titleAr: "طعم أكل الشارع الكوري",
-    blurbEn: "From tteokbokki to hotteok — the dishes, the carts, and the words to order with confidence.",
+    blurbEn: "From tteokbokki to hotteok: the dishes, the carts, and the words to order with confidence.",
     blurbAr: "من التوكبوكي إلى الهوتوك: الأطباق والمفردات اللازمة للطلب بثقة.",
     slugEn: "korean-street-food-guide",
     slugAr: "korean-street-food-guide-ar",
@@ -216,7 +216,7 @@ const CultureHeritageSection = () => {
           <p className="text-ivory/70 text-base md:text-lg leading-relaxed">
             {isAr
               ? "الكورية ليست مجرد قواعد ومفردات، بل تاريخ ممتد وتقاليد حية وثقافة يحبها الملايين حول العالم. كل درس هنا يصل المتعلّم بشيء حقيقي."
-              : "Korean isn't just grammar and vocabulary — it's centuries of history, living traditions, and a culture millions of people are falling for. Every lesson here touches something real."}
+              : "Korean isn't just grammar and vocabulary; it's centuries of history, living traditions, and a culture millions of people are falling for. Every lesson here touches something real."}
           </p>
         </div>
 

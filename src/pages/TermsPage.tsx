@@ -44,7 +44,7 @@ const EN: LegalContent = {
     {
       heading: "First class guarantee and refunds",
       paragraphs: [
-        "If you are not satisfied after your first class, we will refund you or rebook you — no questions asked.",
+        "If you are not satisfied after your first class, we will refund you or rebook you, no questions asked.",
         "After that, refunds are prorated for unused sessions.",
       ],
     },

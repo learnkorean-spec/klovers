@@ -55,7 +55,7 @@ export function LearningJourneyMap({
         {stops.map(s => {
           const level = lang === "ar" ? s.labelAr : s.labelEn;
           const world = worldLabel(s, lang);
-          const label = `${world} — ${level}`;
+          const label = `${world}: ${level}`;
           const stateText = s.state === "completed" ? c("stateCompleted") : s.state === "current" ? c("stateCurrent") : c("stateLocked");
           const node = (
             <>

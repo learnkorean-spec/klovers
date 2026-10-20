@@ -63,7 +63,7 @@ export function tourSlides(lang: WorldLang): TourSlide[] {
       : {
           stop: "why",
           title: "Why Klovers",
-          lead: "Live Korean classes online with a specialist teacher, taught entirely in Arabic — so it actually clicks, not just gets memorized.",
+          lead: "Live Korean classes online with a specialist teacher, taught entirely in Arabic, so it actually clicks, not just gets memorized.",
           points: ["Structured levels", "Flexible classes: group and private options", "Speaking-focused", "TOPIK prep", "A supportive community"],
         },
     courses: ar

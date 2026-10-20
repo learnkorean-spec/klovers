@@ -72,9 +72,9 @@ export const LEVELS: Level[] = [
     order: 0,
     sessions: 4,
     description_en:
-      "Four classes. Learn the alphabet from zero — vowels and consonants, how syllables are built, final consonants, and the pronunciation rules. By the end you can read and write any Korean word. Take it on its own, or as the step before Level 1.",
+      "Four classes. Learn the alphabet from zero: vowels and consonants, how syllables are built, final consonants, and the pronunciation rules. By the end you can read and write any Korean word. Take it on its own, or as the step before Level 1.",
     description_ar:
-      "أربع حصص. تتعلم الأبجدية من الصفر — الحروف المتحركة والساكنة، وتركيب المقاطع، والحرف الأخير، وقواعد النطق. في النهاية تقرأ وتكتب أي كلمة كورية. يمكنك دراستها وحدها، أو كخطوة قبل المستوى الأول.",
+      "أربع حصص. تتعلم الأبجدية من الصفر: الحروف المتحركة والساكنة، وتركيب المقاطع، والحرف الأخير، وقواعد النطق. في النهاية تقرأ وتكتب أي كلمة كورية. يمكنك دراستها وحدها، أو كخطوة قبل المستوى الأول.",
   },
   {
     id: 1,
@@ -181,8 +181,8 @@ export const getLevelByKey = (key: string): Level | undefined =>
  * See the note at the top of this file.
  */
 export const formatLevelLabel = (level: Level): string => {
-  if (level.topik) return `${level.name} — ${level.sessions} classes, prepares you toward TOPIK ${level.topik}`;
-  return `${level.name} — ${level.sessions} classes`;
+  if (level.topik) return `${level.name}: ${level.sessions} classes, prepares you toward TOPIK ${level.topik}`;
+  return `${level.name}: ${level.sessions} classes`;
 };
 
 export const isFoundationLevel = (id: number): boolean => id === 0;

@@ -171,8 +171,8 @@ const ScholarshipMatches = ({ levelKey, signedIn, levelLabel }: Props) => {
           </span>
           {timeline.nextKey &&
             t(
-              `من ${getLevelShortLabel(timeline.currentKey, "ar")} إلى ${getLevelShortLabel(timeline.nextKey, "ar")} في نحو ${timeline.monthsToNext} شهور — المستوى ٢٤ حصة، وحصة واحدة في الأسبوع.`,
-              `from ${getLevelShortLabel(timeline.currentKey, "en")} to ${getLevelShortLabel(timeline.nextKey, "en")} in about ${timeline.monthsToNext} months — a level is 24 classes, one class a week.`,
+              `من ${getLevelShortLabel(timeline.currentKey, "ar")} إلى ${getLevelShortLabel(timeline.nextKey, "ar")} في نحو ${timeline.monthsToNext} شهور، المستوى ٢٤ حصة، وحصة واحدة في الأسبوع.`,
+              `from ${getLevelShortLabel(timeline.currentKey, "en")} to ${getLevelShortLabel(timeline.nextKey, "en")} in about ${timeline.monthsToNext} months: a level is 24 classes, one class a week.`,
             )}
           {!timeline.nextKey &&
             t(
@@ -297,8 +297,8 @@ const ScholarshipMatches = ({ levelKey, signedIn, levelLabel }: Props) => {
 
           <p className="text-xs text-muted-foreground">
             {t(
-              "«متاح لمستواك» تعني أن قواعد البرنامج نفسها لا تمنعك في هذه المرحلة — لا أنها قبول مضمون. الملف مطلوب في كل الحالات، وبعض البرامج تنافسية.",
-              "“Open to you” means the programme's own rules do not stop you at this stage — not that you are accepted. Every programme needs a file, and some are competitive.",
+              "«متاح لمستواك» تعني أن قواعد البرنامج نفسها لا تمنعك في هذه المرحلة، لا أنها قبول مضمون. الملف مطلوب في كل الحالات، وبعض البرامج تنافسية.",
+              "“Open to you” means the programme's own rules do not stop you at this stage, not that you are accepted. Every programme needs a file, and some are competitive.",
             )}
           </p>
 

@@ -221,7 +221,7 @@ export function BadgeGrid({ earnedBadges, loading = false, detailed = false }: {
           <ul className="flex flex-wrap gap-1">
             {locked.map((b) => {
               const text = badgeText(b, language);
-              const label = `${text.name} — ${text.description}`;
+              const label = `${text.name}: ${text.description}`;
               return (
                 <li
                   key={b.key}

@@ -45,7 +45,7 @@ export default function ConversationPage() {
   }, [convo]);
 
   useEffect(() => {
-    if (convo) document.title = `محادثة — ${convo.title} | كلوفرز`;
+    if (convo) document.title = `محادثة: ${convo.title} | كلوفرز`;
     return () => {
       document.title = "كلوفرز";
     };
@@ -99,7 +99,7 @@ export default function ConversationPage() {
       <main dir="rtl" className="mx-auto max-w-2xl px-5 py-10">
         <p className="text-sm font-bold text-muted-foreground">{convo.book}</p>
         <h1 className="mt-1 text-3xl font-black tracking-tight">
-          محادثة — {convo.title}
+          محادثة: {convo.title}
         </h1>
         <div className="mt-2 h-1.5 w-16 rounded-full bg-[#FFFF00]" />
         <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">

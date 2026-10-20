@@ -148,8 +148,8 @@ const APPLICATION_LANGUAGE: Record<string, { targetLevelKey: string | null; reas
     // The only programme on the list that asks for Korean at application.
     targetLevelKey: "l1",
     reason: {
-      ar: "هذه الزمالة تطلب فهم الكورية الأساسية والتحدث بها عند التقديم — وهي المنحة الوحيدة في القائمة التي تطلب كورية مسبقًا.",
-      en: "This fellowship asks applicants to understand and speak basic Korean — the only programme on this list that requires Korean up front.",
+      ar: "هذه الزمالة تطلب فهم الكورية الأساسية والتحدث بها عند التقديم، وهي المنحة الوحيدة في القائمة التي تطلب كورية مسبقًا.",
+      en: "This fellowship asks applicants to understand and speak basic Korean: the only programme on this list that requires Korean up front.",
     },
   },
   koica: {
@@ -252,7 +252,7 @@ function blockersFor(id: string, input: MatchInput): {
 
   if (id === "gks-undergraduate" || id === "gks-graduate") {
     obligation(
-      "معدل ٨٠٪ أو ضمن أفضل ٢٠٪ من الدفعة — إثباته من كشف الدرجات.",
+      "معدل ٨٠٪ أو ضمن أفضل ٢٠٪ من الدفعة، إثباته من كشف الدرجات.",
       "An 80% average or a top-20% class rank, evidenced by the transcript.",
     );
     obligation(
@@ -267,12 +267,12 @@ function blockersFor(id: string, input: MatchInput): {
 
   if (id === "koica") {
     condition(
-      "البرنامج للموظفين الحكوميين، والترشيح الرسمي من جهتك إلزامي — التقديم الفردي غير مقبول.",
+      "البرنامج للموظفين الحكوميين، والترشيح الرسمي من جهتك إلزامي، التقديم الفردي غير مقبول.",
       "The programme is for government officials, and official nomination by your employer is mandatory; a personal application is not accepted.",
     );
     obligation(
-      "قائمة الدول المؤهلة تُعلن سنويًا من KOICA، ولم تكن مصر مؤكدة على صفحاتها — تُراجَع من مكتب KOICA أو السفارة في القاهرة.",
-      "KOICA re-issues the eligible-country list every year, and Egypt was not confirmed on its pages — check with the KOICA office or the embassy in Cairo.",
+      "قائمة الدول المؤهلة تُعلن سنويًا من KOICA، ولم تكن مصر مؤكدة على صفحاتها، تُراجَع من مكتب KOICA أو السفارة في القاهرة.",
+      "KOICA re-issues the eligible-country list every year, and Egypt was not confirmed on its pages; check with the KOICA office or the embassy in Cairo.",
     );
   }
 
@@ -289,8 +289,8 @@ function blockersFor(id: string, input: MatchInput): {
 
   if (id === "gks-exchange") {
     condition(
-      "جامعتك الأم يجب أن يكون لها اتفاق مع إحدى الجامعات الكورية المعتمدة، وهي التي ترشّحك — لا تقديم مباشر.",
-      "Your home university must hold an agreement with a designated Korean university, and it nominates you — there is no direct application.",
+      "جامعتك الأم يجب أن يكون لها اتفاق مع إحدى الجامعات الكورية المعتمدة، وهي التي ترشّحك، لا تقديم مباشر.",
+      "Your home university must hold an agreement with a designated Korean university, and it nominates you; there is no direct application.",
     );
   }
 

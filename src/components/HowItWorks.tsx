@@ -125,7 +125,7 @@ const HowItWorks = () => {
                 "محادثة قصيرة مباشرة مع باقي الطلاب",
                 "تحديد المستوى وشرح الخطوة التالية من المعلمة",
               ] : [
-                "Introduce yourself in Korean — even if you know zero right now",
+                "Introduce yourself in Korean, even if you know zero right now",
                 "Read your first 10 Hangul characters with correct pronunciation",
                 "Have a short live exchange with other students",
                 "Your teacher identifies your level and maps out your next steps",

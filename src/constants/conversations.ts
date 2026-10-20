@@ -29,7 +29,7 @@ export type Conversation = {
 export const CONVERSATIONS: Conversation[] = [
   {
     "code": "b2-1",
-    "book": "المستوى الثاني — مقهى المحادثة",
+    "book": "المستوى الثاني: مقهى المحادثة",
     "lesson": 1,
     "title": "في المقهى",
     "lines": [
@@ -72,7 +72,7 @@ export const CONVERSATIONS: Conversation[] = [
   },
   {
     "code": "b2-2",
-    "book": "المستوى الثاني — مقهى المحادثة",
+    "book": "المستوى الثاني: مقهى المحادثة",
     "lesson": 2,
     "title": "خطة العطلة",
     "lines": [
@@ -115,7 +115,7 @@ export const CONVERSATIONS: Conversation[] = [
   },
   {
     "code": "b2-3",
-    "book": "المستوى الثاني — مقهى المحادثة",
+    "book": "المستوى الثاني: مقهى المحادثة",
     "lesson": 3,
     "title": "لماذا تأخّرت؟",
     "lines": [
@@ -153,7 +153,7 @@ export const CONVERSATIONS: Conversation[] = [
   },
   {
     "code": "b2-4",
-    "book": "المستوى الثاني — مقهى المحادثة",
+    "book": "المستوى الثاني: مقهى المحادثة",
     "lesson": 4,
     "title": "ترتيب اليوم",
     "lines": [
@@ -191,7 +191,7 @@ export const CONVERSATIONS: Conversation[] = [
   },
   {
     "code": "b2-5",
-    "book": "المستوى الثاني — مقهى المحادثة",
+    "book": "المستوى الثاني: مقهى المحادثة",
     "lesson": 5,
     "title": "في المقهى وقت المطر",
     "lines": [

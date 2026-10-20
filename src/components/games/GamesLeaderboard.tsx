@@ -253,7 +253,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
               {/* Outside the top ten: the real rank, from the server */}
               {tab === "all" && !meInBoard && myRank !== null && (
                 <p className="border-t border-border bg-klovers-yellow/25 dark:bg-klovers-yellow/10 px-4 py-3 text-center text-sm font-semibold text-foreground">
-                  {isAr ? `الترتيب الحالي: #${myRank} — مواصلة اللعب ترفع الترتيب.` : `Your rank: #${myRank} — keep playing to climb!`}
+                  {isAr ? `الترتيب الحالي: #${myRank}، مواصلة اللعب ترفع الترتيب.` : `Your rank: #${myRank}, keep playing to climb!`}
                 </p>
               )}
             </>

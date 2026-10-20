@@ -141,7 +141,7 @@ export function MyBooksCard(_props: { clubyAwake?: boolean }) {
             <p className="text-sm text-muted-foreground">
               {allBought
                 ? (isAr ? "الكتب جاهزة للتحميل الآن" : "Your books are ready to download")
-                : (isAr ? "الكتاب جاهز للتحميل الآن" : "Your book is ready — download it now")}
+                : (isAr ? "الكتاب جاهز للتحميل الآن" : "Your book is ready: download it now")}
             </p>
           </div>
         </div>

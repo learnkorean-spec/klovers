@@ -170,7 +170,7 @@ const KoreanWritingTest = ({ vocab, dialogue, lessonTitle, onComplete }: KoreanW
               ? (isAr ? "ممتاز! كتابتك رائعة!" : "Excellent! Great typing skills!")
               : score >= 50
               ? (isAr ? "جيد! تحتاج بعض الممارسة" : "Good! Keep practicing!")
-              : (isAr ? "حاول مرة أخرى - الممارسة تصنع المعجزات!" : "Try again — practice makes perfect!")}
+              : (isAr ? "حاول مرة أخرى - الممارسة تصنع المعجزات!" : "Try again: practice makes perfect!")}
           </p>
           <p className="text-sm text-muted-foreground mb-4">
             {isAr ? "نتيجة الكتابة" : "Writing Score"}: {score}%

@@ -153,7 +153,7 @@ const ProgressReportPage = () => {
                 : <>Keep up the great work, <strong>{data.name.split(" ")[0]}</strong>! Consistency is the key to mastering Korean. Even 10 minutes of daily practice adds up over time.</>
               }
             </p>
-            <p style={{ margin: 0, color: "rgba(46,46,46,0.7)", fontSize: 13 }}><span lang="ko" style={{ fontFamily: "'Noto Sans KR', sans-serif" }}>화이팅!</span> — Reham &amp; the Klovers team</p>
+            <p style={{ margin: 0, color: "rgba(46,46,46,0.7)", fontSize: 13 }}><span lang="ko" style={{ fontFamily: "'Noto Sans KR', sans-serif" }}>화이팅!</span> Reham &amp; the Klovers team</p>
           </div>
 
           {/* Footer */}

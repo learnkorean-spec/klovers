@@ -124,7 +124,7 @@ const MeetTeacher = () => {
               <p>
                 {isAr
                   ? "بعد كل حصة تتضح الخطوة التالية، من الهانغول حتى المستوى السادس."
-                  : "After every class you know what comes next — from Hangul all the way to Level 6."}
+                  : "After every class you know what comes next: from Hangul all the way to Level 6."}
               </p>
             </div>
 

@@ -651,7 +651,7 @@ const GamesPage = () => {
               <h2 className="text-xl font-bold text-foreground">
                 {cheered
                   ? (isAr ? "عمل رائع! 잘했어요" : "Nice work! 잘했어요")
-                  : (isAr ? "قريب جدًا، والمحاولة التالية أقرب" : "So close — try again!")}
+                  : (isAr ? "قريب جدًا، والمحاولة التالية أقرب" : "So close, try again!")}
               </h2>
               <p className="text-sm text-muted-foreground">{isAr ? `حساب مجاني يحفظ التقدّم ويفتح جميع الألعاب الـ ${toArabicDigits(games.length)}.` : `Create a free account to save your progress and unlock all ${games.length} games.`}</p>
             </div>

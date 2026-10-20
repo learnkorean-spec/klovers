@@ -244,7 +244,7 @@ export default function WorldHud(p: HudProps) {
         {prompt && !p.sequence && !p.isTouch && (
           <button
             type="button"
-            aria-label={`${prompt} — ${h.pressKey}`}
+            aria-label={`${prompt}: ${h.pressKey}`}
             onClick={p.onInteract}
             className="pointer-events-auto flex items-center gap-2 rounded-full bg-charcoal/90 px-4 py-2 text-sm font-semibold text-ivory ring-2 ring-klovers-yellow/70 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2"
           >

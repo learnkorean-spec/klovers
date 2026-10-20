@@ -111,8 +111,8 @@ const TopikExamPage = () => {
                 <h3 className="text-xl font-bold text-foreground">TOPIK I</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{tr("Levels 1–2 · scored out of 200", "المستويان ١ و٢ · الدرجة من ٢٠٠")}</p>
                 <ul className="mt-4 space-y-2 text-sm text-foreground">
-                  <li>{tr("Listening — 30 questions, 40 minutes", "استماع — ٣٠ سؤالًا، ٤٠ دقيقة")}</li>
-                  <li>{tr("Reading — 40 questions, 60 minutes", "قراءة — ٤٠ سؤالًا، ٦٠ دقيقة")}</li>
+                  <li>{tr("Listening · 30 questions, 40 minutes", "استماع · ٣٠ سؤالًا، ٤٠ دقيقة")}</li>
+                  <li>{tr("Reading · 40 questions, 60 minutes", "قراءة · ٤٠ سؤالًا، ٦٠ دقيقة")}</li>
                   <li>{tr("All multiple choice · 100 minutes in total", "كلها أسئلة اختيار من متعدد · ١٠٠ دقيقة إجمالًا")}</li>
                 </ul>
                 <div className="mt-5 grid grid-cols-2 gap-2">
@@ -128,9 +128,9 @@ const TopikExamPage = () => {
                 <h3 className="text-xl font-bold text-foreground">TOPIK II</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{tr("Levels 3–6 · scored out of 300", "المستويات من ٣ إلى ٦ · الدرجة من ٣٠٠")}</p>
                 <ul className="mt-4 space-y-2 text-sm text-foreground">
-                  <li>{tr("Listening — 50 questions, 60 minutes", "استماع — ٥٠ سؤالًا، ٦٠ دقيقة")}</li>
-                  <li>{tr("Writing — 4 questions (51–54), 50 minutes", "كتابة — ٤ أسئلة (٥١–٥٤)، ٥٠ دقيقة")}</li>
-                  <li>{tr("Reading — 50 questions, 70 minutes", "قراءة — ٥٠ سؤالًا، ٧٠ دقيقة")}</li>
+                  <li>{tr("Listening · 50 questions, 60 minutes", "استماع · ٥٠ سؤالًا، ٦٠ دقيقة")}</li>
+                  <li>{tr("Writing · 4 questions (51–54), 50 minutes", "كتابة · ٤ أسئلة (٥١–٥٤)، ٥٠ دقيقة")}</li>
+                  <li>{tr("Reading · 50 questions, 70 minutes", "قراءة · ٥٠ سؤالًا، ٧٠ دقيقة")}</li>
                 </ul>
                 <div className="mt-5 grid grid-cols-2 gap-2">
                   {TOPIK_II.map((l) => (
@@ -144,7 +144,7 @@ const TopikExamPage = () => {
             </div>
             <p className="mt-5 text-sm text-muted-foreground">
               {tr(
-                "Your level is decided by your total score, not by any single section. Results are valid for two years. The level a university, employer or visa asks for depends on them — check their own requirement.",
+                "Your level is decided by your total score, not by any single section. Results are valid for two years. The level a university, employer or visa asks for depends on them, so check their own requirement.",
                 "يتحدد المستوى من مجموع الدرجات، لا من قسم واحد. والنتيجة صالحة لمدة سنتين. أما المستوى المطلوب للجامعة أو العمل أو التأشيرة فيختلف حسب الجهة، والأفضل التأكد من شرطها مباشرة.",
               )}
             </p>
@@ -157,7 +157,7 @@ const TopikExamPage = () => {
             <h2 className={sectionTitle}>{tr("Exam dates and registration", "مواعيد الاختبار والتسجيل")}</h2>
             <p className="text-base text-muted-foreground leading-relaxed max-w-2xl">
               {tr(
-                "TOPIK is held several times a year, but which sessions run, where, and when registration opens differs by country. We don't list dates here because they change — the official site always has the current ones.",
+                "TOPIK is held several times a year, but which sessions run, where, and when registration opens differs by country. We don't list dates here because they change; the official site always has the current ones.",
                 "يُعقد TOPIK عدة مرات في السنة، لكن المواعيد وأماكن الاختبار وفتح التسجيل تختلف من بلد إلى آخر. لا ننشر المواعيد هنا لأنها تتغير؛ والموقع الرسمي يعرض المواعيد الحالية دائمًا.",
               )}
             </p>

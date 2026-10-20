@@ -94,8 +94,8 @@ const PersonalTrialBooking = ({
   }, []);
 
   const defaultWaText = tr(
-    "Hi! I'd like to book a trial lesson but none of the available times work for me — can we find another time?",
-    "مرحبًا، أرغب في حجز حصة تجريبية لكن المواعيد المتاحة لا تناسبني — هل يمكننا الاتفاق على موعد آخر؟",
+    "Hi! I'd like to book a trial lesson but none of the available times work for me, can we find another time?",
+    "مرحبًا، أرغب في حجز حصة تجريبية لكن المواعيد المتاحة لا تناسبني، هل يمكننا الاتفاق على موعد آخر؟",
   );
   const waText = whatsappMessage ? tr(whatsappMessage.en, whatsappMessage.ar) : defaultWaText;
   const waHref = `${WHATSAPP_BASE}?text=${encodeURIComponent(waText)}`;
@@ -226,7 +226,7 @@ const PersonalTrialBooking = ({
                   </div>
                 </div>
                 <p className="text-xs text-foreground/60">
-                  {tr("Email or WhatsApp — just one is enough.", "البريد الإلكتروني أو واتساب — يكفي أحدهما.")}
+                  {tr("Email or WhatsApp: just one is enough.", "البريد الإلكتروني أو واتساب: يكفي أحدهما.")}
                 </p>
                 <Button
                   type="submit"
@@ -249,8 +249,8 @@ const PersonalTrialBooking = ({
         ) : (
           <p className="text-foreground/70">
             {tr(
-              "No open times right now — message us on WhatsApp and we'll find one together.",
-              "لا توجد مواعيد متاحة حاليًا — راسلنا على واتساب ولنتفق على موعد معًا.",
+              "No open times right now, message us on WhatsApp and we'll find one together.",
+              "لا توجد مواعيد متاحة حاليًا، راسلنا على واتساب ولنتفق على موعد معًا.",
             )}
           </p>
         )}

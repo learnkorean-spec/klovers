@@ -127,7 +127,7 @@ const ReturningStudentBanner = () => {
           <span className="text-sm font-medium">
             {isAr
               ? "للطلاب الذين أنهوا دورتهم معنا: خصم ٢٠٪ عند العودة."
-              : "You finished your course with us — come back and take 20% off."}
+              : "You finished your course with us, come back and take 20% off."}
           </span>
         </div>
         <Link

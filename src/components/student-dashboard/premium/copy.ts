@@ -92,7 +92,7 @@ const COPY = {
   collectionCount: { en: "{n} / {total} badges", ar: "{n} / {total} شارة" },
   nextUnlock: { en: "Next unlock", ar: "الإنجاز التالي" },
   nextLeft: { en: "{n} more to unlock", ar: "باقٍ {n} للفتح" },
-  nextNone: { en: "Keep learning — new goals appear as you grow.", ar: "مع مواصلة التعلّم تظهر أهداف جديدة عند كل تقدّم." },
+  nextNone: { en: "Keep learning, new goals appear as you grow.", ar: "مع مواصلة التعلّم تظهر أهداف جديدة عند كل تقدّم." },
   viewAll: { en: "View all", ar: "عرض الكل" },
   lockedBadge: { en: "Locked: {name}", ar: "مغلقة: {name}" },
 

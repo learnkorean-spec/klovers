@@ -59,10 +59,10 @@ export const TOPIK_GRADES: Record<TopikGrade, TopikGradeInfo> = {
   pre1: {
     grade: "pre1",
     labelKo: "한글 기초",
-    labelAr: "قبل المستوى الأول — تأسيس الهانغول",
-    labelEn: "Before 1급 — Hangul foundation",
+    labelAr: "قبل المستوى الأول: تأسيس الهانغول",
+    labelEn: "Before 1급: Hangul foundation",
     noteAr: "البداية من قراءة الحروف الكورية، فهي الأساس الذي يُبنى عليه كل ما بعدها.",
-    noteEn: "You start from reading the Korean alphabet — everything else builds on it.",
+    noteEn: "You start from reading the Korean alphabet, everything else builds on it.",
     levelKey: "hangul",
   },
   g1: {
@@ -109,7 +109,7 @@ export const TOPIK_GRADES: Record<TopikGrade, TopikGradeInfo> = {
     noteAr:
       "اكتمل الاختبار حتى نهايته. يقيس هذا الاختبار حتى المستوى الرابع فقط، فلا يمنح مستوى أعلى منه، ويمكن التواصل مع المعلّمة لإجراء تقييم قصير للمستويين الخامس والسادس.",
     noteEn:
-      "You reached the end of the test. It measures up to level 4, so it will not put a number above that — talk to us and we will run a short assessment for levels 5 and 6.",
+      "You reached the end of the test. It measures up to level 4, so it will not put a number above that. Talk to us and we will run a short assessment for levels 5 and 6.",
     levelKey: "l5",
   },
 };

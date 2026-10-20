@@ -62,20 +62,20 @@ const LEVEL_COPY: Record<
 > = {
   hangul: {
     blurb_en:
-      "Read and write Korean from zero. Four classes, complete in itself — take it on its own, or as the step before Level 1.",
+      "Read and write Korean from zero. Four classes, complete in itself: take it on its own, or as the step before Level 1.",
     blurb_ar:
-      "قراءة الكورية وكتابتها من الصفر. أربع حصص كاملة بذاتها — تُدرس وحدها، أو خطوةً قبل المستوى الأول.",
+      "قراءة الكورية وكتابتها من الصفر. أربع حصص كاملة بذاتها: تُدرس وحدها، أو خطوةً قبل المستوى الأول.",
     features_en: [
-      "Class 1 — the basic vowels and consonants, and how a syllable is built",
-      "Class 2 — tense and aspirated consonants, and combined vowels",
-      "Class 3 — the final consonant (batchim)",
-      "Class 4 — pronunciation rules, and reading your first sentences",
+      "Class 1: the basic vowels and consonants, and how a syllable is built",
+      "Class 2: tense and aspirated consonants, and combined vowels",
+      "Class 3: the final consonant (batchim)",
+      "Class 4: pronunciation rules, and reading your first sentences",
     ],
     features_ar: [
-      "الحصة ١ — الحروف المتحركة والساكنة الأساسية وتركيب المقطع",
-      "الحصة ٢ — الحروف المشددة والمهموسة والحروف المتحركة المركبة",
-      "الحصة ٣ — الحرف الأخير (باتشيم)",
-      "الحصة ٤ — قواعد النطق وقراءة أول جملة كورية",
+      "الحصة ١: الحروف المتحركة والساكنة الأساسية وتركيب المقطع",
+      "الحصة ٢: الحروف المشددة والمهموسة والحروف المتحركة المركبة",
+      "الحصة ٣: الحرف الأخير (باتشيم)",
+      "الحصة ٤: قواعد النطق وقراءة أول جملة كورية",
     ],
   },
   l1: {
@@ -144,8 +144,8 @@ const LEVEL_COPY: Record<
     ],
   },
   l5: {
-    blurb_en: "Nuance — tone, politeness and what a sentence implies as well as what it says.",
-    blurb_ar: "الفروق الدقيقة — النبرة والتأدب، وما تلمّح إليه الجملة لا ما تقوله فقط.",
+    blurb_en: "Nuance: tone, politeness and what a sentence implies as well as what it says.",
+    blurb_ar: "الفروق الدقيقة: النبرة والتأدب، وما تلمّح إليه الجملة لا ما تقوله فقط.",
     features_en: [
       "Tone, politeness and implication",
       "Academic and professional language",
@@ -308,9 +308,9 @@ export const COURSE_SECTION_COPY = {
   title_en: "Choose the level that fits your journey",
   title_ar: "المستوى المناسب لكل رحلة",
   subtitle_en:
-    "From the alphabet to advanced. Every class is 60 minutes, once a week. A level is 24 classes over 6 months — except Hangul Foundation, which is 4.",
+    "From the alphabet to advanced. Every class is 60 minutes, once a week. A level is 24 classes over 6 months, except Hangul Foundation, which is 4.",
   subtitle_ar:
-    "من الأبجدية حتى المستوى المتقدم. كل حصة ٦٠ دقيقة، مرة في الأسبوع. المستوى ٢٤ حصة على ٦ شهور — ما عدا تأسيس الهانغول، ٤ حصص.",
+    "من الأبجدية حتى المستوى المتقدم. كل حصة ٦٠ دقيقة، مرة في الأسبوع. المستوى ٢٤ حصة على ٦ شهور، ما عدا تأسيس الهانغول، ٤ حصص.",
   /**
    * The honest caveat, once under the grid rather than on all nine cards.
    *

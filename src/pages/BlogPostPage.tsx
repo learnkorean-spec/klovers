@@ -716,7 +716,7 @@ const BlogPostPage = () => {
                 {isAr ? "تعلم الكورية مع مدرس حقيقي" : "Learn Korean with a real teacher"}
               </p>
               <p className="font-bold text-foreground text-base leading-snug">
-                {isAr ? "أول حصة مجانية، دون بطاقة بنكية" : "Your first class is free — no credit card"}
+                {isAr ? "أول حصة مجانية، دون بطاقة بنكية" : "Your first class is free, no credit card"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {isAr ? "مجموعات صغيرة، وشرح بالعربية، وجدول مرن." : "Small groups, Arabic instruction, flexible schedule."}

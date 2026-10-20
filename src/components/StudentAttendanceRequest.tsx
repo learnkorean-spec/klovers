@@ -138,7 +138,7 @@ const NegativeBalanceBanner = ({ remaining }: { remaining: number }) => {
         <p className="text-xs text-muted-foreground">
           {tr(
             `You've exceeded your package by ${overCount} ${overCount === 1 ? "class" : "classes"}. Allowed until −3. A reminder will be sent.`,
-            `تجاوزت باقتك — الحصص الإضافية: ${overCount}. المسموح حتى −3، وسيصلك تذكير.`,
+            `تجاوزت باقتك، الحصص الإضافية: ${overCount}. المسموح حتى −3، وسيصلك تذكير.`,
           )}
         </p>
         <Button size="sm" variant="destructive" className="mt-2" onClick={() => navigate("/enroll-now")}>
@@ -250,8 +250,8 @@ const StudentAttendanceRequest = ({ userId }: StudentAttendanceRequestProps) => 
         title: approved ? tr("Attendance confirmed!", "تم تأكيد الحضور!") : tr("Attendance submitted!", "تم إرسال الحضور!"),
         description: approved
           ? tr(
-              `${format(date, "MMM d, yyyy")} confirmed automatically — ${result.sessions_remaining} session(s) left.`,
-              `${format(date, "d MMMM yyyy", { locale: dateFnsLocale })} تم تأكيده تلقائيًا — الحصص المتبقية: ${result.sessions_remaining}.`,
+              `${format(date, "MMM d, yyyy")} confirmed automatically: ${result.sessions_remaining} session(s) left.`,
+              `${format(date, "d MMMM yyyy", { locale: dateFnsLocale })} تم تأكيده تلقائيًا، الحصص المتبقية: ${result.sessions_remaining}.`,
             )
           : tr(
               `${format(date, "MMM d, yyyy")} sent for review.`,

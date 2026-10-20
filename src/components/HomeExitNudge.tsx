@@ -126,7 +126,7 @@ const HomeExitNudge = () => {
           <KloverIcon name="growth-chart" className="h-10 w-10 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="font-bold text-foreground text-sm leading-tight">
-              {isAr ? "قبل المغادرة: معرفة المستوى في الكورية" : "Before you go — find your Korean level"}
+              {isAr ? "قبل المغادرة: معرفة المستوى في الكورية" : "Before you go: find your Korean level"}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
               {isAr ? "مجاني · دون تسجيل · نتيجة فورية" : "Free · no sign-up · instant result"}

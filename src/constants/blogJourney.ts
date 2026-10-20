@@ -45,8 +45,8 @@ export const STAGES: JourneyStage[] = [
     short: { ar: "اكتشف", en: "Discover" },
     title: { ar: "اكتشف كوريا", en: "Discover Korea" },
     blurb: {
-      ar: "ممالك قديمة، بيوت تصغي إلى الأرض، أعياد وأساطير — كوريا كما يعرفها أهلها.",
-      en: "Ancient kingdoms, houses that listen to the land, festivals and legends — Korea as Koreans know it.",
+      ar: "ممالك قديمة، بيوت تصغي إلى الأرض، أعياد وأساطير: كوريا كما يعرفها أهلها.",
+      en: "Ancient kingdoms, houses that listen to the land, festivals and legends: Korea as Koreans know it.",
     },
     icon: "palace-blossoms",
     guide: {
@@ -75,8 +75,8 @@ export const STAGES: JourneyStage[] = [
     short: { ar: "عش التجربة", en: "Experience" },
     title: { ar: "عش كوريا", en: "Experience Korea" },
     blurb: {
-      ar: "المتجر المفتوح طوال الليل، المقهى، المترو، المطعم — تفاصيل يوم عادي في كوريا.",
-      en: "The all-night store, the café, the subway, the restaurant — an ordinary day in Korea.",
+      ar: "المتجر المفتوح طوال الليل، المقهى، المترو، المطعم: تفاصيل يوم عادي في كوريا.",
+      en: "The all-night store, the café, the subway, the restaurant: an ordinary day in Korea.",
     },
     icon: "game-subway",
   },
@@ -86,8 +86,8 @@ export const STAGES: JourneyStage[] = [
     short: { ar: "شاهد وتعلم", en: "Watch & learn" },
     title: { ar: "تعلم من الدراما", en: "Learn from K-drama" },
     blurb: {
-      ar: "الجمل التي تسمعها في كل حلقة — وما تعنيه فعلاً.",
-      en: "The lines you hear every episode — and what they really mean.",
+      ar: "الجمل التي تسمعها في كل حلقة، وما تعنيه فعلاً.",
+      en: "The lines you hear every episode, and what they really mean.",
     },
     icon: "game-headphones-music",
     guide: {
@@ -101,8 +101,8 @@ export const STAGES: JourneyStage[] = [
     short: { ar: "تحدث", en: "Speak" },
     title: { ar: "تكلم مثل الكوريين", en: "Speak like Koreans" },
     blurb: {
-      ar: "عبارات يومية معناها الحقيقي أكبر من ترجمتها — ومتى تقولها.",
-      en: "Everyday phrases that mean more than their translation — and when to use them.",
+      ar: "عبارات يومية معناها الحقيقي أكبر من ترجمتها، ومتى تقولها.",
+      en: "Everyday phrases that mean more than their translation, and when to use them.",
     },
     icon: "chat-annyeong",
   },
@@ -118,7 +118,7 @@ export const STAGES: JourneyStage[] = [
     icon: "game-checklist-pencil",
     guide: {
       pose: "thumbsup",
-      line: { ar: "ولا يهمك لو غلطت — حاول تاني.", en: "Wrong answer? No problem — try again." },
+      line: { ar: "ولا يهمك لو غلطت. حاول تاني.", en: "Wrong answer? No problem. Try again." },
     },
   },
 ];
@@ -209,7 +209,7 @@ export const UNTRANSLATABLE: WordStory[] = [
     hook: { ar: "أكثر من الحب والصداقة", en: "More than love or friendship" },
     meaning: {
       ar: "رابط يتكوّن ببطء من الوقت والتجارب المشتركة، ويبقى حتى بعد الخلاف.",
-      en: "A bond that grows slowly from shared time and experience — and stays even after an argument.",
+      en: "A bond that grows slowly from shared time and experience, and stays even after an argument.",
     },
     article: "what-is-jeong-korean-untranslatable-concept",
   },
@@ -219,7 +219,7 @@ export const UNTRANSLATABLE: WordStory[] = [
     hook: { ar: "قراءة الجو من غير كلام", en: "Reading the room, wordlessly" },
     meaning: {
       ar: "أن تفهم ما يشعر به الآخرون وما لا يقولونه، وتتصرف على هذا الأساس.",
-      en: "Sensing what others feel and don't say — and acting on it.",
+      en: "Sensing what others feel and don't say, and acting on it.",
     },
     article: "nunchi-korean-social-superpower-guide",
   },
@@ -229,7 +229,7 @@ export const UNTRANSLATABLE: WordStory[] = [
     hook: { ar: "«نحن»… حتى حين تقصد «أنا»", en: "“We”… even when you mean “my”" },
     meaning: {
       ar: "يقول الكوري 우리 엄마 «أمّنا» عن أمه هو، لأن الانتماء للجماعة يسبق الفرد.",
-      en: "Koreans say 우리 엄마, “our mom”, about their own mother — the group comes before the self.",
+      en: "Koreans say 우리 엄마, “our mom”, about their own mother: the group comes before the self.",
     },
   },
   {
@@ -237,8 +237,8 @@ export const UNTRANSLATABLE: WordStory[] = [
     rom: "inyeon",
     hook: { ar: "لقاء كتبه القدر", en: "A meeting fate arranged" },
     meaning: {
-      ar: "الصلة بين شخصين التي يؤمن الكوريون أنها مقدّرة — حتى لقاء عابر في الطريق.",
-      en: "The destined tie between two people — even a passing encounter on the street.",
+      ar: "الصلة بين شخصين التي يؤمن الكوريون أنها مقدّرة، حتى لقاء عابر في الطريق.",
+      en: "The destined tie between two people, even a passing encounter on the street.",
     },
   },
   {
@@ -247,7 +247,7 @@ export const UNTRANSLATABLE: WordStory[] = [
     hook: { ar: "حزن عميق لا يزول", en: "A sorrow that never quite leaves" },
     meaning: {
       ar: "شعور متراكم بالأسى والظلم يعيش في القصص والأغاني الكورية، ومعه أمل صامت.",
-      en: "An accumulated grief and sense of injustice that runs through Korean stories and songs — with quiet hope.",
+      en: "An accumulated grief and sense of injustice that runs through Korean stories and songs, with quiet hope.",
     },
   },
   {
@@ -306,8 +306,8 @@ export const DRAMA_LINES: Expression[] = [
     literal: { ar: "أريد أن أراك", en: "I want to see you" },
     meaning: { ar: "اشتقتُ إليك", en: "I miss you" },
     context: {
-      ar: "الكورية لا تقول «افتقدتك» مباشرة — بل «أريد أن أراك». أصدق جملة في مشاهد الوداع.",
-      en: "Korean doesn't say “I miss you” — it says “I want to see you”. The line of every farewell scene.",
+      ar: "الكورية لا تقول «افتقدتك» مباشرة، بل «أريد أن أراك». أصدق جملة في مشاهد الوداع.",
+      en: "Korean doesn't say “I miss you”; it says “I want to see you”. The line of every farewell scene.",
     },
     register: "casual",
     article: "korean-dating-phrases-kdrama-lines",
@@ -336,7 +336,7 @@ export const SPEAK_PHRASES: Expression[] = [
     meaning: { ar: "ليست فقط «لا بأس»", en: "Not just “it's okay”" },
     context: {
       ar: "حسب النبرة: «أنا بخير»، «لا شكراً» لرفض مهذب، أو «هل أنت بخير؟» كسؤال.",
-      en: "By tone: “I'm fine”, a polite “no thanks”, or — as a question — “are you okay?”",
+      en: "By tone: “I'm fine”, a polite “no thanks”, or, as a question, “are you okay?”",
     },
     register: "polite",
     article: "korean-daily-greetings",
@@ -407,8 +407,8 @@ export const QUIZ: QuizQuestion[] = [
     ],
     answer: "b",
     explain: {
-      ar: "눈치 حرفياً «قياس العين» — أن تلتقط المشاعر غير المعلنة من حولك.",
-      en: "눈치 is literally “eye-measure” — picking up the unspoken feelings around you.",
+      ar: "눈치 حرفياً «قياس العين»: أن تلتقط المشاعر غير المعلنة من حولك.",
+      en: "눈치 is literally “eye-measure”: picking up the unspoken feelings around you.",
     },
   },
   {
@@ -417,7 +417,7 @@ export const QUIZ: QuizQuestion[] = [
     prompt: { ar: "صديقتك الكورية سألتك: 밥 먹었어요؟ ماذا تقصد غالباً؟", en: "A Korean friend asks 밥 먹었어요? What does she usually mean?" },
     options: [
       { id: "a", label: { ar: "تدعوك إلى العشاء", en: "She's inviting you to dinner" } },
-      { id: "b", label: { ar: "تطمئن عليك كتحية", en: "She's checking on you — a greeting" } },
+      { id: "b", label: { ar: "تطمئن عليك كتحية", en: "She's checking on you: a greeting" } },
       { id: "c", label: { ar: "تسأل عن أكلتك المفضلة", en: "She's asking your favourite food" } },
     ],
     answer: "b",
@@ -467,8 +467,8 @@ export const QUIZ: QuizQuestion[] = [
     ],
     answer: "b",
     explain: {
-      ar: "مع عرض أو هدية، 괜찮아요 رفض مهذب — «لا حاجة، شكرًا».",
-      en: "Answering an offer, 괜찮아요 is a polite no — “I'm good, thanks”.",
+      ar: "مع عرض أو هدية، 괜찮아요 رفض مهذب: «لا حاجة، شكرًا».",
+      en: "Answering an offer, 괜찮아요 is a polite no: “I'm good, thanks”.",
     },
   },
 ];

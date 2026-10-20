@@ -95,7 +95,7 @@ const CommunityBand = () => {
             <p className="mt-1 text-sm text-charcoal/70 md:text-base">
               {isAr
                 ? "متابعونا على وسائل التواصل: أسئلة، وتدريب، ومتعلّمون يتعلّمون معًا"
-                : "Our followers across social media — questions, practice, and people learning alongside you"}
+                : "Our followers across social media: questions, practice, and people learning alongside you"}
             </p>
 
             {/* These two stay on logLeadEvent: clicking through to the

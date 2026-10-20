@@ -136,7 +136,7 @@ const UnitPlacementPage = () => {
       setMicError(
         isAr
           ? "هذا المتصفح لا يدعم التسجيل الصوتي. يُترك هذا القسم فارغًا، ويقيّمه فريق التدريس في الحصة."
-          : "This browser cannot record audio. Leave this section empty — your teacher will assess it live.",
+          : "This browser cannot record audio. Leave this section empty, your teacher will assess it live.",
       );
       return;
     }
@@ -322,11 +322,11 @@ const UnitPlacementPage = () => {
                 )}
               </p>
               <ul className="space-y-1.5 list-disc ms-5 text-muted-foreground">
-                <li>{t("٦ أقسام اختيار من متعدد وقراءة — تتصحح تلقائيًا.", "6 multiple-choice and reading sections — graded automatically.")}</li>
-                <li>{t("٣ أسئلة كتابة بالكورية — يصحّحها فريق التدريس.", "3 Korean writing questions — marked by your teacher.")}</li>
-                <li>{t("٥ أسئلة شفهية بالتسجيل الصوتي — يقيّمها فريق التدريس. يمكن تخطيها.", "5 spoken questions recorded with your microphone — assessed by your teacher. You may skip them.")}</li>
-                <li>{t("حوالي ٣٠ دقيقة. يمكن إغلاق الصفحة والعودة لاحقًا، فالإجابات محفوظة.", "About 30 minutes. You can close the page and come back — your answers are saved.")}</li>
-                <li>{t("دون قاموس أو ترجمة، فالنتيجة الصادقة هي التي تحدد المكان الصحيح.", "No dictionary or translator — an honest result is what puts you in the right place.")}</li>
+                <li>{t("٦ أقسام اختيار من متعدد وقراءة، تتصحح تلقائيًا.", "6 multiple-choice and reading sections, graded automatically.")}</li>
+                <li>{t("٣ أسئلة كتابة بالكورية، يصحّحها فريق التدريس.", "3 Korean writing questions, marked by your teacher.")}</li>
+                <li>{t("٥ أسئلة شفهية بالتسجيل الصوتي، يقيّمها فريق التدريس. يمكن تخطيها.", "5 spoken questions recorded with your microphone, assessed by your teacher. You may skip them.")}</li>
+                <li>{t("حوالي ٣٠ دقيقة. يمكن إغلاق الصفحة والعودة لاحقًا، فالإجابات محفوظة.", "About 30 minutes. You can close the page and come back, your answers are saved.")}</li>
+                <li>{t("دون قاموس أو ترجمة، فالنتيجة الصادقة هي التي تحدد المكان الصحيح.", "No dictionary or translator, an honest result is what puts you in the right place.")}</li>
               </ul>
               <div className="flex gap-2 pt-2">
                 <Button onClick={() => { setStartedAt(Date.now()); setPhase("test"); }}>
@@ -400,7 +400,7 @@ const UnitPlacementPage = () => {
                 <p className="text-xs text-muted-foreground mt-2">
                   {t(
                     `المجموع التلقائي ${result.mcqScore} من ${SEJONG1_MCQ_MAX} ، لكن نقطة البداية يحددها أول قسم لم يُجتز، لا المجموع.`,
-                    `Auto-graded total ${result.mcqScore} of ${SEJONG1_MCQ_MAX} — but your starting point comes from the first section you did not pass, not from the total.`,
+                    `Auto-graded total ${result.mcqScore} of ${SEJONG1_MCQ_MAX}, but your starting point comes from the first section you did not pass, not from the total.`,
                   )}
                 </p>
               </div>
@@ -413,7 +413,7 @@ const UnitPlacementPage = () => {
                 <p className="text-muted-foreground">
                   {t(
                     "حُفظت الإجابات لفريق التدريس، وسيراجعها ويؤكد نقطة البداية، وقد يعدّلها إذا كان مستوى الإنتاج أضعف أو أقوى من مستوى الفهم.",
-                    "Saved for your teacher. They will review them and confirm your starting point — it can move if your production is weaker or stronger than your comprehension.",
+                    "Saved for your teacher. They will review them and confirm your starting point, and it can move if your production is weaker or stronger than your comprehension.",
                   )}
                 </p>
               </div>
@@ -464,10 +464,10 @@ const UnitPlacementPage = () => {
               </>
             )}
             {isWritingStep && (
-              <CardTitle className="text-lg">{t("القسم (ز) — الكتابة", "Section G — Writing")}</CardTitle>
+              <CardTitle className="text-lg">{t("القسم (ز): الكتابة", "Section G: Writing")}</CardTitle>
             )}
             {isSpeakingStep && (
-              <CardTitle className="text-lg">{t("القسم (ح) — الشفهي", "Section H — Speaking")}</CardTitle>
+              <CardTitle className="text-lg">{t("القسم (ح): الشفهي", "Section H: Speaking")}</CardTitle>
             )}
           </CardHeader>
 
@@ -535,7 +535,7 @@ const UnitPlacementPage = () => {
                 <p className="text-sm text-muted-foreground">
                   {t(
                     "تسجيل الإجابة صوتيًا. وإن لم يعمل الميكروفون، يُترك هذا القسم ليقيّمه فريق التدريس في الحصة.",
-                    "Record your answer. If your microphone does not work, skip this section — your teacher will assess it live.",
+                    "Record your answer. If your microphone does not work, skip this section, your teacher will assess it live.",
                   )}
                 </p>
                 {micError && (

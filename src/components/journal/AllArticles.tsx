@@ -67,7 +67,7 @@ export default function AllArticles({
               {isAr ? "مكتبة الرحلة" : "The journey library"}
             </h2>
             <p className="mt-2 text-muted-foreground">
-              {isAr ? `كل المقالات، من الأحدث إلى الأقدم — ${num(posts.length, true)} مقالة.` : `Every article, newest first — ${posts.length} in all.`}
+              {isAr ? `كل المقالات، من الأحدث إلى الأقدم: ${num(posts.length, true)} مقالة.` : `Every article, newest first: ${posts.length} in all.`}
             </p>
           </div>
           <div className="relative w-full md:w-80">
@@ -128,7 +128,7 @@ export default function AllArticles({
         ) : results.length === 0 ? (
           <p className="py-16 text-center text-muted-foreground">
             {filter === "saved"
-              ? isAr ? "لا توجد مقالات محفوظة بعد. يكفي الضغط على رمز الحفظ في أي بطاقة." : "Nothing saved yet — tap the bookmark on any card."
+              ? isAr ? "لا توجد مقالات محفوظة بعد. يكفي الضغط على رمز الحفظ في أي بطاقة." : "Nothing saved yet, tap the bookmark on any card."
               : isAr ? "لا توجد نتائج. يمكن تجربة كلمة أخرى." : "No results. Try another word."}
           </p>
         ) : (

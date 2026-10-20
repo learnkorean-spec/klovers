@@ -191,15 +191,15 @@ function TrialCoverAr() {
 function TrialAgendaAr() {
   const steps = [
     { time:"٠–٥ دقائق",  icon:"👋", color:"#0047AB", title:"تعارف ودفء",         body:"نتعرف على بعض، أسمعكم أسماءكم، نشاط تحفيزي: 'ليه بدأت تتعلم كوري؟'" },
-    { time:"٥–١٢ دقيقة", icon:"🌏", color:"#C8102E", title:"ليه الكورية؟",        body:"K-Drama، K-Pop، السفر، السلسلة الكورية — سبع دقائق تغير نظرتك للغة." },
+    { time:"٥–١٢ دقيقة", icon:"🌏", color:"#C8102E", title:"ليه الكورية؟",        body:"K-Drama، K-Pop، السفر، السلسلة الكورية. سبع دقائق تغير نظرتك للغة." },
     { time:"١٢–٢٢ دقيقة",icon:"✍️", color:"#166534", title:"نتعلم الهانغول!",      body:"نتعلم ٥ حروف ساكنة + ٣ حروف مد، ونقرأ ٢ كلمة كورية حقيقية سوياً." },
     { time:"٢٢–٢٧ دقيقة",icon:"🎬", color:"#7B2D8B", title:"جمل من المسلسلات",   body:"نقرأ ٣ جمل من K-Drama بالهانغول، مع الترجمة والنطق الصحيح." },
-    { time:"٢٧–٣٠ دقيقة",icon:"🚀", color:BK,        title:"الخطوات التالية",      body:"نعرض المستويات الستة ونشرح الطريق للطلاقة — وإزاي تبدأ معنا!" },
+    { time:"٢٧–٣٠ دقيقة",icon:"🚀", color:BK,        title:"الخطوات التالية",      body:"نعرض المستويات الستة ونشرح الطريق للطلاقة، وإزاي تبدأ معنا!" },
   ];
 
   return (
     <Page dir="rtl">
-      <SHead title="برنامج الـ٣٠ دقيقة" subtitle="ما ستتعلمه اليوم — خطوة بخطوة" />
+      <SHead title="برنامج الـ٣٠ دقيقة" subtitle="ما ستتعلمه اليوم، خطوة بخطوة" />
       <Photo src={PHOTOS.seoulNight} alt="Seoul" h={100} radius={10} overlay />
       <DancheongBorder />
 
@@ -242,8 +242,8 @@ function TrialWhyAr() {
     { icon:"🎬", title:"K-Drama و K-Pop",    body:"اكثر من ٢ مليار مشاهدة يومياً. تخيل إنك تفهم كل كلمة بدون ترجمة!" },
     { icon:"✈️", title:"السفر لكوريا",        body:"كوريا الجنوبية وجهة أحلام الكثيرين. لغتهم تفتح لك أبواباً مختلفة تماماً." },
     { icon:"💼", title:"فرص العمل",           body:"شركات كورية ضخمة (Samsung، Hyundai، LG) تبحث دائماً عن متحدثي اللغة." },
-    { icon:"🧠", title:"سهلة جداً للعرب",    body:"الهانغول أبجدية علمية منطقية — ممكن تتعلمها في يومين فقط!" },
-    { icon:"🌟", title:"مجتمع نشيط",          body:"مجتمع Klovers دافئ ومتحمس — أصدقاء جدد يتعلمون معك." },
+    { icon:"🧠", title:"سهلة جداً للعرب",    body:"الهانغول أبجدية علمية منطقية، ممكن تتعلمها في يومين فقط!" },
+    { icon:"🌟", title:"مجتمع نشيط",          body:"مجتمع Klovers دافئ ومتحمس، أصدقاء جدد يتعلمون معك." },
     { icon:"🎯", title:"منهج واضح",           body:"٦ كتب منظمة من الصفر حتى الطلاقة، والخطوة التالية واضحة دائمًا." },
   ];
 
@@ -268,9 +268,9 @@ function TrialWhyAr() {
 
       <div style={{ background:BK, borderRadius:"10px", padding:"12px 16px", textAlign:"center" }}>
         <div style={{ fontSize:"13px", fontWeight:900, color:Y, marginBottom:"4px" }}>
-          한국어를 배워요! — Hankugeoreul baewoyo!
+          한국어를 배워요!: Hankugeoreul baewoyo!
         </div>
-        <div style={{ fontSize:"10px", color:"#aaa" }}>نتعلم اللغة الكورية! — قريباً ستقرأ هذه الجملة بنفسك</div>
+        <div style={{ fontSize:"10px", color:"#aaa" }}>نتعلم اللغة الكورية!: قريباً ستقرأ هذه الجملة بنفسك</div>
       </div>
     </Page>
   );
@@ -289,7 +289,7 @@ function TrialLevelsAr() {
 
   return (
     <Page dir="rtl">
-      <SHead title="المستويات الستة — طريقك للطلاقة" subtitle="من الصفر إلى محادثة طبيعية بالكوري" />
+      <SHead title="المستويات الستة: طريقك للطلاقة" subtitle="من الصفر إلى محادثة طبيعية بالكوري" />
       <DancheongBorder />
 
       <div style={{ display:"flex", flexDirection:"column", gap:"7px" }}>
@@ -379,7 +379,7 @@ function TrialHangulAr() {
               </div>
               <div>
                 <div style={{ fontSize:"15px", fontWeight:900, color:BK }}>{c.word}</div>
-                <div style={{ fontSize:"10px", color:"#555" }}>{c.read} — {c.mean}</div>
+                <div style={{ fontSize:"10px", color:"#555" }}>{c.read}: {c.mean}</div>
               </div>
             </div>
           ))}
@@ -444,7 +444,7 @@ function TrialDramaAr() {
 
   return (
     <Page dir="rtl">
-      <SHead title="جمل سمعتها في المسلسلات 🎬" subtitle="اقرأها الآن بالهانغول — ستفاجأ بنفسك!" />
+      <SHead title="جمل سمعتها في المسلسلات 🎬" subtitle="اقرأها الآن بالهانغول، ستفاجأ بنفسك!" />
       <Photo src={PHOTOS.cherryBlossom} alt="Seoul cherry blossoms" h={80} radius={10} overlay />
       <DancheongBorder />
 
@@ -485,7 +485,7 @@ function TrialJoinAr() {
     { n:"١", icon:"💬", title:"تواصل معنا",        body:"ابعت لنا على واتساب أو إنستجرام وإحنا هنرد عليك فوراً." },
     { n:"٢", icon:"📅", title:"اختيار الموعد",        body:"مواعيد مرنة صباحًا أو مساءً، وفي أيام العطلة، حسب الوقت المتاح." },
     { n:"٣", icon:"📚", title:"بدء المستوى الأول", body:"كتاب الهانغول الأول + الانضمام إلى المجموعة + دعم المعلمة." },
-    { n:"٤", icon:"🌟", title:"وصّل للطلاقة",      body:"٦ مستويات واضحة — ومجتمع يشجعك في كل خطوة." },
+    { n:"٤", icon:"🌟", title:"وصّل للطلاقة",      body:"٦ مستويات واضحة، ومجتمع يشجعك في كل خطوة." },
   ];
 
   return (
@@ -533,7 +533,7 @@ function TrialJoinAr() {
           </div>
         </div>
         <div style={{ fontSize:"10px", color:"#888", marginTop:"10px" }}>
-          한국어를 배워요! — نتعلم اللغة الكورية معاً!
+          한국어를 배워요!: نتعلم اللغة الكورية معاً!
         </div>
       </div>
     </Page>
@@ -592,15 +592,15 @@ function TrialCoverEn() {
 function TrialAgendaEn() {
   const steps = [
     { time:"0–5 min",  icon:"👋", color:"#0047AB", title:"Ice Breaker & Intro",      body:"Meet the group, share names, warm-up: 'Why did you start learning Korean?'" },
-    { time:"5–12 min", icon:"🌏", color:"#C8102E", title:"Why Korean?",              body:"K-Drama, K-Pop, travel, career — 7 minutes that will change how you see this language." },
+    { time:"5–12 min", icon:"🌏", color:"#C8102E", title:"Why Korean?",              body:"K-Drama, K-Pop, travel, career: 7 minutes that will change how you see this language." },
     { time:"12–22 min",icon:"✍️", color:"#166534", title:"Learn Hangul Now!",        body:"Learn 5 consonants + 3 vowels, then read 2 real Korean words together." },
-    { time:"22–27 min",icon:"🎬", color:"#7B2D8B", title:"K-Drama Phrases",          body:"Read 3 K-Drama phrases in Hangul — with translation and correct pronunciation." },
-    { time:"27–30 min",icon:"🚀", color:BK,        title:"Your Next Steps",          body:"Overview of the 6 levels and the path to fluency — how to join us!" },
+    { time:"22–27 min",icon:"🎬", color:"#7B2D8B", title:"K-Drama Phrases",          body:"Read 3 K-Drama phrases in Hangul, with translation and correct pronunciation." },
+    { time:"27–30 min",icon:"🚀", color:BK,        title:"Your Next Steps",          body:"Overview of the 6 levels and the path to fluency, how to join us!" },
   ];
 
   return (
     <Page dir="ltr">
-      <SHead title="The 30-Minute Agenda" subtitle="What you'll experience today — step by step" />
+      <SHead title="The 30-Minute Agenda" subtitle="What you'll experience today, step by step" />
       <Photo src={PHOTOS.seoulNight} alt="Seoul" h={100} radius={10} overlay />
       <DancheongBorder />
       <div style={{ position:"relative" }}>
@@ -627,7 +627,7 @@ function TrialAgendaEn() {
       <div style={{ background:Y, borderRadius:"10px", padding:"10px 14px", display:"flex", alignItems:"center", gap:"10px", marginTop:"4px" }}>
         <MugunghwaIcon size={32} color={BK} />
         <div style={{ fontSize:"11px", color:BK, fontWeight:700 }}>
-          In 30 minutes you'll be reading real Korean words — guaranteed!
+          In 30 minutes you'll be reading real Korean words, guaranteed!
         </div>
       </div>
     </Page>
@@ -639,9 +639,9 @@ function TrialWhyEn() {
     { icon:"🎬", title:"K-Drama & K-Pop",    body:"Over 2 billion views daily. Imagine understanding every word without subtitles!" },
     { icon:"✈️", title:"Travel to Korea",     body:"South Korea is a dream destination. The language opens completely different doors." },
     { icon:"💼", title:"Career Opportunities", body:"Korean giants (Samsung, Hyundai, LG) always look for Korean speakers." },
-    { icon:"🧠", title:"Easier Than You Think", body:"Hangul is a scientific alphabet — you can learn it in 2 days!" },
-    { icon:"🌟", title:"Vibrant Community",   body:"The Klovers community is warm and enthusiastic — make new friends while learning." },
-    { icon:"🎯", title:"Clear Curriculum",    body:"6 structured books from zero to fluency — you always know what's coming next." },
+    { icon:"🧠", title:"Easier Than You Think", body:"Hangul is a scientific alphabet, you can learn it in 2 days!" },
+    { icon:"🌟", title:"Vibrant Community",   body:"The Klovers community is warm and enthusiastic, make new friends while learning." },
+    { icon:"🎯", title:"Clear Curriculum",    body:"6 structured books from zero to fluency, you always know what's coming next." },
   ];
 
   return (
@@ -660,9 +660,9 @@ function TrialWhyEn() {
       </div>
       <div style={{ background:BK, borderRadius:"10px", padding:"12px 16px", textAlign:"center" }}>
         <div style={{ fontSize:"13px", fontWeight:900, color:Y, marginBottom:"4px" }}>
-          한국어를 배워요! — Hankugeoreul baewoyo!
+          한국어를 배워요!: Hankugeoreul baewoyo!
         </div>
-        <div style={{ fontSize:"10px", color:"#aaa" }}>Let's learn Korean! — You'll be reading this sentence yourself very soon</div>
+        <div style={{ fontSize:"10px", color:"#aaa" }}>Let's learn Korean!: You'll be reading this sentence yourself very soon</div>
       </div>
     </Page>
   );
@@ -680,7 +680,7 @@ function TrialLevelsEn() {
 
   return (
     <Page dir="ltr">
-      <SHead title="6 Levels — Your Road to Fluency" subtitle="From zero to natural Korean conversation" />
+      <SHead title="6 Levels: Your Road to Fluency" subtitle="From zero to natural Korean conversation" />
       <DancheongBorder />
       <div style={{ display:"flex", flexDirection:"column", gap:"7px" }}>
         {levels.map((lv, i) => (
@@ -740,7 +740,7 @@ function TrialHangulEn() {
 
   return (
     <Page dir="ltr">
-      <SHead title="Try Hangul Right Now! ✍️" subtitle="5 consonants + 3 vowels — read Korean in 10 minutes" />
+      <SHead title="Try Hangul Right Now! ✍️" subtitle="5 consonants + 3 vowels, read Korean in 10 minutes" />
       <DancheongBorder />
 
       <div style={{ marginBottom:"10px" }}>
@@ -764,7 +764,7 @@ function TrialHangulEn() {
               </div>
               <div>
                 <div style={{ fontSize:"15px", fontWeight:900, color:BK }}>{c.word}</div>
-                <div style={{ fontSize:"10px", color:"#555" }}>{c.read} — {c.mean}</div>
+                <div style={{ fontSize:"10px", color:"#555" }}>{c.read}: {c.mean}</div>
               </div>
             </div>
           ))}
@@ -824,7 +824,7 @@ function TrialDramaEn() {
 
   return (
     <Page dir="ltr">
-      <SHead title="K-Drama Phrases You Already Know 🎬" subtitle="Now read them in Hangul — you'll surprise yourself!" />
+      <SHead title="K-Drama Phrases You Already Know 🎬" subtitle="Now read them in Hangul, you'll surprise yourself!" />
       <Photo src={PHOTOS.hanbok} alt="Traditional hanbok" h={80} radius={10} overlay />
       <DancheongBorder />
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px", marginBottom:"10px" }}>
@@ -858,9 +858,9 @@ function TrialDramaEn() {
 function TrialJoinEn() {
   const steps = [
     { n:"1", icon:"💬", title:"Reach Out",          body:"Message us on WhatsApp or Instagram and we'll reply instantly." },
-    { n:"2", icon:"📅", title:"Pick Your Schedule",  body:"Flexible times — morning or evening, weekends, whatever works for you." },
+    { n:"2", icon:"📅", title:"Pick Your Schedule",  body:"Flexible times, morning or evening, weekends, whatever works for you." },
     { n:"3", icon:"📚", title:"Start Level 1",       body:"Get Hangul Book 1 + group access + full teacher support." },
-    { n:"4", icon:"🌟", title:"Reach Fluency",       body:"6 clear levels — and a community cheering you on every step of the way." },
+    { n:"4", icon:"🌟", title:"Reach Fluency",       body:"6 clear levels, and a community cheering you on every step of the way." },
   ];
 
   return (
@@ -896,7 +896,7 @@ function TrialJoinEn() {
           <div style={{ background:"#0047AB", borderRadius:"8px", padding:"8px 16px", fontSize:"11px", fontWeight:700, color:"#fff" }}>🌐 kloversegy.com</div>
         </div>
         <div style={{ fontSize:"10px", color:"#888", marginTop:"10px" }}>
-          한국어를 배워요! — Let's learn Korean together!
+          한국어를 배워요!: Let's learn Korean together!
         </div>
       </div>
     </Page>
@@ -941,7 +941,7 @@ export default function TrialBookPage() {
       <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
         <Lock className="h-8 w-8 text-amber-600" />
       </div>
-      <h1 className="text-2xl font-black">Trial Book — Admin Only</h1>
+      <h1 className="text-2xl font-black">Trial Book: Admin Only</h1>
       <p className="text-muted-foreground max-w-sm">This resource is available to teachers and admins only.</p>
       <button onClick={() => navigate("/dashboard")}
         className="px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition-colors">
@@ -981,7 +981,7 @@ export default function TrialBookPage() {
             className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
             ← Back
           </button>
-          <span className="text-sm font-bold">Trial Class Book — دليل الحصة التجريبية</span>
+          <span className="text-sm font-bold">Trial Class Book: دليل الحصة التجريبية</span>
           <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">30 min</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

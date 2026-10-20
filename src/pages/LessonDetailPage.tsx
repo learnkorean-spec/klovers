@@ -483,7 +483,7 @@ const LessonDetailPage = () => {
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => e.key === 'Enter' && toggleFlip(v.id)}
-                        aria-label={`${v.korean} — ${isFlipped ? v.meaning : 'tap to reveal'}`}
+                        aria-label={`${v.korean}: ${isFlipped ? v.meaning : 'tap to reveal'}`}
                       >
                         <div
                           style={{

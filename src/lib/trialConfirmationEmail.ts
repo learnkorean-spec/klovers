@@ -25,7 +25,7 @@ export async function sendTrialConfirmationEmail(params: {
 
   const tz = params.timezone || "Africa/Cairo";
   const calendarUrl = buildGoogleCalendarUrl({
-    title: "Free Korean Trial Class — Klovers Academy",
+    title: "Free Korean Trial Class by Klovers Academy",
     date: params.trial_date,
     time: params.start_time,
     durationMin: 45,

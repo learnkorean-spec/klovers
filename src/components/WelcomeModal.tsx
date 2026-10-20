@@ -17,7 +17,7 @@ const STEPS = [
     // neither CEFR nor anything exactly — it is thirty questions that suggest
     // where to start. Promise that instead, in the level names the rest of the
     // site uses.
-    descEn: "See which level to start from — Hangul, or Level 1 to 6 — with our free placement quiz. It only takes 10 minutes.",
+    descEn: "See which level to start from (Hangul, or Level 1 to 6) with our free placement quiz. It only takes 10 minutes.",
     descAr: "اختبار تحديد المستوى المجاني يوضّح نقطة البداية: تأسيس الهانغول، أو أحد المستويات من الأول حتى السادس. ١٠ دقائق فقط.",
     cta: "/placement-test",
     ctaEn: "Take Free Test",
@@ -41,7 +41,7 @@ const STEPS = [
     bg: "bg-primary/10",
     titleEn: "Play & Earn XP",
     titleAr: "ألعاب ونقاط",
-    descEn: "13 interactive games to practise Korean — every game you play earns XP and unlocks badges. Learning is fun!",
+    descEn: "13 interactive games to practise Korean: every game you play earns XP and unlocks badges. Learning is fun!",
     descAr: "١٣ لعبة تفاعلية لتدريب الكورية، كل لعبة تمنح نقاطًا وتفتح شارات.",
     cta: "/games",
     ctaEn: "Play Games",

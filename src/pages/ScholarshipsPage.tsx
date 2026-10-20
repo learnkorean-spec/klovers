@@ -40,7 +40,7 @@ const ScholarshipsPage = () => {
   useSEO({
     title: isAr ? "منح كوريا: ستة برامج رسمية | كلوفرز" : "Korean Scholarships: Six Official Programmes | Klovers",
     description: isAr
-      ? "ست منح كورية رسمية بالتفصيل: منحة الحكومة الكورية، وKAIST، ومؤسسة كوريا، وKOICA، والتبادل الطلابي — بما تغطيه كل منحة وشروطها ومواعيدها ومصادرها الرسمية."
+      ? "ست منح كورية رسمية بالتفصيل: منحة الحكومة الكورية، وKAIST، ومؤسسة كوريا، وKOICA، والتبادل الطلابي. بما تغطيه كل منحة وشروطها ومواعيدها ومصادرها الرسمية."
       : "Six official Korean scholarships: GKS, KAIST, the Korea Foundation, KOICA and exchange. What each covers, who qualifies, when to apply and the official source.",
     canonical: isAr ? "https://kloversegy.com/ar/scholarships" : "https://kloversegy.com/scholarships",
     alternates: {
@@ -54,23 +54,23 @@ const ScholarshipsPage = () => {
   /** Every page the facts on this screen came from, provider by provider. */
   const sources: { label: string; url: string }[] = [
     {
-      label: tr("NIIED / Study in Korea — GKS programmes", "NIIED / Study in Korea — برامج GKS"),
+      label: tr("NIIED / Study in Korea: GKS programmes", "NIIED / Study in Korea: برامج GKS"),
       url: "https://www.studyinkorea.go.kr/en/plan/scholarship.do?tab=gks-tab1",
     },
     {
-      label: tr("Korean Embassy in Cairo — Egypt quotas", "السفارة الكورية بالقاهرة — حصص مصر"),
+      label: tr("Korean Embassy in Cairo: Egypt quotas", "السفارة الكورية بالقاهرة: حصص مصر"),
       url: "https://overseas.mofa.go.kr/eg-ko/brd/m_11508/view.do?seq=1343892",
     },
     {
-      label: tr("KAIST — scholarship page", "KAIST — صفحة المنحة"),
+      label: tr("KAIST: scholarship page", "KAIST: صفحة المنحة"),
       url: "https://admission.kaist.ac.kr/intl-undergraduate/support/scholarships/kaist",
     },
     {
-      label: tr("The Korea Foundation — language fellowship", "مؤسسة كوريا — زمالة اللغة"),
+      label: tr("The Korea Foundation: language fellowship", "مؤسسة كوريا: زمالة اللغة"),
       url: "https://kf.or.kr/kfEng/cm/cntnts/cntntsView.do?cntntsId=1637&mi=2221",
     },
     {
-      label: tr("KOICA — Scholarship Program", "KOICA — برنامج المنح"),
+      label: tr("KOICA: Scholarship Program", "KOICA: برنامج المنح"),
       url: "https://www.koica.go.kr/ciat/7806/subview.do",
     },
     {
@@ -191,8 +191,8 @@ const ScholarshipsPage = () => {
               </p>
               <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-charcoal/75">
                 {tr(
-                  "All six programmes are listed here for everyone. The match — which ones are yours, and how many months stand between you and each — is worked out from your real level once you have taken the free placement test.",
-                  "البرامج الستة معروضة هنا للجميع. أما المطابقة — أيها يناسبك، وكم شهرًا يفصلك عن كل واحدة — فتُحسب من مستواك الحقيقي بعد اختبار تحديد المستوى المجاني.",
+                  "All six programmes are listed here for everyone. The match, which ones are yours, and how many months stand between you and each, is worked out from your real level once you have taken the free placement test.",
+                  "البرامج الستة معروضة هنا للجميع. أما المطابقة، أيها يناسبك، وكم شهرًا يفصلك عن كل واحدة، فتُحسب من مستواك الحقيقي بعد اختبار تحديد المستوى المجاني.",
                 )}
               </p>
               <Button size="lg" asChild className="mt-5 h-12 rounded-full px-8 font-bold">

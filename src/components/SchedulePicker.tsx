@@ -306,7 +306,7 @@ const SchedulePicker = ({
               No live schedule{selectedLevel ? ` for ${selectedLevel}` : ""} yet
             </p>
             <p className="text-sm text-amber-800 dark:text-amber-300 mt-1">
-              We're building the schedule based on student demand. Continue to the next step to tell us your preferred day &amp; time — you're helping shape the timetable!
+              We're building the schedule based on student demand. Continue to the next step to tell us your preferred day &amp; time, you're helping shape the timetable!
             </p>
           </div>
         </div>
@@ -334,7 +334,7 @@ const SchedulePicker = ({
               Holding is the next step: the "Hold my place" button on the
               schedule page, or payment in the enrol flow. */}
           <p className="text-xs text-muted-foreground">
-            Chosen — your place is not held until you finish the next step.
+            Chosen: your place is not held until you finish the next step.
           </p>
           <Button
             variant="ghost"
@@ -372,7 +372,7 @@ const SchedulePicker = ({
             <p className="text-sm text-muted-foreground">
               {userTimezone.replace(/_/g, " ")} <span className="opacity-70">({selectedPrivateOption.weekday} {selectedPrivateOption.timeFormatted} {selectedPrivateOption.timezone.replace(/_/g, " ")})</span>
             </p>
-            <p className="text-xs text-muted-foreground">Private class — pending confirmation</p>
+            <p className="text-xs text-muted-foreground">Private class: pending confirmation</p>
             <Button
               variant="ghost"
               size="sm"
@@ -437,7 +437,7 @@ const SchedulePicker = ({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">Pick your preferred class slot — times shown in your timezone ({userTimezone.replace(/_/g, " ")}):</p>
+      <p className="text-sm text-muted-foreground">Pick your preferred class slot, times shown in your timezone ({userTimezone.replace(/_/g, " ")}):</p>
 
       <div className="grid gap-3">
         {packages.map((pkg) => {

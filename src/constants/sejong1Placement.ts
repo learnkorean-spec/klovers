@@ -57,8 +57,8 @@ export interface SejongSection {
 export const SEJONG1_SECTIONS: SejongSection[] = [
   {
     id: "A", code: "예비편",
-    titleAr: "القسم (أ) — الهانغول والقراءة الأساسية",
-    titleEn: "Section A — Hangul and basic reading",
+    titleAr: "القسم (أ): الهانغول والقراءة الأساسية",
+    titleEn: "Section A: Hangul and basic reading",
     titleKo: "예비편: 한글 자모",
     instrAr: "اختر الإجابة الصحيحة. هذا القسم يقيس معرفة الحروف الكورية وقراءتها.",
     instrEn: "Choose the correct answer. This section checks that you can read Hangul.",
@@ -67,8 +67,8 @@ export const SEJONG1_SECTIONS: SejongSection[] = [
   },
   {
     id: "B", code: "1~3과",
-    titleAr: "القسم (ب) — الوحدات 1 إلى 3",
-    titleEn: "Section B — Units 1 to 3",
+    titleAr: "القسم (ب): الوحدات 1 إلى 3",
+    titleEn: "Section B: Units 1 to 3",
     titleKo: "1과 자기소개 · 2과 일상생활 · 3과 위치",
     instrAr: "اختر الإجابة الصحيحة. هذا القسم يقيس القواعد والمفردات التالية:",
     instrEn: "Choose the correct answer. This section covers the grammar and vocabulary below:",
@@ -78,8 +78,8 @@ export const SEJONG1_SECTIONS: SejongSection[] = [
   },
   {
     id: "C", code: "4~6과",
-    titleAr: "القسم (ج) — الوحدات 4 إلى 6",
-    titleEn: "Section C — Units 4 to 6",
+    titleAr: "القسم (ج): الوحدات 4 إلى 6",
+    titleEn: "Section C: Units 4 to 6",
     titleKo: "4과 물건 사기 1 · 5과 물건 사기 2 · 6과 어제 일과",
     instrAr: "اختر الإجابة الصحيحة. هذا القسم يقيس القواعد والمفردات التالية:",
     instrEn: "Choose the correct answer. This section covers the grammar and vocabulary below:",
@@ -89,8 +89,8 @@ export const SEJONG1_SECTIONS: SejongSection[] = [
   },
   {
     id: "D", code: "7~9과",
-    titleAr: "القسم (د) — الوحدات 7 إلى 9",
-    titleEn: "Section D — Units 7 to 9",
+    titleAr: "القسم (د): الوحدات 7 إلى 9",
+    titleEn: "Section D: Units 7 to 9",
     titleKo: "7과 날씨 · 8과 시간 · 9과 약속",
     instrAr: "اختر الإجابة الصحيحة. هذا القسم يقيس القواعد والمفردات التالية:",
     instrEn: "Choose the correct answer. This section covers the grammar and vocabulary below:",
@@ -100,8 +100,8 @@ export const SEJONG1_SECTIONS: SejongSection[] = [
   },
   {
     id: "E", code: "10~12과",
-    titleAr: "القسم (هـ) — الوحدات 10 إلى 12",
-    titleEn: "Section E — Units 10 to 12",
+    titleAr: "القسم (هـ): الوحدات 10 إلى 12",
+    titleEn: "Section E: Units 10 to 12",
     titleKo: "10과 주말 활동 · 11과 한국어 공부 · 12과 계획",
     instrAr: "اختر الإجابة الصحيحة. هذا القسم يقيس القواعد والمفردات التالية، بالإضافة لمراجعة شاملة:",
     instrEn: "Choose the correct answer. This section covers the grammar and vocabulary below, plus a mixed review:",
@@ -111,8 +111,8 @@ export const SEJONG1_SECTIONS: SejongSection[] = [
   },
   {
     id: "F", code: "읽기",
-    titleAr: "القسم (و) — القراءة",
-    titleEn: "Section F — Reading",
+    titleAr: "القسم (و): القراءة",
+    titleEn: "Section F: Reading",
     titleKo: "읽기",
     instrAr: "اقرأ النص التالي ثم أجب عن الأسئلة.",
     instrEn: "Read the passage below, then answer the questions.",
@@ -146,7 +146,7 @@ export const SEJONG1_QUESTIONS: SejongQuestion[] = [
   { id: "C4", section: "C", unit: "4과", stem: "3,500원을 바르게 읽은 것을 고르십시오.", options: ["삼천다섯백 원","세천오백 원","삼천오백 원","삼천오십 원"], answerIndex: 2 },
   { id: "C5", section: "C", unit: "5과", stem: "사과 (       ) 개 주세요.", hintAr: "المطلوب: أربع تفاحات.", options: ["네","너","넷","사"], answerIndex: 0 },
   { id: "C6", section: "C", unit: "5과", stem: "저는 유키(       ).", hintAr: "الصيغة الرسمية.", options: ["이ㅂ니다","입니다","예니다","이습니다"], answerIndex: 1 },
-  { id: "C7", section: "C", unit: "5과", stem: "무엇을 (       )?", hintAr: "المعنى: ماذا تشتري؟ — بالصيغة الرسمية.", options: ["사습니까","사읍니까","삽니까","사니까"], answerIndex: 2 },
+  { id: "C7", section: "C", unit: "5과", stem: "무엇을 (       )?", hintAr: "المعنى: ماذا تشتري؟ بالصيغة الرسمية.", options: ["사습니까","사읍니까","삽니까","사니까"], answerIndex: 2 },
   { id: "C8", section: "C", unit: "5과", stem: "빵 한 개(       ) 우유 두 개를 사요.", options: ["안","에서","그리고","하고"], answerIndex: 3 },
   { id: "C9", section: "C", unit: "6과", stem: "어제 도서관(       ) 공부했어요.", options: ["을","에서","에","가"], answerIndex: 1 },
   { id: "C10", section: "C", unit: "6과", stem: "어제 친구를 (       ).", options: ["만나요","만날 거예요","만나세요","만났어요"], answerIndex: 3 },
@@ -218,11 +218,11 @@ export interface SejongStartUnit {
 
 export const SEJONG1_START_UNITS: Record<SejongStartUnitKey, SejongStartUnit> = {
   prep: { key: "prep", labelKo: "예비편", labelAr: "الوحدة التمهيدية (الهانغول)", labelEn: "Preparatory unit (Hangul)", levelKey: "hangul" },
-  u1: { key: "u1", labelKo: "1과 자기소개", labelAr: "الوحدة ١ — التعريف بالنفس", labelEn: "Unit 1 — Self introduction", levelKey: "l1" },
-  u4: { key: "u4", labelKo: "4과 물건 사기 1", labelAr: "الوحدة ٤ — الشراء ١", labelEn: "Unit 4 — Shopping 1", levelKey: "l1" },
-  u7: { key: "u7", labelKo: "7과 날씨", labelAr: "الوحدة ٧ — الطقس", labelEn: "Unit 7 — Weather", levelKey: "l1" },
-  u10: { key: "u10", labelKo: "10과 주말 활동", labelAr: "الوحدة ١٠ — أنشطة العطلة", labelEn: "Unit 10 — Weekend activities", levelKey: "l1" },
-  done: { key: "done", labelKo: "세종한국어 2", labelAr: "أنهى الكتاب — ينتقل إلى 세종한국어 2", labelEn: "Finished the book — moves on to Sejong Korean 2", levelKey: "l2" },
+  u1: { key: "u1", labelKo: "1과 자기소개", labelAr: "الوحدة ١: التعريف بالنفس", labelEn: "Unit 1: Self introduction", levelKey: "l1" },
+  u4: { key: "u4", labelKo: "4과 물건 사기 1", labelAr: "الوحدة ٤: الشراء ١", labelEn: "Unit 4: Shopping 1", levelKey: "l1" },
+  u7: { key: "u7", labelKo: "7과 날씨", labelAr: "الوحدة ٧: الطقس", labelEn: "Unit 7: Weather", levelKey: "l1" },
+  u10: { key: "u10", labelKo: "10과 주말 활동", labelAr: "الوحدة ١٠: أنشطة العطلة", labelEn: "Unit 10: Weekend activities", levelKey: "l1" },
+  done: { key: "done", labelKo: "세종한국어 2", labelAr: "أنهى الكتاب، ينتقل إلى 세종한국어 2", labelEn: "Finished the book, moves on to Sejong Korean 2", levelKey: "l2" },
 };
 
 /** Section order matters: the student is placed at the FIRST section they fail. */

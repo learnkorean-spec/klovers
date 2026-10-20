@@ -398,7 +398,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
               ))}
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              {isAr ? "إنهاء هذا العالم يفتح زي كلوبي التالي — قريبًا." : "Finish this world to unlock Cluby's next outfit — coming soon."}
+              {isAr ? "إنهاء هذا العالم يفتح زي كلوبي التالي، قريبًا." : "Finish this world to unlock Cluby's next outfit, coming soon."}
             </p>
           </div>
         </div>
@@ -662,7 +662,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
         <aside className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-border bg-ivory p-4 dark:bg-card sm:flex-row md:col-span-3 xl:col-span-1 xl:flex-col xl:items-stretch">
           <p className={cn("text-base leading-snug text-charcoal dark:text-foreground", clubyAwake ? "cluby-note" : "font-semibold")} lang={lang}>
             {isAr ? "“كل لعبة خطوةٌ أقرب إلى الحلم الكوري.”" : "“Every game brings you closer to your Korean dream.”"}
-            {clubyAwake && <span className="mt-1 block text-sm">— {isAr ? "كلوبي" : "Cluby"}</span>}
+            {clubyAwake && <span className="mt-1 block text-sm">{isAr ? "كلوبي" : "Cluby"}</span>}
           </p>
           {clubyAwake ? (
             <img src={CLUBY_3D_WAVE} alt="" aria-hidden="true" width={230} height={286} loading="lazy" className="h-28 w-auto self-end object-contain" />

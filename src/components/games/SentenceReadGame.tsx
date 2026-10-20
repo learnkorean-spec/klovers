@@ -19,7 +19,7 @@ const FALLBACK: Question[] = [
   { question: "뭐 먹었어요?", answer: "What did you eat?", options: ["What did you eat?", "Are you hungry?", "Do you like food?", "Where did you eat?"], explanation: "뭐 = what, 먹었어요 = ate (polite past)" },
   { question: "저는 커피를 마셔요.", answer: "I drink coffee.", options: ["I drink coffee.", "I like coffee.", "I buy coffee.", "I make coffee."], explanation: "커피를 = coffee (object), 마셔요 = drink (polite)" },
   { question: "한국어 잘 해요!", answer: "Your Korean is good!", options: ["Your Korean is good!", "I love Korean!", "Korean is difficult!", "Speak Korean!"], explanation: "한국어 = Korean, 잘 = well, 해요 = do/speak (polite)" },
-  { question: "안녕히 가세요.", answer: "Goodbye (to someone leaving).", options: ["Goodbye (to someone leaving).", "Good morning.", "Thank you.", "Welcome."], explanation: "안녕히 = peacefully, 가세요 = please go — said to someone who is leaving" },
+  { question: "안녕히 가세요.", answer: "Goodbye (to someone leaving).", options: ["Goodbye (to someone leaving).", "Good morning.", "Thank you.", "Welcome."], explanation: "안녕히 = peacefully, 가세요 = please go: said to someone who is leaving" },
 ];
 
 function shuffleArray<T>(arr: T[]): T[] {

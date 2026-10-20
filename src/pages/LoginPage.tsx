@@ -240,7 +240,7 @@ const LoginPage = () => {
             <CardTitle className="text-2xl">{t("auth.logIn")}</CardTitle>
             {/* One welcome per screen: from lg up the story panel's caption
                 says it, so this line shows only below lg. */}
-            <p className="text-sm text-muted-foreground mt-1 lg:hidden">{isAr ? "مرحبًا بالعودة، والتقدّم محفوظ." : "Welcome back — your progress is waiting for you."}</p>
+            <p className="text-sm text-muted-foreground mt-1 lg:hidden">{isAr ? "مرحبًا بالعودة، والتقدّم محفوظ." : "Welcome back, your progress is waiting for you."}</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">

@@ -149,7 +149,7 @@ export function DramaLines({ lines, isAr, resolve }: { lines: Expression[]; isAr
       </p>
       {/* Phones: one swipeable strip of scenes (snap), so four tall cards don't
           stack into a wall. From md up, a plain two-column grid. */}
-      <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0" aria-label={isAr ? "مشاهد — اسحب لرؤية المزيد" : "Scenes — swipe for more"}>
+      <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 [scrollbar-width:thin] md:mx-0 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:px-0 md:pb-0" aria-label={isAr ? "مشاهد: اسحب لرؤية المزيد" : "Scenes: swipe for more"}>
         {lines.map((l, i) => {
           const slug = l.article ? resolve(l.article) : null;
           return (

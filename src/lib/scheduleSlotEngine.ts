@@ -98,16 +98,16 @@ function buildCaption(slot: AvailableClassSlot): string {
     return `⚡ Only ${slot.seatsAvailable} seat${slot.seatsAvailable === 1 ? "" : "s"} left in our ${lvl} class!\n📅 ${day} at ${time}\n\nDon't miss your chance to join. Spots fill fast!\n\n👉 Register now at kloversegy.com/enroll-now\n\n#LearnKorean #Klovers #KoreanCourse #LimitedSeats`;
   }
   if (slot.postType === "private_opening") {
-    return `🎯 Private Korean lessons available — ${day} at ${time}!\n\nGet 1-on-1 attention and learn at your own pace. Perfect for all levels.\n\n👉 Book your spot at kloversegy.com/enroll-now\n\n#PrivateKorean #Klovers #LearnKorean`;
+    return `🎯 Private Korean lessons available: ${day} at ${time}!\n\nGet 1-on-1 attention and learn at your own pace. Perfect for all levels.\n\n👉 Book your spot at kloversegy.com/enroll-now\n\n#PrivateKorean #Klovers #LearnKorean`;
   }
   if (slot.postType === "new_class_opportunity") {
     return `🆕 New Korean class opening ${day} at ${time}!\n\nBe the first to join and shape the class from day one.\n\n👉 Secure your spot at kloversegy.com/enroll-now\n\n#NewClass #LearnKorean #Klovers`;
   }
   if (slot.postType === "weekend_class") {
-    return `🇰🇷 Weekend Korean class — ${day} at ${time}!\n\n${lvl} — the perfect way to learn Korean without disrupting your week.\n\n👉 Enroll at kloversegy.com/enroll-now\n\n#WeekendKorean #Klovers #LearnKorean`;
+    return `🇰🇷 Weekend Korean class: ${day} at ${time}!\n\n${lvl}, the perfect way to learn Korean without disrupting your week.\n\n👉 Enroll at kloversegy.com/enroll-now\n\n#WeekendKorean #Klovers #LearnKorean`;
   }
   // default group_opening
-  return `🇰🇷 Join our ${lvl} class — ${day} at ${time}!\n\nLive interactive sessions with expert guidance.\n\n👉 Register at kloversegy.com/enroll-now\n\n#LearnKorean #Klovers #KoreanCourse${urgent ? " #LimitedSeats" : ""}`;
+  return `🇰🇷 Join our ${lvl} class: ${day} at ${time}!\n\nLive interactive sessions with expert guidance.\n\n👉 Register at kloversegy.com/enroll-now\n\n#LearnKorean #Klovers #KoreanCourse${urgent ? " #LimitedSeats" : ""}`;
 }
 
 // ── Core engine ────────────────────────────────────────────────────────────────────────
@@ -227,7 +227,7 @@ export function generatePostsFromAvailableSlots(slots: AvailableClassSlot[]): Sl
 
       return {
         id,
-        title: `${lvl} — ${day} ${time}`,
+        title: `${lvl}: ${day} ${time}`,
         subtitle: `Starting ${day} ${time}`,
         extraText: "#LearnKorean #Klovers",
         cta: "Register Now",

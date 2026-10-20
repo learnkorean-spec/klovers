@@ -193,8 +193,8 @@ const ExitIntentModal = () => {
 
             <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
               {isAr
-                ? "الحروف الكورية كاملة في ورقة واحدة — مع طريقة اللفظ الصح. بلاش بطاقة، بلاش التزامات."
-                : "The full Korean alphabet on one sheet — with pronunciation for each letter. No card, no commitment."}
+                ? "الحروف الكورية كاملة في ورقة واحدة، مع طريقة اللفظ الصح. بلاش بطاقة، بلاش التزامات."
+                : "The full Korean alphabet on one sheet, with pronunciation for each letter. No card, no commitment."}
             </p>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">

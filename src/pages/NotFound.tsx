@@ -47,7 +47,7 @@ const NotFound = () => {
                 </span>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">{isAr ? "잠깐! — \"انتظر!\" بالكورية" : "잠깐! — \"Wait!\" in Korean"}</p>
+            <p className="text-xs text-muted-foreground">{isAr ? "잠깐!: \"انتظر!\" بالكورية" : "잠깐!: \"Wait!\" in Korean"}</p>
             <h1 className="text-3xl font-extrabold text-foreground">{isAr ? "الصفحة غير موجودة" : "Page not found"}</h1>
             <p className="text-muted-foreground text-sm max-w-sm mx-auto">
               {isAr ? "هذه الصفحة غير موجودة أو تم نقلها. إليك بعض الأماكن التي قد تبحث عنها:" : "This page doesn't exist or has been moved. Here are some places you might be looking for:"}

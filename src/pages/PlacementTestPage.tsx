@@ -117,18 +117,18 @@ const RECOMMENDED_PLANS: Record<string, RecommendedPlan> = {
 
 const SECTION_BANNERS: Record<number, { label: string; hint: string }> = {
   0: { label: "Foundation", hint: "Hangul, core vocabulary, reading passages & speaking basics" },
-  1: { label: "TOPIK 1 — Beginner", hint: "Grammar particles, reading sentences & spoken expressions" },
-  2: { label: "TOPIK 2 — Elementary", hint: "Connectors, reading passages & spoken grammar forms" },
-  3: { label: "TOPIK 3–4 — Intermediate", hint: "Advanced grammar, reading comprehension & natural speech" },
-  4: { label: "TOPIK 5–6 — Advanced", hint: "Nuanced grammar, academic reading & formal speech" },
+  1: { label: "TOPIK 1: Beginner", hint: "Grammar particles, reading sentences & spoken expressions" },
+  2: { label: "TOPIK 2: Elementary", hint: "Connectors, reading passages & spoken grammar forms" },
+  3: { label: "TOPIK 3–4: Intermediate", hint: "Advanced grammar, reading comprehension & natural speech" },
+  4: { label: "TOPIK 5–6: Advanced", hint: "Nuanced grammar, academic reading & formal speech" },
 };
 
 const SECTION_BANNERS_AR: Record<number, { label: string; hint: string }> = {
   0: { label: "تأسيس", hint: "الهانغول، المفردات الأساسية، نصوص القراءة وأساسيات المحادثة" },
-  1: { label: "TOPIK 1 — مبتدئ", hint: "جسيمات القواعد، قراءة الجمل والتعبيرات المنطوقة" },
-  2: { label: "TOPIK 2 — ابتدائي", hint: "الروابط، نصوص القراءة وأشكال القواعد المنطوقة" },
-  3: { label: "TOPIK 3–4 — متوسط", hint: "القواعد المتقدمة، فهم القراءة والكلام الطبيعي" },
-  4: { label: "TOPIK 5–6 — متقدم", hint: "القواعد الدقيقة، القراءة الأكاديمية والكلام الرسمي" },
+  1: { label: "TOPIK 1: مبتدئ", hint: "جسيمات القواعد، قراءة الجمل والتعبيرات المنطوقة" },
+  2: { label: "TOPIK 2: ابتدائي", hint: "الروابط، نصوص القراءة وأشكال القواعد المنطوقة" },
+  3: { label: "TOPIK 3–4: متوسط", hint: "القواعد المتقدمة، فهم القراءة والكلام الطبيعي" },
+  4: { label: "TOPIK 5–6: متقدم", hint: "القواعد الدقيقة، القراءة الأكاديمية والكلام الرسمي" },
 };
 
 const BAND_LABELS = ["Foundation", "TOPIK 1", "TOPIK 2", "TOPIK 3–4", "TOPIK 5–6"];
@@ -139,7 +139,7 @@ const JOURNEY_MESSAGES: Record<string, string> = {
   l1:    "Next step: Level 2",
   l2:    "Next step: Level 3",
   l3:    "Next steps: the rest of the intermediate levels, then Levels 5 and 6",
-  l5:    "You're already advanced — refine your Korean for TOPIK 5–6 certification",
+  l5:    "You're already advanced, refine your Korean for TOPIK 5–6 certification",
 };
 
 const JOURNEY_MESSAGES_AR: Record<string, string> = {
@@ -162,11 +162,11 @@ function subTestSummary(correct: number, total: number, skill: string, isAr = fa
   if (isAr) {
     if (pct >= 0.8) return `فهم ${skill} ممتاز في هذا المستوى!`;
     if (pct >= 0.6) return `مهارات ${skill} جيدة، ومواصلة التمرين توصل إلى الطلاقة الكاملة.`;
-    return `فهم ${skill} يحتاج لمزيد من العمل — التمرين المركز سيساعد.`;
+    return `فهم ${skill} يحتاج لمزيد من العمل، والتمرين المركز سيساعد.`;
   }
   if (pct >= 0.8) return `Excellent ${skill} comprehension at this level!`;
-  if (pct >= 0.6) return `Good ${skill} skills — keep practising for full fluency.`;
-  return `${skill} comprehension needs more work — targeted practice will help.`;
+  if (pct >= 0.6) return `Good ${skill} skills, keep practising for full fluency.`;
+  return `${skill} comprehension needs more work, targeted practice will help.`;
 }
 
 function speakingSummary(ratings: (0 | 1 | 2)[], levelKey: string, isAr = false): string {
@@ -179,7 +179,7 @@ function speakingSummary(ratings: (0 | 1 | 2)[], levelKey: string, isAr = false)
   }
   if (score >= 8) return `Excellent! Your spoken Korean matches your ${label} placement.`;
   if (score >= 5) return "Good effort! Keep practising speaking alongside your reading and grammar.";
-  return "Your spoken Korean needs more practice — consider starting 1 level below your MCQ result.";
+  return "Your spoken Korean needs more practice, consider starting 1 level below your MCQ result.";
 }
 
 const PlacementTestPage = () => {
@@ -1189,7 +1189,7 @@ const PlacementTestPage = () => {
               </div>
               {!userId && (
                 <Button variant="outline" className="w-full" onClick={() => navigate("/signup")}>
-                  {isAr ? "حفظ النتيجة: تسجيل مجاني" : "Save My Result — Sign Up Free"}
+                  {isAr ? "حفظ النتيجة: تسجيل مجاني" : "Save My Result: Sign Up Free"}
                 </Button>
               )}
               <div className="flex gap-2">
@@ -1423,7 +1423,7 @@ const PlacementTestPage = () => {
       <main id="main-content" className="flex-1 px-4 py-8 max-w-3xl mx-auto w-full">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-1">{isAr ? "اختبار تحديد المستوى" : "Placement Test"}</h1>
-          <p className="text-muted-foreground text-sm">{isAr ? "5 دقائق · إجابة كل سؤال أو تخطيه، والاختيار بالأرقام 1–4." : "5 minutes · answer or skip each question — press 1–4 to select."}</p>
+          <p className="text-muted-foreground text-sm">{isAr ? "5 دقائق · إجابة كل سؤال أو تخطيه، والاختيار بالأرقام 1–4." : "5 minutes · answer or skip each question, press 1–4 to select."}</p>
         </div>
 
         {/* Absolute-beginner shortcut. Mid-quiz abandonment data showed a
@@ -1568,7 +1568,7 @@ const PlacementTestPage = () => {
 
                   {isSkipped ? (
                     <div className="flex items-center justify-between ml-1">
-                      <span className="text-sm text-muted-foreground italic">{isAr ? "تم التخطي — يحتسب كـ 0" : "Skipped — counts as 0"}</span>
+                      <span className="text-sm text-muted-foreground italic">{isAr ? "تم التخطي: يحتسب كـ 0" : "Skipped: counts as 0"}</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleUnskip(q.id); }}
                         className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"

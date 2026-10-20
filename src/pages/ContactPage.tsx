@@ -284,7 +284,7 @@ const ContactPage = () => {
                           <p className="text-sm text-foreground">
                             {isAr
                               ? "تعذّر الإرسال عبر الموقع، والرسالة محفوظة في النموذج. الإرسال متاح الآن عبر واتساب."
-                              : "Sending through the site did not work. Nothing was lost — send it on WhatsApp now."}
+                              : "Sending through the site did not work. Nothing was lost, send it on WhatsApp now."}
                           </p>
                           <a
                             href={`${WHATSAPP_BASE}?text=${encodeURIComponent(buildMessage(form, isAr))}`}

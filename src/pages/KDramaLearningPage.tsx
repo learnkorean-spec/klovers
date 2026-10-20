@@ -27,7 +27,7 @@ import { toArabicDigits } from "@/lib/trustFigures";
 
 const STEPS: { en: [string, string]; ar: [string, string] }[] = [
   {
-    en: ["Watch for the story", "First watch with subtitles in your language. Enjoy it — you need to know what happens before you can study how it is said."],
+    en: ["Watch for the story", "First watch with subtitles in your language. Enjoy it, you need to know what happens before you can study how it is said."],
     ar: ["المشاهدة من أجل القصة", "المشاهدة الأولى بترجمة إلى لغة المشاهد، وللمتعة وحدها. فهم ما يحدث يسبق دراسة طريقة قوله."],
   },
   {
@@ -137,7 +137,7 @@ const KDramaLearningPage = () => {
               <p className="font-bold mb-3">{tr("A notebook line looks like this", "هكذا يبدو سطر في الدفتر")}</p>
               <div className="bg-muted p-4 rounded-xl text-sm text-foreground/80 space-y-1">
                 <p lang="ko" className="font-bold text-foreground">정말이야?</p>
-                <p>{tr("\"Really?\" — a character hears surprising news.", "«حقًّا؟» — شخصية تسمع خبرًا مفاجئًا.")}</p>
+                <p>{tr("\"Really?\": a character hears surprising news.", "«حقًّا؟»: شخصية تسمع خبرًا مفاجئًا.")}</p>
                 <p>{tr("Mine: 정말이야? 내일 시험이야? (Really? The exam is tomorrow?)", "جملة من تأليفي: 정말이야? 내일 시험이야? (حقًّا؟ الامتحان غدًا؟)")}</p>
               </div>
             </div>
@@ -155,7 +155,7 @@ const KDramaLearningPage = () => {
                 </h3>
                 <p className="text-foreground/70 leading-relaxed">
                   {tr(
-                    "Modern stories set at work, at school or at home, with standard Seoul speech and everyday conversation — romantic comedies and slice-of-life shows are a good fit.",
+                    "Modern stories set at work, at school or at home, with standard Seoul speech and everyday conversation: romantic comedies and slice-of-life shows are a good fit.",
                     "قصص حديثة في العمل أو المدرسة أو البيت، بلهجة سيول المعيارية وحوار يومي؛ الكوميديا الرومانسية ومسلسلات الحياة اليومية مناسبة.",
                   )}
                 </p>
@@ -166,7 +166,7 @@ const KDramaLearningPage = () => {
                 </h3>
                 <p className="text-foreground/70 leading-relaxed">
                   {tr(
-                    "Historical dramas (old-fashioned speech), shows in strong regional dialects, and fast thrillers full of slang or technical words — medical, legal, military.",
+                    "Historical dramas (old-fashioned speech), shows in strong regional dialects, and fast thrillers full of slang or technical words: medical, legal, military.",
                     "المسلسلات التاريخية (لغة قديمة)، والمسلسلات ذات اللهجات المحلية القوية، ومسلسلات الإثارة السريعة المليئة بالعامية أو المصطلحات: الطبية أو القانونية أو العسكرية.",
                   )}
                 </p>

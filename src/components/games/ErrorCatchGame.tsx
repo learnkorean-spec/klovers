@@ -73,7 +73,7 @@ const QUESTIONS: ErrorQuestion[] = [
     correction: "를",
     options: ["를", "은", "이", "에"],
     correct: "를",
-    explanation: "배우다 (to learn) takes an object, so the object particle 를 is needed. 한국어를 배워요. 가 is a subject particle — wrong here.",
+    explanation: "배우다 (to learn) takes an object, so the object particle 를 is needed. 한국어를 배워요. 가 is a subject particle, wrong here.",
     category: "Particle",
   },
   {
@@ -133,7 +133,7 @@ const QUESTIONS: ErrorQuestion[] = [
     correction: "드세요",
     options: ["드세요", "먹으세요", "먹어요", "드셔요"],
     correct: "드세요",
-    explanation: "Correct! 드시다 is the honorific form of 먹다/마시다. 드세요 is the polite imperative — appropriate for advising someone politely.",
+    explanation: "Correct! 드시다 is the honorific form of 먹다/마시다. 드세요 is the polite imperative, appropriate for advising someone politely.",
     category: "Trick Question",
   },
 ];

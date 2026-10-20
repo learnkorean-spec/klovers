@@ -198,7 +198,7 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
             needs another path forward, not just a waitlist. */}
         <div className="border-t border-border pt-4">
           <p className="text-xs text-muted-foreground mb-2">
-            {tr("Don't want to wait? Book a private class instead — pick any time that works for you.", "لتفادي الانتظار، يمكن حجز حصة خاصة بدلًا من ذلك، واختيار أي وقت مناسب من كل الأوقات المتاحة.")}
+            {tr("Don't want to wait? Book a private class instead, pick any time that works for you.", "لتفادي الانتظار، يمكن حجز حصة خاصة بدلًا من ذلك، واختيار أي وقت مناسب من كل الأوقات المتاحة.")}
           </p>
           <Button variant="outline" size="sm" asChild className="w-full">
             <Link to="/enroll-now?classType=private">

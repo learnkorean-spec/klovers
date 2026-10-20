@@ -63,7 +63,7 @@ const COPY = {
     join: "دخول الحصة",
     owes: "توجد دفعة مستحقة",
     pay: "رفع الإيصال",
-    lastCovered: "هذه آخر حصة في الباقة الحالية — وما بعدها بداية باقة جديدة.",
+    lastCovered: "هذه آخر حصة في الباقة الحالية، وما بعدها بداية باقة جديدة.",
     notPrivate: "هذه الصفحة مخصّصة لطلاب الحصص الخاصة، والحساب غير مرتبط بحصص خاصة.",
     backToDashboard: "العودة إلى الحساب",
     loadFailed: "تعذّر تحميل البيانات.",
@@ -88,7 +88,7 @@ const COPY = {
     join: "Join the lesson",
     owes: "You have a payment due",
     pay: "Upload the receipt",
-    lastCovered: "This is the last lesson in your bundle — the next one starts a new bundle.",
+    lastCovered: "This is the last lesson in your bundle, the next one starts a new bundle.",
     notPrivate: "This page is for private-lesson students. Your account has no private lessons.",
     backToDashboard: "Back to your account",
     loadFailed: "We could not load your details.",
@@ -287,7 +287,7 @@ const MyLessonsPage = () => {
                 <div className="absolute inset-x-0 bottom-0 p-4">
                   <p className="text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">{c.world}</p>
                   <h1 className="font-display text-2xl font-extrabold leading-tight text-white md:text-3xl">
-                    {c.title} — {roster.full_name}
+                    {c.title}: {roster.full_name}
                   </h1>
                 </div>
               </div>
@@ -297,7 +297,7 @@ const MyLessonsPage = () => {
           ) : (
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                {c.title} — {roster.full_name}
+                {c.title}: {roster.full_name}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">{c.subtitle}</p>
             </div>

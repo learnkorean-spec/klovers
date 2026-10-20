@@ -108,7 +108,7 @@ export function TodaysMissions({
                   <Link
                     to={m.id === "lesson" ? continueHref : "/games"}
                     className="inline-flex min-h-11 shrink-0 items-center rounded-xl border border-foreground/20 bg-background px-4 text-sm font-semibold text-foreground hover:bg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
-                    aria-label={`${title} — ${m.id === "game" ? c("missionPlay") : c("missionGo")}`}
+                    aria-label={`${title}: ${m.id === "game" ? c("missionPlay") : c("missionGo")}`}
                   >
                     {m.id === "game" ? c("missionPlay") : c("missionGo")}
                   </Link>

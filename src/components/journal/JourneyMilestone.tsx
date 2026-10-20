@@ -32,7 +32,7 @@ export default function JourneyMilestone({ isAr, onGoToStage }: { isAr: boolean;
                 {nextStage
                   ? isAr ? "الرحلة مستمرة" : "Your journey continues"
                   : p.articlesRead.length === 0
-                    ? isAr ? "مرّت الرحلة بكل المحطات، والخطوة التالية اختيار قصة للبدء" : "You've passed every stop — pick a story to begin"
+                    ? isAr ? "مرّت الرحلة بكل المحطات، والخطوة التالية اختيار قصة للبدء" : "You've passed every stop, pick a story to begin"
                     : isAr ? "اكتملت زيارة كل محطات الرحلة!" : "You've visited every stop!"}
               </h2>
               <p className="mt-2 text-muted-foreground">
@@ -69,7 +69,7 @@ export default function JourneyMilestone({ isAr, onGoToStage }: { isAr: boolean;
               </Link>
             </Button>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">{isAr ? "الحصة الأولى مجانية، دون بطاقة بنكية." : "Your first class is free — no card needed."}</p>
+          <p className="mt-3 text-xs text-muted-foreground">{isAr ? "الحصة الأولى مجانية، دون بطاقة بنكية." : "Your first class is free, no card needed."}</p>
         </div>
       </div>
     </section>

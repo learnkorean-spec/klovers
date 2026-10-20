@@ -211,7 +211,7 @@ export function VocabularyReviewPage() {
                 <div className="mt-8 text-start space-y-3 bg-muted/50 p-6 rounded-xl">
                   <h3 className="font-semibold text-sm text-foreground"><KloverIcon name="lightbulb-sprout" className="me-1 inline h-6 w-6 align-middle" />{isAr ? "نصائح" : "Tips"}</h3>
                   <ul className="text-sm text-muted-foreground space-y-1.5">
-                    <li>• {isAr ? "التقييم الصادق يساعد الخوارزمية على العمل بشكل أفضل" : "Rate yourself honestly — this helps the algorithm work better"}</li>
+                    <li>• {isAr ? "التقييم الصادق يساعد الخوارزمية على العمل بشكل أفضل" : "Rate yourself honestly, this helps the algorithm work better"}</li>
                     <li>• {isAr ? "\"مرة أخرى\" = نسيان تام (البطاقة تتكرر غداً)" : "\"Again\" = complete blackout (card repeats tomorrow)"}</li>
                     <li>• {isAr ? "\"سهل\" = إجابة مثالية (البطاقة لن تظهر لأسابيع)" : "\"Easy\" = perfect response (card won't appear for weeks)"}</li>
                     <li>• {isAr ? "استراحة قصيرة كل 20 بطاقة تحافظ على التركيز" : "Take breaks every 20 cards to stay focused"}</li>
@@ -240,7 +240,7 @@ export function VocabularyReviewPage() {
                     </div>
                   </div>
                   {masteredCount === reviewedCount && (
-                    <p className="text-sm font-medium text-foreground"><span className="me-1.5 inline-block h-2 w-2 rounded-full bg-klovers-green" aria-hidden="true" />{isAr ? "جلسة مثالية — كل البطاقات معروفة" : "Perfect session — you knew every card"}</p>
+                    <p className="text-sm font-medium text-foreground"><span className="me-1.5 inline-block h-2 w-2 rounded-full bg-klovers-green" aria-hidden="true" />{isAr ? "جلسة مثالية: كل البطاقات معروفة" : "Perfect session: you knew every card"}</p>
                   )}
                   <div className="flex gap-3 justify-center pt-2">
                     <Button variant="outline" onClick={() => { setSessionComplete(false); setSessionStarted(false); setReviewedCount(0); setMasteredCount(0); setXpEarned(0); }}>

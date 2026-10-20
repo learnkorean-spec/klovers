@@ -86,7 +86,7 @@ export default function KoreanInterviewPage() {
   // Arabic version used to keep the English ones.
   const isAr = language === "ar";
   useSEO({
-    title: isAr ? "التدريب على مقابلة العمل بالكورية" : "Korean Interview Training — AI-Powered | Klovers",
+    title: isAr ? "التدريب على مقابلة العمل بالكورية" : "Korean Interview Training, AI-Powered | Klovers",
     description: isAr
       ? "تدريب على أسئلة مقابلات العمل بالكورية: أسئلة وأجوبة مخصّصة بالذكاء الاصطناعي، مع سؤالين مجانيين وإمكانية فتح أسئلة إضافية."
       : "Practice Korean job interview questions with AI-generated personalized Q&A. Get 2 free questions, upgrade for more.",

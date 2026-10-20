@@ -78,8 +78,8 @@ export default function EnrollmentStatusPage() {
     {
       label: "Group forming",
       labelAr: "تشكيل المجموعة",
-      detail: "We're matching you with the right group — 2–5 business days.",
-      detailAr: "نقوم بمطابقتك مع المجموعة المناسبة — من 2 إلى 5 أيام عمل.",
+      detail: "We're matching you with the right group: 2–5 business days.",
+      detailAr: "نقوم بمطابقتك مع المجموعة المناسبة: من 2 إلى 5 أيام عمل.",
       done: !!enrollment.matched_at,
       active: enrollment.payment_status === "PAID" && !enrollment.matched_at,
     },
@@ -94,8 +94,8 @@ export default function EnrollmentStatusPage() {
     {
       label: "Class link sent",
       labelAr: "تم إرسال رابط الحصة",
-      detail: "Check your inbox — your meeting link is waiting.",
-      detailAr: "تحقق من بريدك الإلكتروني — رابط الاجتماع في انتظارك.",
+      detail: "Check your inbox, your meeting link is waiting.",
+      detailAr: "تحقق من بريدك الإلكتروني، رابط الاجتماع في انتظارك.",
       done: !!enrollment.class_link_sent_at,
       active: enrollment.approval_status === "APPROVED" && !enrollment.class_link_sent_at,
     },

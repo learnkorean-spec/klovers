@@ -684,7 +684,7 @@ const StudentDashboard = () => {
 
   const handleExportProgress = () => {
     const lines: string[] = [
-      "KLOVERS KOREAN ACADEMY — STUDENT PROGRESS REPORT",
+      "KLOVERS KOREAN ACADEMY: STUDENT PROGRESS REPORT",
       "=".repeat(50),
       `Generated: ${new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}`,
       "",
@@ -1068,7 +1068,7 @@ const StudentDashboard = () => {
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <CardTitle className="text-lg flex items-center gap-2 flex-wrap min-w-0">
                               <Package className="h-4 w-4 shrink-0" />
-                              <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span> — {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
+                              <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span>: {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
                             </CardTitle>
                             <Badge variant={remaining >= 0 ? "default" : "destructive"} className="shrink-0">
                               {remaining >= 0 ? tInterpolate(t("dashboardPage.sessionsLeft"), { count: remaining }) : tInterpolate(t("dashboardPage.sessionsExtra"), { count: extra })}
@@ -1133,7 +1133,7 @@ const StudentDashboard = () => {
                         <div className="flex items-center justify-between flex-wrap gap-2">
                           <CardTitle className="text-base flex items-center gap-2 flex-wrap min-w-0">
                             <Package className="h-4 w-4 shrink-0" />
-                            <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span> — {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
+                            <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span>: {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
                             <Badge variant="outline" className="ms-1 text-xs shrink-0">{t("dashboardPage.older")}</Badge>
                           </CardTitle>
                           <Badge variant={remaining >= 0 ? "secondary" : "destructive"} className="shrink-0">

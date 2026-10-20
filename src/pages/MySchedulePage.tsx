@@ -56,10 +56,10 @@ function localClock(clock: string, language: string): string {
 // are here: a handful of strings only this page says. group_full and
 // paid_elsewhere are spelled exactly as hold_my_seat raises them.
 const HOLD_COPY_EN = {
-  holdMyPlace: "Hold my place — pay later",
+  holdMyPlace: "Hold my place, pay later",
   placeHeld: "Your place is held",
   placeHeldDesc: "You have a seat in {group}. Pay for it whenever you're ready.",
-  placeHeldNoLinkDesc: "You have a seat in {group}. Pay for it whenever you're ready — the joining link will follow.",
+  placeHeldNoLinkDesc: "You have a seat in {group}. Pay for it whenever you're ready, the joining link will follow.",
   couldNotHold: "Couldn't hold your place",
   group_full: "This class time is full. Pick the other day for your level.",
   paid_elsewhere: "You have already paid for a different class time. Message us and we will move you.",
@@ -69,7 +69,7 @@ const HOLD_COPY_AR = {
   holdMyPlace: "حجز المقعد والدفع لاحقًا",
   placeHeld: "تم حجز المقعد",
   placeHeldDesc: "المقعد محجوز في {group}، ويمكن الدفع في أي وقت مناسب.",
-  placeHeldNoLinkDesc: "المقعد محجوز في {group}، ويمكن الدفع في أي وقت مناسب — وسيصل رابط الدخول لاحقًا.",
+  placeHeldNoLinkDesc: "المقعد محجوز في {group}، ويمكن الدفع في أي وقت مناسب، وسيصل رابط الدخول لاحقًا.",
   couldNotHold: "تعذّر حجز المقعد",
   group_full: "هذا الموعد مكتمل. يمكن اختيار اليوم الآخر المتاح للمستوى نفسه.",
   paid_elsewhere: "تم الدفع بالفعل لموعد آخر. يمكن مراسلتنا لنقل الحجز.",

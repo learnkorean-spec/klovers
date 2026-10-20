@@ -92,7 +92,7 @@ export default function NpsModal({ userId, chapterCount }: NpsModalProps) {
                   key={s}
                   type="button"
                   onClick={() => setScore(s)}
-                  aria-label={`Score ${s} — ${scoreLabel(s)}`}
+                  aria-label={`Score ${s}: ${scoreLabel(s)}`}
                   aria-pressed={score === s}
                   className={`
                     border rounded-lg p-2 text-sm font-bold transition-all
@@ -123,7 +123,7 @@ export default function NpsModal({ userId, chapterCount }: NpsModalProps) {
                 </label>
                 <Textarea
                   id="nps-feedback"
-                  placeholder="Optional — your honest thoughts help us grow"
+                  placeholder="Optional: your honest thoughts help us grow"
                   value={feedback}
                   onChange={e => setFeedback(e.target.value)}
                   rows={3}

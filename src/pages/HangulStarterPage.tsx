@@ -143,10 +143,10 @@ const HangulStarterPage = () => {
   };
 
   useSEO({
-    title: isAr ? "ورقة الهانغول المجانية: الأبجدية الكورية" : "Free Hangul Starter Sheet — Korean Alphabet | Klovers",
+    title: isAr ? "ورقة الهانغول المجانية: الأبجدية الكورية" : "Free Hangul Starter Sheet: Korean Alphabet | Klovers",
     description: isAr
       ? "تعلُّم الأبجدية الكورية (الهانغول) مجانًا: الحروف الساكنة والمتحركة كاملة مع مقطع مثال لكل حرف وشرح مبسّط، وقابلة للطباعة."
-      : "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide — explained simply. Printable.",
+      : "Learn the Korean alphabet (Hangul) for free. Complete consonants, vowels, and pronunciation guide, explained simply. Printable.",
     canonical: isAr ? "https://kloversegy.com/ar/hangul-starter" : "https://kloversegy.com/hangul-starter",
     alternates: { en: "https://kloversegy.com/hangul-starter", ar: "https://kloversegy.com/ar/hangul-starter" },
   });

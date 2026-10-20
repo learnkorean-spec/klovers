@@ -70,7 +70,7 @@ export default function MiniQuiz({ questions, isAr }: { questions: QuizQuestion[
           <KlobiFigure pose="thumbsup" className="h-20 w-20" />
         </div>
         <h3 className="mt-5 font-display text-2xl font-extrabold">
-          {all ? (isAr ? "عمل رائع! اكتملت كل التحديات" : "Well done — every challenge complete") : isAr ? "انتهت الجولة" : "Round complete"}
+          {all ? (isAr ? "عمل رائع! اكتملت كل التحديات" : "Well done, every challenge complete") : isAr ? "انتهت الجولة" : "Round complete"}
         </h3>
         <p className="mt-2 text-muted-foreground">
           {earned > 0
@@ -80,7 +80,7 @@ export default function MiniQuiz({ questions, isAr }: { questions: QuizQuestion[
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button asChild size="lg" className="h-12 rounded-full px-7 font-bold">
             <Link to="/placement-test" onClick={() => trackJourney("course_cta_clicked", { cta: "placement_after_quiz" })}>
-              {isAr ? "اكتشاف المستوى الحقيقي مجانًا" : "Find your real level — free"}
+              {isAr ? "اكتشاف المستوى الحقيقي مجانًا" : "Find your real level: free"}
             </Link>
           </Button>
           <Button variant="outline" size="lg" className="h-12 rounded-full px-6 font-bold" onClick={restart}>
@@ -115,7 +115,7 @@ export default function MiniQuiz({ questions, isAr }: { questions: QuizQuestion[
         {q.scene && (
           <p className="mt-3 rounded-2xl bg-muted/70 px-4 py-3 text-[0.95rem] leading-relaxed text-foreground">
             <Ko className="font-bold">{q.ko}</Ko>
-            <span aria-hidden="true"> — </span>
+            <span aria-hidden="true">: </span>
             {q.scene[L]}
           </p>
         )}

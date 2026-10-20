@@ -55,7 +55,7 @@ const ReturningStudentsLandingPage = () => {
   } | null>(null);
 
   useSEO({
-    title: isAr ? "أهلًا بالعودة — عرض الطلاب العائدين" : "Welcome Back — Returning Students Offer",
+    title: isAr ? "أهلًا بالعودة: عرض الطلاب العائدين" : "Welcome Back: Returning Students Offer",
     description: isAr
       ? "خصم ٢٠٪ للطلاب العائدين إلى كلوفرز، وخصم إضافي عند مشاركة الصفحة مع الأصدقاء. اختبار المستوى اختياري."
       : "Returning Klovers students get 20% off. Enroll now, share with friends, and save up to 35%. No placement test required.",

@@ -59,7 +59,7 @@ const QUESTIONS: HonorificQuestion[] = [
     casualMeaning: "(they) died",
     honorific: "돌아가셨어요",
     options: ["돌아가셨어요", "죽으셨어요", "가셨어요", "없어지셨어요"],
-    explanation: "죽다 (die) → 돌아가시다 (honorific). 돌아가시다 literally means 'returned (to heaven)' — used respectfully.",
+    explanation: "죽다 (die) → 돌아가시다 (honorific). 돌아가시다 literally means 'returned (to heaven)': used respectfully.",
     category: "Sensitive Topics",
   },
   {

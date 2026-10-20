@@ -124,7 +124,7 @@ export default function ShopPage() {
 
   const catTitle = cat ? (catCopy ? tr(catCopy.title.en, catCopy.title.ar) : tr(cat.replace(/-/g, " "), "مجموعة موسمية")) : "";
   useSEO({
-    title: cat ? tr(`${catTitle} · Klovers Supply`, `${catTitle} · متجر كلوفرز`) : tr("Klovers Supply — Korean books and study goods", "متجر كلوفرز — كتب ومستلزمات لتعلّم الكورية"),
+    title: cat ? tr(`${catTitle} · Klovers Supply`, `${catTitle} · متجر كلوفرز`) : tr("Klovers Supply · Korean books and study goods", "متجر كلوفرز · كتب ومستلزمات لتعلّم الكورية"),
     description: cat && catCopy
       ? tr(`${catCopy.line.en}. Klovers books and study goods for learning Korean.`, `${catCopy.line.ar}. كتب ومستلزمات من كلوفرز لتعلّم الكورية.`)
       : tr("Klovers books and study goods that take Korean beyond the classroom. Digital books go straight to My books in the student dashboard.",
@@ -325,7 +325,7 @@ export default function ShopPage() {
                     )}
                   </p>
                   <p className={isAr ? "mt-4 text-sm font-semibold text-foreground" : "mt-4 font-script text-lg text-foreground"}>
-                    {tr("I keep every page safe. — Cluby", "أحفظ كل صفحة. — كلوبي")}
+                    {tr("I keep every page safe. · Cluby", "أحفظ كل صفحة. · كلوبي")}
                   </p>
                   <Button asChild variant="outline" className="mt-5 h-11">
                     <Link to="/free-trial">{tr("Book a free class", "حجز حصة مجانية")}</Link>

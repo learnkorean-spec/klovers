@@ -20,11 +20,11 @@ const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 
 // Fallback preset times shown when teacher hasn't configured availability yet
 const PRESET_TIMES = [
-  { time: "09:00", label: "9:00 AM — Morning" },
-  { time: "12:00", label: "12:00 PM — Midday" },
-  { time: "15:00", label: "3:00 PM — Afternoon" },
-  { time: "18:00", label: "6:00 PM — Evening" },
-  { time: "20:00", label: "8:00 PM — Night" },
+  { time: "09:00", label: "9:00 AM: Morning" },
+  { time: "12:00", label: "12:00 PM: Midday" },
+  { time: "15:00", label: "3:00 PM: Afternoon" },
+  { time: "18:00", label: "6:00 PM: Evening" },
+  { time: "20:00", label: "8:00 PM: Night" },
 ];
 
 interface StudentPreferenceStepProps {
@@ -176,7 +176,7 @@ const StudentPreferenceStep = ({
                 {timeOptions.length === 0 ? (() => {
                   const dayLabel = localDayNames[parseInt(preferredDay)] ?? DAYS[parseInt(preferredDay)];
                   const waMsg = encodeURIComponent(
-                    `Hi Klovers — I'd like to request a Korean class on ${dayLabel}${userLevel ? ` for ${userLevel}` : ""}. The current schedule doesn't have a matching time.`
+                    `Hi Klovers, I'd like to request a Korean class on ${dayLabel}${userLevel ? ` for ${userLevel}` : ""}. The current schedule doesn't have a matching time.`
                   );
                   const waHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`;
                   return (

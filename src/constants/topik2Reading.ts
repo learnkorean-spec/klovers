@@ -82,9 +82,9 @@ export const TOPIK2_SECTIONS: Topik2Section[] = [
   {
     id: "D",
     gradeKo: "3급",
-    titleKo: "읽기 1 — 3급",
-    titleEn: "Section 4 — TOPIK level 3 (3급)",
-    titleAr: "القسم الرابع — المستوى الثالث (3급)",
+    titleKo: "읽기 1: 3급",
+    titleEn: "Section 4: TOPIK level 3 (3급)",
+    titleAr: "القسم الرابع: المستوى الثالث (3급)",
     instrEn:
       "Everyday texts: a notice, an advert, a short paragraph. Read for what the text is for, not only for the words in it.",
     instrAr:
@@ -95,9 +95,9 @@ export const TOPIK2_SECTIONS: Topik2Section[] = [
   {
     id: "E",
     gradeKo: "4급",
-    titleKo: "읽기 2 — 4급",
-    titleEn: "Section 5 — TOPIK level 4 (4급)",
-    titleAr: "القسم الخامس — المستوى الرابع (4급)",
+    titleKo: "읽기 2: 4급",
+    titleEn: "Section 5: TOPIK level 4 (4급)",
+    titleAr: "القسم الخامس: المستوى الرابع (4급)",
     instrEn:
       "Longer texts on social and working life: a headline, an article, a passage with two questions on it.",
     instrAr:

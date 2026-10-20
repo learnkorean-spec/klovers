@@ -39,11 +39,11 @@ const LearnHungarianPage = () => {
 
   useSEO({
     title: isAr
-      ? "تعلّم المجرية بالعربية أو الإنجليزية — مع ريهام الشرقاوي"
-      : "Learn Hungarian in Arabic or English — with Reham Elshrkawy",
+      ? "تعلّم المجرية بالعربية أو الإنجليزية مع ريهام الشرقاوي"
+      : "Learn Hungarian in Arabic or English, with Reham Elshrkawy",
     description: isAr
       ? "دروس مجرية فردية عبر الإنترنت، بشرح بالعربية أو الإنجليزية، مع معلمة عاشت في بودابست وتعرف تمامًا ما يحتاجه المبتدئ: من أجل السفر، أو منحة مجرية، أو أسرة مجرية."
-      : "One-on-one online Hungarian lessons, explained in Arabic or English, with a teacher who lived in Budapest and knows exactly what a beginner needs — for a move, a Hungarian scholarship, or a Hungarian family.",
+      : "One-on-one online Hungarian lessons, explained in Arabic or English, with a teacher who lived in Budapest and knows exactly what a beginner needs: for a move, a Hungarian scholarship, or a Hungarian family.",
     canonical: isAr ? "https://kloversegy.com/ar/learn-hungarian" : "https://kloversegy.com/learn-hungarian",
     alternates: {
       en: "https://kloversegy.com/learn-hungarian",
@@ -62,8 +62,8 @@ const LearnHungarianPage = () => {
         "هل يمكن أن تساعد هذه الدروس في التقدّم لمنحة من معهد بالاسي أو منحة Stipendium Hungaricum؟",
       ),
       a: tr(
-        "Yes — I studied Hungarian myself on a Balassi Institute scholarship, so lessons can focus on the language level and paperwork these applications actually ask for, alongside general conversation.",
-        "نعم — درست المجرية بنفسي بمنحة من معهد بالاسي، فيمكن أن تركّز الدروس على مستوى اللغة والأوراق التي تطلبها هذه المنح فعليًا، إلى جانب المحادثة العامة.",
+        "Yes, I studied Hungarian myself on a Balassi Institute scholarship, so lessons can focus on the language level and paperwork these applications actually ask for, alongside general conversation.",
+        "نعم، درست المجرية بنفسي بمنحة من معهد بالاسي، فيمكن أن تركّز الدروس على مستوى اللغة والأوراق التي تطلبها هذه المنح فعليًا، إلى جانب المحادثة العامة.",
       ),
     },
     {
@@ -72,8 +72,8 @@ const LearnHungarianPage = () => {
         "هل أحتاج إلى معرفة سابقة بالمجرية للبدء؟",
       ),
       a: tr(
-        "No — lessons start from zero. Everything is explained in Arabic or English first, so you're never lost in a language you don't speak yet.",
-        "لا — تبدأ الدروس من الصفر. يُشرح كل شيء بالعربية أو الإنجليزية أولًا، فلن تشعر بالضياع في لغة لا تتحدثها بعد.",
+        "No, lessons start from zero. Everything is explained in Arabic or English first, so you're never lost in a language you don't speak yet.",
+        "لا، تبدأ الدروس من الصفر. يُشرح كل شيء بالعربية أو الإنجليزية أولًا، فلن تشعر بالضياع في لغة لا تتحدثها بعد.",
       ),
     },
   ];
@@ -101,22 +101,22 @@ const LearnHungarianPage = () => {
     {
       title: tr("A free 20-minute call", "مكالمة تعارف مجانية مدتها عشرون دقيقة"),
       body: tr(
-        "We talk about why you're learning Hungarian and where you're starting from — zero is completely fine.",
-        "نتحدث عن سبب رغبتك في تعلّم المجرية ومستواك الحالي — البدء من الصفر أمر طبيعي تمامًا.",
+        "We talk about why you're learning Hungarian and where you're starting from: zero is completely fine.",
+        "نتحدث عن سبب رغبتك في تعلّم المجرية ومستواك الحالي: البدء من الصفر أمر طبيعي تمامًا.",
       ),
     },
     {
       title: tr("Lessons explained in Arabic or English", "دروس تُشرح بالعربية أو الإنجليزية"),
       body: tr(
-        "Hungarian grammar is unlike Arabic or English, so every rule is explained in a language you already think in — not in Hungarian itself.",
+        "Hungarian grammar is unlike Arabic or English, so every rule is explained in a language you already think in, not in Hungarian itself.",
         "قواعد المجرية مختلفة تمامًا عن العربية والإنجليزية، لذا تُشرح كل قاعدة بلغة تفكر بها بالفعل، لا بالمجرية نفسها.",
       ),
     },
     {
       title: tr("Built around what you actually need", "مبنية على ما تحتاجينه فعلًا"),
       body: tr(
-        "Scholarship paperwork, everyday survival phrases, or conversation with family — the lessons follow your actual situation, not a fixed textbook order.",
-        "أوراق المنحة، أو عبارات الحياة اليومية، أو الحديث مع الأسرة — تتبع الدروس وضعك الفعلي لا ترتيب كتاب ثابت.",
+        "Scholarship paperwork, everyday survival phrases, or conversation with family: the lessons follow your actual situation, not a fixed textbook order.",
+        "أوراق المنحة، أو عبارات الحياة اليومية، أو الحديث مع الأسرة: تتبع الدروس وضعك الفعلي لا ترتيب كتاب ثابت.",
       ),
     },
   ];
@@ -142,8 +142,8 @@ const LearnHungarianPage = () => {
                 </h1>
                 <p className="mt-5 text-lg md:text-xl text-foreground/70 leading-relaxed">
                   {tr(
-                    "I lived in Budapest, studied Hungarian at Ain Shams University on a Balassi Institute scholarship, and have been teaching it ever since. I know what it's like to hold a form in Hungarian and not understand it — I'd rather be the person who explains the next one.",
-                    "عشت في بودابست، ودرست المجرية في جامعة عين شمس بمنحة من معهد بالاسي، وأدرّسها منذ ذلك الوقت. أعرف شعور أن تمسك بورقة بالمجرية ولا تفهمها — وأفضّل أن أكون من يشرح الورقة التالية.",
+                    "I lived in Budapest, studied Hungarian at Ain Shams University on a Balassi Institute scholarship, and have been teaching it ever since. I know what it's like to hold a form in Hungarian and not understand it, and I'd rather be the person who explains the next one.",
+                    "عشت في بودابست، ودرست المجرية في جامعة عين شمس بمنحة من معهد بالاسي، وأدرّسها منذ ذلك الوقت. أعرف شعور أن تمسك بورقة بالمجرية ولا تفهمها، وأفضّل أن أكون من يشرح الورقة التالية.",
                   )}
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -238,7 +238,7 @@ const LearnHungarianPage = () => {
             </div>
             <div className="order-1 lg:order-2">
               <h2 className="text-3xl font-bold mb-4 text-foreground">
-                {tr("Not a textbook — a guide who's done this", "ليست كتابًا مدرسيًا، بل مرشدة عاشت التجربة")}
+                {tr("Not a textbook: a guide who's done this", "ليست كتابًا مدرسيًا، بل مرشدة عاشت التجربة")}
               </h2>
               <p className="text-foreground/70 leading-relaxed mb-4">
                 {tr(
@@ -248,8 +248,8 @@ const LearnHungarianPage = () => {
               </p>
               <p className="text-foreground/70 leading-relaxed">
                 {tr(
-                  "I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — Hungarian lessons follow the same one-on-one, real-conversation approach.",
-                  "أسست وأدير أيضًا كلوفرز، أكاديمية إلكترونية تُدرّس الكورية لطلاب في أكثر من خمس عشرة دولة منذ عام 2013 — وتتبع دروس المجرية الأسلوب نفسه القائم على الحصص الفردية والمحادثة الحقيقية.",
+                  "I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013, and Hungarian lessons follow the same one-on-one, real-conversation approach.",
+                  "أسست وأدير أيضًا كلوفرز، أكاديمية إلكترونية تُدرّس الكورية لطلاب في أكثر من خمس عشرة دولة منذ عام 2013، وتتبع دروس المجرية الأسلوب نفسه القائم على الحصص الفردية والمحادثة الحقيقية.",
                 )}
               </p>
             </div>
@@ -264,8 +264,8 @@ const LearnHungarianPage = () => {
             </h2>
             <p className="text-foreground/70 text-center mb-8">
               {tr(
-                "Pick a time that works for you — or message us directly if nothing matches.",
-                "اختر موعدًا يناسبك — أو راسلنا مباشرة إن لم يناسبك أي موعد.",
+                "Pick a time that works for you, or message us directly if nothing matches.",
+                "اختر موعدًا يناسبك، أو راسلنا مباشرة إن لم يناسبك أي موعد.",
               )}
             </p>
             <PersonalTrialBooking
@@ -273,8 +273,8 @@ const LearnHungarianPage = () => {
               accentColor="#a9502f"
               accentHoverColor="#8f4227"
               whatsappMessage={{
-                en: "Hi! I'd like to book a free trial Hungarian lesson but none of the available times work for me — can we find another time?",
-                ar: "مرحبًا، أرغب في حجز حصة مجرية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني — هل يمكننا الاتفاق على موعد آخر؟",
+                en: "Hi! I'd like to book a free trial Hungarian lesson but none of the available times work for me. Can we find another time?",
+                ar: "مرحبًا، أرغب في حجز حصة مجرية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني. هل يمكننا الاتفاق على موعد آخر؟",
               }}
             />
           </div>
@@ -305,8 +305,8 @@ const LearnHungarianPage = () => {
             </h2>
             <p className="text-lg mb-8 text-background/80 max-w-2xl mx-auto">
               {tr(
-                "A scholarship deadline, a move, a family — send a message and we'll start from there.",
-                "موعد منحة، أو سفر، أو أسرة — أرسل رسالة ولنبدأ من وضعك فعليًا.",
+                "A scholarship deadline, a move, a family: send a message and we'll start from there.",
+                "موعد منحة، أو سفر، أو أسرة: أرسل رسالة ولنبدأ من وضعك فعليًا.",
               )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -330,7 +330,7 @@ export function PerfectScoreOverlay({ score, total, onContinue }: {
       >
         <h2 className="text-3xl font-black text-foreground mb-2">{isAr ? "نتيجة كاملة!" : "Perfect Score!"}</h2>
         <p className="text-muted-foreground mb-2">
-          {isAr ? `${toArabicDigits(score)}/${toArabicDigits(total)} — دون أي خطأ! ` : `${score}/${total} — Flawless! `}<span lang="ko">화이팅!</span>
+          {isAr ? `${toArabicDigits(score)}/${toArabicDigits(total)}: دون أي خطأ! ` : `${score}/${total}: Flawless! `}<span lang="ko">화이팅!</span>
         </p>
         <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-klovers-yellow text-charcoal font-bold text-lg mb-6 border border-charcoal">
           {isAr ? "كل الإجابات صحيحة!" : "You got them all!"}

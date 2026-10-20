@@ -166,7 +166,7 @@ const EggTeaser = () => {
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-ivory/70 md:text-base">
             {isAr
               ? "وجد اثنان من طلابنا شيئًا لم يفسّره أحد بعد: بيضة عاجية عليها علامة غريبة. تستيقظ البيضة هنا، لكنها لا تفقس إلا داخل الحساب الشخصي، مع التقدّم في التعلّم."
-              : "Two of our learners found something no one has explained yet — an ivory egg with a strange mark. It stirs here, but it only hatches inside your own account, as you learn."}
+              : "Two of our learners found something no one has explained yet: an ivory egg with a strange mark. It stirs here, but it only hatches inside your own account, as you learn."}
           </p>
 
           {/* Tap the egg — outlined, not filled yellow (FinalCTA below already owns the solid-yellow button) */}
@@ -195,7 +195,7 @@ const EggTeaser = () => {
               <p className="text-xs text-ivory/60">
                 {isAr ? "لا يوجد حساب بعد؟ " : "No account yet? "}
                 <Link to={SIGNUP_HREF} className="font-bold text-klovers-yellow underline-offset-4 hover:underline">
-                  {isAr ? "إنشاء حساب مجاني — البيضة في الانتظار" : "Create one free — your egg is waiting"}
+                  {isAr ? "إنشاء حساب مجاني: البيضة في الانتظار" : "Create one free: your egg is waiting"}
                 </Link>
               </p>
             )}

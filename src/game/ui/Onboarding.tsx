@@ -179,7 +179,7 @@ export function ControlsCard({
                 <a href={m.url} target="_blank" rel="noopener noreferrer" className="underline">
                   {m.title}
                 </a>{" "}
-                — {m.author} ·{" "}
+                , {m.author} ·{" "}
                 <a href={LICENSE_URL} target="_blank" rel="noopener noreferrer" className="underline">
                   {m.license}
                 </a>

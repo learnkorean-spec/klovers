@@ -58,7 +58,7 @@ const SITUATIONS: Situation[] = [
     goal: "Say the traditional phrase before eating.",
     options: ["밥 먹어요!", "잘 먹겠습니다.", "맛있겠다!", "빨리 먹어요."],
     correct: "잘 먹겠습니다.",
-    explanation: "잘 먹겠습니다 = 'I will eat well' — said before a meal as thanks to whoever prepared/provided the food. Essential Korean etiquette.",
+    explanation: "잘 먹겠습니다 = 'I will eat well': said before a meal as thanks to whoever prepared/provided the food. Essential Korean etiquette.",
   },
   {
     emoji: "🎓",
@@ -76,7 +76,7 @@ const SITUATIONS: Situation[] = [
     goal: "Say the phrase for entering someone's home as a guest.",
     options: ["안녕하세요!", "실례합니다, 들어가도 돼요?", "들어갈게요.", "왔어요!"],
     correct: "실례합니다, 들어가도 돼요?",
-    explanation: "실례합니다 = 'Excuse me / I'm intruding.' 들어가도 돼요? = 'May I come in?' — polite way to announce your arrival.",
+    explanation: "실례합니다 = 'Excuse me / I'm intruding.' 들어가도 돼요? = 'May I come in?': polite way to announce your arrival.",
   },
   {
     emoji: "🤧",
@@ -85,7 +85,7 @@ const SITUATIONS: Situation[] = [
     goal: "Say the appropriate response in Korean.",
     options: ["왜 재채기해요?", "건강하세요!", "감기 걸렸어요?", "에취!"],
     correct: "건강하세요!",
-    explanation: "건강하세요! = 'Be healthy!' — the Korean equivalent of 'Bless you!' after a sneeze. Literally wishing them good health.",
+    explanation: "건강하세요! = 'Be healthy!': the Korean equivalent of 'Bless you!' after a sneeze. Literally wishing them good health.",
   },
   {
     emoji: "🍺",
@@ -103,7 +103,7 @@ const SITUATIONS: Situation[] = [
     goal: "Ask politely if you can take a photo.",
     options: ["사진 찍어도 돼요?", "사진이에요!", "찍을게요.", "포즈 취해 주세요."],
     correct: "사진 찍어도 돼요?",
-    explanation: "사진 찍어도 돼요? = 'Is it okay to take a photo?' — the polite way to ask for photo permission using -어도 돼요?",
+    explanation: "사진 찍어도 돼요? = 'Is it okay to take a photo?': the polite way to ask for photo permission using -어도 돼요?",
   },
 ];
 

@@ -29,11 +29,11 @@ const LearnEnglishPage = () => {
 
   useSEO({
     title: isAr
-      ? "تعلّم الإنجليزية بشرح بالعربية — مع ريهام الشرقاوي"
-      : "Learn English, explained in Arabic — with Reham Elshrkawy",
+      ? "تعلّم الإنجليزية بشرح بالعربية مع ريهام الشرقاوي"
+      : "Learn English, explained in Arabic, with Reham Elshrkawy",
     description: isAr
-      ? "دروس إنجليزية فردية عبر الإنترنت، بشرح بالعربية، تركّز على المحادثة الحقيقية والثقة في الحديث — للعمل، أو المقابلات، أو السفر، أو التحضير للامتحانات."
-      : "One-on-one online English lessons, explained in Arabic, focused on real conversation and speaking confidence — for work, interviews, travel, or exam preparation.",
+      ? "دروس إنجليزية فردية عبر الإنترنت، بشرح بالعربية، تركّز على المحادثة الحقيقية والثقة في الحديث، للعمل، أو المقابلات، أو السفر، أو التحضير للامتحانات."
+      : "One-on-one online English lessons, explained in Arabic, focused on real conversation and speaking confidence, for work, interviews, travel, or exam preparation.",
     canonical: isAr ? "https://kloversegy.com/ar/learn-english" : "https://kloversegy.com/learn-english",
     alternates: {
       en: "https://kloversegy.com/learn-english",
@@ -51,18 +51,18 @@ const LearnEnglishPage = () => {
         "هل يمكن أن تساعدني هذه الدروس في اجتياز IELTS أو TOEFL أو مقابلة عمل؟",
       ),
       a: tr(
-        "Yes — lessons are built around your actual goal, whether that's an exam section, interview questions, or everyday work English, not a fixed textbook order.",
-        "نعم — تُبنى الدروس حول هدفك الفعلي، سواء كان قسمًا في اختبار، أو أسئلة مقابلة، أو إنجليزية العمل اليومية، لا ترتيب كتاب ثابت.",
+        "Yes, lessons are built around your actual goal, whether that's an exam section, interview questions, or everyday work English, not a fixed textbook order.",
+        "نعم، تُبنى الدروس حول هدفك الفعلي، سواء كان قسمًا في اختبار، أو أسئلة مقابلة، أو إنجليزية العمل اليومية، لا ترتيب كتاب ثابت.",
       ),
     },
     {
       q: tr(
-        "I already study Korean at Klovers — can I add English lessons too?",
-        "أدرس الكورية بالفعل في كلوفرز — هل يمكنني إضافة دروس الإنجليزية أيضًا؟",
+        "I already study Korean at Klovers, can I add English lessons too?",
+        "أدرس الكورية بالفعل في كلوفرز، هل يمكنني إضافة دروس الإنجليزية أيضًا؟",
       ),
       a: tr(
-        "Yes — this is the same teacher's personal 1:1 lessons, separate from your Korean classes. Message us and we'll fit a schedule around both.",
-        "نعم — هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية. راسلنا ونرتّب جدولًا يناسب الاثنين.",
+        "Yes, this is the same teacher's personal 1:1 lessons, separate from your Korean classes. Message us and we'll fit a schedule around both.",
+        "نعم، هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية. راسلنا ونرتّب جدولًا يناسب الاثنين.",
       ),
     },
   ];
@@ -90,8 +90,8 @@ const LearnEnglishPage = () => {
     {
       title: tr("A free 20-minute call", "مكالمة تعارف مجانية مدتها عشرون دقيقة"),
       body: tr(
-        "We talk about why you're learning English and where you're starting from — beginner to advanced, it's fine either way.",
-        "نتحدث عن سبب رغبتك في تعلّم الإنجليزية ومستواك الحالي — من المبتدئ إلى المتقدم، كله مناسب.",
+        "We talk about why you're learning English and where you're starting from: beginner to advanced, it's fine either way.",
+        "نتحدث عن سبب رغبتك في تعلّم الإنجليزية ومستواك الحالي: من المبتدئ إلى المتقدم، كله مناسب.",
       ),
     },
     {
@@ -104,8 +104,8 @@ const LearnEnglishPage = () => {
     {
       title: tr("Built around what you actually need", "مبنية على ما تحتاجه فعلًا"),
       body: tr(
-        "Job interviews, exam sections, or everyday conversation — the lessons follow your actual situation, not a fixed textbook order.",
-        "مقابلات العمل، أو أقسام الاختبار، أو المحادثة اليومية — تتبع الدروس وضعك الفعلي لا ترتيب كتاب ثابت.",
+        "Job interviews, exam sections, or everyday conversation: the lessons follow your actual situation, not a fixed textbook order.",
+        "مقابلات العمل، أو أقسام الاختبار، أو المحادثة اليومية: تتبع الدروس وضعك الفعلي لا ترتيب كتاب ثابت.",
       ),
     },
   ];
@@ -131,8 +131,8 @@ const LearnEnglishPage = () => {
                 </h1>
                 <p className="mt-5 text-lg md:text-xl text-foreground/70 leading-relaxed">
                   {tr(
-                    "I've used English professionally for years — interpreting, international operations, and running an academy that teaches across three languages. I know exactly where Arabic speakers get stuck, because I've watched it happen for years, not guessed at it.",
-                    "استخدمت الإنجليزية مهنيًا لسنوات — في الترجمة، والعمليات الدولية، وإدارة أكاديمية تُدرّس بثلاث لغات. أعرف بالضبط أين يتعثّر متحدثو العربية، لأنني شاهدت ذلك لسنوات، لا لأنني أخمّن.",
+                    "I've used English professionally for years: interpreting, international operations, and running an academy that teaches across three languages. I know exactly where Arabic speakers get stuck, because I've watched it happen for years, not guessed at it.",
+                    "استخدمت الإنجليزية مهنيًا لسنوات: في الترجمة، والعمليات الدولية، وإدارة أكاديمية تُدرّس بثلاث لغات. أعرف بالضبط أين يتعثّر متحدثو العربية، لأنني شاهدت ذلك لسنوات، لا لأنني أخمّن.",
                   )}
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -227,18 +227,18 @@ const LearnEnglishPage = () => {
             </div>
             <div className="order-1 lg:order-2">
               <h2 className="text-3xl font-bold mb-4 text-foreground">
-                {tr("Not a textbook — a guide who's done this", "ليست كتابًا مدرسيًا، بل مرشدة عاشت التجربة")}
+                {tr("Not a textbook: a guide who's done this", "ليست كتابًا مدرسيًا، بل مرشدة عاشت التجربة")}
               </h2>
               <p className="text-foreground/70 leading-relaxed mb-4">
                 {tr(
-                  "Years of Korean-Arabic interpreting and international operations meant English was never optional for me — it was the language a deadline or a document had to be right in. That's the same standard I bring to a lesson.",
-                  "سنوات من الترجمة الكورية-العربية والعمليات الدولية جعلت الإنجليزية ليست خيارًا بالنسبة لي — بل اللغة التي كان يجب أن يكون فيها الموعد النهائي أو المستند دقيقًا. وهذا هو المعيار نفسه الذي أحمله إلى الدرس.",
+                  "Years of Korean-Arabic interpreting and international operations meant English was never optional for me. It was the language a deadline or a document had to be right in. That's the same standard I bring to a lesson.",
+                  "سنوات من الترجمة الكورية-العربية والعمليات الدولية جعلت الإنجليزية ليست خيارًا بالنسبة لي، بل اللغة التي كان يجب أن يكون فيها الموعد النهائي أو المستند دقيقًا. وهذا هو المعيار نفسه الذي أحمله إلى الدرس.",
                 )}
               </p>
               <p className="text-foreground/70 leading-relaxed">
                 {tr(
-                  "I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — English lessons follow the same one-on-one, real-conversation approach.",
-                  "أسست وأدير أيضًا كلوفرز، أكاديمية إلكترونية تُدرّس الكورية لطلاب في أكثر من خمس عشرة دولة منذ عام 2013 — وتتبع دروس الإنجليزية الأسلوب نفسه القائم على الحصص الفردية والمحادثة الحقيقية.",
+                  "I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013, and English lessons follow the same one-on-one, real-conversation approach.",
+                  "أسست وأدير أيضًا كلوفرز، أكاديمية إلكترونية تُدرّس الكورية لطلاب في أكثر من خمس عشرة دولة منذ عام 2013، وتتبع دروس الإنجليزية الأسلوب نفسه القائم على الحصص الفردية والمحادثة الحقيقية.",
                 )}
               </p>
             </div>
@@ -253,8 +253,8 @@ const LearnEnglishPage = () => {
             </h2>
             <p className="text-foreground/70 text-center mb-8">
               {tr(
-                "Pick a time that works for you — or message us directly if nothing matches.",
-                "اختر موعدًا يناسبك — أو راسلنا مباشرة إن لم يناسبك أي موعد.",
+                "Pick a time that works for you, or message us directly if nothing matches.",
+                "اختر موعدًا يناسبك، أو راسلنا مباشرة إن لم يناسبك أي موعد.",
               )}
             </p>
             <PersonalTrialBooking
@@ -262,8 +262,8 @@ const LearnEnglishPage = () => {
               accentColor="#2d6a6a"
               accentHoverColor="#235252"
               whatsappMessage={{
-                en: "Hi! I'd like to book a free trial English lesson but none of the available times work for me — can we find another time?",
-                ar: "مرحبًا، أرغب في حجز حصة إنجليزية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني — هل يمكننا الاتفاق على موعد آخر؟",
+                en: "Hi! I'd like to book a free trial English lesson but none of the available times work for me. Can we find another time?",
+                ar: "مرحبًا، أرغب في حجز حصة إنجليزية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني. هل يمكننا الاتفاق على موعد آخر؟",
               }}
             />
           </div>
@@ -294,8 +294,8 @@ const LearnEnglishPage = () => {
             </h2>
             <p className="text-lg mb-8 text-background/80 max-w-2xl mx-auto">
               {tr(
-                "A job interview, an exam, a move abroad — send a message and we'll start from there.",
-                "مقابلة عمل، أو اختبار، أو سفر — أرسل رسالة ولنبدأ من وضعك فعليًا.",
+                "A job interview, an exam, a move abroad: send a message and we'll start from there.",
+                "مقابلة عمل، أو اختبار، أو سفر: أرسل رسالة ولنبدأ من وضعك فعليًا.",
               )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

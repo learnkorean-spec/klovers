@@ -273,7 +273,7 @@ const CertificatePage = () => {
     ctx.fillStyle = "rgba(255,249,236,0.32)";
     ctx.font = "11px Inter, sans-serif";
     ctx.fillText(
-      "Certifies completion of a Klovers course. It is not a TOPIK result — TOPIK is awarded by NIIED.",
+      "Certifies completion of a Klovers course. It is not a TOPIK result; TOPIK is awarded by NIIED.",
       W / 2,
       782
     );
