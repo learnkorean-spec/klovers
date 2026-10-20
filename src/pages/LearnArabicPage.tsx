@@ -134,7 +134,7 @@ const LearnArabicPage = () => {
       name: tr("Egyptian Arabic", "العامية المصرية"),
       arabicName: "مصري",
       description: tr(
-        "Real spoken Egyptian dialect — how people actually talk, and the dialect most widely understood across the Arab world, thanks to Egyptian film and TV.",
+        "Real spoken Egyptian dialect: how people actually talk, and the dialect most widely understood across the Arab world, thanks to Egyptian film and TV.",
         "العامية المصرية المنطوقة الحقيقية: كيف يتحدث الناس فعليًا، وهي اللهجة الأكثر فهمًا في العالم العربي بفضل السينما والتلفزيون المصري.",
       ),
     },
