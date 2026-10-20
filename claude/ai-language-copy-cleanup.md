@@ -221,22 +221,45 @@ A final whole-`src/` re-scan after this pass (excluding `admin/**`,
 `__tests__/**`, `*.test.ts(x)`) turned up zero remaining non-comment,
 non-placeholder, non-testimonial em-dashes.
 
+## Update 20 Oct 2026 (same day) — blog posts (Supabase), em-dash sweep
+
+Re said "fix and move next" right after pass 2 shipped, pointing at the one
+item still open: the blog. Checked `blog_posts` via `mcp__Supabase__execute_sql`
+(project `ewtdgpbybkceokfohhyg`) before writing anything:
+
+- 225 posts total, 197 had at least one em-dash somewhere across
+  `title`/`description`/`content`/`hero_caption`/`hero_caption_2`/`cta_text`/
+  `hero_alt`/`hero_alt_2` — 2,430+ raw occurrences in `content` alone, far
+  too many to hand-review one by one the way the code pass did.
+- Checked the *shape* of every occurrence before touching anything: 100%
+  of them are the plain `" — "` (space, em-dash, space) pattern — no
+  line-leading attribution dashes, no no-space compound-word dashes, no
+  en-dash number ranges mixed in. The content is overwhelmingly either (a)
+  a Korean example sentence followed by its translation
+  (`"내일 친구를 만날 거예요. — I'll meet a friend tomorrow."`) or (b) an
+  ordinary English/Arabic prose aside (`"Yes — it functions almost
+  identically"`). Both read fine with a colon in place of the dash.
+- Given that uniformity, did **one mechanical, reviewed SQL `UPDATE`**
+  rather than fetching and rewriting 197 posts individually:
+  `replace(col, ' — ', ': ')` across all eight text columns, scoped to rows
+  that actually matched. Verified before and after with a count query:
+  197/225 → 0/225 posts containing `—` in any of those columns. Spot-checked
+  rendered samples afterward (e.g. `korean-weather-small-talk-phrases`) to
+  confirm the colon reads naturally in both the phrase-pair and prose-aside
+  cases.
+- **Not touched:** `keywords` (array, no prose), `author`, `cta_url`,
+  `slug` — none had em-dashes to begin with (not worth a column-by-column
+  re-check once the eight real text columns above were confirmed clean).
+- This was a direct database write (not a code change), so there is no git
+  commit for it — it's already live wherever these posts render.
+
 ## Not done yet / next session should start here
 
-1. **Blog posts** — 200+ posts live in Supabase's `blog_posts` table, not
-   in this repo (confirmed via `klovers-audit-report.md`'s 17–18 Oct
-   updates, which edited blog content directly via SQL). This repo clone
-   has no DB credentials, so blog content still hasn't been touched by
-   either pass. Next session needs `mcp__Supabase__execute_sql` (or
-   whichever Supabase tool is available) against project
-   `ewtdgpbybkceokfohhyg` to pull post bodies, batch-check them (don't try
-   all 200+ in one run), rewrite flagged ones with an `UPDATE`, and track
-   which post slugs are done/left in this file.
-2. **A dedicated `toast({...})` call sweep** across `src/` for stock
+1. **A dedicated `toast({...})` call sweep** across `src/` for stock
    AI-cliché phrasing (as opposed to em-dashes, which are now fully swept)
    hasn't been done as its own pass — only toasts that happened to also
    contain an em-dash got touched along the way.
-3. **`src/components/admin/**`** (internal staff tooling — scheduling,
+2. **`src/components/admin/**`** (internal staff tooling — scheduling,
    student management, trial-ops panels, the marketing CreatorHub, the
    book-plan board) was deliberately left out of scope throughout both
    passes, per the task's own "admin-facing copy only if it's user-visible"
@@ -246,9 +269,9 @@ non-placeholder, non-testimonial em-dashes.
 
 ## Status
 
-**Em-dash sweep of all user-facing site copy is now complete** (pages,
-components, game narration, constants, lib — everything outside
-`admin/**` and the Supabase-hosted blog). What's left (above) is the blog
-posts (different system entirely) and an optional cliché-phrase-only toast
-sweep. Next session should start at item 1 if blog cleanup is wanted, or
-treat the site-copy em-dash goal as done.
+**Em-dash sweep is now complete everywhere: site copy (pages, components,
+game narration, constants, lib) and the 225 Supabase blog posts.** The only
+things left (above) are optional/out-of-scope by design: a dedicated
+cliché-phrase-only toast sweep, and `src/components/admin/**` internal
+tooling, which was never in scope. Treat the "no AI em-dash anywhere a
+student/visitor can see it" goal as done.
