@@ -339,8 +339,10 @@ const LearnArabicPage = () => {
           </div>
         </section>
 
-        {/* Trial booking */}
-        <section className="py-20 border-b">
+        {/* Trial booking — id targeted by mkatub.kloversegy.com's "Book a
+            trial class" CTAs (2026-10-20 linkup), so they deep-link straight
+            to this real booking widget instead of a fake one. */}
+        <section id="trial-booking" className="py-20 border-b scroll-mt-24">
           <div className="container mx-auto px-4 max-w-2xl">
             <h2 className="text-2xl font-semibold mb-2 text-foreground text-center" style={displayFont(isAr)}>
               {tr("Book your free trial lesson", "احجز حصتك التجريبية المجانية")}
