@@ -253,25 +253,52 @@ item still open: the blog. Checked `blog_posts` via `mcp__Supabase__execute_sql`
 - This was a direct database write (not a code change), so there is no git
   commit for it — it's already live wherever these posts render.
 
-## Not done yet / next session should start here
+## Update 20 Oct 2026 (same day) — dedicated toast/cliché-phrase sweep
 
-1. **A dedicated `toast({...})` call sweep** across `src/` for stock
-   AI-cliché phrasing (as opposed to em-dashes, which are now fully swept)
-   hasn't been done as its own pass — only toasts that happened to also
-   contain an em-dash got touched along the way.
-2. **`src/components/admin/**`** (internal staff tooling — scheduling,
+Re said "yes continue" after the blog cleanup, picking up the one item
+still marked optional. Did a dedicated pass over every `toast({...})` call
+in non-admin `src/` (38 files) plus a broad grep across all of `src/`
+(including `admin/`, for awareness) for the stock AI-cliché phrase list
+from the original ask ("dive into", "unlock", "unleash", "seamless",
+"elevate your", "testament to", "navigate the landscape", "tapestry",
+"whether you're X or Y" as filler, "moreover"/"furthermore", "harness the
+power", "delve into", "cutting-edge", "empower you to", "leverage",
+"robust", "plethora", "myriad", "unparalleled", "unprecedented",
+"seamlessly", "game-changing", "holistic", "synergy", etc.) plus a second
+read for the em-dash specifically in case any had crept back in.
+
+**Result: nothing to fix.** Every toast in the non-admin codebase is already
+a short, plain, functional status message ("Could not save your choice",
+"Enter a valid amount", "Thank you: sent") — the opposite of AI-sounding
+copy; there was never any padding or marketing voice in them to begin
+with. The cliché-phrase grep across all of `src/`, admin included, returned
+zero hits anywhere in the codebase. The only two "seamless" hits were dev
+code comments in `TestimonialsSection.tsx` (not rendered), and the one
+"whether you're X or Y" hit (`LearnArabicPage.tsx`, Fusha vs. spoken
+dialect) is answering a real, substantive FAQ distinction, not filler, so
+it was left alone.
+
+This closes out the only item that was still open. No code or data
+changes resulted from this pass — it was a verification pass, not a fix
+pass, and it found the sweep already done.
+
+## Not done yet
+
+1. **`src/components/admin/**`** (internal staff tooling — scheduling,
    student management, trial-ops panels, the marketing CreatorHub, the
-   book-plan board) was deliberately left out of scope throughout both
-   passes, per the task's own "admin-facing copy only if it's user-visible"
+   book-plan board) was deliberately left out of scope throughout every
+   pass, per the task's own "admin-facing copy only if it's user-visible"
    carve-out. If Re ever wants that swept too (e.g. because staff show
    these screens to each other or to a partner), it's a large, separate
-   job — flag before starting it.
+   job — flag before starting it. (The broad grep above found zero
+   cliché-phrase hits there either, for what it's worth, but it was never
+   reviewed em-dash-by-em-dash the way user-facing copy was.)
 
 ## Status
 
-**Em-dash sweep is now complete everywhere: site copy (pages, components,
-game narration, constants, lib) and the 225 Supabase blog posts.** The only
-things left (above) are optional/out-of-scope by design: a dedicated
-cliché-phrase-only toast sweep, and `src/components/admin/**` internal
-tooling, which was never in scope. Treat the "no AI em-dash anywhere a
-student/visitor can see it" goal as done.
+**Done.** Em-dashes and stock AI-cliché phrasing are both fully swept from
+every piece of user-facing site copy: pages, components, game narration,
+constants, lib, toasts, and the 225 Supabase blog posts. The only thing
+left out of scope by design is `src/components/admin/**` internal tooling.
+Nothing further is pending from the original "remove anything that sounds
+like AI" request.
