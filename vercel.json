@@ -45,6 +45,16 @@
       "permanent": true
     },
     {
+      "source": "/learn-arabic",
+      "destination": "https://mkatub.vercel.app",
+      "permanent": false
+    },
+    {
+      "source": "/ar/learn-arabic",
+      "destination": "https://mkatub.vercel.app",
+      "permanent": false
+    },
+    {
       "source": "/en",
       "destination": "/?lang=en",
       "permanent": true
