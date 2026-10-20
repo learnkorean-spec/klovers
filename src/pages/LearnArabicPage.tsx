@@ -201,8 +201,8 @@ const LearnArabicPage = () => {
           <img
             src={cairoRooftop}
             alt={tr(
-              "A Cairo rooftop terrace at sunset, with minarets on the skyline",
-              "شرفة على سطح في القاهرة عند الغروب، والمآذن تلوح في الأفق",
+              "Friends talking over tea on a Cairo rooftop terrace at sunset, pyramids and minarets on the skyline",
+              "أصدقاء يتحدثون على شرفة في القاهرة عند الغروب، والأهرامات والمآذن تلوح في الأفق",
             )}
             className="absolute inset-0 h-full w-full object-cover object-[center_25%]"
           />
@@ -218,6 +218,15 @@ const LearnArabicPage = () => {
           />
           <div className="container relative mx-auto px-4 py-24 sm:py-32 max-w-5xl">
             <div className="max-w-2xl">
+              <a
+                href="https://mkatub.kloversegy.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold transition hover:bg-white/10"
+                style={{ borderColor: KLOVERS_GREEN, color: KLOVERS_GREEN }}
+              >
+                {tr("Part of mkatub: see the full site", "جزء من مكتوب: شاهد الموقع الكامل")}
+              </a>
               <p className="text-lg" style={{ fontFamily: "Cairo, system-ui, sans-serif", color: KLOVERS_GREEN }} dir="rtl" lang="ar">
                 اهلا بيك في كلوفرز
               </p>
