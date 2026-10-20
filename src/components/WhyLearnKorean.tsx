@@ -86,14 +86,12 @@ const COPY = {
     bandTitle: "رحلة تعلّم الكورية تبدأ اليوم",
     bandSub: "اختيار المستوى، واكتشاف الطريق مع كلوفرز",
     bandCta: "البدء الآن",
-    more: "قراءة المقال",
   },
   en: {
     eyebrow: "A new language → a wider world",
     bandTitle: "Start your Korean journey today",
     bandSub: "Find your level, and your path, with Klovers",
     bandCta: "Start now",
-    more: "Read the article",
   },
 };
 
@@ -144,7 +142,6 @@ const WhyLearnKorean = () => {
               <Link
                 key={index}
                 to={card.href[lang]}
-                aria-label={`${item.title} ${item.description} — ${copy.more}`}
                 className="group block rounded-2xl sm:rounded-3xl border border-ivory/10 bg-ivory/[0.06] p-2 sm:p-3 transition-colors duration-300 hover:border-klovers-yellow/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
               >
                 <div className="relative">
