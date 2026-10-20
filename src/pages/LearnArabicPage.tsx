@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Globe } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
@@ -63,8 +61,129 @@ const KLOVERS_GREEN_DEEP = "#1FB800";
 const headingFont = { fontFamily: "Poppins, system-ui, sans-serif" };
 const arabicFont = (isAr: boolean) => (isAr ? { fontFamily: "Cairo, system-ui, sans-serif" } : {});
 
+type TrFn = (en: string, ar: string) => string;
+
+/**
+ * This page gets its own header/footer instead of the sitewide
+ * <Header />/<Footer /> (Re, 21 Oct 2026, explicit: "if i am in maktub
+ * header and footer maktub has to be shown"). The sitewide Header's nav
+ * (Courses/Pricing/Textbook/Games/Shop, login/dashboard, KLOVERS World)
+ * is about the Korean platform and was confusing here — a visitor
+ * clicking "Pricing" landed on Korean-course pricing, not Arabic lesson
+ * info. Trade-off accepted explicitly: a logged-in Klovers student can no
+ * longer jump to their dashboard/World from this page specifically; every
+ * other klovers page still uses the real Header/Footer unchanged.
+ */
+const MkatubLogoMark = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" className={className} role="img" aria-label="mkatub">
+    <rect width="48" height="48" rx="14" fill={KLOVERS_GREEN} />
+    <path
+      d="M12 34V18.6h3.9l.3 2.4c.7-.9 1.5-1.6 2.5-2.1a7 7 0 0 1 3.2-.7c1.5 0 2.8.3 3.7 1 1 .6 1.7 1.5 2.1 2.7.7-1.1 1.6-2 2.7-2.6a7.6 7.6 0 0 1 3.7-1c2 0 3.6.6 4.7 1.8 1.1 1.2 1.7 3 1.7 5.4V34h-4.3v-8c0-1.4-.3-2.5-.8-3.2-.5-.7-1.4-1.1-2.5-1.1-1.3 0-2.3.5-3 1.4-.7.9-1.1 2.2-1.1 3.8V34h-4.3v-8c0-1.4-.3-2.5-.8-3.2-.5-.7-1.3-1.1-2.5-1.1-1.3 0-2.3.5-3 1.4-.7.9-1.1 2.2-1.1 3.8V34H12Z"
+      fill={FOREST_DEEP}
+    />
+    <circle cx="37" cy="12.5" r="3.5" fill={FOREST_DEEP} />
+    <circle cx="38.1" cy="11.3" r="1" fill="#FFF9EC" />
+  </svg>
+);
+
+const MkatubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; toggleLanguage: () => void }) => {
+  const navLinks = [
+    { href: "#dialects", label: tr("Dialects", "اللهجات") },
+    { href: "#meet-tutor", label: tr("Tutor", "المعلمة") },
+    { href: "#faq", label: tr("FAQ", "الأسئلة الشائعة") },
+  ];
+  return (
+    <header className="sticky top-0 z-40 border-b border-foreground/10 bg-background/90 backdrop-blur">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-3 focus:z-50 focus:rounded-full focus:px-4 focus:py-2 focus:text-sm focus:font-semibold"
+        style={{ backgroundColor: KLOVERS_GREEN, color: "#1A1A1A" }}
+      >
+        {tr("Skip to content", "الانتقال إلى المحتوى")}
+      </a>
+      <div className="container mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+        <a href="#top" className="inline-flex items-center gap-2" aria-label={tr("mkatub home", "الصفحة الرئيسية لـ mkatub")}>
+          <MkatubLogoMark className="h-8 w-8 shrink-0" />
+          <span className="text-xl font-extrabold tracking-tight text-foreground" style={headingFont}>
+            mkatub
+          </span>
+        </a>
+        <nav className="hidden items-center gap-6 md:flex" aria-label={tr("Primary", "رئيسي")}>
+          {navLinks.map((link) => (
+            <a key={link.href} href={link.href} className="text-sm font-medium text-foreground/75 hover:text-foreground">
+              {link.label}
+            </a>
+          ))}
+        </nav>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-1.5 text-xs">
+            <Globe className="h-3.5 w-3.5" />
+            {tr("العربية", "English")}
+          </Button>
+          <Button
+            size="sm"
+            asChild
+            className="hidden rounded-full font-semibold hover:brightness-95 sm:inline-flex"
+            style={{ backgroundColor: KLOVERS_GREEN, color: "#1A1A1A" }}
+          >
+            <a href="#trial-booking">{tr("Book a trial class", "احجز حصة تجريبية")}</a>
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+const MkatubFooter = ({ tr }: { isAr: boolean; tr: TrFn }) => (
+  <footer className="border-t border-white/10 text-white" style={{ backgroundColor: FOREST }}>
+    <div className="container mx-auto max-w-5xl px-4 py-12">
+      <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+        <div>
+          <div className="inline-flex items-center gap-2">
+            <MkatubLogoMark className="h-8 w-8 shrink-0" />
+            <span className="text-xl font-extrabold tracking-tight" style={headingFont}>
+              mkatub
+            </span>
+          </div>
+          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em]">
+            <span className="text-white/80">{tr("Arabi ", "عربي ")}</span>
+            <span style={{ color: KLOVERS_GREEN }}>{tr("made simple.", "ببساطة.")}</span>
+          </p>
+          <p className="mt-4 max-w-sm text-sm text-white/70">
+            {tr(
+              "Live online Arabic classes with a native-speaking tutor: Modern Standard Arabic and real spoken Egyptian dialect, explained in English.",
+              "دروس عربية فردية عبر الإنترنت مع معلمة أصلية: الفصحى والعامية المصرية المنطوقة، بشرح بالإنجليزية.",
+            )}
+          </p>
+        </div>
+        <nav className="flex gap-10 text-sm" aria-label={tr("Footer", "تذييل")}>
+          <div className="flex flex-col gap-2">
+            <span className="font-semibold text-white/90">{tr("Learn", "تعلّم")}</span>
+            <a href="#dialects" className="text-white/70 hover:text-white">{tr("Dialects", "اللهجات")}</a>
+            <a href="#meet-tutor" className="text-white/70 hover:text-white">{tr("Tutor", "المعلمة")}</a>
+            <a href="#faq" className="text-white/70 hover:text-white">{tr("FAQ", "الأسئلة الشائعة")}</a>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="font-semibold text-white/90">{tr("More", "المزيد")}</span>
+            <a href="#trial-booking" className="text-white/70 hover:text-white">{tr("Book a trial class", "احجز حصة تجريبية")}</a>
+            <a href="https://mkatub.kloversegy.com/articles" target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white">
+              {tr("Articles", "مقالات")}
+            </a>
+            <a href="https://mkatub.kloversegy.com" target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white">
+              {tr("Full mkatub site", "موقع mkatub الكامل")}
+            </a>
+          </div>
+        </nav>
+      </div>
+      <p className="mt-10 border-t border-white/10 pt-6 text-xs text-white/50">
+        © 2026 mkatub. {tr("Arabi made simple.", "عربي ببساطة.")}
+      </p>
+    </div>
+  </footer>
+);
+
 const LearnArabicPage = () => {
-  const { language } = useLanguage();
+  const { language, toggleLanguage } = useLanguage();
   const isAr = language === "ar";
   const tr = (en: string, ar: string) => (isAr ? ar : en);
 
@@ -193,7 +312,7 @@ const LearnArabicPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <MkatubHeader isAr={isAr} tr={tr} toggleLanguage={toggleLanguage} />
       <main id="main-content">
         {/* Hero — mkatub's shape: dark forest panel, real Cairo rooftop
             photo, lime/klovers-green accent, pill CTAs. */}
@@ -272,7 +391,7 @@ const LearnArabicPage = () => {
         </section>
 
         {/* Pick a dialect — mkatub's card grid, replacing v1's parchment split. */}
-        <section className="py-20 border-b">
+        <section id="dialects" className="py-20 border-b scroll-mt-24">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground" style={headingFont}>
               {tr("Pick your Arabic", "اختر عربيّتك")}
@@ -355,7 +474,7 @@ const LearnArabicPage = () => {
         </section>
 
         {/* Meet your tutor — dark forest panel, mkatub's MeetTutor shape. */}
-        <section className="py-20 border-b text-white" style={{ backgroundColor: FOREST }}>
+        <section id="meet-tutor" className="py-20 border-b text-white scroll-mt-24" style={{ backgroundColor: FOREST }}>
           <div className="container mx-auto px-4 max-w-5xl grid gap-10 md:grid-cols-[14rem_1fr] md:items-center">
             <div
               className="relative mx-auto h-56 w-56 shrink-0 overflow-hidden rounded-full border-4 md:mx-0"
@@ -431,7 +550,7 @@ const LearnArabicPage = () => {
         </section>
 
         {/* Common questions */}
-        <section className="py-20 border-b" style={{ backgroundColor: SAND }}>
+        <section id="faq" className="py-20 border-b scroll-mt-24" style={{ backgroundColor: SAND }}>
           <div className="container mx-auto px-4 max-w-2xl">
             <h2 className="text-2xl font-bold text-[#1A1A1A]" style={headingFont}>
               {tr("Common questions", "أسئلة شائعة")}
@@ -484,7 +603,7 @@ const LearnArabicPage = () => {
           </div>
         </section>
       </main>
-      <Footer />
+      <MkatubFooter isAr={isAr} tr={tr} />
     </div>
   );
 };
