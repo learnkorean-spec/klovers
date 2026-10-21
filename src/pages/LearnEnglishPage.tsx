@@ -1,26 +1,77 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, MessageCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
+import rehamPhoto from "@/assets/reham-teacher.jpg";
 
 /**
  * /learn-english and /ar/learn-english
  *
  * Added 19 Oct 2026, alongside /learn-hungarian — Reham also teaches English
  * one-on-one (as well as Hungarian and Arabic-for-foreigners) outside the
- * Korean courses Klovers is built around. Built the same way as the
- * Hungarian page: same domain, same Header/Footer, its own quiet palette —
- * a visitor here isn't looking for the Korean product, and no claim to
- * credentials (TEFL/CELTA etc.) that haven't actually been confirmed.
+ * Korean courses Klovers is built around.
+ *
+ * Redesigned 22 Oct 2026 (Re: "create the english page... must be
+ * impressive, out of the box" — the same ask that produced the bespoke
+ * Arabic-page redesign on 20 Oct 2026). Re also referenced "the same idea
+ * like maktub"; maktub is a separate, purpose-built Arabic-teaching site
+ * whose own branding (forest green / klovers-green) the Arabic page now
+ * deliberately matches, because the two are literal siblings — maktub's
+ * trial-booking CTAs link straight into klovers' /learn-arabic page. There
+ * is no English-teaching equivalent of maktub, so matching its colors here
+ * would be decoration with no referent. Confirmed with Re (22 Oct 2026):
+ * what she wants carried over is the IDEA — a bespoke, one-off visual
+ * identity per personal-lesson page, not a shared template — applied to
+ * English with its own identity, same URL, same structure otherwise.
+ *
+ * This page's identity: English, for an Arabic-speaking learner, is above
+ * all the language of *going somewhere* — a job, an exam score, a flight,
+ * a conversation you can finally have. The one deliberate visual device
+ * (used exactly twice: framing the hero photo, and on the trial-booking
+ * card) is a thin two-colour rule lifted from classic airmail stationery —
+ * literally the paper that carried a language across a border — rather
+ * than a stock globe/plane cliché. Ink navy + warm paper + a single signal
+ * red keep everything else quiet around that one idea. Display type is
+ * Fraunces, already loaded sitewide for the v1 Arabic redesign and unused
+ * anywhere live since the Arabic page moved to Poppins/Cairo in v2 — no new
+ * font request.
+ *
+ * Keeps the sitewide Header/Footer (unlike /learn-arabic): there is no
+ * sibling brand here for a bespoke header to match, and Re's "subpage"
+ * question resolved to "keep the URL and structure as they are."
+ *
+ * All copy that states a fact — the SEO title/description, the FAQ
+ * question/answer pairs, the audience list, and the three lesson steps —
+ * is unchanged from the previous version, word for word, and the static
+ * prerendered HTML in scripts/lib/marketing-bodies.mjs is untouched. Only
+ * the hero tagline/badge and section framing (copy whose only job is to
+ * introduce the sections below it) were rewritten for this pass.
  *
  * Shares PersonalTrialBooking + book-personal-trial + personal_trial_slots
- * with the Hungarian page — one calendar, one teacher, parameterized by
- * language — per the scope agreed when that system was built.
+ * with the Hungarian and Arabic pages — one calendar, one teacher,
+ * parameterized by language — per the scope agreed when that system was
+ * built.
  */
+
+const INK = "#152A4A";
+const PAPER = "#F7F1E4";
+const SIGNAL = "#B9372B";
+const SIGNAL_DEEP = "#9A2C22";
+const WING = "#2F5D8A";
+
+const displayFont = { fontFamily: "'Fraunces', serif" };
+
+/** The one recurring device: a thin red-over-blue rule, used exactly twice. */
+const AirmailRule = () => (
+  <div aria-hidden="true">
+    <div style={{ height: 4, backgroundColor: SIGNAL }} />
+    <div style={{ height: 4, backgroundColor: WING }} />
+  </div>
+);
 
 const LearnEnglishPage = () => {
   const { language } = useLanguage();
@@ -40,7 +91,7 @@ const LearnEnglishPage = () => {
       ar: "https://kloversegy.com/ar/learn-english",
     },
     // Own hero image for link previews (19 Oct 2026, SEO/GEO pass) — not the
-    // site-wide Seoul skyline default.
+    // site-wide Seoul skyline default. Unchanged by this redesign.
     ogImage: "https://images.unsplash.com/photo-1758525225676-329ddcedf78f?fm=jpg&q=80&w=1200&auto=format&fit=crop",
   });
 
@@ -114,107 +165,133 @@ const LearnEnglishPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main id="main-content">
-        {/* Hero */}
-        <section className="pt-24 pb-16 bg-[#f2f7f7] dark:bg-muted/20">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="grid items-center gap-10 lg:grid-cols-2">
+        {/* Hero — ink navy ground, the airmail rule framing the one photo. */}
+        <section className="relative overflow-hidden text-white" style={{ backgroundColor: INK }}>
+          <div className="container relative mx-auto px-4 py-20 sm:py-28 max-w-6xl">
+            <div className="grid items-center gap-14 lg:grid-cols-2">
               <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#2d6a6a]/30 bg-[#2d6a6a]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[#2d6a6a]">
-                  <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                  {tr("English lessons · real conversation, not just grammar", "دروس إنجليزية · محادثة حقيقية لا قواعد فقط")}
+                <span
+                  className="inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-medium"
+                  style={{ borderColor: `${SIGNAL}99`, color: "#F0D9C6" }}
+                >
+                  {tr("Real conversation, not just grammar", "محادثة حقيقية لا قواعد فقط")}
                 </span>
-                <h1 className="mt-5 text-4xl md:text-5xl font-bold text-foreground leading-tight">
-                  {tr(
-                    "Learn English, explained in Arabic",
-                    "تعلّم الإنجليزية بشرح بالعربية",
-                  )}
+                <h1 className="mt-5 text-4xl sm:text-5xl font-semibold leading-[1.1]" style={displayFont}>
+                  {tr("Say it in English.", "قل ما تريد بالإنجليزية.")}
+                  <br />
+                  <span className="italic font-normal" style={{ color: "#F0D9C6" }}>
+                    {tr("Be understood, wherever it takes you.", "ولتُفهم، أينما يأخذك ذلك.")}
+                  </span>
                 </h1>
-                <p className="mt-5 text-lg md:text-xl text-foreground/70 leading-relaxed">
+                <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80">
                   {tr(
                     "I've used English professionally for years: interpreting, international operations, and running an academy that teaches across three languages. I know exactly where Arabic speakers get stuck, because I've watched it happen for years, not guessed at it.",
                     "استخدمت الإنجليزية مهنيًا لسنوات: في الترجمة، والعمليات الدولية، وإدارة أكاديمية تُدرّس بثلاث لغات. أعرف بالضبط أين يتعثّر متحدثو العربية، لأنني شاهدت ذلك لسنوات، لا لأنني أخمّن.",
                   )}
                 </p>
-                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <div className="mt-9 flex flex-wrap gap-4">
                   <Button
                     size="lg"
                     asChild
-                    className="rounded-full font-bold bg-[#2d6a6a] hover:bg-[#235252] text-white"
+                    className="rounded-full font-semibold text-white hover:brightness-95"
+                    style={{ backgroundColor: SIGNAL }}
                   >
                     <Link to="/contact?subject=English+lessons">
                       {tr("Message me about lessons", "راسلني بخصوص الدروس")}
                       <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                     </Link>
                   </Button>
-                  <Button size="lg" variant="outline" asChild className="rounded-full">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    asChild
+                    className="rounded-full font-semibold border-white/70 text-white hover:bg-white/10 bg-transparent"
+                  >
                     <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">
                       {tr("Read my story", "اقرأ قصتي")}
                     </Link>
                   </Button>
                 </div>
               </div>
-              <div className="overflow-hidden rounded-3xl border border-border shadow-xl bg-muted">
-                <img
-                  src="https://images.unsplash.com/photo-1758525225676-329ddcedf78f?fm=jpg&q=80&w=1600&auto=format&fit=crop"
-                  width={1600}
-                  height={900}
-                  alt={
-                    isAr
-                      ? "شخصان يتحدثان الإنجليزية في جلسة محادثة"
-                      : "Two people in an English conversation practice session"
-                  }
-                  className="h-full w-full object-cover aspect-video"
-                  loading="eager"
-                  decoding="async"
-                />
+
+              <div className="relative mx-auto max-w-sm lg:max-w-none">
+                <div className="overflow-hidden rounded-2xl shadow-2xl">
+                  <AirmailRule />
+                  <div className="overflow-hidden border-4 border-white/95 bg-muted">
+                    <img
+                      src="https://images.unsplash.com/photo-1758525225676-329ddcedf78f?fm=jpg&q=80&w=1600&auto=format&fit=crop"
+                      width={1600}
+                      height={900}
+                      alt={
+                        isAr
+                          ? "شخصان يتحدثان الإنجليزية في جلسة محادثة"
+                          : "Two people in an English conversation practice session"
+                      }
+                      className="h-full w-full object-cover aspect-[4/3]"
+                      loading="eager"
+                      decoding="async"
+                    />
+                  </div>
+                </div>
+                <span
+                  className="absolute -bottom-5 start-6 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold shadow-lg"
+                  style={{ color: INK }}
+                >
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: SIGNAL }} aria-hidden="true" />
+                  {tr("Lessons over video call", "الحصص عبر مكالمة فيديو")}
+                </span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Who this is for */}
-        <section className="py-16 border-b">
+        {/* Who this is for — stub-style rows, not another checklist card. */}
+        <section className="py-20 border-b" style={{ backgroundColor: PAPER }}>
           <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-8 text-foreground">
+            <h2 className="text-2xl sm:text-3xl font-semibold" style={{ ...displayFont, color: INK }}>
               {tr("Who these lessons are for", "لمن هذه الدروس")}
             </h2>
-            <ul className="space-y-3">
-              {audience.map((line) => (
-                <li key={line} className="flex items-start gap-3 text-foreground">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#2d6a6a]" aria-hidden="true" />
-                  <span className="leading-relaxed">{line}</span>
+            <ul className="mt-9 grid gap-6 sm:grid-cols-2">
+              {audience.map((line, i) => (
+                <li
+                  key={line}
+                  className="border-s-4 ps-4 leading-relaxed"
+                  style={{ borderColor: i % 2 === 0 ? SIGNAL : WING, color: `${INK}cc` }}
+                >
+                  {line}
                 </li>
               ))}
             </ul>
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="py-16 border-b bg-muted/30">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="text-3xl font-bold mb-8 text-foreground">
+        {/* How lessons work — a real sequence, numbered. */}
+        <section className="py-20 border-b">
+          <div className="container mx-auto px-4 max-w-5xl">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
               {tr("How lessons work", "كيف تسير الدروس")}
             </h2>
-            <ol className="space-y-4">
+            <ol className="mt-10 grid gap-10 sm:grid-cols-3">
               {steps.map((s, i) => (
-                <li key={s.title} className="p-6 rounded-2xl border bg-card flex items-start gap-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2d6a6a] font-bold text-white">
-                    {i + 1}
+                <li key={s.title}>
+                  <span
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold text-white"
+                    style={{ backgroundColor: i === 1 ? WING : SIGNAL, ...displayFont }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                  <div>
-                    <h3 className="font-bold text-lg text-foreground">{s.title}</h3>
-                    <p className="mt-1 text-foreground/70 leading-relaxed">{s.body}</p>
-                  </div>
+                  <h3 className="mt-4 text-lg font-bold text-foreground">{s.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-foreground/70">{s.body}</p>
                 </li>
               ))}
             </ol>
           </div>
         </section>
 
-        {/* Second image + credibility */}
-        <section className="py-16 border-b">
-          <div className="container mx-auto px-4 max-w-6xl grid items-center gap-10 lg:grid-cols-2">
-            <div className="overflow-hidden rounded-3xl border border-border shadow-lg bg-muted order-2 lg:order-1">
+        {/* Not a textbook — second photo, kept as-is but reframed. */}
+        <section className="py-20 border-b">
+          <div className="container mx-auto px-4 max-w-6xl grid items-center gap-12 lg:grid-cols-2">
+            <div className="overflow-hidden rounded-2xl border border-border shadow-lg bg-muted order-2 lg:order-1">
               <img
                 src="https://images.unsplash.com/photo-1508169351866-777fc0047ac5?fm=jpg&q=80&w=1600&auto=format&fit=crop"
                 width={1600}
@@ -226,7 +303,7 @@ const LearnEnglishPage = () => {
               />
             </div>
             <div className="order-1 lg:order-2">
-              <h2 className="text-3xl font-bold mb-4 text-foreground">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-4" style={displayFont}>
                 {tr("Not a textbook: a guide who's done this", "ليست كتابًا مدرسيًا، بل مرشدة عاشت التجربة")}
               </h2>
               <p className="text-foreground/70 leading-relaxed mb-4">
@@ -245,39 +322,75 @@ const LearnEnglishPage = () => {
           </div>
         </section>
 
-        {/* Trial booking */}
-        <section className="py-16 border-b bg-muted/30">
+        {/* Meet Reham — ink panel, same figure as the hero's palette. */}
+        <section className="py-20 border-b text-white" style={{ backgroundColor: INK }}>
+          <div className="container mx-auto px-4 max-w-5xl grid gap-10 md:grid-cols-[12rem_1fr] md:items-center">
+            <div
+              className="relative mx-auto h-44 w-44 shrink-0 overflow-hidden rounded-full border-4 md:mx-0"
+              style={{ borderColor: `${WING}cc` }}
+            >
+              <img
+                src={rehamPhoto}
+                alt={tr("Reham Elshrkawy", "ريهام الشرقاوي")}
+                className="h-full w-full object-cover"
+                loading="eager"
+                decoding="async"
+              />
+            </div>
+            <div>
+              <p className="text-lg italic leading-snug" style={{ ...displayFont, color: "#F0D9C6" }}>
+                {tr(
+                  "“English was never optional for me, it was the language a deadline or a document had to be right in.”",
+                  "«الإنجليزية لم تكن أبدًا خيارًا بالنسبة لي، بل اللغة التي كان يجب أن يكون فيها الموعد النهائي أو المستند دقيقًا.»",
+                )}
+              </p>
+              <p className="mt-5 text-sm font-semibold text-white/70">
+                {tr("Reham Elshrkawy — Founder, Klovers", "ريهام الشرقاوي — مؤسسة كلوفرز")}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Trial booking — the second and last use of the airmail rule. */}
+        <section className="py-20 border-b" style={{ backgroundColor: PAPER }}>
           <div className="container mx-auto px-4 max-w-2xl">
-            <h2 className="text-3xl font-bold mb-2 text-foreground text-center">
-              {tr("Book your free trial lesson", "احجز حصتك التجريبية المجانية")}
-            </h2>
-            <p className="text-foreground/70 text-center mb-8">
-              {tr(
-                "Pick a time that works for you, or message us directly if nothing matches.",
-                "اختر موعدًا يناسبك، أو راسلنا مباشرة إن لم يناسبك أي موعد.",
-              )}
-            </p>
-            <PersonalTrialBooking
-              language="english"
-              accentColor="#2d6a6a"
-              accentHoverColor="#235252"
-              whatsappMessage={{
-                en: "Hi! I'd like to book a free trial English lesson but none of the available times work for me. Can we find another time?",
-                ar: "مرحبًا، أرغب في حجز حصة إنجليزية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني. هل يمكننا الاتفاق على موعد آخر؟",
-              }}
-            />
+            <div className="overflow-hidden rounded-t-2xl">
+              <AirmailRule />
+              <div className="bg-background px-6 pt-10 pb-2 sm:px-10">
+                <h2 className="text-2xl sm:text-3xl font-semibold text-center" style={{ ...displayFont, color: INK }}>
+                  {tr("Book your free trial lesson", "احجز حصتك التجريبية المجانية")}
+                </h2>
+                <p className="text-foreground/70 text-center mt-2">
+                  {tr(
+                    "Pick a time that works for you, or message us directly if nothing matches.",
+                    "اختر موعدًا يناسبك، أو راسلنا مباشرة إن لم يناسبك أي موعد.",
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="rounded-b-xl bg-background px-6 pb-10 sm:px-10">
+              <PersonalTrialBooking
+                language="english"
+                accentColor={SIGNAL}
+                accentHoverColor={SIGNAL_DEEP}
+                whatsappMessage={{
+                  en: "Hi! I'd like to book a free trial English lesson but none of the available times work for me. Can we find another time?",
+                  ar: "مرحبًا، أرغب في حجز حصة إنجليزية تجريبية مجانية لكن المواعيد المتاحة لا تناسبني. هل يمكننا الاتفاق على موعد آخر؟",
+                }}
+              />
+            </div>
           </div>
         </section>
 
         {/* Common questions — visible text backing the FAQPage schema above */}
-        <section className="py-16 border-b">
+        <section className="py-20 border-b">
           <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-3xl font-bold mb-8 text-foreground">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
               {tr("Common questions", "أسئلة شائعة")}
             </h2>
-            <div className="space-y-6">
+            <div className="mt-9 divide-y divide-border">
               {faq.map(({ q, a }) => (
-                <div key={q}>
+                <div key={q} className="py-6 first:pt-0">
                   <h3 className="font-bold text-lg text-foreground">{q}</h3>
                   <p className="mt-1 text-foreground/70 leading-relaxed">{a}</p>
                 </div>
@@ -287,24 +400,34 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* CTA */}
-        <section className="py-20 bg-foreground text-background">
-          <div className="container mx-auto px-4 max-w-4xl text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              {tr("Tell me what you're working toward", "أخبرني بما تسعى إليه")}
+        <section className="py-24 text-white" style={{ backgroundColor: INK }}>
+          <div className="container mx-auto px-4 max-w-2xl text-center">
+            <h2 className="text-3xl md:text-4xl font-semibold" style={displayFont}>
+              {tr("Tell me what you're working toward.", "أخبرني بما تسعى إليه.")}
             </h2>
-            <p className="text-lg mb-8 text-background/80 max-w-2xl mx-auto">
+            <p className="mt-5 text-lg text-white/75 max-w-xl mx-auto">
               {tr(
                 "A job interview, an exam, a move abroad: send a message and we'll start from there.",
                 "مقابلة عمل، أو اختبار، أو سفر: أرسل رسالة ولنبدأ من وضعك فعليًا.",
               )}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-[#2d6a6a] hover:bg-[#235252] text-white rounded-full font-bold" asChild>
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+              <Button
+                size="lg"
+                asChild
+                className="rounded-full font-semibold text-white hover:brightness-95"
+                style={{ backgroundColor: SIGNAL }}
+              >
                 <Link to="/contact?subject=English+lessons" className="flex items-center gap-2">
                   {tr("Message me about lessons", "راسلني بخصوص الدروس")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="bg-transparent text-background border-background hover:bg-background/10 hover:text-background rounded-full" asChild>
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="rounded-full font-semibold border-white/70 text-white hover:bg-white/10 bg-transparent"
+              >
                 <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">{tr("Read my story", "اقرأ قصتي")}</Link>
               </Button>
             </div>
