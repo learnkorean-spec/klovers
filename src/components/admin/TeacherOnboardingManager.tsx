@@ -16,6 +16,7 @@
 import { useMemo, useState } from "react";
 import {
   GraduationCap, Plus, Trash2, Pencil, Loader2, UserPlus, AlertCircle, Mail, Phone,
+  ClipboardList, Check, X as XIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { LEVELS, getLevelShortLabel } from "@/constants/levels";
@@ -50,6 +52,10 @@ import {
   type CourseProgressStatus, type OnboardingProgress, type OnboardingStep,
   type TeacherStatus, type TeacherWithOnboarding,
 } from "@/types/teacherOnboarding";
+import {
+  useLinkApplicationToTeacher, useTeacherApplications, useUpdateApplicationStatus,
+  type TeacherApplication,
+} from "@/hooks/admin/useTeacherApplications";
 
 /** A friendlier message for the Postgres errors this screen can actually hit. */
 function friendlyError(e: any): string {
@@ -96,6 +102,13 @@ const COURSE_STATUS_BADGE: Record<CourseProgressStatus, string> = {
 };
 
 const EMPTY_DRAFT: TeacherInput = { full_name: "", email: "", phone: "", status: "onboarding", notes: "" };
+
+const APPLICATION_STATUS_BADGE: Record<TeacherApplication["status"], string> = {
+  new: "bg-amber-100 text-amber-800 border-amber-300",
+  reviewing: "bg-sky-100 text-sky-800 border-sky-300",
+  accepted: "bg-green-100 text-green-800 border-green-300",
+  rejected: "bg-red-100 text-red-700 border-red-300",
+};
 
 /** `LEVELS` order (hangul, l1..l6) applied to a set of course keys. */
 function sortByLevelOrder(keys: string[]): string[] {
@@ -214,6 +227,17 @@ export default function TeacherOnboardingManager() {
   const updateCourseStatus = useUpdateCourseStatus();
   const toggleStep = useToggleStep();
 
+  // Public "Teach with Klovers" applications (src/pages/TeachWithUsPage.tsx)
+  // — a separate intake from the roster above. `error` here is handled the
+  // same way as the roster's: a missing-relation error (migration not
+  // applied yet) degrades to an empty list with its own explanatory card,
+  // never a crash.
+  const { data: applications = [], isLoading: applicationsLoading, error: applicationsError } = useTeacherApplications();
+  const updateApplicationStatus = useUpdateApplicationStatus();
+  const linkApplicationToTeacher = useLinkApplicationToTeacher();
+  const pendingApplicationCount = applications.filter((a) => a.status === "new").length;
+
+  const [activeTab, setActiveTab] = useState<"roster" | "applications">("roster");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | TeacherStatus>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -223,6 +247,8 @@ export default function TeacherOnboardingManager() {
   const [addCourseKey, setAddCourseKey] = useState<string>("");
   /** `teacherId:courseLevelKey` awaiting a second click before it actually removes. */
   const [confirmRemoveKey, setConfirmRemoveKey] = useState<string | null>(null);
+  /** Set while the "Add teacher" dialog is open as an Accept action — prefills the draft from the application and, on save, links the two rows. */
+  const [acceptSource, setAcceptSource] = useState<TeacherApplication | null>(null);
 
   const generalSteps = useMemo(() => steps.filter((s) => s.scope === "general"), [steps]);
   const perCourseSteps = useMemo(() => steps.filter((s) => s.scope === "per_course"), [steps]);
@@ -247,11 +273,37 @@ export default function TeacherOnboardingManager() {
   async function handleCreate(input: TeacherInput, courseKeys: string[]) {
     try {
       const res = await createTeacher.mutateAsync({ input, courseKeys });
-      toast({ title: "Teacher added", description: `${input.full_name} is now onboarding.` });
+      if (acceptSource) {
+        try {
+          await linkApplicationToTeacher.mutateAsync({ applicationId: acceptSource.id, teacherId: res.id });
+        } catch {
+          // Non-critical: the teacher row itself is already saved. The
+          // application just won't show as linked/accepted — worth knowing
+          // but not worth losing the new teacher over.
+        }
+        toast({ title: "Application accepted", description: `${input.full_name} is now onboarding.` });
+        setAcceptSource(null);
+        setActiveTab("roster");
+      } else {
+        toast({ title: "Teacher added", description: `${input.full_name} is now onboarding.` });
+      }
       setAddOpen(false);
       setSelectedId(res.id);
     } catch (e: any) {
       toast({ title: "Couldn't add teacher", description: friendlyError(e), variant: "destructive" });
+    }
+  }
+
+  function handleAcceptApplication(app: TeacherApplication) {
+    setAcceptSource(app);
+    setAddOpen(true);
+  }
+
+  async function handleRejectApplication(app: TeacherApplication) {
+    try {
+      await updateApplicationStatus.mutateAsync({ id: app.id, status: "rejected" });
+    } catch (e: any) {
+      toast({ title: "Couldn't update application", description: friendlyError(e), variant: "destructive" });
     }
   }
 
@@ -374,9 +426,23 @@ export default function TeacherOnboardingManager() {
           <h2 className="text-lg font-semibold flex items-center gap-2"><GraduationCap className="h-5 w-5" /> Teacher Onboarding</h2>
           <p className="text-sm text-muted-foreground">Track every teacher's readiness across every course level.</p>
         </div>
-        <Button onClick={() => setAddOpen(true)}><UserPlus className="h-4 w-4 mr-1.5" /> Add teacher</Button>
+        <Button onClick={() => { setAcceptSource(null); setAddOpen(true); }}><UserPlus className="h-4 w-4 mr-1.5" /> Add teacher</Button>
       </div>
 
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "roster" | "applications")}>
+        <TabsList>
+          <TabsTrigger value="roster" className="gap-1.5"><GraduationCap className="h-3.5 w-3.5" /> Roster</TabsTrigger>
+          <TabsTrigger value="applications" className="gap-1.5">
+            <ClipboardList className="h-3.5 w-3.5" /> Applications
+            {pendingApplicationCount > 0 && (
+              <Badge variant="outline" className="ml-1 h-4 min-w-4 px-1 text-[10px] bg-amber-100 text-amber-800 border-amber-300">
+                {pendingApplicationCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="roster" className="mt-4">
       <div className="grid gap-4 md:grid-cols-[320px_1fr]">
         {/* Roster */}
         <Card className="rounded-2xl">
@@ -588,12 +654,101 @@ export default function TeacherOnboardingManager() {
           )}
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="applications" className="mt-4 space-y-2">
+          {applicationsLoading && <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>}
+          {applicationsError ? (
+            <Card className="rounded-2xl">
+              <CardContent className="py-10 text-center space-y-2">
+                <AlertCircle className="h-8 w-8 mx-auto text-destructive" />
+                {(applicationsError as any)?.code === "42P01" ? (
+                  <>
+                    <p className="text-sm font-medium">The applications table isn't live yet.</p>
+                    <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                      The migration is committed (supabase/migrations/20261021113000_teacher_applications.sql) but
+                      not yet applied — run the "Apply Migrations" GitHub Action (mode: apply) to turn this on.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{(applicationsError as any)?.message}</p>
+                )}
+              </CardContent>
+            </Card>
+          ) : !applicationsLoading && applications.length === 0 ? (
+            <Card className="rounded-2xl">
+              <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                No applications yet. The homepage's "Apply to Teach With Us" section sends them here.
+              </CardContent>
+            </Card>
+          ) : (
+            applications.map((app) => (
+              <Card key={app.id} className="rounded-2xl">
+                <CardContent className="py-3.5 space-y-2">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{app.full_name}</span>
+                        <Badge variant="outline" className={`text-[10px] ${APPLICATION_STATUS_BADGE[app.status]}`}>
+                          {app.status}
+                        </Badge>
+                      </div>
+                      <CardDescription className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                        <span className="flex items-center gap-1"><Mail className="h-3 w-3" /> {app.email}</span>
+                        {app.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {app.phone}</span>}
+                      </CardDescription>
+                    </div>
+                    {(app.status === "new" || app.status === "reviewing") && (
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button size="sm" className="h-7 px-2 gap-1" onClick={() => handleAcceptApplication(app)}>
+                          <Check className="h-3.5 w-3.5" /> Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 gap-1 text-destructive"
+                          disabled={updateApplicationStatus.isPending}
+                          onClick={() => handleRejectApplication(app)}
+                        >
+                          <XIcon className="h-3.5 w-3.5" /> Reject
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  {app.course_levels.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {sortByLevelOrder(app.course_levels).map((k) => (
+                        <Badge key={k} variant="outline" className="text-[10px]">{getLevelShortLabel(k)}</Badge>
+                      ))}
+                    </div>
+                  )}
+                  {app.years_experience && (
+                    <p className="text-xs text-muted-foreground">Experience: {app.years_experience}</p>
+                  )}
+                  {app.message && <p className="text-xs text-muted-foreground border-l-2 border-border pl-2">{app.message}</p>}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+      </Tabs>
 
       <TeacherDialog
         open={addOpen}
-        onOpenChange={setAddOpen}
-        draft={EMPTY_DRAFT}
-        saving={createTeacher.isPending}
+        onOpenChange={(o) => { setAddOpen(o); if (!o) setAcceptSource(null); }}
+        draft={
+          acceptSource
+            ? {
+                full_name: acceptSource.full_name,
+                email: acceptSource.email,
+                phone: acceptSource.phone ?? "",
+                status: "onboarding",
+                notes: "",
+                courseKeys: acceptSource.course_levels.length > 0 ? acceptSource.course_levels : ALL_COURSE_KEYS,
+              }
+            : EMPTY_DRAFT
+        }
+        saving={createTeacher.isPending || linkApplicationToTeacher.isPending}
         isEdit={false}
         onSave={handleCreate}
       />

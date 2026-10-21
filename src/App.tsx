@@ -29,6 +29,7 @@ const PricingPage = lazy(() => import("./pages/PricingPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const TeachWithUsPage = lazy(() => import("./pages/TeachWithUsPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminEntry = lazy(() => import("./pages/AdminEntry"));
@@ -235,6 +236,7 @@ const App = () => (
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/teach-with-us" element={<TeachWithUsPage />} />
                 {/* Legal pages (24 Sep 2026). The footer and the cookie banner
                     linked to these while both rendered NotFound (audit, 23 Sep).
                     /privacy is a convenience alias for the short form people type. */}

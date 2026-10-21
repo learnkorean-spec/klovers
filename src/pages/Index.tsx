@@ -26,6 +26,10 @@ const ScholarshipsSection = lazy(() => import("@/components/ScholarshipsSection"
 const HomeShopShelf = lazy(() => import("@/components/HomeShopShelf"));
 const EggTeaser = lazy(() => import("@/components/EggTeaser"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
+// Secondary audience, not part of the student narrative above — teachers
+// looking to join Klovers. Deliberately last, after every student-facing
+// conversion section (21 Oct 2026, see JoinOurTeam.tsx for why).
+const JoinOurTeam = lazy(() => import("@/components/JoinOurTeam"));
 
 /**
  * THE HOMEPAGE TITLE AND DESCRIPTION.
@@ -318,6 +322,14 @@ const Index = () => {
           <NearViewport>
             <Suspense fallback={<SectionFallback />}>
               <FinalCTA />
+            </Suspense>
+          </NearViewport>
+        </div>
+        {/* Secondary audience — teachers wanting to join Klovers, not students */}
+        <div id="join-team">
+          <NearViewport>
+            <Suspense fallback={<SectionFallback />}>
+              <JoinOurTeam />
             </Suspense>
           </NearViewport>
         </div>
