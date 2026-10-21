@@ -323,7 +323,8 @@ const StudentDashboard = () => {
     const load = async () => {
       try {
       setFetchError(null);
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) console.error("[StudentDashboard] getSession failed:", sessionError.message);
       if (!session) { navigate("/login"); return; }
       setUserId(session.user.id);
 
@@ -340,13 +341,14 @@ const StudentDashboard = () => {
       // payment arrived (approval_status APPROVED, payment_status not PAID).
       // Those rows matched neither query before, so the student saw no
       // payment notice and no class at all.
-      const { data: pendingEnrollData } = await supabase
+      const { data: pendingEnrollData, error: pendingEnrollError } = await supabase
         .from("enrollments")
         .select("id, plan_type, approval_status, payment_status, amount, currency")
         .eq("user_id", session.user.id)
         .is("deleted_at", null)
         .or("approval_status.in.(PENDING_PAYMENT,UNDER_REVIEW,PENDING),and(approval_status.eq.APPROVED,payment_status.neq.PAID)")
         .order("created_at", { ascending: true });
+      if (pendingEnrollError) console.error("[StudentDashboard] pending enrollments lookup failed:", pendingEnrollError.message);
       setPendingEnrollments((pendingEnrollData || []) as PendingEnrollment[]);
 
       // Weekly XP: from Monday 00:00 local time
@@ -354,18 +356,20 @@ const StudentDashboard = () => {
       const monday = new Date(now);
       monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
       monday.setHours(0, 0, 0, 0);
-      const { data: weeklyXpData } = await supabase
+      const { data: weeklyXpData, error: weeklyXpError } = await supabase
         .from("student_xp")
         .select("xp_earned")
         .eq("user_id", session.user.id)
         .gte("created_at", monday.toISOString());
+      if (weeklyXpError) console.error("[StudentDashboard] weekly XP lookup failed:", weeklyXpError.message);
       setWeeklyXp((weeklyXpData || []).reduce((s: number, r: any) => s + (r.xp_earned || 0), 0));
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("avatar_url, name, level, course_level_key, country, phone")
         .eq("user_id", session.user.id)
         .maybeSingle();
+      if (profileError) console.error("[StudentDashboard] profile lookup failed:", profileError.message);
       if (profile) {
         setAvatarUrl(profile.avatar_url || "");
         setProfilePhone(((profile as any).phone as string | null) || "");
@@ -379,13 +383,14 @@ const StudentDashboard = () => {
       }
 
       // Fetch latest placement test result
-      const { data: ptData } = await supabase
+      const { data: ptData, error: ptError } = await supabase
         .from("placement_tests")
         .select("score, level, created_at")
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (ptError) console.error("[StudentDashboard] placement test lookup failed:", ptError.message);
       if (ptData) {
         setPlacementTest(ptData as PlacementTestResult);
       }
@@ -398,13 +403,14 @@ const StudentDashboard = () => {
       if (rosterErr) console.error("teacher_students lookup failed:", rosterErr.message);
       setIsPrivate(Boolean(rosterRow?.id));
 
-      const { data: enrollmentData } = await supabase
+      const { data: enrollmentData, error: enrollmentError } = await supabase
         .from("enrollments")
         .select("id, plan_type, duration, sessions_total, sessions_remaining, unit_price, amount, currency, created_at, preferred_days, timezone, level")
         .eq("user_id", session.user.id)
         .eq("approval_status", "APPROVED")
         .eq("payment_status", "PAID")
         .order("created_at", { ascending: false });
+      if (enrollmentError) console.error("[StudentDashboard] enrollments lookup failed:", enrollmentError.message);
 
       if (enrollmentData && enrollmentData.length > 0) {
         setEnrollments(enrollmentData as EnrollmentRecord[]);
@@ -469,12 +475,13 @@ const StudentDashboard = () => {
         setAttendanceDates(dates);
 
         // Fetch group membership
-        const { data: groupData } = await supabase
+        const { data: groupData, error: groupError } = await supabase
           .from("pkg_group_members")
           .select("group_id, pkg_groups(name)")
           .eq("user_id", session.user.id)
           .eq("member_status", "active")
           .limit(1);
+        if (groupError) console.error("[StudentDashboard] group membership lookup failed:", groupError.message);
         if (groupData && groupData.length > 0) {
           const grp = groupData[0].pkg_groups as { name: string } | null;
           setGroupName(grp?.name || null);
@@ -483,11 +490,12 @@ const StudentDashboard = () => {
         setHasNoData(true);
         // Group attendance is recorded per student, not per enrollment, so a
         // student who attends before paying still sees the classes she came to.
-        const { data: pkgOnly } = await supabase
+        const { data: pkgOnly, error: pkgOnlyError } = await supabase
           .from("pkg_attendance")
           .select("session_id, pkg_group_sessions(session_date)")
           .eq("user_id", session.user.id)
           .eq("admin_approved", true);
+        if (pkgOnlyError) console.error("[StudentDashboard] pre-payment attendance lookup failed:", pkgOnlyError.message);
         setAttendanceDates(
           (pkgOnly || [])
             .flatMap(r => {
