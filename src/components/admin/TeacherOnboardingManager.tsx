@@ -274,7 +274,7 @@ export default function TeacherOnboardingManager() {
       if (selectedId === deleteTarget.id) setSelectedId(null);
       setDeleteTarget(null);
     } catch (e: any) {
-      toast({ title: "Couldn't remove teacher", description: e.message, variant: "destructive" });
+      toast({ title: "Couldn't remove teacher", description: friendlyError(e), variant: "destructive" });
     }
   }
 
