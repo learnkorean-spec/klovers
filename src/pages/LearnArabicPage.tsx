@@ -23,23 +23,23 @@ import cairoRooftop from "@/assets/arabic-cairo-rooftop.jpg";
  * ink panels, parchment, Fraunces/Amiri serif display).
  *
  * Redesigned 20 Oct 2026, v2 (Re: "replace with the new design, green" —
- * i.e. mkatub's design): mkatub (mkatub.vercel.app) is Reham's separate,
+ * i.e. maktub's design): maktub (mkatub.vercel.app) is Reham's separate,
  * purpose-built marketing site for this same Arabic-teaching business —
  * its trial-booking CTAs already link straight back to this very page's
- * #trial-booking section (src/lib/content.ts in the mkatub repo), and its
+ * #trial-booking section (src/lib/content.ts in the maktub repo), and its
  * own tutor bio/quote was pulled FROM this page's v1 copy. The two are
- * siblings, so this page now matches mkatub's visual language instead of
+ * siblings, so this page now matches maktub's visual language instead of
  * its own bespoke one: a dark forest-green hero over real Cairo rooftop
  * photography, pill-shaped CTAs, dialect cards with an availability badge,
  * numbered steps with a circular badge, and the site's existing
- * Poppins/Inter/Cairo type (no new font load — mkatub's Jakarta/Inter/Cairo
+ * Poppins/Inter/Cairo type (no new font load — maktub's Jakarta/Inter/Cairo
  * stack maps directly onto what index.html already loads sitewide).
  *
  * Brand-colour note: klovers-green (hsl(var(--live-bright)), #39FF14) is
  * sitewide-reserved for live/correct/progress status, never decorative
  * (src/index.css's palette doc, tailwind.config.ts's klovers-green comment).
  * This page is a deliberate, explicit exception — Re chose it specifically
- * to match mkatub's lime-on-forest branding (confirmed 20 Oct 2026, after
+ * to match maktub's lime-on-forest branding (confirmed 20 Oct 2026, after
  * being told this bends that rule) — not a default to copy onto other
  * pages. FOREST/SAND below are page-local, bespoke to this page only, the
  * same pattern the v1 redesign used for LAPIS/BRASS/PARCHMENT.
@@ -75,8 +75,8 @@ type TrFn = (en: string, ar: string) => string;
  * longer jump to their dashboard/World from this page specifically; every
  * other klovers page still uses the real Header/Footer unchanged.
  */
-const MkatubLogoMark = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 48 48" className={className} role="img" aria-label="mkatub">
+const MaktubLogoMark = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" className={className} role="img" aria-label="maktub">
     <rect width="48" height="48" rx="14" fill={KLOVERS_GREEN} />
     <path
       d="M12 34V18.6h3.9l.3 2.4c.7-.9 1.5-1.6 2.5-2.1a7 7 0 0 1 3.2-.7c1.5 0 2.8.3 3.7 1 1 .6 1.7 1.5 2.1 2.7.7-1.1 1.6-2 2.7-2.6a7.6 7.6 0 0 1 3.7-1c2 0 3.6.6 4.7 1.8 1.1 1.2 1.7 3 1.7 5.4V34h-4.3v-8c0-1.4-.3-2.5-.8-3.2-.5-.7-1.4-1.1-2.5-1.1-1.3 0-2.3.5-3 1.4-.7.9-1.1 2.2-1.1 3.8V34h-4.3v-8c0-1.4-.3-2.5-.8-3.2-.5-.7-1.3-1.1-2.5-1.1-1.3 0-2.3.5-3 1.4-.7.9-1.1 2.2-1.1 3.8V34H12Z"
@@ -87,10 +87,10 @@ const MkatubLogoMark = ({ className = "" }: { className?: string }) => (
   </svg>
 );
 
-const MkatubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; toggleLanguage: () => void }) => {
+const MaktubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; toggleLanguage: () => void }) => {
   // Re, 21 Oct 2026: fixing the trade-off this page's own header/footer
   // introduced — a logged-in Klovers student lost one-tap access to their
-  // dashboard here. Keep the mkatub look for everyone, but surface a
+  // dashboard here. Keep the maktub look for everyone, but surface a
   // compact dashboard link to a signed-in user instead of nothing.
   const { user } = useAuth();
   const navLinks = [
@@ -108,10 +108,10 @@ const MkatubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; t
         {tr("Skip to content", "الانتقال إلى المحتوى")}
       </a>
       <div className="container mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <a href="#top" className="inline-flex items-center gap-2" aria-label={tr("mkatub home", "الصفحة الرئيسية لـ mkatub")}>
-          <MkatubLogoMark className="h-8 w-8 shrink-0" />
+        <a href="#top" className="inline-flex items-center gap-2" aria-label={tr("maktub home", "الصفحة الرئيسية لـ maktub")}>
+          <MaktubLogoMark className="h-8 w-8 shrink-0" />
           <span className="text-xl font-extrabold tracking-tight text-foreground" style={headingFont}>
-            mkatub
+            maktub
           </span>
         </a>
         <nav className="hidden items-center gap-6 md:flex" aria-label={tr("Primary", "رئيسي")}>
@@ -148,15 +148,15 @@ const MkatubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; t
   );
 };
 
-const MkatubFooter = ({ tr }: { isAr: boolean; tr: TrFn }) => (
+const MaktubFooter = ({ tr }: { isAr: boolean; tr: TrFn }) => (
   <footer className="border-t border-white/10 text-white" style={{ backgroundColor: FOREST }}>
     <div className="container mx-auto max-w-5xl px-4 py-12">
       <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
         <div>
           <div className="inline-flex items-center gap-2">
-            <MkatubLogoMark className="h-8 w-8 shrink-0" />
+            <MaktubLogoMark className="h-8 w-8 shrink-0" />
             <span className="text-xl font-extrabold tracking-tight" style={headingFont}>
-              mkatub
+              maktub
             </span>
           </div>
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em]">
@@ -184,13 +184,13 @@ const MkatubFooter = ({ tr }: { isAr: boolean; tr: TrFn }) => (
               {tr("Articles", "مقالات")}
             </a>
             <a href="https://mkatub.kloversegy.com" target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white">
-              {tr("Full mkatub site", "موقع mkatub الكامل")}
+              {tr("Full maktub site", "موقع maktub الكامل")}
             </a>
           </div>
         </nav>
       </div>
       <p className="mt-10 border-t border-white/10 pt-6 text-xs text-white/50">
-        © 2026 mkatub. {tr("Arabi made simple.", "عربي ببساطة.")}
+        © 2026 maktub. {tr("Arabi made simple.", "عربي ببساطة.")}
       </p>
     </div>
   </footer>
@@ -326,9 +326,9 @@ const LearnArabicPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <MkatubHeader isAr={isAr} tr={tr} toggleLanguage={toggleLanguage} />
+      <MaktubHeader isAr={isAr} tr={tr} toggleLanguage={toggleLanguage} />
       <main id="main-content">
-        {/* Hero — mkatub's shape: dark forest panel, real Cairo rooftop
+        {/* Hero — maktub's shape: dark forest panel, real Cairo rooftop
             photo, lime/klovers-green accent, pill CTAs. */}
         <section className="relative isolate overflow-hidden text-white" style={{ backgroundColor: FOREST }}>
           <img
@@ -358,7 +358,7 @@ const LearnArabicPage = () => {
                 className="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold transition hover:bg-white/10"
                 style={{ borderColor: KLOVERS_GREEN, color: KLOVERS_GREEN }}
               >
-                {tr("Part of mkatub: see the full site", "جزء من مكتوب: شاهد الموقع الكامل")}
+                {tr("Part of maktub: see the full site", "جزء من مكتوب: شاهد الموقع الكامل")}
               </a>
               <p className="text-lg" style={{ fontFamily: "Cairo, system-ui, sans-serif", color: KLOVERS_GREEN }} dir="rtl" lang="ar">
                 اهلا بيك في كلوفرز
@@ -404,7 +404,7 @@ const LearnArabicPage = () => {
           </div>
         </section>
 
-        {/* Pick a dialect — mkatub's card grid, replacing v1's parchment split. */}
+        {/* Pick a dialect — maktub's card grid, replacing v1's parchment split. */}
         <section id="dialects" className="py-20 border-b scroll-mt-24">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground" style={headingFont}>
@@ -464,7 +464,7 @@ const LearnArabicPage = () => {
           </div>
         </section>
 
-        {/* How lessons work — numbered circle badges, mkatub's HowItWorks shape. */}
+        {/* How lessons work — numbered circle badges, maktub's HowItWorks shape. */}
         <section className="py-20 border-b">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground" style={headingFont}>
@@ -487,7 +487,7 @@ const LearnArabicPage = () => {
           </div>
         </section>
 
-        {/* Meet your tutor — dark forest panel, mkatub's MeetTutor shape. */}
+        {/* Meet your tutor — dark forest panel, maktub's MeetTutor shape. */}
         <section id="meet-tutor" className="py-20 border-b text-white scroll-mt-24" style={{ backgroundColor: FOREST }}>
           <div className="container mx-auto px-4 max-w-5xl grid gap-10 md:grid-cols-[14rem_1fr] md:items-center">
             <div
@@ -617,7 +617,7 @@ const LearnArabicPage = () => {
           </div>
         </section>
       </main>
-      <MkatubFooter isAr={isAr} tr={tr} />
+      <MaktubFooter isAr={isAr} tr={tr} />
     </div>
   );
 };
