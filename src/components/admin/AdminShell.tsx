@@ -216,7 +216,12 @@ const AdminShell = ({
   // Counts for the nav rows, on every admin page. An explicit `badges` prop
   // still wins for any id it sets.
   const { data: fetched } = useSidebarBadges();
-  badges = { trials: fetched?.trials, enrollments: fetched?.enrollments, ...badges };
+  badges = {
+    trials: fetched?.trials,
+    enrollments: fetched?.enrollments,
+    "teacher-onboarding": fetched?.teacherOnboarding,
+    ...badges,
+  };
   // The admin had no theme control of its own. The only toggle lived in the
   // public site header, so changing it from here meant leaving the admin,
   // flipping it on a marketing page and navigating back.

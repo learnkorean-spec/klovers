@@ -47,8 +47,39 @@ import {
 } from "@/hooks/admin/useTeacherOnboarding";
 import {
   COURSE_PROGRESS_STATUS_LABEL, GENERAL_SCOPE_KEY, TEACHER_STATUS_LABEL,
-  type CourseProgressStatus, type TeacherStatus, type TeacherWithOnboarding,
+  type CourseProgressStatus, type OnboardingProgress, type OnboardingStep,
+  type TeacherStatus, type TeacherWithOnboarding,
 } from "@/types/teacherOnboarding";
+
+/** A friendlier message for the Postgres errors this screen can actually hit. */
+function friendlyError(e: any): string {
+  if (e?.code === "23505") return "A teacher with this email already exists.";
+  return e?.message ?? "Something went wrong.";
+}
+
+/** One checklist line: English title, with the Arabic title underneath for readers who prefer it. */
+function StepCheckbox({
+  step, progress, onToggle,
+}: {
+  step: OnboardingStep;
+  progress: OnboardingProgress | undefined;
+  onToggle: (next: boolean) => void;
+}) {
+  const done = progress?.is_done ?? false;
+  return (
+    <label className="flex items-start gap-2 text-sm py-0.5">
+      <Checkbox checked={done} onCheckedChange={(c) => onToggle(!!c)} className="mt-0.5" />
+      <span className="flex flex-col">
+        <span className={done ? "line-through text-muted-foreground" : ""}>{step.title_en}</span>
+        {step.title_ar && (
+          <span dir="rtl" className={`text-[11px] ${done ? "text-muted-foreground/60 line-through" : "text-muted-foreground"}`}>
+            {step.title_ar}
+          </span>
+        )}
+      </span>
+    </label>
+  );
+}
 
 const STATUS_BADGE: Record<TeacherStatus, string> = {
   onboarding: "bg-amber-100 text-amber-800 border-amber-300",
@@ -190,8 +221,9 @@ export default function TeacherOnboardingManager() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<TeacherWithOnboarding | null>(null);
   const [addCourseKey, setAddCourseKey] = useState<string>("");
+  /** `teacherId:courseLevelKey` awaiting a second click before it actually removes. */
+  const [confirmRemoveKey, setConfirmRemoveKey] = useState<string | null>(null);
 
-  const stepsById = useMemo(() => new Map(steps.map((s) => [s.id, s])), [steps]);
   const generalSteps = useMemo(() => steps.filter((s) => s.scope === "general"), [steps]);
   const perCourseSteps = useMemo(() => steps.filter((s) => s.scope === "per_course"), [steps]);
 
@@ -219,7 +251,7 @@ export default function TeacherOnboardingManager() {
       setAddOpen(false);
       setSelectedId(res.id);
     } catch (e: any) {
-      toast({ title: "Couldn't add teacher", description: e.message, variant: "destructive" });
+      toast({ title: "Couldn't add teacher", description: friendlyError(e), variant: "destructive" });
     }
   }
 
@@ -230,7 +262,7 @@ export default function TeacherOnboardingManager() {
       toast({ title: "Saved" });
       setEditOpen(false);
     } catch (e: any) {
-      toast({ title: "Couldn't save", description: e.message, variant: "destructive" });
+      toast({ title: "Couldn't save", description: friendlyError(e), variant: "destructive" });
     }
   }
 
@@ -250,7 +282,38 @@ export default function TeacherOnboardingManager() {
     try {
       await toggleStep.mutateAsync({ teacherId, stepId, courseLevelKey, isDone: next, completedBy: user?.id ?? null });
     } catch (e: any) {
-      toast({ title: "Couldn't update step", description: e.message, variant: "destructive" });
+      toast({ title: "Couldn't update step", description: friendlyError(e), variant: "destructive" });
+    }
+  }
+
+  /**
+   * Toggles one per-course step, then — if that completes every per-course
+   * step for this course and nobody has put it further along already — bumps
+   * the course from not_started/in_progress to ready. Never touches 'active':
+   * that is always the admin's own call, not something a checklist earns on
+   * its own.
+   */
+  async function handleTogglePerCourse(
+    teacherId: string,
+    courseKey: string,
+    stepId: string,
+    next: boolean,
+    currentCourseProgress: TeacherWithOnboarding["courseProgress"][number],
+    currentCourseSteps: OnboardingProgress[],
+  ) {
+    await handleToggle(teacherId, stepId, courseKey, next);
+    if (!next) return;
+    if (currentCourseProgress.status !== "not_started" && currentCourseProgress.status !== "in_progress") return;
+    const willAllBeDone = perCourseSteps.every((s) => {
+      if (s.id === stepId) return true;
+      return currentCourseSteps.find((p) => p.step_id === s.id)?.is_done ?? false;
+    });
+    if (!willAllBeDone) return;
+    try {
+      await updateCourseStatus.mutateAsync({ teacherId, courseLevelKey: courseKey, status: "ready" });
+      toast({ title: "Checklist complete", description: `${getLevelShortLabel(courseKey)} marked ready to teach.` });
+    } catch {
+      /* non-critical convenience bump — the checklist itself already saved */
     }
   }
 
@@ -260,15 +323,21 @@ export default function TeacherOnboardingManager() {
       await assignCourse.mutateAsync({ teacherId, courseLevelKey: addCourseKey });
       setAddCourseKey("");
     } catch (e: any) {
-      toast({ title: "Couldn't add course", description: e.message, variant: "destructive" });
+      toast({ title: "Couldn't add course", description: friendlyError(e), variant: "destructive" });
     }
   }
 
   async function handleRemoveCourse(teacherId: string, courseLevelKey: string) {
+    const key = `${teacherId}:${courseLevelKey}`;
+    if (confirmRemoveKey !== key) {
+      setConfirmRemoveKey(key);
+      return;
+    }
+    setConfirmRemoveKey(null);
     try {
       await removeCourse.mutateAsync({ teacherId, courseLevelKey });
     } catch (e: any) {
-      toast({ title: "Couldn't remove course", description: e.message, variant: "destructive" });
+      toast({ title: "Couldn't remove course", description: friendlyError(e), variant: "destructive" });
     }
   }
 
@@ -398,14 +467,12 @@ export default function TeacherOnboardingManager() {
                           (p) => p.step_id === step.id && p.course_level_key === GENERAL_SCOPE_KEY,
                         );
                         return (
-                          <label key={step.id} className="flex items-start gap-2 text-sm py-0.5">
-                            <Checkbox
-                              checked={progress?.is_done ?? false}
-                              onCheckedChange={(c) => handleToggle(selected.id, step.id, GENERAL_SCOPE_KEY, !!c)}
-                              className="mt-0.5"
-                            />
-                            <span className={progress?.is_done ? "line-through text-muted-foreground" : ""}>{step.title_en}</span>
-                          </label>
+                          <StepCheckbox
+                            key={step.id}
+                            step={step}
+                            progress={progress}
+                            onToggle={(next) => handleToggle(selected.id, step.id, GENERAL_SCOPE_KEY, next)}
+                          />
                         );
                       })}
                     </div>
@@ -489,14 +556,14 @@ export default function TeacherOnboardingManager() {
                                 {perCourseSteps.map((step) => {
                                   const progress = courseStepProgress.find((p) => p.step_id === step.id);
                                   return (
-                                    <label key={step.id} className="flex items-start gap-2 text-sm py-0.5">
-                                      <Checkbox
-                                        checked={progress?.is_done ?? false}
-                                        onCheckedChange={(c) => handleToggle(selected.id, step.id, courseKey, !!c)}
-                                        className="mt-0.5"
-                                      />
-                                      <span className={progress?.is_done ? "line-through text-muted-foreground" : ""}>{step.title_en}</span>
-                                    </label>
+                                    <StepCheckbox
+                                      key={step.id}
+                                      step={step}
+                                      progress={progress}
+                                      onToggle={(next) =>
+                                        handleTogglePerCourse(selected.id, courseKey, step.id, next, cp, courseStepProgress)
+                                      }
+                                    />
                                   );
                                 })}
                               </div>
@@ -505,8 +572,9 @@ export default function TeacherOnboardingManager() {
                                 variant="ghost"
                                 className="h-7 text-xs text-destructive px-2"
                                 onClick={() => handleRemoveCourse(selected.id, courseKey)}
+                                onBlur={() => setConfirmRemoveKey((k) => (k === `${selected.id}:${courseKey}` ? null : k))}
                               >
-                                Remove this course
+                                {confirmRemoveKey === `${selected.id}:${courseKey}` ? "Click again to confirm" : "Remove this course"}
                               </Button>
                             </AccordionContent>
                           </AccordionItem>
