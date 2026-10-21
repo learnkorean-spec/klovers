@@ -4970,6 +4970,150 @@ export type Database = {
           },
         ]
       }
+      teacher_course_progress: {
+        Row: {
+          course_level_key: string
+          created_at: string
+          id: string
+          notes: string | null
+          ready_at: string | null
+          started_at: string | null
+          status: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          course_level_key: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          ready_at?: string | null
+          started_at?: string | null
+          status?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          course_level_key?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          ready_at?: string | null
+          started_at?: string | null
+          status?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_course_progress_course_level_key_fkey"
+            columns: ["course_level_key"]
+            isOneToOne: false
+            referencedRelation: "course_levels"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "teacher_course_progress_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          course_level_key: string
+          created_at: string
+          id: string
+          is_done: boolean
+          notes: string | null
+          step_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          course_level_key?: string
+          created_at?: string
+          id?: string
+          is_done?: boolean
+          notes?: string | null
+          step_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          course_level_key?: string
+          created_at?: string
+          id?: string
+          is_done?: boolean
+          notes?: string | null
+          step_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_onboarding_progress_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_onboarding_steps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_onboarding_progress_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_onboarding_steps: {
+        Row: {
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          id: string
+          is_active: boolean
+          key: string
+          scope: string
+          sort_order: number
+          title_ar: string
+          title_en: string
+        }
+        Insert: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          scope?: string
+          sort_order?: number
+          title_ar: string
+          title_en: string
+        }
+        Update: {
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          scope?: string
+          sort_order?: number
+          title_ar?: string
+          title_en?: string
+        }
+        Relationships: []
+      }
       teacher_schedule_slots: {
         Row: {
           created_at: string
@@ -5111,6 +5255,42 @@ export type Database = {
           note?: string | null
           status?: string
           subject?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
           updated_at?: string
           user_id?: string | null
         }

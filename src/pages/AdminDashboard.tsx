@@ -48,6 +48,7 @@ const AdminNotifications = lazy(() => import("@/components/admin/AdminNotificati
 const GroupMatcher = lazy(() => import("@/components/admin/GroupMatcher"));
 const RecommendedSlotsPanel = lazy(() => import("@/components/admin/RecommendedSlotsPanel"));
 const TeacherAvailabilityManager = lazy(() => import("@/components/admin/TeacherAvailabilityManager"));
+const TeacherOnboardingManager = lazy(() => import("@/components/admin/TeacherOnboardingManager"));
 const PersonalTrialManager = lazy(() => import("@/components/admin/PersonalTrialManager"));
 const MyStudentsManager = lazy(() => import("@/components/admin/MyStudentsManager"));
 const UpcomingPrivateClasses = lazy(() => import("@/components/admin/UpcomingPrivateClasses"));
@@ -1011,7 +1012,7 @@ const AdminDashboard = () => {
   // The assertion under this list fails loudly if it happens again.
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
     { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "personal-trials", "lead-funnel", "sales", "promos", "manage"] },
-    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
+    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "teacher-onboarding", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
     { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "book-plan", "pictures", "brand", "conversation-audio"] },
     { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings", "connectors"] },
   ];
@@ -1340,6 +1341,11 @@ const AdminDashboard = () => {
                 {inActiveGroup("availability") && (
                   <TabsTrigger value="availability" className={TAB_CLS}>
                     <Clock className="h-3.5 w-3.5" /> Group Availability
+                  </TabsTrigger>
+                )}
+                {inActiveGroup("teacher-onboarding") && (
+                  <TabsTrigger value="teacher-onboarding" className={TAB_CLS}>
+                    <GraduationCap className="h-3.5 w-3.5" /> Teacher Onboarding
                   </TabsTrigger>
                 )}
                 {inActiveGroup("group-matcher") && (
@@ -1728,6 +1734,15 @@ const AdminDashboard = () => {
             <TabsContent value="availability">
               <TabErrorBoundary name="Teacher Availability">
                 <TeacherAvailabilityManager />
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* TEACHER ONBOARDING TAB — roster + per-course checklist for
+                every teacher the platform is bringing on, across every
+                course level. Unrelated to Availability (one teacher's hours). */}
+            <TabsContent value="teacher-onboarding">
+              <TabErrorBoundary name="Teacher Onboarding">
+                <TeacherOnboardingManager />
               </TabErrorBoundary>
             </TabsContent>
 
