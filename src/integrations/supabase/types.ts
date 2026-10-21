@@ -4970,6 +4970,62 @@ export type Database = {
           },
         ]
       }
+      teacher_applications: {
+        Row: {
+          admin_notes: string | null
+          course_levels: string[]
+          created_at: string
+          created_teacher_id: string | null
+          email: string
+          full_name: string
+          id: string
+          message: string | null
+          phone: string | null
+          reviewed_at: string | null
+          status: string
+          updated_at: string
+          years_experience: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          course_levels?: string[]
+          created_at?: string
+          created_teacher_id?: string | null
+          email: string
+          full_name: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+          years_experience?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          course_levels?: string[]
+          created_at?: string
+          created_teacher_id?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+          years_experience?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_applications_created_teacher_id_fkey"
+            columns: ["created_teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_course_progress: {
         Row: {
           course_level_key: string
