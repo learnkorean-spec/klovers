@@ -4,7 +4,7 @@ import { CanvasTexture, MeshBasicMaterial, SRGBColorSpace, type Group, type Mesh
 import { ACCENT, std } from "../config/materials";
 import { tourSpot, VILLAGE, type TourStop } from "../config/rooms";
 import type { WorldLang } from "../config/copy";
-import { tourSlides, type TourSlide } from "../config/tour";
+import { tourSlides, type TourIcon, type TourSlide } from "../config/tour";
 import { PALETTE } from "../config/world";
 import type { PlayerState } from "../systems/state";
 import { REDUCED_MOTION } from "../systems/motion";
@@ -13,8 +13,9 @@ import { Signboard } from "./parts";
 /**
  * The Klovers tour as an exhibition along the Hangul Village street: who
  * Klovers is, what makes it different, the courses, how we teach, why
- * Korean, how to start — written on the boards themselves, in the site's
- * own words (config/tour.ts), to be read by walking up to them.
+ * Korean, how to start — as posters, not pages: a headline and a picture
+ * of the idea on each board (config/tour.ts). Once a board has unrolled it
+ * "presents": its numbers, icons, steps or photos arrive one by one.
  *
  * Each board is a hanok-framed panel under a tiled cap with its Korean name
  * on top. Its panel is rolled up like a hanging scroll until the learner
@@ -53,6 +54,514 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, width: number, max: n
   return lines;
 }
 
+const INK = PALETTE.charcoal;
+const PAPER = "#FBF6EA";
+
+/** Rounded rectangle path. */
+function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+/** A small line drawing in a yellow disc, centred at (cx, cy), radius r. */
+function drawIcon(ctx: CanvasRenderingContext2D, icon: TourIcon, cx: number, cy: number, r: number) {
+  ctx.save();
+  ctx.fillStyle = PALETTE.yellow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineWidth = r * 0.06;
+  ctx.strokeStyle = "rgba(46,46,46,0.25)";
+  ctx.stroke();
+  ctx.translate(cx, cy);
+  const u = r / 10; // drawing units: the disc is 20 × 20
+  ctx.strokeStyle = INK;
+  ctx.fillStyle = INK;
+  ctx.lineWidth = u * 1.1;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  const head = (x: number, y: number, rad: number) => {
+    ctx.beginPath();
+    ctx.arc(x * u, y * u, rad * u, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  const body = (x: number, y: number, w: number) => {
+    ctx.beginPath();
+    ctx.arc(x * u, (y + w) * u, w * u, Math.PI, 0);
+    ctx.fill();
+  };
+  switch (icon) {
+    case "live": // a video camera with a red "on air" dot
+      rr(ctx, -6 * u, -3.5 * u, 8.5 * u, 7 * u, 1.4 * u);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(2.5 * u, -1 * u);
+      ctx.lineTo(6 * u, -3 * u);
+      ctx.lineTo(6 * u, 3 * u);
+      ctx.lineTo(2.5 * u, 1 * u);
+      ctx.stroke();
+      ctx.fillStyle = "#D7263D";
+      head(-3.6, -1.2, 1.1);
+      break;
+    case "talk": // two speech bubbles
+      rr(ctx, -6.5 * u, -5 * u, 8 * u, 5.5 * u, 2 * u);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-4 * u, 0.5 * u);
+      ctx.lineTo(-5 * u, 2.6 * u);
+      ctx.lineTo(-2 * u, 0.5 * u);
+      ctx.stroke();
+      rr(ctx, -1 * u, -0.5 * u, 7.5 * u, 5 * u, 2 * u);
+      ctx.fill();
+      break;
+    case "group": // three people
+      head(-4.5, -2, 1.6);
+      body(-4.5, 0.3, 3);
+      head(4.5, -2, 1.6);
+      body(4.5, 0.3, 3);
+      ctx.fillStyle = PALETTE.yellow;
+      ctx.beginPath();
+      ctx.arc(0, -2.2 * u, 2.5 * u, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = INK;
+      head(0, -2.8, 2);
+      body(0, 0.5, 3.6);
+      break;
+    case "medal": // a medal on a ribbon
+      ctx.beginPath();
+      ctx.moveTo(-3.5 * u, -6.5 * u);
+      ctx.lineTo(-1 * u, -1 * u);
+      ctx.moveTo(3.5 * u, -6.5 * u);
+      ctx.lineTo(1 * u, -1 * u);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 2.3 * u, 3.8 * u, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = PALETTE.yellow;
+      ctx.font = `800 ${4.6 * u}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("1", 0, 2.5 * u);
+      break;
+    case "book":
+      ctx.beginPath();
+      ctx.moveTo(0, -3.5 * u);
+      ctx.quadraticCurveTo(-3.5 * u, -5.5 * u, -6.5 * u, -4 * u);
+      ctx.lineTo(-6.5 * u, 4.5 * u);
+      ctx.quadraticCurveTo(-3.5 * u, 3 * u, 0, 5 * u);
+      ctx.quadraticCurveTo(3.5 * u, 3 * u, 6.5 * u, 4.5 * u);
+      ctx.lineTo(6.5 * u, -4 * u);
+      ctx.quadraticCurveTo(3.5 * u, -5.5 * u, 0, -3.5 * u);
+      ctx.lineTo(0, 5 * u);
+      ctx.stroke();
+      break;
+    case "pencil": // a pencil over a lined page
+      rr(ctx, -6 * u, -5.5 * u, 8.5 * u, 11 * u, 1 * u);
+      ctx.stroke();
+      for (const y of [-2.5, 0, 2.5]) {
+        ctx.beginPath();
+        ctx.moveTo(-4 * u, y * u);
+        ctx.lineTo(0.5 * u, y * u);
+        ctx.stroke();
+      }
+      ctx.save();
+      ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-0.6 * u, -7.5 * u, 3 * u, 9 * u);
+      ctx.beginPath();
+      ctx.moveTo(-0.6 * u, 1.5 * u);
+      ctx.lineTo(0.9 * u, 4 * u);
+      ctx.lineTo(2.4 * u, 1.5 * u);
+      ctx.fill();
+      ctx.restore();
+      break;
+    case "repeat": // a circle of two arrows
+      for (const a0 of [0, Math.PI]) {
+        ctx.beginPath();
+        ctx.arc(0, 0, 5 * u, a0 + 0.35, a0 + Math.PI - 0.35);
+        ctx.stroke();
+        const ax = Math.cos(a0 + Math.PI - 0.35) * 5 * u;
+        const ay = Math.sin(a0 + Math.PI - 0.35) * 5 * u;
+        const dir = a0 === 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(ax - 2 * u * dir, ay - 0.6 * u * dir);
+        ctx.lineTo(ax, ay);
+        ctx.lineTo(ax + 0.4 * u * dir, ay - 2.2 * u * dir);
+        ctx.stroke();
+      }
+      break;
+    case "teacher": // a person at a board with 한
+      rr(ctx, -1 * u, -6 * u, 7.5 * u, 6 * u, 0.8 * u);
+      ctx.stroke();
+      ctx.font = `700 ${3.6 * u}px "Noto Sans KR", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("한", 2.75 * u, -2.9 * u);
+      head(-4, -1.5, 1.8);
+      body(-4, 1.2, 3.2);
+      ctx.beginPath();
+      ctx.moveTo(-2 * u, 2 * u);
+      ctx.lineTo(-0.5 * u, -0.5 * u);
+      ctx.stroke();
+      break;
+    case "card": // a bank card, crossed out
+      rr(ctx, -6.5 * u, -4 * u, 13 * u, 8.5 * u, 1.4 * u);
+      ctx.stroke();
+      ctx.fillRect(-6.5 * u, -1.5 * u, 13 * u, 1.8 * u);
+      ctx.strokeStyle = "#D7263D";
+      ctx.lineWidth = u * 1.4;
+      ctx.beginPath();
+      ctx.moveTo(-7 * u, 6 * u);
+      ctx.lineTo(7 * u, -6 * u);
+      ctx.stroke();
+      break;
+    case "test": // a checklist
+      rr(ctx, -5 * u, -6 * u, 10 * u, 12 * u, 1.2 * u);
+      ctx.stroke();
+      for (const y of [-2.5, 1.5]) {
+        ctx.beginPath();
+        ctx.moveTo(-3 * u, y * u);
+        ctx.lineTo(-2 * u, (y + 1) * u);
+        ctx.lineTo(-0.3 * u, (y - 1.2) * u);
+        ctx.moveTo(1 * u, y * u);
+        ctx.lineTo(3 * u, y * u);
+        ctx.stroke();
+      }
+      break;
+    case "globe":
+      ctx.beginPath();
+      ctx.arc(0, 0, 6 * u, 0, Math.PI * 2);
+      ctx.moveTo(-6 * u, 0);
+      ctx.lineTo(6 * u, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 2.6 * u, 6 * u, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      break;
+  }
+  ctx.restore();
+}
+
+/** Ease for items arriving: a little overshoot. */
+const pop = (k: number) => (k <= 0 ? 0 : k >= 1 ? 1 : 1 + 2.2 * (k - 1) ** 3 + 1.2 * (k - 1) ** 2);
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+/**
+ * Paints one board: its headline and its picture of the idea. `progress`
+ * (0 → 1) is how far the presentation has run: items arrive one by one.
+ * Exported for checks (drawn straight to a canvas, no 3D needed).
+ */
+export function drawExhibit(canvas: HTMLCanvasElement, slide: TourSlide, lang: WorldLang, n: number, of: number, progress: number, images: (HTMLImageElement | null)[] = []): void {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const rtl = lang === "ar";
+  const font = FONT[lang];
+  const W = canvas.width;
+  const H = canvas.height;
+  const pad = 64;
+  const x0 = rtl ? W - pad : pad;
+  const t = progress;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1;
+  ctx.direction = rtl ? "rtl" : "ltr";
+  ctx.textAlign = rtl ? "right" : "left";
+  ctx.textBaseline = "alphabetic";
+  // Paper on a wooden frame.
+  ctx.fillStyle = PALETTE.woodDark;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = PAPER;
+  ctx.fillRect(18, 18, W - 36, H - 36);
+  // Step and the yellow rule.
+  ctx.fillStyle = PALETTE.yellow;
+  ctx.fillRect(rtl ? W - pad - 90 : pad, 62, 90, 12);
+  ctx.fillStyle = "rgba(42,42,42,0.55)";
+  ctx.font = `700 30px ${font}`;
+  const step = rtl ? `${n.toLocaleString("ar-EG")} / ${of.toLocaleString("ar-EG")}` : `${n} / ${of}`;
+  ctx.fillText(step, rtl ? W - pad - 110 : pad + 110, 78);
+  // Title, and one short line.
+  ctx.fillStyle = INK;
+  ctx.font = `800 80px ${font}`;
+  ctx.fillText(slide.title, x0, 170);
+  let top = 200;
+  if (slide.tagline) {
+    ctx.font = `500 38px ${font}`;
+    ctx.fillStyle = "rgba(42,42,42,0.7)";
+    ctx.fillText(slide.tagline, x0, 228);
+    top = 262;
+  }
+  const width = W - pad * 2;
+  const bottom = H - 50;
+  const areaH = bottom - top;
+  const count = Math.max(1, slide.items.length || slide.pictures?.length || 1);
+  // Item i arrives over its own slice of the presentation time.
+  const arrive = (i: number) => clamp01(t * (count + 1.5) - i);
+  // Lay items out in reading order (right to left in Arabic).
+  const colX = (i: number, cols: number, cw: number, gap: number) => {
+    const col = rtl ? cols - 1 - i : i;
+    return pad + col * (cw + gap);
+  };
+  const center = (fn: () => void, a: number, cx: number, cy: number) => {
+    if (a <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = clamp01(a * 2);
+    const k = pop(a);
+    ctx.translate(cx, cy);
+    ctx.scale(k, k);
+    ctx.translate(-cx, -cy);
+    fn();
+    ctx.restore();
+  };
+  ctx.textAlign = "center";
+
+  if (slide.layout === "stats") {
+    const gap = 28;
+    const cols = slide.items.length;
+    const cw = (width - gap * (cols - 1)) / cols;
+    slide.items.forEach((it, i) => {
+      const x = colX(i, cols, cw, gap);
+      const cx = x + cw / 2;
+      const cy = top + areaH / 2;
+      center(
+        () => {
+          ctx.fillStyle = "#F3EAD7";
+          rr(ctx, x, top + 10, cw, areaH - 20, 28);
+          ctx.fill();
+          ctx.fillStyle = PALETTE.yellow;
+          ctx.fillRect(cx - 50, cy - 140, 100, 10);
+          ctx.fillStyle = INK;
+          const big = it.big ?? "";
+          ctx.font = `900 ${big.length > 4 ? 72 : 120}px ${font}`;
+          ctx.fillText(big, cx, cy + 10);
+          ctx.font = `600 34px ${font}`;
+          wrap(ctx, it.label, cw - 40, 2).forEach((l, k) => ctx.fillText(l, cx, cy + 86 + k * 44));
+        },
+        arrive(i),
+        cx,
+        cy,
+      );
+    });
+  } else if (slide.layout === "icons") {
+    const cols = 2;
+    const gap = 24;
+    const cw = (width - gap) / cols;
+    const rh = (areaH - gap) / 2;
+    slide.items.forEach((it, i) => {
+      const x = colX(i % cols, cols, cw, gap);
+      const y = top + Math.floor(i / cols) * (rh + gap);
+      const r = Math.min(rh * 0.38, 78);
+      const iconX = rtl ? x + cw - 30 - r : x + 30 + r;
+      center(
+        () => {
+          ctx.fillStyle = "#F3EAD7";
+          rr(ctx, x, y, cw, rh, 26);
+          ctx.fill();
+          drawIcon(ctx, it.icon ?? "globe", iconX, y + rh / 2, r);
+          ctx.fillStyle = INK;
+          // Shrink a long single word (no place to break it) until it fits.
+          let size = 40;
+          ctx.font = `700 ${size}px ${font}`;
+          const room = cw - 2 * r - 90;
+          while (size > 26 && Math.max(...it.label.split(/\s+/).map((w) => ctx.measureText(w).width)) > room) {
+            size -= 2;
+            ctx.font = `700 ${size}px ${font}`;
+          }
+          ctx.textAlign = rtl ? "right" : "left";
+          const tx = rtl ? iconX - r - 26 : iconX + r + 26;
+          const lines = wrap(ctx, it.label, cw - 2 * r - 90, 2);
+          lines.forEach((l, k) => ctx.fillText(l, tx, y + rh / 2 + 14 + (k - (lines.length - 1) / 2) * 46));
+          ctx.textAlign = "center";
+        },
+        arrive(i),
+        x + cw / 2,
+        y + rh / 2,
+      );
+    });
+  } else if (slide.layout === "ladder") {
+    // A staircase of levels, rising toward TOPIK.
+    const steps = slide.items.length;
+    const gap = 10;
+    const sw = (width - gap * (steps - 1)) / steps;
+    slide.items.forEach((it, i) => {
+      const h = 120 + (areaH - 150) * (i / (steps - 1));
+      const x = colX(i, steps, sw, gap);
+      const y = bottom - h;
+      const last = i === steps - 1;
+      center(
+        () => {
+          ctx.fillStyle = last ? PALETTE.yellow : i === 0 ? "#E6D9BF" : `rgba(46,46,46,${0.12 + 0.1 * (i / steps)})`;
+          rr(ctx, x, y, sw, h, 14);
+          ctx.fill();
+          if (last) {
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = INK;
+            ctx.stroke();
+          }
+          ctx.fillStyle = INK;
+          const big = it.big ?? "";
+          ctx.font = `900 ${big.length > 3 ? 34 : 58}px ${big === "한글" ? '"Noto Sans KR", sans-serif' : font}`;
+          ctx.fillText(big, x + sw / 2, y + (it.label ? 74 : 68));
+          if (it.label) {
+            ctx.font = `600 24px ${font}`;
+            ctx.fillStyle = "rgba(42,42,42,0.7)";
+            ctx.fillText(it.label, x + sw / 2, y + 106);
+          }
+        },
+        arrive(i),
+        x + sw / 2,
+        bottom,
+      );
+    });
+  } else if (slide.layout === "steps") {
+    // Three steps in a row, joined by arrows, looping weekly.
+    const cols = slide.items.length;
+    const r = Math.min(110, areaH * 0.3);
+    const span = width - 2 * r;
+    slide.items.forEach((it, i) => {
+      const f = cols === 1 ? 0.5 : i / (cols - 1);
+      const cx = pad + r + (rtl ? 1 - f : f) * span;
+      const cy = top + areaH * 0.42;
+      const a = arrive(i);
+      if (i > 0 && a > 0) {
+        const pf = (i - 1) / (cols - 1);
+        const px = pad + r + (rtl ? 1 - pf : pf) * span;
+        const dir = Math.sign(cx - px);
+        const x1 = px + dir * (r + 22);
+        const x2 = x1 + (cx - dir * (r + 22) - x1) * clamp01(a * 1.5);
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 8;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(x1, cy);
+        ctx.lineTo(x2, cy);
+        ctx.stroke();
+        if (a > 0.6) {
+          ctx.beginPath();
+          ctx.moveTo(x2 - dir * 24, cy - 20);
+          ctx.lineTo(x2, cy);
+          ctx.lineTo(x2 - dir * 24, cy + 20);
+          ctx.stroke();
+        }
+      }
+      center(
+        () => {
+          drawIcon(ctx, it.icon ?? "book", cx, cy, r);
+          ctx.fillStyle = INK;
+          ctx.font = `800 42px ${font}`;
+          ctx.fillText(it.label, cx, cy + r + 62);
+          ctx.fillStyle = "rgba(42,42,42,0.45)";
+          ctx.font = `800 30px ${font}`;
+          ctx.fillText(rtl ? (i + 1).toLocaleString("ar-EG") : String(i + 1), cx, cy - r - 18);
+        },
+        a,
+        cx,
+        cy,
+      );
+    });
+  } else if (slide.layout === "pictures") {
+    const gap = 22;
+    const pics = (slide.pictures ?? []).slice(0, 4);
+    const cols = 2;
+    const cw = (width - gap) / cols;
+    const ch = (areaH - gap) / 2;
+    pics.forEach((p, i) => {
+      const px = colX(i % cols, cols, cw, gap);
+      const py = top + Math.floor(i / 2) * (ch + gap);
+      center(
+        () => {
+          ctx.save();
+          rr(ctx, px, py, cw, ch, 22);
+          ctx.clip();
+          ctx.fillStyle = "#E9E1D2";
+          ctx.fillRect(px, py, cw, ch);
+          const img = images[i];
+          if (img) {
+            const s = Math.max(cw / img.width, ch / img.height);
+            const sw = cw / s;
+            const sh = ch / s;
+            ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, px, py, cw, ch);
+          }
+          // The label on a dark band across the photo's foot.
+          const g = ctx.createLinearGradient(0, py + ch - 110, 0, py + ch);
+          g.addColorStop(0, "rgba(20,20,20,0)");
+          g.addColorStop(1, "rgba(20,20,20,0.75)");
+          ctx.fillStyle = g;
+          ctx.fillRect(px, py + ch - 110, cw, 110);
+          ctx.restore();
+          ctx.fillStyle = "#FFFFFF";
+          ctx.font = `800 46px ${font}`;
+          ctx.textAlign = rtl ? "right" : "left";
+          ctx.fillText(p.label, rtl ? px + cw - 28 : px + 28, py + ch - 28);
+          ctx.textAlign = "center";
+        },
+        arrive(i),
+        px + cw / 2,
+        py + ch / 2,
+      );
+    });
+  } else if (slide.layout === "cta") {
+    // A big free-class badge, and three small promises beside it.
+    const [badge, ...rest] = slide.items;
+    const R = Math.min(areaH * 0.48, 230);
+    const bx = rtl ? W - pad - R - 10 : pad + R + 10;
+    const by = top + areaH / 2 - 10;
+    center(
+      () => {
+        ctx.fillStyle = PALETTE.yellow;
+        ctx.beginPath();
+        // A starburst seal.
+        const spikes = 18;
+        for (let k = 0; k <= spikes * 2; k++) {
+          const a = (k / (spikes * 2)) * Math.PI * 2;
+          const rad = k % 2 ? R * 0.9 : R;
+          ctx.lineTo(bx + Math.cos(a) * rad, by + Math.sin(a) * rad);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = INK;
+        ctx.stroke();
+        ctx.fillStyle = INK;
+        ctx.font = `900 ${R * 0.42}px ${font}`;
+        ctx.fillText(badge?.big ?? "", bx, by + R * 0.08);
+        ctx.font = `700 ${R * 0.15}px ${font}`;
+        wrap(ctx, badge?.label ?? "", R * 1.4, 2).forEach((l, k) => ctx.fillText(l, bx, by + R * 0.33 + k * R * 0.18));
+      },
+      arrive(0),
+      bx,
+      by,
+    );
+    const lx0 = rtl ? pad : pad + 2 * R + 60;
+    const lw = width - 2 * R - 50;
+    const rowH = Math.min(140, (areaH - 20) / Math.max(1, rest.length));
+    rest.forEach((it, i) => {
+      const y = top + 20 + i * rowH + rowH / 2;
+      const r = rowH * 0.36;
+      const ix = rtl ? lx0 + lw - r : lx0 + r;
+      center(
+        () => {
+          drawIcon(ctx, it.icon ?? "globe", ix, y, r);
+          ctx.fillStyle = INK;
+          ctx.font = `700 40px ${font}`;
+          ctx.textAlign = rtl ? "right" : "left";
+          ctx.fillText(wrap(ctx, it.label, lw - 2 * r - 30, 1)[0], rtl ? ix - r - 24 : ix + r + 24, y + 14);
+          ctx.textAlign = "center";
+        },
+        arrive(i + 1),
+        ix,
+        y,
+      );
+    });
+  }
+}
+
+/**
+ * The board's picture: drawn again while it "presents" (items arrive one
+ * after another once the scroll has unrolled), then left alone.
+ */
 function useExhibitTexture(slide: TourSlide, lang: WorldLang, n: number, of: number, aspect: number) {
   const { canvas, texture } = useMemo(() => {
     const c = document.createElement("canvas");
@@ -60,99 +569,34 @@ function useExhibitTexture(slide: TourSlide, lang: WorldLang, n: number, of: num
     c.height = Math.round(CANVAS_W / aspect);
     const t = new CanvasTexture(c);
     t.colorSpace = SRGBColorSpace;
-    t.anisotropy = 8;
+    t.anisotropy = 16;
     return { canvas: c, texture: t };
   }, [aspect]);
+  const images = useRef<(HTMLImageElement | null)[]>([]);
+  const progress = useRef(REDUCED_MOTION ? 1 : 0);
+
+  const draw = useMemo(
+    () => () => {
+      drawExhibit(canvas, slide, lang, n, of, progress.current, images.current);
+      texture.needsUpdate = true;
+    },
+    [canvas, texture, slide, lang, n, of],
+  );
 
   useEffect(() => {
     let cancelled = false;
-    const rtl = lang === "ar";
     const font = FONT[lang];
-    const images: (HTMLImageElement | null)[] = (slide.pictures ?? []).map(() => null);
-    const draw = () => {
-      const ctx = canvas.getContext("2d");
-      if (!ctx || cancelled) return;
-      const W = canvas.width;
-      const H = canvas.height;
-      const pad = 64;
-      const x0 = rtl ? W - pad : pad;
-      ctx.direction = rtl ? "rtl" : "ltr";
-      ctx.textAlign = rtl ? "right" : "left";
-      ctx.textBaseline = "alphabetic";
-      // Paper on a wooden frame.
-      ctx.fillStyle = PALETTE.woodDark;
-      ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = "#FBF6EA";
-      ctx.fillRect(18, 18, W - 36, H - 36);
-      // Step and the yellow rule.
-      ctx.fillStyle = PALETTE.yellow;
-      ctx.fillRect(rtl ? W - pad - 90 : pad, 62, 90, 12);
-      ctx.fillStyle = "rgba(42,42,42,0.55)";
-      ctx.font = `700 30px ${font}`;
-      const step = rtl ? `${n.toLocaleString("ar-EG")} / ${of.toLocaleString("ar-EG")}` : `${n} / ${of}`;
-      ctx.fillText(step, rtl ? W - pad - 110 : pad + 110, 78);
-      // Title.
-      ctx.fillStyle = PALETTE.charcoal;
-      ctx.font = `800 76px ${font}`;
-      ctx.fillText(slide.title, x0, 168);
-      let y = 168;
-      const width = W - pad * 2;
-      if (slide.pictures?.length) {
-        // Four pictures, two by two, each with its label.
-        const gap = 28;
-        const cw = (width - gap) / 2;
-        const ch = (H - y - 60 - gap) / 2 - 46;
-        slide.pictures.slice(0, 4).forEach((p, i) => {
-          const col = rtl ? 1 - (i % 2) : i % 2;
-          const px = pad + col * (cw + gap);
-          const py = y + 34 + Math.floor(i / 2) * (ch + 46 + gap);
-          const img = images[i];
-          ctx.fillStyle = "#E9E1D2";
-          ctx.fillRect(px, py, cw, ch);
-          if (img) {
-            // Cover-fit.
-            const s = Math.max(cw / img.width, ch / img.height);
-            const sw = cw / s;
-            const sh = ch / s;
-            ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, px, py, cw, ch);
-          }
-          ctx.fillStyle = PALETTE.charcoal;
-          ctx.font = `700 34px ${font}`;
-          ctx.fillText(p.label, rtl ? px + cw : px, py + ch + 38);
-        });
-      } else {
-        ctx.font = `500 36px ${font}`;
-        ctx.fillStyle = "rgba(42,42,42,0.85)";
-        for (const l of wrap(ctx, slide.lead, width, 3)) {
-          y += 54;
-          ctx.fillText(l, x0, y);
-        }
-        y += 22;
-        ctx.font = `600 36px ${font}`;
-        for (const p of (slide.points ?? []).slice(0, 5)) {
-          y += 58;
-          if (y > H - 50) break;
-          ctx.fillStyle = PALETTE.yellow;
-          ctx.beginPath();
-          ctx.arc(rtl ? W - pad - 10 : pad + 10, y - 12, 10, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = "rgba(42,42,42,0.35)";
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          ctx.fillStyle = PALETTE.charcoal;
-          const line = wrap(ctx, p, width - 44, 1)[0];
-          ctx.fillText(line, rtl ? W - pad - 38 : pad + 38, y);
-        }
-      }
-      texture.needsUpdate = true;
-    };
+    images.current = (slide.pictures ?? []).map(() => null);
     draw();
     // Redraw once the site's fonts and the pictures have arrived.
-    document.fonts?.load(`800 76px ${font}`, slide.title).then(draw).catch(() => undefined);
+    Promise.all([document.fonts?.load(`800 80px ${font}`, slide.title), document.fonts?.load(`700 40px "Noto Sans KR"`, "한글")])
+      .then(() => !cancelled && draw())
+      .catch(() => undefined);
     (slide.pictures ?? []).forEach((p, i) => {
       const img = new Image();
       img.onload = () => {
-        images[i] = img;
+        if (cancelled) return;
+        images.current[i] = img;
         draw();
       };
       img.src = p.src;
@@ -160,16 +604,30 @@ function useExhibitTexture(slide: TourSlide, lang: WorldLang, n: number, of: num
     return () => {
       cancelled = true;
     };
-  }, [canvas, texture, slide, lang, n, of]);
+  }, [draw, slide, lang]);
 
   useEffect(() => () => texture.dispose(), [texture]);
-  return texture;
+  /** Advance the presentation; redraws only while it is still moving. */
+  const present = (dt: number) => {
+    if (progress.current >= 1) return;
+    progress.current = Math.min(1, progress.current + dt / 2.4);
+    draw();
+  };
+  return { texture, present };
 }
 
 const WOOD = () => std(PALETTE.woodDark, 0.75);
 const CAP = () => std(PALETTE.charcoal, 0.7);
 
-function Exhibit({ b, slide, lang, n, of, player, onSeen }: {
+function Exhibit({
+  b,
+  slide,
+  lang,
+  n,
+  of,
+  player,
+  onSeen,
+}: {
   b: (typeof VILLAGE.tour)[number];
   slide: TourSlide;
   lang: WorldLang;
@@ -179,7 +637,7 @@ function Exhibit({ b, slide, lang, n, of, player, onSeen }: {
   onSeen: (stop: TourStop) => void;
 }) {
   const w = b.w;
-  const tex = useExhibitTexture(slide, lang, n, of, w / BOARD_H);
+  const { texture: tex, present } = useExhibitTexture(slide, lang, n, of, w / BOARD_H);
   const material = useMemo(() => new MeshBasicMaterial({ map: tex, toneMapped: false }), [tex]);
   useEffect(() => () => material.dispose(), [material]);
   const panel = useRef<Mesh>(null);
@@ -203,6 +661,8 @@ function Exhibit({ b, slide, lang, n, of, player, onSeen }: {
       tex.offset.set(0, 1 - h / BOARD_H);
     }
     if (roller.current) roller.current.position.y = PANEL_TOP - h - 0.03;
+    // Once unrolled, the board presents: its pictures arrive one by one.
+    if (s.open > 0.85) present(Math.min(dt, 0.1));
     if (!s.seen && s.open > 0.9 && Math.hypot(p.x - spot.x, p.z - spot.z) < 2.4) {
       s.seen = true;
       onSeen(b.id);
