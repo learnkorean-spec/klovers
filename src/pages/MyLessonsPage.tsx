@@ -9,6 +9,7 @@ import { CalendarDays, Clock, Loader2, Video, AlertTriangle, Wallet } from "luci
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatMoney } from "@/types/students";
 import WorldEntryCard from "@/components/games/WorldEntryCard";
+import { VOCA_INK, VOCA_PAPER, VocaStudentHeader, VocaStudentFooter } from "@/components/voca/VocaBrand";
 
 /**
  * What a private student sees: her own lessons, and nothing else.
@@ -132,21 +133,20 @@ const hhmm = (t: string) => (t ?? "").slice(0, 5);
 const isKoreanSubject = (subject: string | null | undefined) => /korean|كوري/i.test(subject ?? "");
 
 /**
- * English private students are Voca students, same sibling brand as
- * /learn-english and its VocaHeader — so this page picks up Voca's maroon
- * instead of the Korean-course klovers-green/yellow accents (Re, 23 Oct
- * 2026: "must be with the english voca course colors as those students are
- * for english"). SIGNAL isn't redefined below because it's the same hex as
- * klovers-yellow (#FFFF00) already used here (the lastCovered marker) — only
- * the maroon accent is new for this page.
+ * English private students are Voca students, not Klovers ones (Re, 23 Oct
+ * 2026: "they are under voca"). For them this page is fully Voca: Voca's
+ * header and footer instead of the sitewide Klovers ones, Voca maroon accents
+ * instead of klovers-green, and no KLOVERS World card — that door leads into
+ * the Korean story world, which is not their course. Korean private students
+ * are unchanged.
  */
 const isEnglishSubject = (subject: string | null | undefined) => /english/i.test(subject ?? "");
-const VOCA_INK = "#650000";
 
 const MyLessonsPage = () => {
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { language, toggleLanguage } = useLanguage();
   const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
   const c = isAr ? COPY.ar : COPY.en;
   const DAY = isAr ? DAY_AR : DAY_EN;
 
@@ -279,9 +279,9 @@ const MyLessonsPage = () => {
   const voca = isEnglishSubject(roster.subject);
 
   return (
-    <div className="min-h-screen" dir={isAr ? "rtl" : "ltr"}>
-      <Header />
-      <main id="main-content" className="pt-24 pb-16 px-4">
+    <div className="min-h-screen" dir={isAr ? "rtl" : "ltr"} style={voca ? { backgroundColor: VOCA_PAPER } : undefined}>
+      {voca ? <VocaStudentHeader tr={tr} toggleLanguage={toggleLanguage} /> : <Header />}
+      <main id="main-content" className={voca ? "pt-10 pb-16 px-4" : "pt-24 pb-16 px-4"}>
         <div className="max-w-2xl mx-auto space-y-5">
 
           {inWorld ? (
@@ -330,7 +330,7 @@ const MyLessonsPage = () => {
             </Card>
           )}
 
-          <WorldEntryCard isAr={isAr} compact />
+          {!voca && <WorldEntryCard isAr={isAr} compact />}
 
           <Card>
             <CardHeader className="pb-3">
@@ -422,7 +422,10 @@ const MyLessonsPage = () => {
                         </span>
                       </p>
                       {i === lastCoveredIndex && (
-                        <p className="mt-1 border-s-2 border-klovers-yellow ps-2 text-[11px] font-medium text-foreground">
+                        <p
+                          className={`mt-1 border-s-2 ps-2 text-[11px] font-medium text-foreground ${voca ? "" : "border-klovers-yellow"}`}
+                          style={voca ? { borderColor: VOCA_INK } : undefined}
+                        >
                           {c.lastCovered}
                         </p>
                       )}
@@ -435,7 +438,7 @@ const MyLessonsPage = () => {
 
         </div>
       </main>
-      <Footer />
+      {voca ? <VocaStudentFooter tr={tr} /> : <Footer />}
     </div>
   );
 };
