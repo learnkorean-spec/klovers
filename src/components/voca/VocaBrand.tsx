@@ -18,18 +18,27 @@ export const VOCA_INK = "#650000"; // maroon
 export const VOCA_SIGNAL = "#FFFF00"; // yellow (same hex as klovers-yellow)
 export const VOCA_PAPER = "#FFF9EC"; // cream
 
-export const VocaLogoMark = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 200 200" className={className} role="img" aria-label="Voca">
-    <rect x="0" y="0" width="200" height="200" rx="44" fill={VOCA_INK} />
-    <circle cx="100" cy="92" r="58" fill={VOCA_SIGNAL} />
-    <circle cx="100" cy="92" r="34" fill={VOCA_INK} />
-    <rect x="78" y="76" width="8" height="32" rx="4" fill={VOCA_SIGNAL} />
-    <rect x="91" y="64" width="8" height="56" rx="4" fill={VOCA_SIGNAL} />
-    <rect x="104" y="72" width="8" height="40" rx="4" fill={VOCA_SIGNAL} />
-    <rect x="117" y="80" width="8" height="24" rx="4" fill={VOCA_SIGNAL} />
-    <path d="M120 142 L150 142 L128 168 Z" fill={VOCA_SIGNAL} />
-  </svg>
-);
+/**
+ * `inverted` swaps maroon and yellow — for use ON a maroon surface (the
+ * student header), where the normal maroon tile disappears into the bar and
+ * only the yellow ring shows.
+ */
+export const VocaLogoMark = ({ className = "", inverted = false }: { className?: string; inverted?: boolean }) => {
+  const bg = inverted ? VOCA_SIGNAL : VOCA_INK;
+  const fg = inverted ? VOCA_INK : VOCA_SIGNAL;
+  return (
+    <svg viewBox="0 0 200 200" className={className} role="img" aria-label="Voca">
+      <rect x="0" y="0" width="200" height="200" rx="44" fill={bg} />
+      <circle cx="100" cy="92" r="58" fill={fg} />
+      <circle cx="100" cy="92" r="34" fill={bg} />
+      <rect x="78" y="76" width="8" height="32" rx="4" fill={fg} />
+      <rect x="91" y="64" width="8" height="56" rx="4" fill={fg} />
+      <rect x="104" y="72" width="8" height="40" rx="4" fill={fg} />
+      <rect x="117" y="80" width="8" height="24" rx="4" fill={fg} />
+      <path d="M120 142 L150 142 L128 168 Z" fill={fg} />
+    </svg>
+  );
+};
 
 type TrFn = (en: string, ar: string) => string;
 
@@ -51,7 +60,7 @@ export const VocaStudentHeader = ({ tr, toggleLanguage }: { tr: TrFn; toggleLang
       </a>
       <div className="container mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         <Link to="/dashboard" className="inline-flex items-center gap-2" aria-label={tr("Voca — my lessons", "Voca — حصصي")}>
-          <VocaLogoMark className="h-8 w-8 shrink-0 rounded-lg ring-1 ring-white/20" />
+          <VocaLogoMark inverted className="h-8 w-8 shrink-0" />
           <span className="text-xl font-extrabold tracking-tight text-white">Voca</span>
         </Link>
         <div className="flex items-center gap-1 sm:gap-2">
