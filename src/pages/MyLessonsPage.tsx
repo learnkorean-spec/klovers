@@ -131,6 +131,18 @@ const hhmm = (t: string) => (t ?? "").slice(0, 5);
 /** Korean private students get the story world; any other subject does not. */
 const isKoreanSubject = (subject: string | null | undefined) => /korean|كوري/i.test(subject ?? "");
 
+/**
+ * English private students are Voca students, same sibling brand as
+ * /learn-english and its VocaHeader — so this page picks up Voca's maroon
+ * instead of the Korean-course klovers-green/yellow accents (Re, 23 Oct
+ * 2026: "must be with the english voca course colors as those students are
+ * for english"). SIGNAL isn't redefined below because it's the same hex as
+ * klovers-yellow (#FFFF00) already used here (the lastCovered marker) — only
+ * the maroon accent is new for this page.
+ */
+const isEnglishSubject = (subject: string | null | undefined) => /english/i.test(subject ?? "");
+const VOCA_INK = "#650000";
+
 const MyLessonsPage = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
@@ -264,6 +276,7 @@ const MyLessonsPage = () => {
   // date it applies to.
   const lastCoveredIndex = balance ? balance.remaining_classes - 1 : -1;
   const inWorld = isKoreanSubject(roster.subject);
+  const voca = isEnglishSubject(roster.subject);
 
   return (
     <div className="min-h-screen" dir={isAr ? "rtl" : "ltr"}>
@@ -296,7 +309,7 @@ const MyLessonsPage = () => {
             </div>
           ) : (
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-2xl font-bold text-foreground" style={voca ? { color: VOCA_INK } : undefined}>
                 {c.title}: {roster.full_name}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">{c.subtitle}</p>
@@ -321,7 +334,7 @@ const MyLessonsPage = () => {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="text-base flex items-center gap-2" style={voca ? { color: VOCA_INK } : undefined}>
                 <Clock className="h-4 w-4" /> {c.weekly}
               </CardTitle>
             </CardHeader>
@@ -346,6 +359,7 @@ const MyLessonsPage = () => {
                   variant="outline"
                   size="sm"
                   className="mt-4"
+                  style={voca ? { borderColor: VOCA_INK, color: VOCA_INK } : undefined}
                   onClick={() => window.open(roster.meeting_url!, "_blank", "noopener,noreferrer")}
                 >
                   <Video className="h-4 w-4 me-1.5" /> {c.join}
@@ -356,7 +370,7 @@ const MyLessonsPage = () => {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="text-base flex items-center gap-2" style={voca ? { color: VOCA_INK } : undefined}>
                 <Wallet className="h-4 w-4" /> {c.bundle}
               </CardTitle>
             </CardHeader>
@@ -375,8 +389,9 @@ const MyLessonsPage = () => {
                   </p>
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full bg-klovers-green"
+                      className={voca ? "h-full" : "h-full bg-klovers-green"}
                       style={{
+                        ...(voca ? { backgroundColor: VOCA_INK } : {}),
                         width: `${Math.min(100, Math.max(0,
                           (balance.used_classes / Math.max(1, balance.total_classes)) * 100))}%`,
                       }}
@@ -389,7 +404,7 @@ const MyLessonsPage = () => {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="text-base flex items-center gap-2" style={voca ? { color: VOCA_INK } : undefined}>
                 <CalendarDays className="h-4 w-4" /> {c.upcoming}
               </CardTitle>
             </CardHeader>
