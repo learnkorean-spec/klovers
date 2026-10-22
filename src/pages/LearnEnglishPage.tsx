@@ -99,18 +99,24 @@ const VocaLogoMark = ({ className = "" }: { className?: string }) => (
  * pattern /learn-arabic already uses for maktub: a page with its own
  * sibling-brand identity gets its own header/nav instead of the sitewide
  * <Header />, whose Courses/Pricing/Textbook/Games/Shop nav is about the
- * Korean platform and doesn't fit an English-lessons visitor. Surfaces
- * Courses and Articles (both still on kloversegy.com — Voca has no separate
- * site the way maktub does) plus this page's own How it works/FAQ/trial
- * anchors. A signed-in Klovers student still gets a one-tap Dashboard link,
- * same trade-off fix maktub's header applied.
+ * Korean platform and doesn't fit an English-lessons visitor.
+ *
+ * UPDATE, 23 Oct 2026: the nav first shipped with "Courses" -> /courses and
+ * "Articles" -> /blog, reasoning Voca has no separate site the way maktub
+ * does. Re corrected this same day: every nav item has to be Voca's own
+ * content, never a link out to Klovers/Korean pages — /courses is Klovers'
+ * Hangul/TOPIK catalogue and /blog is the Korean-journey blog, neither of
+ * which is Voca's. There is no English course catalogue or article library
+ * yet, so the nav instead anchors to the real sections this one-offer page
+ * already has: how lessons work, who they're for, and the FAQ. Add an actual
+ * Voca courses/articles destination here (and only here) if that content is
+ * ever built — until then, don't relink Courses/Articles to kloversegy.com.
  */
 const VocaHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; toggleLanguage: () => void }) => {
   const { user } = useAuth();
   const navLinks = [
+    { href: "#who-its-for", label: tr("Who it's for", "لمن هذه الدروس") },
     { href: "#how-it-works", label: tr("How it works", "كيف تسير الدروس") },
-    { to: "/courses", label: tr("Courses", "الدورات") },
-    { to: "/blog", label: tr("Articles", "مقالات") },
     { href: "#faq", label: tr("FAQ", "الأسئلة الشائعة") },
   ];
   return (
@@ -340,7 +346,7 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* Who this is for — stub-style rows, not another checklist card. */}
-        <section className="py-20 border-b" style={{ backgroundColor: PAPER }}>
+        <section className="py-20 border-b" style={{ backgroundColor: PAPER }} id="who-its-for">
           <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="text-2xl sm:text-3xl font-semibold" style={{ ...displayFont, color: INK }}>
               {tr("Who these lessons are for", "لمن هذه الدروس")}
