@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Globe, LayoutDashboard } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 
@@ -40,9 +40,11 @@ import rehamPhoto from "@/assets/reham-teacher.jpg";
  * anywhere live since the Arabic page moved to Poppins/Cairo in v2 — no new
  * font request.
  *
- * Keeps the sitewide Header/Footer (unlike /learn-arabic): there is no
- * sibling brand here for a bespoke header to match, and Re's "subpage"
- * question resolved to "keep the URL and structure as they are."
+ * UPDATE, 23 Oct 2026 (Re, via Claude): the paragraph above no longer holds.
+ * Re decided this page should get the maktub treatment after all — its own
+ * sibling-brand identity, "Voca" — see the recolor note further down and
+ * the VocaHeader/Voca footer near the end of this file. Header is now
+ * VocaHeader, not the sitewide one; same URL and route structure otherwise.
  *
  * All copy that states a fact — the SEO title/description, the FAQ
  * question/answer pairs, the audience list, and the three lesson steps —
@@ -77,8 +79,96 @@ const AirmailRule = () => (
   </div>
 );
 
+type TrFn = (en: string, ar: string) => string;
+
+const VocaLogoMark = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 200 200" className={className} role="img" aria-label="Voca">
+    <rect x="0" y="0" width="200" height="200" rx="44" fill={INK} />
+    <circle cx="100" cy="92" r="58" fill={SIGNAL} />
+    <circle cx="100" cy="92" r="34" fill={INK} />
+    <rect x="78" y="76" width="8" height="32" rx="4" fill={SIGNAL} />
+    <rect x="91" y="64" width="8" height="56" rx="4" fill={SIGNAL} />
+    <rect x="104" y="72" width="8" height="40" rx="4" fill={SIGNAL} />
+    <rect x="117" y="80" width="8" height="24" rx="4" fill={SIGNAL} />
+    <path d="M120 142 L150 142 L128 168 Z" fill={SIGNAL} />
+  </svg>
+);
+
+/**
+ * Voca's own header — added 23 Oct 2026 at Re's request, following the same
+ * pattern /learn-arabic already uses for maktub: a page with its own
+ * sibling-brand identity gets its own header/nav instead of the sitewide
+ * <Header />, whose Courses/Pricing/Textbook/Games/Shop nav is about the
+ * Korean platform and doesn't fit an English-lessons visitor. Surfaces
+ * Courses and Articles (both still on kloversegy.com — Voca has no separate
+ * site the way maktub does) plus this page's own How it works/FAQ/trial
+ * anchors. A signed-in Klovers student still gets a one-tap Dashboard link,
+ * same trade-off fix maktub's header applied.
+ */
+const VocaHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; toggleLanguage: () => void }) => {
+  const { user } = useAuth();
+  const navLinks = [
+    { href: "#how-it-works", label: tr("How it works", "كيف تسير الدروس") },
+    { to: "/courses", label: tr("Courses", "الدورات") },
+    { to: "/blog", label: tr("Articles", "مقالات") },
+    { href: "#faq", label: tr("FAQ", "الأسئلة الشائعة") },
+  ];
+  return (
+    <header className="sticky top-0 z-40 border-b border-foreground/10 bg-background/90 backdrop-blur">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-3 focus:z-50 focus:rounded-full focus:px-4 focus:py-2 focus:text-sm focus:font-semibold"
+        style={{ backgroundColor: SIGNAL, color: "#111111" }}
+      >
+        {tr("Skip to content", "الانتقال إلى المحتوى")}
+      </a>
+      <div className="container mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+        <a href="#top" className="inline-flex items-center gap-2" aria-label={tr("Voca home", "الصفحة الرئيسية لـ Voca")}>
+          <VocaLogoMark className="h-8 w-8 shrink-0" />
+          <span className="text-xl font-extrabold tracking-tight text-foreground">Voca</span>
+        </a>
+        <nav className="hidden items-center gap-6 md:flex" aria-label={tr("Primary", "رئيسي")}>
+          {navLinks.map((link) =>
+            link.to ? (
+              <Link key={link.to} to={link.to} className="text-sm font-medium text-foreground/75 hover:text-foreground">
+                {link.label}
+              </Link>
+            ) : (
+              <a key={link.href} href={link.href} className="text-sm font-medium text-foreground/75 hover:text-foreground">
+                {link.label}
+              </a>
+            ),
+          )}
+        </nav>
+        <div className="flex items-center gap-2">
+          {user && (
+            <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs" title={tr("My Dashboard", "لوحة التحكم")}>
+              <Link to="/dashboard">
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{tr("Dashboard", "لوحة التحكم")}</span>
+              </Link>
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-1.5 text-xs">
+            <Globe className="h-3.5 w-3.5" />
+            {tr("العربية", "English")}
+          </Button>
+          <Button
+            size="sm"
+            asChild
+            className="hidden rounded-full font-semibold hover:brightness-95 sm:inline-flex"
+            style={{ backgroundColor: SIGNAL, color: "#111111" }}
+          >
+            <a href="#trial">{tr("Book a trial", "احجز حصة تجريبية")}</a>
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
+};
+
 const LearnEnglishPage = () => {
-  const { language } = useLanguage();
+  const { language, toggleLanguage } = useLanguage();
   const isAr = language === "ar";
   const tr = (en: string, ar: string) => (isAr ? ar : en);
 
@@ -167,7 +257,7 @@ const LearnEnglishPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <VocaHeader isAr={isAr} tr={tr} toggleLanguage={toggleLanguage} />
       <main id="main-content">
         {/* Hero — ink navy ground, the airmail rule framing the one photo. */}
         <section className="relative overflow-hidden text-white" style={{ backgroundColor: INK }}>
