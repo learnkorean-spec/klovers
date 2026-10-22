@@ -73,6 +73,13 @@ const Header = () => {
     { href: "/about", label: t("header", "about") },
     { href: "/faq", label: t("header", "faq") },
     { href: "/contact", label: t("header", "contact") },
+    // Reham's other 1:1 language offerings — sibling-brand pages (maktub,
+    // Voca), not Korean content, so they belong in the visitor-facing "More"
+    // menu rather than the logged-in account dropdown (Re, 23 Oct 2026: asked
+    // to cross-link them from the main site; account dropdown rejected as the
+    // wrong spot since it only shows to signed-in Korean students).
+    { href: "/learn-arabic", label: isAr ? "تعلّم العربية — مكتوب" : "Learn Arabic — maktub" },
+    { href: "/learn-english", label: isAr ? "تعلّم الإنجليزية — Voca" : "Learn English — Voca" },
   ];
 
   const allLinks = [...primaryLinks, ...moreLinks];
