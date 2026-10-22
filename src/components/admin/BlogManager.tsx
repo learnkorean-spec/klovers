@@ -42,6 +42,8 @@ interface BlogPost {
   content: string;
   author: string;
   lang: string;
+  /** 'klovers' (Korean Journal, /blog) or 'voca' (English, /learn-english/articles). */
+  brand: string;
   published: boolean;
   published_at: string | null;
   created_at: string;
@@ -120,6 +122,7 @@ const emptyPost = (): Partial<BlogPost> => ({
   content: "",
   author: "Klovers",
   lang: "en",
+  brand: "klovers",
   published: false,
   seo_score: 0,
 });
@@ -212,7 +215,7 @@ const BlogManager = () => {
     const { data } = await supabase
       .from("blog_posts")
       .select(
-        "id,title,slug,description,keywords,article_type,hero_image,hero_alt,hero_caption,hero_image_2,hero_alt_2,hero_caption_2,cta_text,cta_url,author,lang,published,published_at,created_at,updated_at,seo_score"
+        "id,title,slug,description,keywords,article_type,hero_image,hero_alt,hero_caption,hero_image_2,hero_alt_2,hero_caption_2,cta_text,cta_url,author,lang,brand,published,published_at,created_at,updated_at,seo_score"
       )
       .order("created_at", { ascending: false });
     setPosts((data as BlogPost[]) || []);
@@ -272,6 +275,7 @@ const BlogManager = () => {
       content: editing.content,
       author: editing.author || (editing.lang === "ar" ? "فريق كلوفرز" : "Klovers"),
       lang: editing.lang || "en",
+      brand: editing.brand || "klovers",
       published: editing.published || false,
       published_at: editing.published ? (editing.published_at || new Date().toISOString()) : null,
       seo_score: seoScore,
@@ -479,6 +483,9 @@ const BlogManager = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="text-xs">{post.lang === "ar" ? "AR" : "EN"}</Badge>
+                    {post.brand === "voca" && (
+                      <Badge className="ms-1 text-xs text-white" style={{ backgroundColor: "#650000" }}>Voca</Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -596,6 +603,37 @@ const BlogManager = () => {
                 rows={2}
               />
               <p className="text-xs text-muted-foreground">{(editing.description || "").length}/160 chars (120-160 ideal)</p>
+            </div>
+
+            {/* Which site lists it: Voca articles are hidden from the Korean
+                Journal (/blog) and shown on /learn-english/articles. Choosing
+                Voca also swaps the Korean default call-to-action for Voca's. */}
+            <div className="space-y-2">
+              <Label>Brand</Label>
+              <Select
+                value={editing.brand || "klovers"}
+                onValueChange={(v) =>
+                  setEditing((prev) => {
+                    const next = { ...prev, brand: v };
+                    const koreanDefault = !prev?.cta_url || prev.cta_url === "/enroll-now";
+                    const vocaDefault = prev?.cta_url === "/learn-english#trial";
+                    if (v === "voca" && koreanDefault) {
+                      next.cta_text = prev?.lang === "ar" ? "احجز حصة إنجليزية تجريبية مجانية" : "Book a free English trial lesson";
+                      next.cta_url = "/learn-english#trial";
+                    } else if (v === "klovers" && vocaDefault) {
+                      next.cta_text = "Start learning Korean today";
+                      next.cta_url = "/enroll-now";
+                    }
+                    return next;
+                  })
+                }
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="klovers">Klovers: Korean Journal (/blog)</SelectItem>
+                  <SelectItem value="voca">Voca: English articles (/learn-english/articles)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid sm:grid-cols-3 gap-4">
