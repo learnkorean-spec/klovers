@@ -40,6 +40,7 @@ export const WORLD_COPY = {
       enter: "Enter",
       help: "Help",
       read: "Read",
+      shop: "Shop",
     },
     speech: {
       hello: { ko: "안녕!", text: "annyeong: hello" },
@@ -82,6 +83,20 @@ export const WORLD_COPY = {
         { ko: "밥", right: false, feedback: "밥 (bap) = cooked rice. Try again." },
         { ko: "물", right: false, feedback: "물 (mul) = water. Try again." },
       ],
+      close: "Back to the market",
+    },
+    /** The market's little shop: pick one of three things, then ask for it. */
+    shop: {
+      ask: { ko: "어서 오세요! 뭐 드릴까요?", gloss: "Welcome! What would you like?" },
+      line: "Pick one thing to buy.",
+      items: [
+        { ko: "사과", roman: "sagwa", meaning: "apple", say: "사과 주세요.", sayGloss: "An apple, please." },
+        { ko: "물", roman: "mul", meaning: "water", say: "물 주세요.", sayGloss: "Water, please." },
+        { ko: "꽃", roman: "kkot", meaning: "flower", say: "꽃 주세요.", sayGloss: "A flower, please." },
+      ],
+      youSay: "You say",
+      reply: { ko: "여기 있어요!", gloss: "Here you are!" },
+      note: "주세요 (juseyo) = \"please give me\". Put any thing in front of it.",
       close: "Back to the market",
     },
     noWebglTitle: "This device can't open the 3D world yet",
@@ -373,6 +388,7 @@ export const WORLD_COPY = {
       enter: "دخول",
       help: "مساعدة",
       read: "قراءة",
+      shop: "تسوّق",
     },
     speech: {
       hello: { ko: "안녕!", text: "أنيونغ: مرحبًا" },
@@ -414,6 +430,19 @@ export const WORLD_COPY = {
         { ko: "밥", right: false, feedback: "밥 (باب) = الأرز المطبوخ. محاولة أخرى." },
         { ko: "물", right: false, feedback: "물 (مول) = الماء. محاولة أخرى." },
       ],
+      close: "العودة إلى السوق",
+    },
+    shop: {
+      ask: { ko: "어서 오세요! 뭐 드릴까요?", gloss: "أهلًا وسهلًا! ماذا تطلبون؟" },
+      line: "اختيار شيء واحد للشراء.",
+      items: [
+        { ko: "사과", roman: "ساغوا", meaning: "تفاحة", say: "사과 주세요.", sayGloss: "تفاحةً، من فضلك." },
+        { ko: "물", roman: "مول", meaning: "ماء", say: "물 주세요.", sayGloss: "ماءً، من فضلك." },
+        { ko: "꽃", roman: "كّوت", meaning: "زهرة", say: "꽃 주세요.", sayGloss: "زهرةً، من فضلك." },
+      ],
+      youSay: "الطلب بالكورية",
+      reply: { ko: "여기 있어요!", gloss: "تفضّلوا!" },
+      note: "주세요 (جوسيو) تعني: «أعطني من فضلك». تُوضع بعد اسم أي شيء.",
       close: "العودة إلى السوق",
     },
     noWebglTitle: "لا يدعم هذا الجهاز العالم ثلاثي الأبعاد بعد",

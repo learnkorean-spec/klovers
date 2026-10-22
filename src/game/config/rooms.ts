@@ -254,6 +254,12 @@ export const MARKET = {
     [-2.9, 1.9, 1.7, 1.0],
     [4.5, -2.1, 1.0, 1.7],
   ] as [number, number, number, number][],
+  /**
+   * The little shop on the second produce table: three things laid out to
+   * pick from (tap one, or walk up and choose). Each is a word the market
+   * already teaches, said the way a shopper asks for it: "___ 주세요".
+   */
+  shop: { table: 1, items: ["사과", "물", "꽃"] as const },
   /** Baskets of goods in front of the stalls: x, z, size. */
   baskets: [
     [-5.6, 6.3, 0.9], [-5.1, 6.95, 0.7], [5.6, 6.2, 0.85],

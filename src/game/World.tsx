@@ -143,6 +143,10 @@ export interface WorldProps {
   beaconEls?: MutableRefObject<Map<string, HTMLElement>>;
   /** Tap-to-go arrived at this thing. */
   onArrive?: (id: string) => void;
+  /** The market shop's thing last chosen (it hops; `at` changes each pick). */
+  shopChosen?: { item: string; at: number } | null;
+  /** A shop thing was pressed (clicked or tapped) in the scene. */
+  onShopPress?: (item: string) => void;
   /** A chosen mission's marker (wins over the first-visit objective's). */
   marker?: { x: number; z: number } | null;
   /** "eyes": first person (the learner's own view); "behind": over the shoulder. */
@@ -529,7 +533,7 @@ export default function World(props: WorldProps) {
         position={[14, 7.6, 4.5]}
         intensity={3.5}
         color={LIGHT.sun}
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[quality.shadowMap, quality.shadowMap]}
         shadow-bias={-0.0004}
         shadow-normalBias={0.02}
         shadow-camera-left={-layout.shadowExtent}
@@ -544,7 +548,7 @@ export default function World(props: WorldProps) {
       {roomId === "courtyard" && <Lobby story={story} />}
       {roomId === "hangul-village" && <HangulVillage marketOpen={access.open.has("vocabulary-market")} letters={saved.letters} />}
       {roomId === "hangul-village" && <TourExhibit lang={props.lang ?? "en"} player={player} onSeen={(s) => cb.current.onTourSeen?.(s)} />}
-      {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} words={saved.words} />}
+      {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} words={saved.words} shopChosen={props.shopChosen} onShopPress={props.paused ? undefined : (item) => cb.current.onShopPress?.(item)} />}
       {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} />}
       {roomId === "conversation-cafe" && <ConversationCafe />}
       {roomId === "klovers-house" && <KloversHouse />}

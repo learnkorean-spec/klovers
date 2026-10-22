@@ -175,7 +175,9 @@ const WorldPage = () => {
   const beaconEls = useRef(new Map<string, HTMLElement>());
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
-  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId } | null>(null);
+  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shopPick?: string } | null>(null);
+  /** The shop thing last chosen: it hops in the scene. */
+  const [shopChosen, setShopChosen] = useState<{ item: string; at: number } | null>(null);
   // A person's line or a word: shown over the world without stopping it.
   const [bubble, setBubble] = useState<(Bubble & { at: string }) | null>(null);
   const [found, setFound] = useState<{ text: string; ko?: string } | null>(null);
@@ -408,6 +410,16 @@ const WorldPage = () => {
     [patch, note, copy],
   );
 
+  /** A shop thing chosen: its word is learned, it hops, Cluby is pleased. */
+  const pickShop = useCallback(
+    (ko: string) => {
+      learnWord(ko);
+      setShopChosen({ item: ko, at: performance.now() });
+      api.current?.celebrate();
+    },
+    [learnWord],
+  );
+
   /** One of the village's three letters found; all three: Cluby is delighted. */
   const findLetter = useCallback(
     (l: string) => {
@@ -530,6 +542,9 @@ const WorldPage = () => {
         // Once the sign is back up, the baker simply thanks the learner.
         if (savedRef.current.breadSign) setBubble({ kind: "say", id: "baker", at: it.id });
         else setCard({ kind: "word" });
+        break;
+      case "shop":
+        setCard({ kind: "shop" });
         break;
       case "locked":
         setCard({ kind: "locked", notice: it.notice });
@@ -764,6 +779,15 @@ const WorldPage = () => {
                 marker={marker ?? tourMarker}
                 lang={lang}
                 onTourSeen={tourSeen}
+                shopChosen={shopChosen}
+                onShopPress={(item) => {
+                  // Pressed in the scene: open the shop with that thing chosen.
+                  if (card || sequence || welcoming) return;
+                  if (document.pointerLockElement) document.exitPointerLock();
+                  setBubble(null);
+                  pickShop(item);
+                  setCard({ kind: "shop", shopPick: item });
+                }}
               />
             </Suspense>
             {/* Guidance: a small sign over each thing nearby — tap (or click)
@@ -940,6 +964,8 @@ const WorldPage = () => {
                 kind={card.kind}
                 notice={card.notice}
                 quiz={card.quiz}
+                shopPick={card.shopPick}
+                onShopPick={pickShop}
                 signedIn={access.signedIn}
                 solved={saved.breadSign}
                 onClose={() => {

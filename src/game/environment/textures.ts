@@ -105,7 +105,7 @@ function loadPhoto(kind: PhotoKind): Promise<PhotoSet> {
       loader.loadAsync(`${TEX}${kind}_${name}.webp`).then((t) => {
         t.wrapS = RepeatWrapping;
         t.wrapT = RepeatWrapping;
-        t.anisotropy = 8;
+        t.anisotropy = 16;
         if (srgb) t.colorSpace = SRGBColorSpace;
         return t;
       });

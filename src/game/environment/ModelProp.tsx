@@ -117,7 +117,10 @@ function Model({ name, at }: { name: string; at: PropPlacement[] }) {
   }, [base, at]);
   // Only the instance buffers belong to these meshes; the model's geometry
   // and materials stay cached by the loader for the next visit.
-  useEffect(() => () => meshes.forEach((m) => m.dispose()), [meshes]);
+  // R3F applies dispose={null} below as a property, which replaces each
+  // mesh's own dispose(); call the class method directly (calling m.dispose()
+  // threw on every room change once these props had loaded).
+  useEffect(() => () => meshes.forEach((m) => InstancedMesh.prototype.dispose.call(m)), [meshes]);
   return (
     <>
       {meshes.map((m, i) => (

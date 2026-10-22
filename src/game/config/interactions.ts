@@ -26,11 +26,13 @@ import { PROPS } from "./world";
  *            name, what it is for, and a link to it
  * - locked   a gate to a world that is not open yet (or not built yet):
  *            inspecting it says, kindly, what opens it
+ * - shop     the market's little shop: pick one of three things and ask
+ *            for it in Korean (the things can also be pressed in the scene)
  */
-export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour";
+export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour" | "shop";
 
 /** The verb on the prompt ([E] Inspect, the round button's label …). */
-export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read";
+export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read" | "shop";
 
 /** Learning cards (words and letters). Text per language: copy.learn[id]. */
 export type LearnId =
@@ -153,6 +155,8 @@ export const INTERACTABLES: Interactable[] = [
   // A shopper asking the price; fruit on the produce table; a word to check.
   { id: "say-shopper", room: "vocabulary-market", kind: "say", action: "talk", say: "shopper", npc: "m-shopper", x: npc("m-shopper").x + 0.9, z: npc("m-shopper").z, radius: 1.1 },
   { id: "learn-gwail", room: "vocabulary-market", kind: "learn", action: "learn", learn: "gwail", word: "과일", x: MARKET.tables[0][0], z: MARKET.tables[0][1] + MARKET.tables[0][3] / 2 + 0.6, radius: 1.2 },
+  // The little shop: three things on the second produce table, from the square side.
+  { id: "shop", room: "vocabulary-market", kind: "shop", action: "shop", x: MARKET.tables[MARKET.shop.table][0] - MARKET.tables[MARKET.shop.table][2] / 2 - 0.75, z: MARKET.tables[MARKET.shop.table][1], radius: 1.4, priority: 1 },
   { id: "quiz-ppang", room: "vocabulary-market", kind: "quiz", action: "learn", quiz: "ppang", x: MARKET.crates.x - 0.3, z: MARKET.crates.z - MARKET.crates.size / 2 - 0.55, radius: 1.2 },
 
   /* ── KLOVERS Hub: every gate can be walked up to ── */

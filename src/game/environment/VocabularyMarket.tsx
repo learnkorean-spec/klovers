@@ -9,6 +9,7 @@ import Batch from "./Batch";
 import { Kit, basket, bunting, gutter, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import ModelProp, { type PropPlacement } from "./ModelProp";
+import MarketShop, { type ShopItem } from "./MarketShop";
 import { REAL_PROPS } from "../systems/styleMode";
 import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
 
@@ -27,8 +28,10 @@ const HW = MARKET.halfWidth;
 
 /** On each produce table: a flat bamboo tray in the middle, a basket of cabbages at each end. */
 const TABLE_TOP = 0.8;
-const TRAYS: PropPlacement[] = MARKET.tables.map(([x, z]) => ({ x, z, y: TABLE_TOP, width: 0.62 }));
-const TABLE_BASKETS: PropPlacement[] = MARKET.tables.flatMap(([x, z, w, d]) =>
+/** The shop's table holds its own three things instead (MarketShop). */
+const PRODUCE_TABLES = MARKET.tables.filter((_, i) => i !== MARKET.shop.table);
+const TRAYS: PropPlacement[] = PRODUCE_TABLES.map(([x, z]) => ({ x, z, y: TABLE_TOP, width: 0.62 }));
+const TABLE_BASKETS: PropPlacement[] = PRODUCE_TABLES.flatMap(([x, z, w, d]) =>
   [-0.3, 0.3].map((t) => ({ x: w >= d ? x + t * w : x, z: w >= d ? z : z + t * d, y: TABLE_TOP, width: 0.5 })),
 );
 const CABBAGES: PropPlacement[] = TABLE_BASKETS.flatMap((b, i) =>
@@ -59,11 +62,11 @@ function Goods({ word }: { word: Word }) {
         [-0.1, 0.1].map((x) => (
           <group key={x} position={[x, 0, 0]}>
             <mesh position={[0, 0.13, 0]}>
-              <cylinderGeometry args={[0.045, 0.045, 0.26, 10]} />
+              <cylinderGeometry args={[0.045, 0.045, 0.26, 24]} />
               {white()}
             </mesh>
             <mesh position={[0, 0.28, 0]}>
-              <cylinderGeometry args={[0.022, 0.022, 0.04, 8]} />
+              <cylinderGeometry args={[0.022, 0.022, 0.04, 16]} />
               <primitive object={MAT.charcoal} attach="material" />
             </mesh>
           </group>
@@ -73,11 +76,11 @@ function Goods({ word }: { word: Word }) {
       return each(() => (
         <>
           <mesh position={[0, 0.045, 0]}>
-            <cylinderGeometry args={[0.12, 0.07, 0.09, 16]} />
+            <cylinderGeometry args={[0.12, 0.07, 0.09, 32]} />
             <primitive object={MAT.charcoal} attach="material" />
           </mesh>
           <mesh position={[0, 0.085, 0]} scale={[1, 0.55, 1]}>
-            <sphereGeometry args={[0.11, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <sphereGeometry args={[0.11, 28, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
             {white()}
           </mesh>
         </>
@@ -85,7 +88,7 @@ function Goods({ word }: { word: Word }) {
     case "빵": // loaves
       return each(() => (
         <mesh position={[0, 0.08, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 1, 0.8]}>
-          <capsuleGeometry args={[0.08, 0.18, 6, 10]} />
+          <capsuleGeometry args={[0.08, 0.18, 10, 20]} />
           <primitive object={MAT.woodWarm} attach="material" />
         </mesh>
       ));
@@ -111,12 +114,12 @@ function Goods({ word }: { word: Word }) {
       return each((i) => (
         <>
           <mesh position={[0, 0.1, 0]}>
-            <cylinderGeometry args={[0.1, 0.075, 0.2, 12]} />
+            <cylinderGeometry args={[0.1, 0.075, 0.2, 28]} />
             <primitive object={MAT.woodDark} attach="material" />
           </mesh>
           {[[0, 0.3, 0], [0.07, 0.26, 0.05], [-0.07, 0.27, -0.04]].map((p, k) => (
             <mesh key={k} position={p as [number, number, number]}>
-              <sphereGeometry args={[0.065, 10, 8]} />
+              <sphereGeometry args={[0.065, 20, 14]} />
               <primitive object={(k + i) % 3 === 0 ? std(PALETTE.yellow, 0.7) : std(PALETTE.white, 0.7)} attach="material" />
             </mesh>
           ))}
@@ -225,7 +228,7 @@ const MARKET_KIT: Kit = (() => {
     k.box("fabric", [x, 0.79, z], [w * 0.8, 0.02, d * 0.8]);
     const along = w >= d;
     // Real bamboo baskets of cabbage replace these when the props load.
-    if (!REAL_PROPS)
+    if (!REAL_PROPS && i !== MARKET.shop.table)
       for (const t of [-0.3, 0.3]) {
         const bx = along ? x + t * w : x;
         const bz = along ? z : z + t * d;
@@ -278,7 +281,19 @@ function useStringLights() {
   }, []);
 }
 
-export default function VocabularyMarket({ nextOpen, breadSign, words }: { nextOpen: boolean; breadSign: boolean; words: string[] }) {
+export default function VocabularyMarket({
+  nextOpen,
+  breadSign,
+  words,
+  shopChosen,
+  onShopPress,
+}: {
+  nextOpen: boolean;
+  breadSign: boolean;
+  words: string[];
+  shopChosen?: { item: string; at: number } | null;
+  onShopPress?: (item: ShopItem) => void;
+}) {
   const paving = useTiledTexture(paintPaving, HW, HD);
   const photo = usePhotoFloor("paving", HW, HD);
   // Signs already up when the market opened stay still; new ones swing in.
@@ -303,6 +318,7 @@ export default function VocabularyMarket({ nextOpen, breadSign, words }: { nextO
         <primitive object={MAT.stone} attach="material" />
       </mesh>
       <Batch kit={MARKET_KIT} />
+      <MarketShop words={words} chosen={shopChosen} onPress={onShopPress} />
       {/* Two cloth banners by the gate: the market's small movement. */}
       {[-2.6, 2.6].map((x, i) => (
         <group key={x} position={[x + 0.3, 3.28, -HD + 0.9]}>
