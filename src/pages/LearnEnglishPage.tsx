@@ -57,19 +57,23 @@ import rehamPhoto from "@/assets/reham-teacher.jpg";
  * built.
  */
 
-const INK = "#152A4A";
-const PAPER = "#F7F1E4";
-const SIGNAL = "#B9372B";
-const SIGNAL_DEEP = "#9A2C22";
-const WING = "#2F5D8A";
+// Recolored 23 Oct 2026 (Re, via Claude): overriding the navy/paper/red
+// "airmail" identity above with Voca's own maroon + Klovers-yellow pair,
+// plus a standalone Voca footer block and an explicit link back to the
+// Korean side of Klovers — see the end of this page, just before <Footer />.
+const INK = "#650000"; // Voca maroon
+const PAPER = "#FFF9EC"; // Voca cream
+const SIGNAL = "#FFFF00"; // Klovers yellow (primary accent)
+const SIGNAL_DEEP = "#4A0000"; // darker maroon, used as a hover/accent shade
+const WING = "#FFF9EC"; // cream (secondary accent, same as PAPER)
 
 const displayFont = { fontFamily: "'Fraunces', serif" };
 
-/** The one recurring device: a thin red-over-blue rule, used exactly twice. */
+/** The one recurring device: a thin maroon-over-yellow rule, used exactly twice. */
 const AirmailRule = () => (
   <div aria-hidden="true">
+    <div style={{ height: 4, backgroundColor: INK }} />
     <div style={{ height: 4, backgroundColor: SIGNAL }} />
-    <div style={{ height: 4, backgroundColor: WING }} />
   </div>
 );
 
@@ -172,14 +176,14 @@ const LearnEnglishPage = () => {
               <div>
                 <span
                   className="inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-medium"
-                  style={{ borderColor: `${SIGNAL}99`, color: "#F0D9C6" }}
+                  style={{ borderColor: `${SIGNAL}99`, color: SIGNAL }}
                 >
                   {tr("Real conversation, not just grammar", "محادثة حقيقية لا قواعد فقط")}
                 </span>
                 <h1 className="mt-5 text-4xl sm:text-5xl font-semibold leading-[1.1]" style={displayFont}>
                   {tr("Say it in English.", "قل ما تريد بالإنجليزية.")}
                   <br />
-                  <span className="italic font-normal" style={{ color: "#F0D9C6" }}>
+                  <span className="italic font-normal" style={{ color: SIGNAL }}>
                     {tr("Be understood, wherever it takes you.", "ولتُفهم، أينما يأخذك ذلك.")}
                   </span>
                 </h1>
@@ -193,8 +197,8 @@ const LearnEnglishPage = () => {
                   <Button
                     size="lg"
                     asChild
-                    className="rounded-full font-semibold text-white hover:brightness-95"
-                    style={{ backgroundColor: SIGNAL }}
+                    className="rounded-full font-semibold hover:brightness-95"
+                    style={{ backgroundColor: SIGNAL, color: "#111111" }}
                   >
                     <Link to="/contact?subject=English+lessons">
                       {tr("Message me about lessons", "راسلني بخصوص الدروس")}
@@ -266,7 +270,7 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* How lessons work — a real sequence, numbered. */}
-        <section className="py-20 border-b">
+        <section className="py-20 border-b" id="how-it-works">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
               {tr("How lessons work", "كيف تسير الدروس")}
@@ -275,8 +279,8 @@ const LearnEnglishPage = () => {
               {steps.map((s, i) => (
                 <li key={s.title}>
                   <span
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold text-white"
-                    style={{ backgroundColor: i === 1 ? WING : SIGNAL, ...displayFont }}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold"
+                    style={{ backgroundColor: i === 1 ? WING : SIGNAL, color: "#111111", ...displayFont }}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -327,7 +331,7 @@ const LearnEnglishPage = () => {
           <div className="container mx-auto px-4 max-w-5xl grid gap-10 md:grid-cols-[12rem_1fr] md:items-center">
             <div
               className="relative mx-auto h-44 w-44 shrink-0 overflow-hidden rounded-full border-4 md:mx-0"
-              style={{ borderColor: `${WING}cc` }}
+              style={{ borderColor: `${SIGNAL}cc` }}
             >
               <img
                 src={rehamPhoto}
@@ -338,7 +342,7 @@ const LearnEnglishPage = () => {
               />
             </div>
             <div>
-              <p className="text-lg italic leading-snug" style={{ ...displayFont, color: "#F0D9C6" }}>
+              <p className="text-lg italic leading-snug" style={{ ...displayFont, color: SIGNAL }}>
                 {tr(
                   "“English was never optional for me, it was the language a deadline or a document had to be right in.”",
                   "«الإنجليزية لم تكن أبدًا خيارًا بالنسبة لي، بل اللغة التي كان يجب أن يكون فيها الموعد النهائي أو المستند دقيقًا.»",
@@ -352,7 +356,7 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* Trial booking — the second and last use of the airmail rule. */}
-        <section className="py-20 border-b" style={{ backgroundColor: PAPER }}>
+        <section className="py-20 border-b" style={{ backgroundColor: PAPER }} id="trial">
           <div className="container mx-auto px-4 max-w-2xl">
             <div className="overflow-hidden rounded-t-2xl">
               <AirmailRule />
@@ -371,7 +375,7 @@ const LearnEnglishPage = () => {
             <div className="rounded-b-xl bg-background px-6 pb-10 sm:px-10">
               <PersonalTrialBooking
                 language="english"
-                accentColor={SIGNAL}
+                accentColor={INK}
                 accentHoverColor={SIGNAL_DEEP}
                 whatsappMessage={{
                   en: "Hi! I'd like to book a free trial English lesson but none of the available times work for me. Can we find another time?",
@@ -383,7 +387,7 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* Common questions — visible text backing the FAQPage schema above */}
-        <section className="py-20 border-b">
+        <section className="py-20 border-b" id="faq">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
               {tr("Common questions", "أسئلة شائعة")}
@@ -415,8 +419,8 @@ const LearnEnglishPage = () => {
               <Button
                 size="lg"
                 asChild
-                className="rounded-full font-semibold text-white hover:brightness-95"
-                style={{ backgroundColor: SIGNAL }}
+                className="rounded-full font-semibold hover:brightness-95"
+                style={{ backgroundColor: SIGNAL, color: "#111111" }}
               >
                 <Link to="/contact?subject=English+lessons" className="flex items-center gap-2">
                   {tr("Message me about lessons", "راسلني بخصوص الدروس")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
@@ -434,6 +438,86 @@ const LearnEnglishPage = () => {
           </div>
         </section>
       </main>
+
+      {/* Voca is Klovers' English-lessons identity — added 23 Oct 2026 at Re's
+         request, matching the sibling-brand idea used for maktub (Arabic).
+         Sits above the sitewide Footer below, which is left untouched. */}
+      <div
+        className="py-4 px-4 flex flex-wrap items-center justify-center gap-2 text-sm border-y"
+        style={{ backgroundColor: PAPER, borderColor: "#ecddc4" }}
+      >
+        <span
+          className="inline-flex h-5 w-5 items-center justify-center rounded-md font-extrabold text-xs"
+          style={{ backgroundColor: SIGNAL, color: "#111111" }}
+          aria-hidden="true"
+        >
+          K
+        </span>
+        <span style={{ color: "#555555" }}>
+          {tr("Also learning Korean? Voca is part of", "هل تتعلم الكورية أيضًا؟ فوكا جزء من")}
+        </span>
+        <Link to="/" className="font-bold underline" style={{ color: INK }}>
+          {tr("Klovers — back to Korean lessons", "كلوفرز — العودة إلى دروس الكورية")}
+        </Link>
+      </div>
+
+      <footer className="py-10 px-4" style={{ backgroundColor: "#0a0a0a", color: "#d9d9d9" }}>
+        <div className="container mx-auto flex flex-wrap gap-8 justify-between items-start">
+          <div className="flex flex-col gap-2 max-w-xs">
+            <div className="flex items-center gap-2">
+              <svg width="26" height="26" viewBox="0 0 200 200" role="img" aria-label="Voca logo">
+                <rect x="0" y="0" width="200" height="200" rx="44" fill={INK} />
+                <circle cx="100" cy="92" r="58" fill={SIGNAL} />
+                <circle cx="100" cy="92" r="34" fill={INK} />
+                <rect x="78" y="76" width="8" height="32" rx="4" fill={SIGNAL} />
+                <rect x="91" y="64" width="8" height="56" rx="4" fill={SIGNAL} />
+                <rect x="104" y="72" width="8" height="40" rx="4" fill={SIGNAL} />
+                <rect x="117" y="80" width="8" height="24" rx="4" fill={SIGNAL} />
+                <path d="M120 142 L150 142 L128 168 Z" fill={SIGNAL} />
+              </svg>
+              <span className="text-[15px] font-bold text-white">Voca</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/20 text-white/60">
+                {tr("by Klovers", "من كلوفرز")}
+              </span>
+            </div>
+            <p className="text-xs text-white/60 leading-relaxed">
+              {tr(
+                "English, explained in Arabic. Voca is the English-lessons side of Klovers.",
+                "الإنجليزية، بشرح بالعربية. فوكا هو جانب دروس الإنجليزية في كلوفرز.",
+              )}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 text-xs">
+            <h4 className="text-[11px] font-bold uppercase tracking-wide" style={{ color: "#b33b4a" }}>
+              Voca
+            </h4>
+            <a href="#how-it-works" className="text-white/70 hover:text-white">
+              {tr("How it works", "كيف تسير الدروس")}
+            </a>
+            <a href="#faq" className="text-white/70 hover:text-white">
+              {tr("FAQ", "الأسئلة الشائعة")}
+            </a>
+            <a href="#trial" className="text-white/70 hover:text-white">
+              {tr("Book a trial", "احجز حصة تجريبية")}
+            </a>
+          </div>
+          <div className="flex flex-col gap-2 text-xs">
+            <h4 className="text-[11px] font-bold uppercase tracking-wide" style={{ color: SIGNAL }}>
+              {tr("Klovers family", "عائلة كلوفرز")}
+            </h4>
+            <Link to="/" className="text-white/70 hover:text-white">
+              {tr("◂ Klovers — Learn Korean", "◂ كلوفرز — تعلّم الكورية")}
+            </Link>
+            <a href="https://mkatub.kloversegy.com" className="text-white/70 hover:text-white">
+              {tr("Mkatub — Learn Arabic", "مكتوب — تعلّم العربية")}
+            </a>
+            <Link to="/" className="text-white/70 hover:text-white">
+              kloversegy.com
+            </Link>
+          </div>
+        </div>
+      </footer>
+
       <Footer />
     </div>
   );
