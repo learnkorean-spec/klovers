@@ -52,13 +52,24 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { AlertTriangle, CheckCircle2, Clock, Loader2, Paperclip, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Loader2, Paperclip, Wallet, XCircle } from "lucide-react";
 import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { MANUAL_PAY_NUMBER } from "@/lib/siteConfig";
 
 interface Props {
   userId: string;
+  /**
+   * Show only the Payment card. My Lessons (English/Voca students) already
+   * shows the schedule and bundle itself; it mounts this just for paying.
+   */
+  paymentOnly?: boolean;
+  /**
+   * Brand accent for a sibling brand (Voca maroon). When set, the "due" box,
+   * the primary button and the card icon use it instead of the Klovers
+   * yellow / KloverIcon. Unset = the Klovers look, unchanged.
+   */
+  accent?: string;
 }
 
 interface Bundle {
@@ -186,7 +197,7 @@ function claimStatusMeta(status: string, tr: (en: string, ar: string) => string)
   return { Icon: Clock, label: tr("Waiting", "بانتظار التأكيد"), cls: "border-border bg-muted text-muted-foreground" };
 }
 
-const StudentSelfService = ({ userId }: Props) => {
+const StudentSelfService = ({ userId, paymentOnly = false, accent }: Props) => {
   const { language } = useLanguage();
   const isAr = language === "ar";
   const tr = (en: string, ar: string) => (isAr ? ar : en);
@@ -407,6 +418,7 @@ const StudentSelfService = ({ userId }: Props) => {
 
   return (
     <div className="space-y-4">
+      {!paymentOnly && (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -523,11 +535,12 @@ const StudentSelfService = ({ userId }: Props) => {
           )}
         </CardContent>
       </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <KloverIcon name="game-lucky-bag" className="h-7 w-7" />
+          <CardTitle className="text-lg flex items-center gap-2" style={accent ? { color: accent } : undefined}>
+            {accent ? <Wallet className="h-5 w-5" /> : <KloverIcon name="game-lucky-bag" className="h-7 w-7" />}
             {tr("Payment", "الدفع")}
           </CardTitle>
         </CardHeader>
@@ -535,7 +548,12 @@ const StudentSelfService = ({ userId }: Props) => {
           {/* Due / received — always paired with an icon, never colour alone. */}
           {bundle && (
             owes ? (
-              <div className="card-edge flex items-start gap-2 rounded-lg bg-klovers-yellow p-3 text-charcoal dark:bg-card dark:text-foreground">
+              <div
+                className={accent
+                  ? "flex items-start gap-2 rounded-lg p-3 text-white"
+                  : "card-edge flex items-start gap-2 rounded-lg bg-klovers-yellow p-3 text-charcoal dark:bg-card dark:text-foreground"}
+                style={accent ? { backgroundColor: accent } : undefined}
+              >
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <p className="text-sm font-medium">
                   {tr(
@@ -571,6 +589,7 @@ const StudentSelfService = ({ userId }: Props) => {
             <Button
               variant={owes ? "default" : "outline"}
               className="h-auto min-h-10 w-full whitespace-normal"
+              style={accent && owes ? { backgroundColor: accent, color: "#ffffff" } : undefined}
               onClick={openClaimForm}
             >
               {tr("I have paid: upload the receipt", "تمّ الدفع: رفع صورة الإيصال")}
@@ -654,7 +673,12 @@ const StudentSelfService = ({ userId }: Props) => {
                 />
               </label>
               <div className="flex gap-2 pt-1">
-                <Button size="sm" disabled={busy === "claim"} onClick={() => void submitClaim()}>
+                <Button
+                  size="sm"
+                  disabled={busy === "claim"}
+                  onClick={() => void submitClaim()}
+                  style={accent ? { backgroundColor: accent, color: "#ffffff" } : undefined}
+                >
                   {busy === "claim" ? <Loader2 className="h-4 w-4 animate-spin" /> : tr("Send", "إرسال")}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>
