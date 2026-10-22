@@ -1,6 +1,7 @@
 import { STUDENTS_TAUGHT, TEACHING_YEARS_COUNT, toArabicDigits } from "@/lib/trustFigures";
 import type { WorldLang } from "./copy";
 import { VILLAGE, type TourStop } from "./rooms";
+import type { WorldIcon } from "../environment/icons";
 
 /**
  * The Klovers tour, an exhibition along the Hangul Village street: what
@@ -16,8 +17,8 @@ import { VILLAGE, type TourStop } from "./rooms";
  * does. No prices: they depend on the visitor's country (/pricing).
  */
 
-/** The small drawings on the boards (drawn in TourExhibit). */
-export type TourIcon = "live" | "talk" | "group" | "medal" | "book" | "pencil" | "repeat" | "teacher" | "card" | "test" | "globe";
+/** The small drawings on the boards (environment/icons). */
+export type TourIcon = WorldIcon;
 
 export type TourLayout = "stats" | "icons" | "ladder" | "steps" | "pictures" | "cta";
 

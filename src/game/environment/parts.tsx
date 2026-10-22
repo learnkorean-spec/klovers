@@ -1,4 +1,5 @@
 import { useMemo, useRef, type ReactNode } from "react";
+import type { WorldIcon } from "./icons";
 import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { PALETTE } from "../config/world";
@@ -43,8 +44,8 @@ function LintelLine({ y, z, w }: { y: number; z: number; w: number }) {
  */
 
 /** Two back-to-back planes so the sign reads correctly from both sides. */
-export function Signboard({ text, w, h, aspect = 1, oneSided = false }: { text: string; w: number; h: number; aspect?: number; oneSided?: boolean }) {
-  const tex = useSignTexture(text, aspect);
+export function Signboard({ text, w, h, aspect = 1, oneSided = false, icon }: { text: string; w: number; h: number; aspect?: number; oneSided?: boolean; icon?: WorldIcon }) {
+  const tex = useSignTexture(text, aspect, icon);
   // One-sided boards (over gates) have no back and no frame box: from outside
   // the room — where only the camera ever goes — they are simply not there.
   if (oneSided)
@@ -216,7 +217,7 @@ export function Sway({ children, amp = 0.05, speed = 1.3, phase = 0, axis = "z" 
  * yellow rail that marks things to walk up to: the information house
  * (안내소) and the Klovers tour in the village.
  */
-export function InfoBoard({ text, w, tall }: { text: string; w: number; tall?: boolean }) {
+export function InfoBoard({ text, w, tall, icon }: { text: string; w: number; tall?: boolean; icon?: WorldIcon }) {
   const h = tall ? 1.25 : 0.95;
   const y = tall ? 1.75 : 1.65;
   const aspect = w / h;
@@ -229,7 +230,7 @@ export function InfoBoard({ text, w, tall }: { text: string; w: number; tall?: b
         </mesh>
       ))}
       <group position={[0, y, 0]}>
-        <Signboard text={text} w={w} h={h} aspect={aspect} />
+        <Signboard text={text} w={w} h={h} aspect={aspect} icon={icon} />
       </group>
       {/* The yellow rail: these boards are the ones to walk up to. */}
       <mesh position={[0, y - h / 2 - 0.08, 0.02]}>

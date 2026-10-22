@@ -1,4 +1,5 @@
 import { BOUNDS, box, CAMERA_COLLIDERS, COLLIDERS, PLAYER, ROOM, type Box2 } from "./world";
+import type { WorldIcon } from "../environment/icons";
 import { FRIEND_SPOT, npcColliderSpots } from "./npcs";
 import { REAL_PROPS } from "../systems/styleMode";
 
@@ -541,6 +542,19 @@ export const HOUSE = {
     topik: "토픽 시험",
     scholarships: "장학금",
   } as Record<InfoId, string>,
+  /** The picture on each board, beside its Korean (environment/icons). */
+  icons: {
+    about: "clover",
+    courses: "live",
+    trial: "teacher",
+    placement: "test",
+    textbook: "book",
+    shop: "cart",
+    games: "game",
+    blog: "pen",
+    topik: "medal",
+    scholarships: "cap",
+  } as Record<InfoId, WorldIcon>,
   /** A round clover dais in the middle (solid). */
   dais: { x: 0, z: 0.4, r: 1.3 },
   sign: "안내소",

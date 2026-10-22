@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import WorldIconView from "./WorldIconView";
+import { HOUSE } from "../config/rooms";
 import { useSpeech } from "@/hooks/useSpeech";
 import { playVoice, stopVoice, type VoiceLine } from "../systems/voice";
 import { canListen, listenFor, type SayResult } from "../systems/sayIt";
@@ -107,8 +109,23 @@ export default function DialogueBubble({
     lines = (
       <>
         <p className="text-xs font-semibold tracking-wide text-charcoal/60">{t.roman}</p>
-        <p className="font-display text-lg font-bold leading-tight">{t.title}</p>
-        <p className="text-sm text-charcoal/80">{t.line}</p>
+        <div className="flex items-center gap-3 text-start">
+          <WorldIconView icon={HOUSE.icons[bubble.id]} size={52} />
+          <div>
+            <p className="font-display text-lg font-bold leading-tight">{t.title}</p>
+            <p className="text-sm text-charcoal/80">{t.line}</p>
+          </div>
+        </div>
+        {bubble.id === "about" && (
+          <div className="flex justify-center gap-2 pt-1">
+            {copy.infoStats.map((st) => (
+              <div key={st.label} className="rounded-2xl bg-white px-4 py-1.5">
+                <p className="font-display text-2xl font-extrabold leading-none">{st.big}</p>
+                <p className="text-[11px] font-semibold text-charcoal/70">{st.label}</p>
+              </div>
+            ))}
+          </div>
+        )}
         {onOpenInfo && (
           <button
             type="button"

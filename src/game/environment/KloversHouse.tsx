@@ -125,7 +125,7 @@ export default function KloversHouse() {
       <Walls />
       {HOUSE.boards.map((b) => (
         <group key={b.id} position={[b.x, 0, b.z]} rotation={[0, b.yaw, 0]}>
-          <Board text={b.id === "about" ? HOUSE.signs.about.replace(" ", "\n") : HOUSE.signs[b.id]} w={b.w} tall={b.id === "about"} />
+          <Board text={b.id === "about" ? HOUSE.signs.about.replace(" ", "\n") : HOUSE.signs[b.id]} w={b.w} tall={b.id === "about"} icon={HOUSE.icons[b.id]} />
         </group>
       ))}
       <CloverDais />
