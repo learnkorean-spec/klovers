@@ -9,6 +9,7 @@ import { CalendarDays, Clock, Loader2, Video, AlertTriangle, Wallet } from "luci
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatMoney } from "@/types/students";
 import WorldEntryCard from "@/components/games/WorldEntryCard";
+import StudentSelfService from "@/components/StudentSelfService";
 import { VOCA_INK, VOCA_PAPER, VocaStudentHeader, VocaStudentFooter } from "@/components/voca/VocaBrand";
 
 /**
@@ -63,6 +64,10 @@ const COPY = {
     noUpcoming: "لا توجد حصص محجوزة حاليًا.",
     join: "دخول الحصة",
     owes: "توجد دفعة مستحقة",
+    bundleUnpaid: "لم يتم دفع الباقة بعد",
+    bundleDue: (amount: string, label: string) => `المستحق ${amount} عن باقة «${label}». يُرجى الدفع ثم رفع صورة الإيصال.`,
+    bundlePending: "تم إرسال الدفع، بانتظار تأكيد المعلّمة.",
+    payNow: "ادفع الآن",
     pay: "رفع الإيصال",
     lastCovered: "هذه آخر حصة في الباقة الحالية، وما بعدها بداية باقة جديدة.",
     notPrivate: "هذه الصفحة مخصّصة لطلاب الحصص الخاصة، والحساب غير مرتبط بحصص خاصة.",
@@ -88,6 +93,10 @@ const COPY = {
     noUpcoming: "Nothing booked right now.",
     join: "Join the lesson",
     owes: "You have a payment due",
+    bundleUnpaid: "Your bundle isn't paid yet",
+    bundleDue: (amount: string, label: string) => `${amount} is due for your "${label}" bundle. Please pay, then upload the receipt.`,
+    bundlePending: "Payment sent: waiting for your teacher to confirm it.",
+    payNow: "Pay now",
     pay: "Upload the receipt",
     lastCovered: "This is the last lesson in your bundle, the next one starts a new bundle.",
     notPrivate: "This page is for private-lesson students. Your account has no private lessons.",
@@ -157,6 +166,9 @@ const MyLessonsPage = () => {
   const [balance, setBalance] = useState<Balance | null>(null);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [dueEnrollmentId, setDueEnrollmentId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  // The active bundle when it has no paid_on: taught on credit, so she owes it.
+  const [unpaid, setUnpaid] = useState<{ label: string; total_price: number; currency: string; pending: boolean } | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -165,6 +177,7 @@ const MyLessonsPage = () => {
         if (sessionError) throw sessionError;
         const session = sessionData.session;
         if (!session) { navigate("/login"); return; }
+        setUserId(session.user.id);
 
         // RLS returns this student's own row and no other.
         const { data: ts, error: tsError } = await supabase
@@ -219,6 +232,39 @@ const MyLessonsPage = () => {
         );
         setSessions((ses.data ?? []) as unknown as SessionRow[]);
         setDueEnrollmentId((enr.data as { id?: string } | null)?.id ?? null);
+
+        // Is the active bundle paid? get_student_bundle_balances doesn't carry
+        // paid_on, so read it from the bundle itself (RLS: her own rows only),
+        // plus her latest claim on it, so a payment she already reported reads
+        // as "waiting" rather than "you must pay".
+        const { data: activeBundle, error: abError } = await supabase
+          .from("student_bundles")
+          .select("id, label, total_price, currency, paid_on")
+          .eq("student_id", row.id)
+          .eq("status", "active")
+          .order("purchased_on", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (abError) throw abError;
+        const ab = activeBundle as { id: string; label: string | null; total_price: number; currency: string | null; paid_on: string | null } | null;
+        if (ab && !ab.paid_on) {
+          const { data: claim, error: claimError } = await supabase
+            .from("student_payment_claims")
+            .select("status")
+            .eq("bundle_id", ab.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (claimError) throw claimError;
+          setUnpaid({
+            label: ab.label ?? "",
+            total_price: Number(ab.total_price),
+            currency: ab.currency ?? "EGP",
+            pending: (claim as { status?: string } | null)?.status === "pending",
+          });
+        } else {
+          setUnpaid(null);
+        }
       } catch (err) {
         console.error("[my-lessons]", err);
         setError(c.loadFailed);
@@ -313,6 +359,38 @@ const MyLessonsPage = () => {
                 {c.title}: {roster.full_name}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">{c.subtitle}</p>
+            </div>
+          )}
+
+          {unpaid && (
+            <div
+              role="alert"
+              className="rounded-xl border-2 p-4 flex flex-wrap items-center justify-between gap-3"
+              style={voca
+                ? { borderColor: VOCA_INK, backgroundColor: unpaid.pending ? "#ffffff" : VOCA_INK, color: unpaid.pending ? VOCA_INK : "#ffffff" }
+                : { borderColor: "#FF3131", backgroundColor: "rgba(255,49,49,0.1)" }}
+            >
+              <div className="flex items-start gap-2 min-w-0">
+                {unpaid.pending ? <Clock className="h-5 w-5 shrink-0 mt-0.5" /> : <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />}
+                <div>
+                  <p className="font-bold">{unpaid.pending ? c.bundlePending : c.bundleUnpaid}</p>
+                  {!unpaid.pending && (
+                    <p className="text-sm opacity-90 mt-0.5">
+                      {c.bundleDue(formatMoney(unpaid.total_price, unpaid.currency), unpaid.label)}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {!unpaid.pending && (
+                <Button
+                  size="sm"
+                  className="rounded-full font-bold"
+                  style={voca ? { backgroundColor: "#FFFF00", color: "#111111" } : undefined}
+                  onClick={() => document.getElementById("pay")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                >
+                  <Wallet className="h-4 w-4 me-1.5" /> {c.payNow}
+                </Button>
+              )}
             </div>
           )}
 
@@ -435,6 +513,12 @@ const MyLessonsPage = () => {
               )}
             </CardContent>
           </Card>
+
+          {userId && (
+            <div id="pay" className="scroll-mt-24">
+              <StudentSelfService userId={userId} paymentOnly accent={voca ? VOCA_INK : undefined} />
+            </div>
+          )}
 
         </div>
       </main>
