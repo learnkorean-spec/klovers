@@ -14,9 +14,10 @@ const inside = (room: keyof typeof ROOMS, x: number, z: number) => {
 };
 
 describe("world life (NPCs)", () => {
-  it("between 8 and 30 people, every one with a real look and inside a room", () => {
+  it("at least 8 people, at most 8 in any one room, every one with a real look and inside a room", () => {
     expect(NPCS.length).toBeGreaterThanOrEqual(8);
-    expect(NPCS.length).toBeLessThanOrEqual(30);
+    // Only one room is drawn at a time: the cost that matters is per room.
+    for (const room of new Set(NPCS.map((n) => n.room))) expect(NPCS.filter((n) => n.room === room).length, room).toBeLessThanOrEqual(8);
     for (const n of NPCS) {
       expect(CAST[n.cast], n.id).toBeDefined();
       expect(inside(n.room, n.x, n.z), n.id).toBe(true);

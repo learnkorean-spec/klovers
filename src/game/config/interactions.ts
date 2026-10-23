@@ -1,5 +1,5 @@
-import { boardSpot, CAFE, CULTURE, HOUSE, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
-import { FRIEND_SPOT, MINSU_SPOT, NPCS } from "./npcs";
+import { boardSpot, CAFE, CULTURE, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
+import { CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, MINSU_SPOT, NPCS, SEOUL_FRIEND } from "./npcs";
 import { PROPS } from "./world";
 
 /**
@@ -38,9 +38,10 @@ export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" 
 export type LearnId =
   | "seokdeung" | "beotnamu" | "nieun" | "digeut" | "mieum" | "o" | "umul"
   | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan" | "annaeso" | "keopi"
-  | "kimchi" | "bibimbap" | "tteokbokki" | "sinbal" | "hanbok" | "seollal" | "chuseok";
+  | "kimchi" | "bibimbap" | "tteokbokki" | "sinbal" | "hanbok" | "seollal" | "chuseok"
+  | "jihacheol" | "beoseu" | "pyeonuijeom" | "sikdang" | "namsan";
 /** One-question cards. Text per language: copy.quiz[id]. */
-export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang" | "insa" | "meal";
+export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang" | "insa" | "meal" | "gil" | "gyesan";
 /** The market's two shops (the fruit table, the food cart) and the café counter. */
 export type ShopId = "fruit" | "food" | "cafe";
 /** Which things each shop sells (the words are in copy.shop.items). */
@@ -53,7 +54,7 @@ const THOUSANDS = ["", "천", "이천", "삼천", "사천", "오천", "육천", 
 /** A price in won, read the Korean way ("삼천 원"); up to 9,000. */
 export const wonInKorean = (won: number): string => `${THOUSANDS[Math.round(won / 1000)] ?? won} 원`;
 /** People's short lines. Text per language: copy.say[id]. */
-export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear";
+export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear" | "friendCafe" | "friendCulture" | "friendSeoul" | "attendant" | "owner";
 
 export interface Interactable {
   id: string;
@@ -123,8 +124,6 @@ const stallZ = (side: -1 | 1, word: string) => {
 const npc = (id: string) => NPCS.find((n) => n.id === id)!;
 
 const hubNotice: Record<string, NoticeKey> = {
-  "hub-culture": "cultureSoon",
-  "hub-seoul": "seoulSoon",
   "hub-garden": "gardenSoon",
 };
 
@@ -180,11 +179,15 @@ export const INTERACTABLES: Interactable[] = [
   { id: "learn-keopi", room: "conversation-cafe", kind: "learn", action: "learn", learn: "keopi", word: "커피", x: -4.9, z: -CAFE.halfDepth + 1.4, radius: 1.3 },
   // Order from the barista, at the front of the counter.
   { id: "shop-cafe", room: "conversation-cafe", kind: "shop", action: "order", shop: "cafe", npc: "k-barista", x: 0.9, z: CAFE.counter.z + CAFE.counter.d / 2 + 0.85, radius: 1.5, priority: 1 },
+  // The other learner, by the counter: ordering together.
+  { id: "say-friend-cafe", room: "conversation-cafe", kind: "say", action: "talk", say: "friendCafe", x: CAFE_FRIEND.x, z: CAFE_FRIEND.z, radius: 1.7 },
   // Two students at a table, from the aisle in front of them.
   { id: "say-cafe-a", room: "conversation-cafe", kind: "say", action: "talk", say: "cafeA", npc: "k-table-1", x: npc("k-table-1").x - 0.2, z: npc("k-table-1").z + 1.15, radius: 1.0 },
   { id: "say-cafe-b", room: "conversation-cafe", kind: "say", action: "talk", say: "cafeB", npc: "k-table-2", x: npc("k-table-2").x + 0.2, z: npc("k-table-2").z + 1.15, radius: 1.0 },
 
   /* ── Culture Street: one stop per piece of everyday culture ── */
+  // The other learner at the start of the street: walking it together.
+  { id: "say-friend-culture", room: "culture-street", kind: "say", action: "talk", say: "friendCulture", x: CULTURE_FRIEND.x, z: CULTURE_FRIEND.z, radius: 1.7 },
   // The elder in the first doorway: greet them properly.
   { id: "quiz-insa", room: "culture-street", kind: "quiz", action: "talk", quiz: "insa", npc: "c-elder", x: CULTURE.elder.x + 1.45, z: CULTURE.elder.z, radius: 1.4, priority: 1 },
   // Shoes left on a hanok step.
@@ -204,6 +207,24 @@ export const INTERACTABLES: Interactable[] = [
   { id: "learn-seollal", room: "culture-street", kind: "learn", action: "learn", learn: "seollal", word: "설날", x: -2.6, z: CULTURE.arch.z + 1.6, radius: 1.2 },
   { id: "learn-chuseok", room: "culture-street", kind: "learn", action: "learn", learn: "chuseok", word: "추석", x: 3.1, z: CULTURE.arch.z + 1.6, radius: 1.0 },
   { id: "say-new-year", room: "culture-street", kind: "say", action: "talk", say: "newYear", npc: "c-neighbour", x: 1.0, z: CULTURE.arch.z + 2.2, radius: 1.0 },
+
+  /* ── Seoul Journey (part 1): a Seoul street corner ── */
+  // The other learner at the corner, looking at the tower.
+  { id: "say-friend-seoul", room: "seoul-journey", kind: "say", action: "talk", say: "friendSeoul", x: SEOUL_FRIEND.x, z: SEOUL_FRIEND.z, radius: 1.7 },
+  // The subway: its entrance (지하철), and the attendant at the top of the steps.
+  { id: "learn-jihacheol", room: "seoul-journey", kind: "learn", action: "learn", learn: "jihacheol", word: "지하철", x: SEOUL.subway.x + 0.4, z: SEOUL.subway.z + SEOUL.subway.d / 2 + 0.8, radius: 1.2 },
+  { id: "say-attendant", room: "seoul-journey", kind: "say", action: "talk", say: "attendant", npc: "s-attendant", x: npc("s-attendant").x + 0.9, z: npc("s-attendant").z + 0.9, radius: 1.1, priority: 1 },
+  // Someone asks the way to the convenience store.
+  { id: "quiz-gil", room: "seoul-journey", kind: "quiz", action: "talk", quiz: "gil", npc: "s-asker", x: npc("s-asker").x - 1.1, z: npc("s-asker").z, radius: 1.2, priority: 1 },
+  { id: "learn-pyeonuijeom", room: "seoul-journey", kind: "learn", action: "learn", learn: "pyeonuijeom", word: "편의점", x: SEOUL.halfWidth - 1.3, z: SEOUL.store.z, radius: 1.4 },
+  // The bus stop on the west kerb.
+  { id: "learn-beoseu", room: "seoul-journey", kind: "learn", action: "learn", learn: "beoseu", word: "버스", x: SEOUL.bus.x + 1.5, z: SEOUL.bus.z - 0.6, radius: 1.2 },
+  // The restaurant: its name, the bill at the outdoor table, the owner.
+  { id: "learn-sikdang", room: "seoul-journey", kind: "learn", action: "learn", learn: "sikdang", word: "식당", x: SEOUL.halfWidth - 1.3, z: SEOUL.restaurant.z - 1.6, radius: 1.0 },
+  { id: "quiz-gyesan", room: "seoul-journey", kind: "quiz", action: "learn", quiz: "gyesan", x: SEOUL.table.x - 1.25, z: SEOUL.table.z, radius: 1.1 },
+  { id: "say-owner", room: "seoul-journey", kind: "say", action: "talk", say: "owner", npc: "s-owner", x: npc("s-owner").x - 1.1, z: npc("s-owner").z, radius: 1.0, priority: 1 },
+  // The tower viewer at the north kerb: Namsan Tower.
+  { id: "learn-namsan", room: "seoul-journey", kind: "learn", action: "learn", learn: "namsan", word: "남산타워", x: SEOUL.viewer.x, z: SEOUL.viewer.z + 1.0, radius: 1.1 },
 
   /* ── KLOVERS Hub: every gate can be walked up to ── */
   { id: "learn-map", room: "hub", kind: "learn", action: "inspect", learn: "jido", x: 0, z: HUB.post.size / 2 + 0.75, radius: 1.3 },

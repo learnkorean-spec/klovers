@@ -12,7 +12,7 @@ import { ROOMS, type RoomId } from "./rooms";
  * learning data only). A mission inside a world the learner's real level has
  * not opened yet is shown, locked, with what opens it.
  */
-export type MissionId = "hello" | "consonants" | "vowels" | "letterRace" | "hubWalk" | "shopping" | "tour" | "cafe" | "culture";
+export type MissionId = "hello" | "consonants" | "vowels" | "letterRace" | "hubWalk" | "shopping" | "tour" | "cafe" | "culture" | "seoul";
 
 export interface Mission {
   id: MissionId;
@@ -33,6 +33,7 @@ export const MISSIONS: Mission[] = [
   { id: "shopping", room: "vocabulary-market", steps: ["learn-mul", "learn-bap", "learn-chaek", "learn-kkot", "learn-sagwa"] },
   { id: "tour", room: "klovers-house", steps: ["info-about", "info-courses", "info-trial", "info-placement", "info-games"] },
   { id: "cafe", room: "conversation-cafe", steps: ["learn-keopi", "shop-cafe", "say-cafe-a", "say-cafe-b"] },
+  { id: "seoul", room: "seoul-journey", steps: ["learn-jihacheol", "say-attendant", "quiz-gil", "learn-beoseu", "quiz-gyesan", "learn-namsan"] },
   { id: "culture", room: "culture-street", steps: ["quiz-insa", "learn-sinbal", "quiz-meal", "say-two-hands", "learn-seollal", "learn-chuseok"] },
 ];
 

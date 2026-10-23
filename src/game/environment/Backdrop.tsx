@@ -140,8 +140,11 @@ function backdropKit(id: string, hx: number, hz: number): Kit {
       tree(k, x + jitter(seed, 1.2), z + jitter(seed * 3, 1.2), scale * (1 + jitter(seed * 5, 0.25)), false, seed, true);
     }
   };
-  ring(hx + 3.5, hz + 3.5, 4.2, 1.35);
-  ring(hx + 9, hz + 9, 5.5, 1.8);
+  // Seoul is a city: its blocks of buildings stand where the tree rings would.
+  if (id !== "seoul-journey") {
+    ring(hx + 3.5, hz + 3.5, 4.2, 1.35);
+    ring(hx + 9, hz + 9, 5.5, 1.8);
+  }
   // Far hills: soft rounded ridges, blued and faded by the haze.
   for (let i = 0; i < 18; i++) {
     const a = (i / 18) * Math.PI * 2 + jitter(i, 0.15);

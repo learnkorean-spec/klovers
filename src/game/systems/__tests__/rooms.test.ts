@@ -48,8 +48,8 @@ describe("KLOVERS World rooms", () => {
   });
 
   it("every gate into a later canon world carries a locked notice", () => {
-    const gated = new Set(["vocabulary-market", "conversation-cafe", "culture-street"]);
-    const order: Record<string, number> = { courtyard: 0, "hangul-village": 1, hub: 1.5, "vocabulary-market": 2, "conversation-cafe": 3, "culture-street": 4, "klovers-house": 1.6 };
+    const gated = new Set(["vocabulary-market", "conversation-cafe", "culture-street", "seoul-journey"]);
+    const order: Record<string, number> = { courtyard: 0, "hangul-village": 1, hub: 1.5, "vocabulary-market": 2, "conversation-cafe": 3, "culture-street": 4, "seoul-journey": 5, "klovers-house": 1.6 };
     for (const room of Object.values(ROOMS)) {
       for (const portal of room.portals) {
         // Going back never needs a lock; going forward into a gated world does.
@@ -76,6 +76,8 @@ describe("KLOVERS World access (real level only)", () => {
     expect(worldAccess("l2", false).open.has("conversation-cafe")).toBe(true);
     expect(worldAccess("l2", false).open.has("culture-street")).toBe(false);
     expect(worldAccess("l3", false).open.has("culture-street")).toBe(true);
+    expect(worldAccess("l3", false).open.has("seoul-journey")).toBe(false);
+    for (const lvl of ["l4", "l5", "l6"]) expect(worldAccess(lvl, false).open.has("seoul-journey")).toBe(true);
     // Experienced learners are never sent back to replay beginner worlds.
     const l4 = worldAccess("l4", false).open;
     expect(l4.has("vocabulary-market") && l4.has("conversation-cafe")).toBe(true);

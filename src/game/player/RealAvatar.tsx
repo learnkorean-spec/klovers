@@ -67,5 +67,5 @@ export default function RealAvatar({
     c.rate = clip === "walk" ? Math.min(1.5, Math.max(0.6, speed / 1.5)) : clip === "run" ? Math.min(1.3, Math.max(0.8, speed / 5.5)) : 1;
   });
 
-  return <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} />;
+  return <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} look={greet} />;
 }

@@ -6,7 +6,7 @@ describe("recorded voices", () => {
   it("voice exactly the Korean the world shows, in both languages", () => {
     for (const lang of ["en", "ar"] as const) {
       const c = WORLD_COPY[lang];
-      for (const id of ["auntie", "vendor", "shopkeeper", "baker", "hubFriend", "hubReader", "shopper", "cafeA", "cafeB", "cook", "twoHands", "newYear"] as const) expect(LINES[id].ko).toBe(c.say[id].ko);
+      for (const id of ["auntie", "vendor", "shopkeeper", "baker", "hubFriend", "hubReader", "shopper", "cafeA", "cafeB", "cook", "twoHands", "newYear", "attendant", "owner"] as const) expect(LINES[id].ko).toBe(c.say[id].ko);
       expect(LINES.minsu.ko).toBe(c.talk.minsu.ko);
       expect(LINES.adam.ko).toBe(c.talk.adam.ko);
       expect(LINES.lina.ko).toBe(c.talk.lina.ko);
@@ -15,7 +15,7 @@ describe("recorded voices", () => {
 
   it("gives the men a man's voice", () => {
     const men = ["ash", "echo", "onyx"];
-    for (const id of ["minsu", "adam", "vendor", "shopkeeper", "hubFriend", "cafeA", "twoHands"]) expect(men).toContain(LINES[id].voice);
+    for (const id of ["minsu", "adam", "vendor", "shopkeeper", "hubFriend", "cafeA", "twoHands", "attendant"]) expect(men).toContain(LINES[id].voice);
     for (const id of ["lina", "auntie", "baker", "hubReader", "shopper"]) expect(men).not.toContain(LINES[id].voice);
   });
 });

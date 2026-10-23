@@ -14,7 +14,7 @@
  */
 
 /** Line ids (supabase/functions/world-voice/lines.ts has the Korean). */
-export type VoiceLine = "minsu" | "adam" | "lina" | "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear";
+export type VoiceLine = "minsu" | "adam" | "lina" | "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear" | "friendCafe" | "friendCulture" | "friendSeoul" | "attendant" | "owner";
 
 const BASE = "/assets/world/voice/";
 
@@ -73,8 +73,8 @@ export function playClip(path: string, fallback: () => void): void {
   a.play().catch(giveUp);
 }
 
-/** Play a person's line. Call from the tap/click itself (phones need that). */
-export function playVoice(id: VoiceLine, fallback: () => void): void {
+/** Play a person's line (or a named variant, "friendCafe-lina"). Call from the tap/click itself (phones need that). */
+export function playVoice(id: VoiceLine | `${VoiceLine}-${string}`, fallback: () => void): void {
   playClip(`${id}.mp3`, fallback);
 }
 

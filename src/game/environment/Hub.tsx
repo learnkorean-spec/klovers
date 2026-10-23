@@ -334,7 +334,7 @@ function CloverFinial() {
   );
 }
 
-export default function Hub({ cafeOpen, marketOpen, cultureOpen = false }: { cafeOpen: boolean; marketOpen: boolean; cultureOpen?: boolean }) {
+export default function Hub({ cafeOpen, marketOpen, cultureOpen = false, seoulOpen = false }: { cafeOpen: boolean; marketOpen: boolean; cultureOpen?: boolean; seoulOpen?: boolean }) {
   const paving = useTiledTexture(paintPaving, H, H);
   const photo = usePhotoFloor("paving", H, H);
   // Gates open and shut with the learner's real access, so they are a kit of
@@ -343,7 +343,7 @@ export default function Hub({ cafeOpen, marketOpen, cultureOpen = false }: { caf
     const k = new Kit();
     for (const g of HUB.gates) {
       const pose = gatePose(g);
-      const usable = g.kind === "link" || (g.kind === "room" && (g.to === "culture-street" ? cultureOpen : cafeOpen));
+      const usable = g.kind === "link" || (g.kind === "room" && (g.to === "culture-street" ? cultureOpen : g.to === "seoul-journey" ? seoulOpen : cafeOpen));
       // Worlds still ahead get a real, shut Korean gate (a model) instead.
       if (g.kind === "future" && REAL_PROPS) continue;
       gatehouse(k, pose.x, pose.z, pose.rotY, { open: usable, accent: usable, barred: g.kind === "future" });
@@ -353,7 +353,7 @@ export default function Hub({ cafeOpen, marketOpen, cultureOpen = false }: { caf
       gatehouse(k, g.along, H + 0.08, Math.PI, { open: usable, accent: usable });
     }
     return k;
-  }, [cafeOpen, marketOpen, cultureOpen]);
+  }, [cafeOpen, marketOpen, cultureOpen, seoulOpen]);
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>

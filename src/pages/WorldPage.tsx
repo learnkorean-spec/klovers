@@ -36,14 +36,15 @@ function readView(): WorldView {
 }
 
 /** Each place's number on its arrival card (the order a learner meets them). */
-const ROOM_NUMBER: Record<RoomId, number> = {
+/** A room's number on the road (the full map); Klovers House stands beside it, unnumbered. */
+const ROOM_NUMBER: Partial<Record<RoomId, number>> = {
   courtyard: 1,
   "hangul-village": 2,
   "vocabulary-market": 3,
   hub: 4,
   "conversation-cafe": 5,
-  "klovers-house": 6,
-  "culture-street": 7,
+  "culture-street": 6,
+  "seoul-journey": 7,
 };
 
 

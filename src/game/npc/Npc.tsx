@@ -152,7 +152,7 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
       {real ? (
         <AvatarBoundary fallback={simpleBody()}>
           <Suspense fallback={simpleBody()}>
-            <RiggedBody model={real.model} rules={real.rules} female={real.female} control={control} />
+            <RiggedBody model={real.model} rules={real.rules} female={real.female} control={control} look={player} />
           </Suspense>
         </AvatarBoundary>
       ) : (

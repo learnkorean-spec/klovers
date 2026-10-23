@@ -5,17 +5,18 @@ import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { FOLIAGE_TIME, upgradeMaterialDetails } from "./config/materials";
 import { REDUCED_MOTION } from "./systems/motion";
 import { INTERACTABLES, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
-import { CULTURE, findPortal, HUB, MARKET, ROOMS, tourSpot, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn, type TourStop } from "./config/rooms";
+import { CULTURE, findPortal, HUB, MARKET, ROOMS, SEOUL, tourSpot, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn, type TourStop } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
 import ThirdPersonCamera from "./camera/ThirdPersonCamera";
 import { DISCOVERIES, type DiscoveryKey } from "./config/discoveries";
-import { NPCS, FRIEND_SPOT } from "./config/npcs";
+import { NPCS, FRIEND_SPOT, CAFE_FRIEND, CULTURE_FRIEND, SEOUL_FRIEND } from "./config/npcs";
 import { objectiveTarget, type ObjectiveId, type ObjectiveProgress } from "./config/objectives";
 import ObjectiveMarker from "./environment/ObjectiveMarker";
 import Friend from "./npc/Friend";
 import Npc from "./npc/Npc";
 import ConversationCafe from "./environment/ConversationCafe";
 import CultureStreet from "./environment/CultureStreet";
+import SeoulJourney from "./environment/SeoulJourney";
 import KloversHouse from "./environment/KloversHouse";
 import HangulVillage from "./environment/HangulVillage";
 import TourExhibit from "./environment/TourExhibit";
@@ -65,6 +66,7 @@ const BACKDROP: Record<RoomId, { hx: number; hz: number }> = {
   "conversation-cafe": { hx: 9, hz: 8 },
   "klovers-house": { hx: 9, hz: 8 },
   "culture-street": { hx: 10.5, hz: 15 },
+  "seoul-journey": { hx: 15, hz: 14 },
 };
 
 /** Length of the fade to and from ivory on a room change, ms. */
@@ -552,15 +554,20 @@ export default function World(props: WorldProps) {
       {roomId === "hangul-village" && <HangulVillage marketOpen={access.open.has("vocabulary-market")} letters={saved.letters} />}
       {roomId === "hangul-village" && <TourExhibit lang={props.lang ?? "en"} player={player} onSeen={(s) => cb.current.onTourSeen?.(s)} />}
       {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} words={saved.words} shopChosen={props.shopChosen} onShopPress={props.paused ? undefined : (item) => cb.current.onShopPress?.(item)} />}
-      {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} cultureOpen={access.open.has("culture-street")} />}
+      {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} cultureOpen={access.open.has("culture-street")} seoulOpen={access.open.has("seoul-journey")} />}
       {roomId === "conversation-cafe" && <ConversationCafe words={saved.words} />}
       {roomId === "culture-street" && <CultureStreet words={saved.words} />}
+      {roomId === "seoul-journey" && <SeoulJourney words={saved.words} player={player} />}
       {roomId === "klovers-house" && <KloversHouse />}
       {/* The people of this room only; they leave with it. */}
       {NPCS.filter((n) => n.room === roomId).map((n) => (
         <Npc key={n.id} n={n} player={player} />
       ))}
       {roomId === "courtyard" && <Friend avatar={avatar} x={FRIEND_SPOT.x} z={FRIEND_SPOT.z} yaw={Math.atan2(-FRIEND_SPOT.x, -FRIEND_SPOT.z) + 0.5} player={player} />}
+      {/* The other learner leads the café and Culture Street too (canon). */}
+      {roomId === "conversation-cafe" && <Friend avatar={avatar} x={CAFE_FRIEND.x} z={CAFE_FRIEND.z} yaw={CAFE_FRIEND.yaw} player={player} />}
+      {roomId === "culture-street" && <Friend avatar={avatar} x={CULTURE_FRIEND.x} z={CULTURE_FRIEND.z} yaw={CULTURE_FRIEND.yaw} player={player} />}
+      {roomId === "seoul-journey" && <Friend avatar={avatar} x={SEOUL_FRIEND.x} z={SEOUL_FRIEND.z} yaw={SEOUL_FRIEND.yaw} player={player} />}
       {props.marker ? <ObjectiveMarker x={props.marker.x} z={props.marker.z} /> : objectiveSpot ? <ObjectiveMarker x={objectiveSpot.x} z={objectiveSpot.z} /> : null}
       <FocusCue focus={focusRef} />
       <TourFrameWatcher frame={tourFrame} player={player} camera={camera} />
@@ -605,6 +612,7 @@ function guideFor(room: RoomId, access: WorldAccess): { x: number; z: number } |
   if (room === "hangul-village") return access.open.has("vocabulary-market") ? { x: 0, z: -VILLAGE.halfLength } : { x: VILLAGE.halfWidth, z: VILLAGE.hubLaneZ };
   if (room === "vocabulary-market") return { x: 0, z: -MARKET.halfDepth };
   if (room === "culture-street") return { x: 0, z: -CULTURE.halfLength + 2.5 };
+  if (room === "seoul-journey") return { x: SEOUL.subway.x + 0.4, z: SEOUL.subway.z + SEOUL.subway.d / 2 + 1.2 };
   if (room === "hub") return access.open.has("conversation-cafe") ? { x: 0, z: -HUB.half } : { x: HUB.half, z: -3.5 };
   return null;
 }

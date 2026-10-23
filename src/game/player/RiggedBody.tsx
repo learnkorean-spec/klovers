@@ -1,6 +1,6 @@
 import { useEffect, useMemo, type MutableRefObject } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
-import { AdditiveBlending, AnimationMixer, Color, DoubleSide, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, SphereGeometry, Vector3, type AnimationAction, type AnimationClip, type Bone, type BufferGeometry, type Group, type Material, type SkinnedMesh, type Texture } from "three";
+import { AdditiveBlending, AnimationMixer, Color, DoubleSide, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, Quaternion, SphereGeometry, Vector3, type AnimationAction, type AnimationClip, type Bone, type BufferGeometry, type Group, type Material, type SkinnedMesh, type Texture } from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -291,7 +291,36 @@ export interface BodyControl {
   rate: number;
 }
 
-export default function RiggedBody({ model, rules, female, control }: { model: string; rules: DressRule[]; female: boolean; control: MutableRefObject<BodyControl> }) {
+/** Where a person may look: someone's position (the learner), or nobody. */
+export type LookTarget = MutableRefObject<{ position: { x: number; y: number; z: number } }> | undefined;
+
+const UP = new Vector3(0, 1, 0);
+const _fwd = new Vector3();
+const _pos = new Vector3();
+const _q = new Quaternion();
+const _qw = new Quaternion();
+const _qp = new Quaternion();
+
+/**
+ * Turn the head (and a little of the neck) toward `target` after the
+ * motion has posed the body: people notice the learner walking past, follow
+ * them with their eyes while near, then look back to what they were doing.
+ */
+function lookToward(bone: Bone, yaw: number, pitch: number) {
+  if (!bone.parent) return;
+  bone.getWorldQuaternion(_qw);
+  _q.setFromAxisAngle(UP, yaw);
+  _qw.premultiply(_q);
+  if (pitch) {
+    // Nod about the bone's own sideways axis (its local x).
+    _q.setFromAxisAngle(new Vector3(1, 0, 0), pitch);
+    _qw.multiply(_q);
+  }
+  bone.parent.getWorldQuaternion(_qp).invert();
+  bone.quaternion.copy(_qp.multiply(_qw));
+}
+
+export default function RiggedBody({ model, rules, female, control, look }: { model: string; rules: DressRule[]; female: boolean; control: MutableRefObject<BodyControl>; look?: LookTarget }) {
   const person = useLoader(GLTFLoader, `${BASE}${model}.glb`, extend) as GLTF;
   const anims = useLoader(
     GLTFLoader,
@@ -322,7 +351,17 @@ export default function RiggedBody({ model, rules, female, control }: { model: s
     return { mixer: mx, actions: acts };
   }, [root, anims]);
 
-  const st = useMemo(() => ({ base: null as Clip | null, once: null as Clip | null, onceEnd: 0, t: 0 }), []);
+  const st = useMemo(() => ({ base: null as Clip | null, once: null as Clip | null, onceEnd: 0, t: 0, yaw: 0, pitch: 0 }), []);
+  const bones = useMemo(() => {
+    let head: Bone | null = null;
+    let neck: Bone | null = null;
+    root.traverse((o) => {
+      if (!(o as Bone).isBone) return;
+      if (/Head$/.test(o.name)) head = o as Bone;
+      else if (/Neck$/.test(o.name)) neck = o as Bone;
+    });
+    return { head: head as Bone | null, neck: neck as Bone | null };
+  }, [root]);
 
   useEffect(
     () => () => {
@@ -358,6 +397,36 @@ export default function RiggedBody({ model, rules, female, control }: { model: s
     actions.walk.timeScale = c.clip === "walk" ? c.rate : 1;
     actions.run.timeScale = c.clip === "run" ? c.rate : 1;
     mixer.update(d);
+
+    // Look at the learner when they are near and in front; otherwise back.
+    const { head, neck } = bones;
+    if (!head || !look) return;
+    let yaw = 0;
+    let pitch = 0;
+    const tgt = look.current.position;
+    root.updateWorldMatrix(true, false);
+    head.getWorldPosition(_pos);
+    const dx = tgt.x - _pos.x;
+    const dz = tgt.z - _pos.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist < 5 && dist > 0.35 && !st.once) {
+      root.getWorldDirection(_fwd);
+      const facing = Math.atan2(_fwd.x, _fwd.z);
+      let delta = Math.atan2(dx, dz) - facing;
+      delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+      // Only what is in front: nobody turns their head right round.
+      if (Math.abs(delta) < 1.9) {
+        yaw = Math.max(-1.05, Math.min(1.05, delta));
+        // Eyes at about 1.55 m: a small nod up or down toward them.
+        pitch = Math.max(-0.35, Math.min(0.3, -Math.atan2((tgt.y ?? 0) + 1.55 - _pos.y, dist)));
+      }
+    }
+    const k = 1 - Math.exp(-d * 4);
+    st.yaw += (yaw - st.yaw) * k;
+    st.pitch += (pitch - st.pitch) * k;
+    if (Math.abs(st.yaw) < 0.002 && Math.abs(st.pitch) < 0.002) return;
+    if (neck) lookToward(neck, st.yaw * 0.4, st.pitch * 0.3);
+    lookToward(head, st.yaw * 0.6, st.pitch * 0.7);
   });
 
   return <primitive object={root} />;

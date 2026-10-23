@@ -31,6 +31,15 @@ const face = (fromX: number, fromZ: number, toX: number, toZ: number) => Math.at
 export const MINSU_SPOT = { x: -2.8, z: 9.2 };
 /** The other learner waits by the egg, where the two friends found it. */
 export const FRIEND_SPOT = { x: 2.9, z: 0.5 };
+/**
+ * The other learner leads the café and Culture Street with the learner
+ * (canon leadCharacters): waiting by the counter to order together, and at
+ * the start of the street, ready to walk it together.
+ */
+export const CAFE_FRIEND = { x: 3.7, z: -3.1, yaw: -0.5 };
+export const CULTURE_FRIEND = { x: 1.9, z: 9.6, yaw: 0.3 };
+/** Seoul Journey's leads are both learners and Cluby (canon): the friend waits at the corner. */
+export const SEOUL_FRIEND = { x: -2.0, z: 6.4, yaw: 0.5 };
 
 export const NPCS: NpcPlacement[] = [
   // Courtyard: a gardener by the pine, two students on the platform.
@@ -75,6 +84,16 @@ export const NPCS: NpcPlacement[] = [
   { id: "c-diner", room: "culture-street", cast: "student1", pose: "sit", x: 3.85, z: -2.6, yaw: -Math.PI / 2, phase: 2.2 },
   { id: "c-seller", room: "culture-street", cast: "vendor", pose: "talk", x: 4.55, z: -5.6, yaw: -Math.PI / 2, phase: 0.8 },
   { id: "c-neighbour", room: "culture-street", cast: "friendB", pose: "talk", x: 1.4, z: -10.3, yaw: 0, phase: 1.9 },
+
+  // Seoul Journey: a station attendant by the subway steps, a man asking
+  // the way, someone waiting at the bus stop, the restaurant owner, and a
+  // commuter walking along the pavement.
+  { id: "s-attendant", room: "seoul-journey", cast: "vendor", pose: "stand", x: -4.4, z: -4.0, yaw: 0.6, phase: 0.3 },
+  { id: "s-asker", room: "seoul-journey", cast: "student2", pose: "browse", x: 3.2, z: 3.6, yaw: -Math.PI / 2, phase: 1.4 },
+  { id: "s-busstop", room: "seoul-journey", cast: "readerB", pose: "sitRead", x: -8.75, z: 4.2, yaw: Math.PI / 2, phase: 2.0 },
+  { id: "s-owner", room: "seoul-journey", cast: "auntie", pose: "talk", x: 9.0, z: 6.0, yaw: -Math.PI / 2, phase: 0.9 },
+  // Along the north pavement, never across the road (the taxi uses it).
+  { id: "s-commuter", room: "seoul-journey", cast: "walker", pose: "walk", x: -2.3, z: -4.45, yaw: Math.PI / 2, path: [[-2.3, -4.45], [5.4, -4.45]], phase: 1.7 },
 
   // Conversation Café: a barista, two friends at a table.
   { id: "k-barista", room: "conversation-cafe", cast: "barista", pose: "talk", x: 0.9, z: -5.55, yaw: 0, phase: 0.6 },

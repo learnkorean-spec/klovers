@@ -20,5 +20,7 @@ export const LINES: Record<string, { ko: string; voice: string; who: string }> =
   cook: { ko: "맛있게 드세요!", voice: "sage", who: "a warm Korean street-food cook, a woman in her fifties" },
   twoHands: { ko: "여기 있습니다.", voice: "onyx", who: "a polite Korean hanbok shop owner, a man in his forties" },
   newYear: { ko: "새해 복 많이 받으세요!", voice: "shimmer", who: "a cheerful young Korean woman wishing a happy new year" },
+  attendant: { ko: "어디까지 가세요?", voice: "onyx", who: "a polite Seoul subway station attendant, a man in his forties" },
+  owner: { ko: "또 오세요!", voice: "sage", who: "a warm Korean restaurant owner, a woman in her fifties" },
 };
 

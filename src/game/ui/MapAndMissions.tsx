@@ -253,8 +253,8 @@ const toArabic = (n: number) => String(n).replace(/[0-9]/g, (d) => "٠١٢٣٤٥
 /**
  * The map as one long road: the learner's journey from the courtyard to
  * Seoul, bottom to top, in the order the course opens each place. Built
- * places are stops on the road; what is not built yet (Seoul Journey) sits
- * at the far end, dashed; places beside the road (Klovers House, Cluby's
+ * places are stops on the road; what is not built yet (the rest of Seoul,
+ * Levels 5–6) sits at the far end, dashed; places beside the road (Klovers House, Cluby's
  * Memory Garden) hang off the Hub, where their gates are.
  */
 type Stop = { id: RoomId | "seoul"; level?: string };
@@ -265,6 +265,7 @@ const ROAD: Stop[] = [
   { id: "hub" },
   { id: "conversation-cafe" },
   { id: "culture-street" },
+  { id: "seoul-journey" },
   { id: "seoul" },
 ];
 const STEP = 118;
@@ -301,7 +302,7 @@ export function FullMap({ lang, pose, isOpen, onClose, missionRoom }: Omit<MapPr
     const b = stopAt(i + 1);
     return `M${a.x} ${a.y} C${a.x} ${a.y - STEP * 0.62}, ${b.x} ${b.y + STEP * 0.62}, ${b.x} ${b.y}`;
   };
-  const name = (st: Stop) => (st.id === "seoul" ? copy.notices.seoulSoon.title : copy.rooms[st.id].name);
+  const name = (st: Stop) => (st.id === "seoul" ? c.later : copy.rooms[st.id].name);
   return (
     <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-charcoal/55 p-4" onPointerDown={(e) => e.stopPropagation()}>
       <div role="dialog" aria-modal="true" aria-label={c.title} className="flex max-h-full w-full max-w-md flex-col items-center gap-2 rounded-3xl bg-ivory p-4 text-charcoal shadow-2xl">

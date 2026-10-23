@@ -1,6 +1,6 @@
 import { BOUNDS, box, CAMERA_COLLIDERS, COLLIDERS, PLAYER, ROOM, type Box2 } from "./world";
 import type { WorldIcon } from "../environment/icons";
-import { FRIEND_SPOT, npcColliderSpots } from "./npcs";
+import { CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, SEOUL_FRIEND, npcColliderSpots } from "./npcs";
 import { REAL_PROPS } from "../systems/styleMode";
 
 /** People who stand still are solid (a small circle-ish box). */
@@ -26,6 +26,8 @@ const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p
  * - conversation-cafe → worlds[2], "conversation_readiness_milestone"
  * - culture-street    → worlds[4], "beginner_language_foundation_completed"
  *                       (course Level 3, canon levelJourney.l3)
+ * - seoul-journey     → worlds[5], "intermediate_real_world_readiness",
+ *                       part 1 (course Level 4, canon levelJourney.l4)
  * - klovers-house     → the Hub's information house (안내소): not a world.
  *                       Who Klovers is, and one board per section of the
  *                       site, each with its Korean name and a link. Open to all.
@@ -34,10 +36,10 @@ const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p
  * level → world map the dashboard journey uses. Never open one for free.
  */
 
-export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house" | "culture-street";
+export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house" | "culture-street" | "seoul-journey";
 
 /** Notices shown at a gate whose world is still locked (or not built yet). */
-export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon";
+export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "seoulLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon";
 
 export interface Spawn {
   x: number;
@@ -385,7 +387,7 @@ export const HUB = {
   gates: [
     { id: "hub-cafe", kind: "room", wall: "north", along: 0, sign: "카페", to: "conversation-cafe" },
     { id: "hub-culture", kind: "room", wall: "north", along: -6.5, sign: "문화 거리", to: "culture-street" },
-    { id: "hub-seoul", kind: "future", wall: "north", along: 6.5, sign: "서울" },
+    { id: "hub-seoul", kind: "room", wall: "north", along: 6.5, sign: "서울", to: "seoul-journey" },
     { id: "hub-garden", kind: "future", wall: "west", along: -3.5, sign: "기억 정원" },
     { id: "hub-games", kind: "link", wall: "west", along: 4, sign: "게임" },
     { id: "hub-lessons", kind: "link", wall: "east", along: -3.5, sign: "수업" },
@@ -434,6 +436,7 @@ const KLOVERS_HUB: RoomLayout = {
     fromMarket: { x: HUB.southGates.market, z: HUB.half - 3.2, yaw: Math.PI + 0.32 },
     fromCafe: { x: 0, z: -HUB.half + 2.2, yaw: 0 },
     fromCulture: { x: -6.5, z: -HUB.half + 2.2, yaw: 0 },
+    fromSeoul: { x: 6.5, z: -HUB.half + 2.2, yaw: 0 },
     fromHouse: { x: 0, z: HUB.half - 3, yaw: Math.PI },
   },
   portals: [
@@ -469,6 +472,13 @@ const KLOVERS_HUB: RoomLayout = {
       to: "culture-street",
       arrive: "fromHub",
       lockedNotice: "cultureLocked",
+    },
+    {
+      id: "hub-seoul",
+      zone: box(6.5, -HUB.half + 0.55, 3, 1.1),
+      to: "seoul-journey",
+      arrive: "fromHub",
+      lockedNotice: "seoulLocked",
     },
   ],
   shadowExtent: 15,
@@ -507,7 +517,7 @@ const CONVERSATION_CAFE: RoomLayout = {
   id: "conversation-cafe",
   canonWorldId: "conversation-cafe",
   bounds: { minX: -CAFE.halfWidth, maxX: CAFE.halfWidth, minZ: -CAFE.halfDepth, maxZ: CAFE.halfDepth },
-  colliders: [cafeCounter, ...cafeTables],
+  colliders: [cafeCounter, ...cafeTables, box(CAFE_FRIEND.x, CAFE_FRIEND.z, 0.6, 0.6)],
   cameraColliders: [],
   spawns: {
     fromHub: { x: 0, z: CAFE.halfDepth - 2.2, yaw: Math.PI },
@@ -654,6 +664,7 @@ const CULTURE_STREET: RoomLayout = {
     box(CULTURE.hanbok.x, CULTURE.hanbok.z, 0.8, 1.9),
     ...[-1, 1].map((sx) => box(sx * (CULTURE.halfWidth - 0.6), CULTURE.arch.z, CULTURE.arch.post, CULTURE.arch.post)),
     ...cultureLamps,
+    box(CULTURE_FRIEND.x, CULTURE_FRIEND.z, 0.6, 0.6),
     ...people("culture-street"),
   ],
   cameraColliders: [...cultureLamps],
@@ -672,6 +683,93 @@ const CULTURE_STREET: RoomLayout = {
   shadowExtent: 17,
 };
 
+/* ───────────────────────── Seoul Journey ───────────────────────── */
+
+/**
+ * Seoul Journey, part 1 (canon worlds[5], course Level 4): a Seoul street
+ * corner, 20 m × 18 m. A road with a zebra crossing runs east–west through
+ * the middle; around it, the city's everyday places: a subway entrance
+ * (line 2) with its attendant, a bus stop, a convenience store, a small
+ * restaurant, and Namsan Tower on the skyline to the north. Each is a thing
+ * to do in Korean: take the subway, give directions, catch a bus, pay the
+ * bill. Parts 2 and 3 (Levels 5 and 6) go further into the city.
+ */
+export const SEOUL = {
+  halfWidth: 10,
+  halfDepth: 9,
+  /** The road: an east–west strip, z from roadZ − roadW/2 to roadZ + roadW/2. */
+  roadZ: -1.0,
+  roadW: 3.4,
+  /** The crosswalk's middle (x), and the two walk signals at its ends. */
+  cross: { x: 1.0 },
+  signals: [
+    { x: 2.6, z: -3.15 },
+    { x: -0.6, z: 1.15 },
+  ],
+  /** Ginkgo street trees (yellow in autumn), with grates. */
+  trees: [
+    { x: -6.0, z: 1.75 }, { x: 7.9, z: 1.75 }, { x: -1.2, z: -3.75 }, { x: 8.6, z: -3.6 }, { x: -9.2, z: -3.6 },
+  ],
+  /** Two planters by the gate back to the Hub. */
+  planters: [
+    { x: -6.4, z: 8.2, len: 1.9 }, { x: 6.4, z: 8.2, len: 1.9 },
+  ],
+  /** Subway entrance (north-west): its canopy and stair well, solid. */
+  subway: { x: -6.6, z: -6.2, w: 3.4, d: 3.4 },
+  /** The line map board beside it, facing the street. */
+  lineMap: { x: -3.6, z: -7.8 },
+  /** Bus shelter on the west kerb. */
+  bus: { x: -8.9, z: 4.2, w: 1.2, d: 3.6 },
+  /** Convenience store and restaurant fronts on the east side (x = halfWidth). */
+  store: { z: -5.2 },
+  restaurant: { z: 5.4 },
+  /** An outdoor table in front of the restaurant. */
+  table: { x: 6.6, z: 3.4, r: 0.5 },
+  /** The tower viewer (coin binoculars) at the north kerb. */
+  viewer: { x: 3.6, z: -8.2 },
+  /** Namsan Tower, far to the north: beyond the walls, above the roofs. */
+  tower: { x: 14, z: -80 },
+  lamps: [
+    { x: -3.2, z: 2.0 }, { x: 4.2, z: 2.0 }, { x: -3.2, z: -3.9 }, { x: 6.2, z: -3.9 },
+  ],
+  sign: "서울",
+} as const;
+
+const seoulLamps = SEOUL.lamps.map((l) => box(l.x, l.z, 0.3, 0.3));
+
+const SEOUL_JOURNEY: RoomLayout = {
+  id: "seoul-journey",
+  canonWorldId: "seoul-journey",
+  bounds: { minX: -SEOUL.halfWidth, maxX: SEOUL.halfWidth, minZ: -SEOUL.halfDepth, maxZ: SEOUL.halfDepth },
+  colliders: [
+    box(SEOUL.subway.x, SEOUL.subway.z, SEOUL.subway.w, SEOUL.subway.d),
+    box(SEOUL.lineMap.x, SEOUL.lineMap.z, 1.9, 0.4),
+    box(SEOUL.bus.x, SEOUL.bus.z, SEOUL.bus.w, SEOUL.bus.d),
+    box(SEOUL.table.x, SEOUL.table.z, SEOUL.table.r * 2 + 1.0, SEOUL.table.r * 2 + 0.2),
+    box(SEOUL.viewer.x, SEOUL.viewer.z, 0.5, 0.5),
+    ...seoulLamps,
+    ...SEOUL.signals.map((p) => box(p.x, p.z, 0.3, 0.3)),
+    ...SEOUL.trees.map((p) => box(p.x, p.z, 0.5, 0.5)),
+    ...SEOUL.planters.map((p) => box(p.x, p.z, p.len, 0.6)),
+    box(SEOUL_FRIEND.x, SEOUL_FRIEND.z, 0.6, 0.6),
+    ...people("seoul-journey"),
+  ],
+  cameraColliders: [box(SEOUL.subway.x, SEOUL.subway.z, SEOUL.subway.w, SEOUL.subway.d), ...seoulLamps],
+  spawns: {
+    // Just in from the Hub's 서울 gate, facing up the street (−z).
+    fromHub: { x: 0, z: SEOUL.halfDepth - 2.0, yaw: Math.PI },
+  },
+  portals: [
+    {
+      id: "seoul-back-gate",
+      zone: box(0, SEOUL.halfDepth - 0.55, 3, 1.1),
+      to: "hub",
+      arrive: "fromSeoul",
+    },
+  ],
+  shadowExtent: 16,
+};
+
 export const ROOMS: Record<RoomId, RoomLayout> = {
   courtyard: COURTYARD,
   "hangul-village": HANGUL_VILLAGE,
@@ -680,6 +778,7 @@ export const ROOMS: Record<RoomId, RoomLayout> = {
   "conversation-cafe": CONVERSATION_CAFE,
   "klovers-house": KLOVERS_HOUSE,
   "culture-street": CULTURE_STREET,
+  "seoul-journey": SEOUL_JOURNEY,
 };
 
 /** The portal whose zone contains the point, if any (first match wins). */
