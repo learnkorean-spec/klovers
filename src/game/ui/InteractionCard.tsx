@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { SHOP_ITEMS, SHOP_PRICES, wonInKorean, type QuizId, type ShopId } from "../config/interactions";
+import { playClip, playClips, shopClip, stopVoice } from "../systems/voice";
+import { useSpeech } from "@/hooks/useSpeech";
 import type { NoticeKey } from "../config/rooms";
 
 /**
@@ -96,6 +98,23 @@ function ShopIcon({ ko, size = 44 }: { ko: string; size?: number }) {
   );
 }
 
+/** A small "hear it" button beside a Korean line. */
+function Hear({ label, onPlay }: { label: string; onPlay: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onPlay}
+      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-charcoal text-ivory align-middle transition-transform motion-safe:active:scale-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow"
+    >
+      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+        <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+        <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    </button>
+  );
+}
+
 const btn = "min-h-11 rounded-full px-5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
 
 export default function InteractionCard({
@@ -117,6 +136,11 @@ export default function InteractionCard({
 }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
+  const { speakKorean } = useSpeech({ rate: 0.85 });
+  /** Play a recorded line; the browser's voice if it cannot. */
+  const say = (path: string, ko: string) => playClip(path, () => speakKorean(ko));
+  const hearLabel = copy.card.listen;
+  useEffect(() => () => stopVoice(), []);
   const [picked, setPicked] = useState<number | null>(solved && kind === "word" ? 0 : kind === "shop" && shopPick ? Math.max(0, SHOP_ITEMS[shop].indexOf(shopPick)) : null);
 
   useEffect(() => {
@@ -218,8 +242,9 @@ export default function InteractionCard({
       }`;
     body = (
       <>
-        <p lang="ko" dir="ltr" className="font-ko text-xl font-bold">
+        <p lang="ko" dir="ltr" className="flex items-center justify-center gap-2 font-ko text-xl font-bold">
           {item ? c.howMany.ko : c.ask.ko}
+          <Hear label={hearLabel} onPlay={() => (item ? say(shopClip.howMany(), c.howMany.ko) : say(shopClip.ask(), c.ask.ko))} />
         </p>
         <p className="-mt-2 text-sm text-charcoal/70">{item ? c.howMany.gloss : c.ask.gloss}</p>
         {!item ? (
@@ -265,6 +290,10 @@ export default function InteractionCard({
                   onClick={() => {
                     setCount(i);
                     resetPay();
+                    // The learner's request, then the seller names the price.
+                    const req = `${ko} ${n.ko} ${item.counter} 주세요.`;
+                    const won = SHOP_PRICES[ko!] * (i + 1);
+                    playClips([shopClip.request(ko!, i + 1), shopClip.price(won)], () => speakKorean(`${req} ${wonInKorean(won)}${c.price.suffix}`));
                   }}
                   className={tile(count === i)}
                 >
@@ -296,7 +325,8 @@ export default function InteractionCard({
               <button
                 key={won}
                 type="button"
-                disabled={paid}
+                // Enough handed over: the seller takes it from here.
+                disabled={paid || total >= price}
                 onClick={() => {
                   setGiven((g) => [...g, won]);
                   setShort(false);
@@ -314,17 +344,21 @@ export default function InteractionCard({
             return (
               <div role="status" className="flex w-full flex-col gap-1 rounded-2xl bg-white/70 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/60">{c.youSay}</p>
-                <p lang="ko" dir="ltr" className="font-ko text-2xl font-bold">
+                <p lang="ko" dir="ltr" className="flex items-center justify-center gap-2 font-ko text-2xl font-bold">
                   {ko} {c.counts[count].ko} {item.counter} 주세요.
+                  <Hear label={hearLabel} onPlay={() => say(shopClip.request(ko!, count + 1), `${ko} ${c.counts[count].ko} ${item.counter} 주세요.`)} />
                 </p>
                 <p className="text-sm text-charcoal/80">{item.gloss[count]}</p>
                 <p className="text-xs text-charcoal/60">
                   {item.counterNote} · {c.note}
                 </p>
                 {/* The seller names the price, in Korean only: the learner works it out. */}
-                <p lang="ko" dir="ltr" className="pt-2 font-ko text-xl font-bold">
-                  {wonInKorean(price)}
-                  {c.price.suffix}
+                <p lang="ko" dir="ltr" className="flex items-center justify-center gap-2 pt-2 font-ko text-xl font-bold">
+                  <span>
+                    {wonInKorean(price)}
+                    {c.price.suffix}
+                  </span>
+                  <Hear label={hearLabel} onPlay={() => say(shopClip.price(price), `${wonInKorean(price)}${c.price.suffix}`)} />
                 </p>
                 {paid && <p className="text-sm text-charcoal/80">{c.price.gloss(fmt(price))}</p>}
                 {!paid ? (
@@ -349,6 +383,10 @@ export default function InteractionCard({
                           if (total < price) return setShort(true);
                           setPaid(true);
                           onShopPaid?.();
+                          const back = total - price;
+                          playClips([back > 0 ? shopClip.change(back) : "", shopClip.thanks()], () =>
+                            speakKorean(`${back > 0 ? c.change.ko(wonInKorean(back)) + " " : ""}${c.reply.ko} ${c.thanks.ko}`),
+                          );
                         }}
                       >
                         {c.payNow}

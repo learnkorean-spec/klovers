@@ -19,3 +19,24 @@ describe("recorded voices", () => {
     for (const id of ["lina", "auntie", "baker", "hubReader", "shopper"]) expect(men).not.toContain(LINES[id].voice);
   });
 });
+
+import { existsSync } from "fs";
+import { resolve } from "path";
+import { shopClip } from "../voice";
+import { SHOP_ITEMS, SHOP_PRICES } from "../../config/interactions";
+
+describe("recorded files", () => {
+  const file = (p: string) => existsSync(resolve(__dirname, "../../../../public/assets/world/voice", p));
+  it("has every person's line", () => {
+    for (const id of Object.keys(LINES)) expect(file(`${id}.mp3`), id).toBe(true);
+  });
+  it("has every shop request, price, change and reply the card can play", () => {
+    for (const item of [...SHOP_ITEMS.fruit, ...SHOP_ITEMS.food])
+      for (const n of [1, 2, 3]) {
+        expect(file(shopClip.request(item, n)), `${item} ${n}`).toBe(true);
+        expect(file(shopClip.price(SHOP_PRICES[item] * n)), `price ${item} ${n}`).toBe(true);
+      }
+    for (const won of [1000, 2000, 3000, 4000]) expect(file(shopClip.change(won))).toBe(true);
+    for (const p of [shopClip.ask(), shopClip.howMany(), shopClip.thanks()]) expect(file(p), p).toBe(true);
+  });
+});

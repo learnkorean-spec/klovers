@@ -1,33 +1,30 @@
-import { supabase } from "@/integrations/supabase/client";
-
 /**
- * Recorded voices for the people of KLOVERS World (see the world-voice edge
- * function): each line is voiced once, in a voice that fits the speaker —
- * Minsu and the other men with a man's voice — and kept in public storage.
+ * Recorded voices for KLOVERS World: every person's line, and the market
+ * shop's lines (requests, prices, change, thanks), shipped with the site as
+ * small MP3s in public/assets/world/voice. Recorded 23 Oct 2026 with Korean
+ * neural voices (a man's voice for Minsu and the other men, a woman's for
+ * the women, pitched apart so no two people sound alike).
  *
- * Playing tries the stored recording first; if it is not there yet, the
- * function voices it (once, for everyone) and it plays. If anything fails,
- * the caller's fallback (the browser's own voice) speaks instead.
+ * They are files of the site itself, so they start at once inside the tap
+ * (phones only allow sound from a tap) and cost nothing per play. If one
+ * cannot play, the caller's fallback (the browser's own voice) speaks.
+ *
+ * The world-voice edge function (OpenAI TTS into storage) is no longer
+ * called from here: its account had no credits and no line was ever stored.
  */
 
-/** Line ids the function knows (supabase/functions/world-voice/lines.ts). */
+/** Line ids (supabase/functions/world-voice/lines.ts has the Korean). */
 export type VoiceLine = "minsu" | "adam" | "lina" | "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper";
 
-const VERSION = "v1";
-const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const stored = (id: VoiceLine) => `${base}/storage/v1/object/public/lesson-scenes/world-voice/${VERSION}/${id}.mp3`;
+const BASE = "/assets/world/voice/";
 
 let current: HTMLAudioElement | null = null;
-/** Lines that could not be played this visit: go straight to the browser's voice. */
-const unavailable = new Set<VoiceLine>();
+/** Files that could not be played this visit: go straight to the browser's voice. */
+const unavailable = new Set<string>();
 
 /**
- * Phones only let a page make sound from inside a tap. Two things keep that
- * true even when the recording has to be fetched first (the fallback then
- * speaks after a wait, outside the tap):
- * - the browser's speech is "unlocked" during the tap with a silent line;
- * - on iPhone (Safari 17+), the page asks to play as media, so sound is not
- *   muted by the ring/silent switch.
+ * On iPhone (Safari 17+), play as media, so the ring/silent switch does not
+ * mute the world. Set at load and again on every tap.
  */
 function playAsMedia(): void {
   try {
@@ -39,6 +36,7 @@ function playAsMedia(): void {
 }
 if (typeof navigator !== "undefined") playAsMedia();
 
+/** Unlock the browser's speech inside the tap, so a late fallback may still speak. */
 function unlock(): void {
   playAsMedia();
   try {
@@ -57,31 +55,69 @@ export function stopVoice(): void {
   current = null;
 }
 
-/** Play a person's line. Call from the tap/click itself (phones need that). */
-export function playVoice(id: VoiceLine, fallback: () => void): void {
+/** Play a recorded file (path under /assets/world/voice/). Call from the tap itself. */
+export function playClip(path: string, fallback: () => void): void {
   stopVoice();
   unlock();
-  // Known missing this visit: speak now, inside the tap, with no wait.
-  if (!base || typeof Audio === "undefined" || unavailable.has(id)) return fallback();
-  const a = new Audio(stored(id));
+  if (typeof Audio === "undefined" || unavailable.has(path)) return fallback();
+  const a = new Audio(BASE + path);
   current = a;
   let fellBack = false;
   const giveUp = () => {
-    unavailable.add(id);
+    unavailable.add(path);
     if (fellBack || current !== a) return;
     fellBack = true;
     fallback();
   };
-  a.play().catch(async () => {
-    if (current !== a) return;
-    try {
-      const { data, error } = await supabase.functions.invoke("world-voice", { body: { id } });
-      const url = (data as { url?: string } | null)?.url;
-      if (error || !url || current !== a) return giveUp();
-      a.src = url;
-      await a.play();
-    } catch {
-      giveUp();
-    }
+  a.addEventListener("error", giveUp, { once: true });
+  a.play().catch(giveUp);
+}
+
+/** Play a person's line. Call from the tap/click itself (phones need that). */
+export function playVoice(id: VoiceLine, fallback: () => void): void {
+  playClip(`${id}.mp3`, fallback);
+}
+
+/** Romanised file names for the shop's things. */
+const SHOP_FILE: Record<string, string> = { 사과: "sagwa", 물: "mul", 꽃: "kkot", 빵: "ppang", 밥: "bap", 우유: "uyu" };
+
+/** The market shop's recorded lines. */
+export const shopClip = {
+  ask: () => "shop/ask.mp3",
+  howMany: () => "shop/howmany.mp3",
+  /** "사과 두 개 주세요." — count 1…3. */
+  request: (item: string, count: number) => (SHOP_FILE[item] ? `shop/req-${SHOP_FILE[item]}-${count}.mp3` : ""),
+  /** "삼천 원이에요." — won in whole thousands, 1,000…9,000. */
+  price: (won: number) => `shop/price-${Math.round(won / 1000)}.mp3`,
+  /** "거스름돈 천 원이에요." — 1,000…4,000. */
+  change: (won: number) => `shop/change-${Math.round(won / 1000)}.mp3`,
+  thanks: () => "shop/thanks.mp3",
+};
+
+/**
+ * Play several clips one after another on one audio element (a phone lets
+ * the element that started in the tap carry on). Missing ones are skipped.
+ */
+export function playClips(paths: string[], fallback: () => void): void {
+  const list = paths.filter((p) => p && !unavailable.has(p));
+  if (!list.length) return fallback();
+  stopVoice();
+  unlock();
+  if (typeof Audio === "undefined") return fallback();
+  const a = new Audio(BASE + list[0]);
+  current = a;
+  let i = 0;
+  a.addEventListener("ended", () => {
+    i += 1;
+    if (current !== a || i >= list.length) return;
+    a.src = BASE + list[i];
+    a.play().catch(() => undefined);
+  });
+  a.addEventListener("error", () => {
+    unavailable.add(list[i]);
+    if (i === 0 && current === a) fallback();
+  }, { once: true });
+  a.play().catch(() => {
+    if (current === a) fallback();
   });
 }

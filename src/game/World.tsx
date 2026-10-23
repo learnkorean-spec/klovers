@@ -584,6 +584,7 @@ export default function World(props: WorldProps) {
       )}
       <SkyLight />
       <Stats glRef={glRef} sceneRef={sceneRef} />
+      {quality.adaptive && <AdaptiveResolution max={quality.dpr[1]} />}
       <WatercolorDriver />
       {quality.post && watercolorMode() === "off" && <PostDriver />}
     </Canvas>
@@ -925,6 +926,36 @@ function SkyLight() {
       env?.dispose();
     };
   }, [gl, scene]);
+  return null;
+}
+
+/**
+ * Phones: start sharp, then step the pixel ratio down (to 1.25 at least)
+ * while the world runs under ~45 frames a second, measured over 2-second
+ * windows; never back up, so it doesn't flicker between sharp and soft.
+ */
+function AdaptiveResolution({ max }: { max: number }) {
+  const setDpr = useThree((s) => s.setDpr);
+  const native = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+  const st = useRef({ dpr: Math.min(max, native), frames: 0, time: 0, skip: 2 });
+  useFrame((_, dt) => {
+    const s = st.current;
+    s.frames += 1;
+    s.time += Math.min(dt, 0.25);
+    if (s.time < 2) return;
+    const fps = s.frames / s.time;
+    s.frames = 0;
+    s.time = 0;
+    // The first windows include loading and shader compiling: ignore them.
+    if (s.skip > 0) {
+      s.skip -= 1;
+      return;
+    }
+    if (fps < 45 && s.dpr > 1.25) {
+      s.dpr = Math.max(1.25, s.dpr - 0.25);
+      setDpr(s.dpr);
+    }
+  });
   return null;
 }
 
