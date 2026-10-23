@@ -250,30 +250,35 @@ export function MiniMap({ lang, pose, isOpen, steps, target, size, onOpen, showK
 
 const toArabic = (n: number) => String(n).replace(/[0-9]/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
 
-/** The places as a simple picture: boxes joined by paths, laid out as they lie. */
-const NODES: Record<RoomId, { x: number; y: number }> = {
-  "vocabulary-market": { x: 66, y: 60 },
-  "culture-street": { x: 190, y: 60 },
-  "conversation-cafe": { x: 314, y: 60 },
-  "hangul-village": { x: 66, y: 175 },
-  hub: { x: 314, y: 175 },
-  courtyard: { x: 66, y: 290 },
-  "klovers-house": { x: 314, y: 290 },
-};
-const LINKS: [RoomId, RoomId][] = [
-  ["courtyard", "hangul-village"],
-  ["hangul-village", "vocabulary-market"],
-  ["hangul-village", "hub"],
-  ["vocabulary-market", "hub"],
-  ["hub", "conversation-cafe"],
-  ["hub", "culture-street"],
-  ["hub", "klovers-house"],
+/**
+ * The map as one long road: the learner's journey from the courtyard to
+ * Seoul, bottom to top, in the order the course opens each place. Built
+ * places are stops on the road; what is not built yet (Seoul Journey) sits
+ * at the far end, dashed; places beside the road (Klovers House, Cluby's
+ * Memory Garden) hang off the Hub, where their gates are.
+ */
+type Stop = { id: RoomId | "seoul"; level?: string };
+const ROAD: Stop[] = [
+  { id: "courtyard" },
+  { id: "hangul-village" },
+  { id: "vocabulary-market" },
+  { id: "hub" },
+  { id: "conversation-cafe" },
+  { id: "culture-street" },
+  { id: "seoul" },
 ];
+const STEP = 118;
+const ROAD_W = 360;
+const ROAD_H = ROAD.length * STEP + 70;
+const stopAt = (i: number) => ({ x: i % 2 === 0 ? 92 : 268, y: ROAD_H - 52 - i * STEP });
 
 export function FullMap({ lang, pose, isOpen, onClose, missionRoom }: Omit<MapProps, "steps" | "target"> & { onClose: () => void; missionRoom?: RoomId | null }) {
   const copy = WORLD_COPY[lang];
   const c = copy.map;
+  const rtl = lang === "ar";
   const here = pose()?.room ?? "courtyard";
+  const scroller = useRef<HTMLDivElement>(null);
+  const hereRef = useRef<SVGGElement>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.code === "KeyM") onClose();
@@ -281,57 +286,108 @@ export function FullMap({ lang, pose, isOpen, onClose, missionRoom }: Omit<MapPr
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-  const BW = 120;
-  const BH = 64;
+  // Open on where the learner is.
+  useEffect(() => {
+    const box = scroller.current;
+    const el = hereRef.current;
+    if (!box || !el) return;
+    const b = box.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    box.scrollTop += r.top - b.top - b.height / 2 + r.height / 2;
+  }, []);
+  const roomHere = here === "klovers-house" ? "hub" : here;
+  const segment = (i: number) => {
+    const a = stopAt(i);
+    const b = stopAt(i + 1);
+    return `M${a.x} ${a.y} C${a.x} ${a.y - STEP * 0.62}, ${b.x} ${b.y + STEP * 0.62}, ${b.x} ${b.y}`;
+  };
+  const name = (st: Stop) => (st.id === "seoul" ? copy.notices.seoulSoon.title : copy.rooms[st.id].name);
   return (
-    <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-charcoal/55 p-4" onPointerDown={(e) => e.stopPropagation()}>
-      <div role="dialog" aria-modal="true" aria-label={c.title} className="flex w-full max-w-md flex-col items-center gap-3 rounded-3xl bg-ivory p-4 text-charcoal shadow-2xl">
-        <p className="font-display text-lg font-bold">{c.title}</p>
-        <svg viewBox="0 0 380 350" className="w-full max-w-[380px]" style={{ maxHeight: "60vh" }} role="img" aria-label={`${c.here}: ${copy.rooms[here].name}`}>
-          {LINKS.map(([a, b]) => {
-            const open = isOpen(a) && isOpen(b);
-            return (
-              <line
-                key={a + b}
-                x1={NODES[a].x}
-                y1={NODES[a].y}
-                x2={NODES[b].x}
-                y2={NODES[b].y}
-                stroke={open ? "#2E2E2E" : "#B9B2A6"}
-                strokeWidth={open ? 5 : 3}
-                strokeDasharray={open ? undefined : "6 6"}
-                strokeLinecap="round"
-              />
-            );
-          })}
-          {(Object.keys(NODES) as RoomId[]).map((r) => {
-            const n = NODES[r];
-            const open = isOpen(r);
-            const isHere = r === here;
-            const isGoal = missionRoom === r && !isHere;
-            return (
-              <g key={r} transform={`translate(${n.x - BW / 2} ${n.y - BH / 2})`}>
-                <rect
-                  width={BW}
-                  height={BH}
-                  rx={16}
-                  fill={isHere ? "#FFFF00" : open ? "#FFFFFF" : "#E6DDCB"}
-                  stroke={isGoal ? "#2E2E2E" : open ? "#2E2E2E" : "#B9B2A6"}
-                  strokeWidth={isGoal ? 4 : 2}
-                  strokeDasharray={isGoal ? "8 5" : undefined}
-                />
-                <text x={BW / 2} y={isHere || isGoal || !open ? 26 : 37} textAnchor="middle" fontSize="12.5" fontWeight="700" fill={open ? "#2E2E2E" : "#8A8378"}>
-                  {copy.rooms[r].name}
-                </text>
-                {(isHere || isGoal || !open) && (
-                  <text x={BW / 2} y={48} textAnchor="middle" fontSize="12" fontWeight="700" fill="#2E2E2E" opacity={open ? 1 : 0.6}>
-                    {isHere ? c.here : isGoal ? c.goal : c.locked}
+    <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center bg-charcoal/55 p-4" onPointerDown={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label={c.title} className="flex max-h-full w-full max-w-md flex-col items-center gap-2 rounded-3xl bg-ivory p-4 text-charcoal shadow-2xl">
+        <p className="font-display text-lg font-bold">{c.road}</p>
+        <div ref={scroller} className="w-full overflow-y-auto overscroll-contain rounded-2xl bg-[#EFE6D2]" style={{ maxHeight: "68vh" }}>
+          <svg viewBox={`0 0 ${ROAD_W} ${ROAD_H}`} className="block w-full" style={{ direction: "ltr" }} role="img" aria-label={`${c.here}: ${copy.rooms[here].name}`}>
+            {/* Fields either side of the road. */}
+            {Array.from({ length: 14 }, (_, k) => (
+              <circle key={k} cx={k % 2 ? 330 - (k * 37) % 60 : 30 + (k * 53) % 70} cy={ROAD_H - 30 - k * (ROAD_H / 14)} r={10 + (k % 3) * 5} fill="#D9E3C2" opacity={0.7} />
+            ))}
+            {/* The road: verge, asphalt-free path, and a yellow centre line. */}
+            {ROAD.slice(0, -1).map((st, i) => {
+              const future = ROAD[i + 1].id === "seoul";
+              const open = !future && isOpen(ROAD[i + 1].id as RoomId);
+              return (
+                <g key={`r${i}`}>
+                  <path d={segment(i)} fill="none" stroke="#CBBE9F" strokeWidth={34} strokeLinecap="round" />
+                  <path d={segment(i)} fill="none" stroke={future ? "#E4DACA" : "#F7F1E3"} strokeWidth={26} strokeLinecap="round" strokeDasharray={future ? "14 10" : undefined} />
+                  <path d={segment(i)} fill="none" stroke={open ? "#E8D400" : "#C9C0AE"} strokeWidth={3} strokeDasharray="10 9" strokeLinecap="round" />
+                </g>
+              );
+            })}
+            {ROAD.map((st, i) => {
+              const p = stopAt(i);
+              const isSeoul = st.id === "seoul";
+              const room = st.id as RoomId;
+              const open = !isSeoul && isOpen(room);
+              const isHere = !isSeoul && room === roomHere;
+              const isGoal = !isSeoul && missionRoom === room && !isHere;
+              const labelLeft = p.x > ROAD_W / 2;
+              const lx = labelLeft ? p.x - 34 : p.x + 34;
+              const anchor = labelLeft ? "end" : "start";
+              const status = isHere ? c.here : isSeoul ? c.soon : !open ? c.opensAt[room] ?? c.locked : isGoal ? c.goal : i === 0 ? c.start : c.open;
+              const chipFill = isHere ? "#FFFF00" : isSeoul || !open ? "#D8CFBE" : isGoal ? "#2E2E2E" : "#FFFFFF";
+              const chipText = isGoal ? "#FFFFFF" : "#2E2E2E";
+              const chipW = Math.max(54, status.length * (rtl ? 6.2 : 6.6) + 18);
+              return (
+                <g key={st.id} ref={isHere ? hereRef : undefined}>
+                  {isHere && <circle cx={p.x} cy={p.y} r={34} fill="#FFFF00" opacity={0.35} />}
+                  <circle cx={p.x} cy={p.y} r={22} fill={isSeoul ? "#EFE6D2" : open ? "#FFFFFF" : "#E2D9C7"} stroke="#2E2E2E" strokeWidth={isHere ? 4 : 2.5} strokeDasharray={isSeoul ? "5 4" : undefined} />
+                  <text x={p.x} y={p.y + 6} textAnchor="middle" fontSize="17" fontWeight="800" fill="#2E2E2E">
+                    {rtl ? toArabic(i + 1) : i + 1}
                   </text>
-                )}
-              </g>
-            );
-          })}
-        </svg>
+                  {!open && !isSeoul && (
+                    // A small padlock on locked stops.
+                    <g transform={`translate(${p.x + 13} ${p.y - 25})`}>
+                      <rect x={-6} y={0} width={12} height={9} rx={2} fill="#2E2E2E" />
+                      <path d="M-3.5 0v-3a3.5 3.5 0 0 1 7 0v3" fill="none" stroke="#2E2E2E" strokeWidth={2} />
+                    </g>
+                  )}
+                  <text x={lx} y={p.y - 8} textAnchor={anchor} fontSize="15" fontWeight="800" fill={open || isSeoul ? "#2E2E2E" : "#6B6458"}>
+                    {name(st)}
+                  </text>
+                  <text x={lx} y={p.y + 9} textAnchor={anchor} fontSize="11.5" fill="#6B6458">
+                    {c.what[isSeoul ? "seoul" : room]}
+                  </text>
+                  <g transform={`translate(${labelLeft ? lx - chipW : lx} ${p.y + 16})`}>
+                    <rect width={chipW} height={18} rx={9} fill={chipFill} stroke="#2E2E2E" strokeWidth={isHere || isGoal ? 0 : 1} />
+                    <text x={chipW / 2} y={13} textAnchor="middle" fontSize="10.5" fontWeight="700" fill={chipText}>
+                      {status}
+                    </text>
+                  </g>
+                  {st.id === "hub" && (
+                    // Beside the road, at the Hub: the information house and the garden.
+                    <g transform={`translate(${labelLeft ? lx - 196 : lx} ${p.y + 50})`}>
+                      <rect x={-6} y={-13} width={208} height={45} rx={12} fill="#FFF9EC" stroke="#CBBE9F" strokeWidth={1.5} />
+                      <text x={labelLeft ? 196 : 0} y={1} textAnchor={anchor} fontSize="10.5" fontWeight="700" fill="#6B6458">
+                        {c.side}
+                      </text>
+                      <g transform="translate(0 7)">
+                        <rect width={96} height={20} rx={10} fill={here === "klovers-house" ? "#FFFF00" : "#FFFFFF"} stroke="#2E2E2E" strokeWidth={1} />
+                        <text x={48} y={14} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#2E2E2E">
+                          {copy.rooms["klovers-house"].name}
+                        </text>
+                        <rect x={100} width={96} height={20} rx={10} fill="#E2D9C7" stroke="#2E2E2E" strokeWidth={1} strokeDasharray="4 3" />
+                        <text x={148} y={14} textAnchor="middle" fontSize="10" fontWeight="700" fill="#6B6458">
+                          {c.garden}
+                        </text>
+                      </g>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+        </div>
         <button
           type="button"
           onClick={onClose}

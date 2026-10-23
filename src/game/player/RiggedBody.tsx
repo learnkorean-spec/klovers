@@ -116,16 +116,46 @@ function dye(mat: MeshStandardMaterial, color: string, ref: number, contrast = 0
   mat.customProgramCacheKey = () => "klovers-dye";
 }
 
+type Shader = Parameters<NonNullable<Material["onBeforeCompile"]>>[0];
+
+/** Add a shader change to a material, keeping any it already has (dye, skin, rim). */
+function tweak(mat: MeshStandardMaterial, key: string, fn: (shader: Shader) => void) {
+  const prev = mat.onBeforeCompile;
+  const prevKey = mat.customProgramCacheKey();
+  mat.onBeforeCompile = (shader, renderer) => {
+    prev.call(mat, shader, renderer);
+    fn(shader);
+  };
+  mat.customProgramCacheKey = () => `${prevKey}|${key}`;
+}
+
+/**
+ * A soft rim of warm light at the edges of people (where the surface turns
+ * away from the camera): they separate from walls and crowds the way a lit
+ * figure does in a photograph, without any extra light in the scene.
+ */
+function rim(mat: MeshStandardMaterial, strength = 0.2) {
+  tweak(mat, `rim${strength}`, (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <opaque_fragment>",
+      `{
+  float rimF = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+  outgoingLight += vec3(1.0, 0.89, 0.72) * pow(rimF, 3.0) * ${strength.toFixed(2)};
+}
+#include <opaque_fragment>`,
+    );
+  });
+}
+
 /**
  * Skin: Mixamo's gloss maps read as wet, oily skin under the sky light
  * (bright patches on foreheads and noses). A floor on roughness keeps a soft
  * sheen without the shine.
  */
 function skin(mat: MeshStandardMaterial) {
-  mat.onBeforeCompile = (shader) => {
+  tweak(mat, "skin", (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = max( roughnessFactor, 0.5 );");
-  };
-  mat.customProgramCacheKey = () => "klovers-skin";
+  });
 }
 
 /** One glossy, see-through cornea for every eye: catches the sky as a small bright highlight. */
@@ -218,6 +248,7 @@ function prepare(root: Group, rules: DressRule[]) {
       m.receiveShadow = false;
     }
     if (/_Body$/.test(m.name)) skin(mat);
+    const isHair = /hair|eyelash/i.test(m.name);
     const rule = rules.find((r) => r.match.test(m.name));
     if (rule) {
       const ref = !rule.keepMap && mat.map ? meanUnder(m.geometry, mat.map) : null;
@@ -229,6 +260,8 @@ function prepare(root: Group, rules: DressRule[]) {
         mat.color = new Color(rule.color);
       }
     }
+    // After the dye (which sets its own shader change): the rim on top.
+    if (!isHair) rim(mat, /_Body$/.test(m.name) ? 0.16 : 0.22);
     mat.needsUpdate = true;
     m.material = mat as Material;
   });

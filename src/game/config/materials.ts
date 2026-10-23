@@ -234,6 +234,18 @@ float folNoise(vec3 p) {
 }`,
       )
       .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+{
+  // Leaf clusters: bend the normal by a small 3D noise, so a crown catches
+  // the sun in many small facets (leaves) instead of as one smooth ball.
+  vec3 lq = vFolPos * 7.5;
+  float l0 = folNoise(lq);
+  vec3 lg = vec3(folNoise(lq + vec3(0.2, 0.0, 0.0)) - l0, folNoise(lq + vec3(0.0, 0.2, 0.0)) - l0, folNoise(lq + vec3(0.0, 0.0, 0.2)) - l0) / 0.2;
+  normal = normalize(normal - (viewMatrix * vec4(lg, 0.0)).xyz * 0.28);
+}`,
+      )
+      .replace(
         "#include <color_fragment>",
         `#include <color_fragment>
 {
@@ -244,7 +256,7 @@ float folNoise(vec3 p) {
 }`,
       );
   };
-  m.customProgramCacheKey = () => "klovers-foliage-1";
+  m.customProgramCacheKey = () => "klovers-foliage-2";
   return m;
 }
 
