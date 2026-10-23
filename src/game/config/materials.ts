@@ -169,6 +169,85 @@ export function std(color: string, roughness = 0.8, extra: Omit<StdOptions, "rou
   return m;
 }
 
+/** Shared clock for the foliage sway (seconds); advanced by FoliageClock in World.tsx. */
+export const FOLIAGE_TIME = { value: 0 };
+
+/**
+ * Painted foliage: smooth-shaded, with a deep-shade-to-sunlit-top gradient
+ * over each crown, soft dappled clumps (world-space noise) so a crown reads as
+ * leaves rather than one flat colour, a warm rim where the edge turns to the
+ * light, and a slow breeze that moves the tops more than the bases. All in
+ * the material's own shader: no extra draw calls, no textures.
+ */
+export function foliage(color: string, roughness = 0.9): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color(color), roughness, metalness: 0, flatShading: false });
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uFoliageTime = FOLIAGE_TIME;
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+uniform float uFoliageTime;
+varying vec3 vFolPos;
+varying float vFolUp;`,
+      )
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+vFolUp = clamp(position.y + 0.5, 0.0, 1.0);
+{
+  vec3 fp = transformed;
+  #ifdef USE_INSTANCING
+    fp = (instanceMatrix * vec4(fp, 1.0)).xyz;
+  #endif
+  float ph = fp.x * 0.9 + fp.z * 0.7;
+  float sway = sin(uFoliageTime * 1.3 + ph) * 0.5 + sin(uFoliageTime * 0.7 + ph * 1.7) * 0.5;
+  transformed.x += sway * 0.03 * vFolUp;
+  transformed.z += sway * 0.02 * vFolUp;
+}`,
+      )
+      .replace(
+        "#include <worldpos_vertex>",
+        `#include <worldpos_vertex>
+{
+  vec4 fw = vec4(transformed, 1.0);
+  #ifdef USE_INSTANCING
+    fw = instanceMatrix * fw;
+  #endif
+  vFolPos = (modelMatrix * fw).xyz;
+}`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+varying vec3 vFolPos;
+varying float vFolUp;
+float folHash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+float folNoise(vec3 p) {
+  vec3 i = floor(p); vec3 f = fract(p);
+  vec3 u = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(mix(folHash(i), folHash(i + vec3(1,0,0)), u.x), mix(folHash(i + vec3(0,1,0)), folHash(i + vec3(1,1,0)), u.x), u.y),
+    mix(mix(folHash(i + vec3(0,0,1)), folHash(i + vec3(1,0,1)), u.x), mix(folHash(i + vec3(0,1,1)), folHash(i + vec3(1,1,1)), u.x), u.y),
+    u.z);
+}`,
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+{
+  float clump = folNoise(vFolPos * 3.1) * 0.65 + folNoise(vFolPos * 7.3) * 0.35;
+  float lit = mix(0.74, 1.12, smoothstep(0.0, 1.0, vFolUp));
+  diffuseColor.rgb *= lit * mix(0.88, 1.1, clump);
+  diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.06, 1.04, 0.86), smoothstep(0.55, 1.0, clump) * 0.5);
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => "klovers-foliage-1";
+  return m;
+}
+
 /**
  * KLOVERS yellow as an accent and navigation colour only (gate frames, lamp
  * shades): unlit and not tone-mapped, so it renders as exact #FFFF00.
@@ -224,10 +303,10 @@ export const MAT = {
   woodWarm: std("#BC7F48", 0.62, { detail: "grain" }),
   stone: std(NATURAL.ground, 1),
   stoneWarm: std(NATURAL.stoneWarm, 0.98, { detail: "stone" }),
-  pine: std(NATURAL.pine, 0.9, { flatShading: true }),
-  leaf: std(NATURAL.leaf, 0.9, { flatShading: true }),
-  leafDark: std(NATURAL.leafDark, 0.9, { flatShading: true }),
-  blossom: std(NATURAL.blossom, 0.85, { flatShading: true }),
+  pine: foliage(NATURAL.pine, 0.9),
+  leaf: foliage(NATURAL.leaf, 0.9),
+  leafDark: foliage(NATURAL.leafDark, 0.9),
+  blossom: foliage(NATURAL.blossom, 0.85),
   moss: std(NATURAL.moss, 1, { detail: "stone" }),
   /** Raked gravel either side of a stone path. */
   gravel: std("#A99A7F", 1, { detail: "stone" }),

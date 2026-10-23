@@ -2,7 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, PMREMGenerator, RingGeometry, Vector3, type Mesh, type Scene, type Texture, type WebGLRenderer } from "three";
 import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
-import { upgradeMaterialDetails } from "./config/materials";
+import { FOLIAGE_TIME, upgradeMaterialDetails } from "./config/materials";
+import { REDUCED_MOTION } from "./systems/motion";
 import { INTERACTABLES, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
 import { findPortal, HUB, MARKET, ROOMS, tourSpot, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn, type TourStop } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
@@ -583,6 +584,7 @@ export default function World(props: WorldProps) {
         <BeaconWatcher key={`b-${roomId}`} room={roomId} player={player} view={camera} story={story} access={access} els={props.beaconEls} onNearby={(l) => cb.current.onNearby?.(l)} />
       )}
       <SkyLight />
+      <FoliageClock />
       <Stats glRef={glRef} sceneRef={sceneRef} />
       {quality.adaptive && <AdaptiveResolution max={quality.dpr[1]} />}
       <WatercolorDriver />
@@ -926,6 +928,14 @@ function SkyLight() {
       env?.dispose();
     };
   }, [gl, scene]);
+  return null;
+}
+
+/** Advances the shared clock that sways the leaves; still when the person asks for less motion. */
+function FoliageClock() {
+  useFrame(({ clock }) => {
+    if (!REDUCED_MOTION) FOLIAGE_TIME.value = clock.elapsedTime;
+  });
   return null;
 }
 

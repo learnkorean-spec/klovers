@@ -1,4 +1,5 @@
-import { ConeGeometry, CylinderGeometry, IcosahedronGeometry, type BufferGeometry, type Material } from "three";
+import { ConeGeometry, CylinderGeometry, IcosahedronGeometry, Vector3, type BufferGeometry, type Material } from "three";
+import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ACCENT, MAT } from "../config/materials";
 import { UNIT, type Part } from "./Instanced";
 import { curvedRoof, roofAspect } from "./shapes";
@@ -52,15 +53,38 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   flowerLilac: MAT.flowerLilac,
 };
 
+/**
+ * A soft, lumpy crown: an icosphere with shared vertices (so it shades
+ * smoothly instead of in facets) whose radius swells and dips a little in a
+ * few low waves, so no two crowns of the same kind look like the same ball.
+ * Built once; every tree, shrub and rock instances it.
+ */
+function lumpyBall(detail: number, lump: number): BufferGeometry {
+  const raw = new IcosahedronGeometry(0.5, detail);
+  raw.deleteAttribute("normal");
+  raw.deleteAttribute("uv");
+  const g = mergeVertices(raw, 1e-4);
+  const pos = g.getAttribute("position");
+  const v = new Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).normalize();
+    const w = Math.sin(v.x * 3.1 + 0.7) * Math.sin(v.y * 2.7 + 1.9) * Math.sin(v.z * 3.4 + 0.3) + 0.5 * Math.sin(v.x * 6.2 + v.z * 5.1 + 2.0) * Math.sin(v.y * 5.3 + 0.4);
+    v.multiplyScalar(0.5 * (1 + lump * w));
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
 const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   box: UNIT.box,
   hip: UNIT.hipRoof,
   oct: new CylinderGeometry(0.5, 0.5, 1, 8),
   cyl: UNIT.cylinder,
   cone: new ConeGeometry(0.5, 1, 8),
-  ball: new IcosahedronGeometry(0.5, 1),
+  ball: lumpyBall(3, 0.16),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
-  ballLow: new IcosahedronGeometry(0.5, 0),
+  ballLow: lumpyBall(1, 0.12),
   cylLow: new CylinderGeometry(0.5, 0.5, 1, 6),
 };
 
