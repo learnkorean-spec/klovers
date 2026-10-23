@@ -794,7 +794,13 @@ const WorldPage = () => {
                 to walk there and use it. The one already in reach has the
                 round button instead. */}
             {ready && !card && !bubble && !sequence && !welcoming && !reading && (
-              <div className="pointer-events-none absolute inset-0 z-[6] overflow-hidden" dir="ltr">
+              <div
+                className="pointer-events-none absolute inset-0 z-[6] overflow-hidden"
+                dir="ltr"
+                // A phone held upright: the top of the screen is the HUD's, so
+                // signs never float over the buttons and chips there.
+                style={isTouch && portrait ? { clipPath: "inset(15rem 0 0 0)" } : undefined}
+              >
                 {nearby
                   .filter((it) => it.id !== focus?.id)
                   .map((it) => {
@@ -861,6 +867,8 @@ const WorldPage = () => {
                     // On a short screen a word or a person's line takes the side
                     // column's place for a moment, so the two never overlap.
                     <div className={`flex flex-col items-start gap-2 ${bubble ? "max-sm:hidden [@media(max-height:500px)]:hidden" : ""}`}>
+                      {/* On a phone held upright, clear of the controls on the other side. */}
+                      <div className="max-sm:max-w-[calc(100vw-12.5rem)]">
                       {activeMission ? (
                         <MissionChip
                           lang={lang}
@@ -873,6 +881,7 @@ const WorldPage = () => {
                       ) : (
                         <ObjectiveChip lang={lang} objective={objective} count={objectiveCount} justDone={justDone} nudge={nudge} />
                       )}
+                      </div>
                       {currentRoom === "hangul-village" && <LettersChip lang={lang} letters={VILLAGE_LETTERS} found={saved.letters} />}
                       <div className="flex flex-wrap items-center gap-2">
                         <MissionsButton lang={lang} onClick={() => setMissionsOpen(true)} />
@@ -923,10 +932,12 @@ const WorldPage = () => {
                 the bottom-left); on a computer, bottom-left. */}
             {ready && !welcoming && !card && !missionsOpen && !mapOpen && !sequence && (
               <div
-                className={`pointer-events-none absolute z-[11] ${isTouch ? "end-4 top-[7.4rem]" : "bottom-5 left-5"}`}
+                // Phone: bottom right, above the round button (the joystick owns
+                // the bottom left, the HUD the top). Computer: bottom left.
+                className={`pointer-events-none absolute z-[11] ${isTouch ? (portrait ? "bottom-[11.5rem] end-4" : "end-4 top-[7.4rem]") : "bottom-5 left-5"}`}
                 
               >
-                <MiniMap lang={lang} showKey={!isTouch} size={isTouch ? 100 : 160} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onOpen={() => setMapOpen(true)} />
+                <MiniMap lang={lang} showKey={!isTouch} size={isTouch ? (portrait ? 88 : 100) : 160} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onOpen={() => setMapOpen(true)} />
               </div>
             )}
             {mapOpen && <FullMap lang={lang} pose={pose} isOpen={isOpenRoom} missionRoom={missionRoom} onClose={() => setMapOpen(false)} />}

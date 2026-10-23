@@ -91,6 +91,21 @@ function useSteadyPrompt(prompt: string | null, holdMs = 400): string | null {
   return shown;
 }
 
+/** The view toggle on a phone: an eye, or a person seen from behind. */
+function ViewIcon({ v }: { v: "eyes" | "behind" }) {
+  return v === "eyes" ? (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+      <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3" fill="currentColor" />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+      <circle cx="12" cy="7" r="3.5" fill="currentColor" />
+      <path d="M5 21c0-4.4 3.1-7.5 7-7.5s7 3.1 7 7.5z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export default function WorldHud(p: HudProps) {
   const copy = WORLD_COPY[p.lang];
   const h = copy.hints;
@@ -160,7 +175,7 @@ export default function WorldHud(p: HudProps) {
                   // Keep keyboard focus off the button so WASD stays with the scene.
                   e.currentTarget.blur();
                 }}
-                className={`min-h-9 rounded-full px-4 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow ${
+                className={`min-h-9 rounded-full px-3 text-xs font-bold transition-colors sm:px-4 sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-klovers-yellow ${
                   p.avatar === id ? "bg-klovers-yellow text-charcoal" : "text-ivory hover:bg-ivory/10"
                 }`}
               >
@@ -176,6 +191,7 @@ export default function WorldHud(p: HudProps) {
                 key={v}
                 type="button"
                 aria-pressed={p.view === v}
+                aria-label={copy.view[v === "eyes" ? "eyesLong" : "behindLong"]}
                 onClick={(e) => {
                   p.onView(v);
                   e.currentTarget.blur();
@@ -184,7 +200,10 @@ export default function WorldHud(p: HudProps) {
                   p.view === v ? "bg-klovers-yellow text-charcoal" : "text-ivory hover:bg-ivory/10"
                 }`}
               >
-                {copy.view[v]}
+                <span className="max-sm:hidden">{copy.view[v]}</span>
+                <span className="sm:hidden">
+                  <ViewIcon v={v} />
+                </span>
               </button>
             ))}
           </div>
