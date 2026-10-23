@@ -45,6 +45,12 @@ export type ShopId = "fruit" | "food";
 /** Which things each shop sells (the words are in copy.shop.items). */
 export const SHOP_ITEMS: Record<ShopId, readonly string[]> = { fruit: MARKET.shop.items, food: MARKET.cart.items };
 export const shopOf = (item: string): ShopId => (SHOP_ITEMS.food.includes(item) ? "food" : "fruit");
+/** What one of each costs, in won (whole thousands, so every total is a Sino-Korean 천). */
+export const SHOP_PRICES: Record<string, number> = { 사과: 1000, 물: 1000, 꽃: 2000, 빵: 2000, 밥: 3000, 우유: 1000 };
+/** Thousands in Sino-Korean, for prices: 1 → 천, 2 → 이천 … 9 → 구천. */
+const THOUSANDS = ["", "천", "이천", "삼천", "사천", "오천", "육천", "칠천", "팔천", "구천"];
+/** A price in won, read the Korean way ("삼천 원"); up to 9,000. */
+export const wonInKorean = (won: number): string => `${THOUSANDS[Math.round(won / 1000)] ?? won} 원`;
 /** People's short lines. Text per language: copy.say[id]. */
 export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper";
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
-import { SHOP_ITEMS, type QuizId, type ShopId } from "../config/interactions";
+import { SHOP_ITEMS, SHOP_PRICES, wonInKorean, type QuizId, type ShopId } from "../config/interactions";
 import type { NoticeKey } from "../config/rooms";
 
 /**
@@ -33,6 +33,8 @@ interface Props {
   shop?: ShopId;
   /** Shop: the thing already pressed in the scene (opens with it chosen). */
   shopPick?: string;
+  /** Shop: paid for (the world cheers). */
+  onShopPaid?: () => void;
   /** Shop: a thing was chosen (its word is learned; the world reacts). */
   onShopPick?: (ko: string) => void;
 }
@@ -96,12 +98,26 @@ function ShopIcon({ ko, size = 44 }: { ko: string; size?: number }) {
 
 const btn = "min-h-11 rounded-full px-5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
 
-export default function InteractionCard({ lang, kind, notice, quiz, signedIn, solved, onClose, onGo, onWordRight, onWordSeen, onQuizRight, shop = "fruit", shopPick, onShopPick }: Props) {
+export default function InteractionCard({
+  lang,
+  kind,
+  notice,
+  quiz,
+  signedIn,
+  solved,
+  onClose,
+  onGo,
+  onWordRight,
+  onWordSeen,
+  onQuizRight,
+  shop = "fruit",
+  shopPick,
+  onShopPick,
+  onShopPaid,
+}: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
-  const [picked, setPicked] = useState<number | null>(
-    solved && kind === "word" ? 0 : kind === "shop" && shopPick ? Math.max(0, SHOP_ITEMS[shop].indexOf(shopPick)) : null,
-  );
+  const [picked, setPicked] = useState<number | null>(solved && kind === "word" ? 0 : kind === "shop" && shopPick ? Math.max(0, SHOP_ITEMS[shop].indexOf(shopPick)) : null);
 
   useEffect(() => {
     first.current?.focus();
@@ -114,6 +130,15 @@ export default function InteractionCard({ lang, kind, notice, quiz, signedIn, so
 
   /** Shop, step two: how many (0 → one, 1 → two, 2 → three). */
   const [count, setCount] = useState<number | null>(null);
+  /** Shop, step three: the notes handed over so far (won), and whether paid. */
+  const [given, setGiven] = useState<number[]>([]);
+  const [paid, setPaid] = useState(false);
+  const [short, setShort] = useState(false);
+  const resetPay = () => {
+    setGiven([]);
+    setPaid(false);
+    setShort(false);
+  };
 
   let body: JSX.Element;
   if (kind === "locked" && notice) {
@@ -207,6 +232,7 @@ export default function InteractionCard({ lang, kind, notice, quiz, signedIn, so
                 onClick={() => {
                   setPicked(i);
                   setCount(null);
+                  resetPay();
                   onShopPick?.(k);
                 }}
                 className={tile(false)}
@@ -231,7 +257,17 @@ export default function InteractionCard({ lang, kind, notice, quiz, signedIn, so
             </div>
             <div className="grid w-full grid-cols-3 gap-2" role="group" aria-label={c.howMany.gloss}>
               {c.counts.map((n, i) => (
-                <button key={n.ko} ref={i === 0 ? first : undefined} type="button" aria-pressed={count === i} onClick={() => setCount(i)} className={tile(count === i)}>
+                <button
+                  key={n.ko}
+                  ref={i === 0 ? first : undefined}
+                  type="button"
+                  aria-pressed={count === i}
+                  onClick={() => {
+                    setCount(i);
+                    resetPay();
+                  }}
+                  className={tile(count === i)}
+                >
                   <span className="flex h-7 items-center gap-0.5" aria-hidden="true">
                     {Array.from({ length: i + 1 }, (_, d) => (
                       <ShopIcon key={d} ko={ko!} size={24} />
@@ -248,22 +284,99 @@ export default function InteractionCard({ lang, kind, notice, quiz, signedIn, so
             </div>
           </>
         )}
-        {item && count !== null && (
-          <div role="status" className="flex w-full flex-col gap-1 rounded-2xl bg-white/70 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/60">{c.youSay}</p>
-            <p lang="ko" dir="ltr" className="font-ko text-2xl font-bold">
-              {ko} {c.counts[count].ko} {item.counter} 주세요.
-            </p>
-            <p className="text-sm text-charcoal/80">{item.gloss[count]}</p>
-            <p lang="ko" dir="ltr" className="pt-1 font-ko text-lg font-bold">
-              {c.reply.ko}
-            </p>
-            <p className="text-sm text-charcoal/80">{c.reply.gloss}</p>
-            <p className="pt-1 text-xs text-charcoal/70">
-              {item.counterNote} · {c.note}
-            </p>
-          </div>
-        )}
+        {item &&
+          count !== null &&
+          (() => {
+            // Step three: hear the price, hand over notes, get change.
+            const price = SHOP_PRICES[ko!] * (count + 1);
+            const total = given.reduce((a, b) => a + b, 0);
+            const fmt = (won: number) => won.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
+            const change = total - price;
+            const note = (won: number) => (
+              <button
+                key={won}
+                type="button"
+                disabled={paid}
+                onClick={() => {
+                  setGiven((g) => [...g, won]);
+                  setShort(false);
+                }}
+                className={`flex h-12 min-w-[6.5rem] items-center justify-center gap-1 rounded-lg border-2 border-charcoal/30 px-2 font-ko text-sm font-bold shadow-sm transition-transform motion-safe:active:scale-95 disabled:opacity-50 ${won === 1000 ? "bg-[#CFE3F5]" : "bg-[#F6D9B5]"}`}
+              >
+                <span aria-hidden="true" className="rounded bg-white/70 px-1 text-[10px] tracking-wide">
+                  ₩
+                </span>
+                <span lang="ko" dir="ltr">
+                  {wonInKorean(won)}
+                </span>
+              </button>
+            );
+            return (
+              <div role="status" className="flex w-full flex-col gap-1 rounded-2xl bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/60">{c.youSay}</p>
+                <p lang="ko" dir="ltr" className="font-ko text-2xl font-bold">
+                  {ko} {c.counts[count].ko} {item.counter} 주세요.
+                </p>
+                <p className="text-sm text-charcoal/80">{item.gloss[count]}</p>
+                <p className="text-xs text-charcoal/60">
+                  {item.counterNote} · {c.note}
+                </p>
+                {/* The seller names the price, in Korean only: the learner works it out. */}
+                <p lang="ko" dir="ltr" className="pt-2 font-ko text-xl font-bold">
+                  {wonInKorean(price)}
+                  {c.price.suffix}
+                </p>
+                {paid && <p className="text-sm text-charcoal/80">{c.price.gloss(fmt(price))}</p>}
+                {!paid ? (
+                  <>
+                    <p className="pt-1 text-xs font-semibold text-charcoal/60">{c.pay}</p>
+                    <div className="flex justify-center gap-2">{[1000, 5000].map(note)}</div>
+                    <p className="pt-1 text-sm font-semibold" dir="ltr">
+                      {c.paid}: ₩{fmt(total)}
+                    </p>
+                    {short && <p className="text-xs font-semibold text-charcoal/80">{c.notEnough}</p>}
+                    <div className="flex justify-center gap-2">
+                      {given.length > 0 && (
+                        <button type="button" className={`${btn} border-2 border-charcoal/30 text-charcoal outline-charcoal`} onClick={resetPay}>
+                          {c.undo}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={total === 0}
+                        className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal disabled:opacity-40`}
+                        onClick={() => {
+                          if (total < price) return setShort(true);
+                          setPaid(true);
+                          onShopPaid?.();
+                        }}
+                      >
+                        {c.payNow}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {change > 0 && (
+                      <>
+                        <p lang="ko" dir="ltr" className="pt-1 font-ko text-lg font-bold">
+                          {c.change.ko(wonInKorean(change))}
+                        </p>
+                        <p className="text-sm text-charcoal/80">{c.change.gloss(fmt(change))}</p>
+                      </>
+                    )}
+                    <p lang="ko" dir="ltr" className="pt-1 font-ko text-lg font-bold">
+                      {c.reply.ko} {c.thanks.ko}
+                    </p>
+                    <p className="text-sm text-charcoal/80">
+                      {c.reply.gloss} {c.thanks.gloss}
+                    </p>
+                    <p className="pt-1 text-xs text-charcoal/70">{c.numbersNote}</p>
+                  </>
+                )}
+              </div>
+            );
+          })()}
         <div className="flex flex-wrap justify-center gap-2">
           {item && (
             <button
@@ -272,6 +385,7 @@ export default function InteractionCard({ lang, kind, notice, quiz, signedIn, so
               onClick={() => {
                 setPicked(null);
                 setCount(null);
+                resetPay();
               }}
             >
               {c.back}
@@ -333,7 +447,8 @@ export default function InteractionCard({ lang, kind, notice, quiz, signedIn, so
               key={o.ko}
               ref={i === 0 ? first : undefined}
               type="button"
-              lang="ko" dir="ltr"
+              lang="ko"
+              dir="ltr"
               disabled={chosen?.right === true}
               onClick={() => {
                 setPicked(i);
@@ -374,7 +489,7 @@ export default function InteractionCard({ lang, kind, notice, quiz, signedIn, so
       <div
         role="dialog"
         aria-modal="true"
-        className="flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl bg-ivory p-6 text-center text-charcoal shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col items-center gap-3 overflow-y-auto rounded-3xl bg-ivory p-6 text-center text-charcoal shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
         {body}

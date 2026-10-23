@@ -967,6 +967,7 @@ const WorldPage = () => {
                 shop={card.shop}
                 shopPick={card.shopPick}
                 onShopPick={pickShop}
+                onShopPaid={() => api.current?.celebrate()}
                 signedIn={access.signedIn}
                 solved={saved.breadSign}
                 onClose={() => {
