@@ -228,7 +228,7 @@ export default function InteractionCard({
           {q.ko}
         </p>
         <h2 className="font-display text-lg font-bold">{q.question}</h2>
-        <div className="flex justify-center gap-3" role="group" aria-label={q.question}>
+        <div className="flex flex-wrap justify-center gap-3" role="group" aria-label={q.question}>
           {q.options.map((o, i) => (
             <button
               key={o.label}
@@ -239,7 +239,7 @@ export default function InteractionCard({
                 setPicked(i);
                 if (o.right) onQuizRight?.();
               }}
-              className={`h-14 min-w-14 rounded-2xl border-2 px-3 font-display text-xl font-bold transition-colors ${
+              className={`h-14 min-w-14 rounded-2xl border-2 px-3 font-bold transition-colors ${o.label.length > 3 ? "font-ko text-base" : "font-display text-xl"} ${
                 picked === i
                   ? o.right
                     ? "border-charcoal bg-klovers-green text-charcoal"

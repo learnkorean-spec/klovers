@@ -43,6 +43,7 @@ const ROOM_NUMBER: Record<RoomId, number> = {
   hub: 4,
   "conversation-cafe": 5,
   "klovers-house": 6,
+  "culture-street": 7,
 };
 
 
@@ -696,6 +697,7 @@ const WorldPage = () => {
     const verb = copy.prompts[it.kind === "word" && saved.breadSign ? "talk" : it.action];
     if (it.kind === "learn" && it.learn) return { verb, sub: (copy.learn[it.learn] as { ko: string }).ko, subKo: true };
     if ((it.kind === "quiz" || it.kind === "letter") && it.letter) return { verb, sub: it.letter, subKo: true };
+    if (it.kind === "quiz" && it.quiz) return { verb, sub: copy.quiz[it.quiz].ko, subKo: true };
     if (it.kind === "say" && it.say) return { verb, sub: copy.say[it.say].name };
     if (it.kind === "info" && it.info) return { verb, sub: copy.info[it.info].title };
     if (it.kind === "tour" && it.tour) return { verb, sub: VILLAGE.tour.find((b) => b.id === it.tour)?.sign, subKo: true };

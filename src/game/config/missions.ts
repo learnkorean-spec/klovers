@@ -12,7 +12,7 @@ import { ROOMS, type RoomId } from "./rooms";
  * learning data only). A mission inside a world the learner's real level has
  * not opened yet is shown, locked, with what opens it.
  */
-export type MissionId = "hello" | "consonants" | "vowels" | "letterRace" | "hubWalk" | "shopping" | "tour";
+export type MissionId = "hello" | "consonants" | "vowels" | "letterRace" | "hubWalk" | "shopping" | "tour" | "cafe" | "culture";
 
 export interface Mission {
   id: MissionId;
@@ -32,6 +32,8 @@ export const MISSIONS: Mission[] = [
   { id: "hubWalk", room: "hub", steps: ["learn-map", "learn-board", "quiz-sijang", "say-hub-friend"] },
   { id: "shopping", room: "vocabulary-market", steps: ["learn-mul", "learn-bap", "learn-chaek", "learn-kkot", "learn-sagwa"] },
   { id: "tour", room: "klovers-house", steps: ["info-about", "info-courses", "info-trial", "info-placement", "info-games"] },
+  { id: "cafe", room: "conversation-cafe", steps: ["learn-keopi", "shop-cafe", "say-cafe-a", "say-cafe-b"] },
+  { id: "culture", room: "culture-street", steps: ["quiz-insa", "learn-sinbal", "quiz-meal", "say-two-hands", "learn-seollal", "learn-chuseok"] },
 ];
 
 const BY_ID = new Map(INTERACTABLES.map((i) => [i.id, i]));

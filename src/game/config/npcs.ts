@@ -68,6 +68,14 @@ export const NPCS: NpcPlacement[] = [
   { id: "m-shopper", room: "vocabulary-market", cast: "shopper", pose: "browse", x: -5.35, z: -0.2, yaw: -Math.PI / 2, phase: 2.1 },
   { id: "m-porter", room: "vocabulary-market", cast: "porter", pose: "carry", x: -4.4, z: -3.4, yaw: Math.PI / 2, path: [[-4.4, -3.4], [2.8, -3.4]] },
 
+  // Culture Street: an elder in a doorway, a cook at the food stall, a
+  // diner at the table, the hanbok seller, a neighbour dressed for 설날.
+  { id: "c-elder", room: "culture-street", cast: "elder", pose: "stand", x: -3.9, z: 7.4, yaw: Math.PI / 2, phase: 0.4 },
+  { id: "c-cook", room: "culture-street", cast: "auntie", pose: "stand", x: -4.65, z: -0.6, yaw: Math.PI / 2, phase: 1.1 },
+  { id: "c-diner", room: "culture-street", cast: "student1", pose: "sit", x: 3.85, z: -2.6, yaw: -Math.PI / 2, phase: 2.2 },
+  { id: "c-seller", room: "culture-street", cast: "vendor", pose: "talk", x: 4.55, z: -5.6, yaw: -Math.PI / 2, phase: 0.8 },
+  { id: "c-neighbour", room: "culture-street", cast: "friendB", pose: "talk", x: 1.4, z: -10.3, yaw: 0, phase: 1.9 },
+
   // Conversation Café: a barista, two friends at a table.
   { id: "k-barista", room: "conversation-cafe", cast: "barista", pose: "talk", x: 0.9, z: -5.55, yaw: 0, phase: 0.6 },
   { id: "k-table-1", room: "conversation-cafe", cast: "friendA", pose: "sit", x: -4.02, z: 2.8, yaw: Math.PI / 2, phase: 1.2 },

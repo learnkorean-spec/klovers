@@ -167,10 +167,15 @@ export const WORLD_COPY = {
         name: "Klovers House",
         line: "Who we are, and every part of the site, one board each.",
       },
+      "culture-street": {
+        name: "Culture Street",
+        line: "How Koreans greet, eat and celebrate: do it, don't just read it.",
+      },
     },
     notices: {
       marketLocked: { title: "Vocabulary Market", line: "Vocabulary Market unlocks at Level 1." },
       cafeLocked: { title: "Conversation Café", line: "Conversation Café unlocks at Level 2." },
+      cultureLocked: { title: "Culture Street", line: "Culture Street unlocks at Level 3." },
       cultureSoon: { title: "Culture Street", line: "Coming soon", more: "Everyday Korean life: food, manners and traditions." },
       seoulSoon: { title: "Seoul Journey", line: "Coming soon", more: "Real city moments in Seoul: getting around, shopping, restaurants." },
       gardenSoon: { title: "Cluby's Memory Garden", line: "Coming soon", more: "A quiet garden where learned words come back for review." },
@@ -249,6 +254,13 @@ export const WORLD_COPY = {
       gesipan: { ko: "게시판", roman: "gesipan", meaning: "notice board", note: "Korean schools and offices pin their news on one." },
       annaeso: { ko: "안내소", roman: "annaeso", meaning: "information centre", note: "Every Korean station and museum has one. This one shows where everything on the Klovers site is." },
       keopi: { ko: "커피", roman: "keopi", meaning: "coffee", note: "The menu: 커피 coffee · 녹차 green tea · 케이크 cake.", example: { ko: "커피 한 잔 주세요.", gloss: "A coffee, please." } },
+      kimchi: { ko: "김치", roman: "gimchi", meaning: "kimchi", note: "Spicy fermented cabbage, on the table at almost every Korean meal." },
+      bibimbap: { ko: "비빔밥", roman: "bibimbap", meaning: "mixed rice", note: "비빔 = mixed, 밥 = rice: rice with vegetables, egg and chilli paste, stirred together." },
+      tteokbokki: { ko: "떡볶이", roman: "tteokbokki", meaning: "spicy rice cakes", note: "Korea's favourite street food, sold from stalls like this one." },
+      sinbal: { ko: "신발", roman: "sinbal", meaning: "shoes", note: "Shoes come off at the door of a Korean home.", example: { ko: "신발을 벗어요.", gloss: "I take off my shoes." } },
+      hanbok: { ko: "한복", roman: "hanbok", meaning: "traditional Korean clothes", note: "Worn today for holidays, weddings and palace visits." },
+      seollal: { ko: "설날", roman: "seollal", meaning: "Lunar New Year", note: "Families bow to their elders and wish each other luck.", example: { ko: "새해 복 많이 받으세요!", gloss: "Happy New Year! (lit. receive much luck)" } },
+      chuseok: { ko: "추석", roman: "chuseok", meaning: "the harvest festival", note: "Autumn's full moon: families gather and make 송편 rice cakes." },
     },
     quiz: {
       a: {
@@ -305,6 +317,24 @@ export const WORLD_COPY = {
           { label: "the village", right: false, feedback: "A village is 마을. Try again." },
         ],
       },
+      insa: {
+        ko: "인사",
+        question: "An older neighbour greets you. What do you say, with a small bow?",
+        options: [
+          { label: "안녕?", right: false, feedback: "안녕 is only for friends and younger people. To an elder: 안녕하세요." },
+          { label: "안녕하세요!", right: true, feedback: "Yes: 안녕하세요 with a small bow is the polite greeting for anyone older." },
+          { label: "야!", right: false, feedback: "야 means \"hey!\" between close friends; rude to an elder. Try again." },
+        ],
+      },
+      meal: {
+        ko: "식사",
+        question: "The food arrives. What do you say before eating?",
+        options: [
+          { label: "잘 자요", right: false, feedback: "잘 자요 means \"sleep well\". Before eating: 잘 먹겠습니다." },
+          { label: "안녕히 가세요", right: false, feedback: "That's \"goodbye\" to someone leaving. Before eating: 잘 먹겠습니다." },
+          { label: "잘 먹겠습니다", right: true, feedback: "Yes: 잘 먹겠습니다, \"I will eat well\", thanks whoever made or paid for the meal." },
+        ],
+      },
     },
     /** People's short lines: Korean, meaning, one note from Cluby. */
     say: {
@@ -317,6 +347,9 @@ export const WORLD_COPY = {
       shopper: { name: "Shopper", ko: "이거 얼마예요?", gloss: "How much is this?", note: "얼마 means how much." },
       cafeA: { name: "Student", ko: "커피 좋아해요?", gloss: "Do you like coffee?", note: "좋아해요 means (I) like. Asked with a rising voice, it's a question." },
       cafeB: { name: "Student", ko: "네, 좋아해요! 녹차도 좋아해요.", gloss: "Yes, I like it! I like green tea too.", note: "네 = yes. 도 = too, also." },
+      cook: { name: "Stall cook", ko: "맛있게 드세요!", gloss: "Enjoy your food!", note: "What a cook says as the dish goes down. The answer: 잘 먹겠습니다!" },
+      twoHands: { name: "Hanbok seller", ko: "여기 있습니다.", gloss: "Here you are.", note: "Give and take with two hands, above all with older people: it shows respect." },
+      newYear: { name: "Neighbour", ko: "새해 복 많이 받으세요!", gloss: "Happy New Year!", note: "The 설날 greeting, said with a deep bow to grandparents." },
     },
     /** Klovers House: one board per part of the site (config/rooms HOUSE). */
     info: {
@@ -346,6 +379,8 @@ export const WORLD_COPY = {
       hubWalk: { title: "Around the Hub", line: "The map, the notice board, the signpost question and a student." },
       shopping: { title: "Shopping list", line: "물 · 밥 · 책 · 꽃 · 사과: find each one in the market." },
       tour: { title: "Klovers tour", line: "Read five boards in Klovers House." },
+      cafe: { title: "A café order", line: "Read the menu, order from the barista, and talk with both students." },
+      culture: { title: "Culture walk", line: "Greet the elder, shoes off, say grace, two hands, and the two holidays." },
     },
     missionUi: {
       button: "Missions",
@@ -551,10 +586,15 @@ export const WORLD_COPY = {
         name: "بيت كلوفرز",
         line: "من نحن، وكل أقسام الموقع: لوحة لكل قسم.",
       },
+      "culture-street": {
+        name: "شارع الثقافة",
+        line: "كيف يُحيّي الكوريون ويأكلون ويحتفلون: بالممارسة لا بالقراءة فقط.",
+      },
     },
     notices: {
       marketLocked: { title: "سوق المفردات", line: "يُفتح سوق المفردات عند الوصول إلى المستوى الأول." },
       cafeLocked: { title: "مقهى المحادثة", line: "يُفتح مقهى المحادثة عند الوصول إلى المستوى الثاني." },
+      cultureLocked: { title: "شارع الثقافة", line: "يُفتح شارع الثقافة عند الوصول إلى المستوى الثالث." },
       cultureSoon: { title: "شارع الثقافة", line: "قريبًا", more: "الحياة الكورية اليومية: الطعام والآداب والتقاليد." },
       seoulSoon: { title: "رحلة سيول", line: "قريبًا", more: "مواقف حقيقية في مدينة سيول: التنقّل والتسوّق والمطاعم." },
       gardenSoon: { title: "حديقة ذاكرة كلوبي", line: "قريبًا", more: "حديقة هادئة تعود فيها الكلمات المتعلَّمة للمراجعة." },
@@ -633,6 +673,13 @@ export const WORLD_COPY = {
       gesipan: { ko: "게시판", roman: "كيشيبان", meaning: "لوحة الإعلانات", note: "تعلّق المدارس والمكاتب الكورية أخبارها على لوحة كهذه." },
       annaeso: { ko: "안내소", roman: "آنّيسو", meaning: "مكتب الاستعلامات", note: "في كل محطة ومتحف كوري مكتب كهذا، وهذا المكتب يدلّ على كل أقسام موقع كلوفرز." },
       keopi: { ko: "커피", roman: "كوبي", meaning: "قهوة", note: "القائمة: 커피 قهوة · 녹차 شاي أخضر · 케이크 كعكة.", example: { ko: "커피 한 잔 주세요.", gloss: "فنجان قهوة، من فضلك." } },
+      kimchi: { ko: "김치", roman: "كيمتشي", meaning: "كيمتشي", note: "ملفوف مخمَّر حار، حاضر على المائدة الكورية في كل وجبة تقريبًا." },
+      bibimbap: { ko: "비빔밥", roman: "بيبيمباب", meaning: "أرز مخلوط", note: "비빔 = مخلوط، 밥 = أرز: أرز مع الخضار والبيض ومعجون الفلفل، يُقلَّب معًا." },
+      tteokbokki: { ko: "떡볶이", roman: "تّوكبوكّي", meaning: "كعك الأرز الحار", note: "أشهر أكلات الشارع في كوريا، تُباع من أكشاك كهذا." },
+      sinbal: { ko: "신발", roman: "شينبال", meaning: "حذاء", note: "يُخلع الحذاء عند باب البيت الكوري.", example: { ko: "신발을 벗어요.", gloss: "أخلع حذائي." } },
+      hanbok: { ko: "한복", roman: "هانبوك", meaning: "الزي الكوري التقليدي", note: "يُلبَس اليوم في الأعياد والأعراس وزيارات القصور." },
+      seollal: { ko: "설날", roman: "سولال", meaning: "رأس السنة القمرية", note: "تنحني العائلة احترامًا للكبار ويتبادلون التمنيات.", example: { ko: "새해 복 많이 받으세요!", gloss: "سنة سعيدة! (حرفيًا: نلتَ خيرًا كثيرًا)" } },
+      chuseok: { ko: "추석", roman: "تشوسوك", meaning: "عيد الحصاد", note: "في بدر الخريف تجتمع العائلات وتصنع كعك الأرز 송편." },
     },
     quiz: {
       a: {
@@ -689,6 +736,24 @@ export const WORLD_COPY = {
           { label: "القرية", right: false, feedback: "القرية هي 마을. محاولة أخرى." },
         ],
       },
+      insa: {
+        ko: "인사",
+        question: "جار أكبر سنًّا يُلقي التحية. ماذا يُقال، مع انحناءة خفيفة؟",
+        options: [
+          { label: "안녕?", right: false, feedback: "안녕 للأصدقاء ومن هم أصغر سنًّا فقط. أما للكبار: 안녕하세요." },
+          { label: "안녕하세요!", right: true, feedback: "صحيح: 안녕하세요 مع انحناءة خفيفة هي التحية المهذبة لكل من هو أكبر سنًّا." },
+          { label: "야!", right: false, feedback: "야 تعني «يا!» بين الأصدقاء المقرّبين، وهي غير لائقة مع الكبار." },
+        ],
+      },
+      meal: {
+        ko: "식사",
+        question: "وصل الطعام. ماذا يُقال قبل الأكل؟",
+        options: [
+          { label: "잘 자요", right: false, feedback: "잘 자요 تعني «نومًا هنيئًا». قبل الأكل: 잘 먹겠습니다." },
+          { label: "안녕히 가세요", right: false, feedback: "هذه تحية وداع لمن يغادر. قبل الأكل: 잘 먹겠습니다." },
+          { label: "잘 먹겠습니다", right: true, feedback: "صحيح: 잘 먹겠습니다 («سآكل جيدًا») شكرٌ لمن أعدّ الطعام أو دفع ثمنه." },
+        ],
+      },
     },
     say: {
       auntie: { name: "الجارة", ko: "안녕하세요!", gloss: "مرحبًا!", note: "هذه تحية كورية شائعة." },
@@ -700,6 +765,9 @@ export const WORLD_COPY = {
       shopper: { name: "متسوّقة", ko: "이거 얼마예요?", gloss: "بكم هذا؟", note: "얼마 تعني: كم، عند السؤال عن السعر." },
       cafeA: { name: "طالب", ko: "커피 좋아해요?", gloss: "هل تحب القهوة؟", note: "좋아해요 تعني: أحب. وبنبرة صاعدة تصبح سؤالًا." },
       cafeB: { name: "طالبة", ko: "네, 좋아해요! 녹차도 좋아해요.", gloss: "نعم، أحبها! وأحب الشاي الأخضر أيضًا.", note: "네 = نعم. 도 = أيضًا." },
+      cook: { name: "طبّاخة الكشك", ko: "맛있게 드세요!", gloss: "بالهناء والشفاء!", note: "ما تقوله الطبّاخة وهي تقدّم الطبق. والرد: 잘 먹겠습니다!" },
+      twoHands: { name: "بائع الهانبوك", ko: "여기 있습니다.", gloss: "تفضّلوا.", note: "يُعطى الشيء ويُؤخذ باليدين معًا، وخاصةً مع الكبار: علامة احترام." },
+      newYear: { name: "جارة", ko: "새해 복 많이 받으세요!", gloss: "سنة سعيدة!", note: "تحية 설날، تُقال مع انحناءة عميقة للأجداد." },
     },
     info: {
       about: { ko: "우리는 클로버스", roman: "أورينون كُلّوبوسو", title: "نحن كلوفرز", line: "الكورية لمتحدثي العربية، من أول حرف حتى التوبيك." },
@@ -726,6 +794,8 @@ export const WORLD_COPY = {
       hubWalk: { title: "جولة في الساحة", line: "الخريطة، ولوحة الإعلانات، وسؤال اللافتة، وطالب في الساحة." },
       shopping: { title: "قائمة التسوّق", line: "물 · 밥 · 책 · 꽃 · 사과: العثور على كل واحدة في السوق." },
       tour: { title: "جولة كلوفرز", line: "قراءة خمس لوحات في بيت كلوفرز." },
+      cafe: { title: "طلب في المقهى", line: "قراءة القائمة، والطلب من النادلة، والحديث مع الطالبين." },
+      culture: { title: "جولة الثقافة", line: "تحية الكبير، وخلع الحذاء، وما يُقال قبل الأكل، واليدان معًا، والعيدان." },
     },
     missionUi: {
       button: "المهام",

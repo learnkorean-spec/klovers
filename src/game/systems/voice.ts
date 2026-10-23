@@ -14,7 +14,7 @@
  */
 
 /** Line ids (supabase/functions/world-voice/lines.ts has the Korean). */
-export type VoiceLine = "minsu" | "adam" | "lina" | "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB";
+export type VoiceLine = "minsu" | "adam" | "lina" | "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear";
 
 const BASE = "/assets/world/voice/";
 

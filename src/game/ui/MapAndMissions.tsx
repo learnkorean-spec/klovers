@@ -252,12 +252,13 @@ const toArabic = (n: number) => String(n).replace(/[0-9]/g, (d) => "٠١٢٣٤٥
 
 /** The places as a simple picture: boxes joined by paths, laid out as they lie. */
 const NODES: Record<RoomId, { x: number; y: number }> = {
-  "vocabulary-market": { x: 90, y: 60 },
-  "conversation-cafe": { x: 290, y: 60 },
-  "hangul-village": { x: 90, y: 175 },
-  hub: { x: 290, y: 175 },
-  courtyard: { x: 90, y: 290 },
-  "klovers-house": { x: 290, y: 290 },
+  "vocabulary-market": { x: 66, y: 60 },
+  "culture-street": { x: 190, y: 60 },
+  "conversation-cafe": { x: 314, y: 60 },
+  "hangul-village": { x: 66, y: 175 },
+  hub: { x: 314, y: 175 },
+  courtyard: { x: 66, y: 290 },
+  "klovers-house": { x: 314, y: 290 },
 };
 const LINKS: [RoomId, RoomId][] = [
   ["courtyard", "hangul-village"],
@@ -265,6 +266,7 @@ const LINKS: [RoomId, RoomId][] = [
   ["hangul-village", "hub"],
   ["vocabulary-market", "hub"],
   ["hub", "conversation-cafe"],
+  ["hub", "culture-street"],
   ["hub", "klovers-house"],
 ];
 
@@ -279,7 +281,7 @@ export function FullMap({ lang, pose, isOpen, onClose, missionRoom }: Omit<MapPr
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-  const BW = 150;
+  const BW = 120;
   const BH = 64;
   return (
     <div className="pointer-events-auto absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-charcoal/55 p-4" onPointerDown={(e) => e.stopPropagation()}>
@@ -318,7 +320,7 @@ export function FullMap({ lang, pose, isOpen, onClose, missionRoom }: Omit<MapPr
                   strokeWidth={isGoal ? 4 : 2}
                   strokeDasharray={isGoal ? "8 5" : undefined}
                 />
-                <text x={BW / 2} y={isHere || isGoal || !open ? 26 : 37} textAnchor="middle" fontSize="15" fontWeight="700" fill={open ? "#2E2E2E" : "#8A8378"}>
+                <text x={BW / 2} y={isHere || isGoal || !open ? 26 : 37} textAnchor="middle" fontSize="12.5" fontWeight="700" fill={open ? "#2E2E2E" : "#8A8378"}>
                   {copy.rooms[r].name}
                 </text>
                 {(isHere || isGoal || !open) && (

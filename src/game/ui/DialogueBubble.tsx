@@ -37,7 +37,7 @@ interface LearnText {
 const canSpeak = () => typeof window !== "undefined" && "speechSynthesis" in window;
 
 /** Who speaks each line: men and boys get a man's voice. */
-const MALE_SAY = new Set<SayId>(["vendor", "shopkeeper", "hubFriend", "cafeA"]);
+const MALE_SAY = new Set<SayId>(["vendor", "shopkeeper", "hubFriend", "cafeA", "twoHands"]);
 
 /** A Korean voice that is clearly a man's, if this device has one. */
 const hasMaleKoreanVoice = () =>

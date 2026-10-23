@@ -24,6 +24,8 @@ const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p
  * - hub               → the KLOVERS Hub: not a world, a crossroads to every
  *                       world and to the site's own pages
  * - conversation-cafe → worlds[2], "conversation_readiness_milestone"
+ * - culture-street    → worlds[4], "beginner_language_foundation_completed"
+ *                       (course Level 3, canon levelJourney.l3)
  * - klovers-house     → the Hub's information house (안내소): not a world.
  *                       Who Klovers is, and one board per section of the
  *                       site, each with its Korean name and a link. Open to all.
@@ -32,10 +34,10 @@ const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p
  * level → world map the dashboard journey uses. Never open one for free.
  */
 
-export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house";
+export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house" | "culture-street";
 
 /** Notices shown at a gate whose world is still locked (or not built yet). */
-export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon";
+export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon";
 
 export interface Spawn {
   x: number;
@@ -349,6 +351,8 @@ export interface HubGate {
   along: number;
   /** Real Korean on the gate's signboard. */
   sign: string;
+  /** For a "room" gate: the world it opens onto. */
+  to?: RoomId;
 }
 
 export const HUB = {
@@ -379,8 +383,8 @@ export const HUB = {
   benchPine: { x: -9.7, z: 5.8 },
   board: { x: 10.25, z: 2.6 },
   gates: [
-    { id: "hub-cafe", kind: "room", wall: "north", along: 0, sign: "카페" },
-    { id: "hub-culture", kind: "future", wall: "north", along: -6.5, sign: "문화 거리" },
+    { id: "hub-cafe", kind: "room", wall: "north", along: 0, sign: "카페", to: "conversation-cafe" },
+    { id: "hub-culture", kind: "room", wall: "north", along: -6.5, sign: "문화 거리", to: "culture-street" },
     { id: "hub-seoul", kind: "future", wall: "north", along: 6.5, sign: "서울" },
     { id: "hub-garden", kind: "future", wall: "west", along: -3.5, sign: "기억 정원" },
     { id: "hub-games", kind: "link", wall: "west", along: 4, sign: "게임" },
@@ -429,6 +433,7 @@ const KLOVERS_HUB: RoomLayout = {
     fromVillage: { x: HUB.southGates.village, z: HUB.half - 3.2, yaw: Math.PI - 0.32 },
     fromMarket: { x: HUB.southGates.market, z: HUB.half - 3.2, yaw: Math.PI + 0.32 },
     fromCafe: { x: 0, z: -HUB.half + 2.2, yaw: 0 },
+    fromCulture: { x: -6.5, z: -HUB.half + 2.2, yaw: 0 },
     fromHouse: { x: 0, z: HUB.half - 3, yaw: Math.PI },
   },
   portals: [
@@ -457,6 +462,13 @@ const KLOVERS_HUB: RoomLayout = {
       to: "conversation-cafe",
       arrive: "fromHub",
       lockedNotice: "cafeLocked",
+    },
+    {
+      id: "hub-culture",
+      zone: box(-6.5, -HUB.half + 0.55, 3, 1.1),
+      to: "culture-street",
+      arrive: "fromHub",
+      lockedNotice: "cultureLocked",
     },
   ],
   shadowExtent: 15,
@@ -595,6 +607,71 @@ const KLOVERS_HOUSE: RoomLayout = {
   shadowExtent: 11,
 };
 
+/* ───────────────────────── Culture Street ──────────────────────── */
+
+/**
+ * Culture Street (canon worlds[4], course Level 3): one street, 10 m × 26 m,
+ * running north from the Hub's 문화 거리 gate to a festival arch. Modern
+ * shopfronts and hanok fronts side by side; along it, one stop per piece of
+ * everyday culture, each something to do, not only to read:
+ * greeting an elder (with a bow), shoes off at a hanok step, a food stall
+ * (김치 · 비빔밥 · 떡볶이) and what to say before eating, giving and taking
+ * with two hands at the hanbok shop, and the two big holidays under the
+ * festival arch. Learned words change the street: dishes appear on the
+ * table, and the festival lanterns light up.
+ */
+export const CULTURE = {
+  halfWidth: 5,
+  halfLength: 13,
+  /** The elder greets from the doorway of the first hanok (west side). */
+  elder: { x: -3.9, z: 7.4 },
+  /** A hanok step with shoes left on it (east side). */
+  step: { x: 4.1, z: 3.6, w: 1.6, d: 2.2 },
+  /** The food stall (west) and a small table with stools (east). */
+  stall: { x: -3.9, z: -0.6, w: 1.2, d: 3.0 },
+  table: { x: 3.0, z: -2.6, r: 0.55 },
+  /** The hanbok shop: two dressed stands by its door (east side). */
+  hanbok: { x: 4.0, z: -7.2 },
+  /** The festival arch across the north end, lanterns strung under it. */
+  arch: { z: -11.2, post: 0.4 },
+  /** Lamps along the kerbs. */
+  lamps: [
+    { x: -4.6, z: 10.5 }, { x: 4.6, z: 10.5 }, { x: -4.6, z: 2.6 }, { x: 4.6, z: -4.4 },
+  ],
+  sign: "문화 거리",
+} as const;
+
+const cultureLamps = CULTURE.lamps.map((l) => box(l.x, l.z, 0.3, 0.3));
+
+const CULTURE_STREET: RoomLayout = {
+  id: "culture-street",
+  canonWorldId: "culture-street",
+  bounds: { minX: -CULTURE.halfWidth, maxX: CULTURE.halfWidth, minZ: -CULTURE.halfLength, maxZ: CULTURE.halfLength },
+  colliders: [
+    box(CULTURE.step.x, CULTURE.step.z, CULTURE.step.w, CULTURE.step.d),
+    box(CULTURE.stall.x, CULTURE.stall.z, CULTURE.stall.w + 0.1, CULTURE.stall.d + 0.1),
+    box(CULTURE.table.x, CULTURE.table.z, CULTURE.table.r * 2 + 0.9, CULTURE.table.r * 2 + 0.2),
+    box(CULTURE.hanbok.x, CULTURE.hanbok.z, 0.8, 1.9),
+    ...[-1, 1].map((sx) => box(sx * (CULTURE.halfWidth - 0.6), CULTURE.arch.z, CULTURE.arch.post, CULTURE.arch.post)),
+    ...cultureLamps,
+    ...people("culture-street"),
+  ],
+  cameraColliders: [...cultureLamps],
+  spawns: {
+    // Just through the gate from the Hub, facing up the street (−z).
+    fromHub: { x: 0, z: CULTURE.halfLength - 2.4, yaw: Math.PI },
+  },
+  portals: [
+    {
+      id: "culture-back-gate",
+      zone: box(0, CULTURE.halfLength - 0.55, 3, 1.1),
+      to: "hub",
+      arrive: "fromCulture",
+    },
+  ],
+  shadowExtent: 17,
+};
+
 export const ROOMS: Record<RoomId, RoomLayout> = {
   courtyard: COURTYARD,
   "hangul-village": HANGUL_VILLAGE,
@@ -602,6 +679,7 @@ export const ROOMS: Record<RoomId, RoomLayout> = {
   hub: KLOVERS_HUB,
   "conversation-cafe": CONVERSATION_CAFE,
   "klovers-house": KLOVERS_HOUSE,
+  "culture-street": CULTURE_STREET,
 };
 
 /** The portal whose zone contains the point, if any (first match wins). */

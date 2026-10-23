@@ -1,4 +1,4 @@
-import { boardSpot, CAFE, HOUSE, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
+import { boardSpot, CAFE, CULTURE, HOUSE, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
 import { FRIEND_SPOT, MINSU_SPOT, NPCS } from "./npcs";
 import { PROPS } from "./world";
 
@@ -37,9 +37,10 @@ export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" 
 /** Learning cards (words and letters). Text per language: copy.learn[id]. */
 export type LearnId =
   | "seokdeung" | "beotnamu" | "nieun" | "digeut" | "mieum" | "o" | "umul"
-  | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan" | "annaeso" | "keopi";
+  | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan" | "annaeso" | "keopi"
+  | "kimchi" | "bibimbap" | "tteokbokki" | "sinbal" | "hanbok" | "seollal" | "chuseok";
 /** One-question cards. Text per language: copy.quiz[id]. */
-export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang";
+export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang" | "insa" | "meal";
 /** The market's two shops (the fruit table, the food cart) and the café counter. */
 export type ShopId = "fruit" | "food" | "cafe";
 /** Which things each shop sells (the words are in copy.shop.items). */
@@ -52,7 +53,7 @@ const THOUSANDS = ["", "천", "이천", "삼천", "사천", "오천", "육천", 
 /** A price in won, read the Korean way ("삼천 원"); up to 9,000. */
 export const wonInKorean = (won: number): string => `${THOUSANDS[Math.round(won / 1000)] ?? won} 원`;
 /** People's short lines. Text per language: copy.say[id]. */
-export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB";
+export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear";
 
 export interface Interactable {
   id: string;
@@ -182,6 +183,27 @@ export const INTERACTABLES: Interactable[] = [
   // Two students at a table, from the aisle in front of them.
   { id: "say-cafe-a", room: "conversation-cafe", kind: "say", action: "talk", say: "cafeA", npc: "k-table-1", x: npc("k-table-1").x - 0.2, z: npc("k-table-1").z + 1.15, radius: 1.0 },
   { id: "say-cafe-b", room: "conversation-cafe", kind: "say", action: "talk", say: "cafeB", npc: "k-table-2", x: npc("k-table-2").x + 0.2, z: npc("k-table-2").z + 1.15, radius: 1.0 },
+
+  /* ── Culture Street: one stop per piece of everyday culture ── */
+  // The elder in the first doorway: greet them properly.
+  { id: "quiz-insa", room: "culture-street", kind: "quiz", action: "talk", quiz: "insa", npc: "c-elder", x: CULTURE.elder.x + 1.45, z: CULTURE.elder.z, radius: 1.4, priority: 1 },
+  // Shoes left on a hanok step.
+  { id: "learn-sinbal", room: "culture-street", kind: "learn", action: "learn", learn: "sinbal", word: "신발", x: CULTURE.step.x - 1.35, z: CULTURE.step.z, radius: 1.3 },
+  // The food stall: three dishes on its counter, and the cook.
+  ...(["kimchi", "bibimbap", "tteokbokki"] as const).map((id, i): Interactable => ({
+    id: `learn-${id}`, room: "culture-street", kind: "learn", action: "learn", learn: id, word: ["김치", "비빔밥", "떡볶이"][i],
+    x: CULTURE.stall.x + CULTURE.stall.w / 2 + 0.75, z: CULTURE.stall.z + (i - 1) * 1.0, radius: 0.75,
+  })),
+  { id: "say-cook", room: "culture-street", kind: "say", action: "talk", say: "cook", npc: "c-cook", x: CULTURE.stall.x + CULTURE.stall.w / 2 + 0.75, z: CULTURE.stall.z + 2.0, radius: 0.8 },
+  // The table across the street: what to say before eating.
+  { id: "quiz-meal", room: "culture-street", kind: "quiz", action: "learn", quiz: "meal", x: CULTURE.table.x - 1.2, z: CULTURE.table.z, radius: 1.2 },
+  // The hanbok shop: its seller hands things over with both hands.
+  { id: "say-two-hands", room: "culture-street", kind: "say", action: "talk", say: "twoHands", npc: "c-seller", x: CULTURE.hanbok.x - 1.0, z: CULTURE.hanbok.z + 1.6, radius: 1.1 },
+  { id: "learn-hanbok", room: "culture-street", kind: "learn", action: "learn", learn: "hanbok", word: "한복", x: CULTURE.hanbok.x - 1.2, z: CULTURE.hanbok.z, radius: 1.0 },
+  // Under the festival arch: the two great holidays, and a neighbour in hanbok.
+  { id: "learn-seollal", room: "culture-street", kind: "learn", action: "learn", learn: "seollal", word: "설날", x: -2.6, z: CULTURE.arch.z + 1.6, radius: 1.2 },
+  { id: "learn-chuseok", room: "culture-street", kind: "learn", action: "learn", learn: "chuseok", word: "추석", x: 3.1, z: CULTURE.arch.z + 1.6, radius: 1.0 },
+  { id: "say-new-year", room: "culture-street", kind: "say", action: "talk", say: "newYear", npc: "c-neighbour", x: 1.0, z: CULTURE.arch.z + 2.2, radius: 1.0 },
 
   /* ── KLOVERS Hub: every gate can be walked up to ── */
   { id: "learn-map", room: "hub", kind: "learn", action: "inspect", learn: "jido", x: 0, z: HUB.post.size / 2 + 0.75, radius: 1.3 },

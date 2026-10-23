@@ -17,5 +17,8 @@ export const LINES: Record<string, { ko: string; voice: string; who: string }> =
   shopper: { ko: "이거 얼마예요?", voice: "coral", who: "a curious Korean woman shopping at a market" },
   cafeA: { ko: "커피 좋아해요?", voice: "echo", who: "a friendly young Korean man at a café table" },
   cafeB: { ko: "네, 좋아해요! 녹차도 좋아해요.", voice: "nova", who: "a cheerful young Korean woman at a café table" },
+  cook: { ko: "맛있게 드세요!", voice: "sage", who: "a warm Korean street-food cook, a woman in her fifties" },
+  twoHands: { ko: "여기 있습니다.", voice: "onyx", who: "a polite Korean hanbok shop owner, a man in his forties" },
+  newYear: { ko: "새해 복 많이 받으세요!", voice: "shimmer", who: "a cheerful young Korean woman wishing a happy new year" },
 };
 
