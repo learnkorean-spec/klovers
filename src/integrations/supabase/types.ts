@@ -532,6 +532,7 @@ export type Database = {
         Row: {
           article_type: string
           author: string
+          brand: string
           content: string
           created_at: string
           cta_text: string | null
@@ -559,6 +560,7 @@ export type Database = {
         Insert: {
           article_type?: string
           author?: string
+          brand?: string
           content?: string
           created_at?: string
           cta_text?: string | null
@@ -586,6 +588,7 @@ export type Database = {
         Update: {
           article_type?: string
           author?: string
+          brand?: string
           content?: string
           created_at?: string
           cta_text?: string | null

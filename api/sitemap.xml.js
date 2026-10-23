@@ -59,6 +59,9 @@ const STATIC_PAGES = [
   // (ARABIC_TWIN_PATHS) requires an entry here for.
   { loc: "/learn-hungarian", priority: "0.7", changefreq: "monthly" },
   { loc: "/learn-english", priority: "0.7", changefreq: "monthly" },
+  // Voca's article list (23 Oct 2026). English URL only; the articles
+  // themselves are listed below with every other /blog/:slug.
+  { loc: "/learn-english/articles", priority: "0.6", changefreq: "weekly" },
   { loc: "/learn-arabic", priority: "0.7", changefreq: "monthly" },
   // Korean scholarships (4 Oct 2026). High intent for the Arabic market —
   // "منح كوريا" is a real search — and the only page on the site that names

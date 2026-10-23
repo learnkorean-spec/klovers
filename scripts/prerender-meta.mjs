@@ -1119,7 +1119,7 @@ async function fetchPublishedPosts() {
   const { data, error } = await supabase
     .from("blog_posts")
     .select(
-      "slug, title, description, keywords, lang, hero_image, hero_alt, article_type, author, published_at, updated_at, content"
+      "slug, title, description, keywords, lang, brand, hero_image, hero_alt, article_type, author, published_at, updated_at, content"
     )
     .eq("published", true)
     .order("published_at", { ascending: false });
@@ -1143,6 +1143,9 @@ const postToRoute = (p) => ({
   post: {
     slug: p.slug,
     lang: p.lang || "en",
+    // 'klovers' (Korean Journal) or 'voca' (English). Rows cached before the
+    // column existed have none, and every one of those is Korean.
+    brand: p.brand || "klovers",
     heroImage: p.hero_image || null,
     heroAlt: p.hero_alt || null,
     articleType: p.article_type || null,
@@ -1252,7 +1255,23 @@ for (const page of ARABIC_PAGES) {
   });
 }
 
-const routes = [...MARKETING_ROUTES, ...blogRoutes];
+const routes = [
+  ...MARKETING_ROUTES,
+  // Voca's article list (23 Oct 2026). Built here, not in MARKETING_ROUTES,
+  // because its body is the Voca rows of blogRoutes, fetched above.
+  {
+    path: "/learn-english/articles",
+    title: "English articles, explained in Arabic — Voca",
+    description:
+      "Short, practical English lessons in article form from Voca: grammar, vocabulary and real conversation, explained for Arabic speakers.",
+    body: buildVocaIndexHtml(blogRoutes),
+    breadcrumb: [
+      { name: "Home", item: BASE_URL },
+      { name: "Learn English", item: `${BASE_URL}/learn-english` },
+    ],
+  },
+  ...blogRoutes,
+];
 
 // Slug bases, used to decide whether an EN<->AR partner really exists.
 // Arabic posts use either a `-ar` suffix (90 of them) or a legacy `ar-` prefix (10).
@@ -1421,6 +1440,16 @@ function isArabicPost(r) {
   return r.post.lang === "ar";
 }
 
+/**
+ * Voca (English-lessons) articles, 23 Oct 2026. They keep their /blog/:slug
+ * page, but /blog and /ar/blog list only the Korean Journal; the Voca ones are
+ * linked from /learn-english/articles instead (buildVocaIndexHtml below), so
+ * every published article is still linked from exactly one index.
+ */
+function isVocaPost(r) {
+  return r.post.brand === "voca";
+}
+
 function blogIndexItemsHtml(rows) {
   return rows
     .map(
@@ -1433,7 +1462,7 @@ function blogIndexItemsHtml(rows) {
 }
 
 function buildBlogIndexHtml(routes) {
-  const rows = routes.filter((r) => !isArabicPost(r));
+  const rows = routes.filter((r) => !isArabicPost(r) && !isVocaPost(r));
   return `<div id="blog-index-prerendered" lang="en" dir="ltr">
       <h1>Klovers Journal</h1>
       <p>Articles, words, stories and experiences about Korea and the Korean language.</p>
@@ -1446,9 +1475,25 @@ ${blogIndexItemsHtml(rows)}
     </div>`;
 }
 
+/** Voca's article list for /learn-english/articles: English first, then Arabic. */
+function buildVocaIndexHtml(routes) {
+  const en = routes.filter((r) => isVocaPost(r) && !isArabicPost(r));
+  const ar = routes.filter((r) => isVocaPost(r) && isArabicPost(r));
+  const list = (rows) => (rows.length ? `<ul>\n${blogIndexItemsHtml(rows)}\n        </ul>` : "");
+  return `<div id="voca-articles-prerendered" lang="en" dir="ltr">
+      <h1>English, one clear idea at a time</h1>
+      <p>Voca articles: grammar, vocabulary and real-life English, explained for Arabic speakers. Book a free trial lesson on <a href="/learn-english">Voca's English lessons page</a>.</p>
+      <section>
+        <h2>Articles (${en.length + ar.length})</h2>
+        ${list(en)}
+        ${ar.length ? `<div lang="ar" dir="rtl">${list(ar)}</div>` : ""}
+      </section>
+    </div>`;
+}
+
 /** The Arabic article list for /ar/blog (same wording as AllArticles.tsx). */
 function buildArabicBlogListHtml(routes) {
-  const rows = routes.filter(isArabicPost);
+  const rows = routes.filter((r) => isArabicPost(r) && !isVocaPost(r));
   const count = rows.length.toLocaleString("ar-EG");
   return `<p>كل المقالات، من الأحدث إلى الأقدم — ${count} مقالة.</p>
       <ul>
@@ -1843,7 +1888,7 @@ for (const route of routes) {
     // renames or reformats it would leave /blog silently empty again, which is
     // the exact regression this branch exists to fix.
     html = writeIntoRoot(html, buildBlogIndexHtml(blogRoutes), route.path, "index links");
-    blogIndexLinks = blogRoutes.filter((r) => !isArabicPost(r)).length;
+    blogIndexLinks = blogRoutes.filter((r) => !isArabicPost(r) && !isVocaPost(r)).length;
   }
 
   // Article pages carry their related-articles block in the raw HTML, for the
@@ -1954,7 +1999,7 @@ console.log(
 console.log(`   ${withHreflang} blog routes have a real EN/AR partner and got hreflang.`);
 console.log(
   `   /blog carries ${blogIndexLinks} English and /ar/blog ` +
-    `${blogRoutes.filter(isArabicPost).length} Arabic article links in their raw HTML.`
+    `${blogRoutes.filter((r) => isArabicPost(r) && !isVocaPost(r)).length} Arabic article links in their raw HTML.`
 );
 console.log(
   `   ${marketingBodiesWritten} marketing route(s) carry hand-written body copy ` +

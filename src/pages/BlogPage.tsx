@@ -74,6 +74,9 @@ const BlogPage = () => {
         .select(COLUMNS)
         .eq("published", true)
         .eq("lang", language)
+        // The Korean Journal only: Voca (English-lessons) articles are listed
+        // on /learn-english/articles instead (brand column, 23 Oct 2026).
+        .eq("brand", "klovers")
         .order("published_at", { ascending: false })
         .limit(300);
       if (cancelled) return;

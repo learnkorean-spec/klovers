@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Globe, LogOut, CalendarDays } from "lucide-react";
+import { Globe, LogOut, CalendarDays, LayoutDashboard } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -109,3 +110,101 @@ export const VocaStudentFooter = ({ tr }: { tr: TrFn }) => (
     </div>
   </footer>
 );
+
+/** Where the Voca landing page and its articles live, per language. */
+export const vocaPaths = (isAr: boolean) => ({
+  home: isAr ? "/ar/learn-english" : "/learn-english",
+  // English URL only for now (no Arabic twin yet); the page itself follows the
+  // reader's language. Give it an /ar twin once there are Arabic Voca articles.
+  articles: "/learn-english/articles",
+});
+
+/**
+ * Voca's public header — used on /learn-english and /learn-english/articles.
+ * Moved here from LearnEnglishPage.tsx (23 Oct 2026) so both pages share it.
+ *
+ * Re's rule (23 Oct 2026): Voca and Klovers are connected, but NOT from this
+ * header — every item here is Voca's own content. "Articles" points at Voca's
+ * own article list (/learn-english/articles), never at the Korean Journal
+ * (/blog). On the landing page the section links are in-page anchors; on any
+ * other Voca page they go to the landing page's sections.
+ */
+export const VocaSiteHeader = ({
+  isAr,
+  tr,
+  toggleLanguage,
+  onLanding = false,
+}: {
+  isAr: boolean;
+  tr: TrFn;
+  toggleLanguage: () => void;
+  onLanding?: boolean;
+}) => {
+  const { user } = useAuth();
+  const paths = vocaPaths(isAr);
+  const section = (id: string) => (onLanding ? `#${id}` : `${paths.home}#${id}`);
+  const anchors = [
+    { href: section("who-its-for"), label: tr("Who it's for", "لمن هذه الدروس") },
+    { href: section("how-it-works"), label: tr("How it works", "كيف تسير الدروس") },
+    { href: section("faq"), label: tr("FAQ", "الأسئلة الشائعة") },
+  ];
+  const linkCls = "text-sm font-medium text-foreground/75 hover:text-foreground";
+  return (
+    <header className="sticky top-0 z-40 border-b border-foreground/10 bg-background/90 backdrop-blur">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-3 focus:z-50 focus:rounded-full focus:px-4 focus:py-2 focus:text-sm focus:font-semibold"
+        style={{ backgroundColor: VOCA_SIGNAL, color: "#111111" }}
+      >
+        {tr("Skip to content", "الانتقال إلى المحتوى")}
+      </a>
+      <div className="container mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+        {onLanding ? (
+          <a href="#top" className="inline-flex items-center gap-2" aria-label={tr("Voca home", "الصفحة الرئيسية لـ Voca")}>
+            <VocaLogoMark className="h-8 w-8 shrink-0" />
+            <span className="text-xl font-extrabold tracking-tight text-foreground">Voca</span>
+          </a>
+        ) : (
+          <Link to={paths.home} className="inline-flex items-center gap-2" aria-label={tr("Voca home", "الصفحة الرئيسية لـ Voca")}>
+            <VocaLogoMark className="h-8 w-8 shrink-0" />
+            <span className="text-xl font-extrabold tracking-tight text-foreground">Voca</span>
+          </Link>
+        )}
+        <nav className="hidden items-center gap-6 md:flex" aria-label={tr("Primary", "رئيسي")}>
+          {anchors.map((a) => (
+            <a key={a.href} href={a.href} className={linkCls}>{a.label}</a>
+          ))}
+          <Link to={paths.articles} className={linkCls}>{tr("Articles", "مقالات")}</Link>
+        </nav>
+        <div className="flex items-center gap-2">
+          {user && (
+            <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs" title={tr("My Dashboard", "لوحة التحكم")}>
+              <Link to="/dashboard">
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{tr("Dashboard", "لوحة التحكم")}</span>
+              </Link>
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-1.5 text-xs">
+            <Globe className="h-3.5 w-3.5" />
+            {tr("العربية", "English")}
+          </Button>
+          <Button
+            size="sm"
+            asChild
+            className="hidden rounded-full font-semibold hover:brightness-95 sm:inline-flex"
+            style={{ backgroundColor: VOCA_SIGNAL, color: "#111111" }}
+          >
+            <a href={section("trial")}>{tr("Book a trial", "احجز حصة تجريبية")}</a>
+          </Button>
+        </div>
+      </div>
+      {/* Phones: the nav above is md+ only, so Articles stays one tap away here. */}
+      <div className="flex items-center justify-center gap-5 border-t border-foreground/5 py-2 md:hidden">
+        <a href={section("how-it-works")} className="text-xs font-medium text-foreground/75">{tr("How it works", "كيف تسير الدروس")}</a>
+        <Link to={paths.articles} className="text-xs font-medium text-foreground/75">{tr("Articles", "مقالات")}</Link>
+        <a href={section("faq")} className="text-xs font-medium text-foreground/75">{tr("FAQ", "الأسئلة الشائعة")}</a>
+      </div>
+    </header>
+  );
+};
