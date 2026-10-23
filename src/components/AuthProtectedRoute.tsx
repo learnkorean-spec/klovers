@@ -3,7 +3,12 @@ import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { withTimeout } from "@/lib/withTimeout";
 
-const AuthProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+/**
+ * `loginPath`: where a signed-out visitor is sent (default the Klovers /login).
+ * Voca's pages pass /learn-english/login so an English student never lands on
+ * the Klovers login on her way to her lessons.
+ */
+const AuthProtectedRoute = ({ children, loginPath = "/login" }: { children: React.ReactNode; loginPath?: string }) => {
   const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
   const location = useLocation();
 
@@ -37,7 +42,7 @@ const AuthProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (status === "unauthenticated") {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    return <Navigate to={`${loginPath}?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   return <>{children}</>;

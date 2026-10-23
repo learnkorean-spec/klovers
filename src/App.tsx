@@ -84,6 +84,7 @@ const KDramaLearningPage = lazy(() => import("./pages/KDramaLearningPage"));
 const LearnHungarianPage = lazy(() => import("./pages/LearnHungarianPage"));
 const LearnArabicPage = lazy(() => import("./pages/LearnArabicPage"));
 const LearnEnglishPage = lazy(() => import("./pages/LearnEnglishPage"));
+const VocaArticlesPage = lazy(() => import("./pages/VocaArticlesPage"));
 // The scholarships page carries a real Arabic twin (/ar/scholarships), listed in
 // scripts/lib/arabic-page-meta.mjs and scripts/lib/arabic-pages.mjs.
 const ScholarshipsPage = lazy(() => import("./pages/ScholarshipsPage"));
@@ -289,6 +290,11 @@ const App = () => (
                 <Route path="/learn-hungarian" element={<LearnHungarianPage />} />
                 <Route path="/learn-arabic" element={<LearnArabicPage />} />
                 <Route path="/learn-english" element={<LearnEnglishPage />} />
+                {/* Voca's own article list (23 Oct 2026); English URL only for now. */}
+                <Route path="/learn-english/articles" element={<VocaArticlesPage />} />
+                {/* Voca's own addresses for a signed-in English student (23 Oct 2026). */}
+                <Route path="/learn-english/my-lessons" element={<AuthProtectedRoute loginPath="/learn-english/login"><MyLessonsPage brand="voca" /></AuthProtectedRoute>} />
+                <Route path="/learn-english/login" element={<LoginPage brand="voca" />} />
                 <Route path="/scholarships" element={<ScholarshipsPage />} />
                 <Route path="/interview-training" element={<KoreanInterviewPage />} />
                 <Route path="/welcome-back" element={<ReturningStudentsLandingPage />} />

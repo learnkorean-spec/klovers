@@ -20,6 +20,7 @@ Disallow: /admin/
 # Student-only protected areas
 Disallow: /dashboard
 Disallow: /dashboard/
+Disallow: /learn-english/my-lessons
 Disallow: /profile
 Disallow: /pay/
 Disallow: /resubmit-schedule

@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Globe, LayoutDashboard } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useSEO } from "@/hooks/useSEO";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/hooks/useAuth";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
+import { VOCA_THEME_CLASS, VocaSiteHeader } from "@/components/voca/VocaBrand";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 
 /**
@@ -79,99 +79,9 @@ const AirmailRule = () => (
   </div>
 );
 
-type TrFn = (en: string, ar: string) => string;
-
-const VocaLogoMark = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 200 200" className={className} role="img" aria-label="Voca">
-    <rect x="0" y="0" width="200" height="200" rx="44" fill={INK} />
-    <circle cx="100" cy="92" r="58" fill={SIGNAL} />
-    <circle cx="100" cy="92" r="34" fill={INK} />
-    <rect x="78" y="76" width="8" height="32" rx="4" fill={SIGNAL} />
-    <rect x="91" y="64" width="8" height="56" rx="4" fill={SIGNAL} />
-    <rect x="104" y="72" width="8" height="40" rx="4" fill={SIGNAL} />
-    <rect x="117" y="80" width="8" height="24" rx="4" fill={SIGNAL} />
-    <path d="M120 142 L150 142 L128 168 Z" fill={SIGNAL} />
-  </svg>
-);
-
-/**
- * Voca's own header — added 23 Oct 2026 at Re's request, following the same
- * pattern /learn-arabic already uses for maktub: a page with its own
- * sibling-brand identity gets its own header/nav instead of the sitewide
- * <Header />, whose Courses/Pricing/Textbook/Games/Shop nav is about the
- * Korean platform and doesn't fit an English-lessons visitor.
- *
- * UPDATE, 23 Oct 2026: the nav first shipped with "Courses" -> /courses and
- * "Articles" -> /blog, reasoning Voca has no separate site the way maktub
- * does. Re corrected this same day: every nav item has to be Voca's own
- * content, never a link out to Klovers/Korean pages — /courses is Klovers'
- * Hangul/TOPIK catalogue and /blog is the Korean-journey blog, neither of
- * which is Voca's. There is no English course catalogue or article library
- * yet, so the nav instead anchors to the real sections this one-offer page
- * already has: how lessons work, who they're for, and the FAQ. Add an actual
- * Voca courses/articles destination here (and only here) if that content is
- * ever built — until then, don't relink Courses/Articles to kloversegy.com.
- */
-const VocaHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; toggleLanguage: () => void }) => {
-  const { user } = useAuth();
-  const navLinks = [
-    { href: "#who-its-for", label: tr("Who it's for", "لمن هذه الدروس") },
-    { href: "#how-it-works", label: tr("How it works", "كيف تسير الدروس") },
-    { href: "#faq", label: tr("FAQ", "الأسئلة الشائعة") },
-  ];
-  return (
-    <header className="sticky top-0 z-40 border-b border-foreground/10 bg-background/90 backdrop-blur">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-3 focus:z-50 focus:rounded-full focus:px-4 focus:py-2 focus:text-sm focus:font-semibold"
-        style={{ backgroundColor: SIGNAL, color: "#111111" }}
-      >
-        {tr("Skip to content", "الانتقال إلى المحتوى")}
-      </a>
-      <div className="container mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <a href="#top" className="inline-flex items-center gap-2" aria-label={tr("Voca home", "الصفحة الرئيسية لـ Voca")}>
-          <VocaLogoMark className="h-8 w-8 shrink-0" />
-          <span className="text-xl font-extrabold tracking-tight text-foreground">Voca</span>
-        </a>
-        <nav className="hidden items-center gap-6 md:flex" aria-label={tr("Primary", "رئيسي")}>
-          {navLinks.map((link) =>
-            link.to ? (
-              <Link key={link.to} to={link.to} className="text-sm font-medium text-foreground/75 hover:text-foreground">
-                {link.label}
-              </Link>
-            ) : (
-              <a key={link.href} href={link.href} className="text-sm font-medium text-foreground/75 hover:text-foreground">
-                {link.label}
-              </a>
-            ),
-          )}
-        </nav>
-        <div className="flex items-center gap-2">
-          {user && (
-            <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs" title={tr("My Dashboard", "لوحة التحكم")}>
-              <Link to="/dashboard">
-                <LayoutDashboard className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{tr("Dashboard", "لوحة التحكم")}</span>
-              </Link>
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={toggleLanguage} className="gap-1.5 text-xs">
-            <Globe className="h-3.5 w-3.5" />
-            {tr("العربية", "English")}
-          </Button>
-          <Button
-            size="sm"
-            asChild
-            className="hidden rounded-full font-semibold hover:brightness-95 sm:inline-flex"
-            style={{ backgroundColor: SIGNAL, color: "#111111" }}
-          >
-            <a href="#trial">{tr("Book a trial", "احجز حصة تجريبية")}</a>
-          </Button>
-        </div>
-      </div>
-    </header>
-  );
-};
+// VocaHeader moved to src/components/voca/VocaBrand.tsx as VocaSiteHeader
+// (23 Oct 2026) so /learn-english/articles can share it; its history and
+// Re's "no Klovers links in the Voca header" rule are documented there.
 
 const LearnEnglishPage = () => {
   const { language, toggleLanguage } = useLanguage();
@@ -262,8 +172,8 @@ const LearnEnglishPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <VocaHeader isAr={isAr} tr={tr} toggleLanguage={toggleLanguage} />
+    <div className={`${VOCA_THEME_CLASS} min-h-screen bg-background`}>
+      <VocaSiteHeader isAr={isAr} tr={tr} toggleLanguage={toggleLanguage} onLanding />
       <main id="main-content">
         {/* Hero — ink navy ground, the airmail rule framing the one photo. */}
         <section className="relative overflow-hidden text-white" style={{ backgroundColor: INK }}>
@@ -593,6 +503,9 @@ const LearnEnglishPage = () => {
             <a href="#faq" className="text-white/70 hover:text-white">
               {tr("FAQ", "الأسئلة الشائعة")}
             </a>
+            <Link to="/learn-english/articles" className="text-white/70 hover:text-white">
+              {tr("Articles", "مقالات")}
+            </Link>
             <a href="#trial" className="text-white/70 hover:text-white">
               {tr("Book a trial", "احجز حصة تجريبية")}
             </a>

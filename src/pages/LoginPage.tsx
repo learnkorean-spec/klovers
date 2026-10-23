@@ -12,9 +12,35 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { trustCopy } from "@/lib/trustFigures";
 import { safeRedirect, withRedirect } from "@/lib/authRedirect";
 import { withTimeout, isServiceOutage } from "@/lib/withTimeout";
+import {
+  VOCA_INK,
+  VOCA_MY_LESSONS_PATH,
+  VOCA_SIGNAL,
+  VOCA_THEME_CLASS,
+  VocaLogoMark,
+  VocaSiteHeader,
+  VocaStudentFooter,
+} from "@/components/voca/VocaBrand";
 
-const LoginPage = () => {
-  useSEO({ title: document.documentElement.lang === "ar" ? "تسجيل الدخول | كلوفرز" : "Login | Klovers", description: document.documentElement.lang === "ar" ? "تسجيل الدخول إلى حساب كلوفرز للوصول إلى الدروس ولوحة الطالب." : "Sign in to your Klovers account to access your Korean lessons, progress tracker, and student dashboard.", noindex: true });
+/**
+ * `brand="voca"` (route /learn-english/login, 23 Oct 2026): the same sign-in,
+ * dressed as Voca — Voca header, footer and colours, no Cluby art (Cluby is
+ * Klovers' story character, not Voca's) — and landing on the Voca lessons
+ * page by default instead of /dashboard.
+ */
+const LoginPage = ({ brand = "klovers" }: { brand?: "klovers" | "voca" }) => {
+  const voca = brand === "voca";
+  const docAr = document.documentElement.lang === "ar";
+  useSEO(
+    voca
+      ? {
+          title: docAr ? "تسجيل الدخول — Voca" : "Log in — Voca",
+          description: docAr ? "تسجيل الدخول لمتابعة حصص الإنجليزية مع Voca." : "Sign in to see your Voca English lessons.",
+          noindex: true,
+        }
+      : { title: docAr ? "تسجيل الدخول | كلوفرز" : "Login | Klovers", description: docAr ? "تسجيل الدخول إلى حساب كلوفرز للوصول إلى الدروس ولوحة الطالب." : "Sign in to your Klovers account to access your Korean lessons, progress tracker, and student dashboard.", noindex: true },
+  );
+  const defaultRedirect = voca ? VOCA_MY_LESSONS_PATH : "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,8 +48,9 @@ const LoginPage = () => {
   const [searchParams] = useSearchParams();
   // Only same-site relative paths ("/x", never "//x") are honoured.
   const redirectTo = safeRedirect(searchParams.get("redirect"));
-  const { t, language } = useLanguage();
+  const { t, language, toggleLanguage } = useLanguage();
   const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
 
   // If user is already authenticated (e.g. returning from OAuth), redirect immediately
   useEffect(() => {
@@ -36,7 +63,7 @@ const LoginPage = () => {
       }
       if (session) {
         const savedRedirect = safeRedirect(localStorage.getItem("enroll_redirect"));
-        const finalRedirect = redirectTo || savedRedirect || "/dashboard";
+        const finalRedirect = redirectTo || savedRedirect || defaultRedirect;
         if (savedRedirect) localStorage.removeItem("enroll_redirect");
         navigate(finalRedirect, { replace: true });
       }
@@ -46,13 +73,13 @@ const LoginPage = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         const savedRedirect = safeRedirect(localStorage.getItem("enroll_redirect"));
-        const finalRedirect = redirectTo || savedRedirect || "/dashboard";
+        const finalRedirect = redirectTo || savedRedirect || defaultRedirect;
         if (savedRedirect) localStorage.removeItem("enroll_redirect");
         navigate(finalRedirect, { replace: true });
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate, redirectTo]);
+  }, [navigate, redirectTo, defaultRedirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,7 +192,7 @@ const LoginPage = () => {
       } catch { /* ignore draft sync errors */ }
 
       const savedRedirect = safeRedirect(localStorage.getItem("enroll_redirect"));
-      const finalRedirect = redirectTo || savedRedirect || "/dashboard";
+      const finalRedirect = redirectTo || savedRedirect || defaultRedirect;
       if (savedRedirect) localStorage.removeItem("enroll_redirect");
       navigate(finalRedirect);
     }
@@ -173,7 +200,7 @@ const LoginPage = () => {
 
   const handleSocialLogin = async (provider: "google") => {
     // Always save intended redirect so we can use it after OAuth callback
-    const intendedRedirect = redirectTo || "/dashboard";
+    const intendedRedirect = redirectTo || defaultRedirect;
     localStorage.setItem("enroll_redirect", intendedRedirect);
 
     try {
@@ -200,11 +227,27 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main id="main-content" className="pt-24 pb-16 px-4">
+    <div className={voca ? `${VOCA_THEME_CLASS} min-h-screen flex flex-col` : "min-h-screen"} dir={voca && isAr ? "rtl" : undefined}>
+      {voca ? <VocaSiteHeader isAr={isAr} tr={tr} toggleLanguage={toggleLanguage} /> : <Header />}
+      <main id="main-content" className={voca ? "flex-1 pt-10 pb-16 px-4" : "pt-24 pb-16 px-4"}>
         <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-2 lg:items-center lg:gap-10">
 
+        {voca ? (
+          <div
+            className="flex flex-col justify-end gap-3 overflow-hidden rounded-3xl p-6 text-white lg:h-[28rem]"
+            style={{ backgroundColor: VOCA_INK }}
+          >
+            <VocaLogoMark inverted className="h-12 w-12" />
+            <p className="text-2xl font-extrabold leading-tight" style={{ fontFamily: "'Fraunces', serif" }}>
+              {tr("Welcome back.", "أهلًا بالعودة.")}
+            </p>
+            <p className="text-sm text-white/80">
+              {tr("Your lessons, your bundle and your next class are waiting.", "حصصك وباقتك وموعدك القادم في انتظارك.")}
+            </p>
+            <span className="h-1 w-16 rounded-full" style={{ backgroundColor: VOCA_SIGNAL }} aria-hidden="true" />
+          </div>
+        ) : (
+        <>
         {/* Story art: the two friends and Cluby picnicking by the Han river.
             A short strip on phones, a tall panel beside the form from lg up. */}
         <figure className="relative overflow-hidden rounded-3xl border border-border bg-charcoal shadow-sm">
@@ -228,6 +271,8 @@ const LoginPage = () => {
             </span>
           </figcaption>
         </figure>
+        </>
+        )}
 
         <div className="flex w-full flex-col items-center gap-4">
 
@@ -282,7 +327,7 @@ const LoginPage = () => {
         </div>
         </div>
       </main>
-      <Footer />
+      {voca ? <VocaStudentFooter tr={tr} /> : <Footer />}
     </div>
   );
 };
