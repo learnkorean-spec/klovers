@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { VOCA_MY_LESSONS_PATH } from "@/components/voca/VocaBrand";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import LevelConfirmBanner from "@/components/LevelConfirmBanner";
 
 const StudentDashboard = lazy(() => import("./StudentDashboard"));
-const MyLessonsPage = lazy(() => import("./MyLessonsPage"));
 
 /**
  * Which dashboard /dashboard means.
@@ -72,12 +73,10 @@ const DashboardRouter = () => {
 
   if (track === null) return spinner;
 
+  // English students are Voca students (23 Oct 2026): their lessons page has
+  // its own Voca address, so /dashboard forwards them there.
   if (track === "english") {
-    return (
-      <Suspense fallback={spinner}>
-        <MyLessonsPage />
-      </Suspense>
-    );
+    return <Navigate to={VOCA_MY_LESSONS_PATH} replace />;
   }
 
   return (

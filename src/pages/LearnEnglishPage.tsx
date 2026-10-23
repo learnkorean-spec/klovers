@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
-import { VocaSiteHeader } from "@/components/voca/VocaBrand";
+import { VOCA_THEME_CLASS, VocaSiteHeader } from "@/components/voca/VocaBrand";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 
 /**
@@ -172,7 +172,7 @@ const LearnEnglishPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`${VOCA_THEME_CLASS} min-h-screen bg-background`}>
       <VocaSiteHeader isAr={isAr} tr={tr} toggleLanguage={toggleLanguage} onLanding />
       <main id="main-content">
         {/* Hero — ink navy ground, the airmail rule framing the one photo. */}

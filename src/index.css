@@ -270,6 +270,41 @@ Type, loaded in index.html:
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 
   }
+
+  /* VOCA (23 Oct 2026). Voca is the English-lessons sibling brand: maroon
+     #650000 + yellow #FFFF00 on cream. Every Voca page roots itself in
+     .voca-theme (VOCA_THEME_CLASS) so that, inside it:
+       - default buttons and focus rings are Voca maroon, not Klovers yellow
+         (--primary is the yellow pair everywhere else);
+       - the surface is always the light cream one. Voca's colours are fixed
+         hex values, so under the site's dark theme its pages showed light
+         text on cream. Declared on the element, these win over the inherited
+         .dark values; Tailwind's dark: variants still match but now resolve
+         to these light tokens. */
+  .voca-theme {
+    --background: 41 100% 96.3%;
+    --foreground: 0 0% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 18%;
+    --primary: 0 100% 19.8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 100% 19.8%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 41 60% 93%;
+    --muted-foreground: 0 0% 35%;
+    --accent: 41 70% 90%;
+    --accent-foreground: 0 100% 19.8%;
+    --border: 40 25% 88%;
+    --input: 40 25% 88%;
+    --ring: 0 100% 19.8%;
+    --ivory: 41 100% 96.3%;
+    --charcoal: 0 0% 18%;
+    color-scheme: light;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
 }
 
 @layer base {

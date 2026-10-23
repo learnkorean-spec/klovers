@@ -7,8 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   VOCA_INK,
-  VOCA_PAPER,
   VOCA_SIGNAL,
+  VOCA_THEME_CLASS,
   VocaSiteHeader,
   VocaStudentFooter,
   vocaPaths,
@@ -89,7 +89,7 @@ const VocaArticlesPage = () => {
       : "";
 
   return (
-    <div className="min-h-screen flex flex-col" dir={isAr ? "rtl" : "ltr"} style={{ backgroundColor: VOCA_PAPER }}>
+    <div className={`${VOCA_THEME_CLASS} min-h-screen flex flex-col`} dir={isAr ? "rtl" : "ltr"}>
       <VocaSiteHeader isAr={isAr} tr={tr} toggleLanguage={toggleLanguage} />
 
       <main id="main-content" className="flex-1">

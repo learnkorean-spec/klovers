@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,7 +10,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { formatMoney } from "@/types/students";
 import WorldEntryCard from "@/components/games/WorldEntryCard";
 import StudentSelfService from "@/components/StudentSelfService";
-import { VOCA_INK, VOCA_PAPER, VocaStudentHeader, VocaStudentFooter } from "@/components/voca/VocaBrand";
+import {
+  VOCA_INK,
+  VOCA_LOGIN_PATH,
+  VOCA_MY_LESSONS_PATH,
+  VOCA_THEME_CLASS,
+  VocaStudentHeader,
+  VocaStudentFooter,
+} from "@/components/voca/VocaBrand";
 
 /**
  * What a private student sees: her own lessons, and nothing else.
@@ -151,7 +158,15 @@ const isKoreanSubject = (subject: string | null | undefined) => /korean|كوري
  */
 const isEnglishSubject = (subject: string | null | undefined) => /english/i.test(subject ?? "");
 
-const MyLessonsPage = () => {
+/**
+ * `brand="voca"` is the route /learn-english/my-lessons (23 Oct 2026): the
+ * Voca shell is known before anything loads, so the spinner, an error or an
+ * empty account never flash the Klovers header first. Each student ends up on
+ * her own brand's address: an English student opening /my-lessons is sent to
+ * the Voca URL, a Korean one opening the Voca URL is sent to /dashboard.
+ */
+const MyLessonsPage = ({ brand }: { brand?: "voca" }) => {
+  const vocaRoute = brand === "voca";
   const navigate = useNavigate();
   const { language, toggleLanguage } = useLanguage();
   const isAr = language === "ar";
@@ -176,7 +191,10 @@ const MyLessonsPage = () => {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
         const session = sessionData.session;
-        if (!session) { navigate("/login"); return; }
+        if (!session) {
+          navigate(vocaRoute ? `${VOCA_LOGIN_PATH}?redirect=${encodeURIComponent(VOCA_MY_LESSONS_PATH)}` : "/login");
+          return;
+        }
         setUserId(session.user.id);
 
         // RLS returns this student's own row and no other.
@@ -276,58 +294,72 @@ const MyLessonsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
-  if (loading) {
-    return (
+  // The page frame for the states before her roster row is known: Voca's on
+  // the Voca route, Klovers' otherwise.
+  const frame = (children: React.ReactNode, withFooter = false) =>
+    vocaRoute ? (
+      <div className={`${VOCA_THEME_CLASS} min-h-screen flex flex-col`} dir={isAr ? "rtl" : "ltr"}>
+        <VocaStudentHeader tr={tr} toggleLanguage={toggleLanguage} />
+        <main id="main-content" className="flex-1 py-16 flex items-center justify-center px-4">{children}</main>
+        <VocaStudentFooter tr={tr} />
+      </div>
+    ) : (
       <div className="min-h-screen">
         <Header />
-        <main id="main-content" className="pt-24 flex items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </main>
+        <main id="main-content" className="pt-24 flex items-center justify-center px-4">{children}</main>
+        {withFooter && <Footer />}
       </div>
     );
+
+  if (loading) {
+    return frame(<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />);
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen">
-        <Header />
-        <main id="main-content" className="pt-24 flex items-center justify-center px-4">
+    return frame(
           <div className="text-center space-y-3 max-w-sm">
             <AlertTriangle className="h-10 w-10 mx-auto text-wrong dark:text-[#FF3131]" />
             <p className="text-sm text-muted-foreground">{error}</p>
             <Button onClick={() => window.location.reload()}>{c.refresh}</Button>
-          </div>
-        </main>
-      </div>
+          </div>,
     );
   }
 
   if (!roster) {
-    return (
-      <div className="min-h-screen">
-        <Header />
-        <main id="main-content" className="pt-24 flex items-center justify-center px-4">
+    return frame(
           <div className="text-center space-y-4 max-w-sm">
-            <p className="text-sm text-muted-foreground">{c.notPrivate}</p>
-            <Button onClick={() => navigate("/dashboard")}>{c.backToDashboard}</Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
+            <p className="text-sm text-muted-foreground">
+              {vocaRoute
+                ? tr(
+                    "This page is for Voca students with private English lessons, and your account has none yet.",
+                    "هذه الصفحة لطلاب Voca في حصص الإنجليزية الخاصة، ولا توجد حصص مرتبطة بحسابك بعد.",
+                  )
+                : c.notPrivate}
+            </p>
+            <Button onClick={() => navigate(vocaRoute ? "/learn-english" : "/dashboard")}>
+              {vocaRoute ? tr("Back to Voca", "العودة إلى Voca") : c.backToDashboard}
+            </Button>
+          </div>,
+      true,
     );
   }
+
+  // Each student on her own brand's address.
+  const englishStudent = isEnglishSubject(roster.subject);
+  if (vocaRoute && !englishStudent) return <Navigate to="/dashboard" replace />;
+  if (!vocaRoute && englishStudent) return <Navigate to={VOCA_MY_LESSONS_PATH} replace />;
 
   // The lesson after the last one her bundle pays for. Shown on the row itself
   // rather than as a separate warning, so she reads it while looking at the
   // date it applies to.
   const lastCoveredIndex = balance ? balance.remaining_classes - 1 : -1;
   const inWorld = isKoreanSubject(roster.subject);
-  const voca = isEnglishSubject(roster.subject);
+  const voca = englishStudent;
 
   return (
-    <div className="min-h-screen" dir={isAr ? "rtl" : "ltr"} style={voca ? { backgroundColor: VOCA_PAPER } : undefined}>
+    <div className={voca ? `${VOCA_THEME_CLASS} min-h-screen flex flex-col` : "min-h-screen"} dir={isAr ? "rtl" : "ltr"}>
       {voca ? <VocaStudentHeader tr={tr} toggleLanguage={toggleLanguage} /> : <Header />}
-      <main id="main-content" className={voca ? "pt-10 pb-16 px-4" : "pt-24 pb-16 px-4"}>
+      <main id="main-content" className={voca ? "flex-1 pt-10 pb-16 px-4" : "pt-24 pb-16 px-4"}>
         <div className="max-w-2xl mx-auto space-y-5">
 
           {inWorld ? (

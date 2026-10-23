@@ -20,6 +20,22 @@ export const VOCA_SIGNAL = "#FFFF00"; // yellow (same hex as klovers-yellow)
 export const VOCA_PAPER = "#FFF9EC"; // cream
 
 /**
+ * Voca's own addresses for a signed-in English student (Re, 23 Oct 2026: "fix
+ * the path on voca and the student dashboard"). /dashboard still works — it
+ * sends an English-track student here — but the link she is given, the login
+ * she sees and every Voca "My lessons" link use these.
+ */
+export const VOCA_MY_LESSONS_PATH = "/learn-english/my-lessons";
+export const VOCA_LOGIN_PATH = "/learn-english/login";
+
+/**
+ * Root class for every Voca page (see .voca-theme in index.css): maroon
+ * primary instead of Klovers yellow for default buttons and focus rings, and
+ * always the light cream surface, even when the reader's site theme is dark.
+ */
+export const VOCA_THEME_CLASS = "voca-theme";
+
+/**
  * `inverted` swaps maroon and yellow — for use ON a maroon surface (the
  * student header), where the normal maroon tile disappears into the bar and
  * only the yellow ring shows.
@@ -60,13 +76,13 @@ export const VocaStudentHeader = ({ tr, toggleLanguage }: { tr: TrFn; toggleLang
         {tr("Skip to content", "الانتقال إلى المحتوى")}
       </a>
       <div className="container mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <Link to="/dashboard" className="inline-flex items-center gap-2" aria-label={tr("Voca — my lessons", "Voca — حصصي")}>
+        <Link to={VOCA_MY_LESSONS_PATH} className="inline-flex items-center gap-2" aria-label={tr("Voca — my lessons", "Voca — حصصي")}>
           <VocaLogoMark inverted className="h-8 w-8 shrink-0" />
           <span className="text-xl font-extrabold tracking-tight text-white">Voca</span>
         </Link>
         <div className="flex items-center gap-1 sm:gap-2">
           <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs text-white hover:bg-white/10 hover:text-white">
-            <Link to="/dashboard">
+            <Link to={VOCA_MY_LESSONS_PATH}>
               <CalendarDays className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{tr("My lessons", "حصصي")}</span>
             </Link>
@@ -117,6 +133,8 @@ export const vocaPaths = (isAr: boolean) => ({
   // English URL only for now (no Arabic twin yet); the page itself follows the
   // reader's language. Give it an /ar twin once there are Arabic Voca articles.
   articles: "/learn-english/articles",
+  myLessons: VOCA_MY_LESSONS_PATH,
+  login: VOCA_LOGIN_PATH,
 });
 
 /**

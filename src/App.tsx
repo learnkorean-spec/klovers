@@ -292,6 +292,9 @@ const App = () => (
                 <Route path="/learn-english" element={<LearnEnglishPage />} />
                 {/* Voca's own article list (23 Oct 2026); English URL only for now. */}
                 <Route path="/learn-english/articles" element={<VocaArticlesPage />} />
+                {/* Voca's own addresses for a signed-in English student (23 Oct 2026). */}
+                <Route path="/learn-english/my-lessons" element={<AuthProtectedRoute loginPath="/learn-english/login"><MyLessonsPage brand="voca" /></AuthProtectedRoute>} />
+                <Route path="/learn-english/login" element={<LoginPage brand="voca" />} />
                 <Route path="/scholarships" element={<ScholarshipsPage />} />
                 <Route path="/interview-training" element={<KoreanInterviewPage />} />
                 <Route path="/welcome-back" element={<ReturningStudentsLandingPage />} />
