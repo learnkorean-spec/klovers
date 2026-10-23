@@ -40,6 +40,11 @@ export type LearnId =
   | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan" | "annaeso";
 /** One-question cards. Text per language: copy.quiz[id]. */
 export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang";
+/** The market's two shops: the fruit table and the food cart. */
+export type ShopId = "fruit" | "food";
+/** Which things each shop sells (the words are in copy.shop.items). */
+export const SHOP_ITEMS: Record<ShopId, readonly string[]> = { fruit: MARKET.shop.items, food: MARKET.cart.items };
+export const shopOf = (item: string): ShopId => (SHOP_ITEMS.food.includes(item) ? "food" : "fruit");
 /** People's short lines. Text per language: copy.say[id]. */
 export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper";
 
@@ -71,6 +76,8 @@ export interface Interactable {
   npc?: string;
   /** A Hangul letter counted by the village's three-letter discovery. */
   letter?: string;
+  /** Which market shop this is (kind "shop"). */
+  shop?: ShopId;
   /** A market word this reveals (its stall sign goes up once learned). */
   word?: string;
   /** Doors: where walking through leads. */
@@ -156,7 +163,9 @@ export const INTERACTABLES: Interactable[] = [
   { id: "say-shopper", room: "vocabulary-market", kind: "say", action: "talk", say: "shopper", npc: "m-shopper", x: npc("m-shopper").x + 0.9, z: npc("m-shopper").z, radius: 1.1 },
   { id: "learn-gwail", room: "vocabulary-market", kind: "learn", action: "learn", learn: "gwail", word: "과일", x: MARKET.tables[0][0], z: MARKET.tables[0][1] + MARKET.tables[0][3] / 2 + 0.6, radius: 1.2 },
   // The little shop: three things on the second produce table, from the square side.
-  { id: "shop", room: "vocabulary-market", kind: "shop", action: "shop", x: MARKET.tables[MARKET.shop.table][0] - MARKET.tables[MARKET.shop.table][2] / 2 - 0.75, z: MARKET.tables[MARKET.shop.table][1], radius: 1.4, priority: 1 },
+  { id: "shop", room: "vocabulary-market", kind: "shop", action: "shop", shop: "fruit", x: MARKET.tables[MARKET.shop.table][0] - MARKET.tables[MARKET.shop.table][2] / 2 - 0.75, z: MARKET.tables[MARKET.shop.table][1], radius: 1.4, priority: 1 },
+  // The food cart, from the middle of the square (its west side).
+  { id: "shop-food", room: "vocabulary-market", kind: "shop", action: "shop", shop: "food", x: MARKET.cart.x - MARKET.cart.w / 2 - 0.85, z: MARKET.cart.z, radius: 1.4, priority: 1 },
   { id: "quiz-ppang", room: "vocabulary-market", kind: "quiz", action: "learn", quiz: "ppang", x: MARKET.crates.x - 0.3, z: MARKET.crates.z - MARKET.crates.size / 2 - 0.55, radius: 1.2 },
 
   /* ── KLOVERS Hub: every gate can be walked up to ── */

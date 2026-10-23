@@ -18,19 +18,26 @@ import { Signboard } from "./parts";
  * learner knows it (canon: learned words appear as objects in the world).
  */
 
-export type ShopItem = (typeof MARKET.shop.items)[number];
+export type ShopItem = (typeof MARKET.shop.items)[number] | (typeof MARKET.cart.items)[number];
 
 const TABLE = MARKET.tables[MARKET.shop.table];
 /** The shop's things are shown a little larger than life, so they read from across the square. */
 const BASE = 1.3;
 const TOP = 0.81;
 /** Item spots along the table's long side (the table runs north–south). */
-const SPOTS: { item: ShopItem; x: number; z: number }[] = MARKET.shop.items.map((item, i) => ({
-  item,
-  // Toward the square side, clear of the parasol pole in the middle.
-  x: TABLE[0] - 0.22,
-  z: TABLE[1] + (i - 1) * (TABLE[3] / 3.1),
-}));
+const CART = MARKET.cart;
+/** The cart's counter top. */
+const CART_TOP = 0.86;
+const SPOTS: { item: ShopItem; x: number; y: number; z: number }[] = [
+  ...MARKET.shop.items.map((item, i) => ({
+    item,
+    // Toward the square side, clear of the parasol pole in the middle.
+    x: TABLE[0] - 0.22,
+    y: TOP,
+    z: TABLE[1] + (i - 1) * (TABLE[3] / 3.1),
+  })),
+  ...CART.items.map((item, i) => ({ item, x: CART.x - 0.08, y: CART_TOP, z: CART.z + (i - 1) * (CART.d / 3.1) })),
+];
 
 /* Finer materials, made once. */
 const appleSkin = std("#C8242B", 0.32, { metalness: 0.02 });
@@ -185,7 +192,161 @@ function Flower() {
   );
 }
 
-const MODELS: Record<ShopItem, () => JSX.Element> = { 사과: Apples, 물: Water, 꽃: Flower };
+const crustMat = std("#C98B4A", 0.6);
+const crustDark = std("#A8692F", 0.65);
+const riceMat = std("#FFFFFF", 0.75);
+const glazeMat = std("#2E2E2E", 0.25);
+const cartonMat = std("#FFFFFF", 0.5);
+const milkBlue = std("#4C93D8", 0.45);
+const chopMat = std("#8C5A32", 0.6);
+
+function Breads() {
+  return (
+    <group>
+      {[
+        [-0.06, 0.04, 0.3],
+        [0.07, -0.02, -0.2],
+        [0, -0.09, 1.2],
+      ].map(([x, z, r], k) => (
+        <group key={k} position={[x, 0.055 + (k === 2 ? 0.05 : 0), z]} rotation={[0, r, 0]}>
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]} scale={[1, 1, 0.82]}>
+            <capsuleGeometry args={[0.055, 0.12, 12, 24]} />
+            <primitive object={k === 1 ? crustDark : crustMat} attach="material" />
+          </mesh>
+          {[-0.05, 0, 0.05].map((sx) => (
+            <mesh key={sx} position={[sx, 0.05, 0]} rotation={[0.2, 0, 0.5]}>
+              <boxGeometry args={[0.012, 0.004, 0.07]} />
+              <primitive object={riceMat} attach="material" />
+            </mesh>
+          ))}
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function RiceBowl() {
+  return (
+    <group>
+      <mesh castShadow position={[0, 0.045, 0]}>
+        <cylinderGeometry args={[0.11, 0.065, 0.09, 40, 1, true]} />
+        <primitive object={glazeMat} attach="material" />
+      </mesh>
+      <mesh position={[0, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.065, 32]} />
+        <primitive object={glazeMat} attach="material" />
+      </mesh>
+      <mesh position={[0, 0.08, 0]} scale={[1, 0.5, 1]}>
+        <sphereGeometry args={[0.105, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <primitive object={riceMat} attach="material" />
+      </mesh>
+      {/* Chopsticks resting across the rim. */}
+      {[-0.012, 0.012].map((dz) => (
+        <mesh key={dz} position={[0.03, 0.105, dz]} rotation={[0, 0.15, Math.PI / 2 - 0.08]}>
+          <cylinderGeometry args={[0.004, 0.006, 0.26, 8]} />
+          <primitive object={chopMat} attach="material" />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Carton({ x, z, r }: { x: number; z: number; r: number }) {
+  return (
+    <group position={[x, 0, z]} rotation={[0, r, 0]}>
+      <mesh castShadow position={[0, 0.09, 0]}>
+        <boxGeometry args={[0.08, 0.18, 0.08]} />
+        <primitive object={cartonMat} attach="material" />
+      </mesh>
+      <mesh position={[0, 0.07, 0]}>
+        <boxGeometry args={[0.082, 0.07, 0.082]} />
+        <primitive object={milkBlue} attach="material" />
+      </mesh>
+      {/* The gable top. */}
+      <mesh position={[0, 0.2, 0]} rotation={[0, 0, Math.PI / 4]} scale={[1, 1, 1.4]}>
+        <boxGeometry args={[0.04, 0.04, 0.058]} />
+        <primitive object={cartonMat} attach="material" />
+      </mesh>
+    </group>
+  );
+}
+
+function Milk() {
+  return (
+    <group>
+      <Carton x={-0.05} z={0.04} r={0.2} />
+      <Carton x={0.06} z={0.02} r={-0.15} />
+      <Carton x={0} z={-0.07} r={0.5} />
+    </group>
+  );
+}
+
+const MODELS: Record<ShopItem, () => JSX.Element> = { 사과: Apples, 물: Water, 꽃: Flower, 빵: Breads, 밥: RiceBowl, 우유: Milk };
+
+const cartWood = std(PALETTE.woodWarm, 0.7);
+const cartDark = std(PALETTE.woodDark, 0.75);
+const awningA = std("#D9534F", 0.85);
+const awningB = std("#FFF9EC", 0.85);
+
+/** The food cart: a wooden counter on two wheels under a striped canopy. */
+function FoodCart() {
+  const { x, z, w, d } = CART;
+  return (
+    <group position={[x, 0, z]}>
+      <mesh castShadow receiveShadow position={[0, 0.58, 0]}>
+        <boxGeometry args={[w, 0.5, d]} />
+        <primitive object={cartWood} attach="material" />
+      </mesh>
+      <mesh receiveShadow position={[0, CART_TOP - 0.02, 0]}>
+        <boxGeometry args={[w + 0.1, 0.04, d + 0.1]} />
+        <primitive object={cartDark} attach="material" />
+      </mesh>
+      {/* Planks on the front, and two wheels on the east side. */}
+      {[-0.5, 0, 0.5].map((pz) => (
+        <mesh key={pz} position={[-w / 2 - 0.005, 0.58, pz * (d / 1.6)]}>
+          <boxGeometry args={[0.01, 0.46, 0.02]} />
+          <primitive object={cartDark} attach="material" />
+        </mesh>
+      ))}
+      {[-1, 1].map((sz) => (
+        <group key={sz} position={[w / 2 + 0.04, 0.33, sz * (d / 2 - 0.25)]} rotation={[0, 0, Math.PI / 2]}>
+          <mesh castShadow>
+            <torusGeometry args={[0.28, 0.03, 10, 32]} />
+            <primitive object={cartDark} attach="material" />
+          </mesh>
+          {[0, 1, 2, 3].map((k) => (
+            <mesh key={k} rotation={[0, (k * Math.PI) / 4, 0]}>
+              <boxGeometry args={[0.02, 0.02, 0.54]} />
+              <primitive object={cartDark} attach="material" />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {/* Legs on the west side, so it stands level. */}
+      {[-1, 1].map((sz) => (
+        <mesh key={sz} castShadow position={[-w / 2 + 0.06, 0.17, sz * (d / 2 - 0.1)]}>
+          <boxGeometry args={[0.06, 0.34, 0.06]} />
+          <primitive object={cartDark} attach="material" />
+        </mesh>
+      ))}
+      {/* Canopy: four posts and a striped roof. */}
+      {[-1, 1].map((sx) =>
+        [-1, 1].map((sz) => (
+          <mesh key={`${sx}${sz}`} castShadow position={[sx * (w / 2 - 0.03), 1.45, sz * (d / 2 - 0.03)]}>
+            <cylinderGeometry args={[0.025, 0.025, 1.2, 10]} />
+            <primitive object={cartDark} attach="material" />
+          </mesh>
+        )),
+      )}
+      {Array.from({ length: 6 }, (_, k) => (
+        <mesh key={k} castShadow position={[0, 2.08, -d / 2 - 0.1 + (k + 0.5) * ((d + 0.2) / 6)]} rotation={[0, 0, -0.12]}>
+          <boxGeometry args={[w + 0.35, 0.04, (d + 0.2) / 6]} />
+          <primitive object={k % 2 ? awningB : awningA} attach="material" />
+        </mesh>
+      ))}
+    </group>
+  );
+}
 
 /**
  * One pressable thing: grows a little and shows a yellow ring under the
@@ -259,11 +420,12 @@ export default function MarketShop({ words, chosen, onPress }: { words: string[]
     };
   }, [hot, onPress]);
   return (
-    <group position={[0, TOP, 0]}>
-      {SPOTS.map(({ item, x, z }) => {
+    <group>
+      <FoodCart />
+      {SPOTS.map(({ item, x, y, z }) => {
         const Model = MODELS[item];
         return (
-          <group key={item} position={[x, 0, z]}>
+          <group key={item} position={[x, y, z]}>
             <Pressable
               hot={hot === item}
               hop={chosen?.item === item ? chosen.at : 0}

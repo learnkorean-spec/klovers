@@ -89,14 +89,26 @@ export const WORLD_COPY = {
     shop: {
       ask: { ko: "어서 오세요! 뭐 드릴까요?", gloss: "Welcome! What would you like?" },
       line: "Pick one thing to buy.",
-      items: [
-        { ko: "사과", roman: "sagwa", meaning: "apple", say: "사과 주세요.", sayGloss: "An apple, please." },
-        { ko: "물", roman: "mul", meaning: "water", say: "물 주세요.", sayGloss: "Water, please." },
-        { ko: "꽃", roman: "kkot", meaning: "flower", say: "꽃 주세요.", sayGloss: "A flower, please." },
+      /** Each thing: its word, and the counter Korean uses to count it. */
+      items: {
+        사과: { roman: "sagwa", meaning: "apple", counter: "개", counterNote: "개 (gae) counts things", gloss: ["One apple, please.", "Two apples, please.", "Three apples, please."] },
+        물: { roman: "mul", meaning: "water", counter: "병", counterNote: "병 (byeong) counts bottles", gloss: ["One bottle of water, please.", "Two bottles of water, please.", "Three bottles of water, please."] },
+        꽃: { roman: "kkot", meaning: "flower", counter: "송이", counterNote: "송이 (songi) counts flowers", gloss: ["One flower, please.", "Two flowers, please.", "Three flowers, please."] },
+        빵: { roman: "ppang", meaning: "bread", counter: "개", counterNote: "개 (gae) counts things", gloss: ["One loaf of bread, please.", "Two loaves of bread, please.", "Three loaves of bread, please."] },
+        밥: { roman: "bap", meaning: "rice", counter: "그릇", counterNote: "그릇 (geureut) counts bowls", gloss: ["One bowl of rice, please.", "Two bowls of rice, please.", "Three bowls of rice, please."] },
+        우유: { roman: "uyu", meaning: "milk", counter: "개", counterNote: "개 (gae) counts things", gloss: ["One carton of milk, please.", "Two cartons of milk, please.", "Three cartons of milk, please."] },
+      } as Record<string, { roman: string; meaning: string; counter: string; counterNote: string; gloss: [string, string, string] }>,
+      howMany: { ko: "몇 개요?", gloss: "How many?" },
+      /** 한 · 두 · 세: one, two, three before a counter. */
+      counts: [
+        { ko: "한", roman: "han" },
+        { ko: "두", roman: "du" },
+        { ko: "세", roman: "se" },
       ],
       youSay: "You say",
       reply: { ko: "여기 있어요!", gloss: "Here you are!" },
-      note: "주세요 (juseyo) = \"please give me\". Put any thing in front of it.",
+      note: "주세요 (juseyo) = \"please give me\".",
+      back: "Pick something else",
       close: "Back to the market",
     },
     noWebglTitle: "This device can't open the 3D world yet",
@@ -440,14 +452,24 @@ export const WORLD_COPY = {
     shop: {
       ask: { ko: "어서 오세요! 뭐 드릴까요?", gloss: "أهلًا وسهلًا! ماذا تطلبون؟" },
       line: "اختيار شيء واحد للشراء.",
-      items: [
-        { ko: "사과", roman: "ساغوا", meaning: "تفاحة", say: "사과 주세요.", sayGloss: "تفاحةً، من فضلك." },
-        { ko: "물", roman: "مول", meaning: "ماء", say: "물 주세요.", sayGloss: "ماءً، من فضلك." },
-        { ko: "꽃", roman: "كّوت", meaning: "زهرة", say: "꽃 주세요.", sayGloss: "زهرةً، من فضلك." },
+      items: {
+        사과: { roman: "ساغوا", meaning: "تفاحة", counter: "개", counterNote: "개 (كي) لعدّ الأشياء", gloss: ["تفاحة واحدة، من فضلك.", "تفاحتان، من فضلك.", "ثلاث تفاحات، من فضلك."] },
+        물: { roman: "مول", meaning: "ماء", counter: "병", counterNote: "병 (بيونغ) لعدّ الزجاجات", gloss: ["زجاجة ماء واحدة، من فضلك.", "زجاجتا ماء، من فضلك.", "ثلاث زجاجات ماء، من فضلك."] },
+        꽃: { roman: "كّوت", meaning: "زهرة", counter: "송이", counterNote: "송이 (سونغي) لعدّ الزهور", gloss: ["زهرة واحدة، من فضلك.", "زهرتان، من فضلك.", "ثلاث زهرات، من فضلك."] },
+        빵: { roman: "بّانغ", meaning: "خبز", counter: "개", counterNote: "개 (كي) لعدّ الأشياء", gloss: ["رغيف خبز واحد، من فضلك.", "رغيفا خبز، من فضلك.", "ثلاثة أرغفة خبز، من فضلك."] },
+        밥: { roman: "باب", meaning: "أرز", counter: "그릇", counterNote: "그릇 (كوروت) لعدّ الأطباق", gloss: ["طبق أرز واحد، من فضلك.", "طبقا أرز، من فضلك.", "ثلاثة أطباق أرز، من فضلك."] },
+        우유: { roman: "أويو", meaning: "حليب", counter: "개", counterNote: "개 (كي) لعدّ الأشياء", gloss: ["علبة حليب واحدة، من فضلك.", "علبتا حليب، من فضلك.", "ثلاث علب حليب، من فضلك."] },
+      } as Record<string, { roman: string; meaning: string; counter: string; counterNote: string; gloss: [string, string, string] }>,
+      howMany: { ko: "몇 개요?", gloss: "كم العدد؟" },
+      counts: [
+        { ko: "한", roman: "هان" },
+        { ko: "두", roman: "دو" },
+        { ko: "세", roman: "سي" },
       ],
       youSay: "الطلب بالكورية",
       reply: { ko: "여기 있어요!", gloss: "تفضّلوا!" },
-      note: "주세요 (جوسيو) تعني: «أعطني من فضلك». تُوضع بعد اسم أي شيء.",
+      note: "주세요 (جوسيو) تعني: «أعطني من فضلك».",
+      back: "اختيار شيء آخر",
       close: "العودة إلى السوق",
     },
     noWebglTitle: "لا يدعم هذا الجهاز العالم ثلاثي الأبعاد بعد",

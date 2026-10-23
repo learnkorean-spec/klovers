@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
-import type { QuizId } from "../config/interactions";
+import { SHOP_ITEMS, type QuizId, type ShopId } from "../config/interactions";
 import type { NoticeKey } from "../config/rooms";
 
 /**
@@ -29,6 +29,8 @@ interface Props {
   onWordSeen?: (ko: string) => void;
   /** The quiz was answered right. */
   onQuizRight?: () => void;
+  /** Shop: which of the market's shops (its three things). */
+  shop?: ShopId;
   /** Shop: the thing already pressed in the scene (opens with it chosen). */
   shopPick?: string;
   /** Shop: a thing was chosen (its word is learned; the world reacts). */
@@ -36,8 +38,8 @@ interface Props {
 }
 
 /** Small drawings of the shop's three things, matching the 3D ones. */
-function ShopIcon({ ko }: { ko: string }) {
-  const common = { width: 44, height: 44, viewBox: "0 0 44 44", "aria-hidden": true } as const;
+function ShopIcon({ ko, size = 44 }: { ko: string; size?: number }) {
+  const common = { width: size, height: size, viewBox: "0 0 44 44", "aria-hidden": true } as const;
   if (ko === "사과")
     return (
       <svg {...common}>
@@ -56,6 +58,29 @@ function ShopIcon({ ko }: { ko: string }) {
         <rect x="15.5" y="22" width="13" height="6" fill="#EAF4FF" />
       </svg>
     );
+  if (ko === "빵")
+    return (
+      <svg {...common}>
+        <path d="M6 26c0-9 7-14 16-14s16 5 16 14c0 4-3 6-6 6H12c-3 0-6-2-6-6z" fill="#C98B4A" />
+        <path d="M15 17l-3 6M22 15l-2 7M29 17l-2 6" stroke="#F3D3A2" strokeWidth="2.2" strokeLinecap="round" />
+      </svg>
+    );
+  if (ko === "밥")
+    return (
+      <svg {...common}>
+        <path d="M9 22h26a13 13 0 0 1-26 0z" fill="#2E2E2E" />
+        <path d="M10 22c0-6 5-10 12-10s12 4 12 10z" fill="#FFFFFF" stroke="#E5E0D5" />
+        <path d="M30 6l-6 14M34 8l-8 13" stroke="#8C5A32" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    );
+  if (ko === "우유")
+    return (
+      <svg {...common}>
+        <path d="M14 14l4-7h8l4 7v24H14z" fill="#FFFFFF" stroke="#BFD8F2" strokeWidth="1.5" />
+        <path d="M14 22h16v10H14z" fill="#5AA0E0" />
+        <path d="M18 7h8" stroke="#2F6FC4" strokeWidth="2" />
+      </svg>
+    );
   return (
     <svg {...common}>
       <path d="M22 22v8" stroke="#4E8A2E" strokeWidth="2" />
@@ -71,11 +96,11 @@ function ShopIcon({ ko }: { ko: string }) {
 
 const btn = "min-h-11 rounded-full px-5 text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2";
 
-export default function InteractionCard({ lang, kind, notice, quiz, signedIn, solved, onClose, onGo, onWordRight, onWordSeen, onQuizRight, shopPick, onShopPick }: Props) {
+export default function InteractionCard({ lang, kind, notice, quiz, signedIn, solved, onClose, onGo, onWordRight, onWordSeen, onQuizRight, shop = "fruit", shopPick, onShopPick }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
   const [picked, setPicked] = useState<number | null>(
-    solved && kind === "word" ? 0 : kind === "shop" && shopPick ? Math.max(0, copy.shop.items.findIndex((i) => i.ko === shopPick)) : null,
+    solved && kind === "word" ? 0 : kind === "shop" && shopPick ? Math.max(0, SHOP_ITEMS[shop].indexOf(shopPick)) : null,
   );
 
   useEffect(() => {
@@ -86,6 +111,9 @@ export default function InteractionCard({ lang, kind, notice, quiz, signedIn, so
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  /** Shop, step two: how many (0 → one, 1 → two, 2 → three). */
+  const [count, setCount] = useState<number | null>(null);
 
   let body: JSX.Element;
   if (kind === "locked" && notice) {
@@ -154,58 +182,105 @@ export default function InteractionCard({ lang, kind, notice, quiz, signedIn, so
       </>
     );
   } else if (kind === "shop") {
-    // Pick one of three things, then ask for it the way a shopper does.
+    // Two choices, like at a real stall: which thing, then how many.
     const c = copy.shop;
-    const chosen = picked === null ? null : c.items[picked];
+    const list = SHOP_ITEMS[shop];
+    const ko = picked === null ? null : list[picked];
+    const item = ko ? c.items[ko] : null;
+    const tile = (on: boolean) =>
+      `flex flex-col items-center gap-1 rounded-2xl border-2 px-1 py-3 transition-transform motion-safe:active:scale-95 ${
+        on ? "border-charcoal bg-klovers-yellow shadow-md" : "border-charcoal/25 bg-white hover:-translate-y-0.5 hover:border-charcoal hover:shadow"
+      }`;
     body = (
       <>
         <p lang="ko" dir="ltr" className="font-ko text-xl font-bold">
-          {c.ask.ko}
+          {item ? c.howMany.ko : c.ask.ko}
         </p>
-        <p className="-mt-2 text-sm text-charcoal/70">{c.ask.gloss}</p>
-        {!chosen && <h2 className="font-display text-lg font-bold">{c.line}</h2>}
-        <div className="grid w-full grid-cols-3 gap-2" role="group" aria-label={c.line}>
-          {c.items.map((o, i) => (
-            <button
-              key={o.ko}
-              ref={i === 0 ? first : undefined}
-              type="button"
-              aria-pressed={picked === i}
-              onClick={() => {
-                setPicked(i);
-                onShopPick?.(o.ko);
-              }}
-              className={`flex flex-col items-center gap-1 rounded-2xl border-2 px-1 py-3 transition-transform motion-safe:active:scale-95 ${
-                picked === i ? "border-charcoal bg-klovers-yellow shadow-md" : "border-charcoal/25 bg-white hover:-translate-y-0.5 hover:border-charcoal hover:shadow"
-              }`}
-            >
-              <ShopIcon ko={o.ko} />
-              <span lang="ko" dir="ltr" className="font-ko text-2xl font-bold leading-none">
-                {o.ko}
+        <p className="-mt-2 text-sm text-charcoal/70">{item ? c.howMany.gloss : c.ask.gloss}</p>
+        {!item ? (
+          <div className="grid w-full grid-cols-3 gap-2" role="group" aria-label={c.line}>
+            {list.map((k, i) => (
+              <button
+                key={k}
+                ref={i === 0 ? first : undefined}
+                type="button"
+                onClick={() => {
+                  setPicked(i);
+                  setCount(null);
+                  onShopPick?.(k);
+                }}
+                className={tile(false)}
+              >
+                <ShopIcon ko={k} />
+                <span lang="ko" dir="ltr" className="font-ko text-2xl font-bold leading-none">
+                  {k}
+                </span>
+                <span className="text-xs text-charcoal/70">{c.items[k].meaning}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* The chosen thing, small, then three counts to pick from. */}
+            <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1">
+              <ShopIcon ko={ko!} size={30} />
+              <span lang="ko" dir="ltr" className="font-ko text-lg font-bold">
+                {ko}
               </span>
-              <span className="text-xs text-charcoal/70">{o.meaning}</span>
-            </button>
-          ))}
-        </div>
-        {chosen && (
+              <span className="text-xs text-charcoal/70">{item.meaning}</span>
+            </div>
+            <div className="grid w-full grid-cols-3 gap-2" role="group" aria-label={c.howMany.gloss}>
+              {c.counts.map((n, i) => (
+                <button key={n.ko} ref={i === 0 ? first : undefined} type="button" aria-pressed={count === i} onClick={() => setCount(i)} className={tile(count === i)}>
+                  <span className="flex h-7 items-center gap-0.5" aria-hidden="true">
+                    {Array.from({ length: i + 1 }, (_, d) => (
+                      <ShopIcon key={d} ko={ko!} size={24} />
+                    ))}
+                  </span>
+                  <span lang="ko" dir="ltr" className="font-ko text-xl font-bold leading-none">
+                    {n.ko} {item.counter}
+                  </span>
+                  <span className="text-xs text-charcoal/70">
+                    {i + 1} · {n.roman}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {item && count !== null && (
           <div role="status" className="flex w-full flex-col gap-1 rounded-2xl bg-white/70 p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-charcoal/60">{c.youSay}</p>
             <p lang="ko" dir="ltr" className="font-ko text-2xl font-bold">
-              {chosen.say}
+              {ko} {c.counts[count].ko} {item.counter} 주세요.
             </p>
-            <p className="text-sm text-charcoal/80">
-              {chosen.roman} · {chosen.sayGloss}
-            </p>
+            <p className="text-sm text-charcoal/80">{item.gloss[count]}</p>
             <p lang="ko" dir="ltr" className="pt-1 font-ko text-lg font-bold">
               {c.reply.ko}
             </p>
             <p className="text-sm text-charcoal/80">{c.reply.gloss}</p>
-            <p className="pt-1 text-xs text-charcoal/70">{c.note}</p>
+            <p className="pt-1 text-xs text-charcoal/70">
+              {item.counterNote} · {c.note}
+            </p>
           </div>
         )}
-        <button type="button" className={`${btn} border-2 border-charcoal text-charcoal outline-charcoal`} onClick={onClose}>
-          {c.close}
-        </button>
+        <div className="flex flex-wrap justify-center gap-2">
+          {item && (
+            <button
+              type="button"
+              className={`${btn} border-2 border-charcoal/30 text-charcoal outline-charcoal`}
+              onClick={() => {
+                setPicked(null);
+                setCount(null);
+              }}
+            >
+              {c.back}
+            </button>
+          )}
+          <button type="button" className={`${btn} border-2 border-charcoal text-charcoal outline-charcoal`} onClick={onClose}>
+            {c.close}
+          </button>
+        </div>
       </>
     );
   } else if (kind === "egg") {

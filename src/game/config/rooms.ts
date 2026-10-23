@@ -261,6 +261,11 @@ export const MARKET = {
    * already teaches, said the way a shopper asks for it: "___ 주세요".
    */
   shop: { table: 1, items: ["사과", "물", "꽃"] as const },
+  /**
+   * A second shop: a food cart in the south half of the square, seen on the
+   * way in from the village. x, z, width (east–west), depth (north–south).
+   */
+  cart: { x: 2.9, z: 3.3, w: 0.9, d: 1.6, items: ["빵", "밥", "우유"] as const },
   /** Baskets of goods in front of the stalls: x, z, size. */
   baskets: [
     [-5.6, 6.3, 0.9], [-5.1, 6.95, 0.7], [5.6, 6.2, 0.85],
@@ -292,6 +297,7 @@ const VOCABULARY_MARKET: RoomLayout = {
   colliders: [
     ...marketStalls,
     box(MARKET.crates.x, MARKET.crates.z, MARKET.crates.size, MARKET.crates.size),
+    box(MARKET.cart.x, MARKET.cart.z, MARKET.cart.w + 0.3, MARKET.cart.d + 0.1),
     ...MARKET.tables.map(([x, z, w, d]) => box(x, z, w + 0.1, d + 0.1)),
     ...MARKET.flowers.map(([x, z]) => box(x, z, 0.65, 0.6)),
     box(-3.6, -MARKET.halfDepth + 0.7, 0.5, 0.5),

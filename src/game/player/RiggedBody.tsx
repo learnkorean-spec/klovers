@@ -1,6 +1,6 @@
 import { useEffect, useMemo, type MutableRefObject } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
-import { AnimationMixer, Color, DoubleSide, LoopOnce, LoopRepeat, MeshStandardMaterial, type AnimationAction, type AnimationClip, type BufferGeometry, type Group, type Material, type Mesh, type Texture } from "three";
+import { AdditiveBlending, AnimationMixer, Color, DoubleSide, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, SphereGeometry, Vector3, type AnimationAction, type AnimationClip, type Bone, type BufferGeometry, type Group, type Material, type SkinnedMesh, type Texture } from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -10,8 +10,8 @@ import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js
  * shared motions. The owner says which looping motion to play (`clip`) and
  * may ask for a one-off (`once`: a wave, a hop); the body cross-fades.
  *
- * Assets: public/assets/world/people — people ≈0.6–1.5 MB each (meshopt
- * geometry, WebP 1K textures), motions 25–250 KB, shared by everyone.
+ * Assets: public/assets/world/people — people ≈0.8–1.7 MB each (meshopt
+ * geometry, WebP textures; skin and faces 2K, upscaled 23 Oct 2026), motions 25–250 KB, shared by everyone.
  */
 const BASE = "/assets/world/people/";
 
@@ -116,6 +116,73 @@ function dye(mat: MeshStandardMaterial, color: string, ref: number, contrast = 0
   mat.customProgramCacheKey = () => "klovers-dye";
 }
 
+/**
+ * Skin: Mixamo's gloss maps read as wet, oily skin under the sky light
+ * (bright patches on foreheads and noses). A floor on roughness keeps a soft
+ * sheen without the shine.
+ */
+function skin(mat: MeshStandardMaterial) {
+  mat.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = max( roughnessFactor, 0.5 );");
+  };
+  mat.customProgramCacheKey = () => "klovers-skin";
+}
+
+/** One glossy, see-through cornea for every eye: catches the sky as a small bright highlight. */
+const CORNEA = new MeshStandardMaterial({ color: 0x000000, roughness: 0.06, metalness: 0, transparent: true, blending: AdditiveBlending, depthWrite: false, envMapIntensity: 2.2 });
+
+/**
+ * Eyes that look alive: the models' eyes are painted, so they never catch
+ * the light. A small glossy cornea over each eye adds the highlight a real
+ * eye has. Mixamo rigs have no eye bones, so the eyes are found from the
+ * eyelashes (one cluster each side) and the corneas ride on the head bone.
+ */
+function addCorneas(root: Group) {
+  let lashes: SkinnedMesh | null = null;
+  let head: Bone | null = null;
+  root.traverse((o) => {
+    if ((o as SkinnedMesh).isSkinnedMesh && /eyela/i.test(o.name)) lashes = o as SkinnedMesh;
+    // GLTFLoader drops the ":" from "mixamorig:Head".
+    if ((o as Bone).isBone && /Head$/.test(o.name)) head = o as Bone;
+  });
+  const l = lashes as SkinnedMesh | null;
+  const h = head as Bone | null;
+  if (!l || !h) return;
+  root.updateMatrixWorld(true);
+  l.skeleton.update();
+  const pos = l.geometry.getAttribute("position");
+  const v = new Vector3();
+  const headX = new Vector3().setFromMatrixPosition(h.matrixWorld).x;
+  const sides = [
+    { sum: new Vector3(), n: 0, minX: Infinity, maxX: -Infinity },
+    { sum: new Vector3(), n: 0, minX: Infinity, maxX: -Infinity },
+  ];
+  for (let i = 0; i < pos.count; i++) {
+    l.getVertexPosition(i, v);
+    v.applyMatrix4(l.matrixWorld);
+    const s = sides[v.x < headX ? 0 : 1];
+    s.sum.add(v);
+    s.n++;
+    s.minX = Math.min(s.minX, v.x);
+    s.maxX = Math.max(s.maxX, v.x);
+  }
+  for (const s of sides) {
+    if (s.n < 4) continue;
+    const c = s.sum.divideScalar(s.n);
+    const r = (s.maxX - s.minX) * 0.42;
+    if (!(r > 0) || r > 0.05) continue;
+    const eye = new Mesh(new SphereGeometry(r, 24, 16), CORNEA);
+    eye.name = "cornea";
+    eye.renderOrder = 2;
+    // The lashes sit on the lid edge, at the front of the eye: the cornea's
+    // front just there, its centre one radius behind.
+    eye.position.set(c.x, c.y, c.z + 0.0015 - r);
+    root.add(eye);
+    eye.updateMatrixWorld(true);
+    h.attach(eye);
+  }
+}
+
 function prepare(root: Group, rules: DressRule[]) {
   root.traverse((o) => {
     // Mixamo numbers the rig per character ("mixamorig9:Hips"); the shared
@@ -150,6 +217,7 @@ function prepare(root: Group, rules: DressRule[]) {
       // on the body and the ground, but does not take shadows itself.
       m.receiveShadow = false;
     }
+    if (/_Body$/.test(m.name)) skin(mat);
     const rule = rules.find((r) => r.match.test(m.name));
     if (rule) {
       const ref = !rule.keepMap && mat.map ? meanUnder(m.geometry, mat.map) : null;
@@ -201,6 +269,7 @@ export default function RiggedBody({ model, rules, female, control }: { model: s
   const root = useMemo(() => {
     const r = cloneSkinned(person.scene) as Group;
     prepare(r, rules);
+    addCorneas(r);
     return r;
   }, [person, rules]);
 

@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 import { isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
-import { INTERACTABLES, VILLAGE_LETTERS, type Interactable, type QuizId } from "@/game/config/interactions";
+import { INTERACTABLES, shopOf, VILLAGE_LETTERS, type Interactable, type QuizId, type ShopId } from "@/game/config/interactions";
 import { tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { useWorldAccess } from "@/game/systems/useWorldAccess";
@@ -175,7 +175,7 @@ const WorldPage = () => {
   const beaconEls = useRef(new Map<string, HTMLElement>());
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
-  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shopPick?: string } | null>(null);
+  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shop?: ShopId; shopPick?: string } | null>(null);
   /** The shop thing last chosen: it hops in the scene. */
   const [shopChosen, setShopChosen] = useState<{ item: string; at: number } | null>(null);
   // A person's line or a word: shown over the world without stopping it.
@@ -544,7 +544,7 @@ const WorldPage = () => {
         else setCard({ kind: "word" });
         break;
       case "shop":
-        setCard({ kind: "shop" });
+        setCard({ kind: "shop", shop: it.shop });
         break;
       case "locked":
         setCard({ kind: "locked", notice: it.notice });
@@ -786,7 +786,7 @@ const WorldPage = () => {
                   if (document.pointerLockElement) document.exitPointerLock();
                   setBubble(null);
                   pickShop(item);
-                  setCard({ kind: "shop", shopPick: item });
+                  setCard({ kind: "shop", shop: shopOf(item), shopPick: item });
                 }}
               />
             </Suspense>
@@ -964,6 +964,7 @@ const WorldPage = () => {
                 kind={card.kind}
                 notice={card.notice}
                 quiz={card.quiz}
+                shop={card.shop}
                 shopPick={card.shopPick}
                 onShopPick={pickShop}
                 signedIn={access.signedIn}
