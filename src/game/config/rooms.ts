@@ -484,6 +484,8 @@ export const CAFE = {
   tableFootprint: { w: 2.1, d: 1.1 },
   sign: "카페",
   menu: "메뉴\n커피 · 녹차\n케이크",
+  /** What the barista sells (the order card, config/interactions SHOP_ITEMS). */
+  items: ["커피", "녹차", "케이크"] as const,
 } as const;
 
 const cafeTables = CAFE.tables.map((t) => box(t.x, t.z, CAFE.tableFootprint.w, CAFE.tableFootprint.d));

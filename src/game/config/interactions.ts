@@ -1,4 +1,4 @@
-import { boardSpot, HOUSE, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
+import { boardSpot, CAFE, HOUSE, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
 import { FRIEND_SPOT, MINSU_SPOT, NPCS } from "./npcs";
 import { PROPS } from "./world";
 
@@ -32,27 +32,27 @@ import { PROPS } from "./world";
 export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour" | "shop";
 
 /** The verb on the prompt ([E] Inspect, the round button's label …). */
-export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read" | "shop";
+export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read" | "shop" | "order";
 
 /** Learning cards (words and letters). Text per language: copy.learn[id]. */
 export type LearnId =
   | "seokdeung" | "beotnamu" | "nieun" | "digeut" | "mieum" | "o" | "umul"
-  | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan" | "annaeso";
+  | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan" | "annaeso" | "keopi";
 /** One-question cards. Text per language: copy.quiz[id]. */
 export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang";
-/** The market's two shops: the fruit table and the food cart. */
-export type ShopId = "fruit" | "food";
+/** The market's two shops (the fruit table, the food cart) and the café counter. */
+export type ShopId = "fruit" | "food" | "cafe";
 /** Which things each shop sells (the words are in copy.shop.items). */
-export const SHOP_ITEMS: Record<ShopId, readonly string[]> = { fruit: MARKET.shop.items, food: MARKET.cart.items };
-export const shopOf = (item: string): ShopId => (SHOP_ITEMS.food.includes(item) ? "food" : "fruit");
+export const SHOP_ITEMS: Record<ShopId, readonly string[]> = { fruit: MARKET.shop.items, food: MARKET.cart.items, cafe: CAFE.items };
+export const shopOf = (item: string): ShopId => (SHOP_ITEMS.cafe.includes(item) ? "cafe" : SHOP_ITEMS.food.includes(item) ? "food" : "fruit");
 /** What one of each costs, in won (whole thousands, so every total is a Sino-Korean 천). */
-export const SHOP_PRICES: Record<string, number> = { 사과: 1000, 물: 1000, 꽃: 2000, 빵: 2000, 밥: 3000, 우유: 1000 };
+export const SHOP_PRICES: Record<string, number> = { 사과: 1000, 물: 1000, 꽃: 2000, 빵: 2000, 밥: 3000, 우유: 1000, 커피: 3000, 녹차: 2000, 케이크: 3000 };
 /** Thousands in Sino-Korean, for prices: 1 → 천, 2 → 이천 … 9 → 구천. */
 const THOUSANDS = ["", "천", "이천", "삼천", "사천", "오천", "육천", "칠천", "팔천", "구천"];
 /** A price in won, read the Korean way ("삼천 원"); up to 9,000. */
 export const wonInKorean = (won: number): string => `${THOUSANDS[Math.round(won / 1000)] ?? won} 원`;
 /** People's short lines. Text per language: copy.say[id]. */
-export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper";
+export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB";
 
 export interface Interactable {
   id: string;
@@ -173,6 +173,15 @@ export const INTERACTABLES: Interactable[] = [
   // The food cart, from the middle of the square (its west side).
   { id: "shop-food", room: "vocabulary-market", kind: "shop", action: "shop", shop: "food", x: MARKET.cart.x - MARKET.cart.w / 2 - 0.85, z: MARKET.cart.z, radius: 1.4, priority: 1 },
   { id: "quiz-ppang", room: "vocabulary-market", kind: "quiz", action: "learn", quiz: "ppang", x: MARKET.crates.x - 0.3, z: MARKET.crates.z - MARKET.crates.size / 2 - 0.55, radius: 1.2 },
+
+  /* ── Conversation Café: the menu, the counter, a table that talks ── */
+  // The menu board on the north wall, beside the counter.
+  { id: "learn-keopi", room: "conversation-cafe", kind: "learn", action: "learn", learn: "keopi", word: "커피", x: -4.9, z: -CAFE.halfDepth + 1.4, radius: 1.3 },
+  // Order from the barista, at the front of the counter.
+  { id: "shop-cafe", room: "conversation-cafe", kind: "shop", action: "order", shop: "cafe", npc: "k-barista", x: 0.9, z: CAFE.counter.z + CAFE.counter.d / 2 + 0.85, radius: 1.5, priority: 1 },
+  // Two students at a table, from the aisle in front of them.
+  { id: "say-cafe-a", room: "conversation-cafe", kind: "say", action: "talk", say: "cafeA", npc: "k-table-1", x: npc("k-table-1").x - 0.2, z: npc("k-table-1").z + 1.15, radius: 1.0 },
+  { id: "say-cafe-b", room: "conversation-cafe", kind: "say", action: "talk", say: "cafeB", npc: "k-table-2", x: npc("k-table-2").x + 0.2, z: npc("k-table-2").z + 1.15, radius: 1.0 },
 
   /* ── KLOVERS Hub: every gate can be walked up to ── */
   { id: "learn-map", room: "hub", kind: "learn", action: "inspect", learn: "jido", x: 0, z: HUB.post.size / 2 + 0.75, radius: 1.3 },

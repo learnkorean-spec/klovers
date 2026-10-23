@@ -77,6 +77,34 @@ function ShopIcon({ ko, size = 44 }: { ko: string; size?: number }) {
         <path d="M30 6l-6 14M34 8l-8 13" stroke="#8C5A32" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     );
+  if (ko === "커피")
+    return (
+      <svg {...common}>
+        <path d="M10 18h20v10a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8z" fill="#FFFFFF" stroke="#2E2E2E" strokeWidth="1.5" />
+        <path d="M30 21h3a4 4 0 0 1 0 8h-3" fill="none" stroke="#2E2E2E" strokeWidth="2" />
+        <ellipse cx="20" cy="18" rx="10" ry="2.4" fill="#6B3E1E" />
+        <path d="M16 8c-2 3 2 4 0 7M22 7c-2 3 2 4 0 7" stroke="#B9A48C" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+        <path d="M6 38h28" stroke="#2E2E2E" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  if (ko === "녹차")
+    return (
+      <svg {...common}>
+        <path d="M11 17h22l-2 16a5 5 0 0 1-5 4h-8a5 5 0 0 1-5-4z" fill="#E9F2DA" stroke="#5B7F2B" strokeWidth="1.5" />
+        <path d="M12 21h20l-1 7H13z" fill="#8DB255" />
+        <path d="M24 6c6 0 8 5 4 8-3 2-7 1-8-2 0-3 2-6 4-6z" fill="#5B8A2E" />
+      </svg>
+    );
+  if (ko === "케이크")
+    return (
+      <svg {...common}>
+        <path d="M8 30l14-14 14 14z" fill="#F7E3C7" />
+        <path d="M8 30h28v6H8z" fill="#E9C9A0" />
+        <path d="M8 25h28v3H8z" fill="#F2A7B8" />
+        <circle cx="22" cy="13" r="3.2" fill="#D7263D" />
+        <path d="M5 38h34" stroke="#2E2E2E" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
   if (ko === "우유")
     return (
       <svg {...common}>
@@ -157,8 +185,11 @@ export default function InteractionCard({
   /** Shop, step three: the notes handed over so far (won), and whether paid. */
   const [given, setGiven] = useState<number[]>([]);
   const [paid, setPaid] = useState(false);
+  /** Café: for here or to go (asked before the price). */
+  const [stay, setStay] = useState<"here" | "go" | null>(null);
   const [short, setShort] = useState(false);
   const resetPay = () => {
+    setStay(null);
     setGiven([]);
     setPaid(false);
     setShort(false);
@@ -233,6 +264,9 @@ export default function InteractionCard({
   } else if (kind === "shop") {
     // Two choices, like at a real stall: which thing, then how many.
     const c = copy.shop;
+    // The café counter is the same three steps, plus "for here or to go?".
+    const cafe = shop === "cafe";
+    const ask = cafe ? c.cafe.ask : c.ask;
     const list = SHOP_ITEMS[shop];
     const ko = picked === null ? null : list[picked];
     const item = ko ? c.items[ko] : null;
@@ -243,10 +277,10 @@ export default function InteractionCard({
     body = (
       <>
         <p lang="ko" dir="ltr" className="flex items-center justify-center gap-2 font-ko text-xl font-bold">
-          {item ? c.howMany.ko : c.ask.ko}
-          <Hear label={hearLabel} onPlay={() => (item ? say(shopClip.howMany(), c.howMany.ko) : say(shopClip.ask(), c.ask.ko))} />
+          {item ? c.howMany.ko : ask.ko}
+          <Hear label={hearLabel} onPlay={() => (item ? say(shopClip.howMany(cafe), c.howMany.ko) : say(shopClip.ask(cafe), ask.ko))} />
         </p>
-        <p className="-mt-2 text-sm text-charcoal/70">{item ? c.howMany.gloss : c.ask.gloss}</p>
+        <p className="-mt-2 text-sm text-charcoal/70">{item ? c.howMany.gloss : ask.gloss}</p>
         {!item ? (
           <div className="grid w-full grid-cols-3 gap-2" role="group" aria-label={c.line}>
             {list.map((k, i) => (
@@ -293,7 +327,10 @@ export default function InteractionCard({
                     // The learner's request, then the seller names the price.
                     const req = `${ko} ${n.ko} ${item.counter} 주세요.`;
                     const won = SHOP_PRICES[ko!] * (i + 1);
-                    playClips([shopClip.request(ko!, i + 1), shopClip.price(won)], () => speakKorean(`${req} ${wonInKorean(won)}${c.price.suffix}`));
+                    setStay(null);
+                    // At the café the barista asks "for here?" before the price.
+                    if (cafe) playClips([shopClip.request(ko!, i + 1), shopClip.stay("q")], () => speakKorean(`${req} ${c.cafe.stay.ko}`));
+                    else playClips([shopClip.request(ko!, i + 1), shopClip.price(won)], () => speakKorean(`${req} ${wonInKorean(won)}${c.price.suffix}`));
                   }}
                   className={tile(count === i)}
                 >
@@ -352,64 +389,107 @@ export default function InteractionCard({
                 <p className="text-xs text-charcoal/60">
                   {item.counterNote} · {c.note}
                 </p>
-                {/* The seller names the price, in Korean only: the learner works it out. */}
-                <p lang="ko" dir="ltr" className="flex items-center justify-center gap-2 pt-2 font-ko text-xl font-bold">
-                  <span>
-                    {wonInKorean(price)}
-                    {c.price.suffix}
-                  </span>
-                  <Hear label={hearLabel} onPlay={() => say(shopClip.price(price), `${wonInKorean(price)}${c.price.suffix}`)} />
-                </p>
-                {paid && <p className="text-sm text-charcoal/80">{c.price.gloss(fmt(price))}</p>}
-                {!paid ? (
+                {cafe && !stay ? (
                   <>
-                    <p className="pt-1 text-xs font-semibold text-charcoal/60">{c.pay}</p>
-                    <div className="flex justify-center gap-2">{[1000, 5000].map(note)}</div>
-                    <p className="pt-1 text-sm font-semibold" dir="ltr">
-                      {c.paid}: ₩{fmt(total)}
+                    {/* The barista: "for here?" — the learner answers. */}
+                    <p lang="ko" dir="ltr" className="flex items-center justify-center gap-2 pt-2 font-ko text-xl font-bold">
+                      {c.cafe.stay.ko}
+                      <Hear label={hearLabel} onPlay={() => say(shopClip.stay("q"), c.cafe.stay.ko)} />
                     </p>
-                    {short && <p className="text-xs font-semibold text-charcoal/80">{c.notEnough}</p>}
-                    <div className="flex justify-center gap-2">
-                      {given.length > 0 && (
-                        <button type="button" className={`${btn} border-2 border-charcoal/30 text-charcoal outline-charcoal`} onClick={resetPay}>
-                          {c.undo}
+                    <p className="text-sm text-charcoal/80">{c.cafe.stay.gloss}</p>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      {(["here", "go"] as const).map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          className={tile(false)}
+                          onClick={() => {
+                            setStay(k);
+                            playClips([shopClip.stay(k), shopClip.price(price, true)], () => speakKorean(`${c.cafe[k].ko} ${wonInKorean(price)}${c.price.suffix}`));
+                          }}
+                        >
+                          <span lang="ko" dir="ltr" className="font-ko text-base font-bold leading-tight">
+                            {c.cafe[k].ko}
+                          </span>
+                          <span className="text-xs text-charcoal/70">{c.cafe[k].gloss}</span>
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        disabled={total === 0}
-                        className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal disabled:opacity-40`}
-                        onClick={() => {
-                          if (total < price) return setShort(true);
-                          setPaid(true);
-                          onShopPaid?.();
-                          const back = total - price;
-                          playClips([back > 0 ? shopClip.change(back) : "", shopClip.thanks()], () =>
-                            speakKorean(`${back > 0 ? c.change.ko(wonInKorean(back)) + " " : ""}${c.reply.ko} ${c.thanks.ko}`),
-                          );
-                        }}
-                      >
-                        {c.payNow}
-                      </button>
+                      ))}
                     </div>
                   </>
                 ) : (
                   <>
-                    {change > 0 && (
+                    {cafe && stay && (
+                      <p lang="ko" dir="ltr" className="pt-1 font-ko text-base font-bold text-charcoal/80">
+                        {c.cafe.stay.ko} → {c.cafe[stay].ko}
+                      </p>
+                    )}
+                    {/* The seller names the price, in Korean only: the learner works it out. */}
+                    <p lang="ko" dir="ltr" className="flex items-center justify-center gap-2 pt-2 font-ko text-xl font-bold">
+                      <span>
+                        {wonInKorean(price)}
+                        {c.price.suffix}
+                      </span>
+                      <Hear label={hearLabel} onPlay={() => say(shopClip.price(price, cafe), `${wonInKorean(price)}${c.price.suffix}`)} />
+                    </p>
+                    {paid && <p className="text-sm text-charcoal/80">{c.price.gloss(fmt(price))}</p>}
+                    {!paid ? (
                       <>
-                        <p lang="ko" dir="ltr" className="pt-1 font-ko text-lg font-bold">
-                          {c.change.ko(wonInKorean(change))}
+                        <p className="pt-1 text-xs font-semibold text-charcoal/60">{c.pay}</p>
+                        <div className="flex justify-center gap-2">{[1000, 5000].map(note)}</div>
+                        <p className="pt-1 text-sm font-semibold" dir="ltr">
+                          {c.paid}: ₩{fmt(total)}
                         </p>
-                        <p className="text-sm text-charcoal/80">{c.change.gloss(fmt(change))}</p>
+                        {short && <p className="text-xs font-semibold text-charcoal/80">{c.notEnough}</p>}
+                        <div className="flex justify-center gap-2">
+                          {given.length > 0 && (
+                            <button
+                              type="button"
+                              className={`${btn} border-2 border-charcoal/30 text-charcoal outline-charcoal`}
+                              onClick={() => {
+                                // Hand the notes back; the order itself stays.
+                                setGiven([]);
+                                setShort(false);
+                              }}
+                            >
+                              {c.undo}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            disabled={total === 0}
+                            className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal disabled:opacity-40`}
+                            onClick={() => {
+                              if (total < price) return setShort(true);
+                              setPaid(true);
+                              onShopPaid?.();
+                              const back = total - price;
+                              playClips([back > 0 ? shopClip.change(back, cafe) : "", shopClip.thanks(cafe)], () =>
+                                speakKorean(`${back > 0 ? c.change.ko(wonInKorean(back)) + " " : ""}${cafe ? c.cafe.thanks.ko : `${c.reply.ko} ${c.thanks.ko}`}`),
+                              );
+                            }}
+                          >
+                            {c.payNow}
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {change > 0 && (
+                          <>
+                            <p lang="ko" dir="ltr" className="pt-1 font-ko text-lg font-bold">
+                              {c.change.ko(wonInKorean(change))}
+                            </p>
+                            <p className="text-sm text-charcoal/80">{c.change.gloss(fmt(change))}</p>
+                          </>
+                        )}
+                        <p lang="ko" dir="ltr" className="pt-1 font-ko text-lg font-bold">
+                          {cafe ? c.cafe.thanks.ko : `${c.reply.ko} ${c.thanks.ko}`}
+                        </p>
+                        <p className="text-sm text-charcoal/80">{cafe ? c.cafe.thanks.gloss : `${c.reply.gloss} ${c.thanks.gloss}`}</p>
+                        <p className="pt-1 text-xs text-charcoal/70">{c.numbersNote}</p>
+                        {cafe && <p className="text-xs text-charcoal/70">{c.cafe.note}</p>}
                       </>
                     )}
-                    <p lang="ko" dir="ltr" className="pt-1 font-ko text-lg font-bold">
-                      {c.reply.ko} {c.thanks.ko}
-                    </p>
-                    <p className="text-sm text-charcoal/80">
-                      {c.reply.gloss} {c.thanks.gloss}
-                    </p>
-                    <p className="pt-1 text-xs text-charcoal/70">{c.numbersNote}</p>
                   </>
                 )}
               </div>

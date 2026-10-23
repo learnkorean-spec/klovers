@@ -14,7 +14,7 @@
  */
 
 /** Line ids (supabase/functions/world-voice/lines.ts has the Korean). */
-export type VoiceLine = "minsu" | "adam" | "lina" | "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper";
+export type VoiceLine = "minsu" | "adam" | "lina" | "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB";
 
 const BASE = "/assets/world/voice/";
 
@@ -78,20 +78,25 @@ export function playVoice(id: VoiceLine, fallback: () => void): void {
   playClip(`${id}.mp3`, fallback);
 }
 
-/** Romanised file names for the shop's things. */
-const SHOP_FILE: Record<string, string> = { 사과: "sagwa", 물: "mul", 꽃: "kkot", 빵: "ppang", 밥: "bap", 우유: "uyu" };
+/** Romanised file names for the things sold. */
+const SHOP_FILE: Record<string, string> = { 사과: "sagwa", 물: "mul", 꽃: "kkot", 빵: "ppang", 밥: "bap", 우유: "uyu", 커피: "keopi", 녹차: "nokcha", 케이크: "keikeu" };
 
-/** The market shop's recorded lines. */
+/**
+ * The recorded lines of a counter: the market stalls (folder shop/, the
+ * stallholder's voice) or the café (folder cafe/, the barista's voice).
+ */
 export const shopClip = {
-  ask: () => "shop/ask.mp3",
-  howMany: () => "shop/howmany.mp3",
+  ask: (cafe = false) => `${cafe ? "cafe" : "shop"}/ask.mp3`,
+  howMany: (cafe = false) => `${cafe ? "cafe" : "shop"}/howmany.mp3`,
   /** "사과 두 개 주세요." — count 1…3. */
-  request: (item: string, count: number) => (SHOP_FILE[item] ? `shop/req-${SHOP_FILE[item]}-${count}.mp3` : ""),
+  request: (item: string, count: number) => (SHOP_FILE[item] ? `${["keopi", "nokcha", "keikeu"].includes(SHOP_FILE[item]) ? "cafe" : "shop"}/req-${SHOP_FILE[item]}-${count}.mp3` : ""),
   /** "삼천 원이에요." — won in whole thousands, 1,000…9,000. */
-  price: (won: number) => `shop/price-${Math.round(won / 1000)}.mp3`,
+  price: (won: number, cafe = false) => `${cafe ? "cafe" : "shop"}/price-${Math.round(won / 1000)}.mp3`,
   /** "거스름돈 천 원이에요." — 1,000…4,000. */
-  change: (won: number) => `shop/change-${Math.round(won / 1000)}.mp3`,
-  thanks: () => "shop/thanks.mp3",
+  change: (won: number, cafe = false) => `${cafe ? "cafe" : "shop"}/change-${Math.round(won / 1000)}.mp3`,
+  thanks: (cafe = false) => `${cafe ? "cafe" : "shop"}/thanks.mp3`,
+  /** Café only: "여기서 드세요?" and the two answers. */
+  stay: (part: "q" | "here" | "go") => `cafe/stay-${part}.mp3`,
 };
 
 /**

@@ -550,7 +550,7 @@ export default function World(props: WorldProps) {
       {roomId === "hangul-village" && <TourExhibit lang={props.lang ?? "en"} player={player} onSeen={(s) => cb.current.onTourSeen?.(s)} />}
       {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} words={saved.words} shopChosen={props.shopChosen} onShopPress={props.paused ? undefined : (item) => cb.current.onShopPress?.(item)} />}
       {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} />}
-      {roomId === "conversation-cafe" && <ConversationCafe />}
+      {roomId === "conversation-cafe" && <ConversationCafe words={saved.words} />}
       {roomId === "klovers-house" && <KloversHouse />}
       {/* The people of this room only; they leave with it. */}
       {NPCS.filter((n) => n.room === roomId).map((n) => (

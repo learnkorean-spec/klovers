@@ -41,6 +41,7 @@ export const WORLD_COPY = {
       help: "Help",
       read: "Read",
       shop: "Shop",
+      order: "Order",
     },
     speech: {
       hello: { ko: "안녕!", text: "annyeong: hello" },
@@ -97,6 +98,9 @@ export const WORLD_COPY = {
         빵: { roman: "ppang", meaning: "bread", counter: "개", counterNote: "개 (gae) counts things", gloss: ["One loaf of bread, please.", "Two loaves of bread, please.", "Three loaves of bread, please."] },
         밥: { roman: "bap", meaning: "rice", counter: "그릇", counterNote: "그릇 (geureut) counts bowls", gloss: ["One bowl of rice, please.", "Two bowls of rice, please.", "Three bowls of rice, please."] },
         우유: { roman: "uyu", meaning: "milk", counter: "개", counterNote: "개 (gae) counts things", gloss: ["One carton of milk, please.", "Two cartons of milk, please.", "Three cartons of milk, please."] },
+        커피: { roman: "keopi", meaning: "coffee", counter: "잔", counterNote: "잔 (jan) counts cups", gloss: ["One coffee, please.", "Two coffees, please.", "Three coffees, please."] },
+        녹차: { roman: "nokcha", meaning: "green tea", counter: "잔", counterNote: "잔 (jan) counts cups", gloss: ["One green tea, please.", "Two green teas, please.", "Three green teas, please."] },
+        케이크: { roman: "keikeu", meaning: "cake", counter: "개", counterNote: "개 (gae) counts things", gloss: ["One piece of cake, please.", "Two pieces of cake, please.", "Three pieces of cake, please."] },
       } as Record<string, { roman: string; meaning: string; counter: string; counterNote: string; gloss: [string, string, string] }>,
       howMany: { ko: "몇 개요?", gloss: "How many?" },
       /** 한 · 두 · 세: one, two, three before a counter. */
@@ -109,6 +113,15 @@ export const WORLD_COPY = {
       reply: { ko: "여기 있어요!", gloss: "Here you are!" },
       note: "주세요 (juseyo) = \"please give me\".",
       back: "Pick something else",
+      /** The café counter: its own welcome, a "here or to go?", its own goodbye. */
+      cafe: {
+        ask: { ko: "어서 오세요! 주문하시겠어요?", gloss: "Welcome! Would you like to order?" },
+        stay: { ko: "여기서 드세요?", gloss: "For here?" },
+        here: { ko: "네, 여기서요.", gloss: "Yes, for here." },
+        go: { ko: "아니요, 포장해 주세요.", gloss: "No, to go, please." },
+        thanks: { ko: "감사합니다! 맛있게 드세요!", gloss: "Thank you! Enjoy!" },
+        note: "포장 (pojang) = takeaway. 맛있게 드세요 = enjoy your food.",
+      },
       /** Paying: the seller says the price, the learner hands over notes. */
       price: { suffix: "이에요.", gloss: (won: string) => `That's ${won} won.` },
       pay: "Pay with",
@@ -235,6 +248,7 @@ export const WORLD_COPY = {
       gwail: { ko: "과일", roman: "gwail", meaning: "fruit", example: { ko: "과일 좋아해요.", gloss: "I like fruit." } },
       gesipan: { ko: "게시판", roman: "gesipan", meaning: "notice board", note: "Korean schools and offices pin their news on one." },
       annaeso: { ko: "안내소", roman: "annaeso", meaning: "information centre", note: "Every Korean station and museum has one. This one shows where everything on the Klovers site is." },
+      keopi: { ko: "커피", roman: "keopi", meaning: "coffee", note: "The menu: 커피 coffee · 녹차 green tea · 케이크 cake.", example: { ko: "커피 한 잔 주세요.", gloss: "A coffee, please." } },
     },
     quiz: {
       a: {
@@ -301,6 +315,8 @@ export const WORLD_COPY = {
       hubFriend: { name: "Student", ko: "어디 가요?", gloss: "Where are you going?", note: "어디 means where; 가요 means go." },
       hubReader: { name: "Reader", ko: "한국어를 공부해요.", gloss: "I'm studying Korean.", note: "공부 means study." },
       shopper: { name: "Shopper", ko: "이거 얼마예요?", gloss: "How much is this?", note: "얼마 means how much." },
+      cafeA: { name: "Student", ko: "커피 좋아해요?", gloss: "Do you like coffee?", note: "좋아해요 means (I) like. Asked with a rising voice, it's a question." },
+      cafeB: { name: "Student", ko: "네, 좋아해요! 녹차도 좋아해요.", gloss: "Yes, I like it! I like green tea too.", note: "네 = yes. 도 = too, also." },
     },
     /** Klovers House: one board per part of the site (config/rooms HOUSE). */
     info: {
@@ -416,6 +432,7 @@ export const WORLD_COPY = {
       help: "مساعدة",
       read: "قراءة",
       shop: "تسوّق",
+      order: "طلب",
     },
     speech: {
       hello: { ko: "안녕!", text: "أنيونغ: مرحبًا" },
@@ -469,6 +486,9 @@ export const WORLD_COPY = {
         빵: { roman: "بّانغ", meaning: "خبز", counter: "개", counterNote: "개 (كي) لعدّ الأشياء", gloss: ["رغيف خبز واحد، من فضلك.", "رغيفا خبز، من فضلك.", "ثلاثة أرغفة خبز، من فضلك."] },
         밥: { roman: "باب", meaning: "أرز", counter: "그릇", counterNote: "그릇 (كوروت) لعدّ الأطباق", gloss: ["طبق أرز واحد، من فضلك.", "طبقا أرز، من فضلك.", "ثلاثة أطباق أرز، من فضلك."] },
         우유: { roman: "أويو", meaning: "حليب", counter: "개", counterNote: "개 (كي) لعدّ الأشياء", gloss: ["علبة حليب واحدة، من فضلك.", "علبتا حليب، من فضلك.", "ثلاث علب حليب، من فضلك."] },
+        커피: { roman: "كوبي", meaning: "قهوة", counter: "잔", counterNote: "잔 (جان) لعدّ الأكواب", gloss: ["فنجان قهوة واحد، من فضلك.", "فنجانا قهوة، من فضلك.", "ثلاثة فناجين قهوة، من فضلك."] },
+        녹차: { roman: "نوكتشا", meaning: "شاي أخضر", counter: "잔", counterNote: "잔 (جان) لعدّ الأكواب", gloss: ["كوب شاي أخضر واحد، من فضلك.", "كوبا شاي أخضر، من فضلك.", "ثلاثة أكواب شاي أخضر، من فضلك."] },
+        케이크: { roman: "كيكو", meaning: "كعكة", counter: "개", counterNote: "개 (كي) لعدّ الأشياء", gloss: ["قطعة كعك واحدة، من فضلك.", "قطعتا كعك، من فضلك.", "ثلاث قطع كعك، من فضلك."] },
       } as Record<string, { roman: string; meaning: string; counter: string; counterNote: string; gloss: [string, string, string] }>,
       howMany: { ko: "몇 개요?", gloss: "كم العدد؟" },
       counts: [
@@ -480,6 +500,14 @@ export const WORLD_COPY = {
       reply: { ko: "여기 있어요!", gloss: "تفضّلوا!" },
       note: "주세요 (جوسيو) تعني: «أعطني من فضلك».",
       back: "اختيار شيء آخر",
+      cafe: {
+        ask: { ko: "어서 오세요! 주문하시겠어요?", gloss: "أهلًا وسهلًا! هل تريدون الطلب؟" },
+        stay: { ko: "여기서 드세요?", gloss: "هنا أم للأخذ؟" },
+        here: { ko: "네, 여기서요.", gloss: "نعم، هنا." },
+        go: { ko: "아니요, 포장해 주세요.", gloss: "لا، للأخذ من فضلك." },
+        thanks: { ko: "감사합니다! 맛있게 드세요!", gloss: "شكرًا! بالهناء والشفاء!" },
+        note: "포장 (بوجانغ) = للأخذ. 맛있게 드세요 = بالهناء والشفاء.",
+      },
       price: { suffix: "이에요.", gloss: (won: string) => `السعر ${won} وون.` },
       pay: "الدفع بـ",
       paid: "المدفوع",
@@ -604,6 +632,7 @@ export const WORLD_COPY = {
       gwail: { ko: "과일", roman: "غوائيل", meaning: "فاكهة", example: { ko: "과일 좋아해요.", gloss: "أحب الفاكهة." } },
       gesipan: { ko: "게시판", roman: "كيشيبان", meaning: "لوحة الإعلانات", note: "تعلّق المدارس والمكاتب الكورية أخبارها على لوحة كهذه." },
       annaeso: { ko: "안내소", roman: "آنّيسو", meaning: "مكتب الاستعلامات", note: "في كل محطة ومتحف كوري مكتب كهذا، وهذا المكتب يدلّ على كل أقسام موقع كلوفرز." },
+      keopi: { ko: "커피", roman: "كوبي", meaning: "قهوة", note: "القائمة: 커피 قهوة · 녹차 شاي أخضر · 케이크 كعكة.", example: { ko: "커피 한 잔 주세요.", gloss: "فنجان قهوة، من فضلك." } },
     },
     quiz: {
       a: {
@@ -669,6 +698,8 @@ export const WORLD_COPY = {
       hubFriend: { name: "طالب", ko: "어디 가요?", gloss: "إلى أين الوجهة؟", note: "어디 تعني أين، و가요 تعني الذهاب." },
       hubReader: { name: "قارئة", ko: "한국어를 공부해요.", gloss: "أدرس اللغة الكورية.", note: "공부 تعني الدراسة." },
       shopper: { name: "متسوّقة", ko: "이거 얼마예요?", gloss: "بكم هذا؟", note: "얼마 تعني: كم، عند السؤال عن السعر." },
+      cafeA: { name: "طالب", ko: "커피 좋아해요?", gloss: "هل تحب القهوة؟", note: "좋아해요 تعني: أحب. وبنبرة صاعدة تصبح سؤالًا." },
+      cafeB: { name: "طالبة", ko: "네, 좋아해요! 녹차도 좋아해요.", gloss: "نعم، أحبها! وأحب الشاي الأخضر أيضًا.", note: "네 = نعم. 도 = أيضًا." },
     },
     info: {
       about: { ko: "우리는 클로버스", roman: "أورينون كُلّوبوسو", title: "نحن كلوفرز", line: "الكورية لمتحدثي العربية، من أول حرف حتى التوبيك." },

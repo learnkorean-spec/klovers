@@ -10,8 +10,10 @@ import { ACCENT, std } from "../config/materials";
  *
  * "Warm Korean café designed around small real-life conversation
  * situations": a counter with a menu board (메뉴 · 커피 · 녹차 · 케이크),
- * four tables for two, pendant lamps on wooden beams. Nobody speaks yet —
- * conversations arrive with the NPC stage, owned by Adam and Lina.
+ * four tables for two, pendant lamps on wooden beams. The barista takes
+ * orders (config/interactions "shop-cafe"); two students at a table talk.
+ * What the learner has ordered appears on the tables, once it is a word
+ * they know (canon memorySystem: 커피 → coffee).
  */
 
 const HW = CAFE.halfWidth;
@@ -101,7 +103,67 @@ function Counter() {
   );
 }
 
-function Table({ x, z }: { x: number; z: number }) {
+const cupMat = std(PALETTE.white, 0.35);
+const coffeeMat = std("#5A3418", 0.25);
+const teaMat = std("#8DB255", 0.3);
+const saucerMat = std(PALETTE.white, 0.4);
+const spongeMat = std("#F3DDB8", 0.8);
+const creamMat = std("#F2A7B8", 0.6);
+const berryMat = std("#C8242B", 0.35);
+
+/** A cup on its saucer, filled with coffee or green tea. */
+function Cup({ x, z, tea }: { x: number; z: number; tea?: boolean }) {
+  return (
+    <group position={[x, 0.765, z]}>
+      <mesh castShadow position={[0, 0.006, 0]}>
+        <cylinderGeometry args={[0.085, 0.07, 0.012, 28]} />
+        <primitive object={saucerMat} attach="material" />
+      </mesh>
+      <mesh castShadow position={[0, 0.05, 0]}>
+        <cylinderGeometry args={[0.048, 0.036, 0.08, 28, 1, true]} />
+        <primitive object={cupMat} attach="material" />
+      </mesh>
+      <mesh position={[0, 0.082, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.045, 28]} />
+        <primitive object={tea ? teaMat : coffeeMat} attach="material" />
+      </mesh>
+      <mesh position={[0.055, 0.05, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <torusGeometry args={[0.018, 0.006, 8, 16, Math.PI]} />
+        <primitive object={cupMat} attach="material" />
+      </mesh>
+    </group>
+  );
+}
+
+/** A slice of strawberry cake on a plate. */
+function Cake({ x, z }: { x: number; z: number }) {
+  return (
+    <group position={[x, 0.765, z]}>
+      <mesh castShadow position={[0, 0.005, 0]}>
+        <cylinderGeometry args={[0.09, 0.08, 0.01, 28]} />
+        <primitive object={saucerMat} attach="material" />
+      </mesh>
+      {/* A wedge: a third of a short cylinder. */}
+      <mesh castShadow position={[0, 0.04, 0]}>
+        <cylinderGeometry args={[0.075, 0.075, 0.06, 20, 1, false, 0, Math.PI / 3]} />
+        <primitive object={spongeMat} attach="material" />
+      </mesh>
+      <mesh position={[0, 0.074, 0]}>
+        <cylinderGeometry args={[0.076, 0.076, 0.012, 20, 1, false, 0, Math.PI / 3]} />
+        <primitive object={creamMat} attach="material" />
+      </mesh>
+      <mesh position={[Math.sin(Math.PI / 6) * 0.045, 0.092, Math.cos(Math.PI / 6) * 0.045]}>
+        <sphereGeometry args={[0.014, 12, 10]} />
+        <primitive object={berryMat} attach="material" />
+      </mesh>
+    </group>
+  );
+}
+
+function Table({ x, z, words }: { x: number; z: number; words: string[] }) {
+  const coffee = words.includes("커피");
+  const tea = words.includes("녹차");
+  const cake = words.includes("케이크");
   return (
     <group position={[x, 0, z]}>
       <mesh castShadow receiveShadow position={[0, 0.74, 0]}>
@@ -112,10 +174,10 @@ function Table({ x, z }: { x: number; z: number }) {
         <cylinderGeometry args={[0.05, 0.22, 0.72, 12]} />
         <primitive object={std(PALETTE.charcoal, 0.6)} attach="material" />
       </mesh>
-      <mesh castShadow position={[0.1, 0.82, 0.05]}>
-        <cylinderGeometry args={[0.05, 0.04, 0.1, 12]} />
-        <primitive object={std(PALETTE.white, 0.4)} attach="material" />
-      </mesh>
+      {/* Two places at the table: a drink each, and a cake between them. */}
+      {(coffee || tea) && <Cup x={-0.24} z={0.05} tea={!coffee} />}
+      {(coffee || tea) && <Cup x={0.24} z={-0.05} tea={tea} />}
+      {cake && <Cake x={0} z={0.18} />}
       {[-1, 1].map((side) => (
         <group key={side} position={[side * 0.82, 0, 0]}>
           <mesh castShadow position={[0, 0.46, 0]}>
@@ -170,7 +232,7 @@ function BeamsAndLamps() {
   );
 }
 
-export default function ConversationCafe() {
+export default function ConversationCafe({ words = [] }: { words?: string[] }) {
   const planks = useTiledTexture(paintPlanks, HW / 1.5, HD / 1.5);
   const photo = usePhotoFloor("planks", HW / 1.5, HD / 1.5);
   return (
@@ -193,10 +255,10 @@ export default function ConversationCafe() {
         <Signboard text={CAFE.menu} w={1.8} h={1.3} aspect={1.4} />
       </group>
       {CAFE.tables.map((t) => (
-        <Table key={`${t.x}${t.z}`} x={t.x} z={t.z} />
+        <Table key={`${t.x}${t.z}`} x={t.x} z={t.z} words={words} />
       ))}
       <BeamsAndLamps />
-      {/* The door back to the market */}
+      {/* The door back to the Hub */}
       <GateWall z={HD + 0.2} facing={-1} open accent={false} halfWidth={HW} />
     </group>
   );

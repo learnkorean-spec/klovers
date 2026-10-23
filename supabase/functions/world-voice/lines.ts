@@ -15,5 +15,7 @@ export const LINES: Record<string, { ko: string; voice: string; who: string }> =
   hubFriend: { ko: "어디 가요?", voice: "echo", who: "a relaxed Korean university student, a young man" },
   hubReader: { ko: "한국어를 공부해요.", voice: "shimmer", who: "a calm young woman reading" },
   shopper: { ko: "이거 얼마예요?", voice: "coral", who: "a curious Korean woman shopping at a market" },
+  cafeA: { ko: "커피 좋아해요?", voice: "echo", who: "a friendly young Korean man at a café table" },
+  cafeB: { ko: "네, 좋아해요! 녹차도 좋아해요.", voice: "nova", who: "a cheerful young Korean woman at a café table" },
 };
 
