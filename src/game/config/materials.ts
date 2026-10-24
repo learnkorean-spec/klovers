@@ -144,16 +144,46 @@ export function upgradeMaterialDetails(): void {
 }
 
 /**
- * Metres per repeat of a detail map that is laid on by world position
- * (plaster, stone) instead of by each box's own 0–1 face. The kit draws a
- * 20 m wall as one unit box scaled up, so a face-mapped texture was
+ * Metres per repeat of a detail map that is laid on by real size instead of
+ * by each box's own 0–1 face. The kit draws a 20 m wall (or beam, or wall
+ * cap roof) as one unit shape scaled up, so a face-mapped texture was
  * stretched 20× along it: the plaster's tooth smeared into a smooth
- * gradient and the courtyard walls read as grey glass. Grain, tiles and
- * fabric keep their own mapping (they have a direction).
+ * gradient and the courtyard walls read as grey glass; beams and roofs
+ * smeared the same way. Fabric keeps its own mapping.
  */
-const WORLD_SCALE: Partial<Record<Detail, number>> = { plaster: 1.4, stone: 1.1 };
+const WORLD_SCALE: Partial<Record<Detail, number>> = { plaster: 1.4, stone: 1.1, grain: 1.5, tile: 1.8 };
+/**
+ * How each kind is laid on:
+ *  - plane: projected on the face's own plane (no direction — plaster, stone)
+ *  - grain: along the part's own longest side, in metres (beams run along
+ *    their length, posts and trunks up their height)
+ *  - rows:  roof tiles in rows parallel to the eave of each roof side
+ */
+const WORLD_MODE: Partial<Record<Detail, "plane" | "grain" | "rows">> = { plaster: "plane", stone: "plane", grain: "grain", tile: "rows" };
 
-function worldMapped(m: MeshStandardMaterial, metres: number): void {
+const UV_BY_MODE = {
+  // Walls by (along, up), floors by (x, z).
+  plane: "wmUv = wmN.y > max(wmN.x, wmN.z) ? wmP.xz : (wmN.x > wmN.z ? wmP.zy : wmP.xy);",
+  // In the part's own frame, in metres: u along its longest side that lies
+  // in this face (end grain falls back to the longer of the two others).
+  grain: `{
+    vec3 wmS = vec3(length(modelMatrix[0].xyz), length(modelMatrix[1].xyz), length(modelMatrix[2].xyz));
+    #ifdef USE_INSTANCING
+      wmS *= vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
+    #endif
+    vec3 wmL = position * wmS;
+    vec3 an = abs(objectNormal);
+    int f = an.x > an.y ? (an.x > an.z ? 0 : 2) : (an.y > an.z ? 1 : 2);
+    int a = f == 0 ? 1 : 0;
+    int b = f == 2 ? 1 : 2;
+    bool aLong = wmS[a] >= wmS[b];
+    wmUv = aLong ? vec2(wmL[a], wmL[b]) : vec2(wmL[b], wmL[a]);
+  }`,
+  // Rows parallel to each side's eave: a side facing ±x has its eave along z.
+  rows: "wmUv = wmN.x > wmN.z ? vec2(wmP.z, wmP.x) : vec2(wmP.x, wmP.z);",
+} as const;
+
+function worldMapped(m: MeshStandardMaterial, metres: number, mode: "plane" | "grain" | "rows"): void {
   const prev = m.onBeforeCompile;
   m.onBeforeCompile = (shader, renderer) => {
     prev?.call(m, shader, renderer);
@@ -169,8 +199,8 @@ function worldMapped(m: MeshStandardMaterial, metres: number): void {
   #endif
   wmP = modelMatrix * wmP;
   wmN = abs(normalize(mat3(modelMatrix) * wmN));
-  // Project on the face's own plane: walls by (along, up), floors by (x, z).
-  vec2 wmUv = wmN.y > max(wmN.x, wmN.z) ? wmP.xz : (wmN.x > wmN.z ? wmP.zy : wmP.xy);
+  vec2 wmUv;
+  ${UV_BY_MODE[mode]}
   wmUv /= ${metres.toFixed(2)};
   #ifdef USE_MAP
     vMapUv = wmUv;
@@ -182,7 +212,7 @@ function worldMapped(m: MeshStandardMaterial, metres: number): void {
     );
   };
   const key = m.customProgramCacheKey?.bind(m);
-  m.customProgramCacheKey = () => `${key ? key() : ""}|wm${metres}`;
+  m.customProgramCacheKey = () => `${key ? key() : ""}|wm${mode}${metres}`;
 }
 
 /** A cached lit material for this colour and finish. */
@@ -199,7 +229,8 @@ export function std(color: string, roughness = 0.8, extra: Omit<StdOptions, "rou
     if (extra.detail) {
       m.map = detail(extra.detail);
       const metres = WORLD_SCALE[extra.detail];
-      if (metres) worldMapped(m, metres);
+      const mode = WORLD_MODE[extra.detail];
+      if (metres && mode) worldMapped(m, metres, mode);
       const list = byDetail.get(extra.detail) ?? [];
       list.push(m);
       byDetail.set(extra.detail, list);
