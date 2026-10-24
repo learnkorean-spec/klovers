@@ -783,6 +783,28 @@ function spotOf(it: Interactable): { x: number; z: number } {
  * floating over it (DOM, owned by the page). This lists them now and then
  * and moves the signs over their things every frame, without re-rendering.
  */
+type HudRect = { l: number; t: number; r: number; b: number };
+
+/**
+ * Where the page's own controls sit over the 3D view, in the signs' layer
+ * coordinates: every interactive element (pointer-events-auto) outside the
+ * signs' layer — the top buttons and toggles, objective and mission chips,
+ * the controls card, the map, the joystick. Whole-screen overlays (a card's
+ * backdrop) are skipped: they cover everything anyway.
+ */
+function hudRects(layer: HTMLElement | null, w: number, h: number): HudRect[] {
+  if (!layer || !layer.parentElement) return [];
+  const base = layer.getBoundingClientRect();
+  const out: HudRect[] = [];
+  layer.parentElement.querySelectorAll<HTMLElement>(".pointer-events-auto").forEach((e) => {
+    if (layer.contains(e) || e.tagName === "CANVAS") return;
+    const r = e.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2 || r.width * r.height > w * h * 0.5) return;
+    out.push({ l: r.left - base.left, t: r.top - base.top, r: r.right - base.left, b: r.bottom - base.top });
+  });
+  return out;
+}
+
 function BeaconWatcher({ room, player, view, story, access, els, onNearby }: {
   room: RoomId;
   player: MutableRefObject<PlayerState>;
@@ -799,6 +821,7 @@ function BeaconWatcher({ room, player, view, story, access, els, onNearby }: {
   const v = useMemo(() => new Vector3(), []);
   const report = useRef(onNearby);
   report.current = onNearby;
+  const hud = useRef<{ t: number; rects: HudRect[] }>({ t: 0, rects: [] });
   useEffect(() => () => report.current([]), []);
   useFrame((_, dt) => {
     const p = player.current;
@@ -815,6 +838,13 @@ function BeaconWatcher({ room, player, view, story, access, els, onNearby }: {
         list.current = l;
         report.current(l);
       }
+    }
+    // The screen's own controls (buttons, cards, the map, the joystick):
+    // a sign never covers them. Measured every few frames, not every frame.
+    const any = els.current.values().next().value as HTMLElement | undefined;
+    if (any && (hud.current.t -= dt) <= 0) {
+      hud.current.t = 0.25;
+      hud.current.rects = hudRects(any.parentElement, size.width, size.height);
     }
     // Signs never sit on top of each other: a later one steps up a line.
     const placed: { x: number; y: number; w: number }[] = [];
@@ -834,7 +864,15 @@ function BeaconWatcher({ room, player, view, story, access, els, onNearby }: {
           k = -1;
         }
       }
-      const off = v.z > 1 || sx - w / 2 < 4 || sx + w / 2 > size.width - 4 || sy < 70 || sy > size.height - 8;
+      // Over a control: step just below it if there is room, else wait hidden.
+      const hh = el.offsetHeight || 36;
+      for (let pass = 0; pass < 3; pass++) {
+        const hit = hud.current.rects.find((r) => sx + w / 2 > r.l - 4 && sx - w / 2 < r.r + 4 && sy > r.t - 4 && sy - hh < r.b + 4);
+        if (!hit) break;
+        sy = hit.b + hh + 6;
+      }
+      const blocked = hud.current.rects.some((r) => sx + w / 2 > r.l - 4 && sx - w / 2 < r.r + 4 && sy > r.t - 4 && sy - hh < r.b + 4);
+      const off = blocked || v.z > 1 || sx - w / 2 < 4 || sx + w / 2 > size.width - 4 || sy < 70 || sy > size.height - 8;
       if (!off) placed.push({ x: sx, y: sy, w });
       el.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(-50%, -100%)`;
       el.style.visibility = off ? "hidden" : "visible";
