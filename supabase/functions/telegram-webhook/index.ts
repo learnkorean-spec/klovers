@@ -21,6 +21,15 @@
 // never counts the class itself, it only tells Re what the student says so
 // she can confirm it the way she already confirms a web self-service claim.
 //
+// Re, 24 Oct 2026: "anytime there is a meeting link send the question must be
+// sent auto" -- but Telegram gives a bot no visibility into Re's own personal
+// chats, so a class she arranges herself (outside the weekly schedule) can't
+// be auto-detected. The bridge is the /newclass admin command below: Re tells
+// the bot about the exception once, in one message from her own admin chat,
+// and from there it's an ordinary session -- the existing reminder and
+// attendance-ask sweeps (both every 15 minutes) pick it up automatically,
+// exactly like a regular scheduled class.
+//
 // SECURITY
 // --------
 // Telegram is registered with a secret_token (setWebhook); every genuine
@@ -163,6 +172,13 @@ Deno.serve(async (req) => {
       const dateLabel = new Date(session.session_date + "T12:00:00Z")
         .toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 
+      // Per-student language (Namy etc. get English), same helper used by
+      // telegram-class-reminder / telegram-attendance-ask.
+      const { data: localeRows } = await supabase.rpc("telegram_student_locale", {
+        p_ids: [session.student_id],
+      });
+      const lang = (Array.isArray(localeRows) ? localeRows[0]?.language : undefined) === "en" ? "en" : "ar";
+
       if (kind === "att") {
         const { error: rpcError } = await supabase.rpc("telegram_confirm_private_session", {
           p_session_id: sessionId,
@@ -171,16 +187,20 @@ Deno.serve(async (req) => {
         });
         if (rpcError) {
           console.error("telegram_confirm_private_session failed", rpcError);
-          await answerCallbackQuery(cfg.bot_token, cb.id, "في مشكلة، جربي تاني بعدين.");
+          await answerCallbackQuery(cfg.bot_token, cb.id,
+            lang === "en" ? "Something went wrong, try again later." : "في مشكلة، جربي تاني بعدين.");
           return new Response("ok");
         }
 
         await answerCallbackQuery(cfg.bot_token, cb.id);
-        await editMessageText(
-          cfg.bot_token, chatId, messageId,
-          yes ? `تمام، سجّلنا إن ${name || "الطالبة"} حضرت ✅ (هتتأكد من المدرّسة).`
-              : `تمام، سجّلنا إن ${name || "الطالبة"} ماحضرتش ❌`,
-        );
+        const confirmText = lang === "en"
+          ? (yes
+              ? `Got it, we recorded that ${name || "the student"} attended ✅ (the teacher will confirm).`
+              : `Got it, we recorded that ${name || "the student"} didn't attend ❌`)
+          : (yes
+              ? `تمام، سجّلنا إن ${name || "الطالبة"} حضرت ✅ (هتتأكد من المدرّسة).`
+              : `تمام، سجّلنا إن ${name || "الطالبة"} ماحضرتش ❌`);
+        await editMessageText(cfg.bot_token, chatId, messageId, confirmText);
         await sendMessage(cfg.bot_token, cfg.admin_chat_id,
           yes
             ? `📋 ${name || "طالبة"} قالت إنها حضرت حصة ${dateLabel} (عبر تيليجرام) — أكدي في اللوحة`
@@ -219,8 +239,116 @@ Deno.serve(async (req) => {
     const from = msg.from;
     const tgName = displayName(from);
 
-    // Re talking to her own bot — nothing to do.
-    if (String(chatId) === String(cfg.admin_chat_id)) return new Response("ok");
+    // Re talking to her own bot.
+    if (String(chatId) === String(cfg.admin_chat_id)) {
+      // --- /newclass admin command ---------------------------------------
+      // Re, 24 Oct 2026: for an "exception class" she arranges herself
+      // outside the normal weekly schedule, the bot has no way to detect it
+      // automatically -- it can't see Re's own personal chats with students.
+      // This command is the bridge: Re tells the bot about the class once,
+      // in one message, and from there it's an ordinary session -- the
+      // existing reminder and attendance-ask sweeps (every 15 minutes) pick
+      // it up and handle the rest on their own, same as a regular class.
+      //
+      // Syntax (time is Bangkok time, same convention as every other class
+      // time stored in the system):
+      //   /newclass <student name> today|tomorrow|YYYY-MM-DD HH:MM
+      // Examples:
+      //   /newclass Namy today 19:00
+      //   /newclass Menna 2026-11-02 16:00
+      const newClassMatch = text.match(
+        /^\/newclass\s+(.+?)\s+(today|tomorrow|\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2})$/i,
+      );
+
+      if (newClassMatch) {
+        const [, rawName, when, hh, mm] = newClassMatch;
+        const studentNameQuery = rawName.trim();
+
+        let sessionDate: string;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(when)) {
+          sessionDate = when;
+        } else {
+          // "today"/"tomorrow" relative to Bangkok's current date, since
+          // that's the timezone every class time is stored in.
+          const bkkParts = new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Asia/Bangkok",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(new Date());
+          const [by, bm, bd] = bkkParts.split("-").map(Number);
+          const bkkDate = new Date(Date.UTC(by, bm - 1, bd));
+          if (when.toLowerCase() === "tomorrow") bkkDate.setUTCDate(bkkDate.getUTCDate() + 1);
+          sessionDate = bkkDate.toISOString().slice(0, 10);
+        }
+        const startTime = `${hh.padStart(2, "0")}:${mm}`;
+
+        const { data: candidates, error: findError } = await supabase.rpc(
+          "admin_find_linked_student",
+          { p_name: studentNameQuery },
+        );
+        if (findError) {
+          console.error("admin_find_linked_student failed", findError);
+          await sendMessage(cfg.bot_token, chatId, `⚠️ حصل خطأ وأنا بدوّر على "${studentNameQuery}".`);
+          return new Response("ok");
+        }
+        if (!candidates || candidates.length === 0) {
+          await sendMessage(cfg.bot_token, chatId,
+            `⚠️ مش لاقية طالبة اسمها "${studentNameQuery}" مربوطة بتيليجرام.`);
+          return new Response("ok");
+        }
+        if (candidates.length > 1) {
+          const names = candidates.map((c: { full_name: string }) => c.full_name).join("، ");
+          await sendMessage(cfg.bot_token, chatId,
+            `⚠️ في أكتر من طالبة اسمها شبيه: ${names}. اكتبي الاسم بالكامل.`);
+          return new Response("ok");
+        }
+
+        const student = candidates[0] as {
+          student_id: string; full_name: string; chat_id: number | null;
+          meeting_url: string | null; language: string | null;
+        };
+
+        const { data: newSessionId, error: createError } = await supabase.rpc(
+          "admin_create_exception_session",
+          { p_student_id: student.student_id, p_session_date: sessionDate, p_start_time: startTime },
+        );
+        if (createError || !newSessionId) {
+          console.error("admin_create_exception_session failed", createError);
+          await sendMessage(cfg.bot_token, chatId, `⚠️ حصل خطأ وأنا بسجّل حصة ${student.full_name}.`);
+          return new Response("ok");
+        }
+
+        const lang = student.language === "en" ? "en" : "ar";
+        const dateLabel = new Date(sessionDate + "T12:00:00Z")
+          .toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+
+        // Send the class link to the student right away (same idea as
+        // telegram-class-reminder) and mark the reminder as already sent so
+        // the 15-minute cron doesn't duplicate it.
+        let studentNotified = false;
+        if (student.chat_id && student.meeting_url) {
+          const studentText = lang === "en"
+            ? `Hi ${student.full_name} 👋\nYour class today is set -- here's the link:\n${student.meeting_url}`
+            : `هاي ${student.full_name} 👋\nحصتك النهاردة جاهزة، اتفضلي اللينك:\n${student.meeting_url}`;
+          await sendMessage(cfg.bot_token, student.chat_id, studentText);
+          await supabase.from("student_class_sessions")
+            .update({ telegram_reminder_sent_at: new Date().toISOString() })
+            .eq("id", newSessionId);
+          studentNotified = true;
+        }
+
+        await sendMessage(cfg.bot_token, chatId,
+          `✅ اتسجلت حصة استثنائية لـ ${student.full_name} يوم ${dateLabel} الساعة ${startTime} (توقيت بانكوك).` +
+          (studentNotified
+            ? "\nاتبعتلها اللينك دلوقتي، وهيتبعتلها سؤال الحضور تلقائي بعد الحصة."
+            : "\n⚠️ معندهاش رابط ميتنج محفوظ أو مش مربوطة بتيليجرام -- ابعتيلها اللينك بنفسك، وسؤال الحضور هيتبعت تلقائي بعد الحصة."));
+        return new Response("ok");
+      }
+
+      // Anything else Re sends her own bot — nothing to do.
+      return new Response("ok");
+    }
 
     const startMatch = text.match(/^\/start(?:@\w+)?(?:\s+([A-Za-z0-9_-]{1,64}))?$/);
 
