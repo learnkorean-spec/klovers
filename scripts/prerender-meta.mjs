@@ -69,6 +69,23 @@ const BASE_URL = "https://kloversegy.com";
 const SITE_NAME = "Klovers";
 
 /**
+ * Per-lesson Offer objects for the three personal 1:1 lesson pages
+ * (/learn-hungarian, /learn-english, /learn-arabic) — added 25 Oct 2026 as
+ * part of the GEO pass making the PersonalLessonPricing section (shipped 24
+ * Oct 2026) visible to non-JS crawlers. Hardcoded here (this script only
+ * imports from ./lib/*.mjs, not src/*.ts) from the same tier figures as
+ * src/lib/stripePrices.ts's tierPrices.private[1] (local/regional/global:
+ * $50/$80/$120 per month of 4 lessons) and src/components/
+ * PersonalLessonPricing.tsx. If those canonical prices ever change, update
+ * this constant too.
+ */
+const PERSONAL_LESSON_OFFERS = [
+  { "@type": "Offer", name: "Egypt & nearby", price: "12.50", priceCurrency: "USD" },
+  { "@type": "Offer", name: "Southeast Asia & Latin America", price: "20.00", priceCurrency: "USD" },
+  { "@type": "Offer", name: "Gulf, US, UK & Europe", price: "30.00", priceCurrency: "USD" },
+];
+
+/**
  * Blog author as JSON-LD (GEO-09, 27 Sep 2026). Posts Reham wrote carry a real
  * Person, so answer engines can tie the article to a named teacher. Every other
  * post is the one Klovers Organization with one spelling, "Klovers" (Arabic
@@ -908,6 +925,7 @@ const MARKETING_ROUTES = [
       inLanguage: ["hu", "ar", "en"],
       courseMode: "online",
       teaches: "Hungarian, for a move, a Balassi Institute or Stipendium Hungaricum scholarship, or a Hungarian family",
+      offers: PERSONAL_LESSON_OFFERS,
     },
   },
   {
@@ -932,6 +950,7 @@ const MARKETING_ROUTES = [
       inLanguage: ["en", "ar"],
       courseMode: "online",
       teaches: "English, for work, interviews, travel, or IELTS/TOEFL exam preparation",
+      offers: PERSONAL_LESSON_OFFERS,
     },
   },
   {
@@ -959,6 +978,7 @@ const MARKETING_ROUTES = [
       inLanguage: ["ar", "en"],
       courseMode: "online",
       teaches: "Arabic — Modern Standard Arabic (Fusha) and Egyptian dialect, for learners worldwide",
+      offers: PERSONAL_LESSON_OFFERS,
     },
   },
   // Added in A1 — live routes that were missing from the prerender list.
