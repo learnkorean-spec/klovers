@@ -1,9 +1,9 @@
-import { DoubleSide } from "three";
+import { DoubleSide, type Material } from "three";
 import { CAFE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import { GateWall, Signboard } from "./parts";
 import { paintPlanks, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
-import { ACCENT, std } from "../config/materials";
+import { ACCENT, MAT, std } from "../config/materials";
 import { FLOOR_GRID } from "../config/world";
 
 /**
@@ -167,43 +167,81 @@ function Table({ x, z, words }: { x: number; z: number; words: string[] }) {
   const cake = words.includes("케이크");
   return (
     <group position={[x, 0, z]}>
-      <mesh castShadow receiveShadow position={[0, 0.74, 0]}>
-        <cylinderGeometry args={[0.5, 0.5, 0.05, 24]} />
-        <primitive object={std(PALETTE.woodWarm, 0.6)} attach="material" />
+      {/* The top: grained warm wood with a darker edge band, smooth-round. */}
+      <mesh castShadow receiveShadow position={[0, 0.745, 0]}>
+        <cylinderGeometry args={[0.5, 0.49, 0.04, 48]} />
+        <primitive object={MAT.woodWarm} attach="material" />
       </mesh>
-      <mesh castShadow position={[0, 0.37, 0]}>
-        <cylinderGeometry args={[0.05, 0.22, 0.72, 12]} />
-        <primitive object={std(PALETTE.charcoal, 0.6)} attach="material" />
+      <mesh castShadow position={[0, 0.715, 0]}>
+        <cylinderGeometry args={[0.49, 0.47, 0.025, 48]} />
+        <primitive object={MAT.woodDark} attach="material" />
+      </mesh>
+      {/* One pedestal on a round iron foot. */}
+      <mesh castShadow position={[0, 0.36, 0]}>
+        <cylinderGeometry args={[0.04, 0.05, 0.68, 16]} />
+        <primitive object={MAT.metal} attach="material" />
+      </mesh>
+      <mesh castShadow receiveShadow position={[0, 0.02, 0]}>
+        <cylinderGeometry args={[0.24, 0.27, 0.04, 32]} />
+        <primitive object={MAT.metal} attach="material" />
       </mesh>
       {/* Two places at the table: a drink each, and a cake between them. */}
       {(coffee || tea) && <Cup x={-0.24} z={0.05} tea={!coffee} />}
       {(coffee || tea) && <Cup x={0.24} z={-0.05} tea={tea} />}
       {cake && <Cake x={0} z={0.18} />}
       {[-1, 1].map((side) => (
-        <group key={side} position={[side * 0.82, 0, 0]}>
-          <mesh castShadow position={[0, 0.46, 0]}>
-            <boxGeometry args={[0.42, 0.06, 0.42]} />
-            <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
-          </mesh>
-          <mesh castShadow position={[side * 0.19, 0.72, 0]}>
-            <boxGeometry args={[0.05, 0.5, 0.42]} />
-            <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
-          </mesh>
-          {[-1, 1].flatMap((lx) =>
-            [-1, 1].map((lz) => (
-              <mesh key={`${lx}${lz}`} position={[lx * 0.17, 0.22, lz * 0.17]}>
-                <boxGeometry args={[0.04, 0.44, 0.04]} />
-                <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
-              </mesh>
-            )),
-          )}
-        </group>
+        <CafeChair key={side} side={side as -1 | 1} cushion={CUSHIONS[(Math.round(x * 3 + z * 7) + 40) % CUSHIONS.length]} />
       ))}
     </group>
   );
 }
 
-/** Wooden beams across the room with a pendant lamp over each table. */
+const CUSHIONS = [MAT.clothSage, MAT.clothRed, MAT.clothBlue, MAT.fabric];
+
+/**
+ * A café chair: round tapered legs, a wooden seat with a cloth cushion, and
+ * a back of three slats under a top rail (the back stands on the far side
+ * from the table).
+ */
+function CafeChair({ side, cushion }: { side: -1 | 1; cushion: Material }) {
+  const back = side * 0.19;
+  return (
+    <group position={[side * 0.82, 0, 0]}>
+      {[-1, 1].flatMap((lx) =>
+        [-1, 1].map((lz) => {
+          const rear = lx === side;
+          return (
+            <mesh key={`${lx}${lz}`} castShadow position={[lx * 0.17, rear ? 0.47 : 0.22, lz * 0.17]}>
+              <cylinderGeometry args={[0.018, 0.024, rear ? 0.94 : 0.44, 10]} />
+              <primitive object={MAT.woodDark} attach="material" />
+            </mesh>
+          );
+        }),
+      )}
+      <mesh castShadow receiveShadow position={[0, 0.455, 0]}>
+        <boxGeometry args={[0.42, 0.04, 0.42]} />
+        <primitive object={MAT.woodDark} attach="material" />
+      </mesh>
+      <mesh castShadow receiveShadow position={[-side * 0.01, 0.49, 0]}>
+        <boxGeometry args={[0.38, 0.035, 0.38]} />
+        <primitive object={cushion} attach="material" />
+      </mesh>
+      {/* Back: a curved-feel top rail and three slats. */}
+      <mesh castShadow position={[back, 0.9, 0]}>
+        <boxGeometry args={[0.035, 0.08, 0.42]} />
+        <primitive object={MAT.woodDark} attach="material" />
+      </mesh>
+      {[-0.11, 0, 0.11].map((zz) => (
+        <mesh key={zz} castShadow position={[back, 0.69, zz]}>
+          <boxGeometry args={[0.022, 0.36, 0.045]} />
+          <primitive object={MAT.woodDark} attach="material" />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** Wooden beams across the room with a pendant lamp over each table (hung high: the camera behind the learner looks out at about 2.5 m, and a low shade sat in its view). */
 function BeamsAndLamps() {
   return (
     <>
@@ -215,16 +253,16 @@ function BeamsAndLamps() {
       ))}
       {CAFE.tables.map((t) => (
         <group key={`${t.x}${t.z}`} position={[t.x, 0, t.z]}>
-          <mesh position={[0, 2.45, 0]}>
-            <cylinderGeometry args={[0.008, 0.008, 0.7, 6]} />
+          <mesh position={[0, 2.6, 0]}>
+            <cylinderGeometry args={[0.008, 0.008, 0.3, 6]} />
             <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
           </mesh>
-          <mesh position={[0, 2.05, 0]}>
-            <coneGeometry args={[0.2, 0.18, 18, 1, true]} />
+          <mesh position={[0, 2.45, 0]}>
+            <coneGeometry args={[0.16, 0.15, 18, 1, true]} />
             <meshBasicMaterial color={PALETTE.yellow} toneMapped={false} side={DoubleSide} />
           </mesh>
-          <mesh position={[0, 1.98, 0]}>
-            <sphereGeometry args={[0.06, 10, 8]} />
+          <mesh position={[0, 2.39, 0]}>
+            <sphereGeometry args={[0.05, 10, 8]} />
             <primitive object={std(PALETTE.white, 0.8, { emissive: PALETTE.ivory, emissiveIntensity: 1 })} attach="material" />
           </mesh>
         </group>
