@@ -2,6 +2,7 @@ import { useEffect, useMemo, type MutableRefObject } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { AdditiveBlending, AnimationMixer, Color, DoubleSide, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, Quaternion, SphereGeometry, Vector3, type AnimationAction, type AnimationClip, type Bone, type BufferGeometry, type Group, type Material, type SkinnedMesh, type Texture } from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { isTouchFirst } from "../systems/webgl";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 
@@ -246,6 +247,17 @@ function prepare(root: Group, rules: DressRule[]) {
       // Layered cards shadow each other into dark patches: hair still casts
       // on the body and the ground, but does not take shadows itself.
       m.receiveShadow = false;
+    }
+    // Sharp at a slant and at a distance: glTF textures arrive unfiltered
+    // (1×), so skin, cloth and hair went soft the moment a person turned or
+    // stood a few metres off — whatever resolution they were made at. The
+    // renderer clamps this to what the graphics card allows.
+    const aniso = isTouchFirst() ? 4 : 16;
+    for (const t of [mat.map, mat.normalMap, mat.roughnessMap, mat.aoMap]) {
+      if (t && t.anisotropy < aniso) {
+        t.anisotropy = aniso;
+        t.needsUpdate = true;
+      }
     }
     if (/_Body$/.test(m.name)) skin(mat);
     const isHair = /hair|eyelash/i.test(m.name);

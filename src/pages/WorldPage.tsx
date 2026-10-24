@@ -940,7 +940,7 @@ const WorldPage = () => {
                 className={`pointer-events-none absolute z-[11] ${isTouch ? (portrait ? "bottom-[11.5rem] end-4" : "end-4 top-[7.4rem]") : "bottom-5 left-5"}`}
                 
               >
-                <MiniMap lang={lang} showKey={!isTouch} size={isTouch ? (portrait ? 88 : 100) : 160} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onOpen={() => setMapOpen(true)} />
+                <MiniMap lang={lang} showKey={!isTouch} size={isTouch ? (portrait ? 96 : 110) : 184} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onOpen={() => setMapOpen(true)} />
               </div>
             )}
             {mapOpen && <FullMap lang={lang} pose={pose} isOpen={isOpenRoom} missionRoom={missionRoom} onClose={() => setMapOpen(false)} />}

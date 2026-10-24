@@ -6,9 +6,10 @@ import { ROOMS, type RoomId } from "../config/rooms";
 
 /**
  * The walking map and the missions, all DOM / 2D canvas (no 3D cost):
- *   MiniMap      — a round map in the corner that turns with the view (the
- *                  way ahead is always up), like an open-world game's radar.
- *                  Click / tap (or M) opens the full map.
+ *   MiniMap      — a square map in the corner, north always up (it never
+ *                  spins), the whole room in view, doors named, a cone
+ *                  showing where the camera looks. Click / tap (or M)
+ *                  opens the road map.
  *   FullMap      — this place, north up, with every gate and thing to use,
  *                  and the list of places (where you are, what is locked).
  *   MissionsCard — the list of missions to choose from.
@@ -40,8 +41,8 @@ interface DrawOpts {
   isOpen: (r: RoomId) => boolean;
   steps: Set<string>;
   target: { x: number; z: number } | null;
-  /** Round radar: the target clamps to this radius (px) when far. */
-  clampR?: number;
+  /** The pin is held this far (px) inside the edge when its target is out of view. */
+  clampM?: number;
   /** Destination names at the open gates. */
   gateName?: (r: RoomId) => string;
   t: number;
@@ -104,11 +105,13 @@ function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
     ctx.textBaseline = "middle";
     for (const p of room.portals) {
       if (p.lockedNotice && !o.isOpen(p.to)) continue;
-      const [sx, sy] = toScreen(o, (p.zone.minX + p.zone.maxX) / 2, (p.zone.minZ + p.zone.maxZ) / 2);
-      if (sx < 10 || sx > w - 10 || sy < 8 || sy > h - 8) continue;
+      const [gx, gy] = toScreen(o, (p.zone.minX + p.zone.maxX) / 2, (p.zone.minZ + p.zone.maxZ) / 2);
       const label = o.gateName(p.to);
       const tw = ctx.measureText(label).width + 10;
-      ctx.fillStyle = "rgba(46,46,46,0.85)";
+      // Kept inside the frame: a door on the very edge still shows its name.
+      const sx = Math.min(w - tw / 2 - 2, Math.max(tw / 2 + 2, gx));
+      const sy = Math.min(h - 10, Math.max(10, gy));
+      ctx.fillStyle = "rgba(46,46,46,0.88)";
       ctx.fillRect(sx - tw / 2, sy - 8, tw, 16);
       ctx.fillStyle = "#FFF9EC";
       ctx.fillText(label, sx, sy + 0.5);
@@ -120,10 +123,11 @@ function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
     let [sx, sy] = toScreen(o, o.target.x, o.target.z);
     const ox = sx - w / 2;
     const oy = sy - h / 2;
-    const r = Math.hypot(ox, oy);
-    if (o.clampR && r > o.clampR) {
-      sx = w / 2 + (ox * o.clampR) / r;
-      sy = h / 2 + (oy * o.clampR) / r;
+    const m = o.clampM ?? 12;
+    const k = Math.min(ox ? (w / 2 - m) / Math.abs(ox) : Infinity, oy ? (h / 2 - m) / Math.abs(oy) : Infinity);
+    if (k < 1) {
+      sx = w / 2 + ox * k;
+      sy = h / 2 + oy * k;
     }
     const pulse = 0.5 + 0.5 * Math.sin(o.t * 4);
     ctx.beginPath();
@@ -145,6 +149,16 @@ function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
 
   // The learner: a big yellow dot, pointing the way the body faces.
   const [lx, ly] = toScreen(o, o.pose.x, o.pose.z);
+  // Where the camera looks: a soft wedge, so the map and the picture line up.
+  {
+    const a = Math.atan2(-Math.cos(o.pose.camYaw), -Math.sin(o.pose.camYaw)) + o.rot;
+    ctx.beginPath();
+    ctx.moveTo(lx, ly);
+    ctx.arc(lx, ly, 34, a - 0.55, a + 0.55);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(255,255,0,0.38)";
+    ctx.fill();
+  }
   const fx = Math.sin(o.pose.yaw);
   const fz = Math.cos(o.pose.yaw);
   const ax = fx * Math.cos(o.rot) - fz * Math.sin(o.rot);
@@ -212,8 +226,11 @@ export function MiniMap({ lang, pose, isOpen, steps, target, size, onOpen, showK
     const p = pose();
     if (!p) return;
     const tg = target();
+    // North always up; the whole room fits the frame, with a little margin.
+    const b = ROOMS[p.room].bounds;
+    const scale = (w - 14) / Math.max(b.maxX - b.minX, b.maxZ - b.minZ);
     draw(ctx, {
-      pose: p, cx: p.x, cz: p.z, scale: w / 2 / 13, rot: p.camYaw, w, h, isOpen, steps, target: tg, clampR: w / 2 - 12,
+      pose: p, cx: (b.minX + b.maxX) / 2, cz: (b.minZ + b.maxZ) / 2, scale, rot: 0, w, h, isOpen, steps, target: tg, clampM: 14,
       gateName: (r) => copy.rooms[r].name, t: performance.now() / 1000,
     });
     // How far the pin is, in metres (written straight to the DOM, no re-render).
@@ -234,7 +251,7 @@ export function MiniMap({ lang, pose, isOpen, steps, target, size, onOpen, showK
           onOpen();
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="pointer-events-auto relative shrink-0 overflow-hidden rounded-full border-[3px] border-charcoal bg-ivory shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-klovers-yellow"
+        className="pointer-events-auto relative shrink-0 overflow-hidden rounded-2xl border-[3px] border-charcoal bg-ivory shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-klovers-yellow"
         style={{ width: size, height: size }}
       >
         <canvas ref={ref} style={{ width: size, height: size, display: "block" }} />
