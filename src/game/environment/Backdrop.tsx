@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { BackSide, CanvasTexture, Color, Float32BufferAttribute, type Group, type InstancedMesh, MeshBasicMaterial, Object3D, PlaneGeometry, SphereGeometry } from "three";
+import { BackSide, CanvasTexture, Color, Float32BufferAttribute, type Group, type InstancedMesh, MeshBasicMaterial, Object3D, PlaneGeometry, ShaderMaterial, SphereGeometry, Vector3 } from "three";
 import { REDUCED_MOTION } from "../systems/motion";
 import { MAT } from "../config/materials";
 import Batch from "./Batch";
@@ -37,7 +37,48 @@ const SKY_GEOMETRY = (() => {
   g.setAttribute("color", new Float32BufferAttribute(colors, 3));
   return g;
 })();
-const SKY_MATERIAL = new MeshBasicMaterial({ vertexColors: true, side: BackSide, fog: false, depthWrite: false, toneMapped: false });
+/** Where the sun stands (World.tsx's sun light): the sky glows around it. */
+export const SUN_DIR = new Vector3(14, 7.6, 4.5).normalize();
+
+/**
+ * The sky, painted per pixel (no bands between the dome's vertices): the
+ * same zenith → mid → horizon colours, a warm glow round the low sun (a
+ * broad halo and a soft core), a pale haze band along the horizon, and a
+ * touch of dither so the gradient never steps on 8-bit screens.
+ */
+const SKY_MATERIAL = new ShaderMaterial({
+  side: BackSide,
+  depthWrite: false,
+  fog: false,
+  toneMapped: false,
+  uniforms: {
+    zenith: { value: new Color(SKY.zenith) },
+    mid: { value: new Color(SKY.mid) },
+    horizon: { value: new Color(SKY.horizon) },
+    sunDir: { value: SUN_DIR },
+    sunColor: { value: new Color("#FFE2B0") },
+  },
+  vertexShader: `
+    varying vec3 vDir;
+    void main() {
+      vDir = normalize(position);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }`,
+  fragmentShader: `
+    uniform vec3 zenith; uniform vec3 mid; uniform vec3 horizon; uniform vec3 sunDir; uniform vec3 sunColor;
+    varying vec3 vDir;
+    void main() {
+      vec3 d = normalize(vDir);
+      float t = max(d.y, 0.0);
+      vec3 c = t < 0.1 ? mix(horizon, mid, t / 0.1) : mix(mid, zenith, pow(min(1.0, (t - 0.1) / 0.45), 0.8));
+      float s = max(dot(d, sunDir), 0.0);
+      c += sunColor * (pow(s, 6.0) * 0.22 + pow(s, 64.0) * 0.35);
+      c = mix(c, horizon * 1.03, exp(-abs(d.y) * 18.0) * 0.45);
+      c += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
+      gl_FragColor = vec4(c, 1.0);
+      #include <colorspace_fragment>
+    }`,
+});
 
 /**
  * Soft late-afternoon clouds: one painted canvas (a few overlapping warm-white
@@ -45,65 +86,112 @@ const SKY_MATERIAL = new MeshBasicMaterial({ vertexColors: true, side: BackSide,
  * sky. One draw call; they drift very slowly. They give the sky depth and
  * scale — the "real place" feeling — at almost no cost.
  */
-const CLOUD_MATERIAL = (() => {
+/**
+ * Soft late-afternoon clouds in three shapes (a long bank, a tall heap, a
+ * small wisp), each painted once: sunlit warm-white tops over a peach-grey
+ * shaded underside. Drawn as flat cards far out in the sky, one draw call
+ * per shape; they drift very slowly.
+ */
+function cloudMaterial(variant: number): MeshBasicMaterial {
   let map: CanvasTexture | null = null;
   try {
     const c = document.createElement("canvas");
-    c.width = 256;
-    c.height = 128;
+    c.width = 512;
+    c.height = 256;
     const ctx = c.getContext("2d");
     if (ctx) {
-      const puff = (x: number, y: number, r: number, a: number) => {
-        const g = ctx.createRadialGradient(x, y, r * 0.15, x, y, r);
-        g.addColorStop(0, `rgba(255,250,242,${a})`);
-        g.addColorStop(0.6, `rgba(255,240,224,${a * 0.55})`);
-        g.addColorStop(1, "rgba(255,236,214,0)");
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
+      let seed = 11 + variant * 37;
+      const rnd = () => {
+        seed = (seed * 16807) % 2147483647;
+        return seed / 2147483647;
       };
-      const puffs: [number, number, number, number][] = [
-        [70, 78, 42, 0.8], [110, 62, 52, 0.9], [155, 70, 46, 0.85], [195, 82, 34, 0.7], [128, 86, 44, 0.7], [45, 90, 26, 0.55], [222, 92, 22, 0.5],
+      const shapes: { n: number; w: number; h: number; r: [number, number] }[] = [
+        { n: 16, w: 380, h: 40, r: [34, 64] },
+        { n: 13, w: 220, h: 80, r: [38, 78] },
+        { n: 9, w: 300, h: 26, r: [20, 40] },
       ];
-      for (const [x, y, r, a] of puffs) puff(x, y, r, a);
+      const sh = shapes[variant % shapes.length];
+      const puffs = Array.from({ length: sh.n }, (_, i) => {
+        const fx = i / (sh.n - 1) - 0.5;
+        const r = sh.r[0] + rnd() * (sh.r[1] - sh.r[0]);
+        // Tallest in the middle of the cloud, flat along its base.
+        const lift = (1 - Math.abs(fx) * 1.6) * sh.h;
+        return { x: 256 + fx * sh.w + (rnd() - 0.5) * 30, y: 175 - Math.max(0, lift) * (0.6 + rnd() * 0.5), r };
+      });
+      // Shade first (the underside), then the sunlit body a little higher.
+      for (const pass of [0, 1]) {
+        for (const p of puffs) {
+          const y = pass ? p.y - p.r * 0.18 : p.y + p.r * 0.12;
+          const r = pass ? p.r * 0.92 : p.r;
+          const g = ctx.createRadialGradient(p.x - r * 0.15, y - r * 0.2, r * 0.1, p.x, y, r);
+          if (pass) {
+            g.addColorStop(0, "rgba(255,252,246,0.95)");
+            g.addColorStop(0.55, "rgba(255,243,228,0.75)");
+            g.addColorStop(1, "rgba(255,236,214,0)");
+          } else {
+            g.addColorStop(0, "rgba(222,200,190,0.8)");
+            g.addColorStop(0.6, "rgba(232,205,190,0.5)");
+            g.addColorStop(1, "rgba(240,215,198,0)");
+          }
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      // A clean flat base fades the bottom softly.
+      const fade = ctx.createLinearGradient(0, 170, 0, 230);
+      fade.addColorStop(0, "rgba(0,0,0,0)");
+      fade.addColorStop(1, "rgba(0,0,0,1)");
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = fade;
+      ctx.fillRect(0, 170, 512, 86);
+      ctx.globalCompositeOperation = "source-over";
       map = new CanvasTexture(c);
     }
   } catch {
     map = null;
   }
-  return new MeshBasicMaterial({ map, transparent: true, depthWrite: false, fog: false, toneMapped: false, opacity: 0.85 });
-})();
+  return new MeshBasicMaterial({ map, transparent: true, depthWrite: false, fog: false, toneMapped: false, opacity: 0.9 });
+}
+const CLOUD_MATERIALS = [0, 1, 2].map(cloudMaterial);
 const CLOUD_PLANE = new PlaneGeometry(1, 0.5);
-const CLOUDS: { a: number; y: number; s: number }[] = Array.from({ length: 11 }, (_, i) => ({
-  a: (i / 11) * Math.PI * 2 + jitter(i * 5, 0.25),
-  y: 20 + Math.abs(jitter(i * 9, 12)),
+const CLOUDS: { a: number; y: number; s: number }[] = Array.from({ length: 15 }, (_, i) => ({
+  a: (i / 15) * Math.PI * 2 + jitter(i * 5, 0.25),
+  y: 13 + Math.abs(jitter(i * 9, 9)),
   s: 26 + Math.abs(jitter(i * 13, 14)),
 }));
 
-function Clouds() {
+function CloudSet({ variant }: { variant: number }) {
   const ref = useRef<InstancedMesh>(null);
-  const spin = useRef<Group>(null);
+  const mine = useMemo(() => CLOUDS.filter((_, i) => i % 3 === variant), [variant]);
   useLayoutEffect(() => {
     const m = ref.current;
     if (!m) return;
     const o = new Object3D();
-    CLOUDS.forEach((c, i) => {
+    mine.forEach((c, i) => {
       const r = 82;
       o.position.set(Math.sin(c.a) * r, c.y, Math.cos(c.a) * r);
       o.lookAt(0, c.y * 0.6, 0);
-      o.scale.set(c.s, c.s, 1);
+      o.scale.set(c.s * (variant === 1 ? 0.8 : 1.15), c.s * (variant === 1 ? 0.8 : 1.15), 1);
       o.updateMatrix();
       m.setMatrixAt(i, o.matrix);
     });
     m.instanceMatrix.needsUpdate = true;
-  }, []);
+  }, [mine, variant]);
+  return <instancedMesh ref={ref} args={[CLOUD_PLANE, CLOUD_MATERIALS[variant], mine.length]} renderOrder={-1} frustumCulled={false} dispose={null} />;
+}
+
+function Clouds() {
+  const spin = useRef<Group>(null);
   useFrame((_, dt) => {
     if (spin.current && !REDUCED_MOTION) spin.current.rotation.y += Math.min(dt, 0.1) * 0.004;
   });
   return (
     <group ref={spin}>
-      <instancedMesh ref={ref} args={[CLOUD_PLANE, CLOUD_MATERIAL, CLOUDS.length]} renderOrder={-1} frustumCulled={false} dispose={null} />
+      {[0, 1, 2].map((v) => (
+        <CloudSet key={v} variant={v} />
+      ))}
     </group>
   );
 }
