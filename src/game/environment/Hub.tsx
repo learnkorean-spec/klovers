@@ -9,6 +9,7 @@ import { Gate, Signboard } from "./parts";
 import ModelProp, { type PropPlacement } from "./ModelProp";
 import { REAL_PROPS } from "../systems/styleMode";
 import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
+import { FLOOR_GRID } from "../config/world";
 
 /**
  * Room 4 — the KLOVERS Hub: the square every path leads to.
@@ -357,11 +358,11 @@ export default function Hub({ cafeOpen, marketOpen, cultureOpen = false, seoulOp
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[H * 2, H * 2]} />
+        <planeGeometry args={[H * 2, H * 2, ...FLOOR_GRID]} />
         <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#F4EBDD" : "#ffffff"} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <planeGeometry args={[110, 110]} />
+        <planeGeometry args={[110, 110, ...FLOOR_GRID]} />
         <primitive object={MAT.stone} attach="material" />
       </mesh>
       <Batch kit={HUB_KIT} />

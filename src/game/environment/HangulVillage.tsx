@@ -7,6 +7,7 @@ import { Gate, GateWall, Lamps, Signboard, Sway } from "./parts";
 import { VILLAGE_LETTERS } from "../config/interactions";
 import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
 import { curvedRoof } from "./shapes";
+import { FLOOR_GRID } from "../config/world";
 
 /**
  * Room 2 — Hangul Village, the first learning world (canon: worlds[0]).
@@ -171,11 +172,11 @@ export default function HangulVillage({ marketOpen, letters }: { marketOpen: boo
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[HW * 2 + 0.6, HL * 2]} />
+        <planeGeometry args={[HW * 2 + 0.6, HL * 2, ...FLOOR_GRID]} />
         <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#F4EBDD" : "#ffffff"} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <planeGeometry args={[90, 90]} />
+        <planeGeometry args={[90, 90, ...FLOOR_GRID]} />
         <primitive object={MAT.stone} attach="material" />
       </mesh>
       {/* Kerbs */}

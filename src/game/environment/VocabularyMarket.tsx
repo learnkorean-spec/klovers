@@ -12,6 +12,7 @@ import ModelProp, { type PropPlacement } from "./ModelProp";
 import MarketShop, { type ShopItem } from "./MarketShop";
 import { REAL_PROPS } from "../systems/styleMode";
 import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
+import { FLOOR_GRID } from "../config/world";
 
 /**
  * Vocabulary Market — the second world (canon: worlds[1]).
@@ -310,11 +311,11 @@ export default function VocabularyMarket({
         </>
       )}
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[HW * 2, HD * 2]} />
+        <planeGeometry args={[HW * 2, HD * 2, ...FLOOR_GRID]} />
         <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#F4EBDD" : "#ffffff"} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <planeGeometry args={[80, 80]} />
+        <planeGeometry args={[80, 80, ...FLOOR_GRID]} />
         <primitive object={MAT.stone} attach="material" />
       </mesh>
       <Batch kit={MARKET_KIT} />

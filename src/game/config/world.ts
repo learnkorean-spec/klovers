@@ -180,3 +180,13 @@ export const BOUNDS: Box2 = {
   minZ: -ROOM.halfDepth,
   maxZ: ROOM.halfDepth,
 };
+
+/**
+ * Floors and grounds are cut into a grid of smaller triangles, not drawn as
+ * one quad. A quad is two huge triangles, and when the camera stands right
+ * over one of its far corners (the courtyard start view does: a floor corner
+ * sat ~0 m from the camera's plane) some graphics drivers drew one whole
+ * triangle across the view — a brown "slab" over the learner. Small
+ * triangles never get there, and cost nothing.
+ */
+export const FLOOR_GRID: [number, number] = [16, 16];

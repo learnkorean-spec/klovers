@@ -12,6 +12,7 @@ import Instanced, { type Part } from "./Instanced";
 import { Kit, flowers, jitter, kitGeometry, planter } from "./kit";
 import { GateWall } from "./parts";
 import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
+import { FLOOR_GRID } from "../config/world";
 
 /**
  * Seoul Journey, part 1 — canon worlds[5] (course Levels 4–6): "the final
@@ -1150,11 +1151,11 @@ export default function SeoulJourney({ words = [], player }: { words?: string[];
     <group>
       {/* Pavements everywhere, the road across them, a side street north. */}
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -6]}>
-        <planeGeometry args={[120, 80]} />
+        <planeGeometry args={[120, 80, ...FLOOR_GRID]} />
         <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#E6E2DA" : "#ffffff"} />
       </mesh>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.008, SEOUL.roadZ]}>
-        <planeGeometry args={[180, SEOUL.roadW]} />
+        <planeGeometry args={[180, SEOUL.roadW, ...FLOOR_GRID]} />
         <primitive object={roadMat} attach="material" />
       </mesh>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[4.8, 0.008, -HD - 20.4]}>

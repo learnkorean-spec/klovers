@@ -21,7 +21,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "ball" | "ballLow" | "cylLow" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "pineCone" | "ball" | "ballLow" | "cylLow" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -76,12 +76,35 @@ function lumpyBall(detail: number, lump: number): BufferGeometry {
   return g;
 }
 
+/**
+ * A pine tier: a round cone (24 sides, not 8) whose skirt ripples a little in
+ * and out, so a pine reads as layered boughs rather than a faceted spike.
+ */
+function pineTier(): BufferGeometry {
+  const g = new ConeGeometry(0.5, 1, 24, 3);
+  const pos = g.getAttribute("position");
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    const y = pos.getY(i);
+    const r = Math.hypot(x, z);
+    if (r < 1e-4) continue;
+    const a = Math.atan2(z, x);
+    // Ripple grows toward the skirt (y = -0.5), nothing at the tip.
+    const k = 1 + (0.5 - y) * (0.07 * Math.sin(a * 7) + 0.04 * Math.sin(a * 13 + 1.3));
+    pos.setXYZ(i, x * k, y + (y < -0.45 ? 0.04 * Math.sin(a * 5) : 0), z * k);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
 const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   box: UNIT.box,
   hip: UNIT.hipRoof,
   oct: new CylinderGeometry(0.5, 0.5, 1, 8),
   cyl: UNIT.cylinder,
   cone: new ConeGeometry(0.5, 1, 8),
+  pineCone: pineTier(),
   ball: lumpyBall(3, 0.16),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
   ballLow: lumpyBall(1, 0.12),
@@ -353,9 +376,9 @@ export function platform(k: Kit, x: number, z: number, w: number, d: number, rot
 /** A stylised pine: a leaning trunk and three stacked crowns. */
 export function pine(k: Kit, x: number, z: number, s = 1): void {
   k.add("woodDark", "cyl", [x, 0.8 * s, z], [0.2 * s, 1.6 * s, 0.2 * s], [0, 0, 0.06], true);
-  k.add("pine", "cone", [x + 0.05 * s, 1.55 * s, z], [1.5 * s, 0.9 * s, 1.5 * s], undefined, true);
-  k.add("pine", "cone", [x + 0.08 * s, 2.1 * s, z], [1.15 * s, 0.8 * s, 1.15 * s], undefined, true);
-  k.add("pine", "cone", [x + 0.1 * s, 2.55 * s, z], [0.75 * s, 0.7 * s, 0.75 * s], undefined, true);
+  k.add("pine", "pineCone", [x + 0.05 * s, 1.55 * s, z], [1.5 * s, 0.9 * s, 1.5 * s], undefined, true);
+  k.add("pine", "pineCone", [x + 0.08 * s, 2.1 * s, z], [1.15 * s, 0.8 * s, 1.15 * s], undefined, true);
+  k.add("pine", "pineCone", [x + 0.1 * s, 2.55 * s, z], [0.75 * s, 0.7 * s, 0.75 * s], undefined, true);
 }
 
 /** A glazed pot (onggi) with a small round shrub. */

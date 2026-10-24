@@ -10,6 +10,7 @@ import { BakedShade, useBakedFloor } from "./BakedFloor";
 import { Kit, bed, flowers, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, shrub, steppingStones, stoneLantern, tree, wallRun } from "./kit";
 import { Gate, Signboard } from "./parts";
 import { paintMadang, useTiledTexture } from "./textures";
+import { FLOOR_GRID } from "../config/world";
 
 /**
  * Room 1 — the hanok courtyard where the two friends found the clover egg.
@@ -102,12 +103,12 @@ export default function Lobby({ story }: { story: MutableRefObject<StoryState> }
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[HW * 2, HD * 2]} />
+        <planeGeometry args={[HW * 2, HD * 2, ...FLOOR_GRID]} />
         <meshStandardMaterial key={baked.ao ? "baked" : "plain"} map={paving} roughness={0.95} aoMap={baked.ao} aoMapIntensity={1} />
       </mesh>
       {baked.shade && <BakedShade map={baked.shade} w={HW * 2} d={HD * 2} />}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <planeGeometry args={[90, 90]} />
+        <planeGeometry args={[90, 90, ...FLOOR_GRID]} />
         <primitive object={MAT.stone} attach="material" />
       </mesh>
       <Batch kit={COURTYARD_KIT} />

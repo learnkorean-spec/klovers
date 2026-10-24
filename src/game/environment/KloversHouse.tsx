@@ -3,6 +3,7 @@ import { PALETTE } from "../config/world";
 import { ACCENT, std } from "../config/materials";
 import { GateWall, InfoBoard as Board } from "./parts";
 import { paintPlanks, useTiledTexture, usePhotoFloor } from "./textures";
+import { FLOOR_GRID } from "../config/world";
 
 /**
  * Klovers House (안내소) — the Hub's information house. Not a world.
@@ -115,11 +116,11 @@ export default function KloversHouse() {
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[HW * 2, HD * 2]} />
+        <planeGeometry args={[HW * 2, HD * 2, ...FLOOR_GRID]} />
         <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? planks} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.8} color={photo ? "#FFF4E6" : "#ffffff"} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <planeGeometry args={[70, 70]} />
+        <planeGeometry args={[70, 70, ...FLOOR_GRID]} />
         <primitive object={std(PALETTE.stone, 1)} attach="material" />
       </mesh>
       <Walls />

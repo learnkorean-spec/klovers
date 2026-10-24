@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { MeshBasicMaterial, TextureLoader, type Texture } from "three";
 import { pickQuality } from "../systems/quality";
+import { FLOOR_GRID } from "../config/world";
 
 /**
  * Light baked into a room's floor, once, in Blender (Cycles) from the
@@ -55,7 +56,7 @@ export function BakedShade({ map, w, d }: { map: Texture; w: number; d: number }
   useEffect(() => () => material.dispose(), [material]);
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} material={material} renderOrder={1}>
-      <planeGeometry args={[w, d]} />
+      <planeGeometry args={[w, d, ...FLOOR_GRID]} />
     </mesh>
   );
 }
