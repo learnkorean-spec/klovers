@@ -284,7 +284,7 @@ const ROAD: Stop[] = [
   { id: "culture-street" },
   { id: "seoul-journey" },
   { id: "seoul-market" },
-  { id: "seoul" },
+  { id: "seoul-namsan" },
 ];
 const STEP = 118;
 const ROAD_W = 360;

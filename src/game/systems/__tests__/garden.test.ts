@@ -59,3 +59,18 @@ describe("Seoul Journey part 2: the market alley", () => {
     expect(ROOMS["seoul-journey"].spawns[back!.arrive!]).toBeDefined();
   });
 });
+
+describe("Seoul Journey part 3: Namsan Tower", () => {
+  it("opens at Level 6 (canon levelJourney.l6 → seoul-journey part 3), not before", () => {
+    expect(worldAccess("l5", false).open.has("seoul-namsan")).toBe(false);
+    expect(worldAccess("l6", false).open.has("seoul-namsan")).toBe(true);
+  });
+
+  it("is reached by the 02 bus from part 1, and the bus goes back down", () => {
+    const up = INTERACTABLES.find((i) => i.id === "door-bus-namsan");
+    const down = INTERACTABLES.find((i) => i.id === "door-namsan-bus");
+    expect(up?.to).toBe("seoul-namsan");
+    expect(ROOMS["seoul-namsan"].spawns[up!.arrive!]).toBeDefined();
+    expect(ROOMS["seoul-journey"].spawns[down!.arrive!]).toBeDefined();
+  });
+});

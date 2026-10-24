@@ -42,8 +42,19 @@ export const CULTURE_FRIEND = { x: 1.9, z: 9.6, yaw: 0.3 };
 export const SEOUL_FRIEND = { x: -2.0, z: 6.4, yaw: 0.5 };
 /** In the market alley (Seoul part 2) the friend waits under the entrance arch. */
 export const ALLEY_FRIEND = { x: 1.5, z: 8.4, yaw: -2.5 };
+/** On Namsan the friend waits halfway to the tower, turned back toward the bus stop. */
+export const NAMSAN_FRIEND = { x: 3.4, z: 2.6, yaw: 2.4 };
 
 export const NPCS: NpcPlacement[] = [
+  // Seoul Journey part 3, Namsan: the ticket seller, visitors at the locks and
+  // the rail, someone asking the way, a grandmother on the bench.
+  { id: "n-ticket", room: "seoul-namsan", cast: "barista", pose: "stand", x: -4.6, z: -7.35, yaw: 0, phase: 0.5, important: true },
+  { id: "n-tourist", room: "seoul-namsan", cast: "friendB", pose: "talk", x: 6.4, z: -2.6, yaw: -2.0, phase: 1.2, important: true },
+  { id: "n-tourist2", room: "seoul-namsan", cast: "friendA", pose: "stand", x: 7.2, z: -3.4, yaw: -1.6, phase: 0.3 },
+  { id: "n-asker", room: "seoul-namsan", cast: "readerB", pose: "browse", x: -2.2, z: 1.6, yaw: 1.2, phase: 1.9, important: true },
+  { id: "n-grandma", room: "seoul-namsan", cast: "auntie", pose: "sit", x: -8.55, z: 0.2, yaw: Math.PI / 2, phase: 0.8, important: true },
+  { id: "n-viewer", room: "seoul-namsan", cast: "shopper", pose: "browse", x: 0.4, z: 6.9, yaw: 0, phase: 2.4 },
+  { id: "n-walker", room: "seoul-namsan", cast: "walker", pose: "walk", x: -6.5, z: -4.2, yaw: Math.PI / 2, path: [[-6.5, -4.2], [5.5, -4.2]], phase: 1.0 },
   // Seoul Journey part 2, the market alley: a keeper in each stall, the cook
   // at the cart, an elder on the bench by the café, the barista, shoppers.
   { id: "a-fruit", room: "seoul-market", cast: "auntie", pose: "stand", x: -4.0, z: 6.5, yaw: Math.PI / 2, phase: 0.2, important: true },

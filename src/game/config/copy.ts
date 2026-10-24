@@ -176,6 +176,10 @@ export const WORLD_COPY = {
         name: "Seoul Journey",
         line: "A Seoul street corner: the subway, the bus, directions and a meal out.",
       },
+      "seoul-namsan": {
+        name: "Seoul: Namsan Tower",
+        line: "The top of the city: buy the tickets, give a visitor directions, look out over all of Seoul.",
+      },
       "seoul-market": {
         name: "Seoul: the market alley",
         line: "One subway stop away: ask the price, bargain a little, eat at the cart, chat with a neighbour.",
@@ -193,6 +197,7 @@ export const WORLD_COPY = {
       cultureSoon: { title: "Culture Street", line: "Coming soon", more: "Everyday Korean life: food, manners and traditions." },
       seoulSoon: { title: "Seoul Journey", line: "Coming soon", more: "Real city moments in Seoul: getting around, shopping, restaurants." },
       gardenSoon: { title: "Cluby's Memory Garden", line: "Coming soon", more: "A quiet garden where learned words come back for review." },
+      seoulNamsanLocked: { title: "The 02 bus up Namsan", line: "Namsan Tower (Seoul, part 3) opens at Level 6.", more: "Tickets, directions, polite favours and the view over Seoul." },
       seoulMarketLocked: { title: "Line 2 to the market alley", line: "The market alley (Seoul, part 2) opens at Level 5.", more: "Prices, bargaining, street food and small talk." },
       gardenLocked: { title: "Cluby's Memory Garden", line: "Opens once you have words to review: finish a lesson and its words come here.", more: "A quiet garden where learned words come back for review." },
     },
@@ -293,6 +298,9 @@ export const WORLD_COPY = {
       hotteok: { ko: "호떡", roman: "hotteok", meaning: "sweet filled pancake", note: "A winter street snack: dough filled with brown sugar and nuts, fried flat. Careful: the filling is very hot.", example: { ko: "호떡 하나 주세요.", gloss: "One hotteok, please." } },
       eomuk: { ko: "어묵", roman: "eomuk", meaning: "fish cake (on a skewer)", note: "Eaten standing at the cart, with a cup of its hot broth (국물), which is usually free.", example: { ko: "어묵 두 개 주세요.", gloss: "Two fish cakes, please." } },
       gimbap: { ko: "김밥", roman: "gimbap", meaning: "rice rolled in seaweed", note: "김 = seaweed, 밥 = rice. Cut in slices, taken on picnics and trips.", example: { ko: "김밥 한 줄 주세요.", gloss: "One roll of gimbap, please." } },
+      jeonmangdae: { ko: "전망대", roman: "jeonmangdae", meaning: "observation deck", note: "The tower's 전망대 is near the top: all of Seoul, the river and the mountains around it.", example: { ko: "전망대에 올라가요.", gloss: "We're going up to the observation deck." } },
+      jamulsoe: { ko: "자물쇠", roman: "jamulsoe", meaning: "padlock", note: "Friends and families hang padlocks with their names and a wish on Namsan's fences.", example: { ko: "자물쇠에 이름을 써요.", gloss: "We write our names on the padlock." } },
+      yagyeong: { ko: "야경", roman: "yagyeong", meaning: "night view (of a city)", note: "야 = night, 경 = view. From here, Seoul's lights at night are famous.", example: { ko: "서울 야경이 정말 예뻐요.", gloss: "Seoul at night is really beautiful." } },
     },
     quiz: {
       a: {
@@ -403,6 +411,24 @@ export const WORLD_COPY = {
           { label: "괜찮아요", right: false, feedback: "괜찮아요 means \"it's okay / no thanks\". Lukewarm for a cook asking about his food: 네, 맛있어요!" },
         ],
       },
+      pyo: {
+        ko: "표",
+        question: "At the ticket booth: you want two tickets for the observation deck. What do you say?",
+        options: [
+          { label: "표 두 개 주세요", right: false, feedback: "Close, but tickets aren't counted with 개. Flat things like tickets and paper take 장: 표 두 장 주세요." },
+          { label: "표 두 장 주세요", right: true, feedback: "Yes: 표 두 장 주세요. 장 is the counter for flat things: tickets, sheets of paper, photos." },
+          { label: "표 둘이에요", right: false, feedback: "That says \"the tickets are two\". To ask for them: 표 두 장 주세요." },
+        ],
+      },
+      eodi: {
+        ko: "어디",
+        question: "A visitor asks: 케이블카 타는 곳이 어디예요? (Where do I get the cable car?) The sign points straight on, past the tower. What do you say?",
+        options: [
+          { label: "저쪽으로 쭉 가세요", right: true, feedback: "Yes: 저쪽으로 쭉 가세요, \"go straight on that way\". 쭉 = all the way, straight." },
+          { label: "여기 있어요", right: false, feedback: "여기 있어요 means \"here it is\": you'd say it handing something over. For the way: 저쪽으로 쭉 가세요." },
+          { label: "몰라요", right: false, feedback: "몰라요 (I don't know) is blunt, and you do know! Point and say: 저쪽으로 쭉 가세요." },
+        ],
+      },
     },
     /** People's short lines: Korean, meaning, one note from Cluby. */
     say: {
@@ -426,6 +452,9 @@ export const WORLD_COPY = {
       friendMarket: { name: "", ko: "같이 구경하자!", gloss: "Let's look around together!", note: "-자 = let's (casual, between friends). 구경하다 = to look around, to browse." },
       deom: { name: "Side-dish seller", ko: "하나 더 드릴게요!", gloss: "I'll give you one more!", note: "덤: a little extra for free. Market sellers add it to say thank you; the reply is 감사합니다!" },
       grandpa: { name: "Grandfather on the bench", ko: "어디서 왔어요?", gloss: "Where are you from?", note: "Small talk an elder will often start. Answer with your country + 에서 왔어요: 이집트에서 왔어요 (I'm from Egypt)." },
+      friendNamsan: { name: "", ko: "드디어 왔다!", gloss: "We finally made it!", note: "드디어 = at last, finally. -았다/-었다: the plain past, said out loud when something you waited for happens." },
+      photo: { name: "Visitor", ko: "사진 좀 찍어 주시겠어요?", gloss: "Would you mind taking a photo of us?", note: "-어 주시겠어요? is the most polite way to ask a stranger a favour. Answer: 네, 그럼요! (Yes, of course!)" },
+      nalssi: { name: "Grandmother on the bench", ko: "날씨가 정말 좋네요!", gloss: "What lovely weather!", note: "-네요 shares something you notice, inviting a friendly reply: 네, 정말 좋네요!" },
       alleyCafe: { name: "Café owner", ko: "따뜻한 거 드릴까요, 차가운 거 드릴까요?", gloss: "Would you like it hot or iced?", note: "따뜻한 = warm, 차가운 = cold. Answer with one word + 요: 차가운 거요! (Iced, please!)" },
     },
     /** Klovers House: one board per part of the site (config/rooms HOUSE). */
@@ -494,7 +523,7 @@ export const WORLD_COPY = {
       side: "Beside the road",
       garden: "Memory Garden",
       later: "More of Seoul",
-      opensAt: { "vocabulary-market": "Opens at Level 1", "conversation-cafe": "Opens at Level 2", "culture-street": "Opens at Level 3", "seoul-journey": "Opens at Level 4", "seoul-market": "Opens at Level 5" } as Record<string, string>,
+      opensAt: { "vocabulary-market": "Opens at Level 1", "conversation-cafe": "Opens at Level 2", "culture-street": "Opens at Level 3", "seoul-journey": "Opens at Level 4", "seoul-market": "Opens at Level 5", "seoul-namsan": "Opens at Level 6" } as Record<string, string>,
       what: {
         courtyard: "The clover egg",
         "hangul-village": "Letters",
@@ -506,6 +535,7 @@ export const WORLD_COPY = {
         "seoul-journey": "Subway · directions · eating out",
         "memory-garden": "Review what you learned",
         "seoul-market": "Prices · bargaining · street food",
+        "seoul-namsan": "Tickets · directions · the view",
         seoul: "Level 6 · Namsan Tower",
         garden: "Review what you learned",
       } as Record<string, string>,
@@ -696,6 +726,10 @@ export const WORLD_COPY = {
         name: "رحلة سيول",
         line: "زاوية شارع في سيول: المترو والحافلة والاتجاهات ووجبة في مطعم.",
       },
+      "seoul-namsan": {
+        name: "سيول: برج نامسان",
+        line: "قمّة المدينة: اشترِ التذاكر، ودُلّ زائرًا على الطريق، وانظر إلى سيول كلها.",
+      },
       "seoul-market": {
         name: "سيول: سوق الزقاق",
         line: "على بُعد محطة مترو: اسأل عن السعر، وافصل قليلًا، وكُل عند العربة، وتحدّث مع جار.",
@@ -713,6 +747,7 @@ export const WORLD_COPY = {
       cultureSoon: { title: "شارع الثقافة", line: "قريبًا", more: "الحياة الكورية اليومية: الطعام والآداب والتقاليد." },
       seoulSoon: { title: "رحلة سيول", line: "قريبًا", more: "مواقف حقيقية في مدينة سيول: التنقّل والتسوّق والمطاعم." },
       gardenSoon: { title: "حديقة ذاكرة كلوبي", line: "قريبًا", more: "حديقة هادئة تعود فيها الكلمات المتعلَّمة للمراجعة." },
+      seoulNamsanLocked: { title: "حافلة 02 إلى نامسان", line: "يُفتح برج نامسان (سيول، الجزء الثالث) عند المستوى السادس.", more: "التذاكر والاتجاهات وطلب الخدمة بأدب والإطلالة على سيول." },
       seoulMarketLocked: { title: "الخط الثاني إلى سوق الزقاق", line: "يُفتح سوق الزقاق (سيول، الجزء الثاني) عند المستوى الخامس.", more: "الأسعار والفصال وأكل الشارع والحديث الودّي." },
       gardenLocked: { title: "حديقة ذاكرة كلوبي", line: "تُفتح عندما تصبح لديك كلمات للمراجعة: أنهِ درسًا وستأتي كلماته إلى هنا.", more: "حديقة هادئة تعود فيها الكلمات المتعلَّمة للمراجعة." },
     },
@@ -813,6 +848,9 @@ export const WORLD_COPY = {
       hotteok: { ko: "호떡", roman: "هوتّوك", meaning: "فطيرة محشوّة حلوة", note: "وجبة شارع شتوية: عجين محشوّ بالسكر البنّي والمكسّرات ويُقلى مسطّحًا. انتبه: الحشوة ساخنة جدًا.", example: { ko: "호떡 하나 주세요.", gloss: "هوتّوك واحدة من فضلك." } },
       eomuk: { ko: "어묵", roman: "أوموك", meaning: "كعكة السمك (على عود)", note: "تؤكل وقوفًا عند العربة مع كوب من مرقها الساخن (국물)، وغالبًا يكون مجانًا.", example: { ko: "어묵 두 개 주세요.", gloss: "عودان من كعك السمك من فضلك." } },
       gimbap: { ko: "김밥", roman: "كيمباب", meaning: "أرز ملفوف بالأعشاب البحرية", note: "김 = أعشاب بحرية، 밥 = أرز. يُقطَّع شرائح ويؤخذ في النزهات والرحلات.", example: { ko: "김밥 한 줄 주세요.", gloss: "لفّة كيمباب واحدة من فضلك." } },
+      jeonmangdae: { ko: "전망대", roman: "جونمانغدِه", meaning: "منصّة المشاهدة", note: "منصّة المشاهدة في البرج قرب قمّته: سيول كلها والنهر والجبال حولها.", example: { ko: "전망대에 올라가요.", gloss: "نصعد إلى منصّة المشاهدة." } },
+      jamulsoe: { ko: "자물쇠", roman: "جامولسوِه", meaning: "قفل", note: "يعلّق الأصدقاء والعائلات أقفالًا عليها أسماؤهم وأمنية على أسوار نامسان.", example: { ko: "자물쇠에 이름을 써요.", gloss: "نكتب أسماءنا على القفل." } },
+      yagyeong: { ko: "야경", roman: "ياغيونغ", meaning: "منظر المدينة ليلًا", note: "야 = ليل، 경 = منظر. أضواء سيول ليلًا من هنا مشهورة.", example: { ko: "서울 야경이 정말 예뻐요.", gloss: "منظر سيول ليلًا جميل حقًا." } },
     },
     quiz: {
       a: {
@@ -923,6 +961,24 @@ export const WORLD_COPY = {
           { label: "괜찮아요", right: false, feedback: "«괜찮아요» تعني «لا بأس / لا شكرًا»، وهو ردّ فاتر لطبّاخ يسأل عن طعامه. قل: 네, 맛있어요!" },
         ],
       },
+      pyo: {
+        ko: "표",
+        question: "عند شبّاك التذاكر تريد تذكرتين لمنصّة المشاهدة. ماذا تقول؟",
+        options: [
+          { label: "표 두 개 주세요", right: false, feedback: "قريب، لكن التذاكر لا تُعدّ بـ«개». الأشياء المسطّحة مثل التذاكر والأوراق تُعدّ بـ«장»: 표 두 장 주세요." },
+          { label: "표 두 장 주세요", right: true, feedback: "صحيح: 표 두 장 주세요. «장» أداة عدّ الأشياء المسطّحة: التذاكر والأوراق والصور." },
+          { label: "표 둘이에요", right: false, feedback: "هذا يعني «التذاكر اثنتان». لطلبها: 표 두 장 주세요." },
+        ],
+      },
+      eodi: {
+        ko: "어디",
+        question: "يسألك زائر: «케이블카 타는 곳이 어디예요؟» (أين أركب التلفريك؟). اللافتة تشير إلى الأمام بعد البرج. ماذا تقول؟",
+        options: [
+          { label: "저쪽으로 쭉 가세요", right: true, feedback: "صحيح: «저쪽으로 쭉 가세요» أي «امشِ في هذا الاتجاه على طول». «쭉» = على طول، مباشرة." },
+          { label: "여기 있어요", right: false, feedback: "«여기 있어요» تعني «تفضّل، ها هو» عند تسليم شيء. للاتجاه: 저쪽으로 쭉 가세요." },
+          { label: "몰라요", right: false, feedback: "«몰라요» (لا أعرف) جافّة، وأنت تعرف! أشِر وقل: 저쪽으로 쭉 가세요." },
+        ],
+      },
     },
     say: {
       auntie: { name: "الجارة", ko: "안녕하세요!", gloss: "مرحبًا!", note: "هذه تحية كورية شائعة." },
@@ -945,6 +1001,9 @@ export const WORLD_COPY = {
       friendMarket: { name: "", ko: "같이 구경하자!", gloss: "هيا نتجوّل معًا!", note: "«-자» تعني «هيا بنا» بين الأصدقاء. «구경하다» = يتجوّل ويتفرّج." },
       deom: { name: "بائع المقبّلات", ko: "하나 더 드릴게요!", gloss: "سأعطيك واحدة زيادة!", note: "«덤»: شيء إضافي مجانًا. يضيفه البائعون شكرًا للزبون، والردّ: 감사합니다!" },
       grandpa: { name: "الجدّ على المقعد", ko: "어디서 왔어요?", gloss: "من أين أنت؟", note: "حديث ودّي يبدؤه كبار السنّ كثيرًا. أجب باسم بلدك ثم «에서 왔어요»: 이집트에서 왔어요 (أنا من مصر)." },
+      friendNamsan: { name: "", ko: "드디어 왔다!", gloss: "وصلنا أخيرًا!", note: "«드디어» = أخيرًا. و«-았다/-었다» الماضي العادي، يُقال بصوت عالٍ حين يحدث ما انتظرته." },
+      photo: { name: "زائرة", ko: "사진 좀 찍어 주시겠어요?", gloss: "هل تتفضّل بالتقاط صورة لنا؟", note: "«-어 주시겠어요؟» أكثر الصيغ تهذيبًا لطلب خدمة من غريب. والجواب: 네, 그럼요! (نعم، بالطبع!)" },
+      nalssi: { name: "الجدّة على المقعد", ko: "날씨가 정말 좋네요!", gloss: "يا له من طقس جميل!", note: "«-네요» تشارك شيئًا تلاحظه وتدعو إلى ردّ ودّي: 네, 정말 좋네요!" },
       alleyCafe: { name: "صاحبة المقهى", ko: "따뜻한 거 드릴까요, 차가운 거 드릴까요?", gloss: "تريده ساخنًا أم مثلّجًا؟", note: "«따뜻한» = دافئ، «차가운» = بارد. أجب بكلمة واحدة ثم «요»: 차가운 거요! (مثلّج من فضلك!)" },
     },
     info: {
@@ -1009,7 +1068,7 @@ export const WORLD_COPY = {
       side: "بجانب الطريق",
       garden: "حديقة الذاكرة",
       later: "المزيد من سيول",
-      opensAt: { "vocabulary-market": "يُفتح عند المستوى الأول", "conversation-cafe": "يُفتح عند المستوى الثاني", "culture-street": "يُفتح عند المستوى الثالث", "seoul-journey": "يُفتح عند المستوى الرابع", "seoul-market": "يُفتح عند المستوى الخامس" } as Record<string, string>,
+      opensAt: { "vocabulary-market": "يُفتح عند المستوى الأول", "conversation-cafe": "يُفتح عند المستوى الثاني", "culture-street": "يُفتح عند المستوى الثالث", "seoul-journey": "يُفتح عند المستوى الرابع", "seoul-market": "يُفتح عند المستوى الخامس", "seoul-namsan": "يُفتح عند المستوى السادس" } as Record<string, string>,
       what: {
         courtyard: "بيضة البرسيم",
         "hangul-village": "الحروف",
@@ -1021,6 +1080,7 @@ export const WORLD_COPY = {
         "seoul-journey": "المترو · الاتجاهات · المطعم",
         "memory-garden": "مراجعة ما سبق تعلّمه",
         "seoul-market": "الأسعار · الفصال · أكل الشارع",
+        "seoul-namsan": "التذاكر · الاتجاهات · الإطلالة",
         seoul: "المستوى ٦ · برج نامسان",
         garden: "مراجعة ما سبق تعلّمه",
       } as Record<string, string>,

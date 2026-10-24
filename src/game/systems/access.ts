@@ -36,7 +36,7 @@ const ALWAYS: RoomId[] = ["courtyard", "hangul-village", "hub", "klovers-house"]
  * Rooms that are a later part of a canon world, with the course level that
  * opens each (canon levelJourney: l5 → seoul-journey part 2).
  */
-const PART_ROOMS: Partial<Record<RoomId, string>> = { "seoul-market": "l5" };
+const PART_ROOMS: Partial<Record<RoomId, string>> = { "seoul-market": "l5", "seoul-namsan": "l6" };
 
 export const GUEST_ACCESS: WorldAccess = { open: new Set<RoomId>(ALWAYS), preview: false, signedIn: false };
 

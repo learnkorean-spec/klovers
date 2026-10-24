@@ -1,5 +1,5 @@
-import { ALLEY, boardSpot, CAFE, CULTURE, GARDEN, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
-import { ALLEY_FRIEND, CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, MINSU_SPOT, NPCS, SEOUL_FRIEND } from "./npcs";
+import { ALLEY, NAMSAN, boardSpot, CAFE, CULTURE, GARDEN, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
+import { ALLEY_FRIEND, NAMSAN_FRIEND, CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, MINSU_SPOT, NPCS, SEOUL_FRIEND } from "./npcs";
 import { PROPS } from "./world";
 
 /**
@@ -40,9 +40,10 @@ export type LearnId =
   | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan" | "annaeso" | "keopi"
   | "kimchi" | "bibimbap" | "tteokbokki" | "sinbal" | "hanbok" | "seollal" | "chuseok"
   | "jihacheol" | "beoseu" | "pyeonuijeom" | "sikdang" | "namsan"
-  | "golmok" | "eolmayeyo" | "hotteok" | "eomuk" | "gimbap";
+  | "golmok" | "eolmayeyo" | "hotteok" | "eomuk" | "gimbap"
+  | "jeonmangdae" | "jamulsoe" | "yagyeong";
 /** One-question cards. Text per language: copy.quiz[id]. */
-export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang" | "insa" | "meal" | "gil" | "gyesan" | "kkakka" | "masisseo";
+export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang" | "insa" | "meal" | "gil" | "gyesan" | "kkakka" | "masisseo" | "pyo" | "eodi";
 /** The market's two shops (the fruit table, the food cart) and the café counter. */
 export type ShopId = "fruit" | "food" | "cafe";
 /** Which things each shop sells (the words are in copy.shop.items). */
@@ -55,7 +56,7 @@ const THOUSANDS = ["", "천", "이천", "삼천", "사천", "오천", "육천", 
 /** A price in won, read the Korean way ("삼천 원"); up to 9,000. */
 export const wonInKorean = (won: number): string => `${THOUSANDS[Math.round(won / 1000)] ?? won} 원`;
 /** People's short lines. Text per language: copy.say[id]. */
-export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear" | "friendCafe" | "friendCulture" | "friendSeoul" | "attendant" | "owner" | "friendMarket" | "deom" | "grandpa" | "alleyCafe";
+export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear" | "friendCafe" | "friendCulture" | "friendSeoul" | "attendant" | "owner" | "friendMarket" | "deom" | "grandpa" | "alleyCafe" | "friendNamsan" | "photo" | "nalssi";
 
 export interface Interactable {
   id: string;
@@ -272,6 +273,21 @@ export const INTERACTABLES: Interactable[] = [
   // The elder on the bench by the café, and the barista.
   { id: "say-grandpa", room: "seoul-market", kind: "say", action: "talk", say: "grandpa", npc: "a-grandpa", x: ALLEY.bench.x, z: ALLEY.bench.z + 1.3, radius: 1.2, priority: 1 },
   { id: "say-alley-cafe", room: "seoul-market", kind: "say", action: "talk", say: "alleyCafe", npc: "a-barista", x: 1.3, z: -11.0, radius: 1.1, priority: 1 },
+
+  /* ── Seoul Journey part 1 → part 3: the 02 bus up Namsan ── */
+  { id: "gate-bus-namsan", room: "seoul-journey", kind: "locked", action: "inspect", x: SEOUL.bus.x + 1.4, z: SEOUL.bus.z + 1.4, radius: 0.9, notice: "seoulNamsanLocked", whileLocked: "seoul-namsan" },
+  { id: "door-bus-namsan", room: "seoul-journey", kind: "door", action: "enter", x: SEOUL.bus.x + 1.4, z: SEOUL.bus.z + 1.4, radius: 0.9, to: "seoul-namsan", arrive: "fromBus", whileOpen: "seoul-namsan" },
+
+  /* ── Seoul Journey part 3: Namsan Tower (남산서울타워) ── */
+  { id: "door-namsan-bus", room: "seoul-namsan", kind: "door", action: "enter", x: NAMSAN.busStop.x - 1.2, z: NAMSAN.busStop.z, radius: 0.9, to: "seoul-journey", arrive: "fromNamsan" },
+  { id: "say-friend-namsan", room: "seoul-namsan", kind: "say", action: "talk", say: "friendNamsan", x: NAMSAN_FRIEND.x + 0.6, z: NAMSAN_FRIEND.z + 0.9, radius: 1.4 },
+  { id: "learn-jeonmangdae", room: "seoul-namsan", kind: "learn", action: "learn", learn: "jeonmangdae", word: "전망대", x: 1.6, z: NAMSAN.base.z + 1.0, radius: 1.1 },
+  { id: "quiz-pyo", room: "seoul-namsan", kind: "quiz", action: "talk", quiz: "pyo", npc: "n-ticket", x: NAMSAN.booth.x, z: NAMSAN.booth.z + NAMSAN.booth.d / 2 + 0.75, radius: 1.0, priority: 1 },
+  { id: "learn-jamulsoe", room: "seoul-namsan", kind: "learn", action: "learn", learn: "jamulsoe", word: "자물쇠", x: NAMSAN.locks.x - 1.0, z: 1.6, radius: 1.1 },
+  { id: "say-photo", room: "seoul-namsan", kind: "say", action: "talk", say: "photo", npc: "n-tourist", x: 5.3, z: -1.8, radius: 1.1, priority: 1 },
+  { id: "quiz-eodi", room: "seoul-namsan", kind: "quiz", action: "talk", quiz: "eodi", npc: "n-asker", x: -1.1, z: 2.3, radius: 1.0, priority: 1 },
+  { id: "learn-yagyeong", room: "seoul-namsan", kind: "learn", action: "learn", learn: "yagyeong", word: "야경", x: NAMSAN.viewers[0].x, z: NAMSAN.viewers[0].z - 1.0, radius: 1.0 },
+  { id: "say-nalssi", room: "seoul-namsan", kind: "say", action: "talk", say: "nalssi", npc: "n-grandma", x: NAMSAN.bench.x + 1.35, z: NAMSAN.bench.z, radius: 1.2, priority: 1 },
 
   /* ── Cluby's Memory Garden: the memory stone, where words come back ── */
   { id: "review-garden", room: "memory-garden", kind: "review", action: "review", x: GARDEN.stone.x, z: GARDEN.stone.z + 1.05, radius: 1.5, priority: 1 },

@@ -1,6 +1,6 @@
 import { BOUNDS, box, CAMERA_COLLIDERS, COLLIDERS, PLAYER, ROOM, type Box2 } from "./world";
 import type { WorldIcon } from "../environment/icons";
-import { ALLEY_FRIEND, CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, SEOUL_FRIEND, npcColliderSpots } from "./npcs";
+import { ALLEY_FRIEND, NAMSAN_FRIEND, CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, SEOUL_FRIEND, npcColliderSpots } from "./npcs";
 import { REAL_PROPS } from "../systems/styleMode";
 
 /** People who stand still are solid (a small circle-ish box). */
@@ -36,10 +36,10 @@ const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p
  * level → world map the dashboard journey uses. Never open one for free.
  */
 
-export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house" | "culture-street" | "seoul-journey" | "memory-garden" | "seoul-market";
+export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house" | "culture-street" | "seoul-journey" | "memory-garden" | "seoul-market" | "seoul-namsan";
 
 /** Notices shown at a gate whose world is still locked (or not built yet). */
-export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "seoulLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon" | "gardenLocked" | "seoulMarketLocked";
+export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "seoulLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon" | "gardenLocked" | "seoulMarketLocked" | "seoulNamsanLocked";
 
 export interface Spawn {
   x: number;
@@ -769,6 +769,8 @@ const SEOUL_JOURNEY: RoomLayout = {
     fromHub: { x: 0, z: SEOUL.halfDepth - 2.0, yaw: Math.PI },
     // Up the subway stairs from the market, facing the street (+z).
     fromMarket: { x: -8.9, z: -2.9, yaw: 0.35 },
+    // Off the 02 bus back from Namsan, by the bus shelter, facing the street.
+    fromNamsan: { x: -7.0, z: 6.9, yaw: Math.PI - 0.5 },
   },
   portals: [
     {
@@ -840,6 +842,56 @@ const SEOUL_MARKET: RoomLayout = {
   spawns: {
     // Off the subway, just in under the arch, facing up the alley (−z).
     fromSubway: { x: -0.6, z: 8.0, yaw: Math.PI },
+  },
+  portals: [],
+  shadowExtent: 15,
+};
+
+/* ───────────────────── Seoul Journey, part 3: Namsan Tower ───────────────────── */
+
+/**
+ * Seoul Journey, part 3 — canon worlds "seoul-journey" (visualDirection:
+ * "… and Namsan Tower"), levelJourney.l6. The plaza on top of Namsan at
+ * the foot of the tower, reached by the 02 Namsan bus from the street
+ * corner (part 1), whose friend asked "남산타워에 가 볼까요?".
+ *
+ * 20 × 16 m. North: the tower's base with its entrance and the ticket booth.
+ * East: the padlock fences. South and west: the lookout rail over Seoul,
+ * with two coin viewers. A bench, pines, the 02 bus stop in the south-east.
+ */
+export const NAMSAN = {
+  halfWidth: 10,
+  halfDepth: 8,
+  /** The tower's base building (its front is the plaza's north edge). */
+  base: { z: -8, w: 9 },
+  booth: { x: -4.6, z: -7.0, w: 2.4, d: 1.4 },
+  /** The padlock fence along the east side (x), from z0 to z1. */
+  locks: { x: 8.9, z0: -5.5, z1: 4.0 },
+  viewers: [{ x: -5.0, z: 7.4 }, { x: 2.6, z: 7.4 }],
+  bench: { x: -8.6, z: 0.2, w: 0.7, d: 2.0 },
+  busStop: { x: 8.4, z: 6.4 },
+  pines: [{ x: -9, z: -6.6, s: 1.2 }, { x: 9.1, z: -6.8, s: 1.1 }, { x: -9.2, z: 5.6, s: 1.0 }],
+  sign: "남산서울타워",
+} as const;
+
+const NAMSAN_ROOM: RoomLayout = {
+  id: "seoul-namsan",
+  canonWorldId: "seoul-journey",
+  bounds: { minX: -NAMSAN.halfWidth, maxX: NAMSAN.halfWidth, minZ: -NAMSAN.halfDepth, maxZ: NAMSAN.halfDepth },
+  colliders: [
+    box(NAMSAN.booth.x, NAMSAN.booth.z, NAMSAN.booth.w, NAMSAN.booth.d),
+    box(NAMSAN.locks.x, (NAMSAN.locks.z0 + NAMSAN.locks.z1) / 2, 0.4, NAMSAN.locks.z1 - NAMSAN.locks.z0),
+    ...NAMSAN.viewers.map((v) => box(v.x, v.z, 0.5, 0.5)),
+    box(NAMSAN.bench.x, NAMSAN.bench.z, NAMSAN.bench.w, NAMSAN.bench.d),
+    box(NAMSAN.busStop.x, NAMSAN.busStop.z + 0.3, 1.4, 0.5),
+    ...NAMSAN.pines.map((p) => box(p.x, p.z, 0.5, 0.5)),
+    box(NAMSAN_FRIEND.x, NAMSAN_FRIEND.z, 0.6, 0.6),
+    ...people("seoul-namsan"),
+  ],
+  cameraColliders: [],
+  spawns: {
+    // Off the 02 bus, at the stop in the south-east corner, facing the tower.
+    fromBus: { x: 5.6, z: 4.6, yaw: -2.6 },
   },
   portals: [],
   shadowExtent: 15,
@@ -920,6 +972,7 @@ export const ROOMS: Record<RoomId, RoomLayout> = {
   "seoul-journey": SEOUL_JOURNEY,
   "memory-garden": MEMORY_GARDEN,
   "seoul-market": SEOUL_MARKET,
+  "seoul-namsan": NAMSAN_ROOM,
 };
 
 /** The portal whose zone contains the point, if any (first match wins). */

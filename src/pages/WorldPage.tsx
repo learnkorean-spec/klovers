@@ -48,6 +48,7 @@ const ROOM_NUMBER: Partial<Record<RoomId, number>> = {
   "culture-street": 6,
   "seoul-journey": 7,
   "seoul-market": 8,
+  "seoul-namsan": 9,
 };
 
 

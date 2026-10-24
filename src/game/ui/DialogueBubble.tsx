@@ -162,7 +162,7 @@ export default function DialogueBubble({
     line = bubble.id;
     name = t.name;
     // The other learner's lines: their name and their own voice.
-    if (bubble.id === "friendCafe" || bubble.id === "friendCulture" || bubble.id === "friendSeoul" || bubble.id === "friendMarket") {
+    if (bubble.id === "friendCafe" || bubble.id === "friendCulture" || bubble.id === "friendSeoul" || bubble.id === "friendMarket" || bubble.id === "friendNamsan") {
       const friendId = avatar === "lina" ? "adam" : "lina";
       name = copy.names[friendId];
       voice = friendId === "adam" ? "male" : "female";

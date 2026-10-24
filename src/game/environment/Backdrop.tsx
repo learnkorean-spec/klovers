@@ -229,7 +229,20 @@ function backdropKit(id: string, hx: number, hz: number): Kit {
     }
   };
   // Seoul is a city: its blocks of buildings stand where the tree rings would.
-  if (id !== "seoul-journey") {
+  if (id === "seoul-namsan") {
+    // On top of Namsan: Seoul spread out far below the lookout, a city of
+    // pale blocks fading into the haze, in rings out to the far hills.
+    for (let i = 0; i < 260; i++) {
+      seed++;
+      const a = jitter(seed, Math.PI);
+      const r = 26 + Math.abs(jitter(seed * 3, 1)) * 48;
+      const w = 1.6 + Math.abs(jitter(seed * 5, 1)) * 3.2;
+      const h = 2 + Math.abs(jitter(seed * 7, 1)) * (r < 45 ? 11 : 6);
+      k.box(i % 5 === 0 ? "charcoal" : i % 3 === 0 ? "stoneWarm" : "plaster", [Math.sin(a) * r, -16 + h / 2, Math.cos(a) * r], [w, h, w * (0.8 + Math.abs(jitter(seed * 9, 0.4)))]);
+    }
+    // The hill itself falling away under the plaza.
+    k.add("leafDark", "ballLow", [0, -12, 0], [70, 22, 70]);
+  } else if (id !== "seoul-journey" && id !== "seoul-market") {
     ring(hx + 3.5, hz + 3.5, 4.2, 1.35);
     ring(hx + 9, hz + 9, 5.5, 1.8);
   }
@@ -250,10 +263,13 @@ export default function Backdrop({ id, hx, hz }: { id: string; hx: number; hz: n
     <>
       <mesh geometry={SKY_GEOMETRY} material={SKY_MATERIAL} renderOrder={-1} frustumCulled={false} dispose={null} />
       <Clouds />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, 0]} receiveShadow>
-        <circleGeometry args={[96, 32]} />
-        <primitive object={MAT.stone} attach="material" />
-      </mesh>
+      {/* Flat ground out to the hills — except on Namsan, where the city lies below. */}
+      {id !== "seoul-namsan" && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, 0]} receiveShadow>
+          <circleGeometry args={[96, 32]} />
+          <primitive object={MAT.stone} attach="material" />
+        </mesh>
+      )}
       <Batch kit={kit} />
     </>
   );

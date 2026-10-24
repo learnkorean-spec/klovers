@@ -5,11 +5,11 @@ import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { FOLIAGE_TIME, upgradeMaterialDetails } from "./config/materials";
 import { REDUCED_MOTION } from "./systems/motion";
 import { INTERACTABLES, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
-import { ALLEY, CULTURE, findPortal, GARDEN, HUB, MARKET, ROOMS, SEOUL, tourSpot, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn, type TourStop } from "./config/rooms";
+import { ALLEY, NAMSAN, CULTURE, findPortal, GARDEN, HUB, MARKET, ROOMS, SEOUL, tourSpot, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn, type TourStop } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
 import ThirdPersonCamera from "./camera/ThirdPersonCamera";
 import { DISCOVERIES, type DiscoveryKey } from "./config/discoveries";
-import { NPCS, FRIEND_SPOT, CAFE_FRIEND, CULTURE_FRIEND, SEOUL_FRIEND, ALLEY_FRIEND } from "./config/npcs";
+import { NPCS, FRIEND_SPOT, CAFE_FRIEND, CULTURE_FRIEND, SEOUL_FRIEND, ALLEY_FRIEND, NAMSAN_FRIEND } from "./config/npcs";
 import { objectiveTarget, type ObjectiveId, type ObjectiveProgress } from "./config/objectives";
 import ObjectiveMarker from "./environment/ObjectiveMarker";
 import Friend from "./npc/Friend";
@@ -19,6 +19,7 @@ import CultureStreet from "./environment/CultureStreet";
 import SeoulJourney from "./environment/SeoulJourney";
 import MemoryGarden from "./environment/MemoryGarden";
 import SeoulMarket from "./environment/SeoulMarket";
+import SeoulNamsan from "./environment/SeoulNamsan";
 import KloversHouse from "./environment/KloversHouse";
 import HangulVillage from "./environment/HangulVillage";
 import TourExhibit from "./environment/TourExhibit";
@@ -71,6 +72,7 @@ const BACKDROP: Record<RoomId, { hx: number; hz: number }> = {
   "seoul-journey": { hx: 15, hz: 14 },
   "memory-garden": { hx: 8.5, hz: 8.5 },
   "seoul-market": { hx: 7, hz: 13.5 },
+  "seoul-namsan": { hx: 11, hz: 9 },
 };
 
 /** Length of the fade to and from ivory on a room change, ms. */
@@ -562,6 +564,7 @@ export default function World(props: WorldProps) {
       {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} words={saved.words} shopChosen={props.shopChosen} onShopPress={props.paused ? undefined : (item) => cb.current.onShopPress?.(item)} />}
       {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} cultureOpen={access.open.has("culture-street")} seoulOpen={access.open.has("seoul-journey")} gardenOpen={access.open.has("memory-garden")} />}
       {roomId === "seoul-market" && <SeoulMarket />}
+      {roomId === "seoul-namsan" && <SeoulNamsan />}
       {roomId === "memory-garden" && <MemoryGarden words={props.garden?.words ?? 0} reviewed={props.garden?.reviewed ?? 0} />}
       {roomId === "conversation-cafe" && <ConversationCafe words={saved.words} />}
       {roomId === "culture-street" && <CultureStreet words={saved.words} />}
@@ -577,6 +580,7 @@ export default function World(props: WorldProps) {
       {roomId === "culture-street" && <Friend avatar={avatar} x={CULTURE_FRIEND.x} z={CULTURE_FRIEND.z} yaw={CULTURE_FRIEND.yaw} player={player} />}
       {roomId === "seoul-journey" && <Friend avatar={avatar} x={SEOUL_FRIEND.x} z={SEOUL_FRIEND.z} yaw={SEOUL_FRIEND.yaw} player={player} />}
       {roomId === "seoul-market" && <Friend avatar={avatar} x={ALLEY_FRIEND.x} z={ALLEY_FRIEND.z} yaw={ALLEY_FRIEND.yaw} player={player} />}
+      {roomId === "seoul-namsan" && <Friend avatar={avatar} x={NAMSAN_FRIEND.x} z={NAMSAN_FRIEND.z} yaw={NAMSAN_FRIEND.yaw} player={player} />}
       {props.marker ? <ObjectiveMarker x={props.marker.x} z={props.marker.z} /> : objectiveSpot ? <ObjectiveMarker x={objectiveSpot.x} z={objectiveSpot.z} /> : null}
       <FocusCue focus={focusRef} />
       <TourFrameWatcher frame={tourFrame} player={player} camera={camera} />
@@ -624,6 +628,7 @@ function guideFor(room: RoomId, access: WorldAccess): { x: number; z: number } |
   if (room === "seoul-journey") return { x: SEOUL.subway.x + 0.4, z: SEOUL.subway.z + SEOUL.subway.d / 2 + 1.2 };
   if (room === "memory-garden") return { x: GARDEN.stone.x, z: GARDEN.stone.z + 1.05 };
   if (room === "seoul-market") return { x: -(ALLEY.stallX - 0.85), z: 5.5 };
+  if (room === "seoul-namsan") return { x: NAMSAN.booth.x, z: NAMSAN.booth.z + NAMSAN.booth.d / 2 + 0.75 };
   if (room === "hub") return access.open.has("conversation-cafe") ? { x: 0, z: -HUB.half } : { x: HUB.half, z: -3.5 };
   return null;
 }
