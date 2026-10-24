@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
+import PersonalLessonPricing from "@/components/PersonalLessonPricing";
 
 /**
  * /learn-hungarian and /ar/learn-hungarian
@@ -95,6 +96,7 @@ const BudaHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; tog
   const navLinks = [
     { href: "#who-its-for", label: tr("Who it's for", "لمن هذه الدروس") },
     { href: "#how-it-works", label: tr("How it works", "كيف تسير الدروس") },
+    { href: "#pricing", label: tr("Pricing", "الأسعار") },
     { href: "#faq", label: tr("FAQ", "الأسئلة الشائعة") },
   ];
   return (
@@ -360,6 +362,19 @@ const LearnHungarianPage = () => {
             </ol>
           </div>
         </section>
+
+        {/* Pricing — added 24 Oct 2026, same tiers as Reham's private Korean
+            lessons (src/lib/stripePrices.ts), shared across maktub/Voca/Buda. */}
+        <PersonalLessonPricing
+          tr={tr}
+          id="pricing"
+          background={CREAM}
+          ink={DANUBE}
+          signal={GOLD}
+          signalText="#111111"
+          headingStyle={displayFont}
+          trialHref="#trial"
+        />
 
         {/* Not a textbook — second photo, kept as-is but reframed. */}
         <section className="py-20 border-b">

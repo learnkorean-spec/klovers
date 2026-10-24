@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
+import PersonalLessonPricing from "@/components/PersonalLessonPricing";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import cairoRooftop from "@/assets/arabic-cairo-rooftop.jpg";
 
@@ -96,6 +97,7 @@ const MaktubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; t
   const navLinks = [
     { href: "#dialects", label: tr("Dialects", "اللهجات") },
     { href: "#meet-tutor", label: tr("Tutor", "المعلمة") },
+    { href: "#pricing", label: tr("Pricing", "الأسعار") },
     { href: "#faq", label: tr("FAQ", "الأسئلة الشائعة") },
   ];
   return (
@@ -486,6 +488,18 @@ const LearnArabicPage = () => {
             </ol>
           </div>
         </section>
+
+        {/* Pricing — added 24 Oct 2026, same tiers as Reham's private Korean
+            lessons (src/lib/stripePrices.ts), shared across maktub/Voca/Buda. */}
+        <PersonalLessonPricing
+          tr={tr}
+          id="pricing"
+          ink="#1A1A1A"
+          signal={KLOVERS_GREEN}
+          signalText="#1A1A1A"
+          headingStyle={headingFont}
+          trialHref="#trial-booking"
+        />
 
         {/* Meet your tutor — dark forest panel, maktub's MeetTutor shape. */}
         <section id="meet-tutor" className="py-20 border-b text-white scroll-mt-24" style={{ backgroundColor: FOREST }}>
