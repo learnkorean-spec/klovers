@@ -200,6 +200,8 @@ export function useSRS(): SRSState & {
         .from("vocabulary_review_history")
         .upsert(recordsToInsert, {
           onConflict: "user_id,lesson_vocabulary_id",
+          // Never reset a word whose review is already under way.
+          ignoreDuplicates: true,
         });
 
       if (error) throw error;

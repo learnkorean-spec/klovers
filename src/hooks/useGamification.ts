@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { XP_VALUES, getLeague, BADGES } from "@/constants/gamification";
 import { capture } from "@/lib/analytics";
 import { awardGameXpCompat } from "@/lib/gameXpApi";
+import { addLessonWordsToReview } from "@/lib/reviewSchedule";
 
 interface UserProgress {
   totalXp: number;
@@ -262,6 +263,8 @@ export function useGamification() {
         .eq("user_id", userId).eq("lesson_id", lessonId);
 
       if (allDone) {
+        // The lesson's words join the student's review schedule (from tomorrow).
+        await addLessonWordsToReview(userId, lessonId);
         await awardXp(lessonId, "chapter");
         await supabase.from("student_badges").upsert(
           { user_id: userId, badge_key: "first_chapter" },
