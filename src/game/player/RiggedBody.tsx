@@ -25,16 +25,28 @@ const CLIPS: Clip[] = ["idle", "walk", "run", "talk", "wave", "jump", "sit", "lo
 const ONCE = new Set<Clip>(["wave", "jump"]);
 
 /** Recolour clothes by mesh name. The fabric stays: see `dye`. `keepMap` tints the texture as it is (hair). */
-export type DressRule = { match: RegExp; color: string; keepMap?: boolean; /** How much of the texture's light and dark shows (default 0.6). */ contrast?: number };
+export type DressRule = {
+  match: RegExp;
+  color: string;
+  keepMap?: boolean;
+  /** How much of the texture's light and dark shows (default 0.6). */
+  contrast?: number;
+  /**
+   * Tint instead of dye: shift the texture's own average colour to `color`,
+   * keeping every other colour in it (skin: lips stay rosier, brows darker,
+   * the whites of the eyes white).
+   */
+  tint?: boolean;
+};
 
 /** Small greyscale copies of textures, read once, for measuring brightness. */
-const pixels = new WeakMap<Texture, { w: number; h: number; lum: Float32Array; alpha: Uint8Array } | null>();
+const pixels = new WeakMap<Texture, { w: number; h: number; lum: Float32Array; alpha: Uint8Array; rgb: Float32Array } | null>();
 
 const toLinear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 
 function readLuminance(tex: Texture) {
   if (pixels.has(tex)) return pixels.get(tex) ?? null;
-  let out: { w: number; h: number; lum: Float32Array; alpha: Uint8Array } | null = null;
+  let out: { w: number; h: number; lum: Float32Array; alpha: Uint8Array; rgb: Float32Array } | null = null;
   try {
     const img = tex.image as CanvasImageSource | undefined;
     if (img && typeof document !== "undefined") {
@@ -50,8 +62,14 @@ function readLuminance(tex: Texture) {
         const lum = new Float32Array(w * h);
         const alpha = new Uint8Array(w * h);
         for (let i = 0; i < w * h; i++) alpha[i] = d[i * 4 + 3];
-        for (let i = 0; i < w * h; i++) lum[i] = 0.2126 * toLinear(d[i * 4] / 255) + 0.7152 * toLinear(d[i * 4 + 1] / 255) + 0.0722 * toLinear(d[i * 4 + 2] / 255);
-        out = { w, h, lum, alpha };
+        const rgb = new Float32Array(w * h * 3);
+        for (let i = 0; i < w * h; i++) {
+          rgb[i * 3] = toLinear(d[i * 4] / 255);
+          rgb[i * 3 + 1] = toLinear(d[i * 4 + 1] / 255);
+          rgb[i * 3 + 2] = toLinear(d[i * 4 + 2] / 255);
+          lum[i] = 0.2126 * rgb[i * 3] + 0.7152 * rgb[i * 3 + 1] + 0.0722 * rgb[i * 3 + 2];
+        }
+        out = { w, h, lum, alpha, rgb };
       }
     }
   } catch {
@@ -90,6 +108,34 @@ function meanUnder(geometry: BufferGeometry, tex: Texture): number | null {
     weight += a;
   }
   return weight > 0.5 ? sum / weight : null;
+}
+
+/** The texture's average colour (linear RGB) over the faces of this mesh, or null. */
+function meanColorUnder(geometry: BufferGeometry, tex: Texture): [number, number, number] | null {
+  const px = readLuminance(tex);
+  const uv = geometry.getAttribute("uv");
+  if (!px || !uv) return null;
+  const index = geometry.getIndex();
+  const tris = index ? index.count / 3 : uv.count / 3;
+  const step = Math.max(1, Math.floor(tris / 1500));
+  const sum = [0, 0, 0];
+  let weight = 0;
+  for (let t = 0; t < tris; t += step) {
+    let u = 0;
+    let v = 0;
+    for (let k = 0; k < 3; k++) {
+      const i = index ? index.getX(t * 3 + k) : t * 3 + k;
+      u += uv.getX(i) / 3;
+      v += uv.getY(i) / 3;
+    }
+    const x = Math.min(px.w - 1, Math.max(0, Math.floor((((u % 1) + 1) % 1) * px.w)));
+    const y = Math.min(px.h - 1, Math.max(0, Math.floor((((v % 1) + 1) % 1) * px.h)));
+    const j = y * px.w + x;
+    const a = px.alpha[j] / 255;
+    for (let c = 0; c < 3; c++) sum[c] += px.rgb[j * 3 + c] * a;
+    weight += a;
+  }
+  return weight > 0.5 ? [sum[0] / weight, sum[1] / weight, sum[2] / weight] : null;
 }
 
 /**
@@ -262,7 +308,15 @@ function prepare(root: Group, rules: DressRule[]) {
     if (/_Body$/.test(m.name)) skin(mat);
     const isHair = /hair|eyelash/i.test(m.name);
     const rule = rules.find((r) => r.match.test(m.name));
-    if (rule) {
+    if (rule?.tint) {
+      // Skin: shift the texture's average to the person's tone, keep the rest.
+      const mean = mat.map ? meanColorUnder(m.geometry, mat.map) : null;
+      if (mean) {
+        const target = new Color(rule.color);
+        const f = (t: number, m0: number) => Math.min(2.2, Math.max(0.35, t / Math.max(m0, 0.004)));
+        mat.color = new Color(f(target.r, mean[0]), f(target.g, mean[1]), f(target.b, mean[2]));
+      }
+    } else if (rule) {
       const ref = !rule.keepMap && mat.map ? meanUnder(m.geometry, mat.map) : null;
       if (rule.keepMap) mat.color = new Color(rule.color);
       else if (ref !== null) dye(mat, rule.color, ref, rule.contrast);

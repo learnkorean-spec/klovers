@@ -14,7 +14,7 @@ import { Suspense } from "react";
 import RiggedBody, { type BodyControl } from "../player/RiggedBody";
 import AvatarBoundary from "../player/AvatarBoundary";
 import { REAL_PEOPLE } from "../systems/styleMode";
-import { realCast } from "./realCast";
+import { realPerson } from "./realCast";
 
 const WALK_SPEED = 1.15;
 /** People who can be spoken to notice the learner inside this distance. */
@@ -49,7 +49,8 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
   const walk = useRef({ t: 0, dir: 1, pause: 0, yaw: n.yaw, x: n.x, z: n.z });
   const talker = TALKERS.has(n.id);
   const seated = n.pose === "sit" || n.pose === "sitRead";
-  const real = useMemo(() => (REAL_PEOPLE ? realCast(n.cast) : null), [n.cast]);
+  // Each person their own look (body, Korean hair and skin, shade, height).
+  const real = useMemo(() => (REAL_PEOPLE ? realPerson(n.cast, n.id) : null), [n.cast, n.id]);
   const control = useRef<BodyControl>({ clip: seated ? "sit" : n.pose === "talk" ? "talk" : n.pose === "browse" ? "look" : "idle", once: null, rate: 0.8 });
   const waved = useRef(false);
 
@@ -146,7 +147,7 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
     }
   });
 
-  const sc = spec.scale ?? 1;
+  const sc = (spec.scale ?? 1) * (real?.scale ?? 1);
   return (
     <group ref={root} position={[n.x, 0, n.z]} rotation={[0, n.yaw, 0]} scale={sc} userData={{ character: true }}>
       {real ? (
