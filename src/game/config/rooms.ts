@@ -36,10 +36,10 @@ const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p
  * level → world map the dashboard journey uses. Never open one for free.
  */
 
-export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house" | "culture-street" | "seoul-journey";
+export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house" | "culture-street" | "seoul-journey" | "memory-garden";
 
 /** Notices shown at a gate whose world is still locked (or not built yet). */
-export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "seoulLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon";
+export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "seoulLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon" | "gardenLocked";
 
 export interface Spawn {
   x: number;
@@ -388,7 +388,7 @@ export const HUB = {
     { id: "hub-cafe", kind: "room", wall: "north", along: 0, sign: "카페", to: "conversation-cafe" },
     { id: "hub-culture", kind: "room", wall: "north", along: -6.5, sign: "문화 거리", to: "culture-street" },
     { id: "hub-seoul", kind: "room", wall: "north", along: 6.5, sign: "서울", to: "seoul-journey" },
-    { id: "hub-garden", kind: "future", wall: "west", along: -3.5, sign: "기억 정원" },
+    { id: "hub-garden", kind: "room", wall: "west", along: -3.5, sign: "기억 정원", to: "memory-garden" },
     { id: "hub-games", kind: "link", wall: "west", along: 4, sign: "게임" },
     { id: "hub-lessons", kind: "link", wall: "east", along: -3.5, sign: "수업" },
   ] as HubGate[],
@@ -438,6 +438,8 @@ const KLOVERS_HUB: RoomLayout = {
     fromCulture: { x: -6.5, z: -HUB.half + 2.2, yaw: 0 },
     fromSeoul: { x: 6.5, z: -HUB.half + 2.2, yaw: 0 },
     fromHouse: { x: 0, z: HUB.half - 3, yaw: Math.PI },
+    // Back out of the garden gate in the west wall, facing into the square (+x).
+    fromGarden: { x: -HUB.half + 2.2, z: -3.5, yaw: Math.PI / 2 },
   },
   portals: [
     {
@@ -479,6 +481,13 @@ const KLOVERS_HUB: RoomLayout = {
       to: "seoul-journey",
       arrive: "fromHub",
       lockedNotice: "seoulLocked",
+    },
+    {
+      id: "hub-garden",
+      zone: box(-HUB.half + 0.55, -3.5, 1.1, 3),
+      to: "memory-garden",
+      arrive: "fromHub",
+      lockedNotice: "gardenLocked",
     },
   ],
   shadowExtent: 15,
@@ -770,6 +779,70 @@ const SEOUL_JOURNEY: RoomLayout = {
   shadowExtent: 16,
 };
 
+/* ─────────────────────── Cluby's Memory Garden ─────────────────────── */
+
+/**
+ * Cluby's Memory Garden — canon worlds "memory-garden": a quiet green garden
+ * where previously learned words come back for review (purpose: review and
+ * spaced repetition as part of the story; lead: Cluby). Not a level stop: it
+ * stands beside the road at the Hub (its gate in the Hub's west wall) and
+ * opens with the learner's real review data — the words their completed
+ * lessons put into their review schedule (lib/reviewSchedule.ts).
+ *
+ * 16 m square inside clipped hedges. A pond in the middle with the memory
+ * tree on its north bank; a ring of flower beds round the pond, one flower
+ * per word in review (a bud while it is due, open once reviewed); the
+ * memory stone by the tree is where the review happens. The only gate is
+ * east, back to the Hub.
+ */
+export const GARDEN = {
+  half: 8,
+  pond: { x: 0, z: 0.4, r: 2.3 },
+  tree: { x: 0, z: -6.2 },
+  /** The memory stone (the review spot is just south-east of it). */
+  stone: { x: 2.6, z: -6.0 },
+  /** Flower beds in a ring round the pond: radius and count. */
+  bedRing: { r: 4.5, n: 8 },
+  /** A bench facing the pond from the south-west. */
+  bench: { x: -4.6, z: 4.6, w: 1.9, d: 0.8 },
+  sign: "기억 정원",
+} as const;
+
+const gardenBeds = Array.from({ length: GARDEN.bedRing.n }, (_, i) => {
+  const a = (i / GARDEN.bedRing.n) * Math.PI * 2 + Math.PI / GARDEN.bedRing.n;
+  return { x: GARDEN.pond.x + Math.sin(a) * GARDEN.bedRing.r, z: GARDEN.pond.z + Math.cos(a) * GARDEN.bedRing.r, a };
+});
+/** Where each flower bed sits (shared with the garden's drawing). */
+export const GARDEN_BEDS = gardenBeds;
+
+const MEMORY_GARDEN: RoomLayout = {
+  id: "memory-garden",
+  canonWorldId: "memory-garden",
+  bounds: { minX: -GARDEN.half, maxX: GARDEN.half, minZ: -GARDEN.half, maxZ: GARDEN.half },
+  colliders: [
+    box(GARDEN.pond.x, GARDEN.pond.z, GARDEN.pond.r * 2, GARDEN.pond.r * 2),
+    box(GARDEN.tree.x, GARDEN.tree.z, 0.8, 0.8),
+    box(GARDEN.stone.x, GARDEN.stone.z, 0.9, 0.7),
+    box(GARDEN.bench.x, GARDEN.bench.z, GARDEN.bench.w, GARDEN.bench.d),
+    // The flower beds are low: step between them, not over them.
+    ...gardenBeds.map((b) => box(b.x, b.z, 1.2, 1.2)),
+  ],
+  cameraColliders: [box(GARDEN.tree.x, GARDEN.tree.z, 0.5, 0.5)],
+  spawns: {
+    // Just inside the east gate, facing into the garden (−x).
+    fromHub: { x: GARDEN.half - 2.0, z: 0, yaw: -Math.PI / 2 },
+  },
+  portals: [
+    {
+      id: "garden-hub-gate",
+      zone: box(GARDEN.half - 0.55, 0, 1.1, 3),
+      to: "hub",
+      arrive: "fromGarden",
+    },
+  ],
+  shadowExtent: 12,
+};
+
 export const ROOMS: Record<RoomId, RoomLayout> = {
   courtyard: COURTYARD,
   "hangul-village": HANGUL_VILLAGE,
@@ -779,6 +852,7 @@ export const ROOMS: Record<RoomId, RoomLayout> = {
   "klovers-house": KLOVERS_HOUSE,
   "culture-street": CULTURE_STREET,
   "seoul-journey": SEOUL_JOURNEY,
+  "memory-garden": MEMORY_GARDEN,
 };
 
 /** The portal whose zone contains the point, if any (first match wins). */

@@ -34,9 +34,18 @@ const ALWAYS: RoomId[] = ["courtyard", "hangul-village", "hub", "klovers-house"]
 
 export const GUEST_ACCESS: WorldAccess = { open: new Set<RoomId>(ALWAYS), preview: false, signedIn: false };
 
-export function worldAccess(levelKey: string | null | undefined, isAdmin: boolean): WorldAccess {
-  if (isAdmin) return { open: new Set<RoomId>([...ALWAYS, ...WORLD_ROOMS]), preview: true, signedIn: true };
+/**
+ * Cluby's Memory Garden is not a level stop (canon levelJourney.notALevelStop):
+ * it opens with real review data — at least one word in the learner's review
+ * schedule (canon unlockRule "sufficient_review_data_available").
+ */
+export function worldAccess(levelKey: string | null | undefined, isAdmin: boolean, reviewWords = 0): WorldAccess {
+  if (isAdmin) return { open: new Set<RoomId>([...ALWAYS, ...WORLD_ROOMS, "memory-garden"]), preview: true, signedIn: true };
+  const base = levelAccess(levelKey);
+  return reviewWords > 0 ? { ...base, open: new Set<RoomId>([...base.open, "memory-garden"]) } : base;
+}
 
+function levelAccess(levelKey: string | null | undefined): WorldAccess {
   const key = normalizeLevel(levelKey || "");
   const ordered = [...LEVELS].sort((a, b) => a.order - b.order);
   const current = ordered.findIndex((l) => l.key === key);

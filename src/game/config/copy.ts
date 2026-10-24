@@ -42,6 +42,7 @@ export const WORLD_COPY = {
       read: "Read",
       shop: "Shop",
       order: "Order",
+      review: "Review",
     },
     speech: {
       hello: { ko: "안녕!", text: "annyeong: hello" },
@@ -175,6 +176,10 @@ export const WORLD_COPY = {
         name: "Seoul Journey",
         line: "A Seoul street corner: the subway, the bus, directions and a meal out.",
       },
+      "memory-garden": {
+        name: "Cluby's Memory Garden",
+        line: "Cluby remembers the words you may be starting to forget. Each one you review blooms.",
+      },
     },
     notices: {
       marketLocked: { title: "Vocabulary Market", line: "Vocabulary Market unlocks at Level 1." },
@@ -184,10 +189,17 @@ export const WORLD_COPY = {
       cultureSoon: { title: "Culture Street", line: "Coming soon", more: "Everyday Korean life: food, manners and traditions." },
       seoulSoon: { title: "Seoul Journey", line: "Coming soon", more: "Real city moments in Seoul: getting around, shopping, restaurants." },
       gardenSoon: { title: "Cluby's Memory Garden", line: "Coming soon", more: "A quiet garden where learned words come back for review." },
+      gardenLocked: { title: "Cluby's Memory Garden", line: "Opens once you have words to review: finish a lesson and its words come here.", more: "A quiet garden where learned words come back for review." },
     },
     lockedCard: {
       learn: "Continue learning",
       close: "Back",
+    },
+    garden: {
+      title: "The memory stone",
+      intro: "Cluby kept these words for you. Turn each card, say how well you remembered it, and its flower opens.",
+      resting: "Nothing to review today: every flower is resting. Cluby will bring words back when they are due.",
+      close: "Back to the garden",
     },
     onboarding: {
       welcomeTitle: "Welcome to KLOVERS World",
@@ -448,7 +460,7 @@ export const WORLD_COPY = {
       open: "Open",
       soon: "Coming soon",
       side: "Beside the road",
-      garden: "Memory Garden · soon",
+      garden: "Memory Garden",
       later: "More of Seoul",
       opensAt: { "vocabulary-market": "Opens at Level 1", "conversation-cafe": "Opens at Level 2", "culture-street": "Opens at Level 3", "seoul-journey": "Opens at Level 4" } as Record<string, string>,
       what: {
@@ -460,6 +472,7 @@ export const WORLD_COPY = {
         "conversation-cafe": "Ordering · talking",
         "culture-street": "Greeting · food · holidays",
         "seoul-journey": "Subway · directions · eating out",
+        "memory-garden": "Review what you learned",
         seoul: "Levels 5–6 · a whole day in the city",
         garden: "Review what you learned",
       } as Record<string, string>,
@@ -523,6 +536,7 @@ export const WORLD_COPY = {
       read: "قراءة",
       shop: "تسوّق",
       order: "طلب",
+      review: "مراجعة",
     },
     speech: {
       hello: { ko: "안녕!", text: "أنيونغ: مرحبًا" },
@@ -649,6 +663,10 @@ export const WORLD_COPY = {
         name: "رحلة سيول",
         line: "زاوية شارع في سيول: المترو والحافلة والاتجاهات ووجبة في مطعم.",
       },
+      "memory-garden": {
+        name: "حديقة ذاكرة كلوبي",
+        line: "يتذكّر كلوبي الكلمات التي قد تبدأ في نسيانها. كل كلمة تراجعها تتفتّح.",
+      },
     },
     notices: {
       marketLocked: { title: "سوق المفردات", line: "يُفتح سوق المفردات عند الوصول إلى المستوى الأول." },
@@ -658,10 +676,17 @@ export const WORLD_COPY = {
       cultureSoon: { title: "شارع الثقافة", line: "قريبًا", more: "الحياة الكورية اليومية: الطعام والآداب والتقاليد." },
       seoulSoon: { title: "رحلة سيول", line: "قريبًا", more: "مواقف حقيقية في مدينة سيول: التنقّل والتسوّق والمطاعم." },
       gardenSoon: { title: "حديقة ذاكرة كلوبي", line: "قريبًا", more: "حديقة هادئة تعود فيها الكلمات المتعلَّمة للمراجعة." },
+      gardenLocked: { title: "حديقة ذاكرة كلوبي", line: "تُفتح عندما تصبح لديك كلمات للمراجعة: أنهِ درسًا وستأتي كلماته إلى هنا.", more: "حديقة هادئة تعود فيها الكلمات المتعلَّمة للمراجعة." },
     },
     lockedCard: {
       learn: "متابعة التعلّم",
       close: "العودة",
+    },
+    garden: {
+      title: "حجر الذاكرة",
+      intro: "احتفظ كلوبي بهذه الكلمات من أجلك. اقلب كل بطاقة، وقل كم تذكّرتها، فتتفتّح زهرتها.",
+      resting: "لا شيء للمراجعة اليوم: كل الأزهار في راحة. سيعيد كلوبي الكلمات حين يحين موعدها.",
+      close: "العودة إلى الحديقة",
     },
     onboarding: {
       welcomeTitle: "مرحبًا بك في عالم كلوفرز",
@@ -917,7 +942,7 @@ export const WORLD_COPY = {
       open: "مفتوح",
       soon: "قريبًا",
       side: "بجانب الطريق",
-      garden: "حديقة الذاكرة · قريبًا",
+      garden: "حديقة الذاكرة",
       later: "المزيد من سيول",
       opensAt: { "vocabulary-market": "يُفتح عند المستوى الأول", "conversation-cafe": "يُفتح عند المستوى الثاني", "culture-street": "يُفتح عند المستوى الثالث", "seoul-journey": "يُفتح عند المستوى الرابع" } as Record<string, string>,
       what: {
@@ -929,6 +954,7 @@ export const WORLD_COPY = {
         "conversation-cafe": "الطلب · المحادثة",
         "culture-street": "التحية · الطعام · الأعياد",
         "seoul-journey": "المترو · الاتجاهات · المطعم",
+        "memory-garden": "مراجعة ما سبق تعلّمه",
         seoul: "المستويان ٥–٦ · يوم كامل في المدينة",
         garden: "مراجعة ما سبق تعلّمه",
       } as Record<string, string>,

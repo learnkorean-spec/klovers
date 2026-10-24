@@ -16,6 +16,8 @@ import WorldHud, { type Speech } from "@/game/ui/WorldHud";
 import { ControlsCard, DiscoveryToast, FoundToast, HelpButton, LettersChip, ObjectiveChip, WayHint, WelcomeCard, type TutorialStep, type WorldView } from "@/game/ui/Onboarding";
 import { cheer } from "@/game/systems/reactions";
 import { MISSIONS, missionTarget, type MissionId } from "@/game/config/missions";
+import GardenReview from "@/game/ui/GardenReview";
+import { useGarden } from "@/game/systems/useGarden";
 import { FullMap, MiniMap, MissionChip, MissionsButton, MissionsCard, type Pose } from "@/game/ui/MapAndMissions";
 import { watercolorMode } from "@/game/systems/styleMode";
 import { currentObjective, type ObjectiveId } from "@/game/config/objectives";
@@ -168,6 +170,8 @@ const WorldPage = () => {
   const [moved, setMoved] = useState(false);
   const [avatar, setAvatar] = useState<AvatarId>(readAvatar);
   const access = useWorldAccess();
+  // Cluby's Memory Garden: the learner's real review schedule (its flowers).
+  const garden = useGarden();
   const [saved, setSaved] = useState<WorldState>(loadWorldState);
   const [fading, setFading] = useState(false);
   const [room, setRoom] = useState<RoomId | null>(null);
@@ -551,6 +555,9 @@ const WorldPage = () => {
       case "locked":
         setCard({ kind: "locked", notice: it.notice });
         break;
+      case "review":
+        setCard({ kind: "review" });
+        break;
       case "door":
         if (it.to && it.arrive) api.current?.enter(it.to, it.arrive);
         break;
@@ -779,6 +786,7 @@ const WorldPage = () => {
                 beaconEls={beaconEls}
                 onArrive={arrived}
                 view={view}
+                garden={garden.counts}
                 marker={marker ?? tourMarker}
                 lang={lang}
                 onTourSeen={tourSeen}
@@ -972,7 +980,16 @@ const WorldPage = () => {
                 }}
               />
             )}
-            {card && (
+            {card?.kind === "review" && (
+              <GardenReview
+                lang={lang}
+                onClose={() => {
+                  setCard(null);
+                  garden.refresh();
+                }}
+              />
+            )}
+            {card && card.kind !== "review" && (
               <InteractionCard
                 lang={lang}
                 kind={card.kind}

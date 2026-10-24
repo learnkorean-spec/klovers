@@ -12,7 +12,8 @@ import type { NoticeKey } from "../config/rooms";
  * (People's lines and single words use the lighter DialogueBubble, which
  * does not stop the world.)
  */
-export type CardKind = "egg" | "letter" | "word" | "locked" | "quiz" | "shop";
+/** "review" is the Memory Garden's memory stone (game/ui/GardenReview.tsx), not drawn here. */
+export type CardKind = "egg" | "letter" | "word" | "locked" | "quiz" | "shop" | "review";
 
 interface Props {
   lang: WorldLang;

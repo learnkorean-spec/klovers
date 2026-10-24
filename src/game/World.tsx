@@ -5,7 +5,7 @@ import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { FOLIAGE_TIME, upgradeMaterialDetails } from "./config/materials";
 import { REDUCED_MOTION } from "./systems/motion";
 import { INTERACTABLES, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
-import { CULTURE, findPortal, HUB, MARKET, ROOMS, SEOUL, tourSpot, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn, type TourStop } from "./config/rooms";
+import { CULTURE, findPortal, GARDEN, HUB, MARKET, ROOMS, SEOUL, tourSpot, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn, type TourStop } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
 import ThirdPersonCamera from "./camera/ThirdPersonCamera";
 import { DISCOVERIES, type DiscoveryKey } from "./config/discoveries";
@@ -17,6 +17,7 @@ import Npc from "./npc/Npc";
 import ConversationCafe from "./environment/ConversationCafe";
 import CultureStreet from "./environment/CultureStreet";
 import SeoulJourney from "./environment/SeoulJourney";
+import MemoryGarden from "./environment/MemoryGarden";
 import KloversHouse from "./environment/KloversHouse";
 import HangulVillage from "./environment/HangulVillage";
 import TourExhibit from "./environment/TourExhibit";
@@ -67,6 +68,7 @@ const BACKDROP: Record<RoomId, { hx: number; hz: number }> = {
   "klovers-house": { hx: 9, hz: 8 },
   "culture-street": { hx: 10.5, hz: 15 },
   "seoul-journey": { hx: 15, hz: 14 },
+  "memory-garden": { hx: 8.5, hz: 8.5 },
 };
 
 /** Length of the fade to and from ivory on a room change, ms. */
@@ -104,6 +106,8 @@ export interface WorldApi {
 }
 
 export interface WorldProps {
+  /** Cluby's Memory Garden: words in the learner's review schedule, and how many are reviewed and resting. */
+  garden?: { words: number; reviewed: number };
   /** Fired after the first frame has rendered — the loading veil can lift. */
   onReady?: () => void;
   /** Fired the first time the learner looks around. */
@@ -554,7 +558,8 @@ export default function World(props: WorldProps) {
       {roomId === "hangul-village" && <HangulVillage marketOpen={access.open.has("vocabulary-market")} letters={saved.letters} />}
       {roomId === "hangul-village" && <TourExhibit lang={props.lang ?? "en"} player={player} onSeen={(s) => cb.current.onTourSeen?.(s)} />}
       {roomId === "vocabulary-market" && <VocabularyMarket nextOpen breadSign={saved.breadSign} words={saved.words} shopChosen={props.shopChosen} onShopPress={props.paused ? undefined : (item) => cb.current.onShopPress?.(item)} />}
-      {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} cultureOpen={access.open.has("culture-street")} seoulOpen={access.open.has("seoul-journey")} />}
+      {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} cultureOpen={access.open.has("culture-street")} seoulOpen={access.open.has("seoul-journey")} gardenOpen={access.open.has("memory-garden")} />}
+      {roomId === "memory-garden" && <MemoryGarden words={props.garden?.words ?? 0} reviewed={props.garden?.reviewed ?? 0} />}
       {roomId === "conversation-cafe" && <ConversationCafe words={saved.words} />}
       {roomId === "culture-street" && <CultureStreet words={saved.words} />}
       {roomId === "seoul-journey" && <SeoulJourney words={saved.words} player={player} />}
@@ -613,6 +618,7 @@ function guideFor(room: RoomId, access: WorldAccess): { x: number; z: number } |
   if (room === "vocabulary-market") return { x: 0, z: -MARKET.halfDepth };
   if (room === "culture-street") return { x: 0, z: -CULTURE.halfLength + 2.5 };
   if (room === "seoul-journey") return { x: SEOUL.subway.x + 0.4, z: SEOUL.subway.z + SEOUL.subway.d / 2 + 1.2 };
+  if (room === "memory-garden") return { x: GARDEN.stone.x, z: GARDEN.stone.z + 1.05 };
   if (room === "hub") return access.open.has("conversation-cafe") ? { x: 0, z: -HUB.half } : { x: HUB.half, z: -3.5 };
   return null;
 }

@@ -313,7 +313,8 @@ export function FullMap({ lang, pose, isOpen, onClose, missionRoom }: Omit<MapPr
     const r = el.getBoundingClientRect();
     box.scrollTop += r.top - b.top - b.height / 2 + r.height / 2;
   }, []);
-  const roomHere = here === "klovers-house" ? "hub" : here;
+  // Klovers House and the Memory Garden stand beside the road at the Hub.
+  const roomHere = here === "klovers-house" || here === "memory-garden" ? "hub" : here;
   const segment = (i: number) => {
     const a = stopAt(i);
     const b = stopAt(i + 1);
@@ -394,8 +395,9 @@ export function FullMap({ lang, pose, isOpen, onClose, missionRoom }: Omit<MapPr
                         <text x={48} y={14} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#2E2E2E">
                           {copy.rooms["klovers-house"].name}
                         </text>
-                        <rect x={100} width={96} height={20} rx={10} fill="#E2D9C7" stroke="#2E2E2E" strokeWidth={1} strokeDasharray="4 3" />
-                        <text x={148} y={14} textAnchor="middle" fontSize="10" fontWeight="700" fill="#6B6458">
+                        {/* Cluby's Memory Garden: open with real review data (systems/access.ts). */}
+                        <rect x={100} width={96} height={20} rx={10} fill={here === "memory-garden" ? "#FFFF00" : isOpen("memory-garden") ? "#FFFFFF" : "#E2D9C7"} stroke="#2E2E2E" strokeWidth={1} strokeDasharray={isOpen("memory-garden") ? undefined : "4 3"} />
+                        <text x={148} y={14} textAnchor="middle" fontSize="10" fontWeight="700" fill={isOpen("memory-garden") ? "#2E2E2E" : "#6B6458"}>
                           {c.garden}
                         </text>
                       </g>

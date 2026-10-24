@@ -1,4 +1,4 @@
-import { boardSpot, CAFE, CULTURE, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
+import { boardSpot, CAFE, CULTURE, GARDEN, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
 import { CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, MINSU_SPOT, NPCS, SEOUL_FRIEND } from "./npcs";
 import { PROPS } from "./world";
 
@@ -29,10 +29,10 @@ import { PROPS } from "./world";
  * - shop     the market's little shop: pick one of three things and ask
  *            for it in Korean (the things can also be pressed in the scene)
  */
-export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour" | "shop";
+export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour" | "shop" | "review";
 
 /** The verb on the prompt ([E] Inspect, the round button's label …). */
-export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read" | "shop" | "order";
+export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read" | "shop" | "order" | "review";
 
 /** Learning cards (words and letters). Text per language: copy.learn[id]. */
 export type LearnId =
@@ -249,6 +249,9 @@ export const INTERACTABLES: Interactable[] = [
   ...VILLAGE.tour.map((b): Interactable => ({ id: `tour-${b.id}`, room: "hangul-village", kind: "tour", action: "read", tour: b.id, ...tourSpot(b), radius: 1.6 })),
   ...VILLAGE.tourLinks.map((l): Interactable => ({ id: `tourlink-${l.id}`, room: "hangul-village", kind: "link", action: "enter", href: l.href, x: l.x + Math.sin(l.yaw) * 0.9, z: l.z + Math.cos(l.yaw) * 0.9, radius: 1.1, priority: 1 })),
   ...HOUSE.boards.map((b): Interactable => ({ id: `info-${b.id}`, room: "klovers-house", kind: "info", action: "read", info: b.id, ...boardSpot(b), radius: b.id === "about" ? 1.6 : 1.35, priority: 1 })),
+
+  /* ── Cluby's Memory Garden: the memory stone, where words come back ── */
+  { id: "review-garden", room: "memory-garden", kind: "review", action: "review", x: GARDEN.stone.x, z: GARDEN.stone.z + 1.05, radius: 1.5, priority: 1 },
 
   // Every gate into a world that may be locked: inspect it while it is,
   // walk through it (or press E) once it is open.
