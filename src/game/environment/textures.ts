@@ -149,3 +149,42 @@ export function usePhotoFloor(kind: PhotoKind, rx: number, ry: number): PhotoSet
   }, [kind, rx, ry]);
   return set;
 }
+
+/**
+ * Breaks up a tiled floor (attach as the floor material's onBeforeCompile).
+ * The painted floor tile repeats every couple of metres, so a square full of
+ * it showed the same slabs over and over. This lays a world-positioned tone
+ * on top, in the material's own shader: broad patches a few metres across,
+ * a little warmer or cooler, lighter or darker, plus a fine mottle — so no
+ * two stretches of floor are alike. No extra draw calls or textures.
+ */
+export function floorBreakup(shader: { vertexShader: string; fragmentShader: string }): void {
+  shader.vertexShader = shader.vertexShader
+    .replace("#include <common>", "#include <common>\nvarying vec3 vFbPos;")
+    .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFbPos = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+  shader.fragmentShader = shader.fragmentShader
+    .replace(
+      "#include <common>",
+      `#include <common>
+varying vec3 vFbPos;
+float fbHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float fbNoise(vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(fbHash(i), fbHash(i + vec2(1.0, 0.0)), u.x), mix(fbHash(i + vec2(0.0, 1.0)), fbHash(i + vec2(1.0, 1.0)), u.x), u.y);
+}`,
+    )
+    .replace(
+      "#include <map_fragment>",
+      `#include <map_fragment>
+{
+  vec2 q = vFbPos.xz;
+  float broad = fbNoise(q / 4.3) * 0.6 + fbNoise(q / 1.7 + 7.1) * 0.4;
+  float warm = fbNoise(q / 6.1 + 13.7);
+  float fine = fbNoise(q * 2.3 + 3.3) * 0.5 + fbNoise(q * 5.9) * 0.5;
+  diffuseColor.rgb *= mix(0.86, 1.08, broad) * mix(0.95, 1.03, fine);
+  diffuseColor.rgb *= mix(vec3(0.97, 0.99, 1.03), vec3(1.04, 1.0, 0.94), warm);
+}`,
+    );
+}
+export const FLOOR_BREAKUP_KEY = () => "klovers-floor-breakup-1";

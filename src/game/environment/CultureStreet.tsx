@@ -8,7 +8,7 @@ import { REDUCED_MOTION } from "../systems/motion";
 import Batch from "./Batch";
 import { Kit, bunting, curvedRoofOn, flowers, hanokHouse, jitter, pot, shopfront, tree, wallRun } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
-import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
+import { paintPaving, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
 
 /**
@@ -259,7 +259,7 @@ export default function CultureStreet({ words = [] }: { words?: string[] }) {
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[HW * 2, HL * 2, ...FLOOR_GRID]} />
-        <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#F4EBDD" : "#ffffff"} />
+        <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#F4EBDD" : "#ffffff"} onBeforeCompile={floorBreakup} customProgramCacheKey={FLOOR_BREAKUP_KEY} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[80, 80, ...FLOOR_GRID]} />

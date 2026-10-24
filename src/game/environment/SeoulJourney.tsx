@@ -11,7 +11,7 @@ import Batch from "./Batch";
 import Instanced, { type Part } from "./Instanced";
 import { Kit, flowers, jitter, kitGeometry, planter } from "./kit";
 import { GateWall } from "./parts";
-import { paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
+import { paintPaving, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
 
 /**
@@ -1152,7 +1152,7 @@ export default function SeoulJourney({ words = [], player }: { words?: string[];
       {/* Pavements everywhere, the road across them, a side street north. */}
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -6]}>
         <planeGeometry args={[120, 80, ...FLOOR_GRID]} />
-        <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#E6E2DA" : "#ffffff"} />
+        <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? paving} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.95} color={photo ? "#E6E2DA" : "#ffffff"} onBeforeCompile={floorBreakup} customProgramCacheKey={FLOOR_BREAKUP_KEY} />
       </mesh>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.008, SEOUL.roadZ]}>
         <planeGeometry args={[180, SEOUL.roadW, ...FLOOR_GRID]} />

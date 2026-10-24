@@ -2,7 +2,7 @@ import { DoubleSide } from "three";
 import { CAFE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import { GateWall, Signboard } from "./parts";
-import { paintPlanks, useTiledTexture, usePhotoFloor } from "./textures";
+import { paintPlanks, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { ACCENT, std } from "../config/materials";
 import { FLOOR_GRID } from "../config/world";
 
@@ -240,7 +240,7 @@ export default function ConversationCafe({ words = [] }: { words?: string[] }) {
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[HW * 2, HD * 2, ...FLOOR_GRID]} />
-        <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? planks} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.8} color={photo ? "#FFF4E6" : "#ffffff"} />
+        <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? planks} normalMap={photo?.normal ?? null} roughnessMap={photo?.rough ?? null} roughness={photo ? 1 : 0.8} color={photo ? "#FFF4E6" : "#ffffff"} onBeforeCompile={floorBreakup} customProgramCacheKey={FLOOR_BREAKUP_KEY} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
         <planeGeometry args={[70, 70, ...FLOOR_GRID]} />

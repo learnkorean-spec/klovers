@@ -9,7 +9,7 @@ import CloverEgg from "./CloverEgg";
 import { BakedShade, useBakedFloor } from "./BakedFloor";
 import { Kit, bed, flowers, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, shrub, steppingStones, stoneLantern, tree, wallRun } from "./kit";
 import { Gate, Signboard } from "./parts";
-import { paintMadang, useTiledTexture } from "./textures";
+import { paintMadang, useTiledTexture, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
 
 /**
@@ -104,7 +104,7 @@ export default function Lobby({ story }: { story: MutableRefObject<StoryState> }
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[HW * 2, HD * 2, ...FLOOR_GRID]} />
-        <meshStandardMaterial key={baked.ao ? "baked" : "plain"} map={paving} roughness={0.95} aoMap={baked.ao} aoMapIntensity={1} />
+        <meshStandardMaterial key={baked.ao ? "baked" : "plain"} map={paving} roughness={0.95} aoMap={baked.ao} aoMapIntensity={1} onBeforeCompile={floorBreakup} customProgramCacheKey={FLOOR_BREAKUP_KEY} />
       </mesh>
       {baked.shade && <BakedShade map={baked.shade} w={HW * 2} d={HD * 2} />}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
