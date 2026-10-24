@@ -32,6 +32,12 @@ const WORLD_ROOMS: readonly RoomId[] = ["hangul-village", "vocabulary-market", "
 /** Rooms that are never gated: the courtyard, the Hub and its information house are not worlds. */
 const ALWAYS: RoomId[] = ["courtyard", "hangul-village", "hub", "klovers-house"];
 
+/**
+ * Rooms that are a later part of a canon world, with the course level that
+ * opens each (canon levelJourney: l5 → seoul-journey part 2).
+ */
+const PART_ROOMS: Partial<Record<RoomId, string>> = { "seoul-market": "l5" };
+
 export const GUEST_ACCESS: WorldAccess = { open: new Set<RoomId>(ALWAYS), preview: false, signedIn: false };
 
 /**
@@ -40,7 +46,7 @@ export const GUEST_ACCESS: WorldAccess = { open: new Set<RoomId>(ALWAYS), previe
  * schedule (canon unlockRule "sufficient_review_data_available").
  */
 export function worldAccess(levelKey: string | null | undefined, isAdmin: boolean, reviewWords = 0): WorldAccess {
-  if (isAdmin) return { open: new Set<RoomId>([...ALWAYS, ...WORLD_ROOMS, "memory-garden"]), preview: true, signedIn: true };
+  if (isAdmin) return { open: new Set<RoomId>([...ALWAYS, ...WORLD_ROOMS, ...(Object.keys(PART_ROOMS) as RoomId[]), "memory-garden"]), preview: true, signedIn: true };
   const base = levelAccess(levelKey);
   return reviewWords > 0 ? { ...base, open: new Set<RoomId>([...base.open, "memory-garden"]) } : base;
 }
@@ -59,5 +65,7 @@ function levelAccess(levelKey: string | null | undefined): WorldAccess {
   const reached = new Set<string>(ordered.slice(0, current + 1).map((l) => worldOf(l.key)).filter((w): w is string => !!w));
   const open = new Set<RoomId>(ALWAYS);
   for (const room of WORLD_ROOMS) if (reached.has(room)) open.add(room);
+  // Later parts of a world (canon levelJourney part 2, 3) open at their own level.
+  for (const [room, level] of Object.entries(PART_ROOMS)) if (ordered.findIndex((l) => l.key === level) <= current) open.add(room as RoomId);
   return { open, preview: false, signedIn: true };
 }

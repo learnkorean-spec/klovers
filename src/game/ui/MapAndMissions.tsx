@@ -283,6 +283,7 @@ const ROAD: Stop[] = [
   { id: "conversation-cafe" },
   { id: "culture-street" },
   { id: "seoul-journey" },
+  { id: "seoul-market" },
   { id: "seoul" },
 ];
 const STEP = 118;

@@ -1,5 +1,5 @@
-import { boardSpot, CAFE, CULTURE, GARDEN, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
-import { CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, MINSU_SPOT, NPCS, SEOUL_FRIEND } from "./npcs";
+import { ALLEY, boardSpot, CAFE, CULTURE, GARDEN, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
+import { ALLEY_FRIEND, CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, MINSU_SPOT, NPCS, SEOUL_FRIEND } from "./npcs";
 import { PROPS } from "./world";
 
 /**
@@ -39,9 +39,10 @@ export type LearnId =
   | "seokdeung" | "beotnamu" | "nieun" | "digeut" | "mieum" | "o" | "umul"
   | "mul" | "bap" | "chaek" | "ot" | "kkot" | "sagwa" | "gwail" | "jido" | "gesipan" | "annaeso" | "keopi"
   | "kimchi" | "bibimbap" | "tteokbokki" | "sinbal" | "hanbok" | "seollal" | "chuseok"
-  | "jihacheol" | "beoseu" | "pyeonuijeom" | "sikdang" | "namsan";
+  | "jihacheol" | "beoseu" | "pyeonuijeom" | "sikdang" | "namsan"
+  | "golmok" | "eolmayeyo" | "hotteok" | "eomuk" | "gimbap";
 /** One-question cards. Text per language: copy.quiz[id]. */
-export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang" | "insa" | "meal" | "gil" | "gyesan";
+export type QuizId = "a" | "rieul" | "eo" | "u" | "ppang" | "sijang" | "insa" | "meal" | "gil" | "gyesan" | "kkakka" | "masisseo";
 /** The market's two shops (the fruit table, the food cart) and the café counter. */
 export type ShopId = "fruit" | "food" | "cafe";
 /** Which things each shop sells (the words are in copy.shop.items). */
@@ -54,7 +55,7 @@ const THOUSANDS = ["", "천", "이천", "삼천", "사천", "오천", "육천", 
 /** A price in won, read the Korean way ("삼천 원"); up to 9,000. */
 export const wonInKorean = (won: number): string => `${THOUSANDS[Math.round(won / 1000)] ?? won} 원`;
 /** People's short lines. Text per language: copy.say[id]. */
-export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear" | "friendCafe" | "friendCulture" | "friendSeoul" | "attendant" | "owner";
+export type SayId = "auntie" | "vendor" | "shopkeeper" | "baker" | "hubFriend" | "hubReader" | "shopper" | "cafeA" | "cafeB" | "cook" | "twoHands" | "newYear" | "friendCafe" | "friendCulture" | "friendSeoul" | "attendant" | "owner" | "friendMarket" | "deom" | "grandpa" | "alleyCafe";
 
 export interface Interactable {
   id: string;
@@ -249,6 +250,28 @@ export const INTERACTABLES: Interactable[] = [
   ...VILLAGE.tour.map((b): Interactable => ({ id: `tour-${b.id}`, room: "hangul-village", kind: "tour", action: "read", tour: b.id, ...tourSpot(b), radius: 1.6 })),
   ...VILLAGE.tourLinks.map((l): Interactable => ({ id: `tourlink-${l.id}`, room: "hangul-village", kind: "link", action: "enter", href: l.href, x: l.x + Math.sin(l.yaw) * 0.9, z: l.z + Math.cos(l.yaw) * 0.9, radius: 1.1, priority: 1 })),
   ...HOUSE.boards.map((b): Interactable => ({ id: `info-${b.id}`, room: "klovers-house", kind: "info", action: "read", info: b.id, ...boardSpot(b), radius: b.id === "about" ? 1.6 : 1.35, priority: 1 })),
+
+  /* ── Seoul Journey part 1 → part 2: line 2 to the market alley ── */
+  { id: "gate-subway-market", room: "seoul-journey", kind: "locked", action: "inspect", x: SEOUL.subway.x - 1.2, z: SEOUL.subway.z + SEOUL.subway.d / 2 + 0.55, radius: 1.0, notice: "seoulMarketLocked", whileLocked: "seoul-market" },
+  { id: "door-subway-market", room: "seoul-journey", kind: "door", action: "enter", x: SEOUL.subway.x - 1.2, z: SEOUL.subway.z + SEOUL.subway.d / 2 + 0.55, radius: 1.0, to: "seoul-market", arrive: "fromSubway", whileOpen: "seoul-market" },
+
+  /* ── Seoul Journey part 2: the market alley (골목 시장) ── */
+  { id: "door-alley-subway", room: "seoul-market", kind: "door", action: "enter", x: ALLEY.exit.x, z: ALLEY.exit.z - ALLEY.exit.d / 2 - 0.7, radius: 1.1, to: "seoul-journey", arrive: "fromMarket" },
+  { id: "say-friend-market", room: "seoul-market", kind: "say", action: "talk", say: "friendMarket", x: ALLEY_FRIEND.x - 0.2, z: ALLEY_FRIEND.z - 0.9, radius: 1.5 },
+  { id: "learn-golmok", room: "seoul-market", kind: "learn", action: "learn", learn: "golmok", word: "골목", x: -1.9, z: ALLEY.archZ - 0.2, radius: 1.1 },
+  // The fruit stall: its price card, then the keeper — ask the price, then bargain.
+  { id: "learn-eolmayeyo", room: "seoul-market", kind: "learn", action: "learn", learn: "eolmayeyo", word: "얼마예요?", x: -(ALLEY.stallX - 0.85), z: 7.7, radius: 1.0 },
+  { id: "quiz-kkakka", room: "seoul-market", kind: "quiz", action: "talk", quiz: "kkakka", npc: "a-fruit", x: -(ALLEY.stallX - 0.85), z: 5.5, radius: 1.0, priority: 1 },
+  { id: "say-deom", room: "seoul-market", kind: "say", action: "talk", say: "deom", npc: "a-banchan", x: ALLEY.stallX - 0.85, z: 6.2, radius: 1.1, priority: 1 },
+  // The street-food cart: three dishes on its west side, the cook behind.
+  ...(["hotteok", "eomuk", "gimbap"] as const).map((id, i): Interactable => ({
+    id: `learn-${id}`, room: "seoul-market", kind: "learn", action: "learn", learn: id, word: ["호떡", "어묵", "김밥"][i],
+    x: ALLEY.cart.x - ALLEY.cart.w / 2 - 0.7, z: ALLEY.cart.z + (i - 1) * 1.0, radius: 0.7,
+  })),
+  { id: "quiz-masisseo", room: "seoul-market", kind: "quiz", action: "talk", quiz: "masisseo", npc: "a-cook", x: ALLEY.cart.x + 1.1, z: ALLEY.cart.z + ALLEY.cart.d / 2 + 0.75, radius: 0.9, priority: 1 },
+  // The elder on the bench by the café, and the barista.
+  { id: "say-grandpa", room: "seoul-market", kind: "say", action: "talk", say: "grandpa", npc: "a-grandpa", x: ALLEY.bench.x, z: ALLEY.bench.z + 1.3, radius: 1.2, priority: 1 },
+  { id: "say-alley-cafe", room: "seoul-market", kind: "say", action: "talk", say: "alleyCafe", npc: "a-barista", x: 1.3, z: -11.0, radius: 1.1, priority: 1 },
 
   /* ── Cluby's Memory Garden: the memory stone, where words come back ── */
   { id: "review-garden", room: "memory-garden", kind: "review", action: "review", x: GARDEN.stone.x, z: GARDEN.stone.z + 1.05, radius: 1.5, priority: 1 },

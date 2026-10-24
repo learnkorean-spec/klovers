@@ -40,8 +40,20 @@ export const CAFE_FRIEND = { x: 3.7, z: -3.1, yaw: -0.5 };
 export const CULTURE_FRIEND = { x: 1.9, z: 9.6, yaw: 0.3 };
 /** Seoul Journey's leads are both learners and Cluby (canon): the friend waits at the corner. */
 export const SEOUL_FRIEND = { x: -2.0, z: 6.4, yaw: 0.5 };
+/** In the market alley (Seoul part 2) the friend waits under the entrance arch. */
+export const ALLEY_FRIEND = { x: 1.5, z: 8.4, yaw: -2.5 };
 
 export const NPCS: NpcPlacement[] = [
+  // Seoul Journey part 2, the market alley: a keeper in each stall, the cook
+  // at the cart, an elder on the bench by the café, the barista, shoppers.
+  { id: "a-fruit", room: "seoul-market", cast: "auntie", pose: "stand", x: -4.0, z: 6.5, yaw: Math.PI / 2, phase: 0.2, important: true },
+  { id: "a-banchan", room: "seoul-market", cast: "elder", pose: "talk", x: 4.0, z: 6.2, yaw: -Math.PI / 2, phase: 1.1, important: true },
+  { id: "a-eomuk", room: "seoul-market", cast: "porter", pose: "stand", x: 4.0, z: -5.5, yaw: -Math.PI / 2, phase: 1.6 },
+  { id: "a-flowers", room: "seoul-market", cast: "readerA", pose: "stand", x: -4.0, z: -5.5, yaw: Math.PI / 2, phase: 2.2 },
+  { id: "a-cook", room: "seoul-market", cast: "vendor", pose: "talk", x: 1.75, z: 0.6, yaw: -Math.PI / 2, phase: 0.4, important: true },
+  { id: "a-grandpa", room: "seoul-market", cast: "elder", pose: "sit", x: -2.6, z: -10.45, yaw: 0, phase: 0.9, important: true },
+  { id: "a-barista", room: "seoul-market", cast: "barista", pose: "stand", x: 1.6, z: -12.2, yaw: 0.2, phase: 1.3, important: true },
+  { id: "a-walker", room: "seoul-market", cast: "walker", pose: "walk", x: -1.6, z: 7.5, yaw: Math.PI, path: [[-1.6, 7.5], [-1.6, -8.5]], phase: 0.6 },
   // Courtyard: a gardener by the pine, two students on the platform.
   { id: "c-gardener", room: "courtyard", cast: "gardener", pose: "water", x: 8.3, z: 6.3, yaw: face(8.3, 6.3, 9.4, 6.9), phase: 0.4 },
   { id: "c-bench-1", room: "courtyard", cast: "readerA", pose: "sitRead", x: -7.9, z: -4.0, yaw: 0, phase: 1.1 },

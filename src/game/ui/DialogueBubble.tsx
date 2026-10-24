@@ -37,7 +37,7 @@ interface LearnText {
 const canSpeak = () => typeof window !== "undefined" && "speechSynthesis" in window;
 
 /** Who speaks each line: men and boys get a man's voice. */
-const MALE_SAY = new Set<SayId>(["vendor", "shopkeeper", "hubFriend", "cafeA", "twoHands", "attendant"]);
+const MALE_SAY = new Set<SayId>(["vendor", "shopkeeper", "hubFriend", "cafeA", "twoHands", "attendant", "deom", "grandpa"]);
 
 /** A Korean voice that is clearly a man's, if this device has one. */
 const hasMaleKoreanVoice = () =>
@@ -162,7 +162,7 @@ export default function DialogueBubble({
     line = bubble.id;
     name = t.name;
     // The other learner's lines: their name and their own voice.
-    if (bubble.id === "friendCafe" || bubble.id === "friendCulture" || bubble.id === "friendSeoul") {
+    if (bubble.id === "friendCafe" || bubble.id === "friendCulture" || bubble.id === "friendSeoul" || bubble.id === "friendMarket") {
       const friendId = avatar === "lina" ? "adam" : "lina";
       name = copy.names[friendId];
       voice = friendId === "adam" ? "male" : "female";

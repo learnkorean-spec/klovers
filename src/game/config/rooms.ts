@@ -1,6 +1,6 @@
 import { BOUNDS, box, CAMERA_COLLIDERS, COLLIDERS, PLAYER, ROOM, type Box2 } from "./world";
 import type { WorldIcon } from "../environment/icons";
-import { CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, SEOUL_FRIEND, npcColliderSpots } from "./npcs";
+import { ALLEY_FRIEND, CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, SEOUL_FRIEND, npcColliderSpots } from "./npcs";
 import { REAL_PROPS } from "../systems/styleMode";
 
 /** People who stand still are solid (a small circle-ish box). */
@@ -36,10 +36,10 @@ const people = (room: RoomId): Box2[] => npcColliderSpots(room).map((p) => box(p
  * level → world map the dashboard journey uses. Never open one for free.
  */
 
-export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house" | "culture-street" | "seoul-journey" | "memory-garden";
+export type RoomId = "courtyard" | "hangul-village" | "vocabulary-market" | "hub" | "conversation-cafe" | "klovers-house" | "culture-street" | "seoul-journey" | "memory-garden" | "seoul-market";
 
 /** Notices shown at a gate whose world is still locked (or not built yet). */
-export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "seoulLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon" | "gardenLocked";
+export type NoticeKey = "marketLocked" | "cafeLocked" | "cultureLocked" | "seoulLocked" | "cultureSoon" | "seoulSoon" | "gardenSoon" | "gardenLocked" | "seoulMarketLocked";
 
 export interface Spawn {
   x: number;
@@ -767,6 +767,8 @@ const SEOUL_JOURNEY: RoomLayout = {
   spawns: {
     // Just in from the Hub's 서울 gate, facing up the street (−z).
     fromHub: { x: 0, z: SEOUL.halfDepth - 2.0, yaw: Math.PI },
+    // Up the subway stairs from the market, facing the street (+z).
+    fromMarket: { x: -8.9, z: -2.9, yaw: 0.35 },
   },
   portals: [
     {
@@ -777,6 +779,70 @@ const SEOUL_JOURNEY: RoomLayout = {
     },
   ],
   shadowExtent: 16,
+};
+
+/* ───────────────────── Seoul Journey, part 2: the market alley ───────────────────── */
+
+/**
+ * Seoul Journey, part 2 — canon worlds "seoul-journey", levelJourney.l5
+ * (part 2): a neighbourhood market alley (골목 시장), one subway ride from
+ * the street corner (part 1). Skills from the canon list: shopping (asking
+ * the price, bargaining), restaurants (street food), social (an elder's
+ * small talk, a stall-keeper's 덤), directions on the way out.
+ *
+ * An alley 9 m wide and 26 m long running north. The subway exit at the
+ * south end; stalls under awnings down both sides (fruit, side dishes,
+ * socks and hats, fish cakes); the street-food cart in the middle; a small
+ * café at the north end, with a bench outside it.
+ */
+export const ALLEY = {
+  halfWidth: 4.5,
+  halfLength: 13,
+  /** Stall fronts: x of the counter edge, and each stall's centre z and goods. */
+  stallX: 3.35,
+  stalls: [
+    { side: -1, z: 6.5, goods: "fruit", sign: "과일" },
+    { side: 1, z: 6.5, goods: "banchan", sign: "반찬" },
+    { side: -1, z: 0.5, goods: "hats", sign: "모자 · 양말" },
+    { side: 1, z: -5.5, goods: "eomuk", sign: "어묵" },
+    { side: -1, z: -5.5, goods: "flowers", sign: "꽃" },
+  ],
+  stallW: 1.6,
+  stallD: 3.6,
+  /** The street-food cart in the alley's middle (호떡 · 어묵 · 김밥). */
+  cart: { x: 0.6, z: 0.6, w: 1.2, d: 2.4 },
+  /** The café at the north end (its front, x centre), and the bench outside. */
+  cafe: { x: 0, w: 5 },
+  bench: { x: -2.6, z: -10.6, w: 1.8, d: 0.6 },
+  /** The subway exit's stair well at the south end (solid, its stairs face north). */
+  exit: { x: 2.4, z: 11.3, w: 2.2, d: 2.6 },
+  /** The arch over the alley's entrance, and the name on it. */
+  archZ: 9.2,
+  sign: "골목 시장",
+} as const;
+
+const alleyStalls = ALLEY.stalls.map((st) => box(st.side * (ALLEY.halfWidth - ALLEY.stallW / 2 + 0.05), st.z, ALLEY.stallW, ALLEY.stallD));
+
+const SEOUL_MARKET: RoomLayout = {
+  id: "seoul-market",
+  canonWorldId: "seoul-journey",
+  bounds: { minX: -ALLEY.halfWidth, maxX: ALLEY.halfWidth, minZ: -ALLEY.halfLength, maxZ: ALLEY.halfLength },
+  colliders: [
+    ...alleyStalls,
+    box(ALLEY.cart.x, ALLEY.cart.z, ALLEY.cart.w, ALLEY.cart.d),
+    box(ALLEY.bench.x, ALLEY.bench.z, ALLEY.bench.w, ALLEY.bench.d),
+    box(ALLEY.exit.x, ALLEY.exit.z, ALLEY.exit.w, ALLEY.exit.d),
+    box(ALLEY_FRIEND.x, ALLEY_FRIEND.z, 0.6, 0.6),
+    ...[-1, 1].map((sd) => box(sd * (ALLEY.halfWidth - 0.25), ALLEY.archZ, 0.35, 0.35)),
+    ...people("seoul-market"),
+  ],
+  cameraColliders: [box(ALLEY.exit.x, ALLEY.exit.z, ALLEY.exit.w, ALLEY.exit.d)],
+  spawns: {
+    // Off the subway, just in under the arch, facing up the alley (−z).
+    fromSubway: { x: -0.6, z: 8.0, yaw: Math.PI },
+  },
+  portals: [],
+  shadowExtent: 15,
 };
 
 /* ─────────────────────── Cluby's Memory Garden ─────────────────────── */
@@ -853,6 +919,7 @@ export const ROOMS: Record<RoomId, RoomLayout> = {
   "culture-street": CULTURE_STREET,
   "seoul-journey": SEOUL_JOURNEY,
   "memory-garden": MEMORY_GARDEN,
+  "seoul-market": SEOUL_MARKET,
 };
 
 /** The portal whose zone contains the point, if any (first match wins). */

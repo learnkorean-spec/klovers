@@ -42,3 +42,20 @@ describe("Cluby's Memory Garden", () => {
     expect(gardenCounts(rows, "2026-10-24")).toEqual({ words: 4, due: 2, reviewed: 1 });
   });
 });
+
+describe("Seoul Journey part 2: the market alley", () => {
+  it("opens at Level 5 (canon levelJourney.l5 → seoul-journey part 2), not before", () => {
+    expect(worldAccess("l4", false).open.has("seoul-market")).toBe(false);
+    expect(worldAccess("l5", false).open.has("seoul-market")).toBe(true);
+    expect(worldAccess("l6", false).open.has("seoul-market")).toBe(true);
+    expect(GUEST_ACCESS.open.has("seoul-market")).toBe(false);
+  });
+
+  it("is reached by the subway from part 1, and the subway goes back", () => {
+    const into = INTERACTABLES.find((i) => i.id === "door-subway-market");
+    const back = INTERACTABLES.find((i) => i.id === "door-alley-subway");
+    expect(into?.to).toBe("seoul-market");
+    expect(ROOMS["seoul-market"].spawns[into!.arrive!]).toBeDefined();
+    expect(ROOMS["seoul-journey"].spawns[back!.arrive!]).toBeDefined();
+  });
+});
