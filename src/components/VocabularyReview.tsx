@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -28,12 +28,19 @@ export function VocabularyReview({
   const isAr = language === "ar";
   const tr = (en: string, ar: string) => (isAr ? ar : en);
 
+  // The session's deck: the cards as they were when it started. The parent's
+  // list is re-fetched after every answer and shrinks (an answered card is no
+  // longer due), so walking it by index skipped every other card.
+  const [deck, setDeck] = useState<SRSCard[]>(cards);
+  useEffect(() => {
+    if (deck.length === 0 && cards.length > 0) setDeck(cards);
+  }, [cards, deck.length]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentCard = cards[currentIndex];
-  const progress = ((currentIndex + 1) / cards.length) * 100;
+  const currentCard = deck[currentIndex];
+  const progress = ((currentIndex + 1) / deck.length) * 100;
 
   const speakKorean = (text: string) => {
     if ("speechSynthesis" in window) {
@@ -52,12 +59,12 @@ export function VocabularyReview({
       await onComplete(currentCard.lesson_vocabulary_id, quality);
 
       // Move to next card
-      if (currentIndex < cards.length - 1) {
+      if (currentIndex < deck.length - 1) {
         setCurrentIndex(currentIndex + 1);
         setIsFlipped(false);
       } else {
         // All cards reviewed
-        setCurrentIndex(cards.length);
+        setCurrentIndex(deck.length);
       }
     } catch (error) {
       console.error("Failed to record review:", error);
@@ -74,7 +81,7 @@ export function VocabularyReview({
     );
   }
 
-  if (cards.length === 0) {
+  if (deck.length === 0) {
     return (
       <div className="text-center py-12">
         <h3 className="text-2xl font-bold mb-2">{tr("All caught up!", "اكتملت المراجعة!")}</h3>
@@ -85,12 +92,12 @@ export function VocabularyReview({
     );
   }
 
-  if (currentIndex >= cards.length) {
+  if (currentIndex >= deck.length) {
     return (
       <div className="text-center py-12">
         <h3 className="text-2xl font-bold mb-2">{tr("Review complete!", "اكتملت المراجعة!")}</h3>
         <p className="text-muted-foreground mb-6">
-          {isAr ? `تمت مراجعة ${cards.length} من المفردات اليوم.` : `You reviewed ${cards.length} vocabulary items today.`}
+          {isAr ? `تمت مراجعة ${deck.length} من المفردات اليوم.` : `You reviewed ${deck.length} vocabulary items today.`}
         </p>
         <Button
           onClick={() => {
@@ -118,7 +125,7 @@ export function VocabularyReview({
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="font-medium">
-            {isAr ? `البطاقة ${currentIndex + 1} من ${cards.length}` : `Card ${currentIndex + 1} of ${cards.length}`}
+            {isAr ? `البطاقة ${currentIndex + 1} من ${deck.length}` : `Card ${currentIndex + 1} of ${deck.length}`}
           </span>
           <span className="text-muted-foreground">
             {Math.round(progress)}%
