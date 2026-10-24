@@ -205,6 +205,9 @@ function skin(mat: MeshStandardMaterial) {
   });
 }
 
+/** One unit sphere shared by every cornea (scaled per eye): a new one per person was never freed. */
+const CORNEA_SPHERE = new SphereGeometry(1, 24, 16);
+
 /** One glossy, see-through cornea for every eye: catches the sky as a small bright highlight. */
 const CORNEA = new MeshStandardMaterial({ color: 0x000000, roughness: 0.06, metalness: 0, transparent: true, blending: AdditiveBlending, depthWrite: false, envMapIntensity: 2.2 });
 
@@ -248,7 +251,8 @@ function addCorneas(root: Group) {
     const c = s.sum.divideScalar(s.n);
     const r = (s.maxX - s.minX) * 0.42;
     if (!(r > 0) || r > 0.05) continue;
-    const eye = new Mesh(new SphereGeometry(r, 24, 16), CORNEA);
+    const eye = new Mesh(CORNEA_SPHERE, CORNEA);
+    eye.scale.setScalar(r);
     eye.name = "cornea";
     eye.renderOrder = 2;
     // The lashes sit on the lid edge, at the front of the eye: the cornea's
@@ -416,6 +420,26 @@ export default function RiggedBody({ model, rules, female, control, look }: { mo
     });
     return { mixer: mx, actions: acts };
   }, [root, anims]);
+
+  // Leaving a room frees this person's GPU state. Each clone has skeletons
+  // of its own, and every skeleton uploads a bone texture; <primitive> is
+  // never disposed by React Three Fiber, so these piled up visit after visit
+  // (≈30 small float textures per room on a phone, measured 25 Oct 2026).
+  useEffect(
+    () => () => {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(root);
+      const seen = new Set<unknown>();
+      root.traverse((o) => {
+        const sk = (o as SkinnedMesh).skeleton;
+        if ((o as SkinnedMesh).isSkinnedMesh && sk && !seen.has(sk)) {
+          seen.add(sk);
+          sk.dispose();
+        }
+      });
+    },
+    [mixer, root],
+  );
 
   const st = useMemo(() => ({ base: null as Clip | null, once: null as Clip | null, onceEnd: 0, t: 0, yaw: 0, pitch: 0 }), []);
   const bones = useMemo(() => {
