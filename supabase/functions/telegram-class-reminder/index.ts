@@ -7,18 +7,39 @@
 // candidate list (public.telegram_class_reminder_candidates()) does the
 // "starts within the next ~70 minutes, hasn't been reminded yet, has a
 // meeting link, is linked on Telegram" filtering, so this function only has
-// to format and send messages.
+// to format and send messages. Also covers exception classes added via the
+// /newclass admin command (telegram-webhook) -- those are ordinary sessions
+// with class_id = null, which this candidate list already includes.
 //
-// Unlike telegram-attendance-ask, this is informational only -- no buttons,
-// nothing for the student to confirm, nothing for telegram-webhook to handle.
+// Re, 24 Oct 2026: Menna (in Oman) was told her class was at "10 pm" --
+// timeLabel used to build `new Date("2026-10-24T15:00")`, read as UTC, then
+// rendered in Asia/Bangkok: +7h on every reminder. Fixed by resolving the
+// wall-clock time in the class's own timezone first. Shown in the STUDENT's
+// own country/time (teacher_students.country) and language
+// (profiles.language, via telegram_student_locale) -- Namy (Malaysia) reads
+// English, everyone else Arabic.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Inlined rather than imported from ../_shared/authorize.ts: deploying via
-// the MCP tool bundles relative to the function's own folder, and a shared
-// cross-function import path isn't worth fighting for one check.
+const COUNTRY_TZ: Record<string, { tz: string; ar: string; en: string }> = {
+  egypt: { tz: "Africa/Cairo", ar: "بتوقيت مصر", en: "Cairo time" },
+  oman: { tz: "Asia/Muscat", ar: "بتوقيت عُمان", en: "Oman time" },
+  malaysia: { tz: "Asia/Kuala_Lumpur", ar: "بتوقيت ماليزيا", en: "Malaysia time" },
+  "saudi arabia": { tz: "Asia/Riyadh", ar: "بتوقيت السعودية", en: "Saudi time" },
+  "united arab emirates": { tz: "Asia/Dubai", ar: "بتوقيت الإمارات", en: "UAE time" },
+  uae: { tz: "Asia/Dubai", ar: "بتوقيت الإمارات", en: "UAE time" },
+  kuwait: { tz: "Asia/Kuwait", ar: "بتوقيت الكويت", en: "Kuwait time" },
+  qatar: { tz: "Asia/Qatar", ar: "بتوقيت قطر", en: "Qatar time" },
+  jordan: { tz: "Asia/Amman", ar: "بتوقيت الأردن", en: "Jordan time" },
+};
+const DEFAULT_ZONE = COUNTRY_TZ.egypt;
+
+function zoneFor(country: string | null | undefined) {
+  return COUNTRY_TZ[(country ?? "").trim().toLowerCase()] ?? DEFAULT_ZONE;
+}
+
 function isAuthorizedServiceCall(req: Request): boolean {
   const header = req.headers.get("authorization")?.trim();
   const token = header?.startsWith("Bearer ") ? header.slice(7).trim() : null;
@@ -35,16 +56,30 @@ async function getConfig(supabase: ReturnType<typeof createClient>): Promise<Con
   return row as Config;
 }
 
-function timeLabel(sessionDate: string, startTime: string, timezone: string): string {
-  // sessionDate "2026-10-22", startTime "19:00:00" -- build a real instant so
-  // Intl can render it in the class's own timezone, then just take HH:MM.
-  const [h, m] = startTime.split(":");
-  const naive = new Date(`${sessionDate}T${h}:${m}:00`);
+// The instant at which the wall clock in `tz` reads `date time`.
+function zonedToInstant(date: string, time: string, tz: string): Date {
+  const [h, m] = time.split(":");
+  const guess = new Date(`${date}T${h}:${m}:00Z`);
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(guess).map((x) => [x.type, x.value]),
+  );
+  const asUtc = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+  return new Date(guess.getTime() - (asUtc - guess.getTime()));
+}
+
+function timeLabel(sessionDate: string, startTime: string, classTz: string, country: string | null, lang: string): string {
+  const zone = zoneFor(country);
   try {
-    return new Intl.DateTimeFormat("ar-EG-u-nu-latn", {
-      hour: "2-digit", minute: "2-digit", timeZone: timezone,
-    }).format(naive);
+    const at = zonedToInstant(sessionDate, startTime, classTz || "Asia/Bangkok");
+    const clock = new Intl.DateTimeFormat(lang === "en" ? "en-US" : "ar-EG-u-nu-latn", {
+      hour: "numeric", minute: "2-digit", timeZone: zone.tz,
+    }).format(at);
+    return lang === "en" ? `${clock} (${zone.en})` : `${clock} ${zone.ar}`;
   } catch {
+    const [h, m] = startTime.split(":");
     return `${h}:${m}`;
   }
 }
@@ -55,10 +90,15 @@ async function sendReminder(
   studentName: string,
   meetingUrl: string,
   whenLabel: string,
+  lang: string,
 ) {
-  const text = studentName
-    ? `هاي ${studentName} 👋\nحصتك بعد شوية (حوالين الساعة ${whenLabel}).\nلينك الحصة:\n${meetingUrl}`
-    : `حصتك بعد شوية (حوالين الساعة ${whenLabel}) 👋\nلينك الحصة:\n${meetingUrl}`;
+  const text = lang === "en"
+    ? (studentName
+        ? `Hi ${studentName} 👋\nYour class is coming up (around ${whenLabel}).\nClass link:\n${meetingUrl}`
+        : `Your class is coming up (around ${whenLabel}) 👋\nClass link:\n${meetingUrl}`)
+    : (studentName
+        ? `هاي ${studentName} 👋\nحصتك بعد شوية (الساعة ${whenLabel}).\nلينك الحصة:\n${meetingUrl}`
+        : `حصتك بعد شوية (الساعة ${whenLabel}).\nلينك الحصة:\n${meetingUrl}`);
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -92,9 +132,7 @@ Deno.serve(async (req) => {
     console.error("telegram_class_reminder_candidates failed", error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
-
-  let sent = 0;
-  for (const row of (candidates ?? []) as {
+  const rows = (candidates ?? []) as {
     session_id: string;
     teacher_student_id: string;
     full_name: string;
@@ -103,9 +141,22 @@ Deno.serve(async (req) => {
     session_date: string;
     start_time: string;
     timezone: string;
-  }[]) {
-    const whenLabel = timeLabel(row.session_date, row.start_time, row.timezone);
-    const ok = await sendReminder(cfg.bot_token, row.chat_id, row.full_name, row.meeting_url, whenLabel);
+  }[];
+
+  const locale = new Map<string, { country: string | null; language: string }>();
+  const ids = [...new Set(rows.map((r) => r.teacher_student_id).filter(Boolean))];
+  if (ids.length) {
+    const { data: rowsLoc } = await supabase.rpc("telegram_student_locale", { p_ids: ids });
+    for (const l of (rowsLoc ?? []) as { teacher_student_id: string; country: string | null; language: string }[]) {
+      locale.set(l.teacher_student_id, { country: l.country, language: l.language });
+    }
+  }
+
+  let sent = 0;
+  for (const row of rows) {
+    const loc = locale.get(row.teacher_student_id) ?? { country: null, language: "ar" };
+    const whenLabel = timeLabel(row.session_date, row.start_time, row.timezone, loc.country, loc.language);
+    const ok = await sendReminder(cfg.bot_token, row.chat_id, row.full_name, row.meeting_url, whenLabel, loc.language);
     if (ok) {
       const { error: updErr } = await supabase
         .from("student_class_sessions")
@@ -116,7 +167,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ sent, candidates: candidates?.length ?? 0 }), {
+  return new Response(JSON.stringify({ sent, candidates: rows.length }), {
     headers: { "Content-Type": "application/json" },
   });
 });
