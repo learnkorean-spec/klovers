@@ -143,6 +143,48 @@ export function upgradeMaterialDetails(): void {
   });
 }
 
+/**
+ * Metres per repeat of a detail map that is laid on by world position
+ * (plaster, stone) instead of by each box's own 0–1 face. The kit draws a
+ * 20 m wall as one unit box scaled up, so a face-mapped texture was
+ * stretched 20× along it: the plaster's tooth smeared into a smooth
+ * gradient and the courtyard walls read as grey glass. Grain, tiles and
+ * fabric keep their own mapping (they have a direction).
+ */
+const WORLD_SCALE: Partial<Record<Detail, number>> = { plaster: 1.4, stone: 1.1 };
+
+function worldMapped(m: MeshStandardMaterial, metres: number): void {
+  const prev = m.onBeforeCompile;
+  m.onBeforeCompile = (shader, renderer) => {
+    prev?.call(m, shader, renderer);
+    shader.vertexShader = shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
+{
+  vec4 wmP = vec4(transformed, 1.0);
+  vec3 wmN = objectNormal;
+  #ifdef USE_INSTANCING
+    wmP = instanceMatrix * wmP;
+    wmN = mat3(instanceMatrix) * wmN;
+  #endif
+  wmP = modelMatrix * wmP;
+  wmN = abs(normalize(mat3(modelMatrix) * wmN));
+  // Project on the face's own plane: walls by (along, up), floors by (x, z).
+  vec2 wmUv = wmN.y > max(wmN.x, wmN.z) ? wmP.xz : (wmN.x > wmN.z ? wmP.zy : wmP.xy);
+  wmUv /= ${metres.toFixed(2)};
+  #ifdef USE_MAP
+    vMapUv = wmUv;
+  #endif
+  #ifdef USE_NORMALMAP
+    vNormalMapUv = wmUv;
+  #endif
+}`,
+    );
+  };
+  const key = m.customProgramCacheKey?.bind(m);
+  m.customProgramCacheKey = () => `${key ? key() : ""}|wm${metres}`;
+}
+
 /** A cached lit material for this colour and finish. */
 export function std(color: string, roughness = 0.8, extra: Omit<StdOptions, "roughness"> & { detail?: Detail } = {}): MeshStandardMaterial {
   const key = `${color}|${roughness}|${extra.metalness ?? 0}|${extra.emissive ?? ""}|${extra.emissiveIntensity ?? 0}|${extra.flatShading ? 1 : 0}|${extra.detail ?? ""}`;
@@ -156,6 +198,8 @@ export function std(color: string, roughness = 0.8, extra: Omit<StdOptions, "rou
     });
     if (extra.detail) {
       m.map = detail(extra.detail);
+      const metres = WORLD_SCALE[extra.detail];
+      if (metres) worldMapped(m, metres);
       const list = byDetail.get(extra.detail) ?? [];
       list.push(m);
       byDetail.set(extra.detail, list);
