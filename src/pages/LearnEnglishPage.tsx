@@ -8,6 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
 import PersonalLessonPricing from "@/components/PersonalLessonPricing";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
+import englishConversationPhoto from "@/assets/english-conversation-practice.jpg";
+import englishOpenBookPhoto from "@/assets/english-open-book.jpg";
 
 /**
  * /learn-english and /ar/learn-english
@@ -319,7 +321,7 @@ const LearnEnglishPage = () => {
                   <AirmailRule />
                   <div className="overflow-hidden border-4 border-white/95 bg-muted">
                     <img
-                      src="https://images.unsplash.com/photo-1758525225676-329ddcedf78f?fm=jpg&q=80&w=1600&auto=format&fit=crop"
+                      src={englishConversationPhoto}
                       width={1600}
                       height={900}
                       alt={
@@ -406,7 +408,7 @@ const LearnEnglishPage = () => {
           <div className="container mx-auto px-4 max-w-6xl grid items-center gap-12 lg:grid-cols-2">
             <div className="overflow-hidden rounded-2xl border border-border shadow-lg bg-muted order-2 lg:order-1">
               <img
-                src="https://images.unsplash.com/photo-1508169351866-777fc0047ac5?fm=jpg&q=80&w=1600&auto=format&fit=crop"
+                src={englishOpenBookPhoto}
                 width={1600}
                 height={1067}
                 alt={isAr ? "كتاب مفتوح يُستخدم في دراسة الإنجليزية" : "An open book used for studying English"}

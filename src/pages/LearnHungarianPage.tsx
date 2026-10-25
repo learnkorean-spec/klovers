@@ -7,6 +7,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
 import PersonalLessonPricing from "@/components/PersonalLessonPricing";
+import budapestParliamentPhoto from "@/assets/hungarian-parliament-budapest.jpg";
+import fishermansBastionPhoto from "@/assets/hungarian-fishermans-bastion.jpg";
 
 /**
  * /learn-hungarian and /ar/learn-hungarian
@@ -292,7 +294,7 @@ const LearnHungarianPage = () => {
                   <BridgeRule />
                   <div className="overflow-hidden border-4 border-white/95 bg-muted">
                     <img
-                      src="https://images.unsplash.com/photo-1728463460723-61de554e49ba?fm=jpg&q=80&w=1600&auto=format&fit=crop"
+                      src={budapestParliamentPhoto}
                       width={1600}
                       height={900}
                       alt={
@@ -379,7 +381,7 @@ const LearnHungarianPage = () => {
           <div className="container mx-auto px-4 max-w-6xl grid items-center gap-12 lg:grid-cols-2">
             <div className="overflow-hidden rounded-2xl border border-border shadow-lg bg-muted order-2 lg:order-1">
               <img
-                src="https://images.unsplash.com/photo-1661247374773-29f7e75d2b35?fm=jpg&q=80&w=1600&auto=format&fit=crop"
+                src={fishermansBastionPhoto}
                 width={1600}
                 height={1067}
                 alt={isAr ? "قلعة الصيادين في بودابست، المجر" : "Fisherman's Bastion in Budapest, Hungary"}
