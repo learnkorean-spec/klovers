@@ -805,14 +805,18 @@ type HudRect = { l: number; t: number; r: number; b: number };
  * Where the page's own controls sit over the 3D view, in the signs' layer
  * coordinates: every interactive element (pointer-events-auto) outside the
  * signs' layer — the top buttons and toggles, objective and mission chips,
- * the controls card, the map, the joystick. Whole-screen overlays (a card's
+ * the controls card, the map, the joystick — and the panels that only show
+ * something (role="status", or marked data-hud). Whole-screen overlays (a card's
  * backdrop) are skipped: they cover everything anyway.
  */
 function hudRects(layer: HTMLElement | null, w: number, h: number): HudRect[] {
   if (!layer || !layer.parentElement) return [];
   const base = layer.getBoundingClientRect();
   const out: HudRect[] = [];
-  layer.parentElement.querySelectorAll<HTMLElement>(".pointer-events-auto").forEach((e) => {
+  // Panels that show something without being pressed (the objective, the
+  // letters, the room's banner, the map's label) are kept clear too: a sign
+  // over the objective made both unreadable on a phone.
+  layer.parentElement.querySelectorAll<HTMLElement>(".pointer-events-auto, [role=status], [data-hud]").forEach((e) => {
     if (layer.contains(e) || e.tagName === "CANVAS") return;
     const r = e.getBoundingClientRect();
     if (r.width < 2 || r.height < 2 || r.width * r.height > w * h * 0.5) return;

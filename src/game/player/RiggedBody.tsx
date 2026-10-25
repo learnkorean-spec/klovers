@@ -390,7 +390,76 @@ function lookToward(bone: Bone, yaw: number, pitch: number) {
   bone.quaternion.copy(_qp.multiply(_qw));
 }
 
+/**
+ * Lighter copies of the background bodies (≈45–55% of the triangles; made
+ * by scripts/world-lod — geometry only, same skin), worn by people who stand
+ * far from the camera. A busy room drew ≈50k triangles per person whatever
+ * their size on screen: 10 people were half a million triangles on a phone.
+ * Swapping the geometry keeps the one skeleton, motion and clothes.
+ */
+const LOD_MODELS = new Set(["npc-joe", "npc-leonard", "npc-brian", "npc-elizabeth", "npc-megan"]);
+
+/** Checks only: ?lod=all puts everyone in the light copy, ?lod=off nobody. */
+function lodFlag(): "all" | "off" | null {
+  if (typeof window === "undefined") return null;
+  const v = new URLSearchParams(window.location.search).get("lod");
+  return v === "all" || v === "off" ? v : null;
+}
+
+/** Beyond this distance from the camera (metres) a person wears the light copy; phones sooner. */
+const lodFar = () => (isTouchFirst() ? 6 : 10);
+
+const _cam = new Vector3();
+
+function useLod(root: Group, model: string) {
+  const flag = useMemo(lodFlag, []);
+  const use = LOD_MODELS.has(model) && flag !== "off";
+  // Always the same hook calls: the light copy of a body that has none is never fetched.
+  const light = useLoader(GLTFLoader, use ? `${BASE}${model}.lod.glb` : `${BASE}${model}.glb`, extend) as GLTF;
+  const swaps = useMemo(() => {
+    if (!use) return [];
+    const byName = new Map<string, BufferGeometry>();
+    light.scene.traverse((o) => {
+      if ((o as Mesh).isMesh) byName.set(o.name.replace(/^mixamorig\d+/, "mixamorig"), (o as Mesh).geometry);
+    });
+    const out: { mesh: Mesh; full: BufferGeometry; lite: BufferGeometry }[] = [];
+    const corneas: Mesh[] = [];
+    root.traverse((o) => {
+      const m = o as Mesh;
+      if (m.name === "cornea") corneas.push(m);
+      if (!(m as SkinnedMesh).isSkinnedMesh) return;
+      const lite = byName.get(m.name);
+      if (lite && lite !== m.geometry && lite.getAttribute("position")?.count) out.push({ mesh: m, full: m.geometry, lite });
+    });
+    return out.length ? out.map((s, i) => ({ ...s, corneas: i === 0 ? corneas : [] })) : [];
+  }, [use, light, root]);
+  const st = useMemo(() => ({ far: false, first: true }), []);
+  const far = useMemo(lodFar, []);
+  useFrame(({ camera }) => {
+    if (!swaps.length) return;
+    let next: boolean;
+    if (flag === "all") next = true;
+    else {
+      root.getWorldPosition(_pos);
+      camera.getWorldPosition(_cam);
+      const d = _pos.distanceTo(_cam);
+      // A metre of give either way: nobody flickers between the two at the line.
+      next = st.far ? d > far - 1 : d > far + 1;
+    }
+    if (next === st.far && !st.first) return;
+    st.far = next;
+    st.first = false;
+    for (const s of swaps) {
+      s.mesh.geometry = next ? s.lite : s.full;
+      // An eye's highlight is a pixel or less that far off: not worth its sphere.
+      for (const c of s.corneas) c.visible = !next;
+    }
+  });
+}
+
 export default function RiggedBody({ model, rules, female, control, look }: { model: string; rules: DressRule[]; female: boolean; control: MutableRefObject<BodyControl>; look?: LookTarget }) {
+  // Fetch the light copy alongside the body, not after it (each load below waits for the one before).
+  if (LOD_MODELS.has(model) && lodFlag() !== "off") useLoader.preload(GLTFLoader, `${BASE}${model}.lod.glb`, extend);
   const person = useLoader(GLTFLoader, `${BASE}${model}.glb`, extend) as GLTF;
   const anims = useLoader(
     GLTFLoader,
@@ -404,6 +473,7 @@ export default function RiggedBody({ model, rules, female, control, look }: { mo
     addCorneas(r);
     return r;
   }, [person, rules]);
+  useLod(root, model);
 
   const { mixer, actions } = useMemo(() => {
     const mx = new AnimationMixer(root);

@@ -256,7 +256,7 @@ export function MiniMap({ lang, pose, isOpen, steps, target, size, onOpen, showK
       >
         <canvas ref={ref} style={{ width: size, height: size, display: "block" }} />
       </button>
-      <span className="flex items-center gap-1.5 rounded-full bg-charcoal/85 px-2.5 py-0.5 text-[11px] font-bold text-ivory">
+      <span data-hud className="flex items-center gap-1.5 rounded-full bg-charcoal/85 px-2.5 py-0.5 text-[11px] font-bold text-ivory">
         <span ref={distRef} className="rounded-full bg-klovers-yellow px-1.5 text-charcoal" style={{ display: "none" }} />
         <span>{c.button}</span>
         {showKey && <kbd className="font-display text-ivory/70">{c.key}</kbd>}
