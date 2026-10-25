@@ -348,7 +348,7 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* Who this is for — stub-style rows, not another checklist card. */}
-        <section className="py-20 border-b" style={{ backgroundColor: PAPER }} id="who-its-for">
+        <section className="py-20 border-b scroll-mt-24" style={{ backgroundColor: PAPER }} id="who-its-for">
           <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="text-2xl sm:text-3xl font-semibold" style={{ ...displayFont, color: INK }}>
               {tr("Who these lessons are for", "لمن هذه الدروس")}
@@ -368,7 +368,7 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* How lessons work — a real sequence, numbered. */}
-        <section className="py-20 border-b" id="how-it-works">
+        <section className="py-20 border-b scroll-mt-24" id="how-it-works">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
               {tr("How lessons work", "كيف تسير الدروس")}
@@ -467,7 +467,7 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* Trial booking — the second and last use of the airmail rule. */}
-        <section className="py-20 border-b" style={{ backgroundColor: PAPER }} id="trial">
+        <section className="py-20 border-b scroll-mt-24" style={{ backgroundColor: PAPER }} id="trial">
           <div className="container mx-auto px-4 max-w-2xl">
             <div className="overflow-hidden rounded-t-2xl">
               <AirmailRule />
@@ -498,7 +498,7 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* Common questions — visible text backing the FAQPage schema above */}
-        <section className="py-20 border-b" id="faq">
+        <section className="py-20 border-b scroll-mt-24" id="faq">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
               {tr("Common questions", "أسئلة شائعة")}
@@ -622,8 +622,8 @@ const LearnEnglishPage = () => {
             <a href="https://mkatub.kloversegy.com" className="text-white/70 hover:text-white">
               {tr("Mkatub — Learn Arabic", "مكتوب — تعلّم العربية")}
             </a>
-            <Link to="/" className="text-white/70 hover:text-white">
-              kloversegy.com
+            <Link to="/learn-hungarian" className="text-white/70 hover:text-white">
+              {tr("Buda — Learn Hungarian", "بودا — تعلّم المجرية")}
             </Link>
           </div>
         </div>

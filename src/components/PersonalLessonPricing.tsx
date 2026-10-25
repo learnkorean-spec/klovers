@@ -81,7 +81,7 @@ const PersonalLessonPricing = ({
   trialHref = "#trial",
 }: PersonalLessonPricingProps) => {
   return (
-    <section className="py-20 border-b" style={background ? { backgroundColor: background } : undefined} id={id}>
+    <section className="py-20 border-b scroll-mt-24" style={background ? { backgroundColor: background } : undefined} id={id}>
       <div className="container mx-auto px-4 max-w-5xl">
         <h2 className="text-2xl sm:text-3xl font-semibold" style={{ ...headingStyle, color: ink }}>
           {tr("Pricing", "الأسعار")}

@@ -321,7 +321,7 @@ const LearnHungarianPage = () => {
         </section>
 
         {/* Who this is for — stub-style rows, not another checklist card. */}
-        <section className="py-20 border-b" style={{ backgroundColor: CREAM }} id="who-its-for">
+        <section className="py-20 border-b scroll-mt-24" style={{ backgroundColor: CREAM }} id="who-its-for">
           <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="text-2xl sm:text-3xl font-semibold" style={{ ...displayFont, color: DANUBE }}>
               {tr("Who these lessons are for", "لمن هذه الدروس")}
@@ -341,7 +341,7 @@ const LearnHungarianPage = () => {
         </section>
 
         {/* How lessons work — a real sequence, numbered. */}
-        <section className="py-20 border-b" id="how-it-works">
+        <section className="py-20 border-b scroll-mt-24" id="how-it-works">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
               {tr("How lessons work", "كيف تسير الدروس")}
@@ -411,7 +411,7 @@ const LearnHungarianPage = () => {
         </section>
 
         {/* Trial booking — the second and last use of the bridge rule. */}
-        <section className="py-20 border-b" style={{ backgroundColor: CREAM }} id="trial">
+        <section className="py-20 border-b scroll-mt-24" style={{ backgroundColor: CREAM }} id="trial">
           <div className="container mx-auto px-4 max-w-2xl">
             <div className="overflow-hidden rounded-t-2xl">
               <BridgeRule />
@@ -442,7 +442,7 @@ const LearnHungarianPage = () => {
         </section>
 
         {/* Common questions — visible text backing the FAQPage schema above */}
-        <section className="py-20 border-b" id="faq">
+        <section className="py-20 border-b scroll-mt-24" id="faq">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
               {tr("Common questions", "أسئلة شائعة")}
