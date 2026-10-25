@@ -27,4 +27,15 @@ describe("the world's people", () => {
       if (n.cast !== "elder" && n.cast !== "gardener") expect(lum).toBeLessThan(0x30);
     }
   });
+
+  it("have their own face proportions, kept natural (within ±10%)", () => {
+    const shapes = new Set<string>();
+    for (const n of NPCS) {
+      const { head } = realPersonInRoom(n, NPCS);
+      for (const v of head) expect(v).toBeGreaterThan(0.9), expect(v).toBeLessThan(1.1);
+      shapes.add(head.map((v) => v.toFixed(3)).join(","));
+    }
+    expect(shapes.size).toBeGreaterThan(NPCS.length * 0.6);
+  });
+
 });

@@ -27,10 +27,33 @@ jaws heavy):
     (cd mh && git sparse-checkout set makehuman/data/3dobjs makehuman/data/targets/macrodetails makehuman/data/targets/eyes makehuman/data/targets/nose)
     export MH_DATA=$PWD/mh/makehuman/data/
     npm i @gltf-transform/core@4 @gltf-transform/extensions@4 meshoptimizer   # in a scratch folder
-    node dump.mjs ORIGINAL.glb pts.json
+    node dump.mjs ORIGINAL.glb pts.json      # bind-pose positions (joint · IBM · position)
     python3 koface.py pts.json x male new.json 1.5        # or: female … 0.8
     node write.mjs ORIGINAL.glb new.json OUT.glb
 
 Always start from the ORIGINAL (un-reshaped) glb — git history before
 25 Oct 2026 — never re-apply to an already reshaped file. Check the result
 side by side and in the world (seated, walking) before committing.
+
+## Many faces from five bodies (25 Oct 2026, evening)
+
+The nearest-neighbour mapping above left the lips and nostrils crumpled
+(neighbouring vertices moved up to 12 mm apart, so teeth showed under the
+nose). Two steps were added, and the shipped bodies are rebuilt from the
+originals with them (`run.sh`):
+
+- `smooth.py`: each vertex takes the Gaussian-weighted (σ 5 mm) average
+  displacement of its neighbours across head, eyelashes and hair — the same
+  Korean shape, without the crumpling.
+- `morph.py` + `addmorph.mjs`: seven face blend shapes from MakeHuman
+  targets (faceRound, jawWide, cheekbones, eyesBig, noseWide, mouthFull,
+  chinLong), smoothed the same way, stored as glTF morph targets (normalised
+  int16, in each mesh's local space) on the Body, Eyelashes and Hair meshes
+  (+30–140 KB per body). Each person sets their own mix at run time
+  (`realCast.ts` FACE_RANGE → `RiggedBody` setFace); the light/far copies
+  carry none.
+
+After a rebuild, regenerate the light and far copies from the `*.base.glb`
+files (same skin as the shipped files; `scripts/world-lod`), since
+`write.mjs` re-quantises and changes the skin's inverse bind matrices.
+Checks: `src/game/systems/__tests__/faces.test.ts`.

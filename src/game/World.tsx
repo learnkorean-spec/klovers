@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, PMREMGenerator, RingGeometry, Vector3, type Mesh, type Scene, type Texture, type WebGLRenderer } from "three";
+import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, PerspectiveCamera, PMREMGenerator, RingGeometry, Vector3, type Mesh, type Scene, type Texture, type WebGLRenderer } from "three";
 import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { FOLIAGE_TIME, upgradeMaterialDetails } from "./config/materials";
 import { REDUCED_MOTION } from "./systems/motion";
@@ -187,6 +187,8 @@ declare global {
       place: (x: number, z: number) => void;
       /** The live scene, for exporting a room's geometry to bake (scripts/world-bake). */
       scene: () => Scene | null;
+      /** A close look from any point (checks only): renders one frame from there, returns a PNG data URL. */
+      portrait: (from: [number, number, number], to: [number, number, number], fov?: number) => string;
     };
   }
 }
@@ -485,6 +487,18 @@ export default function World(props: WorldProps) {
         };
       },
       scene: () => sceneRef.current,
+      portrait: (from: [number, number, number], to: [number, number, number], fov = 30) => {
+        const gl = glRef.current;
+        const scene = sceneRef.current;
+        if (!gl || !scene) return "";
+        const el = gl.domElement;
+        const cam = new PerspectiveCamera(fov, el.width / el.height, 0.03, 300);
+        cam.position.set(...from);
+        cam.lookAt(...to);
+        cam.updateMatrixWorld();
+        gl.render(scene, cam);
+        return el.toDataURL("image/png");
+      },
       place: (x: number, z: number) => {
         player.current.position.x = x;
         player.current.position.z = z;
@@ -877,21 +891,26 @@ function BeaconWatcher({ room, player, view, story, access, els, onNearby }: {
       const sx = (v.x * 0.5 + 0.5) * size.width;
       let sy = (-v.y * 0.5 + 0.5) * size.height;
       const w = el.offsetWidth || 110;
-      for (let k = 0; k < placed.length; k++) {
-        const o = placed[k];
-        if (Math.abs(o.x - sx) < (o.w + w) / 2 + 6 && Math.abs(o.y - sy) < 40) {
-          sy = o.y - 42;
-          k = -1;
-        }
-      }
-      // Over a control: step just below it if there is room, else wait hidden.
       const hh = el.offsetHeight || 36;
-      for (let pass = 0; pass < 3; pass++) {
-        const hit = hud.current.rects.find((r) => sx + w / 2 > r.l - 4 && sx - w / 2 < r.r + 4 && sy > r.t - 4 && sy - hh < r.b + 4);
-        if (!hit) break;
-        sy = hit.b + hh + 6;
+      const onSign = (y: number) => placed.find((o) => Math.abs(o.x - sx) < (o.w + w) / 2 + 6 && Math.abs(o.y - y) < 40);
+      const onHud = (y: number) => hud.current.rects.find((r) => sx + w / 2 > r.l - 4 && sx - w / 2 < r.r + 4 && y > r.t - 4 && y - hh < r.b + 4);
+      // Signs never sit on top of each other (a later one steps up a line) or
+      // over a control (it steps just below it). Each move is checked against
+      // the other rule; a sign that still lands on something waits hidden.
+      for (let pass = 0; pass < 8; pass++) {
+        const o = onSign(sy);
+        if (o) {
+          sy = o.y - 42;
+          continue;
+        }
+        const hit = onHud(sy);
+        if (hit) {
+          sy = hit.b + hh + 6;
+          continue;
+        }
+        break;
       }
-      const blocked = hud.current.rects.some((r) => sx + w / 2 > r.l - 4 && sx - w / 2 < r.r + 4 && sy > r.t - 4 && sy - hh < r.b + 4);
+      const blocked = !!onHud(sy) || !!onSign(sy);
       const off = blocked || v.z > 1 || sx - w / 2 < 4 || sx + w / 2 > size.width - 4 || sy < 70 || sy > size.height - 8;
       if (!off) placed.push({ x: sx, y: sy, w });
       el.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(-50%, -100%)`;

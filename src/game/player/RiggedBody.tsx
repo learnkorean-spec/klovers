@@ -303,6 +303,63 @@ function addCorneas(root: Group) {
   }
 }
 
+/**
+ * Cloth: the converter's gloss maps left sweaters and trousers shining like
+ * wet rubber under the sky light. Real cloth is matte; a floor on roughness.
+ */
+function cloth(mat: MeshStandardMaterial) {
+  tweak(mat, "cloth", (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = max( roughnessFactor, 0.68 );");
+  });
+}
+
+/**
+ * The npc-elizabeth hair stood out from the head like a wide puff (it read
+ * as a curly 80s volume, not a Korean bob). Its cards are drawn in, sideways
+ * and front-to-back, toward the head (once per geometry: clones share it, and
+ * the light copies get the same change).
+ */
+const TAME_HAIR = /^Ch26_Hair$/;
+const tamed = new WeakSet<BufferGeometry>();
+function tameHair(name: string, geo: BufferGeometry) {
+  if (!TAME_HAIR.test(name) || tamed.has(geo)) return;
+  tamed.add(geo);
+  const pos = geo.getAttribute("position");
+  // Positions are quantised per mesh to -1…1 round the hair's own middle (y up); anything else is left alone.
+  if (!pos.normalized) return;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+    // Most at the crown and sides, none at the ends hanging below the ears.
+    const t = Math.min(1, Math.max(0, (y + 0.6) / 1.4));
+    const f = 1 - 0.15 * t;
+    pos.setXYZ(i, x * f, y - (y > 0.4 ? (y - 0.4) * 0.12 : 0), z * (1 - 0.1 * t));
+  }
+  pos.needsUpdate = true;
+  geo.computeBoundingSphere();
+}
+
+/**
+ * People are drawn only when on screen: their skinned bounds used to follow
+ * the bind pose, so they were never culled — everyone behind the camera
+ * still cost their full triangles. A sphere round the rest pose, generously
+ * enlarged for sitting, reaching and walking, is safe to cull by.
+ */
+function cullable(root: Group) {
+  root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    const m = o as SkinnedMesh;
+    if (!m.isSkinnedMesh) return;
+    m.computeBoundingSphere();
+    if (m.boundingSphere) m.boundingSphere.radius = m.boundingSphere.radius * 1.5 + 0.3;
+    m.frustumCulled = true;
+  });
+}
+
+/** A face's own proportions: the head bone scaled a little (width, height, depth). */
+export type HeadShape = [number, number, number];
+
 function prepare(root: Group, rules: DressRule[]) {
   root.traverse((o) => {
     // Mixamo numbers the rig per character ("mixamorig9:Hips"); the shared
@@ -312,8 +369,9 @@ function prepare(root: Group, rules: DressRule[]) {
     if (!m.isMesh) return;
     m.castShadow = true;
     m.receiveShadow = true;
-    // Skinned bounds follow the bind pose, not the motion: never cull.
+    // Culled by a padded rest-pose sphere (cullable, below), not the bind-pose bounds.
     m.frustumCulled = false;
+    tameHair(m.name, m.geometry);
     if (!(m.material instanceof MeshStandardMaterial)) return;
     // The converter reads Mixamo's gloss map as metal (dark, mirror-like
     // skin) and leaves hair at zero opacity: skin and cloth are not metal,
@@ -370,7 +428,8 @@ function prepare(root: Group, rules: DressRule[]) {
         mat.color = new Color(rule.color);
       }
     }
-    // After the dye (which sets its own shader change): the rim on top.
+    // After the dye (which sets its own shader change): matte cloth and the rim on top.
+    if (/Shirt|Sweater|Suit|Pants|Collar|Tie/.test(m.name)) cloth(mat);
     if (!isHair) rim(mat, /_Body$/.test(m.name) ? 0.16 : 0.22);
     mat.needsUpdate = true;
     m.material = mat as Material;
@@ -473,7 +532,10 @@ function useLod(root: Group, model: string) {
     const named = (g: GLTF) => {
       const byName = new Map<string, BufferGeometry>();
       g.scene.traverse((o) => {
-        if ((o as Mesh).isMesh) byName.set(o.name.replace(/^mixamorig\d+/, "mixamorig"), (o as Mesh).geometry);
+        if (!(o as Mesh).isMesh) return;
+        const name = o.name.replace(/^mixamorig\d+/, "mixamorig");
+        tameHair(name, (o as Mesh).geometry);
+        byName.set(name, (o as Mesh).geometry);
       });
       return byName;
     };
@@ -540,7 +602,25 @@ function onScreen(camera: Camera, frame: number, at: Vector3): boolean {
   return _frustum.intersectsSphere(_sphere);
 }
 
-export default function RiggedBody({ model, rules, female, control, look }: { model: string; rules: DressRule[]; female: boolean; control: MutableRefObject<BodyControl>; look?: LookTarget }) {
+/**
+ * A face of one's own: the bodies carry face blend shapes (rounder or longer,
+ * jaw, cheekbones, eyes, nose, mouth, chin — scripts/world-faces/morph.py);
+ * each person sets them once. The light copies have none, and from that far
+ * no one can tell.
+ */
+function setFace(root: Group, face: Record<string, number>) {
+  root.traverse((o) => {
+    const m = o as Mesh;
+    const dict = m.morphTargetDictionary;
+    if (!dict || !m.morphTargetInfluences) return;
+    for (const [name, v] of Object.entries(face)) {
+      const i = dict[name];
+      if (i !== undefined) m.morphTargetInfluences[i] = v;
+    }
+  });
+}
+
+export default function RiggedBody({ model, rules, female, control, look, head, face }: { model: string; rules: DressRule[]; female: boolean; control: MutableRefObject<BodyControl>; look?: LookTarget; head?: HeadShape; face?: Record<string, number> }) {
   // Fetch the light copy alongside the body, not after it (each load below waits for the one before).
   if (LOD_MODELS.has(model) && lodFlag() !== "off") {
     useLoader.preload(GLTFLoader, `${BASE}${model}.lod.glb`, extend);
@@ -557,8 +637,16 @@ export default function RiggedBody({ model, rules, female, control, look }: { mo
     const r = cloneSkinned(person.scene) as Group;
     prepare(r, rules);
     addCorneas(r);
+    if (head) {
+      // No motion here moves a bone's scale (rotations only), so this holds.
+      r.traverse((o) => {
+        if ((o as Bone).isBone && /Head$/.test(o.name)) o.scale.set(...head);
+      });
+    }
+    if (face) setFace(r, face);
+    cullable(r);
     return r;
-  }, [person, rules]);
+  }, [person, rules, head, face]);
   const lod = useLod(root, model);
 
   const { mixer, actions } = useMemo(() => {

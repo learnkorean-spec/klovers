@@ -57,7 +57,26 @@ export interface PersonLook {
   rules: DressRule[];
   /** Multiplies the role's own scale. */
   scale: number;
+  /** The face's own proportions (head width, height, depth): five bodies, many faces. */
+  head: [number, number, number];
+  /** Face blend shapes baked into the bodies (scripts/world-faces/morph.py), by name: −1…1. */
+  face: Record<string, number>;
 }
+
+/**
+ * How far each face shape may go either way. Kept inside what real faces do:
+ * women's jaws stay narrow (wider read as heavy), long chins stay modest.
+ */
+const FACE_RANGE: Record<string, [number, number]> = {
+  faceRound: [-0.5, 0.5],
+  jawWide: [-0.5, 0.45],
+  cheekbones: [-0.4, 0.7],
+  eyesBig: [-0.7, 0.6],
+  noseWide: [-0.6, 0.6],
+  mouthFull: [-0.5, 0.6],
+  chinLong: [-0.45, 0.4],
+};
+export const FACE_SHAPES = Object.keys(FACE_RANGE);
 
 const people = new Map<string, PersonLook>();
 
@@ -86,7 +105,19 @@ export function realPerson(cast: CastId, personId: string, salt = 0): PersonLook
   ];
   // Korean average heights (≈1.73 m men, 1.61 m women) against the models'.
   const scale = (base.female ? 0.95 : 0.98) + (((h >>> 19) % 7) - 3) * 0.012;
-  const look = { model, female: base.female, rules, scale };
+  // Faces: a little wider or narrower, longer or rounder, each their own.
+  const step = (bits: number, n: number) => (((h >>> bits) % n) - (n - 1) / 2) / ((n - 1) / 2);
+  const size = 1 + step(23, 5) * 0.025;
+  const head: [number, number, number] = [size * (1 + step(25, 7) * 0.055), size * (1 + step(27, 5) * 0.04), size * (1 + step(29, 3) * 0.03)];
+  // Each face shape from its own hash, so no two people share a set of them.
+  const face: Record<string, number> = {};
+  for (const name of FACE_SHAPES) {
+    let [lo, hi] = FACE_RANGE[name];
+    if (base.female && name === "jawWide") hi = 0.15;
+    const u = (hash(`${personId}|${salt}|${name}`) % 1001) / 1000;
+    face[name] = Math.round((lo + (hi - lo) * u) * 100) / 100;
+  }
+  const look = { model, female: base.female, rules, scale, head, face };
   people.set(key, look);
   return look;
 }
