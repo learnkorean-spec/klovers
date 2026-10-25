@@ -1,5 +1,6 @@
 // Light copy of a person (geometry only) for people far from the camera.
-// See README.md. Usage: node lod.mjs IN.glb OUT.lod.glb
+// See README.md. Usage: node lod.mjs IN.glb OUT.lod.glb   (light, past 6–10 m)
+//                       node lod.mjs IN.glb OUT.far.glb far (lighter still, past 13–20 m)
 import { NodeIO } from "@gltf-transform/core";
 import { ALL_EXTENSIONS, EXTMeshoptCompression } from "@gltf-transform/extensions";
 import { prune, dequantize, simplifyPrimitive } from "@gltf-transform/functions";
@@ -8,12 +9,17 @@ import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer
 await MeshoptDecoder.ready;
 await MeshoptEncoder.ready;
 await MeshoptSimplifier.ready;
-const [, , inp, out] = process.argv;
+const [, , inp, out, level = "light"] = process.argv;
+const far = level === "far";
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.decoder": MeshoptDecoder, "meshopt.encoder": MeshoptEncoder });
 const doc = await io.read(inp);
 
 // Share of triangles kept: lashes untouched (tiny, and the eyes find them), hair cards gently.
-const ratioFor = (n) => (/Eyelash/i.test(n) ? 1 : /Hair/i.test(n) ? 0.5 : /Body/i.test(n) ? 0.4 : 0.35);
+// The far copy is for people a few dozen pixels tall: an eighth of the body, a fifth of the hair.
+const ratioFor = (n) =>
+  far ? (/Eyelash/i.test(n) ? 0.5 : /Hair/i.test(n) ? 0.22 : /Body/i.test(n) ? 0.14 : 0.12) : /Eyelash/i.test(n) ? 1 : /Hair/i.test(n) ? 0.5 : /Body/i.test(n) ? 0.4 : 0.35;
+// Largest shape change allowed, as a share of the person's size (≈1.8 m): 0.2 % near, 1.5 % far.
+const errorFor = (n) => (far ? (/Hair/i.test(n) ? 0.03 : 0.015) : /Hair/i.test(n) ? 0.01 : 0.002);
 
 await doc.transform(dequantize({ pattern: /^POSITION$/ }));
 let before = 0;
@@ -22,7 +28,7 @@ for (const mesh of doc.getRoot().listMeshes()) {
   const r = ratioFor(mesh.getName());
   for (const prim of mesh.listPrimitives()) {
     before += prim.getIndices().getCount() / 3;
-    if (r < 1) simplifyPrimitive(prim, { simplifier: MeshoptSimplifier, ratio: r, error: /Hair/i.test(mesh.getName()) ? 0.01 : 0.002, lockBorder: false });
+    if (r < 1) simplifyPrimitive(prim, { simplifier: MeshoptSimplifier, ratio: r, error: errorFor(mesh.getName()), lockBorder: false });
     after += prim.getIndices().getCount() / 3;
   }
 }

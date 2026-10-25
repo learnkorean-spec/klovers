@@ -1,8 +1,9 @@
 import { useEffect, useMemo, type MutableRefObject } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
-import { AdditiveBlending, AnimationMixer, Color, DoubleSide, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, Quaternion, SphereGeometry, Vector3, type AnimationAction, type AnimationClip, type Bone, type BufferGeometry, type Group, type Material, type SkinnedMesh, type Texture } from "three";
+import { AdditiveBlending, AnimationMixer, Color, DoubleSide, Frustum, LoopOnce, LoopRepeat, Matrix4, Mesh, MeshStandardMaterial, Quaternion, Sphere, SphereGeometry, Vector3, type Camera, type AnimationAction, type AnimationClip, type Bone, type BufferGeometry, type Group, type Material, type SkinnedMesh, type Texture } from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { isTouchFirst } from "../systems/webgl";
+import { pickQuality } from "../systems/quality";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 
@@ -38,6 +39,44 @@ export type DressRule = {
    */
   tint?: boolean;
 };
+
+const LIMITS = typeof window !== "undefined" ? pickQuality() : { maxTexture: 4096, maxDetail: 4096 };
+const fitted = new WeakSet<Texture>();
+
+/**
+ * Shrinks a texture whose side is over the tier's limit (systems/quality),
+ * once, before it is first drawn: on phones the people's 2048² colour maps
+ * go to the graphics card at 1024² and their 1024² relief and shine maps
+ * at 512², a quarter of the memory each. Only images without see-through
+ * parts are ever over the limit (the hair's colour map is 1024²), so
+ * drawing through a 2D canvas loses nothing.
+ */
+function fitTexture(t: Texture, max: number) {
+  if (fitted.has(t)) return;
+  fitted.add(t);
+  const img = t.image as (CanvasImageSource & { width: number; height: number; close?: () => void }) | undefined;
+  if (!img || typeof document === "undefined") return;
+  const side = Math.max(img.width, img.height);
+  if (!side || side <= max) return;
+  const k = max / side;
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(img.width * k);
+  cv.height = Math.round(img.height * k);
+  const ctx = cv.getContext("2d");
+  if (!ctx) return;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  try {
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
+  } catch {
+    return;
+  }
+  // Each picture belongs to this one texture (the glTF loader makes one per
+  // image), and an ImageBitmap holds its memory until it is closed.
+  img.close?.();
+  t.image = cv;
+  t.needsUpdate = true;
+}
 
 /** Small greyscale copies of textures, read once, for measuring brightness. */
 const pixels = new WeakMap<Texture, { w: number; h: number; lum: Float32Array; alpha: Uint8Array; rgb: Float32Array } | null>();
@@ -304,6 +343,7 @@ function prepare(root: Group, rules: DressRule[]) {
     // renderer clamps this to what the graphics card allows.
     const aniso = isTouchFirst() ? 4 : 16;
     for (const t of [mat.map, mat.normalMap, mat.roughnessMap, mat.aoMap]) {
+      if (t) fitTexture(t, t === mat.map ? LIMITS.maxTexture : LIMITS.maxDetail);
       if (t && t.anisotropy < aniso) {
         t.anisotropy = aniso;
         t.needsUpdate = true;
@@ -391,75 +431,121 @@ function lookToward(bone: Bone, yaw: number, pitch: number) {
 }
 
 /**
- * Lighter copies of the background bodies (≈45–55% of the triangles; made
- * by scripts/world-lod — geometry only, same skin), worn by people who stand
- * far from the camera. A busy room drew ≈50k triangles per person whatever
- * their size on screen: 10 people were half a million triangles on a phone.
- * Swapping the geometry keeps the one skeleton, motion and clothes.
+ * Lighter copies of each body (made by scripts/world-lod — geometry only,
+ * same skin), worn by people who stand far from the camera: a light copy
+ * (≈40–50% of the triangles) past 3.5 m on a phone / 10 m on a computer,
+ * and a far copy (≈15%) past 9 m / 20 m, where a person is a few dozen
+ * pixels tall. A busy room drew ≈50k triangles per person whatever their size on
+ * screen: 10 people were half a million triangles on a phone. Swapping the
+ * geometry keeps the one skeleton, motion and clothes. Adam and Lina have
+ * copies too: the other learner often waits across a room.
  */
-const LOD_MODELS = new Set(["npc-joe", "npc-leonard", "npc-brian", "npc-elizabeth", "npc-megan"]);
+const LOD_MODELS = new Set(["npc-joe", "npc-leonard", "npc-brian", "npc-elizabeth", "npc-megan", "adam", "lina"]);
 
-/** Checks only: ?lod=all puts everyone in the light copy, ?lod=off nobody. */
-function lodFlag(): "all" | "off" | null {
+/** Checks only: ?lod=all puts everyone in the light copy, ?lod=far in the far one, ?lod=off nobody. */
+function lodFlag(): "all" | "far" | "off" | null {
   if (typeof window === "undefined") return null;
   const v = new URLSearchParams(window.location.search).get("lod");
-  return v === "all" || v === "off" ? v : null;
+  return v === "all" || v === "far" || v === "off" ? v : null;
 }
 
-/** Beyond this distance from the camera (metres) a person wears the light copy; phones sooner. */
-const lodFar = () => (isTouchFirst() ? 6 : 10);
+/**
+ * Where (metres from the camera) a person changes into the light and then
+ * the far copy. Phones sooner: on a phone screen the light copy cannot be
+ * told from the full one past a few metres (compared side by side, 25 Oct
+ * 2026), so only whoever stands right by the camera — someone being talked
+ * to — wears the full one.
+ */
+const lodSteps = () => (isTouchFirst() ? [3.5, 9] : [10, 20]);
 
 const _cam = new Vector3();
+
+type Level = 0 | 1 | 2;
 
 function useLod(root: Group, model: string) {
   const flag = useMemo(lodFlag, []);
   const use = LOD_MODELS.has(model) && flag !== "off";
-  // Always the same hook calls: the light copy of a body that has none is never fetched.
+  // Always the same hook calls: the copies of a body that has none are never fetched.
   const light = useLoader(GLTFLoader, use ? `${BASE}${model}.lod.glb` : `${BASE}${model}.glb`, extend) as GLTF;
+  const farOne = useLoader(GLTFLoader, use ? `${BASE}${model}.far.glb` : `${BASE}${model}.glb`, extend) as GLTF;
   const swaps = useMemo(() => {
     if (!use) return [];
-    const byName = new Map<string, BufferGeometry>();
-    light.scene.traverse((o) => {
-      if ((o as Mesh).isMesh) byName.set(o.name.replace(/^mixamorig\d+/, "mixamorig"), (o as Mesh).geometry);
-    });
-    const out: { mesh: Mesh; full: BufferGeometry; lite: BufferGeometry }[] = [];
+    const named = (g: GLTF) => {
+      const byName = new Map<string, BufferGeometry>();
+      g.scene.traverse((o) => {
+        if ((o as Mesh).isMesh) byName.set(o.name.replace(/^mixamorig\d+/, "mixamorig"), (o as Mesh).geometry);
+      });
+      return byName;
+    };
+    const lite = named(light);
+    const farG = named(farOne);
+    const out: { mesh: Mesh; geo: [BufferGeometry, BufferGeometry, BufferGeometry] }[] = [];
     const corneas: Mesh[] = [];
     root.traverse((o) => {
       const m = o as Mesh;
       if (m.name === "cornea") corneas.push(m);
       if (!(m as SkinnedMesh).isSkinnedMesh) return;
-      const lite = byName.get(m.name);
-      if (lite && lite !== m.geometry && lite.getAttribute("position")?.count) out.push({ mesh: m, full: m.geometry, lite });
+      const ok = (g?: BufferGeometry) => (g && g !== m.geometry && g.getAttribute("position")?.count ? g : undefined);
+      const l = ok(lite.get(m.name));
+      const f = ok(farG.get(m.name)) ?? l;
+      if (l && f) out.push({ mesh: m, geo: [m.geometry, l, f] });
     });
     return out.length ? out.map((s, i) => ({ ...s, corneas: i === 0 ? corneas : [] })) : [];
-  }, [use, light, root]);
-  const st = useMemo(() => ({ far: false, first: true }), []);
-  const far = useMemo(lodFar, []);
+  }, [use, light, farOne, root]);
+  const st = useMemo(() => ({ level: 0 as Level, first: true }), []);
+  const steps = useMemo(lodSteps, []);
   useFrame(({ camera }) => {
     if (!swaps.length) return;
-    let next: boolean;
-    if (flag === "all") next = true;
+    let next: Level;
+    if (flag === "all") next = 1;
+    else if (flag === "far") next = 2;
     else {
       root.getWorldPosition(_pos);
       camera.getWorldPosition(_cam);
       const d = _pos.distanceTo(_cam);
-      // A metre of give either way: nobody flickers between the two at the line.
-      next = st.far ? d > far - 1 : d > far + 1;
+      // A metre of give either way: nobody flickers between two copies at the line.
+      const at = (step: number, level: Level) => (st.level >= level ? d > step - 1 : d > step + 1);
+      next = at(steps[1], 2) ? 2 : at(steps[0], 1) ? 1 : 0;
     }
-    if (next === st.far && !st.first) return;
-    st.far = next;
+    if (next === st.level && !st.first) return;
+    st.level = next;
     st.first = false;
     for (const s of swaps) {
-      s.mesh.geometry = next ? s.lite : s.full;
+      s.mesh.geometry = s.geo[next];
       // An eye's highlight is a pixel or less that far off: not worth its sphere.
-      for (const c of s.corneas) c.visible = !next;
+      for (const c of s.corneas) c.visible = next === 0;
     }
   });
+  return st;
+}
+
+/** Shared per frame: the camera's view, to tell who is on screen. */
+const _frustum = new Frustum();
+const _vp = new Matrix4();
+const _sphere = new Sphere();
+const _at = new Vector3();
+/** The frame the view above was taken for (the clock's time: the same for every person in one frame). */
+let frustumFrame = -1;
+/** Room around a person still counted as on screen: with shadows, theirs reaches in from beyond the edge. */
+const VIEW_MARGIN = typeof window !== "undefined" && pickQuality().shadows ? 4 : 1.6;
+
+function onScreen(camera: Camera, frame: number, at: Vector3): boolean {
+  if (frame !== frustumFrame) {
+    frustumFrame = frame;
+    _vp.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    _frustum.setFromProjectionMatrix(_vp);
+  }
+  _sphere.center.set(at.x, at.y + 0.9, at.z);
+  _sphere.radius = VIEW_MARGIN;
+  return _frustum.intersectsSphere(_sphere);
 }
 
 export default function RiggedBody({ model, rules, female, control, look }: { model: string; rules: DressRule[]; female: boolean; control: MutableRefObject<BodyControl>; look?: LookTarget }) {
   // Fetch the light copy alongside the body, not after it (each load below waits for the one before).
-  if (LOD_MODELS.has(model) && lodFlag() !== "off") useLoader.preload(GLTFLoader, `${BASE}${model}.lod.glb`, extend);
+  if (LOD_MODELS.has(model) && lodFlag() !== "off") {
+    useLoader.preload(GLTFLoader, `${BASE}${model}.lod.glb`, extend);
+    useLoader.preload(GLTFLoader, `${BASE}${model}.far.glb`, extend);
+  }
   const person = useLoader(GLTFLoader, `${BASE}${model}.glb`, extend) as GLTF;
   const anims = useLoader(
     GLTFLoader,
@@ -473,7 +559,7 @@ export default function RiggedBody({ model, rules, female, control, look }: { mo
     addCorneas(r);
     return r;
   }, [person, rules]);
-  useLod(root, model);
+  const lod = useLod(root, model);
 
   const { mixer, actions } = useMemo(() => {
     const mx = new AnimationMixer(root);
@@ -511,7 +597,7 @@ export default function RiggedBody({ model, rules, female, control, look }: { mo
     [mixer, root],
   );
 
-  const st = useMemo(() => ({ base: null as Clip | null, once: null as Clip | null, onceEnd: 0, t: 0, yaw: 0, pitch: 0 }), []);
+  const st = useMemo(() => ({ base: null as Clip | null, once: null as Clip | null, onceEnd: 0, t: 0, yaw: 0, pitch: 0, pending: 0, odd: false }), []);
   const bones = useMemo(() => {
     let head: Bone | null = null;
     let neck: Bone | null = null;
@@ -530,7 +616,7 @@ export default function RiggedBody({ model, rules, female, control, look }: { mo
     [mixer],
   );
 
-  useFrame((_, dt) => {
+  useFrame(({ camera, clock }, dt) => {
     const c = control.current;
     const d = Math.min(dt, 0.1);
     st.t += d;
@@ -556,7 +642,15 @@ export default function RiggedBody({ model, rules, female, control, look }: { mo
     } else if (st.once) st.base = c.clip;
     actions.walk.timeScale = c.clip === "walk" ? c.rate : 1;
     actions.run.timeScale = c.clip === "run" ? c.rate : 1;
-    mixer.update(d);
+    // Posing a skeleton is the people's main cost on the processor. Nobody
+    // sees a pose off screen: it waits there. Far off (a few dozen pixels
+    // tall), every other frame is plenty.
+    st.pending = Math.min(st.pending + d, 0.1);
+    if (!onScreen(camera, clock.elapsedTime, root.getWorldPosition(_at))) return;
+    st.odd = !st.odd;
+    if (lod.level === 2 && st.odd) return;
+    mixer.update(st.pending);
+    st.pending = 0;
 
     // Look at the learner when they are near and in front; otherwise back.
     const { head, neck } = bones;
