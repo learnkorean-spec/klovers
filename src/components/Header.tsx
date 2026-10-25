@@ -80,6 +80,7 @@ const Header = () => {
     // wrong spot since it only shows to signed-in Korean students).
     { href: "/learn-arabic", label: isAr ? "تعلّم العربية — مكتوب" : "Learn Arabic — maktub" },
     { href: "/learn-english", label: isAr ? "تعلّم الإنجليزية — Voca" : "Learn English — Voca" },
+    { href: "/learn-hungarian", label: isAr ? "تعلّم المجرية — Buda" : "Learn Hungarian — Buda" },
   ];
 
   const allLinks = [...primaryLinks, ...moreLinks];
