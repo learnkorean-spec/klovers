@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group, Mesh } from "three";
 import { INTERACTABLES } from "../config/interactions";
-import type { NpcPlacement } from "../config/npcs";
+import { NPCS, type NpcPlacement } from "../config/npcs";
 import type { PlayerState } from "../systems/state";
 import { cheerAmount } from "../systems/reactions";
 import { angleDelta, damp } from "../systems/movement";
@@ -14,7 +14,7 @@ import { Suspense } from "react";
 import RiggedBody, { type BodyControl } from "../player/RiggedBody";
 import AvatarBoundary from "../player/AvatarBoundary";
 import { REAL_PEOPLE } from "../systems/styleMode";
-import { realPerson } from "./realCast";
+import { realPersonInRoom } from "./realCast";
 
 const WALK_SPEED = 1.15;
 /** People who can be spoken to notice the learner inside this distance. */
@@ -50,7 +50,7 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
   const talker = TALKERS.has(n.id);
   const seated = n.pose === "sit" || n.pose === "sitRead";
   // Each person their own look (body, Korean hair and skin, shade, height).
-  const real = useMemo(() => (REAL_PEOPLE ? realPerson(n.cast, n.id) : null), [n.cast, n.id]);
+  const real = useMemo(() => (REAL_PEOPLE ? realPersonInRoom(n, NPCS) : null), [n]);
   const control = useRef<BodyControl>({ clip: seated ? "sit" : n.pose === "talk" ? "talk" : n.pose === "browse" ? "look" : "idle", once: null, rate: 0.8 });
   const waved = useRef(false);
 

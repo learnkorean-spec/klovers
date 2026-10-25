@@ -14,10 +14,28 @@ const inside = (room: keyof typeof ROOMS, x: number, z: number) => {
 };
 
 describe("world life (NPCs)", () => {
-  it("at least 8 people, at most 8 in any one room, every one with a real look and inside a room", () => {
-    expect(NPCS.length).toBeGreaterThanOrEqual(8);
-    // Only one room is drawn at a time: the cost that matters is per room.
-    for (const room of new Set(NPCS.map((n) => n.room))) expect(NPCS.filter((n) => n.room === room).length, room).toBeLessThanOrEqual(8);
+  it("nobody stands or walks in the camera's line just behind where the learner arrives", () => {
+    for (const [id, room] of Object.entries(ROOMS)) {
+      for (const [name, s] of Object.entries(room.spawns)) {
+        const fx = Math.sin(s.yaw);
+        const fz = Math.cos(s.yaw);
+        for (const n of NPCS.filter((p) => p.room === id)) {
+          for (const [x, z] of n.path ?? [[n.x, n.z]]) {
+            const dx = x - s.x;
+            const dz = z - s.z;
+            const behind = -(dx * fx + dz * fz);
+            const side = Math.abs(dx * fz - dz * fx);
+            expect(behind > 0.5 && behind < 5 && side < 1.1, `${n.id} behind ${id}/${name}`).toBe(false);
+          }
+        }
+      }
+    }
+  });
+  it("at least 10 people in every lived-in place (Re, 25 Oct 2026), at most 14, every one with a real look and inside a room", () => {
+    // Every room but Cluby's Memory Garden (canon: a quiet garden) has people around.
+    for (const room of Object.keys(ROOMS).filter((r) => r !== "memory-garden")) expect(NPCS.filter((n) => n.room === room).length, room).toBeGreaterThanOrEqual(10);
+    // Only one room is drawn at a time: the cost that matters is per room (far people wear a light copy).
+    for (const room of new Set(NPCS.map((n) => n.room))) expect(NPCS.filter((n) => n.room === room).length, room).toBeLessThanOrEqual(14);
     for (const n of NPCS) {
       expect(CAST[n.cast], n.id).toBeDefined();
       expect(inside(n.room, n.x, n.z), n.id).toBe(true);

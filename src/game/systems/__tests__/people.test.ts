@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { NPCS } from "../../config/npcs";
-import { realPerson } from "../../npc/realCast";
+import { realPersonInRoom } from "../../npc/realCast";
 
 describe("the world's people", () => {
   it("never look like twins: within a room, no two share body, hair and skin", () => {
     const rooms = new Map<string, Set<string>>();
     for (const n of NPCS) {
-      const p = realPerson(n.cast, n.id);
+      const p = realPersonInRoom(n, NPCS);
       const hair = p.rules.find((r) => r.match.test("Ch01_Hair"))!.color;
       const skin = p.rules.find((r) => r.match.test("Ch01_Body"))!.color;
       const key = `${p.model}|${hair}|${skin}`;
@@ -19,7 +19,7 @@ describe("the world's people", () => {
 
   it("have dark Korean hair (grey for elders) and a Korean skin tone", () => {
     for (const n of NPCS) {
-      const p = realPerson(n.cast, n.id);
+      const p = realPersonInRoom(n, NPCS);
       const skin = p.rules.find((r) => r.match.test("Ch01_Body"))!;
       expect(skin.tint).toBe(true);
       const hair = p.rules.find((r) => r.match.test("Ch01_Hair"))!.color;

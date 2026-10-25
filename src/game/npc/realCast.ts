@@ -61,12 +61,12 @@ export interface PersonLook {
 
 const people = new Map<string, PersonLook>();
 
-/** One person's look, stable for their id. */
-export function realPerson(cast: CastId, personId: string): PersonLook {
-  const key = `${cast}|${personId}`;
+/** One person's look, stable for their id (salt picks another variation of it). */
+export function realPerson(cast: CastId, personId: string, salt = 0): PersonLook {
+  const key = `${cast}|${personId}|${salt}`;
   const hit = people.get(key);
   if (hit) return hit;
-  const h = hash(personId);
+  const h = hash(salt ? `${personId}#${salt}` : personId);
   const pick = <T,>(list: readonly T[], salt: number) => list[(h >>> salt) % list.length];
   const base = BODY[cast];
   const model = FIXED_BODY.has(cast) ? base.model : pick(base.female ? FEMALE_BODIES : MALE_BODIES, 3);
@@ -105,4 +105,27 @@ export function realCast(id: CastId): { model: string; female: boolean; rules: D
     cache.set(id, rules);
   }
   return { ...BODY[id], rules };
+}
+
+/** What makes two people look alike: the same body, hair and skin. */
+const lookKey = (p: PersonLook) => `${p.model}|${p.rules[0].color}|${p.rules[1].color}`;
+const assigned = new Map<string, PersonLook>();
+
+/**
+ * A person's look, guaranteed different from everyone else in their room:
+ * people are taken in list order, and anyone whose look is already used in
+ * that room takes their next variation until it is free.
+ */
+export function realPersonInRoom(n: { id: string; room: string; cast: CastId }, everyone: readonly { id: string; room: string; cast: CastId }[]): PersonLook {
+  const hit = assigned.get(n.id);
+  if (hit) return hit;
+  const used = new Set<string>();
+  for (const m of everyone) {
+    if (m.room !== n.room) continue;
+    let look = realPerson(m.cast, m.id);
+    for (let salt = 1; used.has(lookKey(look)) && salt < 50; salt++) look = realPerson(m.cast, m.id, salt);
+    used.add(lookKey(look));
+    assigned.set(m.id, look);
+  }
+  return assigned.get(n.id) ?? realPerson(n.cast, n.id);
 }
