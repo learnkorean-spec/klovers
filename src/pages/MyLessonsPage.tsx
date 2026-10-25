@@ -408,7 +408,7 @@ const MyLessonsPage = () => {
             </Card>
           )}
 
-          {!voca && <WorldEntryCard isAr={isAr} compact />}
+          {inWorld && <WorldEntryCard isAr={isAr} compact />}
 
           <Card>
             <CardHeader className="pb-3">
