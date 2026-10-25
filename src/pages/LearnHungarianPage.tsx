@@ -271,10 +271,7 @@ const LearnHungarianPage = () => {
                     className="rounded-full font-semibold hover:brightness-95"
                     style={{ backgroundColor: GOLD, color: "#111111" }}
                   >
-                    <Link to="/contact?subject=Hungarian+lessons">
-                      {tr("Message me about lessons", "راسلني بخصوص الدروس")}
-                      <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
-                    </Link>
+                    <a href="#trial">{tr("Book a trial lesson", "احجز حصة تجريبية")}</a>
                   </Button>
                   <Button
                     size="lg"
@@ -282,8 +279,9 @@ const LearnHungarianPage = () => {
                     asChild
                     className="rounded-full font-semibold border-white/70 text-white hover:bg-white/10 bg-transparent"
                   >
-                    <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">
-                      {tr("Read my story", "اقرأ قصتي")}
+                    <Link to="/contact?subject=Hungarian+lessons" className="flex items-center gap-2">
+                      {tr("Message me about lessons", "راسلني بخصوص الدروس")}
+                      <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </Link>
                   </Button>
                 </div>
@@ -406,6 +404,18 @@ const LearnHungarianPage = () => {
                   "أسست وأدير أيضًا كلوفرز، أكاديمية إلكترونية تُدرّس الكورية لطلاب في أكثر من خمس عشرة دولة منذ عام 2013، وتتبع دروس المجرية الأسلوب نفسه القائم على الحصص الفردية والمحادثة الحقيقية.",
                 )}
               </p>
+              <div className="mt-6">
+                <Button
+                  size="lg"
+                  asChild
+                  variant="outline"
+                  className="rounded-full font-semibold"
+                >
+                  <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">
+                    {tr("Read my story", "اقرأ قصتي")}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -477,9 +487,7 @@ const LearnHungarianPage = () => {
                 className="rounded-full font-semibold hover:brightness-95"
                 style={{ backgroundColor: GOLD, color: "#111111" }}
               >
-                <Link to="/contact?subject=Hungarian+lessons" className="flex items-center gap-2">
-                  {tr("Message me about lessons", "راسلني بخصوص الدروس")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                </Link>
+                <a href="#trial">{tr("Book a trial lesson", "احجز حصة تجريبية")}</a>
               </Button>
               <Button
                 size="lg"
@@ -487,7 +495,9 @@ const LearnHungarianPage = () => {
                 asChild
                 className="rounded-full font-semibold border-white/70 text-white hover:bg-white/10 bg-transparent"
               >
-                <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">{tr("Read my story", "اقرأ قصتي")}</Link>
+                <Link to="/contact?subject=Hungarian+lessons" className="flex items-center gap-2">
+                  {tr("Message me about lessons", "راسلني بخصوص الدروس")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                </Link>
               </Button>
             </div>
           </div>

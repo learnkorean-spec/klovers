@@ -298,10 +298,7 @@ const LearnEnglishPage = () => {
                     className="rounded-full font-semibold hover:brightness-95"
                     style={{ backgroundColor: SIGNAL, color: "#111111" }}
                   >
-                    <Link to="/contact?subject=English+lessons">
-                      {tr("Message me about lessons", "راسلني بخصوص الدروس")}
-                      <ArrowRight className="ms-2 h-5 w-5 rtl:rotate-180" />
-                    </Link>
+                    <a href="#trial">{tr("Book a trial lesson", "احجز حصة تجريبية")}</a>
                   </Button>
                   <Button
                     size="lg"
@@ -309,8 +306,9 @@ const LearnEnglishPage = () => {
                     asChild
                     className="rounded-full font-semibold border-white/70 text-white hover:bg-white/10 bg-transparent"
                   >
-                    <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">
-                      {tr("Read my story", "اقرأ قصتي")}
+                    <Link to="/contact?subject=English+lessons" className="flex items-center gap-2">
+                      {tr("Message me about lessons", "راسلني بخصوص الدروس")}
+                      <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </Link>
                   </Button>
                 </div>
@@ -462,6 +460,18 @@ const LearnEnglishPage = () => {
               <p className="mt-5 text-sm font-semibold text-white/70">
                 {tr("Reham Elshrkawy — Founder, Klovers", "ريهام الشرقاوي — مؤسسة كلوفرز")}
               </p>
+              <div className="mt-6">
+                <Button
+                  size="lg"
+                  asChild
+                  variant="outline"
+                  className="rounded-full font-semibold border-white/70 text-white hover:bg-white/10 bg-transparent"
+                >
+                  <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">
+                    {tr("Read my story", "اقرأ قصتي")}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -533,9 +543,7 @@ const LearnEnglishPage = () => {
                 className="rounded-full font-semibold hover:brightness-95"
                 style={{ backgroundColor: SIGNAL, color: "#111111" }}
               >
-                <Link to="/contact?subject=English+lessons" className="flex items-center gap-2">
-                  {tr("Message me about lessons", "راسلني بخصوص الدروس")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                </Link>
+                <a href="#trial">{tr("Book a trial lesson", "احجز حصة تجريبية")}</a>
               </Button>
               <Button
                 size="lg"
@@ -543,7 +551,9 @@ const LearnEnglishPage = () => {
                 asChild
                 className="rounded-full font-semibold border-white/70 text-white hover:bg-white/10 bg-transparent"
               >
-                <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">{tr("Read my story", "اقرأ قصتي")}</Link>
+                <Link to="/contact?subject=English+lessons" className="flex items-center gap-2">
+                  {tr("Message me about lessons", "راسلني بخصوص الدروس")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                </Link>
               </Button>
             </div>
           </div>

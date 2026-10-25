@@ -189,6 +189,18 @@ const MaktubFooter = ({ tr }: { isAr: boolean; tr: TrFn }) => (
               {tr("Full maktub site", "موقع maktub الكامل")}
             </a>
           </div>
+          <div className="flex flex-col gap-2">
+            <span className="font-semibold text-white/90">{tr("Klovers family", "عائلة كلوفرز")}</span>
+            <Link to="/" className="text-white/70 hover:text-white">
+              {tr("◂ Klovers — Learn Korean", "◂ كلوفرز — تعلّم الكورية")}
+            </Link>
+            <Link to="/learn-english" className="text-white/70 hover:text-white">
+              {tr("Voca — Learn English", "فوكا — تعلّم الإنجليزية")}
+            </Link>
+            <Link to="/learn-hungarian" className="text-white/70 hover:text-white">
+              {tr("Buda — Learn Hungarian", "بودا — تعلّم المجرية")}
+            </Link>
+          </div>
         </nav>
       </div>
       <p className="mt-10 border-t border-white/10 pt-6 text-xs text-white/50">
