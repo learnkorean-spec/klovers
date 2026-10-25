@@ -138,17 +138,11 @@ const VocaHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; tog
           <span className="text-xl font-extrabold tracking-tight text-foreground">Voca</span>
         </a>
         <nav className="hidden items-center gap-6 md:flex" aria-label={tr("Primary", "رئيسي")}>
-          {navLinks.map((link) =>
-            link.to ? (
-              <Link key={link.to} to={link.to} className="text-sm font-medium text-foreground/75 hover:text-foreground">
-                {link.label}
-              </Link>
-            ) : (
-              <a key={link.href} href={link.href} className="text-sm font-medium text-foreground/75 hover:text-foreground">
-                {link.label}
-              </a>
-            ),
-          )}
+          {navLinks.map((link) => (
+            <a key={link.href} href={link.href} className="text-sm font-medium text-foreground/75 hover:text-foreground">
+              {link.label}
+            </a>
+          ))}
         </nav>
         <div className="flex items-center gap-2">
           {user && (
