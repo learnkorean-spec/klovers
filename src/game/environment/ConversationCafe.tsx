@@ -241,6 +241,24 @@ function CafeChair({ side, cushion }: { side: -1 | 1; cushion: Material }) {
   );
 }
 
+/**
+ * A plank ceiling at the top of the walls, facing down only. Seen from
+ * inside (the Eyes view, a low camera) the café reads as a room instead of
+ * walls under open sky; when the camera behind the learner rises above the
+ * walls, the plane faces away from it and is culled, so the view in from
+ * above stays exactly as before — the camera never fights the ceiling. It
+ * casts no shadow: the sun still lights the tables.
+ */
+function Ceiling() {
+  const planks = useTiledTexture(paintPlanks, HW / 1.2, (HD + 0.4) / 1.2);
+  return (
+    <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_H + 0.02, 0.1]}>
+      <planeGeometry args={[HW * 2 + 0.4, HD * 2 + 0.6]} />
+      <meshStandardMaterial map={planks} color="#FFF3E0" roughness={0.9} emissive="#C9A27A" emissiveIntensity={0.32} />
+    </mesh>
+  );
+}
+
 /** Wooden beams across the room with a pendant lamp over each table (hung high: the camera behind the learner looks out at about 2.5 m, and a low shade sat in its view). */
 function BeamsAndLamps() {
   return (
@@ -296,6 +314,7 @@ export default function ConversationCafe({ words = [] }: { words?: string[] }) {
       {CAFE.tables.map((t) => (
         <Table key={`${t.x}${t.z}`} x={t.x} z={t.z} words={words} />
       ))}
+      <Ceiling />
       <BeamsAndLamps />
       {/* The door back to the Hub */}
       <GateWall z={HD + 0.2} facing={-1} open accent={false} halfWidth={HW} />

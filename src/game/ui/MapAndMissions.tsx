@@ -100,19 +100,54 @@ function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
 
   // Destination names beside open doorways (upright, whatever the turn).
   if (o.gateName) {
-    ctx.font = "700 10px Cairo, Inter, sans-serif";
+    // Busy rooms (the Hub has seven doors) need the smaller size to keep the map readable under the names.
+    const busy = room.portals.filter((p) => !p.lockedNotice || o.isOpen(p.to)).length > 3;
+    ctx.font = busy ? "700 9px Cairo, Inter, sans-serif" : "700 10px Cairo, Inter, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    // Doors that sit side by side (the Hub's south wall has three) would
+    // print their names on top of each other; each label takes the first
+    // free slot — on the door, then stepped inward — and never overlaps one
+    // already placed. A name wider than the map is shortened with "…".
+    const placed: { x0: number; y0: number; x1: number; y1: number }[] = [];
+    const LH = busy ? 13 : 16;
+    const half = LH / 2;
+    const maxW = w - 4;
     for (const p of room.portals) {
       if (p.lockedNotice && !o.isOpen(p.to)) continue;
       const [gx, gy] = toScreen(o, (p.zone.minX + p.zone.maxX) / 2, (p.zone.minZ + p.zone.maxZ) / 2);
-      const label = o.gateName(p.to);
-      const tw = ctx.measureText(label).width + 10;
+      let label = o.gateName(p.to);
+      while (label.length > 3 && ctx.measureText(label).width + 8 > maxW) label = label.slice(0, -2) + "…";
+      const tw = Math.min(maxW, ctx.measureText(label).width + 8);
       // Kept inside the frame: a door on the very edge still shows its name.
       const sx = Math.min(w - tw / 2 - 2, Math.max(tw / 2 + 2, gx));
-      const sy = Math.min(h - 10, Math.max(10, gy));
-      ctx.fillStyle = "rgba(46,46,46,0.88)";
-      ctx.fillRect(sx - tw / 2, sy - 8, tw, 16);
+      const sy0 = Math.min(h - half - 2, Math.max(half + 2, gy));
+      // Step toward the middle of the map, so a shifted name stays in view.
+      const inward = sy0 > h / 2 ? -1 : 1;
+      let sy = sy0;
+      for (let k = 0; k < 8; k++) {
+        const cy = Math.min(h - half - 2, Math.max(half + 2, sy0 + inward * k * (LH + 1)));
+        const r = { x0: sx - tw / 2, y0: cy - half, x1: sx + tw / 2, y1: cy + half };
+        if (!placed.some((q) => r.x0 < q.x1 && r.x1 > q.x0 && r.y0 < q.y1 && r.y1 > q.y0)) {
+          sy = cy;
+          break;
+        }
+        sy = cy;
+      }
+      placed.push({ x0: sx - tw / 2, y0: sy - half, x1: sx + tw / 2, y1: sy + half });
+      // A name moved off its door keeps a thin line back to it.
+      if (Math.abs(sy - sy0) > 1) {
+        const dx = Math.min(w - 2, Math.max(2, gx));
+        const dy = Math.min(h - 2, Math.max(2, gy));
+        ctx.strokeStyle = "rgba(46,46,46,0.7)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(Math.min(sx + tw / 2, Math.max(sx - tw / 2, dx)), sy + (dy > sy ? half : -half));
+        ctx.lineTo(dx, dy);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "rgba(46,46,46,0.8)";
+      ctx.fillRect(sx - tw / 2, sy - half, tw, LH);
       ctx.fillStyle = "#FFF9EC";
       ctx.fillText(label, sx, sy + 0.5);
     }
