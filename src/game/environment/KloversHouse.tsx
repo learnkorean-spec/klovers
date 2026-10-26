@@ -1,6 +1,8 @@
+import { useEffect, useMemo } from "react";
+import { CatmullRomCurve3, ExtrudeGeometry, LatheGeometry, Shape, TubeGeometry, Vector2, Vector3 } from "three";
 import { HOUSE } from "../config/rooms";
 import { PALETTE } from "../config/world";
-import { ACCENT, std } from "../config/materials";
+import { std } from "../config/materials";
 import { GateWall, InfoBoard as Board } from "./parts";
 import { paintPlanks, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
@@ -48,10 +50,38 @@ function Walls() {
   );
 }
 
-/** A board on two posts with a small tiled cap and a thin yellow rail. */
+/**
+ * The clover itself: four heart-shaped leaves with soft, bevelled edges,
+ * their points meeting in the middle, on a gently curved stem, standing
+ * upright and facing the door like the Klovers mark. Built once.
+ */
+function useCloverGeometry() {
+  return useMemo(() => {
+    // A heart, point at the origin, lobes 0.4 m out along +y.
+    const heart = new Shape();
+    const pts: Vector2[] = [];
+    for (let i = 0; i <= 48; i++) {
+      const t = (i / 48) * Math.PI * 2;
+      const hx = 16 * Math.pow(Math.sin(t), 3);
+      const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      pts.push(new Vector2(hx * 0.0125, (hy + 17) * 0.0125));
+    }
+    heart.setFromPoints(pts);
+    const leaf = new ExtrudeGeometry(heart, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.018, bevelSize: 0.016, bevelSegments: 3, curveSegments: 12 });
+    leaf.translate(0, 0, -0.02);
+    const stem = new TubeGeometry(
+      new CatmullRomCurve3([new Vector3(0, 0.4, 0), new Vector3(0.05, 0.62, 0.02), new Vector3(0.02, 0.82, 0), new Vector3(0, 0.98, -0.02)]),
+      20, 0.024, 8, false,
+    );
+    return { leaf, stem };
+  }, []);
+}
+
 /** The stone dais and the clover on it (four yellow leaves). */
 function CloverDais() {
   const { x, z, r } = HOUSE.dais;
+  const { leaf, stem } = useCloverGeometry();
+  useEffect(() => () => { leaf.dispose(); stem.dispose(); }, [leaf, stem]);
   return (
     <group position={[x, 0, z]}>
       <mesh castShadow receiveShadow position={[0, 0.16, 0]}>
@@ -62,45 +92,76 @@ function CloverDais() {
         <cylinderGeometry args={[r - 0.25, r - 0.2, 0.1, 40]} />
         <primitive object={std(PALETTE.woodWarm, 0.7)} attach="material" />
       </mesh>
-      <group position={[0, 0.95, 0]} rotation={[0, Math.PI / 4, 0]}>
-        {[0, 1, 2, 3].map((i) => {
-          const a = (i * Math.PI) / 2;
-          return (
-            <mesh key={i} castShadow position={[Math.cos(a) * 0.2, 0, Math.sin(a) * 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.2, 0.2, 0.06, 28]} />
-              <primitive object={ACCENT} attach="material" />
+      {/* Four leaves in an X, each tipped a little toward the door. */}
+      <group position={[0, 1.02, -0.02]}>
+        {[0, 1, 2, 3].map((i) => (
+          <group key={i} rotation={[0, 0, Math.PI / 4 + (i * Math.PI) / 2]}>
+            <mesh castShadow geometry={leaf} rotation={[0.18, 0, 0]}>
+              {/* Lit brand yellow (not the flat unlit accent), so the
+                  leaves' bevels and curve read as a real sculpture. */}
+              <primitive object={std(PALETTE.yellow, 0.42, { emissive: PALETTE.yellow, emissiveIntensity: 0.22 })} attach="material" />
             </mesh>
-          );
-        })}
+          </group>
+        ))}
       </group>
-      <mesh castShadow position={[0, 0.66, 0]}>
-        <cylinderGeometry args={[0.03, 0.04, 0.6, 8]} />
+      <mesh castShadow geometry={stem}>
         <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
       </mesh>
     </group>
   );
 }
 
+/**
+ * A hanging paper lantern (청사초롱-style drum): a rounded barrel with the
+ * bamboo hoops showing as soft ridges, under and over small wooden caps.
+ */
+function useLanternGeometry() {
+  return useMemo(() => {
+    const prof: Vector2[] = [];
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24;
+      const y = -0.16 + 0.32 * t;
+      const round = Math.sqrt(Math.max(0, 1 - Math.pow((y / 0.19), 2)));
+      const hoop = 1 + 0.035 * Math.cos(t * Math.PI * 2 * 4);
+      prof.push(new Vector2(0.17 * round * hoop, y));
+    }
+    return new LatheGeometry(prof, 28);
+  }, []);
+}
 /** Paper lanterns hanging from two beams. */
 function Beams() {
-  const zs = [-2.2, 2.4];
+  const lantern = useLanternGeometry();
+  useEffect(() => () => lantern.dispose(), [lantern]);
+  // The beam by the door keeps its middle lantern out of the way: it hung
+  // right at the top of the view as the learner walked in.
+  const rows = [
+    { z: -2.2, xs: [-3.5, 0, 3.5] },
+    { z: 2.4, xs: [-3.5, 3.5] },
+  ];
   return (
     <>
-      {zs.map((z) => (
+      {rows.map(({ z, xs }) => (
         <group key={z}>
           <mesh castShadow position={[0, WALL_H - 0.05, z]}>
             <boxGeometry args={[HW * 2 + 0.4, 0.18, 0.2]} />
             <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
           </mesh>
-          {[-3.5, 0, 3.5].map((x) => (
+          {xs.map((x) => (
             <group key={x} position={[x, 0, z]}>
-              <mesh position={[0, 2.62, 0]}>
-                <cylinderGeometry args={[0.008, 0.008, 0.4, 6]} />
+              <mesh position={[0, 2.64, 0]}>
+                <cylinderGeometry args={[0.008, 0.008, 0.36, 6]} />
                 <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
               </mesh>
-              <mesh position={[0, 2.3, 0]}>
-                <cylinderGeometry args={[0.16, 0.16, 0.32, 16]} />
+              <mesh position={[0, 2.46, 0]}>
+                <cylinderGeometry args={[0.07, 0.1, 0.04, 16]} />
+                <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
+              </mesh>
+              <mesh geometry={lantern} position={[0, 2.3, 0]}>
                 <primitive object={std(PALETTE.white, 0.9, { emissive: PALETTE.ivory, emissiveIntensity: 0.8 })} attach="material" />
+              </mesh>
+              <mesh position={[0, 2.13, 0]}>
+                <cylinderGeometry args={[0.1, 0.07, 0.04, 16]} />
+                <primitive object={std(PALETTE.woodDark, 0.7)} attach="material" />
               </mesh>
             </group>
           ))}

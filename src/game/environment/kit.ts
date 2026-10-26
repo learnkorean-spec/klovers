@@ -20,9 +20,9 @@ import { curvedRoof, roofAspect } from "./shapes";
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
-  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac";
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "pineCone" | "ball" | "puff" | "fruit" | "ballLow" | "cylLow" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "puff" | "fruit" | "ballLow" | "cylLow" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -53,6 +53,9 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   fruitOrange: MAT.fruitOrange,
   flowerWhite: MAT.flowerWhite,
   flowerLilac: MAT.flowerLilac,
+  flowerPink: MAT.flowerPink,
+  pollen: MAT.pollen,
+  flagstone: MAT.flagstone,
 };
 
 /**
@@ -312,6 +315,145 @@ function parasolRibs(): BufferGeometry {
   return g;
 }
 
+/**
+ * Add the back of a thin, one-layer surface (petals, leaves): the same
+ * triangles with reversed winding but the SAME normals, so the underside of
+ * a petal reads as lit cloth-thin colour instead of a black back face.
+ */
+function withUnderside(g: BufferGeometry): BufferGeometry {
+  const flat = g.index ? g.toNonIndexed() : g;
+  const p = flat.getAttribute("position").array as ArrayLike<number>;
+  const n = flat.getAttribute("normal").array as ArrayLike<number>;
+  const pos: number[] = Array.from(p);
+  const nor: number[] = Array.from(n);
+  for (let t = 0; t < p.length; t += 9) {
+    for (const v of [0, 2, 1]) {
+      pos.push(p[t + v * 3], p[t + v * 3 + 1], p[t + v * 3 + 2]);
+      nor.push(n[t + v * 3], n[t + v * 3 + 1], n[t + v * 3 + 2]);
+    }
+  }
+  const out = new BufferGeometry();
+  out.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+  out.setAttribute("normal", new BufferAttribute(new Float32Array(nor), 3));
+  return out;
+}
+
+/**
+ * A stepping stone: an irregular, rounded flagstone with a softly domed top
+ * and an eased (bevelled) edge, instead of a sharp 8-sided disc. Real
+ * proportions (≈0.5 radius, ≈0.1 thick before scaling), so it is scaled
+ * almost uniformly and its lighting stays right. Two shapes (`seed`) so a
+ * path is not one stone repeated.
+ */
+function flagstone(seed: number): BufferGeometry {
+  const N = 16;
+  const rings: [number, number][] = [[0.7, 0.066], [0.95, 0.042], [1.0, 0.012], [1.0, -0.04]];
+  const edge = (a: number) => 0.5 * (0.9 + 0.055 * Math.sin(3 * a + seed) + 0.035 * Math.sin(5 * a + seed * 2.1) + 0.02 * Math.sin(8 * a + seed * 0.6));
+  const pos: number[] = [0, 0.074, 0];
+  rings.forEach(([f, y], r) => {
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * Math.PI * 2;
+      const R = edge(a) * f;
+      // A slight wobble in the top, so light catches it unevenly.
+      const dy = r < 2 ? 0.005 * Math.sin(2 * a + seed * 3) : 0;
+      pos.push(Math.cos(a) * R, y + dy, Math.sin(a) * R);
+    }
+  });
+  const idx: number[] = [];
+  const at = (r: number, i: number) => 1 + r * N + (i % N);
+  for (let i = 0; i < N; i++) idx.push(0, at(0, i + 1), at(0, i));
+  for (let r = 0; r < rings.length - 1; r++) {
+    for (let i = 0; i < N; i++) {
+      const a = at(r, i), b = at(r, i + 1), c = at(r + 1, i), d = at(r + 1, i + 1);
+      idx.push(a, b, c, b, d, c);
+    }
+  }
+  const g = new BufferGeometry();
+  g.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+/**
+ * One garden flower seen from above: five rounded petals with small notches
+ * between them, cupped up a little toward the rim (radius 0.5, about 0.2
+ * tall). Its yellow middle is a separate small ball (see `flowers`).
+ */
+function bloomHead(): BufferGeometry {
+  const N = 20;
+  const rings = [0.35, 1.0];
+  const lobe = (a: number) => 0.5 * (0.5 + 0.5 * Math.pow(Math.abs(Math.cos(2.5 * a)), 0.6));
+  const pos: number[] = [0, 0.0, 0];
+  for (const f of rings) {
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * Math.PI * 2;
+      const R = lobe(a) * f;
+      pos.push(Math.cos(a) * R, 0.2 * f * f, Math.sin(a) * R);
+    }
+  }
+  const idx: number[] = [];
+  const at = (r: number, i: number) => 1 + r * N + (i % N);
+  for (let i = 0; i < N; i++) idx.push(0, at(0, i + 1), at(0, i));
+  for (let r = 0; r < rings.length - 1; r++) {
+    for (let i = 0; i < N; i++) {
+      const a = at(r, i), b = at(r, i + 1), c = at(r + 1, i), d = at(r + 1, i + 1);
+      idx.push(a, b, c, b, d, c);
+    }
+  }
+  const g = new BufferGeometry();
+  g.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return withUnderside(g);
+}
+
+/**
+ * The leaves of a garden clump: seven pointed leaves fanning out from the
+ * middle, each arching up and over with a raised midrib (radius 0.5, about
+ * 0.4 tall). Reads as a plant, where the old mound read as a green pillow.
+ */
+function leafRosette(): BufferGeometry {
+  const LEAVES = 7;
+  const SEG = 5;
+  const pos: number[] = [];
+  const idx: number[] = [];
+  for (let l = 0; l < LEAVES; l++) {
+    const yaw = (l / LEAVES) * Math.PI * 2 + (l % 2) * 0.25;
+    const len = 0.5 * (0.82 + 0.18 * ((l * 3) % 5) / 4);
+    const lift = 0.4 * (0.75 + 0.25 * ((l * 2) % 3) / 2);
+    const cy = Math.cos(yaw), sy = Math.sin(yaw);
+    const base = pos.length / 3;
+    for (let s = 0; s <= SEG; s++) {
+      const t = s / SEG;
+      const along = len * t;
+      // An arch: up from the middle, over, and down toward the tip.
+      const y = lift * Math.sin(Math.PI * Math.min(t * 0.85, 1)) * (1 - 0.35 * t) + 0.02;
+      const half = 0.16 * Math.sin(Math.PI * Math.pow(t, 0.7)) * (1 - 0.1 * t);
+      for (const side of [-1, 0, 1]) {
+        const w = side * half;
+        const yy = y + (side === 0 ? 0.03 * Math.sin(Math.PI * t) : 0);
+        pos.push(cy * along - sy * w, yy, sy * along + cy * w);
+      }
+    }
+    for (let s = 0; s < SEG; s++) {
+      const r0 = base + s * 3;
+      const r1 = r0 + 3;
+      // left half (side −1 → 0), right half (0 → +1)
+      idx.push(r0, r0 + 1, r1, r0 + 1, r1 + 1, r1);
+      idx.push(r0 + 1, r0 + 2, r1 + 1, r0 + 2, r1 + 2, r1 + 1);
+    }
+  }
+  const g = new BufferGeometry();
+  g.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  // Make every leaf face up (some winding comes out downward).
+  const n = g.getAttribute("normal");
+  for (let i = 0; i < n.count; i++) if (n.getY(i) < 0) n.setXYZ(i, -n.getX(i), -n.getY(i), -n.getZ(i));
+  return withUnderside(g);
+}
+
 function phoneTier(): boolean {
   try {
     return pickQuality().maxTexture <= 1024;
@@ -331,6 +473,10 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   parasolRibs: parasolRibs(),
   awningA: awningCloth(0),
   awningB: awningCloth(1),
+  flagA: flagstone(1.3),
+  flagB: flagstone(4.1),
+  bloom: bloomHead(),
+  leaves: leafRosette(),
   pineCone: pineTier(),
   ball: lumpyBall(3, 0.16),
   // Flower clusters of a cherry crown: rougher lumps; on phones a quarter
@@ -624,12 +770,17 @@ export function pot(k: Kit, x: number, z: number, s = 1, shrub = true): void {
 export function steppingStones(k: Kit, x1: number, z1: number, x2: number, z2: number, gap = 0.95, seed = 1, mat: MatKey = "charcoal"): void {
   const len = Math.hypot(x2 - x1, z2 - z1);
   const n = Math.max(1, Math.floor(len / gap));
+  // One whole stone each: the paving photo on "stoneWarm" printed a grid of
+  // little blocks onto every stepping stone.
+  const m: MatKey = mat === "stoneWarm" ? "flagstone" : mat;
   for (let i = 0; i <= n; i++) {
     const t = i / n;
     const px = x1 + (x2 - x1) * t + jitter(seed + i, 0.12);
     const pz = z1 + (z2 - z1) * t + jitter(seed + i * 7, 0.12);
-    const sz = 0.68 + jitter(seed + i * 3, 0.08);
-    k.add(mat, "oct", [px, 0.025, pz], [sz, 0.05, sz * 0.9], [0, jitter(seed + i * 11, 0.6), 0]);
+    const sz = 0.72 + jitter(seed + i * 3, 0.08);
+    // A rounded flagstone (two shapes, alternating), scaled almost evenly so
+    // its bevel keeps its light; it stands about 5 cm proud of the ground.
+    k.add(m, (seed + i) % 2 ? "flagA" : "flagB", [px, 0.0, pz], [sz, 0.7, sz * 0.9], [0, jitter(seed + i * 11, Math.PI), 0]);
   }
 }
 
@@ -924,16 +1075,26 @@ export function gatehouse(k: Kit, x: number, z: number, rotY: number, o: { open:
  * white, lilac). Cheap low-poly shapes with no shadows — colour, not cost.
  */
 export function flowers(k: Kit, x: number, z: number, s = 1, seed = 1, y = 0): void {
-  k.add("leafDark", "ball", [x, y + 0.11 * s, z], [0.9 * s, 0.26 * s, 0.8 * s], [0, jitter(seed, 2), 0]);
-  k.add("leaf", "ball", [x + 0.2 * s, y + 0.13 * s, z - 0.12 * s], [0.55 * s, 0.26 * s, 0.5 * s]);
-  // Blooms sit on top of the leaves, one colour leading per clump.
-  const cols: MatKey[] = ["blossom", "flowerWhite", "flowerLilac"];
+  // Leaves: two fans of pointed leaves, a dark one and a lighter one turned
+  // across it, instead of two green pillows.
+  k.add("leafDark", "leaves", [x, y, z], [0.86 * s, 0.55 * s, 0.8 * s], [0, seed, 0]);
+  k.add("leaf", "leaves", [x + 0.05 * s, y, z - 0.03 * s], [0.62 * s, 0.62 * s, 0.6 * s], [0, seed + 0.45, 0]);
+  // Blooms: five-petalled flowers over the leaves, each with a yellow middle,
+  // one colour leading per clump.
+  const cols: MatKey[] = ["flowerPink", "flowerWhite", "flowerLilac"];
   const lead = Math.abs(Math.round(seed)) % 3;
   for (let i = 0; i < 9; i++) {
-    const a = (i / 9) * Math.PI * 2 + seed;
-    const r = (0.12 + (i % 3) * 0.09) * s;
-    const col = cols[i % 3 === 2 ? (lead + 1) % 3 : lead];
-    k.add(col, "ballLow", [x + Math.cos(a) * r, y + (0.25 + (i % 2) * 0.05) * s, z + Math.sin(a) * r * 0.9], [0.17 * s, 0.13 * s, 0.17 * s]);
+    const a = (i / 9) * Math.PI * 2 * 1.618 + seed;
+    const r = (0.05 + 0.27 * Math.sqrt((i + 0.5) / 9)) * s;
+    const col = cols[i % 4 === 3 ? (lead + 1) % 3 : lead];
+    const size = (0.15 + 0.04 * ((i * 7) % 3) / 2) * s;
+    const bx = x + Math.cos(a) * r;
+    const bz = z + Math.sin(a) * r * 0.9;
+    const by = y + (0.27 - 0.12 * (r / s / 0.32) + jitter(seed + i, 0.025)) * s;
+    // Tilted outward a little, as flowers face the light around a clump.
+    const tilt = 0.25 + 0.5 * (r / s / 0.32);
+    k.add(col, "bloom", [bx, by, bz], [size, size, size], [Math.sin(a) * tilt * 0.6, jitter(seed + i * 5, 3), -Math.cos(a) * tilt * 0.6]);
+    k.add("pollen", "cylLow", [bx, by + 0.02 * s, bz], [0.045 * s, 0.02 * s, 0.045 * s]);
   }
 }
 

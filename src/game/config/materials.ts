@@ -416,8 +416,15 @@ export const MAT = {
   clothBlue: std(NATURAL.clothBlue, 0.92, { detail: "fabric" }),
   clothSage: std(NATURAL.clothSage, 0.92, { detail: "fabric" }),
   /** Garden flowers: pink comes from blossom; these add white and lilac. */
-  flowerWhite: std("#FBF7F0", 0.8, { flatShading: true }),
-  flowerLilac: std("#B79BD6", 0.8, { flatShading: true }),
+  flowerWhite: std("#FBF7F0", 0.75),
+  flowerLilac: std("#C8B0E8", 0.75),
+  /** Pink petals (the tree blossom material shades by crown height, which
+   *  turned small flowers a dark magenta). */
+  flowerPink: std("#F2A3BC", 0.75),
+  /** A single natural stepping stone: fine tooth, no paving grid. */
+  flagstone: std("#A39A87", 0.92, { detail: "plaster" }),
+  /** The warm yellow middle of a garden flower. */
+  pollen: std("#E9B949", 0.75),
   fruitRed: std(NATURAL.fruitRed, 0.55),
   fruitOrange: std(NATURAL.fruitOrange, 0.6),
   metal: std(PALETTE.charcoal, 0.38, { metalness: 0.55 }),
