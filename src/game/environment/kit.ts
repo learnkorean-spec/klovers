@@ -1,5 +1,5 @@
-import { ConeGeometry, CylinderGeometry, IcosahedronGeometry, Vector3, type BufferGeometry, type Material } from "three";
-import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { BufferAttribute, BufferGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, Vector3, type Material } from "three";
+import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ACCENT, MAT } from "../config/materials";
 import { UNIT, type Part } from "./Instanced";
 import { curvedRoof, roofAspect } from "./shapes";
@@ -21,7 +21,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "pineCone" | "ball" | "ballLow" | "cylLow" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "pineCone" | "ball" | "ballLow" | "cylLow" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -98,12 +98,146 @@ function pineTier(): BufferGeometry {
   return g;
 }
 
+/** Panels (gores) of a market parasol: eight, alternating two cloths. */
+const PARASOL_GORES = 8;
+
+/** Canopy height (unit parasol: apex y = 0.5, rim y = -0.5 at r = 0.5) at radius fraction t. */
+function parasolY(t: number): number {
+  // Domed, not a straight cone: flatter by the top, steeper toward the rim.
+  return 0.5 - Math.pow(t, 1.45);
+}
+
+/**
+ * One cloth of a market parasol, in the same unit box as the cone it
+ * replaces (radius 0.5, y -0.5…0.5), so the existing sizes still apply.
+ *
+ * The old parasols were 8-sided cones with a flat base: from under them —
+ * where an eye-level camera always is — they were one dark, flat octagon
+ * filling the top of the screen. This one is the real thing:
+ *  - eight panels, each sagging a little between its ribs, with a short
+ *    scalloped valance at the rim; `parity` 0 or 1 picks every other panel,
+ *    so two cloths make the stripes (one instanced draw each);
+ *  - an underside that copies the top surface with the winding reversed and
+ *    the SAME (upward) normals: seen from below it is lit like the top —
+ *    sunlight through cloth — instead of a black lid. It shares the top's
+ *    depth, so the shadow map (back faces) never shades it, and it is
+ *    culled from above, so it never fights the top.
+ */
+function parasolCloth(parity: 0 | 1): BufferGeometry {
+  const RINGS = 7;
+  const ACROSS = 6;
+  const VALANCE = 0.2;
+  const parts: BufferGeometry[] = [];
+  for (let g = parity; g < PARASOL_GORES; g += 2) {
+    const a0 = (g / PARASOL_GORES) * Math.PI * 2;
+    const da = (Math.PI * 2) / PARASOL_GORES;
+    const pos: number[] = [];
+    const uv: number[] = [];
+    // Canopy rings 0..RINGS, then one valance ring below the rim.
+    for (let i = 0; i <= RINGS + 1; i++) {
+      for (let j = 0; j <= ACROSS; j++) {
+        const u = j / ACROSS;
+        const a = a0 + u * da;
+        const mid = Math.sin(Math.PI * u);
+        let r: number;
+        let y: number;
+        if (i <= RINGS) {
+          const t = i / RINGS;
+          // Cloth pulls in and dips between ribs, most toward the rim.
+          r = 0.5 * t * (1 - 0.045 * mid * t);
+          y = parasolY(t) - 0.035 * mid * t;
+        } else {
+          // Valance: hangs straight down, two scallops per panel.
+          r = 0.5 * (1 - 0.045 * mid);
+          y = parasolY(1) - 0.035 * mid - VALANCE * (0.55 + 0.45 * Math.abs(Math.sin(Math.PI * 2 * u)));
+        }
+        pos.push(Math.cos(a) * r, y, Math.sin(a) * r);
+        // Weave about every 35 cm across a panel (the detail map is coarse).
+        uv.push(u * 4, (i / (RINGS + 1)) * 5);
+      }
+    }
+    const idx: number[] = [];
+    const row = ACROSS + 1;
+    for (let i = 0; i <= RINGS; i++)
+      for (let j = 0; j < ACROSS; j++) {
+        const p0 = i * row + j;
+        const p1 = p0 + 1;
+        const p2 = p0 + row;
+        const p3 = p2 + 1;
+        // Outward-facing (seen from above / outside).
+        idx.push(p0, p2, p1, p1, p2, p3);
+      }
+    const top = new BufferGeometry();
+    top.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+    top.setAttribute("uv", new BufferAttribute(new Float32Array(uv), 2));
+    top.setIndex(idx);
+    top.computeVertexNormals();
+    // Underside: same vertices and normals, reversed winding.
+    const under = top.clone();
+    const rev: number[] = [];
+    for (let k = 0; k < idx.length; k += 3) rev.push(idx[k], idx[k + 2], idx[k + 1]);
+    under.setIndex(rev);
+    parts.push(top, under);
+  }
+  const merged = mergeGeometries(parts);
+  for (const p of parts) p.dispose();
+  return merged;
+}
+
+/**
+ * The parasol's ribs and stretchers as seen from below: thin dark strips
+ * just under each rib line, facing down (culled from above).
+ */
+function parasolRibs(): BufferGeometry {
+  const pos: number[] = [];
+  const nor: number[] = [];
+  const W = 0.008;
+  const STEPS = 7;
+  const quad = (a: Vector3, b: Vector3, c: Vector3, d: Vector3) => {
+    // a-b along one edge, c-d the other; facing down.
+    for (const v of [a, c, b, b, c, d]) {
+      pos.push(v.x, v.y, v.z);
+      nor.push(0, -1, 0);
+    }
+  };
+  for (let g = 0; g < PARASOL_GORES; g++) {
+    const a = (g / PARASOL_GORES) * Math.PI * 2;
+    const cx = Math.cos(a);
+    const cz = Math.sin(a);
+    const sx = -cz * W;
+    const sz = cx * W;
+    // The rib, following the canopy just beneath it.
+    for (let i = 0; i < STEPS; i++) {
+      const t0 = Math.max(0.02, i / STEPS);
+      const t1 = (i + 1) / STEPS;
+      const r0 = 0.5 * t0;
+      const r1 = 0.5 * t1;
+      const y0 = parasolY(t0) - 0.012;
+      const y1 = parasolY(t1) - 0.012;
+      quad(new Vector3(cx * r0 - sx, y0, cz * r0 - sz), new Vector3(cx * r1 - sx, y1, cz * r1 - sz), new Vector3(cx * r0 + sx, y0, cz * r0 + sz), new Vector3(cx * r1 + sx, y1, cz * r1 + sz));
+    }
+    // A stretcher from the pole up to the middle of the rib.
+    const tm = 0.55;
+    const ym = parasolY(tm) - 0.015;
+    const yp = parasolY(0) - 0.55;
+    quad(new Vector3(-sx, yp, -sz), new Vector3(cx * 0.5 * tm - sx, ym, cz * 0.5 * tm - sz), new Vector3(sx, yp, sz), new Vector3(cx * 0.5 * tm + sx, ym, cz * 0.5 * tm + sz));
+  }
+  const g = new BufferGeometry();
+  g.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+  g.setAttribute("normal", new BufferAttribute(new Float32Array(nor), 3));
+  g.setAttribute("uv", new BufferAttribute(new Float32Array((pos.length / 3) * 2), 2));
+  return g;
+}
+
 const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   box: UNIT.box,
   hip: UNIT.hipRoof,
   oct: new CylinderGeometry(0.5, 0.5, 1, 8),
   cyl: UNIT.cylinder,
   cone: new ConeGeometry(0.5, 1, 8),
+  parasolA: parasolCloth(0),
+  parasolB: parasolCloth(1),
+  parasolRibs: parasolRibs(),
   pineCone: pineTier(),
   ball: lumpyBall(3, 0.16),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
@@ -659,4 +793,16 @@ export function pathStrip(k: Kit, x1: number, z1: number, x2: number, z2: number
   const yaw = Math.atan2(x2 - x1, z2 - z1);
   k.box("gravel", [(x1 + x2) / 2, 0.006, (z1 + z2) / 2], [w, 0.012, len], false, [0, yaw, 0]);
   steppingStones(k, x1, z1, x2, z2, 0.95, seed, "stoneWarm");
+}
+
+/**
+ * A market parasol: striped panels (`cloth` and ivory), ribs underneath and
+ * a small cap. `y` is the canopy's middle, `d` its diameter, `h` its height —
+ * the same numbers the old cone parasol took.
+ */
+export function parasol(k: Kit, cloth: MatKey, x: number, y: number, z: number, d: number, h: number): void {
+  k.add(cloth, "parasolA", [x, y, z], [d, h, d], undefined, true);
+  k.add("fabric", "parasolB", [x, y, z], [d, h, d], undefined, true);
+  k.add("woodDark", "parasolRibs", [x, y, z], [d, h, d]);
+  k.add("woodDark", "cone", [x, y + h / 2 + 0.05, z], [0.12, 0.16, 0.12]);
 }

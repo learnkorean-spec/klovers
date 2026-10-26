@@ -6,7 +6,7 @@ import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Instanced, { type Part } from "./Instanced";
 import Batch from "./Batch";
-import { Kit, basket, bunting, gutter, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
+import { Kit, basket, bunting, gutter, parasol, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import ModelProp, { type PropPlacement } from "./ModelProp";
 import MarketShop, { type ShopItem } from "./MarketShop";
@@ -209,9 +209,8 @@ const MARKET_KIT: Kit = (() => {
       basket(k, x + Math.sin(a) * r * 0.3, z + Math.cos(a) * r * 0.3, 0.42, (["fruitOrange", "leaf", "fruitRed"] as MatKey[])[i], 1.03);
     }
     k.add("woodDark", "cyl", [x, 2.0, z], [0.09, 2.6, 0.09]);
-    k.add("clothRed", "cone", [x, 3.2, z], [3.6, 0.7, 3.6], undefined, true);
-    k.add("fabric", "cone", [x, 3.28, z], [1.4, 0.42, 1.4]);
-    k.add("woodDark", "ball", [x, 3.62, z], [0.14, 0.14, 0.14]);
+    parasol(k, "clothRed", x, 3.2, z, 3.6, 0.7);
+    k.add("woodDark", "ball", [x, 3.72, z], [0.1, 0.1, 0.1]);
   }
   // Flowers by the stall ends: green and colour between the counters.
   for (const [fx, fz] of MARKET.flowers) flowers(k, fx, fz, 0.7, fx + fz);
@@ -238,8 +237,7 @@ const MARKET_KIT: Kit = (() => {
     // A crate at the table's end.
     k.box("woodLight", along ? [x - w / 2 - 0.35, 0.2, z] : [x, 0.2, z - d / 2 - 0.35], [0.5, 0.4, 0.5], true, [0, 0.3, 0]);
     k.add("woodDark", "cyl", [x, 1.6, z], [0.07, 3.2, 0.07]);
-    k.add(i % 2 ? "clothBlue" : "clothRed", "cone", [x, 2.95, z], [2.6, 0.55, 2.6], undefined, true);
-    k.add("fabric", "cone", [x, 3.02, z], [0.9, 0.3, 0.9]);
+    parasol(k, i % 2 ? "clothBlue" : "clothRed", x, 2.95, z, 2.6, 0.55);
   });
   for (const x of [-2.6, 2.6]) {
     k.add("stoneWarm", "oct", [x, 0.12, -HD + 0.9], [0.4, 0.24, 0.4]);

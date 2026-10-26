@@ -120,7 +120,11 @@ function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
     // print their names on top of each other; each label takes the first
     // free slot — on the door, then stepped inward — and never overlaps one
     // already placed. A name wider than the map is shortened with "…".
-    const placed: { x0: number; y0: number; x1: number; y1: number }[] = [];
+    // The learner's dot (and its pointer) is a placed box too: the learner
+    // usually stands right at the door they came through, and its name was
+    // printed straight through the dot ("The KLC●RS Hub").
+    const [px0, py0] = toScreen(o, o.pose.x, o.pose.z);
+    const placed: { x0: number; y0: number; x1: number; y1: number }[] = [{ x0: px0 - 14, y0: py0 - 14, x1: px0 + 14, y1: py0 + 14 }];
     const LH = busy ? 13 : 16;
     const half = LH / 2;
     const maxW = w - 4;
@@ -135,8 +139,10 @@ function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
       // Step toward the middle of the map, so a shifted name stays in view.
       const inward = sy0 > h / 2 ? -1 : 1;
       let sy = sy0;
-      for (let k = 0; k < 8; k++) {
-        const cy = Math.min(h - half - 2, Math.max(half + 2, sy0 + inward * k * (LH + 1)));
+      // Try the door first, then step inward and outward in turn.
+      for (let k = 0; k < 12; k++) {
+        const step = k % 2 ? (k + 1) / 2 : -k / 2;
+        const cy = Math.min(h - half - 2, Math.max(half + 2, sy0 + inward * step * (LH + 1)));
         const r = { x0: sx - tw / 2, y0: cy - half, x1: sx + tw / 2, y1: cy + half };
         if (!placed.some((q) => r.x0 < q.x1 && r.x1 > q.x0 && r.y0 < q.y1 && r.y1 > q.y0)) {
           sy = cy;
