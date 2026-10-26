@@ -352,6 +352,54 @@ function tameHair(name: string, geo: BufferGeometry) {
 }
 
 /**
+ * Hair is a stack of cut-out cards, each lit by its own flat normal, so up
+ * close it read as shredded paper: every card a different brightness, and
+ * the back of a card (double-sided) turned dark. Hair normals are bent most
+ * of the way toward "out from the head" (from a vertical capsule through the
+ * hair's middle, so long hair hanging below the ears points outward too),
+ * which lights the hair as one soft mass the way it reads in a photograph,
+ * and `hairShade` stops the back faces from flipping them. Once per geometry
+ * (clones share it; the light copies get the same change).
+ */
+const HAIR_MESH = /hair/i;
+const softened = new WeakSet<BufferGeometry>();
+function softHair(name: string, geo: BufferGeometry) {
+  if (!HAIR_MESH.test(name) || softened.has(geo)) return;
+  const pos = geo.getAttribute("position");
+  const nor = geo.getAttribute("normal");
+  if (!pos || !nor || !pos.count) return;
+  softened.add(geo);
+  geo.computeBoundingBox();
+  const box = geo.boundingBox;
+  if (!box) return;
+  const cx = (box.min.x + box.max.x) / 2;
+  const cz = (box.min.z + box.max.z) / 2;
+  // The skull's middle sits about one head-radius below the top of the hair.
+  const r = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2;
+  const cy = box.max.y - r;
+  const v = new Vector3();
+  const n = new Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    v.set(pos.getX(i) - cx, y > cy ? y - cy : 0, pos.getZ(i) - cz);
+    if (v.lengthSq() < 1e-10) continue;
+    v.normalize();
+    n.set(nor.getX(i), nor.getY(i), nor.getZ(i));
+    if (n.dot(v) < 0) n.negate();
+    n.multiplyScalar(0.3).addScaledVector(v, 0.7).normalize();
+    nor.setXYZ(i, n.x, n.y, n.z);
+  }
+  nor.needsUpdate = true;
+}
+
+/** Double-sided hair keeps its (outward) normal on both faces of a card. */
+function hairShade(mat: MeshStandardMaterial) {
+  tweak(mat, "hairShade", (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace("#include <normal_fragment_begin>", "#undef DOUBLE_SIDED\n#include <normal_fragment_begin>\n#define DOUBLE_SIDED");
+  });
+}
+
+/**
  * People are drawn only when on screen: their skinned bounds used to follow
  * the bind pose, so they were never culled — everyone behind the camera
  * still cost their full triangles. A sphere round the rest pose, generously
@@ -383,6 +431,7 @@ function prepare(root: Group, rules: DressRule[]) {
     // Culled by a padded rest-pose sphere (cullable, below), not the bind-pose bounds.
     m.frustumCulled = false;
     tameHair(m.name, m.geometry);
+    softHair(m.name, m.geometry);
     if (!(m.material instanceof MeshStandardMaterial)) return;
     // The converter reads Mixamo's gloss map as metal (dark, mirror-like
     // skin) and leaves hair at zero opacity: skin and cloth are not metal,
@@ -400,8 +449,9 @@ function prepare(root: Group, rules: DressRule[]) {
       mat.side = DoubleSide;
       mat.depthWrite = true;
       // Hair came in at roughness ≈0.16 once its fake metal was gone: a
-      // wet, plastic shine. Real hair has a soft sheen.
-      mat.roughness = 0.62;
+      // wet, plastic shine; at 0.62 each card still glinted on its own.
+      // Real hair has a soft, low sheen.
+      mat.roughness = 0.8;
       // Layered cards shadow each other into dark patches: hair still casts
       // on the body and the ground, but does not take shadows itself.
       m.receiveShadow = false;
@@ -445,6 +495,7 @@ function prepare(root: Group, rules: DressRule[]) {
     // After the dye (which sets its own shader change): matte cloth and the rim on top.
     if (/Shirt|Sweater|Suit|Pants|Collar|Tie/.test(m.name)) cloth(mat);
     if (!isHair) rim(mat, /_Body$/.test(m.name) ? 0.16 : 0.22);
+    else if (HAIR_MESH.test(m.name)) hairShade(mat);
     mat.needsUpdate = true;
     m.material = mat as Material;
   });
@@ -549,6 +600,7 @@ function useLod(root: Group, model: string) {
         if (!(o as Mesh).isMesh) return;
         const name = o.name.replace(/^mixamorig\d+/, "mixamorig");
         tameHair(name, (o as Mesh).geometry);
+        softHair(name, (o as Mesh).geometry);
         byName.set(name, (o as Mesh).geometry);
       });
       return byName;

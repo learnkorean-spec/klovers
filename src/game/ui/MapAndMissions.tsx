@@ -45,6 +45,8 @@ interface DrawOpts {
   clampM?: number;
   /** Destination names at the open gates. */
   gateName?: (r: RoomId) => string;
+  /** At most this many names (those of the doors nearest the learner); all when unset. */
+  maxNames?: number;
   t: number;
 }
 
@@ -100,8 +102,17 @@ function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
 
   // Destination names beside open doorways (upright, whatever the turn).
   if (o.gateName) {
-    // Busy rooms (the Hub has seven doors) need the smaller size to keep the map readable under the names.
-    const busy = room.portals.filter((p) => !p.lockedNotice || o.isOpen(p.to)).length > 3;
+    let named = room.portals.filter((p) => !p.lockedNotice || o.isOpen(p.to));
+    // A small map with many doors (the Hub has seven) was all names and no
+    // map: only the doors nearest the learner keep theirs (the full map
+    // names every one), and they change as the learner walks.
+    if (o.maxNames !== undefined && named.length > o.maxNames) {
+      const d = (p: (typeof named)[number]) => Math.hypot((p.zone.minX + p.zone.maxX) / 2 - o.pose.x, (p.zone.minZ + p.zone.maxZ) / 2 - o.pose.z);
+      const near = new Set([...named].sort((a, b) => d(a) - d(b)).slice(0, o.maxNames));
+      named = named.filter((p) => near.has(p));
+    }
+    // Busy rooms need the smaller size to keep the map readable under the names.
+    const busy = named.length > 3;
     ctx.font = busy ? "700 9px Cairo, Inter, sans-serif" : "700 10px Cairo, Inter, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -113,8 +124,7 @@ function draw(ctx: CanvasRenderingContext2D, o: DrawOpts) {
     const LH = busy ? 13 : 16;
     const half = LH / 2;
     const maxW = w - 4;
-    for (const p of room.portals) {
-      if (p.lockedNotice && !o.isOpen(p.to)) continue;
+    for (const p of named) {
       const [gx, gy] = toScreen(o, (p.zone.minX + p.zone.maxX) / 2, (p.zone.minZ + p.zone.maxZ) / 2);
       let label = o.gateName(p.to);
       while (label.length > 3 && ctx.measureText(label).width + 8 > maxW) label = label.slice(0, -2) + "…";
@@ -266,7 +276,7 @@ export function MiniMap({ lang, pose, isOpen, steps, target, size, onOpen, showK
     const scale = (w - 14) / Math.max(b.maxX - b.minX, b.maxZ - b.minZ);
     draw(ctx, {
       pose: p, cx: (b.minX + b.maxX) / 2, cz: (b.minZ + b.maxZ) / 2, scale, rot: 0, w, h, isOpen, steps, target: tg, clampM: 14,
-      gateName: (r) => copy.rooms[r].name, t: performance.now() / 1000,
+      gateName: (r) => copy.rooms[r].name, maxNames: size < 140 ? 2 : 3, t: performance.now() / 1000,
     });
     // How far the pin is, in metres (written straight to the DOM, no re-render).
     const el = distRef.current;

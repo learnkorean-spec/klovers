@@ -97,7 +97,7 @@ export function realPerson(cast: CastId, personId: string, salt = 0): PersonLook
     return `#${col.getHexString()}`;
   };
   const rules: DressRule[] = [
-    { match: /_Hair/, color: older ? pick(HAIR_GREY, 5) : pick(HAIR_KO, 7), contrast: 0.85 },
+    { match: /_Hair/, color: older ? pick(HAIR_GREY, 5) : pick(HAIR_KO, 7), contrast: 0.55 },
     { match: /_Body$/, color: pick(SKIN_KO, 11), tint: true },
     { match: /Suit|Sweater/, color: shade(c.over ?? c.top, 13) },
     { match: /Shirt|Collar/, color: shade(c.top, 15) },
