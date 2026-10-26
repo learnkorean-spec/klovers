@@ -1,6 +1,7 @@
 import { BufferAttribute, BufferGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, Vector3, type Material } from "three";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ACCENT, MAT } from "../config/materials";
+import { pickQuality } from "../systems/quality";
 import { UNIT, type Part } from "./Instanced";
 import { curvedRoof, roofAspect } from "./shapes";
 
@@ -18,10 +19,10 @@ import { curvedRoof, roofAspect } from "./shapes";
 
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
-  | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "moss" | "hill"
+  | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "pineCone" | "ball" | "ballLow" | "cylLow" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "pineCone" | "ball" | "puff" | "fruit" | "ballLow" | "cylLow" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -41,6 +42,7 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   leaf: MAT.leaf,
   leafDark: MAT.leafDark,
   blossom: MAT.blossom,
+  blossomPale: MAT.blossomPale,
   moss: MAT.moss,
   gravel: MAT.gravel,
   hill: MAT.hill,
@@ -185,6 +187,87 @@ function parasolCloth(parity: 0 | 1): BufferGeometry {
 }
 
 /**
+ * A stall awning in the unit box: a canvas sheet (x = depth, z = length)
+ * that sags between its front and back bars and a little in each lane, with
+ * a scalloped valance hanging from the front edge (local −x). Lanes alternate
+ * between two pieces (parity 0 = the dyed lanes, 1 = the ivory ones), so one
+ * instanced draw per cloth gives a striped awning. Y is in metres (instance
+ * it with y-scale 1). Both faces carry the same upward normals, like the
+ * parasol, so the underside reads as sunlit canvas from the street.
+ */
+const AWNING_LANES = 8;
+function awningCloth(parity: 0 | 1): BufferGeometry {
+  const AX = 8;
+  const AZ = 4;
+  const parts: BufferGeometry[] = [];
+  for (let lane = parity; lane < AWNING_LANES; lane += 2) {
+    const pos: number[] = [];
+    const uv: number[] = [];
+    for (let i = 0; i <= AX + 1; i++) {
+      for (let j = 0; j <= AZ; j++) {
+        const uz = j / AZ;
+        const z = -0.5 + (lane + uz) / AWNING_LANES;
+        const dip = Math.sin(Math.PI * uz);
+        let x: number;
+        let y: number;
+        if (i <= AX) {
+          const ux = i / AX;
+          x = 0.5 - ux;
+          y = -0.05 * Math.sin(Math.PI * ux) - 0.022 * dip * Math.sin(Math.PI * ux);
+        } else {
+          // Valance: two scallops per lane.
+          x = -0.5;
+          y = -0.17 * (0.6 + 0.4 * Math.abs(Math.sin(Math.PI * 2 * uz)));
+        }
+        pos.push(x, y, z);
+        uv.push((z + 0.5) * 8, (i / (AX + 1)) * 6);
+      }
+    }
+    const idx: number[] = [];
+    const row = AZ + 1;
+    for (let i = 0; i <= AX; i++)
+      for (let j = 0; j < AZ; j++) {
+        const p0 = i * row + j;
+        const p1 = p0 + 1;
+        const p2 = p0 + row;
+        const p3 = p2 + 1;
+        idx.push(p0, p2, p1, p1, p2, p3);
+      }
+    const top = new BufferGeometry();
+    top.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+    top.setAttribute("uv", new BufferAttribute(new Float32Array(uv), 2));
+    top.setIndex(idx);
+    top.computeVertexNormals();
+    // The valance's normals face out (front); the sheet's face up.
+    const under = top.clone();
+    const rev: number[] = [];
+    for (let k = 0; k < idx.length; k += 3) rev.push(idx[k], idx[k + 2], idx[k + 1]);
+    under.setIndex(rev);
+    parts.push(top, under);
+  }
+  const merged = mergeGeometries(parts);
+  for (const p of parts) p.dispose();
+  return merged;
+}
+
+/**
+ * Placement of a stall awning: centre (x, y, z), width w across the stall
+ * (x), length d along it (z). `front` is the side (−1 = −x, 1 = +x) whose
+ * edge carries the valance; `drop` tilts that edge down (radians; negative
+ * raises it).
+ */
+export function awningPlace(x: number, y: number, z: number, w: number, d: number, front: -1 | 1, drop: number): Part {
+  return { p: [x, y, z], s: [w, 1, d], r: [0, front > 0 ? Math.PI : 0, drop] };
+}
+
+/** A striped stall awning in a kit: dyed lanes in `cloth`, ivory between. */
+export function awning(k: Kit, cloth: MatKey, x: number, y: number, z: number, w: number, d: number, front: -1 | 1, drop: number): void {
+  const a = awningPlace(x, y, z, w, d, front, drop);
+  k.add(cloth, "awningA", a.p, a.s, a.r, true);
+  k.add("fabric", "awningB", a.p, a.s, a.r, true);
+}
+
+/**
  * The parasol's ribs and stretchers as seen from below: thin dark strips
  * just under each rib line, facing down (culled from above).
  */
@@ -229,6 +312,14 @@ function parasolRibs(): BufferGeometry {
   return g;
 }
 
+function phoneTier(): boolean {
+  try {
+    return pickQuality().maxTexture <= 1024;
+  } catch {
+    return false;
+  }
+}
+
 const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   box: UNIT.box,
   hip: UNIT.hipRoof,
@@ -238,8 +329,15 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   parasolA: parasolCloth(0),
   parasolB: parasolCloth(1),
   parasolRibs: parasolRibs(),
+  awningA: awningCloth(0),
+  awningB: awningCloth(1),
   pineCone: pineTier(),
   ball: lumpyBall(3, 0.16),
+  // Flower clusters of a cherry crown: rougher lumps; on phones a quarter
+  // of the triangles (a few facets show only up close).
+  puff: lumpyBall(phoneTier() ? 2 : 3, 0.24),
+  // One apple, tangerine or potato in a heap: a small smooth ball.
+  fruit: lumpyBall(1, 0.05),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
   ballLow: lumpyBall(1, 0.12),
   cylLow: new CylinderGeometry(0.5, 0.5, 1, 6),
@@ -574,7 +672,17 @@ export function shopfront(k: Kit, spec: { x: number; z: number; w: number; d: nu
 export function basket(k: Kit, x: number, z: number, s = 1, heap: MatKey = "woodLight", y = 0): void {
   k.add("woodLight", "cyl", [x, y + 0.14 * s, z], [0.55 * s, 0.28 * s, 0.55 * s]);
   k.add("woodDark", "cyl", [x, y + 0.29 * s, z], [0.58 * s, 0.04 * s, 0.58 * s]);
-  k.add(heap, "ball", [x, y + 0.32 * s, z], [0.42 * s, 0.2 * s, 0.42 * s]);
+  // A heap of single goods (apples, tangerines, potatoes…): a ring of six
+  // with three on top, so each reads as a thing to buy, not a coloured lid.
+  const seed = x * 7.1 + z * 3.3;
+  const f = 0.17 * s;
+  for (let i = 0; i < 9; i++) {
+    const top = i >= 6;
+    const a = (top ? (i - 6) / 3 : i / 6) * Math.PI * 2 + seed + (top ? 0.5 : 0);
+    const r = (top ? 0.065 : 0.155) * s;
+    const fj = f * (1 + jitter(seed + i * 3, 0.1));
+    k.add(heap, "fruit", [x + Math.cos(a) * r, y + (top ? 0.4 : 0.33) * s, z + Math.sin(a) * r], [fj, fj * 0.88, fj], [jitter(seed + i, 0.5), jitter(seed * 2 + i, 3), 0]);
+  }
 }
 
 /**
@@ -627,6 +735,10 @@ export function planter(k: Kit, x: number, z: number, len: number, alongX = true
  * hero tree (use sparingly — one per room at most).
  */
 export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed = 1, far = false): void {
+  if (blossom && !far) {
+    cherryTree(k, x, z, s, seed);
+    return;
+  }
   const lean = jitter(seed, 0.12);
   // Far trees (beyond the walls): low-poly, and no shadow (they fall
   // outside the sun's shadow box anyway, so casting would only cost).
@@ -642,6 +754,59 @@ export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed 
     const j = 1 + jitter(seed * 3 + i, 0.12);
     k.add(mat, ball, [x + dx * s, dy * s, z + dz * s], [r * s * j, r * s * 0.82 * j, r * s * j], [0, jitter(seed + i, 1), 0], !far);
   });
+}
+
+/**
+ * A flowering cherry (벚나무): a short trunk that splits into spreading limbs,
+ * each carrying a few clusters of pink and near-white flowers. The crown is
+ * wide and open, so branches and sky show between the clusters — read from
+ * the start view as a tree in bloom, not one pink ball.
+ */
+function cherryTree(k: Kit, x: number, z: number, s: number, seed: number): void {
+  const lean = jitter(seed, 0.08);
+  k.add("woodDark", "cyl", [x, 0.12 * s, z], [0.4 * s, 0.24 * s, 0.4 * s]);
+  k.add("woodDark", "cyl", [x, 0.72 * s, z], [0.26 * s, 1.5 * s, 0.26 * s], [lean, 0, -lean], true);
+  const fork = 1.38 * s;
+  const n = 5;
+  let c = 0;
+  for (let i = 0; i < n; i++) {
+    const a = seed * 1.7 + (i / n) * Math.PI * 2 + jitter(seed + i * 11, 0.35);
+    const t = 0.72 + jitter(seed * 2 + i, 0.16);
+    const len = (1.35 + jitter(seed * 3 + i, 0.25)) * s;
+    const dx = Math.sin(t) * Math.cos(a);
+    const dy = Math.cos(t);
+    const dz = Math.sin(t) * Math.sin(a);
+    k.add("woodDark", "cyl", [x + (dx * len) / 2, fork + (dy * len) / 2, z + (dz * len) / 2], [0.12 * s, len, 0.12 * s], [0, -a, -t], i < 3);
+    const tx = x + dx * len;
+    const ty = fork + dy * len;
+    const tz = z + dz * len;
+    // A thinner twig on outward and a little flatter.
+    const t2 = t + 0.4;
+    const l2 = 0.7 * s;
+    const ex = Math.sin(t2) * Math.cos(a + 0.3);
+    const ey = Math.cos(t2);
+    const ez = Math.sin(t2) * Math.sin(a + 0.3);
+    k.add("woodDark", "cyl", [tx + (ex * l2) / 2, ty + (ey * l2) / 2, tz + (ez * l2) / 2], [0.06 * s, l2, 0.06 * s], [0, -(a + 0.3), -t2]);
+    // Flower clusters round the limb's end, the outer ones lower (the crown's
+    // edge droops a little under the bloom).
+    const spots: [number, number, number, number][] = [
+      [0, 0.2, 0, 0.98],
+      [ex * 0.8, ey * 0.8 - 0.05, ez * 0.8, 0.8],
+      [-dz * 0.6 - dx * 0.2, 0.36, dx * 0.6 - dz * 0.2, 0.76],
+      [dz * 0.55 + dx * 0.2, -0.08, -dx * 0.55 + dz * 0.2, 0.7],
+    ];
+    spots.forEach(([ox, oy, oz, r], j) => {
+      const jr = r * s * (1 + jitter(seed * 7 + i * 5 + j, 0.14));
+      const mat: MatKey = (c++ + seed) % 3 === 0 ? "blossomPale" : "blossom";
+      k.add(mat, "puff", [tx + ox * s, ty + oy * s, tz + oz * s], [jr, jr * 0.74, jr], [jitter(c, 0.4), jitter(c * 3, 3), 0], true);
+    });
+  }
+  // The crown's top, over the fork.
+  for (let j = 0; j < 4; j++) {
+    const a = seed + j * 1.6;
+    const r = (0.82 + jitter(seed + j * 13, 0.1)) * s;
+    k.add(j === 1 ? "blossomPale" : "blossom", "puff", [x + Math.cos(a) * 0.5 * s, 2.75 * s + j * 0.12 * s, z + Math.sin(a) * 0.5 * s], [r, r * 0.72, r], [0, a, 0], true);
+  }
 }
 
 /** A low flowering or green shrub: two or three soft mounds. */

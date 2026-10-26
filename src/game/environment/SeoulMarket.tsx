@@ -4,7 +4,7 @@ import { ALLEY } from "../config/rooms";
 import { FLOOR_GRID } from "../config/world";
 import { MAT } from "../config/materials";
 import Batch from "./Batch";
-import { Kit, bunting, flowers, jitter, planter, type MatKey } from "./kit";
+import { Kit, awning, bunting, flowers, jitter, planter, type MatKey } from "./kit";
 import { Signboard } from "./parts";
 import { floorBreakup, FLOOR_BREAKUP_KEY, paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
 
@@ -180,7 +180,7 @@ function stallsKit(): Kit {
     goods(k, st.goods, front - st.side * 0.35, st.z, i * 11 + 3);
     // Posts and an awning sloping down toward the alley.
     for (const dz of [-1, 1]) k.box("metal", [front + st.side * 0.02, 1.25, st.z + dz * (ALLEY.stallD / 2 - 0.1)], [0.06, 2.5, 0.06]);
-    k.box(AWNINGS[i % AWNINGS.length], [cx - st.side * 0.15, 2.48, st.z], [ALLEY.stallW + 0.7, 0.05, ALLEY.stallD + 0.1], true, [0, 0, st.side * -0.22]);
+    awning(k, AWNINGS[i % AWNINGS.length], cx - st.side * 0.15, 2.52, st.z, ALLEY.stallW + 0.7, ALLEY.stallD + 0.1, -st.side as -1 | 1, -0.22);
   });
   // The street-food cart: a counter on wheels with a red awning.
   const C = ALLEY.cart;

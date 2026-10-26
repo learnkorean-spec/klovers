@@ -254,7 +254,7 @@ export const FOLIAGE_TIME = { value: 0 };
  * light, and a slow breeze that moves the tops more than the bases. All in
  * the material's own shader: no extra draw calls, no textures.
  */
-export function foliage(color: string, roughness = 0.9): MeshStandardMaterial {
+export function foliage(color: string, roughness = 0.9, florets = false): MeshStandardMaterial {
   const m = new MeshStandardMaterial({ color: new Color(color), roughness, metalness: 0, flatShading: false });
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uFoliageTime = FOLIAGE_TIME;
@@ -296,6 +296,7 @@ vFolUp = clamp(position.y + 0.5, 0.0, 1.0);
       .replace(
         "#include <common>",
         `#include <common>
+${florets ? "#define FOL_FLORETS" : ""}
 varying vec3 vFolPos;
 varying float vFolUp;
 float folHash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
@@ -328,10 +329,19 @@ float folNoise(vec3 p) {
   float lit = mix(0.74, 1.12, smoothstep(0.0, 1.0, vFolUp));
   diffuseColor.rgb *= lit * mix(0.88, 1.1, clump);
   diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.06, 1.04, 0.86), smoothstep(0.55, 1.0, clump) * 0.5);
+#ifdef FOL_FLORETS
+  // Blossom crowns: a fine pattern of pale florets and shadowed gaps, so a
+  // flowering tree reads as thousands of small flowers, not pink cotton.
+  // Petals are thin: light comes through, so the underside stays pink.
+  diffuseColor.rgb *= mix(vec3(1.16, 1.1, 1.08), vec3(1.0), vFolUp);
+  float fl = folNoise(vFolPos * 23.0) * 0.6 + folNoise(vFolPos * 47.0) * 0.4;
+  diffuseColor.rgb *= mix(0.86, 1.05, smoothstep(0.3, 0.6, fl));
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0, 0.96, 0.95), smoothstep(0.6, 0.78, fl) * 0.4 * vFolUp);
+#endif
 }`,
       );
   };
-  m.customProgramCacheKey = () => "klovers-foliage-2";
+  m.customProgramCacheKey = () => (florets ? "klovers-foliage-2-florets" : "klovers-foliage-2");
   return m;
 }
 
@@ -363,6 +373,8 @@ export const NATURAL = {
   leaf: "#6F9E4C",
   leafDark: "#46703D",
   blossom: "#F3A5BD",
+  /** The paler, almost white flowers mixed into a cherry crown. */
+  blossomPale: "#F7D2DC",
   moss: "#8E9A62",
   /** Ground beyond the walls, and the far hills. */
   ground: "#C9BC98",
@@ -393,7 +405,8 @@ export const MAT = {
   pine: foliage(NATURAL.pine, 0.9),
   leaf: foliage(NATURAL.leaf, 0.9),
   leafDark: foliage(NATURAL.leafDark, 0.9),
-  blossom: foliage(NATURAL.blossom, 0.85),
+  blossom: foliage(NATURAL.blossom, 0.85, true),
+  blossomPale: foliage(NATURAL.blossomPale, 0.85, true),
   moss: std(NATURAL.moss, 1, { detail: "stone" }),
   /** Raked gravel either side of a stone path. */
   gravel: std("#A99A7F", 1, { detail: "stone" }),

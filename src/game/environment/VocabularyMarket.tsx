@@ -6,7 +6,7 @@ import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Instanced, { type Part } from "./Instanced";
 import Batch from "./Batch";
-import { Kit, basket, bunting, gutter, parasol, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
+import { Kit, awningPlace, kitGeometry, basket, bunting, gutter, parasol, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import ModelProp, { type PropPlacement } from "./ModelProp";
 import MarketShop, { type ShopItem } from "./MarketShop";
@@ -159,12 +159,11 @@ function useStallParts() {
       counter.push({ p: [cx + front * 0.55, 0.45, z], s: [1, 0.9, MARKET.stallD - 0.4] });
       top.push({ p: [cx + front * 0.55, 0.92, z], s: [1.1, 0.05, MARKET.stallD - 0.3] });
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) post.push({ p: [cx + sx * (hw - 0.08), 1.2, z + sz * (hd - 0.08)], s: [0.1, 2.4, 0.1] });
-      // Canvas awning, lower at the front edge.
-      const tilt: [number, number, number] = [0, 0, side * 0.18];
-      awning[n % 3].push({ p: [cx, 2.45, z], s: [MARKET.stallW + 0.3, 0.06, MARKET.stallD + 0.2], r: tilt });
-      for (const k of [-1, 0, 1]) stripe.push({ p: [cx, 2.485, z + k * 0.9], s: [MARKET.stallW + 0.31, 0.012, 0.28], r: tilt });
-      // A scalloped valance along the awning's front edge.
-      for (let v = -1.5; v <= 1.5; v += 0.5) stripe.push({ p: [cx - side * (MARKET.stallW / 2 + 0.1), 2.3, z + v], s: [0.02, 0.18, 0.42] });
+      // Striped canvas awning, sagging between its bars, lower at the front
+      // edge, with a scalloped valance: dyed lanes per stall, ivory between.
+      const a = awningPlace(cx, 2.5, z, MARKET.stallW + 0.3, MARKET.stallD + 0.2, front as -1 | 1, 0.18);
+      awning[n % 3].push(a);
+      stripe.push(a);
     });
     return { counter, top, post, awning, stripe };
   }, []);
@@ -337,10 +336,10 @@ export default function VocabularyMarket({
       <Instanced parts={stalls.counter} material={MAT.woodWarm} castShadow receiveShadow />
       <Instanced parts={stalls.top} material={MAT.woodDark} />
       <Instanced parts={stalls.post} material={MAT.woodDark} castShadow />
-      <Instanced parts={stalls.awning[0]} material={MAT.clothRed} castShadow />
-      <Instanced parts={stalls.awning[1]} material={MAT.clothBlue} castShadow />
-      <Instanced parts={stalls.awning[2]} material={MAT.clothSage} castShadow />
-      <Instanced parts={stalls.stripe} material={MAT.fabric} />
+      <Instanced parts={stalls.awning[0]} material={MAT.clothRed} geometry={kitGeometry("awningA")} castShadow />
+      <Instanced parts={stalls.awning[1]} material={MAT.clothBlue} geometry={kitGeometry("awningA")} castShadow />
+      <Instanced parts={stalls.awning[2]} material={MAT.clothSage} geometry={kitGeometry("awningA")} castShadow />
+      <Instanced parts={stalls.stripe} material={MAT.fabric} geometry={kitGeometry("awningB")} castShadow />
       {STALLS.map(({ side, z, word }) => {
         const front = -side;
         return (

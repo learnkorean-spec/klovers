@@ -9,7 +9,7 @@ import type { PlayerState } from "../systems/state";
 import { TAXI, newTaxi, stepTaxi } from "../systems/traffic";
 import Batch from "./Batch";
 import Instanced, { type Part } from "./Instanced";
-import { Kit, flowers, jitter, kitGeometry, planter } from "./kit";
+import { Kit, awning, flowers, jitter, kitGeometry, planter } from "./kit";
 import { GateWall } from "./parts";
 import { paintPaving, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
@@ -745,10 +745,7 @@ const STREET_KIT: Kit = (() => {
 
   // The restaurant's striped awning and its table outside: red plastic stools.
   const rz = SEOUL.restaurant.z;
-  for (let i = 0; i < 8; i++) {
-    const z = rz - 2.0 + (i + 0.5) * 0.5;
-    k.box(i % 2 ? "fabric" : "clothRed", [HW - 0.48, 2.66, z], [1.0, 0.04, 0.5], true, [0, 0, 0.25]);
-  }
+  awning(k, "clothRed", HW - 0.48, 2.7, rz, 1.0, 4.0, -1, 0.25);
   const t = SEOUL.table;
   k.add("metal", "cyl", [t.x, 0.72, t.z], [t.r * 2, 0.04, t.r * 2], undefined, true);
   k.add("metal", "cyl", [t.x, 0.36, t.z], [0.08, 0.72, 0.08]);
