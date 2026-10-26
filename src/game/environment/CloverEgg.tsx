@@ -1,10 +1,24 @@
 import { useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
-import { AdditiveBlending, CanvasTexture, MeshBasicMaterial, type Group } from "three";
-import { ACCENT, MAT, std } from "../config/materials";
+import {
+  AdditiveBlending,
+  BufferAttribute,
+  CanvasTexture,
+  Color,
+  DoubleSide,
+  LatheGeometry,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  SRGBColorSpace,
+  Vector2,
+  type BufferGeometry,
+  type Group,
+} from "three";
+import { ACCENT, MAT } from "../config/materials";
 import { PALETTE, PROPS } from "../config/world";
 import { HATCH, type StoryState } from "../systems/story";
 import { REDUCED_MOTION } from "../systems/motion";
+import { pickQuality } from "../systems/quality";
 
 /**
  * The clover egg on its plinth in the middle of the courtyard.
@@ -22,7 +36,187 @@ import { REDUCED_MOTION } from "../systems/motion";
 const PLINTH_H = 0.5;
 const EGG_R = 0.5;
 const EGG_Y = PLINTH_H + EGG_R * 1.25;
-const SPLIT = Math.PI * 0.42; // where the cap breaks off
+const EGG_H = EGG_R * 1.3; // half height: an egg, not a ball
+const SPLIT_Y = 0.16; // height (above the middle) where the cap breaks off
+
+/**
+ * The shell, turned on a lathe from a true egg profile: fuller below the
+ * middle, narrower at the top. Points are spaced evenly along the outline so
+ * the painted shell map is not stretched; the cap and the lower shell are
+ * cut from the same profile and keep the whole shell's normals, so no
+ * lighting seam shows where they meet while the egg is whole.
+ */
+const SHELL = (() => {
+  const dense: Vector2[] = [];
+  for (let i = 0; i <= 400; i++) {
+    const t = (i / 400) * Math.PI; // 0 = bottom, π = top
+    dense.push(new Vector2(EGG_R * Math.sin(t) * (1 + 0.1 * Math.cos(t)), -EGG_H * Math.cos(t)));
+  }
+  dense[0].x = 0;
+  dense[400].x = 0;
+  const along = [0];
+  for (let i = 1; i < dense.length; i++) along.push(along[i - 1] + dense[i].distanceTo(dense[i - 1]));
+  const total = along[along.length - 1];
+  const N = 48;
+  const pts: Vector2[] = [];
+  for (let j = 0, k = 0; j <= N; j++) {
+    const d = (j / N) * total;
+    while (k < dense.length - 2 && along[k + 1] < d) k++;
+    const f = (d - along[k]) / Math.max(1e-9, along[k + 1] - along[k]);
+    pts.push(dense[k].clone().lerp(dense[k + 1], Math.min(1, Math.max(0, f))));
+  }
+  let cut = 0;
+  while (cut < N && pts[cut + 1].y < SPLIT_Y) cut++;
+  cut++;
+  const SEG = 40;
+  const whole = new LatheGeometry(pts, SEG, -Math.PI, Math.PI * 2); // u = 0.5 faces +z (spawn)
+  const part = (from: number, to: number): BufferGeometry => {
+    const g = new LatheGeometry(pts.slice(from, to + 1), SEG, -Math.PI, Math.PI * 2);
+    const rows = to - from + 1;
+    const n = g.getAttribute("normal") as BufferAttribute;
+    const uv = g.getAttribute("uv") as BufferAttribute;
+    const wn = whole.getAttribute("normal") as BufferAttribute;
+    for (let i = 0; i <= SEG; i++) {
+      for (let j = 0; j < rows; j++) {
+        const a = i * rows + j;
+        const b = i * pts.length + from + j;
+        n.setXYZ(a, wn.getX(b), wn.getY(b), wn.getZ(b));
+        uv.setY(a, (from + j) / N);
+      }
+    }
+    return g;
+  };
+  const lower = part(0, cut);
+  const cap = part(cut, N);
+  whole.dispose();
+  // Map size in metres, to paint the clover round rather than stretched.
+  return { lower, cap, around: Math.PI * 2 * EGG_R, along: total };
+})();
+
+/**
+ * Ivory shell paint: a faint warm mottle and fine speckles (a real shell,
+ * never a plastic ball), a little warmer toward the base, and the small green
+ * four-leaf clover painted on the side that faces the arrival path. The
+ * clover also has its own faint emissive map so it stays readable in shade.
+ */
+const SHELL_MAT = (() => {
+  const m = new MeshStandardMaterial({ color: new Color("#ffffff"), roughness: 0.48, side: DoubleSide });
+  try {
+    // Sharp enough for a close look on a computer; phones keep to their budget.
+    const W = Math.min(2048, pickQuality().maxTexture);
+    const H = W / 2;
+    const k = W / 1024;
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    const e = document.createElement("canvas"); // the clover's own light: small is enough
+    e.width = 512;
+    e.height = 256;
+    const ctx = c.getContext("2d");
+    const ectx = e.getContext("2d");
+    if (!ctx || !ectx) return m;
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const base = ctx.createLinearGradient(0, 0, 0, H); // canvas top = egg top
+    base.addColorStop(0, "#fffaf0");
+    base.addColorStop(0.55, PALETTE.ivory);
+    base.addColorStop(1, "#f1e6d0");
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 70; i++) {
+      const x = rnd() * W;
+      const y = rnd() * H;
+      const r = (30 + rnd() * 70) * k;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, rnd() < 0.5 ? "rgba(236,222,196,0.35)" : "rgba(255,253,246,0.4)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      for (const ox of [-W, 0, W]) {
+        ctx.save();
+        ctx.translate(ox, 0);
+        ctx.fillRect(x - r, y - r, r * 2, r * 2);
+        ctx.restore();
+      }
+    }
+    for (let i = 0; i < 1400 * k * k; i++) {
+      const y = rnd() * H;
+      ctx.fillStyle = `rgba(${150 + rnd() * 40},${120 + rnd() * 30},${90 + rnd() * 20},${0.06 + rnd() * 0.12})`;
+      ctx.beginPath();
+      ctx.arc(rnd() * W, y, (0.6 + rnd() * 1.3) * k, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ectx.fillStyle = "#000";
+    ectx.fillRect(0, 0, e.width, e.height);
+    // The clover, centred where u = 0.5 (facing +z), a little below the
+    // middle; drawn in metres so it stays round on the curved shell.
+    const cv = 1 - 0.47;
+    const leaf = (g: CanvasRenderingContext2D, fill: string | CanvasGradient) => {
+      for (let k = 0; k < 4; k++) {
+        g.save();
+        g.rotate((k * Math.PI) / 2 + Math.PI / 4);
+        g.beginPath();
+        // A heart-shaped leaf pointing out from the middle.
+        g.moveTo(0, 0);
+        g.bezierCurveTo(-0.012, -0.03, -0.062, -0.044, -0.05, -0.078);
+        g.bezierCurveTo(-0.042, -0.1, -0.012, -0.098, 0, -0.08);
+        g.bezierCurveTo(0.012, -0.098, 0.042, -0.1, 0.05, -0.078);
+        g.bezierCurveTo(0.062, -0.044, 0.012, -0.03, 0, 0);
+        g.closePath();
+        g.fillStyle = fill;
+        g.fill();
+        g.restore();
+      }
+    };
+    for (const g of [ctx, ectx]) {
+      const gw = g.canvas.width;
+      const gh = g.canvas.height;
+      g.save();
+      g.translate(gw / 2, gh * cv);
+      g.scale(gw / SHELL.around, gh / SHELL.along);
+      // Stem first, under the leaves.
+      g.strokeStyle = g === ctx ? "#1f9a2a" : "#3a7a20";
+      g.lineWidth = 0.011;
+      g.lineCap = "round";
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.quadraticCurveTo(0.012, 0.05, 0.03, 0.085);
+      g.stroke();
+      if (g === ctx) {
+        const fill = g.createRadialGradient(0, 0, 0.005, 0, 0, 0.1);
+        fill.addColorStop(0, "#2cbf2a");
+        fill.addColorStop(1, "#3fdc2c");
+        leaf(g, fill);
+        // A pale vein down each leaf.
+        g.strokeStyle = "rgba(225,255,200,0.55)";
+        g.lineWidth = 0.004;
+        for (let k = 0; k < 4; k++) {
+          g.save();
+          g.rotate((k * Math.PI) / 2 + Math.PI / 4);
+          g.beginPath();
+          g.moveTo(0, -0.012);
+          g.lineTo(0, -0.07);
+          g.stroke();
+          g.restore();
+        }
+      } else {
+        leaf(g, "#3fae22");
+      }
+      g.restore();
+    }
+    const map = new CanvasTexture(c);
+    map.colorSpace = SRGBColorSpace;
+    map.anisotropy = 8;
+    const glow = new CanvasTexture(e);
+    glow.colorSpace = SRGBColorSpace;
+    m.map = map;
+    m.emissiveMap = glow;
+    m.emissive = new Color("#ffffff");
+    m.emissiveIntensity = 0.55;
+  } catch {
+    m.color = new Color(PALETTE.ivory);
+  }
+  return m;
+})();
 
 /** Warm radial glow (canvas, painted once), added softly over the timber. */
 const GLOW = (() => {
@@ -128,32 +322,12 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
         <primitive object={MAT.woodWarm} attach="material" />
       </mesh>
       <group ref={egg} position={[0, PLINTH_H + 0.05, 0]}>
-        <group position={[0, EGG_Y - PLINTH_H - 0.05, 0]} scale={[1, 1.3, 1]}>
+        <group position={[0, EGG_Y - PLINTH_H - 0.05, 0]}>
           {/* Lower shell */}
-          <mesh castShadow>
-            <sphereGeometry args={[EGG_R, 32, 24, 0, Math.PI * 2, SPLIT, Math.PI - SPLIT]} />
-            <primitive object={std(PALETTE.ivory, 0.55)} attach="material" />
-          </mesh>
-          {/* Cap */}
+          <mesh castShadow geometry={SHELL.lower} material={SHELL_MAT} />
+          {/* Cap (the clover is painted on the shell below the break) */}
           <group ref={cap}>
-            <mesh castShadow>
-              <sphereGeometry args={[EGG_R, 32, 12, 0, Math.PI * 2, 0, SPLIT]} />
-              <primitive object={std(PALETTE.ivory, 0.55)} attach="material" />
-            </mesh>
-          </group>
-          {/* Four-leaf clover mark, facing the spawn point (+z) */}
-          <group position={[0, -0.02, EGG_R + 0.004]}>
-            {[
-              [0.045, 0.045],
-              [-0.045, 0.045],
-              [0.045, -0.045],
-              [-0.045, -0.045],
-            ].map(([dx, dy], i) => (
-              <mesh key={i} position={[dx, dy, 0]}>
-                <circleGeometry args={[0.05, 16]} />
-                <meshBasicMaterial color={PALETTE.cloverGreen} toneMapped={false} />
-              </mesh>
-            ))}
+            <mesh castShadow geometry={SHELL.cap} material={SHELL_MAT} />
           </group>
         </group>
       </group>

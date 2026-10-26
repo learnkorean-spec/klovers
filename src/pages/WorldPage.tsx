@@ -947,7 +947,7 @@ const WorldPage = () => {
               <div
                 // Phone: bottom right, above the round button (the joystick owns
                 // the bottom left, the HUD the top). Computer: bottom left.
-                className={`pointer-events-none absolute z-[11] ${isTouch ? (portrait ? "bottom-[11.5rem] end-4" : "end-4 top-[7.4rem]") : "bottom-5 left-5"}`}
+                className={`pointer-events-none absolute z-[11] ${isTouch ? (portrait ? "bottom-[11.5rem] end-4" : "end-4 top-[7.4rem] [@media(max-height:500px)]:top-[4.4rem]") : "bottom-5 left-5"}`}
                 
               >
                 <MiniMap lang={lang} showKey={!isTouch} size={isTouch ? (portrait ? 96 : 110) : 184} pose={pose} isOpen={isOpenRoom} steps={stepsLeft} target={() => targetRef.current} onOpen={() => setMapOpen(true)} />

@@ -150,6 +150,9 @@ function meanUnder(geometry: BufferGeometry, tex: Texture): number | null {
 }
 
 /** The texture's average colour (linear RGB) over the faces of this mesh, or null. */
+/** The most a skin tone may brighten the texture, per channel. */
+const SKIN_LIMIT = 2.6;
+
 function meanColorUnder(geometry: BufferGeometry, tex: Texture): [number, number, number] | null {
   const px = readLuminance(tex);
   const uv = geometry.getAttribute("uv");
@@ -170,8 +173,16 @@ function meanColorUnder(geometry: BufferGeometry, tex: Texture): [number, number
     const x = Math.min(px.w - 1, Math.max(0, Math.floor((((u % 1) + 1) % 1) * px.w)));
     const y = Math.min(px.h - 1, Math.max(0, Math.floor((((v % 1) + 1) % 1) * px.h)));
     const j = y * px.w + x;
+    const [r, g, b] = [px.rgb[j * 3], px.rgb[j * 3 + 1], px.rgb[j * 3 + 2]];
+    // Skin only: the body's texture also holds the scalp under the hair,
+    // brows, lashes and the dark of the eyes. Counted in, they pulled the
+    // average so low that every tone hit the brightening limit and the
+    // texture's own hue (tan on some bodies) stayed as it was.
+    if (r < 0.1 || r < g || g < b * 0.8) continue;
     const a = px.alpha[j] / 255;
-    for (let c = 0; c < 3; c++) sum[c] += px.rgb[j * 3 + c] * a;
+    sum[0] += r * a;
+    sum[1] += g * a;
+    sum[2] += b * a;
     weight += a;
   }
   return weight > 0.5 ? [sum[0] / weight, sum[1] / weight, sum[2] / weight] : null;
@@ -415,8 +426,11 @@ function prepare(root: Group, rules: DressRule[]) {
       const mean = mat.map ? meanColorUnder(m.geometry, mat.map) : null;
       if (mean) {
         const target = new Color(rule.color);
-        const f = (t: number, m0: number) => Math.min(2.2, Math.max(0.35, t / Math.max(m0, 0.004)));
-        mat.color = new Color(f(target.r, mean[0]), f(target.g, mean[1]), f(target.b, mean[2]));
+        const f = [target.r / Math.max(mean[0], 0.004), target.g / Math.max(mean[1], 0.004), target.b / Math.max(mean[2], 0.004)];
+        // Never brighten past the limit, but scale all three together when
+        // it is reached, so the shift in hue (toward the tone) survives.
+        const k = Math.min(1, SKIN_LIMIT / Math.max(...f));
+        mat.color = new Color(...(f.map((x) => Math.max(0.35, x * k)) as [number, number, number]));
       }
     } else if (rule) {
       const ref = !rule.keepMap && mat.map ? meanUnder(m.geometry, mat.map) : null;

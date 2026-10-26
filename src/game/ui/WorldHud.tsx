@@ -158,13 +158,15 @@ export default function WorldHud(p: HudProps) {
           {!p.sequence && p.side}
         </div>
 
-        <div className="flex flex-col items-end gap-2">
+        {/* A phone on its side is short: the two pickers sit in one row there,
+            so the walking map under them can move up out of the view. */}
+        <div className="flex flex-col items-end gap-2 [@media(max-height:500px)]:flex-row [@media(max-height:500px)]:items-center">
           <div
             role="group"
             aria-label={copy.avatarLabel}
-            className="pointer-events-auto flex items-center gap-1 rounded-full bg-charcoal/85 p-1 text-xs text-ivory sm:ps-3"
+            className="pointer-events-auto flex items-center gap-1 rounded-full bg-charcoal/85 p-1 text-xs text-ivory [@media(min-width:640px)_and_(min-height:501px)]:ps-3"
           >
-            <span className="hidden pe-1 font-semibold sm:inline">{copy.avatarLabel}</span>
+            <span className="hidden pe-1 font-semibold [@media(min-width:640px)_and_(min-height:501px)]:inline">{copy.avatarLabel}</span>
             {(Object.keys(AVATARS) as AvatarId[]).map((id) => (
               <button
                 key={id}
@@ -184,8 +186,8 @@ export default function WorldHud(p: HudProps) {
             ))}
           </div>
           {/* How the world is seen: through the character's eyes, or from behind. */}
-          <div role="group" aria-label={copy.view.label} className="pointer-events-auto flex items-center gap-1 rounded-full bg-charcoal/85 p-1 text-xs text-ivory sm:ps-3">
-            <span className="hidden pe-1 font-semibold sm:inline">{copy.view.label}</span>
+          <div role="group" aria-label={copy.view.label} className="pointer-events-auto flex items-center gap-1 rounded-full bg-charcoal/85 p-1 text-xs text-ivory [@media(min-width:640px)_and_(min-height:501px)]:ps-3">
+            <span className="hidden pe-1 font-semibold [@media(min-width:640px)_and_(min-height:501px)]:inline">{copy.view.label}</span>
             {(["eyes", "behind"] as const).map((v) => (
               <button
                 key={v}
@@ -200,8 +202,8 @@ export default function WorldHud(p: HudProps) {
                   p.view === v ? "bg-klovers-yellow text-charcoal" : "text-ivory hover:bg-ivory/10"
                 }`}
               >
-                <span className="max-sm:hidden">{copy.view[v]}</span>
-                <span className="sm:hidden">
+                <span className="hidden [@media(min-width:640px)_and_(min-height:501px)]:inline">{copy.view[v]}</span>
+                <span className="[@media(min-width:640px)_and_(min-height:501px)]:hidden">
                   <ViewIcon v={v} />
                 </span>
               </button>
