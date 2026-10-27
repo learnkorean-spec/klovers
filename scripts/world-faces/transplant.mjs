@@ -1,4 +1,6 @@
-// Give npc-elizabeth (Ch26) the hair of npc-megan (Ch22), fitted to her own head.
+// Give one body another body's hair, fitted to its own head: npc-elizabeth
+// (Ch26) took npc-megan's (Ch22); npc-brian (Ch01, bald) took npc-leonard's
+// (Ch31). If the body has no hair mesh, a new one is made beside its body.
 // node transplant.mjs E.glb M.glb OUT.glb
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
@@ -88,14 +90,16 @@ for (const t of src.listTargets()) {
 // Megan's hair material and maps.
 const sm = src.getMaterial();
 const tex = (t) => t && E.createTexture(t.getName()).setImage(t.getImage().slice()).setMimeType(t.getMimeType()).setURI('');
-const mat = E.createMaterial('Ch26_hair2')
+const old = node(E, /_Hair$/);
+const bodyNode = node(E, /_Body$/);
+const pre = bodyNode.getName().replace(/_Body$/, '');
+const mat = E.createMaterial(`${pre}_hair2`)
   .setAlphaMode(sm.getAlphaMode()).setAlphaCutoff(sm.getAlphaCutoff()).setDoubleSided(sm.getDoubleSided())
   .setBaseColorFactor(sm.getBaseColorFactor()).setRoughnessFactor(sm.getRoughnessFactor()).setMetallicFactor(sm.getMetallicFactor())
   .setBaseColorTexture(tex(sm.getBaseColorTexture())).setNormalTexture(tex(sm.getNormalTexture()));
 prim.setMaterial(mat);
-const old = node(E, /_Hair$/);
-const oldMesh = old.getMesh();
-const mesh = E.createMesh('Ch26_Hair').addPrimitive(prim);
+const oldMesh = old?.getMesh();
+const mesh = E.createMesh(`${pre}_Hair`).addPrimitive(prim);
 mesh.setWeights(new Array(src.listTargets().length).fill(0));
 mesh.setExtras({ ...(hn.getMesh().getExtras() || {}) });
 // Joints by name in her skeleton, inverse binds from her bind pose.
@@ -104,11 +108,19 @@ const byName = new Map(E.getRoot().listNodes().map((n) => [bare(n.getName()), n]
 const joints = msk.listJoints().map((j) => { const n = byName.get(bare(j.getName())); if (!n) throw new Error('no joint ' + j.getName()); return n; });
 const ibmArr = new Float32Array(joints.length * 16);
 joints.forEach((j, i) => ibmArr.set(mul(inv(j.getWorldMatrix()), T), i * 16));
-const skin = E.createSkin('Ch26_Hair').setSkeleton(old.getSkin().getSkeleton()).setInverseBindMatrices(acc(ibmArr, 'MAT4', false));
+const skin = E.createSkin(`${pre}_Hair`).setSkeleton((old ?? bodyNode).getSkin().getSkeleton()).setInverseBindMatrices(acc(ibmArr, 'MAT4', false));
 joints.forEach((j) => skin.addJoint(j));
-const oldSkin = old.getSkin();
-old.setMesh(mesh).setSkin(skin);
-oldMesh.dispose(); if (!E.getRoot().listNodes().some((n) => n.getSkin() === oldSkin)) oldSkin.dispose();
+if (old) {
+  const oldSkin = old.getSkin();
+  old.setMesh(mesh).setSkin(skin);
+  oldMesh.dispose(); if (!E.getRoot().listNodes().some((n) => n.getSkin() === oldSkin)) oldSkin.dispose();
+} else {
+  // No hair before (bald body): a new node next to the body, in every scene the body is in.
+  const hairNode = E.createNode(`${pre}_Hair`).setMesh(mesh).setSkin(skin);
+  const parent = bodyNode.getParentNode();
+  if (parent) parent.addChild(hairNode);
+  else for (const sc of E.getRoot().listScenes()) if (sc.listChildren().includes(bodyNode)) sc.addChild(hairNode);
+}
 await E.transform(prune({ keepAttributes: true, keepLeaves: true }));
 console.log('mesh extras', JSON.stringify(mesh.getExtras()).slice(0, 200));
 await io.write(out, E);

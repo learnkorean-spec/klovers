@@ -20,7 +20,7 @@ import { curvedRoof, roofAspect } from "./shapes";
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
-  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake";
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
 export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "puff" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | `roof:${number}`;
 
@@ -61,6 +61,9 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   steel: MAT.steel,
   broth: MAT.broth,
   fishcake: MAT.fishcake,
+  kimchi: MAT.kimchi,
+  sprouts: MAT.sprouts,
+  beans: MAT.beans,
 };
 
 /**

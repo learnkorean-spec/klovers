@@ -153,10 +153,66 @@ function goods(k: Kit, kind: string, x: number, z: number, seed: number) {
     for (let r = 0; r < 2; r++)
       for (let i = 0; i < 4; i++) basket(k, x + (r - 0.5) * 0.36, z - 1.05 + i * 0.7 + r * 0.12, 0.62, fruit[(i + r) % 4], top);
   } else if (kind === "banchan") {
-    // Trays of side dishes in a row.
-    row(["clothRed", "leaf", "fruitOrange", "leafDark", "flowerWhite"], "box", [0.3, 0.06, 0.4], 5, 2);
+    // Steel trays, each heaped with its own side dish, piece by piece:
+    // kimchi, spinach namul, bean sprouts, braised black beans, radish
+    // kkakdugi, stir-fried fish cake. A white price card in every tray.
+    const dishes = ["kimchi", "namul", "sprouts", "beans", "kkakdugi", "fishcake"] as const;
+    const bed: Record<(typeof dishes)[number], MatKey> = { kimchi: "kimchi", namul: "leafDark", sprouts: "sprouts", beans: "beans", kkakdugi: "kimchi", fishcake: "fishcake" };
+    for (let r = 0; r < 2; r++)
+      for (let i = 0; i < 5; i++) {
+        const n = i + r * 5;
+        const xx = x + (r - 0.5) * 0.34;
+        const zz = z - 1.2 + (i + 0.5) * 0.48;
+        const dish = dishes[(n + seed) % dishes.length];
+        const sd = seed * 31 + n * 97;
+        k.add("steel", "box", [xx, top + 0.03, zz], [0.3, 0.06, 0.42]);
+        k.add("steel", "box", [xx, top + 0.063, zz], [0.32, 0.008, 0.44]);
+        // A low bed of the dish fills the tray; the pieces heap on it.
+        k.add(bed[dish], "ball", [xx, top + 0.055, zz], [0.25, 0.035, 0.36], [0, jitter(sd, 0.5), 0]);
+        const count = { kimchi: 13, namul: 16, sprouts: 22, beans: 30, kkakdugi: 18, fishcake: 14 }[dish];
+        for (let c = 0; c < count; c++) {
+          // Denser toward the middle, a little higher there too.
+          const u = (c + 0.5) / count;
+          const rad = Math.sqrt(u) * 0.9;
+          const ang = c * 2.39996 + sd;
+          const px = xx + Math.cos(ang) * rad * 0.1;
+          const pz = zz + Math.sin(ang) * rad * 0.15;
+          const h = top + 0.072 + (1 - rad) * 0.02 + jitter(sd + c, 0.004);
+          const tilt = (q: number) => jitter(sd + c * 7 + q, q);
+          const yaw = jitter(sd + c * 3, Math.PI);
+          if (dish === "kimchi") k.add("kimchi", "fruit", [px, h, pz], [0.085, 0.024, 0.06], [tilt(0.5), yaw, tilt(0.6)]);
+          else if (dish === "namul") k.add("leafDark", "fruit", [px, h - 0.004, pz], [0.075, 0.014, 0.028], [tilt(0.3), yaw, tilt(0.3)]);
+          else if (dish === "beans") k.add("beans", "fruit", [px, h, pz], [0.024, 0.017, 0.03], [0, yaw, 0]);
+          else if (dish === "kkakdugi") k.box("kimchi", [px, h + 0.004, pz], [0.032, 0.03, 0.032], false, [tilt(0.4), yaw, tilt(0.4)]);
+          else if (dish === "fishcake") k.box("fishcake", [px, h, pz], [0.09, 0.012, 0.026], false, [tilt(0.3), yaw, tilt(0.4)]);
+          else {
+            // A bean sprout: a pale stalk lying in the heap, a yellow head.
+            k.add("sprouts", "cylLow", [px, h - 0.004, pz], [0.008, 0.09, 0.008], [Math.PI / 2 + tilt(0.2), yaw, 0]);
+            k.add("pollen", "fruit", [px + Math.sin(yaw) * 0.045, h - 0.002, pz + Math.cos(yaw) * 0.045], [0.014, 0.012, 0.016]);
+          }
+        }
+        k.box("paper", [xx + Math.sign(x) * 0.1, top + 0.12, zz - 0.15], [0.006, 0.05, 0.07], false, [0, 0, Math.sign(x) * 0.15]);
+      }
   } else if (kind === "hats") {
-    row(["clothBlue", "clothSage", "fabric", "clothRed", "charcoal"], "box", [0.28, 0.12, 0.34], 5, 3);
+    // Caps on the back of the counter (a crown and a peak facing the
+    // alley), folded socks in pairs at the front.
+    const back = Math.sign(x);
+    const caps: MatKey[] = ["clothBlue", "clothSage", "fabric", "clothRed", "charcoal"];
+    for (let i = 0; i < 5; i++) {
+      const zz = z - 1.2 + (i + 0.5) * 0.48;
+      const xx = x + back * 0.2;
+      const m = caps[(i + seed) % caps.length];
+      k.add(m, "ball", [xx, top + 0.02, zz], [0.2, 0.22, 0.21]);
+      k.add(m, "cylLow", [xx - back * 0.12, top + 0.01, zz], [0.12, 0.012, 0.19], [0, 0, back * 0.12]);
+    }
+    const socks: MatKey[] = ["flowerWhite", "charcoal", "clothBlue", "fabric", "clothRed", "clothSage"];
+    for (let r = 0; r < 2; r++)
+      for (let i = 0; i < 6; i++) {
+        const zz = z - 1.25 + (i + 0.5) * 0.42;
+        const xx = x - back * (0.27 - r * 0.15);
+        const m = socks[(i + r * 3 + seed) % socks.length];
+        for (const dz of [-0.035, 0.035]) k.box(m, [xx, top + 0.015 + (dz > 0 ? 0.002 : 0), zz + dz], [0.13, 0.03, 0.065], false, [0, jitter(seed + i + r, 0.1), 0]);
+      }
   } else if (kind === "eomuk") {
     // A steel pot of broth, skewers of folded fish cake standing in it,
     // and trays of more fish cake waiting.

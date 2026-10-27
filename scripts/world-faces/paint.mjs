@@ -1,6 +1,8 @@
 // Repaint npc-elizabeth's body map: skin to the same base tone as npc-megan's
 // (the world then tints both the same way), and the scalp under her (new) hair
 // in Megan's scalp-hair colour. node paint.mjs E.glb M.glb OUT.glb [maskOut.png]
+// With M = "-" the skin is left as it is and only the scalp is painted
+// (npc-brian, bald until he took npc-leonard's hair).
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer';
@@ -8,7 +10,7 @@ import sharp from 'sharp';
 await MeshoptDecoder.ready; await MeshoptEncoder.ready;
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.decoder': MeshoptDecoder, 'meshopt.encoder': MeshoptEncoder });
 const [,, eIn, mIn, out, maskOut] = process.argv;
-const E = await io.read(eIn), M = await io.read(mIn);
+const E = await io.read(eIn), M = mIn === '-' ? null : await io.read(mIn);
 const mul = (a, b) => { const o = new Array(16).fill(0); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) o[c*4+r] += a[k*4+r] * b[c*4+k]; return o; };
 const ap = (m, [x, y, z]) => [m[0]*x+m[4]*y+m[8]*z+m[12], m[1]*x+m[5]*y+m[9]*z+m[13], m[2]*x+m[6]*y+m[10]*z+m[14]];
 const node = (doc, re) => doc.getRoot().listNodes().find((n) => re.test(n.getName()));
@@ -81,19 +83,23 @@ function median(m, mask) {
   for (let i = 0; i < mask.length; i++) if (mask[i]) for (let c = 0; c < 3; c++) cols[c].push(m.data[i * 4 + c]);
   return cols.map((a) => { a.sort((x, y) => x - y); return a[a.length >> 1]; });
 }
-const e = await load(E), mg = await load(M);
+const e = await load(E), mg = M && await load(M);
 // Skin: the whole body island, minus the scalp, both bodies.
-const ce = covered(e), cm = covered(mg);
-console.log('covered verts E', ce.filter(Boolean).length, 'M', cm.filter(Boolean).length);
-const bodyE = raster(e, () => true), bodyM = raster(mg, () => true);
+const ce = covered(e);
+console.log('covered verts E', ce.filter(Boolean).length);
+const bodyE = raster(e, () => true);
 const scalpE = raster(e, (a, b, c) => ce[a] && ce[b] && ce[c]);
-const scalpM = raster(mg, (a, b, c) => cm[a] && cm[b] && cm[c]);
-const skinE = stats(e, bodyE.map((v, i) => v && !scalpE[i])), skinM = stats(mg, bodyM.map((v, i) => v && !scalpM[i]));
+const skinE = stats(e, bodyE.map((v, i) => v && !scalpE[i]));
+let skinM = skinE, hairMed = '-';
+if (mg) {
+  const cm = covered(mg), bodyM = raster(mg, () => true), scalpM = raster(mg, (a, b, c) => cm[a] && cm[b] && cm[c]);
+  skinM = stats(mg, bodyM.map((v, i) => v && !scalpM[i]));
+  hairMed = median(mg, scalpM);
+}
 const f = skinM.map((v, c) => v / skinE[c]);
 // Megan's scalp colour is a mid brown that the world's skin tint (≈2× on
 // these maps) turns grey-olive; paint a dark brown that lands near the hair
 // dyes (#100D0C…#2B1F17) after that tint.
-const hairMed = median(mg, scalpM);
 const hairCol = [30, 19, 14];
 console.log('skin E', skinE.map((v) => v.toFixed(3)), 'skin M', skinM.map((v) => v.toFixed(3)), 'factor', f.map((v) => v.toFixed(2)), 'scalp colour M', hairMed, 'painted', hairCol);
 // Feathered scalp mask: a few texels of soft edge.

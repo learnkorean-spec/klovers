@@ -538,6 +538,10 @@ export const MAT = {
   broth: std("#A8743E", 0.2),
   /** Folded fish cake on a skewer. */
   fishcake: std("#D8B07A", 0.7),
+  /** Banchan in their trays: red-dressed kimchi, pale bean sprouts, glossy braised black beans. */
+  kimchi: std("#B4422B", 0.45),
+  sprouts: std("#E4D8AE", 0.6),
+  beans: std("#2E211B", 0.28),
   /** Woven cane baskets of produce. */
   wicker: wicker("#C49A62"),
   /** Dark, damp garden soil in a planting bed. */

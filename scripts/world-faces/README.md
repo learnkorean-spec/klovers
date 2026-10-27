@@ -81,3 +81,16 @@ than Adam and Lina. Three steps, applied to the shipped file:
 
 Start from the 26 Oct shipped `npc-elizabeth.glb` (git 9155008) for E and
 the shipped `npc-megan.glb` for M; needs `sharp` besides the packages above.
+
+## npc-brian: a full head of hair (27 Oct 2026, evening)
+
+npc-brian (Ch01) is a bald Mixamo body; about a third of the world's men
+use it, so a third of the Korean men were shaved bald. It now wears
+npc-leonard's short hair (Ch31_Hair), fitted the same way:
+
+    node transplant.mjs npc-brian.glb npc-leonard.glb brian-h.glb   # no hair mesh → a new Ch01_Hair node beside the body
+    node paint.mjs brian-h.glb - brian-hp.glb                        # "-": skin untouched, only the scalp under the hair painted
+    node strip.mjs brian-hp.glb brian-base.glb                       # then world-lod/lod.mjs on brian-base.glb (light + far)
+
+Start from the shipped `npc-brian.glb` before this change (git 9387422).
+Elders on this body get grey hair from the same `_Hair` dye rule.
