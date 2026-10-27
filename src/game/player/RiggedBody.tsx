@@ -325,33 +325,6 @@ function cloth(mat: MeshStandardMaterial) {
 }
 
 /**
- * The npc-elizabeth hair stood out from the head like a wide puff (it read
- * as a curly 80s volume, not a Korean bob). Its cards are drawn in, sideways
- * and front-to-back, toward the head (once per geometry: clones share it, and
- * the light copies get the same change).
- */
-const TAME_HAIR = /^Ch26_Hair$/;
-const tamed = new WeakSet<BufferGeometry>();
-function tameHair(name: string, geo: BufferGeometry) {
-  if (!TAME_HAIR.test(name) || tamed.has(geo)) return;
-  tamed.add(geo);
-  const pos = geo.getAttribute("position");
-  // Positions are quantised per mesh to -1…1 round the hair's own middle (y up); anything else is left alone.
-  if (!pos.normalized) return;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const y = pos.getY(i);
-    const z = pos.getZ(i);
-    // Most at the crown and sides, none at the ends hanging below the ears.
-    const t = Math.min(1, Math.max(0, (y + 0.6) / 1.4));
-    const f = 1 - 0.15 * t;
-    pos.setXYZ(i, x * f, y - (y > 0.4 ? (y - 0.4) * 0.12 : 0), z * (1 - 0.1 * t));
-  }
-  pos.needsUpdate = true;
-  geo.computeBoundingSphere();
-}
-
-/**
  * Hair is a stack of cut-out cards, each lit by its own flat normal, so up
  * close it read as shredded paper: every card a different brightness, and
  * the back of a card (double-sided) turned dark. Hair normals are bent most
@@ -430,7 +403,6 @@ function prepare(root: Group, rules: DressRule[]) {
     m.receiveShadow = true;
     // Culled by a padded rest-pose sphere (cullable, below), not the bind-pose bounds.
     m.frustumCulled = false;
-    tameHair(m.name, m.geometry);
     softHair(m.name, m.geometry);
     if (!(m.material instanceof MeshStandardMaterial)) return;
     // The converter reads Mixamo's gloss map as metal (dark, mirror-like
@@ -599,7 +571,6 @@ function useLod(root: Group, model: string) {
       g.scene.traverse((o) => {
         if (!(o as Mesh).isMesh) return;
         const name = o.name.replace(/^mixamorig\d+/, "mixamorig");
-        tameHair(name, (o as Mesh).geometry);
         softHair(name, (o as Mesh).geometry);
         byName.set(name, (o as Mesh).geometry);
       });

@@ -244,6 +244,76 @@ export function std(color: string, roughness = 0.8, extra: Omit<StdOptions, "rou
   return m;
 }
 
+/**
+ * Stepping stones as real stones, not one cast repeated: every stone (its
+ * instance position, hashed) gets its own tone and a slight warm/cool cast,
+ * soft mottling at a hand's scale, and a darker, weathered rim where the
+ * bevel meets the ground. A path of identical pale discs read as dough or
+ * snow; a path of varied stones reads as a path. All in the shader: no
+ * textures, no draw calls. Expects the flagstone geometry (top ≈ 0.07, edge
+ * ≈ 0.01 in its own units).
+ */
+function naturalStone(m: MeshStandardMaterial): MeshStandardMaterial {
+  const prev = m.onBeforeCompile;
+  m.onBeforeCompile = (shader, renderer) => {
+    prev?.call(m, shader, renderer);
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+varying vec3 vStone;
+varying vec2 vStoneP;`,
+      )
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+{
+  vec3 so = modelMatrix[3].xyz;
+  vec4 sp = vec4(position, 1.0);
+  #ifdef USE_INSTANCING
+    so += instanceMatrix[3].xyz;
+    sp = instanceMatrix * sp;
+  #endif
+  sp = modelMatrix * sp;
+  float h1 = fract(sin(dot(so.xz, vec2(12.9898, 78.233))) * 43758.5453);
+  float h2 = fract(sin(dot(so.xz, vec2(39.3468, 11.135))) * 24634.6345);
+  vStone = vec3(h1, h2, 1.0 - smoothstep(0.018, 0.062, position.y));
+  vStoneP = sp.xz;
+}`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+varying vec3 vStone;
+varying vec2 vStoneP;
+float stoneNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453);
+  float b = fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);
+  float c = fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);
+  float d = fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}`,
+      )
+      .replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+{
+  float tone = mix(0.74, 1.04, vStone.x);
+  vec3 stoneCast = mix(vec3(1.04, 0.99, 0.92), vec3(0.94, 0.98, 1.04), vStone.y);
+  float mottle = 0.86 + 0.2 * stoneNoise(vStoneP * 7.0 + vStone.xy * 31.0) + 0.06 * stoneNoise(vStoneP * 23.0);
+  diffuseColor.rgb *= tone * stoneCast * mottle * mix(1.0, 0.7, vStone.z);
+}`,
+      );
+  };
+  const key = m.customProgramCacheKey?.bind(m);
+  m.customProgramCacheKey = () => `${key ? key() : ""}|stone`;
+  return m;
+}
+
 /** Shared clock for the foliage sway (seconds); advanced by FoliageClock in World.tsx. */
 export const FOLIAGE_TIME = { value: 0 };
 
@@ -421,8 +491,10 @@ export const MAT = {
   /** Pink petals (the tree blossom material shades by crown height, which
    *  turned small flowers a dark magenta). */
   flowerPink: std("#F2A3BC", 0.75),
-  /** A single natural stepping stone: fine tooth, no paving grid. */
-  flagstone: std("#A39A87", 0.92, { detail: "plaster" }),
+  /** A single natural stepping stone: fine tooth, no paving grid; each stone its own tone. */
+  flagstone: naturalStone(std("#968E7F", 0.92, { detail: "plaster" })),
+  /** Dark, damp garden soil in a planting bed. */
+  soil: std("#5E4A38", 1, { detail: "plaster" }),
   /** The warm yellow middle of a garden flower. */
   pollen: std("#E9B949", 0.75),
   fruitRed: std(NATURAL.fruitRed, 0.55),

@@ -57,3 +57,27 @@ After a rebuild, regenerate the light and far copies from the `*.base.glb`
 files (same skin as the shipped files; `scripts/world-lod`), since
 `write.mjs` re-quantises and changes the skin's inverse bind matrices.
 Checks: `src/game/systems/__tests__/faces.test.ts`.
+
+## npc-elizabeth: Megan's hair and a re-based skin map (27 Oct 2026)
+
+npc-elizabeth (Ch26) kept a wide afro-style hair mesh and a dark skin map
+that the run-time tint could not lift (it stops at 2.6×), so women on that
+body still read as non-Korean, which the canon rules out for anyone other
+than Adam and Lina. Three steps, applied to the shipped file:
+
+- `transplant.mjs E.glb M.glb OUT.glb`: replaces Ch26_Hair with npc-megan's
+  hair (Ch22_Hair: sleek, pulled back into a bun), fitted per axis to
+  Elizabeth's skull (body vertices above the head joint), pushed ≥3 mm out
+  of her scalp, re-quantised into [-1, 1] with that folded into a new skin
+  on her own joints (by name), with Megan's seven face blend shapes carried
+  over and Megan's hair material/maps. The old in-world `tameHair` (which
+  pulled the old hair in) is removed: it would crush the new hair.
+- `paint.mjs E.glb M.glb OUT.glb [preview.png]`: scales the body island of
+  Elizabeth's map so its skin averages Megan's (the world then tints both
+  alike) and paints the scalp under the new hair dark brown (#1E130E, which
+  the ~2× skin tint brings to the hair dyes' range), feathered.
+- `strip.mjs IN OUT`: drops the blend shapes; run `scripts/world-lod/lod.mjs`
+  on its output for the `.lod.glb` / `.far.glb` copies.
+
+Start from the 26 Oct shipped `npc-elizabeth.glb` (git 9155008) for E and
+the shipped `npc-megan.glb` for M; needs `sharp` besides the packages above.

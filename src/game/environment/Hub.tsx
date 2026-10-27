@@ -94,9 +94,22 @@ const HUB_KIT: Kit = (() => {
   // The central post that carries the direction boards.
   k.add("woodDark", "oct", [0, 2.0, 0], [0.34, 3.1, 0.34], [0, Math.PI / 8, 0], true);
   // Flower beds at the four corners of the base, framing the landmark.
+  // Each is a raised stone planter full of flowers: dark soil inside a
+  // coping rim, a full clump in the middle and three smaller ones around it,
+  // so the bed reads planted rather than as a stone block with one tuft.
   for (const [bx, bz] of HUB.flowerBeds) {
     k.box("stoneWarm", [bx, 0.12, bz], [1.25, 0.24, 1.25], true);
-    flowers(k, bx, bz, 0.95, bx * 2 + bz, 0.18);
+    for (const s of [-1, 1]) {
+      k.box("stoneWarm", [bx, 0.27, bz + s * 0.57], [1.29, 0.06, 0.15]);
+      k.box("stoneWarm", [bx + s * 0.57, 0.27, bz], [0.15, 0.06, 0.99]);
+    }
+    k.box("soil", [bx, 0.255, bz], [1.0, 0.03, 1.0]);
+    const seed = bx * 2 + bz;
+    flowers(k, bx, bz, 0.9, seed, 0.26);
+    for (let i = 0; i < 3; i++) {
+      const a = seed + (i / 3) * Math.PI * 2;
+      flowers(k, bx + Math.cos(a) * 0.29, bz + Math.sin(a) * 0.29, 0.58, seed + i + 1, 0.26);
+    }
   }
 
   // Paved paths from the pavilion to every gate: wide to the places that

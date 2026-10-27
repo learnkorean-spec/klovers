@@ -117,6 +117,12 @@ export function realPerson(cast: CastId, personId: string, salt = 0): PersonLook
     const u = (hash(`${personId}|${salt}|${name}`) % 1001) / 1000;
     face[name] = Math.round((lo + (hi - lo) * u) * 100) / 100;
   }
+  // npc-elizabeth's own face has a broad nose and full lips: lean those
+  // two shapes the other way (still inside their ranges).
+  if (model === "npc-elizabeth") {
+    face.noseWide = Math.max(FACE_RANGE.noseWide[0], Math.round((face.noseWide - 0.35) * 100) / 100);
+    face.mouthFull = Math.max(FACE_RANGE.mouthFull[0], Math.round((face.mouthFull - 0.3) * 100) / 100);
+  }
   const look = { model, female: base.female, rules, scale, head, face };
   people.set(key, look);
   return look;
