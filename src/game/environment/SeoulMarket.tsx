@@ -4,7 +4,7 @@ import { ALLEY } from "../config/rooms";
 import { FLOOR_GRID } from "../config/world";
 import { MAT } from "../config/materials";
 import Batch from "./Batch";
-import { Kit, awning, bunting, flowers, jitter, planter, type MatKey } from "./kit";
+import { Kit, awning, basket, bunting, flowers, jitter, planter, type MatKey } from "./kit";
 import { Signboard } from "./parts";
 import { floorBreakup, FLOOR_BREAKUP_KEY, paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
 
@@ -148,18 +148,30 @@ function goods(k: Kit, kind: string, x: number, z: number, seed: number) {
   };
   if (kind === "fruit") {
     // Baskets heaped with apples and tangerines.
-    for (let i = 0; i < 4; i++) k.add("woodLight", "cyl", [x, top + 0.07, z - 1.05 + i * 0.7], [0.5, 0.14, 0.5]);
-    row(["fruitRed", "fruitOrange", "fruitRed"], "ball", [0.13, 0.12, 0.13], 6, 3);
+    // Two rows of woven baskets, each heaped with single fruit.
+    const fruit: MatKey[] = ["fruitRed", "fruitOrange", "fruitRed", "fruitOrange"];
+    for (let r = 0; r < 2; r++)
+      for (let i = 0; i < 4; i++) basket(k, x + (r - 0.5) * 0.36, z - 1.05 + i * 0.7 + r * 0.12, 0.62, fruit[(i + r) % 4], top);
   } else if (kind === "banchan") {
     // Trays of side dishes in a row.
     row(["clothRed", "leaf", "fruitOrange", "leafDark", "flowerWhite"], "box", [0.3, 0.06, 0.4], 5, 2);
   } else if (kind === "hats") {
     row(["clothBlue", "clothSage", "fabric", "clothRed", "charcoal"], "box", [0.28, 0.12, 0.34], 5, 3);
   } else if (kind === "eomuk") {
-    // A steaming pot and skewers.
-    k.add("metal", "cyl", [x, top + 0.18, z - 0.5], [0.7, 0.36, 0.7]);
-    for (let i = 0; i < 6; i++) k.add("woodLight", "cyl", [x - 0.2 + (i % 3) * 0.2, top + 0.5, z - 0.6 + Math.floor(i / 3) * 0.2], [0.02, 0.35, 0.02]);
-    row(["fruitOrange", "woodLight"], "box", [0.22, 0.05, 0.3], 3, 2);
+    // A steel pot of broth, skewers of folded fish cake standing in it,
+    // and trays of more fish cake waiting.
+    k.add("steel", "cyl", [x, top + 0.18, z - 0.5], [0.62, 0.36, 0.62]);
+    k.add("broth", "cyl", [x, top + 0.345, z - 0.5], [0.56, 0.02, 0.56]);
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * Math.PI * 2 + seed;
+      const r = i % 3 === 0 ? 0.08 : 0.19;
+      const px = x + Math.cos(a) * r;
+      const pz = z - 0.5 + Math.sin(a) * r;
+      const lean: [number, number, number] = [Math.sin(a) * 0.2, 0, -Math.cos(a) * 0.2];
+      k.add("woodLight", "cyl", [px, top + 0.5, pz], [0.014, 0.46, 0.014], lean);
+      k.box("fishcake", [px, top + 0.43, pz], [0.11, 0.16, 0.035], false, [lean[0], -a, lean[2]]);
+    }
+    row(["fishcake", "steel"], "box", [0.22, 0.05, 0.3], 3, 2);
   } else {
     // Buckets of flowers.
     for (let i = 0; i < 4; i++) {
@@ -185,14 +197,38 @@ function stallsKit(): Kit {
   // The street-food cart: a counter on wheels with a red awning.
   const C = ALLEY.cart;
   k.box("woodLight", [C.x, 0.5, C.z], [C.w, 0.62, C.d], true);
-  k.box("metal", [C.x, 0.86, C.z], [C.w + 0.06, 0.06, C.d + 0.06], false);
+  k.box("steel", [C.x, 0.86, C.z], [C.w + 0.06, 0.06, C.d + 0.06], false);
   for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) k.add("charcoal", "cyl", [C.x + dx * (C.w / 2 - 0.12), 0.16, C.z + dz * (C.d / 2 - 0.3)], [0.32, 0.08, 0.32], [0, 0, Math.PI / 2]);
-  // On the counter: hotteok on a griddle, eomuk skewers in broth, gimbap rolls.
-  k.box("charcoal", [C.x - 0.15, 0.92, C.z - 0.9], [0.8, 0.04, 0.6]);
-  for (let i = 0; i < 4; i++) k.add("woodLight", "cyl", [C.x - 0.35 + (i % 2) * 0.35, 0.96, C.z - 1.0 + Math.floor(i / 2) * 0.25], [0.18, 0.04, 0.18]);
-  k.add("metal", "cyl", [C.x - 0.1, 1.02, C.z], [0.5, 0.22, 0.5]);
-  for (let i = 0; i < 5; i++) k.add("fruitOrange", "cyl", [C.x - 0.2 + (i % 3) * 0.15, 1.18, C.z - 0.1 + Math.floor(i / 3) * 0.18], [0.03, 0.32, 0.03]);
-  for (let i = 0; i < 3; i++) k.add("charcoal", "cyl", [C.x - 0.2, 0.95, C.z + 0.75 + i * 0.16], [0.11, 0.42, 0.11], [0, 0, Math.PI / 2]);
+  // On the counter: golden hotteok on a black griddle…
+  k.box("charcoal", [C.x - 0.15, 0.91, C.z - 0.85], [0.75, 0.04, 0.6]);
+  for (let i = 0; i < 6; i++) k.add("woodLight", "cyl", [C.x - 0.4 + (i % 3) * 0.25, 0.945, C.z - 1.0 + Math.floor(i / 3) * 0.28], [0.17, 0.03, 0.17]);
+  // …a steel pot of broth with skewers of folded fish cake standing in it…
+  k.add("steel", "cyl", [C.x - 0.1, 1.0, C.z], [0.5, 0.22, 0.5]);
+  k.add("broth", "cyl", [C.x - 0.1, 1.1, C.z], [0.44, 0.02, 0.44]);
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2;
+    const px = C.x - 0.1 + Math.cos(a) * 0.13;
+    const pz = C.z + Math.sin(a) * 0.13;
+    const lean: [number, number, number] = [Math.sin(a) * 0.18, 0, -Math.cos(a) * 0.18];
+    k.add("woodLight", "cyl", [px, 1.24, pz], [0.014, 0.44, 0.014], lean);
+    k.box("fishcake", [px, 1.17, pz], [0.1, 0.15, 0.035], false, [lean[0], -a, lean[2]]);
+  }
+  // …and gimbap: three whole rolls with rice at the cut ends, a plate of slices.
+  for (let i = 0; i < 3; i++) {
+    const z = C.z + 0.66 + i * 0.1;
+    k.add("charcoal", "cyl", [C.x - 0.3, 0.925, z], [0.07, 0.26, 0.07], [0, 0, Math.PI / 2]);
+    for (const e of [-1, 1]) k.add("flowerWhite", "cyl", [C.x - 0.3 + e * 0.13, 0.925, z], [0.058, 0.006, 0.058], [0, 0, Math.PI / 2]);
+  }
+  k.add("flowerWhite", "cyl", [C.x + 0.27, 0.9, C.z + 0.78], [0.3, 0.02, 0.3]);
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2;
+    const r = 0.075;
+    const sx = C.x + 0.27 + (i === 6 ? 0 : Math.cos(a) * r);
+    const sz = C.z + 0.78 + (i === 6 ? 0 : Math.sin(a) * r);
+    k.add("charcoal", "cyl", [sx, 0.92, sz], [0.066, 0.02, 0.066]);
+    k.add("flowerWhite", "cyl", [sx, 0.921, sz], [0.054, 0.021, 0.054]);
+    k.add(i % 2 ? "fruitOrange" : "leaf", "cyl", [sx, 0.922, sz], [0.018, 0.022, 0.018]);
+  }
   for (const dz of [-1, 1]) k.box("metal", [C.x + C.w / 2 - 0.05, 1.45, C.z + dz * (C.d / 2 - 0.05)], [0.05, 1.2, 0.05]);
   k.box("clothRed", [C.x, 2.08, C.z], [C.w + 0.5, 0.05, C.d + 0.4], true, [0, 0, -0.12]);
 

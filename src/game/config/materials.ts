@@ -314,6 +314,45 @@ float stoneNoise(vec2 p) {
   return m;
 }
 
+/**
+ * A woven basket (대바구니): upright stakes with flat cane woven over and
+ * under them, all in the shader from the basket's own unit shape (angle
+ * around the axis, height) — so the weave stays the same size on every
+ * instance and follows the curve. Each crossing is shaded as a rounded
+ * strand with dark gaps between; the pattern fades to a flat straw tone
+ * where it would be finer than a pixel (no shimmer on phones). Fresh
+ * material (not the std cache) because it rewrites the shader.
+ */
+function wicker(color: string): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color(color), roughness: 0.86, metalness: 0 });
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vWeave;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvWeave = position;");
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vWeave;")
+      .replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+{
+  float wu = (atan(vWeave.z, vWeave.x) / 6.2831853 + 0.5) * 30.0;
+  float wv = vWeave.y * 9.0;
+  float fade = clamp(1.6 - 1.4 * max(fwidth(wu), fwidth(wv)), 0.0, 1.0);
+  float over = mod(floor(wu) + floor(wv), 2.0);
+  float across = over > 0.5 ? fract(wv) : fract(wu);
+  float along = over > 0.5 ? fract(wu) : fract(wv);
+  float strand = sin(across * 3.14159);
+  float pinch = 0.8 + 0.2 * sin(along * 3.14159);
+  float tone = mix(0.86, mix(0.5, 1.12, strand * pinch), fade);
+  vec3 cane = over > 0.5 ? vec3(1.0) : vec3(0.93, 0.9, 0.84);
+  diffuseColor.rgb *= tone * mix(vec3(1.0), cane, fade);
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => "wicker";
+  return m;
+}
+
 /** Shared clock for the foliage sway (seconds); advanced by FoliageClock in World.tsx. */
 export const FOLIAGE_TIME = { value: 0 };
 
@@ -493,6 +532,14 @@ export const MAT = {
   flowerPink: std("#F2A3BC", 0.75),
   /** A single natural stepping stone: fine tooth, no paving grid; each stone its own tone. */
   flagstone: naturalStone(std("#968E7F", 0.92, { detail: "plaster" })),
+  /** Brushed stainless steel of a street-food cart: pale, a soft sheen. */
+  steel: std("#B9BFC3", 0.34, { metalness: 0.6 }),
+  /** Glossy eomuk broth in its pot. */
+  broth: std("#A8743E", 0.2),
+  /** Folded fish cake on a skewer. */
+  fishcake: std("#D8B07A", 0.7),
+  /** Woven cane baskets of produce. */
+  wicker: wicker("#C49A62"),
   /** Dark, damp garden soil in a planting bed. */
   soil: std("#5E4A38", 1, { detail: "plaster" }),
   /** The warm yellow middle of a garden flower. */

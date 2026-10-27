@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, Vector3, type Material } from "three";
+import { BufferAttribute, BufferGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, LatheGeometry, TorusGeometry, Vector2, Vector3, type Material } from "three";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ACCENT, MAT } from "../config/materials";
 import { pickQuality } from "../systems/quality";
@@ -20,9 +20,9 @@ import { curvedRoof, roofAspect } from "./shapes";
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
-  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil";
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "puff" | "fruit" | "ballLow" | "cylLow" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "puff" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -57,6 +57,10 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   pollen: MAT.pollen,
   flagstone: MAT.flagstone,
   soil: MAT.soil,
+  wicker: MAT.wicker,
+  steel: MAT.steel,
+  broth: MAT.broth,
+  fishcake: MAT.fishcake,
 };
 
 /**
@@ -455,6 +459,26 @@ function leafRosette(): BufferGeometry {
   return withUnderside(g);
 }
 
+/**
+ * A woven basket's body in the cylinder's unit box (y −0.5…0.5, rim radius
+ * 0.5): a rounded foot, walls bellying out to the rim, a thin wall and a
+ * floor of goods a little below the rim. Drop-in for the old solid "cyl".
+ */
+function basketBody(): BufferGeometry {
+  const pts = [
+    [0, -0.5], [0.33, -0.5], [0.4, -0.48], [0.44, -0.42], [0.47, -0.25], [0.49, 0.05],
+    [0.5, 0.35], [0.5, 0.5], [0.465, 0.5], [0.46, 0.38], [0.45, 0.33], [0, 0.33],
+  ].map(([r, y]) => new Vector2(r, y));
+  return new LatheGeometry(pts, 20);
+}
+
+/** The bound cane rim of a basket: a flat ring at y = 0, radius 0.5. */
+function basketRim(): BufferGeometry {
+  const g = new TorusGeometry(0.5, 0.055, 5, 20);
+  g.rotateX(Math.PI / 2);
+  return g;
+}
+
 function phoneTier(): boolean {
   try {
     return pickQuality().maxTexture <= 1024;
@@ -488,6 +512,8 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
   ballLow: lumpyBall(1, 0.12),
   cylLow: new CylinderGeometry(0.5, 0.5, 1, 6),
+  basket: basketBody(),
+  basketRim: basketRim(),
 };
 
 export function kitGeometry(key: GeoKey): BufferGeometry {
@@ -822,8 +848,8 @@ export function shopfront(k: Kit, spec: { x: number; z: number; w: number; d: nu
 
 /** A woven basket with a few round goods heaped in it. */
 export function basket(k: Kit, x: number, z: number, s = 1, heap: MatKey = "woodLight", y = 0): void {
-  k.add("woodLight", "cyl", [x, y + 0.14 * s, z], [0.55 * s, 0.28 * s, 0.55 * s]);
-  k.add("woodDark", "cyl", [x, y + 0.29 * s, z], [0.58 * s, 0.04 * s, 0.58 * s]);
+  k.add("wicker", "basket", [x, y + 0.14 * s, z], [0.55 * s, 0.28 * s, 0.55 * s], [0, x * 1.7 + z, 0]);
+  k.add("woodDark", "basketRim", [x, y + 0.28 * s, z], [0.55 * s, 0.5 * s, 0.55 * s]);
   // A heap of single goods (apples, tangerines, potatoes…): a ring of six
   // with three on top, so each reads as a thing to buy, not a coloured lid.
   const seed = x * 7.1 + z * 3.3;
