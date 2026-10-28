@@ -546,6 +546,8 @@ export const MAT = {
   wicker: wicker("#C49A62"),
   /** Dark, damp garden soil in a planting bed. */
   soil: std("#5E4A38", 1, { detail: "plaster" }),
+  /** Onggi (옹기): dark brown glazed earthenware — a soft sheen, not a plastic shine. */
+  onggi: std("#4E2F22", 0.42),
   /** The warm yellow middle of a garden flower. */
   pollen: std("#E9B949", 0.75),
   fruitRed: std(NATURAL.fruitRed, 0.55),

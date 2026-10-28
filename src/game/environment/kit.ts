@@ -20,9 +20,9 @@ import { curvedRoof, roofAspect } from "./shapes";
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
-  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans";
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "puff" | "leafy" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "puff" | "leafy" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | "onggi" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -64,6 +64,7 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   kimchi: MAT.kimchi,
   sprouts: MAT.sprouts,
   beans: MAT.beans,
+  onggi: MAT.onggi,
 };
 
 /**
@@ -109,7 +110,7 @@ function leafyBall(detail: number): BufferGeometry {
     dirs.push(v.clone());
     const low = Math.sin(v.x * 2.9 + 0.4) * Math.sin(v.y * 2.3 + 1.1) * Math.sin(v.z * 3.1 + 2.2);
     const h = Math.sin(v.x * 13.3 + v.y * 5.1) * Math.sin(v.z * 12.7 - v.x * 4.9) * Math.sin(v.y * 11.3 + v.z * 3.3);
-    v.multiplyScalar(0.5 * (1 + 0.1 * low + 0.3 * h));
+    v.multiplyScalar(0.5 * (1 + 0.1 * low + 0.2 * h));
     pos.setXYZ(i, v.x, v.y, v.z);
   }
   g.computeVertexNormals();
@@ -508,6 +509,19 @@ function basketBody(): BufferGeometry {
   return new LatheGeometry(pts, 20);
 }
 
+/**
+ * An onggi jar (옹기) in the cylinder's unit box (y −0.5…0.5, belly radius
+ * 0.5): a narrow foot, a full rounded belly high on the body, a short
+ * shoulder into a rolled lip, and soil a little below the mouth.
+ */
+function onggiJar(): BufferGeometry {
+  const pts = [
+    [0, -0.5], [0.3, -0.5], [0.34, -0.47], [0.42, -0.32], [0.48, -0.12], [0.5, 0.06], [0.48, 0.2],
+    [0.42, 0.33], [0.35, 0.41], [0.33, 0.45], [0.355, 0.48], [0.35, 0.5], [0.31, 0.5], [0.3, 0.44], [0, 0.42],
+  ].map(([r, y]) => new Vector2(r, y));
+  return new LatheGeometry(pts, 24);
+}
+
 /** The bound cane rim of a basket: a flat ring at y = 0, radius 0.5. */
 function basketRim(): BufferGeometry {
   const g = new TorusGeometry(0.5, 0.055, 5, 20);
@@ -552,6 +566,7 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   cylLow: new CylinderGeometry(0.5, 0.5, 1, 6),
   basket: basketBody(),
   basketRim: basketRim(),
+  onggi: onggiJar(),
 };
 
 export function kitGeometry(key: GeoKey): BufferGeometry {
@@ -824,11 +839,17 @@ export function pine(k: Kit, x: number, z: number, s = 1): void {
   k.add("pine", "pineCone", [x + 0.1 * s, 2.55 * s, z], [0.75 * s, 0.7 * s, 0.75 * s], undefined, true);
 }
 
-/** A glazed pot (onggi) with a small round shrub. */
+/** A glazed onggi jar with a small leafy shrub. */
 export function pot(k: Kit, x: number, z: number, s = 1, shrub = true): void {
-  k.add("charcoal", "oct", [x, 0.22 * s, z], [0.5 * s, 0.44 * s, 0.5 * s]);
-  k.add("charcoal", "oct", [x, 0.46 * s, z], [0.36 * s, 0.06 * s, 0.36 * s]);
-  if (shrub) k.add("pine", "ball", [x, 0.72 * s, z], [0.6 * s, 0.5 * s, 0.6 * s]);
+  k.add("onggi", "onggi", [x, 0.26 * s, z], [0.56 * s, 0.52 * s, 0.56 * s], undefined, true);
+  if (shrub) {
+    // Three sprigs round the mouth, one a little taller.
+    for (let i = 0; i < 3; i++) {
+      const a = x * 2 + z + (i / 3) * Math.PI * 2;
+      const r = (i === 0 ? 0.4 : 0.33) * s;
+      k.add(i === 1 ? "leafDark" : "pine", "leafy", [x + Math.cos(a) * 0.1 * s, (i === 0 ? 0.74 : 0.64) * s, z + Math.sin(a) * 0.1 * s], [r, r * 0.85, r], [0, a, 0]);
+    }
+  }
 }
 
 /** Flat slate stepping stones from one point to another: a path the eye follows. */
@@ -938,7 +959,7 @@ export function planter(k: Kit, x: number, z: number, len: number, alongX = true
   for (let i = 0; i < n; i++) {
     const t = -len / 2 + (len / n) * (i + 0.5);
     const sc = 0.45 + jitter(i + x * 3 + z, 0.1);
-    k.add("pine", "ball", alongX ? [x + t, 0.48, z] : [x, 0.48, z + t], [sc, sc * 0.8, sc]);
+    k.add("pine", "leafy", alongX ? [x + t, 0.48, z] : [x, 0.48, z + t], [sc, sc * 0.8, sc], [0, jitter(i * 5 + x, 3), 0]);
   }
 }
 
@@ -955,13 +976,16 @@ export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed 
     cherryTree(k, x, z, s, seed);
     return;
   }
+  if (!far) {
+    broadleafTree(k, x, z, s, seed);
+    return;
+  }
   const lean = jitter(seed, 0.12);
   // Far trees (beyond the walls): low-poly, and no shadow (they fall
   // outside the sun's shadow box anyway, so casting would only cost).
-  const cyl: GeoKey = far ? "cylLow" : "cyl";
-  const ball: GeoKey = far ? "ballLow" : "ball";
+  const cyl: GeoKey = "cylLow";
+  const ball: GeoKey = "ballLow";
   k.add("woodDark", cyl, [x, 1.0 * s, z], [0.22 * s, 2.0 * s, 0.22 * s], [lean, 0, -lean], !far);
-  if (!far) k.add("woodDark", "cyl", [x + 0.35 * s, 1.75 * s, z], [0.1 * s, 0.9 * s, 0.1 * s], [0, 0, -0.8], false);
   const crowns: [number, number, number, number][] = [
     [0, 2.55, 0, 1.55], [0.7, 2.35, 0.2, 1.15], [-0.65, 2.3, -0.15, 1.1], [0.1, 3.05, -0.1, 1.05], [0.2, 2.4, -0.7, 0.95],
   ];
@@ -970,6 +994,61 @@ export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed 
     const j = 1 + jitter(seed * 3 + i, 0.12);
     k.add(mat, ball, [x + dx * s, dy * s, z + dz * s], [r * s * j, r * s * 0.82 * j, r * s * j], [0, jitter(seed + i, 1), 0], !far);
   });
+}
+
+/**
+ * A village shade tree (느티나무-like broadleaf): a trunk that forks into
+ * four rising limbs, each with an outward side branch, carrying leafy
+ * clusters round their ends, plus a domed top and a darker inner layer so
+ * the crown doesn't look hollow from below. Branches show between the
+ * clusters — a tree, not a stack of green balls.
+ */
+function broadleafTree(k: Kit, x: number, z: number, s: number, seed: number): void {
+  const lean = jitter(seed, 0.07);
+  // Rod from a in direction (tilt t from vertical, heading a), length len.
+  const rod = (ax: number, ay: number, az: number, a: number, t: number, len: number, w: number, cast: boolean): V3 => {
+    const dx = Math.sin(t) * Math.cos(a);
+    const dy = Math.cos(t);
+    const dz = Math.sin(t) * Math.sin(a);
+    k.add("woodDark", "cyl", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
+    return [ax + dx * len, ay + dy * len, az + dz * len];
+  };
+  let c = 0;
+  const cluster = (p: V3, r: number, dark: boolean) => {
+    const jr = r * s * (1 + jitter(seed * 5 + c * 7, 0.12));
+    c++;
+    k.add(dark ? "leafDark" : "leaf", "leafy", p, [jr, jr * 0.8, jr], [jitter(seed + c, 0.4), jitter(seed * 3 + c, 3), 0], true);
+  };
+  // Root flare and trunk.
+  k.add("woodDark", "cyl", [x, 0.1 * s, z], [0.42 * s, 0.2 * s, 0.42 * s]);
+  const [fx, fork, fz] = rod(x, 0, z, seed * 1.3, Math.abs(lean), 1.55 * s, 0.27 * s, true);
+  const n = 4;
+  for (let i = 0; i < n; i++) {
+    const a = seed * 2.1 + (i / n) * Math.PI * 2 + jitter(seed + i * 13, 0.4);
+    const t = 0.55 + jitter(seed * 2 + i, 0.12);
+    const len = (1.45 + jitter(seed * 3 + i, 0.2)) * s;
+    // Side branch from two-thirds up the limb, flatter and outward.
+    const mid = rod(fx, fork, fz, a, t, len * 0.62, 0.15 * s, true);
+    const tip = rod(mid[0], mid[1], mid[2], a, t - 0.12, len * 0.42, 0.1 * s, i < 2);
+    const sa = a + (i % 2 ? 0.7 : -0.7);
+    const side = rod(mid[0], mid[1], mid[2], sa, t + 0.5, 0.75 * s, 0.065 * s, false);
+    // Clusters: over the tip, either side of it (a little lower), and at the side branch's end.
+    const ox = Math.cos(a);
+    const oz = Math.sin(a);
+    cluster([tip[0], tip[1] + 0.22 * s, tip[2]], 1.08, (i + seed) % 2 === 0);
+    cluster([tip[0] - oz * 0.55 * s + ox * 0.15 * s, tip[1] - 0.12 * s, tip[2] + ox * 0.55 * s + oz * 0.15 * s], 0.86, true);
+    cluster([tip[0] + oz * 0.5 * s + ox * 0.2 * s, tip[1] + 0.02 * s, tip[2] - ox * 0.5 * s + oz * 0.2 * s], 0.82, false);
+    cluster([side[0] + Math.cos(sa) * 0.15 * s, side[1] + 0.08 * s, side[2] + Math.sin(sa) * 0.15 * s], 0.8, i % 2 === 1);
+  }
+  // The domed top over the fork, and a darker inner layer just above it.
+  for (let j = 0; j < 3; j++) {
+    const a = seed + j * 2.1;
+    cluster([fx + Math.cos(a) * 0.42 * s, fork + 1.75 * s + j * 0.1 * s, fz + Math.sin(a) * 0.42 * s], 1.0, false);
+  }
+  for (let j = 0; j < 2; j++) {
+    const a = seed + 0.9 + j * Math.PI;
+    cluster([fx + Math.cos(a) * 0.35 * s, fork + 0.85 * s, fz + Math.sin(a) * 0.35 * s], 0.95, true);
+  }
 }
 
 /**
@@ -1030,7 +1109,7 @@ export function shrub(k: Kit, x: number, z: number, s = 1, seed = 1, mat: MatKey
   const n = 2 + (Math.abs(Math.round(jitter(seed, 1.4))) % 2);
   for (let i = 0; i < n; i++) {
     const r = (0.55 + jitter(seed + i, 0.12)) * s;
-    k.add(i === 0 ? mat : "leafDark", "ball", [x + jitter(seed * 5 + i, 0.35) * s, r * 0.36, z + jitter(seed * 7 + i, 0.35) * s], [r, r * 0.72, r], undefined, true);
+    k.add(i === 0 ? mat : "leafDark", "leafy", [x + jitter(seed * 5 + i, 0.35) * s, r * 0.36, z + jitter(seed * 7 + i, 0.35) * s], [r, r * 0.72, r], [0, jitter(seed * 11 + i, 3), 0], true);
   }
 }
 
