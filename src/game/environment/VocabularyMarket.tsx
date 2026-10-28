@@ -6,7 +6,7 @@ import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Instanced, { type Part } from "./Instanced";
 import Batch from "./Batch";
-import { Kit, awningPlace, kitGeometry, basket, bunting, gutter, parasol, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
+import { Kit, jitter, awningPlace, kitGeometry, basket, bunting, gutter, parasol, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import ModelProp, { type PropPlacement } from "./ModelProp";
 import MarketShop, { type ShopItem } from "./MarketShop";
@@ -169,6 +169,39 @@ function useStallParts() {
   }, []);
 }
 
+/**
+ * One tier of the centre produce stand: a dark octagonal core faced with
+ * upright boards (gaps show the core), a corner post at each angle and a
+ * plinth rail — a built wooden stand instead of a smooth turned block.
+ * Boards are instances of the shared box, so the stand adds no draw calls.
+ */
+function plankDrum(k: Kit, x: number, z: number, size: number, y0: number, h: number): void {
+  const r = size / 2;
+  const apo = r * Math.cos(Math.PI / 8);
+  const face = 2 * r * Math.sin(Math.PI / 8);
+  k.add("woodDark", "oct", [x, y0 + h / 2, z], [size - 0.04, h, size - 0.04], [0, Math.PI / 8, 0], true);
+  const n = face > 0.5 ? 4 : 3;
+  const bw = face / n;
+  for (let j = 0; j < 8; j++) {
+    const a = (j * Math.PI) / 4;
+    const nx = Math.sin(a);
+    const nz = Math.cos(a);
+    for (let b = 0; b < n; b++) {
+      const t = (b - (n - 1) / 2) * bw;
+      const seed = j * 7 + b + size * 13;
+      // Boards stand a hair proud by different amounts and lean a touch:
+      // each catches the light on its own, like hand-nailed planks.
+      const out = apo - 0.018 + 0.008 + jitter(seed, 0.005);
+      const bh = h - 0.05 + jitter(seed + 3, 0.02);
+      k.box("woodLight", [x + nx * out + Math.cos(a) * t, y0 + 0.03 + bh / 2, z + nz * out - Math.sin(a) * t], [bw - 0.016, bh, 0.022], false, [jitter(seed + 5, 0.015), a + jitter(seed + 9, 0.03), 0]);
+    }
+    // Corner post and a low rail at the foot.
+    const c = a + Math.PI / 8;
+    k.box("woodDark", [x + Math.sin(c) * (r - 0.005), y0 + h / 2, z + Math.cos(c) * (r - 0.005)], [0.045, h, 0.045], false, [0, c, 0]);
+    k.box("woodDark", [x + nx * (apo + 0.012), y0 + 0.05, z + nz * (apo + 0.012)], [face + 0.01, 0.07, 0.03], false, [0, a, 0]);
+  }
+}
+
 /** Shop fronts, walls, baskets and banner poles: one Kit for the square. */
 const MARKET_KIT: Kit = (() => {
   const k = new Kit();
@@ -194,9 +227,9 @@ const MARKET_KIT: Kit = (() => {
   {
     const { x, z, size } = MARKET.crates;
     const r = size / 2;
-    k.add("woodLight", "oct", [x, 0.28, z], [size, 0.56, size], [0, Math.PI / 8, 0], true);
+    plankDrum(k, x, z, size, 0, 0.56);
     k.add("woodDark", "oct", [x, 0.58, z], [size + 0.08, 0.06, size + 0.08], [0, Math.PI / 8, 0]);
-    k.add("woodLight", "oct", [x, 0.78, z], [size * 0.55, 0.4, size * 0.55], [0, Math.PI / 8, 0], true);
+    plankDrum(k, x, z, size * 0.55, 0.61, 0.37);
     k.add("woodDark", "oct", [x, 1.0, z], [size * 0.55 + 0.06, 0.05, size * 0.55 + 0.06], [0, Math.PI / 8, 0]);
     const heapsLow: MatKey[] = ["fruitRed", "fruitOrange", "leaf", "fruitRed", "woodLight", "fruitOrange"];
     for (let i = 0; i < 6; i++) {

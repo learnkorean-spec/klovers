@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from "react";
-import { CanvasTexture, MeshStandardMaterial, SRGBColorSpace } from "three";
+import { CanvasTexture, MeshStandardMaterial, PlaneGeometry, SRGBColorSpace } from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { pickQuality } from "../systems/quality";
 import { ALLEY } from "../config/rooms";
 import { FLOOR_GRID } from "../config/world";
 import { MAT } from "../config/materials";
@@ -27,108 +29,206 @@ const KO = '"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans C
 
 /* ───────────────────────── Shop-house fronts ───────────────────────── */
 
-/** Painted upper storeys: rows of windows, a shop sign band, each house its own colour. */
-function facadeTexture(seed: number, base: string, signs: string[]): CanvasTexture | null {
-  try {
-    const c = document.createElement("canvas");
-    c.width = 256;
-    c.height = 384;
-    const ctx = c.getContext("2d");
-    if (!ctx) return null;
-    ctx.fillStyle = base;
-    ctx.fillRect(0, 0, 256, 384);
-    // A little weathering.
-    for (let i = 0; i < 90; i++) {
-      ctx.fillStyle = `rgba(60,45,35,${0.02 + ((i * 37 + seed) % 7) * 0.006})`;
-      ctx.fillRect((i * 53 + seed * 11) % 256, (i * 97 + seed * 7) % 384, 6 + (i % 5) * 4, 3 + (i % 3) * 3);
+/** Canvas units of one painted front (the atlas scales them up on desktop). */
+const FW = 256;
+const FH = 384;
+/** Window cells on a front, in canvas units: 3 across, 2 storeys. */
+const WIN = { x0: 22, dx: 76, y0: 34, dy: 112, w: 58, h: 72 };
+const SIGN_Y = 270;
+
+/** Paint one front into ctx (0..FW × 0..FH): windows, a sign band, a shutter. */
+function paintFacade(ctx: CanvasRenderingContext2D, seed: number, base: string, signs: string[]): void {
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, FW, FH);
+  // A little weathering.
+  for (let i = 0; i < 90; i++) {
+    ctx.fillStyle = `rgba(60,45,35,${0.02 + ((i * 37 + seed) % 7) * 0.006})`;
+    ctx.fillRect((i * 53 + seed * 11) % FW, (i * 97 + seed * 7) % FH, 6 + (i % 5) * 4, 3 + (i % 3) * 3);
+  }
+  // Rain streaks under each sill.
+  for (let row = 0; row < 2; row++)
+    for (let col = 0; col < 3; col++) {
+      const x = WIN.x0 + col * WIN.dx;
+      const y = WIN.y0 + row * WIN.dy + WIN.h + 6;
+      const g = ctx.createLinearGradient(0, y, 0, y + 26);
+      g.addColorStop(0, "rgba(70,60,50,0.16)");
+      g.addColorStop(1, "rgba(70,60,50,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(x + 6, y, WIN.w - 12, 26);
     }
-    // Upper floors: windows with warm or sky reflections, a few with plants.
-    for (let row = 0; row < 2; row++) {
-      for (let col = 0; col < 3; col++) {
-        const x = 22 + col * 76;
-        const y = 34 + row * 112;
-        ctx.fillStyle = "#3B3A38";
-        ctx.fillRect(x - 3, y - 3, 64, 78);
-        const warm = (seed + row * 3 + col) % 3 === 0;
-        const g = ctx.createLinearGradient(x, y, x + 58, y + 72);
-        g.addColorStop(0, warm ? "#F6D9A2" : "#B8CBDA");
-        g.addColorStop(1, warm ? "#C98E52" : "#6F8698");
-        ctx.fillStyle = g;
-        ctx.fillRect(x, y, 58, 72);
-        ctx.fillStyle = "rgba(255,255,255,0.18)";
-        ctx.fillRect(x + 28, y, 2, 72);
-        ctx.fillRect(x, y + 34, 58, 2);
-        if ((seed + col + row) % 4 === 1) {
-          ctx.fillStyle = "#4E7A4C";
-          for (let k = 0; k < 5; k++) ctx.fillRect(x + 4 + k * 11, y + 62 - (k % 2) * 5, 8, 12);
-        }
+  // Upper floors: glass with warm or sky reflections, a few with plants.
+  // (The frames and sills are real geometry in front of the paint.)
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 3; col++) {
+      const x = WIN.x0 + col * WIN.dx;
+      const y = WIN.y0 + row * WIN.dy;
+      ctx.fillStyle = "#3B3A38";
+      ctx.fillRect(x - 3, y - 3, WIN.w + 6, WIN.h + 6);
+      const warm = (seed + row * 3 + col) % 3 === 0;
+      const g = ctx.createLinearGradient(x, y, x + WIN.w, y + WIN.h);
+      g.addColorStop(0, warm ? "#F6D9A2" : "#B8CBDA");
+      g.addColorStop(1, warm ? "#C98E52" : "#6F8698");
+      ctx.fillStyle = g;
+      ctx.fillRect(x, y, WIN.w, WIN.h);
+      // A curtain on one side of some windows.
+      if ((seed + col * 5 + row) % 3 === 1) {
+        ctx.fillStyle = warm ? "rgba(250,240,220,0.75)" : "rgba(235,232,225,0.7)";
+        ctx.fillRect(x + ((col + seed) % 2 ? WIN.w - 18 : 0), y, 18, WIN.h);
+      }
+      ctx.fillStyle = "rgba(255,255,255,0.22)";
+      ctx.beginPath();
+      ctx.moveTo(x + 8, y + WIN.h);
+      ctx.lineTo(x + 22, y + WIN.h);
+      ctx.lineTo(x + 46, y);
+      ctx.lineTo(x + 32, y);
+      ctx.fill();
+      if ((seed + col + row) % 4 === 1) {
+        ctx.fillStyle = "#4E7A4C";
+        for (let k = 0; k < 5; k++) ctx.fillRect(x + 4 + k * 11, y + 62 - (k % 2) * 5, 8, 12);
       }
     }
-    // A shop sign band across the bottom (the stall stands in front of it).
-    const sy = 270;
-    ctx.fillStyle = ["#2F4C6E", "#7A2E2A", "#2E5A43", "#5B3A6E"][seed % 4];
-    ctx.fillRect(8, sy, 240, 56);
-    ctx.fillStyle = "#FFF6E0";
-    ctx.font = `700 34px ${KO}`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(signs[seed % signs.length], 128, sy + 29);
-    // Ground floor: a shutter, half raised.
-    ctx.fillStyle = "#8C8C88";
-    ctx.fillRect(16, 330, 224, 54);
-    ctx.fillStyle = "rgba(40,40,40,0.25)";
-    for (let y = 332; y < 384; y += 6) ctx.fillRect(16, y, 224, 2);
-    const t = new CanvasTexture(c);
-    t.colorSpace = SRGBColorSpace;
-    t.anisotropy = 8;
-    return t;
-  } catch {
-    return null;
   }
+  // A shop sign band across the bottom (the stall stands in front of it).
+  ctx.fillStyle = ["#2F4C6E", "#7A2E2A", "#2E5A43", "#5B3A6E"][seed % 4];
+  ctx.fillRect(8, SIGN_Y, 240, 56);
+  ctx.fillStyle = "#FFF6E0";
+  ctx.font = `700 34px ${KO}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(signs[seed % signs.length], 128, SIGN_Y + 29);
+  // Ground floor: a shutter, half raised.
+  ctx.fillStyle = "#8C8C88";
+  ctx.fillRect(16, 330, 224, 54);
+  ctx.fillStyle = "rgba(40,40,40,0.25)";
+  for (let y = 332; y < FH; y += 6) ctx.fillRect(16, y, 224, 2);
 }
 
 const HOUSE_COLOURS = ["#E6D6BE", "#D9C2A6", "#CFD5D2", "#E8CFB8", "#D6CBB8", "#C9B9A4"];
 const HOUSE_SIGNS = ["떡집", "약국", "미용실", "분식", "철물점", "세탁소", "정육점", "반찬가게"];
 
-/** The shop houses on both sides: a box each, and a painted front facing the alley. */
-function Houses() {
-  const houses = useMemo(() => {
-    const out: { x: number; z: number; len: number; h: number; side: -1 | 1; mat: MeshStandardMaterial }[] = [];
-    const n = 6;
-    const len = (HL * 2) / n;
-    for (const side of [-1, 1] as const) {
-      for (let i = 0; i < n; i++) {
-        const seed = i * 2 + (side > 0 ? 1 : 0);
-        const map = facadeTexture(seed, HOUSE_COLOURS[(i + (side > 0 ? 3 : 0)) % HOUSE_COLOURS.length], HOUSE_SIGNS);
-        const mat = new MeshStandardMaterial({ map, roughness: 0.9 });
-        out.push({ x: side * (HW + 1.6), z: -HL + len * (i + 0.5), len: len - 0.08, h: 6.2 + (seed % 3) * 1.1, side, mat });
-      }
+interface House { x: number; z: number; len: number; h: number; side: -1 | 1; seed: number }
+
+/** The shop houses on both sides of the alley: 6 a side. */
+const HOUSES: House[] = (() => {
+  const out: House[] = [];
+  const n = 6;
+  const len = (HL * 2) / n;
+  for (const side of [-1, 1] as const)
+    for (let i = 0; i < n; i++) {
+      const seed = i * 2 + (side > 0 ? 1 : 0);
+      out.push({ x: side * (HW + 1.6), z: -HL + len * (i + 0.5), len: len - 0.08, h: 6.2 + (seed % 3) * 1.1, side, seed });
     }
-    return out;
+  return out;
+})();
+const ATLAS_COLS = 4;
+const ATLAS_ROWS = Math.ceil(HOUSES.length / ATLAS_COLS);
+
+/** Where a point of a front's canvas (u, v in canvas units) sits in the world. */
+function onFront(h: House, u: number, v: number, out = 0): [number, number, number] {
+  return [h.side * (HW - 0.01) - h.side * out, h.h * (1 - v / FH), h.z + h.side * (u / FW - 0.5) * h.len];
+}
+
+/**
+ * The houses' solid parts, added to the alley's kit: the block and roof
+ * edge, and in front of every painted window a real frame, a stone sill
+ * and here and there a flower box or an air-conditioner — the fronts get
+ * depth and shadow instead of reading as flat posters.
+ */
+function housesKit(k: Kit): void {
+  for (const h of HOUSES) {
+    k.box("plaster", [h.x, h.h / 2, h.z], [3.2, h.h, h.len], true);
+    k.box("charcoal", [h.x, h.h + 0.08, h.z], [3.3, 0.16, h.len + 0.04]);
+    // A parapet coping strip a little below the roof edge.
+    const [px, , pz] = onFront(h, FW / 2, 0, 0.04);
+    k.box("stoneWarm", [px, h.h - 0.3, pz], [0.08, 0.1, h.len]);
+    const sx = h.len / FW; // metres per canvas unit along the front
+    const sy = h.h / FH;
+    for (let row = 0; row < 2; row++)
+      for (let col = 0; col < 3; col++) {
+        const u = WIN.x0 + col * WIN.dx + WIN.w / 2;
+        const v = WIN.y0 + row * WIN.dy + WIN.h / 2;
+        const ww = (WIN.w + 6) * sx;
+        const wh = (WIN.h + 6) * sy;
+        const [x, y, z] = onFront(h, u, v, 0.035);
+        // Frame: two jambs, a head and a middle transom, standing 7 cm proud.
+        for (const s of [-1, 1]) k.box("woodDark", [x, y, z + s * (ww / 2 - 0.03)], [0.07, wh, 0.06]);
+        k.box("woodDark", [x, y + wh / 2 - 0.03, z], [0.07, 0.06, ww]);
+        k.box("woodDark", [x, y, z], [0.05, wh - 0.06, 0.035]);
+        const [lx, , lz] = onFront(h, u, v, 0.08);
+        k.box("stoneWarm", [lx, y - wh / 2 - 0.03, lz], [0.16, 0.07, ww + 0.14], true);
+        const pick = (h.seed * 7 + row * 3 + col * 5) % 9;
+        if (pick === 2 || pick === 6) {
+          // Flower box on the sill.
+          const [fx, , fz] = onFront(h, u, v, 0.15);
+          k.box("woodLight", [fx, y - wh / 2 + 0.08, fz], [0.16, 0.16, ww - 0.1], true);
+          for (let f = 0; f < 4; f++) k.add(f % 2 ? "leafDark" : "leaf", "fruit", [fx, y - wh / 2 + 0.2, fz + (f - 1.5) * (ww - 0.2) / 4], [0.24, 0.18, 0.24]);
+          k.add(pick === 2 ? "flowerPink" : "clothRed", "ball", [fx - h.side * 0.04, y - wh / 2 + 0.27, fz], [0.08, 0.08, 0.08]);
+        } else if (pick === 4 && row === 0) {
+          // An air-conditioner hung under the window.
+          const [ax, , az] = onFront(h, u, v, 0.18);
+          k.box("steel", [ax, y - wh / 2 - 0.42, az + h.side * 0.12], [0.34, 0.5, 0.7], true);
+          k.box("charcoal", [ax - h.side * 0.172, y - wh / 2 - 0.42, az + h.side * 0.12], [0.005, 0.36, 0.5]);
+        }
+      }
+    // A shallow canopy over the sign band: it throws a shadow line on the sign.
+    const [cx, cy, cz] = onFront(h, FW / 2, SIGN_Y - 4, 0.2);
+    k.box("charcoal", [cx, cy, cz], [0.4, 0.05, h.len - 0.1], true);
+  }
+}
+
+/**
+ * The painted fronts: all twelve on one atlas canvas and one merged mesh —
+ * one draw and one texture for the alley's walls instead of a material,
+ * texture and three meshes per house. Desktop paints the atlas at 1.5×.
+ */
+function Houses() {
+  const made = useMemo(() => {
+    const scale = pickQuality().maxTexture <= 1024 ? 1 : 1.5;
+    let map: CanvasTexture | null = null;
+    try {
+      const c = document.createElement("canvas");
+      c.width = Math.round(FW * ATLAS_COLS * scale);
+      c.height = Math.round(FH * ATLAS_ROWS * scale);
+      const ctx = c.getContext("2d");
+      if (ctx) {
+        HOUSES.forEach((h, i) => {
+          const ox = (i % ATLAS_COLS) * FW * scale;
+          const oy = Math.floor(i / ATLAS_COLS) * FH * scale;
+          ctx.save();
+          ctx.setTransform(scale, 0, 0, scale, ox, oy);
+          ctx.beginPath();
+          ctx.rect(0, 0, FW, FH);
+          ctx.clip();
+          paintFacade(ctx, h.seed, HOUSE_COLOURS[((h.seed >> 1) + (h.side > 0 ? 3 : 0)) % HOUSE_COLOURS.length], HOUSE_SIGNS);
+          ctx.restore();
+        });
+        map = new CanvasTexture(c);
+        map.colorSpace = SRGBColorSpace;
+        map.anisotropy = 8;
+      }
+    } catch {
+      map = null;
+    }
+    const planes = HOUSES.map((h, i) => {
+      const g = new PlaneGeometry(h.len, h.h);
+      g.rotateY(-h.side * (Math.PI / 2));
+      g.translate(h.x - h.side * 1.61, h.h / 2, h.z);
+      const uv = g.getAttribute("uv");
+      const c0 = (i % ATLAS_COLS) / ATLAS_COLS;
+      const r0 = Math.floor(i / ATLAS_COLS);
+      for (let j = 0; j < uv.count; j++) {
+        // Canvas rows run top-down; texture v runs bottom-up (flipY).
+        uv.setXY(j, c0 + uv.getX(j) / ATLAS_COLS, 1 - (r0 + 1 - uv.getY(j)) / ATLAS_ROWS);
+      }
+      return g;
+    });
+    const geometry = mergeGeometries(planes) ?? planes[0];
+    planes.forEach((g) => g !== geometry && g.dispose());
+    const material = new MeshStandardMaterial({ map, roughness: 0.9 });
+    return { geometry, material, map };
   }, []);
-  useEffect(() => () => houses.forEach((h) => (h.mat.map?.dispose(), h.mat.dispose())), [houses]);
-  return (
-    <>
-      {houses.map((h, i) => (
-        <group key={i}>
-          <mesh castShadow receiveShadow position={[h.x, h.h / 2, h.z]}>
-            <boxGeometry args={[3.2, h.h, h.len]} />
-            <primitive object={MAT.plaster} attach="material" />
-          </mesh>
-          {/* The painted front, facing into the alley. */}
-          <mesh receiveShadow position={[h.x - h.side * 1.61, h.h / 2, h.z]} rotation={[0, -h.side * (Math.PI / 2), 0]}>
-            <planeGeometry args={[h.len, h.h]} />
-            <primitive object={h.mat} attach="material" />
-          </mesh>
-          {/* A flat roof edge. */}
-          <mesh position={[h.x, h.h + 0.08, h.z]}>
-            <boxGeometry args={[3.3, 0.16, h.len + 0.04]} />
-            <primitive object={MAT.charcoal} attach="material" />
-          </mesh>
-        </group>
-      ))}
-    </>
-  );
+  useEffect(() => () => (made.geometry.dispose(), made.material.dispose(), made.map?.dispose()), [made]);
+  return <mesh receiveShadow geometry={made.geometry} material={made.material} />;
 }
 
 /* ───────────────────────── Stalls, cart, arch ───────────────────────── */
@@ -239,6 +339,7 @@ function goods(k: Kit, kind: string, x: number, z: number, seed: number) {
 
 function stallsKit(): Kit {
   const k = new Kit();
+  housesKit(k);
   ALLEY.stalls.forEach((st, i) => {
     const cx = st.side * (HW - ALLEY.stallW / 2 + 0.05);
     const front = st.side * (HW - ALLEY.stallW + 0.05);

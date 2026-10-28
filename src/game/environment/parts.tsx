@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { BoxGeometry, MeshBasicMaterial, PlaneGeometry, type BufferGeometry, type Group } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { PALETTE } from "../config/world";
-import Instanced, { type Part } from "./Instanced";
+import Instanced, { UNIT, type Part } from "./Instanced";
 import { useSignTexture } from "./signTexture";
 import { REDUCED_MOTION } from "../systems/motion";
 import { ACCENT, MAT, std } from "../config/materials";
@@ -62,22 +62,40 @@ export function Signboard({ text, w, h, aspect = 1, oneSided = false, icon }: { 
 
 /** Street lamps (post, stone foot, paper lantern, cap) — four draw calls for any number. */
 export function Lamps({ spots, size = 0.28 }: { spots: { x: number; z: number }[]; size?: number }) {
+  // A post lantern (deungnong): paper panes held in a dark wooden frame with
+  // a cross bar on each face, under a small hipped cap. The frame shares the
+  // post's instanced list and the cap is the shared hip roof, so a lamp row
+  // is still four draws.
   const parts = useMemo(() => {
-    const post: Part[] = [], foot: Part[] = [], light: Part[] = [], cap: Part[] = [];
+    const wood: Part[] = [], foot: Part[] = [], light: Part[] = [], roof: Part[] = [];
+    const W = 0.36, H = 0.44, Y = 2.42, e = W / 2;
     for (const { x, z } of spots) {
-      post.push({ p: [x, 1.1, z], s: [size * 0.5, 2.2, size * 0.5] });
+      wood.push({ p: [x, 1.1, z], s: [size * 0.5, 2.2, size * 0.5] });
       foot.push({ p: [x, 0.08, z], s: [size, 0.16, size] });
-      light.push({ p: [x, 2.42, z], s: [0.36, 0.44, 0.36] });
-      cap.push({ p: [x, 2.7, z], s: [0.48, 0.08, 0.48] });
+      light.push({ p: [x, Y, z], s: [W, H, W] });
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) wood.push({ p: [x + sx * e, Y, z + sz * e], s: [0.04, H + 0.02, 0.04] });
+      for (const ry of [Y - H / 2 + 0.015, Y + H / 2 - 0.015]) {
+        for (const s of [-1, 1]) {
+          wood.push({ p: [x, ry, z + s * e], s: [W, 0.035, 0.03] });
+          wood.push({ p: [x + s * e, ry, z], s: [0.03, 0.035, W] });
+        }
+      }
+      for (const s of [-1, 1]) {
+        const f = e + 0.004;
+        wood.push({ p: [x, Y, z + s * f], s: [0.016, H, 0.008] }, { p: [x, Y + 0.02, z + s * f], s: [W, 0.016, 0.008] });
+        wood.push({ p: [x + s * f, Y, z], s: [0.008, H, 0.016] }, { p: [x + s * f, Y + 0.02, z], s: [0.008, 0.016, W] });
+      }
+      roof.push({ p: [x, Y + H / 2 + 0.08, z], s: [0.56, 0.16, 0.56] });
+      wood.push({ p: [x, Y + H / 2 + 0.17, z], s: [0.05, 0.07, 0.05] });
     }
-    return { post, foot, light, cap };
+    return { wood, foot, light, roof };
   }, [spots, size]);
   return (
     <>
-      <Instanced parts={parts.post} material={MAT.woodDark} castShadow />
+      <Instanced parts={parts.wood} material={MAT.woodDark} castShadow />
       <Instanced parts={parts.foot} material={MAT.stoneWarm} receiveShadow />
       <Instanced parts={parts.light} material={MAT.lanternPaper} />
-      <Instanced parts={parts.cap} material={MAT.charcoal} />
+      <Instanced parts={parts.roof} material={MAT.charcoal} geometry={UNIT.hipRoof} />
     </>
   );
 }
