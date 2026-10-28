@@ -790,7 +790,7 @@ function windowTrim(k: Kit) {
   const C = 128;
   const band = Math.round(C * BAND);
   BLOCKS.forEach((bl, i) => {
-    if (bl.finish === "glass") return;
+    if (bl.finish === "glass") return curtainFins(k, bl, i, band / C);
     const st = FINISH[bl.finish];
     const ww = ((C * st.winW) / C) * BAY;
     const whPx = (C - band) * st.winH;
@@ -838,6 +838,58 @@ function windowTrim(k: Kit) {
     }
     g.dispose();
   });
+}
+
+/**
+ * A curtain wall's depth: slim vertical fins (mullions) standing out between
+ * the painted panes, the whole height of the block, and a thin ledge along
+ * each storey's spandrel band — so a glass tower catches light in lines
+ * instead of reading as one flat printed sheet. Same street-facing faces and
+ * UV mapping as the window trim; box instances, no new draw calls.
+ */
+function curtainFins(k: Kit, bl: Block, i: number, bandFrac: number) {
+  const base = bl.ground === "none" ? 0 : SHOP_H;
+  const h = heightOf(bl) - base;
+  const g = shell(bl.x, base, bl.z, bl.w, h, bl.d, BAY * 4, FLOOR * 4, (i % 4) * 0.25, [0.37, 0.01]);
+  const pos = g.getAttribute("position");
+  const uv = g.getAttribute("uv");
+  for (const f of [0, 1, 4, 5]) {
+    const n0 = f * 4;
+    const n1 = f * 4 + 1;
+    const u0 = uv.getX(n0);
+    const u1 = uv.getX(n1);
+    const ax = pos.getX(n0);
+    const az = pos.getZ(n0);
+    const ex = pos.getX(n1);
+    const ez = pos.getZ(n1);
+    const len = Math.hypot(ex - ax, ez - az);
+    const nx = f === 0 ? 1 : f === 1 ? -1 : 0;
+    const nz = f === 4 ? 1 : f === 5 ? -1 : 0;
+    const fx = bl.x + (nx * bl.w) / 2;
+    const fz = bl.z + (nz * bl.d) / 2;
+    if (nx * -fx + nz * (SEOUL.roadZ - fz) <= 0) continue;
+    const lo = Math.min(u0, u1);
+    const hi = Math.max(u0, u1);
+    // Fins on the pane joints (u = cell / 4), not too close to the corners.
+    for (let c = Math.ceil(lo * 4); c <= hi * 4; c++) {
+      const t = (c / 4 - u0) / (u1 - u0);
+      const along = Math.abs(t) * len;
+      if (along < 0.4 || along > len - 0.4) continue;
+      const x = ax + (ex - ax) * t;
+      const z = az + (ez - az) * t;
+      k.box("charcoal", [x + nx * 0.09, base + h / 2, z + nz * 0.09], [nx !== 0 ? 0.18 : 0.08, h, nx !== 0 ? 0.08 : 0.18]);
+    }
+    // A ledge on top of each storey's spandrel, and a cap at the top.
+    const mx = (ax + ex) / 2;
+    const mz = (az + ez) / 2;
+    for (let fl = 0; fl <= bl.floors; fl++) {
+      const y = fl === bl.floors ? base + h - 0.05 : base + fl * FLOOR + bandFrac * FLOOR;
+      k.box("charcoal", [mx + nx * 0.06, y, mz + nz * 0.06], [nx !== 0 ? 0.12 : len, 0.07, nx !== 0 ? len : 0.12]);
+    }
+    // Corner posts: the wall's edges, a little proud of the fins.
+    for (const [px, pz] of [[ax, az], [ex, ez]] as const) k.box("charcoal", [px + nx * 0.1, base + h / 2, pz + nz * 0.1], [nx !== 0 ? 0.2 : 0.22, h, nx !== 0 ? 0.22 : 0.2]);
+  }
+  g.dispose();
 }
 
 /* ───────────────────────── The street kit ───────────────────────── */

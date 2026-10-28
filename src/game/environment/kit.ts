@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "puff" | "leafy" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | "onggi" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | "onggi" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -121,6 +121,54 @@ function leafyBall(detail: number): BufferGeometry {
     nrm.setXYZ(i, n.x, n.y, n.z);
   }
   return g;
+}
+
+/**
+ * A clump of cherry blossom (벚꽃): not one ball but six or seven small,
+ * ragged knots of flowers bunched round a twig's end, with gaps between them.
+ * Their normals lean toward "out from the clump's middle", so the clump is
+ * lit as one soft mass while its outline stays broken — a flowering branch,
+ * not cotton candy. Fits a unit box (radius 0.5).
+ */
+function blossomClump(detail: number, variant: number, n: number): BufferGeometry {
+  const parts: BufferGeometry[] = [];
+  const knots: [number, number, number, number][] = [[0, 0.02, 0, 0.22]];
+  // Fewer, larger knots when there are few of them (phones).
+  const kr = 0.17 * Math.sqrt(6 / n);
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 * (n > 7 ? 2 : 1) + variant * 0.9 + jitter(variant * 17 + i, 0.35);
+    const up = (i % 2 ? 0.45 : -0.25) + (n > 7 && i >= n / 2 ? 0.25 : 0) + jitter(variant * 5 + i * 3, 0.25);
+    const d = 0.27 + jitter(variant * 9 + i, 0.04);
+    const r = kr + jitter(variant * 13 + i * 7, kr * 0.2);
+    knots.push([Math.cos(a) * Math.cos(up) * d, Math.sin(up) * d, Math.sin(a) * Math.cos(up) * d, r]);
+  }
+  const v = new Vector3();
+  const n0 = new Vector3();
+  for (const [kx, ky, kz, kr] of knots) {
+    const raw = new IcosahedronGeometry(1, detail);
+    raw.deleteAttribute("normal");
+    raw.deleteAttribute("uv");
+    const g = mergeVertices(raw, 1e-4);
+    const pos = g.getAttribute("position");
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).normalize();
+      // Florets standing out of each knot: a fine, sharp ripple.
+      const h = Math.sin(v.x * 9.7 + kx * 20) * Math.sin(v.z * 10.3 - v.y * 3.1) * Math.sin(v.y * 8.9 + kz * 15);
+      v.multiplyScalar(kr * (1 + 0.22 * h));
+      pos.setXYZ(i, kx + v.x, ky + v.y, kz + v.z);
+    }
+    g.computeVertexNormals();
+    const nrm = g.getAttribute("normal");
+    for (let i = 0; i < nrm.count; i++) {
+      v.fromBufferAttribute(pos, i);
+      n0.fromBufferAttribute(nrm, i).multiplyScalar(0.4).addScaledVector(v.normalize(), 0.6).normalize();
+      nrm.setXYZ(i, n0.x, n0.y, n0.z);
+    }
+    parts.push(g);
+  }
+  const merged = mergeGeometries(parts, false);
+  parts.forEach((g) => g.dispose());
+  return merged ?? lumpyBall(detail, 0.24);
 }
 
 /**
@@ -554,9 +602,10 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   leaves: leafRosette(),
   pineCone: pineTier(),
   ball: lumpyBall(3, 0.16),
-  // Flower clusters of a cherry crown: rougher lumps; on phones a quarter
-  // of the triangles (a few facets show only up close).
-  puff: lumpyBall(phoneTier() ? 2 : 3, 0.24),
+  // Blossom clumps of a cherry crown (two shapes, so neighbours differ);
+  // on phones each knot is a quarter of the triangles.
+  bloomA: blossomClump(1, 1, phoneTier() ? 6 : 10),
+  bloomB: blossomClump(1, 2, phoneTier() ? 6 : 10),
   // Leaf clusters of a broadleaf crown (the Seoul ginkgos).
   leafy: leafyBall(phoneTier() ? 2 : 3),
   // One apple, tangerine or potato in a heap: a small smooth ball.
@@ -1059,48 +1108,54 @@ function broadleafTree(k: Kit, x: number, z: number, s: number, seed: number): v
  */
 function cherryTree(k: Kit, x: number, z: number, s: number, seed: number): void {
   const lean = jitter(seed, 0.08);
-  k.add("woodDark", "cyl", [x, 0.12 * s, z], [0.4 * s, 0.24 * s, 0.4 * s]);
-  k.add("woodDark", "cyl", [x, 0.72 * s, z], [0.26 * s, 1.5 * s, 0.26 * s], [lean, 0, -lean], true);
-  const fork = 1.38 * s;
-  const n = 5;
-  let c = 0;
-  for (let i = 0; i < n; i++) {
-    const a = seed * 1.7 + (i / n) * Math.PI * 2 + jitter(seed + i * 11, 0.35);
-    const t = 0.72 + jitter(seed * 2 + i, 0.16);
-    const len = (1.35 + jitter(seed * 3 + i, 0.25)) * s;
+  // Rod from a in direction (tilt t from vertical, heading a), length len.
+  const rod = (ax: number, ay: number, az: number, a: number, t: number, len: number, w: number, cast: boolean): V3 => {
     const dx = Math.sin(t) * Math.cos(a);
     const dy = Math.cos(t);
     const dz = Math.sin(t) * Math.sin(a);
-    k.add("woodDark", "cyl", [x + (dx * len) / 2, fork + (dy * len) / 2, z + (dz * len) / 2], [0.12 * s, len, 0.12 * s], [0, -a, -t], i < 3);
-    const tx = x + dx * len;
-    const ty = fork + dy * len;
-    const tz = z + dz * len;
-    // A thinner twig on outward and a little flatter.
-    const t2 = t + 0.4;
-    const l2 = 0.7 * s;
-    const ex = Math.sin(t2) * Math.cos(a + 0.3);
-    const ey = Math.cos(t2);
-    const ez = Math.sin(t2) * Math.sin(a + 0.3);
-    k.add("woodDark", "cyl", [tx + (ex * l2) / 2, ty + (ey * l2) / 2, tz + (ez * l2) / 2], [0.06 * s, l2, 0.06 * s], [0, -(a + 0.3), -t2]);
-    // Flower clusters round the limb's end, the outer ones lower (the crown's
-    // edge droops a little under the bloom).
-    const spots: [number, number, number, number][] = [
-      [0, 0.2, 0, 0.98],
-      [ex * 0.8, ey * 0.8 - 0.05, ez * 0.8, 0.8],
-      [-dz * 0.6 - dx * 0.2, 0.36, dx * 0.6 - dz * 0.2, 0.76],
-      [dz * 0.55 + dx * 0.2, -0.08, -dx * 0.55 + dz * 0.2, 0.7],
-    ];
-    spots.forEach(([ox, oy, oz, r], j) => {
-      const jr = r * s * (1 + jitter(seed * 7 + i * 5 + j, 0.14));
-      const mat: MatKey = (c++ + seed) % 3 === 0 ? "blossomPale" : "blossom";
-      k.add(mat, "puff", [tx + ox * s, ty + oy * s, tz + oz * s], [jr, jr * 0.74, jr], [jitter(c, 0.4), jitter(c * 3, 3), 0], true);
-    });
+    k.add("woodDark", "cyl", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
+    return [ax + dx * len, ay + dy * len, az + dz * len];
+  };
+  let c = 0;
+  const clump = (p: V3, r: number) => {
+    const jr = 1.18 * r * s * (1 + jitter(seed * 7 + c * 5, 0.14));
+    const mat: MatKey = (c + seed) % 3 === 0 ? "blossomPale" : "blossom";
+    const geo: GeoKey = c % 2 ? "bloomB" : "bloomA";
+    c++;
+    k.add(mat, geo, p, [jr, jr * 0.78, jr], [jitter(c, 0.4), jitter(c * 3, 3), jitter(c * 5, 0.3)], true);
+  };
+  // Root flare, then a trunk in two pieces that narrows to the fork.
+  k.add("woodDark", "cyl", [x, 0.12 * s, z], [0.42 * s, 0.24 * s, 0.42 * s]);
+  const low = rod(x, 0, z, seed, Math.abs(lean), 0.8 * s, 0.27 * s, true);
+  const [fx, fork, fz] = rod(low[0], low[1], low[2], seed + 2.4, Math.abs(lean) * 1.6, 0.62 * s, 0.22 * s, true);
+  const n = 5;
+  for (let i = 0; i < n; i++) {
+    const a = seed * 1.7 + (i / n) * Math.PI * 2 + jitter(seed + i * 11, 0.35);
+    const t = 0.78 + jitter(seed * 2 + i, 0.16);
+    const len = (1.55 + jitter(seed * 3 + i, 0.25)) * s;
+    // Each limb bends upward a little toward its tip, thinning as it goes.
+    const mid = rod(fx, fork, fz, a, t, len * 0.55, 0.13 * s, i < 3);
+    const tip = rod(mid[0], mid[1], mid[2], a + jitter(seed + i, 0.2), t - 0.22, len * 0.5, 0.08 * s, false);
+    // Two thin twigs: one out and down from the bend, one on from the tip.
+    const sa = a + (i % 2 ? 0.75 : -0.75);
+    const side = rod(mid[0], mid[1], mid[2], sa, t + 0.45, 0.62 * s, 0.05 * s, false);
+    const end = rod(tip[0], tip[1], tip[2], a - 0.25, t + 0.25, 0.5 * s, 0.04 * s, false);
+    const ox = Math.cos(a);
+    const oz = Math.sin(a);
+    // Blossom bunched along the outer half of each limb: at the tip (the
+    // biggest), at the twig ends, either side of the tip, one on the bend.
+    clump([tip[0], tip[1] + 0.16 * s, tip[2]], 0.82);
+    clump([end[0], end[1] + 0.02 * s, end[2]], 0.64);
+    clump([side[0], side[1] + 0.04 * s, side[2]], 0.6);
+    clump([tip[0] - oz * 0.48 * s, tip[1] - 0.08 * s, tip[2] + ox * 0.48 * s], 0.6);
+    clump([tip[0] + oz * 0.44 * s + ox * 0.1 * s, tip[1] + 0.05 * s, tip[2] - ox * 0.44 * s + oz * 0.1 * s], 0.56);
+    clump([mid[0] + ox * 0.05 * s, mid[1] + 0.22 * s, mid[2] + oz * 0.05 * s], 0.5);
   }
-  // The crown's top, over the fork.
+  // The crown's top over the fork: a few clumps, loosely spaced so sky shows.
   for (let j = 0; j < 4; j++) {
     const a = seed + j * 1.6;
-    const r = (0.82 + jitter(seed + j * 13, 0.1)) * s;
-    k.add(j === 1 ? "blossomPale" : "blossom", "puff", [x + Math.cos(a) * 0.5 * s, 2.75 * s + j * 0.12 * s, z + Math.sin(a) * 0.5 * s], [r, r * 0.72, r], [0, a, 0], true);
+    const r = (0.66 + jitter(seed + j * 13, 0.08)) * s;
+    clump([fx + Math.cos(a) * 0.55 * s, fork + 1.45 * s + (j % 2) * 0.22 * s, fz + Math.sin(a) * 0.55 * s], r / s);
   }
 }
 
