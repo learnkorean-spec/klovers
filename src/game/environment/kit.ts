@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "puff" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "puff" | "leafy" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -86,6 +86,39 @@ function lumpyBall(detail: number, lump: number): BufferGeometry {
     pos.setXYZ(i, v.x, v.y, v.z);
   }
   g.computeVertexNormals();
+  return g;
+}
+
+/**
+ * A leafy cluster: a ball whose outline is ragged at a fine scale (sprigs of
+ * leaves standing out) but whose shading stays soft — the normals point
+ * mostly straight out from the middle, as if light fell on one rounded mass
+ * of leaves. A lumpy ball lit by its own bumps reads as a rock or a
+ * cauliflower; this reads as foliage.
+ */
+function leafyBall(detail: number): BufferGeometry {
+  const raw = new IcosahedronGeometry(0.5, detail);
+  raw.deleteAttribute("normal");
+  raw.deleteAttribute("uv");
+  const g = mergeVertices(raw, 1e-4);
+  const pos = g.getAttribute("position");
+  const dirs: Vector3[] = [];
+  const v = new Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).normalize();
+    dirs.push(v.clone());
+    const low = Math.sin(v.x * 2.9 + 0.4) * Math.sin(v.y * 2.3 + 1.1) * Math.sin(v.z * 3.1 + 2.2);
+    const h = Math.sin(v.x * 13.3 + v.y * 5.1) * Math.sin(v.z * 12.7 - v.x * 4.9) * Math.sin(v.y * 11.3 + v.z * 3.3);
+    v.multiplyScalar(0.5 * (1 + 0.1 * low + 0.3 * h));
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  g.computeVertexNormals();
+  const nrm = g.getAttribute("normal");
+  const n = new Vector3();
+  for (let i = 0; i < nrm.count; i++) {
+    n.fromBufferAttribute(nrm, i).multiplyScalar(0.25).addScaledVector(dirs[i], 0.75).normalize();
+    nrm.setXYZ(i, n.x, n.y, n.z);
+  }
   return g;
 }
 
@@ -510,6 +543,8 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   // Flower clusters of a cherry crown: rougher lumps; on phones a quarter
   // of the triangles (a few facets show only up close).
   puff: lumpyBall(phoneTier() ? 2 : 3, 0.24),
+  // Leaf clusters of a broadleaf crown (the Seoul ginkgos).
+  leafy: leafyBall(phoneTier() ? 2 : 3),
   // One apple, tangerine or potato in a heap: a small smooth ball.
   fruit: lumpyBall(1, 0.05),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.

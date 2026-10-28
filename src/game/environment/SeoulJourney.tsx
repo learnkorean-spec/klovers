@@ -706,6 +706,140 @@ function cityGeometry() {
   return { merged, shops: shops.length ? mergeGeometries(shops) : null };
 }
 
+/* ───────────────────────── Ginkgo trees ───────────────────────── */
+
+interface Limb extends Part {
+  cast: boolean;
+}
+
+/**
+ * A street ginkgo (은행나무) in autumn: a straight leader with whorls of
+ * branches climbing it at a steep angle, the lower ones longer, each ending
+ * in a few small clusters of yellow fans. The crown is a loose, tall oval —
+ * the trunk, limbs and sky show between the clusters, so it reads as a tree
+ * rather than a stack of yellow balls. Limbs go into the street kit, the
+ * clusters into three instanced lists (one per shade).
+ */
+const GINKGO = SEOUL.trees.map((tr, i) => {
+  const limbs: Limb[] = [];
+  const clusters: Part[] = [];
+  const s = 1 + jitter(i * 3, 0.1);
+  const r = rng(i * 53 + 11);
+  // Cylinder from a to b (unit cyl along y), thickness w.
+  const rod = (ax: number, ay: number, az: number, bx: number, by: number, bz: number, w: number, cast: boolean) => {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const dz = bz - az;
+    const len = Math.hypot(dx, dy, dz);
+    const t = Math.acos(dy / len);
+    const a = Math.atan2(dz, dx);
+    limbs.push({ p: [(ax + bx) / 2, (ay + by) / 2, (az + bz) / 2], s: [w, len, w], r: [0, -a, -t], cast });
+  };
+  const lx = jitter(i, 0.12);
+  const lz = jitter(i + 7, 0.12);
+  const top = 6.1 * s;
+  // The leader, tapering in two pieces and leaning a touch.
+  rod(tr.x, 0, tr.z, tr.x + lx * 0.5, 3.3 * s, tr.z + lz * 0.5, 0.19, true);
+  rod(tr.x + lx * 0.5, 3.3 * s, tr.z + lz * 0.5, tr.x + lx, top, tr.z + lz, 0.1, true);
+  const at = (y: number): [number, number] => [tr.x + (lx * y) / top, tr.z + (lz * y) / top];
+  const add = (x: number, yy: number, z: number, sz: number) => {
+    const q = sz * (0.88 + r() * 0.24);
+    clusters.push({ p: [x, yy, z], s: [q, q * 0.78, q], r: [(r() - 0.5) * 0.5, r() * 6.28, 0] });
+  };
+  const WHORLS = 4;
+  for (let w = 0; w < WHORLS; w++) {
+    const f = w / (WHORLS - 1);
+    const y = (2.55 + f * 2.6) * s;
+    const n = w === WHORLS - 1 ? 2 : 3;
+    for (let j = 0; j < n; j++) {
+      const a = i * 1.3 + w * 2.4 + (j / n) * Math.PI * 2 + (r() - 0.5) * 0.5;
+      const tilt = (0.82 - f * 0.32) + (r() - 0.5) * 0.12;
+      const len = (1.55 - f * 0.75) * s * (0.9 + r() * 0.2);
+      const [bx, bz] = at(y);
+      const ex = bx + Math.cos(a) * Math.sin(tilt) * len;
+      const ey = y + Math.cos(tilt) * len;
+      const ez = bz + Math.sin(a) * Math.sin(tilt) * len;
+      rod(bx, y, bz, ex, ey, ez, 0.075 - f * 0.03, w < 2);
+      // Clusters: one over the tip, one part-way along on the outer side,
+      // and on the longer limbs one hanging a little below.
+      const cs = (1.08 - f * 0.3) * s;
+      add(ex + Math.cos(a) * 0.1, ey + 0.12, ez + Math.sin(a) * 0.1, cs);
+      add(bx + (ex - bx) * 0.55 + Math.cos(a + 0.9) * 0.18, y + (ey - y) * 0.55 + 0.05, bz + (ez - bz) * 0.55 + Math.sin(a + 0.9) * 0.18, cs * 0.78);
+      if (w < 2) add(bx + (ex - bx) * 0.85 + Math.cos(a - 0.7) * 0.25, ey - 0.3, bz + (ez - bz) * 0.85 + Math.sin(a - 0.7) * 0.25, cs * 0.7);
+    }
+    // Inside the whorl, round the leader: fills the crown's heart so it reads
+    // as one tree, while its edge stays open.
+    const [hx, hz] = at(y + 0.5);
+    add(hx + Math.cos(i + w * 2) * 0.25, y + 0.55, hz + Math.sin(i + w * 2) * 0.25, (0.95 - f * 0.25) * s);
+  }
+  // The leader's top.
+  const [tx, tz] = at(top);
+  clusters.push({ p: [tx, top + 0.1, tz], s: [0.62 * s, 0.7 * s, 0.62 * s], r: [0, i, 0] });
+  clusters.push({ p: [tx + 0.2, top - 0.45, tz - 0.15], s: [0.58 * s, 0.5 * s, 0.58 * s], r: [0, i + 2, 0] });
+  return { limbs, clusters };
+});
+
+/**
+ * Real depth for the painted windows: a stone sill under each one and a thin
+ * head over it, placed from the same layout the façade canvas paints (cell
+ * by cell, through the shell's own UVs), so they line up with the glass.
+ * Curtain-wall (glass) blocks and faces turned away from the street get none. Box instances in the street kit: no
+ * new draw calls.
+ */
+function windowTrim(k: Kit) {
+  const C = 128;
+  const band = Math.round(C * BAND);
+  BLOCKS.forEach((bl, i) => {
+    if (bl.finish === "glass") return;
+    const st = FINISH[bl.finish];
+    const ww = ((C * st.winW) / C) * BAY;
+    const whPx = (C - band) * st.winH;
+    const wh = (whPx / C) * FLOOR;
+    const bottom = ((band + 0.45 * (C - band - whPx)) / C) * FLOOR;
+    const base = bl.ground === "none" ? 0 : SHOP_H;
+    const h = heightOf(bl) - base;
+    const g = shell(bl.x, base, bl.z, bl.w, h, bl.d, BAY * 4, FLOOR * 4, (i % 4) * 0.25, [0.37, 0.01]);
+    const pos = g.getAttribute("position");
+    const uv = g.getAttribute("uv");
+    for (const f of [0, 1, 4, 5]) {
+      const n0 = f * 4;
+      const n1 = f * 4 + 1;
+      const u0 = uv.getX(n0);
+      const u1 = uv.getX(n1);
+      const ax = pos.getX(n0);
+      const az = pos.getZ(n0);
+      const dx = (pos.getX(n1) - ax) / (u1 - u0);
+      const dz = (pos.getZ(n1) - az) / (u1 - u0);
+      const len = Math.hypot(pos.getX(n1) - ax, pos.getZ(n1) - az);
+      // Outward normal of this face (BoxGeometry order: +x, −x, +y, −y, +z, −z).
+      const nx = f === 0 ? 1 : f === 1 ? -1 : 0;
+      const nz = f === 4 ? 1 : f === 5 ? -1 : 0;
+      // Only the faces turned towards the street are ever seen.
+      const fx = bl.x + (nx * bl.w) / 2;
+      const fz = bl.z + (nz * bl.d) / 2;
+      if (nx * -fx + nz * (SEOUL.roadZ - fz) <= 0) continue;
+      const lo = Math.min(u0, u1);
+      const hi = Math.max(u0, u1);
+      // Window centres: texture u = (cell + 0.5) / 4, repeating.
+      for (let c = Math.ceil(lo * 4 - 0.5); c + 0.5 <= hi * 4; c++) {
+        const u = (c + 0.5) / 4;
+        const along = Math.abs((u - u0) / (u1 - u0)) * len;
+        if (along < ww / 2 + 0.15 || along > len - ww / 2 - 0.15) continue;
+        const x = ax + dx * (u - u0);
+        const z = az + dz * (u - u0);
+        const sx = nx !== 0 ? 0.16 : ww + 0.14;
+        const sz = nx !== 0 ? ww + 0.14 : 0.16;
+        for (let fl = 0; fl < bl.floors; fl++) {
+          const y = base + fl * FLOOR + bottom;
+          k.box("plaster", [x + nx * 0.06, y - 0.05, z + nz * 0.06], [sx, 0.08, sz]);
+          k.box("plaster", [x + nx * 0.03, y + wh + 0.05, z + nz * 0.03], [nx !== 0 ? 0.08 : ww + 0.08, 0.07, nx !== 0 ? ww + 0.08 : 0.08]);
+        }
+      }
+    }
+    g.dispose();
+  });
+}
+
 /* ───────────────────────── The street kit ───────────────────────── */
 
 const STREET_KIT: Kit = (() => {
@@ -768,8 +902,9 @@ const STREET_KIT: Kit = (() => {
   // Ginkgo trunks in their grates.
   SEOUL.trees.forEach((tr, i) => {
     k.box("metal", [tr.x, 0.012, tr.z], [1.1, 0.02, 1.1]);
-    k.add("woodDark", "cyl", [tr.x, 1.7, tr.z], [0.17, 3.4, 0.17], [jitter(i, 0.05), 0, jitter(i + 7, 0.05)], true);
-    for (const [ry, rz] of [[0, 0.7], [2.1, 0.75], [4.2, 0.65]] as const) k.add("woodDark", "cyl", [tr.x + Math.cos(ry) * 0.22, 3.0, tr.z + Math.sin(ry) * 0.22], [0.07, 1.0, 0.07], [Math.sin(ry) * rz, 0, -Math.cos(ry) * rz]);
+    const g = GINKGO[i];
+    k.add("woodDark", "cyl", [tr.x, 0.1, tr.z], [0.3, 0.2, 0.3]);
+    for (const l of g.limbs) k.add("woodDark", "cyl", l.p, l.s, l.r, l.cast);
   });
   // Planters by the gate back to the Hub.
   SEOUL.planters.forEach((p, i) => {
@@ -780,6 +915,8 @@ const STREET_KIT: Kit = (() => {
   // The store and restaurant buildings' plain ground floors (their fronts are painted).
   k.box("plaster", [HW + 2.8, SHOP_H / 2, (NORTH_FRONT - 3.3) / 2], [5.5, SHOP_H, Math.abs(NORTH_FRONT + 3.3)], true);
   k.box("plaster", [HW + 2.8, SHOP_H / 2, (1.3 + HD + 0.4) / 2], [5.5, SHOP_H, HD + 0.4 - 1.3], true);
+
+  windowTrim(k);
 
   // Rooftops: a parapet round each block, water tanks, air-conditioners.
   BLOCKS.forEach((bl, i) => {
@@ -821,9 +958,9 @@ const markings = (() => {
   return { white, yellow };
 })();
 
-const ginkgo = foliage("#E3B53A", 0.85);
-const ginkgoDeep = foliage("#CB9426", 0.85);
-const ginkgoLight = foliage("#F2D25C", 0.85);
+const ginkgo = foliage("#EBC03A", 0.85, true);
+const ginkgoDeep = foliage("#D6A42C", 0.85, true);
+const ginkgoLight = foliage("#F6D85E", 0.85, true);
 const leafMat = std("#E0AE34", 0.8);
 
 const canopies = (() => {
@@ -832,17 +969,11 @@ const canopies = (() => {
   const l: Part[] = [];
   const leaves: Part[] = [];
   SEOUL.trees.forEach((tr, i) => {
-    const s = 1 + jitter(i * 3, 0.12);
-    // A ginkgo's crown is upright: clusters stacked in a loose cone.
-    const n = 9;
-    for (let k = 0; k < n; k++) {
-      const t = k / (n - 1);
-      const ang = k * 2.4 + i * 1.3;
-      const rr = (0.62 * (1 - t) + 0.08) * s;
-      const sz = (1.25 - t * 0.6) * s;
-      const part: Part = { p: [tr.x + Math.cos(ang) * rr, (2.55 + t * 2.7) * s, tr.z + Math.sin(ang) * rr], s: [sz, sz * 1.1, sz], r: [0, ang, 0] };
-      (k % 3 === 0 ? c : k % 3 === 1 ? a : l).push(part);
-    }
+    // Shades alternate cluster by cluster: deep inside/low, light on top.
+    GINKGO[i].clusters.forEach((part, k) => {
+      const hi = part.p[1] > 5.0;
+      (hi ? (k % 2 ? l : a) : k % 3 === 0 ? c : k % 3 === 1 ? a : l).push(part);
+    });
     // Fallen leaves on the pavement round the grate (never on the road).
     const r = rng(i * 31 + 5);
     for (let n = 0; n < 18; n++) {
@@ -1209,9 +1340,9 @@ export default function SeoulJourney({ words = [], player }: { words?: string[];
       <Board tex={seoulSign} w={3.6} h={1.2} position={[-2.3, 7.6, NORTH_FRONT + 0.09]} glow={0.8} />
 
       {/* Ginkgos and their leaves, the lamps' lights. */}
-      <Instanced parts={canopies.a} material={ginkgo} geometry={kitGeometry("ball")} castShadow />
-      <Instanced parts={canopies.c} material={ginkgoDeep} geometry={kitGeometry("ball")} castShadow />
-      <Instanced parts={canopies.l} material={ginkgoLight} geometry={kitGeometry("ball")} castShadow />
+      <Instanced parts={canopies.a} material={ginkgo} geometry={kitGeometry("leafy")} castShadow />
+      <Instanced parts={canopies.c} material={ginkgoDeep} geometry={kitGeometry("leafy")} castShadow />
+      <Instanced parts={canopies.l} material={ginkgoLight} geometry={kitGeometry("leafy")} castShadow />
       <Instanced parts={canopies.leaves} material={leafMat} receiveShadow />
       <Instanced parts={LAMP_LIGHTS} material={lampLight} />
 
