@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BoxGeometry, type BufferGeometry, CanvasTexture, DoubleSide, type Group, MeshBasicMaterial, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { MAT, foliage, std } from "../config/materials";
+import { MAT, foliage, hillWoods, std } from "../config/materials";
 import { SEOUL } from "../config/rooms";
 import { REDUCED_MOTION } from "../systems/motion";
 import type { PlayerState } from "../systems/state";
@@ -10,6 +10,7 @@ import { TAXI, newTaxi, stepTaxi } from "../systems/traffic";
 import Batch from "./Batch";
 import Instanced, { type Part } from "./Instanced";
 import { Kit, awning, flowers, jitter, kitGeometry, planter } from "./kit";
+import { DECK_GLASS, TOWER_RED, TOWER_WHITE, towerGeometry } from "./namsanTower";
 import { GateWall } from "./parts";
 import { paintPaving, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
@@ -1188,11 +1189,9 @@ function WalkSignals({ traffic }: { traffic: MutableRefObject<Traffic> }) {
   );
 }
 
-const towerWhite = std("#ECE9E2", 0.55);
-const towerGrey = std("#9AA3AA", 0.5, { metalness: 0.3 });
-const towerRed = std("#D23A3A", 0.6);
-const hillMat = foliage("#587A4E", 0.95);
-const hillFar = foliage("#6C8A62", 0.95);
+// Namsan's wooded hill: the same canopy-shaded woods as the far hills, greener (nearer, less haze).
+const hillMat = hillWoods("#6F8C63");
+const hillFar = hillWoods("#7F9888");
 const HILL: Part[] = [
   { p: [0, -5, 0], s: [52, 28, 36] },
   { p: [-22, -6, 6], s: [36, 20, 26], r: [0, 1.1, 0] },
@@ -1203,41 +1202,33 @@ const HILL_BACK: Part[] = [
   { p: [30, -7, -10], s: [34, 18, 24], r: [0, 1.7, 0] },
 ];
 const deckOn = std("#9ED8FF", 0.3, { emissive: "#7FD4FF", emissiveIntensity: 1.6 });
+deckOn.side = DoubleSide;
 const antennaOn = std("#FF8FA3", 0.4, { emissive: "#FF4D6D", emissiveIntensity: 1.5 });
+antennaOn.side = DoubleSide;
+/** The real tower (part 3's model) at the size it shows from the street. */
+const TOWER_SCALE = 0.62;
 
 /** Namsan Tower on its wooded hill, far to the north; lit once its name is learned. */
 function NamsanTower({ lit }: { lit: boolean }) {
   const { x, z } = SEOUL.tower;
+  const geo = useMemo(() => towerGeometry(20), []);
+  useEffect(
+    () => () => {
+      geo.white.dispose();
+      geo.red.dispose();
+      geo.glass.dispose();
+    },
+    [geo],
+  );
   return (
     <group position={[x, 0, z]}>
       <Instanced parts={HILL} material={hillMat} geometry={kitGeometry("ball")} />
-      <Instanced parts={HILL_BACK} material={hillFar} geometry={kitGeometry("ballLow")} />
-      <mesh position={[0, 14, 0]}>
-        <cylinderGeometry args={[0.42, 0.72, 11, 16]} />
-        <primitive object={towerWhite} attach="material" />
-      </mesh>
-      <mesh position={[0, 20.1, 0]}>
-        <cylinderGeometry args={[1.55, 1.1, 1.1, 24]} />
-        <primitive object={towerWhite} attach="material" />
-      </mesh>
-      <mesh position={[0, 20.95, 0]}>
-        <cylinderGeometry args={[1.75, 1.62, 0.7, 24]} />
-        <primitive object={lit ? deckOn : towerGrey} attach="material" />
-      </mesh>
-      <mesh position={[0, 21.55, 0]}>
-        <cylinderGeometry args={[1.15, 1.62, 0.55, 24]} />
-        <primitive object={towerWhite} attach="material" />
-      </mesh>
-      <mesh position={[0, 25.1, 0]}>
-        <cylinderGeometry args={[0.09, 0.23, 6.6, 10]} />
-        <primitive object={lit ? antennaOn : towerWhite} attach="material" />
-      </mesh>
-      {[23.5, 25.9].map((y) => (
-        <mesh key={y} position={[0, y, 0]}>
-          <cylinderGeometry args={[0.24, 0.24, 0.55, 10]} />
-          <primitive object={lit ? antennaOn : towerRed} attach="material" />
-        </mesh>
-      ))}
+      <Instanced parts={HILL_BACK} material={hillFar} geometry={kitGeometry("ridge")} />
+      <group position={[0, 2.6, 0]} scale={TOWER_SCALE}>
+        <mesh geometry={geo.white} material={TOWER_WHITE} />
+        <mesh geometry={geo.red} material={lit ? antennaOn : TOWER_RED} />
+        <mesh geometry={geo.glass} material={lit ? deckOn : DECK_GLASS} />
+      </group>
     </group>
   );
 }

@@ -321,8 +321,8 @@ float stoneNoise(vec2 p) {
  * woods, lighter towards the sunlit crests. Fades to its average tone where a
  * crown would be finer than a pixel, so the distance never shimmers.
  */
-function hillWoods(): MeshStandardMaterial {
-  const m = new MeshStandardMaterial({ color: new Color(NATURAL.hill), roughness: 1, metalness: 0 });
+export function hillWoods(color: string = NATURAL.hill): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color(color), roughness: 1, metalness: 0 });
   m.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vHillP;")

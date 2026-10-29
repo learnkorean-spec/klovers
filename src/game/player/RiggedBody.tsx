@@ -663,12 +663,12 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
     useLoader.preload(GLTFLoader, `${BASE}${model}.lod.glb`, extend);
     useLoader.preload(GLTFLoader, `${BASE}${model}.far.glb`, extend);
   }
+  // The motions too: without this they only start downloading once the body
+  // has arrived, and a learner's first look at Adam or Lina waits for both in turn.
+  const clipUrls = CLIPS.map((n) => `${BASE}anim-${n === "walk" ? (female ? "walk-f" : "walk-m") : n}.glb`);
+  useLoader.preload(GLTFLoader, clipUrls, extend);
   const person = useLoader(GLTFLoader, `${BASE}${model}.glb`, extend) as GLTF;
-  const anims = useLoader(
-    GLTFLoader,
-    CLIPS.map((n) => `${BASE}anim-${n === "walk" ? (female ? "walk-f" : "walk-m") : n}.glb`),
-    extend,
-  ) as GLTF[];
+  const anims = useLoader(GLTFLoader, clipUrls, extend) as GLTF[];
 
   const root = useMemo(() => {
     const r = cloneSkinned(person.scene) as Group;

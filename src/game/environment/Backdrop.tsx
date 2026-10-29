@@ -253,7 +253,7 @@ function backdropKit(id: string, hx: number, hz: number): Kit {
       const r = 13 + t * 17;
       const y = FLOOR + 28 * Math.sqrt(Math.max(0, 1 - (r / 31) ** 2));
       const sz = 2.4 + Math.abs(jitter(seed * 5, 1)) * 1.6;
-      k.add(i % 3 ? "leafDark" : "leaf", "ballLow", [Math.sin(a) * r, y, Math.cos(a) * r], [sz, sz * 0.8, sz], [0, a, 0]);
+      k.add(i % 3 ? "leafDark" : "leaf", "leafyLow", [Math.sin(a) * r, y, Math.cos(a) * r], [sz, sz * 0.8, sz], [0, a, 0]);
     }
     k.box("river", [0, FLOOR + 0.05, (RIVER_Z[0] + RIVER_Z[1]) / 2], [R1 * 2 + 20, 0.1, RIVER_Z[1] - RIVER_Z[0]]);
     for (const bx of [-40, -8, 26]) {

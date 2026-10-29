@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "river";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -686,6 +686,8 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   bloomB: blossomClump(1, 2, phoneTier() ? 6 : 10),
   // Leaf clusters of a broadleaf crown (the Seoul ginkgos).
   leafy: leafyBall(phoneTier() ? 2 : 3),
+  // Far crowns (backdrop tree rings, Namsan's hillside): as cheap as ballLow, but ragged like leaves.
+  leafyLow: leafyBall(1),
   // One apple, tangerine or potato in a heap: a small smooth ball.
   fruit: lumpyBall(1, 0.05),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
@@ -1116,7 +1118,7 @@ export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed 
   // Far trees (beyond the walls): low-poly, and no shadow (they fall
   // outside the sun's shadow box anyway, so casting would only cost).
   const cyl: GeoKey = "cylLow";
-  const ball: GeoKey = "ballLow";
+  const ball: GeoKey = "leafyLow";
   k.add("woodDark", cyl, [x, 1.0 * s, z], [0.22 * s, 2.0 * s, 0.22 * s], [lean, 0, -lean], !far);
   const crowns: [number, number, number, number][] = [
     [0, 2.55, 0, 1.55], [0.7, 2.35, 0.2, 1.15], [-0.65, 2.3, -0.15, 1.1], [0.1, 3.05, -0.1, 1.05], [0.2, 2.4, -0.7, 0.95],
