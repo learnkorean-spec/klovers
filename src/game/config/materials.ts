@@ -315,6 +315,128 @@ float stoneNoise(vec2 p) {
 }
 
 /**
+ * Seoul seen from the top of Namsan: far-off apartment slabs and office
+ * blocks, every one drawn as a plain box. The shader paints each its own
+ * pale façade tone (cream, white, warm grey, a few blue-glass towers, from a
+ * hash of where it stands) and storeys of windows from its world position —
+ * on every wall; roofs a flat grey. The city is built at reduced scale (see
+ * Backdrop), so a storey is 1.1 m and a bay 0.95 m here. Where a storey
+ * would be finer than a pixel the pattern fades to its average tone, so the
+ * distant city never shimmers. One draw call for the whole city.
+ */
+function cityBlock(): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color("#ffffff"), roughness: 0.85, metalness: 0 });
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vCityP;\nvarying vec3 vCityN;\nvarying float vCityHash;")
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+{
+  vec4 cp = vec4(transformed, 1.0);
+  vec3 cn = objectNormal;
+  vec3 co = modelMatrix[3].xyz;
+  #ifdef USE_INSTANCING
+    cp = instanceMatrix * cp;
+    cn = mat3(instanceMatrix) * cn;
+    co += instanceMatrix[3].xyz;
+  #endif
+  vCityP = (modelMatrix * cp).xyz;
+  vCityN = normalize(mat3(modelMatrix) * cn);
+  vCityHash = fract(sin(dot(co.xz, vec2(12.9898, 78.233))) * 43758.5453);
+}`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vCityP;\nvarying vec3 vCityN;\nvarying float vCityHash;")
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+{
+  vec3 n = normalize(vCityN);
+  bool glassy = vCityHash > 0.86;
+  vec3 wall = vCityHash < 0.3 ? vec3(0.93, 0.91, 0.86) : vCityHash < 0.55 ? vec3(0.86, 0.84, 0.80) : vCityHash < 0.72 ? vec3(0.90, 0.85, 0.76) : vCityHash < 0.86 ? vec3(0.78, 0.77, 0.76) : vec3(0.55, 0.64, 0.72);
+  vec3 glass = glassy ? vec3(0.42, 0.52, 0.62) : vec3(0.44, 0.50, 0.56);
+  vec3 c = wall;
+  if (abs(n.y) > 0.5) {
+    c = vec3(0.62, 0.62, 0.60);
+  } else {
+    vec2 t = normalize(vec2(-n.z, n.x));
+    float u = dot(vCityP.xz, t) / 0.95;
+    float v = vCityP.y / 1.1;
+    float fu = fract(u);
+    float fv = fract(v);
+    float win = step(0.18, fu) * step(fu, 0.82) * step(0.32, fv) * step(fv, 0.86);
+    if (glassy) win = max(win, step(0.3, fv));
+    float w = fract(sin(dot(floor(vec2(u, v)), vec2(41.3, 289.1)) + vCityHash * 17.0) * 43758.5453);
+    vec3 pane = glass * (0.85 + 0.3 * w);
+    float avg = glassy ? 0.75 : 0.33;
+    float aa = clamp(1.6 - 2.2 * max(fwidth(u), fwidth(v)), 0.0, 1.0);
+    vec3 detailed = mix(wall, pane, win);
+    vec3 flat_ = mix(wall, glass, avg);
+    c = mix(flat_, detailed, aa);
+  }
+  diffuseColor.rgb *= c * c;
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => "klovers-city-block";
+  return m;
+}
+
+/** The Han river far below Namsan: still, a little sheen, the sky in it. */
+const RIVER = std("#7F9DB0", 0.25, { metalness: 0.1 });
+
+/**
+ * Love locks on the Namsan fence: one material for every lock body, each
+ * painted its own colour from a hash of where it hangs (red, pink, yellow,
+ * sky blue, green, violet, white, black, or bare brass — the brass ones
+ * metallic). Glossy enamel. One draw call for hundreds of locks. Fresh
+ * material (not the std cache) because it rewrites the shader.
+ */
+function lockPaint(): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color("#ffffff"), roughness: 0.32, metalness: 0.1 });
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying float vLockHash;")
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+{
+  vec3 lo = modelMatrix[3].xyz;
+  #ifdef USE_INSTANCING
+    lo += instanceMatrix[3].xyz;
+  #endif
+  vLockHash = fract(sin(dot(lo, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+}`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying float vLockHash;")
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+float lockMetal = 0.1;
+{
+  int i = int(floor(vLockHash * 11.0));
+  vec3 c = vec3(0.80, 0.16, 0.16);
+  if (i == 1) c = vec3(0.93, 0.42, 0.58);
+  else if (i == 2) c = vec3(0.95, 0.74, 0.16);
+  else if (i == 3) c = vec3(0.24, 0.52, 0.85);
+  else if (i == 4) c = vec3(0.25, 0.66, 0.38);
+  else if (i == 5) c = vec3(0.55, 0.36, 0.80);
+  else if (i == 6) c = vec3(0.94, 0.93, 0.90);
+  else if (i == 7) c = vec3(0.12, 0.12, 0.13);
+  else if (i == 8) c = vec3(0.98, 0.55, 0.62);
+  else if (i >= 9) { c = vec3(0.78, 0.60, 0.28); lockMetal = 0.85; }
+  diffuseColor.rgb *= c * c * 1.1;
+}`,
+      )
+      .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\nmetalnessFactor = lockMetal;");
+  };
+  m.customProgramCacheKey = () => "klovers-lock-paint";
+  return m;
+}
+
+/**
  * A woven basket (대바구니): upright stakes with flat cane woven over and
  * under them, all in the shader from the basket's own unit shape (angle
  * around the axis, height) — so the weave stays the same size on every
@@ -546,6 +668,11 @@ export const MAT = {
   wicker: wicker("#C49A62"),
   /** Dark, damp garden soil in a planting bed. */
   soil: std("#5E4A38", 1, { detail: "plaster" }),
+  /** Seoul far below Namsan: façades with storeys of windows (see cityBlock). */
+  cityBlock: cityBlock(),
+  river: RIVER,
+  /** Love locks on the Namsan fence: each its own enamel colour (see lockPaint). */
+  lockPaint: lockPaint(),
   /** Onggi (옹기): dark brown glazed earthenware — a soft sheen, not a plastic shine. */
   onggi: std("#4E2F22", 0.42),
   /** The warm yellow middle of a garden flower. */

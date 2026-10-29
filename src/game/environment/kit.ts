@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, LatheGeometry, TorusGeometry, Vector2, Vector3, type Material } from "three";
+import { BufferAttribute, BufferGeometry, ConeGeometry, CylinderGeometry, ExtrudeGeometry, IcosahedronGeometry, LatheGeometry, Shape, TorusGeometry, Vector2, Vector3, type Material } from "three";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ACCENT, MAT } from "../config/materials";
 import { pickQuality } from "../systems/quality";
@@ -20,9 +20,9 @@ import { curvedRoof, roofAspect } from "./shapes";
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
-  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi";
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "river";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | "onggi" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -65,6 +65,9 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   sprouts: MAT.sprouts,
   beans: MAT.beans,
   onggi: MAT.onggi,
+  lockPaint: MAT.lockPaint,
+  cityBlock: MAT.cityBlock,
+  river: MAT.river,
 };
 
 /**
@@ -577,6 +580,55 @@ function basketRim(): BufferGeometry {
   return g;
 }
 
+/**
+ * A love lock (사랑의 자물쇠) on Namsan, in metres, hung from its origin:
+ * the body's top edge 3.2 cm below the hanging point, its broad face to ±x.
+ * Two bodies — a plain padlock with rounded corners and a heart — and the
+ * steel shackle that goes with either (a separate shape so it can be steel
+ * while the body is painted). Few triangles: hundreds hang on the fence.
+ */
+function lockBody(heart: boolean): BufferGeometry {
+  const s = new Shape();
+  if (heart) {
+    // Lobes at the top (y 0 … −0.012), point at the bottom (−0.06).
+    const w = 0.031;
+    s.moveTo(0, -0.062);
+    s.bezierCurveTo(-w * 0.55, -0.045, -w, -0.03, -w, -0.012);
+    s.bezierCurveTo(-w, 0.004, -w * 0.45, 0.008, 0, -0.006);
+    s.bezierCurveTo(w * 0.45, 0.008, w, 0.004, w, -0.012);
+    s.bezierCurveTo(w, -0.03, w * 0.55, -0.045, 0, -0.062);
+  } else {
+    const w = 0.026;
+    const h = 0.056;
+    const r = 0.008;
+    s.moveTo(-w, 0);
+    s.lineTo(w, 0);
+    s.lineTo(w, -h + r);
+    s.quadraticCurveTo(w, -h, w - r, -h);
+    s.lineTo(-w + r, -h);
+    s.quadraticCurveTo(-w, -h, -w, -h + r);
+    s.lineTo(-w, 0);
+  }
+  const g = new ExtrudeGeometry(s, { depth: 0.018, bevelEnabled: false, curveSegments: heart ? 3 : 2 });
+  // Centred on its thickness, broad face turned to ±x, top 3.2 cm under the hook.
+  g.translate(0, -0.032, -0.009);
+  g.rotateY(Math.PI / 2);
+  return g;
+}
+
+function lockShackle(): BufferGeometry {
+  // A half ring over the hook (its plane facing ±x, like the body) and two legs into the body.
+  const arc = new TorusGeometry(0.016, 0.0035, 3, 5, Math.PI);
+  arc.rotateY(Math.PI / 2);
+  const legs = [-1, 1].map((sz) => {
+    const c = new CylinderGeometry(0.0035, 0.0035, 0.034, 3, 1, true);
+    c.translate(0, -0.017, sz * 0.016);
+    return c;
+  });
+  const g = mergeGeometries([arc.toNonIndexed(), ...legs.map((c) => c.toNonIndexed())]);
+  return g ?? arc;
+}
+
 function phoneTier(): boolean {
   try {
     return pickQuality().maxTexture <= 1024;
@@ -616,6 +668,9 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   basket: basketBody(),
   basketRim: basketRim(),
   onggi: onggiJar(),
+  lockBox: lockBody(false),
+  lockHeart: lockBody(true),
+  shackle: lockShackle(),
 };
 
 export function kitGeometry(key: GeoKey): BufferGeometry {

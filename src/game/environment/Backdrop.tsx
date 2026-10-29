@@ -5,6 +5,7 @@ import { REDUCED_MOTION } from "../systems/motion";
 import { MAT } from "../config/materials";
 import Batch from "./Batch";
 import { Kit, jitter, tree } from "./kit";
+import { pickQuality } from "../systems/quality";
 
 /**
  * What lies beyond the walls, shared by every room: a warm late-afternoon
@@ -230,28 +231,79 @@ function backdropKit(id: string, hx: number, hz: number): Kit {
   };
   // Seoul is a city: its blocks of buildings stand where the tree rings would.
   if (id === "seoul-namsan") {
-    // On top of Namsan: Seoul spread out far below the lookout, a city of
-    // pale blocks fading into the haze, in rings out to the far hills.
-    for (let i = 0; i < 260; i++) {
+    // On top of Namsan: Seoul spread out far below the lookout. The wooded
+    // hill falls away under the terrace to the city floor 30 m down; then
+    // apartment slabs and office blocks (windows painted by MAT.cityBlock)
+    // out to the haze, taller downtown (north, behind the tower) and across
+    // the Han river, which crosses the south with its bridges. Built at a
+    // reduced scale (MAT.cityBlock's storeys are scaled to match) so the
+    // whole city stays far below eye level inside the haze.
+    const FLOOR = -30;
+    const R0 = 30;
+    const R1 = 88;
+    const RIVER_Z = [56, 66] as const;
+    k.add("leafDark", "ballLow", [0, FLOOR, 0], [62, 56, 62]);
+    k.add("stone", "cylLow", [0, FLOOR - 0.5, 0], [R1 * 2 + 30, 1, R1 * 2 + 30]);
+    // Woods on the hillside: dark crowns in the slope.
+    const woods = pickQuality().maxTexture <= 1024 ? 60 : 110;
+    for (let i = 0; i < woods; i++) {
       seed++;
       const a = jitter(seed, Math.PI);
-      const r = 26 + Math.abs(jitter(seed * 3, 1)) * 48;
-      const w = 1.6 + Math.abs(jitter(seed * 5, 1)) * 3.2;
-      const h = 2 + Math.abs(jitter(seed * 7, 1)) * (r < 45 ? 11 : 6);
-      k.box(i % 5 === 0 ? "charcoal" : i % 3 === 0 ? "stoneWarm" : "plaster", [Math.sin(a) * r, -16 + h / 2, Math.cos(a) * r], [w, h, w * (0.8 + Math.abs(jitter(seed * 9, 0.4)))]);
+      const t = Math.abs(jitter(seed * 3, 1));
+      const r = 13 + t * 17;
+      const y = FLOOR + 28 * Math.sqrt(Math.max(0, 1 - (r / 31) ** 2));
+      const sz = 2.4 + Math.abs(jitter(seed * 5, 1)) * 1.6;
+      k.add(i % 3 ? "leafDark" : "leaf", "ballLow", [Math.sin(a) * r, y, Math.cos(a) * r], [sz, sz * 0.8, sz], [0, a, 0]);
     }
-    // The hill itself falling away under the plaza.
-    k.add("leafDark", "ballLow", [0, -12, 0], [70, 22, 70]);
+    k.box("river", [0, FLOOR + 0.05, (RIVER_Z[0] + RIVER_Z[1]) / 2], [R1 * 2 + 20, 0.1, RIVER_Z[1] - RIVER_Z[0]]);
+    for (const bx of [-40, -8, 26]) {
+      k.box("stoneWarm", [bx, FLOOR + 0.9, (RIVER_Z[0] + RIVER_Z[1]) / 2], [1.6, 0.3, RIVER_Z[1] - RIVER_Z[0] + 4]);
+      for (let j = 0; j < 4; j++) k.box("stoneWarm", [bx, FLOOR + 0.4, RIVER_Z[0] + 1.2 + j * 2.5], [0.6, 0.9, 0.5]);
+    }
+    let placed = 0;
+    for (let i = 0; i < 3000 && placed < 760; i++) {
+      seed++;
+      const a = jitter(seed, Math.PI);
+      const r = R0 + Math.abs(jitter(seed * 3, 1)) * (R1 - R0);
+      const x = Math.sin(a) * r;
+      const z = Math.cos(a) * r;
+      if (z > RIVER_Z[0] - 2 && z < RIVER_Z[1] + 2) continue;
+      placed++;
+      const downtown = (z < -30 && Math.abs(x) < 40) || (z > RIVER_Z[1] + 2 && Math.abs(x) < 45);
+      const kind = Math.abs(jitter(seed * 5, 1));
+      const yaw = Math.round(a / (Math.PI / 2)) * (Math.PI / 2) + jitter(seed * 13, 0.12);
+      let w: number, d: number, h: number;
+      if (downtown && kind < 0.45) {
+        w = 3 + kind * 3;
+        d = w * (0.8 + Math.abs(jitter(seed * 9, 0.3)));
+        h = 10 + Math.abs(jitter(seed * 7, 1)) * 12;
+      } else if (kind < 0.6) {
+        // Apartment slabs (아파트), long and thin.
+        w = 5.5 + Math.abs(jitter(seed * 9, 1)) * 4;
+        d = 1.3;
+        h = 8 + Math.abs(jitter(seed * 7, 1)) * 7;
+      } else {
+        w = 2 + Math.abs(jitter(seed * 9, 1)) * 2.4;
+        d = w * (0.7 + Math.abs(jitter(seed * 11, 0.4)));
+        h = 2.4 + Math.abs(jitter(seed * 7, 1)) * 4.5;
+      }
+      // Nearer the hill the blocks are lower, so the slope still reads.
+      h *= 0.65 + 0.35 * Math.min(1, (r - R0) / 20);
+      k.add("cityBlock", "box", [x, FLOOR + h / 2, z], [w, h, d], [0, yaw, 0]);
+    }
   } else if (id !== "seoul-journey" && id !== "seoul-market") {
     ring(hx + 3.5, hz + 3.5, 4.2, 1.35);
     ring(hx + 9, hz + 9, 5.5, 1.8);
   }
   // Far hills: soft rounded ridges, blued and faded by the haze.
+  // (On Namsan they stand beyond the city, rising from its floor 30 m down.)
+  const namsan = id === "seoul-namsan";
   for (let i = 0; i < 18; i++) {
     const a = (i / 18) * Math.PI * 2 + jitter(i, 0.15);
-    const r = 70 + jitter(i * 7, 10);
-    const s = 30 + jitter(i * 3, 10);
-    k.add("hill", "ballLow", [Math.sin(a) * r, -s * 0.12, Math.cos(a) * r], [s, s * 0.5 + jitter(i * 11, 4), s * 0.7], [0, a, 0]);
+    const r = (namsan ? 100 : 70) + jitter(i * 7, namsan ? 4 : 10);
+    const s = (namsan ? 46 : 30) + jitter(i * 3, 10);
+    const base = namsan ? -30 : -s * 0.12;
+    k.add("hill", "ballLow", [Math.sin(a) * r, base, Math.cos(a) * r], [s, s * (namsan ? 0.75 : 0.5) + jitter(i * 11, 4), s * 0.7], [0, a, 0]);
   }
   kits.set(id, k);
   return k;
