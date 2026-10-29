@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "river";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "fruit" | "ballLow" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -629,6 +629,32 @@ function lockShackle(): BufferGeometry {
   return g ?? arc;
 }
 
+/**
+ * A far hill: a smooth ball whose upper half is lifted into a ridge line
+ * with two or three summits and saddles along its length (local x), and
+ * gentle spurs down its flanks. Smoothly shaded — the old faceted ball read
+ * as low-poly cardboard behind the city and over the rooftops.
+ */
+function ridgeHill(detail: number): BufferGeometry {
+  const raw = new IcosahedronGeometry(0.5, detail);
+  raw.deleteAttribute("normal");
+  raw.deleteAttribute("uv");
+  const g = mergeVertices(raw, 1e-4);
+  const pos = g.getAttribute("position");
+  const v = new Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).normalize();
+    const crest = 0.55 * Math.sin(v.x * 4.6 + 0.9) + 0.25 * Math.sin(v.x * 9.0 + v.z * 2.0 + 2.1) + 0.06 * Math.sin(v.x * 19.0 + v.z * 7.0 + 0.4);
+    const spur = 0.06 * Math.sin(Math.atan2(v.z, v.x) * 9.0 + v.y * 4.0);
+    const up = Math.max(0, v.y);
+    v.y *= 1 + 0.2 * crest * up * up;
+    v.multiplyScalar(0.5 * (1 + spur * up));
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
 function phoneTier(): boolean {
   try {
     return pickQuality().maxTexture <= 1024;
@@ -664,6 +690,8 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   fruit: lumpyBall(1, 0.05),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
   ballLow: lumpyBall(1, 0.12),
+  // The far hills round every room.
+  ridge: ridgeHill(phoneTier() ? 2 : 3),
   cylLow: new CylinderGeometry(0.5, 0.5, 1, 6),
   basket: basketBody(),
   basketRim: basketRim(),
@@ -1183,6 +1211,11 @@ function cherryTree(k: Kit, x: number, z: number, s: number, seed: number): void
   k.add("woodDark", "cyl", [x, 0.12 * s, z], [0.42 * s, 0.24 * s, 0.42 * s]);
   const low = rod(x, 0, z, seed, Math.abs(lean), 0.8 * s, 0.27 * s, true);
   const [fx, fork, fz] = rod(low[0], low[1], low[2], seed + 2.4, Math.abs(lean) * 1.6, 0.62 * s, 0.22 * s, true);
+  // Knuckles where one piece of wood meets the next: without them the open
+  // ends of the rods showed as cut pipes from a low view.
+  const knuckle = (p: V3, w: number) => k.add("woodDark", "fruit", p, [w, w, w]);
+  knuckle(low, 0.25 * s);
+  knuckle([fx, fork, fz], 0.24 * s);
   const n = 5;
   for (let i = 0; i < n; i++) {
     const a = seed * 1.7 + (i / n) * Math.PI * 2 + jitter(seed + i * 11, 0.35);
@@ -1191,6 +1224,8 @@ function cherryTree(k: Kit, x: number, z: number, s: number, seed: number): void
     // Each limb bends upward a little toward its tip, thinning as it goes.
     const mid = rod(fx, fork, fz, a, t, len * 0.55, 0.13 * s, i < 3);
     const tip = rod(mid[0], mid[1], mid[2], a + jitter(seed + i, 0.2), t - 0.22, len * 0.5, 0.08 * s, false);
+    knuckle(mid, 0.13 * s);
+    knuckle(tip, 0.08 * s);
     // Two thin twigs: one out and down from the bend, one on from the tip.
     const sa = a + (i % 2 ? 0.75 : -0.75);
     const side = rod(mid[0], mid[1], mid[2], sa, t + 0.45, 0.62 * s, 0.05 * s, false);

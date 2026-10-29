@@ -303,7 +303,7 @@ function backdropKit(id: string, hx: number, hz: number): Kit {
     const r = (namsan ? 100 : 70) + jitter(i * 7, namsan ? 4 : 10);
     const s = (namsan ? 46 : 30) + jitter(i * 3, 10);
     const base = namsan ? -30 : -s * 0.12;
-    k.add("hill", "ballLow", [Math.sin(a) * r, base, Math.cos(a) * r], [s, s * (namsan ? 0.75 : 0.5) + jitter(i * 11, 4), s * 0.7], [0, a, 0]);
+    k.add("hill", "ridge", [Math.sin(a) * r, base, Math.cos(a) * r], [s, s * (namsan ? 0.75 : 0.5) + jitter(i * 11, 4), s * 0.7], [0, a, 0]);
   }
   kits.set(id, k);
   return k;

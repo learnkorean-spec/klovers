@@ -1,4 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { BoxGeometry, BufferGeometry, Color, DoubleSide, LatheGeometry, MeshStandardMaterial, Vector2 } from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { NAMSAN } from "../config/rooms";
 import { FLOOR_GRID } from "../config/world";
 import { MAT, std } from "../config/materials";
@@ -24,9 +26,6 @@ import { floorBreakup, FLOOR_BREAKUP_KEY, paintPaving, useTiledTexture, usePhoto
 const HW = NAMSAN.halfWidth;
 const HD = NAMSAN.halfDepth;
 const TOWER_Z = NAMSAN.base.z - 9;
-const WHITE = std("#F2F0EA", 0.5);
-const RED = std("#C8463C", 0.6);
-const GLASS = std("#7E97A8", 0.15, { metalness: 0.3 });
 
 function terraceKit(): Kit {
   const k = new Kit();
@@ -143,6 +142,36 @@ function terraceKit(): Kit {
   }
   k.box("plaster", [0, 3.08, BZ + 0.7], [4.6, 0.12, 1.4], true);
   k.box("steel", [0, 3.0, BZ + 1.38], [4.6, 0.06, 0.05]);
+  // The base building: pilasters either side of the glass and at the
+  // corners, a stone plinth under the wings, frames on the wings' ribbon
+  // windows, a parapet with a steel coping, and a set-back upper storey of
+  // glass on the roof (the tower rises from behind it).
+  const wing = (BW + 6) / 2;
+  for (const sx of [-1, 1]) {
+    for (const x of [BW / 2 + 0.15, wing - 0.15]) k.box("plaster", [sx * x, 2.2, BZ + 0.09], [0.3, 4.4, 0.18], true);
+    k.box("stoneWarm", [sx * (BW / 2 + 1.5), 0.22, BZ + 0.05], [2.7, 0.44, 0.1]);
+    const cx = sx * (BW / 2 + 1.55);
+    for (const y of [3.38, 4.06]) k.box("steel", [cx, y, BZ + 0.04], [2.36, 0.05, 0.06]);
+    for (let i = 0; i <= 4; i++) k.box("steel", [cx - 1.15 + i * 0.575, 3.72, BZ + 0.04], [0.04, 0.66, 0.05]);
+    k.box("plaster", [cx, 3.33, BZ + 0.08], [2.5, 0.06, 0.14]);
+    for (let i = 0; i <= 6; i++) k.box("steel", [sx * (wing + 0.02), 3.72, BZ - 5.3 + i * 0.767], [0.05, 0.66, 0.04]);
+  }
+  k.box("plaster", [0, 4.56, BZ - 3], [BW + 6.1, 0.32, 6.1], true);
+  k.box("steel", [0, 4.74, BZ - 3], [BW + 6.24, 0.05, 6.24]);
+  const UZ = BZ - 3.35;
+  k.box("plaster", [0, 4.8, UZ], [8.8, 0.2, 3.7]);
+  k.box("plaster", [0, 6.36, UZ], [9.2, 0.32, 4.1], true);
+  k.box("steel", [0, 6.54, UZ], [9.3, 0.05, 4.2]);
+  for (let i = 0; i <= 8; i++) k.box("steel", [-4.3 + i * 1.075, 5.55, UZ + 1.77], [0.06, 1.3, 0.06]);
+  for (const sx of [-1, 1]) for (let i = 0; i <= 3; i++) k.box("steel", [sx * 4.32, 5.55, UZ - 1.75 + i * 1.167], [0.06, 1.3, 0.06]);
+  // Mullions round the observation deck's two window bands.
+  const decks = phone ? 28 : 44;
+  for (const [y, r] of [[32.81, 3.07], [34.1, 3.29]] as const) {
+    for (let i = 0; i < decks; i++) {
+      const a = (i / decks) * Math.PI * 2;
+      k.box("charcoal", [Math.sin(a) * r, y, TOWER_Z + Math.cos(a) * r], [0.035, 1.0, 0.1], false, [0, a, 0]);
+    }
+  }
   // The ticket booth: a small kiosk with a window.
   const T = NAMSAN.booth;
   k.box("plaster", [T.x, 1.25, T.z - 0.15], [T.w, 2.5, T.d - 0.3], true);
@@ -153,8 +182,153 @@ function terraceKit(): Kit {
 
 let TERRACE: Kit | null = null;
 
+type Profile = [number, number][];
+
+/**
+ * Turns profiles (radius, height) about the y axis and merges them. Each
+ * profile is shaded smoothly along its length; where one profile meets the
+ * next the edge stays crisp (a ledge, a lip, a band).
+ */
+function turned(profiles: Profile[], segs: number): BufferGeometry {
+  const parts = profiles.map((pr) => {
+    const g = new LatheGeometry(pr.map(([r, y]) => new Vector2(r, y)), segs);
+    g.deleteAttribute("uv");
+    return g;
+  });
+  return mergeGeometries(parts) ?? parts[0];
+}
+
+/** Flat boxes, merged into one shape (glass bands of the base building). */
+function boxes(list: { p: [number, number, number]; s: [number, number, number] }[]): BufferGeometry {
+  const parts = list.map(({ p, s }) => {
+    const g = new BoxGeometry(...s);
+    g.deleteAttribute("uv");
+    g.translate(...p);
+    return g;
+  });
+  return mergeGeometries(parts) ?? parts[0];
+}
+
+/**
+ * Tinted glass that shows the sky: the reflected view direction picks a
+ * colour between the hazy horizon and the blue above, strongest at grazing
+ * angles (Fresnel). There is no environment map in the world, so plain
+ * glass read as flat grey plastic.
+ */
+function skyGlass(color: string): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color(color), roughness: 0.2, metalness: 0.1, side: DoubleSide });
+  m.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <opaque_fragment>",
+      `{
+  vec3 toCam = normalize(vViewPosition);
+  vec3 nn = gl_FrontFacing ? normal : -normal;
+  float fres = pow(1.0 - clamp(abs(dot(nn, toCam)), 0.0, 1.0), 3.0);
+  vec3 rw = (vec4(reflect(-toCam, nn), 0.0) * viewMatrix).xyz;
+  float up = clamp(rw.y * 0.5 + 0.5, 0.0, 1.0);
+  vec3 sky = mix(vec3(0.78, 0.76, 0.72), vec3(0.50, 0.64, 0.82), smoothstep(0.5, 0.95, up));
+  sky = mix(vec3(0.30, 0.33, 0.34), sky, smoothstep(0.38, 0.52, up));
+  outgoingLight = mix(outgoingLight, sky, 0.22 + 0.6 * fres);
+}
+#include <opaque_fragment>`,
+    );
+  };
+  m.customProgramCacheKey = () => "klovers-sky-glass";
+  return m;
+}
+
+const TOWER_WHITE = std("#F2F0EA", 0.5);
+TOWER_WHITE.side = DoubleSide;
+const TOWER_RED = std("#C8463C", 0.6);
+TOWER_RED.side = DoubleSide;
+const DECK_GLASS = skyGlass("#4F6577");
+
+/**
+ * N Seoul Tower, by its real silhouette: a white shaft tapering as it rises
+ * and flaring like a trumpet bell under the observation deck; two leaning
+ * window bands split by a ledge; a lipped roof sloping in to the mast
+ * housing; then the mast — white, with service platforms, and red and white
+ * bands to the tip. Built as turned profiles: three shapes in all.
+ */
+function towerGeometry(phone: boolean): { white: BufferGeometry; red: BufferGeometry; glass: BufferGeometry } {
+  const segs = phone ? 32 : 56;
+  const shaft: Profile = [];
+  for (let i = 0; i <= 18; i++) {
+    const t = i / 18;
+    shaft.push([1.12 + 0.68 * Math.pow(1 - t, 1.6), 2 + t * 27]);
+  }
+  // The bell under the deck, continuing the shaft without a crease.
+  for (let i = 1; i <= 10; i++) {
+    const s = i / 10;
+    shaft.push([1.12 + 1.88 * Math.pow(s, 2.4), 29 + 3.2 * s]);
+  }
+  const white: Profile[] = [
+    shaft,
+    [[3.0, 32.2], [3.14, 32.2]],
+    [[3.14, 32.2], [3.14, 32.32]],
+    [[3.14, 32.32], [2.98, 32.32]],
+    // The ledge between the two window bands.
+    [[3.08, 33.3], [3.42, 33.3]],
+    [[3.42, 33.3], [3.42, 33.6]],
+    [[3.42, 33.6], [3.2, 33.6]],
+    // The roof: a lip, then sloping in to the mast housing.
+    [[3.32, 34.6], [3.52, 34.6]],
+    [[3.52, 34.6], [3.52, 34.8]],
+    [[3.52, 34.8], [3.1, 35.02], [2.4, 35.28], [1.42, 35.46]],
+    [[1.42, 35.46], [1.42, 36.6]],
+    [[1.42, 36.6], [0.62, 36.76]],
+    [[0.62, 36.76], [0.5, 40.0]],
+  ];
+  // Service platforms on the mast.
+  for (const [y, r] of [[40.0, 1.0], [44.6, 0.74]] as const) {
+    white.push([[0.3, y], [r, y]], [[r, y], [r, y + 0.16]], [[r, y + 0.16], [0.3, y + 0.16]]);
+  }
+  // Bands, red and white, narrowing to the tip.
+  const red: Profile[] = [];
+  const bands = 9;
+  for (let i = 0; i < bands; i++) {
+    const y0 = 40.16 + i * 1.05;
+    const r0 = 0.44 - i * 0.03;
+    const band: Profile = [[r0, y0], [r0 - 0.03, y0 + 1.05]];
+    (i % 2 ? white : red).push(band);
+  }
+  white.push([[0.12, 49.6], [0.05, 52.4]]);
+  const glass: Profile[] = [
+    [[2.98, 32.32], [3.12, 33.3]],
+    [[3.2, 33.6], [3.34, 34.6]],
+  ];
+  return { white: turned(white, segs), red: turned(red, segs), glass: turned(glass, segs) };
+}
+
+/** The base building's glass: the front, ribbon windows on the wings, the set-back upper storey. */
+function baseGlass(): BufferGeometry {
+  const BZ = NAMSAN.base.z;
+  const W = NAMSAN.base.w;
+  const wing = (W + 6) / 2;
+  return boxes([
+    { p: [0, 1.6, BZ - 0.02], s: [W, 3.0, 0.1] },
+    // Ribbon windows in the wings' upper storey.
+    ...[-1, 1].map((sx) => ({ p: [sx * (W / 2 + 1.55), 3.72, BZ + 0.0] as [number, number, number], s: [2.3, 0.62, 0.06] as [number, number, number] })),
+    // And along both sides.
+    ...[-1, 1].map((sx) => ({ p: [sx * (wing + 0.0), 3.72, BZ - 3] as [number, number, number], s: [0.06, 0.62, 4.6] as [number, number, number] })),
+    // The upper storey, set back on the roof: a band of glass all round.
+    { p: [0, 5.55, BZ - 3.35], s: [8.6, 1.3, 3.5] },
+  ]);
+}
+
 /** The tower: base building, tapering shaft, the observation deck, the antenna. */
 function Tower() {
+  const geo = useMemo(() => towerGeometry(pickQuality().maxTexture <= 1024), []);
+  const glass = useMemo(() => baseGlass(), []);
+  useEffect(
+    () => () => {
+      geo.white.dispose();
+      geo.red.dispose();
+      geo.glass.dispose();
+      glass.dispose();
+    },
+    [geo, glass],
+  );
   return (
     <group>
       {/* The base building closing the plaza's north side, its glass front facing the plaza. */}
@@ -162,39 +336,12 @@ function Tower() {
         <boxGeometry args={[NAMSAN.base.w + 6, 4.4, 6]} />
         <primitive object={MAT.plaster} attach="material" />
       </mesh>
-      <mesh position={[0, 1.6, NAMSAN.base.z - 0.02]}>
-        <boxGeometry args={[NAMSAN.base.w, 3.0, 0.1]} />
-        <primitive object={GLASS} attach="material" />
-      </mesh>
-      <mesh position={[0, 4.5, NAMSAN.base.z - 3]}>
-        <boxGeometry args={[NAMSAN.base.w + 6.4, 0.2, 6.4]} />
-        <primitive object={MAT.charcoal} attach="material" />
-      </mesh>
-      {/* The shaft rises behind the base. */}
-      <mesh castShadow position={[0, 18, TOWER_Z]}>
-        <cylinderGeometry args={[1.1, 1.7, 32, 24]} />
-        <primitive object={WHITE} attach="material" />
-      </mesh>
-      {/* The observation deck: layered rings with a band of windows. */}
-      <mesh castShadow position={[0, 32, TOWER_Z]}>
-        <cylinderGeometry args={[3.0, 2.4, 2.2, 32]} />
-        <primitive object={WHITE} attach="material" />
-      </mesh>
-      <mesh position={[0, 33.6, TOWER_Z]}>
-        <cylinderGeometry args={[3.3, 3.3, 1.2, 32]} />
-        <primitive object={GLASS} attach="material" />
-      </mesh>
-      <mesh castShadow position={[0, 34.8, TOWER_Z]}>
-        <cylinderGeometry args={[2.6, 3.4, 1.2, 32]} />
-        <primitive object={WHITE} attach="material" />
-      </mesh>
-      {/* The antenna, red and white bands to the top. */}
-      {Array.from({ length: 6 }, (_, i) => (
-        <mesh key={i} position={[0, 37 + i * 2.2, TOWER_Z]}>
-          <cylinderGeometry args={[0.32 - i * 0.04, 0.36 - i * 0.04, 2.2, 12]} />
-          <primitive object={i % 2 ? WHITE : RED} attach="material" />
-        </mesh>
-      ))}
+      <mesh geometry={glass} material={DECK_GLASS} />
+      <group position={[0, 0, TOWER_Z]}>
+        <mesh castShadow geometry={geo.white} material={TOWER_WHITE} />
+        <mesh geometry={geo.red} material={TOWER_RED} />
+        <mesh geometry={geo.glass} material={DECK_GLASS} />
+      </group>
     </group>
   );
 }

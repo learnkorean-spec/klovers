@@ -315,6 +315,71 @@ float stoneNoise(vec2 p) {
 }
 
 /**
+ * The far hills: wooded slopes seen through the haze. Smooth geometry
+ * (kit "ridge") shaded with crowns of trees from the world position — small
+ * dark gaps between rounded canopies, bigger patches of lighter and darker
+ * woods, lighter towards the sunlit crests. Fades to its average tone where a
+ * crown would be finer than a pixel, so the distance never shimmers.
+ */
+function hillWoods(): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color(NATURAL.hill), roughness: 1, metalness: 0 });
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vHillP;")
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+{
+  vec4 hp = vec4(transformed, 1.0);
+  #ifdef USE_INSTANCING
+    hp = instanceMatrix * hp;
+  #endif
+  vHillP = (modelMatrix * hp).xyz;
+}`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+varying vec3 vHillP;
+float hillNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453);
+  float b = fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);
+  float c = fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);
+  float d = fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}`,
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+{
+  vec2 q = vHillP.xz + vec2(vHillP.y * 0.7, -vHillP.y * 0.4);
+  // Crowns: a cell pattern of rounded canopies with dark gaps between.
+  vec2 cq = q / 2.0;
+  vec2 ci = floor(cq);
+  vec2 cf = fract(cq) - 0.5;
+  float jx = fract(sin(dot(ci, vec2(41.3, 289.1))) * 43758.5453) - 0.5;
+  float jy = fract(sin(dot(ci, vec2(17.7, 113.5))) * 24634.6345) - 0.5;
+  float d = length(cf - 0.35 * vec2(jx, jy));
+  float crown = 1.0 - smoothstep(0.28, 0.5, d);
+  float aa = clamp(1.5 - 1.2 * length(fwidth(cq)), 0.0, 1.0);
+  float crowns = mix(0.93, mix(0.87, 1.0, crown) * (0.94 + 0.12 * hillNoise(q / 1.3)), aa);
+  float woodsPatch = 0.84 + 0.3 * hillNoise(q / 14.0) + 0.08 * hillNoise(q / 5.0);
+  float crest = mix(0.92, 1.1, smoothstep(-10.0, 16.0, vHillP.y));
+  vec3 woods = mix(vec3(0.86, 1.0, 0.94), vec3(1.06, 1.02, 0.9), hillNoise(q / 22.0 + 7.0));
+  diffuseColor.rgb *= crowns * woodsPatch * crest * woods;
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => "klovers-hill-woods";
+  return m;
+}
+
+/**
  * Seoul seen from the top of Namsan: far-off apartment slabs and office
  * blocks, every one drawn as a plain box. The shader paints each its own
  * pale façade tone (cream, white, warm grey, a few blue-glass towers, from a
@@ -641,7 +706,7 @@ export const MAT = {
   moss: std(NATURAL.moss, 1, { detail: "stone" }),
   /** Raked gravel either side of a stone path. */
   gravel: std("#A99A7F", 1, { detail: "stone" }),
-  hill: std(NATURAL.hill, 1, { flatShading: true }),
+  hill: hillWoods(),
   fabric: std(PALETTE.ivory, 0.92, { detail: "fabric" }),
   clothRed: std(NATURAL.clothRed, 0.92, { detail: "fabric" }),
   clothBlue: std(NATURAL.clothBlue, 0.92, { detail: "fabric" }),
