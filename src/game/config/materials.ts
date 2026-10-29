@@ -749,4 +749,30 @@ export const MAT = {
   paper: std("#FFF6E6", 0.95, { emissive: "#FFDDAA", emissiveIntensity: 0.45 }),
   /** Lantern paper: a warm glow, the world's "lights" without real lights. */
   lanternPaper: std("#FFEBC8", 0.9, { emissive: "#FFBE62", emissiveIntensity: 0.95 }),
+  /** Glazed white china: cups, saucers, plates. */
+  ceramic: std("#F6F3EE", 0.28),
+  /** Clear glass (a cake case, coffee jars): faint, catches a little light. */
+  glass: clearGlass(),
+  /** Café bakes: sponge, cream, strawberries. */
+  sponge: std("#EBC88F", 0.85),
+  cream: std("#FFF8EE", 0.6),
+  berry: std("#C42A31", 0.32),
 } as const;
+
+/** Thin clear glass: mostly see-through, brighter at grazing angles. */
+function clearGlass(): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color("#DDE8EA"), roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.16, depthWrite: false });
+  m.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <opaque_fragment>",
+      `{
+  float fres = pow(1.0 - clamp(abs(dot(normalize(normal), normalize(vViewPosition))), 0.0, 1.0), 2.5);
+  diffuseColor.a = clamp(diffuseColor.a + 0.3 * fres, 0.0, 0.42);
+  outgoingLight += vec3(0.12) * fres;
+}
+#include <opaque_fragment>`,
+    );
+  };
+  m.customProgramCacheKey = () => "klovers-clear-glass";
+  return m;
+}

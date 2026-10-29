@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { CatmullRomCurve3, ExtrudeGeometry, LatheGeometry, Shape, TubeGeometry, Vector2, Vector3 } from "three";
 import { HOUSE } from "../config/rooms";
 import { PALETTE } from "../config/world";
-import { std } from "../config/materials";
+import { MAT, std } from "../config/materials";
 import { GateWall, InfoBoard as Board } from "./parts";
 import { paintPlanks, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
@@ -81,16 +81,29 @@ function useCloverGeometry() {
 function CloverDais() {
   const { x, z, r } = HOUSE.dais;
   const { leaf, stem } = useCloverGeometry();
-  useEffect(() => () => { leaf.dispose(); stem.dispose(); }, [leaf, stem]);
+  // The dais, turned like cut stone: a broad foot with a chamfer, a cove up
+  // into the drum, and a lipped top with a softened edge.
+  const dais = useMemo(() => {
+    const p: [number, number][] = [
+      [0, 0], [r + 0.2, 0], [r + 0.2, 0.05], [r + 0.15, 0.08], [r + 0.06, 0.095], [r + 0.02, 0.11], [r, 0.13],
+      [r, 0.27], [r + 0.03, 0.285], [r + 0.06, 0.3], [r + 0.065, 0.33], [r + 0.05, 0.35], [r + 0.02, 0.36], [0, 0.36],
+    ];
+    return new LatheGeometry(p.map(([a, b]) => new Vector2(a, b)), 64);
+  }, [r]);
+  useEffect(() => () => { leaf.dispose(); stem.dispose(); dais.dispose(); }, [leaf, stem, dais]);
   return (
     <group position={[x, 0, z]}>
-      <mesh castShadow receiveShadow position={[0, 0.16, 0]}>
-        <cylinderGeometry args={[r, r + 0.12, 0.32, 40]} />
-        <primitive object={std("#EFE6D4", 0.9)} attach="material" />
+      <mesh castShadow receiveShadow geometry={dais}>
+        <primitive object={MAT.stoneWarm} attach="material" />
       </mesh>
-      <mesh receiveShadow position={[0, 0.36, 0]}>
-        <cylinderGeometry args={[r - 0.25, r - 0.2, 0.1, 40]} />
-        <primitive object={std(PALETTE.woodWarm, 0.7)} attach="material" />
+      {/* A brass ring round the inlaid wooden top. */}
+      <mesh receiveShadow position={[0, 0.372, 0]}>
+        <cylinderGeometry args={[r - 0.17, r - 0.17, 0.03, 48]} />
+        <primitive object={std("#C9A646", 0.35, { metalness: 0.6 })} attach="material" />
+      </mesh>
+      <mesh receiveShadow position={[0, 0.38, 0]}>
+        <cylinderGeometry args={[r - 0.22, r - 0.22, 0.03, 48]} />
+        <primitive object={MAT.woodWarm} attach="material" />
       </mesh>
       {/* Four leaves in an X, each tipped a little toward the door. */}
       <group position={[0, 1.02, -0.02]}>

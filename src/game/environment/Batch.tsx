@@ -19,7 +19,7 @@ export default function Batch({ kit }: { kit: Kit }) {
             material={KIT_MATERIALS[mat]}
             geometry={kitGeometry(geo)}
             castShadow={cast === "1"}
-            receiveShadow={mat !== "accent" && mat !== "lantern" && mat !== "paper" && mat !== "hill"}
+            receiveShadow={mat !== "accent" && mat !== "lantern" && mat !== "paper" && mat !== "hill" && mat !== "glass"}
           />
         );
       })}
