@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -177,6 +177,55 @@ function blossomClump(detail: number, variant: number, n: number): BufferGeometr
   const merged = mergeGeometries(parts, false);
   parts.forEach((g) => g.dispose());
   return merged ?? lumpyBall(detail, 0.24);
+}
+
+/**
+ * A whole far-tree crown in one piece: a broad dome of eight or nine leafy
+ * knots (a big middle one, a ring round it, two on top), each a small ragged
+ * icosphere. Normals lean 70% toward "out from the crown's middle", so the
+ * crown is lit as one rounded mass while its outline stays broken into
+ * clumps — a tree seen over a roof, not a pile of faceted rocks. About the
+ * triangles of the five separate crowns it replaces, in one instance.
+ * Fits a unit box (y −0.5…0.5, so the foliage shader's sunlit top works).
+ */
+function farCrown(variant: number): BufferGeometry {
+  const knots: [number, number, number, number][] = [[0, -0.02, 0, 0.3]];
+  const ring = 6;
+  for (let i = 0; i < ring; i++) {
+    const a = (i / ring) * Math.PI * 2 + variant * 0.7 + jitter(variant * 11 + i, 0.3);
+    const d = 0.27 + jitter(variant * 7 + i * 3, 0.04);
+    knots.push([Math.cos(a) * d, -0.06 + jitter(variant * 5 + i, 0.1), Math.sin(a) * d, 0.2 + jitter(variant * 13 + i, 0.03)]);
+  }
+  knots.push([0.1 * Math.cos(variant), 0.24, 0.1 * Math.sin(variant), 0.21], [-0.14 * Math.cos(variant), 0.2, 0.12, 0.17]);
+  const parts: BufferGeometry[] = [];
+  const v = new Vector3();
+  const n0 = new Vector3();
+  for (const [kx, ky, kz, kr] of knots) {
+    const raw = new IcosahedronGeometry(1, 1);
+    raw.deleteAttribute("normal");
+    raw.deleteAttribute("uv");
+    const g = mergeVertices(raw, 1e-4);
+    const pos = g.getAttribute("position");
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).normalize();
+      const h = Math.sin(v.x * 7.3 + kx * 11) * Math.sin(v.z * 6.9 - v.y * 2.3) * Math.sin(v.y * 7.7 + kz * 9);
+      v.multiplyScalar(kr * (1 + 0.16 * h));
+      // Flatter underneath, as a crown is.
+      pos.setXYZ(i, kx + v.x, ky + v.y * (v.y < 0 ? 0.85 : 1), kz + v.z);
+    }
+    g.computeVertexNormals();
+    const nrm = g.getAttribute("normal");
+    for (let i = 0; i < nrm.count; i++) {
+      v.fromBufferAttribute(pos, i);
+      v.y *= 1.25;
+      n0.fromBufferAttribute(nrm, i).multiplyScalar(0.3).addScaledVector(v.normalize(), 0.7).normalize();
+      nrm.setXYZ(i, n0.x, n0.y, n0.z);
+    }
+    parts.push(g);
+  }
+  const merged = mergeGeometries(parts, false);
+  parts.forEach((g) => g.dispose());
+  return merged ?? lumpyBall(1, 0.12);
 }
 
 /**
@@ -693,6 +742,9 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   leafy: leafyBall(phoneTier() ? 2 : 3),
   // Far crowns (backdrop tree rings, Namsan's hillside): as cheap as ballLow, but ragged like leaves.
   leafyLow: leafyBall(1),
+  // Whole far-tree crowns (the tree rings past the rooftops), two shapes.
+  crownA: farCrown(1),
+  crownB: farCrown(2),
   // One apple, tangerine or potato in a heap: a small smooth ball.
   fruit: lumpyBall(1, 0.05),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
@@ -1123,16 +1175,12 @@ export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed 
   // Far trees (beyond the walls): low-poly, and no shadow (they fall
   // outside the sun's shadow box anyway, so casting would only cost).
   const cyl: GeoKey = "cylLow";
-  const ball: GeoKey = "leafyLow";
-  k.add("woodDark", cyl, [x, 1.0 * s, z], [0.22 * s, 2.0 * s, 0.22 * s], [lean, 0, -lean], !far);
-  const crowns: [number, number, number, number][] = [
-    [0, 2.55, 0, 1.55], [0.7, 2.35, 0.2, 1.15], [-0.65, 2.3, -0.15, 1.1], [0.1, 3.05, -0.1, 1.05], [0.2, 2.4, -0.7, 0.95],
-  ];
-  crowns.forEach(([dx, dy, dz, r], i) => {
-    const mat: MatKey = blossom ? "blossom" : i % 2 ? "leafDark" : "leaf";
-    const j = 1 + jitter(seed * 3 + i, 0.12);
-    k.add(mat, ball, [x + dx * s, dy * s, z + dz * s], [r * s * j, r * s * 0.82 * j, r * s * j], [0, jitter(seed + i, 1), 0], !far);
-  });
+  k.add("woodDark", cyl, [x, 1.0 * s, z], [0.22 * s, 2.0 * s, 0.22 * s], [lean, 0, -lean], false);
+  // One whole crown (two shapes, two greens, by the seed).
+  const j = 1 + jitter(seed * 3, 0.12);
+  const geo: GeoKey = seed % 2 ? "crownA" : "crownB";
+  const yaw = jitter(seed * 7, Math.PI);
+  k.add(blossom ? "blossom" : seed % 3 ? "leaf" : "leafDark", geo, [x, 2.8 * s, z], [2.45 * s * j, 2.25 * s * j, 2.45 * s * j], [0, yaw, 0], false);
 }
 
 /**

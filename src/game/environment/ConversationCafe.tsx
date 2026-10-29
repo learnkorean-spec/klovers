@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { BufferAttribute, BufferGeometry, CanvasTexture, DoubleSide, MeshBasicMaterial, SRGBColorSpace, type Material } from "three";
+import { BackSide, BufferAttribute, BufferGeometry, CanvasTexture, DoubleSide, LatheGeometry, MeshBasicMaterial, SRGBColorSpace, Vector2, type Material } from "three";
 import { CAFE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import { GateWall, Signboard } from "./parts";
@@ -226,10 +226,34 @@ function shelvesKit(k: Kit): void {
   }
 }
 
+/**
+ * Wall trim: a wooden chair rail capping the dark dado and a cornice where
+ * the walls meet the ceiling (it also hides the thin dark joint there), on
+ * the back and both side walls.
+ */
+function trimKit(k: Kit): void {
+  const runs: { x: number; z: number; alongX: boolean; len: number; out: number }[] = [
+    { x: 0, z: -HD, alongX: true, len: HW * 2, out: 1 },
+    { x: -HW, z: 0, alongX: false, len: HD * 2, out: 1 },
+    { x: HW, z: 0, alongX: false, len: HD * 2, out: -1 },
+  ];
+  for (const r of runs) {
+    const at = (depth: number, y: number): V3 => (r.alongX ? [r.x, y, r.z + r.out * depth] : [r.x + r.out * depth, y, r.z]);
+    const size = (depth: number, h: number): V3 => (r.alongX ? [r.len, h, depth * 2] : [depth * 2, h, r.len]);
+    // Chair rail: a rounded-looking cap (two steps) on top of the dado.
+    k.box("woodDark", at(0.02, 0.905), size(0.02, 0.05));
+    k.box("woodLight", at(0.012, 0.94), size(0.012, 0.022));
+    // Cornice: a deep band with a smaller step under it.
+    k.box("woodDark", at(0.035, WALL_H - 0.04), size(0.035, 0.1));
+    k.box("woodLight", at(0.02, WALL_H - 0.105), size(0.02, 0.03));
+  }
+}
+
 /** Every built-in fitting of the café, as one instanced kit. */
 function CafeFittings() {
   const kit = useMemo(() => {
     const k = new Kit();
+    trimKit(k);
     windowsKit(k);
     counterKit(k);
     shelvesKit(k);
@@ -512,17 +536,38 @@ function CafeChair({ side, cushion }: { side: -1 | 1; cushion: Material }) {
  * walls under open sky; when the camera behind the learner rises above the
  * walls, the plane faces away from it and is culled, so the view in from
  * above stays exactly as before — the camera never fights the ceiling. It
- * casts no shadow: the sun still lights the tables.
+ * casts no shadow: the sun still lights the tables. It sits just under the
+ * dark wall cap (not level with it — coplanar, the cap showed through as a
+ * black band round the room).
  */
 function Ceiling() {
   const planks = useTiledTexture(paintPlanks, HW / 1.2, (HD + 0.4) / 1.2);
   return (
-    <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_H + 0.02, 0.1]}>
+    <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_H + 0.004, 0.1]}>
       <planeGeometry args={[HW * 2 + 0.4, HD * 2 + 0.6]} />
       <meshStandardMaterial map={planks} color="#FFF3E0" roughness={0.9} emissive="#C9A27A" emissiveIntensity={0.32} />
     </mesh>
   );
 }
+
+/**
+ * A pendant shade (brand yellow enamel): a turned bell — narrow neck,
+ * rounded shoulder, flared skirt with a rolled rim. Lit like real enamel
+ * outside; its inside glows warm (unlit, BackSide), so from under a table
+ * it reads as a lamp that is on. The bulb hangs just inside the rim.
+ */
+const LAMP_SHADE = (() => {
+  const pts = [
+    [0.028, 0.075], [0.032, 0.06], [0.05, 0.045], [0.09, 0.022], [0.13, -0.01], [0.155, -0.045], [0.168, -0.07], [0.172, -0.078], [0.168, -0.082],
+  ]
+    .reverse()
+    .map(([r, y]) => new Vector2(r, y));
+  // Bottom → top, so the lathe's front faces point outward.
+  return new LatheGeometry(pts, 28);
+})();
+const LAMP_OUTSIDE = std(PALETTE.yellow, 0.4);
+const LAMP_INSIDE = new MeshBasicMaterial({ color: "#FFF1CC", side: BackSide, toneMapped: false });
+const LAMP_BULB = std(PALETTE.white, 0.8, { emissive: "#FFF4DA", emissiveIntensity: 1.4 });
 
 /** Wooden beams across the room with a pendant lamp over each table (hung high: the camera behind the learner looks out at about 2.5 m, and a low shade sat in its view). */
 function BeamsAndLamps() {
@@ -540,13 +585,19 @@ function BeamsAndLamps() {
             <cylinderGeometry args={[0.008, 0.008, 0.3, 6]} />
             <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
           </mesh>
-          <mesh position={[0, 2.45, 0]}>
-            <coneGeometry args={[0.16, 0.15, 18, 1, true]} />
-            <meshBasicMaterial color={PALETTE.yellow} toneMapped={false} side={DoubleSide} />
+          <mesh position={[0, 2.53, 0]}>
+            <cylinderGeometry args={[0.022, 0.03, 0.035, 12]} />
+            <primitive object={std(PALETTE.charcoal, 0.6)} attach="material" />
           </mesh>
-          <mesh position={[0, 2.39, 0]}>
-            <sphereGeometry args={[0.05, 10, 8]} />
-            <primitive object={std(PALETTE.white, 0.8, { emissive: PALETTE.ivory, emissiveIntensity: 1 })} attach="material" />
+          <mesh geometry={LAMP_SHADE} position={[0, 2.45, 0]}>
+            <primitive object={LAMP_OUTSIDE} attach="material" />
+          </mesh>
+          <mesh geometry={LAMP_SHADE} position={[0, 2.448, 0]} scale={[0.96, 0.98, 0.96]}>
+            <primitive object={LAMP_INSIDE} attach="material" />
+          </mesh>
+          <mesh position={[0, 2.395, 0]}>
+            <sphereGeometry args={[0.042, 12, 8]} />
+            <primitive object={LAMP_BULB} attach="material" />
           </mesh>
         </group>
       ))}
