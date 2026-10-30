@@ -19,10 +19,10 @@ import { curvedRoof, roofAspect } from "./shapes";
 
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
-  | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "blossom" | "blossomPale" | "moss" | "hill"
-  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry";
+  | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "hill"
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -41,6 +41,8 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   metal: MAT.metal,
   leaf: MAT.leaf,
   leafDark: MAT.leafDark,
+  farLeaf: MAT.farLeaf,
+  farLeafDark: MAT.farLeafDark,
   blossom: MAT.blossom,
   blossomPale: MAT.blossomPale,
   moss: MAT.moss,
@@ -56,6 +58,7 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   flowerPink: MAT.flowerPink,
   pollen: MAT.pollen,
   flagstone: MAT.flagstone,
+  boulder: MAT.boulder,
   soil: MAT.soil,
   wicker: MAT.wicker,
   steel: MAT.steel,
@@ -189,7 +192,7 @@ function blossomClump(detail: number, variant: number, n: number): BufferGeometr
  * triangles of the five separate crowns it replaces, in one instance.
  * Fits a unit box (y −0.5…0.5, so the foliage shader's sunlit top works).
  */
-function farCrown(variant: number): BufferGeometry {
+function farCrown(variant: number, detail = 1): BufferGeometry {
   const knots: [number, number, number, number][] = [[0, -0.02, 0, 0.3]];
   const ring = 6;
   for (let i = 0; i < ring; i++) {
@@ -202,7 +205,7 @@ function farCrown(variant: number): BufferGeometry {
   const v = new Vector3();
   const n0 = new Vector3();
   for (const [kx, ky, kz, kr] of knots) {
-    const raw = new IcosahedronGeometry(1, 1);
+    const raw = new IcosahedronGeometry(1, detail);
     raw.deleteAttribute("normal");
     raw.deleteAttribute("uv");
     const g = mergeVertices(raw, 1e-4);
@@ -524,6 +527,41 @@ function flagstone(seed: number): BufferGeometry {
 }
 
 /**
+ * A garden boulder: a squat, irregular stone sitting in the ground — broad
+ * low lobes, a few flatter faces, a flat bed underneath — instead of a
+ * smooth pale ball (which read as dough). Base at y 0, top at y 1, x/z in
+ * −0.5…0.5, so MAT.boulder's weathered band lands on the foot.
+ */
+function boulder(seed: number): BufferGeometry {
+  const raw = new IcosahedronGeometry(0.5, 2);
+  raw.deleteAttribute("normal");
+  raw.deleteAttribute("uv");
+  const g = mergeVertices(raw, 1e-4);
+  const pos = g.getAttribute("position");
+  const v = new Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).normalize();
+    const low = Math.sin(v.x * 2.1 + seed) * Math.sin(v.z * 2.4 - seed * 0.7) + 0.5 * Math.sin(v.y * 2.7 + seed * 1.9);
+    const mid = Math.sin(v.x * 5.3 + v.y * 2.2 + seed * 3.1) * Math.sin(v.z * 4.7 - v.x * 1.3);
+    // Planed faces: pull the bulge back where a cleavage plane cuts it.
+    const cut = Math.max(0, v.dot(new Vector3(Math.cos(seed), 0.35, Math.sin(seed)).normalize()) - 0.72) * 0.6;
+    const r = 0.5 * (1 + 0.16 * low + 0.06 * mid) - cut * 0.5;
+    v.multiplyScalar(r);
+    if (v.y < -0.12) v.y = -0.12 + (v.y + 0.12) * 0.12;
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  g.computeBoundingBox();
+  const b = g.boundingBox!;
+  const sx = 1 / (b.max.x - b.min.x), sy = 1 / (b.max.y - b.min.y), sz = 1 / (b.max.z - b.min.z);
+  const cx = (b.max.x + b.min.x) / 2, cz = (b.max.z + b.min.z) / 2;
+  for (let i = 0; i < pos.count; i++) pos.setXYZ(i, (pos.getX(i) - cx) * sx, (pos.getY(i) - b.min.y) * sy, (pos.getZ(i) - cz) * sz);
+  g.computeVertexNormals();
+  g.computeBoundingBox();
+  g.computeBoundingSphere();
+  return g;
+}
+
+/**
  * One garden flower seen from above: five rounded petals with small notches
  * between them, cupped up a little toward the rim (radius 0.5, about 0.2
  * tall). Its yellow middle is a separate small ball (see `flowers`).
@@ -731,6 +769,10 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   awningB: awningCloth(1),
   flagA: flagstone(1.3),
   flagB: flagstone(4.1),
+  boulderA: boulder(1.7),
+  boulderB: boulder(4.4),
+  // A water-lily pad: a disc with its notch cut out (the notch side is 1 cm, left open).
+  lilyPad: new CylinderGeometry(0.5, 0.5, 1, 22, 1, false, 0.35, Math.PI * 2 - 0.35),
   bloom: bloomHead(),
   leaves: leafRosette(),
   pineCone: pineTier(),
@@ -744,8 +786,9 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   // Far crowns (backdrop tree rings, Namsan's hillside): as cheap as ballLow, but ragged like leaves.
   leafyLow: leafyBall(1),
   // Whole far-tree crowns (the tree rings past the rooftops), two shapes.
-  crownA: farCrown(1),
-  crownB: farCrown(2),
+  // Desktop: rounder knots (the faceted outline showed against the sky).
+  crownA: farCrown(1, phoneTier() ? 1 : 2),
+  crownB: farCrown(2, phoneTier() ? 1 : 2),
   // One apple, tangerine or potato in a heap: a small smooth ball.
   fruit: lumpyBall(1, 0.05),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
@@ -1181,7 +1224,7 @@ export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed 
   const j = 1 + jitter(seed * 3, 0.12);
   const geo: GeoKey = seed % 2 ? "crownA" : "crownB";
   const yaw = jitter(seed * 7, Math.PI);
-  k.add(blossom ? "blossom" : seed % 3 ? "leaf" : "leafDark", geo, [x, 2.8 * s, z], [2.45 * s * j, 2.25 * s * j, 2.45 * s * j], [0, yaw, 0], false);
+  k.add(blossom ? "blossom" : seed % 3 ? "farLeaf" : "farLeafDark", geo, [x, 2.8 * s, z], [2.45 * s * j, 2.25 * s * j, 2.45 * s * j], [0, yaw, 0], false);
 }
 
 /**
@@ -1324,7 +1367,8 @@ export function grass(k: Kit, x: number, z: number, s = 1, seed = 1): void {
 
 /** A garden rock, half sunk into the ground. */
 export function rock(k: Kit, x: number, z: number, s = 1, seed = 1): void {
-  k.add("stoneWarm", "ball", [x, 0.12 * s, z], [0.7 * s, 0.42 * s, 0.55 * s], [jitter(seed, 0.3), jitter(seed * 3, 3), 0], true);
+  // Sunk a little into the ground, tipped a touch, in weathered stone.
+  k.add("boulder", seed % 2 ? "boulderA" : "boulderB", [x, -0.04 * s, z], [0.72 * s, 0.3 * s, 0.58 * s], [jitter(seed, 0.12), jitter(seed * 3, 3), jitter(seed * 5, 0.1)], true);
 }
 
 /**

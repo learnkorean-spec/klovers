@@ -26,7 +26,7 @@ const H = GARDEN.half;
 const SLOTS_PER_BED = 3;
 export const GARDEN_SLOTS = GARDEN_BEDS.length * SLOTS_PER_BED;
 
-const WATER = new MeshStandardMaterial({ color: "#5F8E98", roughness: 0.08, metalness: 0.1, envMapIntensity: 1.4 });
+const WATER = new MeshStandardMaterial({ color: "#4F7F89", roughness: 0.08, metalness: 0.1, envMapIntensity: 1.4 });
 const GRASS = "#8EA662";
 
 /** The still parts of the garden: hedges, pond rim, tree, stone, path, bench. */
@@ -43,23 +43,29 @@ function gardenKit(): Kit {
     for (let i = 0; i < n; i++) {
       const t = -len / 2 + (i + 0.5) * (len / n);
       const r = 0.62 + jitter(seed + i, 0.1);
-      k.add(i % 3 ? "leafDark" : "leaf", "ball", alongX ? [cx + t, 1.62, cz + jitter(seed * 3 + i, 0.08)] : [cx + jitter(seed * 3 + i, 0.08), 1.62, cz + t], [r * 1.3, r * 0.75, r * 1.2], [0, jitter(seed * 5 + i, 2), 0]);
+      k.add(i % 3 ? "leafDark" : "leaf", "leafy", alongX ? [cx + t, 1.62, cz + jitter(seed * 3 + i, 0.08)] : [cx + jitter(seed * 3 + i, 0.08), 1.62, cz + t], [r * 1.3, r * 0.75, r * 1.2], [0, jitter(seed * 5 + i, 2), 0]);
     }
   };
   hedge(-H - 0.45, -H - 0.45, H + 0.45, -H - 0.45, 3);
   hedge(-H - 0.45, H + 0.45, H + 0.45, H + 0.45, 17);
   hedge(-H - 0.45, -H, -H - 0.45, H, 31);
 
-  // The pond's rim: rounded stones all the way round, a little varied.
+  // The pond's rim: weathered stones set into the bank all the way round,
+  // big and small mixed, a few smaller ones behind the gaps.
   const P = GARDEN.pond;
-  const rimN = 26;
+  const rimN = 30;
   for (let i = 0; i < rimN; i++) {
-    const a = (i / rimN) * Math.PI * 2;
-    rock(k, P.x + Math.sin(a) * (P.r + 0.1), P.z + Math.cos(a) * (P.r + 0.1), 0.95 + jitter(i * 7, 0.25), i + 40);
+    const a = (i / rimN) * Math.PI * 2 + jitter(i * 3, 0.05);
+    const s = (i % 3 === 0 ? 1.05 : 0.8) + jitter(i * 7, 0.18);
+    rock(k, P.x + Math.sin(a) * (P.r + 0.06), P.z + Math.cos(a) * (P.r + 0.06), s, i + 40);
+    if (i % 2) {
+      const b = a + Math.PI / rimN;
+      rock(k, P.x + Math.sin(b) * (P.r + 0.42), P.z + Math.cos(b) * (P.r + 0.42), 0.55 + jitter(i * 11, 0.12), i + 90);
+    }
   }
   // Lily pads on the water.
   [[-0.8, 0.9], [0.6, -0.4], [1.1, 1.3], [-1.2, -0.6]].forEach(([dx, dz], i) => {
-    k.add("leaf", "cyl", [P.x + dx, 0.075, P.z + dz], [0.55 + jitter(i, 0.12), 0.02, 0.5 + jitter(i * 3, 0.1)]);
+    k.add(i % 2 ? "leaf" : "leafDark", "lilyPad", [P.x + dx, 0.066, P.z + dz], [0.5 + jitter(i, 0.12), 0.012, 0.48 + jitter(i * 3, 0.1)], [0, i * 1.9, 0]);
   });
 
   // The memory tree (the garden's one flowering tree) and the memory stone.

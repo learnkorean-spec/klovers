@@ -257,7 +257,7 @@ function backdropKit(id: string, hx: number, hz: number): Kit {
       const sz = 2.4 + Math.abs(jitter(seed * 5, 1)) * 1.6;
       // The crowns nearest the rail (seen from just above) are whole ragged
       // canopies; further down the slope one cheap clump each is enough.
-      if (r < 19) k.add(i % 3 ? "leafDark" : "leaf", i % 2 ? "crownA" : "crownB", [Math.sin(a) * r, y - sz * 0.35, Math.cos(a) * r], [sz * 1.05, sz * 0.75, sz * 1.05], [0, a, 0]);
+      if (r < 19) k.add(i % 3 ? "farLeafDark" : "farLeaf", i % 2 ? "crownA" : "crownB", [Math.sin(a) * r, y - sz * 0.35, Math.cos(a) * r], [sz * 1.05, sz * 0.75, sz * 1.05], [0, a, 0]);
       else k.add(i % 3 ? "leafDark" : "leaf", "leafyLow", [Math.sin(a) * r, y, Math.cos(a) * r], [sz, sz * 0.8, sz], [0, a, 0]);
     }
     k.box("river", [0, FLOOR + 0.05, (RIVER_Z[0] + RIVER_Z[1]) / 2], [R1 * 2 + 20, 0.1, RIVER_Z[1] - RIVER_Z[0]]);

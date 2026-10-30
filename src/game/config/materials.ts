@@ -278,7 +278,7 @@ varying vec2 vStoneP;`,
   float h1 = fract(sin(dot(so.xz, vec2(12.9898, 78.233))) * 43758.5453);
   float h2 = fract(sin(dot(so.xz, vec2(39.3468, 11.135))) * 24634.6345);
   vStone = vec3(h1, h2, 1.0 - smoothstep(0.018, 0.062, position.y));
-  vStoneP = sp.xz;
+  vStoneP = sp.xz + vec2(0.7, -0.6) * sp.y;
 }`,
       );
     shader.fragmentShader = shader.fragmentShader
@@ -652,7 +652,7 @@ export const FOLIAGE_TIME = { value: 0 };
  * light, and a slow breeze that moves the tops more than the bases. All in
  * the material's own shader: no extra draw calls, no textures.
  */
-export function foliage(color: string, roughness = 0.9, florets = false): MeshStandardMaterial {
+export function foliage(color: string, roughness = 0.9, florets = false, far = false): MeshStandardMaterial {
   const m = new MeshStandardMaterial({ color: new Color(color), roughness, metalness: 0, flatShading: false });
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uFoliageTime = FOLIAGE_TIME;
@@ -695,6 +695,7 @@ vFolUp = clamp(position.y + 0.5, 0.0, 1.0);
         "#include <common>",
         `#include <common>
 ${florets ? "#define FOL_FLORETS" : ""}
+${far ? "#define FOL_FAR" : ""}
 varying vec3 vFolPos;
 varying float vFolUp;
 float folHash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
@@ -713,19 +714,37 @@ float folNoise(vec3 p) {
 {
   // Leaf clusters: bend the normal by a small 3D noise, so a crown catches
   // the sun in many small facets (leaves) instead of as one smooth ball.
+#ifdef FOL_FAR
+  // Trees over the walls are seen from 10–30 m: leaf-sized facets there
+  // turn a crown into a lime sponge. Shade them by clumps of leaves instead.
+  vec3 lq = vFolPos * 1.9;
+  float bend = 0.42;
+#else
   vec3 lq = vFolPos * 7.5;
+  float bend = 0.28;
+#endif
   float l0 = folNoise(lq);
   vec3 lg = vec3(folNoise(lq + vec3(0.2, 0.0, 0.0)) - l0, folNoise(lq + vec3(0.0, 0.2, 0.0)) - l0, folNoise(lq + vec3(0.0, 0.0, 0.2)) - l0) / 0.2;
-  normal = normalize(normal - (viewMatrix * vec4(lg, 0.0)).xyz * 0.28);
+  normal = normalize(normal - (viewMatrix * vec4(lg, 0.0)).xyz * bend);
 }`,
       )
       .replace(
         "#include <color_fragment>",
         `#include <color_fragment>
 {
+#ifdef FOL_FAR
+  // Clumps a metre across, deep shade low in the crown and in the gaps
+  // between clumps, a little sky in the colour (air between us and it).
+  float clump = folNoise(vFolPos * 1.3) * 0.6 + folNoise(vFolPos * 2.9) * 0.4;
+  float lit = mix(0.6, 1.08, smoothstep(0.1, 0.95, vFolUp));
+  diffuseColor.rgb *= lit * mix(0.8, 1.1, clump);
+  float grey = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(grey) * vec3(0.92, 1.0, 1.06), 0.18);
+#else
   float clump = folNoise(vFolPos * 3.1) * 0.65 + folNoise(vFolPos * 7.3) * 0.35;
   float lit = mix(0.74, 1.12, smoothstep(0.0, 1.0, vFolUp));
   diffuseColor.rgb *= lit * mix(0.88, 1.1, clump);
+#endif
   diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.06, 1.04, 0.86), smoothstep(0.55, 1.0, clump) * 0.5);
 #ifdef FOL_FLORETS
   // Blossom crowns: a fine pattern of pale florets and shadowed gaps, so a
@@ -739,7 +758,7 @@ float folNoise(vec3 p) {
 }`,
       );
   };
-  m.customProgramCacheKey = () => (florets ? "klovers-foliage-2-florets" : "klovers-foliage-2");
+  m.customProgramCacheKey = () => (florets ? "klovers-foliage-2-florets" : far ? "klovers-foliage-2-far" : "klovers-foliage-2");
   return m;
 }
 
@@ -803,6 +822,9 @@ export const MAT = {
   pine: foliage(NATURAL.pine, 0.9),
   leaf: foliage(NATURAL.leaf, 0.9),
   leafDark: foliage(NATURAL.leafDark, 0.9),
+  /** Crowns of the trees beyond the walls (shaded by clumps, not leaves). */
+  farLeaf: foliage("#5F8C48", 0.95, false, true),
+  farLeafDark: foliage("#3E6436", 0.95, false, true),
   blossom: foliage(NATURAL.blossom, 0.85, true),
   blossomPale: foliage(NATURAL.blossomPale, 0.85, true),
   moss: std(NATURAL.moss, 1, { detail: "stone" }),
@@ -821,6 +843,8 @@ export const MAT = {
   flowerPink: std("#F2A3BC", 0.75),
   /** A single natural stepping stone: fine tooth, no paving grid; each stone its own tone. */
   flagstone: naturalStone(std("#968E7F", 0.92, { detail: "plaster" })),
+  /** Garden boulders (kit "boulderA/B"): the same stone, a little lighter, weathered at the foot. */
+  boulder: naturalStone(std("#736C61", 0.86)),
   /** Brushed stainless steel of a street-food cart: pale, a soft sheen. */
   steel: std("#B9BFC3", 0.34, { metalness: 0.6 }),
   /** Glossy eomuk broth in its pot. */
