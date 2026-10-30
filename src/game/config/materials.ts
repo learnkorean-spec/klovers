@@ -392,8 +392,9 @@ float hillNoise(vec2 p) {
 function cityBlock(): MeshStandardMaterial {
   const m = new MeshStandardMaterial({ color: new Color("#ffffff"), roughness: 0.85, metalness: 0 });
   m.onBeforeCompile = (shader) => {
+    const vary = "varying vec3 vCityP;\nvarying vec3 vCityN;\nvarying float vCityHash;\nvarying vec3 vCityL;\nvarying vec3 vCityS;\nvarying vec3 vCityLN;";
     shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying vec3 vCityP;\nvarying vec3 vCityN;\nvarying float vCityHash;")
+      .replace("#include <common>", `#include <common>\n${vary}`)
       .replace(
         "#include <begin_vertex>",
         `#include <begin_vertex>
@@ -401,50 +402,151 @@ function cityBlock(): MeshStandardMaterial {
   vec4 cp = vec4(transformed, 1.0);
   vec3 cn = objectNormal;
   vec3 co = modelMatrix[3].xyz;
+  vec3 cs = vec3(1.0);
   #ifdef USE_INSTANCING
     cp = instanceMatrix * cp;
     cn = mat3(instanceMatrix) * cn;
     co += instanceMatrix[3].xyz;
+    cs = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
   #endif
   vCityP = (modelMatrix * cp).xyz;
   vCityN = normalize(mat3(modelMatrix) * cn);
   vCityHash = fract(sin(dot(co.xz, vec2(12.9898, 78.233))) * 43758.5453);
+  vCityS = cs;
+  vCityL = transformed * cs;
+  vCityLN = objectNormal;
 }`,
       );
     shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", "#include <common>\nvarying vec3 vCityP;\nvarying vec3 vCityN;\nvarying float vCityHash;")
+      .replace("#include <common>", `#include <common>\n${vary}`)
       .replace(
         "#include <color_fragment>",
         `#include <color_fragment>
 {
   vec3 n = normalize(vCityN);
-  bool glassy = vCityHash > 0.86;
+  vec3 S = vCityS;
+  vec3 L = vCityL;
+  vec3 ln = normalize(vCityLN);
+  // Apartment slabs (아파트): long and thin, glazed balconies on the long
+  // sides, blank gable ends with the estate's colour band near the top.
+  bool slab = S.z < 1.6 && S.x > 4.5;
+  bool glassy = !slab && vCityHash > 0.86;
   vec3 wall = vCityHash < 0.3 ? vec3(0.93, 0.91, 0.86) : vCityHash < 0.55 ? vec3(0.86, 0.84, 0.80) : vCityHash < 0.72 ? vec3(0.90, 0.85, 0.76) : vCityHash < 0.86 ? vec3(0.78, 0.77, 0.76) : vec3(0.55, 0.64, 0.72);
+  if (slab) wall = vec3(0.94, 0.93, 0.90);
+  float h2 = fract(vCityHash * 7.13);
+  vec3 band = h2 < 0.25 ? vec3(0.27, 0.55, 0.62) : h2 < 0.5 ? vec3(0.85, 0.50, 0.30) : h2 < 0.75 ? vec3(0.36, 0.50, 0.75) : vec3(0.52, 0.66, 0.42);
   vec3 glass = glassy ? vec3(0.42, 0.52, 0.62) : vec3(0.44, 0.50, 0.56);
   vec3 c = wall;
+  float below = S.y * 0.5 - L.y;
   if (abs(n.y) > 0.5) {
-    c = vec3(0.62, 0.62, 0.60);
+    // Roofs: most low Seoul roofs are painted in green waterproofing (옥상
+    // 방수 페인트); the rest bare concrete or dark felt. A pale coping round
+    // the parapet.
+    vec3 roof = h2 < 0.45 ? vec3(0.50, 0.66, 0.52) : h2 < 0.8 ? vec3(0.66, 0.66, 0.64) : vec3(0.46, 0.46, 0.47);
+    if (S.y > 9.0 && h2 < 0.45) roof = vec3(0.66, 0.66, 0.64);
+    float edge = min(S.x * 0.5 - abs(L.x), S.z * 0.5 - abs(L.z));
+    float rim = 1.0 - smoothstep(0.08, 0.1 + fwidth(edge), edge);
+    c = mix(roof, wall * 0.97, rim);
   } else {
     vec2 t = normalize(vec2(-n.z, n.x));
-    float u = dot(vCityP.xz, t) / 0.95;
+    float along = dot(vCityP.xz, t);
+    float u = along / 0.95;
     float v = vCityP.y / 1.1;
     float fu = fract(u);
     float fv = fract(v);
-    float win = step(0.18, fu) * step(fu, 0.82) * step(0.32, fv) * step(fv, 0.86);
-    if (glassy) win = max(win, step(0.3, fv));
-    float w = fract(sin(dot(floor(vec2(u, v)), vec2(41.3, 289.1)) + vCityHash * 17.0) * 43758.5453);
-    vec3 pane = glass * (0.85 + 0.3 * w);
-    float avg = glassy ? 0.75 : 0.33;
     float aa = clamp(1.6 - 2.2 * max(fwidth(u), fwidth(v)), 0.0, 1.0);
-    vec3 detailed = mix(wall, pane, win);
-    vec3 flat_ = mix(wall, glass, avg);
+    float w = fract(sin(dot(floor(vec2(u, v)), vec2(41.3, 289.1)) + vCityHash * 17.0) * 43758.5453);
+    vec3 detailed;
+    vec3 flat_;
+    if (slab && abs(ln.x) > 0.5) {
+      // Gable end: plain wall, the colour band across its top storeys.
+      float b = step(0.6, below) * step(below, 1.9);
+      detailed = mix(wall, band, b);
+      flat_ = detailed;
+    } else if (slab) {
+      // Long side: a balcony per flat — solid white rail below, glazing above,
+      // thin frames between the flats.
+      float rail = step(fv, 0.36);
+      float frame = step(0.06, fu) * step(fu, 0.94);
+      float pane = (1.0 - rail) * frame * step(fv, 0.94);
+      detailed = mix(wall, glass * (0.9 + 0.25 * w), pane);
+      flat_ = mix(wall, glass, 0.5);
+    } else {
+      float win = step(0.18, fu) * step(fu, 0.82) * step(0.32, fv) * step(fv, 0.86);
+      if (glassy) win = max(win, step(0.3, fv));
+      detailed = mix(wall, glass * (0.85 + 0.3 * w), win);
+      flat_ = mix(wall, glass, glassy ? 0.75 : 0.33);
+    }
     c = mix(flat_, detailed, aa);
+    // A plain parapet band at the top (no windows in it).
+    c = mix(c, wall * 0.98, 1.0 - step(0.32, below));
+    // Street level (the city floor is at y -30): shopfronts — dark glass
+    // under a sign band in a shop's own colour.
+    if (!slab && vCityP.y < -29.0) {
+      float shop = fract(sin(floor(u) * 12.7 + vCityHash * 31.0) * 43758.5453);
+      vec3 signC = shop < 0.3 ? vec3(0.80, 0.30, 0.25) : shop < 0.55 ? vec3(0.95, 0.80, 0.35) : shop < 0.8 ? vec3(0.30, 0.45, 0.70) : vec3(0.92, 0.92, 0.90);
+      float sy = vCityP.y + 30.0;
+      vec3 front = sy > 0.72 ? signC : vec3(0.30, 0.34, 0.37);
+      c = mix(mix(wall, front, 0.6), front, aa);
+    }
   }
   diffuseColor.rgb *= c * c;
 }`,
       );
   };
-  m.customProgramCacheKey = () => "klovers-city-block";
+  m.customProgramCacheKey = () => "klovers-city-block-2";
+  return m;
+}
+
+/**
+ * The city floor far below Namsan: a grid of streets (every 10 m, wider
+ * boulevards every 30 m) with pale pavements, between blocks of paving.
+ * Painted from world position, fading to its average where the lines get
+ * thinner than a pixel. Parks are separate green slabs (Backdrop).
+ */
+function cityGround(): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color("#ffffff"), roughness: 0.95, metalness: 0 });
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vGroundP;")
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+{
+  vec4 gp = vec4(transformed, 1.0);
+  #ifdef USE_INSTANCING
+    gp = instanceMatrix * gp;
+  #endif
+  vGroundP = (modelMatrix * gp).xyz;
+}`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vGroundP;")
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+{
+  vec2 p = vGroundP.xz;
+  vec2 d = abs(p - floor(p / 10.0 + 0.5) * 10.0);
+  vec2 big = abs(p - floor(p / 30.0 + 0.5) * 30.0);
+  vec2 hw = vec2(big.x < 1.0 ? 1.0 : 0.62, big.y < 1.0 ? 1.0 : 0.62);
+  vec2 fw = max(fwidth(p), vec2(0.001));
+  vec2 road2 = 1.0 - smoothstep(hw - fw, hw + fw, d);
+  vec2 walk2 = 1.0 - smoothstep(hw + 0.28 - fw, hw + 0.28 + fw, d);
+  float road = max(road2.x, road2.y);
+  float walk = max(walk2.x, walk2.y);
+  vec3 paving = vec3(0.71, 0.70, 0.67);
+  vec3 c = mix(paving, vec3(0.80, 0.79, 0.76), walk);
+  c = mix(c, vec3(0.38, 0.39, 0.41), road);
+  float lane = (1.0 - smoothstep(0.03, 0.03 + fw.x, d.x)) * step(0.9, hw.x) + (1.0 - smoothstep(0.03, 0.03 + fw.y, d.y)) * step(0.9, hw.y);
+  c = mix(c, vec3(0.92, 0.84, 0.50), clamp(lane, 0.0, 1.0) * 0.8);
+  float far = clamp(max(fw.x, fw.y) * 1.2 - 0.3, 0.0, 1.0);
+  c = mix(c, vec3(0.62, 0.62, 0.60), far);
+  diffuseColor.rgb *= c * c;
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => "klovers-city-ground";
   return m;
 }
 
@@ -735,6 +837,8 @@ export const MAT = {
   soil: std("#5E4A38", 1, { detail: "plaster" }),
   /** Seoul far below Namsan: façades with storeys of windows (see cityBlock). */
   cityBlock: cityBlock(),
+  /** The city floor below Namsan: streets, pavements, paving (see cityGround). */
+  cityGround: cityGround(),
   river: RIVER,
   /** Love locks on the Namsan fence: each its own enamel colour (see lockPaint). */
   lockPaint: lockPaint(),
