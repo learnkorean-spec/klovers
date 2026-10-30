@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -143,7 +143,7 @@ function leafyBall(detail: number): BufferGeometry {
  * green slab. The bottom stays flat on the ground. Laid end to end, each
  * block a little longer than its slot, the lumps hide the joins.
  */
-function hedgeBlock(): BufferGeometry {
+function hedgeBlock(phase = 0): BufferGeometry {
   const raw = new BoxGeometry(1, 1, 1, 10, 7, 5);
   raw.deleteAttribute("normal");
   raw.deleteAttribute("uv");
@@ -163,8 +163,8 @@ function hedgeBlock(): BufferGeometry {
     const n = new Vector3(Math.sign(q.x) * Math.abs(q.x) ** (P - 1), Math.sign(q.y) * Math.abs(q.y) ** (P - 1), Math.sign(q.z) * Math.abs(q.z) ** (P - 1)).normalize();
     body.push(n);
     if (!bottom) {
-      const d = Math.sin(q.x * 23.1 + q.y * 7.3) * Math.sin(q.z * 19.7 - q.x * 5.1) * Math.sin(q.y * 17.9 + q.z * 4.3);
-      const lo = Math.sin(q.x * 6.3 + 1.1) * Math.sin(q.y * 5.2 + q.z * 3.3);
+      const d = Math.sin(q.x * 23.1 + q.y * 7.3 + phase * 2.1) * Math.sin(q.z * 19.7 - q.x * 5.1 + phase * 1.3) * Math.sin(q.y * 17.9 + q.z * 4.3 + phase * 0.7);
+      const lo = Math.sin(q.x * 6.3 + 1.1 + phase * 2.9) * Math.sin(q.y * 5.2 + q.z * 3.3 + phase);
       q.addScaledVector(n, 0.035 * d + 0.02 * lo);
     }
     pos.setXYZ(i, q.x, q.y, q.z);
@@ -817,6 +817,7 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   boulderB: boulder(4.4),
   // A water-lily pad: a disc with its notch cut out (the notch side is 1 cm, left open).
   hedge: hedgeBlock(),
+  hedgeB: hedgeBlock(1.7),
   lilyPad: new CylinderGeometry(0.5, 0.5, 1, 22, 1, false, 0.35, Math.PI * 2 - 0.35),
   bloom: bloomHead(),
   leaves: leafRosette(),

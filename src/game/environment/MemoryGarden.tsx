@@ -86,15 +86,18 @@ function gardenKit(): Kit {
     const len = alongX ? Math.abs(x2 - x1) : Math.abs(z2 - z1);
     const cx = (x1 + x2) / 2;
     const cz = (z1 + z2) / 2;
-    // The body: clipped blocks end to end, each a touch longer than its slot
+    // The body: clipped blocks end to end, each well past its slot
     // so their soft ends overlap into one hedge.
     const nb = Math.max(1, Math.round(len / 1.8));
     for (let i = 0; i < nb; i++) {
       const t = -len / 2 + (i + 0.5) * (len / nb);
-      const bl = (len / nb) * 1.22;
+      const bl = (len / nb) * 1.4;
       const w = 0.92 + jitter(seed * 7 + i, 0.04);
       const hh = 1.62 + jitter(seed * 11 + i, 0.05);
-      k.add("leafDark", "hedge", alongX ? [cx + t, hh / 2, cz] : [cx, hh / 2, cz + t], alongX ? [bl, hh, w] : [w, hh, bl], [0, jitter(seed * 13 + i, 0.03), 0], true);
+      // Two lump patterns, each also turned end for end, stepped along the hedge, so
+      // neighbouring blocks never repeat the same quilting.
+      const v = (i * 3 + seed) % 4;
+      k.add("leafDark", v & 1 ? "hedgeB" : "hedge", alongX ? [cx + t, hh / 2, cz] : [cx, hh / 2, cz + t], alongX ? [bl, hh, w] : [w, hh, bl], [0, jitter(seed * 13 + i, 0.03) + (v & 2 ? Math.PI : 0), 0], true);
     }
     const n = Math.round(len / 0.9);
     for (let i = 0; i < n; i++) {
