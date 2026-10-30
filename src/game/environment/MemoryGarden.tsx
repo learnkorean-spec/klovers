@@ -5,7 +5,7 @@ import { FLOOR_GRID } from "../config/world";
 import Batch from "./Batch";
 import { Kit, flowers, jitter, rock, steppingStones, stoneLantern, tree } from "./kit";
 import { GateWall } from "./parts";
-import { floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
+import { floorBreakup } from "./textures";
 
 /**
  * Cluby's Memory Garden (canon worlds "memory-garden"): a quiet green garden
@@ -27,7 +27,55 @@ const SLOTS_PER_BED = 3;
 export const GARDEN_SLOTS = GARDEN_BEDS.length * SLOTS_PER_BED;
 
 const WATER = new MeshStandardMaterial({ color: "#4F7F89", roughness: 0.08, metalness: 0.1, envMapIntensity: 1.4 });
-const GRASS = "#8EA662";
+const GRASS = "#7F9D53";
+
+/**
+ * A kept lawn: the floor's broad tone breakup, plus faint mowing stripes,
+ * patches of clover and darker grass, and blade-sized speckle that tilts
+ * the normal a little so the sun glints across it. Fine detail fades out
+ * with distance (fwidth) so it never shimmers on phones.
+ */
+const LAWN = (() => {
+  const m = new MeshStandardMaterial({ color: GRASS, roughness: 0.96 });
+  m.onBeforeCompile = (shader) => {
+    floorBreakup(shader);
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+{
+  vec2 q = vFbPos.xz;
+  // Mowing stripes, a pass 1.4 m wide, alternately light and dark.
+  float st = smoothstep(0.42, 0.58, abs(fract(q.x / 2.8) * 2.0 - 1.0));
+  diffuseColor.rgb *= mix(0.93, 1.06, st);
+  // Clover and lusher patches.
+  float pa = fbNoise(q * 0.9 + 21.3);
+  diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.84, 0.95, 0.86), smoothstep(0.62, 0.8, pa) * 0.8);
+  float dry = fbNoise(q * 0.55 + 4.1);
+  diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.08, 1.03, 0.86), smoothstep(0.66, 0.86, dry) * 0.6);
+  // Blades: speckle at grass scale, faded by screen-space size.
+  float fw = fwidth(q.x * 30.0) + fwidth(q.y * 30.0);
+  float amp = 1.0 - smoothstep(0.35, 1.2, fw);
+  float bl = fbNoise(q * 30.0) * 0.6 + fbNoise(q * 71.0) * 0.4;
+  diffuseColor.rgb *= mix(1.0, mix(0.82, 1.1, bl), amp);
+}`,
+      )
+      .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+{
+  vec2 q = vFbPos.xz * 30.0;
+  float fw = fwidth(q.x) + fwidth(q.y);
+  float amp = (1.0 - smoothstep(0.35, 1.2, fw)) * 0.35;
+  float b0 = fbNoise(q);
+  vec2 gr = vec2(fbNoise(q + vec2(0.25, 0.0)) - b0, fbNoise(q + vec2(0.0, 0.25)) - b0) / 0.25;
+  normal = normalize(normal - (viewMatrix * vec4(gr.x, 0.0, gr.y, 0.0)).xyz * amp);
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => "klovers-lawn-1";
+  return m;
+})();
 
 /** The still parts of the garden: hedges, pond rim, tree, stone, path, bench. */
 function gardenKit(): Kit {
@@ -38,7 +86,16 @@ function gardenKit(): Kit {
     const len = alongX ? Math.abs(x2 - x1) : Math.abs(z2 - z1);
     const cx = (x1 + x2) / 2;
     const cz = (z1 + z2) / 2;
-    k.box("leafDark", [cx, 0.8, cz], alongX ? [len, 1.6, 0.9] : [0.9, 1.6, len], true);
+    // The body: clipped blocks end to end, each a touch longer than its slot
+    // so their soft ends overlap into one hedge.
+    const nb = Math.max(1, Math.round(len / 1.8));
+    for (let i = 0; i < nb; i++) {
+      const t = -len / 2 + (i + 0.5) * (len / nb);
+      const bl = (len / nb) * 1.22;
+      const w = 0.92 + jitter(seed * 7 + i, 0.04);
+      const hh = 1.62 + jitter(seed * 11 + i, 0.05);
+      k.add("leafDark", "hedge", alongX ? [cx + t, hh / 2, cz] : [cx, hh / 2, cz + t], alongX ? [bl, hh, w] : [w, hh, bl], [0, jitter(seed * 13 + i, 0.03), 0], true);
+    }
     const n = Math.round(len / 0.9);
     for (let i = 0; i < n; i++) {
       const t = -len / 2 + (i + 0.5) * (len / n);
@@ -84,13 +141,21 @@ function gardenKit(): Kit {
 
   // A bench facing the pond.
   const B = GARDEN.bench;
-  k.box("woodDark", [B.x, 0.42, B.z], [B.w, 0.08, B.d], true);
-  for (const sx of [-1, 1]) k.box("stoneWarm", [B.x + sx * (B.w / 2 - 0.2), 0.2, B.z], [0.22, 0.4, B.d - 0.1]);
+  // Five seat boards with gaps, overhanging a little, on two bearers resting
+  // on cut-stone legs.
+  const slat = (B.d - 0.04) / 5;
+  for (let i = 0; i < 5; i++) k.box("woodDark", [B.x + jitter(i * 5 + 2, 0.008), 0.43, B.z - B.d / 2 + 0.02 + slat * (i + 0.5)], [B.w, 0.045, slat - 0.025], true, [0, 0, jitter(i * 3 + 1, 0.006)]);
+  for (const sx of [-1, 1]) {
+    k.box("woodLight", [B.x + sx * (B.w / 2 - 0.2), 0.385, B.z], [0.12, 0.05, B.d - 0.06]);
+    k.box("stoneWarm", [B.x + sx * (B.w / 2 - 0.2), 0.18, B.z], [0.26, 0.36, B.d - 0.2], true);
+    k.box("stoneWarm", [B.x + sx * (B.w / 2 - 0.2), 0.02, B.z], [0.32, 0.04, B.d - 0.12]);
+  }
 
   // The beds' stone kerbs and moss.
   for (const b of GARDEN_BEDS) {
-    k.add("stoneWarm", "oct", [b.x, 0.08, b.z], [1.3, 0.16, 1.3], [0, b.a, 0]);
-    k.add("moss", "oct", [b.x, 0.12, b.z], [1.1, 0.12, 1.1], [0, b.a, 0]);
+    // A round kerb of cut stone holding dark, freshly turned soil.
+    k.add("stoneWarm", "cyl", [b.x, 0.08, b.z], [1.3, 0.16, 1.3], [0, b.a, 0]);
+    k.add("soil", "cyl", [b.x, 0.12, b.z], [1.12, 0.1, 1.12], [0, b.a, 0]);
   }
   return k;
 }
@@ -127,7 +192,7 @@ export default function MemoryGarden({ words, reviewed }: { words: number; revie
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[H * 2 + 1, H * 2 + 1, ...FLOOR_GRID]} />
-        <meshStandardMaterial color={GRASS} roughness={1} onBeforeCompile={floorBreakup} customProgramCacheKey={FLOOR_BREAKUP_KEY} />
+        <primitive object={LAWN} attach="material" />
       </mesh>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[GARDEN.pond.x, 0.05, GARDEN.pond.z]}>
         <circleGeometry args={[GARDEN.pond.r, 40]} />

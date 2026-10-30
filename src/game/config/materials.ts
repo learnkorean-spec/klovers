@@ -652,8 +652,11 @@ export const FOLIAGE_TIME = { value: 0 };
  * light, and a slow breeze that moves the tops more than the bases. All in
  * the material's own shader: no extra draw calls, no textures.
  */
-export function foliage(color: string, roughness = 0.9, florets = false, far = false): MeshStandardMaterial {
-  const m = new MeshStandardMaterial({ color: new Color(color), roughness, metalness: 0, flatShading: false });
+export function foliage(color: string, roughness = 0.9, florets = false, far = false, merged = false): MeshStandardMaterial {
+  // `merged`: a whole crown baked into one geometry (world-space positions)
+  // that carries its own shade in vertex colours and its height within the
+  // crown in an `aFolUp` attribute.
+  const m = new MeshStandardMaterial({ color: new Color(color), roughness, metalness: 0, flatShading: false, vertexColors: merged });
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uFoliageTime = FOLIAGE_TIME;
     shader.vertexShader = shader.vertexShader
@@ -662,12 +665,13 @@ export function foliage(color: string, roughness = 0.9, florets = false, far = f
         `#include <common>
 uniform float uFoliageTime;
 varying vec3 vFolPos;
-varying float vFolUp;`,
+varying float vFolUp;
+${merged ? "attribute float aFolUp;" : ""}`,
       )
       .replace(
         "#include <begin_vertex>",
         `#include <begin_vertex>
-vFolUp = clamp(position.y + 0.5, 0.0, 1.0);
+vFolUp = ${merged ? "aFolUp" : "clamp(position.y + 0.5, 0.0, 1.0)"};
 {
   vec3 fp = transformed;
   #ifdef USE_INSTANCING
@@ -758,7 +762,7 @@ float folNoise(vec3 p) {
 }`,
       );
   };
-  m.customProgramCacheKey = () => (florets ? "klovers-foliage-2-florets" : far ? "klovers-foliage-2-far" : "klovers-foliage-2");
+  m.customProgramCacheKey = () => `klovers-foliage-2${florets ? "-florets" : ""}${far ? "-far" : ""}${merged ? "-merged" : ""}`;
   return m;
 }
 

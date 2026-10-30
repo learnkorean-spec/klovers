@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
-import { BoxGeometry, type BufferGeometry, CanvasTexture, DoubleSide, type Group, MeshBasicMaterial, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace } from "three";
+import { BoxGeometry, BufferAttribute, type BufferGeometry, CanvasTexture, Color, Matrix3, Object3D, Vector3, DoubleSide, type Group, MeshBasicMaterial, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { MAT, foliage, hillWoods, std } from "../config/materials";
 import { SEOUL } from "../config/rooms";
@@ -1011,22 +1011,87 @@ const markings = (() => {
   return { white, yellow };
 })();
 
-const ginkgo = foliage("#EBC03A", 0.85, true);
-const ginkgoDeep = foliage("#D6A42C", 0.85, true);
-const ginkgoLight = foliage("#F6D85E", 0.85, true);
+const GINKGO_SHADES = { a: new Color("#EBC03A"), c: new Color("#D6A42C"), l: new Color("#F6D85E") };
+const ginkgo = foliage("#FFFFFF", 0.85, true, false, true);
 const leafMat = std("#E0AE34", 0.8);
 
+/**
+ * Every ginkgo crown baked into ONE geometry (one draw for all five trees).
+ * Each cluster keeps its ragged outline, but its normals lean 60% toward
+ * "out from the whole crown" (an ellipsoid round the tree's clusters), so
+ * the sun lights the crown as one tall mass with a lit side and a shaded
+ * side — not as a pile of separately lit yellow balls (popcorn). Shades go
+ * into vertex colours: deep low and inside, light on top, and darker toward
+ * the heart of the crown where the outer leaves shade it.
+ */
+const GINKGO_CROWNS = (() => {
+  const unit = kitGeometry("leafy");
+  const o = new Object3D();
+  const v = new Vector3();
+  const n = new Vector3();
+  const e = new Vector3();
+  const nm = new Matrix3();
+  const parts: BufferGeometry[] = [];
+  SEOUL.trees.forEach((_, i) => {
+    const cl = GINKGO[i].clusters;
+    const lo = new Vector3(Infinity, Infinity, Infinity);
+    const hi = new Vector3(-Infinity, -Infinity, -Infinity);
+    for (const c of cl) {
+      lo.min(v.set(c.p[0] - c.s[0] / 2, c.p[1] - c.s[1] / 2, c.p[2] - c.s[2] / 2));
+      hi.max(v.set(c.p[0] + c.s[0] / 2, c.p[1] + c.s[1] / 2, c.p[2] + c.s[2] / 2));
+    }
+    const mid = lo.clone().add(hi).multiplyScalar(0.5);
+    const rad = hi.clone().sub(lo).multiplyScalar(0.5);
+    const shade = new Color();
+    cl.forEach((part) => {
+      o.position.set(...part.p);
+      o.rotation.set(...(part.r ?? [0, 0, 0]));
+      // A little fuller than the old separate balls: neighbours overlap, so
+      // the crown closes into one mass with a ragged edge.
+      o.scale.set(part.s[0] * 1.14, part.s[1] * 1.14, part.s[2] * 1.14);
+      o.updateMatrix();
+      const g = unit.clone().applyMatrix4(o.matrix);
+      nm.getNormalMatrix(o.matrix);
+      const pos = g.getAttribute("position");
+      const nrm = g.getAttribute("normal");
+      const col = new Float32Array(pos.count * 3);
+      const up = new Float32Array(pos.count);
+      for (let j = 0; j < pos.count; j++) {
+        v.fromBufferAttribute(pos, j);
+        // Where this point sits in the crown's ellipsoid (0 heart, 1 skin).
+        e.copy(v).sub(mid).divide(rad);
+        const depth = Math.min(1, e.length());
+        const out = e.clone().divide(rad).normalize();
+        n.fromBufferAttribute(nrm, j).normalize().multiplyScalar(0.3).addScaledVector(out, 0.7).normalize();
+        nrm.setXYZ(j, n.x, n.y, n.z);
+        // Shade drifts smoothly through the crown (a field in space, not per
+        // cluster — a colour step at every cluster drew each one's outline):
+        // deeper gold low down, paler lemon toward the top.
+        const h = (v.y - lo.y) / (hi.y - lo.y);
+        const f = 0.5 + 0.5 * Math.sin(v.x * 1.7 + v.y * 0.9 + i) * Math.sin(v.z * 1.3 - v.y * 1.1);
+        const t = Math.min(1, Math.max(0, 0.15 + h * 0.6 + (f - 0.5) * 0.6));
+        if (t < 0.5) shade.copy(GINKGO_SHADES.c).lerp(GINKGO_SHADES.a, t * 2);
+        else shade.copy(GINKGO_SHADES.a).lerp(GINKGO_SHADES.l, (t - 0.5) * 2);
+        const ao = 0.66 + 0.34 * Math.min(1, Math.max(0, (depth - 0.3) / 0.6));
+        col[j * 3] = shade.r * ao;
+        col[j * 3 + 1] = shade.g * ao;
+        col[j * 3 + 2] = shade.b * ao;
+        up[j] = Math.min(1, Math.max(0, (v.y - lo.y) / (hi.y - lo.y)));
+      }
+      g.setAttribute("color", new BufferAttribute(col, 3));
+      g.setAttribute("aFolUp", new BufferAttribute(up, 1));
+      parts.push(g);
+    });
+  });
+  const merged = mergeGeometries(parts)!;
+  for (const g of parts) g.dispose();
+  merged.computeBoundingSphere();
+  return merged;
+})();
+
 const canopies = (() => {
-  const a: Part[] = [];
-  const c: Part[] = [];
-  const l: Part[] = [];
   const leaves: Part[] = [];
   SEOUL.trees.forEach((tr, i) => {
-    // Shades alternate cluster by cluster: deep inside/low, light on top.
-    GINKGO[i].clusters.forEach((part, k) => {
-      const hi = part.p[1] > 5.0;
-      (hi ? (k % 2 ? l : a) : k % 3 === 0 ? c : k % 3 === 1 ? a : l).push(part);
-    });
     // Fallen leaves on the pavement round the grate (never on the road).
     const r = rng(i * 31 + 5);
     for (let n = 0; n < 18; n++) {
@@ -1038,7 +1103,7 @@ const canopies = (() => {
       leaves.push({ p: [x, 0.006, z], s: [0.09, 0.005, 0.07], r: [0, r() * 3, 0] });
     }
   });
-  return { a, c, l, leaves };
+  return { leaves };
 })();
 
 const glassMat = new MeshStandardMaterial({ color: "#BFDCE8", roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.32, depthWrite: false, side: DoubleSide });
@@ -1383,9 +1448,7 @@ export default function SeoulJourney({ words = [], player }: { words?: string[];
       <Board tex={seoulSign} w={3.6} h={1.2} position={[-2.3, 7.6, NORTH_FRONT + 0.09]} glow={0.8} />
 
       {/* Ginkgos and their leaves, the lamps' lights. */}
-      <Instanced parts={canopies.a} material={ginkgo} geometry={kitGeometry("leafy")} castShadow />
-      <Instanced parts={canopies.c} material={ginkgoDeep} geometry={kitGeometry("leafy")} castShadow />
-      <Instanced parts={canopies.l} material={ginkgoLight} geometry={kitGeometry("leafy")} castShadow />
+      <mesh geometry={GINKGO_CROWNS} material={ginkgo} castShadow dispose={null} />
       <Instanced parts={canopies.leaves} material={leafMat} receiveShadow />
       <Instanced parts={LAMP_LIGHTS} material={lampLight} />
 

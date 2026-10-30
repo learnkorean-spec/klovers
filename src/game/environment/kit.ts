@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, ConeGeometry, CylinderGeometry, ExtrudeGeometry, IcosahedronGeometry, LatheGeometry, Shape, TorusGeometry, Vector2, Vector3, type Material } from "three";
+import { BoxGeometry, BufferAttribute, BufferGeometry, ConeGeometry, CylinderGeometry, ExtrudeGeometry, IcosahedronGeometry, LatheGeometry, Shape, TorusGeometry, Vector2, Vector3, type Material } from "three";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ACCENT, MAT } from "../config/materials";
 import { pickQuality } from "../systems/quality";
@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -130,6 +130,50 @@ function leafyBall(detail: number): BufferGeometry {
   const n = new Vector3();
   for (let i = 0; i < nrm.count; i++) {
     n.fromBufferAttribute(nrm, i).multiplyScalar(0.25).addScaledVector(dirs[i], 0.75).normalize();
+    nrm.setXYZ(i, n.x, n.y, n.z);
+  }
+  return g;
+}
+
+/**
+ * A clipped hedge block (unit box): flat-ish faces with rounded edges (a
+ * superellipsoid, so the top and ends are soft as on a real clipped hedge),
+ * a lumpy surface of shoots, and normals leaning 65% toward the smooth body,
+ * so light rolls over it as one mass with small leafy breaks — not a flat
+ * green slab. The bottom stays flat on the ground. Laid end to end, each
+ * block a little longer than its slot, the lumps hide the joins.
+ */
+function hedgeBlock(): BufferGeometry {
+  const raw = new BoxGeometry(1, 1, 1, 10, 7, 5);
+  raw.deleteAttribute("normal");
+  raw.deleteAttribute("uv");
+  const g = mergeVertices(raw, 1e-4);
+  const pos = g.getAttribute("position");
+  const body: Vector3[] = [];
+  const v = new Vector3();
+  const P = 5;
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    const bottom = v.y < -0.499;
+    // Project the cube point onto the superellipsoid |x|^P+|y|^P+|z|^P = 0.5^P.
+    const k = Math.pow(Math.abs(v.x) ** P + Math.abs(v.y) ** P + Math.abs(v.z) ** P, 1 / P);
+    const q = v.clone().multiplyScalar(0.5 / k);
+    if (bottom) q.y = -0.5;
+    // Smooth-body normal (the superellipsoid's gradient).
+    const n = new Vector3(Math.sign(q.x) * Math.abs(q.x) ** (P - 1), Math.sign(q.y) * Math.abs(q.y) ** (P - 1), Math.sign(q.z) * Math.abs(q.z) ** (P - 1)).normalize();
+    body.push(n);
+    if (!bottom) {
+      const d = Math.sin(q.x * 23.1 + q.y * 7.3) * Math.sin(q.z * 19.7 - q.x * 5.1) * Math.sin(q.y * 17.9 + q.z * 4.3);
+      const lo = Math.sin(q.x * 6.3 + 1.1) * Math.sin(q.y * 5.2 + q.z * 3.3);
+      q.addScaledVector(n, 0.035 * d + 0.02 * lo);
+    }
+    pos.setXYZ(i, q.x, q.y, q.z);
+  }
+  g.computeVertexNormals();
+  const nrm = g.getAttribute("normal");
+  const n = new Vector3();
+  for (let i = 0; i < nrm.count; i++) {
+    n.fromBufferAttribute(nrm, i).multiplyScalar(0.35).addScaledVector(body[i], 0.65).normalize();
     nrm.setXYZ(i, n.x, n.y, n.z);
   }
   return g;
@@ -772,6 +816,7 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   boulderA: boulder(1.7),
   boulderB: boulder(4.4),
   // A water-lily pad: a disc with its notch cut out (the notch side is 1 cm, left open).
+  hedge: hedgeBlock(),
   lilyPad: new CylinderGeometry(0.5, 0.5, 1, 22, 1, false, 0.35, Math.PI * 2 - 0.35),
   bloom: bloomHead(),
   leaves: leafRosette(),
