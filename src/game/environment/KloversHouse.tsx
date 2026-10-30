@@ -4,6 +4,8 @@ import { HOUSE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import { MAT, std } from "../config/materials";
 import { GateWall, InfoBoard as Board } from "./parts";
+import Batch from "./Batch";
+import { Kit, curvedRoofOn } from "./kit";
 import { paintPlanks, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
 
@@ -21,33 +23,77 @@ const HW = HOUSE.halfWidth;
 const HD = HOUSE.halfDepth;
 const WALL_H = 2.9;
 
-function Walls() {
-  type V3 = [number, number, number];
-  const walls: { pos: V3; size: V3 }[] = [
-    { pos: [0, WALL_H / 2, -HD - 0.2], size: [HW * 2 + 0.8, WALL_H, 0.4] },
-    { pos: [-HW - 0.2, WALL_H / 2, 0], size: [0.4, WALL_H, HD * 2 + 0.4] },
-    { pos: [HW + 0.2, WALL_H / 2, 0], size: [0.4, WALL_H, HD * 2 + 0.4] },
+/**
+ * The three hall walls, framed like a hanok: dark timber posts on a cut-stone
+ * base, a middle rail and a head rail with white plaster between, a band of
+ * lattice paper transoms (교창) under the top beam, and a short tiled coping
+ * on top. One kit, built once (a few instanced draws instead of plain slabs).
+ */
+function wallsKit(): Kit {
+  const k = new Kit();
+  const T = 0.4; // wall thickness
+  const STONE = 0.5;
+  const HEAD = 2.12; // underside of the head rail
+  const BEAM = WALL_H - 0.12; // underside of the top beam
+  // Each wall: its middle line, along x (back) or z (sides), and which way is in.
+  const walls = [
+    { along: "x" as const, at: -HD - T / 2, from: -HW - T, to: HW + T, inward: 1 },
+    { along: "z" as const, at: -HW - T / 2, from: -HD - T / 2, to: HD + T / 2, inward: 1 },
+    { along: "z" as const, at: HW + T / 2, from: -HD - T / 2, to: HD + T / 2, inward: -1 },
   ];
-  return (
-    <>
-      {walls.map((w, i) => (
-        <group key={i}>
-          <mesh receiveShadow position={w.pos}>
-            <boxGeometry args={w.size} />
-            <primitive object={std(PALETTE.ivory, 0.95)} attach="material" />
-          </mesh>
-          <mesh position={[w.pos[0], 0.4, w.pos[2]]}>
-            <boxGeometry args={[w.size[0] + 0.02, 0.8, w.size[2] + 0.02]} />
-            <primitive object={std(PALETTE.woodDark, 0.8)} attach="material" />
-          </mesh>
-          <mesh castShadow position={[w.pos[0], WALL_H + 0.12, w.pos[2]]}>
-            <boxGeometry args={[w.size[0] + 0.7, 0.2, w.size[2] + 0.7]} />
-            <primitive object={std(PALETTE.charcoal, 0.8)} attach="material" />
-          </mesh>
-        </group>
-      ))}
-    </>
-  );
+  type V3 = [number, number, number];
+  for (const w of walls) {
+    const len = w.to - w.from;
+    const mid = (w.from + w.to) / 2;
+    const face = w.at + w.inward * (T / 2); // the inner face
+    // a point u along the wall, y up, o out from the inner face (into the room)
+    const at = (u: number, y: number, o: number): V3 => (w.along === "x" ? [u, y, face + w.inward * o] : [face + w.inward * o, y, u]);
+    const size = (a: number, h: number, d: number): V3 => (w.along === "x" ? [a, h, d] : [d, h, a]);
+    k.box("plaster", w.along === "x" ? [mid, WALL_H / 2, w.at] : [w.at, WALL_H / 2, mid], size(len, WALL_H, T), true);
+    // Cut-stone base, a little proud, with a darker joint line on top.
+    k.box("stoneWarm", at(mid, STONE / 2, 0.02), size(len, STONE, 0.06));
+    // The inner span, corner post to corner post.
+    const a0 = w.along === "x" ? -HW : -HD;
+    const a1 = w.along === "x" ? HW : HD;
+    const bays = 6;
+    const bay = (a1 - a0) / bays;
+    for (let i = 0; i <= bays; i++) {
+      const u = a0 + i * bay;
+      // Posts: corner posts a touch heavier.
+      const pw = i === 0 || i === bays ? 0.26 : 0.2;
+      k.box("woodDark", at(u, WALL_H / 2, 0.05), size(pw, WALL_H, 0.1), true);
+      // A round stone foot under each post.
+      k.box("stoneWarm", at(u, 0.09, 0.08), size(pw + 0.14, 0.18, 0.16));
+    }
+    // Rails: middle rail on the stone base, head rail, top beam.
+    k.box("woodDark", at(0, STONE + 0.05, 0.035), size(a1 - a0, 0.1, 0.07));
+    k.box("woodDark", at(0, HEAD + 0.06, 0.035), size(a1 - a0, 0.12, 0.07));
+    k.box("woodDark", at(0, BEAM + 0.06, 0.04), size(a1 - a0, 0.12, 0.08));
+    // Lattice paper transoms between head rail and top beam, one per bay.
+    const ty0 = HEAD + 0.12;
+    const ty1 = BEAM;
+    const th = ty1 - ty0;
+    const ty = (ty0 + ty1) / 2;
+    for (let i = 0; i < bays; i++) {
+      const c = a0 + (i + 0.5) * bay;
+      const pw = bay - 0.2 - 0.16; // clear of the posts, with a frame
+      k.box("paper", at(c, ty, 0.012), size(pw, th - 0.06, 0.012));
+      // Frame (stiles) and the lattice: thin upright bars, two cross bars.
+      for (const s of [-1, 1]) k.box("woodDark", at(c + s * (pw / 2 + 0.03), ty, 0.03), size(0.06, th, 0.05));
+      const n = Math.max(6, Math.round(pw / 0.17));
+      for (let j = 1; j < n; j++) k.box("woodDark", at(c - pw / 2 + (j * pw) / n, ty, 0.026), size(0.022, th - 0.04, 0.025));
+      for (const f of [1 / 3, 2 / 3]) k.box("woodDark", at(c, ty0 + 0.03 + f * (th - 0.06), 0.026), size(pw, 0.022, 0.025));
+    }
+    // Plaster panel below the head rail is the wall itself. A short tiled
+    // coping along the top, like the courtyard's walls.
+    curvedRoofOn(k, w.along === "x" ? mid : w.at, WALL_H, w.along === "x" ? w.at : mid, w.along === "x" ? len + 0.5 : 1.15, w.along === "x" ? 1.15 : len + 0.5, 0.48, true);
+  }
+  return k;
+}
+
+function Walls() {
+  const kit = useMemo(() => wallsKit(), []);
+  return <Batch kit={kit} />;
 }
 
 /**

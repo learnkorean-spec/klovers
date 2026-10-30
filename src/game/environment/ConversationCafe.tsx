@@ -541,11 +541,15 @@ function CafeChair({ side, cushion }: { side: -1 | 1; cushion: Material }) {
  * black band round the room).
  */
 function Ceiling() {
-  const planks = useTiledTexture(paintPlanks, HW / 1.2, (HD + 0.4) / 1.2);
+  // The floor's photographed boards (same image, already loaded), tiled
+  // smaller so the ceiling reads as narrow tongue-and-groove boards; the
+  // painted planks stand in until the photo arrives.
+  const planks = useTiledTexture(paintPlanks, HW / 0.8, (HD + 0.4) / 0.8);
+  const photo = usePhotoFloor("planks", HW / 0.9, (HD + 0.4) / 0.9);
   return (
     <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_H + 0.004, 0.1]}>
       <planeGeometry args={[HW * 2 + 0.4, HD * 2 + 0.6]} />
-      <meshStandardMaterial map={planks} color="#FFF3E0" roughness={0.9} emissive="#C9A27A" emissiveIntensity={0.32} />
+      <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? planks} normalMap={photo?.normal ?? null} color={photo ? "#FFF0DC" : "#FFF3E0"} roughness={0.9} emissive={photo ? "#F0C89C" : "#C9A27A"} emissiveMap={photo?.map ?? null} emissiveIntensity={photo ? 0.85 : 0.32} />
     </mesh>
   );
 }

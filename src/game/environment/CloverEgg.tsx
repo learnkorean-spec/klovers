@@ -6,7 +6,10 @@ import {
   CanvasTexture,
   Color,
   DoubleSide,
+  CatmullRomCurve3,
   LatheGeometry,
+  TubeGeometry,
+  Vector3,
   MeshBasicMaterial,
   MeshStandardMaterial,
   SRGBColorSpace,
@@ -19,6 +22,7 @@ import { PALETTE, PROPS } from "../config/world";
 import { HATCH, type StoryState } from "../systems/story";
 import { REDUCED_MOTION } from "../systems/motion";
 import { pickQuality } from "../systems/quality";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 /**
  * The clover egg on its plinth in the middle of the courtyard.
@@ -99,6 +103,33 @@ const SHELL = (() => {
  * four-leaf clover painted on the side that faces the arrival path. The
  * clover also has its own faint emissive map so it stays readable in shade.
  */
+/**
+ * The ring the egg rests in: a twisted straw ring (똬리, the pad Koreans set
+ * a jar on), three strands wound round a 0.5 m circle — instead of a smooth
+ * turned wooden donut. One merged geometry, built once.
+ */
+const STRAW_RING = (() => {
+  const R = 0.5;
+  const twists = 9;
+  const N = 216;
+  const strands: BufferGeometry[] = [];
+  for (let s = 0; s < 3; s++) {
+    const pts: Vector3[] = [];
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * Math.PI * 2;
+      const t = a * twists + (s * Math.PI * 2) / 3;
+      const r = R + Math.cos(t) * 0.042;
+      // Ring in the x/y plane (the mesh is turned flat, like the old torus).
+      pts.push(new Vector3(Math.cos(a) * r, Math.sin(a) * r, Math.sin(t) * 0.042));
+    }
+    strands.push(new TubeGeometry(new CatmullRomCurve3(pts, true), N, 0.043, 6, true));
+  }
+  const g = mergeGeometries(strands) ?? strands[0];
+  for (const st of strands) if (st !== g) st.dispose();
+  return g;
+})();
+const STRAW = new MeshStandardMaterial({ color: "#C7A15F", roughness: 0.9 });
+
 const SHELL_MAT = (() => {
   const m = new MeshStandardMaterial({ color: new Color("#ffffff"), roughness: 0.48, side: DoubleSide });
   try {
@@ -317,10 +348,7 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
         <boxGeometry args={[1.2, 0.14, 0.4]} />
         <primitive object={MAT.stoneWarm} attach="material" />
       </mesh>
-      <mesh castShadow position={[0, PLINTH_H + 0.06, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.5, 0.08, 10, 32]} />
-        <primitive object={MAT.woodWarm} attach="material" />
-      </mesh>
+      <mesh castShadow receiveShadow position={[0, PLINTH_H + 0.06, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={STRAW_RING} material={STRAW} />
       <group ref={egg} position={[0, PLINTH_H + 0.05, 0]}>
         <group position={[0, EGG_Y - PLINTH_H - 0.05, 0]}>
           {/* Lower shell */}
