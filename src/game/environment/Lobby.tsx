@@ -7,7 +7,7 @@ import ModelProp, { type PropPlacement } from "./ModelProp";
 import { REAL_PROPS } from "../systems/styleMode";
 import CloverEgg from "./CloverEgg";
 import { BakedShade, useBakedFloor } from "./BakedFloor";
-import { BED_SOIL, Kit, azalea, bed, flowers, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, steppingStones, stoneLantern, tree, wallRun } from "./kit";
+import { BED_SOIL, Kit, azalea, bed, flowers, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, slabWalk, stoneLantern, tree, wallRun } from "./kit";
 import { Gate, Signboard } from "./parts";
 import { paintMadang, useTiledTexture, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
@@ -58,12 +58,11 @@ const COURTYARD_KIT: Kit = (() => {
   // Village roofs beyond the north wall: the promise of what is next.
   hanokHouse(k, { x: -6.5, z: -HD - 4.2, w: 6, d: 4.2, h: 2.4, face: "+z" });
   hanokHouse(k, { x: 6.8, z: -HD - 4.6, w: 5.4, d: 4.4, h: 2.8, face: "+z", roofH: 1.3 });
-  // The path the eye follows: arrival → egg → gate, in pale dressed stone
-  // on a darker bed of gravel, so the route reads from anywhere.
-  k.box("gravel", [0, 0.006, (PROPS.eggPlinth.w / 2 + 0.6 + HD - 1.2) / 2], [1.25, 0.012, HD - 1.8 - PROPS.eggPlinth.w / 2], false);
-  k.box("gravel", [0, 0.006, (-PROPS.eggPlinth.w / 2 - 0.6 - HD + 0.9) / 2], [1.25, 0.012, HD - 1.5 - PROPS.eggPlinth.w / 2], false);
-  steppingStones(k, 0, PROPS.eggPlinth.w / 2 + 0.6, 0, HD - 1.2, 0.95, 3, "stoneWarm");
-  steppingStones(k, 0, -PROPS.eggPlinth.w / 2 - 0.6, 0, -HD + 0.9, 0.95, 17, "stoneWarm");
+  // The path the eye follows: arrival → egg → gate, a laid granite walk
+  // (박석) with kerbs, so the route reads from anywhere without dotting the
+  // pale madang with dark discs.
+  slabWalk(k, 0, HD - 0.75, 0, PROPS.eggPlinth.w / 2 + 0.45, 1.25, 3);
+  slabWalk(k, 0, -PROPS.eggPlinth.w / 2 - 0.45, 0, -HD + 0.45, 1.25, 17);
   // Drip-line gravel along every wall foot.
   gutter(k, -HW + 0.27, -HD, -HW + 0.27, HD);
   gutter(k, HW - 0.27, -HD, HW - 0.27, HD);

@@ -35,7 +35,7 @@ const res = await p.evaluate(() => {
       const local = [];
       let maxY = -1e9, near = false;
       for (let k = 0; k < n; k++) { const i = idx ? idx.getX(k) : k; v.fromBufferAttribute(pos, i).applyMatrix4(m); local.push(v.x, v.y, v.z); if (v.y > maxY) maxY = v.y; if (Math.abs(v.x) < 40 && Math.abs(v.z) < 40) near = true; }
-      if (maxY < 0.03 || !near) continue;
+      if (maxY < 0.045 || !near) continue; // laid paving (slab walks, 3 cm proud) casts nothing
       for (const x of local) tris.push(x); kept++;
     }
     if (kept) names[o.name || o.geometry.type || o.type] = (names[o.name || o.geometry.type || o.type] || 0) + kept;

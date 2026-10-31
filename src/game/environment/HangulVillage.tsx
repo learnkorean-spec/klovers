@@ -2,7 +2,7 @@ import { MAT } from "../config/materials";
 import { VILLAGE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Batch from "./Batch";
-import { Kit, bed, cart, curvedRoofOn, grass, hanokHouse, hanokRoof, jitter, platform, pot, shrub, steppingStones, tree, wallRun, gatehouse, flowerBox } from "./kit";
+import { Kit, bed, cart, curvedRoofOn, grass, hanokHouse, hanokRoof, jitter, platform, pot, shrub, slabWalk, tree, wallRun, gatehouse, flowerBox } from "./kit";
 import { Gate, GateWall, Lamps, Signboard, Sway } from "./parts";
 import { VILLAGE_LETTERS } from "../config/interactions";
 import { paintPaving, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
@@ -78,7 +78,7 @@ const VILLAGE_KIT: Kit = (() => {
   const laneZ = VILLAGE.hubLaneZ;
   wallRun(k, HW + 0.3, laneZ - 1.9, HW + 6, laneZ - 1.9, 2.2);
   wallRun(k, HW + 0.3, laneZ + 1.9, HW + 6, laneZ + 1.9, 2.2);
-  steppingStones(k, HW + 0.4, laneZ, HW + 5.4, laneZ, 0.9, 41, "stoneWarm");
+  slabWalk(k, HW + 0.3, laneZ, HW + 5.7, laneZ, 1.1, 41);
   hanokRoof(k, HW + 9, laneZ, 3.2, 5, 6, 1.4);
   gatehouse(k, HW + 0.25, laneZ, -Math.PI / 2, { open: true, accent: true });
 
@@ -125,9 +125,10 @@ const VILLAGE_KIT: Kit = (() => {
   bed(k, 4.35, 9.3, 0.8, 1.2, 19);
   cart(k, VILLAGE.cart.x, VILLAGE.cart.z, VILLAGE.cart.w, VILLAGE.cart.d);
 
-  // A slate path up the middle of the street.
-  steppingStones(k, 0, HL - 1, 0, 1.4, 1.1, 5, "stoneWarm");
-  steppingStones(k, 0, -1.4, 0, -HL + 1, 1.1, 29, "stoneWarm");
+  // A laid granite walk (박석) up the middle of the cobbled street, parting
+  // round the well. Round stepping stones read as pale discs on paving.
+  slabWalk(k, 0, HL - 0.5, 0, 1.2, 1.25, 5);
+  slabWalk(k, 0, -1.2, 0, -HL + 0.5, 1.25, 29);
   return k;
 })();
 
