@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -28,6 +30,7 @@ export default function AiRoomLabPage() {
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState<string | null>(null);
   const [variants, setVariants] = useState<RoomVariant[]>([]);
+  const [useCharacters, setUseCharacters] = useState(true);
 
   const generate = async () => {
     if (!prompt.trim()) return;
@@ -35,7 +38,7 @@ export default function AiRoomLabPage() {
     setVariants([]);
     try {
       const { data, error } = await supabase.functions.invoke("generate-ai-room-concept", {
-        body: { prompt },
+        body: { prompt, useCharacters },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -82,6 +85,18 @@ export default function AiRoomLabPage() {
               rows={3}
               disabled={loading}
             />
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="use-characters"
+                checked={useCharacters}
+                onCheckedChange={(v) => setUseCharacters(v === true)}
+                disabled={loading}
+              />
+              <Label htmlFor="use-characters" className="text-sm font-normal cursor-pointer">
+                Use KLOVERS characters (Adam, Lina, Cluby) in the image, from their real
+                reference art
+              </Label>
+            </div>
             <Button onClick={generate} disabled={loading || !prompt.trim()}>
               {loading ? (
                 <>
@@ -94,9 +109,9 @@ export default function AiRoomLabPage() {
               )}
             </Button>
             <p className="text-xs text-muted-foreground">
-              This proposes two design directions for a new learning room. Nothing is added to
-              the live world automatically — a developer picks a variant and builds it in, per
-              KLOVERS' story canon.
+              This proposes two design directions for a new learning room — an internal concept
+              sketch for a developer to review and build for real, not a final asset. Nothing is
+              added to the live world automatically, per KLOVERS' story canon.
             </p>
           </CardContent>
         </Card>

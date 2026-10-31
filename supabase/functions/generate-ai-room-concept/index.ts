@@ -25,10 +25,29 @@ const META_API_BASE = "https://api.meta.ai/v1";
 const MUSE_IMAGE_MODEL = "muse-image-1.0";
 const MUSE_SPARK_MODEL = "muse-spark-1.3";
 
+// Per docs/KLOVERS-STORY-BIBLE.md "Visual style" (and the 5 Oct 2026 standing
+// rule retiring flat/illustrated character art sitewide): humans are
+// photorealistic, Cluby is a realistic-cute 3D plush with a specific look,
+// environments are soft painterly Korean storybook — never flat/isometric
+// cartoon. This prompt intentionally does NOT describe the characters from
+// scratch; their real reference images are passed to Muse Image instead (see
+// CHARACTER_REFS below), so their actual look is preserved rather than
+// reinvented.
 const KLOVERS_STYLE =
-  "Clean lines, Klovers palette only — ivory #FFF9EC background, bright yellow " +
-  "#FFFF00 and charcoal #2E2E2E accents, isometric 3D perspective, cute cartoon " +
-  "Korean-styled characters, educational illustration style, no text labels.";
+  "Soft, painterly Korean storybook illustration style, warm natural lighting, " +
+  "photorealistic human proportions and fabric, premium and clean — not flat " +
+  "cartoon, not anime, not isometric icon art. Klovers palette: ivory #FFF9EC, " +
+  "bright yellow #FFFF00, charcoal #2E2E2E accents. No text or labels in the image.";
+
+// Canonical character reference images, served from the live site, passed to
+// Muse Image's edit endpoint so generated scenes use Reham's actual
+// characters instead of inventing new ones.
+const CHARACTER_REFS = {
+  // Adam (male learner) + Lina (female learner) together, photoreal, canon reference.
+  learners: "https://kloversegy.com/assets/cluby/learners-reference.webp",
+  // Cluby, canon reference (realistic-cute plush, mint green, yellow horns, ivory/yellow hanbok).
+  cluby: "https://kloversegy.com/assets/cluby/cluby-wave.webp",
+};
 
 type Variant = { label: "A" | "B"; angle: string };
 
@@ -49,21 +68,34 @@ function getMetaApiKey(): string | undefined {
   return Deno.env.get("META_MODEL_API_KEY");
 }
 
-async function generateConceptImage(prompt: string, apiKey: string): Promise<string> {
-  const res = await fetch(`${META_API_BASE}/images/generations`, {
+async function generateConceptImage(
+  prompt: string,
+  apiKey: string,
+  useCharacters: boolean,
+): Promise<string> {
+  const endpoint = useCharacters ? "images/edits" : "images/generations";
+  const body: Record<string, unknown> = {
+    model: MUSE_IMAGE_MODEL,
+    prompt,
+    n: 1,
+    size: "1536x1024",
+    response_format: "b64_json",
+    output_format: "png",
+  };
+  if (useCharacters) {
+    body.images = [
+      { image_url: CHARACTER_REFS.learners },
+      { image_url: CHARACTER_REFS.cluby },
+    ];
+  }
+
+  const res = await fetch(`${META_API_BASE}/${endpoint}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: MUSE_IMAGE_MODEL,
-      prompt,
-      n: 1,
-      size: "1536x1024",
-      response_format: "b64_json",
-      output_format: "png",
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -158,21 +190,23 @@ serve(async (req) => {
       .maybeSingle();
     if (!roleData) throw new Error("Unauthorized: admin only");
 
-    const { prompt } = await req.json();
+    const { prompt, useCharacters: useCharactersRaw } = await req.json();
     if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
       throw new Error("prompt is required");
     }
     const theme = prompt.trim().slice(0, 500);
+    const useCharacters = useCharactersRaw !== false; // default true
 
-    console.log("Generating AI room concepts for theme:", theme);
+    console.log("Generating AI room concepts for theme:", theme, "useCharacters:", useCharacters);
 
     const results = await Promise.all(
       VARIANTS.map(async (variant) => {
-        const imagePrompt =
-          `Isometric illustration of a Korean-language-learning room scene: ${theme}. ${variant.angle}. ${KLOVERS_STYLE}`;
+        const imagePrompt = useCharacters
+          ? `Using the exact learners and Cluby shown in the reference images (keep their faces, hair, outfits and Cluby's plush look identical to the references), compose them into a new Korean-language-learning room scene: ${theme}. ${variant.angle}. Place them naturally in the room, doing something related to the room's theme. ${KLOVERS_STYLE}`
+          : `A Korean-language-learning room scene: ${theme}. ${variant.angle}. ${KLOVERS_STYLE}`;
 
         const [imageDataUrl, designBrief] = await Promise.all([
-          generateConceptImage(imagePrompt, metaApiKey),
+          generateConceptImage(imagePrompt, metaApiKey, useCharacters),
           generateDesignBrief(theme, variant.angle, metaApiKey),
         ]);
 
