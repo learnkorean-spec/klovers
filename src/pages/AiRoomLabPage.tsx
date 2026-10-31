@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -134,6 +134,14 @@ export default function AiRoomLabPage() {
                       alt={`Room concept variant ${v.label}: ${v.designBrief.roomName}`}
                       className="w-full rounded-md border"
                     />
+                    <a
+                      href={v.imageDataUrl}
+                      download={`klovers-room-${v.label}-${v.designBrief.roomName.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`}
+                    >
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Download className="h-4 w-4 mr-2" /> Download image
+                      </Button>
+                    </a>
                     <div className="text-sm">
                       <p className="font-medium">Learner practices:</p>
                       <p className="text-muted-foreground">{v.designBrief.learnerAction}</p>
