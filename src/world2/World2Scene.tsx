@@ -1,42 +1,45 @@
 import { Suspense, useMemo, useRef } from "react";
-import { useFrame, useLoader } from "@react-three/fiber";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
-import { Box3, Group, Vector3 } from "three";
+import { useFrame } from "@react-three/fiber";
+import type { Group } from "three";
+import { PALETTE } from "../game/config/world";
+import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
 
 /**
  * KLOVERS World 2 — hackathon tech-demo scene: a Korean street-food cart at
  * dusk (포장마차), the room Meta's Muse Image/Spark designed in AI Room Lab.
  *
- * Deliberately isolated from src/game/* — this is a standalone preview, not
- * the live learner world, so it does not touch production room logic, and
- * does not need to satisfy the KLOVERS STORY CANON's progression rules
- * (no real learner data gates anything here — it's a fixed demo scene).
- * It DOES reuse the real Adam/Lina canon models and Cluby's real
- * description, so the characters stay recognizably KLOVERS.
+ * Deliberately isolated from src/game/* room logic (no production progression
+ * or story-canon gating touched), but reuses the game's own RiggedBody
+ * component for Adam and Lina — the same rigged, dyed, real-animation
+ * characters the live KLOVERS World uses — rather than a crude standalone
+ * GLB loader, so they stay pixel-for-pixel the same Adam and Lina.
  *
  * Palette: ivory #FFF9EC, KLOVERS yellow #FFFF00, charcoal #2E2E2E.
  */
 
-const extend = (l: GLTFLoader) => l.setMeshoptDecoder(MeshoptDecoder);
+/** Canon dress rules, copied from player/RealAvatar.tsx (not exported there). */
+const DRESS: Record<"adam" | "lina", DressRule[]> = {
+  adam: [
+    { match: /Suit/, color: "#F2E200" },
+    { match: /Shirt/, color: PALETTE.ivory },
+    { match: /Pants/, color: "#EFE6D2" },
+    { match: /Shoes/, color: PALETTE.white },
+  ],
+  lina: [
+    { match: /Shirt/, color: PALETTE.ivory },
+    { match: /Pants/, color: "#F2E200" },
+    { match: /Shoes/, color: PALETTE.ivory },
+    { match: /HairLong/, color: "#7A3520", contrast: 0.4 },
+    { match: /Hair/, color: "#5E2A17", contrast: 0.35 },
+  ],
+};
 
-/** Loads a canon character GLB and fits it to a target height, standing on the ground. */
-function Character({ url, x, z, rotY = 0, height = 1.75 }: { url: string; x: number; z: number; rotY?: number; height?: number }) {
-  const gltf = useLoader(GLTFLoader, url, extend);
-  const scene = useMemo(() => {
-    const clone = gltf.scene.clone(true);
-    const box = new Box3().setFromObject(clone);
-    const size = new Vector3();
-    box.getSize(size);
-    const scale = size.y > 0 ? height / size.y : 1;
-    clone.scale.setScalar(scale);
-    const box2 = new Box3().setFromObject(clone);
-    clone.position.y -= box2.min.y;
-    return clone;
-  }, [gltf, height]);
+/** A learner, standing and talking at the cart — same rig the live game uses. */
+function Learner({ avatar, x, z, rotY }: { avatar: "adam" | "lina"; x: number; z: number; rotY: number }) {
+  const control = useRef<BodyControl>({ clip: "talk", once: null, rate: 1 });
   return (
     <group position={[x, 0, z]} rotation={[0, rotY, 0]}>
-      <primitive object={scene} />
+      <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} />
     </group>
   );
 }
@@ -174,9 +177,9 @@ export default function World2Scene() {
       <FoodCart />
       <Suspense fallback={null}>
         {/* Adam ordering at the counter */}
-        <Character url="/assets/world/people/adam.glb" x={-0.6} z={1.1} rotY={Math.PI} />
+        <Learner avatar="adam" x={-0.6} z={1.1} rotY={Math.PI} />
         {/* Lina pointing at the menu */}
-        <Character url="/assets/world/people/lina.glb" x={0.5} z={1.1} rotY={Math.PI - 0.3} />
+        <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI - 0.3} />
       </Suspense>
       {/* Cluby sitting on the stool beside them */}
       <Cluby x={0.9} z={0.75} />
