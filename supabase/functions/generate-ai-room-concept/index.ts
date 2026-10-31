@@ -34,10 +34,14 @@ const MUSE_SPARK_MODEL = "muse-spark-1.3";
 // CHARACTER_REFS below), so their actual look is preserved rather than
 // reinvented.
 const KLOVERS_STYLE =
-  "Soft, painterly Korean storybook illustration style, warm natural lighting, " +
-  "photorealistic human proportions and fabric, premium and clean — not flat " +
-  "cartoon, not anime, not isometric icon art. Klovers palette: ivory #FFF9EC, " +
-  "bright yellow #FFFF00, charcoal #2E2E2E accents. No text or labels in the image.";
+  "The room/environment: soft, warm, premium Korean-storybook atmosphere and " +
+  "lighting, clean and uncluttered. Klovers palette: ivory #FFF9EC, bright yellow " +
+  "#FFFF00, charcoal #2E2E2E accents. The PEOPLE (Adam and Lina) must stay fully " +
+  "photorealistic — real human skin texture, real hair, real fabric, exactly like " +
+  "actual photographed people, not illustrated, not painted, not cartoon, not " +
+  "anime, not an isometric icon. Cluby stays a realistic-cute 3D plush creature " +
+  "exactly like its reference image, not flattened into 2D art. No text or " +
+  "labels in the image.";
 
 // Canonical character reference images, served from the live site, passed to
 // Muse Image's edit endpoint so generated scenes use Reham's actual
@@ -202,7 +206,7 @@ serve(async (req) => {
     const results = await Promise.all(
       VARIANTS.map(async (variant) => {
         const imagePrompt = useCharacters
-          ? `Using the exact learners and Cluby shown in the reference images (keep their faces, hair, outfits and Cluby's plush look identical to the references), compose them into a new Korean-language-learning room scene: ${theme}. ${variant.angle}. Place them naturally in the room, doing something related to the room's theme. ${KLOVERS_STYLE}`
+          ? `Photo-edit the exact same real people and creature from the reference images into a new setting — do not redraw or restyle them, keep their real faces, real hair, real skin, real outfits, and Cluby's exact plush look pixel-faithful to the references, as if they were composited/photographed into a new room: ${theme}. ${variant.angle}. Place them naturally in the room, doing something related to the room's theme. ${KLOVERS_STYLE}`
           : `A Korean-language-learning room scene: ${theme}. ${variant.angle}. ${KLOVERS_STYLE}`;
 
         const [imageDataUrl, designBrief] = await Promise.all([
