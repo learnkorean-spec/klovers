@@ -20,7 +20,7 @@ import { curvedRoof, roofAspect } from "./shapes";
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "hill"
-  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry";
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry" | "bark" | "barkCherry";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
 export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "rootFlare" | "taper" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
@@ -77,6 +77,8 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   sponge: MAT.sponge,
   cream: MAT.cream,
   berry: MAT.berry,
+  bark: MAT.bark,
+  barkCherry: MAT.barkCherry,
 };
 
 /**
@@ -1330,7 +1332,7 @@ export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed 
   // Far trees (beyond the walls): low-poly, and no shadow (they fall
   // outside the sun's shadow box anyway, so casting would only cost).
   const cyl: GeoKey = "cylLow";
-  k.add("woodDark", cyl, [x, 1.0 * s, z], [0.22 * s, 2.0 * s, 0.22 * s], [lean, 0, -lean], false);
+  k.add(blossom ? "barkCherry" : "bark", cyl, [x, 1.0 * s, z], [0.22 * s, 2.0 * s, 0.22 * s], [lean, 0, -lean], false);
   // One whole crown (two shapes, two greens, by the seed).
   const j = 1 + jitter(seed * 3, 0.12);
   const geo: GeoKey = seed % 2 ? "crownA" : "crownB";
@@ -1352,7 +1354,7 @@ function broadleafTree(k: Kit, x: number, z: number, s: number, seed: number): v
     const dx = Math.sin(t) * Math.cos(a);
     const dy = Math.cos(t);
     const dz = Math.sin(t) * Math.sin(a);
-    k.add("woodDark", "taper", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
+    k.add("bark", "taper", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
     return [ax + dx * len, ay + dy * len, az + dz * len];
   };
   let c = 0;
@@ -1362,7 +1364,7 @@ function broadleafTree(k: Kit, x: number, z: number, s: number, seed: number): v
     k.add(dark ? "leafDark" : "leaf", "leafy", p, [jr, jr * 0.8, jr], [jitter(seed + c, 0.4), jitter(seed * 3 + c, 3), 0], true);
   };
   // Root flare (buttresses running into the ground) and trunk.
-  k.add("woodDark", "rootFlare", [x, 0.2 * s, z], [0.45 * s, 0.44 * s, 0.45 * s], [0, seed, 0], true);
+  k.add("bark", "rootFlare", [x, 0.2 * s, z], [0.45 * s, 0.44 * s, 0.45 * s], [0, seed, 0], true);
   const [fx, fork, fz] = rod(x, 0, z, seed * 1.3, Math.abs(lean), 1.55 * s, 0.27 * s, true);
   const n = 4;
   for (let i = 0; i < n; i++) {
@@ -1406,7 +1408,7 @@ function cherryTree(k: Kit, x: number, z: number, s: number, seed: number): void
     const dx = Math.sin(t) * Math.cos(a);
     const dy = Math.cos(t);
     const dz = Math.sin(t) * Math.sin(a);
-    k.add("woodDark", "taper", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
+    k.add("barkCherry", "taper", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
     return [ax + dx * len, ay + dy * len, az + dz * len];
   };
   let c = 0;
@@ -1418,12 +1420,12 @@ function cherryTree(k: Kit, x: number, z: number, s: number, seed: number): void
     k.add(mat, geo, p, [jr, jr * 0.78, jr], [jitter(c, 0.4), jitter(c * 3, 3), jitter(c * 5, 0.3)], true);
   };
   // Root flare, then a trunk in two pieces that narrows to the fork.
-  k.add("woodDark", "rootFlare", [x, 0.2 * s, z], [0.45 * s, 0.44 * s, 0.45 * s], [0, seed, 0], true);
+  k.add("barkCherry", "rootFlare", [x, 0.2 * s, z], [0.45 * s, 0.44 * s, 0.45 * s], [0, seed, 0], true);
   const low = rod(x, 0, z, seed, Math.abs(lean), 0.8 * s, 0.27 * s, true);
   const [fx, fork, fz] = rod(low[0], low[1], low[2], seed + 2.4, Math.abs(lean) * 1.6, 0.62 * s, 0.22 * s, true);
   // Knuckles where one piece of wood meets the next: without them the open
   // ends of the rods showed as cut pipes from a low view.
-  const knuckle = (p: V3, w: number) => k.add("woodDark", "fruit", p, [w, w, w]);
+  const knuckle = (p: V3, w: number) => k.add("barkCherry", "fruit", p, [w, w, w]);
   // As wide as the wood they join (each rod ends at 0.8 of its width).
   knuckle(low, 0.22 * s);
   knuckle([fx, fork, fz], 0.2 * s);

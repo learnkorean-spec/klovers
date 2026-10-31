@@ -604,6 +604,145 @@ float lockMetal = 0.1;
 }
 
 /**
+ * Tree bark, in the shader (no textures, no draw calls). Expects round wood
+ * pieces whose axis is local y — the kit's "taper", "cyl", "rootFlare" and
+ * the cherry's "fruit" knuckles. Around the axis the bark is split into
+ * plates a few centimetres wide (a whole number of them round each piece, so
+ * the seam never shows), wandering a little up the trunk and broken across
+ * at random heights; furrows between them are dark and sunk (a bump from the
+ * plate height, by screen derivatives). Everything is in metres from the
+ * instance's own scale, so a thin twig and the trunk show bark of one size;
+ * where a plate would be finer than a pixel it fades to the average tone.
+ *
+ * "cherry" (벚나무): smooth reddish-brown bark with a soft sheen and the
+ * horizontal lenticel dashes cherry trees are known by, instead of plates.
+ * Before, every trunk was a glossy orange pipe with the planks' grain rings.
+ */
+function bark(kind: "plates" | "cherry"): MeshStandardMaterial {
+  const cherry = kind === "cherry";
+  const m = new MeshStandardMaterial({
+    color: new Color(cherry ? "#4A302C" : "#6E6152"),
+    roughness: cherry ? 0.55 : 0.92,
+    metalness: 0,
+  });
+  m.onBeforeCompile = (shader) => {
+    const vary = "varying vec3 vBarkL;\nvarying vec3 vBarkS;\nvarying vec3 vBarkW;\nvarying float vBarkSeed;";
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", `#include <common>\n${vary}`)
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+{
+  vec4 bw = vec4(transformed, 1.0);
+  vec3 bo = modelMatrix[3].xyz;
+  vec3 bs = vec3(length(modelMatrix[0].xyz), length(modelMatrix[1].xyz), length(modelMatrix[2].xyz));
+  #ifdef USE_INSTANCING
+    bw = instanceMatrix * bw;
+    bo += instanceMatrix[3].xyz;
+    bs *= vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
+  #endif
+  vBarkW = (modelMatrix * bw).xyz;
+  vBarkL = position;
+  vBarkS = bs;
+  vBarkSeed = fract(sin(dot(bo.xz, vec2(12.9898, 78.233))) * 43758.5453);
+}`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+${vary}
+float barkHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float barkNoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(barkHash(i), barkHash(i + vec2(1.0, 0.0)), f.x), mix(barkHash(i + vec2(0.0, 1.0)), barkHash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+// 3D value noise: sampled on the piece's own round surface, so it has no seam.
+float barkNoise3(vec3 p) {
+  float i = floor(p.z);
+  float f = fract(p.z);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(barkNoise(p.xy + i * vec2(37.0, 17.0)), barkNoise(p.xy + (i + 1.0) * vec2(37.0, 17.0)), f);
+}`,
+      )
+      .replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+float barkH = 0.0;
+float barkFade = 0.0;
+{
+  // Round the axis (0…1), up it (metres, world height so pieces line up)
+  // and a seamless point on the bark (metres) for the noise.
+  float u = atan(vBarkL.z, vBarkL.x) / 6.2831853 + 0.5;
+  float v = vBarkW.y + vBarkSeed * 0.37;
+  float rad = max(length(vBarkL.xz), 0.05) * vBarkS.x;
+  vec2 dm = normalize(vBarkL.xz + vec2(1e-5)) * rad;
+  // Plate count from the piece's mean girth (not the local radius), so a
+  // tapering piece keeps the same furrows all the way up.
+  float circ = 6.2831853 * 0.45 * vBarkS.x;
+  float px = length(fwidth(vBarkW));
+${cherry ? `  // Lenticels: thin horizontal dashes in loose, broken rows.
+  float n = max(3.0, floor(circ / 0.045 + 0.5));
+  float row = v / 0.028;
+  float ri = floor(row);
+  float cu = u * n + floor(barkHash(vec2(ri, vBarkSeed)) * 3.0) + 0.5 * step(0.5, fract(ri * 0.5));
+  float dash = smoothstep(0.16, 0.07, abs(fract(row) - 0.5)) * smoothstep(0.42, 0.2, abs(fract(cu) - 0.5));
+  dash *= step(0.72, barkHash(vec2(mod(floor(cu), n), ri)));
+  barkFade = clamp(1.8 - px / 0.008, 0.0, 1.0);
+  // Peeling bands round the trunk (darker, greyer), and a mossier foot.
+  float band = barkNoise3(vec3(dm * 6.0, v * 3.0));
+  float fine = barkNoise3(vec3(dm * 30.0, v * 9.0));
+  barkH = dash * barkFade;
+  vec3 tone = mix(vec3(0.74, 0.76, 0.82), vec3(1.08, 1.0, 0.96), smoothstep(0.25, 0.75, band)) * (0.9 + 0.2 * fine);
+  tone = mix(tone, vec3(1.45, 1.3, 1.12), dash * barkFade * 0.7);
+  float foot = 1.0 - smoothstep(0.0, 0.6, vBarkW.y);
+  tone *= mix(vec3(1.0), vec3(0.78, 0.84, 0.72), foot);
+  diffuseColor.rgb *= tone;` : `  // Furrows about 5 cm apart round the piece, wandering as they climb;
+  // the ridges between them broken by cracks and rough patches.
+  float n = max(4.0, floor(circ / 0.05 + 0.5));
+  // Two sets of wandering furrows that cross and merge (the diamond, split
+  // ridges of old broadleaf bark), not straight stripes.
+  float wobA = (barkNoise3(vec3(dm * 5.0, v * 3.0)) - 0.5) * 2.2 + (barkNoise3(vec3(dm * 14.0, v * 8.0)) - 0.5) * 0.5;
+  float wobB = (barkNoise3(vec3(dm * 5.0, v * 3.0) + 17.0) - 0.5) * 2.2 + (barkNoise3(vec3(dm * 14.0, v * 8.0) + 5.0) - 0.5) * 0.5;
+  float ra = abs(sin(3.14159 * (u * n + wobA)));
+  float rb = abs(sin(3.14159 * (u * n + 0.5 + wobB)));
+  float ridge = smoothstep(0.22, 0.85, min(ra, mix(1.0, rb, 0.7)) * 1.1);
+  float crack = smoothstep(0.2, 0.42, barkNoise3(vec3(dm * 26.0, v * 6.0)));
+  float rough = barkNoise3(vec3(dm * 40.0, v * 22.0));
+  barkFade = clamp(1.8 - px / 0.012, 0.0, 1.0);
+  float h = ridge * mix(0.35, 1.0, crack) * (0.8 + 0.2 * rough);
+  barkH = h * barkFade;
+  float tone = mix(0.86, mix(0.4, 1.12, h), barkFade) * (0.92 + 0.16 * barkNoise3(vec3(dm * 3.0, v * 1.3)));
+  // Grey-green lichen in soft patches on the ridges; a darker, damp foot.
+  float lichen = smoothstep(0.6, 0.78, barkNoise3(vec3(dm * 8.0, v * 1.8) + vBarkSeed * 13.0)) * mix(0.5, h, barkFade);
+  vec3 c = vec3(tone) * mix(vec3(1.0), vec3(1.08, 1.17, 0.97), lichen * 0.8);
+  float foot = 1.0 - smoothstep(0.0, 0.5, vBarkW.y);
+  c *= mix(vec3(1.0), vec3(0.78, 0.8, 0.74), foot);
+  diffuseColor.rgb *= c;`}
+}`,
+      )
+      .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+if (barkFade > 0.0) {
+  vec3 sx = dFdx(-vViewPosition);
+  vec3 sy = dFdy(-vViewPosition);
+  vec3 r1 = cross(sy, normal);
+  vec3 r2 = cross(normal, sx);
+  float det = dot(sx, r1) * faceDirection;
+  vec2 dh = vec2(dFdx(barkH), dFdy(barkH)) * ${cherry ? "0.0015" : "0.01"};
+  vec3 grad = sign(det) * (dh.x * r1 + dh.y * r2);
+  normal = normalize(abs(det) * normal - grad);
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => `klovers-bark-${kind}`;
+  return m;
+}
+
+/**
  * A woven basket (대바구니): upright stakes with flat cane woven over and
  * under them, all in the shader from the basket's own unit shape (angle
  * around the axis, height) — so the weave stays the same size on every
@@ -861,6 +1000,9 @@ export const MAT = {
   beans: std("#2E211B", 0.28),
   /** Woven cane baskets of produce. */
   wicker: wicker("#C49A62"),
+  /** Tree trunks and limbs: furrowed plates; cherry: smooth, with lenticels. */
+  bark: bark("plates"),
+  barkCherry: bark("cherry"),
   /** Dark, damp garden soil in a planting bed. */
   soil: std("#5E4A38", 1, { detail: "plaster" }),
   /** Seoul far below Namsan: façades with storeys of windows (see cityBlock). */

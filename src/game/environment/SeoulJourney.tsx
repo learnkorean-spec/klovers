@@ -956,8 +956,8 @@ const STREET_KIT: Kit = (() => {
   SEOUL.trees.forEach((tr, i) => {
     k.box("metal", [tr.x, 0.012, tr.z], [1.1, 0.02, 1.1]);
     const g = GINKGO[i];
-    k.add("woodDark", "cyl", [tr.x, 0.1, tr.z], [0.3, 0.2, 0.3]);
-    for (const l of g.limbs) k.add("woodDark", "cyl", l.p, l.s, l.r, l.cast);
+    k.add("bark", "cyl", [tr.x, 0.1, tr.z], [0.3, 0.2, 0.3]);
+    for (const l of g.limbs) k.add("bark", "cyl", l.p, l.s, l.r, l.cast);
   });
   // Planters by the gate back to the Hub.
   SEOUL.planters.forEach((p, i) => {
