@@ -61,6 +61,7 @@ const ResubmitSchedulePage = lazy(() => import("./pages/ResubmitSchedulePage"));
 const AdminResetPage = lazy(() => import("./pages/AdminResetPage"));
 const MarketingGeneratorPage = lazy(() => import("./pages/MarketingGeneratorPage")); const AdminGuide = lazy(() => import("./pages/AdminGuide"));
 const KoreanOrchestratorPage = lazy(() => import("./pages/KoreanOrchestratorPage"));
+const AiRoomLabPage = lazy(() => import("./pages/AiRoomLabPage"));
 const KoreanPlacementPage = lazy(() => import("./pages/KoreanPlacementPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
 const TextbookHubPage = lazy(() => import("./pages/TextbookHubPage"));
@@ -313,6 +314,7 @@ const App = () => (
                 <Route path="/admin/reset" element={<ProtectedRoute><AdminResetPage /></ProtectedRoute>} />
                 <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} /><Route path="/admin/guide" element={<ProtectedRoute><AdminGuide /></ProtectedRoute>} />
                 <Route path="/admin/korean-orchestra" element={<ProtectedRoute><KoreanOrchestratorPage /></ProtectedRoute>} />
+                <Route path="/admin/ai-room-lab" element={<ProtectedRoute><AiRoomLabPage /></ProtectedRoute>} />
                 <Route path="/admin/today" element={<ProtectedRoute><AdminToday /></ProtectedRoute>} />
                 {/* Must sit BEFORE /admin — /admin is exact-match in v6, so the
                     order is not load-bearing, but keeping the specific paths
