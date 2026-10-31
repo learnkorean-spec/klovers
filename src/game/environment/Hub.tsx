@@ -4,7 +4,7 @@ import { ACCENT, MAT } from "../config/materials";
 import { PALETTE } from "../config/world";
 import { HUB, hubGateSpot, type HubGate } from "../config/rooms";
 import Batch from "./Batch";
-import { Kit, bed, grass, gutter, hanokHouse, hanokRoof, noticeBoard, pine, platform, pot, shopfront, stoneLantern, tree, wallRun, gatehouse, flowers, pathStrip } from "./kit";
+import { Kit, bed, grass, gutter, hanokHouse, hanokRoof, noticeBoard, pine, platform, pot, shopfront, stoneLantern, tree, wallRun, gatehouse, flowers, slabWalk } from "./kit";
 import { Gate, Signboard } from "./parts";
 import ModelProp, { type PropPlacement } from "./ModelProp";
 import { REAL_PROPS } from "../systems/styleMode";
@@ -116,14 +116,28 @@ const HUB_KIT: Kit = (() => {
   // are open (the way you came, the café, lessons, games), narrower to the
   // worlds still ahead. They answer "where does this lead?" at a glance.
   const R0 = 2.35;
+  // Where walks converge by the pavilion, a later walk leaves out the slabs
+  // that would lie on one already laid.
+  const laid: { x1: number; z1: number; x2: number; z2: number; w: number }[] = [];
+  const onLaid = (x: number, z: number) =>
+    laid.some((p) => {
+      const dx = p.x2 - p.x1, dz = p.z2 - p.z1, L = Math.hypot(dx, dz);
+      const t = ((x - p.x1) * dx + (z - p.z1) * dz) / L;
+      const off = Math.abs((x - p.x1) * dz - (z - p.z1) * dx) / L;
+      return t > -0.3 && t < L + 0.3 && off < p.w / 2 + 0.2;
+    });
+  const walk = (x1: number, z1: number, x2: number, z2: number, w: number, seed: number) => {
+    slabWalk(k, x1, z1, x2, z2, w, seed, onLaid);
+    laid.push({ x1, z1, x2, z2, w });
+  };
   for (const g of HUB.gates) {
     const s = hubGateSpot(g, 0.5);
     const d = Math.hypot(s.x, s.z) || 1;
-    pathStrip(k, (s.x / d) * R0, (s.z / d) * R0, s.x, s.z, g.kind === "future" ? 0.85 : 1.2, g.along * 7 + 3);
+    walk((s.x / d) * R0, (s.z / d) * R0, s.x, s.z, g.kind === "future" ? 0.85 : 1.2, g.along * 7 + 3);
   }
   for (const g of SOUTH_GATES) {
     const d = Math.hypot(g.along, H - 0.5);
-    pathStrip(k, (g.along / d) * R0, ((H - 0.5) / d) * R0, g.along, H - 0.5, 1.2, g.along * 5 + 11);
+    walk((g.along / d) * R0, ((H - 0.5) / d) * R0, g.along, H - 0.5, 1.2, g.along * 5 + 11);
   }
 
   for (const [x, z, sc] of HUB.pots) pot(k, x, z, sc, sc > 0.9);

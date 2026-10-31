@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "bedCover" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry" | "bark" | "barkCherry";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "rootFlare" | "taper" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "slab" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "rootFlare" | "taper" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -574,6 +574,39 @@ function flagstone(seed: number): BufferGeometry {
 }
 
 /**
+ * A dressed paving slab (박석 walk): a 1×1 footprint, top at y 0.06 with a
+ * crisp 2 cm chamfer, sides down to y −0.03 (bedded in the joint fill).
+ * Flat-shaded, so each chamfer catches its own light — the slab reads cut,
+ * not cast. MAT.flagstone darkens it below y 0.06 (its rim band).
+ */
+function pavingSlab(): BufferGeometry {
+  const rings: [number, number][] = [[0.47, 0.06], [0.5, 0.038], [0.5, -0.03]];
+  const pos: number[] = [];
+  const corner = (h: number, i: number): [number, number] => {
+    const c = [[-1, -1], [1, -1], [1, 1], [-1, 1]][i % 4];
+    return [c[0] * h, c[1] * h];
+  };
+  const pt = (r: number, i: number) => {
+    const [h, y] = rings[r];
+    const [x, z] = corner(h, i);
+    return [x, y, z];
+  };
+  // Top: two triangles, facing +y.
+  const t = [0, 1, 2, 3].map((i) => pt(0, i));
+  pos.push(...t[0], ...t[2], ...t[1], ...t[0], ...t[3], ...t[2]);
+  for (let r = 0; r < rings.length - 1; r++) {
+    for (let i = 0; i < 4; i++) {
+      const a = pt(r, i), b = pt(r, i + 1), c = pt(r + 1, i), d = pt(r + 1, i + 1);
+      pos.push(...a, ...b, ...c, ...b, ...d, ...c);
+    }
+  }
+  const g = new BufferGeometry();
+  g.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+  g.computeVertexNormals();
+  return g;
+}
+
+/**
  * A garden boulder: a squat, irregular stone sitting in the ground — broad
  * low lobes, a few flatter faces, a flat bed underneath — instead of a
  * smooth pale ball (which read as dough). Base at y 0, top at y 1, x/z in
@@ -879,6 +912,7 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   awningB: awningCloth(1),
   flagA: flagstone(1.3),
   flagB: flagstone(4.1),
+  slab: pavingSlab(),
   boulderA: boulder(1.7),
   boulderB: boulder(4.4),
   // A water-lily pad: a disc with its notch cut out (the notch side is 1 cm, left open).
@@ -1216,6 +1250,52 @@ export function steppingStones(k: Kit, x1: number, z1: number, x2: number, z2: n
     // A rounded flagstone (two shapes, alternating), scaled almost evenly so
     // its bevel keeps its light; it stands about 5 cm proud of the ground.
     k.add(m, (seed + i) % 2 ? "flagA" : "flagB", [px, 0.0, pz], [sz, 0.7, sz * 0.9], [0, jitter(seed + i * 11, Math.PI), 0]);
+  }
+}
+
+/**
+ * A laid stone walk across a paved square (the Hub): dressed granite slabs
+ * in running courses between two kerb stones, bedded in dark grey joint fill —
+ * not stepping stones on a sand strip, which on paving read as scattered
+ * pale discs. Each slab is its own instance, so MAT.flagstone tones each
+ * one differently. `skip(x, z)` drops a slab (where another walk already
+ * lies, so converging walks don't overlap).
+ */
+export function slabWalk(k: Kit, x1: number, z1: number, x2: number, z2: number, w = 1.2, seed = 1, skip?: (x: number, z: number) => boolean): void {
+  const len = Math.hypot(x2 - x1, z2 - z1);
+  if (len < 0.3) return;
+  const ux = (x2 - x1) / len, uz = (z2 - z1) / len;
+  const px = uz, pz = -ux;
+  const yaw = Math.atan2(x2 - x1, z2 - z1);
+  // Slabs are set nearly flush with the paving (top 2.5 cm proud), so the
+  // walk reads laid into the square, not tiles lying on it.
+  const KERB = 0.1, GAP = 0.024, SINK = -0.035;
+  const at = (a: number, b: number): [number, number] => [x1 + ux * a + px * b, z1 + uz * a + pz * b];
+  const [mx, mz] = at(len / 2, 0);
+  k.box("charcoal", [mx, 0.007, mz], [w, 0.014, len], false, [0, yaw, 0]);
+  for (const side of [-1, 1]) {
+    const [kx, kz] = at(len / 2, side * (w / 2 - KERB / 2));
+    k.add("flagstone", "slab", [kx, SINK + 0.006, kz], [KERB - 0.008, 1, len], [0, yaw, 0]);
+  }
+  const inner = w - 2 * KERB - GAP;
+  let a = 0.02, course = 0, lastSplit = 0.5;
+  while (a < len - 0.12) {
+    const d = Math.min(0.4 + 0.16 * (0.5 + jitter(seed + course * 13, 0.5)), len - a);
+    // Running bond: the joint moves well away from the course before.
+    let split = 0.5 + jitter(seed + course * 7, 0.22);
+    if (Math.abs(split - lastSplit) < 0.16) split = split > 0.5 ? split - 0.3 : split + 0.3;
+    lastSplit = split;
+    const pieces = inner < 0.8 ? [[0, 1]] : [[0, split], [split, 1]];
+    for (const [f0, f1] of pieces) {
+      const pw = (f1 - f0) * inner - GAP;
+      const off = -inner / 2 + ((f0 + f1) / 2) * inner;
+      const [sx, sz] = at(a + d / 2, off);
+      if (skip?.(sx, sz)) continue;
+      const lift = jitter(seed + course * 5 + f0 * 31, 0.004);
+      k.add("flagstone", "slab", [sx, SINK + lift, sz], [pw, 1, d - GAP], [0, yaw, 0]);
+    }
+    a += d;
+    course++;
   }
 }
 
@@ -1670,18 +1750,6 @@ export function flowerBox(k: Kit, x: number, z: number, len: number, alongX = fa
     const t = -len / 2 + (len / n) * (i + 0.5);
     flowers(k, alongX ? x + t : x, alongX ? z : z + t, 0.62, seed + i * 3, 0.36);
   }
-}
-
-/**
- * A path from (x1, z1) to (x2, z2) in the courtyard's language: a darker
- * gravel bed with pale stepping stones set in it. Paths say where
- * something is; they are only laid toward real places.
- */
-export function pathStrip(k: Kit, x1: number, z1: number, x2: number, z2: number, w = 1.3, seed = 1): void {
-  const len = Math.hypot(x2 - x1, z2 - z1);
-  const yaw = Math.atan2(x2 - x1, z2 - z1);
-  k.box("gravel", [(x1 + x2) / 2, 0.006, (z1 + z2) / 2], [w, 0.012, len], false, [0, yaw, 0]);
-  steppingStones(k, x1, z1, x2, z2, 0.95, seed, "stoneWarm");
 }
 
 /**
