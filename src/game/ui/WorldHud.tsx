@@ -226,16 +226,18 @@ export default function WorldHud(p: HudProps) {
           </div>
         )}
         {p.banner && (
-          <div role="status" className="flex items-center gap-3 rounded-2xl bg-charcoal/85 py-2.5 pe-5 ps-3 text-ivory motion-safe:animate-in motion-safe:fade-in">
+          // A phone on its side: a slimmer banner (no number disc, one line each)
+          // so the arrival view under it stays visible.
+          <div role="status" className="flex items-center gap-3 rounded-2xl bg-charcoal/85 py-2.5 pe-5 ps-3 text-ivory motion-safe:animate-in motion-safe:fade-in [@media(max-height:500px)]:py-1.5 [@media(max-height:500px)]:ps-4 [@media(max-height:500px)]:max-w-[min(26rem,calc(100vw-2rem))]">
             {p.banner.number !== undefined && (
-              <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-klovers-yellow font-display text-base font-bold text-charcoal">
+              <span aria-hidden="true" className="flex h-9 w-9 [@media(max-height:500px)]:hidden shrink-0 items-center justify-center rounded-full bg-klovers-yellow font-display text-base font-bold text-charcoal">
                 {p.banner.number}
               </span>
             )}
             <span className="flex flex-col items-start gap-0.5 text-start">
               {p.banner.eyebrow && <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-ivory/65">{p.banner.eyebrow}</span>}
-              <span className="font-display text-base font-bold leading-tight sm:text-lg">{p.banner.title}</span>
-              <span className="max-w-sm text-xs text-ivory/80 sm:text-sm">{p.banner.line}</span>
+              <span className="font-display text-base font-bold leading-tight sm:text-lg [@media(max-height:500px)]:text-sm">{p.banner.title}</span>
+              <span className="max-w-sm text-xs text-ivory/80 sm:text-sm [@media(max-height:500px)]:line-clamp-1 [@media(max-height:500px)]:text-[11px]">{p.banner.line}</span>
             </span>
           </div>
         )}

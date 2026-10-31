@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "rootFlare" | "taper" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -710,6 +710,69 @@ function onggiJar(): BufferGeometry {
   return new LatheGeometry(pts, 24);
 }
 
+/**
+ * The foot of a tree trunk (뿌리목) in the cylinder's unit box (y −0.5…0.5):
+ * the trunk (radius 0.28 at the top, just inside the trunk rod) swells into five root buttresses that
+ * reach radius 0.5 where they meet the ground — instead of a flat drum with a
+ * hard ring round the trunk. Scale it by ~0.46 of the tree's size so the top
+ * sits just inside the trunk rod (radius 0.135·s).
+ */
+function rootFlare(segs: number): BufferGeometry {
+  const rings = 7;
+  const pos: number[] = [];
+  const uv: number[] = [];
+  const idx: number[] = [];
+  for (let j = 0; j <= rings; j++) {
+    const h = j / rings;
+    // Most of the swelling is low down: the buttresses run out quickly.
+    const taper = Math.pow(1 - h, 2.4);
+    for (let i = 0; i <= segs; i++) {
+      const a = (i / segs) * Math.PI * 2;
+      const lobe = Math.pow(0.5 + 0.5 * Math.cos(5 * a + 0.7 * Math.sin(2 * a + 1)), 1.6);
+      const r = 0.28 + 0.22 * taper * (0.3 + 0.7 * lobe) + 0.012 * Math.sin(3 * a + h * 4) * (1 - h);
+      pos.push(Math.cos(a) * r, h - 0.5, Math.sin(a) * r);
+      uv.push((i / segs) * 2, h * 0.5);
+    }
+  }
+  const row = segs + 1;
+  for (let j = 0; j < rings; j++) {
+    for (let i = 0; i < segs; i++) {
+      const a = j * row + i;
+      const b = a + 1;
+      const c = a + row;
+      const d = c + 1;
+      idx.push(a, c, b, b, c, d);
+    }
+  }
+  const g = new BufferGeometry();
+  g.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+  g.setAttribute("uv", new BufferAttribute(new Float32Array(uv), 2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  // The seam column (first and last vertex of a ring) shares one normal.
+  const n = g.getAttribute("normal") as BufferAttribute;
+  for (let j = 0; j <= rings; j++) {
+    const a = j * row;
+    const b = a + segs;
+    const x = n.getX(a) + n.getX(b);
+    const y = n.getY(a) + n.getY(b);
+    const z = n.getZ(a) + n.getZ(b);
+    const l = Math.hypot(x, y, z) || 1;
+    n.setXYZ(a, x / l, y / l, z / l);
+    n.setXYZ(b, x / l, y / l, z / l);
+  }
+  return g;
+}
+
+/**
+ * A trunk or branch piece for the trees: a cylinder in the unit box that
+ * narrows to 0.8 of its width at the top (+y), so the next piece starts as
+ * wide as this one ends (no step or ring where two pieces meet).
+ */
+function barkRod(): BufferGeometry {
+  return new CylinderGeometry(0.4, 0.5, 1, 16);
+}
+
 /** The bound cane rim of a basket: a flat ring at y = 0, radius 0.5. */
 function basketRim(): BufferGeometry {
   const g = new TorusGeometry(0.5, 0.055, 5, 20);
@@ -845,6 +908,8 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   basket: basketBody(),
   basketRim: basketRim(),
   onggi: onggiJar(),
+  rootFlare: rootFlare(phoneTier() ? 15 : 25),
+  taper: barkRod(),
   lockBox: lockBody(false),
   lockHeart: lockBody(true),
   shackle: lockShackle(),
@@ -1287,7 +1352,7 @@ function broadleafTree(k: Kit, x: number, z: number, s: number, seed: number): v
     const dx = Math.sin(t) * Math.cos(a);
     const dy = Math.cos(t);
     const dz = Math.sin(t) * Math.sin(a);
-    k.add("woodDark", "cyl", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
+    k.add("woodDark", "taper", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
     return [ax + dx * len, ay + dy * len, az + dz * len];
   };
   let c = 0;
@@ -1296,8 +1361,8 @@ function broadleafTree(k: Kit, x: number, z: number, s: number, seed: number): v
     c++;
     k.add(dark ? "leafDark" : "leaf", "leafy", p, [jr, jr * 0.8, jr], [jitter(seed + c, 0.4), jitter(seed * 3 + c, 3), 0], true);
   };
-  // Root flare and trunk.
-  k.add("woodDark", "cyl", [x, 0.1 * s, z], [0.42 * s, 0.2 * s, 0.42 * s]);
+  // Root flare (buttresses running into the ground) and trunk.
+  k.add("woodDark", "rootFlare", [x, 0.2 * s, z], [0.45 * s, 0.44 * s, 0.45 * s], [0, seed, 0], true);
   const [fx, fork, fz] = rod(x, 0, z, seed * 1.3, Math.abs(lean), 1.55 * s, 0.27 * s, true);
   const n = 4;
   for (let i = 0; i < n; i++) {
@@ -1341,7 +1406,7 @@ function cherryTree(k: Kit, x: number, z: number, s: number, seed: number): void
     const dx = Math.sin(t) * Math.cos(a);
     const dy = Math.cos(t);
     const dz = Math.sin(t) * Math.sin(a);
-    k.add("woodDark", "cyl", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
+    k.add("woodDark", "taper", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
     return [ax + dx * len, ay + dy * len, az + dz * len];
   };
   let c = 0;
@@ -1353,14 +1418,15 @@ function cherryTree(k: Kit, x: number, z: number, s: number, seed: number): void
     k.add(mat, geo, p, [jr, jr * 0.78, jr], [jitter(c, 0.4), jitter(c * 3, 3), jitter(c * 5, 0.3)], true);
   };
   // Root flare, then a trunk in two pieces that narrows to the fork.
-  k.add("woodDark", "cyl", [x, 0.12 * s, z], [0.42 * s, 0.24 * s, 0.42 * s]);
+  k.add("woodDark", "rootFlare", [x, 0.2 * s, z], [0.45 * s, 0.44 * s, 0.45 * s], [0, seed, 0], true);
   const low = rod(x, 0, z, seed, Math.abs(lean), 0.8 * s, 0.27 * s, true);
   const [fx, fork, fz] = rod(low[0], low[1], low[2], seed + 2.4, Math.abs(lean) * 1.6, 0.62 * s, 0.22 * s, true);
   // Knuckles where one piece of wood meets the next: without them the open
   // ends of the rods showed as cut pipes from a low view.
   const knuckle = (p: V3, w: number) => k.add("woodDark", "fruit", p, [w, w, w]);
-  knuckle(low, 0.25 * s);
-  knuckle([fx, fork, fz], 0.24 * s);
+  // As wide as the wood they join (each rod ends at 0.8 of its width).
+  knuckle(low, 0.22 * s);
+  knuckle([fx, fork, fz], 0.2 * s);
   const n = 5;
   for (let i = 0; i < n; i++) {
     const a = seed * 1.7 + (i / n) * Math.PI * 2 + jitter(seed + i * 11, 0.35);
@@ -1369,8 +1435,8 @@ function cherryTree(k: Kit, x: number, z: number, s: number, seed: number): void
     // Each limb bends upward a little toward its tip, thinning as it goes.
     const mid = rod(fx, fork, fz, a, t, len * 0.55, 0.13 * s, i < 3);
     const tip = rod(mid[0], mid[1], mid[2], a + jitter(seed + i, 0.2), t - 0.22, len * 0.5, 0.08 * s, false);
-    knuckle(mid, 0.13 * s);
-    knuckle(tip, 0.08 * s);
+    knuckle(mid, 0.105 * s);
+    knuckle(tip, 0.065 * s);
     // Two thin twigs: one out and down from the bend, one on from the tip.
     const sa = a + (i % 2 ? 0.75 : -0.75);
     const side = rod(mid[0], mid[1], mid[2], sa, t + 0.45, 0.62 * s, 0.05 * s, false);

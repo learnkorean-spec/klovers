@@ -132,7 +132,14 @@ export function ControlsCard({
     <div
       role="region"
       aria-label={c.controlsTitle}
-      className={`pointer-events-auto ${replay ? "w-[min(20rem,calc(100vw-2rem))]" : "w-[min(16rem,calc(100vw-2rem))]"} rounded-2xl bg-ivory/95 p-3 text-charcoal shadow-xl transition-opacity duration-700 motion-safe:animate-in motion-safe:fade-in ${
+      className={`pointer-events-auto ${
+        replay
+          ? "w-[min(20rem,calc(100vw-2rem))]"
+          : // On a phone held sideways the middle of the screen is the view
+            // itself (the egg, the person to meet): the first-steps card waits
+            // low in the middle instead, between the joystick and the edge.
+            "w-[min(16rem,calc(100vw-2rem))] [@media(max-height:500px)]:absolute [@media(max-height:500px)]:inset-x-0 [@media(max-height:500px)]:bottom-[max(0.75rem,env(safe-area-inset-bottom))] [@media(max-height:500px)]:mx-auto [@media(max-height:500px)]:p-2"
+      } rounded-2xl bg-ivory/95 p-3 text-charcoal shadow-xl transition-opacity duration-700 motion-safe:animate-in motion-safe:fade-in ${
         step === "done" && !replay ? "opacity-0" : "opacity-100"
       }`}
     >
