@@ -150,7 +150,7 @@
       "destination": "/api/blog-not-found"
     },
     {
-      "source": "/(ar|ar/courses|ar/pricing|ar/about|ar/faq|ar/placement-test|ar/free-trial|ar/blog|ar/scholarships|ar/contact|ar/learn-korean-arabic-speakers|ar/topik-exam-preparation|ar/learn-korean-kdramas|ar/learn-hungarian|ar/learn-english|ar/learn-arabic|ar/shop|ar/hangul-starter|ar/enroll-now|ar/games|ar/affiliate|ar/interview-training|ar/welcome-back|ar/privacy-policy|ar/terms|ar/journey|ar/journey/[^/]+|courses|pricing|about|faq|contact|teach-with-us|privacy-policy|privacy|terms|signup|login|forgot-password|reset-password|enroll|enroll-now|my-lessons|pay/[^/]+|blog|journey|journey/[^/]+|resubmit-schedule|placement-test|unit-placement|games|world|dashboard|dashboard/[^/]+|textbook|textbook/[^/]+|textbook/[^/]+/[^/]+|review|daily-quiz|profile|complete-profile|free-trial|rsvp|trial-booking|progress-report|certificate|affiliate|learn-korean-arabic-speakers|topik-exam-preparation|learn-korean-kdramas|learn-hungarian|learn-english|learn-arabic|interview-training|welcome-back|scholarships|hangul-book|trial-book|trial-confirm|enrollment-status|hangul-starter|shop|shop/[^/]+|shop/products/[^/]+|c/[^/]+|gift/cluby|practice-interview|unsubscribe|admin|admin/[^/]+)",
+      "source": "/(ar|ar/courses|ar/pricing|ar/about|ar/faq|ar/placement-test|ar/free-trial|ar/blog|ar/scholarships|ar/contact|ar/learn-korean-arabic-speakers|ar/topik-exam-preparation|ar/learn-korean-kdramas|ar/learn-hungarian|ar/learn-english|ar/learn-arabic|ar/shop|ar/hangul-starter|ar/enroll-now|ar/games|ar/affiliate|ar/interview-training|ar/welcome-back|ar/privacy-policy|ar/terms|ar/journey|ar/journey/[^/]+|courses|pricing|about|faq|contact|teach-with-us|privacy-policy|privacy|terms|signup|login|forgot-password|reset-password|enroll|enroll-now|my-lessons|pay/[^/]+|blog|journey|journey/[^/]+|resubmit-schedule|placement-test|unit-placement|games|world|world2|dashboard|dashboard/[^/]+|textbook|textbook/[^/]+|textbook/[^/]+/[^/]+|review|daily-quiz|profile|complete-profile|free-trial|rsvp|trial-booking|progress-report|certificate|affiliate|learn-korean-arabic-speakers|topik-exam-preparation|learn-korean-kdramas|learn-hungarian|learn-english|learn-arabic|interview-training|welcome-back|scholarships|hangul-book|trial-book|trial-confirm|enrollment-status|hangul-starter|shop|shop/[^/]+|shop/products/[^/]+|c/[^/]+|gift/cluby|practice-interview|unsubscribe|admin|admin/[^/]+)",
       "destination": "/app.html"
     },
     {
@@ -293,6 +293,15 @@
     },
     {
       "source": "/world",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/world2",
       "headers": [
         {
           "key": "X-Robots-Tag",
