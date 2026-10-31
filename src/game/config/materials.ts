@@ -315,6 +315,94 @@ float stoneNoise(vec2 p) {
 }
 
 /**
+ * A planted bed seen from a few metres: dark turned soil and bark mulch
+ * with spreading mats of low ground cover (clover, creeping thyme) in
+ * irregular patches, fine leaf speckle and a little bump that fade out by
+ * screen size. All from the world position: no texture, so no paving grid
+ * printed over the bed (the old moss used the stone detail map).
+ */
+function groundCover(soilColor: string, leafColor: string): MeshStandardMaterial {
+  const m = new MeshStandardMaterial({ color: new Color("#ffffff"), roughness: 0.97, metalness: 0 });
+  const soil = new Color(soilColor);
+  const leaf = new Color(leafColor);
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.gcSoil = { value: soil };
+    shader.uniforms.gcLeaf = { value: leaf };
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vGcPos;")
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+{
+  vec4 gp = vec4(transformed, 1.0);
+  #ifdef USE_INSTANCING
+    gp = instanceMatrix * gp;
+  #endif
+  vGcPos = (modelMatrix * gp).xyz;
+}`,
+      );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+varying vec3 vGcPos;
+uniform vec3 gcSoil;
+uniform vec3 gcLeaf;
+float gcHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float gcNoise(vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(gcHash(i), gcHash(i + vec2(1.0, 0.0)), u.x), mix(gcHash(i + vec2(0.0, 1.0)), gcHash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+// 0 = bare soil, 1 = ground cover; plus the leaf/crumb speckle for this pixel.
+vec2 gcField(vec2 q, float amp) {
+  float big = gcNoise(q * 2.1) * 0.6 + gcNoise(q * 5.3 + 5.7) * 0.4;
+  float edge = (gcNoise(q * 15.0 + 2.3) - 0.5) * 0.22 * amp;
+  float cover = smoothstep(0.45, 0.53, big + edge);
+  vec2 r = mat2(0.8, -0.6, 0.6, 0.8) * q;
+  float sp = gcNoise(r * 41.0) * 0.55 + gcNoise(q * 97.0 + 1.7) * 0.45;
+  return vec2(cover, sp);
+}`,
+      )
+      .replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+{
+  vec2 q = vGcPos.xz;
+  float fw = fwidth(q.x * 38.0) + fwidth(q.y * 38.0);
+  float amp = 1.0 - smoothstep(0.4, 1.4, fw);
+  vec2 g = gcField(q, amp);
+  // Soil: crumbs and bits of bark mulch, a little warmer in patches.
+  vec3 dirt = gcSoil * mix(0.86, 1.1, gcNoise(q * 4.0 + 9.1));
+  dirt *= mix(1.0, mix(0.72, 1.22, g.y), amp);
+  // Ground cover: lighter and yellower where it catches the sun, small leaves.
+  vec3 green = gcLeaf * mix(0.82, 1.12, gcNoise(q * 2.2 + 3.3));
+  green = mix(green, green * vec3(1.1, 1.06, 0.8), smoothstep(0.6, 0.85, gcNoise(q * 1.7 + 11.0)) * 0.6);
+  green *= mix(1.0, mix(0.58, 1.22, g.y), amp);
+  // Darker soil right at the leaves' edge (their shade).
+  float rim = smoothstep(0.0, 0.25, g.x) * (1.0 - smoothstep(0.25, 0.7, g.x));
+  dirt *= 1.0 - 0.25 * rim;
+  diffuseColor.rgb *= mix(dirt, green, g.x);
+}`,
+      )
+      .replace(
+        "#include <normal_fragment_maps>",
+        `#include <normal_fragment_maps>
+{
+  vec2 q = vGcPos.xz;
+  float fw = fwidth(q.x * 38.0) + fwidth(q.y * 38.0);
+  float amp = (1.0 - smoothstep(0.4, 1.4, fw)) * 0.3;
+  float b0 = gcNoise(q * 38.0);
+  vec2 gr = vec2(gcNoise(q * 38.0 + vec2(0.3, 0.0)) - b0, gcNoise(q * 38.0 + vec2(0.0, 0.3)) - b0) / 0.3;
+  normal = normalize(normal - (viewMatrix * vec4(gr.x, 0.0, gr.y, 0.0)).xyz * amp);
+}`,
+      );
+  };
+  m.customProgramCacheKey = () => `klovers-ground-cover-1`;
+  return m;
+}
+
+/**
  * The far hills: wooded slopes seen through the haze. Smooth geometry
  * (kit "ridge") shaded with crowns of trees from the world position — small
  * dark gaps between rounded canopies, bigger patches of lighter and darker
@@ -971,6 +1059,8 @@ export const MAT = {
   blossom: foliage(NATURAL.blossom, 0.85, true),
   blossomPale: foliage(NATURAL.blossomPale, 0.85, true),
   moss: std(NATURAL.moss, 1, { detail: "stone" }),
+  /** A planting bed: soil and mulch with patches of low ground cover (no paving grid). */
+  bedCover: groundCover("#5A4535", "#52713A"),
   /** Raked gravel either side of a stone path. */
   gravel: std("#A99A7F", 1, { detail: "stone" }),
   hill: hillWoods(),

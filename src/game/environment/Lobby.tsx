@@ -7,7 +7,7 @@ import ModelProp, { type PropPlacement } from "./ModelProp";
 import { REAL_PROPS } from "../systems/styleMode";
 import CloverEgg from "./CloverEgg";
 import { BakedShade, useBakedFloor } from "./BakedFloor";
-import { Kit, bed, flowers, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, shrub, steppingStones, stoneLantern, tree, wallRun } from "./kit";
+import { BED_SOIL, Kit, azalea, bed, flowers, gatehouse, grass, gutter, hanokHouse, noticeBoard, pine, planter, platform, pot, rock, steppingStones, stoneLantern, tree, wallRun } from "./kit";
 import { Gate, Signboard } from "./parts";
 import { paintMadang, useTiledTexture, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { FLOOR_GRID } from "../config/world";
@@ -73,7 +73,7 @@ const COURTYARD_KIT: Kit = (() => {
   // Planting beds; the one flowering tree is the courtyard's second hero.
   for (const b of PROPS.beds) bed(k, b.x, b.z, b.w, b.d, Math.round(b.x * 7 + b.z), false);
   tree(k, -8.9, -7.9, 1.25, true, 5);
-  shrub(k, -7.0, -7.7, 0.7, 9, "blossom");
+  azalea(k, -7.0, -7.7, 0.8, 9, BED_SOIL);
   // Beyond the south wall and the halls: green crowns over the roofs.
   tree(k, -6.4, HD + 2.8, 1.3, false, 21);
   tree(k, 6.7, HD + 2.6, 1.15, false, 23);

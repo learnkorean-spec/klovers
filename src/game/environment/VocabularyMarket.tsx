@@ -6,7 +6,7 @@ import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Instanced, { type Part } from "./Instanced";
 import Batch from "./Batch";
-import { Kit, jitter, awningPlace, kitGeometry, basket, bunting, gutter, parasol, pot, shopfront, shrub, tree, wallRun, type MatKey, flowers } from "./kit";
+import { Kit, azalea, jitter, awningPlace, kitGeometry, basket, bunting, gutter, parasol, pot, shopfront, tree, wallRun, type MatKey, flowers } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import ModelProp, { type PropPlacement } from "./ModelProp";
 import MarketShop, { type ShopItem } from "./MarketShop";
@@ -248,7 +248,7 @@ const MARKET_KIT: Kit = (() => {
   for (const [fx, fz] of MARKET.flowers) flowers(k, fx, fz, 0.7, fx + fz);
   for (const x of [-3.6, 3.6]) {
     pot(k, x, -HD + 0.7, 0.8, false);
-    shrub(k, x, -HD + 0.7, 0.45, x > 0 ? 4 : 5, "blossom");
+    azalea(k, x, -HD + 0.7, 0.5, x > 0 ? 4 : 5);
   }
   // Trees rising behind the shop roofs.
   for (const [tx, tz] of [[-13.5, -5], [13.8, 3], [-13.2, 6.5]] as const) tree(k, tx, tz, 1.4, false, tx + tz);

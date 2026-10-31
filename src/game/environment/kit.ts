@@ -19,7 +19,7 @@ import { curvedRoof, roofAspect } from "./shapes";
 
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
-  | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "hill"
+  | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "bedCover" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry" | "bark" | "barkCherry";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
 export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "rootFlare" | "taper" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
@@ -46,6 +46,7 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   blossom: MAT.blossom,
   blossomPale: MAT.blossomPale,
   moss: MAT.moss,
+  bedCover: MAT.bedCover,
   gravel: MAT.gravel,
   hill: MAT.hill,
   clothRed: MAT.clothRed,
@@ -1471,6 +1472,38 @@ export function shrub(k: Kit, x: number, z: number, s = 1, seed = 1, mat: MatKey
   }
 }
 
+/**
+ * A flowering azalea (철쭉) cushion: a dark, dense leafy mound with pink
+ * five-petalled flowers over its top and sides, tilted to face out — the
+ * way Korean gardens clip them. `y` is the ground it stands on.
+ */
+export function azalea(k: Kit, x: number, z: number, s = 1, seed = 1, y = 0): void {
+  const R = 0.5 * s;
+  // (leafy is a unit-box ball: radius = half its scale.)
+  k.add("leafDark", "leafy", [x, y + R * 0.45, z], [R * 1.7, R * 1.2, R * 1.6], [0, seed, 0], true);
+  for (let j = 0; j < 3; j++) {
+    const a = seed + j * 2.1;
+    k.add(j === 1 ? "leaf" : "leafDark", "leafy", [x + Math.cos(a) * R * 0.42, y + R * 0.6, z + Math.sin(a) * R * 0.4], [R * 0.95, R * 0.75, R * 0.9], [0, a, 0], true);
+  }
+  const n = 24;
+  for (let i = 0; i < n; i++) {
+    const a = i * 2.39996 + seed;
+    const u = (i + 0.5) / n;
+    // Spread over the dome: from the crown down to a little below the waist.
+    const el = 1.4 - u * 1.3;
+    const cx = Math.cos(a) * Math.cos(el);
+    const cz = Math.sin(a) * Math.cos(el);
+    const cy = Math.sin(el);
+    const px = x + cx * R * 0.9;
+    const py = y + R * 0.47 + cy * R * 0.66;
+    const pz = z + cz * R * 0.86;
+    const size = (0.14 + jitter(seed + i * 3, 0.025)) * s;
+    const col: MatKey = i % 5 === 4 ? "flowerWhite" : "flowerPink";
+    const tilt = Math.PI / 2 - el;
+    k.add(col, "bloom", [px, py, pz], [size, size, size], [Math.sin(a) * tilt * 0.8, jitter(seed + i, 3), -Math.cos(a) * tilt * 0.8]);
+  }
+}
+
 /** A tuft of grass: a few thin blades (cones) leaning outward. */
 export function grass(k: Kit, x: number, z: number, s = 1, seed = 1): void {
   for (let i = 0; i < 5; i++) {
@@ -1485,13 +1518,32 @@ export function rock(k: Kit, x: number, z: number, s = 1, seed = 1): void {
   k.add("boulder", seed % 2 ? "boulderA" : "boulderB", [x, -0.04 * s, z], [0.72 * s, 0.3 * s, 0.58 * s], [jitter(seed, 0.12), jitter(seed * 3, 3), jitter(seed * 5, 0.1)], true);
 }
 
+/** The same kit, with everything added to it lifted by `dy` (plants set into a raised bed). */
+function raised(k: Kit, dy: number): Kit {
+  const r = Object.create(k) as Kit;
+  r.add = (mat, geo, p, s, rr, cast) => k.add(mat, geo, [p[0], p[1] + dy, p[2]], s, rr, cast);
+  return r;
+}
+
 /**
- * A planting bed: a low stone kerb round a mossy bed, with shrubs, grass
- * tufts and a rock or two. Breaks up flat paving along walls and in corners.
+ * A planting bed: a low stone kerb round soil and low ground cover, with
+ * shrubs, leafy clumps, grass tufts and a rock or two, all set on the bed's
+ * surface (they used to sit at paving level and sink into it). Breaks up flat
+ * paving along walls and in corners.
  */
+/** The surface of a planting bed (see `bed`), where its plants stand. */
+export const BED_SOIL = 0.14;
+
 export function bed(k: Kit, x: number, z: number, w: number, d: number, seed = 1, flowers = false): void {
-  k.box("stoneWarm", [x, 0.09, z], [w + 0.16, 0.18, d + 0.16], false);
-  k.box("moss", [x, 0.14, z], [w, 0.12, d]);
+  const TOP = 0.16;
+  const KH = 0.19;
+  // A kerb of four stone curbs; the fill sits 3 cm under their top, so the stone reads as a rim.
+  k.box("stoneWarm", [x, KH / 2, z - d / 2 - 0.04], [w + 0.16, KH, 0.08], false);
+  k.box("stoneWarm", [x, KH / 2, z + d / 2 + 0.04], [w + 0.16, KH, 0.08], false);
+  k.box("stoneWarm", [x - w / 2 - 0.04, KH / 2, z], [0.08, KH, d], false);
+  k.box("stoneWarm", [x + w / 2 + 0.04, KH / 2, z], [0.08, KH, d], false);
+  k.box("bedCover", [x, TOP / 2, z], [w + 0.01, TOP, d + 0.01]);
+  const b = raised(k, BED_SOIL);
   const along = w >= d;
   const len = along ? w : d;
   const n = Math.max(1, Math.round(len / 1.3));
@@ -1499,9 +1551,17 @@ export function bed(k: Kit, x: number, z: number, w: number, d: number, seed = 1
     const t = -len / 2 + (len / n) * (i + 0.5);
     const px = along ? x + t : x + jitter(seed + i, d * 0.15);
     const pz = along ? z + jitter(seed + i, d * 0.15) : z + t;
-    if ((i + seed) % 3 === 2) rock(k, px, pz, 0.7, seed + i);
-    else shrub(k, px, pz, 0.62, seed + i * 3, flowers && i % 2 === 0 ? "blossom" : "leaf");
-    grass(k, px + (along ? 0.55 : 0.2), pz + (along ? 0.2 : 0.55), 0.9, seed + i * 5);
+    if ((i + seed) % 3 === 2) rock(b, px, pz, 0.7, seed + i);
+    else if (flowers && i % 2 === 0) azalea(b, px, pz, 0.62, seed + i * 3);
+    else shrub(b, px, pz, 0.62, seed + i * 3, "leaf");
+    grass(b, px + (along ? 0.55 : 0.2), pz + (along ? 0.2 : 0.55), 0.9, seed + i * 5);
+    // A low fan of leaves between the shrubs, kept inside the kerb.
+    const lx = along ? x + t + len / n / 2 : x - jitter(seed + i * 3, w * 0.2);
+    const lz = along ? z - jitter(seed + i * 3, d * 0.2) : z + t + len / n / 2;
+    if (i < n - 1 || n === 1) {
+      const ls = Math.min(0.7, (along ? d : w) * 0.42);
+      b.add(i % 2 ? "leaf" : "leafDark", "leaves", [n === 1 ? x + w * 0.25 : lx, 0, n === 1 ? z + d * 0.25 : lz], [ls, ls * 0.7, ls], [0, seed + i * 1.7, 0]);
+    }
   }
 }
 
