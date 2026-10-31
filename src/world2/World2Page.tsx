@@ -50,7 +50,7 @@ export default function World2Page() {
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-4">
         <div className="h-[60vh] rounded-lg overflow-hidden border border-[#FFF9EC]/10">
-          <Canvas shadows camera={{ position: [0, 1.8, 4.2], fov: 42 }}>
+          <Canvas shadows camera={{ position: [2.6, 1.9, 3.8], fov: 42 }}>
             <Suspense fallback={null}>
               <SlowOrbit>
                 <World2Scene />

@@ -44,6 +44,19 @@ function Learner({ avatar, x, z, rotY }: { avatar: "adam" | "lina"; x: number; z
   );
 }
 
+/** Shown while Adam/Lina's real models (≈1.3MB each) are still downloading,
+ * so the scene never looks broken or empty during the first load. */
+function LearnerPlaceholder({ x, z }: { x: number; z: number }) {
+  return (
+    <group position={[x, 0, z]}>
+      <mesh position={[0, 0.85, 0]}>
+        <capsuleGeometry args={[0.22, 1.1, 4, 8]} />
+        <meshStandardMaterial color="#FFF9EC" transparent opacity={0.35} />
+      </mesh>
+    </group>
+  );
+}
+
 /** Cluby, built from simple primitives matching the canon description exactly
  * (mint green plush, two short butter-yellow horns, pink inner ears, rosy
  * cheeks, ivory hanbok top, yellow wrap skirt, green clover emblem) — there
@@ -168,18 +181,26 @@ function FoodCart() {
 export default function World2Scene() {
   return (
     <group>
-      <ambientLight intensity={0.55} color="#FFF3DD" />
-      <directionalLight position={[3, 5, 2]} intensity={1.1} color="#FFE7B0" castShadow />
+      <ambientLight intensity={0.85} color="#FFF3DD" />
+      <directionalLight position={[3, 5, 2.5]} intensity={1.8} color="#FFE7B0" castShadow />
+      <pointLight position={[0, 2.1, 0.3]} intensity={0.8} color="#FFD24C" distance={4} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[12, 12]} />
-        <meshStandardMaterial color="#2E2E2E" roughness={0.95} />
+        <meshStandardMaterial color="#3a3a3a" roughness={0.95} />
       </mesh>
       <FoodCart />
-      <Suspense fallback={null}>
-        {/* Adam ordering at the counter */}
-        <Learner avatar="adam" x={-0.6} z={1.1} rotY={Math.PI} />
-        {/* Lina pointing at the menu */}
-        <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI - 0.3} />
+      <Suspense
+        fallback={
+          <>
+            <LearnerPlaceholder x={-0.6} z={1.1} />
+            <LearnerPlaceholder x={0.5} z={1.1} />
+          </>
+        }
+      >
+        {/* Adam ordering at the counter, angled toward camera and Lina */}
+        <Learner avatar="adam" x={-0.6} z={1.1} rotY={Math.PI * 0.8} />
+        {/* Lina beside him, pointing at the menu */}
+        <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI * 0.65} />
       </Suspense>
       {/* Cluby sitting on the stool beside them */}
       <Cluby x={0.9} z={0.75} />
