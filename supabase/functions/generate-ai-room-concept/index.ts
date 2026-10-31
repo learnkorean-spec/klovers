@@ -29,10 +29,32 @@ const MUSE_SPARK_MODEL = "muse-spark-1.3";
 // rule retiring flat/illustrated character art sitewide): humans are
 // photorealistic, Cluby is a realistic-cute 3D plush with a specific look,
 // environments are soft painterly Korean storybook — never flat/isometric
-// cartoon. This prompt intentionally does NOT describe the characters from
-// scratch; their real reference images are passed to Muse Image instead (see
-// CHARACTER_REFS below), so their actual look is preserved rather than
-// reinvented.
+// cartoon.
+//
+// Fidelity fix (1 Nov 2026): relying on the reference images alone was not
+// enough — generated output drifted (Adam/Lina's outfits changed, and Cluby
+// came back as a generic yellow teddy bear instead of the canon mint-green
+// plush). Muse Image's edit endpoint doesn't guarantee pixel-level identity
+// preservation from reference images on its own, so this prompt now ALSO
+// spells out each character's distinguishing features in text, as a
+// redundant anchor alongside the reference images — the two reference
+// images are explicitly labelled (reference image 1 vs. 2) so the model
+// doesn't conflate or guess which description applies to which image.
+const CHARACTER_DESCRIPTIONS =
+  "Reference image 1 shows Adam and Lina, two real people — match their real " +
+  "faces, skin, and hair exactly. Adam wears a bright yellow blazer, cream " +
+  "trousers, and white sneakers. Lina wears an ivory-and-yellow floral " +
+  "hanbok-style dress. Keep these exact outfits unless the room theme " +
+  "requires a specific activity outfit change. " +
+  "Reference image 2 shows Cluby — match it exactly, it is NOT a generic " +
+  "teddy bear or plush toy: Cluby is a mint-green furry creature with a " +
+  "round head, two short butter-yellow horns, pointed ears with pink inner " +
+  "ear, warm dark-brown eyes, soft rosy cheeks, two tiny visible fangs, and " +
+  "a short mint tail with small spikes, wearing an ivory mini hanbok top, a " +
+  "bright KLOVERS-yellow wrap skirt, and a small green four-leaf-clover " +
+  "emblem on the chest. Cluby's body and fur must stay mint green at all " +
+  "times — never beige, tan, or yellow-brown like an ordinary teddy bear.";
+
 const KLOVERS_STYLE =
   "The room/environment: soft, warm, premium Korean-storybook atmosphere and " +
   "lighting, clean and uncluttered. Klovers palette: ivory #FFF9EC, bright yellow " +
@@ -40,8 +62,8 @@ const KLOVERS_STYLE =
   "photorealistic — real human skin texture, real hair, real fabric, exactly like " +
   "actual photographed people, not illustrated, not painted, not cartoon, not " +
   "anime, not an isometric icon. Cluby stays a realistic-cute 3D plush creature " +
-  "exactly like its reference image, not flattened into 2D art. No text or " +
-  "labels in the image.";
+  "exactly like its reference image, not flattened into 2D art, and never redrawn " +
+  "as a different species, color, or toy. No text or labels in the image.";
 
 // Canonical character reference images, served from the live site, passed to
 // Muse Image's edit endpoint so generated scenes use Reham's actual
@@ -206,7 +228,7 @@ serve(async (req) => {
     const results = await Promise.all(
       VARIANTS.map(async (variant) => {
         const imagePrompt = useCharacters
-          ? `Photo-edit the exact same real people and creature from the reference images into a new setting — do not redraw or restyle them, keep their real faces, real hair, real skin, real outfits, and Cluby's exact plush look pixel-faithful to the references, as if they were composited/photographed into a new room: ${theme}. ${variant.angle}. Place them naturally in the room, doing something related to the room's theme. ${KLOVERS_STYLE}`
+          ? `Photo-edit the exact same real people and creature from the reference images into a new setting — do not redraw or restyle them, keep their real faces, real hair, real skin, real outfits, and Cluby's exact plush look pixel-faithful to the references, as if they were composited/photographed into a new room: ${theme}. ${variant.angle}. Place them naturally in the room, doing something related to the room's theme. ${CHARACTER_DESCRIPTIONS} ${KLOVERS_STYLE}`
           : `A Korean-language-learning room scene: ${theme}. ${variant.angle}. ${KLOVERS_STYLE}`;
 
         const [imageDataUrl, designBrief] = await Promise.all([
