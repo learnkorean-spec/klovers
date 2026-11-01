@@ -706,10 +706,10 @@ float lockMetal = 0.1;
  * horizontal lenticel dashes cherry trees are known by, instead of plates.
  * Before, every trunk was a glossy orange pipe with the planks' grain rings.
  */
-function bark(kind: "plates" | "cherry"): MeshStandardMaterial {
+function bark(kind: "plates" | "cherry" | "pine"): MeshStandardMaterial {
   const cherry = kind === "cherry";
   const m = new MeshStandardMaterial({
-    color: new Color(cherry ? "#4A302C" : "#6E6152"),
+    color: new Color(cherry ? "#4A302C" : kind === "pine" ? "#655547" : "#6E6152"),
     roughness: cherry ? 0.55 : 0.92,
     metalness: 0,
   });
@@ -807,7 +807,14 @@ ${cherry ? `  // Lenticels: thin horizontal dashes in loose, broken rows.
   float lichen = smoothstep(0.6, 0.78, barkNoise3(vec3(dm * 8.0, v * 1.8) + vBarkSeed * 13.0)) * mix(0.5, h, barkFade);
   vec3 c = vec3(tone) * mix(vec3(1.0), vec3(1.08, 1.17, 0.97), lichen * 0.8);
   float foot = 1.0 - smoothstep(0.0, 0.5, vBarkW.y);
-  c *= mix(vec3(1.0), vec3(0.78, 0.8, 0.74), foot);
+  c *= mix(vec3(1.0), vec3(0.78, 0.8, 0.74), foot);${kind === "pine" ? `
+  // Red pine (소나무): above head height the grey plates give way to thin,
+  // flaking orange-red bark, smooth enough that the furrows nearly go.
+  float red = smoothstep(1.1, 2.3, vBarkW.y);
+  float flake = barkNoise3(vec3(dm * 14.0, v * 4.0));
+  vec3 redTone = vec3(1.75, 0.98, 0.66) * (0.86 + 0.28 * flake) * mix(1.0, 0.82 + 0.18 * h, barkFade);
+  c = mix(c, redTone, red * 0.9);
+  barkH *= 1.0 - 0.7 * red;` : ""}
   diffuseColor.rgb *= c;`}
 }`,
       )
@@ -1093,6 +1100,7 @@ export const MAT = {
   /** Tree trunks and limbs: furrowed plates; cherry: smooth, with lenticels. */
   bark: bark("plates"),
   barkCherry: bark("cherry"),
+  barkPine: bark("pine"),
   /** Dark, damp garden soil in a planting bed. */
   soil: std("#5E4A38", 1, { detail: "plaster" }),
   /** Seoul far below Namsan: façades with storeys of windows (see cityBlock). */

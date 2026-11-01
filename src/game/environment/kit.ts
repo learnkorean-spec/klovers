@@ -20,9 +20,9 @@ import { curvedRoof, roofAspect } from "./shapes";
 export type MatKey =
   | "plaster" | "stoneWarm" | "stone" | "woodLight" | "woodDark" | "roof" | "roofSoft" | "charcoal" | "paper" | "lantern"
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "bedCover" | "hill"
-  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry" | "bark" | "barkCherry";
+  | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry" | "bark" | "barkCherry" | "barkPine";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "slab" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "rootFlare" | "taper" | "taperLow" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "slab" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pinePadA" | "pinePadB" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "rootFlare" | "taper" | "taperLow" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -80,6 +80,7 @@ export const KIT_MATERIALS: Record<MatKey, Material> = {
   berry: MAT.berry,
   bark: MAT.bark,
   barkCherry: MAT.barkCherry,
+  barkPine: MAT.barkPine,
 };
 
 /**
@@ -280,24 +281,39 @@ function farCrown(variant: number, detail = 1): BufferGeometry {
 }
 
 /**
- * A pine tier: a round cone (24 sides, not 8) whose skirt ripples a little in
- * and out, so a pine reads as layered boughs rather than a faceted spike.
+ * A foliage pad of a Korean red pine (소나무): the flat, cloud-like layer of
+ * needles at the end of a bough. A squashed icosphere whose rim breaks into
+ * ragged tufts (bigger round the edge than on top), with a domed top and a
+ * flatter underside; normals lean 75% toward the smooth body, so the pad
+ * reads as one sunlit layer with tufts, not a pile of balls. Unit box
+ * (radius 0.5); the instance flattens it.
  */
-function pineTier(): BufferGeometry {
-  const g = new ConeGeometry(0.5, 1, 24, 3);
+function pinePad(detail: number, phase: number): BufferGeometry {
+  const raw = new IcosahedronGeometry(0.5, detail);
+  raw.deleteAttribute("normal");
+  raw.deleteAttribute("uv");
+  const g = mergeVertices(raw, 1e-4);
   const pos = g.getAttribute("position");
+  const dirs: Vector3[] = [];
+  const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const z = pos.getZ(i);
-    const y = pos.getY(i);
-    const r = Math.hypot(x, z);
-    if (r < 1e-4) continue;
-    const a = Math.atan2(z, x);
-    // Ripple grows toward the skirt (y = -0.5), nothing at the tip.
-    const k = 1 + (0.5 - y) * (0.07 * Math.sin(a * 7) + 0.04 * Math.sin(a * 13 + 1.3));
-    pos.setXYZ(i, x * k, y + (y < -0.45 ? 0.04 * Math.sin(a * 5) : 0), z * k);
+    v.fromBufferAttribute(pos, i).normalize();
+    dirs.push(v.clone());
+    const rim = 1 - Math.abs(v.y);
+    const low = Math.sin(v.x * 2.6 + phase) * Math.sin(v.z * 2.9 + 1.1 + phase);
+    const tuft = Math.sin(v.x * 11.7 + v.z * 3.1 + phase * 2) * Math.sin(v.z * 12.9 - v.x * 4.3) * Math.sin(v.y * 9.1 + v.x * 2.3);
+    v.multiplyScalar(0.5 * (1 + 0.1 * low + (0.05 + 0.11 * rim) * tuft));
+    // A flatter underside: the needles hang off the bough, they don't wrap it.
+    if (v.y < 0) v.y *= 0.55;
+    pos.setXYZ(i, v.x, v.y, v.z);
   }
   g.computeVertexNormals();
+  const nrm = g.getAttribute("normal");
+  const n = new Vector3();
+  for (let i = 0; i < nrm.count; i++) {
+    n.fromBufferAttribute(nrm, i).multiplyScalar(0.25).addScaledVector(dirs[i], 0.75).normalize();
+    nrm.setXYZ(i, n.x, n.y, n.z);
+  }
   return g;
 }
 
@@ -921,7 +937,10 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   lilyPad: new CylinderGeometry(0.5, 0.5, 1, 22, 1, false, 0.35, Math.PI * 2 - 0.35),
   bloom: bloomHead(),
   leaves: leafRosette(),
-  pineCone: pineTier(),
+  // Foliage pads of a red pine (two shapes, so neighbouring pads differ).
+  // (B, for the small side pads, is lighter on desktop.)
+  pinePadA: pinePad(phoneTier() ? 2 : 3, 0),
+  pinePadB: pinePad(2, 2.3),
   ball: lumpyBall(3, 0.16),
   // Blossom clumps of a cherry crown (two shapes, so neighbours differ);
   // on phones each knot is a quarter of the triangles.
@@ -1218,10 +1237,69 @@ export function platform(k: Kit, x: number, z: number, w: number, d: number, rot
 
 /** A stylised pine: a leaning trunk and three stacked crowns. */
 export function pine(k: Kit, x: number, z: number, s = 1): void {
-  k.add("woodDark", "cyl", [x, 0.8 * s, z], [0.2 * s, 1.6 * s, 0.2 * s], [0, 0, 0.06], true);
-  k.add("pine", "pineCone", [x + 0.05 * s, 1.55 * s, z], [1.5 * s, 0.9 * s, 1.5 * s], undefined, true);
-  k.add("pine", "pineCone", [x + 0.08 * s, 2.1 * s, z], [1.15 * s, 0.8 * s, 1.15 * s], undefined, true);
-  k.add("pine", "pineCone", [x + 0.1 * s, 2.55 * s, z], [0.75 * s, 0.7 * s, 0.75 * s], undefined, true);
+  // A Korean red pine (소나무), as in a hanok courtyard: a trunk that leans
+  // and kinks as it climbs (grey plated bark below, orange-red above),
+  // boughs held out nearly level, each ending in a flat cloud-like pad of
+  // needles, and a crown of pads on top — not a stack of green cones.
+  const seed = x * 3.1 + z * 1.7;
+  // Lean toward the open (a pine reaching for light away from the hall
+  // behind it), more or less by the seed.
+  const lean = Math.atan2(-z, -x) + jitter(seed, 0.5);
+  const tilt = 0.13 + Math.abs(jitter(seed * 2, 0.05));
+  const rod = (ax: number, ay: number, az: number, a: number, t: number, len: number, w: number, cast: boolean): V3 => {
+    const dx = Math.sin(t) * Math.cos(a);
+    const dy = Math.cos(t);
+    const dz = Math.sin(t) * Math.sin(a);
+    k.add("barkPine", "taper", [ax + (dx * len) / 2, ay + (dy * len) / 2, az + (dz * len) / 2], [w, len, w], [0, -a, -t], cast);
+    return [ax + dx * len, ay + dy * len, az + dz * len];
+  };
+  const knuckle = (p: V3, w: number) => k.add("barkPine", "fruit", p, [w, w, w]);
+  k.add("barkPine", "rootFlare", [x, 0.18 * s, z], [0.4 * s, 0.38 * s, 0.4 * s], [0, seed, 0], true);
+  // Trunk in three pieces, each kinked a little off the last.
+  const p1 = rod(x, 0, z, lean, tilt, 1.45 * s, 0.25 * s, true);
+  const p2 = rod(p1[0], p1[1], p1[2], lean + 0.6, tilt * 0.35, 1.05 * s, 0.2 * s, true);
+  const p3 = rod(p2[0], p2[1], p2[2], lean - 0.5, tilt * 1.5, 0.85 * s, 0.16 * s, true);
+  knuckle(p1, 0.2 * s);
+  knuckle(p2, 0.16 * s);
+  let c = 0;
+  const pad = (p: V3, r: number, h: number, geo: GeoKey) => {
+    const j = 1 + jitter(seed * 5 + c * 7, 0.1);
+    c++;
+    k.add("pine", geo, p, [r * s * j, h * s, r * s * j * 0.9], [0, jitter(seed * 3 + c, 3), jitter(seed + c, 0.08)], true);
+  };
+  // A cloud of needles: a main pad with two smaller ones tucked either side
+  // of it and a little lower, so the layer has a soft, lumpy edge.
+  const cloud = (p: V3, r: number, h: number, dir: number) => {
+    pad(p, r, h, "pinePadA");
+    for (const sd of [-1, 1]) {
+      const a = dir + sd * (1.35 + jitter(seed + c, 0.25));
+      pad([p[0] + Math.cos(a) * 0.4 * r * s, p[1] - 0.05 * s, p[2] + Math.sin(a) * 0.4 * r * s], r * 0.62, h * 0.8, "pinePadB");
+    }
+  };
+  // Boughs: from the upper trunk, held out nearly level, shorter higher up
+  // and shorter on the side away from the lean (the hall wall behind).
+  const from: [V3, V3, number][] = [
+    [p1, p2, 0.5],
+    [p1, p2, 0.95],
+    [p2, p3, 0.3],
+    [p2, p3, 0.75],
+  ];
+  from.forEach(([a, b, f], i) => {
+    const o: V3 = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
+    const h = lean + Math.PI * 0.55 + i * 2.4 + jitter(seed + i * 11, 0.3);
+    const toward = 0.72 + 0.28 * Math.cos(h - lean);
+    const len = (0.95 - 0.12 * i) * s * toward;
+    const t = 1.28 - 0.05 * i;
+    const mid = rod(o[0], o[1], o[2], h, t, len * 0.6, 0.075 * s, i < 2);
+    const tip = rod(mid[0], mid[1], mid[2], h + jitter(seed + i, 0.3), t - 0.25, len * 0.45, 0.05 * s, false);
+    // A cloud on the bough's end, a single pad by its bend.
+    cloud([tip[0], tip[1] + 0.06 * s, tip[2]], 0.88 - 0.08 * i, 0.34, h);
+    const side = h + (i % 2 ? 1.2 : -1.2);
+    pad([mid[0] + Math.cos(side) * 0.18 * s, mid[1] + 0.1 * s, mid[2] + Math.sin(side) * 0.18 * s], 0.55 - 0.04 * i, 0.26, "pinePadB");
+  });
+  // The crown: a broad cloud over the top, a smaller pad above it.
+  cloud([p3[0], p3[1] + 0.02 * s, p3[2]], 1.0, 0.4, lean);
+  pad([p3[0] + Math.cos(lean) * 0.12 * s, p3[1] + 0.26 * s, p3[2] + Math.sin(lean) * 0.12 * s], 0.66, 0.32, "pinePadA");
 }
 
 /** A glazed onggi jar with a small leafy shrub. */
