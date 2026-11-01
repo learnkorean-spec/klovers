@@ -258,7 +258,14 @@ export default function World2Scene() {
           not the cart or characters in the foreground */}
       <fog attach="fog" args={["#2a2438", 7, 16]} />
       <ambientLight intensity={0.8} color="#FFF0DD" />
-      <directionalLight position={[3, 5, 2.5]} intensity={1.7} color="#FFE7B0" castShadow />
+      <directionalLight
+        position={[3, 5, 2.5]}
+        intensity={1.7}
+        color="#FFE7B0"
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0005}
+      />
       <pointLight position={[0, 2.1, 0.3]} intensity={0.9} color="#FFD24C" distance={4.5} />
       <Alley />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>

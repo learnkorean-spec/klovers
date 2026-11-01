@@ -64,7 +64,12 @@ export default function World2Page() {
         </figure>
 
         <div className="h-[60vh] rounded-lg overflow-hidden border border-[#FFF9EC]/10">
-          <Canvas shadows camera={{ position: [2.6, 1.9, 3.8], fov: 42 }}>
+          <Canvas
+            shadows
+            dpr={[1, 2]}
+            gl={{ antialias: true }}
+            camera={{ position: [2.6, 1.9, 3.8], fov: 42 }}
+          >
             <Suspense fallback={null}>
               <SlowOrbit>
                 <World2Scene />
