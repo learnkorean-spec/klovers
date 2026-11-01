@@ -24,6 +24,39 @@ export type VocabItem = {
   english: string;
 };
 
+/** One line of a short, real exchange between Adam and Lina in a room — the
+ * "practice the conversation" feature, distinct from the single-word vocab
+ * hotspots: a learner sees how those same words actually get used back and
+ * forth between two study companions, not just in isolation. Per canon
+ * (CLAUDE.md / klovers-world.ts), Adam and Lina are friends and study
+ * companions, never a romantic pair — lines stay practical (ordering,
+ * prices, "let's go together"), never romantic. */
+export type DialogueLine = {
+  speaker: "adam" | "lina";
+  korean: string;
+  /** Romanized pronunciation guide — the "English reading" of the Korean line. */
+  reading: string;
+  english: string;
+};
+
+/** Speaks a line aloud with the browser's own TTS (ko-KR voice) — no
+ * backend, no API key, works everywhere Web Speech is supported. Silently
+ * does nothing where it isn't (older Safari/Firefox), rather than erroring.
+ * Shared by the vocab flashcard and the dialogue card so both "Hear it"
+ * buttons use the exact same voice and rate. */
+export function speakKorean(text: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "ko-KR";
+    utter.rate = 0.85;
+    window.speechSynthesis.speak(utter);
+  } catch {
+    // Best-effort: pronunciation audio is a bonus, never block the flashcard on it.
+  }
+}
+
 /** Canon dress rules, copied from player/RealAvatar.tsx (not exported there). */
 export const DRESS: Record<"adam" | "lina", DressRule[]> = {
   adam: [

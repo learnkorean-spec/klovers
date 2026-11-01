@@ -3,10 +3,10 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Volume2, X } from "lucide-react";
-import World2Scene from "./World2Scene";
-import ConvenienceStoreScene from "./ConvenienceStoreScene";
-import type { VocabItem } from "./shared";
+import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Volume2, X } from "lucide-react";
+import World2Scene, { DIALOGUE as CART_DIALOGUE } from "./World2Scene";
+import ConvenienceStoreScene, { DIALOGUE as STORE_DIALOGUE } from "./ConvenienceStoreScene";
+import { speakKorean, type DialogueLine, type VocabItem } from "./shared";
 
 /** Each room AI Room Lab has proposed and a developer has built out: its own
  * concept image, 3D scene, camera framing and vocabulary. Adding a third
@@ -23,6 +23,10 @@ type Room = {
   hint: string;
   title: string;
   body: string;
+  /** The room's "practice the conversation" exchange between Adam and
+   * Lina — shown in the DialogueCard, line by line, Korean + English
+   * reading + English translation. */
+  dialogue: DialogueLine[];
 };
 
 const ROOMS: Room[] = [
@@ -39,6 +43,7 @@ const ROOMS: Room[] = [
     title: "A warm Korean street food cart at dusk (포장마차)",
     body:
       "Adam orders at the counter, Lina points to the menu and explains, Cluby sits on a stool beside them. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
+    dialogue: CART_DIALOGUE,
   },
   {
     id: "store",
@@ -53,24 +58,9 @@ const ROOMS: Room[] = [
     title: "A late-night Korean convenience store (편의점)",
     body:
       "Adam picks snacks and drinks from the shelves, Lina helps him read the labels, Cluby curls up by the door. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
+    dialogue: STORE_DIALOGUE,
   },
 ];
-
-/** Speaks the Korean word aloud with the browser's own TTS (ko-KR voice) —
- * no backend, no API key, works everywhere Web Speech is supported. Silently
- * does nothing where it isn't (older Safari/Firefox), rather than erroring. */
-function speakKorean(text: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  try {
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "ko-KR";
-    utter.rate = 0.85;
-    window.speechSynthesis.speak(utter);
-  } catch {
-    // Best-effort: pronunciation audio is a bonus, never block the flashcard on it.
-  }
-}
 
 /** The flashcard shown when a learner clicks a food/menu hotspot in the 3D
  * scene: the actual word they picked, not a generic vocab list — this is the
@@ -105,6 +95,82 @@ function VocabCard({ vocab, onClose }: { vocab: VocabItem; onClose: () => void }
   );
 }
 
+/** The "practice the conversation" card: a short, real back-and-forth
+ * between Adam and Lina, shown one line at a time — Korean, its English
+ * reading (romanization), and the English translation — distinct from the
+ * single-word VocabCard above. Clicking a speaker's line also plays a
+ * one-off "talk" animation on that character in the scene (see
+ * activeDialogueSpeaker/dialogueTurnKey wiring in World2Page below). */
+function DialogueCard({
+  line,
+  index,
+  total,
+  onPrev,
+  onNext,
+  onClose,
+}: {
+  line: DialogueLine;
+  index: number;
+  total: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}) {
+  const speakerLabel = line.speaker === "adam" ? "Adam" : "Lina";
+  return (
+    <div className="absolute inset-x-3 bottom-3 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-96 rounded-lg border border-[#FFF9EC]/15 bg-[#2E2E2E]/95 backdrop-blur p-4 shadow-xl">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FFFF00] text-[#2E2E2E]">
+            {speakerLabel}
+          </span>
+          <span className="text-xs text-[#FFF9EC]/50">
+            {index + 1} / {total}
+          </span>
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="text-[#FFF9EC]/50 hover:text-[#FFF9EC] shrink-0"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="text-xl font-bold text-[#FFF9EC] mt-2">{line.korean}</p>
+      <p className="text-xs text-[#FFF9EC]/60 mt-0.5">{line.reading}</p>
+      <p className="text-sm text-[#FFF9EC]/80 mt-2">{line.english}</p>
+      <div className="flex items-center justify-between mt-3">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onPrev}
+          disabled={index === 0}
+          className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10 disabled:opacity-30 px-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => speakKorean(line.korean)}
+          className="bg-[#FFFF00] text-[#2E2E2E] hover:bg-[#FFFF00]/90"
+        >
+          <Volume2 className="h-3.5 w-3.5 mr-1.5" />
+          Hear it
+        </Button>
+        {index === total - 1 ? (
+          <Button size="sm" variant="ghost" onClick={onClose} className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10 px-2">
+            Done
+          </Button>
+        ) : (
+          <Button size="sm" variant="ghost" onClick={onNext} className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10 px-2">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Camera gently orbits so the scene reads as a real 3D room, not a static render. */
 function SlowOrbit({ children }: { children: React.ReactNode }) {
   const g = useRef<Group>(null);
@@ -129,11 +195,29 @@ export default function World2Page() {
   const navigate = useNavigate();
   const [activeVocab, setActiveVocab] = useState<VocabItem | null>(null);
   const [roomId, setRoomId] = useState(ROOMS[0].id);
+  // null = dialogue card closed; otherwise the index of the line showing.
+  const [dialogueIndex, setDialogueIndex] = useState<number | null>(null);
   const room = ROOMS.find((r) => r.id === roomId) ?? ROOMS[0];
+  const currentLine = dialogueIndex !== null ? room.dialogue[dialogueIndex] : null;
   const selectRoom = (id: string) => {
     setRoomId(id);
     setActiveVocab(null);
+    setDialogueIndex(null);
   };
+  // A hotspot click and the dialogue card both use the bottom-of-canvas
+  // overlay slot, so opening one closes the other rather than stacking.
+  const selectVocab = (vocab: VocabItem) => {
+    setDialogueIndex(null);
+    setActiveVocab(vocab);
+  };
+  const openDialogue = () => {
+    setActiveVocab(null);
+    setDialogueIndex(0);
+  };
+  const closeDialogue = () => setDialogueIndex(null);
+  const prevLine = () => setDialogueIndex((i) => (i === null ? null : Math.max(i - 1, 0)));
+  const nextLine = () =>
+    setDialogueIndex((i) => (i === null ? null : Math.min(i + 1, room.dialogue.length - 1)));
   return (
     <div className="min-h-screen bg-[#2E2E2E] text-[#FFF9EC]">
       <div className="sticky top-0 z-20 bg-[#2E2E2E]/90 backdrop-blur border-b border-[#FFF9EC]/10">
@@ -199,20 +283,44 @@ export default function World2Page() {
           >
             <Suspense fallback={null}>
               <SlowOrbit>
-                <room.Scene onSelectVocab={setActiveVocab} />
+                <room.Scene
+                  onSelectVocab={selectVocab}
+                  activeDialogueSpeaker={currentLine?.speaker ?? null}
+                  dialogueTurnKey={dialogueIndex ?? -1}
+                />
               </SlowOrbit>
             </Suspense>
           </Canvas>
-          {!activeVocab && (
+          {!activeVocab && !currentLine && (
             <div className="absolute top-3 left-3 right-3 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
               {room.hint}
             </div>
           )}
           {activeVocab && <VocabCard vocab={activeVocab} onClose={() => setActiveVocab(null)} />}
+          {currentLine && (
+            <DialogueCard
+              line={currentLine}
+              index={dialogueIndex ?? 0}
+              total={room.dialogue.length}
+              onPrev={prevLine}
+              onNext={nextLine}
+              onClose={closeDialogue}
+            />
+          )}
         </div>
 
         <div className="rounded-lg border border-[#FFF9EC]/10 bg-[#FFF9EC]/5 p-4 text-sm space-y-2">
-          <p className="font-semibold">{room.title}</p>
+          <div className="flex items-start justify-between gap-3">
+            <p className="font-semibold">{room.title}</p>
+            <Button
+              size="sm"
+              onClick={openDialogue}
+              className="shrink-0 bg-[#FFFF00] text-[#2E2E2E] hover:bg-[#FFFF00]/90"
+            >
+              <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+              Practice the conversation
+            </Button>
+          </div>
           <p className="text-[#FFF9EC]/80">{room.body}</p>
           <p className="text-[#FFF9EC]/50 text-xs">
             This is a hackathon tech-demo page, separate from the live KLOVERS World learner

@@ -1,6 +1,6 @@
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useTiledTexture, paintPlanks } from "../game/environment/textures";
-import { Learner, LearnerPlaceholder, Hotspot, Cluby, Player, useLearnerReactions, type VocabItem } from "./shared";
+import { Learner, LearnerPlaceholder, Hotspot, Cluby, Player, useLearnerReactions, type VocabItem, type DialogueLine } from "./shared";
 
 /** How far Adam can walk here (in this scene's own local coordinates, before
  * the whole room is shifted -0.6 on x): clear of the shelf/fridge front
@@ -32,6 +32,18 @@ export const VOCAB: VocabItem[] = [
   { id: "hana", korean: "하나", pronunciation: "ha-na", arabic: "واحد", english: "one" },
   { id: "dul", korean: "둘", pronunciation: "dul", arabic: "اتنين", english: "two" },
   { id: "gyesandae", korean: "계산대", pronunciation: "gye-san-dae", arabic: "الكاشير", english: "checkout counter" },
+];
+
+/** A short, real exchange between Adam and Lina picking snacks and paying —
+ * reuses this room's own vocabulary (과자, 얼마예요?, 주세요) so the
+ * words-in-isolation hotspots and this back-and-forth reinforce each other.
+ * Friends shopping together, per canon — nothing romantic. */
+export const DIALOGUE: DialogueLine[] = [
+  { speaker: "adam", korean: "과자 어디 있어?", reading: "gwa-ja eo-di i-sseo?", english: "Where are the snacks?" },
+  { speaker: "lina", korean: "저기 있어, 같이 가자.", reading: "jeo-gi i-sseo, ga-chi ga-ja.", english: "They're over there, let's go together." },
+  { speaker: "adam", korean: "이거 얼마예요?", reading: "i-geo eol-ma-ye-yo?", english: "How much is this?" },
+  { speaker: "lina", korean: "삼천 원이에요.", reading: "sam-cheon won-i-e-yo.", english: "It's 3,000 won." },
+  { speaker: "adam", korean: "네, 이거 하나 주세요.", reading: "ne, i-geo ha-na ju-se-yo.", english: "Okay, one of these, please." },
 ];
 
 /** Warm hanging lamp over the register, and the store's dark night window —
@@ -207,10 +219,17 @@ function PriceTags({ onSelectPrice, onSelectCount }: { onSelectPrice: () => void
 
 export default function ConvenienceStoreScene({
   onSelectVocab,
+  activeDialogueSpeaker = null,
+  dialogueTurnKey = -1,
 }: {
   /** Fired when the learner clicks a shelf/fridge/register hotspot, with the
    * matching VocabItem — same contract as World2Scene's cart room. */
   onSelectVocab?: (vocab: VocabItem) => void;
+  /** Who is "speaking" the dialogue line currently shown in the page's
+   * DialogueCard, or null when it's closed — same contract as World2Scene. */
+  activeDialogueSpeaker?: "adam" | "lina" | null;
+  /** Bumped by the page on every dialogue-line change, same as World2Scene. */
+  dialogueTurnKey?: number;
 }) {
   const floor = useTiledTexture(paintPlanks, 5, 3);
   const { adamControl, linaControl, react } = useLearnerReactions();
@@ -220,6 +239,12 @@ export default function ConvenienceStoreScene({
     react();
     onSelectVocab?.(vocab);
   };
+  useEffect(() => {
+    if (!activeDialogueSpeaker) return;
+    const control = activeDialogueSpeaker === "adam" ? adamControl : linaControl;
+    control.current.once = "talk";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dialogueTurnKey]);
   // "하나" and "둘" are two separate vocab items in AI Room Lab's own brief —
   // one price tag alternates between them on each click rather than picking
   // just one, so both numbers stay reachable from a single hotspot.

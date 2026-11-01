@@ -1,6 +1,6 @@
-import { Suspense, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import { useTiledTexture, paintPlanks, paintPaving } from "../game/environment/textures";
-import { Learner, LearnerPlaceholder, Hotspot, Cluby, Player, useLearnerReactions, type VocabItem } from "./shared";
+import { Learner, LearnerPlaceholder, Hotspot, Cluby, Player, useLearnerReactions, type VocabItem, type DialogueLine } from "./shared";
 
 /** How far Adam can actually walk in this room: clear of the counter's front
  * face (z≈0.3) and the alley wall behind it, inside the camera's frame. */
@@ -17,6 +17,19 @@ export const VOCAB: VocabItem[] = [
   { id: "tteokbokki", korean: "떡볶이", pronunciation: "tteok-bok-ki", arabic: "توكبوكي (كعك الأرز الحار)", english: "spicy rice cakes" },
   { id: "gimbap", korean: "김밥", pronunciation: "gim-bap", arabic: "كيمباب (لفائف أرز بالأعشاب البحرية)", english: "seaweed rice rolls" },
   { id: "juseyo", korean: "주세요", pronunciation: "ju-se-yo", arabic: "من فضلك أعطني", english: "please give me" },
+];
+
+/** A short, real exchange between Adam and Lina ordering at the cart — the
+ * "practice the conversation" feature. Reuses this room's own vocabulary
+ * (떡볶이, 김밥, 주세요) plus 얼마예요? so the two words-in-isolation hotspots
+ * and this back-and-forth reinforce each other. Friends ordering food
+ * together, per canon — nothing romantic. */
+export const DIALOGUE: DialogueLine[] = [
+  { speaker: "lina", korean: "여기 뭐 먹을까?", reading: "yeo-gi mwo meo-geul-kka?", english: "What should we eat here?" },
+  { speaker: "adam", korean: "떡볶이 하나 주세요.", reading: "tteok-bok-ki ha-na ju-se-yo.", english: "One tteokbokki, please." },
+  { speaker: "lina", korean: "저는 김밥 주세요.", reading: "jeo-neun gim-bap ju-se-yo.", english: "I'll have gimbap, please." },
+  { speaker: "adam", korean: "이거 얼마예요?", reading: "i-geo eol-ma-ye-yo?", english: "How much is this?" },
+  { speaker: "lina", korean: "진짜 맛있겠다!", reading: "jin-jja ma-sit-get-da!", english: "This looks so good!" },
 ];
 
 /**
@@ -185,11 +198,21 @@ function FoodCart({ onSelectVocab }: { onSelectVocab: (id: string) => void }) {
 
 export default function World2Scene({
   onSelectVocab,
+  activeDialogueSpeaker = null,
+  dialogueTurnKey = -1,
 }: {
   /** Fired when the learner clicks a food/menu hotspot, with the matching
    * VocabItem — the actual click is the "real learner data" driving the
    * reaction, not a timer or a hover. */
   onSelectVocab?: (vocab: VocabItem) => void;
+  /** Who is "speaking" the dialogue line currently shown in the page's
+   * DialogueCard, or null when it's closed — drives a one-off talk
+   * animation on that character each time the line changes. */
+  activeDialogueSpeaker?: "adam" | "lina" | null;
+  /** Bumped by the page every time the displayed dialogue line changes, so
+   * the talk animation retriggers even if the same speaker says two lines
+   * in a row (speaker alone wouldn't change in that case). */
+  dialogueTurnKey?: number;
 }) {
   // Dressed-stone paving (same painter the live game's courtyards use)
   // instead of a flat plane, so the ground reads as a real street.
@@ -204,6 +227,16 @@ export default function World2Scene({
     react();
     onSelectVocab?.(vocab);
   };
+  // Dialogue card playback: whoever is "speaking" the current line plays a
+  // one-off "talk" clip, cross-fading back to idle on its own once done —
+  // same mechanism `react()` above uses, just driven by the page instead of
+  // a hotspot click.
+  useEffect(() => {
+    if (!activeDialogueSpeaker) return;
+    const control = activeDialogueSpeaker === "adam" ? adamControl : linaControl;
+    control.current.once = "talk";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dialogueTurnKey]);
   return (
     <group>
       {/* light dusk haze, far enough out that it only softens the alley wall,
