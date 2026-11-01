@@ -1,9 +1,28 @@
-import { Suspense, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { Suspense, useMemo, useRef, useState, type MutableRefObject } from "react";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import type { Group } from "three";
 import { PALETTE } from "../game/config/world";
 import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
 import { useTiledTexture, paintPlanks, paintPaving } from "../game/environment/textures";
+
+/** A single clickable vocabulary item: the word said at the cart, what it
+ * means, and how to say it. Clicking its hotspot in the 3D scene is the
+ * "real learner data" trigger — a word the learner actually picked, not a
+ * hover tooltip — so AI Room Lab's own vocabulary list drives the lesson. */
+export type VocabItem = {
+  id: string;
+  korean: string;
+  pronunciation: string;
+  arabic: string;
+  english: string;
+};
+
+export const VOCAB: VocabItem[] = [
+  { id: "eomuk", korean: "어묵", pronunciation: "eo-muk", arabic: "كعك السمك", english: "fish cake" },
+  { id: "tteokbokki", korean: "떡볶이", pronunciation: "tteok-bok-ki", arabic: "توكبوكي (كعك الأرز الحار)", english: "spicy rice cakes" },
+  { id: "gimbap", korean: "김밥", pronunciation: "gim-bap", arabic: "كيمباب (لفائف أرز بالأعشاب البحرية)", english: "seaweed rice rolls" },
+  { id: "juseyo", korean: "주세요", pronunciation: "ju-se-yo", arabic: "من فضلك أعطني", english: "please give me" },
+];
 
 /**
  * KLOVERS World 2 — hackathon tech-demo scene: a Korean street-food cart at
@@ -35,14 +54,66 @@ const DRESS: Record<"adam" | "lina", DressRule[]> = {
   ],
 };
 
-/** A learner, standing and talking at the cart — same rig the live game uses. */
-function Learner({ avatar, x, z, rotY }: { avatar: "adam" | "lina"; x: number; z: number; rotY: number }) {
-  // "idle" reads naturally in a frozen frame; "talk" mid-gesture looked like
-  // reaching for the props on the counter.
-  const control = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
+/** A learner, standing and talking at the cart — same rig the live game uses.
+ * Takes its control ref from the parent (instead of owning one) so clicking a
+ * vocab hotspot can trigger a one-off reaction animation on both Adam and Lina. */
+function Learner({
+  avatar,
+  x,
+  z,
+  rotY,
+  control,
+}: {
+  avatar: "adam" | "lina";
+  x: number;
+  z: number;
+  rotY: number;
+  control: MutableRefObject<BodyControl>;
+}) {
   return (
     <group position={[x, 0, z]} rotation={[0, rotY, 0]}>
       <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} />
+    </group>
+  );
+}
+
+/** Wraps a food/menu prop so it's clickable: a subtle hover highlight (scale
+ * pulse + brighter emissive on its own light, when it has one) plus a pointer
+ * cursor, so it reads as "tap this to learn the word" rather than a hidden
+ * easter egg. */
+function Hotspot({
+  onSelect,
+  children,
+}: {
+  onSelect: () => void;
+  children: React.ReactNode;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const g = useRef<Group>(null);
+  useFrame(() => {
+    if (!g.current) return;
+    const target = hovered ? 1.08 : 1;
+    const s = g.current.scale.x + (target - g.current.scale.x) * 0.25;
+    g.current.scale.setScalar(s);
+  });
+  return (
+    <group
+      ref={g}
+      onClick={(e: ThreeEvent<MouseEvent>) => {
+        e.stopPropagation();
+        onSelect();
+      }}
+      onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = "pointer";
+      }}
+      onPointerOut={() => {
+        setHovered(false);
+        document.body.style.cursor = "auto";
+      }}
+    >
+      {children}
     </group>
   );
 }
@@ -163,8 +234,10 @@ function Alley() {
   );
 }
 
-/** The food cart itself: wooden counter, fabric awning on poles, hanging lights, a hand-drawn menu board. */
-function FoodCart() {
+/** The food cart itself: wooden counter, fabric awning on poles, hanging lights, a hand-drawn menu board.
+ * The three food props and the menu board are click-to-learn hotspots:
+ * `onSelectVocab` fires with the matching VocabItem (by id, found in VOCAB). */
+function FoodCart({ onSelectVocab }: { onSelectVocab: (id: string) => void }) {
   const lights = useMemo(() => [-0.8, -0.3, 0.3, 0.8].map((x) => ({ x, y: 2.05 + 0.04 * Math.sin(x * 5), z: 0 })), []);
   // Real wood-plank grain (the same procedural painter the live game's maru
   // floors use — see textures.ts) instead of a flat color, so the counter,
@@ -185,43 +258,49 @@ function FoodCart() {
       </mesh>
       {/* skewers tray (어묵): a wooden tray of upright skewer sticks, set
           toward the back-centre of the counter, clear of where the
-          characters' hands rest. */}
-      <group position={[-0.15, 1.05, -0.12]}>
-        <mesh>
-          <boxGeometry args={[0.38, 0.03, 0.22]} />
-          <meshStandardMaterial color="#d9a441" roughness={0.6} />
-        </mesh>
-        {[-0.12, -0.04, 0.04, 0.12].map((sx) => (
-          <mesh key={sx} position={[sx, 0.09, 0]}>
-            <cylinderGeometry args={[0.012, 0.012, 0.18, 8]} />
-            <meshStandardMaterial color="#f0c24a" roughness={0.5} />
+          characters' hands rest. Click to learn the word. */}
+      <Hotspot onSelect={() => onSelectVocab("eomuk")}>
+        <group position={[-0.15, 1.05, -0.12]}>
+          <mesh>
+            <boxGeometry args={[0.38, 0.03, 0.22]} />
+            <meshStandardMaterial color="#d9a441" roughness={0.6} />
           </mesh>
-        ))}
-      </group>
-      {/* tteokbokki pot (떡볶이): a shallow bowl, red sauce visible. */}
-      <group position={[0.25, 1.05, -0.12]}>
-        <mesh>
-          <cylinderGeometry args={[0.14, 0.11, 0.08, 24]} />
-          <meshStandardMaterial color="#5a4a3a" roughness={0.6} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]}>
-          <cylinderGeometry args={[0.12, 0.12, 0.02, 24]} />
-          <meshStandardMaterial color="#c43b2e" roughness={0.4} />
-        </mesh>
-      </group>
-      {/* kimbap tray (김밥): a few dark rice-roll cylinders lying on a board. */}
-      <group position={[0.45, 1.04, -0.12]}>
-        <mesh>
-          <boxGeometry args={[0.26, 0.02, 0.18]} />
-          <meshStandardMaterial color="#1f1f1f" roughness={0.4} />
-        </mesh>
-        {[-0.08, 0, 0.08].map((sx) => (
-          <mesh key={sx} position={[sx, 0.035, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.16, 12]} />
-            <meshStandardMaterial color="#2a2a1a" roughness={0.5} />
+          {[-0.12, -0.04, 0.04, 0.12].map((sx) => (
+            <mesh key={sx} position={[sx, 0.09, 0]}>
+              <cylinderGeometry args={[0.012, 0.012, 0.18, 8]} />
+              <meshStandardMaterial color="#f0c24a" roughness={0.5} />
+            </mesh>
+          ))}
+        </group>
+      </Hotspot>
+      {/* tteokbokki pot (떡볶이): a shallow bowl, red sauce visible. Click to learn the word. */}
+      <Hotspot onSelect={() => onSelectVocab("tteokbokki")}>
+        <group position={[0.25, 1.05, -0.12]}>
+          <mesh>
+            <cylinderGeometry args={[0.14, 0.11, 0.08, 24]} />
+            <meshStandardMaterial color="#5a4a3a" roughness={0.6} />
           </mesh>
-        ))}
-      </group>
+          <mesh position={[0, 0.05, 0]}>
+            <cylinderGeometry args={[0.12, 0.12, 0.02, 24]} />
+            <meshStandardMaterial color="#c43b2e" roughness={0.4} />
+          </mesh>
+        </group>
+      </Hotspot>
+      {/* kimbap tray (김밥): a few dark rice-roll cylinders lying on a board. Click to learn the word. */}
+      <Hotspot onSelect={() => onSelectVocab("gimbap")}>
+        <group position={[0.45, 1.04, -0.12]}>
+          <mesh>
+            <boxGeometry args={[0.26, 0.02, 0.18]} />
+            <meshStandardMaterial color="#1f1f1f" roughness={0.4} />
+          </mesh>
+          {[-0.08, 0, 0.08].map((sx) => (
+            <mesh key={sx} position={[sx, 0.035, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.16, 12]} />
+              <meshStandardMaterial color="#2a2a1a" roughness={0.5} />
+            </mesh>
+          ))}
+        </group>
+      </Hotspot>
       {/* awning poles */}
       {[-1.1, 1.1].map((x) => (
         <mesh key={x} position={[x, 1.6, -0.4]} castShadow>
@@ -234,11 +313,13 @@ function FoodCart() {
         <boxGeometry args={[2.6, 0.06, 1.4]} />
         <meshStandardMaterial color="#FFF9EC" roughness={0.9} />
       </mesh>
-      {/* menu board */}
-      <mesh position={[-1.3, 1.3, -0.2]} rotation={[0, 0.5, 0]}>
-        <boxGeometry args={[0.5, 0.7, 0.04]} />
-        <meshStandardMaterial map={boardWood} color="#6b4a30" roughness={0.8} />
-      </mesh>
+      {/* menu board — click to learn how to ask for something */}
+      <Hotspot onSelect={() => onSelectVocab("juseyo")}>
+        <mesh position={[-1.3, 1.3, -0.2]} rotation={[0, 0.5, 0]}>
+          <boxGeometry args={[0.5, 0.7, 0.04]} />
+          <meshStandardMaterial map={boardWood} color="#6b4a30" roughness={0.8} />
+        </mesh>
+      </Hotspot>
       {/* three stools, tucked under the counter's overhang — set back from
           where Adam and Lina stand (z 1.1) so nothing clips their legs */}
       {[-1.1, -0.3, 1.1].map((x) => (
@@ -258,10 +339,29 @@ function FoodCart() {
   );
 }
 
-export default function World2Scene() {
+export default function World2Scene({
+  onSelectVocab,
+}: {
+  /** Fired when the learner clicks a food/menu hotspot, with the matching
+   * VocabItem — the actual click is the "real learner data" driving the
+   * reaction, not a timer or a hover. */
+  onSelectVocab?: (vocab: VocabItem) => void;
+}) {
   // Dressed-stone paving (same painter the live game's courtyards use)
   // instead of a flat plane, so the ground reads as a real street.
   const ground = useTiledTexture(paintPaving, 6, 6);
+  // Shared with FoodCart's hotspots below: clicking a word plays a one-off
+  // reaction on both learners (Lina "explains" it, Adam "reacts" to it) —
+  // cross-fades back to idle automatically once the clip finishes.
+  const adamControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
+  const linaControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
+  const handleSelect = (id: string) => {
+    const vocab = VOCAB.find((v) => v.id === id);
+    if (!vocab) return;
+    linaControl.current.once = "talk";
+    adamControl.current.once = "wave";
+    onSelectVocab?.(vocab);
+  };
   return (
     <group>
       {/* light dusk haze, far enough out that it only softens the alley wall,
@@ -282,7 +382,7 @@ export default function World2Scene() {
         <planeGeometry args={[16, 16]} />
         <meshStandardMaterial map={ground} color="#8a7560" roughness={0.95} />
       </mesh>
-      <FoodCart />
+      <FoodCart onSelectVocab={handleSelect} />
       <Suspense
         fallback={
           <>
@@ -292,9 +392,9 @@ export default function World2Scene() {
         }
       >
         {/* Adam ordering at the counter, angled toward camera and Lina */}
-        <Learner avatar="adam" x={-0.6} z={1.1} rotY={Math.PI * 0.8} />
+        <Learner avatar="adam" x={-0.6} z={1.1} rotY={Math.PI * 0.8} control={adamControl} />
         {/* Lina beside him, pointing at the menu */}
-        <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI * 0.65} />
+        <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI * 0.65} control={linaControl} />
       </Suspense>
       {/* Cluby sitting on its own stool (the one at x=1.1, z=1.5), raised to
           seat height so it reads as sitting rather than floating. */}
