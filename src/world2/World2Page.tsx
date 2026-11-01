@@ -4,7 +4,57 @@ import type { Group } from "three";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Volume2, X } from "lucide-react";
-import World2Scene, { type VocabItem } from "./World2Scene";
+import World2Scene from "./World2Scene";
+import ConvenienceStoreScene from "./ConvenienceStoreScene";
+import type { VocabItem } from "./shared";
+
+/** Each room AI Room Lab has proposed and a developer has built out: its own
+ * concept image, 3D scene, camera framing and vocabulary. Adding a third
+ * room (once a third AI Room Lab brief is picked) means one more entry here
+ * plus one new Scene file — nothing else in this page changes. */
+type Room = {
+  id: string;
+  label: string;
+  conceptImage: string;
+  conceptAlt: string;
+  cameraPosition: [number, number, number];
+  cameraFov: number;
+  Scene: typeof World2Scene;
+  hint: string;
+  title: string;
+  body: string;
+};
+
+const ROOMS: Room[] = [
+  {
+    id: "cart",
+    label: "Street Cart",
+    conceptImage: "/assets/world2/concept-pojangmacha.jpg",
+    conceptAlt:
+      "Meta Muse Image concept render: Adam and Lina at a lantern-lit Korean street food cart at dusk, with Cluby seated beside them",
+    cameraPosition: [2.6, 1.9, 3.8],
+    cameraFov: 42,
+    Scene: World2Scene,
+    hint: "Tap the skewers, tteokbokki, kimbap, or the menu board to learn the word.",
+    title: "A warm Korean street food cart at dusk (포장마차)",
+    body:
+      "Adam orders at the counter, Lina points to the menu and explains, Cluby sits on a stool beside them. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
+  },
+  {
+    id: "store",
+    label: "Convenience Store",
+    conceptImage: "/assets/world2/concept-convenience-store.jpg",
+    conceptAlt:
+      "Meta Muse Image concept render: Adam and Lina picking snacks in a late-night Korean convenience store, with Cluby curled up by the door",
+    cameraPosition: [3.0, 2.1, 4.6],
+    cameraFov: 44,
+    Scene: ConvenienceStoreScene,
+    hint: "Tap the snack shelf, drink fridge, checkout counter, or a price tag to learn the word.",
+    title: "A late-night Korean convenience store (편의점)",
+    body:
+      "Adam picks snacks and drinks from the shelves, Lina helps him read the labels, Cluby curls up by the door. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
+  },
+];
 
 /** Speaks the Korean word aloud with the browser's own TTS (ko-KR voice) —
  * no backend, no API key, works everywhere Web Speech is supported. Silently
@@ -78,6 +128,12 @@ function SlowOrbit({ children }: { children: React.ReactNode }) {
 export default function World2Page() {
   const navigate = useNavigate();
   const [activeVocab, setActiveVocab] = useState<VocabItem | null>(null);
+  const [roomId, setRoomId] = useState(ROOMS[0].id);
+  const room = ROOMS.find((r) => r.id === roomId) ?? ROOMS[0];
+  const selectRoom = (id: string) => {
+    setRoomId(id);
+    setActiveVocab(null);
+  };
   return (
     <div className="min-h-screen bg-[#2E2E2E] text-[#FFF9EC]">
       <div className="sticky top-0 z-20 bg-[#2E2E2E]/90 backdrop-blur border-b border-[#FFF9EC]/10">
@@ -100,10 +156,30 @@ export default function World2Page() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-4">
+        {/* Room switcher: each tab is a separate AI Room Lab brief, picked
+            from its own A/B variants and built into its own scene — not a
+            single room re-skinned. */}
+        <div className="flex gap-2">
+          {ROOMS.map((r) => (
+            <button
+              key={r.id}
+              onClick={() => selectRoom(r.id)}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                r.id === roomId
+                  ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"
+                  : "bg-transparent text-[#FFF9EC]/80 border-[#FFF9EC]/20 hover:border-[#FFF9EC]/40"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+
         <figure className="rounded-lg overflow-hidden border border-[#FFF9EC]/10">
           <img
-            src="/assets/world2/concept-pojangmacha.jpg"
-            alt="Meta Muse Image concept render: Adam and Lina at a lantern-lit Korean street food cart at dusk, with Cluby seated beside them"
+            key={room.id}
+            src={room.conceptImage}
+            alt={room.conceptAlt}
             className="w-full h-auto block"
             loading="eager"
           />
@@ -115,33 +191,29 @@ export default function World2Page() {
 
         <div className="relative h-[60vh] rounded-lg overflow-hidden border border-[#FFF9EC]/10">
           <Canvas
+            key={room.id}
             shadows
             dpr={[1, 2]}
             gl={{ antialias: true }}
-            camera={{ position: [2.6, 1.9, 3.8], fov: 42 }}
+            camera={{ position: room.cameraPosition, fov: room.cameraFov }}
           >
             <Suspense fallback={null}>
               <SlowOrbit>
-                <World2Scene onSelectVocab={setActiveVocab} />
+                <room.Scene onSelectVocab={setActiveVocab} />
               </SlowOrbit>
             </Suspense>
           </Canvas>
           {!activeVocab && (
             <div className="absolute top-3 left-3 right-3 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
-              Tap the skewers, tteokbokki, kimbap, or the menu board to learn the word.
+              {room.hint}
             </div>
           )}
           {activeVocab && <VocabCard vocab={activeVocab} onClose={() => setActiveVocab(null)} />}
         </div>
 
         <div className="rounded-lg border border-[#FFF9EC]/10 bg-[#FFF9EC]/5 p-4 text-sm space-y-2">
-          <p className="font-semibold">A warm Korean street food cart at dusk (포장마차)</p>
-          <p className="text-[#FFF9EC]/80">
-            Adam orders at the counter, Lina points to the menu and explains, Cluby sits on a
-            stool beside them. Tap a food item or the menu board above to hear and learn the word.
-            Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요
-            (please give me), 얼마예요? (how much is it?).
-          </p>
+          <p className="font-semibold">{room.title}</p>
+          <p className="text-[#FFF9EC]/80">{room.body}</p>
           <p className="text-[#FFF9EC]/50 text-xs">
             This is a hackathon tech-demo page, separate from the live KLOVERS World learner
             experience — it does not touch production rooms, progression, or story canon gating.

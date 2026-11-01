@@ -1,22 +1,13 @@
-import { Suspense, useMemo, useRef, useState, type MutableRefObject } from "react";
-import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import type { Group } from "three";
-import { PALETTE } from "../game/config/world";
-import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
+import { Suspense, useMemo } from "react";
 import { useTiledTexture, paintPlanks, paintPaving } from "../game/environment/textures";
+import { Learner, LearnerPlaceholder, Hotspot, Cluby, useLearnerReactions, type VocabItem } from "./shared";
+
+export type { VocabItem };
 
 /** A single clickable vocabulary item: the word said at the cart, what it
  * means, and how to say it. Clicking its hotspot in the 3D scene is the
  * "real learner data" trigger — a word the learner actually picked, not a
  * hover tooltip — so AI Room Lab's own vocabulary list drives the lesson. */
-export type VocabItem = {
-  id: string;
-  korean: string;
-  pronunciation: string;
-  arabic: string;
-  english: string;
-};
-
 export const VOCAB: VocabItem[] = [
   { id: "eomuk", korean: "어묵", pronunciation: "eo-muk", arabic: "كعك السمك", english: "fish cake" },
   { id: "tteokbokki", korean: "떡볶이", pronunciation: "tteok-bok-ki", arabic: "توكبوكي (كعك الأرز الحار)", english: "spicy rice cakes" },
@@ -36,157 +27,6 @@ export const VOCAB: VocabItem[] = [
  *
  * Palette: ivory #FFF9EC, KLOVERS yellow #FFFF00, charcoal #2E2E2E.
  */
-
-/** Canon dress rules, copied from player/RealAvatar.tsx (not exported there). */
-const DRESS: Record<"adam" | "lina", DressRule[]> = {
-  adam: [
-    { match: /Suit/, color: "#F2E200" },
-    { match: /Shirt/, color: PALETTE.ivory },
-    { match: /Pants/, color: "#EFE6D2" },
-    { match: /Shoes/, color: PALETTE.white },
-  ],
-  lina: [
-    { match: /Shirt/, color: PALETTE.ivory },
-    { match: /Pants/, color: "#F2E200" },
-    { match: /Shoes/, color: PALETTE.ivory },
-    { match: /HairLong/, color: "#7A3520", contrast: 0.4 },
-    { match: /Hair/, color: "#5E2A17", contrast: 0.35 },
-  ],
-};
-
-/** A learner, standing and talking at the cart — same rig the live game uses.
- * Takes its control ref from the parent (instead of owning one) so clicking a
- * vocab hotspot can trigger a one-off reaction animation on both Adam and Lina. */
-function Learner({
-  avatar,
-  x,
-  z,
-  rotY,
-  control,
-}: {
-  avatar: "adam" | "lina";
-  x: number;
-  z: number;
-  rotY: number;
-  control: MutableRefObject<BodyControl>;
-}) {
-  return (
-    <group position={[x, 0, z]} rotation={[0, rotY, 0]}>
-      <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} />
-    </group>
-  );
-}
-
-/** Wraps a food/menu prop so it's clickable: a subtle hover highlight (scale
- * pulse + brighter emissive on its own light, when it has one) plus a pointer
- * cursor, so it reads as "tap this to learn the word" rather than a hidden
- * easter egg. */
-function Hotspot({
-  onSelect,
-  children,
-}: {
-  onSelect: () => void;
-  children: React.ReactNode;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const g = useRef<Group>(null);
-  useFrame(() => {
-    if (!g.current) return;
-    const target = hovered ? 1.08 : 1;
-    const s = g.current.scale.x + (target - g.current.scale.x) * 0.25;
-    g.current.scale.setScalar(s);
-  });
-  return (
-    <group
-      ref={g}
-      onClick={(e: ThreeEvent<MouseEvent>) => {
-        e.stopPropagation();
-        onSelect();
-      }}
-      onPointerOver={(e: ThreeEvent<PointerEvent>) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = "pointer";
-      }}
-      onPointerOut={() => {
-        setHovered(false);
-        document.body.style.cursor = "auto";
-      }}
-    >
-      {children}
-    </group>
-  );
-}
-
-/** Shown while Adam/Lina's real models (≈1.3MB each) are still downloading,
- * so the scene never looks broken or empty during the first load. */
-function LearnerPlaceholder({ x, z }: { x: number; z: number }) {
-  return (
-    <group position={[x, 0, z]}>
-      <mesh position={[0, 0.85, 0]}>
-        <capsuleGeometry args={[0.22, 1.1, 4, 8]} />
-        <meshStandardMaterial color="#FFF9EC" transparent opacity={0.35} />
-      </mesh>
-    </group>
-  );
-}
-
-/** Cluby, built from simple primitives matching the canon description exactly
- * (mint green plush, two short butter-yellow horns, pink inner ears, rosy
- * cheeks, ivory hanbok top, yellow wrap skirt, green clover emblem) — there
- * is no Cluby GLB yet, so this is a faithful low-poly stand-in, not an
- * invented character. */
-function Cluby({ x, y = 0, z }: { x: number; y?: number; z: number }) {
-  const g = useRef<Group>(null);
-  useFrame(({ clock }) => {
-    if (g.current) g.current.position.y = y + 0.02 * Math.sin(clock.elapsedTime * 1.6);
-  });
-  return (
-    <group position={[x, 0, z]}>
-      <group ref={g}>
-        {/* body */}
-        <mesh position={[0, 0.3, 0]}>
-          <sphereGeometry args={[0.28, 24, 20]} />
-          <meshStandardMaterial color="#8FD6B4" roughness={0.9} />
-        </mesh>
-        {/* ivory hanbok top */}
-        <mesh position={[0, 0.22, 0]}>
-          <sphereGeometry args={[0.24, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <meshStandardMaterial color="#FFF9EC" roughness={0.8} />
-        </mesh>
-        {/* yellow wrap skirt */}
-        <mesh position={[0, 0.1, 0]}>
-          <cylinderGeometry args={[0.2, 0.24, 0.14, 20]} />
-          <meshStandardMaterial color="#FFFF00" roughness={0.7} />
-        </mesh>
-        {/* head */}
-        <mesh position={[0, 0.58, 0]}>
-          <sphereGeometry args={[0.2, 24, 20]} />
-          <meshStandardMaterial color="#8FD6B4" roughness={0.9} />
-        </mesh>
-        {/* rosy cheeks */}
-        {[-0.1, 0.1].map((dx) => (
-          <mesh key={dx} position={[dx, 0.55, 0.17]}>
-            <circleGeometry args={[0.035, 12]} />
-            <meshStandardMaterial color="#F8B4B4" />
-          </mesh>
-        ))}
-        {/* horns */}
-        {[-0.08, 0.08].map((dx) => (
-          <mesh key={dx} position={[dx, 0.76, 0]} rotation={[0, 0, dx > 0 ? -0.3 : 0.3]}>
-            <coneGeometry args={[0.03, 0.1, 10]} />
-            <meshStandardMaterial color="#FFD24C" roughness={0.5} />
-          </mesh>
-        ))}
-        {/* clover emblem */}
-        <mesh position={[0, 0.24, 0.23]}>
-          <circleGeometry args={[0.04, 12]} />
-          <meshStandardMaterial color="#2E7D4F" />
-        </mesh>
-      </group>
-    </group>
-  );
-}
 
 /** The alley backdrop: a single wide, curved-feeling wall of hanok storefronts
  * directly behind the cart, close enough and wide enough to stay in frame
@@ -353,13 +193,11 @@ export default function World2Scene({
   // Shared with FoodCart's hotspots below: clicking a word plays a one-off
   // reaction on both learners (Lina "explains" it, Adam "reacts" to it) —
   // cross-fades back to idle automatically once the clip finishes.
-  const adamControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
-  const linaControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
+  const { adamControl, linaControl, react } = useLearnerReactions();
   const handleSelect = (id: string) => {
     const vocab = VOCAB.find((v) => v.id === id);
     if (!vocab) return;
-    linaControl.current.once = "talk";
-    adamControl.current.once = "wave";
+    react();
     onSelectVocab?.(vocab);
   };
   return (
