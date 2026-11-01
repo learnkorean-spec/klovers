@@ -1,6 +1,10 @@
 import { Suspense, useMemo } from "react";
 import { useTiledTexture, paintPlanks, paintPaving } from "../game/environment/textures";
-import { Learner, LearnerPlaceholder, Hotspot, Cluby, useLearnerReactions, type VocabItem } from "./shared";
+import { Learner, LearnerPlaceholder, Hotspot, Cluby, Player, useLearnerReactions, type VocabItem } from "./shared";
+
+/** How far Adam can actually walk in this room: clear of the counter's front
+ * face (z≈0.3) and the alley wall behind it, inside the camera's frame. */
+const ADAM_BOUNDS = { x: [-2.2, 2.2] as [number, number], z: [0.5, 3.2] as [number, number] };
 
 export type { VocabItem };
 
@@ -229,8 +233,14 @@ export default function World2Scene({
           </>
         }
       >
-        {/* Adam ordering at the counter, angled toward camera and Lina */}
-        <Learner avatar="adam" x={-0.6} z={1.1} rotY={Math.PI * 0.8} control={adamControl} />
+        {/* Adam — keyboard-controlled (arrow keys / WASD), starts ordering at
+            the counter angled toward camera and Lina, then can walk around */}
+        <Player
+          avatar="adam"
+          initial={{ x: -0.6, z: 1.1, rotY: Math.PI * 0.8 }}
+          bounds={ADAM_BOUNDS}
+          control={adamControl}
+        />
         {/* Lina beside him, pointing at the menu */}
         <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI * 0.65} control={linaControl} />
       </Suspense>

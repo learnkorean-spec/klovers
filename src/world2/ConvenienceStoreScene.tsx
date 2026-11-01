@@ -1,6 +1,11 @@
 import { Suspense, useMemo, useRef } from "react";
 import { useTiledTexture, paintPlanks } from "../game/environment/textures";
-import { Learner, LearnerPlaceholder, Hotspot, Cluby, useLearnerReactions, type VocabItem } from "./shared";
+import { Learner, LearnerPlaceholder, Hotspot, Cluby, Player, useLearnerReactions, type VocabItem } from "./shared";
+
+/** How far Adam can walk here (in this scene's own local coordinates, before
+ * the whole room is shifted -0.6 on x): clear of the shelf/fridge front
+ * faces (z≈-1.15) and the checkout counter (z≈-0.03), inside the camera's frame. */
+const ADAM_BOUNDS = { x: [-2.0, 2.3] as [number, number], z: [-0.9, 1.8] as [number, number] };
 
 /**
  * KLOVERS World 2 — second hackathon room: a late-night Korean convenience
@@ -255,8 +260,14 @@ export default function ConvenienceStoreScene({
           </>
         }
       >
-        {/* Adam at the shelf, reaching for a snack */}
-        <Learner avatar="adam" x={0.5} z={0.9} rotY={-Math.PI * 0.55} control={adamControl} />
+        {/* Adam — keyboard-controlled (arrow keys / WASD), starts at the
+            shelf reaching for a snack, then can walk around the store */}
+        <Player
+          avatar="adam"
+          initial={{ x: 0.5, z: 0.9, rotY: -Math.PI * 0.55 }}
+          bounds={ADAM_BOUNDS}
+          control={adamControl}
+        />
         {/* Lina beside him, pointing at the label */}
         <Learner avatar="lina" x={1.15} z={0.75} rotY={-Math.PI * 0.4} control={linaControl} />
       </Suspense>

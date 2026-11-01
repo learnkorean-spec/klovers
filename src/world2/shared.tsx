@@ -1,4 +1,4 @@
-import { useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import type { Group } from "three";
 import { PALETTE } from "../game/config/world";
@@ -59,6 +59,106 @@ export function Learner({
 }) {
   return (
     <group position={[x, 0, z]} rotation={[0, rotY, 0]}>
+      <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} />
+    </group>
+  );
+}
+
+/** Arrow keys and WASD both move the player, mapped to an [x, z] direction. */
+const MOVE_KEYS: Record<string, [number, number]> = {
+  arrowup: [0, -1],
+  w: [0, -1],
+  arrowdown: [0, 1],
+  s: [0, 1],
+  arrowleft: [-1, 0],
+  a: [-1, 0],
+  arrowright: [1, 0],
+  d: [1, 0],
+};
+
+/** Lets the learner actually walk a character around a room with the
+ * keyboard (arrow keys or WASD) — the thing that makes a room read as a game
+ * you play rather than a slideshow of click targets. Held keys live in a
+ * plain ref (not React state), so movement never triggers a re-render —
+ * only the Three.js transform updates, every frame, while a key is down.
+ * Returns the group ref to mount the moving body on. */
+export function usePlayerMovement({
+  bounds,
+  control,
+  speed = 1.7,
+}: {
+  bounds: { x: [number, number]; z: [number, number] };
+  control: MutableRefObject<BodyControl>;
+  speed?: number;
+}) {
+  const g = useRef<Group>(null);
+  const pressed = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if (MOVE_KEYS[key]) pressed.current.add(key);
+    };
+    const up = (e: KeyboardEvent) => pressed.current.delete(e.key.toLowerCase());
+    const clearAll = () => pressed.current.clear();
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", clearAll);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", clearAll);
+    };
+  }, []);
+  useFrame((_, delta) => {
+    const group = g.current;
+    if (!group) return;
+    let dx = 0;
+    let dz = 0;
+    for (const key of pressed.current) {
+      const dir = MOVE_KEYS[key];
+      if (!dir) continue;
+      dx += dir[0];
+      dz += dir[1];
+    }
+    const moving = dx !== 0 || dz !== 0;
+    if (moving) {
+      const len = Math.hypot(dx, dz) || 1;
+      const step = speed * Math.min(delta, 0.05); // clamp delta so a dropped frame can't teleport the player
+      const nx = group.position.x + (dx / len) * step;
+      const nz = group.position.z + (dz / len) * step;
+      group.position.x = Math.min(bounds.x[1], Math.max(bounds.x[0], nx));
+      group.position.z = Math.min(bounds.z[1], Math.max(bounds.z[0], nz));
+      const targetRot = Math.atan2(dx, dz);
+      let diff = targetRot - group.rotation.y;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      group.rotation.y += diff * Math.min(1, delta * 10);
+      if (control.current.clip !== "walk") control.current.clip = "walk";
+    } else if (control.current.clip === "walk") {
+      control.current.clip = "idle";
+    }
+  });
+  return g;
+}
+
+/** A keyboard-controlled learner — same rig as `Learner`, but the player
+ * actually drives it around the room with arrow keys / WASD instead of it
+ * sitting at a fixed spot. `initial` only sets the starting pose; after that
+ * the group's own transform (moved every frame in `usePlayerMovement`) owns
+ * position and facing. */
+export function Player({
+  avatar,
+  initial,
+  bounds,
+  control,
+}: {
+  avatar: "adam" | "lina";
+  initial: { x: number; z: number; rotY: number };
+  bounds: { x: [number, number]; z: [number, number] };
+  control: MutableRefObject<BodyControl>;
+}) {
+  const g = usePlayerMovement({ bounds, control });
+  return (
+    <group ref={g} position={[initial.x, 0, initial.z]} rotation={[0, initial.rotY, 0]}>
       <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} />
     </group>
   );

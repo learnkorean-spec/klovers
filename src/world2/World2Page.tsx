@@ -35,7 +35,7 @@ const ROOMS: Room[] = [
     cameraPosition: [2.6, 1.9, 3.8],
     cameraFov: 42,
     Scene: World2Scene,
-    hint: "Tap the skewers, tteokbokki, kimbap, or the menu board to learn the word.",
+    hint: "Use WASD or the arrow keys to walk Adam around. Tap the skewers, tteokbokki, kimbap, or the menu board to learn the word.",
     title: "A warm Korean street food cart at dusk (포장마차)",
     body:
       "Adam orders at the counter, Lina points to the menu and explains, Cluby sits on a stool beside them. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
@@ -49,7 +49,7 @@ const ROOMS: Room[] = [
     cameraPosition: [3.0, 2.1, 4.6],
     cameraFov: 44,
     Scene: ConvenienceStoreScene,
-    hint: "Tap the snack shelf, drink fridge, checkout counter, or a price tag to learn the word.",
+    hint: "Use WASD or the arrow keys to walk Adam around. Tap the shelf, fridge, checkout, or a price tag to learn the word.",
     title: "A late-night Korean convenience store (편의점)",
     body:
       "Adam picks snacks and drinks from the shelves, Lina helps him read the labels, Cluby curls up by the door. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
