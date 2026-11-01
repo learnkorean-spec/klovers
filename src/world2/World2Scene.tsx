@@ -36,7 +36,9 @@ const DRESS: Record<"adam" | "lina", DressRule[]> = {
 
 /** A learner, standing and talking at the cart — same rig the live game uses. */
 function Learner({ avatar, x, z, rotY }: { avatar: "adam" | "lina"; x: number; z: number; rotY: number }) {
-  const control = useRef<BodyControl>({ clip: "talk", once: null, rate: 1 });
+  // "idle" reads naturally in a frozen frame; "talk" mid-gesture looked like
+  // reaching for the props on the counter.
+  const control = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
   return (
     <group position={[x, 0, z]} rotation={[0, rotY, 0]}>
       <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} />
@@ -62,10 +64,10 @@ function LearnerPlaceholder({ x, z }: { x: number; z: number }) {
  * cheeks, ivory hanbok top, yellow wrap skirt, green clover emblem) — there
  * is no Cluby GLB yet, so this is a faithful low-poly stand-in, not an
  * invented character. */
-function Cluby({ x, z }: { x: number; z: number }) {
+function Cluby({ x, y = 0, z }: { x: number; y?: number; z: number }) {
   const g = useRef<Group>(null);
   useFrame(({ clock }) => {
-    if (g.current) g.current.position.y = 0.02 * Math.sin(clock.elapsedTime * 1.6);
+    if (g.current) g.current.position.y = y + 0.02 * Math.sin(clock.elapsedTime * 1.6);
   });
   return (
     <group position={[x, 0, z]}>
@@ -128,21 +130,45 @@ function FoodCart() {
         <boxGeometry args={[2.3, 0.05, 0.65]} />
         <meshStandardMaterial color="#6b4423" roughness={0.8} />
       </mesh>
-      {/* skewers tray (어묵) */}
-      <mesh position={[-0.6, 1.08, 0]}>
-        <boxGeometry args={[0.5, 0.06, 0.3]} />
-        <meshStandardMaterial color="#d9a441" roughness={0.6} />
-      </mesh>
-      {/* tteokbokki pot (떡볶이) */}
-      <mesh position={[0.1, 1.1, 0]}>
-        <cylinderGeometry args={[0.18, 0.18, 0.14, 20]} />
-        <meshStandardMaterial color="#c43b2e" roughness={0.5} />
-      </mesh>
-      {/* kimbap tray (김밥) */}
-      <mesh position={[0.7, 1.07, 0]}>
-        <boxGeometry args={[0.4, 0.04, 0.22]} />
-        <meshStandardMaterial color="#1f1f1f" roughness={0.4} />
-      </mesh>
+      {/* skewers tray (어묵): a wooden tray of upright skewer sticks, set
+          toward the back-centre of the counter, clear of where the
+          characters' hands rest. */}
+      <group position={[-0.15, 1.05, -0.12]}>
+        <mesh>
+          <boxGeometry args={[0.38, 0.03, 0.22]} />
+          <meshStandardMaterial color="#d9a441" roughness={0.6} />
+        </mesh>
+        {[-0.12, -0.04, 0.04, 0.12].map((sx) => (
+          <mesh key={sx} position={[sx, 0.09, 0]}>
+            <cylinderGeometry args={[0.012, 0.012, 0.18, 8]} />
+            <meshStandardMaterial color="#f0c24a" roughness={0.5} />
+          </mesh>
+        ))}
+      </group>
+      {/* tteokbokki pot (떡볶이): a shallow bowl, red sauce visible. */}
+      <group position={[0.25, 1.05, -0.12]}>
+        <mesh>
+          <cylinderGeometry args={[0.14, 0.11, 0.08, 24]} />
+          <meshStandardMaterial color="#5a4a3a" roughness={0.6} />
+        </mesh>
+        <mesh position={[0, 0.05, 0]}>
+          <cylinderGeometry args={[0.12, 0.12, 0.02, 24]} />
+          <meshStandardMaterial color="#c43b2e" roughness={0.4} />
+        </mesh>
+      </group>
+      {/* kimbap tray (김밥): a few dark rice-roll cylinders lying on a board. */}
+      <group position={[0.45, 1.04, -0.12]}>
+        <mesh>
+          <boxGeometry args={[0.26, 0.02, 0.18]} />
+          <meshStandardMaterial color="#1f1f1f" roughness={0.4} />
+        </mesh>
+        {[-0.08, 0, 0.08].map((sx) => (
+          <mesh key={sx} position={[sx, 0.035, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.025, 0.025, 0.16, 12]} />
+            <meshStandardMaterial color="#2a2a1a" roughness={0.5} />
+          </mesh>
+        ))}
+      </group>
       {/* awning poles */}
       {[-1.1, 1.1].map((x) => (
         <mesh key={x} position={[x, 1.6, -0.4]} castShadow>
@@ -160,9 +186,10 @@ function FoodCart() {
         <boxGeometry args={[0.5, 0.7, 0.04]} />
         <meshStandardMaterial color="#3a2a1a" roughness={0.8} />
       </mesh>
-      {/* three stools */}
-      {[-0.9, 0, 0.9].map((x) => (
-        <mesh key={x} position={[x, 0.25, 0.7]} castShadow>
+      {/* three stools, tucked under the counter's overhang — set back from
+          where Adam and Lina stand (z 1.1) so nothing clips their legs */}
+      {[-1.1, -0.3, 1.1].map((x) => (
+        <mesh key={x} position={[x, 0.25, 1.5]} castShadow>
           <cylinderGeometry args={[0.18, 0.16, 0.5, 16]} />
           <meshStandardMaterial color="#6b4423" roughness={0.8} />
         </mesh>
@@ -202,8 +229,9 @@ export default function World2Scene() {
         {/* Lina beside him, pointing at the menu */}
         <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI * 0.65} />
       </Suspense>
-      {/* Cluby sitting on the stool beside them */}
-      <Cluby x={0.9} z={0.75} />
+      {/* Cluby sitting on its own stool (the one at x=1.1, z=1.5), raised to
+          seat height so it reads as sitting rather than floating. */}
+      <Cluby x={1.1} y={0.5} z={1.4} />
     </group>
   );
 }
