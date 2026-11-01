@@ -22,7 +22,7 @@ export type MatKey =
   | "pine" | "accent" | "fabric" | "metal" | "gravel" | "leaf" | "leafDark" | "farLeaf" | "farLeafDark" | "blossom" | "blossomPale" | "moss" | "bedCover" | "hill"
   | "clothRed" | "clothBlue" | "clothSage" | "fruitRed" | "fruitOrange" | "flowerWhite" | "flowerLilac" | "flowerPink" | "pollen" | "flagstone" | "boulder" | "soil" | "wicker" | "steel" | "broth" | "fishcake" | "kimchi" | "sprouts" | "beans" | "onggi" | "lockPaint" | "cityBlock" | "cityGround" | "river" | "ceramic" | "glass" | "sponge" | "cream" | "berry" | "bark" | "barkCherry";
 /** Unit shapes, plus curved roofs by aspect ("roof:2" …). */
-export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "slab" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "rootFlare" | "taper" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
+export type GeoKey = "box" | "hip" | "oct" | "cyl" | "cone" | "parasolA" | "parasolB" | "parasolRibs" | "awningA" | "awningB" | "flagA" | "flagB" | "slab" | "boulderA" | "boulderB" | "lilyPad" | "hedge" | "hedgeB" | "bloom" | "leaves" | "pineCone" | "ball" | "bloomA" | "bloomB" | "leafy" | "leafyLow" | "crownA" | "crownB" | "fruit" | "ballLow" | "ridge" | "cylLow" | "basket" | "basketRim" | "onggi" | "rootFlare" | "taper" | "taperLow" | "lockBox" | "lockHeart" | "shackle" | `roof:${number}`;
 
 export const KIT_MATERIALS: Record<MatKey, Material> = {
   plaster: MAT.plaster,
@@ -240,12 +240,12 @@ function blossomClump(detail: number, variant: number, n: number): BufferGeometr
  * Fits a unit box (y −0.5…0.5, so the foliage shader's sunlit top works).
  */
 function farCrown(variant: number, detail = 1): BufferGeometry {
-  const knots: [number, number, number, number][] = [[0, -0.02, 0, 0.3]];
+  const knots: [number, number, number, number][] = [[0, -0.02, 0, 0.33]];
   const ring = 6;
   for (let i = 0; i < ring; i++) {
     const a = (i / ring) * Math.PI * 2 + variant * 0.7 + jitter(variant * 11 + i, 0.3);
-    const d = 0.27 + jitter(variant * 7 + i * 3, 0.04);
-    knots.push([Math.cos(a) * d, -0.06 + jitter(variant * 5 + i, 0.1), Math.sin(a) * d, 0.2 + jitter(variant * 13 + i, 0.03)]);
+    const d = 0.24 + jitter(variant * 7 + i * 3, 0.04);
+    knots.push([Math.cos(a) * d, -0.06 + jitter(variant * 5 + i, 0.1), Math.sin(a) * d, 0.22 + jitter(variant * 13 + i, 0.03)]);
   }
   knots.push([0.1 * Math.cos(variant), 0.24, 0.1 * Math.sin(variant), 0.21], [-0.14 * Math.cos(variant), 0.2, 0.12, 0.17]);
   const parts: BufferGeometry[] = [];
@@ -269,7 +269,7 @@ function farCrown(variant: number, detail = 1): BufferGeometry {
     for (let i = 0; i < nrm.count; i++) {
       v.fromBufferAttribute(pos, i);
       v.y *= 1.25;
-      n0.fromBufferAttribute(nrm, i).multiplyScalar(0.3).addScaledVector(v.normalize(), 0.7).normalize();
+      n0.fromBufferAttribute(nrm, i).multiplyScalar(0.15).addScaledVector(v.normalize(), 0.85).normalize();
       nrm.setXYZ(i, n0.x, n0.y, n0.z);
     }
     parts.push(g);
@@ -947,6 +947,8 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   onggi: onggiJar(),
   rootFlare: rootFlare(phoneTier() ? 15 : 25),
   taper: barkRod(),
+  // Far trunks and limbs: seven sides, open ends (they run into the crown).
+  taperLow: new CylinderGeometry(0.4, 0.5, 1, 7, 1, true),
   lockBox: lockBody(false),
   lockHeart: lockBody(true),
   shackle: lockShackle(),
@@ -1409,11 +1411,24 @@ export function tree(k: Kit, x: number, z: number, s = 1, blossom = false, seed 
     broadleafTree(k, x, z, s, seed);
     return;
   }
-  const lean = jitter(seed, 0.12);
+  const lean = jitter(seed, 0.08);
   // Far trees (beyond the walls): low-poly, and no shadow (they fall
   // outside the sun's shadow box anyway, so casting would only cost).
-  const cyl: GeoKey = "cylLow";
-  k.add(blossom ? "barkCherry" : "bark", cyl, [x, 1.0 * s, z], [0.22 * s, 2.0 * s, 0.22 * s], [lean, 0, -lean], false);
+  // A tapering trunk that runs on up into the crown and forks there into
+  // three limbs — a tree, not a ball on a stick.
+  const bark: MatKey = blossom ? "barkCherry" : "bark";
+  const trunkH = 2.3 * s;
+  k.add(bark, "taperLow", [x, trunkH / 2, z], [0.3 * s, trunkH, 0.3 * s], [lean, 0, -lean], false);
+  const fork = 1.7 * s;
+  const len = 0.95 * s;
+  for (let i = 0; i < 3; i++) {
+    const a = jitter(seed * 17, Math.PI) + (i * Math.PI * 2) / 3 + jitter(seed * 19 + i, 0.4);
+    const t = 0.6 + jitter(seed * 23 + i, 0.12);
+    const dx = Math.sin(t) * Math.cos(a);
+    const dy = Math.cos(t);
+    const dz = Math.sin(t) * Math.sin(a);
+    k.add(bark, "taperLow", [x + (dx * len) / 2, fork + (dy * len) / 2, z + (dz * len) / 2], [0.13 * s, len, 0.13 * s], [0, -a, -t], false);
+  }
   // One whole crown (two shapes, two greens, by the seed).
   const j = 1 + jitter(seed * 3, 0.12);
   const geo: GeoKey = seed % 2 ? "crownA" : "crownB";

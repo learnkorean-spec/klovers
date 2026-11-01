@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from "react";
-import { BackSide, BufferAttribute, BufferGeometry, CanvasTexture, DoubleSide, LatheGeometry, MeshBasicMaterial, SRGBColorSpace, Vector2, type Material } from "three";
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { BackSide, BufferAttribute, BufferGeometry, CanvasTexture, DoubleSide, type Group, LatheGeometry, MeshBasicMaterial, SRGBColorSpace, Vector2, type Material } from "three";
 import { CAFE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import { GateWall, Signboard } from "./parts";
@@ -531,26 +532,51 @@ function CafeChair({ side, cushion }: { side: -1 | 1; cushion: Material }) {
 }
 
 /**
- * A plank ceiling at the top of the walls, facing down only. Seen from
- * inside (the Eyes view, a low camera) the café reads as a room instead of
- * walls under open sky; when the camera behind the learner rises above the
- * walls, the plane faces away from it and is culled, so the view in from
- * above stays exactly as before — the camera never fights the ceiling. It
- * casts no shadow: the sun still lights the tables. It sits just under the
- * dark wall cap (not level with it — coplanar, the cap showed through as a
- * black band round the room).
+ * The ceiling: warm white plaster between exposed timber joists, the way a
+ * small Seoul café is often finished. (It used to be the floor's own photo
+ * boards, so from a seat it read as a second floor upside down.)
+ *
+ * The plaster faces down only. Seen from inside (the Eyes view, a low
+ * camera) the café reads as a room instead of walls under open sky; when the
+ * camera behind the learner rises above the walls, the plane faces away from
+ * it and is culled, and the joists are hidden too, so the view in from above
+ * stays exactly as before — the camera never fights the ceiling. Neither
+ * casts a shadow: the sun still lights the tables. The plaster sits just
+ * under the dark wall cap (coplanar, the cap showed through as a black band
+ * round the room).
  */
+const JOIST = { step: 0.62, w: 0.075, h: 0.13 };
+const CEILING_PLASTER = std("#F3EADC", 0.95, { emissive: "#EFE2CC", emissiveIntensity: 0.68, detail: "plaster" });
+const JOISTS_KIT = (() => {
+  const k = new Kit();
+  const n = Math.floor((HW * 2) / JOIST.step);
+  const len = HD * 2 + 0.4;
+  for (let i = 0; i <= n; i++) {
+    const x = -((n * JOIST.step) / 2) + i * JOIST.step;
+    if (Math.abs(x) > HW - 0.05) continue;
+    k.box("woodLight", [x, WALL_H - JOIST.h / 2, 0.2], [JOIST.w, JOIST.h, len]);
+  }
+  // A ledger along the back wall that the joists rest on.
+  k.box("woodLight", [0, WALL_H - 0.09, -HD + 0.05], [HW * 2, 0.18, 0.1]);
+  return k;
+})();
+
 function Ceiling() {
-  // The floor's photographed boards (same image, already loaded), tiled
-  // smaller so the ceiling reads as narrow tongue-and-groove boards; the
-  // painted planks stand in until the photo arrives.
-  const planks = useTiledTexture(paintPlanks, HW / 0.8, (HD + 0.4) / 0.8);
-  const photo = usePhotoFloor("planks", HW / 0.9, (HD + 0.4) / 0.9);
+  const joists = useRef<Group>(null);
+  // Hide the joists once the camera is up at (or over) the wall tops.
+  useFrame(({ camera }) => {
+    if (joists.current) joists.current.visible = camera.position.y < WALL_H - 0.05;
+  });
   return (
-    <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_H + 0.004, 0.1]}>
-      <planeGeometry args={[HW * 2 + 0.4, HD * 2 + 0.6]} />
-      <meshStandardMaterial key={photo ? "photo" : "painted"} map={photo?.map ?? planks} normalMap={photo?.normal ?? null} color={photo ? "#FFF0DC" : "#FFF3E0"} roughness={0.9} emissive={photo ? "#F0C89C" : "#C9A27A"} emissiveMap={photo?.map ?? null} emissiveIntensity={photo ? 0.85 : 0.32} />
-    </mesh>
+    <>
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_H + 0.004, 0.1]}>
+        <planeGeometry args={[HW * 2 + 0.4, HD * 2 + 0.6]} />
+        <primitive object={CEILING_PLASTER} attach="material" />
+      </mesh>
+      <group ref={joists}>
+        <Batch kit={JOISTS_KIT} />
+      </group>
+    </>
   );
 }
 
@@ -610,8 +636,8 @@ function BeamsAndLamps() {
 }
 
 export default function ConversationCafe({ words = [] }: { words?: string[] }) {
-  const planks = useTiledTexture(paintPlanks, HW / 1.5, HD / 1.5);
-  const photo = usePhotoFloor("planks", HW / 1.5, HD / 1.5);
+  const planks = useTiledTexture(paintPlanks, HW / 1.15, HD / 1.15);
+  const photo = usePhotoFloor("planks", HW / 1.15, HD / 1.15);
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
