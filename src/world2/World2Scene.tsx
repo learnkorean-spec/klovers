@@ -116,6 +116,52 @@ function Cluby({ x, y = 0, z }: { x: number; y?: number; z: number }) {
   );
 }
 
+/** The alley backdrop: a single wide, curved-feeling wall of hanok storefronts
+ * directly behind the cart, close enough and wide enough to stay in frame
+ * through the camera's gentle orbit (unlike scattered background props,
+ * which can swing out of a narrow FOV) — gives the cart somewhere to stand
+ * instead of a void, echoing the alley in the Meta concept image above it. */
+function Alley() {
+  const windowXs = useMemo(() => [-2.6, -1.9, -1.2, 1.2, 1.9, 2.6], []);
+  return (
+    <group position={[0, 0, -2.2]}>
+      {/* dusk sky, well back and wide so it fills the frame at any orbit angle */}
+      <mesh position={[0, 3, -4]}>
+        <planeGeometry args={[26, 10]} />
+        <meshBasicMaterial color="#2f2a3d" />
+      </mesh>
+      {/* storefront wall directly behind the cart */}
+      <mesh position={[0, 1.4, 0]} receiveShadow>
+        <boxGeometry args={[9, 2.8, 0.4]} />
+        <meshStandardMaterial color="#2a2019" roughness={0.9} />
+      </mesh>
+      {/* roofline: a long low ridge along the top of the wall */}
+      <mesh position={[0, 2.95, 0.05]} rotation={[0.12, 0, 0]}>
+        <boxGeometry args={[9.4, 0.3, 0.9]} />
+        <meshStandardMaterial color="#1a130f" roughness={0.9} />
+      </mesh>
+      {/* a row of warm, lit storefront windows, each with a thin dark frame so
+          they read as windows rather than flat glowing cards */}
+      {windowXs.map((x) => (
+        <group key={x} position={[x, 1.45, 0.21]}>
+          <mesh>
+            <planeGeometry args={[0.42, 0.6]} />
+            <meshStandardMaterial color="#1a130f" />
+          </mesh>
+          <mesh position={[0, 0, 0.005]}>
+            <planeGeometry args={[0.34, 0.5]} />
+            <meshStandardMaterial color="#FFD98A" emissive="#FFB23C" emissiveIntensity={1.1} />
+          </mesh>
+        </group>
+      ))}
+      {/* soft glow from the storefronts, picking out the characters' silhouettes against the wall */}
+      {[-2.2, 2.2].map((x) => (
+        <pointLight key={x} position={[x, 1.8, 1.2]} intensity={0.5} color="#FFB84D" distance={4} />
+      ))}
+    </group>
+  );
+}
+
 /** The food cart itself: wooden counter, fabric awning on poles, hanging lights, a hand-drawn menu board. */
 function FoodCart() {
   const lights = useMemo(() => [-0.8, -0.3, 0.3, 0.8].map((x) => ({ x, y: 2.05 + 0.04 * Math.sin(x * 5), z: 0 })), []);
@@ -208,12 +254,16 @@ function FoodCart() {
 export default function World2Scene() {
   return (
     <group>
-      <ambientLight intensity={0.85} color="#FFF3DD" />
-      <directionalLight position={[3, 5, 2.5]} intensity={1.8} color="#FFE7B0" castShadow />
-      <pointLight position={[0, 2.1, 0.3]} intensity={0.8} color="#FFD24C" distance={4} />
+      {/* light dusk haze, far enough out that it only softens the alley wall,
+          not the cart or characters in the foreground */}
+      <fog attach="fog" args={["#2a2438", 7, 16]} />
+      <ambientLight intensity={0.8} color="#FFF0DD" />
+      <directionalLight position={[3, 5, 2.5]} intensity={1.7} color="#FFE7B0" castShadow />
+      <pointLight position={[0, 2.1, 0.3]} intensity={0.9} color="#FFD24C" distance={4.5} />
+      <Alley />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[12, 12]} />
-        <meshStandardMaterial color="#3a3a3a" roughness={0.95} />
+        <planeGeometry args={[16, 16]} />
+        <meshStandardMaterial color="#3a2f24" roughness={0.95} />
       </mesh>
       <FoodCart />
       <Suspense
