@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { PALETTE } from "../game/config/world";
 import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
+import { useTiledTexture, paintPlanks, paintPaving } from "../game/environment/textures";
 
 /**
  * KLOVERS World 2 — hackathon tech-demo scene: a Korean street-food cart at
@@ -165,16 +166,22 @@ function Alley() {
 /** The food cart itself: wooden counter, fabric awning on poles, hanging lights, a hand-drawn menu board. */
 function FoodCart() {
   const lights = useMemo(() => [-0.8, -0.3, 0.3, 0.8].map((x) => ({ x, y: 2.05 + 0.04 * Math.sin(x * 5), z: 0 })), []);
+  // Real wood-plank grain (the same procedural painter the live game's maru
+  // floors use — see textures.ts) instead of a flat color, so the counter,
+  // stools and menu board don't read as plastic next to the photo above.
+  const counterWood = useTiledTexture(paintPlanks, 2, 0.6);
+  const stoolWood = useTiledTexture(paintPlanks, 1, 1);
+  const boardWood = useTiledTexture(paintPlanks, 0.8, 1);
   return (
     <group>
       {/* counter */}
       <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
         <boxGeometry args={[2.2, 1.0, 0.6]} />
-        <meshStandardMaterial color="#8a5a34" roughness={0.85} />
+        <meshStandardMaterial map={counterWood} color="#c9a877" roughness={0.85} />
       </mesh>
       <mesh position={[0, 1.02, 0]}>
         <boxGeometry args={[2.3, 0.05, 0.65]} />
-        <meshStandardMaterial color="#6b4423" roughness={0.8} />
+        <meshStandardMaterial map={counterWood} color="#d8ba8e" roughness={0.75} />
       </mesh>
       {/* skewers tray (어묵): a wooden tray of upright skewer sticks, set
           toward the back-centre of the counter, clear of where the
@@ -230,14 +237,14 @@ function FoodCart() {
       {/* menu board */}
       <mesh position={[-1.3, 1.3, -0.2]} rotation={[0, 0.5, 0]}>
         <boxGeometry args={[0.5, 0.7, 0.04]} />
-        <meshStandardMaterial color="#3a2a1a" roughness={0.8} />
+        <meshStandardMaterial map={boardWood} color="#6b4a30" roughness={0.8} />
       </mesh>
       {/* three stools, tucked under the counter's overhang — set back from
           where Adam and Lina stand (z 1.1) so nothing clips their legs */}
       {[-1.1, -0.3, 1.1].map((x) => (
         <mesh key={x} position={[x, 0.25, 1.5]} castShadow>
           <cylinderGeometry args={[0.18, 0.16, 0.5, 16]} />
-          <meshStandardMaterial color="#6b4423" roughness={0.8} />
+          <meshStandardMaterial map={stoolWood} color="#9a7249" roughness={0.8} />
         </mesh>
       ))}
       {/* hanging lights */}
@@ -252,6 +259,9 @@ function FoodCart() {
 }
 
 export default function World2Scene() {
+  // Dressed-stone paving (same painter the live game's courtyards use)
+  // instead of a flat plane, so the ground reads as a real street.
+  const ground = useTiledTexture(paintPaving, 6, 6);
   return (
     <group>
       {/* light dusk haze, far enough out that it only softens the alley wall,
@@ -270,7 +280,7 @@ export default function World2Scene() {
       <Alley />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[16, 16]} />
-        <meshStandardMaterial color="#3a2f24" roughness={0.95} />
+        <meshStandardMaterial map={ground} color="#8a7560" roughness={0.95} />
       </mesh>
       <FoodCart />
       <Suspense
