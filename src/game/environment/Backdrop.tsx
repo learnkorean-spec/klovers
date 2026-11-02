@@ -358,7 +358,9 @@ function backdropKit(id: string, hx: number, hz: number): Kit {
     }
   } else if (id !== "seoul-journey" && id !== "seoul-market") {
     ring(hx + 3.5, hz + 3.5, 4.2, 1.35);
-    ring(hx + 9, hz + 9, 5.5, 1.8);
+    // The outer ring mostly shows as crowns over the inner one: phones space
+    // it wider (≈25% fewer far trees, ≈10k fewer triangles a room).
+    ring(hx + 9, hz + 9, pickQuality().maxTexture <= 1024 ? 7.2 : 5.5, 1.8);
   }
   // Far hills: soft rounded ridges, blued and faded by the haze.
   // (On Namsan they stand beyond the city, rising from its floor 30 m down.)
