@@ -232,6 +232,20 @@ const BookAssignmentManager = () => {
     window.location.assign(data.signedUrl);
   };
 
+  /** Same signed URL as downloadPdf, but without forcing a download - opens
+   * the PDF inline in a new tab so Re can read it without saving a file. */
+  const openPdf = async (id: BookId) => {
+    const book = BOOKS[id];
+    const { data, error } = await supabase.storage
+      .from("student-materials")
+      .createSignedUrl(book.path, 60 * 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: "Could not prepare the PDF", description: error?.message, variant: "destructive" });
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener");
+  };
+
   const handleAssign = async () => {
     if (!selectedUser) { toast({ title: "Select a student first", variant: "destructive" }); return; }
     if (!availableFrom) { toast({ title: "Set an availability date", variant: "destructive" }); return; }
@@ -337,6 +351,10 @@ const BookAssignmentManager = () => {
                             <Button variant={selected ? "default" : "outline"} size="sm" className="h-6 px-2 text-[11px]"
                               onClick={() => setBookId(id)}>
                               {selected ? "Selected" : "Select"}
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-6 px-2 text-[11px] gap-1"
+                              disabled={hasFile === false} onClick={() => openPdf(id)}>
+                              <ExternalLink className="h-3 w-3" /> Open
                             </Button>
                             <Button variant="outline" size="sm" className="h-6 px-2 text-[11px] gap-1"
                               disabled={hasFile === false} onClick={() => downloadPdf(id)}>
