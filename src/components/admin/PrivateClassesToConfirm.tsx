@@ -17,7 +17,7 @@ import { Check, CalendarCheck, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UnreviewedBadge } from "@/components/admin/UnreviewedBadge";
-import { TelegramClaimBadge } from "@/components/admin/TelegramClaimBadge";
+import { TelegramClaimBadge, TelegramQuickConfirmButton } from "@/components/admin/TelegramClaimBadge";
 import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
 import { formatClassRange, formatSessionDate, type MyStudentWithClasses } from "@/types/students";
 
@@ -74,6 +74,11 @@ const PrivateClassesToConfirm = ({
             </span>
             {bundle ? (
               <span className="flex gap-1">
+                <TelegramQuickConfirmButton
+                  scheduledRow={occ.scheduledRow}
+                  disabled={confirmSessions.isPending}
+                  onConfirm={(outcome) => confirmOne(student.id, occ, outcome)}
+                />
                 <Button
                   size="sm" variant="outline"
                   disabled={confirmSessions.isPending}

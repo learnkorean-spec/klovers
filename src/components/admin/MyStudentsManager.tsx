@@ -29,7 +29,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { TelegramClaimBadge } from "@/components/admin/TelegramClaimBadge";
+import { TelegramClaimBadge, TelegramQuickConfirmButton } from "@/components/admin/TelegramClaimBadge";
 import {
   Plus, Pencil, Trash2, Clock, Loader2, GraduationCap, AlertTriangle,
   Video, Copy, Check, CalendarCheck, X, Wallet, History, Ban, ShieldAlert, Users,
@@ -1651,6 +1651,11 @@ const MyStudentsManager = () => {
                   </span>
                   {bundle ? (
                     <span className="flex gap-1">
+                      <TelegramQuickConfirmButton
+                        scheduledRow={occ.scheduledRow}
+                        disabled={confirmSessions.isPending}
+                        onConfirm={(outcome) => confirmOne(student.id, occ, outcome)}
+                      />
                       <Button
                         size="sm" variant="outline"
                         disabled={confirmSessions.isPending}
