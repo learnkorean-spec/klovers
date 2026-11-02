@@ -6,7 +6,7 @@ import { FLOOR_GRID } from "../config/world";
 import { MAT, std } from "../config/materials";
 import Batch from "./Batch";
 import { DECK_GLASS, TOWER_RED, TOWER_WHITE, towerGeometry } from "./namsanTower";
-import { Kit, jitter, pine } from "./kit";
+import { Kit, azalea, bed, jitter, pine, shrub } from "./kit";
 import { pickQuality } from "../systems/quality";
 import { Signboard } from "./parts";
 import { floorBreakup, FLOOR_BREAKUP_KEY, paintPaving, useTiledTexture, usePhotoFloor } from "./textures";
@@ -173,10 +173,55 @@ function terraceKit(): Kit {
       k.box("charcoal", [Math.sin(a) * r, y, TOWER_Z + Math.cos(a) * r], [0.035, 1.0, 0.1], false, [0, a, 0]);
     }
   }
-  // The ticket booth: a small kiosk with a window.
+  // The ticket booth: a small kiosk with a real service window — the
+  // ticket seller stands inside and is seen through it (it was a solid box,
+  // and her "Talk" label floated over a blank wall).
   const T = NAMSAN.booth;
-  k.box("plaster", [T.x, 1.25, T.z - 0.15], [T.w, 2.5, T.d - 0.3], true);
+  const front = T.z - 0.15 + (T.d - 0.3) / 2;
+  const back = T.z - 0.15 - (T.d - 0.3) / 2;
+  const mid = (front + back) / 2;
+  const win = 1.5;
+  const pier = (T.w - win) / 2;
+  k.box("plaster", [T.x, 1.25, back + 0.06], [T.w, 2.5, 0.12], true);
+  for (const sx of [-1, 1]) {
+    k.box("plaster", [T.x + sx * (T.w / 2 - 0.06), 1.25, mid], [0.12, 2.5, front - back], true);
+    k.box("plaster", [T.x + sx * (win / 2 + pier / 2), 1.425, front - 0.06], [pier, 0.95, 0.12], true);
+  }
+  k.box("plaster", [T.x, 0.475, front - 0.06], [T.w, 0.95, 0.12], true);
+  k.box("plaster", [T.x, 2.2, front - 0.06], [T.w, 0.6, 0.12], true);
+  k.box("charcoal", [T.x, 1.25, back + 0.125], [T.w - 0.24, 2.4, 0.01]);
+  for (const y of [0.95, 1.9]) k.box("steel", [T.x, y, front - 0.01], [win + 0.04, 0.04, 0.05]);
+  for (const sx of [-1, 1]) k.box("steel", [T.x + sx * (win / 2), 1.425, front - 0.01], [0.04, 0.95, 0.05]);
   k.box("woodDark", [T.x, 0.95, T.z + T.d / 2 - 0.2], [T.w + 0.1, 0.08, 0.3]);
+  // Stone cladding on the base building's wings (front and ends): panels
+  // with thin joints, so the wings read as a dressed stone building, not
+  // a grey box.
+  {
+    const BZ = NAMSAN.base.z;
+    const wing = (NAMSAN.base.w + 6) / 2;
+    const y0 = 0.46;
+    const rows = 4;
+    const rh = (3.28 - y0) / rows;
+    for (const sx of [-1, 1]) {
+      const x0 = NAMSAN.base.w / 2 + 0.3;
+      const x1 = wing - 0.3;
+      const cols = 3;
+      const cw = (x1 - x0) / cols;
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++) k.box("stoneWarm", [sx * (x0 + cw * (c + 0.5)), y0 + rh * (r + 0.5), BZ + 0.025], [cw - 0.025, rh - 0.025, 0.05]);
+      const sc = 7;
+      const sw = 6 / sc;
+      k.box("stoneWarm", [sx * (wing + 0.05), 0.22, BZ - 3], [0.1, 0.44, 6]);
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < sc; c++) k.box("stoneWarm", [sx * (wing + 0.025), y0 + rh * (r + 0.5), BZ - sw * (c + 0.5)], [0.05, rh - 0.025, sw - 0.025]);
+    }
+  }
+  // Planting beds along the wings: shrubs, an azalea and flowers at the foot of the stone.
+  NAMSAN.planters.forEach((p, i) => {
+    bed(k, p.x, p.z, p.w, p.d, 61 + i * 7, true);
+    shrub(k, p.x - p.w * 0.28, p.z, 0.5, 63 + i);
+    if (p.w > 2) azalea(k, p.x + p.w * 0.22, p.z, 0.55, 67 + i, 0.14);
+  });
   k.box("roof", [T.x, 2.6, T.z], [T.w + 0.4, 0.2, T.d + 0.4], true);
   return k;
 }
