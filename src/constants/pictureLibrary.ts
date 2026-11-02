@@ -48,7 +48,8 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "cover_a0_ar", label: "غلاف الهانغُل من الصفر: عربي" },
   { file: "cover_b1", label: "غلاف كتاب ١: سوق المفردات" },
   { file: "cover_a0_en", label: "غلاف الهانغُل من الصفر: إنجليزي" },
-  { file: "cover_hangul_starter", label: "غلاف ورقة الهانغُل المجانية" },
+  { file: "cover_hangul_starter", label: "غلاف ورقة الهانغُل المجانية: عربي" },
+  { file: "cover_hangul_starter_en", label: "غلاف ورقة الهانغُل المجانية: إنجليزي" },
   { file: "cover_trial_ar", label: "غلاف دليل الحصة التجريبية: عربي" },
   { file: "cover_trial_en", label: "غلاف دليل الحصة التجريبية: إنجليزي" },
   // Lesson opener scenes (1 Oct 2026). Each lesson has its own opener
