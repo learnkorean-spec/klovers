@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -331,6 +331,20 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
  */
 interface AttendanceClaimPanelProps {
   notification: Notification;
+  /**
+   * Fired once when there is nothing left to resolve for this
+   * related_user_id — either nothing was pending to begin with, or the last
+   * row here just got resolved. Only PendingAttendanceSection (the dedicated
+   * "clean list" view below) passes this; the plain feed usage leaves it
+   * unset and keeps showing its own "Already resolved" line instead.
+   */
+  onAllResolved?: () => void;
+  /**
+   * true when this panel is the whole card (PendingAttendanceSection), not a
+   * sub-panel hanging off a notification message above it — drops the
+   * divider/margin that assumed there was always something above.
+   */
+  standalone?: boolean;
 }
 
 interface PendingPrivateSession {
@@ -345,13 +359,14 @@ interface PendingGroupAttendance {
   group_name: string;
 }
 
-const AttendanceClaimPanel = ({ notification }: AttendanceClaimPanelProps) => {
+const AttendanceClaimPanel = ({ notification, onAllResolved, standalone }: AttendanceClaimPanelProps) => {
   const uid = notification.related_user_id;
   const [mode, setMode] = useState<"loading" | "private" | "group" | "none">("loading");
   const [studentName, setStudentName] = useState("");
   const [privateRows, setPrivateRows] = useState<PendingPrivateSession[]>([]);
   const [groupRows, setGroupRows] = useState<PendingGroupAttendance[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const resolvedRef = useRef(false);
 
   const load = useCallback(async () => {
     if (!uid) { setMode("none"); return; }
@@ -460,6 +475,23 @@ const AttendanceClaimPanel = ({ notification }: AttendanceClaimPanelProps) => {
 
   useEffect(() => { load(); }, [load]);
 
+  // Tell PendingAttendanceSection once this student/member has nothing left
+  // pending, so it can drop the card — checked after every load and after
+  // every resolve, exactly once.
+  useEffect(() => {
+    if (!onAllResolved || resolvedRef.current) return;
+    if (mode === "none") {
+      resolvedRef.current = true;
+      onAllResolved();
+    } else if (mode === "private" && privateRows.length === 0) {
+      resolvedRef.current = true;
+      onAllResolved();
+    } else if (mode === "group" && groupRows.length === 0) {
+      resolvedRef.current = true;
+      onAllResolved();
+    }
+  }, [mode, privateRows, groupRows, onAllResolved]);
+
   const dateLabel = (d: string | null) =>
     d ? new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "";
 
@@ -500,6 +532,9 @@ const AttendanceClaimPanel = ({ notification }: AttendanceClaimPanelProps) => {
 
   const rows = mode === "private" ? privateRows : groupRows;
   if (rows.length === 0) {
+    // In the dedicated section the whole card disappears instead (see
+    // onAllResolved above) — nothing to show here in that case.
+    if (onAllResolved) return null;
     return (
       <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Check className="h-3.5 w-3.5" /> Already resolved.
@@ -508,7 +543,7 @@ const AttendanceClaimPanel = ({ notification }: AttendanceClaimPanelProps) => {
   }
 
   return (
-    <div className="mt-3 border-t border-border pt-3 space-y-2">
+    <div className={standalone ? "space-y-2" : "mt-3 border-t border-border pt-3 space-y-2"}>
       {mode === "private" && privateRows.map((r) => (
         <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 text-xs bg-muted/40 rounded px-3 py-2">
           <span className="font-medium text-foreground">{studentName} — {dateLabel(r.session_date)}</span>
@@ -543,6 +578,97 @@ const AttendanceClaimPanel = ({ notification }: AttendanceClaimPanelProps) => {
           </div>
         </div>
       ))}
+    </div>
+  );
+};
+
+/**
+ * Re, 2 Nov 2026: "so clean on dashboard that it has only the classes they
+ * confirmed so i confirm?" -- AttendanceClaimPanel fixes a claim once you've
+ * found its notification, but that notification is buried in the general
+ * Updates feed among payments, signups, slot-full alerts, etc. This is the
+ * dedicated list: just the pending Telegram attendance claims, one card per
+ * student/member (not per notification -- a student can have several
+ * sessions queued up), nothing else on it. A card vanishes the moment that
+ * person has nothing left pending, whether resolved here or already handled
+ * elsewhere (GroupAttendanceManager, a direct session edit, etc.).
+ */
+interface PendingAttendanceGroup {
+  relatedUserId: string;
+  notificationIds: string[];
+}
+
+const PendingAttendanceSection = () => {
+  const [groups, setGroups] = useState<PendingAttendanceGroup[] | null>(null);
+
+  const load = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("admin_notifications")
+      .select("id, related_user_id")
+      .in("type", ["attendance_claim", "attendance_claim_negative"])
+      .eq("read", false)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      console.error("Failed to fetch pending attendance claims:", error);
+      setGroups([]);
+      return;
+    }
+
+    const byUser = new Map<string, string[]>();
+    for (const row of data || []) {
+      if (!row.related_user_id) continue; // older rows, before related_user_id existed
+      const ids = byUser.get(row.related_user_id) ?? [];
+      ids.push(row.id);
+      byUser.set(row.related_user_id, ids);
+    }
+    setGroups(Array.from(byUser.entries()).map(([relatedUserId, notificationIds]) => ({ relatedUserId, notificationIds })));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const dismiss = useCallback(async (group: PendingAttendanceGroup) => {
+    const { error } = await supabase
+      .from("admin_notifications")
+      .update({ read: true })
+      .in("id", group.notificationIds);
+    if (error) {
+      console.error("Failed to mark attendance claim notifications read:", error);
+    }
+    setGroups((prev) => (prev ?? []).filter((g) => g.relatedUserId !== group.relatedUserId));
+  }, []);
+
+  if (groups === null || groups.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+        <h4 className="text-sm font-semibold text-foreground">Pending attendance confirmations</h4>
+        <Badge variant="secondary" className="text-xs">{groups.length}</Badge>
+      </div>
+      <div className="space-y-2">
+        {groups.map((g) => (
+          <Card key={g.relatedUserId}>
+            <CardContent className="py-3 px-4">
+              <AttendanceClaimPanel
+                standalone
+                notification={{
+                  id: g.relatedUserId,
+                  message: "",
+                  type: "attendance_claim",
+                  category: "update",
+                  read: false,
+                  created_at: "",
+                  related_user_id: g.relatedUserId,
+                  related_group_id: null,
+                }}
+                onAllResolved={() => dismiss(g)}
+              />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
@@ -728,6 +854,11 @@ const AdminNotifications = () => {
           </Button>
         </div>
       </div>
+
+      {/* Always visible, independent of the Updates/System tab and the
+          unread/all filter below -- this is the clean, dedicated list Re
+          works through, not another thing to dig for inside the feed. */}
+      <PendingAttendanceSection />
 
       {/* Updates first, and open by default: the numbers from the site are what
           this screen is for. System is the technical drawer. */}
