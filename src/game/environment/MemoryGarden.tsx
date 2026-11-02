@@ -156,9 +156,16 @@ function gardenKit(): Kit {
 
   // The beds' stone kerbs and moss.
   for (const b of GARDEN_BEDS) {
-    // A round kerb of cut stone holding dark, freshly turned soil.
+    // A round kerb of cut stone holding soil under low ground cover, and a
+    // ring of leafy plants round the rim: green and tended even before any
+    // word has flowered there (the flowers themselves are the learner's
+    // review words — flowerKit below).
     k.add("stoneWarm", "cyl", [b.x, 0.08, b.z], [1.3, 0.16, 1.3], [0, b.a, 0]);
-    k.add("soil", "cyl", [b.x, 0.12, b.z], [1.12, 0.1, 1.12], [0, b.a, 0]);
+    k.add("bedCover", "cyl", [b.x, 0.12, b.z], [1.12, 0.1, 1.12], [0, b.a, 0]);
+    for (let j = 0; j < 5; j++) {
+      const a = b.a + (j / 5) * Math.PI * 2 + 0.3;
+      k.add(j % 2 ? "leaf" : "leafDark", "leaves", [b.x + Math.sin(a) * 0.4, 0.165, b.z + Math.cos(a) * 0.4], [0.32, 0.22, 0.3], [0, a, 0]);
+    }
   }
   return k;
 }
