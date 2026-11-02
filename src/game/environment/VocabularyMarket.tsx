@@ -6,7 +6,8 @@ import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Instanced, { type Part } from "./Instanced";
 import Batch from "./Batch";
-import { Kit, azalea, jitter, awningPlace, kitGeometry, basket, bunting, gutter, parasol, pot, shopfront, tree, wallRun, type MatKey, flowers } from "./kit";
+import { MergeChildren } from "./Merged";
+import { KIT_MATERIALS, Kit, azalea, jitter, awningPlace, kitGeometry, basket, bunting, gutter, parasol, pot, shopfront, tree, wallRun, type MatKey, flowers } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import ModelProp, { type PropPlacement } from "./ModelProp";
 import MarketShop, { type ShopItem } from "./MarketShop";
@@ -44,6 +45,54 @@ const LAMP_SPOTS = MARKET.lamps.map((l) => ({ x: l.x, z: l.z }));
 type Word = (typeof MARKET.stallsLeft)[number] | (typeof MARKET.stallsRight)[number];
 
 const white = () => <primitive object={std(PALETTE.white, 0.4)} attach="material" />;
+
+const POT_FLOWER_YELLOW = std(PALETTE.yellow, 0.6);
+
+/**
+ * A pot of flowers for sale: a turned wooden pot with soil, a fan of pointed
+ * leaves and nine five-petalled blooms with yellow middles (the kit's garden
+ * flowers at pot size). They used to be three plain balls on a cylinder.
+ */
+function FlowerPot({ seed, yellowLead }: { seed: number; yellowLead: boolean }) {
+  const s = 0.55;
+  const y = 0.19;
+  const blooms = Array.from({ length: 9 }, (_, i) => {
+    const a = (i / 9) * Math.PI * 2 * 1.618 + seed;
+    const r = (0.05 + 0.27 * Math.sqrt((i + 0.5) / 9)) * s;
+    const size = (0.15 + (0.04 * ((i * 7) % 3)) / 2) * s;
+    const tilt = 0.25 + 0.5 * (r / s / 0.32);
+    const yellow = (i % 3 === 0) === yellowLead;
+    return { p: [Math.cos(a) * r, y + (0.27 - 0.12 * (r / s / 0.32)) * s, Math.sin(a) * r * 0.9] as const, size, rot: [Math.sin(a) * tilt * 0.6, jitter(seed + i * 5, 3), -Math.cos(a) * tilt * 0.6] as const, yellow };
+  });
+  return (
+    <>
+      <mesh castShadow position={[0, 0.1, 0]}>
+        <cylinderGeometry args={[0.1, 0.075, 0.2, 28]} />
+        <primitive object={MAT.woodDark} attach="material" />
+      </mesh>
+      <mesh position={[0, 0.192, 0]}>
+        <cylinderGeometry args={[0.092, 0.092, 0.01, 20]} />
+        <primitive object={KIT_MATERIALS.soil} attach="material" />
+      </mesh>
+      <mesh geometry={kitGeometry("leaves")} position={[0, y, 0]} scale={[0.86 * s, 0.55 * s, 0.8 * s]} rotation={[0, seed, 0]}>
+        <primitive object={KIT_MATERIALS.leafDark} attach="material" />
+      </mesh>
+      <mesh geometry={kitGeometry("leaves")} position={[0.02, y, -0.01]} scale={[0.62 * s, 0.62 * s, 0.6 * s]} rotation={[0, seed + 0.45, 0]}>
+        <primitive object={KIT_MATERIALS.leaf} attach="material" />
+      </mesh>
+      {blooms.map((b, i) => (
+        <group key={i}>
+          <mesh geometry={kitGeometry("bloom")} position={b.p as unknown as [number, number, number]} scale={b.size} rotation={b.rot as unknown as [number, number, number]}>
+            <primitive object={b.yellow ? POT_FLOWER_YELLOW : KIT_MATERIALS.flowerWhite} attach="material" />
+          </mesh>
+          <mesh geometry={kitGeometry("cylLow")} position={[b.p[0], b.p[1] + 0.02 * s, b.p[2]]} scale={[0.045 * s, 0.02 * s, 0.045 * s]}>
+            <primitive object={KIT_MATERIALS.pollen} attach="material" />
+          </mesh>
+        </group>
+      ))}
+    </>
+  );
+}
 
 /** Goods on a counter, in the stall's local space (counter top at y 0). */
 function Goods({ word }: { word: Word }) {
@@ -112,20 +161,7 @@ function Goods({ word }: { word: Word }) {
         )),
       );
     case "꽃": // flowers in pots — the one stall allowed a touch of yellow
-      return each((i) => (
-        <>
-          <mesh position={[0, 0.1, 0]}>
-            <cylinderGeometry args={[0.1, 0.075, 0.2, 28]} />
-            <primitive object={MAT.woodDark} attach="material" />
-          </mesh>
-          {[[0, 0.3, 0], [0.07, 0.26, 0.05], [-0.07, 0.27, -0.04]].map((p, k) => (
-            <mesh key={k} position={p as [number, number, number]}>
-              <sphereGeometry args={[0.065, 20, 14]} />
-              <primitive object={(k + i) % 3 === 0 ? std(PALETTE.yellow, 0.7) : std(PALETTE.white, 0.7)} attach="material" />
-            </mesh>
-          ))}
-        </>
-      ));
+      return each((i) => <FlowerPot seed={i * 2.3 + 1} yellowLead={i % 2 === 0} />);
     default:
       return null;
   }
@@ -378,7 +414,9 @@ export default function VocabularyMarket({
         return (
           <group key={word}>
             <group position={[side * MARKET.stallX + front * 0.55, 0.945, z]}>
-              <Goods word={word} />
+              <MergeChildren>
+                <Goods word={word} />
+              </MergeChildren>
             </group>
             {/* The word, hanging at the front edge of the awning. */}
             <group

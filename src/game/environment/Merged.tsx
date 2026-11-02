@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from "react";
-import { Euler, Matrix4, Quaternion, Vector3, type BufferGeometry, type Material } from "three";
+import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
+import { Euler, Matrix4, Mesh, Quaternion, Vector3, type BufferGeometry, type Group, type InstancedMesh, type Material, type SkinnedMesh } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 /**
@@ -74,6 +74,9 @@ export class Pieces {
     }
     const out: { geo: BufferGeometry; mat: Material }[] = [];
     for (const [mat, geos] of byMat) {
+      // Keep only the attributes every piece has (a hand-built shape may have no uv).
+      const common = ["position", "normal", "uv"].filter((a) => geos.every((g) => g.getAttribute(a)));
+      for (const g of geos) for (const a of Object.keys(g.attributes)) if (!common.includes(a)) g.deleteAttribute(a);
       const indexed = geos.some((g) => g.index);
       const ready = indexed ? geos.map((g) => (g.index ? g : withIndex(g))) : geos;
       const merged = mergeGeometries(ready, false);
@@ -106,4 +109,48 @@ export default function Merged({ build, castShadow = false, receiveShadow = fals
       ))}
     </>
   );
+}
+
+/**
+ * The same, for hand-written JSX: renders its children once, then folds every
+ * plain mesh under it into one mesh per finish (in this group's own frame,
+ * so a parent that moves, scales or hops still carries it) and hides the
+ * originals. For small static models written as many little meshes — a
+ * bowl of apples, a stall's goods — that must stay one pressable thing.
+ * Children must not change shape or finish after the first render.
+ */
+export function MergeChildren({ children }: { children: ReactNode }) {
+  const ref = useRef<Group>(null);
+  useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    root.updateWorldMatrix(true, true);
+    const inv = new Matrix4().copy(root.matrixWorld).invert();
+    const k = new Pieces();
+    const originals: Mesh[] = [];
+    let cast = false;
+    root.traverse((o) => {
+      const m = o as Mesh;
+      if (!m.isMesh || (m as InstancedMesh).isInstancedMesh || (m as SkinnedMesh).isSkinnedMesh || !m.visible || Array.isArray(m.material)) return;
+      originals.push(m);
+      cast ||= m.castShadow;
+      k.list.push({ geo: m.geometry, mat: m.material, m: new Matrix4().multiplyMatrices(inv, m.matrixWorld) });
+    });
+    const merged = k.build().map(({ geo, mat }) => {
+      const mesh = new Mesh(geo, mat);
+      mesh.castShadow = cast;
+      mesh.receiveShadow = true;
+      return mesh;
+    });
+    for (const m of originals) m.visible = false;
+    root.add(...merged);
+    return () => {
+      for (const m of merged) {
+        root.remove(m);
+        m.geometry.dispose();
+      }
+      for (const m of originals) m.visible = true;
+    };
+  }, []);
+  return <group ref={ref}>{children}</group>;
 }

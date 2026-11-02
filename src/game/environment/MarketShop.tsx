@@ -4,6 +4,7 @@ import { DoubleSide, MeshPhysicalMaterial, type Group, type Mesh } from "three";
 import { ACCENT, std } from "../config/materials";
 import { MARKET } from "../config/rooms";
 import { PALETTE } from "../config/world";
+import { MergeChildren } from "./Merged";
 import { Signboard } from "./parts";
 
 /**
@@ -421,7 +422,9 @@ export default function MarketShop({ words, chosen, onPress }: { words: string[]
   }, [hot, onPress]);
   return (
     <group>
-      <FoodCart />
+      <MergeChildren>
+        <FoodCart />
+      </MergeChildren>
       {SPOTS.map(({ item, x, y, z }) => {
         const Model = MODELS[item];
         return (
@@ -432,7 +435,9 @@ export default function MarketShop({ words, chosen, onPress }: { words: string[]
               onPress={() => onPress?.(item)}
               onHover={(on) => setHot((h) => (on ? item : h === item ? null : h))}
             >
-              <Model />
+              <MergeChildren>
+                <Model />
+              </MergeChildren>
             </Pressable>
             {/* Its word, on a little card on a stick, once the learner knows it. */}
             {words.includes(item) && (
