@@ -105,6 +105,97 @@ function displayName(from: { first_name?: string; last_name?: string; username?:
   return full || (from.username ? `@${from.username}` : "");
 }
 
+// Re, 2 Nov 2026: "group classes must be auto as well same like private" --
+// group equivalent of the "att:" branch below. A group session is shared by
+// several members (telegram_links keyed by user_id, not teacher_student_id),
+// so the callback_data carries which member is answering as a 4th segment:
+// gatt:<yes|no>:<session_id>:<user_id>. Same claim-only semantics as private:
+// telegram_confirm_group_session inserts an UNAPPROVED pkg_attendance row,
+// never bills by itself -- Re still approves it in GroupAttendanceManager.
+async function handleGroupAttendanceTap(
+  supabase: ReturnType<typeof createClient>,
+  cfg: Config,
+  chatId: number,
+  messageId: number,
+  cb: { id: string; from?: { id?: number } },
+  gmatch: RegExpMatchArray,
+) {
+  const yes = gmatch[1] === "yes";
+  const sessionId = gmatch[2];
+  const userId = gmatch[3];
+  const tapperId: number | undefined = cb.from?.id;
+
+  const { data: session } = await supabase
+    .from("pkg_group_sessions")
+    .select("id, session_date, group_id")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (!session) {
+    await answerCallbackQuery(cfg.bot_token, cb.id, "الحصة دي مش لاقيها.");
+    return;
+  }
+
+  // Resolve by (user_id) from the button itself, same reasoning as the
+  // private flow: don't trust chat_id alone to pick the right member.
+  const { data: link } = await supabase
+    .from("telegram_links")
+    .select("user_id, chat_id, tg_user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!link || link.chat_id !== chatId) {
+    await answerCallbackQuery(cfg.bot_token, cb.id, "اللينك ده مش شغال.");
+    return;
+  }
+
+  const { data: profile } = await supabase.from("profiles")
+    .select("name, language").eq("user_id", userId).maybeSingle();
+  const name = profile?.name ?? "";
+  const dateLabel = new Date(session.session_date + "T12:00:00Z")
+    .toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
+  const lang = profile?.language === "en" ? "en" : "ar";
+
+  // Same identity lock as the private "att:" flow: confirm the tap actually
+  // came from THIS member, not a groupmate answering on her behalf. Only
+  // enforced once we actually have her tg_user_id on file.
+  if (link.tg_user_id != null && tapperId != null && link.tg_user_id !== tapperId) {
+    await answerCallbackQuery(
+      cfg.bot_token, cb.id,
+      lang === "en"
+        ? `This button is only for ${name || "that student"} to answer.`
+        : `الزرار ده مخصص لـ ${name || "الطالبة"} بس 🙏`,
+    );
+    return;
+  }
+
+  const { error: rpcError } = await supabase.rpc("telegram_confirm_group_session", {
+    p_session_id: sessionId,
+    p_user_id: userId,
+    p_attended: yes,
+  });
+  if (rpcError) {
+    console.error("telegram_confirm_group_session failed", rpcError);
+    await answerCallbackQuery(cfg.bot_token, cb.id,
+      lang === "en" ? "Something went wrong, try again later." : "في مشكلة، جربي تاني بعدين.");
+    return;
+  }
+
+  await answerCallbackQuery(cfg.bot_token, cb.id);
+  const confirmText = lang === "en"
+    ? (yes
+        ? `Got it, we recorded that ${name || "the student"} attended ✅ (the teacher will confirm).`
+        : `Got it, we recorded that ${name || "the student"} didn't attend ❌`)
+    : (yes
+        ? `تمام، سجّلنا إن ${name || "الطالبة"} حضرت ✅ (هتتأكد من المدرّسة).`
+        : `تمام، سجّلنا إن ${name || "الطالبة"} ماحضرتش ❌`);
+  await editMessageText(cfg.bot_token, chatId, messageId, confirmText);
+  await sendMessage(cfg.bot_token, cfg.admin_chat_id,
+    yes
+      ? `📋 ${name || "طالبة"} قالت إنها حضرت جروب يوم ${dateLabel} (عبر تيليجرام) — أكدي في اللوحة`
+      : `⚠️ ${name || "طالبة"} قالت إنها ماحضرتش جروب يوم ${dateLabel} (عبر تيليجرام) — راجعيها`);
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("ok");
 
@@ -139,15 +230,27 @@ Deno.serve(async (req) => {
       const match = typeof cb.data === "string"
         ? cb.data.match(/^(att|resched):(yes|no):([0-9a-fA-F-]{36})$/)
         : null;
+      // "gatt:" = confirming attendance of a GROUP class that already
+      // happened (telegram-group-attendance-ask). A group session is shared
+      // by several members, so the callback also carries which member is
+      // answering -- that's the 4th segment, handled separately below.
+      const gmatch = !match && typeof cb.data === "string"
+        ? cb.data.match(/^gatt:(yes|no):([0-9a-fA-F-]{36}):([0-9a-fA-F-]{36})$/)
+        : null;
 
-      if (!chatId || !messageId || !match) {
+      if (!chatId || !messageId || (!match && !gmatch)) {
         await answerCallbackQuery(cfg.bot_token, cb.id);
         return new Response("ok");
       }
 
-      const kind = match[1] as "att" | "resched";
-      const yes = match[2] === "yes";
-      const sessionId = match[3];
+      if (gmatch) {
+        await handleGroupAttendanceTap(supabase, cfg, chatId, messageId, cb, gmatch);
+        return new Response("ok");
+      }
+
+      const kind = match![1] as "att" | "resched";
+      const yes = match![2] === "yes";
+      const sessionId = match![3];
 
       // Resolve by session id FIRST, not by chat_id: a shared group (e.g.
       // two sisters, each her own teacher_students row) can have more than
