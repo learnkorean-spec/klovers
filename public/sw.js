@@ -4,7 +4,12 @@
 //   Navigation (HTML)             → Network-First with offline fallback
 //   Supabase API / edge functions → Network-Only (never cache auth/data)
 
-const CACHE_NAME = "klovers-v2";
+// Bump this whenever a non-hashed /public asset changes (book covers, logo,
+// etc.) - it is the only thing that busts the image cache below, since the
+// "7-day expiry" in the comment was never actually implemented and images
+// were being cached-first forever. (Found 3 Nov 2026: restyled book covers
+// kept showing the old art to any visitor who had the site open before.)
+const CACHE_NAME = "klovers-v3";
 const OFFLINE_URL = "/";
 
 // Assets to pre-cache on install (shell)
@@ -91,7 +96,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3. Images → Cache-First with 7-day expiry (simple size limit)
+  // 3. Images → Cache-First. NOTE: despite the old comment here, there is no
+  // expiry logic below - a cached image is served forever until CACHE_NAME
+  // changes. Bump CACHE_NAME above whenever a cover or other /public image
+  // is restyled, or returning visitors will keep seeing the old file.
   if (
     request.destination === "image" ||
     url.pathname.endsWith(".jpg") ||
