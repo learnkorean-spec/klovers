@@ -143,7 +143,7 @@ export function MergeChildren({ children }: { children: ReactNode }) {
       return mesh;
     });
     for (const m of originals) m.visible = false;
-    root.add(...merged);
+    if (merged.length) root.add(...merged);
     return () => {
       for (const m of merged) {
         root.remove(m);

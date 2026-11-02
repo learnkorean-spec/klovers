@@ -609,7 +609,9 @@ function useLod(root: Group, model: string) {
       camera.getWorldPosition(_cam);
       const d = _pos.distanceTo(_cam);
       // A metre of give either way: nobody flickers between two copies at the line.
-      const at = (step: number, level: Level) => (st.level >= level ? d > step - 1 : d > step + 1);
+      // On the first frame there is no copy to hold on to: plain thresholds
+      // (with the give, someone 3.7 m away kept the full copy for good).
+      const at = (step: number, level: Level) => (st.first ? d > step : st.level >= level ? d > step - 1 : d > step + 1);
       next = at(steps[1], 2) ? 2 : at(steps[0], 1) ? 1 : 0;
     }
     if (next === st.level && !st.first) return;

@@ -6,6 +6,7 @@ import { CULTURE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import { REDUCED_MOTION } from "../systems/motion";
 import Batch from "./Batch";
+import { MergeChildren } from "./Merged";
 import { Kit, bunting, curvedRoofOn, flowers, hanokHouse, jitter, pot, shopfront, tree, wallRun } from "./kit";
 import { GateWall, Lamps, Signboard, Sway } from "./parts";
 import { paintPaving, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
@@ -306,20 +307,25 @@ export default function CultureStreet({ words = [] }: { words?: string[] }) {
       <Batch kit={STREET_KIT} />
 
       {/* The stall's three dishes, always shown: they are what it sells. */}
-      {FOODS.map((f, i) => (
-        <Dish key={f} word={f} x={st.x + 0.15} y={0.98} z={st.z + (i - 1) * 1.0} />
-      ))}
+      {/* Dishes and hanbok stands are many little meshes: one draw per finish (Merged.tsx). */}
+      <MergeChildren>
+        {FOODS.map((f, i) => (
+          <Dish key={f} word={f} x={st.x + 0.15} y={0.98} z={st.z + (i - 1) * 1.0} />
+        ))}
+        <HanbokStand x={CULTURE.hanbok.x} z={CULTURE.hanbok.z - 0.5} c={HANBOK[0]} />
+        <HanbokStand x={CULTURE.hanbok.x + 0.05} z={CULTURE.hanbok.z + 0.45} c={HANBOK[1]} />
+      </MergeChildren>
       <group position={[st.x + st.w / 2 + 0.02, 2.0, st.z]} rotation={[0, Math.PI / 2, 0]}>
         <Signboard text="분식" w={1.0} h={0.42} aspect={2.4} />
       </group>
       {/* The table: whatever food the learner knows is served here. */}
-      {foods.map((f, i) => (
-        <Dish key={f} word={f} x={t.x + (i - (foods.length - 1) / 2) * 0.3} y={0.745} z={t.z + (i % 2 ? 0.12 : -0.08)} />
-      ))}
+      <MergeChildren key={foods.join("|")}>
+        {foods.map((f, i) => (
+          <Dish key={f} word={f} x={t.x + (i - (foods.length - 1) / 2) * 0.3} y={0.745} z={t.z + (i % 2 ? 0.12 : -0.08)} />
+        ))}
+      </MergeChildren>
 
       {/* The hanbok shop's door: two dressed stands and its sign. */}
-      <HanbokStand x={CULTURE.hanbok.x} z={CULTURE.hanbok.z - 0.5} c={HANBOK[0]} />
-      <HanbokStand x={CULTURE.hanbok.x + 0.05} z={CULTURE.hanbok.z + 0.45} c={HANBOK[1]} />
       <group position={[FACE_X + 0.02, 3.2, CULTURE.hanbok.z]} rotation={[0, -Math.PI / 2, 0]}>
         <Signboard text="한복" w={1.0} h={0.5} aspect={2} />
       </group>
