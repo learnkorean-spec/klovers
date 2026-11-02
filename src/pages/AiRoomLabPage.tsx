@@ -35,25 +35,26 @@ interface CoverResult {
   extraCharacter?: string;
   imageDataUrl: string;
   designBrief: DesignBrief;
+  score: number;
+  passed: boolean;
+  attempts: number;
+  issues: string[];
 }
 
-// The 10 book-cover ideas drafted with Re on 2 Nov 2026 — each pairs a scene
-// from KLOVERS' existing world/books with ONE new original supporting
-// character, so the cover set stops reusing just Adam + Lina over and over.
-// Editable in the textarea below before generating; this is only the
-// starting default.
+// The 5 book-cover ideas drafted with Re on 2 Nov 2026 — one per real book in
+// the current collection (Trial Guide, Hangul A0, First Conversation,
+// Conversation Cafe, Cluby Coloring), each pairing the book's own scene with
+// ONE new original supporting character so the set stops reusing just Adam +
+// Lina over and over. Editable in the textarea below before generating; this
+// is only the starting default. Capped at 5 per Re's standing request (2 Nov
+// 2026) — each cover now also has to clear a 99/100 score bar (see the
+// edge function), so a batch stays small on purpose.
 const DEFAULT_IDEAS: BatchIdea[] = [
   {
-    book: "Conversation Cafe",
+    book: "Trial Guide",
     theme:
-      "a cozy hanok cafe where Adam and Lina order coffee and pastries at the counter and practice drink and dessert words, Cluby napping by the window",
-    extraCharacter: "a friendly Korean barista standing behind the counter, taking their order",
-  },
-  {
-    book: "Convenience store",
-    theme:
-      "a small late-night Korean convenience store where Adam picks snacks and drinks from the shelves and practices asking the price, Lina helping him read the labels",
-    extraCharacter: "an older Korean shopkeeper behind the register, handing back change",
+      "a warm welcome scene where Adam and Lina greet someone arriving for their very first Korean class",
+    extraCharacter: "a new student arriving at the door for their first trial class, different look from Adam and Lina",
   },
   {
     book: "Hangul from Zero",
@@ -62,40 +63,16 @@ const DEFAULT_IDEAS: BatchIdea[] = [
     extraCharacter: "a new Korean teacher standing beside the board, pointing at the letter",
   },
   {
-    book: "Street food / Hongdae",
+    book: "First Conversation",
     theme:
-      "a cheerful Hongdae street-food cart at dusk where Adam orders a snack and practices counting and ordering words, Cluby curled up nearby",
-    extraCharacter: "a warm street-food vendor behind the cart, handing Adam a wrapped snack",
+      "a sunny Seoul street corner where Adam and Lina greet a new friend for the first time and exchange names",
+    extraCharacter: "a cheerful new Korean friend they just met, waving hello",
   },
   {
-    book: "Vocabulary Market",
+    book: "Conversation Cafe",
     theme:
-      "a lively Korean market alley where Lina shops for fruit and flowers and practices naming them",
-    extraCharacter: "two different market stall owners in the background, a fruit seller and a flower seller",
-  },
-  {
-    book: "Culture Street",
-    theme:
-      "a traditional hanbok rental shop where Adam tries on a hanbok jacket and practices clothing words",
-    extraCharacter: "a hanbok shop owner helping him tie the sash",
-  },
-  {
-    book: "Namsan Tower",
-    theme:
-      "Namsan Tower's love-lock wall at golden hour, where Adam and Lina hang a lock together and practice friendship words",
-    extraCharacter: "a passing Korean tourist offering to take their photo",
-  },
-  {
-    book: "Trial Guide",
-    theme:
-      "a warm welcome scene where Adam and Lina greet someone arriving for their very first Korean class",
-    extraCharacter: "a new student arriving at the door for their first trial class, different look from Adam and Lina",
-  },
-  {
-    book: "Conversation Cafe (Level 2)",
-    theme:
-      "a Seoul subway platform where Lina asks for directions and practices place and direction words",
-    extraCharacter: "a helpful Korean stranger pointing toward a subway map",
+      "a cozy hanok cafe where Adam and Lina order coffee and pastries at the counter and practice drink and dessert words, Cluby napping by the window",
+    extraCharacter: "a friendly Korean barista standing behind the counter, taking their order",
   },
   {
     book: "Cluby Coloring",
@@ -156,26 +133,35 @@ export default function AiRoomLabPage() {
     }
   };
 
+  const MAX_BATCH = 5;
+  const PASS_SCORE = 99;
+
   const generateAllCovers = async () => {
-    const items = parseIdeasText(batchText);
+    const items = parseIdeasText(batchText).slice(0, MAX_BATCH);
     if (items.length === 0) return;
     setBatchLoading(true);
     setCovers([]);
     setBatchProgress({ done: 0, total: items.length });
     try {
-      // One function call generates the whole batch (the edge function runs
-      // each theme sequentially server-side so we stay under the Meta Model
-      // API's rate limit); we just show a progress estimate while we wait.
+      // One function call generates the whole batch. Server-side, each idea
+      // is generated, scored by a vision model against a 99/100 bar, and
+      // automatically regenerated (up to 3 tries) if it doesn't clear it —
+      // so this call can take a few minutes for 5 ideas.
       const { data, error } = await supabase.functions.invoke("generate-ai-room-concept", {
         body: { batch: items, useCharacters },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setCovers(data.covers || []);
+      const results: CoverResult[] = data.covers || [];
+      setCovers(results);
       setBatchProgress({ done: items.length, total: items.length });
+      const passedCount = results.filter((c) => c.passed).length;
       toast({
-        title: `${data.covers?.length ?? 0} book covers generated`,
-        description: "All text-free — ready to drop a title on top of any of them.",
+        title: `${results.length} book covers generated`,
+        description:
+          passedCount === results.length
+            ? `All ${results.length} cleared the ${PASS_SCORE}/100 bar.`
+            : `${passedCount}/${results.length} cleared ${PASS_SCORE}/100 — the rest are each flagged with their score and what to fix.`,
       });
     } catch (e) {
       toast({
@@ -214,17 +200,19 @@ export default function AiRoomLabPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              One line per cover idea: <code>scene theme :: new supporting character</code>.
+              One line per cover idea (max {MAX_BATCH}): <code>scene theme :: new supporting character</code>.
               Each line renders as one clean, title-free portrait photo (no text, no signage, no
               labels anywhere) sized for a book cover, with empty space at top and bottom to drop
               a title on later. The character after <code>::</code> is a brand-new original
               person (never Adam, Lina, or Cluby) so the set stops repeating the same two faces —
-              edit, remove, or add lines freely before generating.
+              edit, remove, or add lines freely before generating. A vision model grades every
+              cover out of 100 and automatically regenerates it (up to 3 tries) until it clears{" "}
+              <strong>{PASS_SCORE}/100</strong> — zero text is an automatic fail.
             </p>
             <Textarea
               value={batchText}
               onChange={(e) => setBatchText(e.target.value)}
-              rows={12}
+              rows={8}
               disabled={batchLoading}
               className="font-mono text-xs"
             />
@@ -248,7 +236,7 @@ export default function AiRoomLabPage() {
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Generate all {parseIdeasText(batchText).length} covers
+                  Generate all {Math.min(parseIdeasText(batchText).length, MAX_BATCH)} covers
                 </>
               )}
             </Button>
@@ -262,18 +250,31 @@ export default function AiRoomLabPage() {
         {covers.length > 0 && (
           <div>
             <h2 className="text-sm font-semibold text-muted-foreground mb-3">
-              {covers.length} book-cover concepts
+              {covers.length} book-cover concepts —{" "}
+              {covers.filter((c) => c.passed).length}/{covers.length} cleared {PASS_SCORE}/100
             </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {covers.map((c, i) => (
-                <Card key={i}>
+                <Card key={i} className={c.passed ? undefined : "border-destructive/50"}>
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center justify-between gap-2">
                       <span>{c.designBrief?.roomName ?? `Cover ${i + 1}`}</span>
-                      <Badge variant="secondary" className="shrink-0">#{i + 1}</Badge>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Badge variant={c.passed ? "default" : "destructive"}>
+                          {c.score}/100
+                        </Badge>
+                        <Badge variant="secondary">#{i + 1}</Badge>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
+                    {!c.passed && (
+                      <p className="text-xs text-destructive">
+                        Didn't clear {PASS_SCORE}/100 after {c.attempts} attempt
+                        {c.attempts === 1 ? "" : "s"} — best attempt shown.
+                        {c.issues.length > 0 && <> Issues: {c.issues.join("; ")}.</>}
+                      </p>
+                    )}
                     <img
                       src={c.imageDataUrl}
                       alt={`Book cover concept: ${c.designBrief?.roomName ?? c.theme}`}

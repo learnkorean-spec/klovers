@@ -14,6 +14,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -239,37 +240,152 @@ interface CoverResult {
   extraCharacter?: string;
   imageDataUrl: string;
   designBrief: DesignBrief;
+  score: number;
+  passed: boolean;
+  attempts: number;
+  issues: string[];
+}
+
+interface CoverScore {
+  score: number;
+  issues: string[];
+}
+
+// Minimum score (out of 100) a cover must reach before it's handed back as
+// usable — Re's standing requirement (2 Nov 2026): "must pass 99 points of
+// 100 to rate covers". Scored by a vision-capable model (OpenAI gpt-4o-mini,
+// the same provider the rest of Klovers uses for text/image per
+// _shared/ai.ts) looking at the actual rendered image, not just the prompt —
+// Muse Spark is text-only and can't see what Muse Image actually drew.
+const PASS_SCORE = 99;
+const MAX_ATTEMPTS = 3;
+
+async function scoreCoverImage(
+  imageDataUrl: string,
+  theme: string,
+  extraCharacter: string | undefined,
+  openAiKey: string,
+): Promise<CoverScore> {
+  const rubric =
+    "You are a strict art director grading a KLOVERS book-cover photo out of " +
+    "100. KLOVERS is a Korean-learning brand for Arabic speakers; humans must " +
+    "be photorealistic (never illustrated/cartoon/anime), Cluby (if present) " +
+    "must be a mint-green furry creature with yellow horns and an ivory/yellow " +
+    "hanbok outfit (never a generic teddy bear or any other color). " +
+    "AUTOMATIC FAIL (score must be 30 or below) if the image contains ANY " +
+    "visible text, letters, numbers, words, captions, labels, signage, logos, " +
+    "watermarks, or writing of any kind, anywhere in the image, on any " +
+    "surface, sign, book, or screen. Otherwise score based on: character " +
+    "photorealism and fidelity, clean uncluttered premium Korean-storybook " +
+    "composition, portrait framing with usable empty margin at top and bottom " +
+    "for a title to be overlaid later, warm ivory/yellow/charcoal KLOVERS " +
+    "palette, and whether the scene matches the requested theme. " +
+    `Theme: "${theme}".` +
+    (extraCharacter
+      ? ` It should include a new supporting character: "${extraCharacter}".`
+      : "") +
+    ' Respond with ONLY a JSON object: {"score": <0-100 integer>, "issues": ' +
+    '[<short strings, empty array if none>]}. No markdown, no prose.';
+
+  const res = await fetch(AI_CHAT_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${openAiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: AI_TEXT_MODEL,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: rubric },
+            { type: "image_url", image_url: { url: imageDataUrl } },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Cover scoring error ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const content: string | undefined = data?.choices?.[0]?.message?.content;
+  if (!content) throw new Error("Cover scoring returned no content");
+
+  const cleaned = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  try {
+    const parsed = JSON.parse(cleaned) as { score: number; issues?: string[] };
+    return {
+      score: Math.max(0, Math.min(100, Math.round(parsed.score))),
+      issues: Array.isArray(parsed.issues) ? parsed.issues.slice(0, 10) : [],
+    };
+  } catch {
+    throw new Error(`Cover scoring returned non-JSON content: ${cleaned.slice(0, 200)}`);
+  }
 }
 
 async function generateBookCover(
   item: BatchItem,
   apiKey: string,
+  openAiKey: string,
   useCharacters: boolean,
 ): Promise<CoverResult> {
   const theme = item.theme.trim().slice(0, 500);
   const extraCharacter = item.extraCharacter?.trim().slice(0, 300);
 
-  const imagePrompt = useCharacters
-    ? `Photo-edit the exact same real people and creature from the reference ` +
-      `images into a new book-cover scene — do not redraw or restyle them, ` +
-      `keep their real faces, real hair, real skin, real outfits, and Cluby's ` +
-      `exact plush look pixel-faithful to the references: ${theme}. Place them ` +
-      `naturally in the scene, doing something related to the theme. ` +
-      `${CHARACTER_DESCRIPTIONS} ${extraCharacter ? newCharacterInstruction(extraCharacter) + " " : ""}` +
-      `${KLOVERS_STYLE} ${COVER_STYLE}`
-    : `A Korean-language-learning book cover scene: ${theme}. ` +
-      `${extraCharacter ? newCharacterInstruction(extraCharacter) + " " : ""}` +
-      `${KLOVERS_STYLE} ${COVER_STYLE}`;
+  // Design brief is informational only (vocab/props/palette for whoever
+  // builds the title/layout around the cover) and isn't affected by a
+  // regenerate, so it's only fetched once, not re-fetched per attempt.
+  const designBriefPromise = generateDesignBrief(
+    theme,
+    "a clean title-free book-cover portrait",
+    apiKey,
+  );
 
-  // Sequential, not parallel with other batch items: keeps us well under the
-  // Meta Model API's rate limit when a batch of ~10 themes is submitted at
-  // once (each theme already fires 2 calls — image + design brief).
-  const [imageDataUrl, designBrief] = await Promise.all([
-    generateConceptImage(imagePrompt, apiKey, useCharacters, "1024x1536"),
-    generateDesignBrief(theme, "a clean title-free book-cover portrait", apiKey),
-  ]);
+  let best: { imageDataUrl: string; score: number; issues: string[] } | null = null;
+  let avoidNote = "";
+  let attemptsUsed = 0;
 
-  return { theme, extraCharacter, imageDataUrl, designBrief };
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    attemptsUsed = attempt;
+    const imagePrompt = useCharacters
+      ? `Photo-edit the exact same real people and creature from the reference ` +
+        `images into a new book-cover scene — do not redraw or restyle them, ` +
+        `keep their real faces, real hair, real skin, real outfits, and Cluby's ` +
+        `exact plush look pixel-faithful to the references: ${theme}. Place them ` +
+        `naturally in the scene, doing something related to the theme. ` +
+        `${CHARACTER_DESCRIPTIONS} ${extraCharacter ? newCharacterInstruction(extraCharacter) + " " : ""}` +
+        `${KLOVERS_STYLE} ${COVER_STYLE}${avoidNote}`
+      : `A Korean-language-learning book cover scene: ${theme}. ` +
+        `${extraCharacter ? newCharacterInstruction(extraCharacter) + " " : ""}` +
+        `${KLOVERS_STYLE} ${COVER_STYLE}${avoidNote}`;
+
+    const imageDataUrl = await generateConceptImage(imagePrompt, apiKey, useCharacters, "1024x1536");
+    const { score, issues } = await scoreCoverImage(imageDataUrl, theme, extraCharacter, openAiKey);
+
+    if (!best || score > best.score) best = { imageDataUrl, score, issues };
+    if (score >= PASS_SCORE) break;
+
+    if (attempt < MAX_ATTEMPTS && issues.length > 0) {
+      avoidNote = ` IMPORTANT — fix these problems from the previous attempt: ${issues.join("; ")}.`;
+    }
+  }
+
+  const designBrief = await designBriefPromise;
+  return {
+    theme,
+    extraCharacter,
+    imageDataUrl: best!.imageDataUrl,
+    designBrief,
+    score: best!.score,
+    passed: best!.score >= PASS_SCORE,
+    attempts: attemptsUsed,
+    issues: best!.issues,
+  };
 }
 
 serve(async (req) => {
@@ -278,6 +394,7 @@ serve(async (req) => {
   try {
     const metaApiKey = getMetaApiKey();
     if (!metaApiKey) throw new Error("META_MODEL_API_KEY not configured");
+    const openAiKey = getAiKey();
 
     // Admin-only, same check as the other AI generator functions.
     const authHeader = req.headers.get("Authorization");
@@ -310,23 +427,30 @@ serve(async (req) => {
     // covers" button so a whole set of cover ideas can be produced in one
     // request instead of one admin click per theme.
     if (Array.isArray(body.batch)) {
+      if (!openAiKey) throw new Error("OPENAI_API_KEY not configured (needed to score covers)");
+
       const items: BatchItem[] = body.batch
         .filter((it: unknown): it is BatchItem =>
           !!it && typeof (it as BatchItem).theme === "string" && (it as BatchItem).theme.trim().length > 0
         )
-        .slice(0, 20); // sanity cap
+        // Re's standing cap (2 Nov 2026): 5 covers per batch, not 10+ — each
+        // one can now take up to MAX_ATTEMPTS generate+score round trips to
+        // clear the 99/100 bar, so a bigger batch risks the edge function's
+        // own execution time limit.
+        .slice(0, 5);
       if (items.length === 0) throw new Error("batch must contain at least one { theme } item");
 
       console.log(`Generating ${items.length} book-cover images, useCharacters:`, useCharacters);
 
       const covers: CoverResult[] = [];
-      // Sequential on purpose (see generateBookCover) — a batch of 10+ themes
-      // run in parallel would hammer the Meta Model API's rate limit.
+      // Sequential on purpose (see generateBookCover) — a batch run in
+      // parallel would hammer the Meta Model API's rate limit, and each item
+      // already retries internally against the 99/100 score bar.
       for (const item of items) {
-        covers.push(await generateBookCover(item, metaApiKey, useCharacters));
+        covers.push(await generateBookCover(item, metaApiKey, openAiKey, useCharacters));
       }
 
-      return new Response(JSON.stringify({ covers }), {
+      return new Response(JSON.stringify({ covers, passScore: PASS_SCORE }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
