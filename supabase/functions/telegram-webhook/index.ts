@@ -30,6 +30,18 @@
 // attendance-ask sweeps (both every 15 minutes) pick it up automatically,
 // exactly like a regular scheduled class.
 //
+// Re, 2 Nov 2026: "the person with the msg name must get the yes or no from
+// the specific person, because they can't confirm for each other". A shared
+// group chat (e.g. two sisters, each her own teacher_students row, same
+// telegram chat_id) let EITHER person tap the Yes/No meant for the OTHER --
+// the old check only verified the tap came from the right GROUP, never the
+// right PERSON inside it. Fix: telegram_links now also stores tg_user_id,
+// the numeric Telegram id of whoever ran /start with that student's own link
+// code. The att: callback now checks the tapper's id against it and refuses
+// a mismatch. Links made before this fix have tg_user_id = null and are left
+// unrestricted (nothing to check against) until the student runs /start
+// again, which backfills it silently.
+//
 // SECURITY
 // --------
 // Telegram is registered with a secret_token (setWebhook); every genuine
@@ -119,6 +131,7 @@ Deno.serve(async (req) => {
     if (cb) {
       const chatId: number | undefined = cb.message?.chat?.id;
       const messageId: number | undefined = cb.message?.message_id;
+      const tapperId: number | undefined = cb.from?.id;
       // "att:" = confirming attendance of a lesson that already happened
       // (telegram-attendance-ask). "resched:" = confirming/declining a
       // newly proposed class time (Re messaging the group directly about a
@@ -157,7 +170,7 @@ Deno.serve(async (req) => {
 
       const { data: link } = await supabase
         .from("telegram_links")
-        .select("teacher_student_id, chat_id")
+        .select("teacher_student_id, chat_id, tg_user_id")
         .eq("teacher_student_id", session.student_id)
         .maybeSingle();
 
@@ -178,6 +191,21 @@ Deno.serve(async (req) => {
         p_ids: [session.student_id],
       });
       const lang = (Array.isArray(localeRows) ? localeRows[0]?.language : undefined) === "en" ? "en" : "ar";
+
+      // Re, 2 Nov 2026: in a shared group chat, confirm the tap actually
+      // came from THIS student, not a groupmate answering on her behalf.
+      // Only enforced once we actually have her tg_user_id on file -- a
+      // link made before this fix has it null, so it's left unrestricted
+      // rather than locking someone out with no way to pass the check.
+      if (link.tg_user_id != null && tapperId != null && link.tg_user_id !== tapperId) {
+        await answerCallbackQuery(
+          cfg.bot_token, cb.id,
+          lang === "en"
+            ? `This button is only for ${name || "that student"} to answer.`
+            : `الزرار ده مخصص لـ ${name || "الطالبة"} بس 🙏`,
+        );
+        return new Response("ok");
+      }
 
       if (kind === "att") {
         const { error: rpcError } = await supabase.rpc("telegram_confirm_private_session", {
@@ -383,7 +411,8 @@ Deno.serve(async (req) => {
         const alreadySameChat = link.chat_id === chatId;
         const { error } = await supabase.from("telegram_links").update({
           chat_id: chatId,
-          tg_username: null,
+          tg_user_id: from?.id ?? null,
+          tg_username: from?.username ?? null,
           tg_first_name: msg.chat.title ?? null,
           linked_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -443,6 +472,7 @@ Deno.serve(async (req) => {
       const alreadySameChat = link.chat_id === chatId;
       const { error } = await supabase.from("telegram_links").update({
         chat_id: chatId,
+        tg_user_id: from?.id ?? null,
         tg_username: from?.username ?? null,
         tg_first_name: from?.first_name ?? null,
         linked_at: new Date().toISOString(),

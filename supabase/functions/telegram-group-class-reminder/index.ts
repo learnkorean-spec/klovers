@@ -77,11 +77,11 @@ async function sendReminder(
 ) {
   const text = lang === "en"
     ? (studentName
-        ? `Hi ${studentName} 👋\nYour class is coming up (around ${whenLabel}).\nClass link:\n${meetingUrl}`
-        : `Your class is coming up (around ${whenLabel}) 👋\nClass link:\n${meetingUrl}`)
+        ? `Hi ${studentName} 👋\nYour class starts in 15 minutes (around ${whenLabel}).\nClass link:\n${meetingUrl}`
+        : `Your class starts in 15 minutes (around ${whenLabel}) 👋\nClass link:\n${meetingUrl}`)
     : (studentName
-        ? `هاي ${studentName} 👋\nحصتك بعد شوية (الساعة ${whenLabel}).\nلينك الحصة:\n${meetingUrl}`
-        : `حصتك بعد شوية (الساعة ${whenLabel}).\nلينك الحصة:\n${meetingUrl}`);
+        ? `هاي ${studentName} 👋\nحصتك هتبدأ خلال 15 دقيقة (الساعة ${whenLabel}).\nلينك الحصة:\n${meetingUrl}`
+        : `حصتك هتبدأ خلال 15 دقيقة (الساعة ${whenLabel}) 👋\nلينك الحصة:\n${meetingUrl}`);
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
