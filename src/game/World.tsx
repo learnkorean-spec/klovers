@@ -23,6 +23,7 @@ import SeoulNamsan from "./environment/SeoulNamsan";
 import KloversHouse from "./environment/KloversHouse";
 import HangulVillage from "./environment/HangulVillage";
 import TourExhibit from "./environment/TourExhibit";
+import { ShadowBlobs } from "./npc/ShadowBlob";
 import type { WorldLang } from "./config/copy";
 import Hub from "./environment/Hub";
 import Lobby from "./environment/Lobby";
@@ -622,6 +623,7 @@ export default function World(props: WorldProps) {
       )}
       <SkyLight />
       <FoliageClock />
+      <ShadowBlobs />
       <Stats glRef={glRef} sceneRef={sceneRef} />
       {quality.adaptive && <AdaptiveResolution max={quality.dpr[1]} />}
       <WatercolorDriver />

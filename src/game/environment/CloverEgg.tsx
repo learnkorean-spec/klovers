@@ -111,7 +111,8 @@ const SHELL = (() => {
 const STRAW_RING = (() => {
   const R = 0.5;
   const twists = 9;
-  const N = 216;
+  // 16 segments a twist on phones (24 on computers): the same rope at a hand's size on screen.
+  const N = typeof window !== "undefined" && pickQuality().maxTexture <= 1024 ? 144 : 216;
   const strands: BufferGeometry[] = [];
   for (let s = 0; s < 3; s++) {
     const pts: Vector3[] = [];

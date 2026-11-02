@@ -1,6 +1,6 @@
-import { useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import type { Group } from "three";
+import { CylinderGeometry, Matrix4, SphereGeometry, Vector3, type InstancedMesh } from "three";
 import { ACCENT, MAT, std } from "../config/materials";
 import { CULTURE } from "../config/rooms";
 import { PALETTE } from "../config/world";
@@ -213,36 +213,74 @@ const lanternOff = std("#E9DCC6", 0.85);
 const lanternOn = std("#FFD7A0", 0.7, { emissive: "#FF9E3D", emissiveIntensity: 1.4 });
 const lanternRed = std("#C8242B", 0.7, { emissive: "#D7263D", emissiveIntensity: 0.9 });
 
-/** The festival lanterns under the arch: dark paper until a holiday is learned. */
+const LANTERN_GLOBE = new SphereGeometry(0.2, 20, 14);
+const LANTERN_TASSEL = new CylinderGeometry(0.012, 0.012, 0.18, 6);
+const _pivot = new Matrix4();
+const _local = new Matrix4();
+const _rot = new Matrix4();
+
+/**
+ * The festival lanterns under the arch: dark paper until a holiday is
+ * learned. Each swings a little on its own; all the globes of one finish
+ * are one draw, the tassels another (it was two draws a lantern).
+ */
 function FestivalLanterns({ lit }: { lit: boolean }) {
-  const g = useRef<Group>(null);
-  useFrame(({ clock }) => {
-    if (!g.current || REDUCED_MOTION) return;
-    g.current.children.forEach((c, i) => {
-      c.rotation.z = Math.sin(clock.elapsedTime * 1.3 + i) * 0.05;
-    });
-  });
   const xs = useMemo(() => Array.from({ length: 9 }, (_, i) => -HW + 1.2 + (i * (HW * 2 - 2.4)) / 8), []);
+  // Which lanterns wear which paper: every third one red once lit.
+  const groups = useMemo(
+    () =>
+      lit
+        ? [
+            { mat: lanternOn, idx: xs.map((_, i) => i).filter((i) => i % 3 !== 1) },
+            { mat: lanternRed, idx: xs.map((_, i) => i).filter((i) => i % 3 === 1) },
+          ]
+        : [{ mat: lanternOff, idx: xs.map((_, i) => i) }],
+    [lit, xs],
+  );
+  const globes = useRef<(InstancedMesh | null)[]>([]);
+  const tassels = useRef<InstancedMesh>(null);
+  const place = (t: number) => {
+    const swing = (i: number) => (REDUCED_MOTION ? 0 : Math.sin(t * 1.3 + i) * 0.05);
+    // A lantern hangs from (x, 4.1) and swings about that point.
+    const at = (i: number, y: number, sy: number, out: Matrix4) => {
+      _pivot.makeTranslation(xs[i], 4.1, 0).multiply(_rot.makeRotationZ(swing(i)));
+      return out.copy(_pivot).multiply(_local.makeTranslation(0, y, 0).scale(new Vector3(1, sy, 1)));
+    };
+    const m = new Matrix4();
+    groups.forEach((g, k) => {
+      const mesh = globes.current[k];
+      if (!mesh) return;
+      g.idx.forEach((i, n) => mesh.setMatrixAt(n, at(i, -0.32, 1.25, m)));
+      mesh.instanceMatrix.needsUpdate = true;
+    });
+    if (tassels.current) {
+      xs.forEach((_, i) => tassels.current?.setMatrixAt(i, at(i, -0.6, 1, m)));
+      tassels.current.instanceMatrix.needsUpdate = true;
+    }
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => place(0), [groups]);
+  useFrame(({ clock }) => {
+    if (!REDUCED_MOTION) place(clock.elapsedTime);
+  });
   return (
     <group position={[0, 0, CULTURE.arch.z + 0.05]}>
       <mesh position={[0, 4.1, 0]}>
         <boxGeometry args={[HW * 2 - 1.2, 0.02, 0.02]} />
         <primitive object={MAT.charcoal} attach="material" />
       </mesh>
-      <group ref={g}>
-        {xs.map((x, i) => (
-          <group key={x} position={[x, 4.1, 0]}>
-            <mesh position={[0, -0.32, 0]} scale={[1, 1.25, 1]}>
-              <sphereGeometry args={[0.2, 20, 14]} />
-              <primitive object={lit ? (i % 3 === 1 ? lanternRed : lanternOn) : lanternOff} attach="material" />
-            </mesh>
-            <mesh position={[0, -0.6, 0]}>
-              <cylinderGeometry args={[0.012, 0.012, 0.18, 6]} />
-              <primitive object={ACCENT} attach="material" />
-            </mesh>
-          </group>
-        ))}
-      </group>
+      {groups.map((g, k) => (
+        <instancedMesh
+          key={`${lit}-${k}`}
+          ref={(el) => {
+            globes.current[k] = el;
+          }}
+          args={[LANTERN_GLOBE, g.mat, g.idx.length]}
+          frustumCulled={false}
+          dispose={null}
+        />
+      ))}
+      <instancedMesh ref={tassels} args={[LANTERN_TASSEL, ACCENT, xs.length]} frustumCulled={false} dispose={null} />
       {lit && <pointLight position={[0, 3.6, 1.2]} color="#FFB060" intensity={3} distance={9} decay={2} />}
     </group>
   );

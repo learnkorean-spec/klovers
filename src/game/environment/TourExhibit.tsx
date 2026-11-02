@@ -10,6 +10,8 @@ import { PALETTE } from "../config/world";
 import type { PlayerState } from "../systems/state";
 import { REDUCED_MOTION } from "../systems/motion";
 import { Signboard } from "./parts";
+import { Kit } from "./kit";
+import Batch from "./Batch";
 
 /**
  * The Klovers tour as an exhibition along the Hangul Village street: who
@@ -429,7 +431,32 @@ function useExhibitTexture(slide: TourSlide, lang: WorldLang, n: number, of: num
 }
 
 const WOOD = () => std(PALETTE.woodDark, 0.75);
-const CAP = () => std(PALETTE.charcoal, 0.7);
+
+/**
+ * Everything on the boards that never moves — posts, plank backs, the
+ * scroll rods, the tiled caps and the link posts' poles — as one kit for
+ * the whole street: a few draws in all instead of five per board (the
+ * street drew ≈60 calls for its exhibition alone on a phone).
+ */
+const FRAMES: Kit = (() => {
+  const k = new Kit();
+  // A point on a board (its own x right, y up, z out) → the street.
+  const on = (b: { x: number; z: number; yaw: number }, lx: number, ly: number, lz: number): [number, number, number] => [
+    b.x + lx * Math.cos(b.yaw) + lz * Math.sin(b.yaw),
+    ly,
+    b.z - lx * Math.sin(b.yaw) + lz * Math.cos(b.yaw),
+  ];
+  for (const b of VILLAGE.tour) {
+    const w = b.w;
+    const r: [number, number, number] = [0, b.yaw, 0];
+    for (const sx of [-1, 1]) k.box("woodDark", on(b, sx * (w / 2 + 0.08), 1.45, -0.05), [0.12, 2.9, 0.12], true, r);
+    k.box("woodDark", on(b, 0, PANEL_TOP - BOARD_H / 2, -0.07), [w + 0.06, BOARD_H + 0.06, 0.05], true, r);
+    k.add("woodDark", "cyl", on(b, 0, PANEL_TOP + 0.03, -0.02), [0.07, w + 0.1, 0.07], [0, b.yaw, Math.PI / 2]);
+    k.box("charcoal", on(b, 0, PANEL_TOP + 0.62, -0.05), [w + 0.55, 0.09, 0.5], true, r);
+  }
+  for (const l of VILLAGE.tourLinks) k.add("woodDark", "cyl", [l.x, 0.75, l.z], [0.11, 1.5, 0.11], undefined, true);
+  return k;
+})();
 
 function Exhibit({
   b,
@@ -483,22 +510,6 @@ function Exhibit({
 
   return (
     <group position={[b.x, 0, b.z]} rotation={[0, b.yaw, 0]}>
-      {/* Posts and a back of planks, so the board has a body from every side. */}
-      {[-1, 1].map((sx) => (
-        <mesh key={sx} castShadow position={[sx * (w / 2 + 0.08), 1.45, -0.05]}>
-          <boxGeometry args={[0.12, 2.9, 0.12]} />
-          <primitive object={WOOD()} attach="material" />
-        </mesh>
-      ))}
-      <mesh castShadow position={[0, PANEL_TOP - BOARD_H / 2, -0.07]}>
-        <boxGeometry args={[w + 0.06, BOARD_H + 0.06, 0.05]} />
-        <primitive object={WOOD()} attach="material" />
-      </mesh>
-      {/* The scroll: its rod on top, the paper, and the weighted roller below. */}
-      <mesh position={[0, PANEL_TOP + 0.03, -0.02]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.035, 0.035, w + 0.1, 10]} />
-        <primitive object={WOOD()} attach="material" />
-      </mesh>
       <mesh ref={panel} position={[0, PANEL_TOP - BOARD_H / 2, -0.035]} material={material}>
         <planeGeometry args={[w, BOARD_H]} />
       </mesh>
@@ -517,10 +528,6 @@ function Exhibit({
       <group position={[0, PANEL_TOP + 0.33, -0.03]}>
         <Signboard text={b.sign} w={Math.min(1.5, w * 0.62)} h={0.36} aspect={Math.min(1.5, w * 0.62) / 0.36} />
       </group>
-      <mesh castShadow position={[0, PANEL_TOP + 0.62, -0.05]}>
-        <boxGeometry args={[w + 0.55, 0.09, 0.5]} />
-        <primitive object={CAP()} attach="material" />
-      </mesh>
     </group>
   );
 }
@@ -529,10 +536,6 @@ function Exhibit({
 function LinkPost({ x, z, yaw, sign }: { x: number; z: number; yaw: number; sign: string }) {
   return (
     <group position={[x, 0, z]} rotation={[0, yaw, 0]}>
-      <mesh castShadow position={[0, 0.75, 0]}>
-        <cylinderGeometry args={[0.05, 0.06, 1.5, 10]} />
-        <primitive object={WOOD()} attach="material" />
-      </mesh>
       <group position={[0, 1.42, 0.05]}>
         <Signboard text={sign} w={0.8} h={0.3} aspect={0.8 / 0.3} />
       </group>
@@ -551,6 +554,7 @@ export default function TourExhibit({ lang, player, onSeen }: { lang: WorldLang;
   const report = useMemo(() => (s: TourStop) => seen.current(s), []);
   return (
     <group>
+      <Batch kit={FRAMES} />
       {VILLAGE.tour.map((b, i) => (
         <Exhibit key={`${b.id}-${lang}`} b={b} slide={slides[i]} lang={lang} n={i + 1} of={VILLAGE.tour.length} player={player} onSeen={report} />
       ))}

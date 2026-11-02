@@ -130,7 +130,7 @@ export const NPCS: NpcPlacement[] = [
   { id: "a-cook", room: "seoul-market", cast: "vendor", pose: "talk", x: 1.75, z: 0.6, yaw: -Math.PI / 2, phase: 0.4, important: true },
   { id: "a-grandpa", room: "seoul-market", cast: "elder", pose: "sit", x: -2.6, z: -10.45, yaw: 0, phase: 0.9, important: true },
   { id: "a-barista", room: "seoul-market", cast: "barista", pose: "stand", x: 1.6, z: -12.2, yaw: 0.2, phase: 1.3, important: true },
-  { id: "a-walker", room: "seoul-market", cast: "walker", pose: "walk", x: -1.6, z: 7.5, yaw: Math.PI, path: [[-1.6, 7.5], [-1.6, -8.5]], phase: 0.6 },
+  { id: "a-walker", room: "seoul-market", cast: "walker", pose: "walk", x: -1.6, z: 5.0, yaw: Math.PI, path: [[-1.6, 5.0], [-1.6, -8.5]], phase: 0.6 },
   // Courtyard: a gardener by the pine, two students on the platform.
   { id: "c-gardener", room: "courtyard", cast: "gardener", pose: "water", x: 8.3, z: 6.3, yaw: face(8.3, 6.3, 9.4, 6.9), phase: 0.4 },
   { id: "c-bench-1", room: "courtyard", cast: "readerA", pose: "sitRead", x: -7.9, z: -4.0, yaw: 0, phase: 1.1 },
