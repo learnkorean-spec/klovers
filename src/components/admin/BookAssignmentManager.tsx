@@ -44,9 +44,9 @@ const SHELVES: { id: Shelf; title: string; note: string }[] = [
 ];
 
 /** Public PDFs on the site itself (not in book_assignments). */
-const PUBLIC_FILES: { href: string; title: string; lang: "ar" | "en"; note: string }[] = [
-  { href: "/hangul-starter-ar.pdf", title: "Hangul starter sheet (Arabic)", lang: "ar", note: "Public download on /hangul-starter · 5 pages" },
-  { href: "/hangul-starter-en.pdf", title: "Hangul starter sheet (English)", lang: "en", note: "Public download on /hangul-starter · 5 pages" },
+const PUBLIC_FILES: { href: string; title: string; lang: "ar" | "en"; note: string; cover: string }[] = [
+  { href: "/hangul-starter-ar.pdf", title: "Hangul starter sheet (Arabic)", lang: "ar", note: "Public download on /hangul-starter · 5 pages", cover: "/picture-library/scenes/cover_hangul_starter.jpg" },
+  { href: "/hangul-starter-en.pdf", title: "Hangul starter sheet (English)", lang: "en", note: "Public download on /hangul-starter · 5 pages", cover: "/picture-library/scenes/cover_hangul_starter_en.jpg" },
 ];
 
 interface ShopListing { bookId: string | null; price: { amount: number; currency: string } }
@@ -351,7 +351,8 @@ const BookAssignmentManager = () => {
                 {shelf.id === "free" && PUBLIC_FILES.map(f => (
                   <Card key={f.href}>
                     <CardContent className="p-3 flex gap-3">
-                      <div className="h-[78px] w-[60px] rounded bg-klovers-yellow text-charcoal shrink-0 flex items-center justify-center text-lg font-bold" aria-hidden="true">한</div>
+                      <img src={f.cover} alt="" width={60} height={78} loading="lazy"
+                        className="h-[78px] w-[60px] rounded object-cover shrink-0 bg-muted" />
                       <div className="min-w-0 flex-1 space-y-1.5">
                         <div className="text-xs font-semibold leading-snug">{f.title}</div>
                         <div className="text-[11px] text-muted-foreground">{f.note}</div>
