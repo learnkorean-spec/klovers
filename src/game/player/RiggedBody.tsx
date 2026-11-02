@@ -585,17 +585,20 @@ function useLod(root: Group, model: string) {
     const farG = named(farOne);
     const out: { mesh: Mesh; geo: [BufferGeometry, BufferGeometry, BufferGeometry] }[] = [];
     const corneas: Mesh[] = [];
+    const smalls: Mesh[] = [];
     root.traverse((o) => {
       const m = o as Mesh;
       // Lashes go with the eye highlights: a hair-thin line, and a draw call of their own per person.
       if (m.name === "cornea" || /Eyelashes$/.test(m.name)) corneas.push(m);
+      // Belts, ties and collars are a few pixels on a far person: they go with the far copy.
+      if (/_(Belt|Tie|Collar)$/.test(m.name)) smalls.push(m);
       if (!(m as SkinnedMesh).isSkinnedMesh) return;
       const ok = (g?: BufferGeometry) => (g && g !== m.geometry && g.getAttribute("position")?.count ? g : undefined);
       const l = ok(lite.get(m.name));
       const f = ok(farG.get(m.name)) ?? l;
       if (l && f) out.push({ mesh: m, geo: [m.geometry, l, f] });
     });
-    return out.length ? out.map((s, i) => ({ ...s, corneas: i === 0 ? corneas : [] })) : [];
+    return out.length ? out.map((s, i) => ({ ...s, corneas: i === 0 ? corneas : [], smalls: i === 0 ? smalls : [] })) : [];
   }, [use, light, farOne, root]);
   const st = useMemo(() => ({ level: 0 as Level, first: true }), []);
   const steps = useMemo(lodSteps, []);
@@ -622,6 +625,7 @@ function useLod(root: Group, model: string) {
       // An eye's highlight (and its lashes) is a pixel or less that far off:
       // not worth its own draw. On a computer the lashes stay until the far copy.
       for (const c of s.corneas) c.visible = next === 0 || (!lashesGoEarly && next === 1 && c.name !== "cornea");
+      for (const c of s.smalls) c.visible = next < 2;
     }
   });
   return st;
