@@ -239,7 +239,8 @@ const BUNDLE_COLUMNS =
   "purchased_on, paid_on, coverage_start, coverage_start_confirmed_at, status, voided_reason, voided_at, note";
 
 const SESSION_COLUMNS =
-  "id, student_id, bundle_id, class_id, session_date, start_time, outcome, counted, confirmed_at, note";
+  "id, student_id, bundle_id, class_id, session_date, start_time, outcome, counted, confirmed_at, note, " +
+  "student_confirmed_at, student_declined_at, telegram_asked_at";
 
 /** Every bundle a student has ever had, newest first — the payment history. */
 export function useStudentBundles(studentId: string | null) {

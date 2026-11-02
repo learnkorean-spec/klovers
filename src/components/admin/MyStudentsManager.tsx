@@ -29,6 +29,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { TelegramClaimBadge } from "@/components/admin/TelegramClaimBadge";
 import {
   Plus, Pencil, Trash2, Clock, Loader2, GraduationCap, AlertTriangle,
   Video, Copy, Check, CalendarCheck, X, Wallet, History, Ban, ShieldAlert, Users,
@@ -1646,6 +1647,7 @@ const MyStudentsManager = () => {
                         start date -- the warning shows up here, before the click,
                         not only after opening the bundle. */}
                     {bundle && bundle.coverage_start_confirmed_at === null && <UnreviewedBadge />}
+                    <TelegramClaimBadge scheduledRow={occ.scheduledRow} />
                   </span>
                   {bundle ? (
                     <span className="flex gap-1">
