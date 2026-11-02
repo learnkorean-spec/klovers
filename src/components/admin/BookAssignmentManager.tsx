@@ -13,7 +13,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { BookOpen, Plus, Trash2, Search, Clock, CheckCircle2, Lock, Download, ExternalLink } from "lucide-react";
+import { BookOpen, Plus, Trash2, Search, Clock, CheckCircle2, Lock, Download, ExternalLink, Upload, Loader2 } from "lucide-react";
 import { BOOKS, BOOK_COVERS, type BookId } from "@/constants/books";
 
 /**
@@ -159,6 +159,7 @@ const BookAssignmentManager = () => {
   const BOOK_ID = bookId;
   const BOOK = BOOKS[bookId];
   const [filesInStorage, setFilesInStorage] = useState<Set<string> | null>(null);
+  const [uploadingId, setUploadingId] = useState<BookId | null>(null);
   const [shop, setShop] = useState<ShopListing[] | null>(null);
   // Cluby's gift pop-up (30 Sep 2026): how many saw it, took the book, downloaded it.
   const [gift, setGift] = useState<{ shown: number; taps: number; claimed: number; downloads: number; people: number } | null>(null);
@@ -244,6 +245,24 @@ const BookAssignmentManager = () => {
       return;
     }
     window.open(data.signedUrl, "_blank", "noopener");
+  };
+
+  /** Admins can now upload/replace a book's PDF straight from this screen
+   * (migration 20261102184900 added the INSERT/UPDATE storage policies this
+   * needs - previously only the Supabase dashboard itself could write here). */
+  const uploadPdf = async (id: BookId, file: File) => {
+    const book = BOOKS[id];
+    setUploadingId(id);
+    const { error } = await supabase.storage
+      .from("student-materials")
+      .upload(book.path, file, { upsert: true, contentType: "application/pdf" });
+    setUploadingId(null);
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Uploaded", description: book.fileName });
+    setFilesInStorage(prev => new Set(prev ? [...prev, book.path] : [book.path]));
   };
 
   const handleAssign = async () => {
@@ -359,6 +378,23 @@ const BookAssignmentManager = () => {
                             <Button variant="outline" size="sm" className="h-6 px-2 text-[11px] gap-1"
                               disabled={hasFile === false} onClick={() => downloadPdf(id)}>
                               <Download className="h-3 w-3" /> PDF
+                            </Button>
+                            <Button variant="outline" size="sm"
+                              className={`h-6 px-2 text-[11px] gap-1 ${uploadingId === id ? "pointer-events-none opacity-60" : ""}`}
+                              asChild>
+                              <label>
+                                {uploadingId === id
+                                  ? <Loader2 className="h-3 w-3 animate-spin" />
+                                  : <Upload className="h-3 w-3" />}
+                                {hasFile ? "Replace" : "Upload"}
+                                <input type="file" accept="application/pdf" className="hidden"
+                                  disabled={uploadingId === id}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    e.target.value = "";
+                                    if (file) uploadPdf(id, file);
+                                  }} />
+                              </label>
                             </Button>
                           </div>
                         </div>
