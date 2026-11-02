@@ -10,7 +10,7 @@
  * Telegram never sets outcome/counted; only the buttons next to this badge
  * do that.
  */
-import { Check, X, Clock } from "lucide-react";
+import { Check, X, Clock, Send } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { StudentClassSession } from "@/types/students";
@@ -20,21 +20,31 @@ interface TelegramClaimBadgeProps {
   scheduledRow: StudentClassSession | null;
 }
 
+/**
+ * Re, 2 Nov 2026: "add telegram mark in blue so its easy to recognize" —
+ * the badge used to borrow the generic default/destructive/secondary colors,
+ * which already mean other things elsewhere on the same screen
+ * (UnreviewedBadge, destructive buttons). Telegram's own blue makes this one
+ * instantly its own thing at a glance, with the paper-plane icon as the
+ * second cue — the Check/X/Clock still carries which answer it was.
+ */
+const TELEGRAM_BLUE = "border-transparent bg-[#229ED9] text-white hover:bg-[#229ED9]";
+
 export const TelegramClaimBadge = ({ scheduledRow }: TelegramClaimBadgeProps) => {
   if (!scheduledRow) return null;
 
   if (scheduledRow.student_confirmed_at) {
     return (
-      <Badge variant="default" className="text-xs gap-1">
-        <Check className="h-3 w-3" /> Said yes on Telegram
+      <Badge className={`text-xs gap-1 ${TELEGRAM_BLUE}`}>
+        <Send className="h-3 w-3" /> <Check className="h-3 w-3" /> Said yes on Telegram
       </Badge>
     );
   }
 
   if (scheduledRow.student_declined_at) {
     return (
-      <Badge variant="destructive" className="text-xs gap-1">
-        <X className="h-3 w-3" /> Said no on Telegram
+      <Badge className={`text-xs gap-1 ${TELEGRAM_BLUE}`}>
+        <Send className="h-3 w-3" /> <X className="h-3 w-3" /> Said no on Telegram
       </Badge>
     );
   }
@@ -43,8 +53,8 @@ export const TelegramClaimBadge = ({ scheduledRow }: TelegramClaimBadgeProps) =>
   // distinction AdminToday already draws for trial attendance (asked vs not).
   if (scheduledRow.telegram_asked_at) {
     return (
-      <Badge variant="secondary" className="text-xs gap-1">
-        <Clock className="h-3 w-3" /> Asked, no reply
+      <Badge className={`text-xs gap-1 ${TELEGRAM_BLUE}`}>
+        <Send className="h-3 w-3" /> <Clock className="h-3 w-3" /> Asked, no reply
       </Badge>
     );
   }
