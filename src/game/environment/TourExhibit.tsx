@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
-import { CanvasTexture, MeshBasicMaterial, SRGBColorSpace, type Group, type Mesh } from "three";
+import { CanvasTexture, Matrix4, MeshBasicMaterial, SRGBColorSpace, Vector3, type InstancedMesh, type Mesh } from "three";
 import { ACCENT, std } from "../config/materials";
 import { tourSpot, VILLAGE, type TourStop } from "../config/rooms";
 import type { WorldLang } from "../config/copy";
@@ -12,6 +12,7 @@ import { REDUCED_MOTION } from "../systems/motion";
 import { Signboard } from "./parts";
 import { Kit } from "./kit";
 import Batch from "./Batch";
+import { UNIT } from "./Instanced";
 
 /**
  * The Klovers tour as an exhibition along the Hangul Village street: who
@@ -480,7 +481,6 @@ function Exhibit({
   const material = useMemo(() => new MeshBasicMaterial({ map: tex, toneMapped: false }), [tex]);
   useEffect(() => () => material.dispose(), [material]);
   const panel = useRef<Mesh>(null);
-  const roller = useRef<Group>(null);
   const st = useRef({ open: REDUCED_MOTION ? 1 : 0, seen: false });
   const spot = useMemo(() => tourSpot(b), [b]);
 
@@ -499,7 +499,7 @@ function Exhibit({
       tex.repeat.set(1, h / BOARD_H);
       tex.offset.set(0, 1 - h / BOARD_H);
     }
-    if (roller.current) roller.current.position.y = PANEL_TOP - h - 0.03;
+    ROLLER_Y[n - 1] = PANEL_TOP - h - 0.03;
     // Once unrolled, the board presents: its pictures arrive one by one.
     if (s.open > 0.85) present(Math.min(dt, 0.1));
     if (!s.seen && s.open > 0.9 && Math.hypot(p.x - spot.x, p.z - spot.z) < 2.4) {
@@ -513,22 +513,54 @@ function Exhibit({
       <mesh ref={panel} position={[0, PANEL_TOP - BOARD_H / 2, -0.035]} material={material}>
         <planeGeometry args={[w, BOARD_H]} />
       </mesh>
-      <group ref={roller}>
-        <mesh rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.045, 0.045, w + 0.14, 12]} />
-          <primitive object={WOOD()} attach="material" />
-        </mesh>
-        {/* The yellow rail: boards to walk up to. */}
-        <mesh position={[0, -0.06, 0.01]}>
-          <boxGeometry args={[w * 0.6, 0.03, 0.02]} />
-          <primitive object={ACCENT} attach="material" />
-        </mesh>
-      </group>
       {/* The Korean name, under a little tiled cap. */}
       <group position={[0, PANEL_TOP + 0.33, -0.03]}>
         <Signboard text={b.sign} w={Math.min(1.5, w * 0.62)} h={0.36} aspect={Math.min(1.5, w * 0.62) / 0.36} />
       </group>
     </group>
+  );
+}
+
+/** Each board's weighted roller height (it drops as the scroll unrolls), written by its Exhibit every frame. */
+const ROLLER_Y = new Float32Array(VILLAGE.tour.length).fill(PANEL_TOP - 0.05);
+const _board = new Matrix4();
+const _part = new Matrix4();
+const _rodTurn = new Matrix4().makeRotationZ(Math.PI / 2);
+
+/**
+ * Every board's roller as one instanced draw and every yellow rail (on the
+ * rollers, and under the link posts' signs) as another — they were two
+ * draws a board.
+ */
+function Rollers() {
+  const rods = useRef<InstancedMesh>(null);
+  const rails = useRef<InstancedMesh>(null);
+  const wood = useMemo(WOOD, []);
+  const m = useMemo(() => new Matrix4(), []);
+  const links = VILLAGE.tourLinks.length;
+  useLayoutEffect(() => {
+    // The link posts' rails never move.
+    VILLAGE.tourLinks.forEach((l, i) => {
+      _board.makeRotationY(l.yaw).setPosition(l.x, 0, l.z);
+      rails.current?.setMatrixAt(VILLAGE.tour.length + i, m.copy(_board).multiply(_part.makeTranslation(0, 1.22, 0.06)).scale(new Vector3(0.8, 0.05, 0.02)));
+    });
+  }, [m]);
+  useFrame(() => {
+    if (!rods.current || !rails.current) return;
+    VILLAGE.tour.forEach((b, i) => {
+      const y = ROLLER_Y[i];
+      _board.makeRotationY(b.yaw).setPosition(b.x, 0, b.z);
+      rods.current?.setMatrixAt(i, m.copy(_board).multiply(_part.makeTranslation(0, y, 0)).multiply(_rodTurn).scale(new Vector3(0.09, b.w + 0.14, 0.09)));
+      rails.current?.setMatrixAt(i, m.copy(_board).multiply(_part.makeTranslation(0, y - 0.06, 0.01)).scale(new Vector3(b.w * 0.6, 0.03, 0.02)));
+    });
+    rods.current.instanceMatrix.needsUpdate = true;
+    rails.current.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <>
+      <instancedMesh ref={rods} args={[UNIT.cylinder, wood, VILLAGE.tour.length]} frustumCulled={false} dispose={null} />
+      <instancedMesh ref={rails} args={[UNIT.box, ACCENT, VILLAGE.tour.length + links]} frustumCulled={false} dispose={null} />
+    </>
   );
 }
 
@@ -539,10 +571,6 @@ function LinkPost({ x, z, yaw, sign }: { x: number; z: number; yaw: number; sign
       <group position={[0, 1.42, 0.05]}>
         <Signboard text={sign} w={0.8} h={0.3} aspect={0.8 / 0.3} />
       </group>
-      <mesh position={[0, 1.22, 0.06]}>
-        <boxGeometry args={[0.8, 0.05, 0.02]} />
-        <primitive object={ACCENT} attach="material" />
-      </mesh>
     </group>
   );
 }
@@ -558,6 +586,7 @@ export default function TourExhibit({ lang, player, onSeen }: { lang: WorldLang;
       {VILLAGE.tour.map((b, i) => (
         <Exhibit key={`${b.id}-${lang}`} b={b} slide={slides[i]} lang={lang} n={i + 1} of={VILLAGE.tour.length} player={player} onSeen={report} />
       ))}
+      <Rollers />
       {VILLAGE.tourLinks.map((l) => (
         <LinkPost key={l.id} x={l.x} z={l.z} yaw={l.yaw} sign={l.sign} />
       ))}

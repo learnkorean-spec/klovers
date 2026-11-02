@@ -25,7 +25,7 @@ const signGeometries = new Map<string, BufferGeometry>();
  * It was three meshes — busy rooms carry twenty-odd signs, ≈40 draw calls
  * on a phone for nothing (measured 25 Oct 2026).
  */
-function signGeometry(w: number, h: number): BufferGeometry {
+export function signGeometry(w: number, h: number): BufferGeometry {
   const key = `${w.toFixed(3)}|${h.toFixed(3)}`;
   let g = signGeometries.get(key);
   if (!g) {
