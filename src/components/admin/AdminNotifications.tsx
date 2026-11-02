@@ -356,15 +356,20 @@ const AttendanceClaimPanel = ({ notification }: AttendanceClaimPanelProps) => {
   const load = useCallback(async () => {
     if (!uid) { setMode("none"); return; }
 
-    const { data: ts } = await supabase
+    const { data: ts, error: tsError } = await supabase
       .from("teacher_students")
       .select("id, full_name")
       .eq("id", uid)
       .maybeSingle();
+    if (tsError) {
+      toast({ title: "Couldn't load this claim", description: tsError.message, variant: "destructive" });
+      setMode("none");
+      return;
+    }
 
     if (ts) {
       setStudentName(ts.full_name || "");
-      const { data: sessions } = await supabase
+      const { data: sessions, error: sessionsError } = await supabase
         .from("student_class_sessions")
         .select("id, session_date, start_time")
         .eq("student_id", uid)
@@ -372,26 +377,41 @@ const AttendanceClaimPanel = ({ notification }: AttendanceClaimPanelProps) => {
         .not("telegram_asked_at", "is", null)
         .order("session_date", { ascending: false })
         .limit(5);
+      if (sessionsError) {
+        toast({ title: "Couldn't load pending sessions", description: sessionsError.message, variant: "destructive" });
+        setMode("none");
+        return;
+      }
       setPrivateRows((sessions as PendingPrivateSession[]) || []);
       setMode("private");
       return;
     }
 
-    const { data: prof } = await supabase
+    const { data: prof, error: profError } = await supabase
       .from("profiles")
       .select("user_id, name")
       .eq("user_id", uid)
       .maybeSingle();
+    if (profError) {
+      toast({ title: "Couldn't load this claim", description: profError.message, variant: "destructive" });
+      setMode("none");
+      return;
+    }
 
     if (prof) {
       setStudentName(prof.name || "");
-      const { data: pending } = await supabase
+      const { data: pending, error: pendingError } = await supabase
         .from("pkg_attendance")
         .select("session_id")
         .eq("user_id", uid)
         .eq("admin_approved", false)
         .order("created_at", { ascending: false })
         .limit(5);
+      if (pendingError) {
+        toast({ title: "Couldn't load pending attendance", description: pendingError.message, variant: "destructive" });
+        setMode("none");
+        return;
+      }
 
       const sessionIds = (pending || []).map((p) => p.session_id);
       if (sessionIds.length === 0) {
@@ -400,15 +420,25 @@ const AttendanceClaimPanel = ({ notification }: AttendanceClaimPanelProps) => {
         return;
       }
 
-      const { data: sessions } = await supabase
+      const { data: sessions, error: sessionsError } = await supabase
         .from("pkg_group_sessions")
         .select("id, session_date, group_id")
         .in("id", sessionIds);
+      if (sessionsError) {
+        toast({ title: "Couldn't load group sessions", description: sessionsError.message, variant: "destructive" });
+        setMode("none");
+        return;
+      }
 
       const groupIds = [...new Set((sessions || []).map((s) => s.group_id))];
-      const { data: groups } = groupIds.length
+      const { data: groups, error: groupsError } = groupIds.length
         ? await supabase.from("pkg_groups").select("id, name").in("id", groupIds)
-        : { data: [] as { id: string; name: string }[] };
+        : { data: [] as { id: string; name: string }[], error: null };
+      if (groupsError) {
+        toast({ title: "Couldn't load group names", description: groupsError.message, variant: "destructive" });
+        setMode("none");
+        return;
+      }
 
       const groupNameById: Record<string, string> = {};
       (groups || []).forEach((g) => { groupNameById[g.id] = g.name; });
