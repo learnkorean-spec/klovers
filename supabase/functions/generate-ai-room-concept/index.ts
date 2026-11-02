@@ -82,6 +82,52 @@ const VARIANTS: Variant[] = [
   { label: "B", angle: "a bright, airy, daylight version of the scene with more open space" },
 ];
 
+// --- Book Cover Batch mode -------------------------------------------------
+//
+// A second entry point into the same generator: instead of one theme -> two
+// 3D-room-design variants, this takes a LIST of themes and renders each as a
+// single clean, text-free portrait photo meant to sit behind a book title
+// (trial guide, Hangul A0, conversation-cafe books, etc). Reuses the exact
+// same character-fidelity machinery (reference images + CHARACTER_DESCRIPTIONS
+// + KLOVERS_STYLE) so cover photos stay visually consistent with the room
+// concepts and with the site's existing character art.
+//
+// Per Re's standing request (2 Nov 2026): book-cover ideas should keep
+// introducing NEW supporting people into the conversations/scenes, not just
+// recycle Adam + Lina every time, so each batch item can carry an optional
+// `extraCharacter` describing a new, original side character (a vendor, a
+// teacher, a fellow student, ...). These new people are NOT drawn from any
+// reference image (none exists yet) — Muse Image invents them fresh per the
+// instruction below, consistently "a different-looking Korean person" per
+// the KLOVERS World canon goal that every background person looks distinct
+// and Korean. They are new ORIGINAL characters, not a change to Adam, Lina,
+// or Cluby's canon relationships/origin/responsibilities.
+const COVER_STYLE =
+  "This image is a BOOK COVER photo, not a 3D room design reference. It must " +
+  "be completely free of text: no letters, numbers, words, captions, labels, " +
+  "signage, logos, watermarks, subtitles, or writing of any kind anywhere in " +
+  "the image, on any surface, sign, book, or screen. Clean portrait photo " +
+  "composition, subject centered with soft, uncluttered empty margin at the " +
+  "very top and very bottom of the frame so a title can be overlaid " +
+  "afterward by a designer. Shallow depth of field, soft bokeh background.";
+
+function newCharacterInstruction(extraCharacter: string): string {
+  return (
+    `Also include, naturally part of the scene, ONE new original supporting ` +
+    `character who is NOT Adam, Lina, or Cluby and must not resemble them: ` +
+    `${extraCharacter}. Give this new person their own distinct Korean face, ` +
+    `hairstyle, and outfit, clearly different from Adam and Lina and from any ` +
+    `other person already in the scene — per KLOVERS World's standing rule ` +
+    `that every background person looks different and Korean. This is a new ` +
+    `side character for the scene, not a replacement for Adam, Lina, or Cluby.`
+  );
+}
+
+interface BatchItem {
+  theme: string;
+  extraCharacter?: string;
+}
+
 interface DesignBrief {
   roomName: string;
   vocabularyFocus: string[];
@@ -98,13 +144,14 @@ async function generateConceptImage(
   prompt: string,
   apiKey: string,
   useCharacters: boolean,
+  size: string = "1536x1024",
 ): Promise<string> {
   const endpoint = useCharacters ? "images/edits" : "images/generations";
   const body: Record<string, unknown> = {
     model: MUSE_IMAGE_MODEL,
     prompt,
     n: 1,
-    size: "1536x1024",
+    size,
     response_format: "b64_json",
     output_format: "png",
   };
@@ -187,6 +234,44 @@ async function generateDesignBrief(
   }
 }
 
+interface CoverResult {
+  theme: string;
+  extraCharacter?: string;
+  imageDataUrl: string;
+  designBrief: DesignBrief;
+}
+
+async function generateBookCover(
+  item: BatchItem,
+  apiKey: string,
+  useCharacters: boolean,
+): Promise<CoverResult> {
+  const theme = item.theme.trim().slice(0, 500);
+  const extraCharacter = item.extraCharacter?.trim().slice(0, 300);
+
+  const imagePrompt = useCharacters
+    ? `Photo-edit the exact same real people and creature from the reference ` +
+      `images into a new book-cover scene — do not redraw or restyle them, ` +
+      `keep their real faces, real hair, real skin, real outfits, and Cluby's ` +
+      `exact plush look pixel-faithful to the references: ${theme}. Place them ` +
+      `naturally in the scene, doing something related to the theme. ` +
+      `${CHARACTER_DESCRIPTIONS} ${extraCharacter ? newCharacterInstruction(extraCharacter) + " " : ""}` +
+      `${KLOVERS_STYLE} ${COVER_STYLE}`
+    : `A Korean-language-learning book cover scene: ${theme}. ` +
+      `${extraCharacter ? newCharacterInstruction(extraCharacter) + " " : ""}` +
+      `${KLOVERS_STYLE} ${COVER_STYLE}`;
+
+  // Sequential, not parallel with other batch items: keeps us well under the
+  // Meta Model API's rate limit when a batch of ~10 themes is submitted at
+  // once (each theme already fires 2 calls — image + design brief).
+  const [imageDataUrl, designBrief] = await Promise.all([
+    generateConceptImage(imagePrompt, apiKey, useCharacters, "1024x1536"),
+    generateDesignBrief(theme, "a clean title-free book-cover portrait", apiKey),
+  ]);
+
+  return { theme, extraCharacter, imageDataUrl, designBrief };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -216,12 +301,41 @@ serve(async (req) => {
       .maybeSingle();
     if (!roleData) throw new Error("Unauthorized: admin only");
 
-    const { prompt, useCharacters: useCharactersRaw } = await req.json();
+    const body = await req.json();
+    const useCharacters = body.useCharacters !== false; // default true
+
+    // Batch mode: body.batch is a list of { theme, extraCharacter? } and the
+    // response is a list of single book-cover images (one per theme), not
+    // the two-variant room-design flow below. Used by the "Generate all book
+    // covers" button so a whole set of cover ideas can be produced in one
+    // request instead of one admin click per theme.
+    if (Array.isArray(body.batch)) {
+      const items: BatchItem[] = body.batch
+        .filter((it: unknown): it is BatchItem =>
+          !!it && typeof (it as BatchItem).theme === "string" && (it as BatchItem).theme.trim().length > 0
+        )
+        .slice(0, 20); // sanity cap
+      if (items.length === 0) throw new Error("batch must contain at least one { theme } item");
+
+      console.log(`Generating ${items.length} book-cover images, useCharacters:`, useCharacters);
+
+      const covers: CoverResult[] = [];
+      // Sequential on purpose (see generateBookCover) — a batch of 10+ themes
+      // run in parallel would hammer the Meta Model API's rate limit.
+      for (const item of items) {
+        covers.push(await generateBookCover(item, metaApiKey, useCharacters));
+      }
+
+      return new Response(JSON.stringify({ covers }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { prompt } = body;
     if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
       throw new Error("prompt is required");
     }
     const theme = prompt.trim().slice(0, 500);
-    const useCharacters = useCharactersRaw !== false; // default true
 
     console.log("Generating AI room concepts for theme:", theme, "useCharacters:", useCharacters);
 
