@@ -31,16 +31,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Heart, X, Loader2, ShieldAlert, Camera, Sparkles, MessageCircle } from "lucide-react";
+import { Heart, X, Loader2, ShieldAlert, Camera, Sparkles, MessageCircle, Clock } from "lucide-react";
 import {
   EXCHANGE_LANGUAGES,
   EXCHANGE_INTERESTS,
   EXCHANGE_MIN_AGE,
   EXCHANGE_MAX_AGE,
+  EXCHANGE_GOALS,
+  EXCHANGE_MAX_GOALS,
+  EXCHANGE_DAYS,
+  EXCHANGE_TIME_BUCKETS,
+  EXCHANGE_AVAILABILITY_COUNT,
   REPORT_REASONS,
   languageLabel,
   interestLabel,
+  goalLabel,
+  formatAvailabilitySlot,
+  shortTimezoneLabel,
 } from "@/constants/languageExchange";
+import { getUserTimezone } from "@/lib/viewerTimezone";
 
 /**
  * Language Exchange (added 4 Nov 2026, Re's request): an opt-in, swipe-based
@@ -67,6 +76,9 @@ interface ExchangeProfileRow {
   native_languages: string[];
   learning_languages: string[];
   interests: string[];
+  goals: string[];
+  availability_slots: string[];
+  timezone: string | null;
   contact_type: string | null;
   contact_value: string | null;
   is_visible: boolean;
@@ -88,6 +100,9 @@ const emptyDraft = (): ExchangeProfileRow => ({
   native_languages: [],
   learning_languages: [],
   interests: [],
+  goals: [],
+  availability_slots: [],
+  timezone: null,
   contact_type: null,
   contact_value: "",
   is_visible: true,
@@ -523,14 +538,34 @@ function SwipeCard({
 
             {profile.bio ? <p className="mt-3 text-sm">{profile.bio}</p> : null}
 
-            {profile.interests?.length ? (
+            {profile.goals?.length ? (
               <div className="mt-3 flex flex-wrap gap-1.5">
+                {profile.goals.map((k) => (
+                  <Badge key={k} className="bg-[#FFFF00] text-foreground hover:bg-[#FFFF00]">
+                    {goalLabel(k, isAr ? "ar" : "en")}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+
+            {profile.interests?.length ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {profile.interests.map((k) => (
                   <Badge key={k} variant="secondary">
                     {interestLabel(k, isAr ? "ar" : "en")}
                   </Badge>
                 ))}
               </div>
+            ) : null}
+
+            {profile.availability_slots?.length ? (
+              <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4 shrink-0" />
+                {profile.availability_slots
+                  .map((s) => formatAvailabilitySlot(s, isAr ? "ar" : "en"))
+                  .join(isAr ? "، " : ", ")}
+                {profile.timezone ? ` (${shortTimezoneLabel(profile.timezone)})` : ""}
+              </p>
             ) : null}
           </CardContent>
         </Card>
@@ -649,6 +684,26 @@ function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar:
                 </div>
                 {m.bio ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{m.bio}</p> : null}
 
+                {m.goals?.length ? (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {m.goals.map((k) => (
+                      <Badge key={k} className="bg-[#FFFF00] text-foreground hover:bg-[#FFFF00] text-xs">
+                        {goalLabel(k, isAr ? "ar" : "en")}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
+
+                {m.availability_slots?.length ? (
+                  <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5 shrink-0" />
+                    {m.availability_slots
+                      .map((s) => formatAvailabilitySlot(s, isAr ? "ar" : "en"))
+                      .join(isAr ? "، " : ", ")}
+                    {m.timezone ? ` (${shortTimezoneLabel(m.timezone)})` : ""}
+                  </p>
+                ) : null}
+
                 {m.contact_type && m.contact_value ? (
                   isRevealed ? (
                     <p className="mt-2 flex items-center gap-1.5 text-sm font-medium">
@@ -696,7 +751,9 @@ function ProfileEditor({
   tr: (en: string, ar: string) => string;
   onSaved: (row: ExchangeProfileRow) => void;
 }) {
-  const [draft, setDraft] = useState<ExchangeProfileRow>(initial ?? { ...emptyDraft(), user_id: userId });
+  const [draft, setDraft] = useState<ExchangeProfileRow>(
+    initial ?? { ...emptyDraft(), user_id: userId, timezone: getUserTimezone() },
+  );
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -705,7 +762,24 @@ function ProfileEditor({
     if (initial) setDraft(initial);
   }, [initial]);
 
-  const toggleFromList = (field: "native_languages" | "learning_languages" | "interests", value: string, max?: number) => {
+  // "Monday:evening" -> { day: "Monday", bucket: "evening" }. Missing slot = both blank.
+  const slotAt = (index: number): { day: string; bucket: string } => {
+    const [day = "", bucket = ""] = (draft.availability_slots[index] ?? "").split(":");
+    return { day, bucket };
+  };
+
+  const setSlotPart = (index: number, part: "day" | "bucket", value: string) => {
+    setDraft((d) => {
+      const slots = [...d.availability_slots];
+      while (slots.length <= index) slots.push("");
+      const [curDay = "", curBucket = ""] = slots[index].split(":");
+      const next = part === "day" ? `${value}:${curBucket}` : `${curDay}:${value}`;
+      slots[index] = next === ":" ? "" : next;
+      return { ...d, availability_slots: slots };
+    });
+  };
+
+  const toggleFromList = (field: "native_languages" | "learning_languages" | "interests" | "goals", value: string, max?: number) => {
     setDraft((d) => {
       const list = d[field];
       const has = list.includes(value);
@@ -741,19 +815,26 @@ function ProfileEditor({
     setUploading(false);
   };
 
+  const validSlots = draft.availability_slots.filter((s) => {
+    const [day, bucket] = s.split(":");
+    return day && bucket;
+  });
+
   const canSave =
     draft.display_name.trim().length >= 2 &&
     (draft.age == null || (draft.age >= EXCHANGE_MIN_AGE && draft.age <= EXCHANGE_MAX_AGE)) &&
     draft.native_languages.length > 0 &&
-    draft.learning_languages.length > 0;
+    draft.learning_languages.length > 0 &&
+    draft.goals.length > 0 &&
+    validSlots.length === EXCHANGE_AVAILABILITY_COUNT;
 
   const handleSave = async () => {
     if (!canSave) {
       toast({
         title: tr("Please complete the required fields", "يرجى إكمال الحقول المطلوبة"),
         description: tr(
-          `Name, at least one language you speak, one you're learning, and age ${EXCHANGE_MIN_AGE}+ if given.`,
-          `الاسم، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، والعمر ${EXCHANGE_MIN_AGE}+ إن تم إدخاله.`,
+          `Name, at least one language you speak, one you're learning, age ${EXCHANGE_MIN_AGE}+ if given, at least one goal, and ${EXCHANGE_AVAILABILITY_COUNT} free times.`,
+          `الاسم، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، العمر ${EXCHANGE_MIN_AGE}+ إن تم إدخاله، هدف واحد على الأقل، و${EXCHANGE_AVAILABILITY_COUNT} وقتَي فراغ.`,
         ),
         variant: "destructive",
       });
@@ -769,6 +850,9 @@ function ProfileEditor({
       native_languages: draft.native_languages,
       learning_languages: draft.learning_languages,
       interests: draft.interests,
+      goals: draft.goals,
+      availability_slots: validSlots,
+      timezone: draft.timezone ?? getUserTimezone(),
       contact_type: draft.contact_type,
       contact_value: draft.contact_value?.trim() || null,
       is_visible: draft.is_visible,
@@ -901,6 +985,75 @@ function ProfileEditor({
             </Badge>
           ))}
         </div>
+      </div>
+
+      <div>
+        <Label>{tr("What are you looking for?", "عمّاذا تبحث/ين؟")} *</Label>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {tr(
+            `Pick up to ${EXCHANGE_MAX_GOALS} — a study partner, a culture friend, TOPIK prep, or whatever fits.`,
+            `اختاري حتى ${EXCHANGE_MAX_GOALS} — شريك دراسة، صديق ثقافي، تحضير TOPIK، أو ما يناسبك.`,
+          )}
+        </p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {EXCHANGE_GOALS.map((g) => (
+            <Badge
+              key={g.key}
+              variant={draft.goals.includes(g.key) ? "default" : "outline"}
+              className={draft.goals.includes(g.key) ? "cursor-pointer select-none bg-[#FFFF00] text-foreground hover:bg-[#FFFF00]" : "cursor-pointer select-none"}
+              onClick={() => toggleFromList("goals", g.key, EXCHANGE_MAX_GOALS)}
+            >
+              {isAr ? g.ar : g.en}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <Label>{tr("When are you free?", "متى تكون/ين متفرغ/ة؟")} *</Label>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {tr(
+            `Pick ${EXCHANGE_AVAILABILITY_COUNT} times — this is what your match will see.`,
+            `اختاري ${EXCHANGE_AVAILABILITY_COUNT} وقتين — هذا ما سيراه تطابقك.`,
+          )}
+        </p>
+        <div className="mt-2 space-y-2">
+          {Array.from({ length: EXCHANGE_AVAILABILITY_COUNT }).map((_, idx) => {
+            const { day, bucket } = slotAt(idx);
+            return (
+              <div key={idx} className="grid grid-cols-2 gap-2">
+                <Select value={day} onValueChange={(v) => setSlotPart(idx, "day", v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={tr(`Day ${idx + 1}`, `اليوم ${idx + 1}`)} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXCHANGE_DAYS.map((d) => (
+                      <SelectItem key={d.en} value={d.en}>
+                        {isAr ? d.ar : d.en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={bucket} onValueChange={(v) => setSlotPart(idx, "bucket", v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={tr("Time of day", "وقت اليوم")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXCHANGE_TIME_BUCKETS.map((b) => (
+                      <SelectItem key={b.key} value={b.key}>
+                        {isAr ? b.ar : b.en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          {tr("Shown in your own timezone", "يُعرض بتوقيتك المحلي")}
+          {draft.timezone ? ` (${shortTimezoneLabel(draft.timezone)})` : ""}.
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
