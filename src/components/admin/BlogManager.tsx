@@ -510,12 +510,12 @@ const BlogManager = () => {
                     <Button variant="ghost" size="icon" onClick={() => togglePublish(post)} title={post.published ? "Unpublish" : "Publish"}>
                       {post.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(post)} disabled={loadingEdit === post.id}>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(post)} disabled={loadingEdit === post.id} aria-label="Edit post">
                       <Pencil className={`h-4 w-4 ${loadingEdit === post.id ? "animate-pulse" : ""}`} />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        <Button variant="ghost" size="icon" aria-label="Delete post"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>

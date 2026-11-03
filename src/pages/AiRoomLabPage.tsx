@@ -178,7 +178,7 @@ export default function AiRoomLabPage() {
     <div className="min-h-screen bg-muted/30">
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
         <div className="max-w-6xl mx-auto flex items-center gap-3 py-3 px-4 md:px-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} aria-label="Back to admin">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

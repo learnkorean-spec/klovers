@@ -491,6 +491,7 @@ const BookAssignmentManager = () => {
                     <Button
                       variant="ghost" size="icon"
                       className="h-7 w-7 text-destructive hover:text-destructive"
+                      aria-label="Remove book assignment"
                       onClick={() => handleRemove(a.id, a.book_id, a.profile?.name)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

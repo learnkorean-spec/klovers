@@ -809,10 +809,10 @@ const LeadsPanel: React.FC = () => {
                       <div className="flex items-center gap-1">
                         {editingLeadId === lead.id ? (
                           <>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEditLead}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEditLead} aria-label="Save lead">
                               <Check className="h-4 w-4 text-primary" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEditLead}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEditLead} aria-label="Cancel editing lead">
                               <X className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </>

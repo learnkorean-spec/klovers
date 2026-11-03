@@ -477,6 +477,7 @@ const SessionAttendanceManager = () => {
                         size="icon" variant="outline"
                         disabled={sessionIndex <= 0}
                         onClick={() => setSelectedSessionId(sessions[sessionIndex - 1].session_id)}
+                        aria-label="Previous session"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
@@ -484,6 +485,7 @@ const SessionAttendanceManager = () => {
                         size="icon" variant="outline"
                         disabled={sessionIndex >= sessions.length - 1}
                         onClick={() => setSelectedSessionId(sessions[sessionIndex + 1].session_id)}
+                        aria-label="Next session"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
