@@ -10,7 +10,18 @@
 -- explicit approval (production DB change); this file documents it for the
 -- migration history, which the project's own CLAUDE.md already notes has
 -- diverged from what's actually live.
+--
+-- Made idempotent on 4 Nov 2026: the Apply Migrations workflow (dispatched
+-- to apply an unrelated, later migration) hit this one first and failed --
+-- "policy ... already exists" -- because the policies below really were
+-- already live from the direct MCP apply on 3 Nov, and this file had never
+-- been run through the workflow before. DROP ... IF EXISTS before each
+-- CREATE so re-running this file is a no-op against the live database,
+-- per this repo's own "Writing a migration that is safe here" rule in
+-- docs/APPLYING_MIGRATIONS.md. No behavior change -- same two policies,
+-- same definitions.
 
+drop policy if exists "Admins can upload student books" on storage.objects;
 create policy "Admins can upload student books"
   on storage.objects for insert
   with check (
@@ -19,6 +30,7 @@ create policy "Admins can upload student books"
     and has_role((select auth.uid()), 'admin'::app_role)
   );
 
+drop policy if exists "Admins can update student books" on storage.objects;
 create policy "Admins can update student books"
   on storage.objects for update
   using (
