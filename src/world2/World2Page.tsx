@@ -1,9 +1,9 @@
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Volume2, X } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, MessageCircle, Minimize2, Volume2, X } from "lucide-react";
 import World2Scene, { DIALOGUE as CART_DIALOGUE } from "./World2Scene";
 import ConvenienceStoreScene, { DIALOGUE as STORE_DIALOGUE } from "./ConvenienceStoreScene";
 import EntranceScene from "./EntranceScene";
@@ -180,6 +180,36 @@ function DialogueCard({
   );
 }
 
+/** Full-screen toggle for the Canvas's wrapping div, using the browser's own
+ * Fullscreen API (same mechanism any web game uses — no extra dependency).
+ * Re asked "why not a full screen" after reviewing World2 on a laptop: the
+ * 3D view previously only ever filled 75% of viewport height inside the page
+ * layout (header, tabs, info panel above/below it still visible). This lets
+ * the learner expand just the 3D canvas to the whole screen and back, while
+ * the embedded (75vh) view stays the default so the page still reads fine
+ * without ever entering fullscreen (e.g. on a device that blocks it). */
+function useFullscreen<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(document.fullscreenElement === ref.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  const toggle = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      ref.current?.requestFullscreen().catch(() => {
+        // Some mobile browsers (notably iOS Safari) don't support the
+        // Fullscreen API on arbitrary elements at all — fail silently
+        // rather than throwing, the embedded 75vh view still works fine.
+      });
+    }
+  };
+  return { ref, isFullscreen, toggle };
+}
+
 /** Camera gently orbits so the scene reads as a real 3D room, not a static
  * render. Amplitude was 0.35 rad (~20°) — wide enough that, combined with
  * Cluby standing close to Lina in World2Scene, the sway could carry Cluby's
@@ -210,6 +240,7 @@ function SlowOrbit({ children }: { children: React.ReactNode }) {
  */
 export default function World2Page() {
   const navigate = useNavigate();
+  const { ref: stageRef, isFullscreen, toggle: toggleFullscreen } = useFullscreen<HTMLDivElement>();
   const [activeVocab, setActiveVocab] = useState<VocabItem | null>(null);
   // "entrance" (the landing courtyard, two gates) or a Room's id — the
   // learner always lands in the entrance first, the way the live /world
@@ -292,7 +323,12 @@ export default function World2Page() {
 
         {room ? (
           <>
-            <div className="relative h-[75vh] rounded-lg overflow-hidden border border-[#FFF9EC]/10">
+            <div
+              ref={stageRef}
+              className={`relative overflow-hidden border border-[#FFF9EC]/10 bg-[#2E2E2E] ${
+                isFullscreen ? "h-screen w-screen" : "h-[75vh] rounded-lg"
+              }`}
+            >
               <Canvas
                 key={room.id}
                 shadows
@@ -312,10 +348,17 @@ export default function World2Page() {
                 </Suspense>
               </Canvas>
               {!activeVocab && !currentLine && (
-                <div className="absolute top-3 left-3 right-3 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
+                <div className="absolute top-3 left-3 right-14 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
                   {room.hint}
                 </div>
               )}
+              <button
+                onClick={toggleFullscreen}
+                aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
+                className="absolute top-3 right-3 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E]"
+              >
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </button>
               {activeVocab && <VocabCard vocab={activeVocab} onClose={() => setActiveVocab(null)} />}
               {currentLine && (
                 <DialogueCard
@@ -350,16 +393,28 @@ export default function World2Page() {
           </>
         ) : (
           <>
-            <div className="relative h-[75vh] rounded-lg overflow-hidden border border-[#FFF9EC]/10">
+            <div
+              ref={stageRef}
+              className={`relative overflow-hidden border border-[#FFF9EC]/10 bg-[#2E2E2E] ${
+                isFullscreen ? "h-screen w-screen" : "h-[75vh] rounded-lg"
+              }`}
+            >
               <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }} camera={{ position: [0, 2.2, 10.5], fov: 52 }}>
                 <PostFinish />
                 <Suspense fallback={null}>
                   <EntranceScene onEnterRoom={(id) => goTo(id)} />
                 </Suspense>
               </Canvas>
-              <div className="absolute top-3 left-3 right-3 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
+              <div className="absolute top-3 left-3 right-14 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
                 Click a gate to walk into that room.
               </div>
+              <button
+                onClick={toggleFullscreen}
+                aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
+                className="absolute top-3 right-3 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E]"
+              >
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </button>
             </div>
 
             <div className="rounded-lg border border-[#FFF9EC]/10 bg-[#FFF9EC]/5 p-4 text-sm space-y-2">
