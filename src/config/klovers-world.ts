@@ -19,7 +19,7 @@
  */
 
 export const KLOVERS_WORLD = {
-  version: "1.1",
+  version: "1.2",
 
   corePromise: {
     internal:
@@ -306,6 +306,88 @@ export const KLOVERS_WORLD = {
         status: "from_book_1_artwork_2026_09_27",
       },
     },
+  },
+
+  /**
+   * Supporting Korean cast — new Korean people the learners meet as Book 1's
+   * 24 classes move forward in time, not just Minsu over and over. Re's
+   * decision, 4 Nov 2026: "the story must be including new people in Korea
+   * during time."
+   *
+   * This follows the exact precedent of `koreanFriend` (Minsu): a native
+   * speaker the learners meet, never a teacher, never a romantic interest,
+   * always tied to the class's own grammar/vocabulary so the dialogue stays
+   * curriculum, not decoration. Every entry here answers the CLAUDE.md
+   * six questions (what's learned, why now, who owns the moment, which
+   * world, what real progress triggers it, what changes after) via its
+   * `classContext` + `neverUseAs` fields.
+   *
+   * All of them live inside the single world Book 1 occupies —
+   * "vocabulary-market" — so this is additive content inside an existing
+   * world, not a new world or a change to the trio's core relationships.
+   * Full visual direction is intentionally left undecided here (draft
+   * approved for NAMES/ROLES only, Re 4 Nov 2026) — pin down `visual` per
+   * character before any of them appear in production artwork, not just
+   * model-lesson mockups.
+   */
+  supportingKoreanCast: {
+    book1: [
+      {
+        id: "classmate-jihoon",
+        name: { en: "Jihoon", ar: "جي هون", ko: "지훈" },
+        role: "passerby_who_gives_directions",
+        classContext: "class_3_places_and_direction_verbs",
+        neverUseAs: ["teacher", "romantic_interest"],
+      },
+      {
+        id: "market-vendor-park",
+        name: { en: "Ms. Park", ar: "الآنسة بارك", ko: "박 아주머니" },
+        role: "vocabulary_market_vendor",
+        classContext: "classes_7_8_numbers_prices_shopping",
+        neverUseAs: ["teacher", "romantic_interest"],
+      },
+      {
+        id: "info-desk-clerk-kim",
+        name: { en: "Mr. Kim", ar: "السيد كيم", ko: "김 선생님" },
+        role: "information_desk_clerk",
+        classContext: "class_9_formal_speech",
+        neverUseAs: [
+          "teacher",
+          "romantic_interest",
+          "replacement_for_real_teacher_trust",
+        ],
+      },
+      {
+        id: "cafe-barista-yuna",
+        name: { en: "Yuna", ar: "يونا", ko: "유나" },
+        role: "cafe_barista",
+        classContext: "class_10_polite_requests",
+        note: "Previews the conversation-cafe world without unlocking it early.",
+        neverUseAs: ["teacher", "romantic_interest"],
+      },
+      {
+        id: "classmate-seoyeon",
+        name: { en: "Seoyeon", ar: "سيو يون", ko: "서연" },
+        role: "classmate_making_plans",
+        classContext: "class_16_time_and_date",
+        neverUseAs: ["teacher", "romantic_interest"],
+      },
+      {
+        id: "new-friend-taeyang",
+        name: { en: "Taeyang", ar: "تايانغ", ko: "태양" },
+        role: "friend_proposing_a_weekend_trip",
+        classContext: "classes_19_20_21_suggestions_plans_reasons",
+        neverUseAs: ["teacher", "romantic_interest"],
+      },
+      {
+        id: "neighbor-hana",
+        name: { en: "Hana", ar: "هَنا", ko: "하나" },
+        role: "neighbor_or_housemate",
+        classContext: "classes_22_23_requests_and_ability",
+        neverUseAs: ["teacher", "romantic_interest"],
+      },
+    ],
+    source: "Re, 4 Nov 2026 — claude/klovers-book1-model-lessons-plan.md",
   },
 
   characterRelationshipRules: {

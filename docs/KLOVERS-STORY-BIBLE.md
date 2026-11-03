@@ -90,6 +90,31 @@ spellings in every language.
 | Lina (female learner) | curiosity, culture, real-life context, stories, emotional warmth | — |
 | Minsu (Korean friend) | native-speaker friend, conversation partner, everyday Korean | a teacher, a romantic interest |
 
+### New Korean people over time (Book 1)
+
+Re's decision, 4 Nov 2026: the story must keep introducing new Korean people
+as Book 1's 24 classes move forward, not just Minsu repeated every lesson.
+Each one follows the exact Minsu precedent — a native speaker tied to that
+class's own grammar/vocabulary, never a teacher, never a romantic interest —
+and all of them live inside Book 1's one world, Vocabulary Market, so this is
+additive content, not a new world or a change to the trio's relationships.
+Names/roles are approved as a draft (`supportingKoreanCast.book1` in the code
+canon); full visual direction is still undecided and must be pinned down
+before any of them appear in production artwork, not just model-lesson
+mockups.
+
+| Class | New character | Role |
+|---|---|---|
+| 3 — places & direction verbs | Jihoon (지훈) | passerby who gives directions |
+| 7–8 — numbers, prices, shopping | Ms. Park (박 아주머니) | Vocabulary Market vendor |
+| 9 — formal speech | Mr. Kim (김 선생님) | information-desk clerk (never a teacher) |
+| 10 — polite requests | Yuna (유나) | café barista (previews Conversation Café without unlocking it early) |
+| 16 — time & date | Seoyeon (서연) | classmate making plans |
+| 19–21 — suggestions, plans, reasons | Taeyang (태양) | friend proposing a weekend trip |
+| 22–23 — requests, ability | Hana (하나) | neighbor / housemate |
+
+Full detail: `claude/klovers-book1-model-lessons-plan.md` (Claude Project docs).
+
 ## 5. Current worlds (in unlock order)
 
 1. **Hangul Village** — the Korean writing/sound system. Lead: male learner +
