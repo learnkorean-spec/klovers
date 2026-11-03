@@ -4,7 +4,15 @@
 //   Navigation (HTML)             → Network-First with offline fallback
 //   Supabase API / edge functions → Network-Only (never cache auth/data)
 
-const CACHE_NAME = "klovers-v2";
+// v4 (3 Nov 2026): images below were pure Cache-First, matched by URL only.
+// Every further cover edit after the v2->v3 bump (same fix, same day) went
+// stale again for anyone who had already loaded the old file under v3 -
+// bumping CACHE_NAME only flushes what was already cached, it does nothing
+// for the NEXT edit to a file whose URL does not change (which is every
+// cover: cover_b2.jpg stays cover_b2.jpg forever). Section 3 below now does
+// stale-while-revalidate instead, so this bump is the last one that should
+// ever be needed for an image content change - see the note there.
+const CACHE_NAME = "klovers-v4";
 const OFFLINE_URL = "/";
 
 // Assets to pre-cache on install (shell)
@@ -91,7 +99,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 3. Images → Cache-First with 7-day expiry (simple size limit)
+  // 3. Images -> Stale-While-Revalidate. Serves the cached copy instantly
+  // (so repeat views stay fast/offline-friendly) but ALWAYS fires a network
+  // fetch in parallel to refresh the cache for the next load. Plain
+  // Cache-First here meant every cover-photo edit needed a manual CACHE_NAME
+  // bump to ever reach a visitor who had already loaded the old file - and
+  // the bump only fixes files touched before it, not the next edit, which is
+  // exactly what happened twice in one day (3 Nov 2026) to the same book
+  // covers. With SWR, a visitor sees the stale image at most once more after
+  // a cover changes, then the background refresh has it cached fresh.
   if (
     request.destination === "image" ||
     url.pathname.endsWith(".jpg") ||
@@ -102,16 +118,18 @@ self.addEventListener("fetch", (event) => {
     url.pathname.endsWith(".avif")
   ) {
     event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request).then((response) => {
-            if (response.ok) {
-              const clone = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-            }
-            return response;
-          })
+      caches.open(CACHE_NAME).then((cache) =>
+        cache.match(request).then((cached) => {
+          const network = fetch(request)
+            .then((response) => {
+              if (response.ok) {
+                cache.put(request, response.clone());
+              }
+              return response;
+            })
+            .catch(() => cached || Response.error());
+          return cached || network;
+        })
       )
     );
     return;

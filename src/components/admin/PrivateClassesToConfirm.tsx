@@ -17,6 +17,7 @@ import { Check, CalendarCheck, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UnreviewedBadge } from "@/components/admin/UnreviewedBadge";
+import { TelegramClaimBadge, TelegramQuickConfirmButton } from "@/components/admin/TelegramClaimBadge";
 import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
 import { formatClassRange, formatSessionDate, type MyStudentWithClasses } from "@/types/students";
 
@@ -69,9 +70,15 @@ const PrivateClassesToConfirm = ({
                   start date -- the warning shows up here, before the click,
                   not only after opening the bundle. */}
               {bundle && bundle.coverage_start_confirmed_at === null && <UnreviewedBadge />}
+              <TelegramClaimBadge scheduledRow={occ.scheduledRow} />
             </span>
             {bundle ? (
               <span className="flex gap-1">
+                <TelegramQuickConfirmButton
+                  scheduledRow={occ.scheduledRow}
+                  disabled={confirmSessions.isPending}
+                  onConfirm={(outcome) => confirmOne(student.id, occ, outcome)}
+                />
                 <Button
                   size="sm" variant="outline"
                   disabled={confirmSessions.isPending}

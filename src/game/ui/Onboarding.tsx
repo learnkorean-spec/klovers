@@ -276,16 +276,16 @@ export function LettersChip({ lang, letters, found }: { lang: WorldLang; letters
   const c = WORLD_COPY[lang].found;
   const n = letters.filter((l) => found.includes(l)).length;
   return (
-    <div role="status" aria-label={`${c.lettersLabel} ${n}/${letters.length}`} className="flex items-center gap-2 rounded-full bg-charcoal/85 px-3 py-1.5 text-ivory">
-      <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ivory/65 max-sm:hidden">{c.lettersLabel}</span>
-      <span className="flex items-center gap-1.5" dir="ltr">
+    <div role="status" aria-label={`${c.lettersLabel} ${n}/${letters.length}`} className="flex items-center gap-2 rounded-full bg-charcoal/85 px-3 py-1.5 text-ivory [@media(max-height:500px)]:px-2.5 [@media(max-height:500px)]:py-1">
+      <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-ivory/65 max-sm:hidden [@media(max-height:500px)]:hidden">{c.lettersLabel}</span>
+      <span className="flex items-center gap-1.5 [@media(max-height:500px)]:gap-1" dir="ltr">
         {letters.map((l) => {
           const got = found.includes(l);
           return (
             <span
               key={l}
               lang="ko" dir="ltr"
-              className={`flex h-5 w-5 items-center justify-center rounded-full border font-ko text-[11px] font-bold sm:h-6 sm:w-6 sm:text-xs ${got ? "border-klovers-yellow bg-klovers-yellow text-charcoal" : "border-ivory/40 text-transparent"}`}
+              className={`flex h-5 w-5 items-center justify-center rounded-full border font-ko text-[11px] font-bold sm:h-6 sm:w-6 sm:text-xs [@media(max-height:500px)]:h-[18px] [@media(max-height:500px)]:w-[18px] [@media(max-height:500px)]:text-[10px] ${got ? "border-klovers-yellow bg-klovers-yellow text-charcoal" : "border-ivory/40 text-transparent"}`}
             >
               {got ? l : "·"}
             </span>

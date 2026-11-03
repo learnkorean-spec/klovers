@@ -13,7 +13,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { BookOpen, Plus, Trash2, Search, Clock, CheckCircle2, Lock, Download, ExternalLink } from "lucide-react";
+import { BookOpen, Plus, Trash2, Search, Clock, CheckCircle2, Lock, Download, ExternalLink, Upload, Loader2 } from "lucide-react";
 import { BOOKS, BOOK_COVERS, type BookId } from "@/constants/books";
 
 /**
@@ -44,9 +44,9 @@ const SHELVES: { id: Shelf; title: string; note: string }[] = [
 ];
 
 /** Public PDFs on the site itself (not in book_assignments). */
-const PUBLIC_FILES: { href: string; title: string; lang: "ar" | "en"; note: string }[] = [
-  { href: "/hangul-starter-ar.pdf", title: "Hangul starter sheet (Arabic)", lang: "ar", note: "Public download on /hangul-starter · 5 pages" },
-  { href: "/hangul-starter-en.pdf", title: "Hangul starter sheet (English)", lang: "en", note: "Public download on /hangul-starter · 5 pages" },
+const PUBLIC_FILES: { href: string; title: string; lang: "ar" | "en"; note: string; cover: string }[] = [
+  { href: "/hangul-starter-ar.pdf", title: "Hangul starter sheet (Arabic)", lang: "ar", note: "Public download on /hangul-starter · 5 pages", cover: "/picture-library/scenes/cover_hangul_starter.jpg" },
+  { href: "/hangul-starter-en.pdf", title: "Hangul starter sheet (English)", lang: "en", note: "Public download on /hangul-starter · 5 pages", cover: "/picture-library/scenes/cover_hangul_starter_en.jpg" },
 ];
 
 interface ShopListing { bookId: string | null; price: { amount: number; currency: string } }
@@ -159,6 +159,7 @@ const BookAssignmentManager = () => {
   const BOOK_ID = bookId;
   const BOOK = BOOKS[bookId];
   const [filesInStorage, setFilesInStorage] = useState<Set<string> | null>(null);
+  const [uploadingId, setUploadingId] = useState<BookId | null>(null);
   const [shop, setShop] = useState<ShopListing[] | null>(null);
   // Cluby's gift pop-up (30 Sep 2026): how many saw it, took the book, downloaded it.
   const [gift, setGift] = useState<{ shown: number; taps: number; claimed: number; downloads: number; people: number } | null>(null);
@@ -230,6 +231,38 @@ const BookAssignmentManager = () => {
       return;
     }
     window.location.assign(data.signedUrl);
+  };
+
+  /** Same signed URL as downloadPdf, but without forcing a download - opens
+   * the PDF inline in a new tab so Re can read it without saving a file. */
+  const openPdf = async (id: BookId) => {
+    const book = BOOKS[id];
+    const { data, error } = await supabase.storage
+      .from("student-materials")
+      .createSignedUrl(book.path, 60 * 60);
+    if (error || !data?.signedUrl) {
+      toast({ title: "Could not prepare the PDF", description: error?.message, variant: "destructive" });
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener");
+  };
+
+  /** Admins can now upload/replace a book's PDF straight from this screen
+   * (migration 20261102184900 added the INSERT/UPDATE storage policies this
+   * needs - previously only the Supabase dashboard itself could write here). */
+  const uploadPdf = async (id: BookId, file: File) => {
+    const book = BOOKS[id];
+    setUploadingId(id);
+    const { error } = await supabase.storage
+      .from("student-materials")
+      .upload(book.path, file, { upsert: true, contentType: "application/pdf" });
+    setUploadingId(null);
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Uploaded", description: book.fileName });
+    setFilesInStorage(prev => new Set(prev ? [...prev, book.path] : [book.path]));
   };
 
   const handleAssign = async () => {
@@ -339,8 +372,29 @@ const BookAssignmentManager = () => {
                               {selected ? "Selected" : "Select"}
                             </Button>
                             <Button variant="outline" size="sm" className="h-6 px-2 text-[11px] gap-1"
+                              disabled={hasFile === false} onClick={() => openPdf(id)}>
+                              <ExternalLink className="h-3 w-3" /> Open
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-6 px-2 text-[11px] gap-1"
                               disabled={hasFile === false} onClick={() => downloadPdf(id)}>
                               <Download className="h-3 w-3" /> PDF
+                            </Button>
+                            <Button variant="outline" size="sm"
+                              className={`h-6 px-2 text-[11px] gap-1 ${uploadingId === id ? "pointer-events-none opacity-60" : ""}`}
+                              asChild>
+                              <label>
+                                {uploadingId === id
+                                  ? <Loader2 className="h-3 w-3 animate-spin" />
+                                  : <Upload className="h-3 w-3" />}
+                                {hasFile ? "Replace" : "Upload"}
+                                <input type="file" accept="application/pdf" className="hidden"
+                                  disabled={uploadingId === id}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    e.target.value = "";
+                                    if (file) uploadPdf(id, file);
+                                  }} />
+                              </label>
                             </Button>
                           </div>
                         </div>
@@ -351,7 +405,8 @@ const BookAssignmentManager = () => {
                 {shelf.id === "free" && PUBLIC_FILES.map(f => (
                   <Card key={f.href}>
                     <CardContent className="p-3 flex gap-3">
-                      <div className="h-[78px] w-[60px] rounded bg-klovers-yellow text-charcoal shrink-0 flex items-center justify-center text-lg font-bold" aria-hidden="true">한</div>
+                      <img src={f.cover} alt="" width={60} height={78} loading="lazy"
+                        className="h-[78px] w-[60px] rounded object-cover shrink-0 bg-muted" />
                       <div className="min-w-0 flex-1 space-y-1.5">
                         <div className="text-xs font-semibold leading-snug">{f.title}</div>
                         <div className="text-[11px] text-muted-foreground">{f.note}</div>

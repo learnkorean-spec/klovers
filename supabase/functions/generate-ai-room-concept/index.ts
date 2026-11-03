@@ -14,6 +14,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,6 +83,52 @@ const VARIANTS: Variant[] = [
   { label: "B", angle: "a bright, airy, daylight version of the scene with more open space" },
 ];
 
+// --- Book Cover Batch mode -------------------------------------------------
+//
+// A second entry point into the same generator: instead of one theme -> two
+// 3D-room-design variants, this takes a LIST of themes and renders each as a
+// single clean, text-free portrait photo meant to sit behind a book title
+// (trial guide, Hangul A0, conversation-cafe books, etc). Reuses the exact
+// same character-fidelity machinery (reference images + CHARACTER_DESCRIPTIONS
+// + KLOVERS_STYLE) so cover photos stay visually consistent with the room
+// concepts and with the site's existing character art.
+//
+// Per Re's standing request (2 Nov 2026): book-cover ideas should keep
+// introducing NEW supporting people into the conversations/scenes, not just
+// recycle Adam + Lina every time, so each batch item can carry an optional
+// `extraCharacter` describing a new, original side character (a vendor, a
+// teacher, a fellow student, ...). These new people are NOT drawn from any
+// reference image (none exists yet) — Muse Image invents them fresh per the
+// instruction below, consistently "a different-looking Korean person" per
+// the KLOVERS World canon goal that every background person looks distinct
+// and Korean. They are new ORIGINAL characters, not a change to Adam, Lina,
+// or Cluby's canon relationships/origin/responsibilities.
+const COVER_STYLE =
+  "This image is a BOOK COVER photo, not a 3D room design reference. It must " +
+  "be completely free of text: no letters, numbers, words, captions, labels, " +
+  "signage, logos, watermarks, subtitles, or writing of any kind anywhere in " +
+  "the image, on any surface, sign, book, or screen. Clean portrait photo " +
+  "composition, subject centered with soft, uncluttered empty margin at the " +
+  "very top and very bottom of the frame so a title can be overlaid " +
+  "afterward by a designer. Shallow depth of field, soft bokeh background.";
+
+function newCharacterInstruction(extraCharacter: string): string {
+  return (
+    `Also include, naturally part of the scene, ONE new original supporting ` +
+    `character who is NOT Adam, Lina, or Cluby and must not resemble them: ` +
+    `${extraCharacter}. Give this new person their own distinct Korean face, ` +
+    `hairstyle, and outfit, clearly different from Adam and Lina and from any ` +
+    `other person already in the scene — per KLOVERS World's standing rule ` +
+    `that every background person looks different and Korean. This is a new ` +
+    `side character for the scene, not a replacement for Adam, Lina, or Cluby.`
+  );
+}
+
+interface BatchItem {
+  theme: string;
+  extraCharacter?: string;
+}
+
 interface DesignBrief {
   roomName: string;
   vocabularyFocus: string[];
@@ -98,13 +145,14 @@ async function generateConceptImage(
   prompt: string,
   apiKey: string,
   useCharacters: boolean,
+  size: string = "1536x1024",
 ): Promise<string> {
   const endpoint = useCharacters ? "images/edits" : "images/generations";
   const body: Record<string, unknown> = {
     model: MUSE_IMAGE_MODEL,
     prompt,
     n: 1,
-    size: "1536x1024",
+    size,
     response_format: "b64_json",
     output_format: "png",
   };
@@ -187,12 +235,166 @@ async function generateDesignBrief(
   }
 }
 
+interface CoverResult {
+  theme: string;
+  extraCharacter?: string;
+  imageDataUrl: string;
+  designBrief: DesignBrief;
+  score: number;
+  passed: boolean;
+  attempts: number;
+  issues: string[];
+}
+
+interface CoverScore {
+  score: number;
+  issues: string[];
+}
+
+// Minimum score (out of 100) a cover must reach before it's handed back as
+// usable — Re's standing requirement (2 Nov 2026): "must pass 99 points of
+// 100 to rate covers". Scored by a vision-capable model (OpenAI gpt-4o-mini,
+// the same provider the rest of Klovers uses for text/image per
+// _shared/ai.ts) looking at the actual rendered image, not just the prompt —
+// Muse Spark is text-only and can't see what Muse Image actually drew.
+const PASS_SCORE = 99;
+const MAX_ATTEMPTS = 3;
+
+async function scoreCoverImage(
+  imageDataUrl: string,
+  theme: string,
+  extraCharacter: string | undefined,
+  openAiKey: string,
+): Promise<CoverScore> {
+  const rubric =
+    "You are a strict art director grading a KLOVERS book-cover photo out of " +
+    "100. KLOVERS is a Korean-learning brand for Arabic speakers; humans must " +
+    "be photorealistic (never illustrated/cartoon/anime), Cluby (if present) " +
+    "must be a mint-green furry creature with yellow horns and an ivory/yellow " +
+    "hanbok outfit (never a generic teddy bear or any other color). " +
+    "AUTOMATIC FAIL (score must be 30 or below) if the image contains ANY " +
+    "visible text, letters, numbers, words, captions, labels, signage, logos, " +
+    "watermarks, or writing of any kind, anywhere in the image, on any " +
+    "surface, sign, book, or screen. Otherwise score based on: character " +
+    "photorealism and fidelity, clean uncluttered premium Korean-storybook " +
+    "composition, portrait framing with usable empty margin at top and bottom " +
+    "for a title to be overlaid later, warm ivory/yellow/charcoal KLOVERS " +
+    "palette, and whether the scene matches the requested theme. " +
+    `Theme: "${theme}".` +
+    (extraCharacter
+      ? ` It should include a new supporting character: "${extraCharacter}".`
+      : "") +
+    ' Respond with ONLY a JSON object: {"score": <0-100 integer>, "issues": ' +
+    '[<short strings, empty array if none>]}. No markdown, no prose.';
+
+  const res = await fetch(AI_CHAT_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${openAiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: AI_TEXT_MODEL,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: rubric },
+            { type: "image_url", image_url: { url: imageDataUrl } },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Cover scoring error ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const content: string | undefined = data?.choices?.[0]?.message?.content;
+  if (!content) throw new Error("Cover scoring returned no content");
+
+  const cleaned = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  try {
+    const parsed = JSON.parse(cleaned) as { score: number; issues?: string[] };
+    return {
+      score: Math.max(0, Math.min(100, Math.round(parsed.score))),
+      issues: Array.isArray(parsed.issues) ? parsed.issues.slice(0, 10) : [],
+    };
+  } catch {
+    throw new Error(`Cover scoring returned non-JSON content: ${cleaned.slice(0, 200)}`);
+  }
+}
+
+async function generateBookCover(
+  item: BatchItem,
+  apiKey: string,
+  openAiKey: string,
+  useCharacters: boolean,
+): Promise<CoverResult> {
+  const theme = item.theme.trim().slice(0, 500);
+  const extraCharacter = item.extraCharacter?.trim().slice(0, 300);
+
+  // Design brief is informational only (vocab/props/palette for whoever
+  // builds the title/layout around the cover) and isn't affected by a
+  // regenerate, so it's only fetched once, not re-fetched per attempt.
+  const designBriefPromise = generateDesignBrief(
+    theme,
+    "a clean title-free book-cover portrait",
+    apiKey,
+  );
+
+  let best: { imageDataUrl: string; score: number; issues: string[] } | null = null;
+  let avoidNote = "";
+  let attemptsUsed = 0;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    attemptsUsed = attempt;
+    const imagePrompt = useCharacters
+      ? `Photo-edit the exact same real people and creature from the reference ` +
+        `images into a new book-cover scene — do not redraw or restyle them, ` +
+        `keep their real faces, real hair, real skin, real outfits, and Cluby's ` +
+        `exact plush look pixel-faithful to the references: ${theme}. Place them ` +
+        `naturally in the scene, doing something related to the theme. ` +
+        `${CHARACTER_DESCRIPTIONS} ${extraCharacter ? newCharacterInstruction(extraCharacter) + " " : ""}` +
+        `${KLOVERS_STYLE} ${COVER_STYLE}${avoidNote}`
+      : `A Korean-language-learning book cover scene: ${theme}. ` +
+        `${extraCharacter ? newCharacterInstruction(extraCharacter) + " " : ""}` +
+        `${KLOVERS_STYLE} ${COVER_STYLE}${avoidNote}`;
+
+    const imageDataUrl = await generateConceptImage(imagePrompt, apiKey, useCharacters, "1024x1536");
+    const { score, issues } = await scoreCoverImage(imageDataUrl, theme, extraCharacter, openAiKey);
+
+    if (!best || score > best.score) best = { imageDataUrl, score, issues };
+    if (score >= PASS_SCORE) break;
+
+    if (attempt < MAX_ATTEMPTS && issues.length > 0) {
+      avoidNote = ` IMPORTANT — fix these problems from the previous attempt: ${issues.join("; ")}.`;
+    }
+  }
+
+  const designBrief = await designBriefPromise;
+  return {
+    theme,
+    extraCharacter,
+    imageDataUrl: best!.imageDataUrl,
+    designBrief,
+    score: best!.score,
+    passed: best!.score >= PASS_SCORE,
+    attempts: attemptsUsed,
+    issues: best!.issues,
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const metaApiKey = getMetaApiKey();
     if (!metaApiKey) throw new Error("META_MODEL_API_KEY not configured");
+    const openAiKey = getAiKey();
 
     // Admin-only, same check as the other AI generator functions.
     const authHeader = req.headers.get("Authorization");
@@ -216,12 +418,48 @@ serve(async (req) => {
       .maybeSingle();
     if (!roleData) throw new Error("Unauthorized: admin only");
 
-    const { prompt, useCharacters: useCharactersRaw } = await req.json();
+    const body = await req.json();
+    const useCharacters = body.useCharacters !== false; // default true
+
+    // Batch mode: body.batch is a list of { theme, extraCharacter? } and the
+    // response is a list of single book-cover images (one per theme), not
+    // the two-variant room-design flow below. Used by the "Generate all book
+    // covers" button so a whole set of cover ideas can be produced in one
+    // request instead of one admin click per theme.
+    if (Array.isArray(body.batch)) {
+      if (!openAiKey) throw new Error("OPENAI_API_KEY not configured (needed to score covers)");
+
+      const items: BatchItem[] = body.batch
+        .filter((it: unknown): it is BatchItem =>
+          !!it && typeof (it as BatchItem).theme === "string" && (it as BatchItem).theme.trim().length > 0
+        )
+        // Re's standing cap (2 Nov 2026): 5 covers per batch, not 10+ — each
+        // one can now take up to MAX_ATTEMPTS generate+score round trips to
+        // clear the 99/100 bar, so a bigger batch risks the edge function's
+        // own execution time limit.
+        .slice(0, 5);
+      if (items.length === 0) throw new Error("batch must contain at least one { theme } item");
+
+      console.log(`Generating ${items.length} book-cover images, useCharacters:`, useCharacters);
+
+      const covers: CoverResult[] = [];
+      // Sequential on purpose (see generateBookCover) — a batch run in
+      // parallel would hammer the Meta Model API's rate limit, and each item
+      // already retries internally against the 99/100 score bar.
+      for (const item of items) {
+        covers.push(await generateBookCover(item, metaApiKey, openAiKey, useCharacters));
+      }
+
+      return new Response(JSON.stringify({ covers, passScore: PASS_SCORE }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { prompt } = body;
     if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
       throw new Error("prompt is required");
     }
     const theme = prompt.trim().slice(0, 500);
-    const useCharacters = useCharactersRaw !== false; // default true
 
     console.log("Generating AI room concepts for theme:", theme, "useCharacters:", useCharacters);
 

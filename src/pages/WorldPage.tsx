@@ -895,9 +895,10 @@ const WorldPage = () => {
                         <ObjectiveChip lang={lang} objective={objective} count={objectiveCount} justDone={justDone} nudge={nudge} />
                       )}
                       </div>
-                      {currentRoom === "hangul-village" && <LettersChip lang={lang} letters={VILLAGE_LETTERS} found={saved.letters} />}
+                      {/* The letters share the Missions row: on a landscape phone a row of its own ran across the street's first exhibit board. */}
                       <div className="flex flex-wrap items-center gap-2">
                         <MissionsButton lang={lang} onClick={() => setMissionsOpen(true)} />
+                        {currentRoom === "hangul-village" && <LettersChip lang={lang} letters={VILLAGE_LETTERS} found={saved.letters} />}
                         {!showControls && <HelpButton lang={lang} onClick={() => setHelpOpen(true)} />}
                       </div>
                     </div>

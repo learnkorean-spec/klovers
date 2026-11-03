@@ -1,9 +1,15 @@
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { InstancedBufferAttribute, Matrix4, MeshBasicMaterial, type InstancedMesh } from "three";
 import { MAT } from "../config/materials";
+import { REDUCED_MOTION } from "../systems/motion";
+import { useSignAtlas } from "./signTexture";
+import { UNIT } from "./Instanced";
 import { VILLAGE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import Batch from "./Batch";
 import { Kit, bed, cart, curvedRoofOn, grass, hanokHouse, hanokRoof, jitter, platform, pot, shrub, slabWalk, tree, wallRun, gatehouse, flowerBox } from "./kit";
-import { Gate, GateWall, Lamps, Signboard, Sway } from "./parts";
+import { Gate, GateWall, Lamps, Signboard, signGeometry } from "./parts";
 import { VILLAGE_LETTERS } from "../config/interactions";
 import { paintPaving, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY } from "./textures";
 import { curvedRoof } from "./shapes";
@@ -132,6 +138,80 @@ const VILLAGE_KIT: Kit = (() => {
   return k;
 })();
 
+/** Where a letter sign hangs: its bracket's end, the board 0.46 m below. */
+const SIGN_TEXTS = SIGNS.map((s) => s.letter);
+const _hang = new Matrix4();
+const _swing = new Matrix4();
+const _drop = new Matrix4().makeTranslation(0, -0.46, 0);
+const _edge = new Matrix4().makeScale(0.74, 0.74, 0.012);
+
+/**
+ * The letter signs on the doors as ONE instanced draw: every letter painted
+ * on one canvas (useSignAtlas), each board picking its cell in the shader,
+ * each still swinging on its own. The yellow edge on the next letters to
+ * find is a second small instanced draw. (They were one draw per sign —
+ * nine on the street — plus one per edge.)
+ */
+function LetterSigns({ next }: { next: string[] }) {
+  const { texture, cols, rows } = useSignAtlas(SIGN_TEXTS);
+  const material = useMemo(() => {
+    const m = new MeshBasicMaterial({ map: texture, toneMapped: false });
+    m.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader
+        .replace("#include <common>", "#include <common>\nattribute vec2 aCell;")
+        .replace("#include <uv_vertex>", `#include <uv_vertex>\nvMapUv = (vMapUv + vec2(aCell.x, ${rows.toFixed(1)} - 1.0 - aCell.y)) / vec2(${cols.toFixed(1)}, ${rows.toFixed(1)});`);
+    };
+    m.customProgramCacheKey = () => `klovers-sign-atlas-${cols}x${rows}`;
+    return m;
+  }, [texture, cols, rows]);
+  useEffect(() => () => material.dispose(), [material]);
+  const geometry = useMemo(() => {
+    const g = signGeometry(0.62, 0.62).clone();
+    const cell = new Float32Array(SIGNS.length * 2);
+    SIGNS.forEach((_, i) => {
+      cell[i * 2] = i % cols;
+      cell[i * 2 + 1] = Math.floor(i / cols);
+    });
+    g.setAttribute("aCell", new InstancedBufferAttribute(cell, 2));
+    return g;
+  }, [cols]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  const edgeIdx = useMemo(() => SIGNS.map((s, i) => (next.includes(s.letter) ? i : -1)).filter((i) => i >= 0), [next]);
+  const boards = useRef<InstancedMesh>(null);
+  const edges = useRef<InstancedMesh>(null);
+  const m = useMemo(() => new Matrix4(), []);
+  const place = (t: number) => {
+    const at = (i: number) => {
+      const s = SIGNS[i];
+      const a = REDUCED_MOTION ? 0 : Math.sin(t * (1.1 + (i % 3) * 0.17) + i * 1.7) * 0.045;
+      return m.copy(_hang.makeTranslation(s.x, 2.58, s.z)).multiply(_swing.makeRotationZ(a)).multiply(_drop);
+    };
+    if (boards.current) {
+      SIGNS.forEach((_, i) => boards.current?.setMatrixAt(i, at(i)));
+      boards.current.instanceMatrix.needsUpdate = true;
+    }
+    if (edges.current) {
+      edgeIdx.forEach((i, n) => edges.current?.setMatrixAt(n, at(i).multiply(_edge)));
+      edges.current.count = edgeIdx.length;
+      edges.current.instanceMatrix.needsUpdate = true;
+    }
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => place(0), [edgeIdx]);
+  useFrame(({ clock }) => {
+    if (!REDUCED_MOTION) place(clock.elapsedTime);
+  });
+  return (
+    <>
+      <instancedMesh ref={boards} args={[geometry, material, SIGNS.length]} castShadow frustumCulled={false} />
+      <instancedMesh ref={edges} args={[UNIT.box, EDGE_MAT, 2]} frustumCulled={false} dispose={null} />
+    </>
+  );
+}
+
+/** The thin yellow edge round a sign still to be found. */
+const EDGE_MAT = new MeshBasicMaterial({ color: PALETTE.yellow, toneMapped: false });
+
 function Well() {
   const { x, z } = VILLAGE.well;
   return (
@@ -192,22 +272,7 @@ export default function HangulVillage({ marketOpen, letters }: { marketOpen: boo
       <Well />
 
       {/* Hanging signboards, one letter per door, gently swaying. */}
-      {SIGNS.map((s, i) => (
-        <group key={`${s.x}${s.z}`} position={[s.x, 2.58, s.z]}>
-          <Sway amp={0.045} speed={1.1 + (i % 3) * 0.17} phase={i * 1.7} axis="z">
-            <group position={[0, -0.46, 0]}>
-              {nextLetters.includes(s.letter) && (
-                // A sign still to be discovered up close: a thin yellow edge.
-                <mesh position={[0, 0, 0]} scale={[0.74, 0.74, 0.012]}>
-                  <boxGeometry />
-                  <meshBasicMaterial color={PALETTE.yellow} toneMapped={false} />
-                </mesh>
-              )}
-              <Signboard text={s.letter} w={0.62} h={0.62} />
-            </group>
-          </Sway>
-        </group>
-      ))}
+      <LetterSigns next={nextLetters} />
 
       <group position={[0, 3.72, ARCH_Z]}>
         <Signboard text={VILLAGE.entranceSign} w={2.6} h={0.72} aspect={3.4} />

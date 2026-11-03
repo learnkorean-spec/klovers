@@ -529,8 +529,8 @@ function lookToward(bone: Bone, yaw: number, pitch: number) {
 /**
  * Lighter copies of each body (made by scripts/world-lod — geometry only,
  * same skin), worn by people who stand far from the camera: a light copy
- * (≈40–50% of the triangles) past 3.5 m on a phone / 10 m on a computer,
- * and a far copy (≈15%) past 9 m / 20 m, where a person is a few dozen
+ * (≈40–50% of the triangles) past 3 m on a phone / 10 m on a computer,
+ * and a far copy (≈15%) past 6 m / 20 m, where a person is a few dozen
  * pixels tall. A busy room drew ≈50k triangles per person whatever their size on
  * screen: 10 people were half a million triangles on a phone. Swapping the
  * geometry keeps the one skeleton, motion and clothes. Adam and Lina have
@@ -550,9 +550,14 @@ function lodFlag(): "all" | "far" | "off" | null {
  * the far copy. Phones sooner: on a phone screen the light copy cannot be
  * told from the full one past a few metres (compared side by side, 25 Oct
  * 2026), so only whoever stands right by the camera — someone being talked
- * to — wears the full one.
+ * to — wears the full one. The far copy from 6 m (was 9): compared at four
+ * times a phone's pixels in the café on 1 Nov 2026, a seated guest or Lina
+ * at 5–7 m looked the same in both bar a slightly blockier hairline, and a
+ * small room full of guests at that distance was ≈250k triangles of people.
  */
-const lodSteps = () => (isTouchFirst() ? [3.5, 9] : [10, 20]);
+const lodSteps = () => (isTouchFirst() ? [3, 6] : [10, 20]);
+/** Phones drop a person's lashes with the light copy; computers only with the far one. */
+const lashesGoEarly = typeof window !== "undefined" && isTouchFirst();
 
 const _cam = new Vector3();
 
@@ -580,16 +585,20 @@ function useLod(root: Group, model: string) {
     const farG = named(farOne);
     const out: { mesh: Mesh; geo: [BufferGeometry, BufferGeometry, BufferGeometry] }[] = [];
     const corneas: Mesh[] = [];
+    const smalls: Mesh[] = [];
     root.traverse((o) => {
       const m = o as Mesh;
-      if (m.name === "cornea") corneas.push(m);
+      // Lashes go with the eye highlights: a hair-thin line, and a draw call of their own per person.
+      if (m.name === "cornea" || /Eyelashes$/.test(m.name)) corneas.push(m);
+      // Belts, ties and collars are a few pixels on a far person: they go with the far copy.
+      if (/_(Belt|Tie|Collar)$/.test(m.name)) smalls.push(m);
       if (!(m as SkinnedMesh).isSkinnedMesh) return;
       const ok = (g?: BufferGeometry) => (g && g !== m.geometry && g.getAttribute("position")?.count ? g : undefined);
       const l = ok(lite.get(m.name));
       const f = ok(farG.get(m.name)) ?? l;
       if (l && f) out.push({ mesh: m, geo: [m.geometry, l, f] });
     });
-    return out.length ? out.map((s, i) => ({ ...s, corneas: i === 0 ? corneas : [] })) : [];
+    return out.length ? out.map((s, i) => ({ ...s, corneas: i === 0 ? corneas : [], smalls: i === 0 ? smalls : [] })) : [];
   }, [use, light, farOne, root]);
   const st = useMemo(() => ({ level: 0 as Level, first: true }), []);
   const steps = useMemo(lodSteps, []);
@@ -603,7 +612,9 @@ function useLod(root: Group, model: string) {
       camera.getWorldPosition(_cam);
       const d = _pos.distanceTo(_cam);
       // A metre of give either way: nobody flickers between two copies at the line.
-      const at = (step: number, level: Level) => (st.level >= level ? d > step - 1 : d > step + 1);
+      // On the first frame there is no copy to hold on to: plain thresholds
+      // (with the give, someone 3.7 m away kept the full copy for good).
+      const at = (step: number, level: Level) => (st.first ? d > step : st.level >= level ? d > step - 1 : d > step + 1);
       next = at(steps[1], 2) ? 2 : at(steps[0], 1) ? 1 : 0;
     }
     if (next === st.level && !st.first) return;
@@ -611,8 +622,10 @@ function useLod(root: Group, model: string) {
     st.first = false;
     for (const s of swaps) {
       s.mesh.geometry = s.geo[next];
-      // An eye's highlight is a pixel or less that far off: not worth its sphere.
-      for (const c of s.corneas) c.visible = next === 0;
+      // An eye's highlight (and its lashes) is a pixel or less that far off:
+      // not worth its own draw. On a computer the lashes stay until the far copy.
+      for (const c of s.corneas) c.visible = next === 0 || (!lashesGoEarly && next === 1 && c.name !== "cornea");
+      for (const c of s.smalls) c.visible = next < 2;
     }
   });
   return st;

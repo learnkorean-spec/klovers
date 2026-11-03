@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect, useCallback, useRef, memo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,6 +76,8 @@ const TYPE_META: Record<string, { label: string; variant: "default" | "secondary
   slot_confirmed: { label: "Slot confirmed", variant: "default" },
   waitlist: { label: "Waitlist", variant: "secondary" },
   alternative_slot: { label: "Alternative slot", variant: "outline" },
+  attendance_claim: { label: "Attendance claim", variant: "secondary" },
+  attendance_claim_negative: { label: "Attendance claim", variant: "outline" },
 };
 
 const typeLabel = (type: string) =>
@@ -97,6 +99,9 @@ const TypeIcon = ({ type }: { type: string }) => {
     case "slot_full":
     case "slot_confirmed":
       return <Users className={className} aria-hidden="true" />;
+    case "attendance_claim":
+    case "attendance_claim_negative":
+      return <CalendarDays className={className} aria-hidden="true" />;
     default:
       return <Wrench className={className} aria-hidden="true" />;
   }
@@ -308,6 +313,366 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
   );
 };
 
+/**
+ * Re, 2 Nov 2026: "when they confirm must be confirmed on dashboard, with
+ * adding a way that admin can edit and fix". A Telegram attendance claim
+ * (telegram_confirm_private_session / telegram_confirm_group_session) used
+ * to be nothing but this plain text line -- fixing it meant going to a
+ * different screen, finding the right student (or group) and the right
+ * session by hand. This panel, same pattern as SlotFullPanel above, finds
+ * the exact pending item from related_user_id and resolves it with one tap,
+ * right here.
+ *
+ * related_user_id is teacher_students.id for a private student or
+ * profiles.user_id for a group member -- two different id spaces, so which
+ * one it is gets settled by which table actually has a row for that id, not
+ * by the notification type (a negative claim and a positive one for the
+ * same kind of student share the same id space).
+ */
+interface AttendanceClaimPanelProps {
+  notification: Notification;
+  /**
+   * Fired once when there is nothing left to resolve for this
+   * related_user_id — either nothing was pending to begin with, or the last
+   * row here just got resolved. Only PendingAttendanceSection (the dedicated
+   * "clean list" view below) passes this; the plain feed usage leaves it
+   * unset and keeps showing its own "Already resolved" line instead.
+   */
+  onAllResolved?: () => void;
+  /**
+   * true when this panel is the whole card (PendingAttendanceSection), not a
+   * sub-panel hanging off a notification message above it — drops the
+   * divider/margin that assumed there was always something above.
+   */
+  standalone?: boolean;
+}
+
+interface PendingPrivateSession {
+  id: string;
+  session_date: string;
+  start_time: string;
+}
+
+interface PendingGroupAttendance {
+  session_id: string;
+  session_date: string | null;
+  group_name: string;
+}
+
+const AttendanceClaimPanel = ({ notification, onAllResolved, standalone }: AttendanceClaimPanelProps) => {
+  const uid = notification.related_user_id;
+  const [mode, setMode] = useState<"loading" | "private" | "group" | "none">("loading");
+  const [studentName, setStudentName] = useState("");
+  const [privateRows, setPrivateRows] = useState<PendingPrivateSession[]>([]);
+  const [groupRows, setGroupRows] = useState<PendingGroupAttendance[]>([]);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const resolvedRef = useRef(false);
+
+  const load = useCallback(async () => {
+    if (!uid) { setMode("none"); return; }
+
+    const { data: ts, error: tsError } = await supabase
+      .from("teacher_students")
+      .select("id, full_name")
+      .eq("id", uid)
+      .maybeSingle();
+    if (tsError) {
+      toast({ title: "Couldn't load this claim", description: tsError.message, variant: "destructive" });
+      setMode("none");
+      return;
+    }
+
+    if (ts) {
+      setStudentName(ts.full_name || "");
+      const { data: sessions, error: sessionsError } = await supabase
+        .from("student_class_sessions")
+        .select("id, session_date, start_time")
+        .eq("student_id", uid)
+        .eq("outcome", "scheduled")
+        .not("telegram_asked_at", "is", null)
+        .order("session_date", { ascending: false })
+        .limit(5);
+      if (sessionsError) {
+        toast({ title: "Couldn't load pending sessions", description: sessionsError.message, variant: "destructive" });
+        setMode("none");
+        return;
+      }
+      setPrivateRows((sessions as PendingPrivateSession[]) || []);
+      setMode("private");
+      return;
+    }
+
+    const { data: prof, error: profError } = await supabase
+      .from("profiles")
+      .select("user_id, name")
+      .eq("user_id", uid)
+      .maybeSingle();
+    if (profError) {
+      toast({ title: "Couldn't load this claim", description: profError.message, variant: "destructive" });
+      setMode("none");
+      return;
+    }
+
+    if (prof) {
+      setStudentName(prof.name || "");
+      const { data: pending, error: pendingError } = await supabase
+        .from("pkg_attendance")
+        .select("session_id")
+        .eq("user_id", uid)
+        .eq("admin_approved", false)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (pendingError) {
+        toast({ title: "Couldn't load pending attendance", description: pendingError.message, variant: "destructive" });
+        setMode("none");
+        return;
+      }
+
+      const sessionIds = (pending || []).map((p) => p.session_id);
+      if (sessionIds.length === 0) {
+        setGroupRows([]);
+        setMode("group");
+        return;
+      }
+
+      const { data: sessions, error: sessionsError } = await supabase
+        .from("pkg_group_sessions")
+        .select("id, session_date, group_id")
+        .in("id", sessionIds);
+      if (sessionsError) {
+        toast({ title: "Couldn't load group sessions", description: sessionsError.message, variant: "destructive" });
+        setMode("none");
+        return;
+      }
+
+      const groupIds = [...new Set((sessions || []).map((s) => s.group_id))];
+      const { data: groups, error: groupsError } = groupIds.length
+        ? await supabase.from("pkg_groups").select("id, name").in("id", groupIds)
+        : { data: [] as { id: string; name: string }[], error: null };
+      if (groupsError) {
+        toast({ title: "Couldn't load group names", description: groupsError.message, variant: "destructive" });
+        setMode("none");
+        return;
+      }
+
+      const groupNameById: Record<string, string> = {};
+      (groups || []).forEach((g) => { groupNameById[g.id] = g.name; });
+
+      const sessionById: Record<string, { session_date: string; group_id: string }> = {};
+      (sessions || []).forEach((s) => { sessionById[s.id] = s; });
+
+      setGroupRows(sessionIds.map((sid) => ({
+        session_id: sid,
+        session_date: sessionById[sid]?.session_date ?? null,
+        group_name: sessionById[sid] ? (groupNameById[sessionById[sid].group_id] || "") : "",
+      })));
+      setMode("group");
+      return;
+    }
+
+    setMode("none");
+  }, [uid]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Tell PendingAttendanceSection once this student/member has nothing left
+  // pending, so it can drop the card — checked after every load and after
+  // every resolve, exactly once.
+  useEffect(() => {
+    if (!onAllResolved || resolvedRef.current) return;
+    if (mode === "none") {
+      resolvedRef.current = true;
+      onAllResolved();
+    } else if (mode === "private" && privateRows.length === 0) {
+      resolvedRef.current = true;
+      onAllResolved();
+    } else if (mode === "group" && groupRows.length === 0) {
+      resolvedRef.current = true;
+      onAllResolved();
+    }
+  }, [mode, privateRows, groupRows, onAllResolved]);
+
+  const dateLabel = (d: string | null) =>
+    d ? new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "";
+
+  const resolvePrivate = async (sessionId: string, outcome: "attended" | "absent_excused" | "no_show_charged") => {
+    setBusyId(sessionId);
+    const counted = outcome === "attended" || outcome === "no_show_charged";
+    const { error } = await supabase
+      .from("student_class_sessions")
+      .update({ outcome, counted, confirmed_at: new Date().toISOString() })
+      .eq("id", sessionId);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setPrivateRows((prev) => prev.filter((r) => r.id !== sessionId));
+      toast({ title: "Attendance fixed ✓" });
+    }
+    setBusyId(null);
+  };
+
+  const resolveGroup = async (sessionId: string, status: "present" | "absent" | "excused") => {
+    if (!uid) return;
+    setBusyId(sessionId);
+    const { error } = await supabase
+      .from("pkg_attendance")
+      .update({ status, admin_approved: true })
+      .eq("session_id", sessionId)
+      .eq("user_id", uid);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setGroupRows((prev) => prev.filter((r) => r.session_id !== sessionId));
+      toast({ title: "Attendance fixed ✓" });
+    }
+    setBusyId(null);
+  };
+
+  if (mode === "loading" || mode === "none") return null;
+
+  const rows = mode === "private" ? privateRows : groupRows;
+  if (rows.length === 0) {
+    // In the dedicated section the whole card disappears instead (see
+    // onAllResolved above) — nothing to show here in that case.
+    if (onAllResolved) return null;
+    return (
+      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Check className="h-3.5 w-3.5" /> Already resolved.
+      </div>
+    );
+  }
+
+  return (
+    <div className={standalone ? "space-y-2" : "mt-3 border-t border-border pt-3 space-y-2"}>
+      {mode === "private" && privateRows.map((r) => (
+        <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 text-xs bg-muted/40 rounded px-3 py-2">
+          <span className="font-medium text-foreground">{studentName} — {dateLabel(r.session_date)}</span>
+          <div className="flex gap-1 flex-wrap">
+            <Button size="sm" className="h-7 text-xs" disabled={busyId === r.id} onClick={() => resolvePrivate(r.id, "attended")}>
+              Attended
+            </Button>
+            <Button size="sm" variant="outline" className="h-7 text-xs" disabled={busyId === r.id} onClick={() => resolvePrivate(r.id, "absent_excused")}>
+              Absent (no charge)
+            </Button>
+            <Button size="sm" variant="destructive" className="h-7 text-xs" disabled={busyId === r.id} onClick={() => resolvePrivate(r.id, "no_show_charged")}>
+              No-show (charge)
+            </Button>
+          </div>
+        </div>
+      ))}
+      {mode === "group" && groupRows.map((r) => (
+        <div key={r.session_id} className="flex flex-wrap items-center justify-between gap-2 text-xs bg-muted/40 rounded px-3 py-2">
+          <span className="font-medium text-foreground">
+            {studentName}{r.group_name && ` — ${r.group_name}`}{r.session_date && ` · ${dateLabel(r.session_date)}`}
+          </span>
+          <div className="flex gap-1 flex-wrap">
+            <Button size="sm" className="h-7 text-xs" disabled={busyId === r.session_id} onClick={() => resolveGroup(r.session_id, "present")}>
+              Present
+            </Button>
+            <Button size="sm" variant="outline" className="h-7 text-xs" disabled={busyId === r.session_id} onClick={() => resolveGroup(r.session_id, "excused")}>
+              Excused (no charge)
+            </Button>
+            <Button size="sm" variant="destructive" className="h-7 text-xs" disabled={busyId === r.session_id} onClick={() => resolveGroup(r.session_id, "absent")}>
+              Absent
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/**
+ * Re, 2 Nov 2026: "so clean on dashboard that it has only the classes they
+ * confirmed so i confirm?" -- AttendanceClaimPanel fixes a claim once you've
+ * found its notification, but that notification is buried in the general
+ * Updates feed among payments, signups, slot-full alerts, etc. This is the
+ * dedicated list: just the pending Telegram attendance claims, one card per
+ * student/member (not per notification -- a student can have several
+ * sessions queued up), nothing else on it. A card vanishes the moment that
+ * person has nothing left pending, whether resolved here or already handled
+ * elsewhere (GroupAttendanceManager, a direct session edit, etc.).
+ */
+interface PendingAttendanceGroup {
+  relatedUserId: string;
+  notificationIds: string[];
+}
+
+const PendingAttendanceSection = () => {
+  const [groups, setGroups] = useState<PendingAttendanceGroup[] | null>(null);
+
+  const load = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("admin_notifications")
+      .select("id, related_user_id")
+      .in("type", ["attendance_claim", "attendance_claim_negative"])
+      .eq("read", false)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      console.error("Failed to fetch pending attendance claims:", error);
+      setGroups([]);
+      return;
+    }
+
+    const byUser = new Map<string, string[]>();
+    for (const row of data || []) {
+      if (!row.related_user_id) continue; // older rows, before related_user_id existed
+      const ids = byUser.get(row.related_user_id) ?? [];
+      ids.push(row.id);
+      byUser.set(row.related_user_id, ids);
+    }
+    setGroups(Array.from(byUser.entries()).map(([relatedUserId, notificationIds]) => ({ relatedUserId, notificationIds })));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const dismiss = useCallback(async (group: PendingAttendanceGroup) => {
+    const { error } = await supabase
+      .from("admin_notifications")
+      .update({ read: true })
+      .in("id", group.notificationIds);
+    if (error) {
+      console.error("Failed to mark attendance claim notifications read:", error);
+    }
+    setGroups((prev) => (prev ?? []).filter((g) => g.relatedUserId !== group.relatedUserId));
+  }, []);
+
+  if (groups === null || groups.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+        <h4 className="text-sm font-semibold text-foreground">Pending attendance confirmations</h4>
+        <Badge variant="secondary" className="text-xs">{groups.length}</Badge>
+      </div>
+      <div className="space-y-2">
+        {groups.map((g) => (
+          <Card key={g.relatedUserId}>
+            <CardContent className="py-3 px-4">
+              <AttendanceClaimPanel
+                standalone
+                notification={{
+                  id: g.relatedUserId,
+                  message: "",
+                  type: "attendance_claim",
+                  category: "update",
+                  read: false,
+                  created_at: "",
+                  related_user_id: g.relatedUserId,
+                  related_group_id: null,
+                }}
+                onAllResolved={() => dismiss(g)}
+              />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const AdminNotifications = () => {
   const queryClient = useQueryClient();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -490,6 +855,11 @@ const AdminNotifications = () => {
         </div>
       </div>
 
+      {/* Always visible, independent of the Updates/System tab and the
+          unread/all filter below -- this is the clean, dedicated list Re
+          works through, not another thing to dig for inside the feed. */}
+      <PendingAttendanceSection />
+
       {/* Updates first, and open by default: the numbers from the site are what
           this screen is for. System is the technical drawer. */}
       <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/40 p-1">
@@ -532,6 +902,12 @@ const AdminNotifications = () => {
                         notification={n}
                         onGroupCreated={handleGroupCreated}
                       />
+                    )}
+
+                    {/* Telegram attendance claim (private or group): fix it
+                        right here instead of sending Re to another screen. */}
+                    {(n.type === "attendance_claim" || n.type === "attendance_claim_negative") && (
+                      <AttendanceClaimPanel notification={n} />
                     )}
 
                     {/* Show created group name badge if exists */}

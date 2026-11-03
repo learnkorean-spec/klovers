@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { BackSide, BufferAttribute, BufferGeometry, CanvasTexture, DoubleSide, type Group, LatheGeometry, MeshBasicMaterial, SRGBColorSpace, Vector2, type Material } from "three";
+import { BackSide, BoxGeometry, BufferAttribute, BufferGeometry, CanvasTexture, CylinderGeometry, DoubleSide, type Group, LatheGeometry, MeshBasicMaterial, SRGBColorSpace, Vector2, type Material } from "three";
 import { CAFE } from "../config/rooms";
 import { PALETTE } from "../config/world";
 import { GateWall, Signboard } from "./parts";
@@ -8,6 +8,7 @@ import { paintPlanks, useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKU
 import { MAT, std } from "../config/materials";
 import { FLOOR_GRID } from "../config/world";
 import Batch from "./Batch";
+import Merged, { Pieces } from "./Merged";
 import { Kit, jitter, type MatKey } from "./kit";
 import { pickQuality } from "../systems/quality";
 
@@ -451,84 +452,76 @@ function Cake({ x, z }: { x: number; z: number }) {
   );
 }
 
-function Table({ x, z, words }: { x: number; z: number; words: string[] }) {
+/** What is on a table: a drink each once the word is known, and a cake between them. */
+function TableTop({ x, z, words }: { x: number; z: number; words: string[] }) {
   const coffee = words.includes("커피");
   const tea = words.includes("녹차");
   const cake = words.includes("케이크");
   return (
     <group position={[x, 0, z]}>
-      {/* The top: grained warm wood with a darker edge band, smooth-round. */}
-      <mesh castShadow receiveShadow position={[0, 0.745, 0]}>
-        <cylinderGeometry args={[0.5, 0.49, 0.04, 48]} />
-        <primitive object={MAT.woodWarm} attach="material" />
-      </mesh>
-      <mesh castShadow position={[0, 0.715, 0]}>
-        <cylinderGeometry args={[0.49, 0.47, 0.025, 48]} />
-        <primitive object={MAT.woodDark} attach="material" />
-      </mesh>
-      {/* One pedestal on a round iron foot. */}
-      <mesh castShadow position={[0, 0.36, 0]}>
-        <cylinderGeometry args={[0.04, 0.05, 0.68, 16]} />
-        <primitive object={MAT.metal} attach="material" />
-      </mesh>
-      <mesh castShadow receiveShadow position={[0, 0.02, 0]}>
-        <cylinderGeometry args={[0.24, 0.27, 0.04, 32]} />
-        <primitive object={MAT.metal} attach="material" />
-      </mesh>
-      {/* Two places at the table: a drink each, and a cake between them. */}
       {(coffee || tea) && <Cup x={-0.24} z={0.05} tea={!coffee} />}
       {(coffee || tea) && <Cup x={0.24} z={-0.05} tea={tea} />}
       {cake && <Cake x={0} z={0.18} />}
-      {[-1, 1].map((side) => (
-        <CafeChair key={side} side={side as -1 | 1} cushion={CUSHIONS[(Math.round(x * 3 + z * 7) + 40) % CUSHIONS.length]} />
-      ))}
     </group>
   );
 }
 
 const CUSHIONS = [MAT.clothSage, MAT.clothRed, MAT.clothBlue, MAT.fabric];
 
+/** The furniture's shapes, made once and shared by every table and chair. */
+const FURNITURE_GEO = {
+  top: new CylinderGeometry(0.5, 0.49, 0.04, 48),
+  band: new CylinderGeometry(0.49, 0.47, 0.025, 48),
+  pedestal: new CylinderGeometry(0.04, 0.05, 0.68, 16),
+  foot: new CylinderGeometry(0.24, 0.27, 0.04, 32),
+  legFront: new CylinderGeometry(0.018, 0.024, 0.44, 10),
+  legRear: new CylinderGeometry(0.018, 0.024, 0.94, 10),
+  seat: new BoxGeometry(0.42, 0.04, 0.42),
+  cushion: new BoxGeometry(0.38, 0.035, 0.38),
+  rail: new BoxGeometry(0.035, 0.08, 0.42),
+  slat: new BoxGeometry(0.022, 0.36, 0.045),
+};
+
 /**
  * A café chair: round tapered legs, a wooden seat with a cloth cushion, and
  * a back of three slats under a top rail (the back stands on the far side
  * from the table).
  */
-function CafeChair({ side, cushion }: { side: -1 | 1; cushion: Material }) {
+function cafeChair(k: Pieces, side: -1 | 1, cushion: Material): void {
+  const g = FURNITURE_GEO;
   const back = side * 0.19;
-  return (
-    <group position={[side * 0.82, 0, 0]}>
-      {[-1, 1].flatMap((lx) =>
-        [-1, 1].map((lz) => {
-          const rear = lx === side;
-          return (
-            <mesh key={`${lx}${lz}`} castShadow position={[lx * 0.17, rear ? 0.47 : 0.22, lz * 0.17]}>
-              <cylinderGeometry args={[0.018, 0.024, rear ? 0.94 : 0.44, 10]} />
-              <primitive object={MAT.woodDark} attach="material" />
-            </mesh>
-          );
-        }),
-      )}
-      <mesh castShadow receiveShadow position={[0, 0.455, 0]}>
-        <boxGeometry args={[0.42, 0.04, 0.42]} />
-        <primitive object={MAT.woodDark} attach="material" />
-      </mesh>
-      <mesh castShadow receiveShadow position={[-side * 0.01, 0.49, 0]}>
-        <boxGeometry args={[0.38, 0.035, 0.38]} />
-        <primitive object={cushion} attach="material" />
-      </mesh>
-      {/* Back: a curved-feel top rail and three slats. */}
-      <mesh castShadow position={[back, 0.9, 0]}>
-        <boxGeometry args={[0.035, 0.08, 0.42]} />
-        <primitive object={MAT.woodDark} attach="material" />
-      </mesh>
-      {[-0.11, 0, 0.11].map((zz) => (
-        <mesh key={zz} castShadow position={[back, 0.69, zz]}>
-          <boxGeometry args={[0.022, 0.36, 0.045]} />
-          <primitive object={MAT.woodDark} attach="material" />
-        </mesh>
-      ))}
-    </group>
-  );
+  k.at({ p: [side * 0.82, 0, 0] }, () => {
+    for (const lx of [-1, 1])
+      for (const lz of [-1, 1]) {
+        const rear = lx === side;
+        k.add({ geo: rear ? g.legRear : g.legFront, mat: MAT.woodDark, p: [lx * 0.17, rear ? 0.47 : 0.22, lz * 0.17] });
+      }
+    k.add({ geo: g.seat, mat: MAT.woodDark, p: [0, 0.455, 0] });
+    k.add({ geo: g.cushion, mat: cushion, p: [-side * 0.01, 0.49, 0] });
+    // Back: a curved-feel top rail and three slats.
+    k.add({ geo: g.rail, mat: MAT.woodDark, p: [back, 0.9, 0] });
+    for (const zz of [-0.11, 0, 0.11]) k.add({ geo: g.slat, mat: MAT.woodDark, p: [back, 0.69, zz] });
+  });
+}
+
+/**
+ * Four tables for two: a grained warm-wood top with a darker edge band on
+ * one pedestal and a round iron foot, a chair either side — all one mesh
+ * per finish (Merged.tsx).
+ */
+function furniture(): Pieces {
+  const k = new Pieces();
+  const g = FURNITURE_GEO;
+  for (const t of CAFE.tables) {
+    k.at({ p: [t.x, 0, t.z] }, () => {
+      k.add({ geo: g.top, mat: MAT.woodWarm, p: [0, 0.745, 0] });
+      k.add({ geo: g.band, mat: MAT.woodDark, p: [0, 0.715, 0] });
+      k.add({ geo: g.pedestal, mat: MAT.metal, p: [0, 0.36, 0] });
+      k.add({ geo: g.foot, mat: MAT.metal, p: [0, 0.02, 0] });
+      for (const side of [-1, 1] as const) cafeChair(k, side, CUSHIONS[(Math.round(t.x * 3 + t.z * 7) + 40) % CUSHIONS.length]);
+    });
+  }
+  return k;
 }
 
 /**
@@ -658,8 +651,9 @@ export default function ConversationCafe({ words = [] }: { words?: string[] }) {
       <group position={[-4.9, 1.75, -HD + 0.03]}>
         <Signboard text={CAFE.menu} w={1.8} h={1.3} aspect={1.4} />
       </group>
+      <Merged build={furniture} castShadow receiveShadow />
       {CAFE.tables.map((t) => (
-        <Table key={`${t.x}${t.z}`} x={t.x} z={t.z} words={words} />
+        <TableTop key={`${t.x}${t.z}`} x={t.x} z={t.z} words={words} />
       ))}
       <Ceiling />
       <BeamsAndLamps />

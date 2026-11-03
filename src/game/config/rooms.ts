@@ -871,6 +871,11 @@ export const NAMSAN = {
   bench: { x: -8.6, z: 0.2, w: 0.7, d: 2.0 },
   busStop: { x: 8.4, z: 6.4 },
   pines: [{ x: -9, z: -6.6, s: 1.2 }, { x: 9.1, z: -6.8, s: 1.1 }, { x: -9.2, z: 5.6, s: 1.0 }],
+  /** Planting beds along the base building's stone wings (x, z, w, d). */
+  planters: [
+    { x: -6.75, z: -7.35, w: 1.3, d: 0.9 },
+    { x: 6.0, z: -7.35, w: 2.6, d: 0.9 },
+  ],
   sign: "남산서울타워",
 } as const;
 
@@ -885,6 +890,7 @@ const NAMSAN_ROOM: RoomLayout = {
     box(NAMSAN.bench.x, NAMSAN.bench.z, NAMSAN.bench.w, NAMSAN.bench.d),
     box(NAMSAN.busStop.x, NAMSAN.busStop.z + 0.3, 1.4, 0.5),
     ...NAMSAN.pines.map((p) => box(p.x, p.z, 0.5, 0.5)),
+    ...NAMSAN.planters.map((p) => box(p.x, p.z, p.w, p.d)),
     box(NAMSAN_FRIEND.x, NAMSAN_FRIEND.z, 0.6, 0.6),
     ...people("seoul-namsan"),
   ],

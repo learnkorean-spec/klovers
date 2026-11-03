@@ -190,6 +190,42 @@ function hedgeBlock(phase = 0): BufferGeometry {
  * lit as one soft mass while its outline stays broken — a flowering branch,
  * not cotton candy. Fits a unit box (radius 0.5).
  */
+/**
+ * Drops the faces of a clump's knot that lie wholly inside another knot
+ * (every corner well within that knot's smallest surface radius): they can
+ * never be seen, only drawn. `inner` is that smallest radius as a share of
+ * the knot's nominal one (its ripple and any flattening taken off).
+ */
+function cullBuried(parts: BufferGeometry[], knots: [number, number, number, number][], inner: number): void {
+  const p = new Vector3();
+  const buried = (i: number) => {
+    for (let j = 0; j < knots.length; j++) {
+      if (j === i) continue;
+      const [x, y, z, r] = knots[j];
+      if ((p.x - x) ** 2 + (p.y - y) ** 2 + (p.z - z) ** 2 < (r * inner) ** 2) return true;
+    }
+    return false;
+  };
+  parts.forEach((g, i) => {
+    const pos = g.getAttribute("position");
+    const idx = g.getIndex();
+    if (!idx) return;
+    const hidden = new Uint8Array(pos.count);
+    for (let v = 0; v < pos.count; v++) {
+      p.fromBufferAttribute(pos, v);
+      hidden[v] = buried(i) ? 1 : 0;
+    }
+    const keep: number[] = [];
+    for (let t = 0; t < idx.count; t += 3) {
+      const a = idx.getX(t);
+      const b = idx.getX(t + 1);
+      const c = idx.getX(t + 2);
+      if (!(hidden[a] && hidden[b] && hidden[c])) keep.push(a, b, c);
+    }
+    g.setIndex(keep);
+  });
+}
+
 function blossomClump(detail: number, variant: number, n: number): BufferGeometry {
   const parts: BufferGeometry[] = [];
   const knots: [number, number, number, number][] = [[0, 0.02, 0, 0.22]];
@@ -226,6 +262,7 @@ function blossomClump(detail: number, variant: number, n: number): BufferGeometr
     }
     parts.push(g);
   }
+  cullBuried(parts, knots, 0.74);
   const merged = mergeGeometries(parts, false);
   parts.forEach((g) => g.dispose());
   return merged ?? lumpyBall(detail, 0.24);
@@ -275,6 +312,7 @@ function farCrown(variant: number, detail = 1): BufferGeometry {
     }
     parts.push(g);
   }
+  cullBuried(parts, knots, 0.68);
   const merged = mergeGeometries(parts, false);
   parts.forEach((g) => g.dispose());
   return merged ?? lumpyBall(1, 0.12);

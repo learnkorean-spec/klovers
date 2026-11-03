@@ -1,0 +1,22 @@
+-- Re, 2 Nov 2026: "why didn't Solafa get the before-class message today?"
+--
+-- Root cause: Solafa and Lamar's previous bundle ran out and auto-renewed
+-- into a new active bundle at 10:23 UTC today -- mid-morning. But
+-- fn_generate_scheduled_sessions(), the job that materialises upcoming
+-- `scheduled` placeholder rows in student_class_sessions from a student's
+-- weekly classes (the rows the Telegram reminder/attendance-ask candidates
+-- functions read, and the rows My Students' confirm strip is built from),
+-- only ran WEEKLY (Monday 02:00 UTC) -- and it had already run for this
+-- week, hours before the new bundle existed. So no `scheduled` row ever got
+-- created for today's (or any upcoming) class under the new bundle, and
+-- telegram_class_reminder_candidates() had nothing to match -- it only ever
+-- looks at EXISTING scheduled rows, it does not derive from the weekly
+-- schedule directly the way the frontend's buildExpectedSessions() does.
+--
+-- This isn't specific to Solafa -- it will recur for ANY student whose
+-- bundle auto-renews on a day other than the weekly run, up to six days of
+-- silence depending on timing. Moving the job to daily closes that window to
+-- at most ~24h instead of up to a week. (Backfilled Solafa's missing
+-- sessions by hand by calling fn_generate_scheduled_sessions() directly --
+-- that part needed no schema change, just running the existing function.)
+select cron.alter_job(job_id := 35, schedule := '0 2 * * *');

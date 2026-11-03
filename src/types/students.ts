@@ -203,6 +203,12 @@ export interface StudentClassSession {
   /** Null on a scheduled row — nobody has answered for that lesson yet. */
   confirmed_at: string | null;
   note: string | null;
+  /** Student tapped "Yes" on the Telegram after-class ask. A claim, not a confirmation — outcome/counted are untouched until an admin acts. */
+  student_confirmed_at: string | null;
+  /** Student tapped "No" on the Telegram after-class ask. Same claim-only caveat as student_confirmed_at. */
+  student_declined_at: string | null;
+  /** The ask was actually sent for this session — lets a row distinguish "no reply" from "never asked". */
+  telegram_asked_at: string | null;
 }
 
 /** A row somebody has actually answered for. A scheduled row is not one. */

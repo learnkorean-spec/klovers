@@ -30,6 +30,13 @@ verify_jwt = false
 [functions.payment-reminder]
 verify_jwt = false
 
+# Called only by pg_cron (telegram-group-attendance-asks) with the service
+# role key, same as every other telegram-* function -- never by a browser.
+# Not declaring this left the FIRST deploy of a brand-new function at the
+# platform default (verify_jwt = true), which rejects that call.
+[functions.telegram-group-attendance-ask]
+verify_jwt = false
+
 [functions.submit-lead]
 verify_jwt = false
 
