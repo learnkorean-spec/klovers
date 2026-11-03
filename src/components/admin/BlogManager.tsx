@@ -176,8 +176,11 @@ const calculateSeoScore = (post: Partial<BlogPost>, keywords: string): number =>
 };
 
 const getSeoColor = (score: number) => {
-  if (score >= 80) return "text-green-600";
-  if (score >= 50) return "text-yellow-600";
+  // text-green-600 / text-yellow-600 fail WCAG AA (4.5:1) for normal-size text on
+  // white (measured 3.3:1 and 2.94:1 respectively). -700 shades clear 4.5:1 while
+  // staying visually close to the original colors.
+  if (score >= 80) return "text-green-700";
+  if (score >= 50) return "text-yellow-700";
   return "text-destructive";
 };
 
