@@ -82,7 +82,7 @@ export default function AllArticles({
               className="h-12 w-full rounded-full border border-border bg-card ps-10 pe-10 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             {query && (
-              <button type="button" onClick={() => setQuery("")} aria-label={isAr ? "مسح البحث" : "Clear search"} className="absolute top-1/2 end-1.5 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full hover:bg-muted">
+              <button type="button" onClick={() => setQuery("")} aria-label={isAr ? "مسح البحث" : "Clear search"} className="absolute top-1/2 end-1.5 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
             )}

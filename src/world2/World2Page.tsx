@@ -85,7 +85,7 @@ function VocabCard({ vocab, onClose }: { vocab: VocabItem; onClose: () => void }
         <button
           onClick={onClose}
           aria-label="Close"
-          className="text-[#FFF9EC]/50 hover:text-[#FFF9EC] shrink-0"
+          className="text-[#FFF9EC]/50 hover:text-[#FFF9EC] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <X className="h-4 w-4" />
         </button>
@@ -140,7 +140,7 @@ function DialogueCard({
         <button
           onClick={onClose}
           aria-label="Close"
-          className="text-[#FFF9EC]/50 hover:text-[#FFF9EC] shrink-0"
+          className="text-[#FFF9EC]/50 hover:text-[#FFF9EC] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <X className="h-4 w-4" />
         </button>
@@ -298,7 +298,7 @@ export default function World2Page() {
         <div className="flex gap-2">
           <button
             onClick={() => goTo("entrance")}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
               view === "entrance"
                 ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"
                 : "bg-transparent text-[#FFF9EC]/80 border-[#FFF9EC]/20 hover:border-[#FFF9EC]/40"
@@ -310,7 +310,7 @@ export default function World2Page() {
             <button
               key={r.id}
               onClick={() => goTo(r.id)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                 r.id === view
                   ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"
                   : "bg-transparent text-[#FFF9EC]/80 border-[#FFF9EC]/20 hover:border-[#FFF9EC]/40"
@@ -355,7 +355,7 @@ export default function World2Page() {
               <button
                 onClick={toggleFullscreen}
                 aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
-                className="absolute top-3 right-3 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E]"
+                className="absolute top-3 right-3 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </button>
@@ -411,7 +411,7 @@ export default function World2Page() {
               <button
                 onClick={toggleFullscreen}
                 aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
-                className="absolute top-3 right-3 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E]"
+                className="absolute top-3 right-3 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </button>

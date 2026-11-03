@@ -58,7 +58,7 @@ const InterviewBannerChip = () => {
         </Link>
         <button
           onClick={dismiss}
-          className="flex-shrink-0 text-background/50 hover:text-background transition-colors ml-0.5"
+          className="flex-shrink-0 text-background/50 hover:text-background transition-colors ml-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label="Dismiss"
         >
           <X className="h-3.5 w-3.5" />

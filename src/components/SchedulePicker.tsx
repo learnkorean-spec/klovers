@@ -409,7 +409,7 @@ const SchedulePicker = ({
                 const label = `${oLocal.weekday} · ${oLocal.timeFormatted} · ${userTimezone}`;
                 onSelect(`private-${opt.dayIndex}-${opt.time}`, label);
               }}
-              className="w-full text-left p-4 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all"
+              className="w-full text-left p-4 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -447,7 +447,7 @@ const SchedulePicker = ({
             key={pkg.id}
             type="button"
             onClick={() => handleClick(pkg)}
-            className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+            className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background w-full text-left p-4 rounded-lg border-2 transition-all ${
               pkg.seats_left === 0
                 ? "border-border opacity-60 hover:border-destructive/50"
                 : "border-border hover:border-primary hover:bg-accent"
@@ -517,7 +517,7 @@ const SchedulePicker = ({
                   key={alt.id}
                   type="button"
                   onClick={() => selectPackage(alt, true)}
-                  className="w-full text-left p-3 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all"
+                  className="w-full text-left p-3 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <div className="flex items-center justify-between">
                     <div>

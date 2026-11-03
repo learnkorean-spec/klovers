@@ -194,7 +194,7 @@ const PersonalTrialBooking = ({
                       key={slot.id}
                       type="button"
                       onClick={() => setSelectedSlotId(slot.id)}
-                      className="rounded-xl border px-4 py-3 text-start transition-colors"
+                      className="rounded-xl border px-4 py-3 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       style={
                         isSelected
                           ? { borderColor: accentColor, backgroundColor: `${accentColor}1a` }

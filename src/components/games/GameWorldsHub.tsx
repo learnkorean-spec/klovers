@@ -335,7 +335,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
                   <button
                     type="button"
                     onClick={() => onPlay(continueGame)}
-                    className="min-h-10 rounded-full bg-charcoal px-4 text-sm font-bold text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
+                    className="min-h-10 rounded-full bg-charcoal px-4 text-sm font-bold text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {isAr ? "بدء اللعب" : "Start playing"}
                   </button>
@@ -672,7 +672,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           <button
             type="button"
             onClick={seeAll}
-            className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-charcoal bg-klovers-yellow px-4 py-2 text-sm font-bold text-charcoal"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-charcoal bg-klovers-yellow px-4 py-2 text-sm font-bold text-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {isAr ? `كل الألعاب (${num(totalGames)})` : `All ${totalGames} games`}
           </button>

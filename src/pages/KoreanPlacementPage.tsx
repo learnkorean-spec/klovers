@@ -934,7 +934,7 @@ const KoreanPlacementPage = () => {
                   <button
                     type="button"
                     onClick={() => navigate(`/login?redirect=${encodeURIComponent("/placement-test")}`)}
-                    className="w-full text-start rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 hover:border-primary/60 transition-colors"
+                    className="w-full text-start rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 hover:border-primary/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <span className="block text-sm font-bold leading-snug">
                       {t("تسجيل الدخول أولًا لحفظ النتيجة",
@@ -961,7 +961,7 @@ const KoreanPlacementPage = () => {
                   <button
                     type="button"
                     onClick={handleCannotReadHangul}
-                    className="w-full text-start rounded-xl border border-border bg-muted/40 px-4 py-3 hover:border-primary/60 transition-colors"
+                    className="w-full text-start rounded-xl border border-border bg-muted/40 px-4 py-3 hover:border-primary/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <span className="block text-sm font-bold leading-snug">
                       {t("لا أستطيع قراءة الهانغول بعد: عرض مستواي",

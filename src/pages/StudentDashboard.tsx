@@ -636,7 +636,7 @@ const StudentDashboard = () => {
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
               <button
                 onClick={() => { setFetchError(null); setLoading(true); setRetryCount(c => c + 1); }}
-                className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80 transition-opacity"
+                className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 {t("dashboardPage.tryAgain")}
               </button>
@@ -647,7 +647,7 @@ const StudentDashboard = () => {
                     { cta_label: "dashboard_error_contact" }
                   )
                 }
-                className="px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors"
+                className="px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 {t("dashboardPage.contactSupport")}
               </button>
@@ -1172,7 +1172,7 @@ const StudentDashboard = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank', 'noopener,noreferrer')}
-                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center"
+                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <KloverIcon name="growth-chart" className="h-10 w-10 sm:h-12 sm:w-12" />
                     <span className="text-sm font-semibold text-foreground">{t("dashboardPage.progressReport")}</span>
@@ -1180,7 +1180,7 @@ const StudentDashboard = () => {
                   </button>
                   <button
                     onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank', 'noopener,noreferrer')}
-                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center"
+                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <KloverIcon name="badge-blossom" className="h-10 w-10 sm:h-12 sm:w-12" />
                     <span className="text-sm font-semibold text-foreground">{t("dashboardPage.certificate")}</span>

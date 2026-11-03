@@ -107,7 +107,7 @@ const TypeKoreanGame = ({ onGameComplete }: { onGameComplete?: (score: number, t
         <Card className="p-6 text-center space-y-4">
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-1"><PenLine className="h-4 w-4" /> Type the Korean word:</p>
           <p className="text-4xl font-bold text-foreground">{q.meaning}</p>
-          <button onClick={() => setShowHint(h => !h)} className="text-xs text-muted-foreground hover:underline">
+          <button onClick={() => setShowHint(h => !h)} className="text-xs text-muted-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             {showHint ? `💡 ${q.romanization}` : "Show romanization hint"}
           </button>
           <div className="flex gap-2 justify-center">

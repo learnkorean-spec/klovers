@@ -122,13 +122,13 @@ const SentenceBuilderGame = ({ onGameComplete }: { onGameComplete?: (score: numb
           <div className="min-h-[48px] border-2 border-dashed border-border rounded-lg p-3 flex flex-wrap gap-2">
             {placed.length === 0 && <span className="text-muted-foreground text-sm">{t("games.sentencePlaceholder")}</span>}
             {placed.map((word, i) => (
-              <button key={i} onClick={() => handleRemoveWord(i)} className="px-3 py-1.5 bg-primary/10 text-foreground rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors">{word}</button>
+              <button key={i} onClick={() => handleRemoveWord(i)} className="px-3 py-1.5 bg-primary/10 text-foreground rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">{word}</button>
             ))}
           </div>
 
           <div className="flex flex-wrap gap-2 justify-center">
             {available.map((word, i) => (
-              <button key={i} onClick={() => handleWordClick(word)} className="px-3 py-1.5 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors border border-border">{word}</button>
+              <button key={i} onClick={() => handleWordClick(word)} className="px-3 py-1.5 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">{word}</button>
             ))}
           </div>
 

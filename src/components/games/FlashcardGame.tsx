@@ -81,7 +81,7 @@ const FlashcardGame = ({ onGameComplete }: { onGameComplete?: (score: number, to
         {/* Flashcard */}
         <button
           onClick={() => setFlipped(f => !f)}
-          className="w-full"
+          className="w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label={flipped ? "Flip back" : "Flip card to reveal meaning"}
         >
           <Card className={`p-8 text-center space-y-3 min-h-[200px] flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${flipped ? "border-primary/40 bg-primary/5" : "border-border"}`}>

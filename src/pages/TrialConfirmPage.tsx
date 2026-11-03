@@ -235,13 +235,14 @@ function renderWhen(
  * `bg-primary text-primary-foreground` across the site and `brandButton` in
  * the email — the letter and the page it links to should not disagree.
  */
+const FOCUS_RING = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 const PRIMARY_CLASS =
   "inline-block bg-primary text-primary-foreground border-2 border-foreground " +
-  "font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity";
+  "font-bold px-6 py-3 rounded-xl text-base hover:opacity-80 transition-opacity " + FOCUS_RING;
 const OUTLINE_CLASS =
   "inline-block font-bold px-6 py-3 rounded-xl text-base border border-border " +
-  "text-muted-foreground hover:bg-muted transition-colors";
-const QUIET_CLASS = "text-sm text-muted-foreground underline hover:text-foreground";
+  "text-muted-foreground hover:bg-muted transition-colors " + FOCUS_RING;
+const QUIET_CLASS = "text-sm text-muted-foreground underline hover:text-foreground rounded-sm " + FOCUS_RING;
 
 /** Ivory info card for the facts a student needs on the day: when, and where. */
 const INFO_CARD_CLASS =
@@ -485,7 +486,7 @@ const TrialConfirmPage = () => {
                         disabled={full}
                         onClick={() => setChosenSlot(o.slot_id)}
                         aria-pressed={selected}
-                        className={`w-full rounded-xl border p-3 transition-colors ${
+                        className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background w-full rounded-xl border p-3 transition-colors ${
                           t.dir === "rtl" ? "text-right" : "text-left"
                         } ${
                           selected
@@ -579,7 +580,7 @@ const TrialConfirmPage = () => {
                   onClick={() => handleRespond("yes")}
                   disabled={canChoose && !chosenSlot}
 
-                  className={`${PRIMARY_CLASS} disabled:opacity-40`}
+                  className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${PRIMARY_CLASS} disabled:opacity-40`}
                 >
                   {t.confirmCta}
                 </button>

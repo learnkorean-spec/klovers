@@ -138,7 +138,7 @@ function LoadingVeil({ lang, visible, onExit }: { lang: WorldLang; visible: bool
         type="button"
         onClick={onExit}
         tabIndex={visible ? 0 : -1}
-        className="mt-2 text-sm font-semibold text-ivory underline underline-offset-4"
+        className="mt-2 text-sm font-semibold text-ivory underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         {copy.exit}
       </button>
@@ -749,7 +749,7 @@ const WorldPage = () => {
                     setReady(false);
                     retry();
                   }}
-                  className="min-h-11 rounded-full bg-klovers-yellow px-5 text-sm font-bold text-charcoal"
+                  className="min-h-11 rounded-full bg-klovers-yellow px-5 text-sm font-bold text-charcoal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {copy.retry}
                 </button>

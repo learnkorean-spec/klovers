@@ -141,14 +141,14 @@ const HangulMiniGame = ({ totalGames }: { totalGames: number }) => {
             <button
               type="button"
               onClick={() => navigate("/games")}
-              className="inline-flex items-center gap-2 rounded-full bg-klovers-yellow px-5 py-2.5 text-sm font-extrabold text-charcoal transition-transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-full bg-klovers-yellow px-5 py-2.5 text-sm font-extrabold text-charcoal transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {tr(`Play all ${totalGames} games`, `العب كل الـ ${totalGames} لعبة`)}
             </button>
             <button
               type="button"
               onClick={restart}
-              className="inline-flex items-center gap-1.5 rounded-full border-2 border-ivory/40 px-4 py-2 text-sm font-bold text-ivory transition-colors hover:border-ivory"
+              className="inline-flex items-center gap-1.5 rounded-full border-2 border-ivory/40 px-4 py-2 text-sm font-bold text-ivory transition-colors hover:border-ivory focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <RotateCcw className="h-4 w-4" aria-hidden="true" /> {tr("Again", "تاني")}
             </button>

@@ -148,7 +148,7 @@ const ExitIntentModal = () => {
       <div ref={modalRef} className="relative bg-background border border-border rounded-3xl shadow-2xl max-w-md w-full p-7 animate-in zoom-in-95 duration-200">
         <button
           onClick={() => setShow(false)}
-          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label={isAr ? "إغلاق" : "Close"}
         >
           <X className="h-5 w-5" />

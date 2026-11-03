@@ -42,7 +42,7 @@ class ErrorBoundary extends Component<Props, State> {
               {this.state.error?.message || "An unexpected error occurred."}
             </p>
             <button
-              className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80 transition-opacity"
+              className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               onClick={() => this.setState({ hasError: false, error: null })}
             >
               Try again

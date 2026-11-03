@@ -94,7 +94,7 @@ export default function NpsModal({ userId, chapterCount }: NpsModalProps) {
                   onClick={() => setScore(s)}
                   aria-label={`Score ${s}: ${scoreLabel(s)}`}
                   aria-pressed={score === s}
-                  className={`
+                  className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background 
                     border rounded-lg p-2 text-sm font-bold transition-all
                     ${score === s
                       ? `${scoreColor(s)} ring-2 ring-offset-1 ring-current scale-110`

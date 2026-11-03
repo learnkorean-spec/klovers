@@ -283,7 +283,7 @@ const TeachWithUsPage = () => {
                         <button
                           type="button"
                           onClick={() => trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(buildFallbackMessage())}`, { cta_label: "teach_with_us_fallback" })}
-                          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         >
                           <MessageCircle className="h-4 w-4" />
                           {isAr ? "إرسال عبر واتساب" : "Send on WhatsApp"}

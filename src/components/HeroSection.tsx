@@ -384,7 +384,7 @@ const HeroSection = () => {
           <button
             type="button"
             onClick={playVideo}
-            className="absolute top-24 end-4 z-20 inline-flex min-h-11 items-center gap-2 rounded-full border border-ivory/35 bg-charcoal/70 px-4 text-xs font-semibold text-ivory backdrop-blur-sm transition-colors hover:border-ivory/60 hover:bg-charcoal/85"
+            className="absolute top-24 end-4 z-20 inline-flex min-h-11 items-center gap-2 rounded-full border border-ivory/35 bg-charcoal/70 px-4 text-xs font-semibold text-ivory backdrop-blur-sm transition-colors hover:border-ivory/60 hover:bg-charcoal/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <Play className="h-4 w-4 fill-current" aria-hidden="true" />
             {isAr ? "تشغيل الفيديو" : "Play video"}

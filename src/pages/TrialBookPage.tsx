@@ -944,7 +944,7 @@ export default function TrialBookPage() {
       <h1 className="text-2xl font-black">Trial Book: Admin Only</h1>
       <p className="text-muted-foreground max-w-sm">This resource is available to teachers and admins only.</p>
       <button onClick={() => navigate("/dashboard")}
-        className="px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition-colors">
+        className="px-6 py-2 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
         Back to Dashboard
       </button>
     </div>
@@ -978,7 +978,7 @@ export default function TrialBookPage() {
       <div className="no-print sticky top-0 z-50 flex items-center justify-between gap-3 px-4 py-2 bg-white border-b shadow-sm flex-wrap">
         <div className="flex items-center gap-2">
           <button onClick={() => navigate(-1)}
-            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             ← Back
           </button>
           <span className="text-sm font-bold">Trial Class Book: دليل الحصة التجريبية</span>
@@ -987,20 +987,20 @@ export default function TrialBookPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex border rounded-lg overflow-hidden text-xs">
             <button onClick={() => setPreview("ar")}
-              className={`px-3 py-1.5 font-medium transition-colors ${isAr ? "bg-amber-500 text-black" : "hover:bg-muted"}`}>
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background px-3 py-1.5 font-medium transition-colors ${isAr ? "bg-amber-500 text-black" : "hover:bg-muted"}`}>
               عربي
             </button>
             <button onClick={() => setPreview("en")}
-              className={`px-3 py-1.5 font-medium transition-colors ${!isAr ? "bg-amber-500 text-black" : "hover:bg-muted"}`}>
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background px-3 py-1.5 font-medium transition-colors ${!isAr ? "bg-amber-500 text-black" : "hover:bg-muted"}`}>
               English
             </button>
           </div>
           <button onClick={() => printVersion("ar")}
-            className="text-xs px-3 py-1.5 border rounded-lg hover:bg-muted transition-colors flex items-center gap-1">
+            className="text-xs px-3 py-1.5 border rounded-lg hover:bg-muted transition-colors flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             ⬇ PDF عربي
           </button>
           <button onClick={() => printVersion("en")}
-            className="text-xs px-3 py-1.5 border rounded-lg hover:bg-muted transition-colors flex items-center gap-1">
+            className="text-xs px-3 py-1.5 border rounded-lg hover:bg-muted transition-colors flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             ⬇ PDF English
           </button>
         </div>

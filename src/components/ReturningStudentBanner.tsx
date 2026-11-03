@@ -139,7 +139,7 @@ const ReturningStudentBanner = () => {
       </div>
       <button
         onClick={handleDismiss}
-        className="absolute end-2 top-1/2 -translate-y-1/2 inline-flex min-h-11 min-w-11 items-center justify-center hover:bg-white/20 rounded-full transition-colors"
+        className="absolute end-2 top-1/2 -translate-y-1/2 inline-flex min-h-11 min-w-11 items-center justify-center hover:bg-white/20 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label={isAr ? "إغلاق" : "Dismiss"}
       >
         <X className="h-4 w-4" aria-hidden="true" />

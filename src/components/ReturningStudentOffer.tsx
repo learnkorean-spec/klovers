@@ -321,7 +321,7 @@ const ReturningStudentOffer = () => {
                 <div key={i} className="overflow-hidden rounded-2xl border border-border bg-card">
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-foreground transition-colors hover:bg-ivory dark:hover:bg-muted"
+                    className="flex w-full items-center justify-between px-4 py-3 text-start text-sm font-medium text-foreground transition-colors hover:bg-ivory dark:hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {faq.question}
                     <ChevronDown

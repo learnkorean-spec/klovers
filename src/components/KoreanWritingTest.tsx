@@ -272,7 +272,7 @@ const KoreanWritingTest = ({ vocab, dialogue, lessonTitle, onComplete }: KoreanW
             ) : (
               <button
                 onClick={() => setShowHint(true)}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 {isAr ? "إظهار التلميح" : "Show hint"}
               </button>

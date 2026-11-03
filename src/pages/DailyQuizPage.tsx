@@ -248,7 +248,7 @@ const DailyQuizPage = () => {
             <AlertCircle className="mx-auto h-10 w-10 text-wrong dark:text-[#FF3131]" aria-hidden="true" />
             <h2 className="font-semibold text-foreground">{t("dailyQuiz.loadErrorTitle")}</h2>
             <p className="text-sm text-muted-foreground">{fetchError}</p>
-            <button onClick={() => fetchDailyQuiz()} className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80">{t("dailyQuiz.tryAgainBtn")}</button>
+            <button onClick={() => fetchDailyQuiz()} className="px-4 py-2 text-sm bg-foreground text-background rounded-md hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">{t("dailyQuiz.tryAgainBtn")}</button>
           </div>
         </main>
       </div>

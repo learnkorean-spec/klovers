@@ -223,7 +223,7 @@ const SlotRanker = ({ selectedLevel, onComplete }: SlotRankerProps) => {
             return (
               <Badge key={id} variant="secondary" className="gap-1 pr-1">
                 #{idx + 1}: {slot.day} {slot.time}
-                <button type="button" onClick={() => toggleSlot(id)} className="ml-1 hover:text-destructive">
+                <button type="button" onClick={() => toggleSlot(id)} className="ml-1 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
@@ -241,7 +241,7 @@ const SlotRanker = ({ selectedLevel, onComplete }: SlotRankerProps) => {
               key={slot.id}
               type="button"
               onClick={() => toggleSlot(slot.id)}
-              className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background w-full text-left p-4 rounded-lg border-2 transition-all ${
                 rank
                   ? "border-primary bg-accent"
                   : "border-border hover:border-primary/50"

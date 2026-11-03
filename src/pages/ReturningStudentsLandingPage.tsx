@@ -523,7 +523,7 @@ const ReturningStudentsLandingPage = () => {
                       onClick={() => setOpenFaq(openFaq === i ? null : i)}
                       aria-expanded={openFaq === i}
                       aria-controls={`wb-faq-${i}`}
-                      className="w-full flex items-center justify-between px-4 py-3 text-start text-sm font-medium hover:bg-muted/50 transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-3 text-start text-sm font-medium hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {faq.question}
                       <ChevronDown

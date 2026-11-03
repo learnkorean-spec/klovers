@@ -631,7 +631,7 @@ const GamesPage = () => {
           <div className="bg-background border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 relative">
             <button
               onClick={() => setShowSignupNudge(false)}
-              className="absolute top-3 end-3 z-10 p-1.5 rounded-full bg-background/80 hover:bg-muted transition-colors"
+              className="absolute top-3 end-3 z-10 p-1.5 rounded-full bg-background/80 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               aria-label={isAr ? "إغلاق" : "Close"}
             >
               <X className="h-4 w-4 text-muted-foreground" />
@@ -680,7 +680,7 @@ const GamesPage = () => {
 
             <button
               onClick={() => setShowSignupNudge(false)}
-              className="w-full text-xs text-muted-foreground hover:underline"
+              className="w-full text-xs text-muted-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {isAr ? "مواصلة اللعب كضيف" : "Continue playing as guest"}
             </button>

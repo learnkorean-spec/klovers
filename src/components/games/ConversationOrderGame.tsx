@@ -214,8 +214,8 @@ const ConversationOrderGame = ({ onGameComplete }: { onGameComplete?: (score: nu
                 </div>
                 {!submitted && (
                   <div className="flex flex-col gap-0.5 flex-shrink-0">
-                    <button onClick={() => moveUp(idx)} disabled={idx === 0} className="p-1 rounded hover:bg-muted disabled:opacity-20 text-muted-foreground text-xs">▲</button>
-                    <button onClick={() => moveDown(idx)} disabled={idx === shuffledLines.length - 1} className="p-1 rounded hover:bg-muted disabled:opacity-20 text-muted-foreground text-xs">▼</button>
+                    <button onClick={() => moveUp(idx)} disabled={idx === 0} className="p-1 rounded hover:bg-muted disabled:opacity-20 text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">▲</button>
+                    <button onClick={() => moveDown(idx)} disabled={idx === shuffledLines.length - 1} className="p-1 rounded hover:bg-muted disabled:opacity-20 text-muted-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">▼</button>
                   </div>
                 )}
                 {submitted && (

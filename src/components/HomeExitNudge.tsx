@@ -113,7 +113,7 @@ const HomeExitNudge = () => {
             type="button"
             onClick={() => setVisible(false)}
             aria-label={isAr ? "إغلاق" : "Dismiss"}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <X className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
