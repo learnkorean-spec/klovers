@@ -97,6 +97,7 @@ export default function PictureLibrary() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by Korean word, Arabic meaning, lesson or file name"
+            aria-label="Search by Korean word, Arabic meaning, lesson or file name"
             className="pl-9"
           />
         </div>

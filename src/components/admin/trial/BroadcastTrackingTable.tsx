@@ -88,6 +88,7 @@ export default function BroadcastTrackingTable() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name / email"
+            aria-label="Search name / email"
             className="w-48 rounded-md border bg-background px-3 py-1.5 text-sm"
           />
           <select

@@ -314,6 +314,7 @@ const BookAssignmentManager = () => {
           <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Search students…"
+            aria-label="Search students"
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-8 h-8 text-xs w-56"
@@ -533,6 +534,7 @@ const BookAssignmentManager = () => {
                     <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
                       placeholder="Search by name or email…"
+                      aria-label="Search by name or email"
                       value={userSearch}
                       onChange={e => setUserSearch(e.target.value)}
                       className="pl-8 h-8 text-xs"

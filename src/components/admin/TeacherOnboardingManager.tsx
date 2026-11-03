@@ -447,7 +447,7 @@ export default function TeacherOnboardingManager() {
         {/* Roster */}
         <Card className="rounded-2xl">
           <CardHeader className="pb-3 space-y-2">
-            <Input placeholder="Search name or email…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input placeholder="Search name or email…" aria-label="Search name or email" value={search} onChange={(e) => setSearch(e.target.value)} />
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
