@@ -233,10 +233,13 @@ export default function KoreanOrchestrator() {
               </div>
 
               {seedResult && (
-                <div className={cn(
-                  "rounded-lg border p-4 text-sm",
-                  seedStatus === "done" ? "border-green-500/30 bg-green-500/5" : "border-destructive/30 bg-destructive/5"
-                )}>
+                <div
+                  role={seedResult.error ? "alert" : "status"}
+                  className={cn(
+                    "rounded-lg border p-4 text-sm",
+                    seedStatus === "done" ? "border-green-500/30 bg-green-500/5" : "border-destructive/30 bg-destructive/5"
+                  )}
+                >
                   {seedResult.error ? (
                     <p className="text-destructive font-semibold">{seedResult.error}</p>
                   ) : seedResult.dry_run ? (

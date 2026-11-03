@@ -635,6 +635,33 @@ const GamesPage = () => {
             </div>
           )}
         </div>
+
+        {/* Plain study guides under the games: static, crawlable links to the
+            blog articles that rank in search, so a visitor who finished a
+            game has a next step besides the trial class. Marketing copy only,
+            no story/world content. */}
+        <section className="mx-auto mt-10 max-w-2xl px-4" aria-labelledby="games-guides-heading">
+          <h2 id="games-guides-heading" className="text-lg font-bold text-foreground mb-3">
+            {isAr ? "أدلة للدراسة بعد اللعب" : "Study guides to go with the games"}
+          </h2>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {[
+              { slug: "learn-korean-alphabet-hangul-guide", en: "Learn the Korean alphabet (Hangul)", ar: "تعلّم الأبجدية الكورية (هانغول)" },
+              { slug: "50-essential-korean-words-beginners", en: "50 basic Korean words for beginners", ar: "50 كلمة كورية أساسية للمبتدئين" },
+              { slug: "korean-food-vocabulary", en: "Food in Korean: 60 food words", ar: "مفردات الطعام الكوري: 60 كلمة" },
+              { slug: "how-to-learn-korean-faster", en: "10 practical ways to learn Korean faster", ar: "10 طرق عملية لتعلّم الكورية أسرع" },
+            ].map((g) => (
+              <li key={g.slug}>
+                <Link
+                  to={`/blog/${g.slug}${isAr ? "-ar" : ""}`}
+                  className="block rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  {isAr ? g.ar : g.en}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
         <FinalCTA />
       </main>
       <Footer />
