@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminLtr } from "@/hooks/admin/useAdminLtr";
+import { withTimeout } from "@/lib/withTimeout";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   // Admin screens are English: always left to right, whatever the site language.
@@ -10,28 +11,41 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setStatus("unauthorized");
-        return;
-      }
+      try {
+        // getSession() awaits a token refresh when the stored token has
+        // expired; withTimeout stops that from hanging forever (same
+        // real-world failure mode as the 17 Oct 2026 outage withTimeout was
+        // built for) and leaving the admin on an unlabeled spinner with no
+        // way out.
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 8000, "session");
+        if (!session) {
+          setStatus("unauthorized");
+          return;
+        }
 
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
+        const { data, error } = await withTimeout(
+          supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", session.user.id)
+            .eq("role", "admin")
+            .maybeSingle(),
+          8000,
+          "role check",
+        );
 
-      // A failed lookup is not "not an admin". Sending her to the login page
-      // for a dropped connection looks like being logged out; an admin who
-      // is already in keeps the page, anyone else sees a retry.
-      if (error) {
+        // A failed lookup is not "not an admin". Sending her to the login page
+        // for a dropped connection looks like being logged out; an admin who
+        // is already in keeps the page, anyone else sees a retry.
+        if (error) {
+          setStatus((prev) => (prev === "authorized" ? prev : "error"));
+          return;
+        }
+
+        setStatus(data ? "authorized" : "unauthorized");
+      } catch {
         setStatus((prev) => (prev === "authorized" ? prev : "error"));
-        return;
       }
-
-      setStatus(data ? "authorized" : "unauthorized");
     };
 
     check();
