@@ -524,7 +524,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
                     </div>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(p)} aria-label={`Edit ${getLevelShortLabel(p.level)} ${p.course_type || "group"} slot`}><Pencil className="h-4 w-4" /></Button>
                     {pkgHasGroup[p.id] ? (
                       <Button variant="ghost" size="sm" onClick={() => onSwitchToGroups?.()} title="View group in Groups tab">
                         <Users className="h-4 w-4 mr-1" /> View Group
@@ -1095,7 +1095,7 @@ const GroupsManager = () => {
                     ) : (
                       <>
                         <CardTitle className="text-sm truncate">{g.name}</CardTitle>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => startEditName(g)}>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => startEditName(g)} aria-label={`Edit name for ${g.name}`}>
                           <Pencil className="h-3 w-3 text-muted-foreground" />
                         </Button>
                       </>

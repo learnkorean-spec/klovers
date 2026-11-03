@@ -377,7 +377,7 @@ const LeadFunnelPanel: React.FC = () => {
               <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={refresh} disabled={loading} aria-label="Refresh lead funnel data">
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>

@@ -664,7 +664,7 @@ const BulkEmailManager = () => {
       <Card className="rounded-2xl">
         <CardHeader className="pb-4 flex flex-row items-center justify-between">
           <CardTitle className="text-base">Campaign History</CardTitle>
-          <Button variant="ghost" size="sm" onClick={fetchCampaigns} disabled={loadingHistory}>
+          <Button variant="ghost" size="sm" onClick={fetchCampaigns} disabled={loadingHistory} aria-label="Refresh campaign history">
             <RefreshCw className={`h-4 w-4 ${loadingHistory ? "animate-spin" : ""}`} />
           </Button>
         </CardHeader>
@@ -689,10 +689,10 @@ const BulkEmailManager = () => {
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>{new Date(c.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>{c.queued}</TableCell>
-                    <TableCell className="text-green-600">{c.sent}</TableCell>
+                    <TableCell className="text-green-700">{c.sent}</TableCell>
                     <TableCell className="text-destructive">{c.failed}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => viewDetail(c)}>
+                      <Button variant="ghost" size="sm" onClick={() => viewDetail(c)} aria-label={`View details for ${c.name}`}>
                         <Eye className="h-4 w-4" />
                       </Button>
                     </TableCell>
