@@ -277,7 +277,7 @@ const PromoCodesManager = () => {
                       </div>
                       {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
                     </TableCell>
-                    <TableCell className="font-semibold text-primary">{formatDiscount(c)}</TableCell>
+                    <TableCell className="font-semibold text-foreground">{formatDiscount(c)}</TableCell>
                     <TableCell className="text-xs">{c.currency ?? "Any"}</TableCell>
                     <TableCell className="text-xs">
                       {c.uses_count}{c.max_uses ? ` / ${c.max_uses}` : ""}

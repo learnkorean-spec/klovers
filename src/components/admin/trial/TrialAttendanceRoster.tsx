@@ -448,7 +448,7 @@ export default function TrialAttendanceRoster() {
                   than a made-up one — guessing here would be guessing about
                   whether to cancel on somebody. */}
               {slot.min_to_run != null && (
-                <p className={`text-xs font-medium ${meetsMin ? 'text-primary' : 'text-destructive'}`}>
+                <p className={`text-xs font-medium ${meetsMin ? 'text-green-700' : 'text-destructive'}`}>
                   {meetsMin ? 'Runs: ' : 'Short: '}
                   needs {slot.min_to_run} to run — has {yes}
                 </p>
