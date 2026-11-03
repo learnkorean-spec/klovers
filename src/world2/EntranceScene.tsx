@@ -41,11 +41,15 @@ export default function EntranceScene({
   return (
     <group>
       <fog attach="fog" args={["#2a2438", 9, 18]} />
-      <ambientLight intensity={0.85} color="#FFF3DD" />
+      {/* Same hemisphere + warm key + cool fill recipe as World1's own
+          lighting (src/game/World.tsx's LIGHT constant) — see World2Scene's
+          own comment for the full rationale. */}
+      <hemisphereLight args={["#FFE9CC", "#A08466", 0.5]} />
+      <directionalLight position={[-5, 4, -2]} intensity={0.3} color="#C4D3EC" />
       <directionalLight
         position={[2.5, 5, 3]}
         intensity={1.5}
-        color="#FFE7B0"
+        color="#FFCC8E"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}

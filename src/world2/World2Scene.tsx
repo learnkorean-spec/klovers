@@ -242,11 +242,18 @@ export default function World2Scene({
       {/* light dusk haze, far enough out that it only softens the alley wall,
           not the cart or characters in the foreground */}
       <fog attach="fog" args={["#2a2438", 7, 16]} />
-      <ambientLight intensity={0.8} color="#FFF0DD" />
+      {/* World1's own lighting recipe (src/game/World.tsx's LIGHT constant):
+          a hemisphere sky/ground bounce instead of flat ambient, a warm key
+          light, and a faint cool fill so shadows keep their colour instead
+          of going flat black — same technique, re-tuned down for dusk
+          instead of World1's golden-afternoon brightness (Re, 3 Nov 2026:
+          "make the lighting match World1"). */}
+      <hemisphereLight args={["#FFE9CC", "#A08466", 0.45]} />
+      <directionalLight position={[-6, 4, -2]} intensity={0.25} color="#C4D3EC" />
       <directionalLight
         position={[3, 5, 2.5]}
         intensity={1.7}
-        color="#FFE7B0"
+        color="#FFCC8E"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}

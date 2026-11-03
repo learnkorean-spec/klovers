@@ -269,11 +269,15 @@ export default function ConvenienceStoreScene({
     // the camera's default look-at (the origin) instead of re-deriving a
     // custom camera target.
     <group position={[-0.6, 0, 0]}>
-      <ambientLight intensity={0.75} color="#FFF3DD" />
+      {/* Same hemisphere + warm key + cool fill recipe as World1's own
+          lighting (src/game/World.tsx's LIGHT constant) — see World2Scene's
+          own comment for the full rationale. */}
+      <hemisphereLight args={["#FFE9CC", "#A08466", 0.4]} />
+      <directionalLight position={[-6, 4, -2]} intensity={0.22} color="#C4D3EC" />
       <directionalLight
         position={[2, 5, 3]}
         intensity={1.3}
-        color="#FFE7B0"
+        color="#FFCC8E"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}
