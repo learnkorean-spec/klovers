@@ -7,6 +7,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Volume2, X } from 
 import World2Scene, { DIALOGUE as CART_DIALOGUE } from "./World2Scene";
 import ConvenienceStoreScene, { DIALOGUE as STORE_DIALOGUE } from "./ConvenienceStoreScene";
 import EntranceScene from "./EntranceScene";
+import PostFinish from "./PostFinish";
 import { speakKorean, type DialogueLine, type VocabItem } from "./shared";
 
 /** Each room AI Room Lab has proposed and a developer has built out: its own
@@ -292,6 +293,7 @@ export default function World2Page() {
                 gl={{ antialias: true }}
                 camera={{ position: room.cameraPosition, fov: room.cameraFov }}
               >
+                <PostFinish />
                 <Suspense fallback={null}>
                   <SlowOrbit>
                     <room.Scene
@@ -343,6 +345,7 @@ export default function World2Page() {
           <>
             <div className="relative h-[75vh] rounded-lg overflow-hidden border border-[#FFF9EC]/10">
               <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }} camera={{ position: [0, 2.2, 10.5], fov: 52 }}>
+                <PostFinish />
                 <Suspense fallback={null}>
                   <EntranceScene onEnterRoom={(id) => goTo(id)} />
                 </Suspense>
