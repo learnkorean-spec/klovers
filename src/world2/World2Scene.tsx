@@ -277,9 +277,14 @@ export default function World2Scene({
         {/* Lina beside him, pointing at the menu */}
         <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI * 0.65} control={linaControl} />
       </Suspense>
-      {/* Cluby sitting on its own stool (the one at x=1.1, z=1.5), raised to
-          seat height so it reads as sitting rather than floating. */}
-      <Cluby x={1.1} y={0.5} z={1.4} />
+      {/* Cluby sitting further right and back from Lina (x=0.5, z=1.1) —
+          moved here from x=1.1/z=1.4 after Re flagged that, at some points
+          in SlowOrbit's camera sway, Cluby's round silhouette landed
+          directly over Lina's torso from this room's camera angle, reading
+          as a broken/deformed body rather than two separate characters.
+          This extra separation (Δx 1.1 vs 0.6, Δz 0.8 vs 0.3 before) keeps
+          them visibly apart across the whole orbit range. */}
+      <Cluby x={1.6} y={0.5} z={1.9} />
     </group>
   );
 }

@@ -180,11 +180,18 @@ function DialogueCard({
   );
 }
 
-/** Camera gently orbits so the scene reads as a real 3D room, not a static render. */
+/** Camera gently orbits so the scene reads as a real 3D room, not a static
+ * render. Amplitude was 0.35 rad (~20°) — wide enough that, combined with
+ * Cluby standing close to Lina in World2Scene, the sway could carry Cluby's
+ * silhouette directly over Lina's from this room's camera angle (Re flagged
+ * this as the body "not looking well" — two separate characters reading as
+ * one broken one). Narrowed to 0.12 rad (~7°): still a visible, living sway,
+ * but far too small a swing for a stationary NPC's position to cross another
+ * stationary NPC's from the camera's point of view. */
 function SlowOrbit({ children }: { children: React.ReactNode }) {
   const g = useRef<Group>(null);
   useFrame(({ clock }) => {
-    if (g.current) g.current.rotation.y = Math.sin(clock.elapsedTime * 0.15) * 0.35;
+    if (g.current) g.current.rotation.y = Math.sin(clock.elapsedTime * 0.15) * 0.12;
   });
   return <group ref={g}>{children}</group>;
 }
