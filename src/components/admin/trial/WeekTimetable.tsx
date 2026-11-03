@@ -414,7 +414,7 @@ const WeekTimetable = () => {
   }
 
   const seg = (on: boolean) =>
-    `rounded-md px-3 py-1.5 text-sm transition-colors ${
+    `rounded-md px-3 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
       on ? "bg-foreground font-semibold text-background" : "font-medium text-muted-foreground hover:bg-muted"
     }`;
 
@@ -602,7 +602,7 @@ const WeekTimetable = () => {
                     <button
                       type="button"
                       onClick={() => copy(r.link as string)}
-                      className="flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted"
+                      className="flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       <Copy className="h-3 w-3" /> Copy
                     </button>

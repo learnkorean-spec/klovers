@@ -741,7 +741,7 @@ const TrialBookingPage = () => {
                 <button
                   onClick={handleReschedule}
                   disabled={cancelling}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 text-sm font-semibold text-foreground transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-border bg-card hover:border-primary/50 hover:bg-primary/5 text-sm font-semibold text-foreground transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <CalendarClock className="h-4 w-4 text-foreground" />
                   {t("trialBooking.changeDateBtn")}
@@ -749,7 +749,7 @@ const TrialBookingPage = () => {
                 <button
                   onClick={handleCancelBooking}
                   disabled={cancelling}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-border bg-card hover:border-destructive/50 hover:bg-destructive/5 text-sm font-semibold text-foreground transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-border bg-card hover:border-destructive/50 hover:bg-destructive/5 text-sm font-semibold text-foreground transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <CalendarX className="h-4 w-4 text-destructive" />
                   {cancelling ? t("trialBooking.cancelling") : t("trialBooking.cancelDateBtn")}
@@ -786,7 +786,7 @@ const TrialBookingPage = () => {
                   <button
                     type="button"
                     onClick={() => setClassLanguage("arabic")}
-                    className={`px-2.5 py-1 rounded-md border text-xs font-medium transition-all ${
+                    className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background px-2.5 py-1 rounded-md border text-xs font-medium transition-all ${
                       classLanguage === "arabic"
                         ? "border-charcoal bg-charcoal text-ivory dark:border-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                         : "border-border text-muted-foreground hover:border-primary/40"
@@ -797,7 +797,7 @@ const TrialBookingPage = () => {
                   <button
                     type="button"
                     onClick={() => setClassLanguage("english")}
-                    className={`px-2.5 py-1 rounded-md border text-xs font-medium transition-all ${
+                    className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background px-2.5 py-1 rounded-md border text-xs font-medium transition-all ${
                       classLanguage === "english"
                         ? "border-charcoal bg-charcoal text-ivory dark:border-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                         : "border-border text-muted-foreground hover:border-primary/40"
@@ -832,7 +832,7 @@ const TrialBookingPage = () => {
                     const url = `${WHATSAPP_BASE}?text=${encodeURIComponent(t("trialBooking.whatsappSuccessMsg"))}`;
                     trackAndOpenWhatsApp(url, { cta_label: "post_booking_whatsapp" });
                   }}
-                  className="w-full flex items-center gap-4 bg-klovers-green/10 dark:bg-klovers-green/10 border-2 border-klovers-green rounded-xl p-4 text-start hover:bg-klovers-green/20 hover:shadow-md transition-all group"
+                  className="w-full flex items-center gap-4 bg-klovers-green/10 dark:bg-klovers-green/10 border-2 border-klovers-green rounded-xl p-4 text-start hover:bg-klovers-green/20 hover:shadow-md transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-green flex items-center justify-center shrink-0">
                     <KloverIcon name="game-chat-smile" className="h-5 w-5" />
@@ -851,7 +851,7 @@ const TrialBookingPage = () => {
                     logLeadEvent({ source_type: "free_trial", cta_label: "post_booking_placement_test" });
                     navigate("/placement-test");
                   }}
-                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
+                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
                     <KloverIcon name="diploma-scroll" className="h-5 w-5 text-charcoal" />
@@ -870,7 +870,7 @@ const TrialBookingPage = () => {
                     logLeadEvent({ source_type: "free_trial", cta_label: "post_booking_pricing" });
                     navigate("/pricing");
                   }}
-                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
+                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
                     <KloverIcon name="badge-blossom" className="h-5 w-5 text-charcoal" />
@@ -900,7 +900,7 @@ const TrialBookingPage = () => {
                       window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank", "noopener,noreferrer");
                     }
                   }}
-                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group"
+                  className="w-full flex items-center gap-4 bg-card border border-border rounded-xl p-4 text-start hover:border-foreground hover:shadow-md transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <div className="h-10 w-10 rounded-full bg-klovers-yellow border border-foreground/20 flex items-center justify-center shrink-0">
                     <KloverIcon name="reward-gift" className="h-5 w-5" />
@@ -953,7 +953,7 @@ const TrialBookingPage = () => {
                     logLeadEvent({ source_type: "free_trial", cta_label: "referral_link_copied" });
                     setTimeout(() => setReferralCopied(false), 2000);
                   }}
-                  className="flex-shrink-0 flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+                  className="flex-shrink-0 flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   aria-label={language === "ar" ? "نسخ رابط الإحالة" : "Copy referral link"}
                 >
                   {referralCopied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
@@ -969,7 +969,7 @@ const TrialBookingPage = () => {
                   logLeadEvent({ source_type: "free_trial", cta_label: "post_booking_pricing" });
                   navigate("/pricing");
                 }}
-                className="hover:text-foreground underline underline-offset-2 flex items-center gap-1"
+                className="hover:text-foreground underline underline-offset-2 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <KloverIcon name="badge-blossom" className="h-3 w-3" /> {t("trialBooking.peekPlansTitle")}
               </button>
@@ -980,14 +980,14 @@ const TrialBookingPage = () => {
                   const url = `${WHATSAPP_BASE}?text=${encodeURIComponent(t("trialBooking.whatsappSuccessMsg"))}`;
                   trackAndOpenWhatsApp(url, { cta_label: "post_booking_whatsapp" });
                 }}
-                className="hover:text-foreground underline underline-offset-2 flex items-center gap-1"
+                className="hover:text-foreground underline underline-offset-2 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <MessageCircle className="h-3 w-3" /> {t("trialBooking.whatsappPromptTitle")}
               </button>
               <span aria-hidden>·</span>
               <button
                 onClick={() => navigate(user ? "/dashboard" : "/signup")}
-                className="hover:text-foreground underline underline-offset-2 flex items-center gap-1"
+                className="hover:text-foreground underline underline-offset-2 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <LayoutDashboard className="h-3 w-3" /> {user ? t("trialBooking.goDashboard") : (language === "ar" ? "إنشاء حساب مجاني" : "Create a free account")}
               </button>
@@ -1162,7 +1162,7 @@ const TrialBookingPage = () => {
                   <button
                     type="button"
                     onClick={() => setClassLanguage("arabic")}
-                    className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                    className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                       classLanguage === "arabic"
                         ? "border-charcoal bg-charcoal text-ivory dark:border-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                         : "border-border bg-card text-muted-foreground hover:border-primary/40"
@@ -1173,7 +1173,7 @@ const TrialBookingPage = () => {
                   <button
                     type="button"
                     onClick={() => setClassLanguage("english")}
-                    className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                    className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background flex-1 py-2 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
                       classLanguage === "english"
                         ? "border-charcoal bg-charcoal text-ivory dark:border-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal"
                         : "border-border bg-card text-muted-foreground hover:border-primary/40"

@@ -91,7 +91,7 @@ export default function InstallPrompt() {
         <p className="text-xs text-muted-foreground mt-0.5">{isAr ? "الدراسة دون إنترنت، وتذكيرات الأيام المتتالية، ودخول أسرع." : "Study offline, get streak reminders, faster access."}</p>
         <button
           onClick={handleInstall}
-          className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:bg-primary/90 transition-colors"
+          className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Download className="w-3 h-3" aria-hidden="true" />
           {isAr ? "الإضافة إلى الشاشة الرئيسية" : "Add to Home Screen"}
@@ -101,7 +101,7 @@ export default function InstallPrompt() {
       <button
         onClick={handleDismiss}
         aria-label={isAr ? "إغلاق نافذة التثبيت" : "Dismiss install prompt"}
-        className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+        className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <X className="w-4 h-4" />
       </button>

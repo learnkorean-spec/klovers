@@ -355,7 +355,7 @@ const TestimonialsSection = () => {
           type="button"
           onClick={() => setPaused((p) => !p)}
           aria-pressed={paused}
-          className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-muted-foreground underline underline-offset-4 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {paused ? <Play className="h-3.5 w-3.5" aria-hidden="true" /> : <Pause className="h-3.5 w-3.5" aria-hidden="true" />}
           {paused

@@ -96,7 +96,7 @@ const NumbersGame = ({ onGameComplete }: { onGameComplete?: (score: number, tota
           <div className="grid grid-cols-2 gap-3">
             {options.map(opt => (
               <button key={opt} onClick={() => handleAnswer(opt)} disabled={!!feedback}
-                className={`p-4 rounded-lg text-xl font-bold border-2 transition-all ${
+                className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 rounded-lg text-xl font-bold border-2 transition-all ${
                   feedback && opt === q.value ? "border-green-500 bg-green-500/10 text-foreground" :
                   feedback && opt === selected && opt !== q.value ? "border-destructive bg-destructive/10 text-foreground" :
                   "border-border bg-card text-foreground hover:border-foreground/30"

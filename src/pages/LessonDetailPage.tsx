@@ -713,7 +713,7 @@ const LessonDetailPage = () => {
                               key={oi}
                               onClick={() => handleAnswer(ex.id, oi, ex.correct_index)}
                               disabled={revealed}
-                              className={cn(
+                              className={cn("focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", 
                                 "text-left px-4 py-3 rounded-lg border text-sm transition-all",
                                 revealed && isCorrect && "border-klovers-green bg-klovers-green/15 text-foreground font-medium",
                                 revealed && selected && !isCorrect && "border-[#FF3131] bg-[#FF3131]/10 text-foreground",

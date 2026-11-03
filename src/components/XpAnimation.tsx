@@ -145,7 +145,7 @@ export function StreakCelebration({
         {/* Continue button */}
         <button
           onClick={onContinue}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-colors shadow-lg active:scale-95"
+          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-colors shadow-lg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {isAr ? "متابعة" : "CONTINUE"}
         </button>
@@ -225,7 +225,7 @@ export function LeaguePromotionModal({
 
         <button
           onClick={onClose}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-colors shadow-lg active:scale-95"
+          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-colors shadow-lg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {isAr ? "متابعة" : "CONTINUE"}
         </button>
@@ -283,7 +283,7 @@ export function MissionCompleteOverlay({ lessonTitle, xpEarned, onContinue }: {
         </div>
         <button
           onClick={onContinue}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-colors shadow-lg active:scale-95"
+          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-colors shadow-lg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {isAr ? "متابعة ←" : "Continue →"}
         </button>
@@ -337,7 +337,7 @@ export function PerfectScoreOverlay({ score, total, onContinue }: {
         </div>
         <button
           onClick={onContinue}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-colors shadow-lg active:scale-95"
+          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-colors shadow-lg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {isAr ? "متابعة" : "CONTINUE"}
         </button>

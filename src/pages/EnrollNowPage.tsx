@@ -937,7 +937,7 @@ const EnrollNowPage = () => {
                   <button
                     type="button"
                     onClick={() => setClassType("group")}
-                    className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                    className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
                       classType === "group" ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                     }`}
                   >
@@ -948,7 +948,7 @@ const EnrollNowPage = () => {
                   <button
                     type="button"
                     onClick={() => setClassType("private")}
-                    className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                    className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
                       classType === "private" ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                     }`}
                   >
@@ -991,7 +991,7 @@ const EnrollNowPage = () => {
                           type="button"
                           key={d}
                           onClick={() => setDuration(d)}
-                          className={`p-3 rounded-lg border-2 transition-all text-center ${
+                          className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background p-3 rounded-lg border-2 transition-all text-center ${
                             duration === d ? "border-primary bg-accent" : "border-border hover:border-primary/50"
                           }`}
                         >
@@ -1106,7 +1106,7 @@ const EnrollNowPage = () => {
                           type="button"
                           key={day}
                           onClick={() => toggleDay(day)}
-                          className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                          className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
                             preferredDays.includes(day)
                               ? "border-primary bg-primary text-primary-foreground"
                               : "border-border text-foreground hover:border-primary/50"
@@ -1147,7 +1147,7 @@ const EnrollNowPage = () => {
                           key={packageId}
                           disabled={isFull}
                           onClick={() => !isFull && (classType === "private" ? selectPrivateSlot(slot) : toggleDay(day))}
-                          className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all flex flex-col items-center gap-0.5 ${
+                          className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all flex flex-col items-center gap-0.5 ${
                             isFull
                               ? "border-border opacity-50 cursor-not-allowed"
                               : isSelected
@@ -1355,7 +1355,7 @@ const EnrollNowPage = () => {
                     </div>
                     <button
                       onClick={() => { setPromoApplied(null); setPromoInput(""); setPromoError(""); }}
-                      className="text-xs text-muted-foreground hover:text-foreground underline"
+                      className="text-xs text-muted-foreground hover:text-foreground underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {isAr ? "إزالة" : "Remove"}
                     </button>
@@ -1386,7 +1386,7 @@ const EnrollNowPage = () => {
                         key={m.value}
                         type="button"
                         onClick={() => setEgyptPaymentMethod(m.value)}
-                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 text-xs font-medium transition-all ${
+                        className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background flex flex-col items-center gap-1 p-3 rounded-xl border-2 text-xs font-medium transition-all ${
                           egyptPaymentMethod === m.value
                             ? "border-primary bg-primary/10 text-foreground"
                             : "border-border bg-muted/40 text-muted-foreground hover:border-foreground/30"

@@ -103,7 +103,7 @@ export const StudentsTab = memo(function StudentsTab({
                   <button
                     type="button"
                     onClick={() => setAdminTab("manage")}
-                    className="underline underline-offset-2 hover:text-foreground ml-1"
+                    className="ml-1 rounded-sm underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     Student Admin →
                   </button>
@@ -487,10 +487,10 @@ export const StudentsTab = memo(function StudentsTab({
                     Page {studentPage + 1} of {totalPages} · {sortedUsers.length} results
                   </p>
                   <div className="flex items-center gap-1">
-                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={studentPage === 0} onClick={() => setStudentPage(p => p - 1)}>
+                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={studentPage === 0} onClick={() => setStudentPage(p => p - 1)} aria-label="Previous page">
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={studentPage >= totalPages - 1} onClick={() => setStudentPage(p => p + 1)}>
+                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={studentPage >= totalPages - 1} onClick={() => setStudentPage(p => p + 1)} aria-label="Next page">
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>

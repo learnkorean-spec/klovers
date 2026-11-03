@@ -1880,7 +1880,7 @@ export default function RehamTrainingPanel() {
               <button
                 key={field.key}
                 onClick={() => setSelectedField(field.key)}
-                className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all ${
+                className={`flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   selectedField === field.key
                     ? "border-primary bg-primary/5 ring-1 ring-primary"
                     : "border-border hover:border-primary/50"
@@ -2139,7 +2139,7 @@ export default function RehamTrainingPanel() {
                     <button
                       key={ex.id}
                       onClick={() => goTo(i)}
-                      className={`w-full flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-colors ${
+                      className={`w-full flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                         i === currentIndex
                           ? "bg-primary/10 border border-primary/30 font-semibold"
                           : completed.has(ex.id)
@@ -2711,7 +2711,7 @@ export default function RehamTrainingPanel() {
                             >
                               <button
                                 className={cn(
-                                  "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                                  "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                                   learnedVocab.has(w.korean)
                                     ? "bg-green-500 border-green-500 text-white"
                                     : "border-muted-foreground/30 hover:border-green-400",
@@ -2957,7 +2957,7 @@ export default function RehamTrainingPanel() {
                       <button
                         key={w.korean}
                         className={cn(
-                          "text-left p-2 rounded-lg border text-xs transition-colors flex items-center gap-1.5",
+                          "text-left p-2 rounded-lg border text-xs transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                           fcCardIdx === i && "ring-2 ring-blue-400",
                           isMastered
                             ? "bg-green-50 dark:bg-green-950/20 border-green-300"

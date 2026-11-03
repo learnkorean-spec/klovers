@@ -379,7 +379,7 @@ export default function KoreanInterviewPage() {
                         key={lang.id}
                         type="button"
                         onClick={() => toggleLang(lang.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                           selectedLangs.includes(lang.id)
                             ? "bg-muted border-border text-foreground dark:bg-secondary dark:border-border dark:text-secondary-foreground"
                             : "bg-ivory border-border text-muted-foreground hover:border-foreground dark:bg-muted"

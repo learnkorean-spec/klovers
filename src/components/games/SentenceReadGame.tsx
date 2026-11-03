@@ -115,7 +115,7 @@ const SentenceReadGame = ({ onGameComplete }: { onGameComplete?: (score: number,
           <div className="grid gap-3">
             {shuffleArray(q.options).map(opt => (
               <button key={opt} onClick={() => handleAnswer(opt)} disabled={!!feedback}
-                className={`p-3 rounded-lg font-medium border-2 transition-all text-left text-sm ${
+                className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background p-3 rounded-lg font-medium border-2 transition-all text-left text-sm ${
                   feedback && opt === q.answer ? "border-green-500 bg-green-500/10 text-foreground" :
                   feedback && opt === selected ? "border-destructive bg-destructive/10 text-foreground" :
                   "border-border bg-card text-foreground hover:border-foreground/30"

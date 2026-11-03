@@ -176,8 +176,11 @@ const calculateSeoScore = (post: Partial<BlogPost>, keywords: string): number =>
 };
 
 const getSeoColor = (score: number) => {
-  if (score >= 80) return "text-green-600";
-  if (score >= 50) return "text-yellow-600";
+  // text-green-600 / text-yellow-600 fail WCAG AA (4.5:1) for normal-size text on
+  // white (measured 3.3:1 and 2.94:1 respectively). -700 shades clear 4.5:1 while
+  // staying visually close to the original colors.
+  if (score >= 80) return "text-green-700";
+  if (score >= 50) return "text-yellow-700";
   return "text-destructive";
 };
 
@@ -510,12 +513,12 @@ const BlogManager = () => {
                     <Button variant="ghost" size="icon" onClick={() => togglePublish(post)} title={post.published ? "Unpublish" : "Publish"}>
                       {post.published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(post)} disabled={loadingEdit === post.id}>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(post)} disabled={loadingEdit === post.id} aria-label="Edit post">
                       <Pencil className={`h-4 w-4 ${loadingEdit === post.id ? "animate-pulse" : ""}`} />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        <Button variant="ghost" size="icon" aria-label="Delete post"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>

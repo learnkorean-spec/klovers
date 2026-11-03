@@ -269,7 +269,7 @@ const PromoCodesManager = () => {
                         <span className="font-mono font-semibold text-sm">{c.code}</span>
                         <button
                           onClick={() => copyCode(c.code)}
-                          className="text-muted-foreground hover:text-foreground transition-colors"
+                          className="rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                           aria-label={`Copy code ${c.code}`}
                         >
                           <Copy className="h-3 w-3" />
@@ -308,7 +308,7 @@ const PromoCodesManager = () => {
                     <TableCell>
                       <button
                         onClick={() => deleteCode(c.id, c.code)}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        className="rounded-sm text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         aria-label={`Delete code ${c.code}`}
                       >
                         <Trash2 className="h-4 w-4" />

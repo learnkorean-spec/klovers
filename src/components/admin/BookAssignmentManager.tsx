@@ -491,6 +491,7 @@ const BookAssignmentManager = () => {
                     <Button
                       variant="ghost" size="icon"
                       className="h-7 w-7 text-destructive hover:text-destructive"
+                      aria-label="Remove book assignment"
                       onClick={() => handleRemove(a.id, a.book_id, a.profile?.name)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -544,7 +545,7 @@ const BookAssignmentManager = () => {
                       ) : filteredProfiles.slice(0, 8).map(p => (
                         <button
                           key={p.user_id}
-                          className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors"
+                          className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                           onClick={() => setSelectedUser(p)}
                         >
                           <div className="text-xs font-medium">{p.name ?? "—"}</div>

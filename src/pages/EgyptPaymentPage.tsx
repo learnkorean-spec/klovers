@@ -158,7 +158,7 @@ const UnderReviewBlock = ({
         {!showReplace ? (
           <button
             type="button"
-            className="text-xs text-muted-foreground underline hover:text-foreground transition-colors w-full text-center"
+            className="text-xs text-muted-foreground underline hover:text-foreground transition-colors w-full text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => setShowReplace(true)}
           >
             {t("payment.wrongFile")}
@@ -254,7 +254,7 @@ const PaymentForm = ({
                 aria-checked={paymentMethod === m.value}
                 aria-label={m.label}
                 onClick={() => setPaymentMethod(m.value)}
-                className={`p-3 rounded-lg border-2 text-center transition-all ${
+                className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background p-3 rounded-lg border-2 text-center transition-all ${
                   paymentMethod === m.value
                     ? "border-primary bg-accent"
                     : "border-border hover:border-primary/50"

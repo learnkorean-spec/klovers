@@ -91,7 +91,7 @@ const EnrollmentProtectedRoute = ({ children }: { children: React.ReactNode }) =
 
             <button
               onClick={() => navigate("/dashboard")}
-              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
+              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Back to dashboard
             </button>

@@ -611,7 +611,7 @@ const PlacementTestPage = () => {
                             key={q.id}
                             onClick={() => { setPage(Math.floor(PLACEMENT_QUESTIONS.findIndex(pq => pq.id === q.id) / QUESTIONS_PER_PAGE)); setPhase("test"); }}
                             className={[
-                              "rounded-lg border text-sm font-semibold py-2.5 transition-colors",
+                              "rounded-lg border text-sm font-semibold py-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                               st === "answered"   ? "bg-klovers-green/20 border-klovers-green text-charcoal dark:text-foreground hover:bg-klovers-green/30" : "",
                               st === "skipped"    ? "bg-klovers-yellow/25 border-klovers-yellow text-charcoal dark:text-foreground hover:bg-klovers-yellow/40" : "",
                               st === "unanswered" ? "bg-muted/60 border-border text-muted-foreground hover:bg-muted" : "",
@@ -679,7 +679,7 @@ const PlacementTestPage = () => {
               {/* Options */}
               <div className="space-y-2">
                 {q.options.map((opt, i) => {
-                  let cls = "w-full text-left rounded-lg border px-4 py-3 text-sm transition-all ";
+                  let cls = "w-full text-left rounded-lg border px-4 py-3 text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ";
                   if (!listeningConfirmed) {
                     cls += listeningSelected === i
                       ? "bg-primary/10 border-primary text-foreground font-medium"
@@ -727,7 +727,7 @@ const PlacementTestPage = () => {
           </Card>
 
           <button
-            className="w-full text-xs text-muted-foreground hover:underline"
+            className="w-full text-xs text-muted-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => { cancelSpeech(); setPhase("result"); }}
           >
             {isAr ? "تخطي اختبار الاستماع ← العودة للنتيجة" : "Skip listening exam → back to result"}
@@ -766,7 +766,7 @@ const PlacementTestPage = () => {
               {/* Options */}
               <div className="space-y-2">
                 {q.options.map((opt, i) => {
-                  let cls = "w-full text-left rounded-lg border px-4 py-3 text-sm transition-all ";
+                  let cls = "w-full text-left rounded-lg border px-4 py-3 text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ";
                   if (!readingConfirmed) {
                     cls += readingSelected === i
                       ? "bg-primary/10 border-primary text-foreground font-medium"
@@ -814,7 +814,7 @@ const PlacementTestPage = () => {
           </Card>
 
           <button
-            className="w-full text-xs text-muted-foreground hover:underline"
+            className="w-full text-xs text-muted-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => setPhase("result")}
           >
             {isAr ? "تخطي اختبار القراءة ← العودة للنتيجة" : "Skip reading exam → back to result"}
@@ -908,7 +908,7 @@ const PlacementTestPage = () => {
           </Card>
 
           <button
-            className="w-full text-xs text-muted-foreground hover:underline"
+            className="w-full text-xs text-muted-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => { cancelSpeech(); setPhase("result"); }}
           >
             {isAr ? "تخطي اختبار المحادثة ← العودة للنتيجة" : "Skip speaking test → go back to result"}
@@ -1030,7 +1030,7 @@ const PlacementTestPage = () => {
                         track.custom("placement_recommendation_clicked", { level: result.levelKey, cta: "see_pricing", plan: plan.name });
                         navigate("/pricing");
                       }}
-                      className="w-full text-xs text-muted-foreground hover:text-foreground hover:underline"
+                      className="w-full text-xs text-muted-foreground hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {isAr ? "أو عرض خطط الأسعار" : "Or see full pricing"}
                     </button>
@@ -1106,7 +1106,7 @@ const PlacementTestPage = () => {
                     <p className="text-xs text-muted-foreground">{tip}</p>
                     <button
                       onClick={() => navigate(link)}
-                      className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
+                      className="text-xs text-primary font-medium hover:underline flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {label} <ArrowRight className="h-3 w-3" />
                     </button>
@@ -1141,7 +1141,7 @@ const PlacementTestPage = () => {
               <CardContent className="pt-5 pb-5">
                 <button
                   onClick={() => setShowRoadmap(v => !v)}
-                  className="flex w-full items-center justify-between text-sm font-semibold text-foreground"
+                  className="flex w-full items-center justify-between text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <span className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-primary" />
@@ -1300,7 +1300,7 @@ const PlacementTestPage = () => {
                   <p className="text-xs text-muted-foreground">{speakingSummary(speakingRatings, result.levelKey, isAr)}</p>
                 </div>
               )}
-              <button onClick={() => navigate("/")} className="w-full text-xs text-muted-foreground hover:underline">
+              <button onClick={() => navigate("/")} className="w-full text-xs text-muted-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                 {isAr ? "العودة للرئيسية" : "Back to home"}
               </button>
             </CardContent>
@@ -1311,7 +1311,7 @@ const PlacementTestPage = () => {
             <CardContent className="pt-5 pb-5">
               <button
                 onClick={() => setShowExplanations(v => !v)}
-                className="flex w-full items-center justify-between text-sm font-semibold text-foreground"
+                className="flex w-full items-center justify-between text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-primary" />
@@ -1340,7 +1340,7 @@ const PlacementTestPage = () => {
                         <div className="ml-7 mb-2 rounded-lg bg-primary/5 border border-primary/15 px-3 py-2 text-xs space-y-1.5">
                           <p className="font-medium text-foreground leading-relaxed">{q.passage}</p>
                           <button
-                            className="flex items-center gap-1 text-primary hover:underline text-[11px]"
+                            className="flex items-center gap-1 text-foreground hover:underline text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             onClick={() => speakKorean(q.passage!)}
                           >
                             <Volume2 className="h-3 w-3" /> {isAr ? "الاستماع مجددًا" : "Listen again"}
@@ -1491,7 +1491,7 @@ const PlacementTestPage = () => {
                 title={`Q${q.id} · ${q.level}`}
                 onClick={() => setPage(qPage)}
                 className={[
-                  "h-5 w-5 rounded-full border-2 transition-all",
+                  "h-5 w-5 rounded-full border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   st === "answered"   ? "bg-klovers-green border-charcoal/40" : "",
                   st === "skipped"    ? "bg-klovers-yellow border-charcoal/40" : "",
                   st === "unanswered" ? "bg-muted border-border" : "",
@@ -1571,7 +1571,7 @@ const PlacementTestPage = () => {
                       <span className="text-sm text-muted-foreground italic">{isAr ? "تم التخطي: يحتسب كـ 0" : "Skipped: counts as 0"}</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleUnskip(q.id); }}
-                        className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+                        className="flex items-center gap-1.5 text-xs text-foreground hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       >
                         <Undo2 className="h-3.5 w-3.5" /> {isAr ? "الإجابة عن هذا السؤال" : "Answer this question"}
                       </button>
@@ -1612,7 +1612,7 @@ const PlacementTestPage = () => {
                       <div className="mt-3 ml-1">
                         <button
                           onClick={(e) => { e.stopPropagation(); handleSkip(q.id); }}
-                          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         >
                           <SkipForward className="h-3.5 w-3.5" /> {isAr ? "تخطي هذا السؤال" : "Skip this question"}
                         </button>

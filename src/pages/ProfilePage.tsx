@@ -295,7 +295,7 @@ const ProfilePage = () => {
                   <button
                     key={href}
                     onClick={() => navigate(href)}
-                    className="flex items-center gap-2 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors text-sm font-medium text-foreground text-left"
+                    className="flex items-center gap-2 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors text-sm font-medium text-foreground text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <Icon className="h-4 w-4 text-primary shrink-0" />
                     {label}

@@ -63,7 +63,7 @@ export function ManualEnrollDialog({
                 <button
                   key={pt}
                   onClick={() => setEnrollForm(f => ({ ...f, plan_type: pt, group_id: "" }))}
-                  className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     enrollForm.plan_type === pt
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border hover:border-primary/50"

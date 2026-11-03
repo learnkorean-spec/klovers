@@ -1381,7 +1381,7 @@ const TrialClassesManager = () => {
                         <TableHead>
                           <button
                             type="button"
-                            className="inline-flex items-center gap-1 hover:text-foreground"
+                            className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             onClick={() => setBookedSort((s) => (s === "asc" ? "desc" : "asc"))}
                             title={bookedSort === "asc" ? "Oldest signup first — click for newest first" : "Newest signup first — click for oldest first"}
                           >

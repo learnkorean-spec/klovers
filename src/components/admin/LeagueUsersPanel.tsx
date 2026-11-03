@@ -112,7 +112,7 @@ export default function LeagueUsersPanel() {
               key={league.key}
               onClick={() => setLeagueFilter(isActive ? "all" : league.key)}
               className={cn(
-                "rounded-2xl border-2 p-3 text-left transition-all hover:shadow-md",
+                "rounded-2xl border-2 p-3 text-left transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 isActive
                   ? "border-primary bg-primary/5 shadow-md"
                   : "border-border bg-card hover:border-primary/40"
@@ -221,10 +221,10 @@ export default function LeagueUsersPanel() {
                 Page {page + 1} of {totalPages}
               </span>
               <div className="flex gap-1">
-                <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)} aria-label="Previous page">
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)} aria-label="Next page">
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

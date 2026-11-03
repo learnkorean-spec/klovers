@@ -127,7 +127,7 @@ const GamesLeaderboard = ({ isLoggedIn, isAr, loading, allTime, weekly, myRank }
                   role="tab"
                   aria-selected={tab === key}
                   onClick={() => setTab(key)}
-                  className={cn(
+                  className={cn("focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background", 
                     "min-h-9 rounded-full px-4 text-xs font-bold transition-colors",
                     tab === key ? "bg-charcoal text-klovers-yellow dark:bg-klovers-yellow dark:text-charcoal" : "text-muted-foreground hover:text-foreground",
                   )}

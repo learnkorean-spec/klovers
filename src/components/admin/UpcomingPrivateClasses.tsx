@@ -111,7 +111,7 @@ const UpcomingPrivateClasses = () => {
                 <div key={date} className="min-w-[110px] space-y-1.5">
                   <p
                     className={`text-xs font-semibold pb-1 border-b ${
-                      isToday ? "text-primary border-primary" : "text-muted-foreground border-border"
+                      isToday ? "text-foreground border-primary" : "text-muted-foreground border-border"
                     }`}
                   >
                     {dayLabel(date)}

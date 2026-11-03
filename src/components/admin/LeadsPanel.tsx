@@ -465,7 +465,7 @@ const LeadsPanel: React.FC = () => {
               </div>
               <div className="bg-background border border-border rounded-lg px-3 py-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Booked</p>
-                <p className="text-lg font-bold text-green-600 dark:text-green-400">{recoveryKpi.leads_converted}</p>
+                <p className="text-lg font-bold text-green-700 dark:text-green-400">{recoveryKpi.leads_converted}</p>
               </div>
               <div className="bg-background border border-border rounded-lg px-3 py-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Recovery</p>
@@ -510,7 +510,7 @@ const LeadsPanel: React.FC = () => {
                             </td>
                             <td className="px-3 py-2 text-center">
                               {row.converted_at
-                                ? <span className="text-green-600 dark:text-green-400 font-semibold">✓ {fmt(row.converted_at)}</span>
+                                ? <span className="text-green-700 dark:text-green-400 font-semibold">✓ {fmt(row.converted_at)}</span>
                                 : <Dot on={false} colorClass="" />}
                             </td>
                           </tr>
@@ -610,7 +610,7 @@ const LeadsPanel: React.FC = () => {
                   <span key={src} className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-background border border-border rounded-full px-2.5 py-1">
                     <span className="text-foreground capitalize">{src}</span>
                     <span className="text-muted-foreground">{total}</span>
-                    <span className="text-green-600 font-bold">{total > 0 ? Math.round((converted / total) * 100) : 0}%</span>
+                    <span className="text-green-700 font-bold">{total > 0 ? Math.round((converted / total) * 100) : 0}%</span>
                   </span>
                 ))}
               </div>
@@ -706,7 +706,7 @@ const LeadsPanel: React.FC = () => {
                         <div className="flex items-center gap-1 max-w-[220px]">
                           <span className="truncate flex-1 text-sm">{lead.email}</span>
                           <button
-                            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
+                            className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); setCopiedLeadId(lead.id + "_email"); setTimeout(() => setCopiedLeadId(id => id === lead.id + "_email" ? null : id), 1500); }}
                             aria-label="Copy email address"
                           >
@@ -751,7 +751,7 @@ const LeadsPanel: React.FC = () => {
                                   const next = selected ? days.filter(d => d !== day) : [...days, day];
                                   setEditForm(f => ({ ...f, schedule: next.join("/") }));
                                 }}
-                                className={`px-2 py-0.5 rounded text-xs border transition-all ${selected ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                                className={`px-2 py-0.5 rounded text-xs border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${selected ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
                               >
                                 {day.slice(0, 3)}
                               </button>
@@ -809,10 +809,10 @@ const LeadsPanel: React.FC = () => {
                       <div className="flex items-center gap-1">
                         {editingLeadId === lead.id ? (
                           <>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEditLead}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleEditLead} aria-label="Save lead">
                               <Check className="h-4 w-4 text-primary" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEditLead}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEditLead} aria-label="Cancel editing lead">
                               <X className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </>

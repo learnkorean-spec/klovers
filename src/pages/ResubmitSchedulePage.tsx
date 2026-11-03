@@ -245,7 +245,7 @@ const ResubmitSchedulePage = () => {
                         key={pkg.id}
                         type="button"
                         onClick={() => setSelectedPackageId(pkg.id)}
-                        className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                        className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background w-full text-left p-4 rounded-lg border-2 transition-all ${
                           selectedPackageId === pkg.id
                             ? "border-primary bg-accent"
                             : "border-border hover:border-primary/50"

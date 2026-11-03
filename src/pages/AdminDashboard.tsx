@@ -1073,7 +1073,7 @@ const AdminDashboard = () => {
               </div>
               <button
                 onClick={() => invalidateAll()}
-                className="shrink-0 text-xs underline underline-offset-2 hover:no-underline"
+                className="shrink-0 rounded-sm text-xs underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 Retry
               </button>
@@ -1191,7 +1191,7 @@ const AdminDashboard = () => {
                 <button
                   type="button"
                   onClick={() => { setAdminTab("enrollments"); setTabGroup("ops"); }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-start hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-start hover:bg-amber-100/60 dark:hover:bg-amber-900/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <FileCheck className="h-4 w-4 text-amber-600 shrink-0" />
                   <div className="flex-1 min-w-0 text-sm">
@@ -1561,7 +1561,7 @@ const AdminDashboard = () => {
                     <button
                       type="button"
                       onClick={() => setAdminTab("students")}
-                      className="underline underline-offset-2 hover:text-foreground ml-1"
+                      className="ml-1 rounded-sm underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       Users →
                     </button>

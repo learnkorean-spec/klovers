@@ -94,7 +94,7 @@ const WelcomeModal = ({ open, onClose }: WelcomeModalProps) => {
         <div className="bg-gradient-to-br from-primary to-primary/80 px-6 pt-8 pb-6 text-center relative">
           <button
             onClick={handleClose}
-            className="absolute top-3 end-3 h-7 w-7 rounded-full bg-primary-foreground/15 flex items-center justify-center hover:bg-primary-foreground/25 transition-colors"
+            className="absolute top-3 end-3 h-7 w-7 rounded-full bg-primary-foreground/15 flex items-center justify-center hover:bg-primary-foreground/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label={isAr ? "إغلاق" : "Close"}
           >
             <X className="h-4 w-4 text-primary-foreground" />
@@ -135,7 +135,7 @@ const WelcomeModal = ({ open, onClose }: WelcomeModalProps) => {
                 onClick={() => setStep(i)}
                 aria-label={isAr ? `الخطوة ${i + 1} من ${STEPS.length}` : `Step ${i + 1} of ${STEPS.length}`}
                 aria-current={i === step ? "step" : undefined}
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background h-2 rounded-full transition-all duration-300 ${
                   i === step ? "w-6 bg-primary-foreground" : "w-2 bg-primary-foreground/40"
                 }`}
               />
@@ -178,7 +178,7 @@ const WelcomeModal = ({ open, onClose }: WelcomeModalProps) => {
           {/* Skip */}
           <button
             onClick={handleClose}
-            className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {isAr ? "تخطي جولة الترحيب" : "Skip welcome tour"}
           </button>

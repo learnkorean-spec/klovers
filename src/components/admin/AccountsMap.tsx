@@ -248,7 +248,7 @@ export default function AccountsMap() {
           {query && (
             <button
               type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               aria-label="Clear filter"
               onClick={() => setQuery("")}
             >
@@ -265,7 +265,7 @@ export default function AccountsMap() {
                 type="button"
                 onClick={() => setQuery(on ? "" : name)}
                 className={cn(
-                  "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                  "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   on ? "border-charcoal bg-klovers-yellow text-charcoal" : "border-border bg-background text-foreground hover:bg-muted",
                 )}
               >
@@ -317,7 +317,7 @@ export default function AccountsMap() {
                 </span>
                 <button
                   type="button"
-                  className="shrink-0 rounded p-1 hover:bg-muted"
+                  className="shrink-0 rounded p-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   aria-label={`Edit ${r.service}`}
                   onClick={() => setEditing({ ...r, url: r.url ?? "" })}
                 >
@@ -413,7 +413,7 @@ function Branch({
           {!unknown && (
             <button
               type="button"
-              className="shrink-0 rounded p-1 text-foreground hover:bg-muted"
+              className="shrink-0 rounded p-1 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               aria-label={`Copy ${login}`}
               onClick={() => {
                 void navigator.clipboard?.writeText(login).then(
@@ -454,7 +454,7 @@ function Branch({
                   )}
                   <button
                     type="button"
-                    className="rounded p-1 text-foreground hover:bg-muted"
+                    className="rounded p-1 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     aria-label={`Edit ${r.service}`}
                     onClick={() => onEdit(r)}
                   >

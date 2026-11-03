@@ -128,7 +128,7 @@ const FAQPage = () => {
                   type="button"
                   onClick={() => setSearchQuery("")}
                   aria-label={isAr ? "مسح البحث" : "Clear search"}
-                  className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <X className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -162,7 +162,7 @@ const FAQPage = () => {
               {filteredFaqs.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <p className="font-medium">{isAr ? `لا نتائج لـ «${searchQuery}»` : `No results for "${searchQuery}"`}</p>
-                  <button onClick={() => { setSearchQuery(""); setActiveCategory(null); }} className="mt-2 text-sm font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground">
+                  <button onClick={() => { setSearchQuery(""); setActiveCategory(null); }} className="mt-2 text-sm font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                     {isAr ? "مسح البحث" : "Clear search"}
                   </button>
                 </div>

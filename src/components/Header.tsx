@@ -273,7 +273,7 @@ const Header = () => {
 
           {/* Mobile hamburger */}
           <button
-            className="lg:hidden inline-flex min-h-11 min-w-11 items-center justify-center rounded-md hover:bg-accent transition-colors"
+            className="lg:hidden inline-flex min-h-11 min-w-11 items-center justify-center rounded-md hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label={isMenuOpen ? (isAr ? "إغلاق قائمة التنقل" : "Close navigation menu") : (isAr ? "فتح قائمة التنقل" : "Open navigation menu")}
             aria-expanded={isMenuOpen}

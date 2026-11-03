@@ -449,7 +449,7 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
         </div>
       <div className="border-t border-border pt-2 mt-2">
         <button
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 rounded-sm text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           onClick={toggleLogs}
         >
           <Mail className="h-3 w-3" />

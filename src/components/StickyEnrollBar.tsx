@@ -116,7 +116,7 @@ const StickyEnrollBar = () => {
         <button
           onClick={dismiss}
           aria-label={isAr ? "إخفاء" : "Dismiss"}
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-white/60 hover:text-white/90 transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-white/60 hover:text-white/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>

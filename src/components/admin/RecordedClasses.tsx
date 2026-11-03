@@ -151,7 +151,7 @@ const RecordedClasses = ({ limit = 6 }: RecordedClassesProps) => {
         {rows.length > limit && (
           <button
             type="button"
-            className="pt-1 text-xs text-muted-foreground underline underline-offset-2"
+            className="rounded-sm pt-1 text-xs text-muted-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             onClick={() => setShowAll(v => !v)}
           >
             {showAll ? "Show fewer" : `Show all ${rows.length}`}

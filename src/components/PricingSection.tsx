@@ -263,7 +263,7 @@ const PricingSection = () => {
             <div className="inline-flex rounded-lg bg-muted p-1">
               <button
                 onClick={() => setClassType("group")}
-                className={`px-5 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background px-5 py-2 rounded-md text-sm font-medium transition-colors ${
                   classType === "group"
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -273,7 +273,7 @@ const PricingSection = () => {
               </button>
               <button
                 onClick={() => setClassType("private")}
-                className={`px-5 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background px-5 py-2 rounded-md text-sm font-medium transition-colors ${
                   classType === "private"
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -547,7 +547,7 @@ const PricingSection = () => {
                     <button
                       type="button"
                       onClick={() => openFlexPaymentChat(tierKey, classType)}
-                      className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground py-1 transition-colors"
+                      className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground py-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       <KloverIcon name="game-chat-smile" className="h-5 w-5" />
                       {tr("Flexible / installment payment? Chat with us", "الدفع بالتقسيط أو بمرونة؟ المراسلة عبر واتساب")}

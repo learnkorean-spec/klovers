@@ -243,13 +243,15 @@ const MoneyIn = () => {
               </>
             ) : (
               <>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {currencies.map(c => (
                     <div key={c.currency} className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold leading-none tracking-tight tabular-nums">
                         {formatMoney(c.total)}
                       </span>
-                      <span className="text-sm text-muted-foreground">{c.currency}</span>
+                      <span className="rounded border border-input bg-muted px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-muted-foreground">
+                        {c.currency}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -306,7 +308,7 @@ const MoneyIn = () => {
                       type="button"
                       onClick={() => void openReceipt(c.id, c.receipt_path!)}
                       disabled={busy === c.id}
-                      className="flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-60"
+                      className="flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       <Paperclip className="h-3 w-3" /> See receipt
                     </button>
@@ -318,7 +320,7 @@ const MoneyIn = () => {
                     type="button"
                     onClick={() => void reviewClaim(c.id, true)}
                     disabled={busy === c.id}
-                    className="rounded-lg border bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+                    className="rounded-lg border bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {busy === c.id ? "Saving…" : "Money received"}
                   </button>
@@ -326,7 +328,7 @@ const MoneyIn = () => {
                     type="button"
                     onClick={() => void reviewClaim(c.id, false)}
                     disabled={busy === c.id}
-                    className="rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-60"
+                    className="rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     Not found
                   </button>
@@ -369,7 +371,7 @@ const MoneyIn = () => {
                       type="button"
                       onClick={() => void askForPayment(b.id)}
                       disabled={busy === b.id}
-                      className="flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-60"
+                      className="flex items-center gap-1 rounded-lg border px-3 py-1 text-xs font-semibold disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       title="Emails her the amount, the classes taught, how to pay, and where to upload the receipt"
                     >
                       <Send className="h-3 w-3" />
@@ -382,13 +384,13 @@ const MoneyIn = () => {
                     aria-label={`Date ${b.student} paid`}
                     value={dates[b.id] ?? b.purchased_on ?? todayInCairo()}
                     onChange={e => setDates(d => ({ ...d, [b.id]: e.target.value }))}
-                    className="rounded-lg border bg-background px-2 py-1 text-xs"
+                    className="rounded-lg border bg-background px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   />
                   <button
                     type="button"
                     onClick={() => void markPaid(b.id, b.purchased_on)}
                     disabled={busy === b.id}
-                    className="rounded-lg border bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+                    className="rounded-lg border bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {busy === b.id ? "Saving…" : "Mark paid"}
                   </button>

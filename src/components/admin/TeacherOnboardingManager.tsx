@@ -471,7 +471,7 @@ export default function TeacherOnboardingManager() {
                 <button
                   key={t.id}
                   onClick={() => setSelectedId(t.id)}
-                  className={`w-full text-left rounded-lg border p-2.5 transition-colors ${
+                  className={`w-full text-left rounded-lg border p-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     selectedId === t.id ? "border-primary bg-primary/5" : "border-border/60 hover:bg-muted"
                   }`}
                 >

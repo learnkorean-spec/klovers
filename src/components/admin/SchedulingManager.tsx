@@ -1640,7 +1640,7 @@ const PrivateTimeConfig = () => {
                 {formatTime(t)}
                 <button
                   onClick={() => removeTime(t)}
-                  className="ml-1 text-muted-foreground hover:text-destructive"
+                  className="ml-1 rounded-sm text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   disabled={saving}
                 >
                   <X className="h-3 w-3" />

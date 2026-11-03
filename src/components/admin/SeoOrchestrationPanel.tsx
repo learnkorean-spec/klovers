@@ -76,7 +76,7 @@ function PostRow({ item }: { item: AgentReport }) {
   return (
     <div className={`border rounded-xl overflow-hidden transition-shadow ${open ? "shadow-md" : "hover:shadow-sm"}`}>
       <button
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen((v) => !v)}
       >
         {open ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
@@ -408,7 +408,7 @@ function TopicGapPanel({
       {/* Topic clusters */}
       {data.topic_clusters.length > 0 && (
         <Card className="rounded-xl">
-          <button className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-muted/40 transition-colors" onClick={() => setClusterOpen((v) => !v)}>
+          <button className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" onClick={() => setClusterOpen((v) => !v)}>
             {clusterOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
             <TrendingUp className="h-4 w-4 text-primary" />
             <span className="font-medium text-sm">Topic Clusters ({data.topic_clusters.length})</span>
@@ -564,13 +564,13 @@ function SeoOrchestrationPanel() {
         <div className="flex gap-1 border-b">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "posts" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${activeTab === "posts" ? "border-primary text-foreground font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             Post Analysis ({result.report.length})
           </button>
           <button
             onClick={() => setActiveTab("topics")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === "topics" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${activeTab === "topics" ? "border-primary text-foreground font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             <TrendingUp className="h-3.5 w-3.5" />
             Topic Intelligence

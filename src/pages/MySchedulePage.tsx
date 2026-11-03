@@ -528,7 +528,7 @@ const MySchedulePage = () => {
                 <button
                   type="button"
                   onClick={() => setSelectedCourseType("group")}
-                  className="p-6 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all text-center space-y-2"
+                  className="p-6 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all text-center space-y-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <KloverIcon name="student-girl-heart" className="h-12 w-12 mx-auto" />
                   <p className="font-semibold text-foreground">{t("mySchedule.groupClass")}</p>
@@ -537,7 +537,7 @@ const MySchedulePage = () => {
                 <button
                   type="button"
                   onClick={() => setSelectedCourseType("private")}
-                  className="p-6 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all text-center space-y-2"
+                  className="p-6 rounded-lg border-2 border-border hover:border-primary hover:bg-accent transition-all text-center space-y-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <KloverIcon name="klobi-headphones" className="h-12 w-12 mx-auto" />
                   <p className="font-semibold text-foreground">{t("mySchedule.privateClass")}</p>

@@ -372,7 +372,7 @@ const TeacherAvailabilityManager = () => {
   };
 
   const seg = (on: boolean) =>
-    `rounded-md px-2.5 py-1 text-xs transition-colors ${
+    `rounded-md px-2.5 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
       on ? "bg-foreground font-semibold text-background" : "font-medium text-muted-foreground hover:bg-muted"
     }`;
 
@@ -517,7 +517,7 @@ const TeacherAvailabilityManager = () => {
                                   disabled={busy}
                                   onClick={() => toggle(slot)}
                                   aria-label={slot.is_available ? "Pause this hour" : "Offer this hour"}
-                                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
+                                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                                 >
                                   {busy ? (
                                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -532,7 +532,7 @@ const TeacherAvailabilityManager = () => {
                                   disabled={busy}
                                   onClick={() => remove(slot)}
                                   aria-label="Remove this hour"
-                                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-40"
+                                  className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
                                 </button>

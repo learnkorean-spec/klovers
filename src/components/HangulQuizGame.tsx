@@ -185,7 +185,7 @@ const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, t
                 </p>
               )}
               {!showHint && selected === null && (
-                <button onClick={() => setShowHint(true)} className="text-xs text-muted-foreground/60 hover:text-muted-foreground mt-2 underline">
+                <button onClick={() => setShowHint(true)} className="text-xs text-muted-foreground/60 hover:text-muted-foreground mt-2 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                   {t("games.needHint")}
                 </button>
               )}
@@ -208,7 +208,7 @@ const HangulQuizGame = ({ onGameComplete }: { onGameComplete?: (score: number, t
                     key={opt}
                     onClick={() => handleAnswer(opt)}
                     disabled={selected !== null}
-                    className={`rounded-lg border-2 p-4 text-center font-semibold text-lg transition-all duration-200 ${style} ${selected === null ? "cursor-pointer" : "cursor-default"}`}
+                    className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg border-2 p-4 text-center font-semibold text-lg transition-all duration-200 ${style} ${selected === null ? "cursor-pointer" : "cursor-default"}`}
                   >
                     {opt}
                   </button>

@@ -66,7 +66,7 @@ const FAQ = () => {
           {faqs.map((faq, i) => (
             <div key={i} className="bg-card border border-border rounded-xl overflow-hidden">
               <button
-                className="w-full flex items-center justify-between px-5 py-4 text-start gap-4 hover:bg-muted/30 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 text-start gap-4 hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 onClick={() => setOpen(open === i ? null : i)}
                 aria-expanded={open === i}
               >
@@ -161,7 +161,7 @@ const ExitNudge = () => {
         <button
           onClick={() => setVisible(false)}
           aria-label={t("pricingPage.exitDismiss")}
-          className="absolute top-2 end-2 text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-muted transition-colors z-10"
+          className="absolute top-2 end-2 text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-muted transition-colors z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -193,7 +193,7 @@ const ExitNudge = () => {
         </Link>
         <button
           onClick={handleWaClick}
-          className="block w-full text-center text-[10px] text-muted-foreground hover:text-foreground py-1.5 border-t border-border/50 bg-muted/20"
+          className="block w-full text-center text-[10px] text-muted-foreground hover:text-foreground py-1.5 border-t border-border/50 bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {t("pricingPage.exitChat")}
         </button>

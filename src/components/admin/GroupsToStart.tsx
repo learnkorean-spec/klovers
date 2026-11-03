@@ -1529,7 +1529,7 @@ export default function GroupsToStart() {
                             type="button"
                             disabled={addingBusy}
                             onClick={() => void addStudent(g, c)}
-                            className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left disabled:opacity-50"
+                            className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                           >
                             <span className="truncate">{c.name} <span className="text-muted-foreground">· {c.email}</span></span>
                             <span className="flex shrink-0 gap-1">
