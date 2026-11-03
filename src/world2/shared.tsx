@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import type { Group } from "three";
 import { PALETTE } from "../game/config/world";
+import { std } from "../game/config/materials";
 import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
 
 /**
@@ -250,58 +251,161 @@ export function Hotspot({
   );
 }
 
-/** Cluby, built from simple primitives matching the canon description exactly
- * (mint green plush, two short butter-yellow horns, pink inner ears, rosy
- * cheeks, ivory hanbok top, yellow wrap skirt, green clover emblem) — there
- * is no Cluby GLB yet, so this is a faithful low-poly stand-in, not an
- * invented character. Shared by every room Cluby appears in. */
+/** Cluby's own canon colours (same literal hex values as the live /world
+ * game's src/game/player/Cluby.tsx — kept as local constants here rather
+ * than imported, since that file's export also drags in the live game's
+ * player/story/collision systems this static diorama doesn't have). */
+const CLUBY_MINT = "#9FDDBE";
+const CLUBY_BUTTER = "#F3D46A";
+const CLUBY_PINK = "#F4B3C2";
+const CLUBY_EYES = "#4A2E1F";
+
+/** Cluby — reuses the live /world game's own canon geometry (body, ivory
+ * hanbok top with its ribbon tie, Klovers-yellow wrap skirt with the trim
+ * ring and four-leaf clover, pointed ears with pink insides, horns, fangs,
+ * tail) copied mesh-for-mesh from src/game/player/Cluby.tsx, instead of
+ * World2's own earlier simplified stand-in (Re, 3 Nov 2026: "why not use
+ * the same Cluby in world 1?" — turns out we can, almost verbatim).
+ *
+ * What's deliberately NOT reused: the live game's useFrame logic (follow-
+ * the-learner movement, emerge-from-egg, pointing/guiding, hiding) — that's
+ * all driven by World1's own `story`/`player`/`layout` state, which this
+ * hackathon diorama doesn't have and doesn't need. Cluby just sits in place
+ * here, with the same gentle idle bob World2 already had. Still built from
+ * primitive Three.js geometry, same as World1 — there is no Cluby GLB
+ * anywhere in the repo (confirmed), so this isn't a downgrade from "the
+ * real one," it IS the real one's shape, just standing still. */
 export function Cluby({ x, y = 0, z }: { x: number; y?: number; z: number }) {
   const g = useRef<Group>(null);
   useFrame(({ clock }) => {
     if (g.current) g.current.position.y = y + 0.02 * Math.sin(clock.elapsedTime * 1.6);
   });
+  const mint = std(CLUBY_MINT, 0.95);
+  const m = (o: ReturnType<typeof std>) => <primitive object={o} attach="material" />;
   return (
     <group position={[x, 0, z]}>
       <group ref={g}>
-        {/* body */}
-        <mesh position={[0, 0.3, 0]}>
-          <sphereGeometry args={[0.28, 24, 20]} />
-          <meshStandardMaterial color="#8FD6B4" roughness={0.9} />
-        </mesh>
-        {/* ivory hanbok top */}
-        <mesh position={[0, 0.22, 0]}>
-          <sphereGeometry args={[0.24, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <meshStandardMaterial color="#FFF9EC" roughness={0.8} />
-        </mesh>
-        {/* yellow wrap skirt */}
-        <mesh position={[0, 0.1, 0]}>
-          <cylinderGeometry args={[0.2, 0.24, 0.14, 20]} />
-          <meshStandardMaterial color="#FFFF00" roughness={0.7} />
-        </mesh>
-        {/* head */}
-        <mesh position={[0, 0.58, 0]}>
-          <sphereGeometry args={[0.2, 24, 20]} />
-          <meshStandardMaterial color="#8FD6B4" roughness={0.9} />
-        </mesh>
-        {/* rosy cheeks */}
-        {[-0.1, 0.1].map((dx) => (
-          <mesh key={dx} position={[dx, 0.55, 0.17]}>
-            <circleGeometry args={[0.035, 12]} />
-            <meshStandardMaterial color="#F8B4B4" />
+        {/* Feet */}
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 0.07, 0.04, 0.04]} scale={[1, 0.6, 1.3]}>
+            <sphereGeometry args={[0.06, 10, 8]} />
+            {m(mint)}
           </mesh>
         ))}
-        {/* horns */}
-        {[-0.08, 0.08].map((dx) => (
-          <mesh key={dx} position={[dx, 0.76, 0]} rotation={[0, 0, dx > 0 ? -0.3 : 0.3]}>
-            <coneGeometry args={[0.03, 0.1, 10]} />
-            <meshStandardMaterial color="#FFD24C" roughness={0.5} />
+        {/* Plush body */}
+        <mesh castShadow position={[0, 0.24, 0]} scale={[1, 1.1, 0.95]}>
+          <sphereGeometry args={[0.17, 18, 14]} />
+          {m(mint)}
+        </mesh>
+        {/* Ivory mini-hanbok top (jeogori) with a collar band and a yellow
+            ribbon tie (goreum). */}
+        <mesh castShadow position={[0, 0.24, 0]} scale={[1, 1.1, 0.95]}>
+          <sphereGeometry args={[0.176, 20, 12, 0, Math.PI * 2, Math.PI * 0.3, Math.PI * 0.26]} />
+          {m(std(PALETTE.ivory, 0.95))}
+        </mesh>
+        {[-1, 1].map((sd) => (
+          <mesh key={sd} position={[sd * 0.04, 0.315, 0.152]} rotation={[-0.35, 0, -sd * 0.55]}>
+            <boxGeometry args={[0.022, 0.11, 0.012]} />
+            {m(std("#E9E1CF", 0.9))}
           </mesh>
         ))}
-        {/* clover emblem */}
-        <mesh position={[0, 0.24, 0.23]}>
-          <circleGeometry args={[0.04, 12]} />
-          <meshStandardMaterial color="#2E7D4F" />
+        <mesh position={[0.035, 0.27, 0.17]} rotation={[0.1, 0, -0.35]}>
+          <boxGeometry args={[0.018, 0.075, 0.01]} />
+          {m(std(PALETTE.yellow, 0.8))}
         </mesh>
+        {/* Klovers-yellow wrap skirt (chima) with the green four-leaf
+            clover on the front. */}
+        <mesh castShadow position={[0, 0.125, 0]} scale={[1, 1, 0.92]}>
+          <cylinderGeometry args={[0.168, 0.205, 0.17, 22, 1, true]} />
+          {m(std(PALETTE.yellow, 0.85))}
+        </mesh>
+        <mesh position={[0, 0.205, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[1, 0.92, 1]}>
+          <torusGeometry args={[0.168, 0.012, 6, 24]} />
+          {m(std(PALETTE.yellow, 0.85))}
+        </mesh>
+        {[[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([sx, sy], i) => (
+          <mesh key={i} position={[sx * 0.015, 0.12 + sy * 0.015, 0.194]}>
+            <sphereGeometry args={[0.016, 8, 6]} />
+            <meshBasicMaterial color={PALETTE.cloverGreen} toneMapped={false} />
+          </mesh>
+        ))}
+        {/* Arms, resting (World1's right-arm "point the way" rig isn't
+            needed here — Cluby never guides in this static diorama). */}
+        <group position={[-0.17, 0.3, 0]} rotation={[0, 0, 0.6]}>
+          <mesh position={[0, -0.06, 0]}>
+            <capsuleGeometry args={[0.035, 0.08, 4, 8]} />
+            {m(mint)}
+          </mesh>
+        </group>
+        <group position={[0.17, 0.3, 0]} rotation={[0, 0, -0.6]}>
+          <mesh position={[0, -0.06, 0]}>
+            <capsuleGeometry args={[0.035, 0.08, 4, 8]} />
+            {m(mint)}
+          </mesh>
+        </group>
+        {/* Head */}
+        <group position={[0, 0.5, 0]}>
+          <mesh castShadow scale={[1.05, 0.95, 1]}>
+            <sphereGeometry args={[0.17, 20, 16]} />
+            {m(mint)}
+          </mesh>
+          {[-1, 1].map((s) => (
+            <group key={s}>
+              {/* Warm brown eyes with a small light */}
+              <mesh position={[s * 0.062, 0.02, 0.145]}>
+                <sphereGeometry args={[0.03, 12, 10]} />
+                {m(std(CLUBY_EYES, 0.3))}
+              </mesh>
+              <mesh position={[s * 0.055, 0.035, 0.173]}>
+                <sphereGeometry args={[0.009, 6, 4]} />
+                <meshBasicMaterial color={PALETTE.white} />
+              </mesh>
+              {/* Rose cheeks */}
+              <mesh position={[s * 0.105, -0.03, 0.13]} scale={[1, 0.6, 0.4]}>
+                <sphereGeometry args={[0.026, 8, 6]} />
+                {m(std(CLUBY_PINK, 0.9))}
+              </mesh>
+              {/* Two short butter-yellow horns */}
+              <mesh position={[s * 0.07, 0.16, 0.02]} rotation={[0, 0, -s * 0.35]}>
+                <coneGeometry args={[0.03, 0.09, 10]} />
+                {m(std(CLUBY_BUTTER, 0.7))}
+              </mesh>
+              {/* Pointed ears, pink inside */}
+              <group position={[s * 0.16, 0.06, 0]} rotation={[0, 0, -s * 1.15]}>
+                <mesh>
+                  <coneGeometry args={[0.05, 0.13, 10]} />
+                  {m(mint)}
+                </mesh>
+                <mesh position={[0, -0.005, 0.018]} scale={[0.65, 0.8, 0.4]}>
+                  <coneGeometry args={[0.05, 0.13, 10]} />
+                  {m(std(CLUBY_PINK, 0.9))}
+                </mesh>
+              </group>
+              {/* Small fangs */}
+              <mesh position={[s * 0.013, -0.057, 0.158]} rotation={[Math.PI, 0, 0]}>
+                <coneGeometry args={[0.007, 0.018, 6]} />
+                <meshBasicMaterial color={PALETTE.white} />
+              </mesh>
+            </group>
+          ))}
+          <mesh position={[0, -0.045, 0.16]}>
+            <boxGeometry args={[0.04, 0.008, 0.008]} />
+            {m(std(CLUBY_EYES, 0.5))}
+          </mesh>
+        </group>
+        {/* Short spiky tail */}
+        <group position={[0, 0.14, -0.17]} rotation={[-1.9, 0, 0]}>
+          <mesh>
+            <coneGeometry args={[0.05, 0.16, 10]} />
+            {m(mint)}
+          </mesh>
+          {[0.02, -0.03].map((yy, i) => (
+            <mesh key={i} position={[0, yy, 0.04]} rotation={[0.9, 0, 0]}>
+              <coneGeometry args={[0.018, 0.04, 6]} />
+              {m(mint)}
+            </mesh>
+          ))}
+        </group>
       </group>
     </group>
   );
