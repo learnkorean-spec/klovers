@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from "react";
+import { Link } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -152,6 +153,12 @@ const GamesPage = () => {
   const [activeGame, setActiveGame] = useState<string>("match");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
+  // 4 Nov 2026 (G0c follow-up): shown after EVERY completion, guest or
+  // logged-in, first game or fifth — unlike the signup nudge above it is not
+  // session-gated, because it is the only post-completion conversion path a
+  // logged-in player or a repeat guest ever sees. See the GameEventType note
+  // in leadTracking.ts for the data that motivated this.
+  const [showCompletionCta, setShowCompletionCta] = useState(false);
   // The last finished round, kept only so the completion modal can pick which
   // character to lead with. Not persisted and not read anywhere else.
   const [lastResult, setLastResult] = useState<{ score: number; total: number } | null>(null);
@@ -284,6 +291,8 @@ const GamesPage = () => {
     });
 
     setLastResult({ score, total: totalRounds });
+    // See the state declaration above: unconditional, every completion.
+    setShowCompletionCta(true);
 
     if (isLoggedIn) {
       const xp = await awardGameXp(gameId, score, totalRounds);
@@ -301,6 +310,7 @@ const GamesPage = () => {
       // with it open has still been asked.
       markNudgeSeen();
       setShowSignupNudge(true);
+      void logGameEvent({ source_type: "signup_nudge_shown", cta_label: gameId });
     }
   }, [awardGameXp, league, isLoggedIn]);
 
@@ -346,6 +356,7 @@ const GamesPage = () => {
     // game_opened while activeGame never changes, the effect below never
     // re-runs, and the started/opened ratio silently understates replays.
     startedForGame.current = null;
+    setShowCompletionCta(false);
     setActiveGame(id);
     setTimeout(() => {
       document.getElementById("active-game-area")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -590,6 +601,39 @@ const GamesPage = () => {
           <div ref={gameAreaRef}>
             {renderGame()}
           </div>
+
+          {/* Post-game conversion CTA (G0c follow-up, 4 Nov 2026). Shown after
+              EVERY completion — see showCompletionCta's declaration above —
+              right under the game instead of past FinalCTA's scroll, which a
+              finished player had no reason to make (1 click in 30 days from
+              /games). Deliberately plain marketing copy, no characters or
+              world content, so it sits outside the story-canon review this
+              repo requires for reward/celebration surfaces. */}
+          {showCompletionCta && lastResult && (
+            <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-border bg-muted/40 px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-foreground text-center sm:text-start">
+                {isAr
+                  ? "عايز تتعلم أكتر؟ جرّب حصة مجانية مع معلمة حقيقية."
+                  : "Want to learn more? Try a free class with a real teacher."}
+              </p>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  asChild
+                  size="sm"
+                  onClick={() => void logGameEvent({ source_type: "post_game_cta_clicked", cta_label: activeGame })}
+                >
+                  <Link to="/free-trial">{isAr ? "حجز مجانًا" : "Book Free Class"}</Link>
+                </Button>
+                <button
+                  onClick={() => setShowCompletionCta(false)}
+                  aria-label={isAr ? "إغلاق" : "Dismiss"}
+                  className="p-1.5 rounded-full hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <FinalCTA />
       </main>
@@ -630,7 +674,10 @@ const GamesPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-background border border-border rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 relative">
             <button
-              onClick={() => setShowSignupNudge(false)}
+              onClick={() => {
+                void logGameEvent({ source_type: "signup_nudge_clicked", cta_label: "dismiss_x" });
+                setShowSignupNudge(false);
+              }}
               className="absolute top-3 end-3 z-10 p-1.5 rounded-full bg-background/80 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               aria-label={isAr ? "إغلاق" : "Close"}
             >
@@ -671,15 +718,28 @@ const GamesPage = () => {
 
             <div className="space-y-2 pt-1">
               <Button className="w-full" size="lg" asChild>
-                <a href="/signup">{isAr ? "إنشاء حساب مجاني" : "Sign Up Free"}</a>
+                <a
+                  href="/signup"
+                  onClick={() => void logGameEvent({ source_type: "signup_nudge_clicked", cta_label: "signup" })}
+                >
+                  {isAr ? "إنشاء حساب مجاني" : "Sign Up Free"}
+                </a>
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <a href="/login">{isAr ? "حساب موجود بالفعل؟ تسجيل الدخول" : "Already have an account? Log in"}</a>
+                <a
+                  href="/login"
+                  onClick={() => void logGameEvent({ source_type: "signup_nudge_clicked", cta_label: "login" })}
+                >
+                  {isAr ? "حساب موجود بالفعل؟ تسجيل الدخول" : "Already have an account? Log in"}
+                </a>
               </Button>
             </div>
 
             <button
-              onClick={() => setShowSignupNudge(false)}
+              onClick={() => {
+                void logGameEvent({ source_type: "signup_nudge_clicked", cta_label: "dismiss" });
+                setShowSignupNudge(false);
+              }}
               className="w-full text-xs text-muted-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {isAr ? "مواصلة اللعب كضيف" : "Continue playing as guest"}

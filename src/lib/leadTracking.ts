@@ -43,7 +43,23 @@ export type GameEventType =
   | "games_page_view"
   | "game_opened"
   | "game_started"
-  | "game_completed";
+  | "game_completed"
+  // 4 Nov 2026 (G0c follow-up): the games section was producing ~1,250
+  // game events/month against essentially zero downstream trial/signup
+  // events in lead_events — confirmed via session-level join, not assumed:
+  // of 227 sessions with a game event in the trailing 30 days, only 14 had
+  // any lead-type event in the following 2 hours. The existing signup-nudge
+  // modal shown to guests after their first completion had NO instrumentation
+  // at all (its Sign Up Free / Log in / dismiss actions logged nothing), and
+  // the only trial CTA on the page (FinalCTA, below the game area) saw a
+  // single click in 30 days — it sits past a scroll a finished player has no
+  // reason to make. These three events close both gaps: whether the nudge is
+  // actually seen/acted on, and a conversion path for the far more common
+  // case (not-first-completion, or a logged-in player) where nothing at all
+  // was ever offered.
+  | "signup_nudge_shown"
+  | "signup_nudge_clicked"
+  | "post_game_cta_clicked";
 
 /**
  * Automatic engagement signals — things that happen TO a visitor rather than
