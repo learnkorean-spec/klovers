@@ -106,7 +106,7 @@ function BilingualText({ text, tone = 'muted' }: { text: Bilingual; tone?: 'mute
   return (
     <div className={`space-y-1 text-xs ${colour}`}>
       <p dir="ltr">{text.en}</p>
-      <p dir="rtl" className="text-right">{text.ar}</p>
+      <p lang="ar" dir="rtl" className="text-right">{text.ar}</p>
     </div>
   );
 }

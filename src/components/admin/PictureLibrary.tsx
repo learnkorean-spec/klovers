@@ -132,7 +132,7 @@ export default function PictureLibrary() {
                   className="aspect-[4/3] w-full max-w-full bg-muted object-cover"
                 />
                 <CardContent className="space-y-1 p-3">
-                  <p className="text-sm font-medium" dir="rtl">{s.label}</p>
+                  <p className="text-sm font-medium" lang="ar" dir="rtl">{s.label}</p>
                   <FileRow dir="scenes" file={s.file} />
                 </CardContent>
               </Card>
@@ -159,7 +159,7 @@ export default function PictureLibrary() {
                 />
                 <CardContent className="p-2 text-center">
                   <p className="truncate text-sm font-semibold" lang="ko">{i.ko}</p>
-                  <p className="truncate text-xs text-muted-foreground" dir="rtl">{i.ar}</p>
+                  <p className="truncate text-xs text-muted-foreground" lang="ar" dir="rtl">{i.ar}</p>
                 </CardContent>
               </Card>
             ))}
@@ -184,7 +184,7 @@ export default function PictureLibrary() {
                   className="aspect-[4/3] w-full max-w-full bg-muted object-cover"
                 />
                 <CardContent className="space-y-1 p-3">
-                  <p className="text-sm font-medium" dir="rtl">{s.label}</p>
+                  <p className="text-sm font-medium" lang="ar" dir="rtl">{s.label}</p>
                   <FileRow dir="sheets" file={s.file} />
                 </CardContent>
               </Card>
@@ -215,7 +215,7 @@ export default function PictureLibrary() {
                       className="aspect-[4/3] w-full max-w-full bg-muted object-cover"
                     />
                     <CardContent className="space-y-1 p-3">
-                      {p.label && <p className="text-sm font-medium" dir="rtl">{p.label}</p>}
+                      {p.label && <p className="text-sm font-medium" lang="ar" dir="rtl">{p.label}</p>}
                       <div className="flex items-center justify-between gap-2">
                         <code className="truncate text-xs text-muted-foreground">{p.file}</code>
                         <a

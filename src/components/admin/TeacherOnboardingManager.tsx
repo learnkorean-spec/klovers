@@ -78,7 +78,7 @@ function StepCheckbox({
       <span className="flex flex-col">
         <span className={done ? "line-through text-muted-foreground" : ""}>{step.title_en}</span>
         {step.title_ar && (
-          <span dir="rtl" className={`text-[11px] ${done ? "text-muted-foreground/60 line-through" : "text-muted-foreground"}`}>
+          <span lang="ar" dir="rtl" className={`text-[11px] ${done ? "text-muted-foreground/60 line-through" : "text-muted-foreground"}`}>
             {step.title_ar}
           </span>
         )}

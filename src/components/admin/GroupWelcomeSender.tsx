@@ -226,7 +226,12 @@ export default function GroupWelcomeSender({
           {busy ? "Sending…" : `Send to ${recipients.length} student${recipients.length === 1 ? "" : "s"}`}
         </Button>
         <span className="text-[11px] text-muted-foreground">
-          {isAr ? "Arabic" : "English"} · {group.whenLabel || "no day/time set"}
+          {isAr ? "Arabic" : "English"} ·{" "}
+          {group.whenLabel ? (
+            <span lang={isAr ? "ar" : "en"} dir={isAr ? "rtl" : "ltr"}>{group.whenLabel}</span>
+          ) : (
+            "no day/time set"
+          )}
           {noEmail > 0 && ` · ${noEmail} without an email address`}
         </span>
       </div>

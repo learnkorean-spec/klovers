@@ -67,7 +67,7 @@ export default function ConversationAudio() {
               <CardContent className="space-y-3 p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-semibold" dir="rtl">{c.title}</p>
+                    <p className="font-semibold" lang="ar" dir="rtl">{c.title}</p>
                     <p className="text-xs text-muted-foreground">
                       الحصة {c.lesson} · {c.lines.length} سطر
                     </p>

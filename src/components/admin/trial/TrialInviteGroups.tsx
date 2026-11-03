@@ -183,6 +183,8 @@ function GroupCard({ group }: { group: TrialGroup }) {
                     <td className="px-4 py-2 text-muted-foreground">{levelLabel(r.level)}</td>
                     <td className="px-4 py-2">
                       <span
+                        lang={arabic ? "ar" : "en"}
+                        dir={arabic ? "rtl" : "ltr"}
                         className={
                           "rounded px-1.5 py-0.5 text-[11px] font-semibold " +
                           (arabic
