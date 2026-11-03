@@ -110,6 +110,89 @@ const MOVE_KEYS: Record<string, [number, number]> = {
   d: [1, 0],
 };
 
+/** The on-screen touch D-pad's current direction (see `TouchPad` below).
+ * A plain mutable object, not a ref or React state — `usePlayerMovement`
+ * reads it every frame same as the keyboard `pressed` set, and `TouchPad`
+ * writes it on pointer events. A module-level singleton is safe here
+ * because World2 only ever has one active, keyboard/touch-controlled
+ * player on screen at a time (the entrance, the cart, and the store are
+ * three *separate* mounts of this hook, never simultaneous). */
+export const touchDir = { x: 0, z: 0 };
+
+/** A small on-screen D-pad for touch devices — World2's only movement
+ * input was the keyboard (arrow keys / WASD), which simply doesn't exist
+ * on a phone or tablet, so a touch-only visitor had no way to walk Adam at
+ * all. Shown only when the browser reports a coarse (touch) primary
+ * pointer (checked via `matchMedia` in JS, not a Tailwind variant — this
+ * Tailwind install (3.4.17) turns out not to ship `pointer-coarse:`/
+ * `any-pointer-coarse:` despite the docs for later versions; verified by
+ * grepping the installed package for "coarse" and finding nothing) — kept
+ * out of the way on desktop, where the keyboard still works exactly as
+ * before. Writes directly into `touchDir`; a held button keeps moving
+ * every frame, same as a held key. */
+export function TouchPad() {
+  const [coarse, setCoarse] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse)");
+    setCoarse(mq.matches);
+    const onChange = () => setCoarse(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  const set = (x: number, z: number) => {
+    touchDir.x = x;
+    touchDir.z = z;
+  };
+  const clear = () => set(0, 0);
+  const btn =
+    "absolute flex items-center justify-center w-12 h-12 rounded-full bg-[#2E2E2E]/70 text-[#FFF9EC] text-xl select-none touch-none active:bg-[#FFFF00] active:text-[#2E2E2E]";
+  if (!coarse) return null;
+  return (
+    <div className="absolute bottom-3 left-3 w-40 h-40 pointer-events-none">
+      <button
+        aria-label="Walk up"
+        className={`${btn} left-14 top-0 pointer-events-auto`}
+        onPointerDown={() => set(0, -1)}
+        onPointerUp={clear}
+        onPointerLeave={clear}
+        onPointerCancel={clear}
+      >
+        ↑
+      </button>
+      <button
+        aria-label="Walk left"
+        className={`${btn} left-0 top-14 pointer-events-auto`}
+        onPointerDown={() => set(-1, 0)}
+        onPointerUp={clear}
+        onPointerLeave={clear}
+        onPointerCancel={clear}
+      >
+        ←
+      </button>
+      <button
+        aria-label="Walk right"
+        className={`${btn} left-28 top-14 pointer-events-auto`}
+        onPointerDown={() => set(1, 0)}
+        onPointerUp={clear}
+        onPointerLeave={clear}
+        onPointerCancel={clear}
+      >
+        →
+      </button>
+      <button
+        aria-label="Walk down"
+        className={`${btn} left-14 top-28 pointer-events-auto`}
+        onPointerDown={() => set(0, 1)}
+        onPointerUp={clear}
+        onPointerLeave={clear}
+        onPointerCancel={clear}
+      >
+        ↓
+      </button>
+    </div>
+  );
+}
+
 /** Lets the learner actually walk a character around a room with the
  * keyboard (arrow keys or WASD) — the thing that makes a room read as a game
  * you play rather than a slideshow of click targets. Held keys live in a
@@ -143,17 +226,23 @@ export function usePlayerMovement({
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     window.addEventListener("blur", clearAll);
+    // Reset any direction left over from whichever room/player last read
+    // this shared singleton (see `touchDir`'s own doc comment).
+    touchDir.x = 0;
+    touchDir.z = 0;
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", clearAll);
+      touchDir.x = 0;
+      touchDir.z = 0;
     };
   }, []);
   useFrame((_, delta) => {
     const group = g.current;
     if (!group) return;
-    let dx = 0;
-    let dz = 0;
+    let dx = touchDir.x;
+    let dz = touchDir.z;
     for (const key of pressed.current) {
       const dir = MOVE_KEYS[key];
       if (!dir) continue;

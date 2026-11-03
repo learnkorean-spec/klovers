@@ -8,7 +8,7 @@ import World2Scene, { DIALOGUE as CART_DIALOGUE } from "./World2Scene";
 import ConvenienceStoreScene, { DIALOGUE as STORE_DIALOGUE } from "./ConvenienceStoreScene";
 import EntranceScene from "./EntranceScene";
 import PostFinish from "./PostFinish";
-import { speakKorean, type DialogueLine, type VocabItem } from "./shared";
+import { speakKorean, TouchPad, type DialogueLine, type VocabItem } from "./shared";
 
 /** Each room AI Room Lab has proposed and a developer has built out: its own
  * concept image, 3D scene, camera framing and vocabulary. Adding a third
@@ -445,6 +445,7 @@ export default function World2Page() {
                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </button>
               {mapOpen && <MapOverlay view={view} onGo={goTo} onClose={() => setMapOpen(false)} />}
+              <TouchPad />
               {activeVocab && <VocabCard vocab={activeVocab} onClose={() => setActiveVocab(null)} />}
               {currentLine && (
                 <DialogueCard
@@ -510,6 +511,7 @@ export default function World2Page() {
                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </button>
               {mapOpen && <MapOverlay view={view} onGo={goTo} onClose={() => setMapOpen(false)} />}
+              <TouchPad />
             </div>
 
             <div className="rounded-lg border border-[#FFF9EC]/10 bg-[#FFF9EC]/5 p-4 text-sm space-y-2">
