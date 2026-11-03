@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -266,6 +266,16 @@ const TrialBookingPage = () => {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState("");
   const [loading, setLoading] = useState(false);
+  // `loading` (state) gates the picker's disabled prop, but state updates are
+  // not visible until the next render — a student tapping "Book this trial"
+  // twice inside one frame (or a stuck event loop on a slow phone) could still
+  // fire handleSlotPicked twice before React re-renders with the button
+  // disabled. One real case (3 Nov 2026): 8 taps in 4s on the same slot, one
+  // booking succeeded and the other requests surfaced a scary "you already
+  // have a trial booked" error toast before the success screen caught up.
+  // This ref is set synchronously on the very first call, so every call after
+  // it — same tick or not — is a no-op regardless of when `loading` re-renders.
+  const submittingRef = useRef(false);
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string>(guessCountryFromTz);
@@ -368,6 +378,11 @@ const TrialBookingPage = () => {
     !((user?.user_metadata?.level as string | undefined)?.trim()));
 
   const handleSlotPicked = async (dayOfWeek: number, startTime: string, trialDate: string) => {
+    // Hard reentrancy guard — see the comment on submittingRef above. Checked
+    // first, before any validation, so a rapid repeat tap can't even re-run
+    // the validation branches, let alone reach the network call below.
+    if (submittingRef.current) return;
+
     if (!user && (!guestName.trim() || !guestEmailIsValid)) {
       toast({
         title: language === "ar" ? "يُرجى كتابة الاسم والبريد" : "Add your name and email",
@@ -401,6 +416,7 @@ const TrialBookingPage = () => {
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
     let skipFinallyReset = false;
     try {
@@ -526,7 +542,10 @@ const TrialBookingPage = () => {
           });
           // Keep button disabled for 8 s so the student doesn't hammer again.
           skipFinallyReset = true;
-          setTimeout(() => setLoading(false), 8000);
+          setTimeout(() => {
+            submittingRef.current = false;
+            setLoading(false);
+          }, 8000);
           return;
         }
       }
@@ -549,7 +568,10 @@ const TrialBookingPage = () => {
         variant: "destructive",
       });
     } finally {
-      if (!skipFinallyReset) setLoading(false);
+      if (!skipFinallyReset) {
+        submittingRef.current = false;
+        setLoading(false);
+      }
     }
   };
 
@@ -1193,6 +1215,7 @@ const TrialBookingPage = () => {
                 onSelect={handleSlotPicked}
                 onBack={() => navigate("/free-trial")}
                 classLanguage={classLanguage}
+                submitting={loading}
               />
 
               {loading && (

@@ -45,6 +45,15 @@ interface TrialSlotPickerProps {
   onSelect: (dayOfWeek: number, startTime: string, trialDate: string) => void;
   onBack: () => void;
   classLanguage?: "arabic" | "english";
+  /**
+   * True while the parent's booking request is in flight. The parent
+   * (TrialBookingPage) also has its own synchronous ref guard against
+   * duplicate submits, but this makes the same state visible: the button
+   * is disabled and relabelled instead of silently swallowing extra taps,
+   * so a student on a slow connection sees their tap registered rather
+   * than tapping again and risking a confusing "already booked" error.
+   */
+  submitting?: boolean;
 }
 
 // Only used when the backend row somehow omits capacity (shouldn't happen in prod).
@@ -57,7 +66,7 @@ const DEFAULT_CAPACITY = 6;
  * on buttons). Generic icons are gone (text arrows, KloverIcon), and the
  * waitlist confirmation uses palette colours instead of Tailwind green.
  */
-const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerProps) => {
+const TrialSlotPicker = ({ onSelect, onBack, classLanguage, submitting = false }: TrialSlotPickerProps) => {
   const { language } = useLanguage();
   const isAr = language === "ar";
   const tr = (en: string, ar: string) => (isAr ? ar : en);
@@ -279,7 +288,7 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
 
       <div className="space-y-2">
         <Label htmlFor="trial-day">{tr("Trial day", "يوم الحصة")}</Label>
-        <Select value={selectedKey} onValueChange={setSelectedKey}>
+        <Select value={selectedKey} onValueChange={setSelectedKey} disabled={submitting}>
           <SelectTrigger id="trial-day" className="w-full">
             <SelectValue placeholder={tr("Choose a trial session", "اختيار موعد الحصة")} />
           </SelectTrigger>
@@ -310,10 +319,14 @@ const TrialSlotPicker = ({ onSelect, onBack, classLanguage }: TrialSlotPickerPro
         type="button"
         size="lg"
         className="w-full text-base font-bold h-13 mt-2"
-        disabled={!selectedKey}
+        disabled={!selectedKey || submitting}
         onClick={commit}
       >
-        {selectedKey ? tr("Book this trial", "حجز هذه الحصة") : tr("Select a trial day", "اختيار يوم الحصة أولًا")}
+        {submitting
+          ? tr("Booking…", "جارٍ الحجز…")
+          : selectedKey
+          ? tr("Book this trial", "حجز هذه الحصة")
+          : tr("Select a trial day", "اختيار يوم الحصة أولًا")}
       </Button>
     </div>
   );
