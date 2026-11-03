@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
 import { useAdminLtr } from "@/hooks/admin/useAdminLtr";
+import { withTimeout, isServiceOutage } from "@/lib/withTimeout";
 
 const AdminLogin = () => {
   useAdminLtr();
@@ -19,30 +20,61 @@ const AdminLogin = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      // signInWithPassword() and the role check below have no timeout of
+      // their own; if Supabase is unreachable (the 17 Oct 2026 outage, same
+      // failure mode as ProtectedRoute.tsx's session-refresh hang), this is
+      // the only door into the admin panel, so a hang here with no feedback
+      // and no way to retry would be worse than being locked out already in.
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password }),
+        20_000,
+        "login",
+      );
 
-    if (error) {
-      toast({ title: "Access denied", description: "Invalid credentials or insufficient permissions.", variant: "destructive" });
+      if (error) {
+        const description = isServiceOutage(error)
+          ? "The server isn't responding. Check your connection and try again."
+          : "Invalid credentials or insufficient permissions.";
+        toast({ title: "Access denied", description, variant: "destructive" });
+        return;
+      }
+
+      // Check if user has admin role
+      const { data: roleData, error: roleError } = await withTimeout(
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .eq("role", "admin")
+          .maybeSingle(),
+        10_000,
+        "role check",
+      );
+
+      if (roleError) {
+        const description = isServiceOutage(roleError)
+          ? "The server isn't responding. Check your connection and try again."
+          : "Invalid credentials or insufficient permissions.";
+        toast({ title: "Access denied", description, variant: "destructive" });
+        return;
+      }
+
+      if (!roleData) {
+        await supabase.auth.signOut();
+        toast({ title: "Access denied", description: "Invalid credentials or insufficient permissions.", variant: "destructive" });
+        return;
+      }
+
+      navigate("/admin");
+    } catch (err) {
+      const description = isServiceOutage(err)
+        ? "The server isn't responding. Check your connection and try again."
+        : "Something went wrong. Please try again.";
+      toast({ title: "Access denied", description, variant: "destructive" });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Check if user has admin role
-    const { data: roleData, error: roleError } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", data.user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-
-    if (roleError || !roleData) {
-      await supabase.auth.signOut();
-      toast({ title: "Access denied", description: "Invalid credentials or insufficient permissions.", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    navigate("/admin");
   };
 
   return (
