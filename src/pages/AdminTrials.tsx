@@ -125,7 +125,7 @@ function Person({ b }: { b: Booking }) {
         <button
           type="button"
           onClick={() => setWhy(v => !v)}
-          className="text-[11px] text-muted-foreground underline underline-offset-2"
+          className="rounded-sm text-[11px] text-muted-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {why ? "إخفاء السبب" : "ليه؟"}
         </button>
@@ -276,7 +276,7 @@ export default function AdminTrials() {
                   <button
                     type="button"
                     onClick={() => setOpen(isOpen ? null : s.key)}
-                    className="text-sm underline underline-offset-4"
+                    className="rounded-sm text-sm underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {isOpen ? "إخفاء الأسماء" : `الأسماء (${s.people.length})`}
                   </button>

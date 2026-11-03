@@ -706,7 +706,7 @@ const LeadsPanel: React.FC = () => {
                         <div className="flex items-center gap-1 max-w-[220px]">
                           <span className="truncate flex-1 text-sm">{lead.email}</span>
                           <button
-                            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
+                            className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); setCopiedLeadId(lead.id + "_email"); setTimeout(() => setCopiedLeadId(id => id === lead.id + "_email" ? null : id), 1500); }}
                             aria-label="Copy email address"
                           >
@@ -751,7 +751,7 @@ const LeadsPanel: React.FC = () => {
                                   const next = selected ? days.filter(d => d !== day) : [...days, day];
                                   setEditForm(f => ({ ...f, schedule: next.join("/") }));
                                 }}
-                                className={`px-2 py-0.5 rounded text-xs border transition-all ${selected ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                                className={`px-2 py-0.5 rounded text-xs border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${selected ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
                               >
                                 {day.slice(0, 3)}
                               </button>

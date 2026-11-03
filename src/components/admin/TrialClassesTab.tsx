@@ -108,7 +108,7 @@ export default function TrialClassesTab() {
               type="button"
               onClick={() => setSub(t.key)}
               className={
-                'whitespace-nowrap border-b-2 px-3 py-2 text-sm transition ' +
+                'whitespace-nowrap border-b-2 px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ' +
                 (active
                   ? 'border-primary font-medium text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground')

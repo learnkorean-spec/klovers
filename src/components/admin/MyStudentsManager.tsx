@@ -323,7 +323,7 @@ const CompletedBundleLines = ({
         <button
           type="button"
           onClick={onManageBundles}
-          className="text-[11px] text-primary hover:underline text-left"
+          className="rounded-sm text-left text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           +{extra} more completed — see all in Manage bundles
         </button>
@@ -512,7 +512,7 @@ const BundleEditHistory = ({ bundleId }: { bundleId: string }) => {
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="text-[11px] text-primary hover:underline">
+      <button type="button" onClick={() => setOpen(true)} className="rounded-sm text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
         View edit history
       </button>
     );
@@ -553,7 +553,7 @@ const DeletedBundleHistory = ({ studentId }: { studentId: string }) => {
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="text-[11px] text-primary hover:underline">
+      <button type="button" onClick={() => setOpen(true)} className="rounded-sm text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
         View deleted bundles
       </button>
     );
@@ -1695,7 +1695,7 @@ const MyStudentsManager = () => {
                 <button
                   type="button"
                   onClick={() => setShowAllToConfirm(v => !v)}
-                  className="text-xs font-medium text-foreground underline underline-offset-2 pt-1"
+                  className="rounded-sm pt-1 text-xs font-medium text-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {showAllToConfirm ? "Show fewer" : `Show all ${toConfirm.length}`}
                 </button>
@@ -2497,7 +2497,7 @@ const MyStudentsManager = () => {
                           if (next.has(key)) next.delete(key); else next.add(key);
                           return next;
                         })}
-                        className={`w-full flex items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+                        className={`w-full flex items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                           on ? "border-primary/40 bg-primary/5" : "bg-muted/30"
                         }`}
                       >
@@ -2519,7 +2519,7 @@ const MyStudentsManager = () => {
                   <button
                     type="button"
                     onClick={showOlderInCatchUp}
-                    className="text-xs text-primary hover:underline"
+                    className="rounded-sm text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {older.length} older unconfirmed {older.length === 1 ? "class" : "classes"} — show {older.length === 1 ? "it" : "them"}
                   </button>
