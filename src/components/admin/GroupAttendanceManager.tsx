@@ -1373,6 +1373,7 @@ const GroupAttendanceManager = ({
             <Label className="text-sm font-semibold">Add Students</Label>
             <Input
               placeholder="Search by name or email..."
+              aria-label="Search by name or email"
               value={studentSearch}
               onChange={e => setStudentSearch(e.target.value)}
             />

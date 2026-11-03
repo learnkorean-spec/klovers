@@ -626,7 +626,7 @@ const StudentManager = () => {
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by name or email..." value={overviewSearch} onChange={(e) => setOverviewSearch(e.target.value)} className="pl-9" />
+              <Input placeholder="Search by name or email..." aria-label="Search students overview" value={overviewSearch} onChange={(e) => setOverviewSearch(e.target.value)} className="pl-9" />
             </div>
             <Select value={overviewFilter} onValueChange={setOverviewFilter}>
               <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
@@ -708,7 +708,7 @@ const StudentManager = () => {
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by name or email..." value={legacySearch} onChange={(e) => setLegacySearch(e.target.value)} className="pl-9" />
+              <Input placeholder="Search by name or email..." aria-label="Search legacy students" value={legacySearch} onChange={(e) => setLegacySearch(e.target.value)} className="pl-9" />
             </div>
             <Select value={legacyStatusFilter} onValueChange={setLegacyStatusFilter}>
               <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>

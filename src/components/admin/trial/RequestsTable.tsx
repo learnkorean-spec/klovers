@@ -76,6 +76,7 @@ export default function RequestsTable({ bookings }: { bookings: AdminTrialBookin
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name / email / phone"
+            aria-label="Search name / email / phone"
             className="w-52 rounded-md border bg-background px-3 py-1.5 text-sm"
           />
           <select

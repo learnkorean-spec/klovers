@@ -137,6 +137,7 @@ export default function LeagueUsersPanel() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search name or email…"
+                aria-label="Search name or email"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-8 w-56 h-9 rounded-full text-sm"
