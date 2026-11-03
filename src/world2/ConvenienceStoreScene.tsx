@@ -1,6 +1,17 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
+import type { Group } from "three";
 import { useTiledTexture, paintPlanks } from "../game/environment/textures";
-import { Learner, LearnerPlaceholder, Hotspot, Cluby, Player, useLearnerReactions, type VocabItem, type DialogueLine } from "./shared";
+import {
+  Learner,
+  LearnerPlaceholder,
+  Hotspot,
+  Cluby,
+  Player,
+  FollowCamera,
+  useLearnerReactions,
+  type VocabItem,
+  type DialogueLine,
+} from "./shared";
 
 /** How far Adam can walk here (in this scene's own local coordinates, before
  * the whole room is shifted -0.6 on x): clear of the shelf/fridge front
@@ -243,6 +254,7 @@ export default function ConvenienceStoreScene({
 }) {
   const floor = useTiledTexture(paintPlanks, 5, 3);
   const { adamControl, linaControl, react } = useLearnerReactions();
+  const adamRef = useRef<Group>(null);
   const handleSelect = (id: string) => {
     const vocab = VOCAB.find((v) => v.id === id);
     if (!vocab) return;
@@ -291,6 +303,7 @@ export default function ConvenienceStoreScene({
       <DrinkFridge onSelect={() => handleSelect("eumnyosu")} />
       <Checkout onSelect={() => handleSelect("gyesandae")} />
       <PriceTags onSelectPrice={() => handleSelect("eolmayeyo")} onSelectCount={handleCount} />
+      <FollowCamera target={adamRef} control={adamControl} />
       <Suspense
         fallback={
           <>
@@ -306,6 +319,7 @@ export default function ConvenienceStoreScene({
           initial={{ x: 0.5, z: 0.9, rotY: -Math.PI * 0.55 }}
           bounds={ADAM_BOUNDS}
           control={adamControl}
+          exposedRef={adamRef}
         />
         {/* Lina beside him, pointing at the label */}
         <Learner avatar="lina" x={1.15} z={0.75} rotY={-Math.PI * 0.4} control={linaControl} />

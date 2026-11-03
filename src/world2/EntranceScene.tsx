@@ -7,6 +7,7 @@ import {
   LearnerPlaceholder,
   Hotspot,
   Cluby,
+  FollowCamera,
   useLearnerReactions,
   usePlayerMovement,
   DRESS,
@@ -73,6 +74,7 @@ export default function EntranceScene({
   });
   return (
     <group>
+      <FollowCamera target={adam} control={adamControl} />
       <fog attach="fog" args={["#2a2438", 9, 18]} />
       {/* Same hemisphere + warm key + cool fill recipe as World1's own
           lighting (src/game/World.tsx's LIGHT constant) — see World2Scene's

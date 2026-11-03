@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
-import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import type { Group } from "three";
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { Group, Matrix4, Quaternion, Vector3 } from "three";
 import { PALETTE } from "../game/config/world";
 import { std } from "../game/config/materials";
 import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
@@ -120,12 +120,18 @@ export function usePlayerMovement({
   bounds,
   control,
   speed = 1.7,
+  externalRef,
 }: {
   bounds: { x: [number, number]; z: [number, number] };
   control: MutableRefObject<BodyControl>;
   speed?: number;
+  /** Lets a parent (e.g. a FollowCamera mounted alongside this player) read
+   * the same transform this hook drives, instead of creating its own ref
+   * that nothing outside this hook could ever see. */
+  externalRef?: MutableRefObject<Group | null>;
 }) {
-  const g = useRef<Group>(null);
+  const internalRef = useRef<Group>(null);
+  const g = externalRef ?? internalRef;
   const pressed = useRef<Set<string>>(new Set());
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -184,18 +190,119 @@ export function Player({
   initial,
   bounds,
   control,
+  exposedRef,
 }: {
   avatar: "adam" | "lina";
   initial: { x: number; z: number; rotY: number };
   bounds: { x: [number, number]; z: [number, number] };
   control: MutableRefObject<BodyControl>;
+  /** Optional: a ref a FollowCamera (or anything else outside this
+   * component) can read this player's live transform from. */
+  exposedRef?: MutableRefObject<Group | null>;
 }) {
-  const g = usePlayerMovement({ bounds, control });
+  const g = usePlayerMovement({ bounds, control, externalRef: exposedRef });
   return (
     <group ref={g} position={[initial.x, 0, initial.z]} rotation={[0, initial.rotY, 0]}>
       <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} />
     </group>
   );
+}
+
+/** A lightweight third-person follow camera for a World2 room — built from
+ * scratch for this hackathon diorama rather than reusing the live game's
+ * own ThirdPersonCamera (src/game/camera/ThirdPersonCamera.tsx), which
+ * turned out to be tightly coupled to World1's own PlayerState/CameraState/
+ * RoomLayout and wall-collision system; porting it would mean building an
+ * equivalent room-layout/collider model for every World2 room just to drive
+ * a camera, real work with no reuse payoff for a two-room tech demo.
+ *
+ * Behaviour: each room's existing static establishing shot (the
+ * `cameraPosition`/`cameraFov` already set on its <Canvas>) is captured,
+ * live, the first frame this mounts — so it always matches whatever that
+ * room already had, no duplicated numbers to keep in sync. While the
+ * learner is standing still, the camera eases back to exactly that shot.
+ * While they're walking (driven off the same BodyControl the movement rig
+ * already flips to "walk"), it eases into a chase position behind and
+ * slightly above them, looking a little ahead of their facing direction —
+ * reading their world position/rotation through Three's own world-matrix
+ * (getWorldPosition/getWorldQuaternion) rather than local coordinates, so
+ * it tracks correctly even with World2Page's own SlowOrbit gently swaying
+ * the room around them. */
+const UP = new Vector3(0, 1, 0);
+
+export function FollowCamera({
+  target,
+  control,
+  behind = 2.4,
+  height = 1.75,
+  ahead = 1.0,
+  eyeHeight = 1.05,
+}: {
+  /** The moving character's own transform (Player's `exposedRef`, or the
+   * ref returned directly by usePlayerMovement). */
+  target: MutableRefObject<Group | null>;
+  control: MutableRefObject<BodyControl>;
+  behind?: number;
+  height?: number;
+  ahead?: number;
+  eyeHeight?: number;
+}) {
+  const { camera } = useThree();
+  const staticPos = useRef(new Vector3());
+  const staticQuat = useRef(new Quaternion());
+  const capturedStatic = useRef(false);
+  const curPos = useRef(new Vector3());
+  const curQuat = useRef(new Quaternion());
+  // Scratch objects, reused every frame in the "moving" branch only — not
+  // on the far more common idle path, where nothing new is allocated.
+  const worldPos = useRef(new Vector3());
+  const worldQuat = useRef(new Quaternion());
+  const forward = useRef(new Vector3());
+  const desiredPos = useRef(new Vector3());
+  const lookAt = useRef(new Vector3());
+  const lookMatrix = useRef(new Matrix4());
+  const desiredQuat = useRef(new Quaternion());
+
+  useFrame((_, rawDt) => {
+    if (!capturedStatic.current) {
+      staticPos.current.copy(camera.position);
+      staticQuat.current.copy(camera.quaternion);
+      curPos.current.copy(camera.position);
+      curQuat.current.copy(camera.quaternion);
+      capturedStatic.current = true;
+    }
+    const dt = Math.min(rawDt, 0.05);
+    const moving = control.current.clip === "walk" && target.current;
+    if (moving && target.current) {
+      target.current.getWorldPosition(worldPos.current);
+      target.current.getWorldQuaternion(worldQuat.current);
+      // The player's own forward convention is local +Z (see
+      // usePlayerMovement's atan2(dx, dz)), not Three's usual -Z.
+      forward.current.set(0, 0, 1).applyQuaternion(worldQuat.current);
+      desiredPos.current.set(
+        worldPos.current.x - forward.current.x * behind,
+        height,
+        worldPos.current.z - forward.current.z * behind,
+      );
+      lookAt.current.set(
+        worldPos.current.x + forward.current.x * ahead,
+        eyeHeight,
+        worldPos.current.z + forward.current.z * ahead,
+      );
+      lookMatrix.current.lookAt(desiredPos.current, lookAt.current, UP);
+      desiredQuat.current.setFromRotationMatrix(lookMatrix.current);
+    } else {
+      desiredPos.current.copy(staticPos.current);
+      desiredQuat.current.copy(staticQuat.current);
+    }
+    const k = 1 - Math.exp(-(moving ? 3.2 : 1.8) * dt);
+    curPos.current.lerp(desiredPos.current, k);
+    curQuat.current.slerp(desiredQuat.current, k);
+    camera.position.copy(curPos.current);
+    camera.quaternion.copy(curQuat.current);
+  }, -1);
+
+  return null;
 }
 
 /** Shown while Adam/Lina's real models (≈1.3MB each) are still downloading,

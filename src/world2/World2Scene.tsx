@@ -1,6 +1,17 @@
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import type { Group } from "three";
 import { useTiledTexture, paintPlanks, paintPaving } from "../game/environment/textures";
-import { Learner, LearnerPlaceholder, Hotspot, Cluby, Player, useLearnerReactions, type VocabItem, type DialogueLine } from "./shared";
+import {
+  Learner,
+  LearnerPlaceholder,
+  Hotspot,
+  Cluby,
+  Player,
+  FollowCamera,
+  useLearnerReactions,
+  type VocabItem,
+  type DialogueLine,
+} from "./shared";
 
 /** How far Adam can actually walk in this room: clear of the counter's front
  * face (z≈0.3) and the alley wall behind it, inside the camera's frame. */
@@ -221,6 +232,7 @@ export default function World2Scene({
   // reaction on both learners (Lina "explains" it, Adam "reacts" to it) —
   // cross-fades back to idle automatically once the clip finishes.
   const { adamControl, linaControl, react } = useLearnerReactions();
+  const adamRef = useRef<Group>(null);
   const handleSelect = (id: string) => {
     const vocab = VOCAB.find((v) => v.id === id);
     if (!vocab) return;
@@ -265,6 +277,7 @@ export default function World2Scene({
         <meshStandardMaterial map={ground} color="#8a7560" roughness={0.95} />
       </mesh>
       <FoodCart onSelectVocab={handleSelect} />
+      <FollowCamera target={adamRef} control={adamControl} />
       <Suspense
         fallback={
           <>
@@ -280,6 +293,7 @@ export default function World2Scene({
           initial={{ x: -0.6, z: 1.1, rotY: Math.PI * 0.8 }}
           bounds={ADAM_BOUNDS}
           control={adamControl}
+          exposedRef={adamRef}
         />
         {/* Lina beside him, pointing at the menu */}
         <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI * 0.65} control={linaControl} />
