@@ -129,17 +129,20 @@ function DrinkFridge({ onSelect }: { onSelect: () => void }) {
   return (
     <Hotspot onSelect={onSelect}>
       <group position={[-0.1, 0, -1.4]}>
+        {/* The box is 0.55 deep, so its own front face sits at local z=0.275.
+            The bottle rows and point light below used to sit at z=0.2 and
+            z=0.4 respectively — *inside* that solid box — so the opaque
+            box face hid every bottle completely, leaving only its own lit
+            front face showing through the glass: a flat glowing blank
+            panel (Re flagged this, 3 Nov). Pulling the rows (0.32) and
+            glass (0.4) in front of that face, with the light (0.33) just
+            behind the glass, actually shows the stocked shelves now. */}
         <mesh position={[0, 1.0, 0]} castShadow receiveShadow>
           <boxGeometry args={[1.3, 2.0, 0.55]} />
           <meshStandardMaterial color="#d7dde2" roughness={0.5} metalness={0.2} />
         </mesh>
-        {/* glass front */}
-        <mesh position={[0, 1.0, 0.29]}>
-          <boxGeometry args={[1.12, 1.8, 0.02]} />
-          <meshStandardMaterial color="#bfe6ef" transparent opacity={0.3} roughness={0.1} />
-        </mesh>
         {rows.map((y) => (
-          <group key={y} position={[0, y, 0.2]}>
+          <group key={y} position={[0, y, 0.32]}>
             {[-0.4, -0.2, 0, 0.2, 0.4].map((x, i) => (
               <mesh key={x} position={[x, 0, 0]}>
                 <cylinderGeometry args={[0.055, 0.055, 0.32, 10]} />
@@ -148,7 +151,14 @@ function DrinkFridge({ onSelect }: { onSelect: () => void }) {
             ))}
           </group>
         ))}
-        <pointLight position={[0, 1.4, 0.4]} intensity={0.4} color="#bfe6ef" distance={1.5} />
+        <pointLight position={[0, 1.4, 0.33]} intensity={0.4} color="#bfe6ef" distance={1.5} />
+        {/* glass front — in front of the bottles now, so they're actually
+            visible through it instead of hidden behind the fridge's own
+            opaque body. */}
+        <mesh position={[0, 1.0, 0.4]}>
+          <boxGeometry args={[1.12, 1.8, 0.02]} />
+          <meshStandardMaterial color="#bfe6ef" transparent opacity={0.3} roughness={0.1} />
+        </mesh>
       </group>
     </Hotspot>
   );
