@@ -10,7 +10,10 @@ import {
   FollowCamera,
   useLearnerReactions,
   usePlayerMovement,
+  companionOf,
+  DEFAULT_PLAYER_AVATAR,
   DRESS,
+  type PlayableAvatar,
 } from "./shared";
 import RiggedBody from "../game/player/RiggedBody";
 
@@ -33,36 +36,48 @@ import RiggedBody from "../game/player/RiggedBody";
  * to World1's own room/collision/camera state — these two components are
  * self-contained geometry + a canvas texture, nothing else.
  *
- * Two gates, two destinations — clicking a gate, OR walking Adam through
- * its opening with the keyboard, is "choosing a room", same mental model as
- * the Hub. A third room later is a third gate here, nothing else about this
- * file changes.
+ * Two gates, two destinations — clicking a gate, OR walking the learner's
+ * own character through its opening with the keyboard, is "choosing a
+ * room", same mental model as the Hub. A third room later is a third gate
+ * here, nothing else about this file changes.
  *
  * Re, 3 Nov 2026: "must have moves with arrows... and they must be
  * interacting" — the entrance previously stood still (Adam and Lina were
  * fixed, click-only) while both destination rooms already had full arrow-
- * key/WASD walking (see shared.tsx's usePlayerMovement/Player). Adam now
- * walks here too, with the same keys, and walking far enough toward either
- * gate's opening enters that room exactly like clicking it — clicking the
- * gate still works on its own as a faster shortcut.
+ * key/WASD walking (see shared.tsx's usePlayerMovement/Player). The
+ * learner's character now walks here too, with the same keys, and walking
+ * far enough toward either gate's opening enters that room exactly like
+ * clicking it — clicking the gate still works on its own as a faster
+ * shortcut.
+ *
+ * Re, 4 Nov 2026: "the visitor is either lena or adam" — the entrance used
+ * to always put Adam in the walkable slot with Lina as a fixed companion;
+ * `playerAvatar` (picked on `World2Page`, see shared.tsx's `PlayableAvatar`)
+ * now decides which canon learner occupies each slot here, same as in both
+ * rooms.
  */
 export default function EntranceScene({
+  playerAvatar = DEFAULT_PLAYER_AVATAR,
   onEnterRoom,
 }: {
+  /** Which canon learner the visitor is walking as this visit — see
+   * shared.tsx's `PlayableAvatar`. */
+  playerAvatar?: PlayableAvatar;
   /** Fired when the learner clicks a gate, or walks through its opening,
    * with the room it leads to. */
   onEnterRoom: (roomId: "cart" | "store") => void;
 }) {
   const ground = useTiledTexture(paintPaving, 6, 6);
-  const { adamControl, linaControl } = useLearnerReactions();
+  const { playerControl, companionControl } = useLearnerReactions(playerAvatar);
+  const companionAvatar = companionOf(playerAvatar);
   // Wide enough to reach both gates (±3.8 on x) with a little room to spare,
   // and deep enough (toward -1.6) to actually walk through the gate opening
   // rather than stopping dead at it.
-  const adam = usePlayerMovement({ bounds: { x: [-5, 5], z: [-1.6, 3] }, control: adamControl });
+  const player = usePlayerMovement({ bounds: { x: [-5, 5], z: [-1.6, 3] }, control: playerControl });
   const enteredRoom = useRef(false);
   useFrame(() => {
     if (enteredRoom.current) return;
-    const pos = adam.current?.position;
+    const pos = player.current?.position;
     if (!pos || pos.z > -0.9) return;
     if (pos.x < -2.3) {
       enteredRoom.current = true;
@@ -74,7 +89,7 @@ export default function EntranceScene({
   });
   return (
     <group>
-      <FollowCamera target={adam} control={adamControl} />
+      <FollowCamera target={player} control={playerControl} />
       <fog attach="fog" args={["#2a2438", 9, 18]} />
       {/* Same hemisphere + warm key + cool fill recipe as World1's own
           lighting (src/game/World.tsx's LIGHT constant) — see World2Scene's
@@ -140,10 +155,15 @@ export default function EntranceScene({
           </>
         }
       >
-        <group ref={adam} position={[-0.4, 0, 0.6]} rotation={[0, Math.PI * 0.15, 0]}>
-          <RiggedBody model="adam" rules={DRESS.adam} female={false} control={adamControl} />
+        <group ref={player} position={[-0.4, 0, 0.6]} rotation={[0, Math.PI * 0.15, 0]}>
+          <RiggedBody
+            model={playerAvatar}
+            rules={DRESS[playerAvatar]}
+            female={playerAvatar === "lina"}
+            control={playerControl}
+          />
         </group>
-        <Learner avatar="lina" x={0.4} z={0.6} rotY={-Math.PI * 0.15} control={linaControl} />
+        <Learner avatar={companionAvatar} x={0.4} z={0.6} rotY={-Math.PI * 0.15} control={companionControl} />
       </Suspense>
       <Cluby x={0} y={0} z={1.3} />
     </group>

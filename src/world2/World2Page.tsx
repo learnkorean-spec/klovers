@@ -23,7 +23,15 @@ import ConvenienceStoreScene, {
 } from "./ConvenienceStoreScene";
 import EntranceScene from "./EntranceScene";
 import PostFinish from "./PostFinish";
-import { povMode, speakKorean, TouchPad, type DialogueLine, type VocabItem } from "./shared";
+import {
+  DEFAULT_PLAYER_AVATAR,
+  povMode,
+  speakKorean,
+  TouchPad,
+  type DialogueLine,
+  type PlayableAvatar,
+  type VocabItem,
+} from "./shared";
 
 /** Each room AI Room Lab has proposed and a developer has built out: its own
  * concept image, 3D scene, camera framing and vocabulary. Adding a third
@@ -68,10 +76,10 @@ const ROOMS: Room[] = [
     cameraPosition: [2.6, 1.9, 3.8],
     cameraFov: 42,
     Scene: World2Scene,
-    hint: "Use WASD or the arrow keys to walk Adam around. Tap the skewers, tteokbokki, kimbap, or the menu board to learn the word.",
+    hint: "Use WASD or the arrow keys to walk {player} around. Tap the skewers, tteokbokki, kimbap, or the menu board to learn the word.",
     title: "A warm Korean street food cart at dusk (포장마차)",
     body:
-      "Adam orders at the counter, Lina points to the menu and explains, Cluby sits on a stool beside them. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
+      "{player} orders at the counter, {companion} points to the menu and explains, Cluby sits on a stool beside them. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
     dialogue: CART_DIALOGUE,
     vocab: CART_VOCAB,
   },
@@ -84,14 +92,29 @@ const ROOMS: Room[] = [
     cameraPosition: [3.0, 2.1, 4.6],
     cameraFov: 44,
     Scene: ConvenienceStoreScene,
-    hint: "Use WASD or the arrow keys to walk Adam around. Tap the shelf, fridge, checkout, or a price tag to learn the word.",
+    hint: "Use WASD or the arrow keys to walk {player} around. Tap the shelf, fridge, checkout, or a price tag to learn the word.",
     title: "A late-night Korean convenience store (편의점)",
     body:
-      "Adam picks snacks and drinks from the shelves, Lina helps him read the labels, Cluby curls up by the door. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
+      "{player} picks snacks and drinks from the shelves, {companion} helps {playerObj} read the labels, Cluby curls up by the door. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
     dialogue: STORE_DIALOGUE,
     vocab: STORE_VOCAB,
   },
 ];
+
+/** Fills a room's `hint`/`body` template with whichever names/pronoun fit
+ * the learner's current character choice — `{player}`/`{companion}` (names)
+ * and `{playerObj}` (object pronoun: "him"/"her"), so the copy stays
+ * correct whichever of Adam/Lina the visitor is walking as (see
+ * `playerAvatar` below and shared.tsx's `PlayableAvatar`). */
+function fillNames(text: string, playerAvatar: PlayableAvatar): string {
+  const playerName = playerAvatar === "adam" ? "Adam" : "Lina";
+  const companionName = playerAvatar === "adam" ? "Lina" : "Adam";
+  const playerObj = playerAvatar === "adam" ? "him" : "her";
+  return text
+    .replaceAll("{player}", playerName)
+    .replaceAll("{companion}", companionName)
+    .replaceAll("{playerObj}", playerObj);
+}
 
 /** The flashcard shown when a learner clicks a food/menu hotspot in the 3D
  * scene: the actual word they picked, not a generic vocab list — this is the
@@ -198,6 +221,44 @@ function DialogueCard({
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Lets the visitor choose which canon learner they're walking as this
+ * visit — Adam or Lina, the other stands in as a companion throughout the
+ * entrance and both rooms. Re, 4 Nov 2026: "the visitor is either lena or
+ * adam" — World2 previously always made Adam the walkable character with
+ * Lina as a fixed companion everywhere, unlike the live /world game, which
+ * already lets the learner pick which of the two they play as (see
+ * src/game/environment/Onboarding.tsx's WelcomeCard / characters.ts). Kept
+ * as a visible, always-switchable pair of pills (not a one-time modal)
+ * rather than an onboarding step, so it's visible at a glance, doesn't
+ * block the first render, and can be changed mid-visit without losing any
+ * progress (the "Learned X/Y" tracking is keyed by room+vocab id, not by
+ * which character is walking). */
+function CharacterPicker({
+  playerAvatar,
+  onChange,
+}: {
+  playerAvatar: PlayableAvatar;
+  onChange: (avatar: PlayableAvatar) => void;
+}) {
+  const pill = (active: boolean) =>
+    `text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+      active
+        ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"
+        : "bg-transparent text-[#FFF9EC]/80 border-[#FFF9EC]/20 hover:border-[#FFF9EC]/40"
+    }`;
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-[#FFF9EC]/60">Playing as:</span>
+      <button onClick={() => onChange("adam")} aria-pressed={playerAvatar === "adam"} className={pill(playerAvatar === "adam")}>
+        Adam
+      </button>
+      <button onClick={() => onChange("lina")} aria-pressed={playerAvatar === "lina"} className={pill(playerAvatar === "lina")}>
+        Lina
+      </button>
     </div>
   );
 }
@@ -351,6 +412,9 @@ export default function World2Page() {
   // comment there) purely so this button's own icon re-renders on toggle;
   // FollowCamera reads `povMode.firstPerson` directly every frame.
   const [firstPerson, setFirstPerson] = useState(false);
+  // Which canon learner the visitor is walking as this visit — see
+  // CharacterPicker's doc comment above.
+  const [playerAvatar, setPlayerAvatar] = useState<PlayableAvatar>(DEFAULT_PLAYER_AVATAR);
   const togglePov = () => {
     povMode.firstPerson = !povMode.firstPerson;
     setFirstPerson(povMode.firstPerson);
@@ -419,10 +483,13 @@ export default function World2Page() {
         {/* Overall progress across both rooms — visible from the entrance
             too, so a learner sees where they stand before picking a gate,
             not only once they're already inside a room. */}
-        <p className="text-xs text-[#FFF9EC]/60">
-          Learned {ROOMS.reduce((n, r) => n + r.vocab.filter((v) => learnedIds.has(`${r.id}:${v.id}`)).length, 0)}/
-          {ROOMS.reduce((n, r) => n + r.vocab.length, 0)} words total across both places
-        </p>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <p className="text-xs text-[#FFF9EC]/60">
+            Learned {ROOMS.reduce((n, r) => n + r.vocab.filter((v) => learnedIds.has(`${r.id}:${v.id}`)).length, 0)}/
+            {ROOMS.reduce((n, r) => n + r.vocab.length, 0)} words total across both places
+          </p>
+          <CharacterPicker playerAvatar={playerAvatar} onChange={setPlayerAvatar} />
+        </div>
         {/* Entrance + room switcher: "Entrance" is the landing courtyard
             (two gates); each room tab is a separate AI Room Lab brief,
             picked from its own A/B variants and built into its own scene —
@@ -472,6 +539,7 @@ export default function World2Page() {
                 <Suspense fallback={null}>
                   <SlowOrbit>
                     <room.Scene
+                      playerAvatar={playerAvatar}
                       onSelectVocab={selectVocab}
                       activeDialogueSpeaker={currentLine?.speaker ?? null}
                       dialogueTurnKey={dialogueIndex ?? -1}
@@ -481,7 +549,7 @@ export default function World2Page() {
               </Canvas>
               {!activeVocab && !currentLine && (
                 <div className="absolute top-3 left-3 right-14 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
-                  {room.hint}
+                  {fillNames(room.hint, playerAvatar)}
                 </div>
               )}
               <button
@@ -545,7 +613,7 @@ export default function World2Page() {
                   </span>
                 )}
               </div>
-              <p className="text-[#FFF9EC]/80">{room.body}</p>
+              <p className="text-[#FFF9EC]/80">{fillNames(room.body, playerAvatar)}</p>
               <p className="text-[#FFF9EC]/50 text-xs">
                 This is a hackathon tech-demo page, separate from the live KLOVERS World learner
                 experience — it does not touch production rooms, progression, or story canon gating.
@@ -563,11 +631,11 @@ export default function World2Page() {
               <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }} camera={{ position: [0, 2.2, 10.5], fov: 52 }}>
                 <PostFinish />
                 <Suspense fallback={null}>
-                  <EntranceScene onEnterRoom={(id) => goTo(id)} />
+                  <EntranceScene playerAvatar={playerAvatar} onEnterRoom={(id) => goTo(id)} />
                 </Suspense>
               </Canvas>
               <div className="absolute top-3 left-3 right-14 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
-                Use WASD or the arrow keys to walk Adam through a gate, or just click one.
+                {fillNames("Use WASD or the arrow keys to walk {player} through a gate, or just click one.", playerAvatar)}
               </div>
               <button
                 onClick={() => setMapOpen((o) => !o)}
@@ -599,8 +667,10 @@ export default function World2Page() {
             <div className="rounded-lg border border-[#FFF9EC]/10 bg-[#FFF9EC]/5 p-4 text-sm space-y-2">
               <p className="font-semibold">KLOVERS World 2 — the entrance</p>
               <p className="text-[#FFF9EC]/80">
-                Adam and Lina are waiting at the gate. Walk through 포장마차 (the street cart) or
-                편의점 (the convenience store) with the arrow keys, or click one, to start learning.
+                {fillNames(
+                  "You're walking as {player}, with {companion} alongside. Walk through 포장마차 (the street cart) or 편의점 (the convenience store) with the arrow keys, or click one, to start learning.",
+                  playerAvatar,
+                )}
               </p>
               <p className="text-[#FFF9EC]/50 text-xs">
                 This is a hackathon tech-demo page, separate from the live KLOVERS World learner

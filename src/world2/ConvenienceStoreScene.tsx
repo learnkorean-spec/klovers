@@ -9,14 +9,18 @@ import {
   Player,
   FollowCamera,
   useLearnerReactions,
+  companionOf,
+  DEFAULT_PLAYER_AVATAR,
+  type PlayableAvatar,
   type VocabItem,
   type DialogueLine,
 } from "./shared";
 
-/** How far Adam can walk here (in this scene's own local coordinates, before
- * the whole room is shifted -0.6 on x): clear of the shelf/fridge front
- * faces (z≈-1.15) and the checkout counter (z≈-0.03), inside the camera's frame. */
-const ADAM_BOUNDS = { x: [-2.0, 2.3] as [number, number], z: [-0.9, 1.8] as [number, number] };
+/** How far the learner can walk here (in this scene's own local coordinates,
+ * before the whole room is shifted -0.6 on x): clear of the shelf/fridge
+ * front faces (z≈-1.15) and the checkout counter (z≈-0.03), inside the
+ * camera's frame. */
+const PLAYER_BOUNDS = { x: [-2.0, 2.3] as [number, number], z: [-0.9, 1.8] as [number, number] };
 
 /**
  * KLOVERS World 2 — second hackathon room: a late-night Korean convenience
@@ -239,10 +243,14 @@ function PriceTags({ onSelectPrice, onSelectCount }: { onSelectPrice: () => void
 }
 
 export default function ConvenienceStoreScene({
+  playerAvatar = DEFAULT_PLAYER_AVATAR,
   onSelectVocab,
   activeDialogueSpeaker = null,
   dialogueTurnKey = -1,
 }: {
+  /** Which canon learner the visitor is walking as this visit — same
+   * contract as World2Scene's cart room; see shared.tsx's `PlayableAvatar`. */
+  playerAvatar?: PlayableAvatar;
   /** Fired when the learner clicks a shelf/fridge/register hotspot, with the
    * matching VocabItem — same contract as World2Scene's cart room. */
   onSelectVocab?: (vocab: VocabItem) => void;
@@ -253,8 +261,9 @@ export default function ConvenienceStoreScene({
   dialogueTurnKey?: number;
 }) {
   const floor = useTiledTexture(paintPlanks, 5, 3);
-  const { adamControl, linaControl, react } = useLearnerReactions();
-  const adamRef = useRef<Group>(null);
+  const { adamControl, linaControl, playerControl, companionControl, react } = useLearnerReactions(playerAvatar);
+  const companionAvatar = companionOf(playerAvatar);
+  const playerRef = useRef<Group>(null);
   const handleSelect = (id: string) => {
     const vocab = VOCAB.find((v) => v.id === id);
     if (!vocab) return;
@@ -303,7 +312,7 @@ export default function ConvenienceStoreScene({
       <DrinkFridge onSelect={() => handleSelect("eumnyosu")} />
       <Checkout onSelect={() => handleSelect("gyesandae")} />
       <PriceTags onSelectPrice={() => handleSelect("eolmayeyo")} onSelectCount={handleCount} />
-      <FollowCamera target={adamRef} control={adamControl} />
+      <FollowCamera target={playerRef} control={playerControl} />
       <Suspense
         fallback={
           <>
@@ -312,17 +321,18 @@ export default function ConvenienceStoreScene({
           </>
         }
       >
-        {/* Adam — keyboard-controlled (arrow keys / WASD), starts at the
-            shelf reaching for a snack, then can walk around the store */}
+        {/* The learner's own character — keyboard-controlled (arrow keys /
+            WASD), starts at the shelf reaching for a snack, then can walk
+            around the store */}
         <Player
-          avatar="adam"
+          avatar={playerAvatar}
           initial={{ x: 0.5, z: 0.9, rotY: -Math.PI * 0.55 }}
-          bounds={ADAM_BOUNDS}
-          control={adamControl}
-          exposedRef={adamRef}
+          bounds={PLAYER_BOUNDS}
+          control={playerControl}
+          exposedRef={playerRef}
         />
-        {/* Lina beside him, pointing at the label */}
-        <Learner avatar="lina" x={1.15} z={0.75} rotY={-Math.PI * 0.4} control={linaControl} />
+        {/* The companion beside them, pointing at the label */}
+        <Learner avatar={companionAvatar} x={1.15} z={0.75} rotY={-Math.PI * 0.4} control={companionControl} />
       </Suspense>
       {/* Cluby curled up by the door, per the brief */}
       <Cluby x={2.3} y={0.12} z={0.9} />

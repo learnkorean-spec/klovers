@@ -9,13 +9,17 @@ import {
   Player,
   FollowCamera,
   useLearnerReactions,
+  companionOf,
+  DEFAULT_PLAYER_AVATAR,
+  type PlayableAvatar,
   type VocabItem,
   type DialogueLine,
 } from "./shared";
 
-/** How far Adam can actually walk in this room: clear of the counter's front
- * face (z≈0.3) and the alley wall behind it, inside the camera's frame. */
-const ADAM_BOUNDS = { x: [-2.2, 2.2] as [number, number], z: [0.5, 3.2] as [number, number] };
+/** How far the learner can actually walk in this room: clear of the
+ * counter's front face (z≈0.3) and the alley wall behind it, inside the
+ * camera's frame. */
+const PLAYER_BOUNDS = { x: [-2.2, 2.2] as [number, number], z: [0.5, 3.2] as [number, number] };
 
 export type { VocabItem };
 
@@ -208,10 +212,15 @@ function FoodCart({ onSelectVocab }: { onSelectVocab: (id: string) => void }) {
 }
 
 export default function World2Scene({
+  playerAvatar = DEFAULT_PLAYER_AVATAR,
   onSelectVocab,
   activeDialogueSpeaker = null,
   dialogueTurnKey = -1,
 }: {
+  /** Which canon learner the visitor is walking as this visit — Adam or
+   * Lina; the other stands in as the companion. See shared.tsx's doc
+   * comment on `PlayableAvatar`. */
+  playerAvatar?: PlayableAvatar;
   /** Fired when the learner clicks a food/menu hotspot, with the matching
    * VocabItem — the actual click is the "real learner data" driving the
    * reaction, not a timer or a hover. */
@@ -229,10 +238,12 @@ export default function World2Scene({
   // instead of a flat plane, so the ground reads as a real street.
   const ground = useTiledTexture(paintPaving, 6, 6);
   // Shared with FoodCart's hotspots below: clicking a word plays a one-off
-  // reaction on both learners (Lina "explains" it, Adam "reacts" to it) —
-  // cross-fades back to idle automatically once the clip finishes.
-  const { adamControl, linaControl, react } = useLearnerReactions();
-  const adamRef = useRef<Group>(null);
+  // reaction on both learners (the companion "explains" it, the player
+  // "reacts" to it) — cross-fades back to idle automatically once the clip
+  // finishes.
+  const { adamControl, linaControl, playerControl, companionControl, react } = useLearnerReactions(playerAvatar);
+  const companionAvatar = companionOf(playerAvatar);
+  const playerRef = useRef<Group>(null);
   const handleSelect = (id: string) => {
     const vocab = VOCAB.find((v) => v.id === id);
     if (!vocab) return;
@@ -277,7 +288,7 @@ export default function World2Scene({
         <meshStandardMaterial map={ground} color="#8a7560" roughness={0.95} />
       </mesh>
       <FoodCart onSelectVocab={handleSelect} />
-      <FollowCamera target={adamRef} control={adamControl} />
+      <FollowCamera target={playerRef} control={playerControl} />
       <Suspense
         fallback={
           <>
@@ -286,17 +297,18 @@ export default function World2Scene({
           </>
         }
       >
-        {/* Adam — keyboard-controlled (arrow keys / WASD), starts ordering at
-            the counter angled toward camera and Lina, then can walk around */}
+        {/* The learner's own character — keyboard-controlled (arrow keys /
+            WASD), starts ordering at the counter angled toward camera and
+            the companion, then can walk around */}
         <Player
-          avatar="adam"
+          avatar={playerAvatar}
           initial={{ x: -0.6, z: 1.1, rotY: Math.PI * 0.8 }}
-          bounds={ADAM_BOUNDS}
-          control={adamControl}
-          exposedRef={adamRef}
+          bounds={PLAYER_BOUNDS}
+          control={playerControl}
+          exposedRef={playerRef}
         />
-        {/* Lina beside him, pointing at the menu */}
-        <Learner avatar="lina" x={0.5} z={1.1} rotY={Math.PI * 0.65} control={linaControl} />
+        {/* The companion beside them, pointing at the menu */}
+        <Learner avatar={companionAvatar} x={0.5} z={1.1} rotY={Math.PI * 0.65} control={companionControl} />
       </Suspense>
       {/* Cluby sitting further right and back from Lina (x=0.5, z=1.1) —
           moved here from x=1.1/z=1.4 after Re flagged that, at some points

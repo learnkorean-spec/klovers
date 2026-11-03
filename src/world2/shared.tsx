@@ -58,6 +58,29 @@ export function speakKorean(text: string) {
   }
 }
 
+/** Which of the two canon learners the visitor is currently walking as —
+ * same idea as the live /world game's own `AvatarId`/onboarding picker
+ * (src/game/player/characters.ts, src/game/environment/Onboarding.tsx):
+ * "the learner picks which one to walk as," the other stands in as a
+ * companion. World2 previously hardcoded Adam as the only walkable
+ * character with Lina as a fixed companion everywhere — Re, 4 Nov 2026:
+ * "the visitor is either lena or adam" (i.e. make this a real choice, the
+ * way World1 already does it, not always-Adam). `World2Page` owns the
+ * single choice for the whole visit and threads it down as a prop; every
+ * scene swaps which character is `Player` (keyboard-controlled, camera
+ * target) and which is `Learner` (stationary companion) accordingly — the
+ * position/pose "slots" each room already had stay the same, only which
+ * canon character occupies which slot changes. */
+export type PlayableAvatar = "adam" | "lina";
+
+/** Matches the live game's own `DEFAULT_AVATAR` (characters.ts). */
+export const DEFAULT_PLAYER_AVATAR: PlayableAvatar = "adam";
+
+/** The companion standing alongside whoever the learner is playing as. */
+export function companionOf(avatar: PlayableAvatar): PlayableAvatar {
+  return avatar === "adam" ? "lina" : "adam";
+}
+
 /** Canon dress rules, copied from player/RealAvatar.tsx (not exported there). */
 export const DRESS: Record<"adam" | "lina", DressRule[]> = {
   adam: [
@@ -643,16 +666,26 @@ export function Cluby({ x, y = 0, z }: { x: number; y?: number; z: number }) {
 }
 
 /** A shared hook: two BodyControl refs (Adam, Lina) plus a `react(vocab)`
- * helper that plays Lina "explains it" / Adam "reacts" one-off animations,
- * cross-fading back to idle automatically once the clip finishes (see
- * RiggedBody's own `once` handling) — every room's handleSelect calls this
- * instead of re-deriving the same two lines. */
-export function useLearnerReactions() {
+ * helper that plays the companion's "explains it" / the player's "reacts"
+ * one-off animations, cross-fading back to idle automatically once the clip
+ * finishes (see RiggedBody's own `once` handling) — every room's
+ * handleSelect calls this instead of re-deriving the same two lines.
+ *
+ * Which control is "the player's" vs "the companion's" depends on
+ * `playerAvatar` (defaults to Adam, matching the live game's own
+ * DEFAULT_AVATAR) — the controls themselves stay keyed by character
+ * (adamControl always drives Adam's rig) since that's what RiggedBody
+ * needs; `playerControl`/`companionControl` are just the two named by role
+ * instead, for call sites that don't care which specific character is
+ * walking. */
+export function useLearnerReactions(playerAvatar: PlayableAvatar = DEFAULT_PLAYER_AVATAR) {
   const adamControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
   const linaControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
+  const playerControl = playerAvatar === "adam" ? adamControl : linaControl;
+  const companionControl = playerAvatar === "adam" ? linaControl : adamControl;
   const react = () => {
-    linaControl.current.once = "talk";
-    adamControl.current.once = "wave";
+    companionControl.current.once = "talk";
+    playerControl.current.once = "wave";
   };
-  return { adamControl, linaControl, react };
+  return { adamControl, linaControl, playerControl, companionControl, react };
 }
