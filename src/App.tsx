@@ -65,6 +65,7 @@ const AiRoomLabPage = lazy(() => import("./pages/AiRoomLabPage"));
 const World2Page = lazy(() => import("./world2/World2Page"));
 const KoreanPlacementPage = lazy(() => import("./pages/KoreanPlacementPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
+const LanguageExchangePage = lazy(() => import("./pages/LanguageExchangePage"));
 const TextbookHubPage = lazy(() => import("./pages/TextbookHubPage"));
 const TextbookPage = lazy(() => import("./pages/TextbookPage"));
 const LessonDetailPage = lazy(() => import("./pages/LessonDetailPage"));
@@ -223,6 +224,7 @@ const App = () => (
                 {/* Enrolment, games, affiliate, interview training, welcome back and the two legal pages (15 Oct 2026). */}
                 <Route path="/ar/enroll-now" element={<EnrollNowPage />} />
                 <Route path="/ar/games" element={<GamesPage />} />
+                <Route path="/ar/exchange" element={<LanguageExchangePage />} />
                 <Route path="/ar/affiliate" element={<AffiliatePage />} />
                 <Route path="/ar/interview-training" element={<KoreanInterviewPage />} />
                 <Route path="/ar/welcome-back" element={<ReturningStudentsLandingPage />} />
@@ -270,6 +272,7 @@ const App = () => (
                     already sent to students do not 404. */}
                 <Route path="/unit-placement" element={<Navigate to="/placement-test" replace />} />
                 <Route path="/games" element={<GamesPage />} />
+                <Route path="/exchange" element={<LanguageExchangePage />} />
                 <Route path="/world" element={<WorldPage />} />
                 <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
                 <Route path="/textbook/progress" element={<AuthProtectedRoute><TextbookProgressPage /></AuthProtectedRoute>} />

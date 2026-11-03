@@ -65,6 +65,7 @@ const Header = () => {
     { href: "/pricing", label: t("header", "pricing") },
     { href: "/textbook", label: isAr ? "الكتاب" : "Textbook" },
     { href: "/games", label: isAr ? "ألعاب" : "Games", badge: !user ? (isAr ? "مجاني" : "Free") : undefined },
+    { href: "/exchange", label: isAr ? "تبادل اللغة" : "Language Exchange", badge: isAr ? "جديد" : "New" },
     { href: "/shop", label: isAr ? "المتجر" : "Shop" },
   ];
 

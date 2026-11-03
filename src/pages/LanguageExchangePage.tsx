@@ -1,0 +1,1046 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useSEO } from "@/hooks/useSEO";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
+import { Heart, X, Loader2, ShieldAlert, Camera, Sparkles, MessageCircle } from "lucide-react";
+import {
+  EXCHANGE_LANGUAGES,
+  EXCHANGE_INTERESTS,
+  EXCHANGE_MIN_AGE,
+  EXCHANGE_MAX_AGE,
+  REPORT_REASONS,
+  languageLabel,
+  interestLabel,
+} from "@/constants/languageExchange";
+
+/**
+ * Language Exchange (added 4 Nov 2026, Re's request): an opt-in, swipe-based
+ * way for any signed-up visitor — not only enrolled Korean students — to find
+ * a partner to practice a language with. Separate feature, separate tables
+ * (exchange_profiles / exchange_swipes / exchange_matches / exchange_blocks /
+ * exchange_reports — see supabase/migrations/20261104000100_language_exchange_feature.sql),
+ * kept off the paid-course `students`/`profiles` tables entirely.
+ *
+ * `as any` on every `.from("exchange_*")` call: these tables postdate the
+ * last `generate_typescript_types` run, matching the existing pattern in e.g.
+ * BulkEmailManager.tsx for other tables added after a types refresh.
+ *
+ * Served at /exchange and /ar/exchange from the same component (App.tsx),
+ * same pattern as /games + /ar/games -> GamesPage.
+ */
+
+interface ExchangeProfileRow {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  age: number | null;
+  native_languages: string[];
+  learning_languages: string[];
+  interests: string[];
+  contact_type: string | null;
+  contact_value: string | null;
+  is_visible: boolean;
+}
+
+const CONTACT_TYPES = [
+  { value: "telegram", en: "Telegram", ar: "تيليجرام" },
+  { value: "whatsapp", en: "WhatsApp", ar: "واتساب" },
+  { value: "instagram", en: "Instagram", ar: "إنستغرام" },
+  { value: "email", en: "Email", ar: "البريد الإلكتروني" },
+];
+
+const emptyDraft = (): ExchangeProfileRow => ({
+  user_id: "",
+  display_name: "",
+  avatar_url: null,
+  bio: "",
+  age: null,
+  native_languages: [],
+  learning_languages: [],
+  interests: [],
+  contact_type: null,
+  contact_value: "",
+  is_visible: true,
+});
+
+export default function LanguageExchangePage() {
+  const { user, loading: authLoading } = useAuth();
+  const { language } = useLanguage();
+  const isAr = language === "ar";
+  const tr = (en: string, ar: string) => (isAr ? ar : en);
+
+  useSEO({
+    title: tr("Language Exchange | Klovers", "تبادل اللغة | كلوفرز"),
+    description: tr(
+      "Find a language exchange partner: set your languages and interests, then swipe through profiles.",
+      "ابحث عن شريك لتبادل اللغة: حدّدي لغاتك واهتماماتك ثم تصفّحي الملفات الشخصية.",
+    ),
+    noindex: true,
+  });
+
+  const [myProfile, setMyProfile] = useState<ExchangeProfileRow | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [tab, setTab] = useState<"discover" | "matches" | "profile">("discover");
+
+  // Load (or notice the absence of) the signed-in visitor's own exchange profile.
+  useEffect(() => {
+    if (!user) { setProfileLoaded(true); return; }
+    let cancelled = false;
+    supabase
+      .from("exchange_profiles" as any)
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          toast({ title: tr("Couldn't load your profile", "تعذّر تحميل ملفك"), description: error.message, variant: "destructive" });
+        }
+        setMyProfile((data as unknown as ExchangeProfileRow) ?? null);
+        setProfileLoaded(true);
+        if (!data) setTab("profile");
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  if (authLoading || (user && !profileLoaded)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div dir={isAr ? "rtl" : "ltr"} className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 mx-auto max-w-lg px-5 py-20 text-center">
+          <Sparkles className="mx-auto h-10 w-10 text-[#FFFF00]" />
+          <h1 className="mt-4 text-3xl font-black tracking-tight">
+            {tr("Language Exchange", "تبادل اللغة")}
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            {tr(
+              "Sign up free to create a profile and find a partner to practice a language with.",
+              "أنشئي حسابًا مجانيًا لإنشاء ملفك الشخصي والعثور على شريك لممارسة اللغة معه.",
+            )}
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Button asChild>
+              <Link to={`/signup?redirect=${encodeURIComponent("/exchange")}`}>{tr("Sign up", "إنشاء حساب")}</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to={`/login?redirect=${encodeURIComponent("/exchange")}`}>{tr("Log in", "تسجيل الدخول")}</Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div dir={isAr ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-background">
+      <Header />
+      <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-8 sm:py-10">
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-black tracking-tight">{tr("Language Exchange", "تبادل اللغة")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {tr(
+              "Swipe through profiles, match, and practice together.",
+              "تصفّحي الملفات الشخصية، كوّني تطابقًا، ومارسي اللغة معًا.",
+            )}
+          </p>
+        </div>
+
+        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="discover">{tr("Discover", "اكتشاف")}</TabsTrigger>
+            <TabsTrigger value="matches">{tr("Matches", "التطابقات")}</TabsTrigger>
+            <TabsTrigger value="profile">{tr("My Profile", "ملفي")}</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="discover" className="mt-6">
+            {myProfile ? (
+              <DiscoverDeck myProfile={myProfile} isAr={isAr} tr={tr} />
+            ) : (
+              <NeedsProfileNotice tr={tr} onGo={() => setTab("profile")} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="matches" className="mt-6">
+            <MatchesList isAr={isAr} tr={tr} userId={user.id} />
+          </TabsContent>
+
+          <TabsContent value="profile" className="mt-6">
+            <ProfileEditor
+              userId={user.id}
+              initial={myProfile}
+              isAr={isAr}
+              tr={tr}
+              onSaved={(row) => {
+                setMyProfile(row);
+                if (tab === "profile") toast({ title: tr("Saved", "تم الحفظ") });
+              }}
+            />
+          </TabsContent>
+        </Tabs>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+function NeedsProfileNotice({ tr, onGo }: { tr: (en: string, ar: string) => string; onGo: () => void }) {
+  return (
+    <Card>
+      <CardContent className="py-10 text-center">
+        <p className="text-muted-foreground">
+          {tr("Set up your exchange profile first — it only takes a minute.", "أنشئي ملف التبادل أولًا — الأمر يستغرق دقيقة فقط.")}
+        </p>
+        <Button className="mt-4" onClick={onGo}>
+          {tr("Set up my profile", "إعداد ملفي")}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ---------------------------------- Discover ---------------------------------- */
+
+function DiscoverDeck({
+  myProfile,
+  isAr,
+  tr,
+}: {
+  myProfile: ExchangeProfileRow;
+  isAr: boolean;
+  tr: (en: string, ar: string) => string;
+}) {
+  const [queue, setQueue] = useState<ExchangeProfileRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState(false);
+  const [matchedWith, setMatchedWith] = useState<ExchangeProfileRow | null>(null);
+  const [reportTarget, setReportTarget] = useState<ExchangeProfileRow | null>(null);
+
+  const loadQueue = useCallback(async () => {
+    setLoading(true);
+    const { data: swipes } = await supabase
+      .from("exchange_swipes" as any)
+      .select("target_id")
+      .eq("swiper_id", myProfile.user_id);
+    const swipedIds = ((swipes as unknown as { target_id: string }[]) ?? []).map((s) => s.target_id);
+
+    let query = supabase
+      .from("exchange_profiles" as any)
+      .select("*")
+      .eq("is_visible", true)
+      .neq("user_id", myProfile.user_id)
+      .limit(25);
+
+    if (swipedIds.length > 0) {
+      query = query.not("user_id", "in", `(${swipedIds.join(",")})`);
+    }
+
+    // Prefer people whose languages actually pair with mine, when we know them.
+    const wantsFrom = myProfile.learning_languages ?? [];
+    const offers = myProfile.native_languages ?? [];
+    if (wantsFrom.length > 0 || offers.length > 0) {
+      const parts: string[] = [];
+      if (wantsFrom.length) parts.push(`native_languages.ov.{${wantsFrom.join(",")}}`);
+      if (offers.length) parts.push(`learning_languages.ov.{${offers.join(",")}}`);
+      query = query.or(parts.join(","));
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      toast({ title: tr("Couldn't load profiles", "تعذّر تحميل الملفات"), description: error.message, variant: "destructive" });
+      setQueue([]);
+    } else {
+      const rows = (data as unknown as ExchangeProfileRow[]) ?? [];
+      // Shuffle so the same top rows don't always lead.
+      for (let i = rows.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rows[i], rows[j]] = [rows[j], rows[i]];
+      }
+      setQueue(rows);
+    }
+    setLoading(false);
+  }, [myProfile.user_id, myProfile.learning_languages, myProfile.native_languages, tr]);
+
+  useEffect(() => {
+    loadQueue();
+  }, [loadQueue]);
+
+  const current = queue[0];
+
+  const act = async (action: "like" | "pass") => {
+    if (!current || acting) return;
+    setActing(true);
+    const { error } = await supabase.from("exchange_swipes" as any).insert({
+      swiper_id: myProfile.user_id,
+      target_id: current.user_id,
+      action,
+    });
+    if (error && !error.message.includes("duplicate key")) {
+      toast({ title: tr("Something went wrong", "حدث خطأ"), description: error.message, variant: "destructive" });
+      setActing(false);
+      return;
+    }
+
+    if (action === "like") {
+      const { data: matchRows } = await supabase
+        .from("exchange_matches" as any)
+        .select("*")
+        .or(`user_a.eq.${current.user_id},user_b.eq.${current.user_id}`);
+      const isMatch = ((matchRows as unknown as { user_a: string; user_b: string }[]) ?? []).some(
+        (m) => m.user_a === myProfile.user_id || m.user_b === myProfile.user_id,
+      );
+      if (isMatch) setMatchedWith(current);
+    }
+
+    setQueue((q) => q.slice(1));
+    setActing(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!current) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center">
+          <p className="text-muted-foreground">
+            {tr("No new profiles right now — check back soon.", "لا توجد ملفات جديدة الآن — عودي لاحقًا.")}
+          </p>
+          <Button variant="outline" className="mt-4" onClick={loadQueue}>
+            {tr("Refresh", "تحديث")}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div>
+      <SwipeCard
+        profile={current}
+        isAr={isAr}
+        tr={tr}
+        disabled={acting}
+        onLike={() => act("like")}
+        onPass={() => act("pass")}
+        onReport={() => setReportTarget(current)}
+      />
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        {tr(
+          "Keep it safe: never send money, and meet in public first.",
+          "حافظي على سلامتك: لا ترسلي أموالًا أبدًا، والتقي في مكان عام أولًا.",
+        )}
+      </p>
+
+      <Dialog open={!!matchedWith} onOpenChange={(open) => !open && setMatchedWith(null)}>
+        <DialogContent className="text-center">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{tr("It's a match! 🎉", "لقد تطابقتما! 🎉")}</DialogTitle>
+            <DialogDescription>
+              {tr(
+                `You and ${matchedWith?.display_name} both liked each other. Find them in Matches.`,
+                `أنتِ و${matchedWith?.display_name} أعجب كل منكما بالآخر. يمكنك إيجادهما في التطابقات.`,
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center">
+            <Button onClick={() => setMatchedWith(null)}>{tr("Keep swiping", "تابعي التصفّح")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ReportDialog
+        target={reportTarget}
+        isAr={isAr}
+        tr={tr}
+        onClose={() => setReportTarget(null)}
+      />
+    </div>
+  );
+}
+
+function SwipeCard({
+  profile,
+  isAr,
+  tr,
+  disabled,
+  onLike,
+  onPass,
+  onReport,
+}: {
+  profile: ExchangeProfileRow;
+  isAr: boolean;
+  tr: (en: string, ar: string) => string;
+  disabled: boolean;
+  onLike: () => void;
+  onPass: () => void;
+  onReport: () => void;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef<{ startX: number; dragging: boolean } | null>(null);
+  const [dragX, setDragX] = useState(0);
+
+  const resetDrag = () => {
+    setDragX(0);
+    dragState.current = null;
+  };
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (disabled) return;
+    dragState.current = { startX: e.clientX, dragging: true };
+    cardRef.current?.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragState.current?.dragging) return;
+    setDragX(e.clientX - dragState.current.startX);
+  };
+
+  const onPointerUp = () => {
+    if (!dragState.current?.dragging) return;
+    const threshold = 110;
+    if (dragX > threshold) onLike();
+    else if (dragX < -threshold) onPass();
+    resetDrag();
+  };
+
+  const rotation = Math.max(-12, Math.min(12, dragX / 12));
+  const likeOpacity = Math.min(1, Math.max(0, dragX / 100));
+  const passOpacity = Math.min(1, Math.max(0, -dragX / 100));
+
+  return (
+    <div>
+      <div
+        ref={cardRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={resetDrag}
+        style={{ transform: `translateX(${dragX}px) rotate(${rotation}deg)`, touchAction: "pan-y" }}
+        className="relative cursor-grab select-none active:cursor-grabbing transition-transform"
+      >
+        <Card className="overflow-hidden">
+          <div className="relative h-72 w-full bg-muted">
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile.display_name} className="h-full w-full object-cover" draggable={false} />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <Avatar className="h-28 w-28">
+                  <AvatarFallback className="text-3xl">{profile.display_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+              </div>
+            )}
+            <div
+              className="absolute top-5 rounded-xl border-4 border-green-500 px-3 py-1 text-xl font-black text-green-500 rotate-[-12deg]"
+              style={{ insetInlineStart: 16, opacity: likeOpacity }}
+            >
+              {tr("LIKE", "إعجاب")}
+            </div>
+            <div
+              className="absolute top-5 rounded-xl border-4 border-red-500 px-3 py-1 text-xl font-black text-red-500 rotate-[12deg]"
+              style={{ insetInlineEnd: 16, opacity: passOpacity }}
+            >
+              {tr("PASS", "تخطّي")}
+            </div>
+          </div>
+          <CardContent className="p-5">
+            <div className="flex items-baseline justify-between gap-2">
+              <h2 className="text-xl font-bold">
+                {profile.display_name}
+                {profile.age ? <span className="ms-2 font-normal text-muted-foreground">{profile.age}</span> : null}
+              </h2>
+              <button
+                type="button"
+                onClick={onReport}
+                className="shrink-0 text-muted-foreground hover:text-destructive"
+                aria-label={tr("Report", "إبلاغ")}
+              >
+                <ShieldAlert className="h-5 w-5" />
+              </button>
+            </div>
+
+            {(profile.native_languages?.length || profile.learning_languages?.length) ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {profile.native_languages?.length ? (
+                  <>
+                    {tr("Speaks", "تتحدث")}{" "}
+                    {profile.native_languages.map((c) => languageLabel(c, isAr ? "ar" : "en")).join(", ")}
+                  </>
+                ) : null}
+                {profile.native_languages?.length && profile.learning_languages?.length ? " · " : ""}
+                {profile.learning_languages?.length ? (
+                  <>
+                    {tr("Learning", "تتعلم")}{" "}
+                    {profile.learning_languages.map((c) => languageLabel(c, isAr ? "ar" : "en")).join(", ")}
+                  </>
+                ) : null}
+              </p>
+            ) : null}
+
+            {profile.bio ? <p className="mt-3 text-sm">{profile.bio}</p> : null}
+
+            {profile.interests?.length ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {profile.interests.map((k) => (
+                  <Badge key={k} variant="secondary">
+                    {interestLabel(k, isAr ? "ar" : "en")}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-5 flex justify-center gap-6">
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-14 w-14 rounded-full border-red-300 text-red-500 hover:bg-red-50"
+          onClick={onPass}
+          disabled={disabled}
+          aria-label={tr("Pass", "تخطّي")}
+        >
+          <X className="h-6 w-6" />
+        </Button>
+        <Button
+          size="icon"
+          className="h-14 w-14 rounded-full bg-green-500 text-white hover:bg-green-600"
+          onClick={onLike}
+          disabled={disabled}
+          aria-label={tr("Like", "إعجاب")}
+        >
+          <Heart className="h-6 w-6" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------- Matches ---------------------------------- */
+
+function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar: string) => string; userId: string }) {
+  const [matches, setMatches] = useState<ExchangeProfileRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reportTarget, setReportTarget] = useState<ExchangeProfileRow | null>(null);
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data: matchRows, error } = await supabase
+      .from("exchange_matches" as any)
+      .select("*")
+      .or(`user_a.eq.${userId},user_b.eq.${userId}`)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast({ title: tr("Couldn't load matches", "تعذّر تحميل التطابقات"), description: error.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    const otherIds = ((matchRows as unknown as { user_a: string; user_b: string }[]) ?? []).map((m) =>
+      m.user_a === userId ? m.user_b : m.user_a,
+    );
+
+    if (otherIds.length === 0) {
+      setMatches([]);
+      setLoading(false);
+      return;
+    }
+
+    const { data: profilesData } = await supabase
+      .from("exchange_profiles" as any)
+      .select("*")
+      .in("user_id", otherIds);
+    setMatches((profilesData as unknown as ExchangeProfileRow[]) ?? []);
+    setLoading(false);
+  }, [userId, tr]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (matches.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-muted-foreground">
+          {tr("No matches yet — keep swiping in Discover.", "لا توجد تطابقات بعد — تابعي التصفّح في اكتشاف.")}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {matches.map((m) => {
+        const contactLabel = CONTACT_TYPES.find((c) => c.value === m.contact_type);
+        const isRevealed = revealed[m.user_id];
+        return (
+          <Card key={m.user_id}>
+            <CardContent className="flex items-start gap-4 p-4">
+              <Avatar className="h-14 w-14 shrink-0">
+                {m.avatar_url && <AvatarImage src={m.avatar_url} alt={m.display_name} />}
+                <AvatarFallback>{m.display_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-bold">{m.display_name}</h3>
+                  <button
+                    type="button"
+                    onClick={() => setReportTarget(m)}
+                    className="shrink-0 text-muted-foreground hover:text-destructive"
+                    aria-label={tr("Report", "إبلاغ")}
+                  >
+                    <ShieldAlert className="h-4 w-4" />
+                  </button>
+                </div>
+                {m.bio ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{m.bio}</p> : null}
+
+                {m.contact_type && m.contact_value ? (
+                  isRevealed ? (
+                    <p className="mt-2 flex items-center gap-1.5 text-sm font-medium">
+                      <MessageCircle className="h-4 w-4 text-[#FFFF00]" />
+                      {contactLabel ? (isAr ? contactLabel.ar : contactLabel.en) : m.contact_type}: {m.contact_value}
+                    </p>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => setRevealed((r) => ({ ...r, [m.user_id]: true }))}
+                    >
+                      {tr("Show contact info", "إظهار معلومات التواصل")}
+                    </Button>
+                  )
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {tr("No contact info shared.", "لم تتم مشاركة معلومات تواصل.")}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+
+      <ReportDialog target={reportTarget} isAr={isAr} tr={tr} onClose={() => setReportTarget(null)} />
+    </div>
+  );
+}
+
+/* ---------------------------------- Profile editor ---------------------------------- */
+
+function ProfileEditor({
+  userId,
+  initial,
+  isAr,
+  tr,
+  onSaved,
+}: {
+  userId: string;
+  initial: ExchangeProfileRow | null;
+  isAr: boolean;
+  tr: (en: string, ar: string) => string;
+  onSaved: (row: ExchangeProfileRow) => void;
+}) {
+  const [draft, setDraft] = useState<ExchangeProfileRow>(initial ?? { ...emptyDraft(), user_id: userId });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (initial) setDraft(initial);
+  }, [initial]);
+
+  const toggleFromList = (field: "native_languages" | "learning_languages" | "interests", value: string, max?: number) => {
+    setDraft((d) => {
+      const list = d[field];
+      const has = list.includes(value);
+      if (has) return { ...d, [field]: list.filter((v) => v !== value) };
+      if (max && list.length >= max) return d;
+      return { ...d, [field]: [...list, value] };
+    });
+  };
+
+  const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: tr("Invalid file", "ملف غير صالح"), description: tr("Please select an image.", "الرجاء اختيار صورة."), variant: "destructive" });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: tr("File too large", "الملف كبير جدًا"), description: tr("Max 2MB.", "الحد الأقصى 2 ميجابايت."), variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${userId}/exchange-avatar.${ext}`;
+    await supabase.storage.from("avatars").remove([path]);
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (upErr) {
+      toast({ title: tr("Upload failed", "تعذّر الرفع"), description: upErr.message, variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    setDraft((d) => ({ ...d, avatar_url: `${data.publicUrl}?t=${Date.now()}` }));
+    setUploading(false);
+  };
+
+  const canSave =
+    draft.display_name.trim().length >= 2 &&
+    (draft.age == null || (draft.age >= EXCHANGE_MIN_AGE && draft.age <= EXCHANGE_MAX_AGE)) &&
+    draft.native_languages.length > 0 &&
+    draft.learning_languages.length > 0;
+
+  const handleSave = async () => {
+    if (!canSave) {
+      toast({
+        title: tr("Please complete the required fields", "يرجى إكمال الحقول المطلوبة"),
+        description: tr(
+          `Name, at least one language you speak, one you're learning, and age ${EXCHANGE_MIN_AGE}+ if given.`,
+          `الاسم، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، والعمر ${EXCHANGE_MIN_AGE}+ إن تم إدخاله.`,
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      user_id: userId,
+      display_name: draft.display_name.trim(),
+      avatar_url: draft.avatar_url,
+      bio: draft.bio?.trim() || null,
+      age: draft.age,
+      native_languages: draft.native_languages,
+      learning_languages: draft.learning_languages,
+      interests: draft.interests,
+      contact_type: draft.contact_type,
+      contact_value: draft.contact_value?.trim() || null,
+      is_visible: draft.is_visible,
+    };
+    const { data, error } = await supabase
+      .from("exchange_profiles" as any)
+      .upsert(payload, { onConflict: "user_id" })
+      .select("*")
+      .single();
+    setSaving(false);
+    if (error) {
+      toast({ title: tr("Couldn't save", "تعذّر الحفظ"), description: error.message, variant: "destructive" });
+      return;
+    }
+    onSaved(data as unknown as ExchangeProfileRow);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="border-[#FFFF00]/40 bg-[#FFFF00]/5">
+        <CardContent className="p-4 text-sm">
+          <p className="font-semibold">{tr("Keep it safe", "حافظي على سلامتك")}</p>
+          <p className="mt-1 text-muted-foreground">
+            {tr(
+              `You must be ${EXCHANGE_MIN_AGE} or older. Never send money or passwords. Meet in a public place first. Report anyone who makes you uncomfortable.`,
+              `يجب أن يكون عمرك ${EXCHANGE_MIN_AGE} عامًا أو أكثر. لا ترسلي أبدًا أموالًا أو كلمات مرور. التقي في مكان عام أولًا. أبلغي عن أي شخص يجعلك تشعرين بعدم الارتياح.`,
+            )}
+          </p>
+        </CardContent>
+      </Card>
+
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="relative shrink-0 rounded-full"
+          disabled={uploading}
+          aria-label={tr("Upload a photo", "رفع صورة")}
+        >
+          <Avatar className="h-20 w-20 border-2 border-primary/20">
+            {draft.avatar_url && <AvatarImage src={draft.avatar_url} alt={draft.display_name} />}
+            <AvatarFallback className="text-lg">{(draft.display_name || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <span className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground">
+            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+          </span>
+        </button>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarPick} disabled={uploading} />
+        <p className="text-sm text-muted-foreground">{tr("Tap to add a photo (optional).", "اضغطي لإضافة صورة (اختياري).")}</p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="display_name">{tr("Display name", "الاسم الظاهر")} *</Label>
+          <Input
+            id="display_name"
+            value={draft.display_name}
+            onChange={(e) => setDraft((d) => ({ ...d, display_name: e.target.value }))}
+            maxLength={40}
+          />
+        </div>
+        <div>
+          <Label htmlFor="age">{tr("Age", "العمر")}</Label>
+          <Input
+            id="age"
+            type="number"
+            min={EXCHANGE_MIN_AGE}
+            max={EXCHANGE_MAX_AGE}
+            value={draft.age ?? ""}
+            onChange={(e) => setDraft((d) => ({ ...d, age: e.target.value ? Number(e.target.value) : null }))}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="bio">{tr("About you", "عنكِ")}</Label>
+        <Textarea
+          id="bio"
+          value={draft.bio ?? ""}
+          onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))}
+          maxLength={300}
+          rows={3}
+          placeholder={tr("What are you hoping to practice, and how?", "ماذا تأملين أن تمارسي، وكيف؟")}
+        />
+      </div>
+
+      <div>
+        <Label>{tr("Languages you speak", "اللغات التي تتحدثينها")} *</Label>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {EXCHANGE_LANGUAGES.map((l) => (
+            <Badge
+              key={l.code}
+              variant={draft.native_languages.includes(l.code) ? "default" : "outline"}
+              className="cursor-pointer select-none"
+              onClick={() => toggleFromList("native_languages", l.code)}
+            >
+              {isAr ? l.ar : l.en}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <Label>{tr("Languages you're learning", "اللغات التي تتعلمينها")} *</Label>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {EXCHANGE_LANGUAGES.map((l) => (
+            <Badge
+              key={l.code}
+              variant={draft.learning_languages.includes(l.code) ? "default" : "outline"}
+              className="cursor-pointer select-none"
+              onClick={() => toggleFromList("learning_languages", l.code)}
+            >
+              {isAr ? l.ar : l.en}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <Label>{tr("Interests", "الاهتمامات")} ({tr("up to 8", "حتى 8")})</Label>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {EXCHANGE_INTERESTS.map((i) => (
+            <Badge
+              key={i.key}
+              variant={draft.interests.includes(i.key) ? "default" : "outline"}
+              className="cursor-pointer select-none"
+              onClick={() => toggleFromList("interests", i.key, 8)}
+            >
+              {isAr ? i.ar : i.en}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label>{tr("Contact method (shown only to matches)", "طريقة التواصل (تظهر للتطابقات فقط)")}</Label>
+          <Select
+            value={draft.contact_type ?? ""}
+            onValueChange={(v) => setDraft((d) => ({ ...d, contact_type: v }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={tr("Optional", "اختياري")} />
+            </SelectTrigger>
+            <SelectContent>
+              {CONTACT_TYPES.map((c) => (
+                <SelectItem key={c.value} value={c.value}>
+                  {isAr ? c.ar : c.en}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="contact_value">{tr("Contact details", "بيانات التواصل")}</Label>
+          <Input
+            id="contact_value"
+            value={draft.contact_value ?? ""}
+            onChange={(e) => setDraft((d) => ({ ...d, contact_value: e.target.value }))}
+            placeholder={tr("@username or email", "@اسم المستخدم أو البريد الإلكتروني")}
+            disabled={!draft.contact_type}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between rounded-lg border p-4">
+        <div>
+          <p className="font-medium">{tr("Visible to others", "ظاهر للآخرين")}</p>
+          <p className="text-sm text-muted-foreground">
+            {tr("Turn off to pause being shown in Discover.", "أوقفيه لتجميد ظهورك في اكتشاف.")}
+          </p>
+        </div>
+        <Switch
+          checked={draft.is_visible}
+          onCheckedChange={(v) => setDraft((d) => ({ ...d, is_visible: v }))}
+        />
+      </div>
+
+      <Button className="w-full" size="lg" onClick={handleSave} disabled={saving || !canSave}>
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : tr("Save profile", "حفظ الملف")}
+      </Button>
+    </div>
+  );
+}
+
+/* ---------------------------------- Report ---------------------------------- */
+
+function ReportDialog({
+  target,
+  isAr,
+  tr,
+  onClose,
+}: {
+  target: ExchangeProfileRow | null;
+  isAr: boolean;
+  tr: (en: string, ar: string) => string;
+  onClose: () => void;
+}) {
+  const { user } = useAuth();
+  const [reason, setReason] = useState("");
+  const [details, setDetails] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [blockToo, setBlockToo] = useState(true);
+
+  useEffect(() => {
+    if (target) { setReason(""); setDetails(""); setBlockToo(true); }
+  }, [target]);
+
+  const submit = async () => {
+    if (!target || !user || !reason) return;
+    setSubmitting(true);
+    const { error } = await supabase.from("exchange_reports" as any).insert({
+      reporter_id: user.id,
+      reported_id: target.user_id,
+      reason,
+      details: details.trim() || null,
+    });
+    if (error) {
+      toast({ title: tr("Couldn't send report", "تعذّر إرسال البلاغ"), description: error.message, variant: "destructive" });
+      setSubmitting(false);
+      return;
+    }
+    if (blockToo) {
+      await supabase.from("exchange_blocks" as any).insert({ blocker_id: user.id, blocked_id: target.user_id });
+    }
+    setSubmitting(false);
+    toast({ title: tr("Report sent", "تم إرسال البلاغ"), description: tr("Our team will review it.", "سيقوم فريقنا بمراجعته.") });
+    onClose();
+  };
+
+  return (
+    <Dialog open={!!target} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{tr("Report", "الإبلاغ عن")} {target?.display_name}</DialogTitle>
+          <DialogDescription>
+            {tr("Tell us what happened. This is reviewed by our team, not shared with the other person.", "أخبرينا بما حدث. سيراجعه فريقنا ولن يُشارك مع الشخص الآخر.")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <Select value={reason} onValueChange={setReason}>
+            <SelectTrigger>
+              <SelectValue placeholder={tr("Reason", "السبب")} />
+            </SelectTrigger>
+            <SelectContent>
+              {REPORT_REASONS.map((r) => (
+                <SelectItem key={r.key} value={r.key}>
+                  {isAr ? r.ar : r.en}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Textarea
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+            placeholder={tr("Optional details", "تفاصيل اختيارية")}
+            rows={3}
+          />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={blockToo} onChange={(e) => setBlockToo(e.target.checked)} />
+            {tr("Also block this person", "حظر هذا الشخص أيضًا")}
+          </label>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>{tr("Cancel", "إلغاء")}</Button>
+          <Button variant="destructive" disabled={!reason || submitting} onClick={submit}>
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : tr("Submit report", "إرسال البلاغ")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
