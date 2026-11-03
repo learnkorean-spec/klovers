@@ -1340,7 +1340,7 @@ const PlacementTestPage = () => {
                         <div className="ml-7 mb-2 rounded-lg bg-primary/5 border border-primary/15 px-3 py-2 text-xs space-y-1.5">
                           <p className="font-medium text-foreground leading-relaxed">{q.passage}</p>
                           <button
-                            className="flex items-center gap-1 text-primary hover:underline text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                            className="flex items-center gap-1 text-foreground hover:underline text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             onClick={() => speakKorean(q.passage!)}
                           >
                             <Volume2 className="h-3 w-3" /> {isAr ? "الاستماع مجددًا" : "Listen again"}
@@ -1571,7 +1571,7 @@ const PlacementTestPage = () => {
                       <span className="text-sm text-muted-foreground italic">{isAr ? "تم التخطي: يحتسب كـ 0" : "Skipped: counts as 0"}</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleUnskip(q.id); }}
-                        className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        className="flex items-center gap-1.5 text-xs text-foreground hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       >
                         <Undo2 className="h-3.5 w-3.5" /> {isAr ? "الإجابة عن هذا السؤال" : "Answer this question"}
                       </button>

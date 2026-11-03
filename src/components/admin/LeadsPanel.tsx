@@ -465,7 +465,7 @@ const LeadsPanel: React.FC = () => {
               </div>
               <div className="bg-background border border-border rounded-lg px-3 py-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Booked</p>
-                <p className="text-lg font-bold text-green-600 dark:text-green-400">{recoveryKpi.leads_converted}</p>
+                <p className="text-lg font-bold text-green-700 dark:text-green-400">{recoveryKpi.leads_converted}</p>
               </div>
               <div className="bg-background border border-border rounded-lg px-3 py-2">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Recovery</p>
@@ -510,7 +510,7 @@ const LeadsPanel: React.FC = () => {
                             </td>
                             <td className="px-3 py-2 text-center">
                               {row.converted_at
-                                ? <span className="text-green-600 dark:text-green-400 font-semibold">✓ {fmt(row.converted_at)}</span>
+                                ? <span className="text-green-700 dark:text-green-400 font-semibold">✓ {fmt(row.converted_at)}</span>
                                 : <Dot on={false} colorClass="" />}
                             </td>
                           </tr>
@@ -610,7 +610,7 @@ const LeadsPanel: React.FC = () => {
                   <span key={src} className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-background border border-border rounded-full px-2.5 py-1">
                     <span className="text-foreground capitalize">{src}</span>
                     <span className="text-muted-foreground">{total}</span>
-                    <span className="text-green-600 font-bold">{total > 0 ? Math.round((converted / total) * 100) : 0}%</span>
+                    <span className="text-green-700 font-bold">{total > 0 ? Math.round((converted / total) * 100) : 0}%</span>
                   </span>
                 ))}
               </div>

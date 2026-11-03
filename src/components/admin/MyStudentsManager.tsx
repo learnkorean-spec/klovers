@@ -211,7 +211,7 @@ const MeetingLinkRow = ({ url, onEdit }: { url: string | null; onEdit: () => voi
       <Video className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       <a
         href={url} target="_blank" rel="noopener noreferrer"
-        className="truncate max-w-[22rem] text-primary hover:underline"
+        className="truncate max-w-[22rem] text-foreground hover:underline"
         title={url}
       >
         {url.replace(/^https:\/\//, "")}
@@ -323,7 +323,7 @@ const CompletedBundleLines = ({
         <button
           type="button"
           onClick={onManageBundles}
-          className="rounded-sm text-left text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="rounded-sm text-left text-[11px] text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           +{extra} more completed — see all in Manage bundles
         </button>
@@ -512,7 +512,7 @@ const BundleEditHistory = ({ bundleId }: { bundleId: string }) => {
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="rounded-sm text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+      <button type="button" onClick={() => setOpen(true)} className="rounded-sm text-[11px] text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
         View edit history
       </button>
     );
@@ -553,7 +553,7 @@ const DeletedBundleHistory = ({ studentId }: { studentId: string }) => {
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="rounded-sm text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+      <button type="button" onClick={() => setOpen(true)} className="rounded-sm text-[11px] text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
         View deleted bundles
       </button>
     );
@@ -2519,7 +2519,7 @@ const MyStudentsManager = () => {
                   <button
                     type="button"
                     onClick={showOlderInCatchUp}
-                    className="rounded-sm text-xs text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="rounded-sm text-xs text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {older.length} older unconfirmed {older.length === 1 ? "class" : "classes"} — show {older.length === 1 ? "it" : "them"}
                   </button>
