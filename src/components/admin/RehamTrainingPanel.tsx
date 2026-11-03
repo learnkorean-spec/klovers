@@ -2517,8 +2517,12 @@ export default function RehamTrainingPanel() {
                     return (
                       <Card
                         key={cat.name}
-                        className="rounded-xl cursor-pointer hover:border-primary/50 transition-colors"
+                        className="rounded-xl cursor-pointer hover:border-primary/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`${cat.name}: ${catCompleted} of ${cat.ids.length} questions completed`}
                         onClick={() => { setSelectedCategory(cat.name); setCatIndex(0); }}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedCategory(cat.name); setCatIndex(0); } }}
                       >
                         <CardContent className="p-4 space-y-2">
                           <div className="flex items-center gap-2">
@@ -2835,13 +2839,17 @@ export default function RehamTrainingPanel() {
               {/* Flash Card */}
               <div
                 className={cn(
-                  "relative min-h-[320px] rounded-2xl border-2 cursor-pointer transition-all duration-300",
+                  "relative min-h-[320px] rounded-2xl border-2 cursor-pointer transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   fcFlipped
                     ? "bg-green-50 dark:bg-green-950/30 border-green-300"
                     : "bg-blue-50 dark:bg-blue-950/30 border-blue-300",
                   fcMastered.has(fcCurrent.korean) && "ring-2 ring-green-400",
                 )}
+                role="button"
+                tabIndex={0}
+                aria-label={fcFlipped ? "Flashcard, showing answer. Press to flip back." : "Flashcard, showing question. Press to reveal answer."}
                 onClick={() => setFcFlipped(!fcFlipped)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFcFlipped(!fcFlipped); } }}
               >
                 <div className="absolute top-3 left-3">
                   <Badge
@@ -3010,8 +3018,17 @@ export default function RehamTrainingPanel() {
                       )}
                     >
                       <div
-                        className="flex-1 min-w-0"
+                        className="flex-1 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                        role={editingCollectionId === col.id ? undefined : "button"}
+                        tabIndex={editingCollectionId === col.id ? undefined : 0}
+                        aria-label={editingCollectionId === col.id ? undefined : `Select collection ${col.name}`}
                         onClick={() => setSelectedCollectionId(col.id)}
+                        onKeyDown={(e) => {
+                          if (editingCollectionId !== col.id && (e.key === "Enter" || e.key === " ")) {
+                            e.preventDefault();
+                            setSelectedCollectionId(col.id);
+                          }
+                        }}
                       >
                         {editingCollectionId === col.id ? (
                           <input

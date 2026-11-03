@@ -1011,8 +1011,12 @@ const TrialClassesManager = () => {
       {/* Trial schedule — edit dates/times/language/capacity for your own availability */}
       <Card>
         <CardHeader
-          className="py-3 cursor-pointer select-none"
+          className="py-3 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          role="button"
+          tabIndex={0}
+          aria-expanded={scheduleOpen}
           onClick={() => setScheduleOpen((o) => !o)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setScheduleOpen((o) => !o); } }}
         >
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-sm flex items-center gap-2">

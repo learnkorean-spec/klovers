@@ -670,13 +670,21 @@ const LeadsPanel: React.FC = () => {
               <TableHeader>
                 <TableRow className="sticky top-0 bg-background/95 backdrop-blur z-10 border-b">
                   <TableHead
-                    className="py-3 px-3 font-semibold cursor-pointer select-none hover:text-primary"
+                    className="py-3 px-3 font-semibold cursor-pointer select-none hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    role="button"
+                    tabIndex={0}
+                    aria-sort={leadsSort.col === "name" ? (leadsSort.dir === "asc" ? "ascending" : "descending") : "none"}
                     onClick={() => setLeadsSort(s => ({ col: "name", dir: s.col === "name" && s.dir === "asc" ? "desc" : "asc" }))}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLeadsSort(s => ({ col: "name", dir: s.col === "name" && s.dir === "asc" ? "desc" : "asc" })); } }}
                   >Name {leadsSort.col === "name" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
                   <TableHead className="py-3 px-3 font-semibold">Email</TableHead>
                   <TableHead
-                    className="py-3 px-3 hidden md:table-cell font-semibold cursor-pointer select-none hover:text-primary"
+                    className="py-3 px-3 hidden md:table-cell font-semibold cursor-pointer select-none hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    role="button"
+                    tabIndex={0}
+                    aria-sort={leadsSort.col === "country" ? (leadsSort.dir === "asc" ? "ascending" : "descending") : "none"}
                     onClick={() => setLeadsSort(s => ({ col: "country", dir: s.col === "country" && s.dir === "asc" ? "desc" : "asc" }))}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLeadsSort(s => ({ col: "country", dir: s.col === "country" && s.dir === "asc" ? "desc" : "asc" })); } }}
                   >Country {leadsSort.col === "country" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
                   <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Plan</TableHead>
                   <TableHead className="py-3 px-3 hidden md:table-cell font-semibold">Duration</TableHead>
@@ -685,8 +693,12 @@ const LeadsPanel: React.FC = () => {
                   <TableHead className="py-3 px-3 font-semibold">Status</TableHead>
                   <TableHead className="py-3 px-3 hidden sm:table-cell font-semibold">Linked</TableHead>
                   <TableHead
-                    className="py-3 px-3 hidden sm:table-cell font-semibold cursor-pointer select-none hover:text-primary"
+                    className="py-3 px-3 hidden sm:table-cell font-semibold cursor-pointer select-none hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    role="button"
+                    tabIndex={0}
+                    aria-sort={leadsSort.col === "created_at" ? (leadsSort.dir === "asc" ? "ascending" : "descending") : "none"}
                     onClick={() => setLeadsSort(s => ({ col: "created_at", dir: s.col === "created_at" && s.dir === "asc" ? "desc" : "asc" }))}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLeadsSort(s => ({ col: "created_at", dir: s.col === "created_at" && s.dir === "asc" ? "desc" : "asc" })); } }}
                   >Date {leadsSort.col === "created_at" ? (leadsSort.dir === "asc" ? "↑" : "↓") : "↕"}</TableHead>
                   <TableHead className="py-3 px-3 w-10"></TableHead>
                 </TableRow>
@@ -788,8 +800,11 @@ const LeadsPanel: React.FC = () => {
                         </Select>
                       ) : (
                         <Badge
-                          className={`text-xs border cursor-pointer hover:opacity-80 transition-opacity ${getLeadStatusBadgeClass(lead.status)}`}
+                          className={`text-xs border cursor-pointer hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${getLeadStatusBadgeClass(lead.status)}`}
                           onClick={() => setQuickStatusLeadId(lead.id)}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setQuickStatusLeadId(lead.id); } }}
+                          role="button"
+                          tabIndex={0}
                           title="Click to change status"
                           aria-label={`Lead status: ${lead.status}. Click to change.`}
                         >

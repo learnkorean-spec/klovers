@@ -1340,8 +1340,12 @@ const GroupMatcher = () => {
           {privateMatched.length > 0 && (
             <Card className="border-green-300 dark:border-green-700">
               <CardHeader
-                className="pb-3 cursor-pointer select-none"
+                className="pb-3 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                role="button"
+                tabIndex={0}
+                aria-expanded={showAssigned}
                 onClick={() => setShowAssigned(p => !p)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowAssigned(p => !p); } }}
               >
                 <CardTitle className="text-base flex items-center gap-2 text-green-800 dark:text-green-300">
                   <CheckCircle className="h-4 w-4" />
@@ -1397,8 +1401,12 @@ const GroupMatcher = () => {
           {rejectedEnrollments.length > 0 && (
             <Card className="border-destructive/40">
               <CardHeader
-                className="pb-3 cursor-pointer select-none"
+                className="pb-3 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                role="button"
+                tabIndex={0}
+                aria-expanded={showRejected}
                 onClick={() => setShowRejected(p => !p)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setShowRejected(p => !p); } }}
               >
                 <CardTitle className="text-base flex items-center gap-2 text-destructive">
                   <XCircle className="h-4 w-4" />

@@ -586,35 +586,75 @@ const StudentManager = () => {
         {/* OVERVIEW TAB */}
         <TabsContent value="overview">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-            <Card className={overviewFilter === "attending" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("attending")} role="button">
+            <Card
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${overviewFilter === "attending" ? "ring-2 ring-primary" : ""}`}
+              onClick={() => setOverviewFilter("attending")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOverviewFilter("attending"); } }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={overviewFilter === "attending"}
+              aria-label={`Filter: Attending (${overviewStats.attending})`}
+            >
               <CardContent className="pt-4 text-center cursor-pointer">
                 <UserCheck className="h-5 w-5 mx-auto mb-1 text-primary" />
                 <p className="text-2xl font-bold text-foreground">{overviewStats.attending}</p>
                 <p className="text-xs text-muted-foreground">Attending</p>
               </CardContent>
             </Card>
-            <Card className={overviewFilter === "paid_approved_unassigned" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("paid_approved_unassigned")} role="button">
+            <Card
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${overviewFilter === "paid_approved_unassigned" ? "ring-2 ring-primary" : ""}`}
+              onClick={() => setOverviewFilter("paid_approved_unassigned")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOverviewFilter("paid_approved_unassigned"); } }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={overviewFilter === "paid_approved_unassigned"}
+              aria-label={`Filter: Paid (Unassigned) (${overviewStats.paidUnassigned})`}
+            >
               <CardContent className="pt-4 text-center cursor-pointer">
                 <CalendarDays className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
                 <p className="text-2xl font-bold text-foreground">{overviewStats.paidUnassigned}</p>
                 <p className="text-xs text-muted-foreground">Paid (Unassigned)</p>
               </CardContent>
             </Card>
-            <Card className={overviewFilter === "paid_pending" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("paid_pending")} role="button">
+            <Card
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${overviewFilter === "paid_pending" ? "ring-2 ring-primary" : ""}`}
+              onClick={() => setOverviewFilter("paid_pending")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOverviewFilter("paid_pending"); } }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={overviewFilter === "paid_pending"}
+              aria-label={`Filter: Paid (Pending) (${overviewStats.paidPending})`}
+            >
               <CardContent className="pt-4 text-center cursor-pointer">
                 <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
                 <p className="text-2xl font-bold text-foreground">{overviewStats.paidPending}</p>
                 <p className="text-xs text-muted-foreground">Paid (Pending)</p>
               </CardContent>
             </Card>
-            <Card className={overviewFilter === "not_paid" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("not_paid")} role="button">
+            <Card
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${overviewFilter === "not_paid" ? "ring-2 ring-primary" : ""}`}
+              onClick={() => setOverviewFilter("not_paid")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOverviewFilter("not_paid"); } }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={overviewFilter === "not_paid"}
+              aria-label={`Filter: Not Paid (${overviewStats.notPaid})`}
+            >
               <CardContent className="pt-4 text-center cursor-pointer">
                 <Users className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
                 <p className="text-2xl font-bold text-foreground">{overviewStats.notPaid}</p>
                 <p className="text-xs text-muted-foreground">Not Paid</p>
               </CardContent>
             </Card>
-            <Card className={overviewFilter === "rejected" ? "ring-2 ring-primary" : ""} onClick={() => setOverviewFilter("rejected")} role="button">
+            <Card
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${overviewFilter === "rejected" ? "ring-2 ring-primary" : ""}`}
+              onClick={() => setOverviewFilter("rejected")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOverviewFilter("rejected"); } }}
+              role="button"
+              tabIndex={0}
+              aria-pressed={overviewFilter === "rejected"}
+              aria-label={`Filter: Rejected (${overviewStats.rejected})`}
+            >
               <CardContent className="pt-4 text-center cursor-pointer">
                 <UserX className="h-5 w-5 mx-auto mb-1 text-destructive" />
                 <p className="text-2xl font-bold text-foreground">{overviewStats.rejected}</p>

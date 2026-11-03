@@ -293,16 +293,22 @@ export const StudentsTab = memo(function StudentsTab({
                         <TableHead className="py-3 px-3 font-semibold">Level</TableHead>
                       )}
                       <TableHead
-                        className="py-3 px-3 font-semibold text-center cursor-pointer select-none hover:text-primary"
+                        className="py-3 px-3 font-semibold text-center cursor-pointer select-none hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setStudentSort(s => ({ col: "sessions_remaining", dir: s.col === "sessions_remaining" && s.dir === "asc" ? "desc" : "asc" }))}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStudentSort(s => ({ col: "sessions_remaining", dir: s.col === "sessions_remaining" && s.dir === "asc" ? "desc" : "asc" })); } }}
                         aria-sort={studentSort.col === "sessions_remaining" ? (studentSort.dir === "asc" ? "ascending" : "descending") : "none"}
                       >
                         Remaining {studentSort.col === "sessions_remaining" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
                       </TableHead>
                       {visibleStudentCols.has("attendance") && (
                         <TableHead
-                          className="py-3 px-3 font-semibold text-center cursor-pointer select-none hover:text-primary"
+                          className="py-3 px-3 font-semibold text-center cursor-pointer select-none hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setStudentSort(s => ({ col: "attendance_pct", dir: s.col === "attendance_pct" && s.dir === "asc" ? "desc" : "asc" }))}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStudentSort(s => ({ col: "attendance_pct", dir: s.col === "attendance_pct" && s.dir === "asc" ? "desc" : "asc" })); } }}
                           aria-sort={studentSort.col === "attendance_pct" ? (studentSort.dir === "asc" ? "ascending" : "descending") : "none"}
                         >
                           Attend% {studentSort.col === "attendance_pct" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
@@ -310,15 +316,21 @@ export const StudentsTab = memo(function StudentsTab({
                       )}
                       <TableHead className="py-3 px-3 font-semibold text-center">Negative</TableHead>
                       <TableHead
-                        className="py-3 px-3 font-semibold text-right cursor-pointer select-none hover:text-primary"
+                        className="py-3 px-3 font-semibold text-right cursor-pointer select-none hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setStudentSort(s => ({ col: "amount_due", dir: s.col === "amount_due" && s.dir === "asc" ? "desc" : "asc" }))}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStudentSort(s => ({ col: "amount_due", dir: s.col === "amount_due" && s.dir === "asc" ? "desc" : "asc" })); } }}
                         aria-sort={studentSort.col === "amount_due" ? (studentSort.dir === "asc" ? "ascending" : "descending") : "none"}
                       >
                         Amount Due {studentSort.col === "amount_due" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
                       </TableHead>
                       <TableHead
-                        className="py-3 px-3 font-semibold text-right cursor-pointer select-none hover:text-primary"
+                        className="py-3 px-3 font-semibold text-right cursor-pointer select-none hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setStudentSort(s => ({ col: "remaining_balance", dir: s.col === "remaining_balance" && s.dir === "asc" ? "desc" : "asc" }))}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStudentSort(s => ({ col: "remaining_balance", dir: s.col === "remaining_balance" && s.dir === "asc" ? "desc" : "asc" })); } }}
                         aria-sort={studentSort.col === "remaining_balance" ? (studentSort.dir === "asc" ? "ascending" : "descending") : "none"}
                       >
                         Balance {studentSort.col === "remaining_balance" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
@@ -329,8 +341,11 @@ export const StudentsTab = memo(function StudentsTab({
                       )}
                       {visibleStudentCols.has("joined") && (
                         <TableHead
-                          className="py-3 px-3 font-semibold cursor-pointer select-none hover:text-primary"
+                          className="py-3 px-3 font-semibold cursor-pointer select-none hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setStudentSort(s => ({ col: "joined_at", dir: s.col === "joined_at" && s.dir === "asc" ? "desc" : "asc" }))}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStudentSort(s => ({ col: "joined_at", dir: s.col === "joined_at" && s.dir === "asc" ? "desc" : "asc" })); } }}
                           aria-sort={studentSort.col === "joined_at" ? (studentSort.dir === "asc" ? "ascending" : "descending") : "none"}
                         >
                           Joined {studentSort.col === "joined_at" ? (studentSort.dir === "asc" ? "↑" : "↓") : "↕"}
@@ -345,11 +360,18 @@ export const StudentsTab = memo(function StudentsTab({
                       const isLocked = u.derived_status === "LOCKED";
                       return (
                         <TableRow key={u.user_id} className={cn(
-                          "group odd:bg-muted/30 hover:bg-muted/50 transition cursor-pointer",
+                          "group odd:bg-muted/30 hover:bg-muted/50 transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                           selectedStudentId === u.user_id && "ring-2 ring-primary/40",
                           isAtRisk && "bg-amber-50/60 dark:bg-amber-950/20 odd:bg-amber-50/60",
                           isLocked && "bg-red-50/60 dark:bg-red-950/20 odd:bg-red-50/60"
-                        )} onClick={() => setSelectedStudentId(selectedStudentId === u.user_id ? null : (u.enrollment_id ? u.user_id : null))}>
+                        )}
+                          role="button"
+                          tabIndex={0}
+                          aria-expanded={selectedStudentId === u.user_id}
+                          aria-label={`${u.name || u.email}: ${selectedStudentId === u.user_id ? "hide" : "show"} details`}
+                          onClick={() => setSelectedStudentId(selectedStudentId === u.user_id ? null : (u.enrollment_id ? u.user_id : null))}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedStudentId(selectedStudentId === u.user_id ? null : (u.enrollment_id ? u.user_id : null)); } }}
+                        >
                           <TableCell className="py-3 px-3 font-medium">
                             <div className="flex items-center gap-1.5">
                               <span>{u.name || "—"}</span>
@@ -436,13 +458,21 @@ export const StudentsTab = memo(function StudentsTab({
                             <TableCell className="py-3 px-3" onClick={(e) => e.stopPropagation()}>
                               <Badge
                                 variant="outline"
-                                className="text-xs cursor-pointer hover:bg-accent transition-colors"
+                                className="text-xs cursor-pointer hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 onClick={() => {
                                   const f = u.source_label === "Stripe" ? "stripe" : u.source_label === "Egypt" ? "egypt" : null;
                                   if (f) { setStudentFilter(f); setStudentPage(() => 0); }
                                 }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    const f = u.source_label === "Stripe" ? "stripe" : u.source_label === "Egypt" ? "egypt" : null;
+                                    if (f) { setStudentFilter(f); setStudentPage(() => 0); }
+                                  }
+                                }}
                                 title={`Filter by ${u.source_label}`}
                                 role="button"
+                                tabIndex={0}
                                 aria-label={`Filter students by source: ${u.source_label}`}
                               >
                                 {u.source_label}

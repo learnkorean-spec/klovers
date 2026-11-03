@@ -1165,12 +1165,26 @@ const GroupAttendanceManager = ({
                       <div key={g.id} className="border rounded-lg overflow-hidden">
                         {/* Group header */}
                         <div
-                          className="flex items-center justify-between p-3 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                          className="flex items-center justify-between p-3 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                          role="button"
+                          tabIndex={0}
+                          aria-expanded={isExpanded}
+                          aria-label={`${g.name}: ${isExpanded ? "collapse" : "expand"} group`}
                           onClick={() => setExpandedGroups(prev => {
                             const next = new Set(prev);
                             if (next.has(g.id)) { next.delete(g.id); } else { next.add(g.id); }
                             return next;
                           })}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setExpandedGroups(prev => {
+                                const next = new Set(prev);
+                                if (next.has(g.id)) { next.delete(g.id); } else { next.add(g.id); }
+                                return next;
+                              });
+                            }
+                          }}
                         >
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}

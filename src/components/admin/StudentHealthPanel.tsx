@@ -81,8 +81,18 @@ const StudentHealthPanel = ({ overviewRows }: Props) => {
         {cards.map(({ key, icon: Icon, iconColor, bgColor, borderColor, badgeClass, count, label, sublabel, rows }) => (
           <Card
             key={key}
-            className={`rounded-2xl border ${borderColor} ${bgColor} cursor-pointer hover:shadow-md transition-shadow`}
+            className={`rounded-2xl border ${borderColor} ${bgColor} cursor-pointer hover:shadow-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+            role="button"
+            tabIndex={0}
+            aria-expanded={openCard === key}
+            aria-label={`${label}: ${count} ${sublabel}`}
             onClick={() => setOpenCard(openCard === key ? null : key)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setOpenCard(openCard === key ? null : key);
+              }
+            }}
           >
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-2">

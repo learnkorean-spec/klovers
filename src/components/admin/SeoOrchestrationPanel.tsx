@@ -337,7 +337,17 @@ function TopicGapPanel({
               <div
                 key={a.slug}
                 onClick={() => !isCreated && !isExisting && !generating && !autoGenerating && toggleSelect(a.slug)}
-                className={`flex flex-col gap-1 p-3 rounded-lg border text-sm transition-all select-none
+                onKeyDown={(e) => {
+                  if ((e.key === "Enter" || e.key === " ") && !isCreated && !isExisting && !generating && !autoGenerating) {
+                    e.preventDefault();
+                    toggleSelect(a.slug);
+                  }
+                }}
+                role={isCreated || isExisting ? undefined : "checkbox"}
+                aria-checked={isCreated || isExisting ? undefined : isSelected}
+                tabIndex={isCreated || isExisting || generating || autoGenerating ? undefined : 0}
+                aria-label={isCreated || isExisting ? undefined : a.title}
+                className={`flex flex-col gap-1 p-3 rounded-lg border text-sm transition-all select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
                   ${isCreated ? "border-green-300 bg-green-50/60 cursor-default" :
                     isExisting ? "border-blue-200 bg-blue-50/40 cursor-default" :
                     hasError ? "border-red-200 bg-red-50/40 cursor-default" :

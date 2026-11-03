@@ -490,7 +490,15 @@ const AdminAttendancePanel = ({
         {/* Status & actions row */}
         <div className="flex flex-wrap gap-2">
           {isLocked && (
-            <Badge variant="destructive" className="cursor-pointer" onClick={handleUnlock} title="Click to unlock">
+            <Badge
+              variant="destructive"
+              className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={handleUnlock}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleUnlock(); } }}
+              role="button"
+              tabIndex={0}
+              title="Click to unlock"
+            >
               <AlertTriangle className="h-3 w-3 mr-1" /> LOCKED — click to unlock
             </Badge>
           )}
