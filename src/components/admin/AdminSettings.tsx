@@ -124,6 +124,7 @@ const AdminSettings = () => {
           <Input
             type="url"
             placeholder="https://zoom.us/j/... or meet.google.com/..."
+            aria-label="Meeting link"
             value={zoomUrl}
             onChange={(e) => setZoomUrl(e.target.value)}
           />

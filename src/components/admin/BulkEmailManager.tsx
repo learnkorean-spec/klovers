@@ -603,11 +603,11 @@ const BulkEmailManager = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Campaign Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Welcome Campaign" />
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Welcome Campaign" aria-label="Campaign name" />
             </div>
             <div className="space-y-2">
               <Label>Subject</Label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Welcome to Klovers" />
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Welcome to Klovers" aria-label="Email subject" />
             </div>
           </div>
 
@@ -618,6 +618,7 @@ const BulkEmailManager = () => {
               onChange={(e) => setHtmlBody(e.target.value)}
               rows={10}
               className="font-mono text-xs"
+              aria-label="HTML body"
             />
           </div>
 

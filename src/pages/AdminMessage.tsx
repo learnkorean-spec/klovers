@@ -412,6 +412,7 @@ const AdminMessage = () => {
                           value={query}
                           onChange={e => setQuery(e.target.value)}
                           placeholder="Filter by name or email…"
+                          aria-label="Filter recipients by name or email"
                           className="pl-9"
                           // Chrome read this box as an address field and covered
                           // the list with its own saved-email popup. It is not an
@@ -495,6 +496,7 @@ const AdminMessage = () => {
                     value={subject}
                     onChange={e => { setSubject(e.target.value); setConfirming(false); }}
                     placeholder="Subject"
+                    aria-label="Subject"
                     dir={isAr ? "rtl" : "ltr"}
                   />
 
@@ -502,6 +504,7 @@ const AdminMessage = () => {
                     value={body}
                     onChange={e => { setBody(e.target.value); setConfirming(false); }}
                     placeholder={isAr ? "اكتبي الرسالة هنا…" : "Write the message here…"}
+                    aria-label={isAr ? "نص الرسالة" : "Message body"}
                     dir={isAr ? "rtl" : "ltr"}
                     rows={10}
                     className="resize-y"

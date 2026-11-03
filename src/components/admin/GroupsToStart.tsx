@@ -1507,6 +1507,7 @@ export default function GroupsToStart() {
                       value={addFilter}
                       onChange={e => setAddFilter(e.target.value)}
                       placeholder="Filter by name or email…"
+                      aria-label="Filter by name or email"
                       className="h-8 text-xs"
                       autoFocus
                     />
