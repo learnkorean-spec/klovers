@@ -272,10 +272,15 @@ function DiscoverDeck({
 
   const loadQueue = useCallback(async () => {
     setLoading(true);
-    const { data: swipes } = await supabase
+    const { data: swipes, error: swipesError } = await supabase
       .from("exchange_swipes" as any)
       .select("target_id")
       .eq("swiper_id", myProfile.user_id);
+    if (swipesError) {
+      // Non-fatal: the queue below just won't filter out already-swiped
+      // profiles this load. Still worth knowing about if it keeps happening.
+      console.error("exchange_swipes select failed:", swipesError.message);
+    }
     const swipedIds = ((swipes as unknown as { target_id: string }[]) ?? []).map((s) => s.target_id);
 
     let query = supabase
@@ -336,10 +341,15 @@ function DiscoverDeck({
     }
 
     if (action === "like") {
-      const { data: matchRows } = await supabase
+      const { data: matchRows, error: matchError } = await supabase
         .from("exchange_matches" as any)
         .select("*")
         .or(`user_a.eq.${current.user_id},user_b.eq.${current.user_id}`);
+      if (matchError) {
+        // Non-fatal: worst case the match celebration screen doesn't show
+        // this time, but the match row itself (written elsewhere) is unaffected.
+        console.error("exchange_matches select failed:", matchError.message);
+      }
       const isMatch = ((matchRows as unknown as { user_a: string; user_b: string }[]) ?? []).some(
         (m) => m.user_a === myProfile.user_id || m.user_b === myProfile.user_id,
       );
@@ -628,10 +638,15 @@ function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar:
       return;
     }
 
-    const { data: profilesData } = await supabase
+    const { data: profilesData, error: profilesError } = await supabase
       .from("exchange_profiles" as any)
       .select("*")
       .in("user_id", otherIds);
+    if (profilesError) {
+      // This is exactly the "empty list reads as no data yet" trap: a real
+      // query failure here would otherwise render as "No matches yet".
+      toast({ title: tr("Couldn't load matches", "تعذّر تحميل التطابقات"), description: profilesError.message, variant: "destructive" });
+    }
     setMatches((profilesData as unknown as ExchangeProfileRow[]) ?? []);
     setLoading(false);
   }, [userId, tr]);
@@ -803,14 +818,14 @@ function ProfileEditor({
     setUploading(true);
     const ext = file.name.split(".").pop();
     const path = `${userId}/exchange-avatar.${ext}`;
-    await supabase.storage.from("avatars").remove([path]);
+    await supabase.storage.from("avatars").remove([path]); // supabase-error-check-ignore: best-effort cleanup of the old avatar; the upsert upload right after overwrites it regardless
     const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
     if (upErr) {
       toast({ title: tr("Upload failed", "تعذّر الرفع"), description: upErr.message, variant: "destructive" });
       setUploading(false);
       return;
     }
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path); // supabase-error-check-ignore: getPublicUrl is a local URL join, never a network call — it has no error to check
     setDraft((d) => ({ ...d, avatar_url: `${data.publicUrl}?t=${Date.now()}` }));
     setUploading(false);
   };
@@ -1144,11 +1159,16 @@ function ReportDialog({
       setSubmitting(false);
       return;
     }
+    let blockFailed = false;
     if (blockToo) {
-      await supabase.from("exchange_blocks" as any).insert({ blocker_id: user.id, blocked_id: target.user_id });
+      const { error: blockErr } = await supabase.from("exchange_blocks" as any).insert({ blocker_id: user.id, blocked_id: target.user_id });
+      blockFailed = Boolean(blockErr);
     }
     setSubmitting(false);
     toast({ title: tr("Report sent", "تم إرسال البلاغ"), description: tr("Our team will review it.", "سيقوم فريقنا بمراجعته.") });
+    if (blockFailed) {
+      toast({ title: tr("Couldn't block this user", "تعذّر حظر هذا المستخدم"), description: tr("The report was sent, but blocking failed — try blocking them separately.", "تم إرسال البلاغ، لكن الحظر لم ينجح — جرّب حظره بشكل منفصل."), variant: "destructive" });
+    }
     onClose();
   };
 
