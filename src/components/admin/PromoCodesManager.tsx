@@ -135,7 +135,7 @@ const PromoCodesManager = () => {
         <div className="flex items-center gap-2">
           <Tag className="h-5 w-5 text-primary" />
           <div>
-            <h3 className="font-semibold text-foreground">Promo Codes</h3>
+            <h2 className="font-semibold text-foreground">Promo Codes</h2>
             <p className="text-xs text-muted-foreground">{codes.filter(c => c.active && !isExpired(c)).length} active codes</p>
           </div>
         </div>

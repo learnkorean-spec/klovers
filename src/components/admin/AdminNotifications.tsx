@@ -644,7 +644,7 @@ const PendingAttendanceSection = () => {
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-muted-foreground" />
-        <h4 className="text-sm font-semibold text-foreground">Pending attendance confirmations</h4>
+        <h3 className="text-sm font-semibold text-foreground">Pending attendance confirmations</h3>
         <Badge variant="secondary" className="text-xs">{groups.length}</Badge>
       </div>
       <div className="space-y-2">
@@ -819,7 +819,7 @@ const AdminNotifications = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bell className="h-5 w-5 text-muted-foreground" />
-          <h3 className="font-semibold text-foreground">Notifications</h3>
+          <h2 className="font-semibold text-foreground">Notifications</h2>
           {unreadCount > 0 && (
             <Badge variant="destructive" className="text-xs">{unreadCount} unread</Badge>
           )}

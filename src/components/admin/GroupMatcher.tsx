@@ -958,7 +958,7 @@ const GroupMatcher = () => {
         <>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-foreground">Group Matcher</h3>
+              <h2 className="font-semibold text-foreground">Group Matcher</h2>
               <p className="text-sm text-muted-foreground">
                 {clusters.reduce((s, c) => s + c.members.length, 0)} groupable student{clusters.reduce((s, c) => s + c.members.length, 0) !== 1 ? "s" : ""}
                 {privateUnmatched.length > 0 && ` · ${privateUnmatched.length} private`}
