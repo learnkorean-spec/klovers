@@ -366,6 +366,11 @@ export default function KoreanOrchestrator() {
                   <CardTitle className="text-base">Results</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
+                  <p className="sr-only" role="status" aria-live="polite">
+                    {orchestraResults.filter((r) => r.error).length > 0
+                      ? `${orchestraResults.filter((r) => !r.error).length} succeeded, ${orchestraResults.filter((r) => r.error).length} failed`
+                      : `${orchestraResults.length} succeeded`}
+                  </p>
                   {orchestraResults.map((r, i) => (
                     <div key={i} className={cn(
                       "flex items-center justify-between rounded-lg border p-3 text-sm",
