@@ -112,7 +112,7 @@ jobs:
           node-version: 22
 
       - name: Install Supabase CLI
-        run: npx supabase@latest --version
+        run: npx supabase@2.117.0 --version
 
       - name: Self-test the migration-list parser
         run: |
@@ -123,13 +123,13 @@ jobs:
           python3 scripts/test-migration-parser.py
 
       - name: Link project
-        run: npx supabase@latest link --project-ref "$PROJECT_REF"
+        run: npx supabase@2.117.0 link --project-ref "$PROJECT_REF"
 
       - name: Work out what is pending
         id: plan
         run: |
           set -euo pipefail
-          npx supabase@latest migration list | tee migration-list.txt
+          npx supabase@2.117.0 migration list | tee migration-list.txt
 
           local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
           echo "local migration files: ${local_migrations}"
@@ -236,10 +236,10 @@ jobs:
           node-version: 22
 
       - name: Install Supabase CLI
-        run: npx supabase@latest --version
+        run: npx supabase@2.117.0 --version
 
       - name: Link project
-        run: npx supabase@latest link --project-ref "$PROJECT_REF"
+        run: npx supabase@2.117.0 link --project-ref "$PROJECT_REF"
 
       - name: Re-confirm what is pending
         id: replan
@@ -250,7 +250,7 @@ jobs:
           # for a while; re-reading here catches anything that changed what
           # was pending between the plan a reviewer looked at and this
           # actually running, rather than trusting a stale snapshot.
-          npx supabase@latest migration list | tee migration-list.txt
+          npx supabase@2.117.0 migration list | tee migration-list.txt
 
           local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
           python3 scripts/parse-migration-list.py migration-list.txt \
@@ -337,7 +337,7 @@ jobs:
             # The CLI's own writer, so this row matches every other row in
             # supabase_migrations.schema_migrations rather than a hand-rolled
             # insert. Runs right here, not after the loop - see the note above.
-            npx supabase@latest migration repair --status applied "$version"
+            npx supabase@2.117.0 migration repair --status applied "$version"
             echo "recorded: ${version}"
             echo "::endgroup::"
           done < pending-versions.txt
@@ -347,7 +347,7 @@ jobs:
           set -euo pipefail
           export PGPASSWORD="$SUPABASE_DB_PASSWORD"
 
-          npx supabase@latest migration list | tee migration-list-after.txt
+          npx supabase@2.117.0 migration list | tee migration-list-after.txt
           local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
           python3 scripts/parse-migration-list.py migration-list-after.txt \
             --min-rows "$local_migrations" | tee pending-after.txt
@@ -411,7 +411,7 @@ jobs:
           node-version: 22
 
       - name: Install Supabase CLI
-        run: npx supabase@latest --version
+        run: npx supabase@2.117.0 --version
 
       - name: Validate the version input
         run: |
@@ -433,12 +433,12 @@ jobs:
           echo "Found local file: $(basename "$f")"
 
       - name: Link project
-        run: npx supabase@latest link --project-ref "$PROJECT_REF"
+        run: npx supabase@2.117.0 link --project-ref "$PROJECT_REF"
 
       - name: Confirm this version is not already recorded
         run: |
           set -euo pipefail
-          npx supabase@latest migration list | tee migration-list.txt
+          npx supabase@2.117.0 migration list | tee migration-list.txt
           # The CLI's table wraps every cell in backticks: `VERSION` | `VERSION` | `TIME`
           # (see scripts/parse-migration-list.py's docstring for the exact
           # format). A row is already-applied when the same version appears
@@ -465,13 +465,13 @@ jobs:
           # migration file's effect matches reality, only a human
           # comparing the file to the database can do that. Get that proof
           # BEFORE dispatching this, not after.
-          npx supabase@latest migration repair --status applied "${{ inputs.version }}"
+          npx supabase@2.117.0 migration repair --status applied "${{ inputs.version }}"
           echo "recorded: ${{ inputs.version }}"
 
       - name: Verify and print the state
         run: |
           set -euo pipefail
-          npx supabase@latest migration list | tee migration-list-after.txt
+          npx supabase@2.117.0 migration list | tee migration-list-after.txt
           if ! grep -qE "\`${{ inputs.version }}\`[[:space:]]*[|│][[:space:]]*\`${{ inputs.version }}\`" migration-list-after.txt; then
             echo "::error::${{ inputs.version }} still does not show as applied after the repair call."
             exit 1
