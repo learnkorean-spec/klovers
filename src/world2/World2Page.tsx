@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronLeft, ChevronRight, MessageCircle, Volume2, X } from "lucide-react";
 import World2Scene, { DIALOGUE as CART_DIALOGUE } from "./World2Scene";
 import ConvenienceStoreScene, { DIALOGUE as STORE_DIALOGUE } from "./ConvenienceStoreScene";
+import EntranceScene from "./EntranceScene";
 import { speakKorean, type DialogueLine, type VocabItem } from "./shared";
 
 /** Each room AI Room Lab has proposed and a developer has built out: its own
@@ -202,13 +203,16 @@ function SlowOrbit({ children }: { children: React.ReactNode }) {
 export default function World2Page() {
   const navigate = useNavigate();
   const [activeVocab, setActiveVocab] = useState<VocabItem | null>(null);
-  const [roomId, setRoomId] = useState(ROOMS[0].id);
+  // "entrance" (the landing courtyard, two gates) or a Room's id — the
+  // learner always lands in the entrance first, the way the live /world
+  // game always lands you in its own Hub before you pick a direction.
+  const [view, setView] = useState<string>("entrance");
   // null = dialogue card closed; otherwise the index of the line showing.
   const [dialogueIndex, setDialogueIndex] = useState<number | null>(null);
-  const room = ROOMS.find((r) => r.id === roomId) ?? ROOMS[0];
-  const currentLine = dialogueIndex !== null ? room.dialogue[dialogueIndex] : null;
-  const selectRoom = (id: string) => {
-    setRoomId(id);
+  const room = view === "entrance" ? null : ROOMS.find((r) => r.id === view) ?? null;
+  const currentLine = room && dialogueIndex !== null ? room.dialogue[dialogueIndex] : null;
+  const goTo = (id: string) => {
+    setView(id);
     setActiveVocab(null);
     setDialogueIndex(null);
   };
@@ -225,7 +229,7 @@ export default function World2Page() {
   const closeDialogue = () => setDialogueIndex(null);
   const prevLine = () => setDialogueIndex((i) => (i === null ? null : Math.max(i - 1, 0)));
   const nextLine = () =>
-    setDialogueIndex((i) => (i === null ? null : Math.min(i + 1, room.dialogue.length - 1)));
+    setDialogueIndex((i) => (i === null || !room ? null : Math.min(i + 1, room.dialogue.length - 1)));
   return (
     <div className="min-h-screen bg-[#2E2E2E] text-[#FFF9EC]">
       <div className="sticky top-0 z-20 bg-[#2E2E2E]/90 backdrop-blur border-b border-[#FFF9EC]/10">
@@ -248,16 +252,27 @@ export default function World2Page() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-4">
-        {/* Room switcher: each tab is a separate AI Room Lab brief, picked
-            from its own A/B variants and built into its own scene — not a
-            single room re-skinned. */}
+        {/* Entrance + room switcher: "Entrance" is the landing courtyard
+            (two gates); each room tab is a separate AI Room Lab brief,
+            picked from its own A/B variants and built into its own scene —
+            not a single room re-skinned. */}
         <div className="flex gap-2">
+          <button
+            onClick={() => goTo("entrance")}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+              view === "entrance"
+                ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"
+                : "bg-transparent text-[#FFF9EC]/80 border-[#FFF9EC]/20 hover:border-[#FFF9EC]/40"
+            }`}
+          >
+            Entrance
+          </button>
           {ROOMS.map((r) => (
             <button
               key={r.id}
-              onClick={() => selectRoom(r.id)}
+              onClick={() => goTo(r.id)}
               className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-                r.id === roomId
+                r.id === view
                   ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"
                   : "bg-transparent text-[#FFF9EC]/80 border-[#FFF9EC]/20 hover:border-[#FFF9EC]/40"
               }`}
@@ -267,60 +282,89 @@ export default function World2Page() {
           ))}
         </div>
 
-        <div className="relative h-[75vh] rounded-lg overflow-hidden border border-[#FFF9EC]/10">
-          <Canvas
-            key={room.id}
-            shadows
-            dpr={[1, 2]}
-            gl={{ antialias: true }}
-            camera={{ position: room.cameraPosition, fov: room.cameraFov }}
-          >
-            <Suspense fallback={null}>
-              <SlowOrbit>
-                <room.Scene
-                  onSelectVocab={selectVocab}
-                  activeDialogueSpeaker={currentLine?.speaker ?? null}
-                  dialogueTurnKey={dialogueIndex ?? -1}
+        {room ? (
+          <>
+            <div className="relative h-[75vh] rounded-lg overflow-hidden border border-[#FFF9EC]/10">
+              <Canvas
+                key={room.id}
+                shadows
+                dpr={[1, 2]}
+                gl={{ antialias: true }}
+                camera={{ position: room.cameraPosition, fov: room.cameraFov }}
+              >
+                <Suspense fallback={null}>
+                  <SlowOrbit>
+                    <room.Scene
+                      onSelectVocab={selectVocab}
+                      activeDialogueSpeaker={currentLine?.speaker ?? null}
+                      dialogueTurnKey={dialogueIndex ?? -1}
+                    />
+                  </SlowOrbit>
+                </Suspense>
+              </Canvas>
+              {!activeVocab && !currentLine && (
+                <div className="absolute top-3 left-3 right-3 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
+                  {room.hint}
+                </div>
+              )}
+              {activeVocab && <VocabCard vocab={activeVocab} onClose={() => setActiveVocab(null)} />}
+              {currentLine && (
+                <DialogueCard
+                  line={currentLine}
+                  index={dialogueIndex ?? 0}
+                  total={room.dialogue.length}
+                  onPrev={prevLine}
+                  onNext={nextLine}
+                  onClose={closeDialogue}
                 />
-              </SlowOrbit>
-            </Suspense>
-          </Canvas>
-          {!activeVocab && !currentLine && (
-            <div className="absolute top-3 left-3 right-3 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
-              {room.hint}
+              )}
             </div>
-          )}
-          {activeVocab && <VocabCard vocab={activeVocab} onClose={() => setActiveVocab(null)} />}
-          {currentLine && (
-            <DialogueCard
-              line={currentLine}
-              index={dialogueIndex ?? 0}
-              total={room.dialogue.length}
-              onPrev={prevLine}
-              onNext={nextLine}
-              onClose={closeDialogue}
-            />
-          )}
-        </div>
 
-        <div className="rounded-lg border border-[#FFF9EC]/10 bg-[#FFF9EC]/5 p-4 text-sm space-y-2">
-          <div className="flex items-start justify-between gap-3">
-            <p className="font-semibold">{room.title}</p>
-            <Button
-              size="sm"
-              onClick={openDialogue}
-              className="shrink-0 bg-[#FFFF00] text-[#2E2E2E] hover:bg-[#FFFF00]/90"
-            >
-              <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-              Practice the conversation
-            </Button>
-          </div>
-          <p className="text-[#FFF9EC]/80">{room.body}</p>
-          <p className="text-[#FFF9EC]/50 text-xs">
-            This is a hackathon tech-demo page, separate from the live KLOVERS World learner
-            experience — it does not touch production rooms, progression, or story canon gating.
-          </p>
-        </div>
+            <div className="rounded-lg border border-[#FFF9EC]/10 bg-[#FFF9EC]/5 p-4 text-sm space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-semibold">{room.title}</p>
+                <Button
+                  size="sm"
+                  onClick={openDialogue}
+                  className="shrink-0 bg-[#FFFF00] text-[#2E2E2E] hover:bg-[#FFFF00]/90"
+                >
+                  <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+                  Practice the conversation
+                </Button>
+              </div>
+              <p className="text-[#FFF9EC]/80">{room.body}</p>
+              <p className="text-[#FFF9EC]/50 text-xs">
+                This is a hackathon tech-demo page, separate from the live KLOVERS World learner
+                experience — it does not touch production rooms, progression, or story canon gating.
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="relative h-[75vh] rounded-lg overflow-hidden border border-[#FFF9EC]/10">
+              <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }} camera={{ position: [0, 2.2, 10.5], fov: 52 }}>
+                <Suspense fallback={null}>
+                  <EntranceScene onEnterRoom={(id) => goTo(id)} />
+                </Suspense>
+              </Canvas>
+              <div className="absolute top-3 left-3 right-3 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
+                Click a gate to walk into that room.
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-[#FFF9EC]/10 bg-[#FFF9EC]/5 p-4 text-sm space-y-2">
+              <p className="font-semibold">KLOVERS World 2 — the entrance</p>
+              <p className="text-[#FFF9EC]/80">
+                Adam and Lina are waiting at the gate. Click 포장마차 (the street cart) or 편의점
+                (the convenience store) to walk into that room and start learning.
+              </p>
+              <p className="text-[#FFF9EC]/50 text-xs">
+                This is a hackathon tech-demo page, separate from the live KLOVERS World learner
+                experience — it does not touch production rooms, progression, or story canon gating.
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
