@@ -117,7 +117,7 @@ export default function SuggestedSlots({
                   type="button"
                   onClick={() => handleCreate(s)}
                   disabled={pending}
-                  className="mt-4 rounded-md border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
+                  className="mt-4 rounded-md border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {pending ? 'Creating…' : 'Open this slot'}
                 </button>

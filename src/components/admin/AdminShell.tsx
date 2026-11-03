@@ -177,7 +177,7 @@ const FoldedGroup = ({ label, items }: { label: string; items: NavItem[] }) => {
         type="button"
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         {label === "Content" ? <FileText className="h-[18px] w-[18px]" /> : <Settings className="h-[18px] w-[18px]" />}
         <span className="flex-1 text-left">{label}</span>
@@ -317,7 +317,7 @@ const AdminShell = ({
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="flex h-9 max-w-md flex-1 items-center gap-2 rounded-lg border bg-muted px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-background"
+            className="flex h-9 max-w-md flex-1 items-center gap-2 rounded-lg border bg-muted px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <Search className="h-4 w-4 shrink-0" />
             <span className="flex-1 truncate">Search screens</span>

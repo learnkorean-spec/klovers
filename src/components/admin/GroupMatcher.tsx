@@ -794,7 +794,7 @@ const GroupMatcher = () => {
               Auto-sent {autoEmailsSent} reminder{autoEmailsSent !== 1 ? "s" : ""} to students with missing info
             </span>
           </div>
-          <button onClick={() => setAutoEmailsSent(null)} className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 text-lg leading-none">×</button>
+          <button onClick={() => setAutoEmailsSent(null)} className="rounded-sm text-lg leading-none text-yellow-600 hover:text-yellow-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-yellow-400">×</button>
         </div>
       )}
 
@@ -1050,7 +1050,7 @@ const GroupMatcher = () => {
                             )}
                             <button
                               onClick={() => handleViewReceipt(m.receipt_url, m.name)}
-                              className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-colors ${
+                              className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                                 m.receipt_url
                                   ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400"
                                   : "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
@@ -1258,7 +1258,7 @@ const GroupMatcher = () => {
                           ) : null}
                           <button
                             onClick={() => handleViewReceipt(m.receipt_url, m.name)}
-                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-colors ${
+                            className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                               m.receipt_url
                                 ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400"
                                 : "bg-muted text-muted-foreground cursor-not-allowed opacity-60"

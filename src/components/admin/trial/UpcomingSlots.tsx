@@ -56,14 +56,14 @@ function MeetingUrlCell({ slot }: { slot: AdminTrialSlotOccurrence }) {
         <button
           onClick={save}
           disabled={update.isPending}
-          className="h-7 w-7 flex items-center justify-center rounded-md bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+          className="h-7 w-7 flex items-center justify-center rounded-md bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           title="Save"
         >
           <Check className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => setEditing(false)}
-          className="h-7 w-7 flex items-center justify-center rounded-md border border-border hover:bg-muted text-muted-foreground"
+          className="h-7 w-7 flex items-center justify-center rounded-md border border-border hover:bg-muted text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           title="Cancel"
         >
           <X className="h-3.5 w-3.5" />
@@ -83,7 +83,7 @@ function MeetingUrlCell({ slot }: { slot: AdminTrialSlotOccurrence }) {
       )}
       <button
         onClick={() => { setDraft(slot.meeting_url ?? ''); setEditing(true); }}
-        className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+        className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         title="Edit link"
       >
         <Pencil className="h-3 w-3" />

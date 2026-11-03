@@ -55,7 +55,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return (
       <div dir="ltr" lang="en" className="min-h-screen flex flex-col items-center justify-center gap-3 bg-background">
         <p className="text-muted-foreground">Could not check your access. Check your connection and try again.</p>
-        <button className="rounded-md border px-3 py-1.5 text-sm" onClick={() => window.location.reload()}>Try again</button>
+        <button className="rounded-md border px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" onClick={() => window.location.reload()}>Try again</button>
       </div>
     );
   }

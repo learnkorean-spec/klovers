@@ -71,7 +71,7 @@ export default function TrialSettingsPanel({
             type="button"
             onClick={handleSave}
             disabled={saveDate.isPending}
-            className="rounded-md border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            className="rounded-md border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {saveDate.isPending ? 'Saving…' : 'Save'}
           </button>
@@ -136,7 +136,7 @@ export default function TrialSettingsPanel({
             type="button"
             onClick={handleSaveGroupSettings}
             disabled={saveSettings.isPending}
-            className="rounded-md border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            className="rounded-md border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {saveSettings.isPending ? 'Saving…' : 'Save'}
           </button>
@@ -235,7 +235,7 @@ export default function TrialSettingsPanel({
                   <td className="px-3 py-2 text-right">
                     <button
                       onClick={() => setEditingSlot(s)}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       title="Edit slot"
                     >
                       <Pencil className="h-3.5 w-3.5" />

@@ -429,7 +429,7 @@ const LeadFunnelPanel: React.FC = () => {
           <button
             key={v}
             onClick={() => { setActiveView(v); setEventsPage(0); }}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
               activeView === v
                 ? "bg-primary text-primary-foreground"
                 : "hover:bg-muted"

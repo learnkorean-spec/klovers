@@ -359,7 +359,7 @@ const SessionAttendanceManager = () => {
                       <button
                         key={s.session_id}
                         onClick={() => setSelectedSessionId(s.session_id)}
-                        className={`w-full text-left p-3 rounded-lg border transition-all ${
+                        className={`w-full text-left p-3 rounded-lg border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                           isSelected
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/40 hover:bg-accent/30"

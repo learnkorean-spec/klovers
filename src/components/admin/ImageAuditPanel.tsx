@@ -117,7 +117,7 @@ function PostRow({ item }: { item: PostAuditResult }) {
   return (
     <div className="border rounded-xl overflow-hidden">
       <button
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen((v) => !v)}
       >
         {open ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
@@ -198,7 +198,7 @@ function DebugInfo({ group }: { group: ParityGroup }) {
     <div className="border-t border-dashed pt-1.5 mt-1.5">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground"
+        className="flex items-center gap-1 rounded-sm text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         Debug Info
@@ -235,7 +235,7 @@ function ParitySection({ groups }: { groups: ParityGroup[] }) {
   return (
     <Card className="rounded-xl">
       <button
-        className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-muted/40 transition-colors"
+        className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen((v) => !v)}
       >
         {open ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
@@ -462,13 +462,13 @@ function ImageAuditPanel() {
         <div className="flex gap-1 border-b">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "posts" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${activeTab === "posts" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             Post Issues ({result.report.length})
           </button>
           <button
             onClick={() => setActiveTab("parity")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === "parity" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${activeTab === "parity" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             <Globe className="h-3.5 w-3.5" />
             Bilingual Parity
@@ -490,7 +490,7 @@ function ImageAuditPanel() {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors capitalize ${filter === f ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:text-foreground"}`}
+                  className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${filter === f ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:text-foreground"}`}
                 >
                   {f} ({filterCounts[f]})
                 </button>

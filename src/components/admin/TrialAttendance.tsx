@@ -484,7 +484,7 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
                 {locked ? (
                   <button
                     type="button"
-                    className="text-xs text-muted-foreground underline underline-offset-2"
+                    className="rounded-sm text-xs text-muted-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     disabled={confirmSession.isPending}
                     onClick={() =>
                       s.date && confirmSession.mutate({ date: s.date, time: s.time, reopen: true })
@@ -571,7 +571,7 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
             {(hidden > 0 || isOpen) && (
               <button
                 type="button"
-                className="pt-1 text-xs text-muted-foreground underline underline-offset-2"
+                className="rounded-sm pt-1 text-xs text-muted-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 onClick={() => toggle(s.key)}
               >
                 {isOpen
@@ -623,7 +623,7 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
                       </span>{" "}
                       <button
                         type="button"
-                        className="font-semibold underline underline-offset-2"
+                        className="rounded-sm font-semibold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         onClick={() =>
                           previewing &&
                           runPreview(previewing.date, previewing.time, previewing.label, "both")
@@ -639,7 +639,7 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
                       </span>{" "}
                       <button
                         type="button"
-                        className="font-semibold underline underline-offset-2"
+                        className="rounded-sm font-semibold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         onClick={() =>
                           previewing &&
                           runPreview(previewing.date, previewing.time, previewing.label, "came")

@@ -379,7 +379,7 @@ function AllTemplateCards({ post, theme, format, active, onSelect, bgImage }: {
             <button
               key={tpl}
               onClick={() => onSelect(tpl)}
-              className={`rounded-xl overflow-hidden border-2 transition-all text-left ${
+              className={`rounded-xl overflow-hidden border-2 transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                 isActive ? "border-primary shadow-lg shadow-primary/20 scale-[1.03]" : "border-border hover:border-primary/50"
               }`}
             >
@@ -846,7 +846,7 @@ export default function CreatorHub() {
                   <button
                     key={t.key}
                     onClick={() => setTemplate(t.key)}
-                    className={`text-left p-2.5 rounded-lg border text-sm transition-colors ${
+                    className={`text-left p-2.5 rounded-lg border text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                       template === t.key
                         ? "border-primary bg-accent"
                         : "border-border hover:border-muted-foreground/30"
@@ -868,7 +868,7 @@ export default function CreatorHub() {
                 <button
                   key={key}
                   onClick={() => setTheme(key)}
-                  className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-colors ${
+                  className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     theme === key ? "border-primary bg-accent" : "border-border hover:border-muted-foreground/30"
                   }`}
                 >
@@ -982,7 +982,7 @@ export default function CreatorHub() {
                 <button
                   key={key}
                   onClick={() => setFormat(key)}
-                  className={`p-2.5 rounded-lg border text-left transition-colors ${
+                  className={`p-2.5 rounded-lg border text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     format === key ? "border-primary bg-accent" : "border-border hover:border-muted-foreground/30"
                   }`}
                 >
@@ -1088,7 +1088,7 @@ export default function CreatorHub() {
             <button
               key={c.id}
               onClick={() => setSelectedCampaign(c.id)}
-              className={`rounded-xl border p-3 text-left transition-all ${
+              className={`rounded-xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                 selectedCampaign === c.id
                   ? "ring-2 ring-primary border-primary bg-primary/5 shadow-sm"
                   : "border-border hover:border-primary/40 hover:bg-muted/50"
@@ -1168,7 +1168,7 @@ export default function CreatorHub() {
                     </Button>
                     <button
                       onClick={() => setMonthlyDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, approved: !d.approved } : d))}
-                      className={`ml-auto h-7 w-7 rounded-full flex items-center justify-center transition-colors ${draft.approved ? "bg-green-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
+                      className={`ml-auto h-7 w-7 rounded-full flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${draft.approved ? "bg-green-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}
                       title={draft.approved ? "Approved" : "Mark approved"}
                     >
                       <CheckCircle2 className="h-4 w-4" />
@@ -1280,7 +1280,7 @@ export default function CreatorHub() {
                           type="button"
                           disabled={reelComposing}
                           onClick={() => setReelPickedVideoId(v.id)}
-                          className={`relative rounded-xl overflow-hidden border-2 transition-all ${
+                          className={`relative rounded-xl overflow-hidden border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                             reelPickedVideoId === v.id
                               ? "border-primary ring-2 ring-primary/30"
                               : "border-transparent hover:border-muted-foreground/30"

@@ -897,7 +897,7 @@ const GroupAttendanceManager = ({
                         <button
                           key={row.id + "-avatar"}
                           onClick={() => handleToggleStatus(row)}
-                          className="flex flex-col items-center gap-1.5 animate-fade-in group cursor-pointer"
+                          className="flex flex-col items-center gap-1.5 animate-fade-in group cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                           style={{ animationDelay: `${i * 80}ms`, animationFillMode: "both" }}
                           title={`${row.student_name} — ${row.status} (click to toggle)`}
                         >

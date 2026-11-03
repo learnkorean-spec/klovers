@@ -112,7 +112,7 @@ export default function LeagueUsersPanel() {
               key={league.key}
               onClick={() => setLeagueFilter(isActive ? "all" : league.key)}
               className={cn(
-                "rounded-2xl border-2 p-3 text-left transition-all hover:shadow-md",
+                "rounded-2xl border-2 p-3 text-left transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 isActive
                   ? "border-primary bg-primary/5 shadow-md"
                   : "border-border bg-card hover:border-primary/40"

@@ -103,7 +103,7 @@ export const StudentsTab = memo(function StudentsTab({
                   <button
                     type="button"
                     onClick={() => setAdminTab("manage")}
-                    className="underline underline-offset-2 hover:text-foreground ml-1"
+                    className="ml-1 rounded-sm underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     Student Admin →
                   </button>

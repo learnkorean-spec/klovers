@@ -132,7 +132,7 @@ const LegacyStudents = () => {
                 {visible.map((s) => (
                   <TableRow key={s.id} className="cursor-pointer" onClick={() => setOpenId(s.id)}>
                     <TableCell className="font-semibold">
-                      <button type="button" className="text-left hover:underline" onClick={(e) => { e.stopPropagation(); setOpenId(s.id); }}>
+                      <button type="button" className="rounded-sm text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" onClick={(e) => { e.stopPropagation(); setOpenId(s.id); }}>
                         {s.display_name}
                       </button>
                     </TableCell>
@@ -414,7 +414,7 @@ const LinkAccountDialog = ({
                     type="button"
                     disabled={taken}
                     onClick={() => setPicked(r)}
-                    className="flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     <span>
                       <span className="font-semibold">{r.name}</span>

@@ -544,7 +544,7 @@ const BookAssignmentManager = () => {
                       ) : filteredProfiles.slice(0, 8).map(p => (
                         <button
                           key={p.user_id}
-                          className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors"
+                          className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                           onClick={() => setSelectedUser(p)}
                         >
                           <div className="text-xs font-medium">{p.name ?? "—"}</div>
