@@ -1,7 +1,17 @@
-import { Suspense } from "react";
+import { Suspense, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import { useTiledTexture, paintPaving } from "../game/environment/textures";
 import { GateWall, Signboard } from "../game/environment/parts";
-import { Learner, LearnerPlaceholder, Hotspot, Cluby, useLearnerReactions } from "./shared";
+import {
+  Learner,
+  LearnerPlaceholder,
+  Hotspot,
+  Cluby,
+  useLearnerReactions,
+  usePlayerMovement,
+  DRESS,
+} from "./shared";
+import RiggedBody from "../game/player/RiggedBody";
 
 /**
  * KLOVERS World 2 — the entrance courtyard, route /world2's landing view.
@@ -22,22 +32,45 @@ import { Learner, LearnerPlaceholder, Hotspot, Cluby, useLearnerReactions } from
  * to World1's own room/collision/camera state — these two components are
  * self-contained geometry + a canvas texture, nothing else.
  *
- * Two gates, two destinations — clicking (or, on the live game's own
- * convention, walking through) a gate is "choosing a room", same mental
- * model as the Hub. A third room later is a third gate here, nothing else
- * about this file changes.
+ * Two gates, two destinations — clicking a gate, OR walking Adam through
+ * its opening with the keyboard, is "choosing a room", same mental model as
+ * the Hub. A third room later is a third gate here, nothing else about this
+ * file changes.
+ *
+ * Re, 3 Nov 2026: "must have moves with arrows... and they must be
+ * interacting" — the entrance previously stood still (Adam and Lina were
+ * fixed, click-only) while both destination rooms already had full arrow-
+ * key/WASD walking (see shared.tsx's usePlayerMovement/Player). Adam now
+ * walks here too, with the same keys, and walking far enough toward either
+ * gate's opening enters that room exactly like clicking it — clicking the
+ * gate still works on its own as a faster shortcut.
  */
 export default function EntranceScene({
   onEnterRoom,
 }: {
-  /** Fired when the learner clicks a gate, with the room it leads to. */
+  /** Fired when the learner clicks a gate, or walks through its opening,
+   * with the room it leads to. */
   onEnterRoom: (roomId: "cart" | "store") => void;
 }) {
   const ground = useTiledTexture(paintPaving, 6, 6);
-  // Adam and Lina stand here only to welcome the learner in — no keyboard
-  // movement in the entrance itself, so there's nothing to get in the way
-  // of clicking a gate cleanly (see World2Scene's own hotspot-timing notes).
   const { adamControl, linaControl } = useLearnerReactions();
+  // Wide enough to reach both gates (±3.8 on x) with a little room to spare,
+  // and deep enough (toward -1.6) to actually walk through the gate opening
+  // rather than stopping dead at it.
+  const adam = usePlayerMovement({ bounds: { x: [-5, 5], z: [-1.6, 3] }, control: adamControl });
+  const enteredRoom = useRef(false);
+  useFrame(() => {
+    if (enteredRoom.current) return;
+    const pos = adam.current?.position;
+    if (!pos || pos.z > -0.9) return;
+    if (pos.x < -2.3) {
+      enteredRoom.current = true;
+      onEnterRoom("cart");
+    } else if (pos.x > 2.3) {
+      enteredRoom.current = true;
+      onEnterRoom("store");
+    }
+  });
   return (
     <group>
       <fog attach="fog" args={["#2a2438", 9, 18]} />
@@ -105,7 +138,9 @@ export default function EntranceScene({
           </>
         }
       >
-        <Learner avatar="adam" x={-0.4} z={0.6} rotY={Math.PI * 0.15} control={adamControl} />
+        <group ref={adam} position={[-0.4, 0, 0.6]} rotation={[0, Math.PI * 0.15, 0]}>
+          <RiggedBody model="adam" rules={DRESS.adam} female={false} control={adamControl} />
+        </group>
         <Learner avatar="lina" x={0.4} z={0.6} rotY={-Math.PI * 0.15} control={linaControl} />
       </Suspense>
       <Cluby x={0} y={0} z={1.3} />

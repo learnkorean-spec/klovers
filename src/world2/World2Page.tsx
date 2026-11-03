@@ -3,7 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronLeft, ChevronRight, Maximize2, MessageCircle, Minimize2, Volume2, X } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Map as MapIcon, Maximize2, MessageCircle, Minimize2, Volume2, X } from "lucide-react";
 import World2Scene, { DIALOGUE as CART_DIALOGUE } from "./World2Scene";
 import ConvenienceStoreScene, { DIALOGUE as STORE_DIALOGUE } from "./ConvenienceStoreScene";
 import EntranceScene from "./EntranceScene";
@@ -180,6 +180,73 @@ function DialogueCard({
   );
 }
 
+/** Small top-down schematic of the three places in World 2 — the entrance
+ * courtyard and its two gates — with the learner's current location
+ * highlighted and every node clickable for instant fast-travel. Re, 3 Nov
+ * 2026: "must have... a map" alongside the arrow-key movement already in
+ * every room; this is deliberately a schematic (three dots and two paths),
+ * not a literal top-down render of the 3D scenes, since the whole layout is
+ * just "a courtyard with a gate left and a gate right" — a real minimap
+ * would show the same three dots at far more code for no added clarity. */
+function MapOverlay({
+  view,
+  onGo,
+  onClose,
+}: {
+  view: string;
+  onGo: (id: string) => void;
+  onClose: () => void;
+}) {
+  const nodes: { id: string; label: string; x: number; y: number }[] = [
+    { id: "cart", label: "Street Cart", x: 18, y: 20 },
+    { id: "store", label: "Convenience Store", x: 82, y: 20 },
+    { id: "entrance", label: "Entrance", x: 50, y: 78 },
+  ];
+  return (
+    <div className="absolute top-14 right-3 w-48 rounded-lg border border-[#FFF9EC]/15 bg-[#2E2E2E]/95 backdrop-blur p-3 shadow-xl">
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-xs font-semibold text-[#FFF9EC]/80">Map</p>
+        <button
+          onClick={onClose}
+          aria-label="Close map"
+          className="text-[#FFF9EC]/50 hover:text-[#FFF9EC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <svg viewBox="0 0 100 100" className="w-full h-28">
+        <line x1={50} y1={78} x2={18} y2={20} stroke="#FFF9EC" strokeOpacity={0.25} strokeWidth={1.5} />
+        <line x1={50} y1={78} x2={82} y2={20} stroke="#FFF9EC" strokeOpacity={0.25} strokeWidth={1.5} />
+        {nodes.map((n) => (
+          <circle
+            key={n.id}
+            cx={n.x}
+            cy={n.y}
+            r={n.id === view ? 6 : 4.5}
+            fill={n.id === view ? "#FFFF00" : "#FFF9EC"}
+            fillOpacity={n.id === view ? 1 : 0.55}
+            className="cursor-pointer"
+            onClick={() => onGo(n.id)}
+          />
+        ))}
+      </svg>
+      <div className="grid grid-cols-3 gap-1 mt-1">
+        {nodes.map((n) => (
+          <button
+            key={n.id}
+            onClick={() => onGo(n.id)}
+            className={`text-[9px] leading-tight text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded ${
+              n.id === view ? "text-[#FFFF00] font-semibold" : "text-[#FFF9EC]/70 hover:text-[#FFF9EC]"
+            }`}
+          >
+            {n.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Full-screen toggle for the Canvas's wrapping div, using the browser's own
  * Fullscreen API (same mechanism any web game uses — no extra dependency).
  * Re asked "why not a full screen" after reviewing World2 on a laptop: the
@@ -242,6 +309,7 @@ export default function World2Page() {
   const navigate = useNavigate();
   const { ref: stageRef, isFullscreen, toggle: toggleFullscreen } = useFullscreen<HTMLDivElement>();
   const [activeVocab, setActiveVocab] = useState<VocabItem | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
   // "entrance" (the landing courtyard, two gates) or a Room's id — the
   // learner always lands in the entrance first, the way the live /world
   // game always lands you in its own Hub before you pick a direction.
@@ -254,6 +322,7 @@ export default function World2Page() {
     setView(id);
     setActiveVocab(null);
     setDialogueIndex(null);
+    setMapOpen(false);
   };
   // A hotspot click and the dialogue card both use the bottom-of-canvas
   // overlay slot, so opening one closes the other rather than stacking.
@@ -353,12 +422,21 @@ export default function World2Page() {
                 </div>
               )}
               <button
+                onClick={() => setMapOpen((o) => !o)}
+                aria-label="Map"
+                aria-pressed={mapOpen}
+                className="absolute top-3 right-14 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <MapIcon className="h-4 w-4" />
+              </button>
+              <button
                 onClick={toggleFullscreen}
                 aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
                 className="absolute top-3 right-3 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </button>
+              {mapOpen && <MapOverlay view={view} onGo={goTo} onClose={() => setMapOpen(false)} />}
               {activeVocab && <VocabCard vocab={activeVocab} onClose={() => setActiveVocab(null)} />}
               {currentLine && (
                 <DialogueCard
@@ -406,8 +484,16 @@ export default function World2Page() {
                 </Suspense>
               </Canvas>
               <div className="absolute top-3 left-3 right-14 md:right-auto md:max-w-xs rounded-md bg-[#2E2E2E]/80 backdrop-blur px-3 py-2 text-xs text-[#FFF9EC]/80 pointer-events-none">
-                Click a gate to walk into that room.
+                Use WASD or the arrow keys to walk Adam through a gate, or just click one.
               </div>
+              <button
+                onClick={() => setMapOpen((o) => !o)}
+                aria-label="Map"
+                aria-pressed={mapOpen}
+                className="absolute top-3 right-14 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <MapIcon className="h-4 w-4" />
+              </button>
               <button
                 onClick={toggleFullscreen}
                 aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
@@ -415,13 +501,14 @@ export default function World2Page() {
               >
                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </button>
+              {mapOpen && <MapOverlay view={view} onGo={goTo} onClose={() => setMapOpen(false)} />}
             </div>
 
             <div className="rounded-lg border border-[#FFF9EC]/10 bg-[#FFF9EC]/5 p-4 text-sm space-y-2">
               <p className="font-semibold">KLOVERS World 2 — the entrance</p>
               <p className="text-[#FFF9EC]/80">
-                Adam and Lina are waiting at the gate. Click 포장마차 (the street cart) or 편의점
-                (the convenience store) to walk into that room and start learning.
+                Adam and Lina are waiting at the gate. Walk through 포장마차 (the street cart) or
+                편의점 (the convenience store) with the arrow keys, or click one, to start learning.
               </p>
               <p className="text-[#FFF9EC]/50 text-xs">
                 This is a hackathon tech-demo page, separate from the live KLOVERS World learner
