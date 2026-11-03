@@ -339,7 +339,15 @@ export default function World2Page() {
   const nextLine = () =>
     setDialogueIndex((i) => (i === null || !room ? null : Math.min(i + 1, room.dialogue.length - 1)));
   return (
-    <div className="min-h-screen bg-[#2E2E2E] text-[#FFF9EC]">
+    // World2 is an English-narrated hackathon tech demo (hint text, room
+    // descriptions, dialogue/vocab cards) — explicitly LTR so it renders
+    // correctly even when the site's own dir is "rtl" for an Arabic-locale
+    // visitor (confirmed live on kloversegy.com: without this, English
+    // paragraphs right-align and wrap oddly, e.g. trailing punctuation
+    // lands at the start of a line). The vocab card's own Arabic
+    // translation line already sets its own dir="rtl" locally, so it's
+    // unaffected by this page-level override.
+    <div dir="ltr" className="min-h-screen bg-[#2E2E2E] text-[#FFF9EC]">
       <div className="sticky top-0 z-20 bg-[#2E2E2E]/90 backdrop-blur border-b border-[#FFF9EC]/10">
         <div className="max-w-5xl mx-auto flex items-center gap-3 py-3 px-4 md:px-6">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10">
