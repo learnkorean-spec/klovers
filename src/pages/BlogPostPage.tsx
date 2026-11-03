@@ -14,6 +14,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
+import { trackJourney } from "@/lib/journeyAnalytics";
 import { extractRelatedBlock, splitMarkdownAtHeading } from "@/lib/markdownContent";
 import { buildFaqJsonLd } from "../../scripts/lib/faq-parser.mjs";
 import { extractArticleVocab, articleLevel } from "@/lib/articleVocab";
@@ -542,9 +543,17 @@ const BlogPostPage = () => {
   // fallback renders on every article that has no cta_text of its own, so
   // it is the widest-reach copy of the student figure on the site. Same
   // claim as the hero strip in HeroSection.tsx - every student taught
-  // across 13 years. Defined once and rendered at two positions (see
-  // earlySplit above) so both copies always stay in sync.
-  const ctaBlock = (
+  // across 13 years. Rendered at two positions (see earlySplit above) so
+  // both copies always stay in sync; now a function of `position` so the
+  // two placements can be told apart in the funnel data.
+  //
+  // 4 Nov 2026: neither link here nor the free-trial block below the share
+  // row ever called trackJourney — course_cta_clicked had been sitting at
+  // zero for 30 days straight despite 4,452 article_opened events in the
+  // same window. Not proof the CTAs don't work, but it meant nobody could
+  // tell either way. All three links below are now instrumented the same
+  // way JourneyMilestone and MiniQuiz already track theirs.
+  const ctaBlock = (position: "early" | "end") => (
     <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center space-y-4">
       <p className="text-sm font-bold text-foreground uppercase tracking-widest">
         {post.cta_text ? (isAr ? "هل حان وقت البدء؟" : "Ready to start?") : (isAr ? "تعلّم الكورية يبدأ اليوم" : "Start learning Korean today")}
@@ -554,12 +563,20 @@ const BlogPostPage = () => {
       </h3>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
         <Button asChild size="lg" className="gap-2">
-          <Link to={post.cta_url || "/placement-test"}>
+          <Link
+            to={post.cta_url || "/placement-test"}
+            onClick={() => trackJourney("course_cta_clicked", { cta: "article_cta_primary", position, slug: post.slug })}
+          >
             {post.cta_url ? (isAr ? "البدء الآن" : "Get Started") : (isAr ? "اختبار تحديد المستوى المجاني" : "Take the Free Placement Test")} <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>
         <Button asChild size="lg" variant="outline" className="gap-2">
-          <Link to="/enroll">{isAr ? "عرض الدورات والأسعار" : "View Courses & Pricing"}</Link>
+          <Link
+            to="/enroll"
+            onClick={() => trackJourney("course_cta_clicked", { cta: "article_cta_pricing", position, slug: post.slug })}
+          >
+            {isAr ? "عرض الدورات والأسعار" : "View Courses & Pricing"}
+          </Link>
         </Button>
       </div>
     </div>
@@ -687,7 +704,7 @@ const BlogPostPage = () => {
                       {earlySplit.before}
                     </ReactMarkdown>
                   </div>
-                  {ctaBlock}
+                  {ctaBlock("early")}
                   <div className={proseClassName}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
                       {earlySplit.after}
@@ -719,7 +736,7 @@ const BlogPostPage = () => {
               the article, so this same block is now also inserted after
               roughly the first 20% (see earlySplit above/ctaBlock below) —
               not just here at the foot. */}
-          {ctaBlock}
+          {ctaBlock("end")}
 
           {/* Share row */}
           <div className="mt-8 pt-6 border-t border-border flex items-center gap-3 flex-wrap">
@@ -769,7 +786,10 @@ const BlogPostPage = () => {
               </p>
             </div>
             <Button asChild className="gap-2 shrink-0">
-              <Link to="/free-trial">
+              <Link
+                to="/free-trial"
+                onClick={() => trackJourney("course_cta_clicked", { cta: "article_free_trial", slug: post.slug })}
+              >
                 {isAr ? "الحجز مجانًا" : "Book Free Class"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
