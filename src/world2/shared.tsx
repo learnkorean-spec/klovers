@@ -316,7 +316,23 @@ export function Player({
  * reading their world position/rotation through Three's own world-matrix
  * (getWorldPosition/getWorldQuaternion) rather than local coordinates, so
  * it tracks correctly even with World2Page's own SlowOrbit gently swaying
- * the room around them. */
+ * the room around them.
+ *
+ * Re also asked for a "character POV" view, separate from this chase
+ * camera: a `povMode` toggle (World2Page.tsx renders the button; mirrors
+ * the `touchDir` singleton above for the same reason — only one player/
+ * camera is ever active across the entrance/cart/store at a time, so a
+ * module-level flag is safe and avoids threading a prop through all three
+ * Scene components just for this). When it's on, `FollowCamera` ignores
+ * the walk/idle chase-vs-static logic entirely and instead sits just in
+ * front of the character's face at eye height, looking the way they're
+ * facing — an approximation of first-person rather than a literal
+ * in-the-skull camera (which would clip into their own head/hair mesh;
+ * RiggedBody has no "hide for this viewer" toggle to port here safely
+ * this close to the deadline), but it reads as "seeing through their
+ * eyes" for a demo. */
+export const povMode = { firstPerson: false };
+
 const UP = new Vector3(0, 1, 0);
 
 export function FollowCamera({
@@ -361,8 +377,27 @@ export function FollowCamera({
       capturedStatic.current = true;
     }
     const dt = Math.min(rawDt, 0.05);
-    const moving = control.current.clip === "walk" && target.current;
-    if (moving && target.current) {
+    const pov = povMode.firstPerson && target.current;
+    const moving = !pov && control.current.clip === "walk" && target.current;
+    if (pov && target.current) {
+      target.current.getWorldPosition(worldPos.current);
+      target.current.getWorldQuaternion(worldQuat.current);
+      forward.current.set(0, 0, 1).applyQuaternion(worldQuat.current);
+      // Just in front of the face, not literally at it — see this
+      // function's doc comment on why this is an approximation.
+      desiredPos.current.set(
+        worldPos.current.x + forward.current.x * 0.15,
+        eyeHeight,
+        worldPos.current.z + forward.current.z * 0.15,
+      );
+      lookAt.current.set(
+        worldPos.current.x + forward.current.x * 3,
+        eyeHeight,
+        worldPos.current.z + forward.current.z * 3,
+      );
+      lookMatrix.current.lookAt(desiredPos.current, lookAt.current, UP);
+      desiredQuat.current.setFromRotationMatrix(lookMatrix.current);
+    } else if (moving && target.current) {
       target.current.getWorldPosition(worldPos.current);
       target.current.getWorldQuaternion(worldQuat.current);
       // The player's own forward convention is local +Z (see
@@ -384,7 +419,7 @@ export function FollowCamera({
       desiredPos.current.copy(staticPos.current);
       desiredQuat.current.copy(staticQuat.current);
     }
-    const k = 1 - Math.exp(-(moving ? 3.2 : 1.8) * dt);
+    const k = 1 - Math.exp(-(pov || moving ? 3.2 : 1.8) * dt);
     curPos.current.lerp(desiredPos.current, k);
     curQuat.current.slerp(desiredQuat.current, k);
     camera.position.copy(curPos.current);

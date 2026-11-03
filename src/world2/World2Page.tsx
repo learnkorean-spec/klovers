@@ -3,12 +3,27 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronLeft, ChevronRight, Map as MapIcon, Maximize2, MessageCircle, Minimize2, Volume2, X } from "lucide-react";
-import World2Scene, { DIALOGUE as CART_DIALOGUE } from "./World2Scene";
-import ConvenienceStoreScene, { DIALOGUE as STORE_DIALOGUE } from "./ConvenienceStoreScene";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Map as MapIcon,
+  Maximize2,
+  MessageCircle,
+  Minimize2,
+  Volume2,
+  X,
+} from "lucide-react";
+import World2Scene, { DIALOGUE as CART_DIALOGUE, VOCAB as CART_VOCAB } from "./World2Scene";
+import ConvenienceStoreScene, {
+  DIALOGUE as STORE_DIALOGUE,
+  VOCAB as STORE_VOCAB,
+} from "./ConvenienceStoreScene";
 import EntranceScene from "./EntranceScene";
 import PostFinish from "./PostFinish";
-import { speakKorean, TouchPad, type DialogueLine, type VocabItem } from "./shared";
+import { povMode, speakKorean, TouchPad, type DialogueLine, type VocabItem } from "./shared";
 
 /** Each room AI Room Lab has proposed and a developer has built out: its own
  * concept image, 3D scene, camera framing and vocabulary. Adding a third
@@ -36,6 +51,11 @@ type Room = {
    * Lina — shown in the DialogueCard, line by line, Korean + English
    * reading + English translation. */
   dialogue: DialogueLine[];
+  /** Every vocab hotspot this room has — used only to size the "Learned
+   * X/Y" progress chip (see `learnedIds` in World2Page below), not to
+   * render anything here; each room's own Scene still owns its own
+   * hotspot placement and click handling. */
+  vocab: VocabItem[];
 };
 
 const ROOMS: Room[] = [
@@ -53,6 +73,7 @@ const ROOMS: Room[] = [
     body:
       "Adam orders at the counter, Lina points to the menu and explains, Cluby sits on a stool beside them. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
     dialogue: CART_DIALOGUE,
+    vocab: CART_VOCAB,
   },
   {
     id: "store",
@@ -68,6 +89,7 @@ const ROOMS: Room[] = [
     body:
       "Adam picks snacks and drinks from the shelves, Lina helps him read the labels, Cluby curls up by the door. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
     dialogue: STORE_DIALOGUE,
+    vocab: STORE_VOCAB,
   },
 ];
 
@@ -303,7 +325,10 @@ function SlowOrbit({ children }: { children: React.ReactNode }) {
  * reads like the live /world game (full 3D scene, no generated picture
  * pasted above it). The source concept art stays in
  * public/assets/world2/concept-*.jpg and the Project doc for anyone writing
- * up how the pipeline worked. Nothing here reads or writes learner progress.
+ * up how the pipeline worked. This page tracks a per-visit "Learned X/Y"
+ * progress chip (see `learnedIds`/`dialogueSeen` below) entirely in local
+ * component state — nothing is written to Supabase or any real learner
+ * progress table; it resets on reload, same as everything else here.
  */
 export default function World2Page() {
   const navigate = useNavigate();
@@ -316,6 +341,24 @@ export default function World2Page() {
   const [view, setView] = useState<string>("entrance");
   // null = dialogue card closed; otherwise the index of the line showing.
   const [dialogueIndex, setDialogueIndex] = useState<number | null>(null);
+  // "has the learner actually seen this yet" — keyed `${roomId}:${vocabId}`
+  // so the two rooms' own vocab ids (already distinct) never collide, kept
+  // for the whole visit (not reset on switching rooms) so the "Learned
+  // X/Y" chip below reflects real progress, not just the room on screen.
+  const [learnedIds, setLearnedIds] = useState<Set<string>>(new Set());
+  const [dialogueSeen, setDialogueSeen] = useState<Set<string>>(new Set());
+  // Mirrors the `povMode` singleton in shared.tsx (see FollowCamera's doc
+  // comment there) purely so this button's own icon re-renders on toggle;
+  // FollowCamera reads `povMode.firstPerson` directly every frame.
+  const [firstPerson, setFirstPerson] = useState(false);
+  const togglePov = () => {
+    povMode.firstPerson = !povMode.firstPerson;
+    setFirstPerson(povMode.firstPerson);
+  };
+  // Never leave the next page (or a later remount) stuck in first-person.
+  useEffect(() => () => {
+    povMode.firstPerson = false;
+  }, []);
   const room = view === "entrance" ? null : ROOMS.find((r) => r.id === view) ?? null;
   const currentLine = room && dialogueIndex !== null ? room.dialogue[dialogueIndex] : null;
   const goTo = (id: string) => {
@@ -329,10 +372,15 @@ export default function World2Page() {
   const selectVocab = (vocab: VocabItem) => {
     setDialogueIndex(null);
     setActiveVocab(vocab);
+    if (room) {
+      const key = `${room.id}:${vocab.id}`;
+      setLearnedIds((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
+    }
   };
   const openDialogue = () => {
     setActiveVocab(null);
     setDialogueIndex(0);
+    if (room) setDialogueSeen((prev) => (prev.has(room.id) ? prev : new Set(prev).add(room.id)));
   };
   const closeDialogue = () => setDialogueIndex(null);
   const prevLine = () => setDialogueIndex((i) => (i === null ? null : Math.max(i - 1, 0)));
@@ -368,6 +416,13 @@ export default function World2Page() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-4">
+        {/* Overall progress across both rooms — visible from the entrance
+            too, so a learner sees where they stand before picking a gate,
+            not only once they're already inside a room. */}
+        <p className="text-xs text-[#FFF9EC]/60">
+          Learned {ROOMS.reduce((n, r) => n + r.vocab.filter((v) => learnedIds.has(`${r.id}:${v.id}`)).length, 0)}/
+          {ROOMS.reduce((n, r) => n + r.vocab.length, 0)} words total across both places
+        </p>
         {/* Entrance + room switcher: "Entrance" is the landing courtyard
             (two gates); each room tab is a separate AI Room Lab brief,
             picked from its own A/B variants and built into its own scene —
@@ -433,9 +488,17 @@ export default function World2Page() {
                 onClick={() => setMapOpen((o) => !o)}
                 aria-label="Map"
                 aria-pressed={mapOpen}
-                className="absolute top-3 right-14 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="absolute top-3 right-24 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <MapIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={togglePov}
+                aria-label={firstPerson ? "Switch to third-person view" : "Switch to first-person (character POV) view"}
+                aria-pressed={firstPerson}
+                className="absolute top-3 right-14 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                {firstPerson ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
               <button
                 onClick={toggleFullscreen}
@@ -471,6 +534,17 @@ export default function World2Page() {
                   Practice the conversation
                 </Button>
               </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FFF9EC]/10 text-[#FFF9EC]/80">
+                  Learned {room.vocab.filter((v) => learnedIds.has(`${room.id}:${v.id}`)).length}/
+                  {room.vocab.length} words
+                </span>
+                {dialogueSeen.has(room.id) && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FFF9EC]/10 text-[#FFF9EC]/80">
+                    ✓ Conversation practiced
+                  </span>
+                )}
+              </div>
               <p className="text-[#FFF9EC]/80">{room.body}</p>
               <p className="text-[#FFF9EC]/50 text-xs">
                 This is a hackathon tech-demo page, separate from the live KLOVERS World learner
@@ -499,9 +573,17 @@ export default function World2Page() {
                 onClick={() => setMapOpen((o) => !o)}
                 aria-label="Map"
                 aria-pressed={mapOpen}
-                className="absolute top-3 right-14 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="absolute top-3 right-24 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <MapIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={togglePov}
+                aria-label={firstPerson ? "Switch to third-person view" : "Switch to first-person (character POV) view"}
+                aria-pressed={firstPerson}
+                className="absolute top-3 right-14 rounded-md bg-[#2E2E2E]/80 backdrop-blur p-2 text-[#FFF9EC]/80 hover:text-[#FFF9EC] hover:bg-[#2E2E2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                {firstPerson ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
               <button
                 onClick={toggleFullscreen}
