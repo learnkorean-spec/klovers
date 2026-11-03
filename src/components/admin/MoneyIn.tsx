@@ -336,7 +336,7 @@ const MoneyIn = () => {
               ))}
             </ul>
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
           </CardContent>
         </Card>
       )}
@@ -398,7 +398,7 @@ const MoneyIn = () => {
               ))}
             </ul>
 
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
           </CardContent>
         </Card>
       )}

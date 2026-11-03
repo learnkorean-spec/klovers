@@ -447,7 +447,7 @@ function ImageAuditPanel() {
 
       {/* Errors */}
       {result?.errors && result.errors.length > 0 && (
-        <Card className="rounded-xl border-destructive/40 bg-destructive/5">
+        <Card className="rounded-xl border-destructive/40 bg-destructive/5" role="alert">
           <CardContent className="pt-4">
             <p className="text-sm font-medium text-destructive mb-2">Errors during audit</p>
             <ul className="text-xs text-muted-foreground space-y-1">

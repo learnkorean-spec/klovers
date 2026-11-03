@@ -196,7 +196,7 @@ const EmailDeliveryPanel = () => {
       </div>
 
       {error && (
-        <Card className="border-destructive">
+        <Card className="border-destructive" role="alert">
           <CardContent className="p-5 text-sm">
             <span className="font-semibold text-destructive">Could not read the send log.</span>{" "}
             <span className="text-muted-foreground">{error}</span>
