@@ -87,6 +87,34 @@ const pageLanguage = (): string | undefined =>
   typeof document !== "undefined" ? document.documentElement.lang || undefined : undefined;
 
 /**
+ * Automated-visitor guard (G0c, 4 Nov 2026).
+ *
+ * The admin funnel dashboard's "Sessions" count and blog_journey volume were
+ * being inflated by headless-browser crawls: a single run was seen sweeping
+ * every blog article in sequence in under 4 minutes, each article firing
+ * `article_opened` exactly twice a few hundred ms apart (the crawler loading
+ * the page twice per URL), each sweep spinning up a fresh session_id. Real
+ * readers do not browse 50 unrelated grammar/culture articles a few seconds
+ * apart, and `navigator.webdriver` / the UA string both say "automation"
+ * outright in exactly this case.
+ *
+ * This is deliberately conservative — `navigator.webdriver` plus a known
+ * crawler/automation-tool UA list, nothing fuzzier (no rate-based heuristics
+ * that could misclassify a fast real reader). Checked once here, at the
+ * single choke point every lead/game/engagement event already funnels
+ * through, so the fix covers all of them — and the Meta Pixel / GA4 mirrors
+ * in logLeadEvent, which the same crawl was quietly feeding too.
+ */
+const AUTOMATION_UA_PATTERN =
+  /bot|crawl|spider|headless|phantomjs|puppeteer|playwright|selenium|lighthouse|pagespeed|python-requests|curl\/|scrapy|slurp|facebookexternalhit|whatsapp|telegrambot|slackbot|discordbot|gptbot|chatgpt-user|ccbot|bytespider|applebot/i;
+
+function isAutomatedVisitor(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if (navigator.webdriver) return true;
+  return AUTOMATION_UA_PATTERN.test(navigator.userAgent || "");
+}
+
+/**
  * Build the row and insert it. Pixel-free by construction — every mirror to
  * an external analytics product lives in the caller, so that adding one is a
  * visible edit at a call site rather than an invisible side effect here.
@@ -124,6 +152,7 @@ async function insertEventRow(opts: EventOpts<string>): Promise<void> {
  * unchanged.
  */
 export async function logLeadEvent(opts: LogOpts): Promise<void> {
+  if (isAutomatedVisitor()) return;
   try {
     track.lead(
       { content_name: opts.source_type },
@@ -147,6 +176,7 @@ export async function logLeadEvent(opts: LogOpts): Promise<void> {
  * `leadTracking.pixel.test.ts`.
  */
 export async function logGameEvent(opts: EventOpts<GameEventType>): Promise<void> {
+  if (isAutomatedVisitor()) return;
   try {
     await insertEventRow(opts);
   } catch {
@@ -160,6 +190,7 @@ export async function logGameEvent(opts: EventOpts<GameEventType>): Promise<void
  * EngagementEventType above.
  */
 export async function logEngagementEvent(opts: EventOpts<EngagementEventType>): Promise<void> {
+  if (isAutomatedVisitor()) return;
   try {
     await insertEventRow(opts);
   } catch {
