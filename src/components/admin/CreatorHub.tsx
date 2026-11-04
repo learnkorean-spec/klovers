@@ -1293,6 +1293,7 @@ export default function CreatorHub() {
                           type="button"
                           disabled={reelComposing}
                           onClick={() => setReelPickedVideoId(v.id)}
+                          aria-pressed={reelPickedVideoId === v.id}
                           className={`relative rounded-xl overflow-hidden border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                             reelPickedVideoId === v.id
                               ? "border-primary ring-2 ring-primary/30"
