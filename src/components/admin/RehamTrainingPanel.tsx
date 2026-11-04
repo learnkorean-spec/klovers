@@ -1978,7 +1978,7 @@ export default function RehamTrainingPanel() {
                       {line.section}
                     </Badge>
                     <div className="flex-1 min-w-0 space-y-1">
-                      <p className="text-sm font-medium leading-relaxed">{line.korean}</p>
+                      <p className="text-sm font-medium leading-relaxed" lang="ko">{line.korean}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">{line.english}</p>
                     </div>
                     <div className="flex flex-col gap-1 shrink-0">
@@ -2038,7 +2038,7 @@ export default function RehamTrainingPanel() {
                       <span className="text-xs font-semibold uppercase tracking-wide text-blue-600">Interviewer</span>
                     </div>
                     <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-1">
-                      <p className="text-sm font-medium">{current.interviewer.korean}</p>
+                      <p className="text-sm font-medium" lang="ko">{current.interviewer.korean}</p>
                       <p className="text-xs text-muted-foreground">{current.interviewer.english}</p>
                     </div>
                     <div className="flex gap-1">
@@ -2058,7 +2058,7 @@ export default function RehamTrainingPanel() {
                       )}
                     </div>
                     <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 space-y-1">
-                      <p className="text-sm font-medium leading-relaxed">{current.reham.korean}</p>
+                      <p className="text-sm font-medium leading-relaxed" lang="ko">{current.reham.korean}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">{current.reham.english}</p>
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -2155,7 +2155,7 @@ export default function RehamTrainingPanel() {
                           ? "bg-green-500 text-white"
                           : "bg-muted text-muted-foreground"
                       }`}>{i + 1}</span>
-                      <span className="truncate flex-1">{ex.interviewer.korean}</span>
+                      <span className="truncate flex-1" lang="ko">{ex.interviewer.korean}</span>
                       <span className="text-[10px] text-muted-foreground shrink-0">{ex.topic}</span>
                       {completed.has(ex.id) && <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />}
                     </button>
@@ -2185,7 +2185,7 @@ export default function RehamTrainingPanel() {
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{ex.interviewer.korean}</p>
+                    <p className="text-sm font-medium truncate" lang="ko">{ex.interviewer.korean}</p>
                     <p className="text-xs text-muted-foreground truncate">{ex.interviewer.english}</p>
                     <Badge variant="outline" className="mt-1 text-[10px]">{ex.topic}</Badge>
                   </div>
@@ -2304,7 +2304,7 @@ export default function RehamTrainingPanel() {
                               </Button>
                             </div>
                             <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-1">
-                              <p className="text-sm font-medium">{ex.interviewer.korean}</p>
+                              <p className="text-sm font-medium" lang="ko">{ex.interviewer.korean}</p>
                               <p className="text-xs text-muted-foreground">{ex.interviewer.english}</p>
                             </div>
                             <div className="flex gap-1 mt-1">
@@ -2316,7 +2316,7 @@ export default function RehamTrainingPanel() {
                         {revealedAnswers.has(ex.id) ? (
                           <>
                             <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 space-y-1">
-                              <p className="text-sm font-medium leading-relaxed">{ex.reham.korean}</p>
+                              <p className="text-sm font-medium leading-relaxed" lang="ko">{ex.reham.korean}</p>
                               <p className="text-xs text-muted-foreground leading-relaxed">{ex.reham.english}</p>
                             </div>
                             <div className="flex flex-wrap gap-1">
@@ -2402,7 +2402,7 @@ export default function RehamTrainingPanel() {
                     </div>
                     <Progress value={((mockCurrent + 1) / mockQuestions.length) * 100} className="h-2" />
                     <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-2">
-                      <p className="text-base font-medium">{mockQuestions[mockCurrent].interviewer.korean}</p>
+                      <p className="text-base font-medium" lang="ko">{mockQuestions[mockCurrent].interviewer.korean}</p>
                       <p className="text-sm text-muted-foreground">{mockQuestions[mockCurrent].interviewer.english}</p>
                     </div>
                     <div className="flex gap-1">
@@ -2424,7 +2424,7 @@ export default function RehamTrainingPanel() {
                     <p className="text-sm text-muted-foreground">Think about your answer...</p>
                     <div className="text-5xl font-bold tabular-nums text-orange-600">{thinkingTime}</div>
                     <Progress value={(thinkingTime / 30) * 100} className="h-3" />
-                    <p className="text-sm font-medium">{mockQuestions[mockCurrent].interviewer.korean}</p>
+                    <p className="text-sm font-medium" lang="ko">{mockQuestions[mockCurrent].interviewer.korean}</p>
                     <Button
                       onClick={() => setMockPhase("answer")}
                       variant="outline"
@@ -2441,11 +2441,11 @@ export default function RehamTrainingPanel() {
                   <CardContent className="p-5 space-y-4">
                     <Badge variant="outline" className="text-xs">{mockQuestions[mockCurrent].topic}</Badge>
                     <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-1">
-                      <p className="text-sm font-medium">{mockQuestions[mockCurrent].interviewer.korean}</p>
+                      <p className="text-sm font-medium" lang="ko">{mockQuestions[mockCurrent].interviewer.korean}</p>
                       <p className="text-xs text-muted-foreground">{mockQuestions[mockCurrent].interviewer.english}</p>
                     </div>
                     <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 space-y-1">
-                      <p className="text-sm font-medium leading-relaxed">{mockQuestions[mockCurrent].reham.korean}</p>
+                      <p className="text-sm font-medium leading-relaxed" lang="ko">{mockQuestions[mockCurrent].reham.korean}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">{mockQuestions[mockCurrent].reham.english}</p>
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -2479,7 +2479,7 @@ export default function RehamTrainingPanel() {
                         {mockQuestions.map((q, i) => (
                           <div key={q.id} className="flex items-center gap-2 p-2 rounded-lg border text-xs">
                             <span className="font-bold w-5 text-center text-muted-foreground">{i + 1}</span>
-                            <span className="flex-1 truncate">{q.interviewer.korean}</span>
+                            <span className="flex-1 truncate" lang="ko">{q.interviewer.korean}</span>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -2566,7 +2566,7 @@ export default function RehamTrainingPanel() {
                       <CardContent className="p-5 space-y-4">
                         <Badge variant="outline" className="text-xs">{ex.topic}</Badge>
                         <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 space-y-1">
-                          <p className="text-sm font-medium">{ex.interviewer.korean}</p>
+                          <p className="text-sm font-medium" lang="ko">{ex.interviewer.korean}</p>
                           <p className="text-xs text-muted-foreground">{ex.interviewer.english}</p>
                         </div>
                         <div className="flex gap-1">
@@ -2575,7 +2575,7 @@ export default function RehamTrainingPanel() {
                         </div>
                         <div className="w-full h-px bg-border" />
                         <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 space-y-1">
-                          <p className="text-sm font-medium leading-relaxed">{ex.reham.korean}</p>
+                          <p className="text-sm font-medium leading-relaxed" lang="ko">{ex.reham.korean}</p>
                           <p className="text-xs text-muted-foreground leading-relaxed">{ex.reham.english}</p>
                         </div>
                         <div className="flex flex-wrap gap-1">
@@ -2624,7 +2624,7 @@ export default function RehamTrainingPanel() {
                         <div key={i} className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent/30 transition-colors">
                           <Badge variant="secondary" className="text-[10px] shrink-0 w-40 justify-center">{m.label}</Badge>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">{m.korean}</p>
+                            <p className="text-sm font-medium" lang="ko">{m.korean}</p>
                             <p className="text-xs text-muted-foreground">{m.english}</p>
                           </div>
                           <div className="flex gap-1 shrink-0">
@@ -2646,7 +2646,7 @@ export default function RehamTrainingPanel() {
                       {POWER_PHRASES.map((p, i) => (
                         <div key={i} className="flex items-center gap-3 p-2 rounded-lg border hover:bg-accent/30 transition-colors">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">{p.korean}</p>
+                            <p className="text-sm font-medium" lang="ko">{p.korean}</p>
                             <p className="text-xs text-muted-foreground italic">{p.romanization}</p>
                             <p className="text-xs text-muted-foreground">{p.english}</p>
                           </div>
@@ -2671,7 +2671,7 @@ export default function RehamTrainingPanel() {
                         <div key={i} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/30 transition-colors">
                           <Badge variant="outline" className="text-xs shrink-0 w-28 justify-center">{c.name}</Badge>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">{c.korean}</p>
+                            <p className="text-sm font-medium" lang="ko">{c.korean}</p>
                             <p className="text-xs text-muted-foreground">{c.english}</p>
                           </div>
                           <div className="flex gap-1 shrink-0">
@@ -2733,7 +2733,7 @@ export default function RehamTrainingPanel() {
                                 {learnedVocab.has(w.korean) && <CheckCircle2 className="h-3 w-3" />}
                               </button>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium">{w.korean}</p>
+                                <p className="text-sm font-medium" lang="ko">{w.korean}</p>
                                 <p className="text-[10px] text-muted-foreground italic">{w.romanization}</p>
                                 <p className="text-xs text-muted-foreground">{w.english}</p>
                               </div>
@@ -2873,7 +2873,7 @@ export default function RehamTrainingPanel() {
                 {!fcFlipped ? (
                   /* Front: Korean word */
                   <div className="flex flex-col items-center justify-center h-full min-h-[320px] p-6 text-center">
-                    <p className="text-4xl font-bold mb-3">{fcCurrent.korean}</p>
+                    <p className="text-4xl font-bold mb-3" lang="ko">{fcCurrent.korean}</p>
                     <p className="text-sm text-muted-foreground italic mb-6">{fcCurrent.romanization}</p>
                     {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events */}
                     <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
@@ -2884,7 +2884,7 @@ export default function RehamTrainingPanel() {
                 ) : (
                   /* Back: English + example sentence */
                   <div className="flex flex-col items-center justify-center h-full min-h-[320px] p-6 text-center space-y-4">
-                    <p className="text-2xl font-bold">{fcCurrent.korean}</p>
+                    <p className="text-2xl font-bold" lang="ko">{fcCurrent.korean}</p>
                     <p className="text-lg text-green-700 dark:text-green-300 font-semibold">{fcCurrent.english}</p>
                     <div className="w-full max-w-md p-4 rounded-xl bg-white/60 dark:bg-black/20 border space-y-2">
                       <p className="text-sm font-medium">{fcCurrent.sentence_kr}</p>
@@ -2980,7 +2980,7 @@ export default function RehamTrainingPanel() {
                           "inline-block w-2 h-2 rounded-full shrink-0",
                           isMastered ? "bg-green-500" : isSeen ? "bg-amber-400" : "bg-gray-300",
                         )} />
-                        <span className="font-medium">{w.korean}</span>
+                        <span className="font-medium" lang="ko">{w.korean}</span>
                         <span className="text-muted-foreground truncate">{w.english}</span>
                       </button>
                     );
@@ -3112,7 +3112,7 @@ export default function RehamTrainingPanel() {
                                 {line.section}
                               </Badge>
                               <div className="flex-1 min-w-0 space-y-1">
-                                <p className="text-sm font-medium leading-relaxed">{line.korean}</p>
+                                <p className="text-sm font-medium leading-relaxed" lang="ko">{line.korean}</p>
                                 <p className="text-xs text-muted-foreground leading-relaxed">{line.english}</p>
                               </div>
                               <div className="flex flex-col gap-1 shrink-0">
@@ -3143,11 +3143,11 @@ export default function RehamTrainingPanel() {
                                   <div className="flex-1 min-w-0">
                                     <Badge variant="outline" className="text-[10px] mb-1">{ex.topic}</Badge>
                                     <div className="p-2 rounded bg-blue-50 dark:bg-blue-950/30 space-y-1">
-                                      <p className="text-xs font-medium">{ex.interviewer.korean}</p>
+                                      <p className="text-xs font-medium" lang="ko">{ex.interviewer.korean}</p>
                                       <p className="text-xs text-muted-foreground">{ex.interviewer.english}</p>
                                     </div>
                                     <div className="p-2 rounded bg-green-50 dark:bg-green-950/30 space-y-1 mt-1">
-                                      <p className="text-xs font-medium">{ex.reham.korean}</p>
+                                      <p className="text-xs font-medium" lang="ko">{ex.reham.korean}</p>
                                       <p className="text-xs text-muted-foreground">{ex.reham.english}</p>
                                     </div>
                                   </div>
