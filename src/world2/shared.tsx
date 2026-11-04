@@ -386,6 +386,7 @@ export function FollowCamera({
   height = 1.75,
   ahead = 1.0,
   eyeHeight = 1.05,
+  povEyeHeight = 1.6,
 }: {
   /** The moving character's own transform (Player's `exposedRef`, or the
    * ref returned directly by usePlayerMovement). */
@@ -395,6 +396,10 @@ export function FollowCamera({
   height?: number;
   ahead?: number;
   eyeHeight?: number;
+  /** Eye height used only in POV mode — see the doc comment on `povMode`
+   * above and the fix note on the POV branch below for why this is a
+   * separate knob from `eyeHeight` (the chase camera's look-at height). */
+  povEyeHeight?: number;
 }) {
   const { camera } = useThree();
   const staticPos = useRef(new Vector3());
@@ -427,17 +432,23 @@ export function FollowCamera({
       target.current.getWorldPosition(worldPos.current);
       target.current.getWorldQuaternion(worldQuat.current);
       forward.current.set(0, 0, 1).applyQuaternion(worldQuat.current);
-      // Just in front of the face, not literally at it — see this
-      // function's doc comment on why this is an approximation.
+      // Re, 4 Nov 2026: shipped POV clipped straight into the character's
+      // own head/hair the instant it turned on — this offset (+0.15, at a
+      // 1.05 "chest" eyeHeight) put the camera *in front of* the face, below
+      // eye level, right where the head mesh is widest. The live game's own
+      // first-person camera (ThirdPersonCamera.tsx: POV_EYE=1.6, a -0.12
+      // nudge *behind* centre) gets this right — eye height is up near the
+      // top of the head where the mesh narrows, and the tiny nudge is
+      // *behind* the face, not into it. Mirrored here.
       desiredPos.current.set(
-        worldPos.current.x + forward.current.x * 0.15,
-        eyeHeight,
-        worldPos.current.z + forward.current.z * 0.15,
+        worldPos.current.x - forward.current.x * 0.12,
+        povEyeHeight,
+        worldPos.current.z - forward.current.z * 0.12,
       );
       lookAt.current.set(
-        worldPos.current.x + forward.current.x * 3,
-        eyeHeight,
-        worldPos.current.z + forward.current.z * 3,
+        desiredPos.current.x + forward.current.x * 3,
+        povEyeHeight,
+        desiredPos.current.z + forward.current.z * 3,
       );
       lookMatrix.current.lookAt(desiredPos.current, lookAt.current, UP);
       desiredQuat.current.setFromRotationMatrix(lookMatrix.current);
