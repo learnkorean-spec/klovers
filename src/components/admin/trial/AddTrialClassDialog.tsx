@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -70,6 +70,7 @@ export default function AddTrialClassDialog({
   onDoneEditing?: () => void;
 }) {
   const isEditMode = !!editingSlot;
+  const uid = useId();
   const [open, setOpen] = useState(isEditMode);
   const [form, setForm] = useState<Form>(() => (editingSlot ? formFromSlot(editingSlot) : defaultForm()));
   const qc = useQueryClient();
@@ -195,9 +196,9 @@ export default function AddTrialClassDialog({
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="trial-date">Date</Label>
+            <Label htmlFor={`${uid}-trial-date`}>Date</Label>
             <Input
-              id="trial-date"
+              id={`${uid}-trial-date`}
               type="date"
               min={isEditMode ? undefined : todayIso}
               value={form.trialDate}
@@ -207,18 +208,18 @@ export default function AddTrialClassDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="trial-time">Start time (24h)</Label>
+              <Label htmlFor={`${uid}-trial-time`}>Start time (24h)</Label>
               <Input
-                id="trial-time"
+                id={`${uid}-trial-time`}
                 type="time"
                 value={form.startTime}
                 onChange={(e) => setForm({ ...form, startTime: e.target.value })}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="trial-duration">Duration (min)</Label>
+              <Label htmlFor={`${uid}-trial-duration`}>Duration (min)</Label>
               <Input
-                id="trial-duration"
+                id={`${uid}-trial-duration`}
                 type="number"
                 min={5}
                 step={5}
@@ -229,9 +230,9 @@ export default function AddTrialClassDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="trial-language">Language</Label>
+            <Label htmlFor={`${uid}-trial-language`}>Language</Label>
             <select
-              id="trial-language"
+              id={`${uid}-trial-language`}
               value={form.classLanguage}
               onChange={(e) => setForm({ ...form, classLanguage: e.target.value as Form['classLanguage'] })}
               className="w-full rounded-md border bg-background px-3 py-2 text-sm"
@@ -243,9 +244,9 @@ export default function AddTrialClassDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="trial-capacity">Max capacity</Label>
+              <Label htmlFor={`${uid}-trial-capacity`}>Max capacity</Label>
               <Input
-                id="trial-capacity"
+                id={`${uid}-trial-capacity`}
                 type="number"
                 min={1}
                 value={form.capacity}
@@ -253,9 +254,9 @@ export default function AddTrialClassDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="trial-min-to-run">Min. to run</Label>
+              <Label htmlFor={`${uid}-trial-min-to-run`}>Min. to run</Label>
               <Input
-                id="trial-min-to-run"
+                id={`${uid}-trial-min-to-run`}
                 type="number"
                 min={1}
                 placeholder="Uses global default"
@@ -292,9 +293,9 @@ export default function AddTrialClassDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="trial-meeting-url">Meet / Zoom Link (optional)</Label>
+            <Label htmlFor={`${uid}-trial-meeting-url`}>Meet / Zoom Link (optional)</Label>
             <Input
-              id="trial-meeting-url"
+              id={`${uid}-trial-meeting-url`}
               type="url"
               value={form.meetingUrl}
               onChange={(e) => setForm({ ...form, meetingUrl: e.target.value })}
