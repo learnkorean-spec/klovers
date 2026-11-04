@@ -14,14 +14,15 @@ import { supabase } from "@/integrations/supabase/client";
  *                      are hidden from the trial list and are not counted.
  *   enrollments        approved but not yet paid (payment_status = PENDING_PAYMENT)
  *   teacherOnboarding  teachers still mid-onboarding (status = 'onboarding')
+ *   exchangeReports    unreviewed Language Exchange reports (exchange_reports.reviewed = false)
  */
 export function useSidebarBadges() {
-  return useQuery<{ trials: number; enrollments: number; teacherOnboarding: number }>({
+  return useQuery<{ trials: number; enrollments: number; teacherOnboarding: number; exchangeReports: number }>({
     queryKey: ["admin", "sidebar-badges"],
     staleTime: 60 * 1000,
     queryFn: async () => {
       const todayIso = new Date().toISOString().slice(0, 10);
-      const [trials, enrollments, teacherOnboarding] = await Promise.all([
+      const [trials, enrollments, teacherOnboarding, exchangeReports] = await Promise.all([
         supabase
           .from("trial_bookings")
           .select("id", { count: "exact", head: true })
@@ -39,14 +40,19 @@ export function useSidebarBadges() {
         // than failing the whole sidebar-badges query and losing the two
         // badges above as well.
         supabase.from("teachers").select("id", { count: "exact", head: true }).eq("status", "onboarding"),
+        // Same 42P01 tolerance: exchange_reports may not exist yet if its
+        // migrations haven't been applied on this environment.
+        supabase.from("exchange_reports" as any).select("id", { count: "exact", head: true }).eq("reviewed", false),
       ]);
       if (trials.error) throw trials.error;
       if (enrollments.error) throw enrollments.error;
       if (teacherOnboarding.error && teacherOnboarding.error.code !== "42P01") throw teacherOnboarding.error;
+      if (exchangeReports.error && exchangeReports.error.code !== "42P01") throw exchangeReports.error;
       return {
         trials: trials.count ?? 0,
         enrollments: enrollments.count ?? 0,
         teacherOnboarding: teacherOnboarding.error ? 0 : teacherOnboarding.count ?? 0,
+        exchangeReports: exchangeReports.error ? 0 : exchangeReports.count ?? 0,
       };
     },
   });
