@@ -3,14 +3,12 @@ import { useFrame } from "@react-three/fiber";
 import { useTiledTexture, paintPaving } from "../game/environment/textures";
 import { GateWall, Signboard } from "../game/environment/parts";
 import {
-  Learner,
   LearnerPlaceholder,
   Hotspot,
   Cluby,
   FollowCamera,
   useLearnerReactions,
   usePlayerMovement,
-  companionOf,
   DEFAULT_PLAYER_AVATAR,
   DRESS,
   type PlayableAvatar,
@@ -53,8 +51,11 @@ import RiggedBody from "../game/player/RiggedBody";
  * Re, 4 Nov 2026: "the visitor is either lena or adam" — the entrance used
  * to always put Adam in the walkable slot with Lina as a fixed companion;
  * `playerAvatar` (picked on `World2Page`, see shared.tsx's `PlayableAvatar`)
- * now decides which canon learner occupies each slot here, same as in both
- * rooms.
+ * now decides which canon learner walks here, same as in both rooms.
+ *
+ * Re, 4 Nov 2026 (later the same day): "student must choose a character and
+ * move with one only" — the fixed companion learner described above is
+ * removed entirely; only the chosen character and Cluby appear here now.
  */
 export default function EntranceScene({
   playerAvatar = DEFAULT_PLAYER_AVATAR,
@@ -68,8 +69,7 @@ export default function EntranceScene({
   onEnterRoom: (roomId: "cart" | "store") => void;
 }) {
   const ground = useTiledTexture(paintPaving, 6, 6);
-  const { playerControl, companionControl } = useLearnerReactions(playerAvatar);
-  const companionAvatar = companionOf(playerAvatar);
+  const { playerControl } = useLearnerReactions();
   // Wide enough to reach both gates (±3.8 on x) with a little room to spare,
   // and deep enough (toward -1.6) to actually walk through the gate opening
   // rather than stopping dead at it.
@@ -147,15 +147,8 @@ export default function EntranceScene({
         </Hotspot>
       </group>
 
-      <Suspense
-        fallback={
-          <>
-            <LearnerPlaceholder x={-0.4} z={0.6} />
-            <LearnerPlaceholder x={0.4} z={0.6} />
-          </>
-        }
-      >
-        <group ref={player} position={[-0.4, 0, 0.6]} rotation={[0, Math.PI * 0.15, 0]}>
+      <Suspense fallback={<LearnerPlaceholder x={0} z={0.6} />}>
+        <group ref={player} position={[0, 0, 0.6]} rotation={[0, Math.PI * 0.15, 0]}>
           <RiggedBody
             model={playerAvatar}
             rules={DRESS[playerAvatar]}
@@ -163,9 +156,8 @@ export default function EntranceScene({
             control={playerControl}
           />
         </group>
-        <Learner avatar={companionAvatar} x={0.4} z={0.6} rotY={-Math.PI * 0.15} control={companionControl} />
       </Suspense>
-      <Cluby x={0} y={0} z={1.3} />
+      <Cluby x={0.5} y={0} z={1.3} />
     </group>
   );
 }

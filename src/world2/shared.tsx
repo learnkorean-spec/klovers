@@ -25,15 +25,19 @@ export type VocabItem = {
   english: string;
 };
 
-/** One line of a short, real exchange between Adam and Lina in a room — the
- * "practice the conversation" feature, distinct from the single-word vocab
- * hotspots: a learner sees how those same words actually get used back and
- * forth between two study companions, not just in isolation. Per canon
- * (CLAUDE.md / klovers-world.ts), Adam and Lina are friends and study
- * companions, never a romantic pair — lines stay practical (ordering,
- * prices, "let's go together"), never romantic. */
+/** One line of a short, real exchange in a room — the "practice the
+ * conversation" feature, distinct from the single-word vocab hotspots: a
+ * learner sees how those same words actually get used in a back-and-forth,
+ * not just in isolation.
+ *
+ * Re, 4 Nov 2026: this used to always be Adam talking to Lina (or vice
+ * versa); now that only one human renders in any World2 scene (see
+ * `PlayableAvatar`'s doc comment above), the exchange is between whichever
+ * learner the visitor picked ("player") and Cluby — who hints, encourages,
+ * and reacts, per his own canon role (`give_hints`, `companion`,
+ * `motivation` in klovers-world.ts), never ordering or shopping himself. */
 export type DialogueLine = {
-  speaker: "adam" | "lina";
+  speaker: "player" | "cluby";
   korean: string;
   /** Romanized pronunciation guide — the "English reading" of the Korean line. */
   reading: string;
@@ -70,13 +74,29 @@ export function speakKorean(text: string) {
  * scene swaps which character is `Player` (keyboard-controlled, camera
  * target) and which is `Learner` (stationary companion) accordingly — the
  * position/pose "slots" each room already had stay the same, only which
- * canon character occupies which slot changes. */
+ * canon character occupies which slot changes.
+ *
+ * Re, 4 Nov 2026: "student must choose a character and move with one only" —
+ * the second human (the stationary `Learner` companion described above) has
+ * been removed from the entrance and both rooms entirely, not just made
+ * non-walking (it was already stationary; only the keyboard-controlled
+ * `Player` ever moved). Now exactly one human renders in any World2 scene —
+ * whichever one `playerAvatar` names. Cluby, who's in every room regardless,
+ * takes over the companion's old role as the dialogue partner for "Practice
+ * the conversation" (see `DialogueLine`'s `speaker` below: `"player" |
+ * "cluby"`, not `"adam" | "lina"`) and as who "explains"/reacts to a vocab
+ * hotspot click (see `useLearnerReactions`'s `clubyReact` below). This also
+ * reads more naturally with canon: Cluby is the one companion present no
+ * matter which learner is walking, where the old setup made Lina (say) a
+ * mute prop standing next to the camera whenever Adam was the chosen player. */
 export type PlayableAvatar = "adam" | "lina";
 
 /** Matches the live game's own `DEFAULT_AVATAR` (characters.ts). */
 export const DEFAULT_PLAYER_AVATAR: PlayableAvatar = "adam";
 
-/** The companion standing alongside whoever the learner is playing as. */
+/** The companion standing alongside whoever the learner is playing as.
+ * Kept for reference/possible reuse — no longer called anywhere as of
+ * 4 Nov 2026 (see the note on `PlayableAvatar` above this one). */
 export function companionOf(avatar: PlayableAvatar): PlayableAvatar {
   return avatar === "adam" ? "lina" : "adam";
 }
@@ -555,10 +575,33 @@ const CLUBY_EYES = "#4A2E1F";
  * primitive Three.js geometry, same as World1 — there is no Cluby GLB
  * anywhere in the repo (confirmed), so this isn't a downgrade from "the
  * real one," it IS the real one's shape, just standing still. */
-export function Cluby({ x, y = 0, z }: { x: number; y?: number; z: number }) {
+export function Cluby({
+  x,
+  y = 0,
+  z,
+  reactRef,
+}: {
+  x: number;
+  y?: number;
+  z: number;
+  /** Re, 4 Nov 2026: Cluby is now the dialogue/reaction partner everywhere
+   * the companion learner used to stand in (see `PlayableAvatar`'s doc
+   * comment) — he has no talk/wave animation clips the way RiggedBody's
+   * humans do, so instead of a cross-faded clip this is a simple decaying
+   * "pulse" added on top of his existing idle bob: set `reactRef.current.
+   * pulse = 1` (see `useLearnerReactions`'s `react()` below) for a quick,
+   * self-resetting little hop whenever he "speaks" or reacts to a hotspot. */
+  reactRef?: MutableRefObject<{ pulse: number }>;
+}) {
   const g = useRef<Group>(null);
-  useFrame(({ clock }) => {
-    if (g.current) g.current.position.y = y + 0.02 * Math.sin(clock.elapsedTime * 1.6);
+  useFrame(({ clock }, dt) => {
+    if (!g.current) return;
+    let hop = 0;
+    if (reactRef?.current) {
+      reactRef.current.pulse = Math.max(0, reactRef.current.pulse - dt * 2.5);
+      hop = reactRef.current.pulse * 0.07;
+    }
+    g.current.position.y = y + 0.02 * Math.sin(clock.elapsedTime * 1.6) + hop;
   });
   const mint = std(CLUBY_MINT, 0.95);
   const m = (o: ReturnType<typeof std>) => <primitive object={o} attach="material" />;
@@ -691,27 +734,22 @@ export function Cluby({ x, y = 0, z }: { x: number; y?: number; z: number }) {
   );
 }
 
-/** A shared hook: two BodyControl refs (Adam, Lina) plus a `react(vocab)`
- * helper that plays the companion's "explains it" / the player's "reacts"
- * one-off animations, cross-fading back to idle automatically once the clip
- * finishes (see RiggedBody's own `once` handling) — every room's
- * handleSelect calls this instead of re-deriving the same two lines.
+/** A shared hook: the player's own BodyControl ref, plus Cluby's `reactRef`
+ * pulse, plus a `react()` helper that fires both — every room's
+ * `handleSelect` calls this instead of re-deriving the same two lines.
  *
- * Which control is "the player's" vs "the companion's" depends on
- * `playerAvatar` (defaults to Adam, matching the live game's own
- * DEFAULT_AVATAR) — the controls themselves stay keyed by character
- * (adamControl always drives Adam's rig) since that's what RiggedBody
- * needs; `playerControl`/`companionControl` are just the two named by role
- * instead, for call sites that don't care which specific character is
- * walking. */
-export function useLearnerReactions(playerAvatar: PlayableAvatar = DEFAULT_PLAYER_AVATAR) {
-  const adamControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
-  const linaControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
-  const playerControl = playerAvatar === "adam" ? adamControl : linaControl;
-  const companionControl = playerAvatar === "adam" ? linaControl : adamControl;
+ * Re, 4 Nov 2026: this used to also hold a second, "companion" BodyControl
+ * (Adam's or Lina's, whichever wasn't the player) so clicking a vocab
+ * hotspot could play a "the companion explains it" talk clip. Now that the
+ * companion learner is gone from every scene (see `PlayableAvatar`'s doc
+ * comment), that role moved to Cluby's `reactRef` pulse instead — the
+ * player still gets the same "wave" reaction clip as before. */
+export function useLearnerReactions() {
+  const playerControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
+  const clubyReact = useRef<{ pulse: number }>({ pulse: 0 });
   const react = () => {
-    companionControl.current.once = "talk";
     playerControl.current.once = "wave";
+    clubyReact.current.pulse = 1;
   };
-  return { adamControl, linaControl, playerControl, companionControl, react };
+  return { playerControl, clubyReact, react };
 }

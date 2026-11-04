@@ -54,9 +54,9 @@ type Room = {
   hint: string;
   title: string;
   body: string;
-  /** The room's "practice the conversation" exchange between Adam and
-   * Lina — shown in the DialogueCard, line by line, Korean + English
-   * reading + English translation. */
+  /** The room's "practice the conversation" exchange between the player's
+   * chosen character and Cluby — shown in the DialogueCard, line by line,
+   * Korean + English reading + English translation. */
   dialogue: DialogueLine[];
   /** Every vocab hotspot this room has — used only to size the "Learned
    * X/Y" progress chip (see `learnedIds` in World2Page below), not to
@@ -89,7 +89,7 @@ const ROOMS: Room[] = [
     hint: "Use WASD or the arrow keys to walk {player} around. Tap the skewers, tteokbokki, kimbap, or the menu board to learn the word.",
     title: "A warm Korean street food cart at dusk (포장마차)",
     body:
-      "{player} orders at the counter, {companion} points to the menu and explains, Cluby sits on a stool beside them. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
+      "{player} orders at the counter while Cluby watches from a stool, calling out hints when a new word comes up. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
     dialogue: CART_DIALOGUE,
     vocab: CART_VOCAB,
   },
@@ -105,25 +105,25 @@ const ROOMS: Room[] = [
     hint: "Use WASD or the arrow keys to walk {player} around. Tap the shelf, fridge, checkout, or a price tag to learn the word.",
     title: "A late-night Korean convenience store (편의점)",
     body:
-      "{player} picks snacks and drinks from the shelves, {companion} helps {playerObj} read the labels, Cluby curls up by the door. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
+      "{player} picks snacks and drinks from the shelves while Cluby curls up by the door, cheering {playerObj} on as new words come up. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
     dialogue: STORE_DIALOGUE,
     vocab: STORE_VOCAB,
   },
 ];
 
-/** Fills a room's `hint`/`body` template with whichever names/pronoun fit
- * the learner's current character choice — `{player}`/`{companion}` (names)
- * and `{playerObj}` (object pronoun: "him"/"her"), so the copy stays
- * correct whichever of Adam/Lina the visitor is walking as (see
- * `playerAvatar` below and shared.tsx's `PlayableAvatar`). */
+/** Fills a room's `hint`/`body` template with whichever name/pronoun fits
+ * the learner's current character choice — `{player}` (name) and
+ * `{playerObj}` (object pronoun: "him"/"her"), so the copy stays correct
+ * whichever of Adam/Lina the visitor is walking as (see `playerAvatar`
+ * below and shared.tsx's `PlayableAvatar`).
+ *
+ * Re, 4 Nov 2026: dropped `{companion}` — the second human learner no
+ * longer appears in any World2 scene (see shared.tsx's `PlayableAvatar`
+ * doc comment), so no template references it any more. */
 function fillNames(text: string, playerAvatar: PlayableAvatar): string {
   const playerName = playerAvatar === "adam" ? "Adam" : "Lina";
-  const companionName = playerAvatar === "adam" ? "Lina" : "Adam";
   const playerObj = playerAvatar === "adam" ? "him" : "her";
-  return text
-    .replaceAll("{player}", playerName)
-    .replaceAll("{companion}", companionName)
-    .replaceAll("{playerObj}", playerObj);
+  return text.replaceAll("{player}", playerName).replaceAll("{playerObj}", playerObj);
 }
 
 /** The flashcard shown when a learner clicks a food/menu hotspot in the 3D
@@ -163,12 +163,14 @@ function VocabCard({ vocab, onClose }: { vocab: VocabItem; onClose: () => void }
  * between Adam and Lina, shown one line at a time — Korean, its English
  * reading (romanization), and the English translation — distinct from the
  * single-word VocabCard above. Clicking a speaker's line also plays a
- * one-off "talk" animation on that character in the scene (see
- * activeDialogueSpeaker/dialogueTurnKey wiring in World2Page below). */
+ * one-off "talk" animation (or, for Cluby, a little reaction hop) on that
+ * character in the scene (see activeDialogueSpeaker/dialogueTurnKey wiring
+ * in World2Page below). */
 function DialogueCard({
   line,
   index,
   total,
+  playerName,
   onPrev,
   onNext,
   onClose,
@@ -176,11 +178,15 @@ function DialogueCard({
   line: DialogueLine;
   index: number;
   total: number;
+  /** "Adam" or "Lina" — whichever the visitor is currently walking as, so a
+   * `line.speaker === "player"` line is labelled with their actual name
+   * rather than a generic "Player". */
+  playerName: string;
   onPrev: () => void;
   onNext: () => void;
   onClose: () => void;
 }) {
-  const speakerLabel = line.speaker === "adam" ? "Adam" : "Lina";
+  const speakerLabel = line.speaker === "player" ? playerName : "Cluby";
   return (
     <div className="absolute inset-x-3 bottom-3 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-96 rounded-lg border border-[#FFF9EC]/15 bg-[#2E2E2E]/95 backdrop-blur p-4 shadow-xl">
       <div className="flex items-start justify-between gap-2">
@@ -588,6 +594,7 @@ export default function World2Page() {
                   line={currentLine}
                   index={dialogueIndex ?? 0}
                   total={room.dialogue.length}
+                  playerName={playerAvatar === "adam" ? "Adam" : "Lina"}
                   onPrev={prevLine}
                   onNext={nextLine}
                   onClose={closeDialogue}
@@ -673,7 +680,7 @@ export default function World2Page() {
               <p className="font-semibold">KLOVERS World 2 — the entrance</p>
               <p className="text-[#FFF9EC]/80">
                 {fillNames(
-                  "You're walking as {player}, with {companion} alongside. Walk through 포장마차 (the street cart) or 편의점 (the convenience store) with the arrow keys, or click one, to start learning.",
+                  "You're walking as {player}, with Cluby close by. Walk through 포장마차 (the street cart) or 편의점 (the convenience store) with the arrow keys, or click one, to start learning.",
                   playerAvatar,
                 )}
               </p>

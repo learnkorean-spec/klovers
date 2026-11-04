@@ -2,14 +2,12 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { useTiledTexture, paintPlanks } from "../game/environment/textures";
 import {
-  Learner,
   LearnerPlaceholder,
   Hotspot,
   Cluby,
   Player,
   FollowCamera,
   useLearnerReactions,
-  companionOf,
   DEFAULT_PLAYER_AVATAR,
   type PlayableAvatar,
   type VocabItem,
@@ -29,6 +27,9 @@ const PLAYER_BOUNDS = { x: [-2.0, 2.3] as [number, number], z: [-0.9, 1.8] as [n
  * where Adam picks snacks and drinks and practices asking the price and
  * counting numbers at the register, Lina helping him read the labels,
  * Cluby curled up by the door" — picked over Variant B's daytime/open-door
+ * (Re, 4 Nov 2026: the shipped scene now seats only one learner — Adam or
+ * Lina, whichever the visitor picked — with Cluby as the one who's always
+ * there; see shared.tsx's `PlayableAvatar` doc comment)
  * version because its warm hanging lamp and glass night-lit entrance match
  * the dusk-street-cart room's own palette (ivory #FFF9EC, KLOVERS yellow
  * #FFFF00, charcoal #2E2E2E, plus the brief's own warm tan #FFE99A),
@@ -49,16 +50,20 @@ export const VOCAB: VocabItem[] = [
   { id: "gyesandae", korean: "계산대", pronunciation: "gye-san-dae", arabic: "الكاشير", english: "checkout counter" },
 ];
 
-/** A short, real exchange between Adam and Lina picking snacks and paying —
- * reuses this room's own vocabulary (과자, 얼마예요?, 주세요) so the
- * words-in-isolation hotspots and this back-and-forth reinforce each other.
- * Friends shopping together, per canon — nothing romantic. */
+/** A short, real exchange picking snacks and paying — reuses this room's own
+ * vocabulary (과자, 얼마예요?, 하나) so the words-in-isolation hotspots and
+ * this back-and-forth reinforce each other.
+ *
+ * Re, 4 Nov 2026: rewritten from an Adam↔Lina exchange to player↔Cluby, now
+ * that only one human renders in this room (see shared.tsx's
+ * `PlayableAvatar` doc comment) — Cluby hints and cheers the player on
+ * rather than shopping alongside them. */
 export const DIALOGUE: DialogueLine[] = [
-  { speaker: "adam", korean: "과자 어디 있어?", reading: "gwa-ja eo-di i-sseo?", english: "Where are the snacks?" },
-  { speaker: "lina", korean: "저기 있어, 같이 가자.", reading: "jeo-gi i-sseo, ga-chi ga-ja.", english: "They're over there, let's go together." },
-  { speaker: "adam", korean: "이거 얼마예요?", reading: "i-geo eol-ma-ye-yo?", english: "How much is this?" },
-  { speaker: "lina", korean: "삼천 원이에요.", reading: "sam-cheon won-i-e-yo.", english: "It's 3,000 won." },
-  { speaker: "adam", korean: "네, 이거 하나 주세요.", reading: "ne, i-geo ha-na ju-se-yo.", english: "Okay, one of these, please." },
+  { speaker: "cluby", korean: "과자는 저기 있어!", reading: "gwa-ja-neun jeo-gi i-sseo!", english: "The snacks are over there!" },
+  { speaker: "player", korean: "이거 얼마예요?", reading: "i-geo eol-ma-ye-yo?", english: "How much is this?" },
+  { speaker: "cluby", korean: "삼천 원이야. 계산대로 가자!", reading: "sam-cheon won-i-ya. gye-san-dae-ro ga-ja!", english: "It's 3,000 won. Let's go to the checkout!" },
+  { speaker: "player", korean: "네, 이거 하나 주세요.", reading: "ne, i-geo ha-na ju-se-yo.", english: "Okay, one of these, please." },
+  { speaker: "cluby", korean: "진짜 잘했어! 이제 '둘'도 배워보자.", reading: "jin-jja jal-hae-sseo! i-je 'dul'-do bae-wo-bo-ja.", english: "Great job! Now let's learn 'dul' (two) too." },
 ];
 
 /** Warm hanging lamp over the register, and the store's dark night window —
@@ -264,13 +269,12 @@ export default function ConvenienceStoreScene({
   onSelectVocab?: (vocab: VocabItem) => void;
   /** Who is "speaking" the dialogue line currently shown in the page's
    * DialogueCard, or null when it's closed — same contract as World2Scene. */
-  activeDialogueSpeaker?: "adam" | "lina" | null;
+  activeDialogueSpeaker?: "player" | "cluby" | null;
   /** Bumped by the page on every dialogue-line change, same as World2Scene. */
   dialogueTurnKey?: number;
 }) {
   const floor = useTiledTexture(paintPlanks, 5, 3);
-  const { adamControl, linaControl, playerControl, companionControl, react } = useLearnerReactions(playerAvatar);
-  const companionAvatar = companionOf(playerAvatar);
+  const { playerControl, clubyReact, react } = useLearnerReactions();
   const playerRef = useRef<Group>(null);
   const handleSelect = (id: string) => {
     const vocab = VOCAB.find((v) => v.id === id);
@@ -280,8 +284,11 @@ export default function ConvenienceStoreScene({
   };
   useEffect(() => {
     if (!activeDialogueSpeaker) return;
-    const control = activeDialogueSpeaker === "adam" ? adamControl : linaControl;
-    control.current.once = "talk";
+    if (activeDialogueSpeaker === "player") {
+      playerControl.current.once = "talk";
+    } else {
+      clubyReact.current.pulse = 1;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dialogueTurnKey]);
   // "하나" and "둘" are two separate vocab items in AI Room Lab's own brief —
@@ -326,29 +333,26 @@ export default function ConvenienceStoreScene({
       <Checkout onSelect={() => handleSelect("gyesandae")} />
       <PriceTags onSelectPrice={() => handleSelect("eolmayeyo")} onSelectCount={handleCount} />
       <FollowCamera target={playerRef} control={playerControl} />
-      <Suspense
-        fallback={
-          <>
-            <LearnerPlaceholder x={0.5} z={0.9} />
-            <LearnerPlaceholder x={1.3} z={0.6} />
-          </>
-        }
-      >
+      <Suspense fallback={<LearnerPlaceholder x={0.85} z={0.8} />}>
         {/* The learner's own character — keyboard-controlled (arrow keys /
             WASD), starts at the shelf reaching for a snack, then can walk
-            around the store */}
+            around the store. Re, 4 Nov 2026: "student must choose a
+            character and move with one only" — re-centred (was x=0.5,
+            offset to leave room for the companion that stood at x=1.15) now
+            that this is the only human in the scene. */}
         <Player
           avatar={playerAvatar}
-          initial={{ x: 0.5, z: 0.9, rotY: -Math.PI * 0.55 }}
+          initial={{ x: 0.85, z: 0.8, rotY: -Math.PI * 0.55 }}
           bounds={PLAYER_BOUNDS}
           control={playerControl}
           exposedRef={playerRef}
         />
-        {/* The companion beside them, pointing at the label */}
-        <Learner avatar={companionAvatar} x={1.15} z={0.75} rotY={-Math.PI * 0.4} control={companionControl} />
       </Suspense>
-      {/* Cluby curled up by the door, per the brief */}
-      <Cluby x={2.3} y={0.12} z={0.9} />
+      {/* Cluby curled up by the door, per the brief — also the dialogue/
+          reaction partner now (see `clubyReact` above), since the companion
+          learner that used to stand beside the player is gone from this
+          scene entirely. */}
+      <Cluby x={2.3} y={0.12} z={0.9} reactRef={clubyReact} />
     </group>
   );
 }

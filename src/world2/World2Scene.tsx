@@ -2,14 +2,12 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { useTiledTexture, paintPlanks, paintPaving } from "../game/environment/textures";
 import {
-  Learner,
   LearnerPlaceholder,
   Hotspot,
   Cluby,
   Player,
   FollowCamera,
   useLearnerReactions,
-  companionOf,
   DEFAULT_PLAYER_AVATAR,
   type PlayableAvatar,
   type VocabItem,
@@ -34,17 +32,22 @@ export const VOCAB: VocabItem[] = [
   { id: "juseyo", korean: "주세요", pronunciation: "ju-se-yo", arabic: "من فضلك أعطني", english: "please give me" },
 ];
 
-/** A short, real exchange between Adam and Lina ordering at the cart — the
- * "practice the conversation" feature. Reuses this room's own vocabulary
- * (떡볶이, 김밥, 주세요) plus 얼마예요? so the two words-in-isolation hotspots
- * and this back-and-forth reinforce each other. Friends ordering food
- * together, per canon — nothing romantic. */
+/** A short, real exchange ordering at the cart — the "practice the
+ * conversation" feature. Reuses this room's own vocabulary (떡볶이, 김밥,
+ * 주세요) plus 얼마예요? so the two words-in-isolation hotspots and this
+ * back-and-forth reinforce each other.
+ *
+ * Re, 4 Nov 2026: rewritten from an Adam↔Lina exchange to player↔Cluby, now
+ * that only one human renders in this room (see shared.tsx's
+ * `PlayableAvatar` doc comment). Cluby hints and encourages — per his own
+ * canon role (`give_hints`, never an all-knowing teacher) — he doesn't order
+ * or eat anything himself. */
 export const DIALOGUE: DialogueLine[] = [
-  { speaker: "lina", korean: "여기 뭐 먹을까?", reading: "yeo-gi mwo meo-geul-kka?", english: "What should we eat here?" },
-  { speaker: "adam", korean: "떡볶이 하나 주세요.", reading: "tteok-bok-ki ha-na ju-se-yo.", english: "One tteokbokki, please." },
-  { speaker: "lina", korean: "저는 김밥 주세요.", reading: "jeo-neun gim-bap ju-se-yo.", english: "I'll have gimbap, please." },
-  { speaker: "adam", korean: "이거 얼마예요?", reading: "i-geo eol-ma-ye-yo?", english: "How much is this?" },
-  { speaker: "lina", korean: "진짜 맛있겠다!", reading: "jin-jja ma-sit-get-da!", english: "This looks so good!" },
+  { speaker: "cluby", korean: "저기 봐! 떡볶이야. 맵지만 진짜 맛있어!", reading: "jeo-gi bwa! tteok-bok-ki-ya. maep-ji-man jin-jja ma-si-sseo!", english: "Look over there! That's tteokbokki. It's spicy but really good!" },
+  { speaker: "player", korean: "떡볶이 하나 주세요.", reading: "tteok-bok-ki ha-na ju-se-yo.", english: "One tteokbokki, please." },
+  { speaker: "cluby", korean: "잘했어! 이제 '얼마예요?'라고 물어봐.", reading: "jal-hae-sseo! i-je 'eol-ma-ye-yo?' ra-go mu-reo-bwa.", english: "Well done! Now ask 'how much is it?'." },
+  { speaker: "player", korean: "이거 얼마예요?", reading: "i-geo eol-ma-ye-yo?", english: "How much is this?" },
+  { speaker: "cluby", korean: "우와, 김밥도 진짜 맛있겠다!", reading: "u-wa, gim-bap-do jin-jja ma-sit-get-da!", english: "Wow, the gimbap looks really good too!" },
 ];
 
 /**
@@ -226,7 +229,7 @@ export default function World2Scene({
   dialogueTurnKey = -1,
 }: {
   /** Which canon learner the visitor is walking as this visit — Adam or
-   * Lina; the other stands in as the companion. See shared.tsx's doc
+   * Lina; the only human rendered in this room. See shared.tsx's doc
    * comment on `PlayableAvatar`. */
   playerAvatar?: PlayableAvatar;
   /** Fired when the learner clicks a food/menu hotspot, with the matching
@@ -234,9 +237,10 @@ export default function World2Scene({
    * reaction, not a timer or a hover. */
   onSelectVocab?: (vocab: VocabItem) => void;
   /** Who is "speaking" the dialogue line currently shown in the page's
-   * DialogueCard, or null when it's closed — drives a one-off talk
-   * animation on that character each time the line changes. */
-  activeDialogueSpeaker?: "adam" | "lina" | null;
+   * DialogueCard, or null when it's closed — drives a one-off "talk" clip
+   * on the player, or a little reaction hop on Cluby, each time the line
+   * changes. */
+  activeDialogueSpeaker?: "player" | "cluby" | null;
   /** Bumped by the page every time the displayed dialogue line changes, so
    * the talk animation retriggers even if the same speaker says two lines
    * in a row (speaker alone wouldn't change in that case). */
@@ -246,11 +250,9 @@ export default function World2Scene({
   // instead of a flat plane, so the ground reads as a real street.
   const ground = useTiledTexture(paintPaving, 6, 6);
   // Shared with FoodCart's hotspots below: clicking a word plays a one-off
-  // reaction on both learners (the companion "explains" it, the player
-  // "reacts" to it) — cross-fades back to idle automatically once the clip
-  // finishes.
-  const { adamControl, linaControl, playerControl, companionControl, react } = useLearnerReactions(playerAvatar);
-  const companionAvatar = companionOf(playerAvatar);
+  // reaction (the player waves, Cluby hops) — cross-fades/decays back to
+  // idle automatically on its own.
+  const { playerControl, clubyReact, react } = useLearnerReactions();
   const playerRef = useRef<Group>(null);
   const handleSelect = (id: string) => {
     const vocab = VOCAB.find((v) => v.id === id);
@@ -259,13 +261,15 @@ export default function World2Scene({
     onSelectVocab?.(vocab);
   };
   // Dialogue card playback: whoever is "speaking" the current line plays a
-  // one-off "talk" clip, cross-fading back to idle on its own once done —
-  // same mechanism `react()` above uses, just driven by the page instead of
-  // a hotspot click.
+  // one-off "talk" clip (player) or reaction hop (Cluby) — same mechanism
+  // `react()` above uses, just driven by the page instead of a hotspot click.
   useEffect(() => {
     if (!activeDialogueSpeaker) return;
-    const control = activeDialogueSpeaker === "adam" ? adamControl : linaControl;
-    control.current.once = "talk";
+    if (activeDialogueSpeaker === "player") {
+      playerControl.current.once = "talk";
+    } else {
+      clubyReact.current.pulse = 1;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dialogueTurnKey]);
   return (
@@ -306,40 +310,35 @@ export default function World2Scene({
       </mesh>
       <FoodCart onSelectVocab={handleSelect} />
       <FollowCamera target={playerRef} control={playerControl} />
-      <Suspense
-        fallback={
-          <>
-            <LearnerPlaceholder x={-0.6} z={1.1} />
-            <LearnerPlaceholder x={0.5} z={1.1} />
-          </>
-        }
-      >
+      <Suspense fallback={<LearnerPlaceholder x={-0.1} z={1.1} />}>
         {/* The learner's own character — keyboard-controlled (arrow keys /
-            WASD), starts ordering at the counter angled toward camera and
-            the companion, then can walk around */}
+            WASD), starts ordering at the counter angled toward camera. Re,
+            4 Nov 2026: "student must choose a character and move with one
+            only" — re-centred (was x=-0.6, offset to leave room for the
+            companion that stood at x=0.5) now that this is the only human
+            in the scene. */}
         <Player
           avatar={playerAvatar}
-          initial={{ x: -0.6, z: 1.1, rotY: Math.PI * 0.8 }}
+          initial={{ x: -0.1, z: 1.1, rotY: Math.PI * 0.8 }}
           bounds={PLAYER_BOUNDS}
           control={playerControl}
           exposedRef={playerRef}
         />
-        {/* The companion beside them, pointing at the menu */}
-        <Learner avatar={companionAvatar} x={0.5} z={1.1} rotY={Math.PI * 0.65} control={companionControl} />
       </Suspense>
-      {/* Cluby, left of the counter, clear of both learners and of the
-          camera's near field. Previously on the right (x=1.6, z=1.9,
-          elevated to y=0.5 to sit "on a stool") to keep clear of Lina's
-          torso during SlowOrbit's camera sway — but at z=1.9 it was also
-          the single nearest thing to the old tight camera, so perspective
-          blew it up into an oversized shape overlapping the vocab-card UI
-          (Re, 4 Nov 2026: "game looks so bad"). Moving it to the opposite
-          side entirely (left, away from both the learners on the right and
-          the UI card's own corner) solves the same silhouette-overlap
-          problem without relying on being close to camera, and grounds it
-          like every other room's Cluby instead of floating on an invisible
-          stool. */}
-      <Cluby x={-1.6} y={0} z={1.3} />
+      {/* Cluby, left of the counter, clear of the camera's near field.
+          Previously on the right (x=1.6, z=1.9, elevated to y=0.5 to sit
+          "on a stool") to keep clear of Lina's torso during SlowOrbit's
+          camera sway — but at z=1.9 it was also the single nearest thing to
+          the old tight camera, so perspective blew it up into an oversized
+          shape overlapping the vocab-card UI (Re, 4 Nov 2026: "game looks so
+          bad"). Moving it to the opposite side entirely (left, away from the
+          UI card's own corner) solves the same silhouette-overlap problem
+          without relying on being close to camera, and grounds it like every
+          other room's Cluby instead of floating on an invisible stool.
+          Now also the dialogue/reaction partner (see `clubyReact` above),
+          since the companion learner that used to stand opposite the player
+          is gone from this scene entirely. */}
+      <Cluby x={-1.6} y={0} z={1.3} reactRef={clubyReact} />
     </group>
   );
 }
