@@ -284,17 +284,21 @@ export default function World2Scene({
           keeps the warm evening mood but actually lets the counter, food
           props and characters read clearly instead of sinking into the
           alley's fog. */}
-      <hemisphereLight args={["#FFE9CC", "#A08466", 0.8]} />
-      <directionalLight position={[-6, 4, -2]} intensity={0.42} color="#C4D3EC" />
+      {/* Re, 4 Nov 2026 (second pass, "yes fix"): still reading a shade too
+          dark/warm even after the above — another step up across the board
+          (not just the key light) so the scene stays legible without
+          flattening into daylight. */}
+      <hemisphereLight args={["#FFE9CC", "#A08466", 1.0]} />
+      <directionalLight position={[-6, 4, -2]} intensity={0.55} color="#C4D3EC" />
       <directionalLight
         position={[3, 5, 2.5]}
-        intensity={2.4}
+        intensity={2.9}
         color="#FFCC8E"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}
       />
-      <pointLight position={[0, 2.1, 0.3]} intensity={1.6} color="#FFD24C" distance={5.5} />
+      <pointLight position={[0, 2.1, 0.3]} intensity={2.0} color="#FFD24C" distance={5.5} />
       <Alley />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[16, 16]} />

@@ -96,7 +96,7 @@ function StoreShell() {
         <sphereGeometry args={[0.05, 12, 10]} />
         <meshStandardMaterial color="#FFFF00" emissive="#FFD24C" emissiveIntensity={1.2} />
       </mesh>
-      <pointLight position={[1.6, 2.3, 0.3]} intensity={1.1} color="#FFD98A" distance={3.5} />
+      <pointLight position={[1.6, 2.3, 0.3]} intensity={1.4} color="#FFD98A" distance={3.5} />
     </group>
   );
 }
@@ -301,11 +301,16 @@ export default function ConvenienceStoreScene({
       {/* Same hemisphere + warm key + cool fill recipe as World1's own
           lighting (src/game/World.tsx's LIGHT constant) — see World2Scene's
           own comment for the full rationale. */}
-      <hemisphereLight args={["#FFE9CC", "#A08466", 0.4]} />
-      <directionalLight position={[-6, 4, -2]} intensity={0.22} color="#C4D3EC" />
+      {/* Re, 4 Nov 2026 ("yes fix"): a late-night store should stay dimmer
+          than the dusk street cart, but it was reading as flat dark rather
+          than moodily lit — stepped every light up by roughly the same
+          proportion as the cart room's own brightness pass, keeping the
+          store noticeably darker than the cart but no longer murky. */}
+      <hemisphereLight args={["#FFE9CC", "#A08466", 0.55]} />
+      <directionalLight position={[-6, 4, -2]} intensity={0.32} color="#C4D3EC" />
       <directionalLight
         position={[2, 5, 3]}
-        intensity={1.3}
+        intensity={1.7}
         color="#FFCC8E"
         castShadow
         shadow-mapSize={[2048, 2048]}
