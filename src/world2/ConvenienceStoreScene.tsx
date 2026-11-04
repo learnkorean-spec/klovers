@@ -359,16 +359,19 @@ export default function ConvenienceStoreScene({
       <World1Atmosphere id="w2-store" hx={10} hz={10} />
       <StoreShell />
       {/* The shop's own plank floor, between its side walls and out past
-          the camera; beyond it, World1's stone plaza (Backdrop) carries on. */}
+          the camera; beyond it, World1's stone plaza (Backdrop) carries on.
+          No photo roughness map: it's varnish-shiny (made for World1's
+          roofed café), and in this open shop the direct sun glinted off it
+          as a white smear — a flat matte finish instead. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 1.2]} receiveShadow>
         <planeGeometry args={[9.2, 10]} />
         <meshStandardMaterial
           key={floorPhoto ? "photo" : "painted"}
           map={floorPhoto?.map ?? floor}
           normalMap={floorPhoto?.normal ?? null}
-          roughnessMap={floorPhoto?.rough ?? null}
           color={floorPhoto ? "#FFF4E6" : "#ffffff"}
-          roughness={floorPhoto ? 1 : 0.8}
+          roughness={0.88}
+          envMapIntensity={0.6}
           onBeforeCompile={floorBreakup}
           customProgramCacheKey={FLOOR_BREAKUP_KEY}
         />
