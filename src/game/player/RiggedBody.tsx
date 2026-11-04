@@ -735,7 +735,15 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
     [mixer, root],
   );
 
-  const st = useMemo(() => ({ base: null as Clip | null, once: null as Clip | null, onceEnd: 0, t: 0, yaw: 0, pitch: 0, pending: 0, odd: false }), []);
+  // Tied to `root` (not a one-time []): when `model` changes at runtime
+  // (World2's Adam/Lina swap) `root`/`mixer`/`actions` are rebuilt for the
+  // new body, but a `st` surviving from the old one would still say
+  // `base === c.clip` ("idle" === "idle") and skip ever calling .play() on
+  // the new mixer's actions — the new skeleton would sit in its raw bind
+  // pose (a T-pose) forever, since nothing had started a clip on it. A
+  // fresh `st` per `root` forces that first .play() every time the body
+  // underneath changes.
+  const st = useMemo(() => ({ base: null as Clip | null, once: null as Clip | null, onceEnd: 0, t: 0, yaw: 0, pitch: 0, pending: 0, odd: false }), [root]);
   const bones = useMemo(() => {
     let head: Bone | null = null;
     let neck: Bone | null = null;
