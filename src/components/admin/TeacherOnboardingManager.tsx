@@ -151,21 +151,21 @@ function TeacherDialog({
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label>Full name</Label>
-            <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="Teacher's full name" />
+            <Label htmlFor="teacher-name">Full name</Label>
+            <Input id="teacher-name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="Teacher's full name" />
           </div>
           <div className="space-y-1.5">
-            <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="teacher@example.com" />
+            <Label htmlFor="teacher-email">Email</Label>
+            <Input id="teacher-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="teacher@example.com" />
           </div>
           <div className="space-y-1.5">
-            <Label>Phone (optional)</Label>
-            <Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+20 1xx xxx xxxx" />
+            <Label htmlFor="teacher-phone">Phone (optional)</Label>
+            <Input id="teacher-phone" value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+20 1xx xxx xxxx" />
           </div>
           <div className="space-y-1.5">
-            <Label>Status</Label>
+            <Label htmlFor="teacher-status">Status</Label>
             <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as TeacherStatus })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger id="teacher-status"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.entries(TEACHER_STATUS_LABEL).map(([v, label]) => (
                   <SelectItem key={v} value={v}>{label}</SelectItem>
@@ -174,8 +174,9 @@ function TeacherDialog({
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Notes (optional)</Label>
+            <Label htmlFor="teacher-notes">Notes (optional)</Label>
             <Textarea
+              id="teacher-notes"
               value={form.notes ?? ""}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               placeholder="Anything worth remembering about this teacher"
@@ -184,8 +185,8 @@ function TeacherDialog({
           </div>
           {!isEdit && (
             <div className="space-y-1.5">
-              <Label>Courses to onboard toward</Label>
-              <div className="grid grid-cols-2 gap-2 rounded-lg border p-2.5">
+              <span id="teacher-courses-label" className="text-sm font-medium leading-none">Courses to onboard toward</span>
+              <div className="grid grid-cols-2 gap-2 rounded-lg border p-2.5" role="group" aria-labelledby="teacher-courses-label">
                 {LEVELS.map((l) => (
                   <label key={l.key} className="flex items-center gap-2 text-sm">
                     <Checkbox
@@ -526,8 +527,8 @@ export default function TeacherOnboardingManager() {
                 {/* General steps — once per teacher, not tied to a course */}
                 {generalSteps.length > 0 && (
                   <div className="space-y-1.5">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">General onboarding</Label>
-                    <div className="space-y-1 rounded-lg border p-2.5">
+                    <span id="teacher-general-steps-label" className="text-xs uppercase tracking-wide text-muted-foreground">General onboarding</span>
+                    <div className="space-y-1 rounded-lg border p-2.5" role="group" aria-labelledby="teacher-general-steps-label">
                       {generalSteps.map((step) => {
                         const progress = selected.stepProgress.find(
                           (p) => p.step_id === step.id && p.course_level_key === GENERAL_SCOPE_KEY,
@@ -550,7 +551,7 @@ export default function TeacherOnboardingManager() {
                 {/* Per-course checklists */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Courses</Label>
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground">Courses</span>
                     {(() => {
                       const assigned = new Set(selected.courseProgress.map((c) => c.course_level_key));
                       const available = LEVELS.filter((l) => !assigned.has(l.key));
@@ -603,14 +604,14 @@ export default function TeacherOnboardingManager() {
                             </AccordionTrigger>
                             <AccordionContent className="space-y-2.5 pb-3">
                               <div className="flex items-center gap-2">
-                                <Label className="text-xs shrink-0">Status</Label>
+                                <Label htmlFor={`teacher-course-status-${courseKey}`} className="text-xs shrink-0">Status</Label>
                                 <Select
                                   value={cp.status}
                                   onValueChange={(v) =>
                                     updateCourseStatus.mutate({ teacherId: selected.id, courseLevelKey: courseKey, status: v as CourseProgressStatus })
                                   }
                                 >
-                                  <SelectTrigger className="h-7 text-xs w-36"><SelectValue /></SelectTrigger>
+                                  <SelectTrigger id={`teacher-course-status-${courseKey}`} className="h-7 text-xs w-36"><SelectValue /></SelectTrigger>
                                   <SelectContent>
                                     {Object.entries(COURSE_PROGRESS_STATUS_LABEL).map(([v, label]) => (
                                       <SelectItem key={v} value={v}>{label}</SelectItem>

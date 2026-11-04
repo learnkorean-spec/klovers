@@ -151,8 +151,9 @@ const PromoCodesManager = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label className="text-xs">Code *</Label>
+                <Label htmlFor="promo-code" className="text-xs">Code *</Label>
                 <Input
+                  id="promo-code"
                   placeholder="e.g. SAVE20"
                   value={form.code}
                   onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
@@ -160,8 +161,9 @@ const PromoCodesManager = () => {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Description</Label>
+                <Label htmlFor="promo-description" className="text-xs">Description</Label>
                 <Input
+                  id="promo-description"
                   placeholder="e.g. 20% off for Ramadan"
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -171,9 +173,9 @@ const PromoCodesManager = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <Label className="text-xs">Discount Type</Label>
+                <Label htmlFor="promo-discount-type" className="text-xs">Discount Type</Label>
                 <Select value={form.discount_type} onValueChange={v => setForm(f => ({ ...f, discount_type: v as "pct" | "flat" }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="promo-discount-type"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pct">Percentage (%)</SelectItem>
                     <SelectItem value="flat">Fixed Amount</SelectItem>
@@ -181,8 +183,9 @@ const PromoCodesManager = () => {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">{form.discount_type === "pct" ? "Percentage" : "Amount"} *</Label>
+                <Label htmlFor="promo-discount-value" className="text-xs">{form.discount_type === "pct" ? "Percentage" : "Amount"} *</Label>
                 <Input
+                  id="promo-discount-value"
                   type="number"
                   placeholder={form.discount_type === "pct" ? "e.g. 15" : "e.g. 10"}
                   value={form.discount_value}
@@ -190,9 +193,9 @@ const PromoCodesManager = () => {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Currency</Label>
+                <Label htmlFor="promo-currency" className="text-xs">Currency</Label>
                 <Select value={form.currency} onValueChange={v => setForm(f => ({ ...f, currency: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="promo-currency"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="any">Any (USD + EGP)</SelectItem>
                     <SelectItem value="USD">USD only</SelectItem>
@@ -204,8 +207,9 @@ const PromoCodesManager = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label className="text-xs">Max Uses (leave blank = unlimited)</Label>
+                <Label htmlFor="promo-max-uses" className="text-xs">Max Uses (leave blank = unlimited)</Label>
                 <Input
+                  id="promo-max-uses"
                   type="number"
                   placeholder="e.g. 50"
                   value={form.max_uses}
@@ -213,8 +217,9 @@ const PromoCodesManager = () => {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Expires At (leave blank = never)</Label>
+                <Label htmlFor="promo-expires-at" className="text-xs">Expires At (leave blank = never)</Label>
                 <Input
+                  id="promo-expires-at"
                   type="date"
                   value={form.expires_at}
                   onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))}

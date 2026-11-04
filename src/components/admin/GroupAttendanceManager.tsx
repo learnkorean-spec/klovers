@@ -770,9 +770,9 @@ const GroupAttendanceManager = ({
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 space-y-1">
-                    <Label>Group</Label>
+                    <Label htmlFor="attendance-group">Group</Label>
                     <Select value={selectedGroup} onValueChange={(v) => { setSelectedGroup(v); setSelectedSession(""); }}>
-                      <SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger>
+                      <SelectTrigger id="attendance-group"><SelectValue placeholder="Select group" /></SelectTrigger>
                       <SelectContent>
                         {groups.map(g => {
                           const schedule = [g.schedule_day, g.schedule_time].filter(Boolean).join(" · ");
@@ -808,8 +808,8 @@ const GroupAttendanceManager = ({
                   })()}
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Session Date</Label>
+                <div className="space-y-2" role="group" aria-labelledby="attendance-session-date-label">
+                  <span id="attendance-session-date-label" className="text-sm font-medium leading-none">Session Date</span>
                   {groupPackageInfo?.day_of_week != null && (
                     <div className="flex flex-wrap gap-1.5">
                       <Badge variant="secondary" className="text-xs font-normal gap-1">
@@ -847,9 +847,9 @@ const GroupAttendanceManager = ({
 
               {sessions.length > 0 && (
                 <div className="space-y-1">
-                  <Label>Session</Label>
+                  <Label htmlFor="attendance-session">Session</Label>
                   <Select value={selectedSession} onValueChange={setSelectedSession}>
-                    <SelectTrigger><SelectValue placeholder="Select session" /></SelectTrigger>
+                    <SelectTrigger id="attendance-session"><SelectValue placeholder="Select session" /></SelectTrigger>
                     <SelectContent>
                       {sessions.map(s => (
                         <SelectItem key={s.id} value={s.id}>
@@ -1306,13 +1306,13 @@ const GroupAttendanceManager = ({
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1">
-              <Label>Group Name</Label>
-              <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Group name" />
+              <Label htmlFor="attendance-edit-group-name">Group Name</Label>
+              <Input id="attendance-edit-group-name" value={editName} onChange={e => setEditName(e.target.value)} placeholder="Group name" />
             </div>
             <div className="space-y-1">
-              <Label>Level</Label>
+              <Label htmlFor="attendance-edit-level">Level</Label>
               <Select value={editLevel} onValueChange={setEditLevel}>
-                <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
+                <SelectTrigger id="attendance-edit-level"><SelectValue placeholder="Select level" /></SelectTrigger>
                 <SelectContent>
                   {LEVEL_SELECT_OPTIONS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
                 </SelectContent>
@@ -1320,26 +1320,26 @@ const GroupAttendanceManager = ({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>Day</Label>
+                <Label htmlFor="attendance-edit-day">Day</Label>
                 {adminWeekdays.length > 0 ? (
                   <Select value={editDay} onValueChange={setEditDay}>
-                    <SelectTrigger><SelectValue placeholder="Select day" /></SelectTrigger>
+                    <SelectTrigger id="attendance-edit-day"><SelectValue placeholder="Select day" /></SelectTrigger>
                     <SelectContent>
                       {adminWeekdays.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 ) : (
-                  <Input value={editDay} onChange={e => setEditDay(e.target.value)} placeholder="e.g. Monday" />
+                  <Input id="attendance-edit-day" value={editDay} onChange={e => setEditDay(e.target.value)} placeholder="e.g. Monday" />
                 )}
               </div>
               <div className="space-y-1">
-                <Label>Time</Label>
-                <Input value={editTime} onChange={e => setEditTime(e.target.value)} placeholder="e.g. 18:00" />
+                <Label htmlFor="attendance-edit-time">Time</Label>
+                <Input id="attendance-edit-time" value={editTime} onChange={e => setEditTime(e.target.value)} placeholder="e.g. 18:00" />
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Capacity</Label>
-              <Input type="number" value={editCapacity} onChange={e => setEditCapacity(e.target.value)} placeholder="Max students" />
+              <Label htmlFor="attendance-edit-capacity">Capacity</Label>
+              <Input id="attendance-edit-capacity" type="number" value={editCapacity} onChange={e => setEditCapacity(e.target.value)} placeholder="Max students" />
             </div>
           </div>
           <DialogFooter>
@@ -1361,8 +1361,8 @@ const GroupAttendanceManager = ({
           </DialogHeader>
 
           {/* Current members */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Current Members ({groupMembers.length})</Label>
+          <div className="space-y-2" role="group" aria-labelledby="attendance-current-members-label">
+            <span id="attendance-current-members-label" className="text-sm font-semibold">Current Members ({groupMembers.length})</span>
             {groupMembers.length === 0 ? (
               <p className="text-muted-foreground text-sm" role="status">No students in this group yet.</p>
             ) : (
@@ -1383,8 +1383,8 @@ const GroupAttendanceManager = ({
           </div>
 
           {/* Add students */}
-          <div className="space-y-2 pt-2 border-t border-border">
-            <Label className="text-sm font-semibold">Add Students</Label>
+          <div className="space-y-2 pt-2 border-t border-border" role="group" aria-labelledby="attendance-add-students-label">
+            <span id="attendance-add-students-label" className="text-sm font-semibold">Add Students</span>
             <Input
               placeholder="Search by name or email..."
               aria-label="Search by name or email"
@@ -1426,8 +1426,9 @@ const GroupAttendanceManager = ({
               Send a group_match email to every active member in every active group.
             </p>
             <div className="space-y-1">
-              <Label>Optional message</Label>
+              <Label htmlFor="attendance-notify-message">Optional message</Label>
               <Textarea
+                id="attendance-notify-message"
                 placeholder="Add a custom message (shown in every email)..."
                 value={broadcastMessage}
                 onChange={(e) => setBroadcastMessage(e.target.value)}
