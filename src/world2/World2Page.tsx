@@ -23,6 +23,7 @@ import ConvenienceStoreScene, {
 } from "./ConvenienceStoreScene";
 import EntranceScene from "./EntranceScene";
 import PostFinish from "./PostFinish";
+import { useWorld1Quality, world1CanvasProps } from "./World1Stage";
 import {
   DEFAULT_PLAYER_AVATAR,
   povMode,
@@ -89,7 +90,7 @@ const ROOMS: Room[] = [
     cameraFov: 42,
     Scene: World2Scene,
     hint: "Use WASD or the arrow keys to walk {player} around. Tap the skewers, tteokbokki, kimbap, or the menu board to learn the word.",
-    title: "A warm Korean street food cart at dusk (포장마차)",
+    title: "A Korean street food cart (포장마차)",
     body:
       "{player} orders at the counter while Cluby watches from a stool, calling out hints when a new word comes up. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
     dialogue: CART_DIALOGUE,
@@ -105,7 +106,7 @@ const ROOMS: Room[] = [
     cameraFov: 44,
     Scene: ConvenienceStoreScene,
     hint: "Use WASD or the arrow keys to walk {player} around. Tap the shelf, fridge, checkout, or a price tag to learn the word.",
-    title: "A late-night Korean convenience store (편의점)",
+    title: "A Korean convenience store (편의점)",
     body:
       "{player} picks snacks and drinks from the shelves while Cluby curls up by the door, cheering {playerObj} on as new words come up. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
     dialogue: STORE_DIALOGUE,
@@ -510,6 +511,8 @@ export default function World2Page() {
   // Which canon learner the visitor is walking as this visit — see
   // CharacterPicker's doc comment above.
   const [playerAvatar, setPlayerAvatar] = useState<PlayableAvatar>(DEFAULT_PLAYER_AVATAR);
+  // The live game's own quality tier (shadows, pixel ratio, AO) for this device.
+  const quality = useWorld1Quality();
   const togglePov = () => {
     povMode.firstPerson = !povMode.firstPerson;
     setFirstPerson(povMode.firstPerson);
@@ -569,7 +572,7 @@ export default function World2Page() {
     // unaffected by this page-level override.
     <div dir="ltr" className="min-h-screen bg-[#2E2E2E] text-[#FFF9EC]">
       <div className="sticky top-0 z-20 bg-[#2E2E2E]/90 backdrop-blur border-b border-[#FFF9EC]/10">
-        <div className="max-w-5xl mx-auto flex items-center gap-3 py-3 px-4 md:px-6">
+        <div className="max-w-[1400px] mx-auto flex items-center gap-3 py-3 px-4 md:px-6">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10">
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -587,7 +590,7 @@ export default function World2Page() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-4">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-6 space-y-4">
         {/* Overall progress across both rooms — visible from the entrance
             too, so a learner sees where they stand before picking a gate,
             not only once they're already inside a room. */}
@@ -648,17 +651,15 @@ export default function World2Page() {
             <div
               ref={stageRef}
               className={`relative overflow-hidden border border-[#FFF9EC]/10 bg-[#2E2E2E] ${
-                isFullscreen ? "h-screen w-screen" : "h-[75vh] rounded-lg"
+                isFullscreen ? "h-screen w-screen" : "h-[80vh] min-h-[420px] rounded-lg"
               }`}
             >
               <Canvas
                 key={room.id}
-                shadows
-                dpr={[1, 2]}
-                gl={{ antialias: true }}
-                camera={{ position: room.cameraPosition, fov: room.cameraFov }}
+                {...world1CanvasProps(quality)}
+                camera={{ position: room.cameraPosition, fov: room.cameraFov, near: 0.1, far: 120 }}
               >
-                <PostFinish />
+                {quality.post && <PostFinish />}
                 <Suspense fallback={null}>
                   {/* Re, 4 Nov 2026: "fix and make it as possible same
                       looking and function of world1" — the live /world
@@ -760,11 +761,11 @@ export default function World2Page() {
             <div
               ref={stageRef}
               className={`relative overflow-hidden border border-[#FFF9EC]/10 bg-[#2E2E2E] ${
-                isFullscreen ? "h-screen w-screen" : "h-[75vh] rounded-lg"
+                isFullscreen ? "h-screen w-screen" : "h-[80vh] min-h-[420px] rounded-lg"
               }`}
             >
-              <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }} camera={{ position: [0, 2.2, 10.5], fov: 52 }}>
-                <PostFinish />
+              <Canvas {...world1CanvasProps(quality)} camera={{ position: [0, 2.2, 10.5], fov: 52, near: 0.1, far: 120 }}>
+                {quality.post && <PostFinish />}
                 <Suspense fallback={null}>
                   <EntranceScene playerAvatar={playerAvatar} onEnterRoom={(id) => goTo(id)} />
                 </Suspense>

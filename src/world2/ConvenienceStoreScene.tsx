@@ -1,8 +1,9 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY, paintPlanks } from "../game/environment/textures";
-import { Kit, basket } from "../game/environment/kit";
+import { Kit, basket, hanokRoof, tree, pine } from "../game/environment/kit";
 import Batch from "../game/environment/Batch";
+import { World1Atmosphere } from "./World1Stage";
 import {
   LearnerPlaceholder,
   Hotspot,
@@ -69,21 +70,39 @@ export const DIALOGUE: DialogueLine[] = [
   { speaker: "cluby", korean: "진짜 잘했어! 이제 '둘'도 배워보자.", reading: "jin-jja jal-hae-sseo! i-je 'dul'-do bae-wo-bo-ja.", english: "Great job! Now let's learn 'dul' (two) too." },
 ];
 
-/** Warm hanging lamp over the register, and the store's dark night window —
- * the two things that read "late-night" rather than "any store". */
+/** The store's walls, and the warm hanging lamp over the register.
+ *
+ * Re, 4 Nov 2026 ("i need world 1 quality"): the walls used to be a single
+ * flat cream box against a painted night-street plane. Now they're built
+ * the way the live game builds its own rooms — timber-framed plaster walls
+ * on a stone footing, under a tiled hanok roof edge, from kit.ts's own
+ * materials and builders (drawn through the same Batch) — and the shop
+ * stands in the shared World1 landscape (World1Stage.tsx), trees behind. */
 function StoreShell() {
+  const walls = useMemo(() => {
+    const k = new Kit();
+    const H = 3.0;
+    // Back wall (local z = -1.6), and short side returns either end.
+    k.box("stoneWarm", [0, 0.15, -1.6], [9.2, 0.3, 0.45], true);
+    k.box("plaster", [0, 0.3 + H / 2, -1.6], [9, H, 0.3], true);
+    for (const x of [-4.5, -1.5, 1.5, 4.5]) k.box("woodDark", [x, 0.3 + H / 2, -1.42], [0.2, H, 0.18], true);
+    k.box("woodDark", [0, 0.3 + H - 0.08, -1.42], [9.2, 0.16, 0.18], true);
+    k.box("woodDark", [0, 1.05, -1.43], [9, 0.08, 0.14]);
+    for (const sx of [-1, 1]) {
+      k.box("stoneWarm", [sx * 4.6, 0.15, -0.5], [0.45, 0.3, 2.6], true);
+      k.box("plaster", [sx * 4.6, 0.3 + H / 2, -0.5], [0.3, H, 2.4], true);
+      k.box("woodDark", [sx * 4.6, 0.3 + H / 2, 0.7], [0.22, H, 0.22], true);
+      k.box("woodDark", [sx * 4.6, 0.3 + H - 0.08, -0.5], [0.22, 0.16, 2.6], true);
+    }
+    hanokRoof(k, 0, -2.3, 0.3 + H, 10.2, 2.0, 0.9);
+    tree(k, -6.4, -3.6, 1.0, true, 5);
+    pine(k, 6.2, -3.9, 1.0);
+    tree(k, 1.8, -5.6, 1.1, false, 9);
+    return k;
+  }, []);
   return (
     <group position={[0, 0, -2.2]}>
-      {/* dark street outside the window, well back so it fills the frame */}
-      <mesh position={[0, 2.6, -3.6]}>
-        <planeGeometry args={[22, 8]} />
-        <meshBasicMaterial color="#141022" />
-      </mesh>
-      {/* back wall */}
-      <mesh position={[0, 1.6, -1.6]} receiveShadow>
-        <boxGeometry args={[9, 3.2, 0.3]} />
-        <meshStandardMaterial color="#efe2c8" roughness={0.85} />
-      </mesh>
+      <Batch kit={walls} />
       {/* glass entrance door, stage right, night outside visible through it */}
       <group position={[2.6, 1.3, -0.2]}>
         <mesh>
@@ -283,11 +302,11 @@ export default function ConvenienceStoreScene({
   /** Bumped by the page on every dialogue-line change, same as World2Scene. */
   dialogueTurnKey?: number;
 }) {
-  const floor = useTiledTexture(paintPlanks, 5, 3);
+  const floor = useTiledTexture(paintPlanks, 4, 4.4);
   // Render-quality pass, 4 Nov 2026 — see EntranceScene.tsx's matching
   // comment: the same real photographed wood-plank floor World1's rooms
   // already use, upgraded in place once it downloads.
-  const floorPhoto = usePhotoFloor("planks", 5, 3);
+  const floorPhoto = usePhotoFloor("planks", 4, 4.4);
   // Re, 4 Nov 2026 ("make it as world1, that's not the same"): a basket of
   // goods by the wall — the same kit piece the live game's own rooms use,
   // clear of the player's walk bounds and every hotspot, so the store reads
@@ -332,34 +351,22 @@ export default function ConvenienceStoreScene({
     // the camera's default look-at (the origin) instead of re-deriving a
     // custom camera target.
     <group position={[-0.6, 0, 0]}>
-      {/* Same hemisphere + warm key + cool fill recipe as World1's own
-          lighting (src/game/World.tsx's LIGHT constant) — see World2Scene's
-          own comment for the full rationale. */}
-      {/* Re, 4 Nov 2026 ("yes fix"): a late-night store should stay dimmer
-          than the dusk street cart, but it was reading as flat dark rather
-          than moodily lit — stepped every light up by roughly the same
-          proportion as the cart room's own brightness pass, keeping the
-          store noticeably darker than the cart but no longer murky. */}
-      <hemisphereLight args={["#FFE9CC", "#A08466", 0.55]} />
-      <directionalLight position={[-6, 4, -2]} intensity={0.32} color="#C4D3EC" />
-      <directionalLight
-        position={[2, 5, 3]}
-        intensity={1.7}
-        color="#FFCC8E"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0005}
-      />
+      {/* Re, 4 Nov 2026 ("i need world 1 quality"): the live game's own
+          sky, landscape, haze and light rig (World1Stage.tsx) — replaces
+          this room's old dim late-night lights. */}
+      <World1Atmosphere id="w2-store" hx={10} hz={10} floor={{ cx: 0.15, cz: 0.45, w: 4.3, d: 2.7 }} />
       <StoreShell />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[14, 14]} />
+      {/* The shop's own plank floor, between its side walls and out past
+          the camera; beyond it, World1's stone plaza (Backdrop) carries on. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 1.2]} receiveShadow>
+        <planeGeometry args={[9.2, 10]} />
         <meshStandardMaterial
           key={floorPhoto ? "photo" : "painted"}
           map={floorPhoto?.map ?? floor}
           normalMap={floorPhoto?.normal ?? null}
           roughnessMap={floorPhoto?.rough ?? null}
-          color="#7a6a52"
-          roughness={floorPhoto ? 1 : 0.9}
+          color={floorPhoto ? "#FFF4E6" : "#ffffff"}
+          roughness={floorPhoto ? 1 : 0.8}
           onBeforeCompile={floorBreakup}
           customProgramCacheKey={FLOOR_BREAKUP_KEY}
         />

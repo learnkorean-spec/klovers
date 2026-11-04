@@ -18,6 +18,7 @@ import {
   type PlayableAvatar,
 } from "./shared";
 import RiggedBody from "../game/player/RiggedBody";
+import { World1Atmosphere } from "./World1Stage";
 
 /**
  * KLOVERS World 2 — the entrance courtyard, route /world2's landing view.
@@ -72,7 +73,7 @@ export default function EntranceScene({
    * with the room it leads to. */
   onEnterRoom: (roomId: "cart" | "store") => void;
 }) {
-  const ground = useTiledTexture(paintPaving, 6, 6);
+  const ground = useTiledTexture(paintPaving, 10, 10);
   // Re, 4 Nov 2026 (render-quality pass): the live /world game's own rooms
   // (VocabularyMarket.tsx etc.) upgrade this exact painted tile to a real
   // photographed stone floor once it downloads (usePhotoFloor/floorBreakup —
@@ -80,7 +81,7 @@ export default function EntranceScene({
   // them here). World2 never adopted that upgrade path; it's a direct,
   // zero-risk texture-resolution win, since the painted tile still shows
   // until the photo loads and stays if it never does.
-  const groundPhoto = usePhotoFloor("paving", 6, 6);
+  const groundPhoto = usePhotoFloor("paving", 10, 10);
   // Re, 4 Nov 2026 ("make it as world1, that's not the same"): the entrance
   // read as two gates floating in an empty grey void next to the live
   // game's own Hub (kloversegy.com/world) — a dense little courtyard with
@@ -182,20 +183,10 @@ export default function EntranceScene({
   return (
     <group>
       <FollowCamera target={player} control={playerControl} cameraColliders={tallColliders} />
-      <fog attach="fog" args={["#2a2438", 9, 18]} />
-      {/* Same hemisphere + warm key + cool fill recipe as World1's own
-          lighting (src/game/World.tsx's LIGHT constant) — see World2Scene's
-          own comment for the full rationale. */}
-      <hemisphereLight args={["#FFE9CC", "#A08466", 0.5]} />
-      <directionalLight position={[-5, 4, -2]} intensity={0.3} color="#C4D3EC" />
-      <directionalLight
-        position={[2.5, 5, 3]}
-        intensity={1.5}
-        color="#FFCC8E"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0005}
-      />
+      {/* Re, 4 Nov 2026 ("i need world 1 quality"): the live game's own
+          sky, landscape, haze and light rig — see World1Stage.tsx. Replaces
+          this scene's old dark dusk fog/lights and its flat sky plane. */}
+      <World1Atmosphere id="w2-entrance" hx={12} hz={12} floor={{ cx: 0, cz: 0.7, w: 10, d: 4.6 }} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
         <meshStandardMaterial
@@ -203,18 +194,11 @@ export default function EntranceScene({
           map={groundPhoto?.map ?? ground}
           normalMap={groundPhoto?.normal ?? null}
           roughnessMap={groundPhoto?.rough ?? null}
-          color="#8a7560"
+          color={groundPhoto ? "#F4EBDD" : "#ffffff"}
           roughness={groundPhoto ? 1 : 0.95}
           onBeforeCompile={floorBreakup}
           customProgramCacheKey={FLOOR_BREAKUP_KEY}
         />
-      </mesh>
-      {/* A plain sky backdrop well behind the gates — without it they'd read
-          as floating against the canvas's own void, unlike every other
-          room here, which backs onto an Alley/StoreShell wall. */}
-      <mesh position={[0, 4, -9]}>
-        <planeGeometry args={[26, 12]} />
-        <meshBasicMaterial color="#cfe0e8" />
       </mesh>
 
       {/* Trees, lanterns, flower beds, the bench and the stone walk — see

@@ -1,8 +1,9 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY, paintPlanks, paintPaving } from "../game/environment/textures";
-import { Kit, pot, basket } from "../game/environment/kit";
+import { Kit, pot, basket, shopfront, hanokHouse, bunting, tree, pine } from "../game/environment/kit";
 import Batch from "../game/environment/Batch";
+import { World1Atmosphere } from "./World1Stage";
 import {
   LearnerPlaceholder,
   Hotspot,
@@ -66,66 +67,32 @@ export const DIALOGUE: DialogueLine[] = [
  * Palette: ivory #FFF9EC, KLOVERS yellow #FFFF00, charcoal #2E2E2E.
  */
 
-/** The alley backdrop: a single wide, curved-feeling wall of hanok storefronts
- * directly behind the cart, close enough and wide enough to stay in frame
- * through the camera's gentle orbit (unlike scattered background props,
- * which can swing out of a narrow FOV) — gives the cart somewhere to stand
- * instead of a void, echoing the alley in the Meta concept image above it. */
+/** The street behind the cart: two market shopfronts either side of a hanok
+ * house, bunting overhead and trees at the ends — World1's own building kit,
+ * so the cart stands in a real place rather than against a flat wall. */
 function Alley() {
-  const windowXs = useMemo(() => [-2.6, -1.9, -1.2, 1.2, 1.9, 2.6], []);
+  const street = useMemo(() => {
+    const k = new Kit();
+    // Local to the Alley group (z = -2.2): fronts face the camera (+z).
+    shopfront(k, { x: -3.3, z: -1.0, w: 3.0, d: 2.0, h: 2.6, face: "+z" });
+    hanokHouse(k, { x: 0, z: -1.5, w: 3.4, d: 3.0, h: 2.3, face: "+z" });
+    shopfront(k, { x: 3.3, z: -1.0, w: 3.0, d: 2.0, h: 2.6, face: "+z" });
+    bunting(k, -4.6, 0.4, 4.6, 0.4, 3.1, 3);
+    tree(k, -6.0, 0.2, 0.95, true, 4);
+    pine(k, 6.0, 0.0, 0.9);
+    tree(k, 6.6, 2.6, 0.8, false, 7);
+    return k;
+  }, []);
   return (
     <group position={[0, 0, -2.2]}>
-      {/* dusk sky, well back and wide so it fills the frame at any orbit angle */}
-      <mesh position={[0, 3, -4]}>
-        <planeGeometry args={[26, 10]} />
-        <meshBasicMaterial color="#2f2a3d" />
-      </mesh>
-      {/* storefront wall directly behind the cart */}
-      <mesh position={[0, 1.4, 0]} receiveShadow>
-        <boxGeometry args={[9, 2.8, 0.4]} />
-        <meshStandardMaterial color="#2a2019" roughness={0.9} />
-      </mesh>
-      {/* roofline: a long low ridge along the top of the wall */}
-      <mesh position={[0, 2.95, 0.05]} rotation={[0.12, 0, 0]}>
-        <boxGeometry args={[9.4, 0.3, 0.9]} />
-        <meshStandardMaterial color="#1a130f" roughness={0.9} />
-      </mesh>
-      {/* a row of warm, lit storefront windows, each with a thin dark frame so
-          they read as windows rather than flat glowing cards */}
-      {windowXs.map((x) => (
-        <group key={x} position={[x, 1.45, 0.21]}>
-          <mesh>
-            <planeGeometry args={[0.42, 0.6]} />
-            <meshStandardMaterial color="#1a130f" />
-          </mesh>
-          <mesh position={[0, 0, 0.005]}>
-            <planeGeometry args={[0.34, 0.5]} />
-            <meshStandardMaterial color="#FFD98A" emissive="#FFB23C" emissiveIntensity={1.1} />
-          </mesh>
-        </group>
-      ))}
-      {/* soft glow from the storefronts, picking out the characters' silhouettes against the wall */}
-      {[-2.2, 2.2].map((x) => (
-        <pointLight key={x} position={[x, 1.8, 1.2]} intensity={0.5} color="#FFB84D" distance={4} />
-      ))}
-      {/* Re, 4 Nov 2026: "add more... tigstures and detailsa" — a string of
-          small red paper lanterns along the roofline, the single most
-          recognizable night-market prop missing from the alley; cheap
-          primitives (a cylinder body + a point light each), same technique
-          as the cart's own hanging lights below. */}
-      {[-3.6, -2.6, -1.6, 1.6, 2.6, 3.6].map((x) => (
-        <group key={x} position={[x, 2.55, 0.35]}>
-          <mesh>
-            <cylinderGeometry args={[0.1, 0.1, 0.16, 12]} />
-            <meshStandardMaterial color="#C43B2E" emissive="#9A2A1F" emissiveIntensity={0.5} roughness={0.6} />
-          </mesh>
-          <mesh position={[0, -0.1, 0]}>
-            <cylinderGeometry args={[0.02, 0.02, 0.06, 6]} />
-            <meshStandardMaterial color="#2a2019" roughness={0.8} />
-          </mesh>
-          <pointLight position={[0, 0, 0]} intensity={0.3} color="#FF7A54" distance={1.6} />
-        </group>
-      ))}
+      {/* Re, 4 Nov 2026 ("i need world 1 quality"): this used to be a
+          painted dusk-sky plane and a single flat dark box for a wall, with
+          glowing window cards. Now it's a real street built from the live
+          game's own building pieces (kit.ts's shopfront/hanokHouse/bunting,
+          the same ones SeoulMarket/VocabularyMarket use), drawn through the
+          same Batch — tiled roofs, timber columns, paper windows, a canopy
+          over each shop — under the shared World1 sky (World1Stage.tsx). */}
+      <Batch kit={street} />
     </group>
   );
 }
@@ -277,11 +244,11 @@ export default function World2Scene({
 }) {
   // Dressed-stone paving (same painter the live game's courtyards use)
   // instead of a flat plane, so the ground reads as a real street.
-  const ground = useTiledTexture(paintPaving, 6, 6);
+  const ground = useTiledTexture(paintPaving, 8, 8);
   // Render-quality pass, 4 Nov 2026 — see EntranceScene.tsx's matching
   // comment: the same real photographed stone floor World1's rooms already
   // use, upgraded in place once it downloads.
-  const groundPhoto = usePhotoFloor("paving", 6, 6);
+  const groundPhoto = usePhotoFloor("paving", 8, 8);
   // Re, 4 Nov 2026 ("make it as world1, that's not the same"): a couple of
   // real market-goods props (kit.ts's own basket/pot, the same pieces
   // VocabularyMarket.tsx uses) off to the sides — clear of the player's
@@ -319,35 +286,10 @@ export default function World2Scene({
   }, [dialogueTurnKey]);
   return (
     <group>
-      {/* light dusk haze, far enough out that it only softens the alley wall,
-          not the cart or characters in the foreground */}
-      <fog attach="fog" args={["#2a2438", 7, 16]} />
-      {/* World1's own lighting recipe (src/game/World.tsx's LIGHT constant):
-          a hemisphere sky/ground bounce instead of flat ambient, a warm key
-          light, and a faint cool fill so shadows keep their colour instead
-          of going flat black — same technique, re-tuned down for dusk
-          instead of World1's golden-afternoon brightness (Re, 3 Nov 2026:
-          "make the lighting match World1"). */}
-      {/* Re, 4 Nov 2026: "game looks so bad" — "dusk" was reading as just
-          dark on a normal monitor; a little more fill and key brightness
-          keeps the warm evening mood but actually lets the counter, food
-          props and characters read clearly instead of sinking into the
-          alley's fog. */}
-      {/* Re, 4 Nov 2026 (second pass, "yes fix"): still reading a shade too
-          dark/warm even after the above — another step up across the board
-          (not just the key light) so the scene stays legible without
-          flattening into daylight. */}
-      <hemisphereLight args={["#FFE9CC", "#A08466", 1.0]} />
-      <directionalLight position={[-6, 4, -2]} intensity={0.55} color="#C4D3EC" />
-      <directionalLight
-        position={[3, 5, 2.5]}
-        intensity={2.9}
-        color="#FFCC8E"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0005}
-      />
-      <pointLight position={[0, 2.1, 0.3]} intensity={2.0} color="#FFD24C" distance={5.5} />
+      {/* Re, 4 Nov 2026 ("i need world 1 quality"): the live game's own
+          sky, landscape, haze and light rig (World1Stage.tsx) — replaces
+          this room's old dusk fog and dim, hand-tuned lights. */}
+      <World1Atmosphere id="w2-cart" hx={10} hz={10} floor={{ cx: 0, cz: 1.85, w: 4.4, d: 2.7 }} />
       <Alley />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[16, 16]} />
@@ -356,7 +298,7 @@ export default function World2Scene({
           map={groundPhoto?.map ?? ground}
           normalMap={groundPhoto?.normal ?? null}
           roughnessMap={groundPhoto?.rough ?? null}
-          color="#8a7560"
+          color={groundPhoto ? "#F4EBDD" : "#ffffff"}
           roughness={groundPhoto ? 1 : 0.95}
           onBeforeCompile={floorBreakup}
           customProgramCacheKey={FLOOR_BREAKUP_KEY}
