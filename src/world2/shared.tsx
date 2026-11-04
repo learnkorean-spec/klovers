@@ -498,17 +498,23 @@ export function FollowCamera({
       target.current.getWorldQuaternion(worldQuat.current);
       forward.current.set(0, 0, 1).applyQuaternion(worldQuat.current);
       // Re, 4 Nov 2026: shipped POV clipped straight into the character's
-      // own head/hair the instant it turned on — this offset (+0.15, at a
-      // 1.05 "chest" eyeHeight) put the camera *in front of* the face, below
-      // eye level, right where the head mesh is widest. The live game's own
-      // first-person camera (ThirdPersonCamera.tsx: POV_EYE=1.6, a -0.12
-      // nudge *behind* centre) gets this right — eye height is up near the
-      // top of the head where the mesh narrows, and the tiny nudge is
-      // *behind* the face, not into it. Mirrored here.
+      // own head/hair the instant it turned on — a -0.12 "behind centre"
+      // nudge (copied from the live game's POV_EYE recipe) wasn't enough
+      // clearance for RiggedBody's actual head radius, so the camera sat
+      // *inside* the head — live-tested on production and confirmed: it
+      // showed the inside of the hair mesh, then (as the learner turned) the
+      // inside of the face itself, nose and eyes rendered from within the
+      // skull. World1's own head model is evidently narrower; this one
+      // needs real clearance, not a graze. 0.35 — just behind the
+      // shoulder/collar line rather than grazing the skull — reads as "over
+      // their own shoulder" rather than literally between the eyes, but
+      // stays clear of the head from every facing angle, which the previous
+      // number demonstrably did not.
+      const povBehind = 0.35;
       desiredPos.current.set(
-        worldPos.current.x - forward.current.x * 0.12,
+        worldPos.current.x - forward.current.x * povBehind,
         povEyeHeight,
-        worldPos.current.z - forward.current.z * 0.12,
+        worldPos.current.z - forward.current.z * povBehind,
       );
       lookAt.current.set(
         desiredPos.current.x + forward.current.x * 3,
