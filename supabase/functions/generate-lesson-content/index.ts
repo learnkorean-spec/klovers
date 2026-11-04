@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
+import { chatComplete } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,13 +13,6 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-
-  const apiKey = getAiKey();
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
 
   // Parse optional filters from body
   let bookFilter: string | null = null;
@@ -102,26 +95,15 @@ Requirements:
 - Content should be appropriate for ${levelDesc} level
 - Return ONLY valid JSON, no markdown`;
 
-      const aiRes = await fetch(AI_CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: AI_TEXT_MODEL,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
-
-      if (!aiRes.ok) {
-        const errText = await aiRes.text();
-        errors.push(`Lesson ${lesson.sort_order}: AI error ${aiRes.status} - ${errText.substring(0, 100)}`);
+      // Falls back to AWS Bedrock (Amazon Nova Lite) if OpenAI is
+      // unavailable — see supabase/functions/_shared/ai.ts.
+      let text: string;
+      try {
+        text = await chatComplete(prompt);
+      } catch (aiErr: any) {
+        errors.push(`Lesson ${lesson.sort_order}: AI error - ${String(aiErr?.message ?? aiErr).slice(0, 100)}`);
         continue;
       }
-
-      const aiData = await aiRes.json();
-      const text = aiData.choices?.[0]?.message?.content || "";
       let content: any;
       try {
         content = JSON.parse(text.replace(/```json\n?|\n?```/g, "").trim());
