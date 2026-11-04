@@ -109,6 +109,12 @@ export const ADMIN_NAV: {
         { id: "pictures", label: "Pictures", to: "/admin?tab=pictures" },
         { id: "brand", label: "Brand", to: "/admin?tab=brand" },
         { id: "conversation-audio", label: "Book audio", to: "/admin?tab=conversation-audio" },
+        // Hackathon tool: generates a concept room (image + design brief) from
+        // a text theme via Meta's Model API. Admin-only, its own route (not a
+        // ?tab=) since it lives outside AdminDashboard.tsx's <TabsContent>
+        // set — see AiRoomLabPage.tsx. Does not touch the learner-facing
+        // World/World2 or the story canon; a dev still builds any room by hand.
+        { id: "ai-room-lab", label: "AI Room Lab", to: "/admin/ai-room-lab" },
       ],
     },
     {
