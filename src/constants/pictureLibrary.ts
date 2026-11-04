@@ -622,6 +622,11 @@ export const LIBRARY_ICONS: LibraryIcon[] = [
   { file: "b1i105", ko: "경복궁", ar: "قصر جيونغبوكغونغ", lesson: 22 },
   { file: "b1i106", ko: "저기", ar: "هناك", lesson: 22 },
   { file: "b1i107", ko: "죄송해요", ar: "آسف", lesson: 22 },
+  { file: "b1i108", ko: "학생", ar: "طالب", lesson: 1 },
+  { file: "b1i109", ko: "만나다", ar: "يقابل", lesson: 3 },
+  { file: "b1i110", ko: "가게", ar: "متجر", lesson: 3 },
+  { file: "b1i111", ko: "친구", ar: "صديق", lesson: 1 },
+  { file: "b1i112", ko: "선생님", ar: "معلّم", lesson: 1 },
 ];
 
 export const LIBRARY_SHEETS: LibraryScene[] = [
