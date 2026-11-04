@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -31,6 +32,7 @@ import {
   type PlayableAvatar,
   type VocabItem,
 } from "./shared";
+import { HANGUL, clubyTeachesLetter, type HangulLetter } from "./hangul";
 
 /** Each room AI Room Lab has proposed and a developer has built out: its own
  * concept image, 3D scene, camera framing and vocabulary. Adding a third
@@ -241,6 +243,94 @@ function DialogueCard({
   );
 }
 
+/**
+ * "Learn the Alphabet" — Cluby teaches one Hangul letter at a time: the 14
+ * consonants, then the 10 vowels. Re, 4 Nov 2026: the one piece of the
+ * bundled request the cart/store rooms never covered — those teach
+ * vocabulary *in context* (어묵, 과자...), never the writing system itself.
+ * Deliberately a full-screen overlay rather than another 3D room: this
+ * isn't tied to any scene's geometry, and every room already has Cluby in
+ * it, so there's no world to build, just a focused teaching moment. See
+ * hangul.ts's own doc comment on why this doesn't conflict with the live
+ * game's canon "Hangul Village" world.
+ */
+function HangulCard({
+  letter,
+  index,
+  total,
+  onPrev,
+  onNext,
+  onClose,
+}: {
+  letter: HangulLetter;
+  index: number;
+  total: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}) {
+  const line = clubyTeachesLetter(letter);
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-lg border border-[#FFF9EC]/15 bg-[#2E2E2E] p-5 shadow-2xl">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FFFF00] text-[#2E2E2E]">Cluby</span>
+            <span className="text-xs text-[#FFF9EC]/50">
+              {letter.kind === "consonant" ? "Consonant" : "Vowel"} · {index + 1} / {total}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="text-[#FFF9EC]/50 hover:text-[#FFF9EC] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex items-center gap-4 mt-3">
+          <p className="text-6xl font-bold text-[#FFFF00] leading-none">{letter.letter}</p>
+          <div>
+            <p className="text-lg font-semibold text-[#FFF9EC]">{letter.name}</p>
+            <p className="text-xs text-[#FFF9EC]/60">{letter.reading} — {letter.sound}</p>
+          </div>
+        </div>
+        <p className="text-[#FFF9EC] mt-4">{line.korean}</p>
+        <p className="text-xs text-[#FFF9EC]/60 mt-0.5">{line.reading}</p>
+        <p className="text-sm text-[#FFF9EC]/80 mt-2">{line.english}</p>
+        <div className="flex items-center justify-between mt-4">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onPrev}
+            disabled={index === 0}
+            className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10 disabled:opacity-30 px-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => speakKorean(letter.example.korean)}
+            className="bg-[#FFFF00] text-[#2E2E2E] hover:bg-[#FFFF00]/90"
+          >
+            <Volume2 className="h-3.5 w-3.5 mr-1.5" />
+            Hear it
+          </Button>
+          {index === total - 1 ? (
+            <Button size="sm" variant="ghost" onClick={onClose} className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10 px-2">
+              Done
+            </Button>
+          ) : (
+            <Button size="sm" variant="ghost" onClick={onNext} className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10 px-2">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Lets the visitor choose which canon learner they're walking as this
  * visit — Adam or Lina, the other stands in as a companion throughout the
  * entrance and both rooms. Re, 4 Nov 2026: "the visitor is either lena or
@@ -408,6 +498,11 @@ export default function World2Page() {
   // X/Y" chip below reflects real progress, not just the room on screen.
   const [learnedIds, setLearnedIds] = useState<Set<string>>(new Set());
   const [dialogueSeen, setDialogueSeen] = useState<Set<string>>(new Set());
+  // "Learn the Alphabet" — null when closed, otherwise the index into HANGUL
+  // currently showing. `hangulSeen` tracks real progress the same way
+  // `learnedIds` does for vocab, keyed by letter id.
+  const [hangulIndex, setHangulIndex] = useState<number | null>(null);
+  const [hangulSeen, setHangulSeen] = useState<Set<string>>(new Set());
   // Mirrors the `povMode` singleton in shared.tsx (see FollowCamera's doc
   // comment there) purely so this button's own icon re-renders on toggle;
   // FollowCamera reads `povMode.firstPerson` directly every frame.
@@ -450,6 +545,19 @@ export default function World2Page() {
   const prevLine = () => setDialogueIndex((i) => (i === null ? null : Math.max(i - 1, 0)));
   const nextLine = () =>
     setDialogueIndex((i) => (i === null || !room ? null : Math.min(i + 1, room.dialogue.length - 1)));
+  const openHangul = () => {
+    setHangulIndex(0);
+    setHangulSeen((prev) => (prev.has(HANGUL[0].id) ? prev : new Set(prev).add(HANGUL[0].id)));
+  };
+  const closeHangul = () => setHangulIndex(null);
+  const prevLetter = () => setHangulIndex((i) => (i === null ? null : Math.max(i - 1, 0)));
+  const nextLetter = () =>
+    setHangulIndex((i) => {
+      if (i === null) return null;
+      const next = Math.min(i + 1, HANGUL.length - 1);
+      setHangulSeen((prev) => (prev.has(HANGUL[next].id) ? prev : new Set(prev).add(HANGUL[next].id)));
+      return next;
+    });
   return (
     // World2 is an English-narrated hackathon tech demo (hint text, room
     // descriptions, dialogue/vocab cards) — explicitly LTR so it renders
@@ -484,10 +592,25 @@ export default function World2Page() {
             too, so a learner sees where they stand before picking a gate,
             not only once they're already inside a room. */}
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <p className="text-xs text-[#FFF9EC]/60">
-            Learned {ROOMS.reduce((n, r) => n + r.vocab.filter((v) => learnedIds.has(`${r.id}:${v.id}`)).length, 0)}/
-            {ROOMS.reduce((n, r) => n + r.vocab.length, 0)} words total across both places
-          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-xs text-[#FFF9EC]/60">
+              Learned {ROOMS.reduce((n, r) => n + r.vocab.filter((v) => learnedIds.has(`${r.id}:${v.id}`)).length, 0)}/
+              {ROOMS.reduce((n, r) => n + r.vocab.length, 0)} words total across both places
+            </p>
+            {/* "Learn the Alphabet" — see HangulCard's own doc comment:
+                genuinely new content (the writing/sound system, not
+                vocabulary-in-context), available from anywhere in World2
+                since it isn't tied to any one room's scene. */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={openHangul}
+              className="h-6 px-2.5 text-xs font-semibold bg-transparent text-[#FFF9EC]/80 border-[#FFF9EC]/20 hover:border-[#FFF9EC]/40 hover:bg-[#FFF9EC]/10"
+            >
+              <BookOpen className="h-3 w-3 mr-1.5" />
+              Learn the Alphabet (한글) · {hangulSeen.size}/{HANGUL.length}
+            </Button>
+          </div>
           <CharacterPicker playerAvatar={playerAvatar} onChange={setPlayerAvatar} />
         </div>
         {/* Entrance + room switcher: "Entrance" is the landing courtyard
@@ -692,6 +815,16 @@ export default function World2Page() {
           </>
         )}
       </div>
+      {hangulIndex !== null && (
+        <HangulCard
+          letter={HANGUL[hangulIndex]}
+          index={hangulIndex}
+          total={HANGUL.length}
+          onPrev={prevLetter}
+          onNext={nextLetter}
+          onClose={closeHangul}
+        />
+      )}
     </div>
   );
 }
