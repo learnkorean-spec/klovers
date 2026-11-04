@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Group, Matrix4, Quaternion, Vector3 } from "three";
 import { PALETTE, type Box2 } from "../game/config/world";
@@ -6,6 +6,9 @@ import { std } from "../game/config/materials";
 import { isBlocked, pushOutOfBox } from "../game/systems/collision";
 import { damp, stepVelocity, stepYaw, yawFromDirection } from "../game/systems/movement";
 import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
+import AvatarBoundary from "../game/player/AvatarBoundary";
+import { realPerson } from "../game/npc/realCast";
+import type { CastId } from "../game/npc/cast";
 
 /**
  * Shared building blocks for every World2 hackathon room (the street-food
@@ -293,7 +296,17 @@ export function usePlayerMovement({
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
-      if (MOVE_KEYS[key]) pressed.current.add(key);
+      if (!MOVE_KEYS[key]) return;
+      // Re, 4 Nov 2026: with the stage now taller than the window, walking
+      // with the arrow keys also scrolled the whole page (the browser's own
+      // default for those keys) — the scene jumped away mid-walk. The live
+      // game is full-screen so never hit this. Arrow keys only (WASD has no
+      // default to cancel), and never while the learner is typing somewhere.
+      const t = e.target as HTMLElement | null;
+      const typing = !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+      if (typing) return;
+      if (key.startsWith("arrow")) e.preventDefault();
+      pressed.current.add(key);
     };
     const up = (e: KeyboardEvent) => pressed.current.delete(e.key.toLowerCase());
     const clearAll = () => pressed.current.clear();
@@ -628,7 +641,7 @@ const BG_FIGURE_TONES = ["#5C6B8A", "#8A6B5C", "#6B8A6F", "#8A5C76", "#6E6458"];
  * primitives, same philosophy as Cluby's own hand-built geometry — since
  * this never needs to walk, talk, or be identified, only to stand there and
  * breathe a little. */
-export function BackgroundFigure({
+function SimpleFigure({
   x,
   z,
   rotY = 0,
@@ -683,6 +696,50 @@ export function BackgroundFigure({
         </mesh>
       </group>
     </group>
+  );
+}
+
+/** The roles World1's own extras play (npc/cast.ts) — unnamed, no lines. */
+const BG_CASTS: CastId[] = ["shopper", "porter", "student1", "readerB", "auntie", "vendor", "walker", "student2"];
+
+/**
+ * Re, 4 Nov 2026 ("i need world 1 quality"): these were faceless capsule
+ * dolls. The live game fills its rooms with real rigged people instead —
+ * realCast.ts's `realPerson` gives each an own body model, skin, hair,
+ * clothes, height and face shape, stable for its id ("every person looks
+ * different and Korean", Re's standing ask). Same unnamed extras World1
+ * places (shopper, vendor, student…): no name, no line, no story role, so
+ * this stays the set dressing the original note above describes. The old
+ * primitive figure is kept as what shows while a body downloads (and if
+ * one ever fails, via the same AvatarBoundary World1's Npc uses).
+ */
+export function BackgroundFigure({
+  x,
+  z,
+  rotY = 0,
+  toneIndex = 0,
+  scale = 1,
+}: {
+  x: number;
+  z: number;
+  rotY?: number;
+  toneIndex?: number;
+  scale?: number;
+}) {
+  const look = useMemo(
+    () => realPerson(BG_CASTS[toneIndex % BG_CASTS.length], `w2-bg-${x.toFixed(2)}-${z.toFixed(2)}`),
+    [toneIndex, x, z],
+  );
+  const control = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
+  const fallback = <SimpleFigure x={x} z={z} rotY={rotY} toneIndex={toneIndex} scale={scale} />;
+  return (
+    <AvatarBoundary fallback={fallback}>
+      <Suspense fallback={fallback}>
+        <group position={[x, 0, z]} rotation={[0, rotY, 0]} scale={scale * look.scale}>
+          <RiggedBody model={look.model} rules={look.rules} female={look.female} control={control} head={look.head} face={look.face} />
+        </group>
+      </Suspense>
+    </AvatarBoundary>
   );
 }
 
