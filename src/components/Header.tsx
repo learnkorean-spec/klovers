@@ -30,7 +30,29 @@ const Header = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<{ name: string; avatar_url: string | null } | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [exchangeUnread, setExchangeUnread] = useState(0);
   const isAr = language === "ar";
+
+  // Language Exchange match notifications (Re's request, 4 Nov 2026): a
+  // small unread count on the nav link, so a match is noticed site-wide and
+  // not only by reopening /exchange's own Matches tab. Polled rather than
+  // realtime-subscribed, matching the existing admin notification bell's
+  // own pattern (useUnreadAlerts.ts).
+  useEffect(() => {
+    if (!user) { setExchangeUnread(0); return; }
+    let cancelled = false;
+    const load = () => {
+      supabase
+        .from("exchange_notifications" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false)
+        .then(({ count }) => { if (!cancelled) setExchangeUnread(count ?? 0); });
+    };
+    load();
+    const interval = setInterval(load, 60000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [user?.id]);
 
   // Load profile whenever the logged-in user changes.
   //
@@ -65,7 +87,11 @@ const Header = () => {
     { href: "/pricing", label: t("header", "pricing") },
     { href: "/textbook", label: isAr ? "الكتاب" : "Textbook" },
     { href: "/games", label: isAr ? "ألعاب" : "Games", badge: !user ? (isAr ? "مجاني" : "Free") : undefined },
-    { href: "/exchange", label: isAr ? "تبادل اللغة" : "Language Exchange", badge: isAr ? "جديد" : "New" },
+    {
+      href: "/exchange",
+      label: isAr ? "تبادل اللغة" : "Language Exchange",
+      badge: user ? (exchangeUnread > 0 ? String(exchangeUnread) : undefined) : (isAr ? "جديد" : "New"),
+    },
     { href: "/shop", label: isAr ? "المتجر" : "Shop" },
   ];
 
