@@ -161,11 +161,14 @@ export function World1Atmosphere({
   id: string;
   hx: number;
   hz: number;
-  floor: { cx: number; cz: number; w: number; d: number };
+  /** Omit on wooden floors: GroundWear's worn-path marks are made for
+   * stone paving and read as a white scuff on planks. */
+  floor?: { cx: number; cz: number; w: number; d: number };
 }) {
   const quality = useWorld1Quality();
   const extent = Math.max(hx, hz) + 2;
-  const wear = useMemo(() => box(floor.cx, floor.cz, floor.w, floor.d), [floor.cx, floor.cz, floor.w, floor.d]);
+  const [fx, fz, fw, fd] = floor ? [floor.cx, floor.cz, floor.w, floor.d] : [0, 0, 0, 0];
+  const wear = useMemo(() => (floor ? box(fx, fz, fw, fd) : null), [!!floor, fx, fz, fw, fd]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>
       <SceneAir />
@@ -187,7 +190,7 @@ export function World1Atmosphere({
         shadow-camera-near={1}
         shadow-camera-far={40}
       />
-      <GroundWear bounds={wear} seed={id.length * 7} />
+      {wear && <GroundWear bounds={wear} seed={id.length * 7} />}
       <SkyLight />
       <FoliageClock />
       {quality.adaptive && <AdaptiveResolution max={quality.dpr[1]} />}

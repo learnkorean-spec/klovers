@@ -318,7 +318,7 @@ export default function ConvenienceStoreScene({
   // keep fighting the camera for it.)
   const sceneKit = useMemo(() => {
     const k = new Kit();
-    basket(k, -2.15, 1.6, 1.0, "fruitOrange");
+    basket(k, -2.8, 2.25, 1.0, "fruitOrange");
     return k;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -356,7 +356,7 @@ export default function ConvenienceStoreScene({
       {/* Re, 4 Nov 2026 ("i need world 1 quality"): the live game's own
           sky, landscape, haze and light rig (World1Stage.tsx) — replaces
           this room's old dim late-night lights. */}
-      <World1Atmosphere id="w2-store" hx={10} hz={10} floor={{ cx: 0.15, cz: 0.45, w: 4.3, d: 2.7 }} />
+      <World1Atmosphere id="w2-store" hx={10} hz={10} />
       <StoreShell />
       {/* The shop's own plank floor, between its side walls and out past
           the camera; beyond it, World1's stone plaza (Backdrop) carries on. */}
