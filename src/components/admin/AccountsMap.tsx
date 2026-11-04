@@ -207,7 +207,7 @@ export default function AccountsMap() {
 
   if (missingTable) {
     return (
-      <div className="rounded-xl border-2 border-klovers-yellow bg-ivory p-5 text-sm text-charcoal">
+      <div role="status" className="rounded-xl border-2 border-klovers-yellow bg-ivory p-5 text-sm text-charcoal">
         <p className="font-semibold">Connectors are not set up yet.</p>
         <p className="mt-1">It appears once the admin_accounts_map migration has been applied (Apply Migrations: plan, then apply).</p>
       </div>

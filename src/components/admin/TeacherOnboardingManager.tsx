@@ -401,7 +401,7 @@ export default function TeacherOnboardingManager() {
   const schemaMissing = (error as any)?.code === "42P01";
   if (error) {
     return (
-      <Card className="rounded-2xl">
+      <Card className="rounded-2xl" role="alert">
         <CardContent className="py-10 text-center space-y-2">
           <AlertCircle className="h-8 w-8 mx-auto text-destructive" />
           {schemaMissing ? (

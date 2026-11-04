@@ -261,7 +261,7 @@ const SalesAnalytics = () => {
 
   if (error) {
     return (
-      <Card className="rounded-2xl border-destructive">
+      <Card className="rounded-2xl border-destructive" role="alert">
         <CardContent className="p-5 text-sm">
           <span className="font-semibold text-destructive">Could not load sales.</span>{" "}
           <span className="text-muted-foreground">{error}</span>
