@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import LevelConfirmBanner from "@/components/LevelConfirmBanner";
+import { withTimeout } from "@/lib/withTimeout";
 
 const StudentDashboard = lazy(() => import("./StudentDashboard"));
 const MyLessonsPage = lazy(() => import("./MyLessonsPage"));
@@ -36,16 +37,25 @@ const DashboardRouter = () => {
     let cancelled = false;
     const load = async () => {
       try {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        // The try/catch alone only guards against a call that rejects; it
+        // does nothing for one that hangs without ever settling (the 17 Oct
+        // 2026 outage failure mode), which would leave a student on this
+        // spinner forever. withTimeout turns that into the same fallback
+        // path as an explicit error below.
+        const { data: sessionData, error: sessionError } = await withTimeout(supabase.auth.getSession(), 8000, "session");
         if (sessionError) throw sessionError;
         const session = sessionData.session;
         if (!session) { if (!cancelled) setTrack("korean"); return; }
 
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("track")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
+        const { data, error } = await withTimeout(
+          supabase
+            .from("profiles")
+            .select("track")
+            .eq("user_id", session.user.id)
+            .maybeSingle(),
+          8000,
+          "track lookup",
+        );
         if (error) throw error;
         if (cancelled) return;
         setTrack((data as { track?: string } | null)?.track === "english" ? "english" : "korean");

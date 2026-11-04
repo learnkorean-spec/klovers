@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { withTimeout } from "@/lib/withTimeout";
 
 /**
  * Checks if the logged-in user's profile.reset_version matches
@@ -19,19 +20,31 @@ export function useResetGate() {
 
     const check = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // This hook gates the entire StudentDashboard render (see
+        // gateLoading in StudentDashboard.tsx) - every logged-in student
+        // hits this on every visit. The try/catch alone only covers a call
+        // that rejects; none of these four sequential calls had a timeout,
+        // so one that just hung (the 17 Oct 2026 outage failure mode) would
+        // leave every student stuck on the loading screen forever.
+        // withTimeout turns a hang into the same fail-open path the catch
+        // block already takes on an explicit error.
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 8000, "session");
         if (!session) {
           if (!cancelled) setLoading(false);
           return;
         }
 
         // Check if user is admin — admins are never blocked
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .maybeSingle();
+        const { data: roleData } = await withTimeout(
+          supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", session.user.id)
+            .eq("role", "admin")
+            .maybeSingle(),
+          8000,
+          "role check",
+        );
 
         if (roleData) {
           if (!cancelled) setLoading(false);
@@ -39,20 +52,28 @@ export function useResetGate() {
         }
 
         // Get current app reset version
-        const { data: setting } = await supabase
-          .from("app_settings")
-          .select("value")
-          .eq("key", "app_reset_version")
-          .single();
+        const { data: setting } = await withTimeout(
+          supabase
+            .from("app_settings")
+            .select("value")
+            .eq("key", "app_reset_version")
+            .single(),
+          8000,
+          "reset version",
+        );
 
         const currentVersion = setting?.value || "1";
 
         // Get user's profile reset_version
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("reset_version")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
+        const { data: profile } = await withTimeout(
+          supabase
+            .from("profiles")
+            .select("reset_version")
+            .eq("user_id", session.user.id)
+            .maybeSingle(),
+          8000,
+          "profile version",
+        );
 
         const userVersion = profile?.reset_version;
 

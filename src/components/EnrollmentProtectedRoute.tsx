@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Lock, GraduationCap } from "lucide-react";
 import { WHATSAPP_NUMBER } from "@/lib/siteConfig";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
+import { withTimeout } from "@/lib/withTimeout";
 
-type Status = "loading" | "unauthenticated" | "enrolled" | "not_enrolled";
+type Status = "loading" | "unauthenticated" | "enrolled" | "not_enrolled" | "error";
 
 const EnrollmentProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [status, setStatus] = useState<Status>("loading");
@@ -15,24 +16,39 @@ const EnrollmentProtectedRoute = ({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { setStatus("unauthenticated"); return; }
+      try {
+        // getSession() awaits a token refresh when the stored token has
+        // expired; withTimeout stops that from hanging forever (the 17 Oct
+        // 2026 outage failure mode) and leaving a paying student stuck on
+        // "Checking access..." forever, locked out of the textbook/vocab/
+        // quiz features this route gates.
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 8000, "session");
+        if (!session) { setStatus("unauthenticated"); return; }
 
-      const { data, error } = await supabase
-        .from("enrollments")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .eq("payment_status", "PAID")
-        .eq("approval_status", "APPROVED")
-        .limit(1)
-        .maybeSingle();
+        const { data, error } = await withTimeout(
+          supabase
+            .from("enrollments")
+            .select("id")
+            .eq("user_id", session.user.id)
+            .eq("payment_status", "PAID")
+            .eq("approval_status", "APPROVED")
+            .limit(1)
+            .maybeSingle(),
+          8000,
+          "enrollment check",
+        );
 
-      if (error) {
-        console.error("Enrollment check failed:", error.message);
-        setStatus("not_enrolled");
-        return;
+        if (error) {
+          console.error("Enrollment check failed:", error.message);
+          // A failed lookup isn't "not enrolled" - that would wrongly show
+          // an already-paying student the upsell screen during an outage.
+          setStatus((prev) => (prev === "enrolled" ? prev : "error"));
+          return;
+        }
+        setStatus(data ? "enrolled" : "not_enrolled");
+      } catch {
+        setStatus((prev) => (prev === "enrolled" ? prev : "error"));
       }
-      setStatus(data ? "enrolled" : "not_enrolled");
     };
     check();
   }, []);
@@ -41,6 +57,20 @@ const EnrollmentProtectedRoute = ({ children }: { children: React.ReactNode }) =
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground">Checking access…</p>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-background">
+        <p className="text-muted-foreground">Could not check your access. Check your connection and try again.</p>
+        <button
+          className="rounded-md border px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          onClick={() => window.location.reload()}
+        >
+          Try again
+        </button>
       </div>
     );
   }
