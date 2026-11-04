@@ -262,6 +262,7 @@ const AdminShell = ({
 
   return (
     <div className="admin-shell flex min-h-screen bg-background">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium focus:shadow-lg">Skip to main content</a>
 
       <aside className="hidden w-[248px] shrink-0 flex-col border-r lg:flex">
         <div className="flex h-16 shrink-0 items-center gap-2.5 border-b px-5">
@@ -411,7 +412,7 @@ const AdminShell = ({
           ))}
         </div>
 
-        <main className="min-w-0 flex-1">{children}</main>
+        <main id="main-content" className="min-w-0 flex-1">{children}</main>
       </div>
 
       <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen}>
