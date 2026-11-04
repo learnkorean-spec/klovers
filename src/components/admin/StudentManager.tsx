@@ -916,11 +916,11 @@ const StudentManager = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="sm-full-name" className="text-sm font-medium text-foreground">Full Name *</label>
-                <Input id="sm-full-name" value={studentForm.full_name} onChange={(e) => setStudentForm(f => ({ ...f, full_name: e.target.value }))} />
+                <Input id="sm-full-name" required aria-required="true" value={studentForm.full_name} onChange={(e) => setStudentForm(f => ({ ...f, full_name: e.target.value }))} />
               </div>
               <div>
                 <label htmlFor="sm-email" className="text-sm font-medium text-foreground">Email * {lookingUpEmail && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</label>
-                <Input id="sm-email" type="email" value={studentForm.email} onChange={(e) => setStudentForm(f => ({ ...f, email: e.target.value }))} onBlur={handleEmailBlur} />
+                <Input id="sm-email" type="email" required aria-required="true" value={studentForm.email} onChange={(e) => setStudentForm(f => ({ ...f, email: e.target.value }))} onBlur={handleEmailBlur} />
                 {!editingStudentId && <p className="text-xs text-muted-foreground mt-0.5">Tab out to auto-lookup existing data</p>}
               </div>
             </div>
