@@ -62,6 +62,7 @@ const AdminResetPage = lazy(() => import("./pages/AdminResetPage"));
 const MarketingGeneratorPage = lazy(() => import("./pages/MarketingGeneratorPage")); const AdminGuide = lazy(() => import("./pages/AdminGuide"));
 const KoreanOrchestratorPage = lazy(() => import("./pages/KoreanOrchestratorPage"));
 const AiRoomLabPage = lazy(() => import("./pages/AiRoomLabPage"));
+const AdminExchangeReportsPage = lazy(() => import("./pages/AdminExchangeReportsPage"));
 const World2Page = lazy(() => import("./world2/World2Page"));
 const KoreanPlacementPage = lazy(() => import("./pages/KoreanPlacementPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
@@ -319,6 +320,7 @@ const App = () => (
                 <Route path="/admin/marketing" element={<ProtectedRoute><MarketingGeneratorPage /></ProtectedRoute>} /><Route path="/admin/guide" element={<ProtectedRoute><AdminGuide /></ProtectedRoute>} />
                 <Route path="/admin/korean-orchestra" element={<ProtectedRoute><KoreanOrchestratorPage /></ProtectedRoute>} />
                 <Route path="/admin/ai-room-lab" element={<ProtectedRoute><AiRoomLabPage /></ProtectedRoute>} />
+                <Route path="/admin/exchange-reports" element={<ProtectedRoute><AdminExchangeReportsPage /></ProtectedRoute>} />
                 <Route path="/world2" element={<World2Page />} />
                 <Route path="/admin/today" element={<ProtectedRoute><AdminToday /></ProtectedRoute>} />
                 {/* Must sit BEFORE /admin — /admin is exact-match in v6, so the
