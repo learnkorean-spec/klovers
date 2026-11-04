@@ -510,17 +510,27 @@ export function FollowCamera({
         // Walk the line from the learner out to the full "behind" distance
         // in steps, and stop at the furthest one still clear — the same
         // "back off until clear" idea as the live game's own wall-avoidance,
-        // just sampled rather than solved against room portals. `t=0` (right
-        // at the learner) is never itself blocked, so this always lands
-        // somewhere.
+        // just sampled rather than solved against room portals.
+        //
+        // Re, 4 Nov 2026: shipped this with the floor at t=0 (right on top
+        // of the learner) and a 0.3 pad. Standing flush against a lantern —
+        // exactly the collision fix above now lets happen, where before the
+        // learner would have slid past it — put the learner's own position
+        // inside that padded zone too, so every sample came back "blocked"
+        // and the camera collapsed to point-blank, the extreme close-up Re
+        // screenshot. A smaller pad (closer to the geometry's own footprint)
+        // plus a floor well short of zero means a worst case still frames
+        // the learner from a short but usable distance instead of their own
+        // collar.
         const hugeBounds = { minX: -1e6, maxX: 1e6, minZ: -1e6, maxZ: 1e6 };
         const steps = 8;
-        let bestT = 0;
-        for (let i = steps; i >= 0; i--) {
+        const minStep = 3; // t=3/8=0.375 of `behind` — the closest the camera will ever sit
+        let bestT = minStep / steps;
+        for (let i = steps; i >= minStep; i--) {
           const t = i / steps;
           const tx = worldPos.current.x - forward.current.x * behind * t;
           const tz = worldPos.current.z - forward.current.z * behind * t;
-          if (!isBlocked(tx, tz, 0.3, cameraColliders, hugeBounds)) {
+          if (!isBlocked(tx, tz, 0.15, cameraColliders, hugeBounds)) {
             bestT = t;
             break;
           }
