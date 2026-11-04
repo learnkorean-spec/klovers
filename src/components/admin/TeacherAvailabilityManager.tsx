@@ -393,7 +393,7 @@ const TeacherAvailabilityManager = () => {
           </div>
           <div className="flex gap-1 rounded-lg border p-1">
             {(Object.keys(ZONES) as ZoneKey[]).map(k => (
-              <button key={k} type="button" className={seg(zone === k)} onClick={() => setZone(k)}>
+              <button key={k} type="button" aria-pressed={zone === k} className={seg(zone === k)} onClick={() => setZone(k)}>
                 {ZONES[k].short}
               </button>
             ))}

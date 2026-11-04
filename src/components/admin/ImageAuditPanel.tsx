@@ -459,14 +459,18 @@ function ImageAuditPanel() {
 
       {/* Tab switcher */}
       {result && (
-        <div className="flex gap-1 border-b">
+        <div className="flex gap-1 border-b" role="tablist">
           <button
+            role="tab"
+            aria-selected={activeTab === "posts"}
             onClick={() => setActiveTab("posts")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${activeTab === "posts" ? "border-primary text-foreground font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             Post Issues ({result.report.length})
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === "parity"}
             onClick={() => setActiveTab("parity")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${activeTab === "parity" ? "border-primary text-foreground font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >

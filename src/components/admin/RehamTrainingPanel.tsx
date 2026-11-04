@@ -2139,6 +2139,7 @@ export default function RehamTrainingPanel() {
                     <button
                       key={ex.id}
                       onClick={() => goTo(i)}
+                      aria-current={i === currentIndex ? "true" : undefined}
                       className={`w-full flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                         i === currentIndex
                           ? "bg-primary/10 border border-primary/30 font-semibold"
