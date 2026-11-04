@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { withTimeout, isServiceOutage } from "@/lib/withTimeout";
 
 const ResetPasswordPage = () => {
   const { t, language } = useLanguage();
@@ -69,7 +70,25 @@ const ResetPasswordPage = () => {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.updateUser({ password });
+    let result: Awaited<ReturnType<typeof supabase.auth.updateUser>>;
+    try {
+      // withTimeout guards against updateUser() hanging rather than resolving
+      // or rejecting (the 17 Oct 2026 outage failure mode), which would
+      // otherwise leave this button saying "Updating..." forever.
+      result = await withTimeout(supabase.auth.updateUser({ password }), 15000, "update password");
+    } catch (err) {
+      toast({
+        title: isAr ? "تعذّر حفظ كلمة المرور" : "The password could not be saved",
+        description: isServiceOutage(err)
+          ? (isAr ? "الخادم لا يستجيب. يُرجى المحاولة مرة أخرى بعد لحظات." : "The server isn't responding. Please try again in a moment.")
+          : (isAr ? "يُرجى المحاولة مرة أخرى." : "Please try again."),
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    const { error } = result;
 
     if (error) {
       // Only an expired/missing recovery session means "the link expired".

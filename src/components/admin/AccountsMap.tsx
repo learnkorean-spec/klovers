@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useId, isValidElement, cloneElement, type ReactElement, type ReactNode } from "react";
 import { Copy, ExternalLink, Loader2, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -207,7 +207,7 @@ export default function AccountsMap() {
 
   if (missingTable) {
     return (
-      <div className="rounded-xl border-2 border-klovers-yellow bg-ivory p-5 text-sm text-charcoal">
+      <div role="status" className="rounded-xl border-2 border-klovers-yellow bg-ivory p-5 text-sm text-charcoal">
         <p className="font-semibold">Connectors are not set up yet.</p>
         <p className="mt-1">It appears once the admin_accounts_map migration has been applied (Apply Migrations: plan, then apply).</p>
       </div>
@@ -264,6 +264,7 @@ export default function AccountsMap() {
                 key={name}
                 type="button"
                 onClick={() => setQuery(on ? "" : name)}
+                aria-pressed={on}
                 className={cn(
                   "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   on ? "border-charcoal bg-klovers-yellow text-charcoal" : "border-border bg-background text-foreground hover:bg-muted",
@@ -470,11 +471,12 @@ function Branch({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  const fieldId = useId();
   return (
     <div className="space-y-1">
-      <Label className="text-xs">{label}</Label>
-      {children}
+      <Label htmlFor={fieldId} className="text-xs">{label}</Label>
+      {isValidElement(children) ? cloneElement(children as ReactElement<{ id?: string }>, { id: fieldId }) : children}
     </div>
   );
 }

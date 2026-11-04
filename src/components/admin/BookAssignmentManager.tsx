@@ -308,6 +308,15 @@ const BookAssignmentManager = () => {
 
   return (
     <div className="space-y-4">
+      {/* Screen title - this tab has no page-level heading of its own
+          (AdminDashboard.tsx renders no h1/h2 around tab content), so
+          without this every CardTitle/h3 on the screen is an orphan with
+          nothing above it in the heading outline. */}
+      <div className="flex items-center gap-2">
+        <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
+        <h2 className="font-semibold text-foreground">Books</h2>
+      </div>
+
       {/* Header row */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="relative">
@@ -433,7 +442,7 @@ const BookAssignmentManager = () => {
 
       {/* Table */}
       {loading ? (
-        <div className="text-xs text-muted-foreground py-8 text-center">Loading…</div>
+        <div className="text-xs text-muted-foreground py-8 text-center" role="status">Loading…</div>
       ) : filtered.length === 0 ? (
         <div className="text-xs text-muted-foreground py-8 text-center">
           {search ? "No matches found." : "No books assigned yet. They appear here when a Hangul group starts."}
@@ -516,8 +525,8 @@ const BookAssignmentManager = () => {
 
           <div className="space-y-4 py-1">
             {/* Student search */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Student</Label>
+            <div className="space-y-1.5" role="group" aria-labelledby="book-assign-student-label">
+              <span id="book-assign-student-label" className="text-xs font-medium leading-none">Student</span>
               {selectedUser ? (
                 <div className="flex items-center justify-between rounded-lg border px-3 py-2 bg-muted/40">
                   <div>
@@ -562,8 +571,9 @@ const BookAssignmentManager = () => {
 
             {/* Available from date */}
             <div className="space-y-1.5">
-              <Label className="text-xs">Available from (default: now)</Label>
+              <Label htmlFor="book-assign-available-from" className="text-xs">Available from (default: now)</Label>
               <Input
+                id="book-assign-available-from"
                 type="datetime-local"
                 value={availableFrom}
                 onChange={e => setAvailableFrom(e.target.value)}
@@ -573,8 +583,9 @@ const BookAssignmentManager = () => {
 
             {/* Notes */}
             <div className="space-y-1.5">
-              <Label className="text-xs">Notes (optional)</Label>
+              <Label htmlFor="book-assign-notes" className="text-xs">Notes (optional)</Label>
               <Textarea
+                id="book-assign-notes"
                 placeholder="e.g. Private student — gift on joining"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}

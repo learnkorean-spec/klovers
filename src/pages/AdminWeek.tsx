@@ -17,11 +17,11 @@ import WeekTimetable from "@/components/admin/trial/WeekTimetable";
 
 const AdminWeek = () => (
   <AdminShell activeId="week">
-    <main id="main-content">
+    <div id="main-content">
       <div className="mx-auto w-full max-w-6xl px-5 py-8">
         <WeekTimetable />
       </div>
-    </main>
+    </div>
   </AdminShell>
 );
 

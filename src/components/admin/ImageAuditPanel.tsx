@@ -117,6 +117,8 @@ function PostRow({ item }: { item: PostAuditResult }) {
   return (
     <div className="border rounded-xl overflow-hidden">
       <button
+        type="button"
+        aria-expanded={open}
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen((v) => !v)}
       >
@@ -197,6 +199,8 @@ function DebugInfo({ group }: { group: ParityGroup }) {
   return (
     <div className="border-t border-dashed pt-1.5 mt-1.5">
       <button
+        type="button"
+        aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1 rounded-sm text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
@@ -235,6 +239,8 @@ function ParitySection({ groups }: { groups: ParityGroup[] }) {
   return (
     <Card className="rounded-xl">
       <button
+        type="button"
+        aria-expanded={open}
         className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen((v) => !v)}
       >
@@ -459,14 +465,18 @@ function ImageAuditPanel() {
 
       {/* Tab switcher */}
       {result && (
-        <div className="flex gap-1 border-b">
+        <div className="flex gap-1 border-b" role="tablist">
           <button
+            role="tab"
+            aria-selected={activeTab === "posts"}
             onClick={() => setActiveTab("posts")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${activeTab === "posts" ? "border-primary text-foreground font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             Post Issues ({result.report.length})
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === "parity"}
             onClick={() => setActiveTab("parity")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${activeTab === "parity" ? "border-primary text-foreground font-semibold" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
@@ -490,6 +500,7 @@ function ImageAuditPanel() {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
+                  aria-pressed={filter === f}
                   className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${filter === f ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:text-foreground"}`}
                 >
                   {f} ({filterCounts[f]})

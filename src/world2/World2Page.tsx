@@ -1,10 +1,10 @@
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import type { Group } from "three";
+import { Canvas } from "@react-three/fiber";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -23,6 +23,7 @@ import ConvenienceStoreScene, {
 } from "./ConvenienceStoreScene";
 import EntranceScene from "./EntranceScene";
 import PostFinish from "./PostFinish";
+import { useWorld1Quality, world1CanvasProps } from "./World1Stage";
 import {
   DEFAULT_PLAYER_AVATAR,
   povMode,
@@ -32,6 +33,7 @@ import {
   type PlayableAvatar,
   type VocabItem,
 } from "./shared";
+import { HANGUL, clubyTeachesLetter, type HangulLetter } from "./hangul";
 
 /** Each room AI Room Lab has proposed and a developer has built out: its own
  * concept image, 3D scene, camera framing and vocabulary. Adding a third
@@ -55,9 +57,9 @@ type Room = {
   hint: string;
   title: string;
   body: string;
-  /** The room's "practice the conversation" exchange between Adam and
-   * Lina — shown in the DialogueCard, line by line, Korean + English
-   * reading + English translation. */
+  /** The room's "practice the conversation" exchange between the player's
+   * chosen character and Cluby — shown in the DialogueCard, line by line,
+   * Korean + English reading + English translation. */
   dialogue: DialogueLine[];
   /** Every vocab hotspot this room has — used only to size the "Learned
    * X/Y" progress chip (see `learnedIds` in World2Page below), not to
@@ -73,13 +75,24 @@ const ROOMS: Room[] = [
     conceptImage: "/assets/world2/concept-pojangmacha.jpg",
     conceptAlt:
       "Meta Muse Image concept render: Adam and Lina at a lantern-lit Korean street food cart at dusk, with Cluby seated beside them",
+    // Re, 4 Nov 2026: "game looks so bad" — found live on kloversegy.com/world2
+    // that Cluby and the foreground stools sat closer to this camera than
+    // anything else in the shot, so perspective blew them up into oversized,
+    // frame-cropping shapes crowding the characters and the vocab card UI.
+    // Tried pulling the camera back + narrowing the FOV first; it barely
+    // helped (the near props shrink at nearly the same rate as everything
+    // else when they're this close), so the actual fix is in World2Scene.tsx
+    // itself: the stools moved behind the characters (z 1.5→0.85, nested at
+    // the counter instead of standing proud of it) and Cluby moved off to
+    // the side entirely, out of this camera's close foreground. Camera left
+    // at its original framing.
     cameraPosition: [2.6, 1.9, 3.8],
     cameraFov: 42,
     Scene: World2Scene,
     hint: "Use WASD or the arrow keys to walk {player} around. Tap the skewers, tteokbokki, kimbap, or the menu board to learn the word.",
-    title: "A warm Korean street food cart at dusk (포장마차)",
+    title: "A Korean street food cart (포장마차)",
     body:
-      "{player} orders at the counter, {companion} points to the menu and explains, Cluby sits on a stool beside them. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
+      "{player} orders at the counter while Cluby watches from a stool, calling out hints when a new word comes up. Tap a food item or the menu board above to hear and learn the word. Vocabulary: 어묵 (fish cake), 떡볶이 (spicy rice cakes), 김밥 (seaweed rice rolls), 주세요 (please give me), 얼마예요? (how much is it?).",
     dialogue: CART_DIALOGUE,
     vocab: CART_VOCAB,
   },
@@ -93,27 +106,27 @@ const ROOMS: Room[] = [
     cameraFov: 44,
     Scene: ConvenienceStoreScene,
     hint: "Use WASD or the arrow keys to walk {player} around. Tap the shelf, fridge, checkout, or a price tag to learn the word.",
-    title: "A late-night Korean convenience store (편의점)",
+    title: "A Korean convenience store (편의점)",
     body:
-      "{player} picks snacks and drinks from the shelves, {companion} helps {playerObj} read the labels, Cluby curls up by the door. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
+      "{player} picks snacks and drinks from the shelves while Cluby curls up by the door, cheering {playerObj} on as new words come up. Tap the shelf, the fridge, the register, or a price tag above to hear and learn the word. Vocabulary: 과자 (snack), 음료수 (drink), 얼마예요? (how much is it?), 하나/둘 (one/two), 계산대 (checkout counter).",
     dialogue: STORE_DIALOGUE,
     vocab: STORE_VOCAB,
   },
 ];
 
-/** Fills a room's `hint`/`body` template with whichever names/pronoun fit
- * the learner's current character choice — `{player}`/`{companion}` (names)
- * and `{playerObj}` (object pronoun: "him"/"her"), so the copy stays
- * correct whichever of Adam/Lina the visitor is walking as (see
- * `playerAvatar` below and shared.tsx's `PlayableAvatar`). */
+/** Fills a room's `hint`/`body` template with whichever name/pronoun fits
+ * the learner's current character choice — `{player}` (name) and
+ * `{playerObj}` (object pronoun: "him"/"her"), so the copy stays correct
+ * whichever of Adam/Lina the visitor is walking as (see `playerAvatar`
+ * below and shared.tsx's `PlayableAvatar`).
+ *
+ * Re, 4 Nov 2026: dropped `{companion}` — the second human learner no
+ * longer appears in any World2 scene (see shared.tsx's `PlayableAvatar`
+ * doc comment), so no template references it any more. */
 function fillNames(text: string, playerAvatar: PlayableAvatar): string {
   const playerName = playerAvatar === "adam" ? "Adam" : "Lina";
-  const companionName = playerAvatar === "adam" ? "Lina" : "Adam";
   const playerObj = playerAvatar === "adam" ? "him" : "her";
-  return text
-    .replaceAll("{player}", playerName)
-    .replaceAll("{companion}", companionName)
-    .replaceAll("{playerObj}", playerObj);
+  return text.replaceAll("{player}", playerName).replaceAll("{playerObj}", playerObj);
 }
 
 /** The flashcard shown when a learner clicks a food/menu hotspot in the 3D
@@ -153,12 +166,14 @@ function VocabCard({ vocab, onClose }: { vocab: VocabItem; onClose: () => void }
  * between Adam and Lina, shown one line at a time — Korean, its English
  * reading (romanization), and the English translation — distinct from the
  * single-word VocabCard above. Clicking a speaker's line also plays a
- * one-off "talk" animation on that character in the scene (see
- * activeDialogueSpeaker/dialogueTurnKey wiring in World2Page below). */
+ * one-off "talk" animation (or, for Cluby, a little reaction hop) on that
+ * character in the scene (see activeDialogueSpeaker/dialogueTurnKey wiring
+ * in World2Page below). */
 function DialogueCard({
   line,
   index,
   total,
+  playerName,
   onPrev,
   onNext,
   onClose,
@@ -166,11 +181,15 @@ function DialogueCard({
   line: DialogueLine;
   index: number;
   total: number;
+  /** "Adam" or "Lina" — whichever the visitor is currently walking as, so a
+   * `line.speaker === "player"` line is labelled with their actual name
+   * rather than a generic "Player". */
+  playerName: string;
   onPrev: () => void;
   onNext: () => void;
   onClose: () => void;
 }) {
-  const speakerLabel = line.speaker === "adam" ? "Adam" : "Lina";
+  const speakerLabel = line.speaker === "player" ? playerName : "Cluby";
   return (
     <div className="absolute inset-x-3 bottom-3 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-96 rounded-lg border border-[#FFF9EC]/15 bg-[#2E2E2E]/95 backdrop-blur p-4 shadow-xl">
       <div className="flex items-start justify-between gap-2">
@@ -220,6 +239,94 @@ function DialogueCard({
             <ChevronRight className="h-4 w-4" />
           </Button>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * "Learn the Alphabet" — Cluby teaches one Hangul letter at a time: the 14
+ * consonants, then the 10 vowels. Re, 4 Nov 2026: the one piece of the
+ * bundled request the cart/store rooms never covered — those teach
+ * vocabulary *in context* (어묵, 과자...), never the writing system itself.
+ * Deliberately a full-screen overlay rather than another 3D room: this
+ * isn't tied to any scene's geometry, and every room already has Cluby in
+ * it, so there's no world to build, just a focused teaching moment. See
+ * hangul.ts's own doc comment on why this doesn't conflict with the live
+ * game's canon "Hangul Village" world.
+ */
+function HangulCard({
+  letter,
+  index,
+  total,
+  onPrev,
+  onNext,
+  onClose,
+}: {
+  letter: HangulLetter;
+  index: number;
+  total: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}) {
+  const line = clubyTeachesLetter(letter);
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-lg border border-[#FFF9EC]/15 bg-[#2E2E2E] p-5 shadow-2xl">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FFFF00] text-[#2E2E2E]">Cluby</span>
+            <span className="text-xs text-[#FFF9EC]/50">
+              {letter.kind === "consonant" ? "Consonant" : "Vowel"} · {index + 1} / {total}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="text-[#FFF9EC]/50 hover:text-[#FFF9EC] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex items-center gap-4 mt-3">
+          <p className="text-6xl font-bold text-[#FFFF00] leading-none">{letter.letter}</p>
+          <div>
+            <p className="text-lg font-semibold text-[#FFF9EC]">{letter.name}</p>
+            <p className="text-xs text-[#FFF9EC]/60">{letter.reading} — {letter.sound}</p>
+          </div>
+        </div>
+        <p className="text-[#FFF9EC] mt-4">{line.korean}</p>
+        <p className="text-xs text-[#FFF9EC]/60 mt-0.5">{line.reading}</p>
+        <p className="text-sm text-[#FFF9EC]/80 mt-2">{line.english}</p>
+        <div className="flex items-center justify-between mt-4">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onPrev}
+            disabled={index === 0}
+            className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10 disabled:opacity-30 px-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => speakKorean(letter.example.korean)}
+            className="bg-[#FFFF00] text-[#2E2E2E] hover:bg-[#FFFF00]/90"
+          >
+            <Volume2 className="h-3.5 w-3.5 mr-1.5" />
+            Hear it
+          </Button>
+          {index === total - 1 ? (
+            <Button size="sm" variant="ghost" onClick={onClose} className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10 px-2">
+              Done
+            </Button>
+          ) : (
+            <Button size="sm" variant="ghost" onClick={onNext} className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10 px-2">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -318,6 +425,7 @@ function MapOverlay({
           <button
             key={n.id}
             onClick={() => onGo(n.id)}
+            aria-current={n.id === view ? "location" : undefined}
             className={`text-[9px] leading-tight text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded ${
               n.id === view ? "text-[#FFFF00] font-semibold" : "text-[#FFF9EC]/70 hover:text-[#FFF9EC]"
             }`}
@@ -360,22 +468,6 @@ function useFullscreen<T extends HTMLElement>() {
   return { ref, isFullscreen, toggle };
 }
 
-/** Camera gently orbits so the scene reads as a real 3D room, not a static
- * render. Amplitude was 0.35 rad (~20°) — wide enough that, combined with
- * Cluby standing close to Lina in World2Scene, the sway could carry Cluby's
- * silhouette directly over Lina's from this room's camera angle (Re flagged
- * this as the body "not looking well" — two separate characters reading as
- * one broken one). Narrowed to 0.12 rad (~7°): still a visible, living sway,
- * but far too small a swing for a stationary NPC's position to cross another
- * stationary NPC's from the camera's point of view. */
-function SlowOrbit({ children }: { children: React.ReactNode }) {
-  const g = useRef<Group>(null);
-  useFrame(({ clock }) => {
-    if (g.current) g.current.rotation.y = Math.sin(clock.elapsedTime * 0.15) * 0.12;
-  });
-  return <group ref={g}>{children}</group>;
-}
-
 /**
  * KLOVERS World 2 — hackathon preview page, route /world2.
  *
@@ -408,6 +500,11 @@ export default function World2Page() {
   // X/Y" chip below reflects real progress, not just the room on screen.
   const [learnedIds, setLearnedIds] = useState<Set<string>>(new Set());
   const [dialogueSeen, setDialogueSeen] = useState<Set<string>>(new Set());
+  // "Learn the Alphabet" — null when closed, otherwise the index into HANGUL
+  // currently showing. `hangulSeen` tracks real progress the same way
+  // `learnedIds` does for vocab, keyed by letter id.
+  const [hangulIndex, setHangulIndex] = useState<number | null>(null);
+  const [hangulSeen, setHangulSeen] = useState<Set<string>>(new Set());
   // Mirrors the `povMode` singleton in shared.tsx (see FollowCamera's doc
   // comment there) purely so this button's own icon re-renders on toggle;
   // FollowCamera reads `povMode.firstPerson` directly every frame.
@@ -415,6 +512,8 @@ export default function World2Page() {
   // Which canon learner the visitor is walking as this visit — see
   // CharacterPicker's doc comment above.
   const [playerAvatar, setPlayerAvatar] = useState<PlayableAvatar>(DEFAULT_PLAYER_AVATAR);
+  // The live game's own quality tier (shadows, pixel ratio, AO) for this device.
+  const quality = useWorld1Quality();
   const togglePov = () => {
     povMode.firstPerson = !povMode.firstPerson;
     setFirstPerson(povMode.firstPerson);
@@ -450,6 +549,19 @@ export default function World2Page() {
   const prevLine = () => setDialogueIndex((i) => (i === null ? null : Math.max(i - 1, 0)));
   const nextLine = () =>
     setDialogueIndex((i) => (i === null || !room ? null : Math.min(i + 1, room.dialogue.length - 1)));
+  const openHangul = () => {
+    setHangulIndex(0);
+    setHangulSeen((prev) => (prev.has(HANGUL[0].id) ? prev : new Set(prev).add(HANGUL[0].id)));
+  };
+  const closeHangul = () => setHangulIndex(null);
+  const prevLetter = () => setHangulIndex((i) => (i === null ? null : Math.max(i - 1, 0)));
+  const nextLetter = () =>
+    setHangulIndex((i) => {
+      if (i === null) return null;
+      const next = Math.min(i + 1, HANGUL.length - 1);
+      setHangulSeen((prev) => (prev.has(HANGUL[next].id) ? prev : new Set(prev).add(HANGUL[next].id)));
+      return next;
+    });
   return (
     // World2 is an English-narrated hackathon tech demo (hint text, room
     // descriptions, dialogue/vocab cards) — explicitly LTR so it renders
@@ -461,7 +573,7 @@ export default function World2Page() {
     // unaffected by this page-level override.
     <div dir="ltr" className="min-h-screen bg-[#2E2E2E] text-[#FFF9EC]">
       <div className="sticky top-0 z-20 bg-[#2E2E2E]/90 backdrop-blur border-b border-[#FFF9EC]/10">
-        <div className="max-w-5xl mx-auto flex items-center gap-3 py-3 px-4 md:px-6">
+        <div className="max-w-[1400px] mx-auto flex items-center gap-3 py-3 px-4 md:px-6">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-[#FFF9EC] hover:bg-[#FFF9EC]/10">
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -479,15 +591,30 @@ export default function World2Page() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-4">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-6 space-y-4">
         {/* Overall progress across both rooms — visible from the entrance
             too, so a learner sees where they stand before picking a gate,
             not only once they're already inside a room. */}
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <p className="text-xs text-[#FFF9EC]/60">
-            Learned {ROOMS.reduce((n, r) => n + r.vocab.filter((v) => learnedIds.has(`${r.id}:${v.id}`)).length, 0)}/
-            {ROOMS.reduce((n, r) => n + r.vocab.length, 0)} words total across both places
-          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-xs text-[#FFF9EC]/60">
+              Learned {ROOMS.reduce((n, r) => n + r.vocab.filter((v) => learnedIds.has(`${r.id}:${v.id}`)).length, 0)}/
+              {ROOMS.reduce((n, r) => n + r.vocab.length, 0)} words total across both places
+            </p>
+            {/* "Learn the Alphabet" — see HangulCard's own doc comment:
+                genuinely new content (the writing/sound system, not
+                vocabulary-in-context), available from anywhere in World2
+                since it isn't tied to any one room's scene. */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={openHangul}
+              className="h-6 px-2.5 text-xs font-semibold bg-transparent text-[#FFF9EC]/80 border-[#FFF9EC]/20 hover:border-[#FFF9EC]/40 hover:bg-[#FFF9EC]/10"
+            >
+              <BookOpen className="h-3 w-3 mr-1.5" />
+              Learn the Alphabet (한글) · {hangulSeen.size}/{HANGUL.length}
+            </Button>
+          </div>
           <CharacterPicker playerAvatar={playerAvatar} onChange={setPlayerAvatar} />
         </div>
         {/* Entrance + room switcher: "Entrance" is the landing courtyard
@@ -497,6 +624,7 @@ export default function World2Page() {
         <div className="flex gap-2">
           <button
             onClick={() => goTo("entrance")}
+            aria-current={view === "entrance" ? "page" : undefined}
             className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
               view === "entrance"
                 ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"
@@ -509,6 +637,7 @@ export default function World2Page() {
             <button
               key={r.id}
               onClick={() => goTo(r.id)}
+              aria-current={r.id === view ? "page" : undefined}
               className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                 r.id === view
                   ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"
@@ -525,26 +654,35 @@ export default function World2Page() {
             <div
               ref={stageRef}
               className={`relative overflow-hidden border border-[#FFF9EC]/10 bg-[#2E2E2E] ${
-                isFullscreen ? "h-screen w-screen" : "h-[75vh] rounded-lg"
+                isFullscreen ? "h-screen w-screen" : "h-[80vh] min-h-[420px] rounded-lg"
               }`}
             >
               <Canvas
                 key={room.id}
-                shadows
-                dpr={[1, 2]}
-                gl={{ antialias: true }}
-                camera={{ position: room.cameraPosition, fov: room.cameraFov }}
+                {...world1CanvasProps(quality)}
+                camera={{ position: room.cameraPosition, fov: room.cameraFov, near: 0.1, far: 120 }}
               >
-                <PostFinish />
+                {quality.post && <PostFinish />}
                 <Suspense fallback={null}>
-                  <SlowOrbit>
-                    <room.Scene
-                      playerAvatar={playerAvatar}
-                      onSelectVocab={selectVocab}
-                      activeDialogueSpeaker={currentLine?.speaker ?? null}
-                      dialogueTurnKey={dialogueIndex ?? -1}
-                    />
-                  </SlowOrbit>
+                  {/* Re, 4 Nov 2026: "fix and make it as possible same
+                      looking and function of world1" — the live /world
+                      game never idly moves its own camera or scene; it only
+                      moves when the learner does (ThirdPersonCamera, driven
+                      by real player input). World2 used to wrap every room
+                      in a constant slow sway ("SlowOrbit") "so the scene
+                      reads as a real 3D room, not a static render" — but
+                      that meant every hotspot's on-screen position was
+                      always slowly drifting, on top of already being a
+                      small target (see Hotspot's own hitSize/hitCenter fix
+                      in shared.tsx), making them harder to hit than they
+                      needed to be. Removed: the room now holds still except
+                      when the learner actually moves, same as World1. */}
+                  <room.Scene
+                    playerAvatar={playerAvatar}
+                    onSelectVocab={selectVocab}
+                    activeDialogueSpeaker={currentLine?.speaker ?? null}
+                    dialogueTurnKey={dialogueIndex ?? -1}
+                  />
                 </Suspense>
               </Canvas>
               {!activeVocab && !currentLine && (
@@ -583,6 +721,7 @@ export default function World2Page() {
                   line={currentLine}
                   index={dialogueIndex ?? 0}
                   total={room.dialogue.length}
+                  playerName={playerAvatar === "adam" ? "Adam" : "Lina"}
                   onPrev={prevLine}
                   onNext={nextLine}
                   onClose={closeDialogue}
@@ -625,11 +764,11 @@ export default function World2Page() {
             <div
               ref={stageRef}
               className={`relative overflow-hidden border border-[#FFF9EC]/10 bg-[#2E2E2E] ${
-                isFullscreen ? "h-screen w-screen" : "h-[75vh] rounded-lg"
+                isFullscreen ? "h-screen w-screen" : "h-[80vh] min-h-[420px] rounded-lg"
               }`}
             >
-              <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }} camera={{ position: [0, 2.2, 10.5], fov: 52 }}>
-                <PostFinish />
+              <Canvas {...world1CanvasProps(quality)} camera={{ position: [0, 2.2, 10.5], fov: 52, near: 0.1, far: 120 }}>
+                {quality.post && <PostFinish />}
                 <Suspense fallback={null}>
                   <EntranceScene playerAvatar={playerAvatar} onEnterRoom={(id) => goTo(id)} />
                 </Suspense>
@@ -668,7 +807,7 @@ export default function World2Page() {
               <p className="font-semibold">KLOVERS World 2 — the entrance</p>
               <p className="text-[#FFF9EC]/80">
                 {fillNames(
-                  "You're walking as {player}, with {companion} alongside. Walk through 포장마차 (the street cart) or 편의점 (the convenience store) with the arrow keys, or click one, to start learning.",
+                  "You're walking as {player}, with Cluby close by. Walk through 포장마차 (the street cart) or 편의점 (the convenience store) with the arrow keys, or click one, to start learning.",
                   playerAvatar,
                 )}
               </p>
@@ -680,6 +819,16 @@ export default function World2Page() {
           </>
         )}
       </div>
+      {hangulIndex !== null && (
+        <HangulCard
+          letter={HANGUL[hangulIndex]}
+          index={hangulIndex}
+          total={HANGUL.length}
+          onPrev={prevLetter}
+          onNext={nextLetter}
+          onClose={closeHangul}
+        />
+      )}
     </div>
   );
 }

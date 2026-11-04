@@ -7,6 +7,8 @@
  * src/i18n/translations.ts for a single page.
  */
 
+import { EXCHANGE_AVATAR_DEFS } from "@/components/exchange/AvatarArt";
+
 export interface LanguageOption {
   code: string;
   en: string;
@@ -94,6 +96,36 @@ export const goalLabel = (key: string, lang: "en" | "ar"): string =>
 export const EXCHANGE_MAX_GOALS = 3;
 export const EXCHANGE_AVAILABILITY_COUNT = 2;
 
+/**
+ * Own gender and who a profile wants to practice with (Re's request,
+ * 4 Nov 2026). Both enforced server-side with the same fixed-catalogue CHECK
+ * pattern as goals (see
+ * supabase/migrations/20261104030000_exchange_gender_and_notifications.sql).
+ * `looking_for_gender` defaults to "any" so existing profiles aren't broken.
+ */
+export interface GenderOption {
+  key: string;
+  en: string;
+  ar: string;
+}
+
+export const EXCHANGE_GENDERS: GenderOption[] = [
+  { key: "male", en: "Male", ar: "ذكر" },
+  { key: "female", en: "Female", ar: "أنثى" },
+];
+
+export const EXCHANGE_LOOKING_FOR_GENDERS: GenderOption[] = [
+  { key: "male", en: "Male", ar: "ذكر" },
+  { key: "female", en: "Female", ar: "أنثى" },
+  { key: "any", en: "Either", ar: "الاثنان" },
+];
+
+export const genderLabel = (key: string | null | undefined, lang: "en" | "ar"): string =>
+  EXCHANGE_GENDERS.find((g) => g.key === key)?.[lang] ?? (key ?? "");
+
+export const lookingForGenderLabel = (key: string, lang: "en" | "ar"): string =>
+  EXCHANGE_LOOKING_FOR_GENDERS.find((g) => g.key === key)?.[lang] ?? key;
+
 /** Days and time-of-day buckets used to build an availability slot token
  *  ("Monday:evening"). Day names in English/Arabic mirror MySchedulePage's
  *  DAY_NAMES_EN/DAY_NAMES_AR so a day reads the same everywhere in the app. */
@@ -130,6 +162,39 @@ export function shortTimezoneLabel(tz: string | null | undefined): string {
   if (!tz) return "";
   return tz.split("/").pop()?.replace(/_/g, " ") ?? tz;
 }
+
+/**
+ * Avatars only, never real photos (Re's request, 4 Nov 2026 — this is a
+ * study-partner feature, not a dating app, and a real photo is the single
+ * biggest catfishing/harassment surface a swipe-based feature can have).
+ *
+ * No upload exists for this feature at all: a profile picks one of a fixed
+ * set of original cartoon-character avatars (src/components/exchange/AvatarArt.tsx),
+ * stored as "avatar://<key>" in the existing `avatar_url` column (no schema
+ * change needed — it was already free text). The character set deliberately
+ * excludes anything romantic (no hearts, no couple poses, no flirtatious
+ * expressions) — the same "friends and study companions, not a romantic
+ * couple" line this repo's own CLAUDE.md draws for the in-game characters —
+ * and includes a hijab-wearing option alongside the rest of the cast, given
+ * Klovers' Arabic-speaking / Egyptian audience.
+ *
+ * Any `avatar_url` that is NOT in this "avatar://" form (e.g. a leftover
+ * real upload from before this change) is deliberately never rendered as an
+ * image — see isBuiltInAvatarValue — so this holds even retroactively.
+ */
+export const AVATAR_ICON_PREFIX = "avatar://";
+
+export type { AvatarDef as AvatarStyleOption } from "@/components/exchange/AvatarArt";
+export const EXCHANGE_AVATAR_STYLES = EXCHANGE_AVATAR_DEFS;
+
+export const isBuiltInAvatarValue = (v: string | null | undefined): boolean =>
+  !!v && v.startsWith(AVATAR_ICON_PREFIX);
+
+export const avatarStyleFromValue = (v: string | null | undefined) => {
+  if (!isBuiltInAvatarValue(v)) return null;
+  const key = v!.slice(AVATAR_ICON_PREFIX.length);
+  return EXCHANGE_AVATAR_DEFS.find((a) => a.key === key) ?? null;
+};
 
 export const REPORT_REASONS: { key: string; en: string; ar: string }[] = [
   { key: "harassment", en: "Harassment or abuse", ar: "مضايقة أو إساءة" },

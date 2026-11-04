@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Group, Matrix4, Quaternion, Vector3 } from "three";
-import { PALETTE } from "../game/config/world";
+import { PALETTE, type Box2 } from "../game/config/world";
 import { std } from "../game/config/materials";
+import { isBlocked, pushOutOfBox } from "../game/systems/collision";
+import { damp, stepVelocity, stepYaw, yawFromDirection } from "../game/systems/movement";
 import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
+import AvatarBoundary from "../game/player/AvatarBoundary";
+import { realPerson } from "../game/npc/realCast";
+import type { CastId } from "../game/npc/cast";
 
 /**
  * Shared building blocks for every World2 hackathon room (the street-food
@@ -25,15 +30,19 @@ export type VocabItem = {
   english: string;
 };
 
-/** One line of a short, real exchange between Adam and Lina in a room — the
- * "practice the conversation" feature, distinct from the single-word vocab
- * hotspots: a learner sees how those same words actually get used back and
- * forth between two study companions, not just in isolation. Per canon
- * (CLAUDE.md / klovers-world.ts), Adam and Lina are friends and study
- * companions, never a romantic pair — lines stay practical (ordering,
- * prices, "let's go together"), never romantic. */
+/** One line of a short, real exchange in a room — the "practice the
+ * conversation" feature, distinct from the single-word vocab hotspots: a
+ * learner sees how those same words actually get used in a back-and-forth,
+ * not just in isolation.
+ *
+ * Re, 4 Nov 2026: this used to always be Adam talking to Lina (or vice
+ * versa); now that only one human renders in any World2 scene (see
+ * `PlayableAvatar`'s doc comment above), the exchange is between whichever
+ * learner the visitor picked ("player") and Cluby — who hints, encourages,
+ * and reacts, per his own canon role (`give_hints`, `companion`,
+ * `motivation` in klovers-world.ts), never ordering or shopping himself. */
 export type DialogueLine = {
-  speaker: "adam" | "lina";
+  speaker: "player" | "cluby";
   korean: string;
   /** Romanized pronunciation guide — the "English reading" of the Korean line. */
   reading: string;
@@ -70,13 +79,29 @@ export function speakKorean(text: string) {
  * scene swaps which character is `Player` (keyboard-controlled, camera
  * target) and which is `Learner` (stationary companion) accordingly — the
  * position/pose "slots" each room already had stay the same, only which
- * canon character occupies which slot changes. */
+ * canon character occupies which slot changes.
+ *
+ * Re, 4 Nov 2026: "student must choose a character and move with one only" —
+ * the second human (the stationary `Learner` companion described above) has
+ * been removed from the entrance and both rooms entirely, not just made
+ * non-walking (it was already stationary; only the keyboard-controlled
+ * `Player` ever moved). Now exactly one human renders in any World2 scene —
+ * whichever one `playerAvatar` names. Cluby, who's in every room regardless,
+ * takes over the companion's old role as the dialogue partner for "Practice
+ * the conversation" (see `DialogueLine`'s `speaker` below: `"player" |
+ * "cluby"`, not `"adam" | "lina"`) and as who "explains"/reacts to a vocab
+ * hotspot click (see `useLearnerReactions`'s `clubyReact` below). This also
+ * reads more naturally with canon: Cluby is the one companion present no
+ * matter which learner is walking, where the old setup made Lina (say) a
+ * mute prop standing next to the camera whenever Adam was the chosen player. */
 export type PlayableAvatar = "adam" | "lina";
 
 /** Matches the live game's own `DEFAULT_AVATAR` (characters.ts). */
 export const DEFAULT_PLAYER_AVATAR: PlayableAvatar = "adam";
 
-/** The companion standing alongside whoever the learner is playing as. */
+/** The companion standing alongside whoever the learner is playing as.
+ * Kept for reference/possible reuse — no longer called anywhere as of
+ * 4 Nov 2026 (see the note on `PlayableAvatar` above this one). */
 export function companionOf(avatar: PlayableAvatar): PlayableAvatar {
   return avatar === "adam" ? "lina" : "adam";
 }
@@ -227,6 +252,11 @@ export function usePlayerMovement({
   control,
   speed = 1.7,
   externalRef,
+  colliders,
+  radius = 0.35,
+  acceleration = 10,
+  deceleration = 12,
+  turnRate = 12,
 }: {
   bounds: { x: [number, number]; z: [number, number] };
   control: MutableRefObject<BodyControl>;
@@ -235,14 +265,48 @@ export function usePlayerMovement({
    * the same transform this hook drives, instead of creating its own ref
    * that nothing outside this hook could ever see. */
   externalRef?: MutableRefObject<Group | null>;
+  /** Re, 4 Nov 2026 ("movement is so bad"): the entrance's new kit scenery
+   * (trees, lanterns, the bed, the bench) had no collision at all — the
+   * learner could walk straight into a lantern, and the chase camera
+   * (sitting just behind them) ended up with the lantern's own geometry
+   * between it and everything else, the clipped-through mess Re screenshot.
+   * This is the live game's own circle-vs-box player collision
+   * (systems/collision.ts's `pushOutOfBox`), reused as-is rather than
+   * reinvented — a scene with no solid decor just omits it. */
+  colliders?: Box2[];
+  /** The learner's own circular footprint, metres — matches the live
+   * game's own `PLAYER.radius` (config/world.ts). */
+  radius?: number;
+  /** Re, 4 Nov 2026 ("why can't you just copy the world1 code"): movement
+   * here used to be instant speed with a linear turn lerp — snappy, but not
+   * what the live game actually feels like. These three default to the
+   * live game's own `PLAYER` tuning (config/world.ts) and drive the exact
+   * same velocity/turn maths (systems/movement.ts's `stepVelocity`/
+   * `stepYaw`, reused unmodified, not reimplemented) — acceleration and
+   * braking instead of an instant stop/start, and a turn that eases instead
+   * of snapping to face the new direction. */
+  acceleration?: number;
+  deceleration?: number;
+  turnRate?: number;
 }) {
   const internalRef = useRef<Group>(null);
   const g = externalRef ?? internalRef;
   const pressed = useRef<Set<string>>(new Set());
+  const velocity = useRef({ x: 0, z: 0 });
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
-      if (MOVE_KEYS[key]) pressed.current.add(key);
+      if (!MOVE_KEYS[key]) return;
+      // Re, 4 Nov 2026: with the stage now taller than the window, walking
+      // with the arrow keys also scrolled the whole page (the browser's own
+      // default for those keys) — the scene jumped away mid-walk. The live
+      // game is full-screen so never hit this. Arrow keys only (WASD has no
+      // default to cancel), and never while the learner is typing somewhere.
+      const t = e.target as HTMLElement | null;
+      const typing = !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+      if (typing) return;
+      if (key.startsWith("arrow")) e.preventDefault();
+      pressed.current.add(key);
     };
     const up = (e: KeyboardEvent) => pressed.current.delete(e.key.toLowerCase());
     const clearAll = () => pressed.current.clear();
@@ -273,17 +337,33 @@ export function usePlayerMovement({
       dz += dir[1];
     }
     const moving = dx !== 0 || dz !== 0;
+    const len = Math.hypot(dx, dz) || 1;
+    const wish = moving ? { x: dx / len, z: dz / len } : { x: 0, z: 0 };
+    const dt = Math.min(delta, 0.05); // clamp so a dropped frame can't teleport the player
+    // Re, 4 Nov 2026: the live game's own velocity/turn maths
+    // (systems/movement.ts), reused unmodified — acceleration and braking
+    // instead of an instant stop/start speed, a turn that eases toward the
+    // new heading instead of snapping to it.
+    velocity.current = stepVelocity(velocity.current, wish, speed, acceleration, deceleration, dt);
+    if (velocity.current.x !== 0 || velocity.current.z !== 0) {
+      const nx = group.position.x + velocity.current.x * dt;
+      const nz = group.position.z + velocity.current.z * dt;
+      const p = { x: nx, z: nz };
+      if (colliders && colliders.length) {
+        // Two passes settle corners where two boxes meet — same as the
+        // live game's own `resolveCollisions`.
+        for (let pass = 0; pass < 2; pass++) {
+          let moved = false;
+          for (const b of colliders) if (pushOutOfBox(p, radius, b)) moved = true;
+          if (!moved) break;
+        }
+      }
+      group.position.x = Math.min(bounds.x[1], Math.max(bounds.x[0], p.x));
+      group.position.z = Math.min(bounds.z[1], Math.max(bounds.z[0], p.z));
+    }
     if (moving) {
-      const len = Math.hypot(dx, dz) || 1;
-      const step = speed * Math.min(delta, 0.05); // clamp delta so a dropped frame can't teleport the player
-      const nx = group.position.x + (dx / len) * step;
-      const nz = group.position.z + (dz / len) * step;
-      group.position.x = Math.min(bounds.x[1], Math.max(bounds.x[0], nx));
-      group.position.z = Math.min(bounds.z[1], Math.max(bounds.z[0], nz));
-      const targetRot = Math.atan2(dx, dz);
-      let diff = targetRot - group.rotation.y;
-      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-      group.rotation.y += diff * Math.min(1, delta * 10);
+      const targetRot = yawFromDirection(dx, dz);
+      group.rotation.y = stepYaw(group.rotation.y, targetRot, turnRate, dt);
       if (control.current.clip !== "walk") control.current.clip = "walk";
     } else if (control.current.clip === "walk") {
       control.current.clip = "idle";
@@ -337,9 +417,10 @@ export function Player({
  * already flips to "walk"), it eases into a chase position behind and
  * slightly above them, looking a little ahead of their facing direction —
  * reading their world position/rotation through Three's own world-matrix
- * (getWorldPosition/getWorldQuaternion) rather than local coordinates, so
- * it tracks correctly even with World2Page's own SlowOrbit gently swaying
- * the room around them.
+ * (getWorldPosition/getWorldQuaternion) rather than local coordinates —
+ * originally so it still tracked correctly under World2Page's old
+ * "SlowOrbit" idle sway (removed 4 Nov 2026, see World2Page.tsx), kept now
+ * because reading world transforms is simply more correct than local ones.
  *
  * Re also asked for a "character POV" view, separate from this chase
  * camera: a `povMode` toggle (World2Page.tsx renders the button; mirrors
@@ -365,6 +446,8 @@ export function FollowCamera({
   height = 1.75,
   ahead = 1.0,
   eyeHeight = 1.05,
+  povEyeHeight = 1.6,
+  cameraColliders,
 }: {
   /** The moving character's own transform (Player's `exposedRef`, or the
    * ref returned directly by usePlayerMovement). */
@@ -374,6 +457,19 @@ export function FollowCamera({
   height?: number;
   ahead?: number;
   eyeHeight?: number;
+  /** Eye height used only in POV mode — see the doc comment on `povMode`
+   * above and the fix note on the POV branch below for why this is a
+   * separate knob from `eyeHeight` (the chase camera's look-at height). */
+  povEyeHeight?: number;
+  /** Re, 4 Nov 2026 ("movement is so bad"): the chase camera had no idea the
+   * entrance's new scenery (lanterns, trees) existed, so walking past one
+   * put its own geometry between the camera and everything else — the
+   * clipped-through mess Re screenshot. The live game's own camera avoids
+   * exactly this (ThirdPersonCamera.tsx's `cameraBlocked`/`isBlocked`
+   * against `CAMERA_COLLIDERS`, i.e. tall props only — low furniture the
+   * camera can see over is left out); same idea here, just sampled along
+   * the line to the desired spot instead of walled rooms with portals. */
+  cameraColliders?: Box2[];
 }) {
   const { camera } = useThree();
   const staticPos = useRef(new Vector3());
@@ -381,6 +477,13 @@ export function FollowCamera({
   const capturedStatic = useRef(false);
   const curPos = useRef(new Vector3());
   const curQuat = useRef(new Quaternion());
+  // Re, 4 Nov 2026 ("movement is so bad"): the camera used to drop the chase
+  // view and snap straight back to this captured opening shot the instant
+  // the learner let go of a key — jarring mid-room, and the likely source
+  // of half of "so bad". The live game's own camera never does this: once
+  // it's following, it keeps following. `everMoved` mirrors that — the
+  // opening shot plays once, then the chase camera owns the view for good.
+  const everMoved = useRef(false);
   // Scratch objects, reused every frame in the "moving" branch only — not
   // on the far more common idle path, where nothing new is allocated.
   const worldPos = useRef(new Vector3());
@@ -401,22 +504,40 @@ export function FollowCamera({
     }
     const dt = Math.min(rawDt, 0.05);
     const pov = povMode.firstPerson && target.current;
-    const moving = !pov && control.current.clip === "walk" && target.current;
+    if (!pov && control.current.clip === "walk") everMoved.current = true;
+    const moving = !pov && everMoved.current && target.current;
     if (pov && target.current) {
       target.current.getWorldPosition(worldPos.current);
       target.current.getWorldQuaternion(worldQuat.current);
       forward.current.set(0, 0, 1).applyQuaternion(worldQuat.current);
-      // Just in front of the face, not literally at it — see this
-      // function's doc comment on why this is an approximation.
+      // Re, 4 Nov 2026: two bugs here, found live on production back to
+      // back. First, a -0.12 "behind centre" nudge (copied from the live
+      // game's POV_EYE recipe, which relies on being *inside* a head mesh
+      // whose backfaces are culled — not true of this rig) put the camera
+      // inside the hair/face geometry. Widening it to -0.35 cleared the
+      // geometry, but that's when the real bug showed: this function's own
+      // doc comment above says POV "sits just in front of the character's
+      // face... looking the way they're facing" — the *opposite* side from
+      // "behind centre" — and the code had never matched that comment. With
+      // the camera behind the head looking further out, the character's own
+      // skull sat directly on the sightline to the look-ahead point and
+      // blocked it: every frame rendered the back of their own head at
+      // point-blank range, not an outward view. The fix the comment always
+      // described: stand slightly *ahead* of the face (clear of the nose and
+      // any hair) and look further along the same forward direction — nothing
+      // of their own body is ever in front of their own face, so this can't
+      // clip into them from any facing angle, and it reads as seeing what
+      // they see rather than seeing them.
+      const povAhead = 0.4;
       desiredPos.current.set(
-        worldPos.current.x + forward.current.x * 0.15,
-        eyeHeight,
-        worldPos.current.z + forward.current.z * 0.15,
+        worldPos.current.x + forward.current.x * povAhead,
+        povEyeHeight,
+        worldPos.current.z + forward.current.z * povAhead,
       );
       lookAt.current.set(
-        worldPos.current.x + forward.current.x * 3,
-        eyeHeight,
-        worldPos.current.z + forward.current.z * 3,
+        desiredPos.current.x + forward.current.x * 3,
+        povEyeHeight,
+        desiredPos.current.z + forward.current.z * 3,
       );
       lookMatrix.current.lookAt(desiredPos.current, lookAt.current, UP);
       desiredQuat.current.setFromRotationMatrix(lookMatrix.current);
@@ -431,6 +552,38 @@ export function FollowCamera({
         height,
         worldPos.current.z - forward.current.z * behind,
       );
+      if (cameraColliders && cameraColliders.length) {
+        // Walk the line from the learner out to the full "behind" distance
+        // in steps, and stop at the furthest one still clear — the same
+        // "back off until clear" idea as the live game's own wall-avoidance,
+        // just sampled rather than solved against room portals.
+        //
+        // Re, 4 Nov 2026: shipped this with the floor at t=0 (right on top
+        // of the learner) and a 0.3 pad. Standing flush against a lantern —
+        // exactly the collision fix above now lets happen, where before the
+        // learner would have slid past it — put the learner's own position
+        // inside that padded zone too, so every sample came back "blocked"
+        // and the camera collapsed to point-blank, the extreme close-up Re
+        // screenshot. A smaller pad (closer to the geometry's own footprint)
+        // plus a floor well short of zero means a worst case still frames
+        // the learner from a short but usable distance instead of their own
+        // collar.
+        const hugeBounds = { minX: -1e6, maxX: 1e6, minZ: -1e6, maxZ: 1e6 };
+        const steps = 8;
+        const minStep = 3; // t=3/8=0.375 of `behind` — the closest the camera will ever sit
+        let bestT = minStep / steps;
+        for (let i = steps; i >= minStep; i--) {
+          const t = i / steps;
+          const tx = worldPos.current.x - forward.current.x * behind * t;
+          const tz = worldPos.current.z - forward.current.z * behind * t;
+          if (!isBlocked(tx, tz, 0.15, cameraColliders, hugeBounds)) {
+            bestT = t;
+            break;
+          }
+        }
+        desiredPos.current.x = worldPos.current.x - forward.current.x * behind * bestT;
+        desiredPos.current.z = worldPos.current.z - forward.current.z * behind * bestT;
+      }
       lookAt.current.set(
         worldPos.current.x + forward.current.x * ahead,
         eyeHeight,
@@ -442,7 +595,7 @@ export function FollowCamera({
       desiredPos.current.copy(staticPos.current);
       desiredQuat.current.copy(staticQuat.current);
     }
-    const k = 1 - Math.exp(-(pov || moving ? 3.2 : 1.8) * dt);
+    const k = damp(pov || moving ? 3.2 : 1.8, dt);
     curPos.current.lerp(desiredPos.current, k);
     curQuat.current.slerp(desiredQuat.current, k);
     camera.position.copy(curPos.current);
@@ -465,14 +618,160 @@ export function LearnerPlaceholder({ x, z }: { x: number; z: number }) {
   );
 }
 
+/** Muted, varied outfit tones for `BackgroundFigure` — picked to read as
+ * "a street/store full of other people", never close to Adam/Lina/Cluby's
+ * own canon palette (KLOVERS yellow, ivory) so a background figure is never
+ * mistaken for a chosen character at a glance. */
+const BG_FIGURE_TONES = ["#5C6B8A", "#8A6B5C", "#6B8A6F", "#8A5C76", "#6E6458"];
+
+/** A generic, unnamed background figure — the "more people" Re asked for
+ * (4 Nov 2026: "add more people and tigstures and detailsa") without
+ * introducing any named character. CLAUDE.md's story-canon check applies to
+ * any new character in a World2 scene: the Story Bible's draft Book-1 cast
+ * (Jihoon, Ms. Park, Mr. Kim, Yuna, Seoyeon, Taeyang, Hana) is explicitly
+ * scoped to Book 1's "Vocabulary Market" world with its own visual direction
+ * "still undecided... must be pinned down before any of them appear in
+ * production artwork" — not World2, and not ready either way. A plain,
+ * faceless, unnamed silhouette sidesteps that entirely: it reads as "this
+ * place has other people in it" the way a crowded street or a late-night
+ * store would, purely set dressing, never a speaking or clickable character
+ * (no Hotspot, no dialogue, no canon role to conflict with).
+ *
+ * Deliberately much simpler than RiggedBody's real rig — a handful of
+ * primitives, same philosophy as Cluby's own hand-built geometry — since
+ * this never needs to walk, talk, or be identified, only to stand there and
+ * breathe a little. */
+function SimpleFigure({
+  x,
+  z,
+  rotY = 0,
+  toneIndex = 0,
+  scale = 1,
+}: {
+  x: number;
+  z: number;
+  rotY?: number;
+  /** Picks a muted outfit tone from `BG_FIGURE_TONES` so a handful of these
+   * standing near each other don't look cloned. */
+  toneIndex?: number;
+  scale?: number;
+}) {
+  const g = useRef<Group>(null);
+  // A random-but-stable phase so several figures don't bob in lockstep.
+  const phase = useMemo(() => Math.random() * Math.PI * 2, []);
+  useFrame(({ clock }) => {
+    if (!g.current) return;
+    g.current.position.y = 0.012 * Math.sin(clock.elapsedTime * 1.1 + phase);
+    g.current.rotation.y = 0.05 * Math.sin(clock.elapsedTime * 0.35 + phase);
+  });
+  const tone = BG_FIGURE_TONES[toneIndex % BG_FIGURE_TONES.length];
+  return (
+    <group position={[x, 0, z]} rotation={[0, rotY, 0]} scale={scale}>
+      <group ref={g}>
+        {/* legs */}
+        <mesh position={[0, 0.34, 0]}>
+          <cylinderGeometry args={[0.08, 0.095, 0.68, 10]} />
+          <meshStandardMaterial color="#2E2E2E" roughness={0.9} />
+        </mesh>
+        {/* torso, a simple coat/hanbok-adjacent silhouette, never canon dress */}
+        <mesh position={[0, 0.95, 0]} castShadow>
+          <capsuleGeometry args={[0.155, 0.5, 4, 10]} />
+          <meshStandardMaterial color={tone} roughness={0.88} />
+        </mesh>
+        {/* arms, resting */}
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 0.19, 0.78, 0]} rotation={[0, 0, s * 0.12]}>
+            <capsuleGeometry args={[0.04, 0.38, 4, 8]} />
+            <meshStandardMaterial color={tone} roughness={0.88} />
+          </mesh>
+        ))}
+        {/* head + simple dark hair cap */}
+        <mesh position={[0, 1.4, 0]}>
+          <sphereGeometry args={[0.115, 14, 12]} />
+          <meshStandardMaterial color="#caa07a" roughness={0.8} />
+        </mesh>
+        <mesh position={[0, 1.45, -0.015]} scale={[1, 0.65, 1.02]}>
+          <sphereGeometry args={[0.12, 14, 12]} />
+          <meshStandardMaterial color="#241b14" roughness={0.9} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+/** The roles World1's own extras play (npc/cast.ts) — unnamed, no lines. */
+const BG_CASTS: CastId[] = ["shopper", "porter", "student1", "readerB", "auntie", "vendor", "walker", "student2"];
+
+/**
+ * Re, 4 Nov 2026 ("i need world 1 quality"): these were faceless capsule
+ * dolls. The live game fills its rooms with real rigged people instead —
+ * realCast.ts's `realPerson` gives each an own body model, skin, hair,
+ * clothes, height and face shape, stable for its id ("every person looks
+ * different and Korean", Re's standing ask). Same unnamed extras World1
+ * places (shopper, vendor, student…): no name, no line, no story role, so
+ * this stays the set dressing the original note above describes. The old
+ * primitive figure is kept as what shows while a body downloads (and if
+ * one ever fails, via the same AvatarBoundary World1's Npc uses).
+ */
+export function BackgroundFigure({
+  x,
+  z,
+  rotY = 0,
+  toneIndex = 0,
+  scale = 1,
+}: {
+  x: number;
+  z: number;
+  rotY?: number;
+  toneIndex?: number;
+  scale?: number;
+}) {
+  const look = useMemo(
+    () => realPerson(BG_CASTS[toneIndex % BG_CASTS.length], `w2-bg-${x.toFixed(2)}-${z.toFixed(2)}`),
+    [toneIndex, x, z],
+  );
+  const control = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
+  const fallback = <SimpleFigure x={x} z={z} rotY={rotY} toneIndex={toneIndex} scale={scale} />;
+  return (
+    <AvatarBoundary fallback={fallback}>
+      <Suspense fallback={fallback}>
+        <group position={[x, 0, z]} rotation={[0, rotY, 0]} scale={scale * look.scale}>
+          <RiggedBody model={look.model} rules={look.rules} female={look.female} control={control} head={look.head} face={look.face} />
+        </group>
+      </Suspense>
+    </AvatarBoundary>
+  );
+}
+
 /** Wraps a clickable prop: a subtle hover highlight (scale pulse) plus a
  * pointer cursor, so it reads as "tap this to learn the word" rather than a
- * hidden easter egg. Shared by every room's clickable props. */
+ * hidden easter egg. Shared by every room's clickable props.
+ *
+ * Re, 4 Nov 2026: tested World2's hotspots live and found them hard to hit —
+ * several of the food props (a tray of 0.012-radius skewer sticks, a 0.11m
+ * pot) were nearly unclickable by mouse, let alone touch, because the only
+ * thing raycast-able was the tiny visual mesh itself. The live /world game's
+ * own interactables never have this problem: MarketShop.tsx wraps every
+ * clickable item in "an easy target: the thing's whole footprint, invisible"
+ * — a generous invisible box sized for a comfortable tap, independent of
+ * however small or oddly-shaped the actual prop is. `hitSize`/`hitCenter`
+ * bring that exact technique here, defaulting to a reasonable hand-sized
+ * box so existing call sites that don't pass one still get some padding. */
 export function Hotspot({
   onSelect,
+  hitSize = [0.4, 0.4, 0.4],
+  hitCenter = [0, 0, 0],
   children,
 }: {
   onSelect: () => void;
+  /** Size (x, y, z, metres) of the invisible click/tap target placed over
+   * the visual prop. Err generous — it's invisible, so it only ever makes
+   * the prop easier to hit, never changes how the scene looks. */
+  hitSize?: [number, number, number];
+  /** Where that invisible box sits, in the same local space as `children` —
+   * usually the prop's own centre, since most of these props are small and
+   * off to one side of this Hotspot's own origin. */
+  hitCenter?: [number, number, number];
   children: React.ReactNode;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -500,6 +799,10 @@ export function Hotspot({
         document.body.style.cursor = "auto";
       }}
     >
+      <mesh position={hitCenter} visible={false}>
+        <boxGeometry args={hitSize} />
+        <meshBasicMaterial />
+      </mesh>
       {children}
     </group>
   );
@@ -529,10 +832,33 @@ const CLUBY_EYES = "#4A2E1F";
  * primitive Three.js geometry, same as World1 — there is no Cluby GLB
  * anywhere in the repo (confirmed), so this isn't a downgrade from "the
  * real one," it IS the real one's shape, just standing still. */
-export function Cluby({ x, y = 0, z }: { x: number; y?: number; z: number }) {
+export function Cluby({
+  x,
+  y = 0,
+  z,
+  reactRef,
+}: {
+  x: number;
+  y?: number;
+  z: number;
+  /** Re, 4 Nov 2026: Cluby is now the dialogue/reaction partner everywhere
+   * the companion learner used to stand in (see `PlayableAvatar`'s doc
+   * comment) — he has no talk/wave animation clips the way RiggedBody's
+   * humans do, so instead of a cross-faded clip this is a simple decaying
+   * "pulse" added on top of his existing idle bob: set `reactRef.current.
+   * pulse = 1` (see `useLearnerReactions`'s `react()` below) for a quick,
+   * self-resetting little hop whenever he "speaks" or reacts to a hotspot. */
+  reactRef?: MutableRefObject<{ pulse: number }>;
+}) {
   const g = useRef<Group>(null);
-  useFrame(({ clock }) => {
-    if (g.current) g.current.position.y = y + 0.02 * Math.sin(clock.elapsedTime * 1.6);
+  useFrame(({ clock }, dt) => {
+    if (!g.current) return;
+    let hop = 0;
+    if (reactRef?.current) {
+      reactRef.current.pulse = Math.max(0, reactRef.current.pulse - dt * 2.5);
+      hop = reactRef.current.pulse * 0.07;
+    }
+    g.current.position.y = y + 0.02 * Math.sin(clock.elapsedTime * 1.6) + hop;
   });
   const mint = std(CLUBY_MINT, 0.95);
   const m = (o: ReturnType<typeof std>) => <primitive object={o} attach="material" />;
@@ -665,27 +991,22 @@ export function Cluby({ x, y = 0, z }: { x: number; y?: number; z: number }) {
   );
 }
 
-/** A shared hook: two BodyControl refs (Adam, Lina) plus a `react(vocab)`
- * helper that plays the companion's "explains it" / the player's "reacts"
- * one-off animations, cross-fading back to idle automatically once the clip
- * finishes (see RiggedBody's own `once` handling) — every room's
- * handleSelect calls this instead of re-deriving the same two lines.
+/** A shared hook: the player's own BodyControl ref, plus Cluby's `reactRef`
+ * pulse, plus a `react()` helper that fires both — every room's
+ * `handleSelect` calls this instead of re-deriving the same two lines.
  *
- * Which control is "the player's" vs "the companion's" depends on
- * `playerAvatar` (defaults to Adam, matching the live game's own
- * DEFAULT_AVATAR) — the controls themselves stay keyed by character
- * (adamControl always drives Adam's rig) since that's what RiggedBody
- * needs; `playerControl`/`companionControl` are just the two named by role
- * instead, for call sites that don't care which specific character is
- * walking. */
-export function useLearnerReactions(playerAvatar: PlayableAvatar = DEFAULT_PLAYER_AVATAR) {
-  const adamControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
-  const linaControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
-  const playerControl = playerAvatar === "adam" ? adamControl : linaControl;
-  const companionControl = playerAvatar === "adam" ? linaControl : adamControl;
+ * Re, 4 Nov 2026: this used to also hold a second, "companion" BodyControl
+ * (Adam's or Lina's, whichever wasn't the player) so clicking a vocab
+ * hotspot could play a "the companion explains it" talk clip. Now that the
+ * companion learner is gone from every scene (see `PlayableAvatar`'s doc
+ * comment), that role moved to Cluby's `reactRef` pulse instead — the
+ * player still gets the same "wave" reaction clip as before. */
+export function useLearnerReactions() {
+  const playerControl = useRef<BodyControl>({ clip: "idle", once: null, rate: 1 });
+  const clubyReact = useRef<{ pulse: number }>({ pulse: 0 });
   const react = () => {
-    companionControl.current.once = "talk";
     playerControl.current.once = "wave";
+    clubyReact.current.pulse = 1;
   };
-  return { adamControl, linaControl, playerControl, companionControl, react };
+  return { playerControl, clubyReact, react };
 }

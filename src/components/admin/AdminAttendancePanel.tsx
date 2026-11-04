@@ -625,9 +625,9 @@ const AdminAttendancePanel = ({
 
         {/* Attendance Dates List — sorted oldest to newest */}
         {loading ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
+          <p className="text-sm text-muted-foreground text-center py-4" role="status">Loading...</p>
         ) : records.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">No attendance records yet.</p>
+          <p className="text-sm text-muted-foreground text-center py-4" role="status">No attendance records yet.</p>
         ) : (
           <div className="space-y-1 max-h-72 overflow-y-auto">
             <p className="text-xs text-muted-foreground font-medium mb-1">

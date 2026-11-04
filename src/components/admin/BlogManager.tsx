@@ -456,9 +456,9 @@ const BlogManager = () => {
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground text-center py-8">Loading...</p>
+        <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-muted-foreground text-center py-8">No posts found.</p>
+        <p className="text-muted-foreground text-center py-8" role="status">No posts found.</p>
       ) : (
         <div className="overflow-x-auto">
           <Table>
@@ -562,8 +562,9 @@ const BlogManager = () => {
           <div className="grid gap-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Title *</Label>
+                <Label htmlFor="blog-title">Title *</Label>
                 <Input
+                  id="blog-title"
                   value={editing.title || ""}
                   onChange={(e) => {
                     const title = e.target.value;
@@ -579,14 +580,15 @@ const BlogManager = () => {
                 <p className="text-xs text-muted-foreground">{(editing.title || "").length}/60 chars (30-60 ideal)</p>
               </div>
               <div className="space-y-2">
-                <Label>Slug *</Label>
-                <Input value={editing.slug || ""} onChange={(e) => setEditing((prev) => ({ ...prev, slug: e.target.value }))} />
+                <Label htmlFor="blog-slug">Slug *</Label>
+                <Input id="blog-slug" value={editing.slug || ""} onChange={(e) => setEditing((prev) => ({ ...prev, slug: e.target.value }))} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Description (meta)</Label>
+              <Label htmlFor="blog-description">Description (meta)</Label>
               <Textarea
+                id="blog-description"
                 value={editing.description || ""}
                 onChange={(e) => {
                   const description = e.target.value;
@@ -603,9 +605,9 @@ const BlogManager = () => {
 
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Article Type</Label>
+                <Label htmlFor="blog-article-type">Article Type</Label>
                 <Select value={editing.article_type || "longform"} onValueChange={(v) => setEditing((prev) => ({ ...prev, article_type: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="blog-article-type"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {ARTICLE_TYPES.map((t) => (
                       <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
@@ -614,13 +616,13 @@ const BlogManager = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Author</Label>
-                <Input value={editing.author || ""} onChange={(e) => setEditing((prev) => ({ ...prev, author: e.target.value }))} />
+                <Label htmlFor="blog-author">Author</Label>
+                <Input id="blog-author" value={editing.author || ""} onChange={(e) => setEditing((prev) => ({ ...prev, author: e.target.value }))} />
               </div>
               <div className="space-y-2">
-                <Label>Language</Label>
+                <Label htmlFor="blog-lang">Language</Label>
                 <Select value={editing.lang || "en"} onValueChange={(v) => setEditing((prev) => ({ ...prev, lang: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="blog-lang"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="ar">Arabic</SelectItem>
@@ -630,15 +632,15 @@ const BlogManager = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Keywords (comma-separated)</Label>
-              <Input value={keywordsInput} onChange={(e) => setKeywordsInput(e.target.value)} placeholder="korean, learn, beginner" />
+              <Label htmlFor="blog-keywords">Keywords (comma-separated)</Label>
+              <Input id="blog-keywords" value={keywordsInput} onChange={(e) => setKeywordsInput(e.target.value)} placeholder="korean, learn, beginner" />
               <p className="text-xs text-muted-foreground">3+ keywords recommended for SEO</p>
             </div>
 
             {/* Hero Image 1 */}
             <div className="space-y-2 p-3 border rounded-lg">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold">Hero Image 1 (Primary)</Label>
+                <span id="blog-hero1-heading" className="text-sm font-semibold">Hero Image 1 (Primary)</span>
                 <Button
                   variant="outline" size="sm" className="gap-1.5 text-xs"
                   disabled={generatingImage || !editing.title}
@@ -648,7 +650,7 @@ const BlogManager = () => {
                   {generatingImage ? "Generating..." : "AI Generate"}
                 </Button>
               </div>
-              <div className="grid sm:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-3 gap-4" role="group" aria-labelledby="blog-hero1-heading">
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <Input value={editing.hero_image || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_image: e.target.value }))} placeholder="URL or upload" className="flex-1" />
@@ -664,12 +666,12 @@ const BlogManager = () => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Alt Text (SEO)</Label>
-                  <Input value={editing.hero_alt || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_alt: e.target.value }))} />
+                  <Label htmlFor="blog-hero1-alt" className="text-xs">Alt Text (SEO)</Label>
+                  <Input id="blog-hero1-alt" value={editing.hero_alt || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_alt: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Caption</Label>
-                  <Input value={editing.hero_caption || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_caption: e.target.value }))} />
+                  <Label htmlFor="blog-hero1-caption" className="text-xs">Caption</Label>
+                  <Input id="blog-hero1-caption" value={editing.hero_caption || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_caption: e.target.value }))} />
                 </div>
               </div>
             </div>
@@ -677,7 +679,7 @@ const BlogManager = () => {
             {/* Hero Image 2 */}
             <div className="space-y-2 p-3 border rounded-lg">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold">Hero Image 2 (Secondary)</Label>
+                <span id="blog-hero2-heading" className="text-sm font-semibold">Hero Image 2 (Secondary)</span>
                 <Button
                   variant="outline" size="sm" className="gap-1.5 text-xs"
                   disabled={generatingImage2 || !editing.title}
@@ -687,7 +689,7 @@ const BlogManager = () => {
                   {generatingImage2 ? "Generating..." : "AI Generate"}
                 </Button>
               </div>
-              <div className="grid sm:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-3 gap-4" role="group" aria-labelledby="blog-hero2-heading">
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <Input value={editing.hero_image_2 || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_image_2: e.target.value }))} placeholder="URL or upload" className="flex-1" />
@@ -703,24 +705,24 @@ const BlogManager = () => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Alt Text (SEO)</Label>
-                  <Input value={editing.hero_alt_2 || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_alt_2: e.target.value }))} />
+                  <Label htmlFor="blog-hero2-alt" className="text-xs">Alt Text (SEO)</Label>
+                  <Input id="blog-hero2-alt" value={editing.hero_alt_2 || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_alt_2: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs">Caption</Label>
-                  <Input value={editing.hero_caption_2 || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_caption_2: e.target.value }))} />
+                  <Label htmlFor="blog-hero2-caption" className="text-xs">Caption</Label>
+                  <Input id="blog-hero2-caption" value={editing.hero_caption_2 || ""} onChange={(e) => setEditing((prev) => ({ ...prev, hero_caption_2: e.target.value }))} />
                 </div>
               </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>CTA Text</Label>
-                <Input value={editing.cta_text || ""} onChange={(e) => setEditing((prev) => ({ ...prev, cta_text: e.target.value }))} placeholder="Start Learning Korean Today!" />
+                <Label htmlFor="blog-cta-text">CTA Text</Label>
+                <Input id="blog-cta-text" value={editing.cta_text || ""} onChange={(e) => setEditing((prev) => ({ ...prev, cta_text: e.target.value }))} placeholder="Start Learning Korean Today!" />
               </div>
               <div className="space-y-2">
-                <Label>CTA URL</Label>
-                <div className="flex gap-2">
+                <span id="blog-cta-url-label" className="text-sm font-medium leading-none">CTA URL</span>
+                <div className="flex gap-2" role="group" aria-labelledby="blog-cta-url-label">
                   <Select
                     value={CTA_URL_OPTIONS.some(o => o.value === editing.cta_url) ? editing.cta_url : "custom"}
                     onValueChange={(v) => {
@@ -748,8 +750,9 @@ const BlogManager = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Content (Markdown) *</Label>
+              <Label htmlFor="blog-content">Content (Markdown) *</Label>
               <Textarea
+                id="blog-content"
                 value={editing.content || ""}
                 onChange={(e) => setEditing((prev) => ({ ...prev, content: e.target.value }))}
                 rows={16}
@@ -760,10 +763,11 @@ const BlogManager = () => {
 
             <div className="flex items-center gap-3">
               <Switch
+                id="blog-published"
                 checked={editing.published || false}
                 onCheckedChange={(v) => setEditing((prev) => ({ ...prev, published: v }))}
               />
-              <Label>Published</Label>
+              <Label htmlFor="blog-published">Published</Label>
             </div>
 
             <div className="flex justify-end gap-2">

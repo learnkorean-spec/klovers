@@ -602,10 +602,10 @@ const LeadFunnelPanel: React.FC = () => {
                   Page {eventsPage + 1} of {totalPages}
                 </span>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" disabled={eventsPage === 0} onClick={() => setEventsPage((p) => p - 1)}>
+                  <Button variant="ghost" size="sm" disabled={eventsPage === 0} onClick={() => setEventsPage((p) => p - 1)} aria-label="Previous page">
                     <ChevronLeft className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="sm" disabled={eventsPage >= totalPages - 1} onClick={() => setEventsPage((p) => p + 1)}>
+                  <Button variant="ghost" size="sm" disabled={eventsPage >= totalPages - 1} onClick={() => setEventsPage((p) => p + 1)} aria-label="Next page">
                     <ChevronRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>

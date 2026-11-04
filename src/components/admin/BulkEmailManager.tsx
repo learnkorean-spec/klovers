@@ -584,13 +584,14 @@ const BulkEmailManager = () => {
         <CardContent className="space-y-4">
           {/* Template Selector */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-1.5"><FileText className="h-4 w-4" /> Choose Template</Label>
-            <div className="flex flex-wrap gap-2">
+            <span id="bulk-email-template-label" className="flex items-center gap-1.5 text-sm font-medium leading-none"><FileText className="h-4 w-4" /> Choose Template</span>
+            <div className="flex flex-wrap gap-2" role="group" aria-labelledby="bulk-email-template-label">
               {EMAIL_TEMPLATES.map((tpl) => (
                 <Button
                   key={tpl.id}
                   variant={selectedTemplate === tpl.id ? "default" : "outline"}
                   size="sm"
+                  aria-pressed={selectedTemplate === tpl.id}
                   onClick={() => applyTemplate(tpl.id)}
                   className="text-xs"
                 >
@@ -623,9 +624,9 @@ const BulkEmailManager = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Audience</Label>
+            <Label htmlFor="bulk-email-audience">Audience</Label>
             <Select value={audience} onValueChange={(v) => setAudience(v as "new" | "all")}>
-              <SelectTrigger className="w-full sm:w-[300px]">
+              <SelectTrigger id="bulk-email-audience" className="w-full sm:w-[300px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -670,7 +671,7 @@ const BulkEmailManager = () => {
         </CardHeader>
         <CardContent>
           {campaigns.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No campaigns yet.</p>
+            <p className="text-sm text-muted-foreground" role="status">No campaigns yet.</p>
           ) : (
             <Table>
               <TableHeader>

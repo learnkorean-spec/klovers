@@ -379,6 +379,7 @@ function AllTemplateCards({ post, theme, format, active, onSelect, bgImage }: {
             <button
               key={tpl}
               onClick={() => onSelect(tpl)}
+              aria-pressed={isActive}
               className={`rounded-xl overflow-hidden border-2 transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                 isActive ? "border-primary shadow-lg shadow-primary/20 scale-[1.03]" : "border-border hover:border-primary/50"
               }`}
@@ -794,11 +795,11 @@ export default function CreatorHub() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preview</span>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" disabled={activeIndex === 0} onClick={() => setActiveIndex(activeIndex - 1)}>
+              <Button size="sm" variant="ghost" disabled={activeIndex === 0} onClick={() => setActiveIndex(activeIndex - 1)} aria-label="Previous post">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm font-medium text-foreground">{activeIndex + 1} / {posts.length}</span>
-              <Button size="sm" variant="ghost" disabled={activeIndex >= posts.length - 1} onClick={() => setActiveIndex(activeIndex + 1)}>
+              <Button size="sm" variant="ghost" disabled={activeIndex >= posts.length - 1} onClick={() => setActiveIndex(activeIndex + 1)} aria-label="Next post">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -846,6 +847,7 @@ export default function CreatorHub() {
                   <button
                     key={t.key}
                     onClick={() => setTemplate(t.key)}
+                    aria-pressed={template === t.key}
                     className={`text-left p-2.5 rounded-lg border text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                       template === t.key
                         ? "border-primary bg-accent"
@@ -868,6 +870,7 @@ export default function CreatorHub() {
                 <button
                   key={key}
                   onClick={() => setTheme(key)}
+                  aria-pressed={theme === key}
                   className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     theme === key ? "border-primary bg-accent" : "border-border hover:border-muted-foreground/30"
                   }`}
@@ -982,6 +985,7 @@ export default function CreatorHub() {
                 <button
                   key={key}
                   onClick={() => setFormat(key)}
+                  aria-pressed={format === key}
                   className={`p-2.5 rounded-lg border text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     format === key ? "border-primary bg-accent" : "border-border hover:border-muted-foreground/30"
                   }`}
@@ -1002,22 +1006,34 @@ export default function CreatorHub() {
               </Button>
             </div>
             <div className="space-y-1 max-h-40 overflow-y-auto">
-              {posts.map((p, i) => (
+              {posts.map((p, i) => {
+                const postLabel = p.mainText || `Post ${i + 1}`;
+                return (
                 <div
                   key={p.id}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-xs transition-colors ${
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={i === activeIndex}
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     i === activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted text-foreground"
                   }`}
                   onClick={() => setActiveIndex(i)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setActiveIndex(i);
+                    }
+                  }}
                 >
-                  <span className="flex-1 truncate">{p.mainText || `Post ${i + 1}`}</span>
+                  <span className="flex-1 truncate">{postLabel}</span>
                   {posts.length > 1 && (
-                    <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={e => { e.stopPropagation(); removePost(i); }}>
+                    <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={e => { e.stopPropagation(); removePost(i); }} aria-label={`Delete ${postLabel}`}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -1088,6 +1104,7 @@ export default function CreatorHub() {
             <button
               key={c.id}
               onClick={() => setSelectedCampaign(c.id)}
+              aria-pressed={selectedCampaign === c.id}
               className={`rounded-xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                 selectedCampaign === c.id
                   ? "ring-2 ring-primary border-primary bg-primary/5 shadow-sm"
@@ -1201,8 +1218,9 @@ export default function CreatorHub() {
                     { label: "Hashtags / Extra", key: "extraText" as const, rows: 1 },
                   ].map(({ label, key, rows }) => (
                     <div key={key} className="space-y-1">
-                      <label className="text-xs font-semibold">{label}</label>
+                      <label htmlFor={`ch-edit-${key}`} className="text-xs font-semibold">{label}</label>
                       <textarea
+                        id={`ch-edit-${key}`}
                         rows={rows}
                         className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                         value={editDraftText[key]}
@@ -1280,6 +1298,7 @@ export default function CreatorHub() {
                           type="button"
                           disabled={reelComposing}
                           onClick={() => setReelPickedVideoId(v.id)}
+                          aria-pressed={reelPickedVideoId === v.id}
                           className={`relative rounded-xl overflow-hidden border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                             reelPickedVideoId === v.id
                               ? "border-primary ring-2 ring-primary/30"

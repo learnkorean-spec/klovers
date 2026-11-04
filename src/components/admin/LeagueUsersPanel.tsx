@@ -111,6 +111,7 @@ export default function LeagueUsersPanel() {
             <button
               key={league.key}
               onClick={() => setLeagueFilter(isActive ? "all" : league.key)}
+              aria-pressed={isActive}
               className={cn(
                 "rounded-2xl border-2 p-3 text-left transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 isActive

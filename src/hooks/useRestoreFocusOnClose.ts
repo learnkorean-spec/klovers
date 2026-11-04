@@ -8,22 +8,51 @@ import * as React from "react";
  * focus on <body>, stranding keyboard users at the top of the page instead
  * of back where they were.
  *
- * This hook captures the triggering element explicitly when the dialog
- * content mounts, and restores focus to it on close itself — only when
- * nothing else (a caller-supplied `onCloseAutoFocus`) already handled it.
+ * Two earlier attempts at this fix (round 21, then a same-day follow-up)
+ * both captured the trigger in a `useRef` set by a mount-time `useEffect`,
+ * and both failed live re-testing for the same underlying reason, only
+ * found by re-testing on production with real admin access:
+ *
+ * `DialogContent` (this wrapper) is NOT actually remounted each time the
+ * dialog opens. Callers write `<Dialog open={x}><DialogContent>...` with
+ * `DialogContent` always present in the JSX - Radix's `Dialog.Root` always
+ * renders its children, and it's Radix's own internal `Presence`/`Portal`
+ * machinery *inside* `DialogPrimitive.Content` (a layer below this wrapper)
+ * that decides whether anything actually exists in the DOM. So this
+ * wrapper component mounts exactly once, the first time its parent
+ * renders - almost always before the dialog has ever been opened - and a
+ * `useEffect(() => {...}, [])` inside it only ever runs that one time,
+ * capturing a stale (often null, or whatever had focus at page load)
+ * value forever. Every later open/close cycle read that same stale ref.
+ *
+ * The fix: don't capture into a per-mount ref at all. Track the last
+ * focused element continuously in a module-level variable via a
+ * capture-phase `focusin` listener on `document` (registered once,
+ * independent of any component's mount/unmount lifecycle), skipping any
+ * element that's inside an open dialog - and read that live value
+ * directly when closing, not a value captured earlier.
  */
+let lastFocusOutsideDialog: HTMLElement | null = null;
+
+if (typeof document !== "undefined") {
+  document.addEventListener(
+    "focusin",
+    (event) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && !target.closest('[role="dialog"], [role="alertdialog"]')) {
+        lastFocusOutsideDialog = target;
+      }
+    },
+    true,
+  );
+}
+
 export function useRestoreFocusOnClose(onCloseAutoFocus?: (event: Event) => void) {
-  const triggerRef = React.useRef<HTMLElement | null>(null);
-
-  React.useEffect(() => {
-    triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  }, []);
-
   return React.useCallback(
     (event: Event) => {
       onCloseAutoFocus?.(event);
       if (!event.defaultPrevented) {
-        const trigger = triggerRef.current;
+        const trigger = lastFocusOutsideDialog;
         if (trigger && document.contains(trigger)) {
           event.preventDefault();
           trigger.focus();

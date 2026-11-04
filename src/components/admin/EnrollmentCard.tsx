@@ -449,6 +449,8 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
         </div>
       <div className="border-t border-border pt-2 mt-2">
         <button
+          type="button"
+          aria-expanded={logsOpen}
           className="flex items-center gap-1 rounded-sm text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           onClick={toggleLogs}
         >
@@ -458,8 +460,8 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
         </button>
         {logsOpen && (
           <div className="mt-2 space-y-1">
-            {logsLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
-            {!logsLoading && logs.length === 0 && <p className="text-xs text-muted-foreground italic">No logs found.</p>}
+            {logsLoading && <p className="text-xs text-muted-foreground" role="status">Loading…</p>}
+            {!logsLoading && logs.length === 0 && <p className="text-xs text-muted-foreground italic" role="status">No logs found.</p>}
             {logs.map(log => (
               <div key={log.id} className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground w-36 shrink-0">{new Date(log.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>

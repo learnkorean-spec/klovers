@@ -1519,9 +1519,9 @@ const GroupMatcher = () => {
               Assigning <span className="font-semibold text-foreground">{assignTarget?.name}</span> ({assignTarget?.email})
             </p>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Day</label>
+              <label htmlFor="gm-assign-day" className="text-xs font-medium text-muted-foreground">Day</label>
               <Select value={assignDay} onValueChange={setAssignDay}>
-                <SelectTrigger className="text-sm">
+                <SelectTrigger id="gm-assign-day" className="text-sm">
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1532,9 +1532,9 @@ const GroupMatcher = () => {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Time</label>
+              <label htmlFor="gm-assign-time" className="text-xs font-medium text-muted-foreground">Time</label>
               <Select value={assignTime} onValueChange={setAssignTime}>
-                <SelectTrigger className="text-sm">
+                <SelectTrigger id="gm-assign-time" className="text-sm">
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1548,9 +1548,9 @@ const GroupMatcher = () => {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Timezone</label>
+              <label htmlFor="gm-assign-timezone" className="text-xs font-medium text-muted-foreground">Timezone</label>
               <Select value={assignTimezone} onValueChange={setAssignTimezone}>
-                <SelectTrigger className="text-sm">
+                <SelectTrigger id="gm-assign-timezone" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1599,9 +1599,9 @@ const GroupMatcher = () => {
               </p>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Reason</label>
+              <label htmlFor="gm-reject-reason" className="text-xs font-medium text-muted-foreground">Reason</label>
               <Select value={rejectReason} onValueChange={setRejectReason}>
-                <SelectTrigger className="text-sm">
+                <SelectTrigger id="gm-reject-reason" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1615,8 +1615,9 @@ const GroupMatcher = () => {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Additional note (optional)</label>
+              <label htmlFor="gm-reject-note" className="text-xs font-medium text-muted-foreground">Additional note (optional)</label>
               <Textarea
+                id="gm-reject-note"
                 value={rejectNote}
                 onChange={e => setRejectNote(e.target.value)}
                 placeholder="e.g. We'll notify you when new slots open…"

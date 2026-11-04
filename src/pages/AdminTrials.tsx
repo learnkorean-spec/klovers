@@ -217,7 +217,7 @@ export default function AdminTrials() {
         </div>
       </header>
 
-      <main id="main-content" className="mx-auto max-w-3xl px-5 pb-24 text-[16.5px] leading-[1.85]">
+      <div id="main-content" className="mx-auto max-w-3xl px-5 pb-24 text-[16.5px] leading-[1.85]">
         {error && (
           <p className="mt-8 rounded-lg border border-destructive p-4 text-sm">
             ماقدرتش أقرا الحجوزات: {error}
@@ -368,7 +368,7 @@ export default function AdminTrials() {
             <Link to="/admin/guide" className="underline decoration-2 underline-offset-4">الدليل</Link>
           </p>
         </footer>
-      </main>
+      </div>
     </div>
     </AdminShell>
   );

@@ -993,6 +993,8 @@ const TrialClassesManager = () => {
 
   return (
     <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-foreground">Trial Classes</h2>
+
       {/* Sessions the hourly job suggested because a language filled up. It
           renders nothing unless one is waiting, and it is the only place a
           suggestion can be turned into a real class — the email that announced
@@ -1382,7 +1384,7 @@ const TrialClassesManager = () => {
                         <TableHead>Contact</TableHead>
                         <TableHead>Level</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>
+                        <TableHead aria-sort={bookedSort === "asc" ? "ascending" : "descending"}>
                           <button
                             type="button"
                             className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"

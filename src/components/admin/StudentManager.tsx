@@ -683,9 +683,9 @@ const StudentManager = () => {
           </div>
 
           {overviewLoading ? (
-            <p className="text-muted-foreground text-center py-8">Loading...</p>
+            <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
           ) : filteredOverview.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No students found.</p>
+            <p className="text-muted-foreground text-center py-8" role="status">No students found.</p>
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -774,7 +774,7 @@ const StudentManager = () => {
           </div>
 
           {legacyLoading || overviewLoading ? (
-            <p className="text-muted-foreground text-center py-8">Loading...</p>
+            <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -915,30 +915,30 @@ const StudentManager = () => {
           <div className="grid gap-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium text-foreground">Full Name *</label>
-                <Input value={studentForm.full_name} onChange={(e) => setStudentForm(f => ({ ...f, full_name: e.target.value }))} />
+                <label htmlFor="sm-full-name" className="text-sm font-medium text-foreground">Full Name *</label>
+                <Input id="sm-full-name" required aria-required="true" value={studentForm.full_name} onChange={(e) => setStudentForm(f => ({ ...f, full_name: e.target.value }))} />
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Email * {lookingUpEmail && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</label>
-                <Input type="email" value={studentForm.email} onChange={(e) => setStudentForm(f => ({ ...f, email: e.target.value }))} onBlur={handleEmailBlur} />
-                {!editingStudentId && <p className="text-xs text-muted-foreground mt-0.5">Tab out to auto-lookup existing data</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium text-foreground">Phone</label>
-                <Input value={studentForm.phone} onChange={(e) => setStudentForm(f => ({ ...f, phone: e.target.value }))} />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground">Country</label>
-                <Input value={studentForm.country} onChange={(e) => setStudentForm(f => ({ ...f, country: e.target.value }))} />
+                <label htmlFor="sm-email" className="text-sm font-medium text-foreground">Email * {lookingUpEmail && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</label>
+                <Input id="sm-email" type="email" required aria-required="true" aria-describedby={!editingStudentId ? "sm-email-hint" : undefined} value={studentForm.email} onChange={(e) => setStudentForm(f => ({ ...f, email: e.target.value }))} onBlur={handleEmailBlur} />
+                {!editingStudentId && <p id="sm-email-hint" className="text-xs text-muted-foreground mt-0.5">Tab out to auto-lookup existing data</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium text-foreground">Status</label>
+                <label htmlFor="sm-phone" className="text-sm font-medium text-foreground">Phone</label>
+                <Input id="sm-phone" value={studentForm.phone} onChange={(e) => setStudentForm(f => ({ ...f, phone: e.target.value }))} />
+              </div>
+              <div>
+                <label htmlFor="sm-country" className="text-sm font-medium text-foreground">Country</label>
+                <Input id="sm-country" value={studentForm.country} onChange={(e) => setStudentForm(f => ({ ...f, country: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="sm-status" className="text-sm font-medium text-foreground">Status</label>
                 <Select value={studentForm.status} onValueChange={(v) => setStudentForm(f => ({ ...f, status: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="sm-status"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="lead">Lead</SelectItem>
                     <SelectItem value="student">Student</SelectItem>
@@ -947,9 +947,9 @@ const StudentManager = () => {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Course Type</label>
+                <label htmlFor="sm-course-type" className="text-sm font-medium text-foreground">Course Type</label>
                 <Select value={studentForm.course_type || "none"} onValueChange={(v) => setStudentForm(f => ({ ...f, course_type: v === "none" ? "" : v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectTrigger id="sm-course-type"><SelectValue placeholder="Select type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">— Select —</SelectItem>
                     {COURSE_TYPES.map(ct => <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>)}
@@ -959,9 +959,9 @@ const StudentManager = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium text-foreground">Level</label>
+                <label htmlFor="sm-level" className="text-sm font-medium text-foreground">Level</label>
                 <Select value={studentForm.level || "none"} onValueChange={(v) => setStudentForm(f => ({ ...f, level: v === "none" ? "" : v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
+                  <SelectTrigger id="sm-level"><SelectValue placeholder="Select level" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">— Select —</SelectItem>
                     {COURSE_LEVELS.map(cl => <SelectItem key={cl.value} value={cl.value}>{cl.label}</SelectItem>)}
@@ -969,9 +969,9 @@ const StudentManager = () => {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Group Name</label>
+                <label htmlFor="sm-group-name" className="text-sm font-medium text-foreground">Group Name</label>
                 <Select value={studentForm.group_name || "unassigned"} onValueChange={(v) => setStudentForm(f => ({ ...f, group_name: v === "unassigned" ? "" : v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select group" /></SelectTrigger>
+                  <SelectTrigger id="sm-group-name"><SelectValue placeholder="Select group" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unassigned">— None —</SelectItem>
                     {groups.map(g => <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>)}
@@ -980,8 +980,8 @@ const StudentManager = () => {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground">Notes</label>
-              <Textarea value={studentForm.notes} onChange={(e) => setStudentForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
+              <label htmlFor="sm-notes" className="text-sm font-medium text-foreground">Notes</label>
+              <Textarea id="sm-notes" value={studentForm.notes} onChange={(e) => setStudentForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
             </div>
           </div>
           <DialogFooter>
@@ -999,7 +999,7 @@ const StudentManager = () => {
           </DialogHeader>
           <div className="grid gap-3">
             <div>
-              <label className="text-sm font-medium text-foreground">Select Bundle</label>
+              <label htmlFor="sm-pkg-bundle" className="text-sm font-medium text-foreground">Select Bundle</label>
               <Select onValueChange={(v) => {
                 const bundle = BUNDLE_OPTIONS[Number(v)];
                 if (bundle) {
@@ -1012,7 +1012,7 @@ const StudentManager = () => {
                   });
                 }
               }}>
-                <SelectTrigger><SelectValue placeholder="Choose a bundle..." /></SelectTrigger>
+                <SelectTrigger id="sm-pkg-bundle"><SelectValue placeholder="Choose a bundle..." /></SelectTrigger>
                 <SelectContent className="max-h-60">
                   {BUNDLE_OPTIONS.map((b, i) => (
                     <SelectItem key={i} value={String(i)}>
@@ -1023,22 +1023,22 @@ const StudentManager = () => {
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground">Package Name</label>
-              <Input value={packageForm.package_name} onChange={(e) => setPackageForm(f => ({ ...f, package_name: e.target.value }))} placeholder="Auto-filled from bundle" />
+              <label htmlFor="sm-pkg-name" className="text-sm font-medium text-foreground">Package Name</label>
+              <Input id="sm-pkg-name" value={packageForm.package_name} onChange={(e) => setPackageForm(f => ({ ...f, package_name: e.target.value }))} placeholder="Auto-filled from bundle" />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-sm font-medium text-foreground">Total Classes</label>
-                <Input type="number" min={0} value={packageForm.total_classes} onChange={(e) => setPackageForm(f => ({ ...f, total_classes: Number(e.target.value) }))} />
+                <label htmlFor="sm-pkg-total-classes" className="text-sm font-medium text-foreground">Total Classes</label>
+                <Input id="sm-pkg-total-classes" type="number" min={0} value={packageForm.total_classes} onChange={(e) => setPackageForm(f => ({ ...f, total_classes: Number(e.target.value) }))} />
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Extra (unpaid)</label>
-                <Input type="number" min={0} value={packageForm.used_classes} onChange={(e) => setPackageForm(f => ({ ...f, used_classes: Number(e.target.value) }))} placeholder="0" />
-                <p className="text-xs text-muted-foreground mt-0.5">Classes attended but not paid</p>
+                <label htmlFor="sm-pkg-extra" className="text-sm font-medium text-foreground">Extra (unpaid)</label>
+                <Input id="sm-pkg-extra" type="number" min={0} aria-describedby="sm-pkg-extra-hint" value={packageForm.used_classes} onChange={(e) => setPackageForm(f => ({ ...f, used_classes: Number(e.target.value) }))} placeholder="0" />
+                <p id="sm-pkg-extra-hint" className="text-xs text-muted-foreground mt-0.5">Classes attended but not paid</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Total Paid</label>
-                <Input type="number" min={0} value={packageForm.total_paid} onChange={(e) => setPackageForm(f => ({ ...f, total_paid: Number(e.target.value) }))} />
+                <label htmlFor="sm-pkg-total-paid" className="text-sm font-medium text-foreground">Total Paid</label>
+                <Input id="sm-pkg-total-paid" type="number" min={0} value={packageForm.total_paid} onChange={(e) => setPackageForm(f => ({ ...f, total_paid: Number(e.target.value) }))} />
               </div>
             </div>
             {Number(packageForm.used_classes) > 0 && (
@@ -1049,13 +1049,13 @@ const StudentManager = () => {
             )}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium text-foreground">Price / Class</label>
-                <Input type="number" disabled value={Number(packageForm.total_classes) > 0 ? Math.round((Number(packageForm.total_paid) / Number(packageForm.total_classes)) * 100) / 100 : 0} />
+                <label htmlFor="sm-pkg-price-per-class" className="text-sm font-medium text-foreground">Price / Class</label>
+                <Input id="sm-pkg-price-per-class" type="number" disabled value={Number(packageForm.total_classes) > 0 ? Math.round((Number(packageForm.total_paid) / Number(packageForm.total_classes)) * 100) / 100 : 0} />
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">Payment Status</label>
+                <label htmlFor="sm-pkg-payment-status" className="text-sm font-medium text-foreground">Payment Status</label>
                 <Select value={packageForm.payment_status} onValueChange={(v) => setPackageForm(f => ({ ...f, payment_status: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="sm-pkg-payment-status"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="paid">Paid</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
@@ -1079,9 +1079,9 @@ const StudentManager = () => {
             <DialogTitle>Packages — {packagesStudentName}</DialogTitle>
           </DialogHeader>
           {packagesLoading ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
+            <p className="text-sm text-muted-foreground text-center py-4" role="status">Loading...</p>
           ) : packagesForStudent.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">No packages found.</p>
+            <p className="text-sm text-muted-foreground text-center py-4" role="status">No packages found.</p>
           ) : (
             <div className="space-y-3">
               {packagesForStudent.map((pkg) => {
@@ -1150,10 +1150,10 @@ const StudentManager = () => {
           <div className="space-y-3">
             <div className="flex gap-2">
               <Input placeholder="New group name..." value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddGroup()} />
-              <Button size="sm" onClick={handleAddGroup}><Plus className="h-4 w-4" /></Button>
+              <Button size="sm" onClick={handleAddGroup} aria-label="Add group"><Plus className="h-4 w-4" /></Button>
             </div>
             {groups.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No groups yet.</p>
+              <p className="text-sm text-muted-foreground text-center py-4" role="status">No groups yet.</p>
             ) : (
               <div className="space-y-1 max-h-60 overflow-y-auto">
                 {groups.map(g => (
@@ -1161,7 +1161,7 @@ const StudentManager = () => {
                     <span className="text-sm text-foreground">{g.name}</span>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                        <Button variant="ghost" size="sm" aria-label={`Delete group "${g.name}"`}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
@@ -1191,18 +1191,18 @@ const StudentManager = () => {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1">
-              <Label>Group *</Label>
+              <Label htmlFor="enroll-group">Group *</Label>
               <Select value={enrollForm.group_id} onValueChange={v => setEnrollForm(f => ({ ...f, group_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger>
+                <SelectTrigger id="enroll-group"><SelectValue placeholder="Select group..." /></SelectTrigger>
                 <SelectContent>
                   {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>Level</Label>
+              <Label htmlFor="enroll-level">Level</Label>
               <Select value={enrollForm.level || "__none__"} onValueChange={v => setEnrollForm(f => ({ ...f, level: v === "__none__" ? "" : v }))}>
-                <SelectTrigger><SelectValue placeholder="Select level..." /></SelectTrigger>
+                <SelectTrigger id="enroll-level"><SelectValue placeholder="Select level..." /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">— Not set —</SelectItem>
                   {LEVEL_SELECT_OPTIONS.map(l => (
@@ -1212,18 +1212,18 @@ const StudentManager = () => {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>Sessions included</Label>
-              <Input type="number" value={enrollForm.sessions} onChange={e => setEnrollForm(f => ({ ...f, sessions: e.target.value }))} />
+              <Label htmlFor="enroll-sessions">Sessions included</Label>
+              <Input id="enroll-sessions" type="number" value={enrollForm.sessions} onChange={e => setEnrollForm(f => ({ ...f, sessions: e.target.value }))} />
             </div>
             <div className="flex gap-2">
               <div className="flex-1 space-y-1">
-                <Label>Amount paid</Label>
-                <Input type="number" value={enrollForm.amount} onChange={e => setEnrollForm(f => ({ ...f, amount: e.target.value }))} />
+                <Label htmlFor="enroll-amount">Amount paid</Label>
+                <Input id="enroll-amount" type="number" value={enrollForm.amount} onChange={e => setEnrollForm(f => ({ ...f, amount: e.target.value }))} />
               </div>
               <div className="w-28 space-y-1">
-                <Label>Currency</Label>
+                <Label htmlFor="enroll-currency">Currency</Label>
                 <Select value={enrollForm.currency} onValueChange={v => setEnrollForm(f => ({ ...f, currency: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="enroll-currency"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="EGP">EGP</SelectItem>
                     <SelectItem value="USD">USD</SelectItem>
@@ -1232,8 +1232,8 @@ const StudentManager = () => {
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Notes (optional)</Label>
-              <Textarea value={enrollForm.notes} onChange={e => setEnrollForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
+              <Label htmlFor="enroll-notes">Notes (optional)</Label>
+              <Textarea id="enroll-notes" value={enrollForm.notes} onChange={e => setEnrollForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
             </div>
           </div>
           <DialogFooter>

@@ -393,7 +393,7 @@ const TeacherAvailabilityManager = () => {
           </div>
           <div className="flex gap-1 rounded-lg border p-1">
             {(Object.keys(ZONES) as ZoneKey[]).map(k => (
-              <button key={k} type="button" className={seg(zone === k)} onClick={() => setZone(k)}>
+              <button key={k} type="button" aria-pressed={zone === k} className={seg(zone === k)} onClick={() => setZone(k)}>
                 {ZONES[k].short}
               </button>
             ))}
@@ -457,7 +457,7 @@ const TeacherAvailabilityManager = () => {
 
         {/* The week, as a board */}
         {loading ? (
-          <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground" role="status">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading…
           </div>
         ) : rows.length === 0 ? (

@@ -354,7 +354,7 @@ const AdminToday = () => {
     <AdminShell
       activeId="today"
     >
-      <main id="main-content">
+      <div id="main-content">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 space-y-8">
 
           <header className="flex flex-wrap items-end justify-between gap-4">
@@ -764,7 +764,7 @@ const AdminToday = () => {
           </section>
 
         </div>
-      </main>
+      </div>
     </AdminShell>
   );
 };

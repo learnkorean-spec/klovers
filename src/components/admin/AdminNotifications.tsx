@@ -243,6 +243,7 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
       <Button
         variant="ghost"
         size="sm"
+        aria-expanded={expanded}
         className="w-full justify-between text-sm"
         onClick={handleExpand}
       >
@@ -868,7 +869,7 @@ const AdminNotifications = () => {
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground text-center py-8">Loading...</p>
+        <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
       ) : notifications.length === 0 ? (
         <p className="text-muted-foreground text-center py-8">
           {filter === "unread"

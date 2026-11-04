@@ -226,7 +226,7 @@ export default function TrialSlotProposals() {
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
           {listError && (
-            <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2">
+            <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2">
               <BilingualText text={listError} tone="destructive" />
             </div>
           )}
@@ -309,7 +309,7 @@ export default function TrialSlotProposals() {
               />
 
               {dialogError && (
-                <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2">
+                <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2">
                   <BilingualText text={dialogError} tone="destructive" />
                 </div>
               )}

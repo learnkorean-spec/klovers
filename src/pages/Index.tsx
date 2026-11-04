@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 import StickyEnrollBar from "@/components/StickyEnrollBar";
 import ReturningStudentBanner from "@/components/ReturningStudentBanner";
 import HomeExitNudge from "@/components/HomeExitNudge";
+import ExchangeEntryCard from "@/components/exchange/ExchangeEntryCard";
 
 // Lazy-load below-fold sections for faster initial paint
 const MeetTeacher = lazy(() => import("@/components/MeetTeacher"));
@@ -211,6 +212,7 @@ const Index = () => {
       { id: "placement-cta", label: "section_placement_cta" },
       { id: "testimonials", label: "section_testimonials" },
       { id: "meet-teacher", label: "section_meet_teacher" },
+      { id: "language-exchange", label: "section_language_exchange" },
       { id: "scholarships", label: "section_scholarships" },
       { id: "egg-teaser", label: "section_egg_teaser" },
       { id: "final-cta", label: "section_final_cta" },
@@ -277,6 +279,13 @@ const Index = () => {
             <MoreThanAClass />
           </Suspense>
         </NearViewport>
+        {/* Language Exchange — a visible feature teaser for every visitor, signed
+            up or not (clicking in prompts sign-up/log-in, same as the page itself). */}
+        <div id="language-exchange">
+          <NearViewport>
+            <ExchangeEntryCard isAr={isAr} />
+          </NearViewport>
+        </div>
         {/* Desire — reinforces motivation after seeing proof */}
         <WhyLearnKorean />
         {/* Desire — real reviews, in the reader's language */}

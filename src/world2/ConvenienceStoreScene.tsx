@@ -1,15 +1,17 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { useTiledTexture, paintPlanks } from "../game/environment/textures";
+import { useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY, paintPlanks } from "../game/environment/textures";
+import { Kit, basket, hanokRoof, tree, pine } from "../game/environment/kit";
+import Batch from "../game/environment/Batch";
+import { World1Atmosphere } from "./World1Stage";
 import {
-  Learner,
   LearnerPlaceholder,
   Hotspot,
   Cluby,
   Player,
+  BackgroundFigure,
   FollowCamera,
   useLearnerReactions,
-  companionOf,
   DEFAULT_PLAYER_AVATAR,
   type PlayableAvatar,
   type VocabItem,
@@ -29,6 +31,9 @@ const PLAYER_BOUNDS = { x: [-2.0, 2.3] as [number, number], z: [-0.9, 1.8] as [n
  * where Adam picks snacks and drinks and practices asking the price and
  * counting numbers at the register, Lina helping him read the labels,
  * Cluby curled up by the door" — picked over Variant B's daytime/open-door
+ * (Re, 4 Nov 2026: the shipped scene now seats only one learner — Adam or
+ * Lina, whichever the visitor picked — with Cluby as the one who's always
+ * there; see shared.tsx's `PlayableAvatar` doc comment)
  * version because its warm hanging lamp and glass night-lit entrance match
  * the dusk-street-cart room's own palette (ivory #FFF9EC, KLOVERS yellow
  * #FFFF00, charcoal #2E2E2E, plus the brief's own warm tan #FFE99A),
@@ -49,33 +54,55 @@ export const VOCAB: VocabItem[] = [
   { id: "gyesandae", korean: "계산대", pronunciation: "gye-san-dae", arabic: "الكاشير", english: "checkout counter" },
 ];
 
-/** A short, real exchange between Adam and Lina picking snacks and paying —
- * reuses this room's own vocabulary (과자, 얼마예요?, 주세요) so the
- * words-in-isolation hotspots and this back-and-forth reinforce each other.
- * Friends shopping together, per canon — nothing romantic. */
+/** A short, real exchange picking snacks and paying — reuses this room's own
+ * vocabulary (과자, 얼마예요?, 하나) so the words-in-isolation hotspots and
+ * this back-and-forth reinforce each other.
+ *
+ * Re, 4 Nov 2026: rewritten from an Adam↔Lina exchange to player↔Cluby, now
+ * that only one human renders in this room (see shared.tsx's
+ * `PlayableAvatar` doc comment) — Cluby hints and cheers the player on
+ * rather than shopping alongside them. */
 export const DIALOGUE: DialogueLine[] = [
-  { speaker: "adam", korean: "과자 어디 있어?", reading: "gwa-ja eo-di i-sseo?", english: "Where are the snacks?" },
-  { speaker: "lina", korean: "저기 있어, 같이 가자.", reading: "jeo-gi i-sseo, ga-chi ga-ja.", english: "They're over there, let's go together." },
-  { speaker: "adam", korean: "이거 얼마예요?", reading: "i-geo eol-ma-ye-yo?", english: "How much is this?" },
-  { speaker: "lina", korean: "삼천 원이에요.", reading: "sam-cheon won-i-e-yo.", english: "It's 3,000 won." },
-  { speaker: "adam", korean: "네, 이거 하나 주세요.", reading: "ne, i-geo ha-na ju-se-yo.", english: "Okay, one of these, please." },
+  { speaker: "cluby", korean: "과자는 저기 있어!", reading: "gwa-ja-neun jeo-gi i-sseo!", english: "The snacks are over there!" },
+  { speaker: "player", korean: "이거 얼마예요?", reading: "i-geo eol-ma-ye-yo?", english: "How much is this?" },
+  { speaker: "cluby", korean: "삼천 원이야. 계산대로 가자!", reading: "sam-cheon won-i-ya. gye-san-dae-ro ga-ja!", english: "It's 3,000 won. Let's go to the checkout!" },
+  { speaker: "player", korean: "네, 이거 하나 주세요.", reading: "ne, i-geo ha-na ju-se-yo.", english: "Okay, one of these, please." },
+  { speaker: "cluby", korean: "진짜 잘했어! 이제 '둘'도 배워보자.", reading: "jin-jja jal-hae-sseo! i-je 'dul'-do bae-wo-bo-ja.", english: "Great job! Now let's learn 'dul' (two) too." },
 ];
 
-/** Warm hanging lamp over the register, and the store's dark night window —
- * the two things that read "late-night" rather than "any store". */
+/** The store's walls, and the warm hanging lamp over the register.
+ *
+ * Re, 4 Nov 2026 ("i need world 1 quality"): the walls used to be a single
+ * flat cream box against a painted night-street plane. Now they're built
+ * the way the live game builds its own rooms — timber-framed plaster walls
+ * on a stone footing, under a tiled hanok roof edge, from kit.ts's own
+ * materials and builders (drawn through the same Batch) — and the shop
+ * stands in the shared World1 landscape (World1Stage.tsx), trees behind. */
 function StoreShell() {
+  const walls = useMemo(() => {
+    const k = new Kit();
+    const H = 3.0;
+    // Back wall (local z = -1.6), and short side returns either end.
+    k.box("stoneWarm", [0, 0.15, -1.6], [9.2, 0.3, 0.45], true);
+    k.box("plaster", [0, 0.3 + H / 2, -1.6], [9, H, 0.3], true);
+    for (const x of [-4.5, -1.5, 1.5, 4.5]) k.box("woodDark", [x, 0.3 + H / 2, -1.42], [0.2, H, 0.18], true);
+    k.box("woodDark", [0, 0.3 + H - 0.08, -1.42], [9.2, 0.16, 0.18], true);
+    k.box("woodDark", [0, 1.05, -1.43], [9, 0.08, 0.14]);
+    for (const sx of [-1, 1]) {
+      k.box("stoneWarm", [sx * 4.6, 0.15, -0.5], [0.45, 0.3, 2.6], true);
+      k.box("plaster", [sx * 4.6, 0.3 + H / 2, -0.5], [0.3, H, 2.4], true);
+      k.box("woodDark", [sx * 4.6, 0.3 + H / 2, 0.7], [0.22, H, 0.22], true);
+      k.box("woodDark", [sx * 4.6, 0.3 + H - 0.08, -0.5], [0.22, 0.16, 2.6], true);
+    }
+    hanokRoof(k, 0, -2.3, 0.3 + H, 10.2, 2.0, 0.9);
+    tree(k, -6.4, -3.6, 1.0, true, 5);
+    pine(k, 6.2, -3.9, 1.0);
+    tree(k, 1.8, -5.6, 1.1, false, 9);
+    return k;
+  }, []);
   return (
     <group position={[0, 0, -2.2]}>
-      {/* dark street outside the window, well back so it fills the frame */}
-      <mesh position={[0, 2.6, -3.6]}>
-        <planeGeometry args={[22, 8]} />
-        <meshBasicMaterial color="#141022" />
-      </mesh>
-      {/* back wall */}
-      <mesh position={[0, 1.6, -1.6]} receiveShadow>
-        <boxGeometry args={[9, 3.2, 0.3]} />
-        <meshStandardMaterial color="#efe2c8" roughness={0.85} />
-      </mesh>
+      <Batch kit={walls} />
       {/* glass entrance door, stage right, night outside visible through it */}
       <group position={[2.6, 1.3, -0.2]}>
         <mesh>
@@ -96,7 +123,16 @@ function StoreShell() {
         <sphereGeometry args={[0.05, 12, 10]} />
         <meshStandardMaterial color="#FFFF00" emissive="#FFD24C" emissiveIntensity={1.2} />
       </mesh>
-      <pointLight position={[1.6, 2.3, 0.3]} intensity={1.1} color="#FFD98A" distance={3.5} />
+      {/* Toned right down: under the World1 daylight rig the old night-time
+          strength only blew a white hot-spot onto the planks. */}
+      <pointLight position={[1.6, 2.3, 0.3]} intensity={0.35} color="#FFD98A" distance={2.5} />
+      {/* Re, 4 Nov 2026: "add more... tigstures and detailsa" — a woven
+          welcome mat at the glass door, the small real-world detail every
+          late-night store actually has at its threshold. */}
+      <mesh position={[2.6, 0.01, 0.15]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[0.9, 0.5]} />
+        <meshStandardMaterial color="#3a342c" roughness={0.95} />
+      </mesh>
     </group>
   );
 }
@@ -107,7 +143,7 @@ function StoreShell() {
 function SnackShelves({ onSelect }: { onSelect: () => void }) {
   const rows = useMemo(() => [0.35, 0.75, 1.15, 1.55], []);
   return (
-    <Hotspot onSelect={onSelect}>
+    <Hotspot onSelect={onSelect} hitCenter={[-1.5, 1.0, -1.4]} hitSize={[1.8, 2.1, 0.6]}>
       <group position={[-1.5, 0, -1.4]}>
         {/* frame */}
         <mesh position={[0, 1.0, 0]} castShadow receiveShadow>
@@ -142,7 +178,7 @@ function SnackShelves({ onSelect }: { onSelect: () => void }) {
 function DrinkFridge({ onSelect }: { onSelect: () => void }) {
   const rows = useMemo(() => [0.45, 0.95, 1.45], []);
   return (
-    <Hotspot onSelect={onSelect}>
+    <Hotspot onSelect={onSelect} hitCenter={[-0.1, 1.0, -1.4]} hitSize={[1.4, 2.1, 0.7]}>
       <group position={[-0.1, 0, -1.4]}>
         {/* The box is 0.55 deep, so its own front face sits at local z=0.275.
             The bottle rows and point light below used to sit at z=0.2 and
@@ -152,9 +188,15 @@ function DrinkFridge({ onSelect }: { onSelect: () => void }) {
             panel (Re flagged this, 3 Nov). Pulling the rows (0.32) and
             glass (0.4) in front of that face, with the light (0.33) just
             behind the glass, actually shows the stocked shelves now. */}
+        {/* Re, 4 Nov 2026: found live that this read as a flat glowing white
+            panel, not a fridge — metalness 0.2 + roughness 0.5 caught a
+            sharp specular highlight from the room's key light right behind
+            the glass, blowing the whole front face out to white and washing
+            the bottle rows out with it. Matte (metalness 0, roughness 0.9)
+            diffuses that highlight instead of mirroring it. */}
         <mesh position={[0, 1.0, 0]} castShadow receiveShadow>
           <boxGeometry args={[1.3, 2.0, 0.55]} />
-          <meshStandardMaterial color="#d7dde2" roughness={0.5} metalness={0.2} />
+          <meshStandardMaterial color="#d7dde2" roughness={0.9} metalness={0} />
         </mesh>
         {rows.map((y) => (
           <group key={y} position={[0, y, 0.32]}>
@@ -166,13 +208,15 @@ function DrinkFridge({ onSelect }: { onSelect: () => void }) {
             ))}
           </group>
         ))}
-        <pointLight position={[0, 1.4, 0.33]} intensity={0.4} color="#bfe6ef" distance={1.5} />
+        <pointLight position={[0, 1.4, 0.33]} intensity={0.12} color="#bfe6ef" distance={1.5} />
         {/* glass front — in front of the bottles now, so they're actually
             visible through it instead of hidden behind the fridge's own
-            opaque body. */}
+            opaque body. Lower opacity (0.3→0.18) and roughness up (0.1→0.4)
+            — a mirror-smooth, fairly opaque pane on top of the (now matte)
+            body was still enough to haze the bottles behind it. */}
         <mesh position={[0, 1.0, 0.4]}>
           <boxGeometry args={[1.12, 1.8, 0.02]} />
-          <meshStandardMaterial color="#bfe6ef" transparent opacity={0.3} roughness={0.1} />
+          <meshStandardMaterial color="#bfe6ef" transparent opacity={0.18} roughness={0.4} />
         </mesh>
       </group>
     </Hotspot>
@@ -185,7 +229,7 @@ function DrinkFridge({ onSelect }: { onSelect: () => void }) {
 function Checkout({ onSelect }: { onSelect: () => void }) {
   const counterWood = useTiledTexture(paintPlanks, 1.4, 0.4);
   return (
-    <Hotspot onSelect={onSelect}>
+    <Hotspot onSelect={onSelect} hitCenter={[1.5, 0.9, -0.3]} hitSize={[1.6, 1.8, 0.7]}>
       <group position={[1.5, 0, -0.3]}>
         <mesh position={[0, 0.55, 0]} castShadow receiveShadow>
           <boxGeometry args={[1.5, 1.1, 0.55]} />
@@ -226,13 +270,13 @@ function PriceTags({ onSelectPrice, onSelectCount }: { onSelectPrice: () => void
   // margin or the shelf's own raycast hit wins every click.
   return (
     <group position={[-1.5, 1.0, -1.0]}>
-      <Hotspot onSelect={onSelectPrice}>
+      <Hotspot onSelect={onSelectPrice} hitCenter={[-0.5, 0, 0]} hitSize={[0.4, 0.3, 0.3]}>
         <mesh position={[-0.5, 0, 0]} rotation={[0, 0, 0.08]}>
           <planeGeometry args={[0.22, 0.14]} />
           <meshStandardMaterial color="#FFF9EC" />
         </mesh>
       </Hotspot>
-      <Hotspot onSelect={onSelectCount}>
+      <Hotspot onSelect={onSelectCount} hitCenter={[0.5, 0, 0]} hitSize={[0.4, 0.3, 0.3]}>
         <mesh position={[0.5, 0, 0]} rotation={[0, 0, -0.06]}>
           <planeGeometry args={[0.22, 0.14]} />
           <meshStandardMaterial color="#FFE99A" />
@@ -256,13 +300,29 @@ export default function ConvenienceStoreScene({
   onSelectVocab?: (vocab: VocabItem) => void;
   /** Who is "speaking" the dialogue line currently shown in the page's
    * DialogueCard, or null when it's closed — same contract as World2Scene. */
-  activeDialogueSpeaker?: "adam" | "lina" | null;
+  activeDialogueSpeaker?: "player" | "cluby" | null;
   /** Bumped by the page on every dialogue-line change, same as World2Scene. */
   dialogueTurnKey?: number;
 }) {
-  const floor = useTiledTexture(paintPlanks, 5, 3);
-  const { adamControl, linaControl, playerControl, companionControl, react } = useLearnerReactions(playerAvatar);
-  const companionAvatar = companionOf(playerAvatar);
+  const floor = useTiledTexture(paintPlanks, 4, 4.4);
+  // Render-quality pass, 4 Nov 2026 — see EntranceScene.tsx's matching
+  // comment: the same real photographed wood-plank floor World1's rooms
+  // already use, upgraded in place once it downloads.
+  const floorPhoto = usePhotoFloor("planks", 4, 4.4);
+  // Re, 4 Nov 2026 ("make it as world1, that's not the same"): a basket of
+  // goods by the wall — the same kit piece the live game's own rooms use,
+  // clear of the player's walk bounds and every hotspot, so the store reads
+  // a little more stocked. (A potted plant was tried near the door too, but
+  // from this room's own camera angle it sat visually behind Cluby at every
+  // position tried, reading as him standing in a bush — dropped rather than
+  // keep fighting the camera for it.)
+  const sceneKit = useMemo(() => {
+    const k = new Kit();
+    basket(k, -2.8, 2.25, 1.0, "fruitOrange");
+    return k;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const { playerControl, clubyReact, react } = useLearnerReactions();
   const playerRef = useRef<Group>(null);
   const handleSelect = (id: string) => {
     const vocab = VOCAB.find((v) => v.id === id);
@@ -272,8 +332,11 @@ export default function ConvenienceStoreScene({
   };
   useEffect(() => {
     if (!activeDialogueSpeaker) return;
-    const control = activeDialogueSpeaker === "adam" ? adamControl : linaControl;
-    control.current.once = "talk";
+    if (activeDialogueSpeaker === "player") {
+      playerControl.current.once = "talk";
+    } else {
+      clubyReact.current.pulse = 1;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dialogueTurnKey]);
   // "하나" and "둘" are two separate vocab items in AI Room Lab's own brief —
@@ -290,52 +353,63 @@ export default function ConvenienceStoreScene({
     // the camera's default look-at (the origin) instead of re-deriving a
     // custom camera target.
     <group position={[-0.6, 0, 0]}>
-      {/* Same hemisphere + warm key + cool fill recipe as World1's own
-          lighting (src/game/World.tsx's LIGHT constant) — see World2Scene's
-          own comment for the full rationale. */}
-      <hemisphereLight args={["#FFE9CC", "#A08466", 0.4]} />
-      <directionalLight position={[-6, 4, -2]} intensity={0.22} color="#C4D3EC" />
-      <directionalLight
-        position={[2, 5, 3]}
-        intensity={1.3}
-        color="#FFCC8E"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-bias={-0.0005}
-      />
+      {/* Re, 4 Nov 2026 ("i need world 1 quality"): the live game's own
+          sky, landscape, haze and light rig (World1Stage.tsx) — replaces
+          this room's old dim late-night lights. */}
+      <World1Atmosphere id="w2-store" hx={10} hz={10} />
       <StoreShell />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[14, 14]} />
-        <meshStandardMaterial map={floor} color="#7a6a52" roughness={0.9} />
+      {/* The shop's own plank floor, between its side walls and out past
+          the camera; beyond it, World1's stone plaza (Backdrop) carries on.
+          No photo roughness map: it's varnish-shiny (made for World1's
+          roofed café), and in this open shop the direct sun glinted off it
+          as a white smear — a flat matte finish instead. */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 1.2]} receiveShadow>
+        <planeGeometry args={[9.2, 10]} />
+        <meshStandardMaterial
+          key={floorPhoto ? "photo" : "painted"}
+          map={floorPhoto?.map ?? floor}
+          normalMap={floorPhoto?.normal ?? null}
+          color={floorPhoto ? "#FFF4E6" : "#ffffff"}
+          roughness={0.88}
+          envMapIntensity={0.6}
+          onBeforeCompile={floorBreakup}
+          customProgramCacheKey={FLOOR_BREAKUP_KEY}
+        />
       </mesh>
       <SnackShelves onSelect={() => handleSelect("gwaja")} />
       <DrinkFridge onSelect={() => handleSelect("eumnyosu")} />
       <Checkout onSelect={() => handleSelect("gyesandae")} />
       <PriceTags onSelectPrice={() => handleSelect("eolmayeyo")} onSelectCount={handleCount} />
+      <Batch kit={sceneKit} />
       <FollowCamera target={playerRef} control={playerControl} />
-      <Suspense
-        fallback={
-          <>
-            <LearnerPlaceholder x={0.5} z={0.9} />
-            <LearnerPlaceholder x={1.3} z={0.6} />
-          </>
-        }
-      >
+      <Suspense fallback={<LearnerPlaceholder x={0.85} z={0.8} />}>
         {/* The learner's own character — keyboard-controlled (arrow keys /
             WASD), starts at the shelf reaching for a snack, then can walk
-            around the store */}
+            around the store. Re, 4 Nov 2026: "student must choose a
+            character and move with one only" — re-centred (was x=0.5,
+            offset to leave room for the companion that stood at x=1.15) now
+            that this is the only human in the scene. */}
         <Player
           avatar={playerAvatar}
-          initial={{ x: 0.5, z: 0.9, rotY: -Math.PI * 0.55 }}
+          initial={{ x: 0.85, z: 0.8, rotY: -Math.PI * 0.55 }}
           bounds={PLAYER_BOUNDS}
           control={playerControl}
           exposedRef={playerRef}
         />
-        {/* The companion beside them, pointing at the label */}
-        <Learner avatar={companionAvatar} x={1.15} z={0.75} rotY={-Math.PI * 0.4} control={companionControl} />
       </Suspense>
-      {/* Cluby curled up by the door, per the brief */}
-      <Cluby x={2.3} y={0.12} z={0.9} />
+      {/* Cluby curled up by the door, per the brief — also the dialogue/
+          reaction partner now (see `clubyReact` above), since the companion
+          learner that used to stand beside the player is gone from this
+          scene entirely. */}
+      <Cluby x={2.3} y={0.12} z={0.9} reactRef={clubyReact} />
+      {/* Re, 4 Nov 2026: "add more people" — two unnamed other shoppers,
+          clear of the player's own walk bounds (x -2.0..2.3, z -0.9..1.8)
+          and every hotspot's hit box, so the store reads as a real
+          late-night spot without crowding the one learner this room is
+          about. See `BackgroundFigure`'s own doc comment on why these are
+          generic, never named canon characters. */}
+      <BackgroundFigure x={-2.5} z={-0.1} rotY={1.3} toneIndex={1} />
+      <BackgroundFigure x={-1.7} z={1.75} rotY={-0.6} toneIndex={4} scale={0.97} />
     </group>
   );
 }
