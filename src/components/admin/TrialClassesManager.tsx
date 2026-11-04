@@ -1384,7 +1384,7 @@ const TrialClassesManager = () => {
                         <TableHead>Contact</TableHead>
                         <TableHead>Level</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>
+                        <TableHead aria-sort={bookedSort === "asc" ? "ascending" : "descending"}>
                           <button
                             type="button"
                             className="inline-flex items-center gap-1 rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
