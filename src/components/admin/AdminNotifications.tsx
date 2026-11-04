@@ -868,7 +868,7 @@ const AdminNotifications = () => {
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground text-center py-8">Loading...</p>
+        <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
       ) : notifications.length === 0 ? (
         <p className="text-muted-foreground text-center py-8">
           {filter === "unread"

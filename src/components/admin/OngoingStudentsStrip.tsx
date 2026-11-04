@@ -319,7 +319,7 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
 
       <CardContent className="pt-0 space-y-4">
         {studentsQ.isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground" role="status">Loading…</p>
         ) : (
           <>
             {rows.length > 0 && (

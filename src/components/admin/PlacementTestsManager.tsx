@@ -124,7 +124,7 @@ const PlacementTestsManager = () => {
       </CardHeader>
       <CardContent className="pt-0">
         {loading ? (
-          <p className="text-muted-foreground text-center py-8">Loading...</p>
+          <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
         ) : filtered.length === 0 ? (
           <p className="text-muted-foreground text-center py-8">No placement tests found.</p>
         ) : (

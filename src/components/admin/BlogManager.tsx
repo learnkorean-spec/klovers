@@ -456,7 +456,7 @@ const BlogManager = () => {
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground text-center py-8">Loading...</p>
+        <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
       ) : filtered.length === 0 ? (
         <p className="text-muted-foreground text-center py-8">No posts found.</p>
       ) : (

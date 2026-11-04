@@ -60,7 +60,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (status === "loading") {
     return (
       <div dir="ltr" lang="en" className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground" role="status">Loading...</p>
       </div>
     );
   }

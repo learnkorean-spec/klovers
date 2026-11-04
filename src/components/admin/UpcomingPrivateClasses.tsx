@@ -94,7 +94,7 @@ const UpcomingPrivateClasses = () => {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <p className="text-sm text-muted-foreground py-2">Loading…</p>
+          <p className="text-sm text-muted-foreground py-2" role="status">Loading…</p>
         ) : total === 0 ? (
           <p className="text-sm text-muted-foreground py-2">
             No private classes in the next 7 days.

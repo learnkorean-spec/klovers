@@ -458,7 +458,7 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
         </button>
         {logsOpen && (
           <div className="mt-2 space-y-1">
-            {logsLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
+            {logsLoading && <p className="text-xs text-muted-foreground" role="status">Loading…</p>}
             {!logsLoading && logs.length === 0 && <p className="text-xs text-muted-foreground italic">No logs found.</p>}
             {logs.map(log => (
               <div key={log.id} className="flex items-center gap-2 text-xs">

@@ -442,7 +442,7 @@ const BookAssignmentManager = () => {
 
       {/* Table */}
       {loading ? (
-        <div className="text-xs text-muted-foreground py-8 text-center">Loading…</div>
+        <div className="text-xs text-muted-foreground py-8 text-center" role="status">Loading…</div>
       ) : filtered.length === 0 ? (
         <div className="text-xs text-muted-foreground py-8 text-center">
           {search ? "No matches found." : "No books assigned yet. They appear here when a Hangul group starts."}

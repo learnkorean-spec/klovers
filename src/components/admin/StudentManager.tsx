@@ -683,7 +683,7 @@ const StudentManager = () => {
           </div>
 
           {overviewLoading ? (
-            <p className="text-muted-foreground text-center py-8">Loading...</p>
+            <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
           ) : filteredOverview.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">No students found.</p>
           ) : (
@@ -774,7 +774,7 @@ const StudentManager = () => {
           </div>
 
           {legacyLoading || overviewLoading ? (
-            <p className="text-muted-foreground text-center py-8">Loading...</p>
+            <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -1079,7 +1079,7 @@ const StudentManager = () => {
             <DialogTitle>Packages — {packagesStudentName}</DialogTitle>
           </DialogHeader>
           {packagesLoading ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
+            <p className="text-sm text-muted-foreground text-center py-4" role="status">Loading...</p>
           ) : packagesForStudent.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No packages found.</p>
           ) : (

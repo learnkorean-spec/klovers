@@ -448,7 +448,7 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
         );
       })()}
 
-      {loading ? <p className="text-muted-foreground text-center py-8">Loading...</p> : (
+      {loading ? <p className="text-muted-foreground text-center py-8" role="status">Loading...</p> : (
         <div className="border rounded-xl overflow-auto">
           <Table>
             <TableHeader>
@@ -1585,7 +1585,7 @@ const PrivateTimeConfig = () => {
     saveTimeOptions(updated);
   };
 
-  if (loading) return <p className="text-muted-foreground text-sm">Loading...</p>;
+  if (loading) return <p className="text-muted-foreground text-sm" role="status">Loading...</p>;
 
   return (
     <div className="space-y-4">

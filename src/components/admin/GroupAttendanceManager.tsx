@@ -886,7 +886,7 @@ const GroupAttendanceManager = ({
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <p className="text-muted-foreground text-center py-4">Loading...</p>
+                  <p className="text-muted-foreground text-center py-4" role="status">Loading...</p>
                 ) : attendanceRows.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">No students in this session.</p>
                 ) : (

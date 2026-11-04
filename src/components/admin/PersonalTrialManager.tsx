@@ -228,7 +228,7 @@ const PersonalTrialManager = () => {
           </form>
 
           {loading ? (
-            <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground" role="status">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading…
             </div>
           ) : slots.length === 0 ? (
