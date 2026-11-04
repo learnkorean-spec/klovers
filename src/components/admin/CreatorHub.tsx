@@ -1002,22 +1002,34 @@ export default function CreatorHub() {
               </Button>
             </div>
             <div className="space-y-1 max-h-40 overflow-y-auto">
-              {posts.map((p, i) => (
+              {posts.map((p, i) => {
+                const postLabel = p.mainText || `Post ${i + 1}`;
+                return (
                 <div
                   key={p.id}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-xs transition-colors ${
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={i === activeIndex}
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     i === activeIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted text-foreground"
                   }`}
                   onClick={() => setActiveIndex(i)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setActiveIndex(i);
+                    }
+                  }}
                 >
-                  <span className="flex-1 truncate">{p.mainText || `Post ${i + 1}`}</span>
+                  <span className="flex-1 truncate">{postLabel}</span>
                   {posts.length > 1 && (
-                    <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={e => { e.stopPropagation(); removePost(i); }}>
+                    <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={e => { e.stopPropagation(); removePost(i); }} aria-label={`Delete ${postLabel}`}>
                       <Trash2 className="h-3 w-3" />
                     </Button>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

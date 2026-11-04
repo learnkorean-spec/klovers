@@ -1150,7 +1150,7 @@ const StudentManager = () => {
           <div className="space-y-3">
             <div className="flex gap-2">
               <Input placeholder="New group name..." value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddGroup()} />
-              <Button size="sm" onClick={handleAddGroup}><Plus className="h-4 w-4" /></Button>
+              <Button size="sm" onClick={handleAddGroup} aria-label="Add group"><Plus className="h-4 w-4" /></Button>
             </div>
             {groups.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4" role="status">No groups yet.</p>
@@ -1161,7 +1161,7 @@ const StudentManager = () => {
                     <span className="text-sm text-foreground">{g.name}</span>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                        <Button variant="ghost" size="sm" aria-label={`Delete group "${g.name}"`}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>

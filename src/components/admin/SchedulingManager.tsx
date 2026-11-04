@@ -1085,10 +1085,10 @@ const GroupsManager = () => {
                             if (e.key === "Escape") cancelEditName();
                           }}
                         />
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditName(g.id)}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditName(g.id)} aria-label="Save group name">
                           <Check className="h-3.5 w-3.5 text-green-600" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditName}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditName} aria-label="Cancel editing group name">
                           <X className="h-3.5 w-3.5 text-destructive" />
                         </Button>
                       </div>
@@ -1145,10 +1145,10 @@ const GroupsManager = () => {
                             if (e.key === "Escape") cancelEditLink();
                           }}
                         />
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditLink(g.id)}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditLink(g.id)} aria-label="Save meeting link">
                           <Check className="h-3.5 w-3.5 text-green-600" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditLink}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditLink} aria-label="Cancel editing meeting link">
                           <X className="h-3.5 w-3.5 text-destructive" />
                         </Button>
                       </div>
