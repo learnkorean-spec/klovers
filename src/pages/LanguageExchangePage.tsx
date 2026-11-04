@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -31,7 +31,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Heart, X, Loader2, ShieldAlert, Camera, Sparkles, MessageCircle, Clock } from "lucide-react";
+import {
+  Heart, X, Loader2, ShieldAlert, Sparkles, MessageCircle, Clock,
+  BookOpen, Globe2, GraduationCap, PenTool, Music2, Film, Coffee, Plane, Mic2, Palette, Headphones,
+  type LucideIcon,
+} from "lucide-react";
 import {
   EXCHANGE_LANGUAGES,
   EXCHANGE_INTERESTS,
@@ -43,6 +47,9 @@ import {
   EXCHANGE_TIME_BUCKETS,
   EXCHANGE_AVAILABILITY_COUNT,
   REPORT_REASONS,
+  EXCHANGE_AVATAR_STYLES,
+  AVATAR_ICON_PREFIX,
+  avatarStyleFromValue,
   languageLabel,
   interestLabel,
   goalLabel,
@@ -50,6 +57,51 @@ import {
   shortTimezoneLabel,
 } from "@/constants/languageExchange";
 import { getUserTimezone } from "@/lib/viewerTimezone";
+
+/** Maps the icon-name strings stored in EXCHANGE_AVATAR_STYLES to the actual
+ *  lucide-react components imported above (languageExchange.ts deliberately
+ *  stores icon names as plain strings to stay icon-library-agnostic). */
+const AVATAR_ICON_COMPONENTS: Record<string, LucideIcon> = {
+  BookOpen, Globe2, GraduationCap, MessageCircle, PenTool, Music2,
+  Film, Coffee, Plane, Mic2, Palette, Headphones,
+};
+
+/**
+ * Renders a profile's picture as one of the fixed built-in icon-on-color
+ * avatars (never a real photo — see the "Avatars only" comment in
+ * languageExchange.ts). Any value that isn't a recognized "avatar://<key>"
+ * falls back to initials, so a stray/legacy value is never rendered as an
+ * <img src=...>.
+ */
+function ExchangeAvatar({
+  avatarUrl,
+  name,
+  className,
+}: {
+  avatarUrl: string | null | undefined;
+  name: string;
+  className?: string;
+}) {
+  const style = avatarStyleFromValue(avatarUrl);
+  if (style) {
+    const Icon = AVATAR_ICON_COMPONENTS[style.icon] ?? Sparkles;
+    return (
+      <div
+        className={className ?? "flex h-full w-full items-center justify-center"}
+        style={{ backgroundColor: style.bg }}
+      >
+        <Icon className="h-1/2 w-1/2 text-black/60" strokeWidth={1.75} />
+      </div>
+    );
+  }
+  return (
+    <div className={className ?? "flex h-full w-full items-center justify-center"}>
+      <Avatar className="h-full w-full">
+        <AvatarFallback className="text-3xl">{name.slice(0, 2).toUpperCase()}</AvatarFallback>
+      </Avatar>
+    </div>
+  );
+}
 
 /**
  * Language Exchange (added 4 Nov 2026, Re's request): an opt-in, swipe-based
@@ -490,15 +542,7 @@ function SwipeCard({
       >
         <Card className="overflow-hidden">
           <div className="relative h-72 w-full bg-muted">
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile.display_name} className="h-full w-full object-cover" draggable={false} />
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <Avatar className="h-28 w-28">
-                  <AvatarFallback className="text-3xl">{profile.display_name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-              </div>
-            )}
+            <ExchangeAvatar avatarUrl={profile.avatar_url} name={profile.display_name} className="flex h-full w-full items-center justify-center" />
             <div
               className="absolute top-5 rounded-xl border-4 border-green-500 px-3 py-1 text-xl font-black text-green-500 rotate-[-12deg]"
               style={{ insetInlineStart: 16, opacity: likeOpacity }}
@@ -681,10 +725,9 @@ function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar:
         return (
           <Card key={m.user_id}>
             <CardContent className="flex items-start gap-4 p-4">
-              <Avatar className="h-14 w-14 shrink-0">
-                {m.avatar_url && <AvatarImage src={m.avatar_url} alt={m.display_name} />}
-                <AvatarFallback>{m.display_name.slice(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full">
+                <ExchangeAvatar avatarUrl={m.avatar_url} name={m.display_name} className="flex h-full w-full items-center justify-center" />
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="font-bold">{m.display_name}</h3>
@@ -770,8 +813,6 @@ function ProfileEditor({
     initial ?? { ...emptyDraft(), user_id: userId, timezone: getUserTimezone() },
   );
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initial) setDraft(initial);
@@ -804,32 +845,6 @@ function ProfileEditor({
     });
   };
 
-  const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast({ title: tr("Invalid file", "ملف غير صالح"), description: tr("Please select an image.", "الرجاء اختيار صورة."), variant: "destructive" });
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      toast({ title: tr("File too large", "الملف كبير جدًا"), description: tr("Max 2MB.", "الحد الأقصى 2 ميجابايت."), variant: "destructive" });
-      return;
-    }
-    setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `${userId}/exchange-avatar.${ext}`;
-    await supabase.storage.from("avatars").remove([path]); // supabase-error-check-ignore: best-effort cleanup of the old avatar; the upsert upload right after overwrites it regardless
-    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (upErr) {
-      toast({ title: tr("Upload failed", "تعذّر الرفع"), description: upErr.message, variant: "destructive" });
-      setUploading(false);
-      return;
-    }
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path); // supabase-error-check-ignore: getPublicUrl is a local URL join, never a network call — it has no error to check
-    setDraft((d) => ({ ...d, avatar_url: `${data.publicUrl}?t=${Date.now()}` }));
-    setUploading(false);
-  };
-
   const validSlots = draft.availability_slots.filter((s) => {
     const [day, bucket] = s.split(":");
     return day && bucket;
@@ -841,15 +856,16 @@ function ProfileEditor({
     draft.native_languages.length > 0 &&
     draft.learning_languages.length > 0 &&
     draft.goals.length > 0 &&
-    validSlots.length === EXCHANGE_AVAILABILITY_COUNT;
+    validSlots.length === EXCHANGE_AVAILABILITY_COUNT &&
+    !!draft.avatar_url;
 
   const handleSave = async () => {
     if (!canSave) {
       toast({
         title: tr("Please complete the required fields", "يرجى إكمال الحقول المطلوبة"),
         description: tr(
-          `Name, at least one language you speak, one you're learning, age ${EXCHANGE_MIN_AGE}+ if given, at least one goal, and ${EXCHANGE_AVAILABILITY_COUNT} free times.`,
-          `الاسم، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، العمر ${EXCHANGE_MIN_AGE}+ إن تم إدخاله، هدف واحد على الأقل، و${EXCHANGE_AVAILABILITY_COUNT} وقتَي فراغ.`,
+          `Name, an avatar, at least one language you speak, one you're learning, age ${EXCHANGE_MIN_AGE}+ if given, at least one goal, and ${EXCHANGE_AVAILABILITY_COUNT} free times.`,
+          `الاسم، صورة رمزية، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، العمر ${EXCHANGE_MIN_AGE}+ إن تم إدخاله، هدف واحد على الأقل، و${EXCHANGE_AVAILABILITY_COUNT} وقتَي فراغ.`,
         ),
         variant: "destructive",
       });
@@ -899,24 +915,36 @@ function ProfileEditor({
         </CardContent>
       </Card>
 
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="relative shrink-0 rounded-full"
-          disabled={uploading}
-          aria-label={tr("Upload a photo", "رفع صورة")}
-        >
-          <Avatar className="h-20 w-20 border-2 border-primary/20">
-            {draft.avatar_url && <AvatarImage src={draft.avatar_url} alt={draft.display_name} />}
-            <AvatarFallback className="text-lg">{(draft.display_name || "?").slice(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <span className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground">
-            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
-          </span>
-        </button>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarPick} disabled={uploading} />
-        <p className="text-sm text-muted-foreground">{tr("Tap to add a photo (optional).", "اضغطي لإضافة صورة (اختياري).")}</p>
+      <div>
+        <Label>{tr("Avatar", "الصورة الرمزية")} *</Label>
+        <p className="mb-2 text-sm text-muted-foreground">
+          {tr(
+            "No photo uploads here — pick an icon avatar, so Language Exchange stays about learning, not looks.",
+            "لا يوجد رفع صور هنا — اختاري صورة رمزية، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
+          )}
+        </p>
+        <div className="grid grid-cols-6 gap-2 sm:grid-cols-12">
+          {EXCHANGE_AVATAR_STYLES.map((style) => {
+            const value = `${AVATAR_ICON_PREFIX}${style.key}`;
+            const Icon = AVATAR_ICON_COMPONENTS[style.icon] ?? Sparkles;
+            const selected = draft.avatar_url === value;
+            return (
+              <button
+                key={style.key}
+                type="button"
+                onClick={() => setDraft((d) => ({ ...d, avatar_url: value }))}
+                className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
+                  selected ? "ring-2 ring-primary ring-offset-2" : "opacity-80 hover:opacity-100"
+                }`}
+                style={{ backgroundColor: style.bg }}
+                aria-label={style.key}
+                aria-pressed={selected}
+              >
+                <Icon className="h-6 w-6 text-black/60" strokeWidth={1.75} />
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

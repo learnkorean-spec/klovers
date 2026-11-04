@@ -131,6 +131,56 @@ export function shortTimezoneLabel(tz: string | null | undefined): string {
   return tz.split("/").pop()?.replace(/_/g, " ") ?? tz;
 }
 
+/**
+ * Avatars only, never real photos (Re's request, 4 Nov 2026 — this is a
+ * study-partner feature, not a dating app, and a real photo is the single
+ * biggest catfishing/harassment surface a swipe-based feature can have).
+ *
+ * No upload exists for this feature at all: a profile picks one of these
+ * built-in icon-on-color avatars, stored as "avatar://<key>" in the existing
+ * `avatar_url` column (no schema change needed — it was already free text).
+ * The icon set is deliberately study/culture themed (book, globe, languages,
+ * music...) and deliberately excludes anything romantic (no hearts, no
+ * couple icons) — the same "friends and study companions, not a romantic
+ * couple" line this repo's own CLAUDE.md draws for the in-game characters.
+ *
+ * Any `avatar_url` that is NOT in this "avatar://" form (e.g. a leftover
+ * real upload from before this change) is deliberately never rendered as an
+ * image — see isBuiltInAvatarValue — so this holds even retroactively.
+ */
+export const AVATAR_ICON_PREFIX = "avatar://";
+
+export interface AvatarStyleOption {
+  key: string;
+  /** lucide-react icon name, resolved where it's rendered (keeps this file icon-library-agnostic) */
+  icon: string;
+  bg: string;
+}
+
+export const EXCHANGE_AVATAR_STYLES: AvatarStyleOption[] = [
+  { key: "book", icon: "BookOpen", bg: "#FDE68A" },
+  { key: "globe", icon: "Globe2", bg: "#A7F3D0" },
+  { key: "graduation", icon: "GraduationCap", bg: "#BFDBFE" },
+  { key: "chat", icon: "MessageCircle", bg: "#FBCFE8" },
+  { key: "pen", icon: "PenTool", bg: "#DDD6FE" },
+  { key: "music", icon: "Music2", bg: "#FECACA" },
+  { key: "film", icon: "Film", bg: "#FDBA74" },
+  { key: "coffee", icon: "Coffee", bg: "#99F6E4" },
+  { key: "plane", icon: "Plane", bg: "#C7D2FE" },
+  { key: "mic", icon: "Mic2", bg: "#FCA5A5" },
+  { key: "palette", icon: "Palette", bg: "#D9F99D" },
+  { key: "headphones", icon: "Headphones", bg: "#E9D5FF" },
+];
+
+export const isBuiltInAvatarValue = (v: string | null | undefined): boolean =>
+  !!v && v.startsWith(AVATAR_ICON_PREFIX);
+
+export const avatarStyleFromValue = (v: string | null | undefined): AvatarStyleOption | null => {
+  if (!isBuiltInAvatarValue(v)) return null;
+  const key = v!.slice(AVATAR_ICON_PREFIX.length);
+  return EXCHANGE_AVATAR_STYLES.find((a) => a.key === key) ?? null;
+};
+
 export const REPORT_REASONS: { key: string; en: string; ar: string }[] = [
   { key: "harassment", en: "Harassment or abuse", ar: "مضايقة أو إساءة" },
   { key: "inappropriate", en: "Inappropriate content", ar: "محتوى غير لائق" },
