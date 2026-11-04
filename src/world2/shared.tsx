@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { Group, Matrix4, Quaternion, Vector3 } from "three";
+import { Group, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { PALETTE, type Box2 } from "../game/config/world";
 import { std } from "../game/config/materials";
 import { isBlocked, pushOutOfBox } from "../game/systems/collision";
@@ -484,6 +484,7 @@ export function FollowCamera({
   // it's following, it keeps following. `everMoved` mirrors that — the
   // opening shot plays once, then the chase camera owns the view for good.
   const everMoved = useRef(false);
+  const baseNear = useRef<number | null>(null);
   // Scratch objects, reused every frame in the "moving" branch only — not
   // on the far more common idle path, where nothing new is allocated.
   const worldPos = useRef(new Vector3());
@@ -595,11 +596,27 @@ export function FollowCamera({
       desiredPos.current.copy(staticPos.current);
       desiredQuat.current.copy(staticQuat.current);
     }
-    const k = damp(pov || moving ? 3.2 : 1.8, dt);
+    // Re, 5 Nov 2026 (found while recording the demo video): POV used the
+    // same eased follow as the chase camera, so whenever the learner turned
+    // (e.g. pressing "down" spins them 180°) the camera swept from in front of
+    // the old face position *through* their own head to the new one — every
+    // in-between frame showed the inside of their eyes and mouth. In POV the
+    // camera now snaps to the spot ahead of the face every frame (it is
+    // meant to *be* their eyes, so there is nothing to ease), and the near
+    // plane is pushed out a little as a safety net so no part of their own
+    // head can ever be drawn at point-blank range.
+    const k = pov ? 1 : damp(moving ? 3.2 : 1.8, dt);
     curPos.current.lerp(desiredPos.current, k);
     curQuat.current.slerp(desiredQuat.current, k);
     camera.position.copy(curPos.current);
     camera.quaternion.copy(curQuat.current);
+    const persp = camera as PerspectiveCamera;
+    if (baseNear.current === null) baseNear.current = persp.near;
+    const wantNear = pov ? Math.max(baseNear.current, 0.3) : baseNear.current;
+    if (persp.near !== wantNear) {
+      persp.near = wantNear;
+      persp.updateProjectionMatrix();
+    }
   }, -1);
 
   return null;
