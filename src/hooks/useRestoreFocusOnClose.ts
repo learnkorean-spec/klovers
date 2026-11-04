@@ -8,21 +8,29 @@ import * as React from "react";
  * focus on <body>, stranding keyboard users at the top of the page instead
  * of back where they were.
  *
- * The first attempt at this fix (round 21) captured the trigger in a plain
- * `useEffect` on mount, reading `document.activeElement` at that point. That
- * doesn't work: Radix's own `FocusScope` (a descendant of this component, so
- * its effects run first - React fires child effects before parent effects)
- * already auto-focuses something inside the dialog by the time our effect
- * runs, so `document.activeElement` was already wrong - still inside the
- * dialog, not the real trigger. Re-tested live after shipping and confirmed
- * this: focus still landed on <body> after Escape, not the trigger.
+ * Two earlier attempts at this fix (round 21, then a same-day follow-up)
+ * both captured the trigger in a `useRef` set by a mount-time `useEffect`,
+ * and both failed live re-testing for the same underlying reason, only
+ * found by re-testing on production with real admin access:
  *
- * The fix: track the last focused element continuously via a capture-phase
- * `focusin` listener on `document`, skipping any element that's inside an
- * open dialog. That listener fires synchronously on the original trigger
- * click/focus, well before Radix's dialog even mounts - so by the time this
- * hook needs the value, it was already recorded correctly, independent of
- * effect ordering.
+ * `DialogContent` (this wrapper) is NOT actually remounted each time the
+ * dialog opens. Callers write `<Dialog open={x}><DialogContent>...` with
+ * `DialogContent` always present in the JSX - Radix's `Dialog.Root` always
+ * renders its children, and it's Radix's own internal `Presence`/`Portal`
+ * machinery *inside* `DialogPrimitive.Content` (a layer below this wrapper)
+ * that decides whether anything actually exists in the DOM. So this
+ * wrapper component mounts exactly once, the first time its parent
+ * renders - almost always before the dialog has ever been opened - and a
+ * `useEffect(() => {...}, [])` inside it only ever runs that one time,
+ * capturing a stale (often null, or whatever had focus at page load)
+ * value forever. Every later open/close cycle read that same stale ref.
+ *
+ * The fix: don't capture into a per-mount ref at all. Track the last
+ * focused element continuously in a module-level variable via a
+ * capture-phase `focusin` listener on `document` (registered once,
+ * independent of any component's mount/unmount lifecycle), skipping any
+ * element that's inside an open dialog - and read that live value
+ * directly when closing, not a value captured earlier.
  */
 let lastFocusOutsideDialog: HTMLElement | null = null;
 
@@ -40,17 +48,11 @@ if (typeof document !== "undefined") {
 }
 
 export function useRestoreFocusOnClose(onCloseAutoFocus?: (event: Event) => void) {
-  const triggerRef = React.useRef<HTMLElement | null>(null);
-
-  React.useEffect(() => {
-    triggerRef.current = lastFocusOutsideDialog;
-  }, []);
-
   return React.useCallback(
     (event: Event) => {
       onCloseAutoFocus?.(event);
       if (!event.defaultPrevented) {
-        const trigger = triggerRef.current;
+        const trigger = lastFocusOutsideDialog;
         if (trigger && document.contains(trigger)) {
           event.preventDefault();
           trigger.focus();
