@@ -16,7 +16,7 @@ import OptimizedImage from "@/components/OptimizedImage";
 import { cn } from "@/lib/utils";
 import { useSpeech } from "@/hooks/useSpeech";
 import { STAGE_BY_ID, type StageId } from "@/constants/blogJourney";
-import { LEVEL_LABEL, PURE_HANGUL, type ArticleLevel, type VocabItem } from "@/lib/articleVocab";
+import { HAS_HANGUL, LEVEL_LABEL, PURE_HANGUL, type ArticleLevel, type VocabItem } from "@/lib/articleVocab";
 import { journey, useJourneyProgress } from "@/lib/journeyProgress";
 import { trackJourney } from "@/lib/journeyAnalytics";
 import { CoverFallback, KlobiFigure, Ko, LearningMeta, learningFor, minutesLabel, num, useInView, wordsLabel } from "./shared";
@@ -149,8 +149,33 @@ const textOf = (children: ReactNode): string | null => {
 };
 
 /**
+ * All text under a react-markdown node, however deeply nested (a blockquote's
+ * children is a <p> element, not a string, so textOf alone misses it). Used
+ * only to decide direction below — never rendered itself.
+ */
+const allText = (node: ReactNode): string => {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(allText).join("");
+  if (node && typeof node === "object" && "props" in node) {
+    return allText((node as { props?: { children?: ReactNode } }).props?.children);
+  }
+  return "";
+};
+
+const HAS_ARABIC = /[؀-ۿ]/;
+
+/**
  * react-markdown component overrides: a bold or table cell that is pure Hangul
  * becomes a <KoreanWord /> when the article's own vocabulary table glosses it.
+ *
+ * A blockquote that is Korean dialogue (TOPIK-style example lines) dropped
+ * into an Arabic article is isolated as its own LTR run: left un-isolated,
+ * the base RTL paragraph direction reorders trailing neutral characters —
+ * a line ending "...만나요?" renders with the "?" at the visual start. The
+ * check is "has Hangul, has no Arabic" rather than requiring the whole quote
+ * to be pure Hangul, because these lines mix in ASCII (가:/나: speaker labels,
+ * punctuation, parenthetical notes) that PURE_HANGUL would reject.
+ *
  * Everything else renders exactly as before.
  */
 export function koreanWordComponents(vocab: VocabItem[], from: string, isAr: boolean) {
@@ -168,6 +193,18 @@ export function koreanWordComponents(vocab: VocabItem[], from: string, isAr: boo
     td: ({ children, node: _node, ...props }: { children?: ReactNode; node?: unknown }) => (
       <td {...props}>{wrap(children) ?? children}</td>
     ),
+    blockquote: ({ children, node: _node, ...props }: { children?: ReactNode; node?: unknown }) => {
+      const isForeignDialogue = isAr && HAS_HANGUL.test(allText(children)) && !HAS_ARABIC.test(allText(children));
+      return (
+        <blockquote
+          {...props}
+          dir={isForeignDialogue ? "ltr" : undefined}
+          className={isForeignDialogue ? "[unicode-bidi:isolate]" : undefined}
+        >
+          {children}
+        </blockquote>
+      );
+    },
   };
 }
 
