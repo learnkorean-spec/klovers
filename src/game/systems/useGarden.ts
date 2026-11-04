@@ -34,7 +34,12 @@ export function useGarden(): { counts: GardenCounts; refresh: () => void } {
     let live = true;
     (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          // Distinguishable from "guest, no session" in the logs — the
+          // garden still just reads as empty either way for the learner.
+          console.warn("[KLOVERS World] garden session check failed", sessionError);
+        }
         if (!session) return;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
