@@ -458,7 +458,7 @@ const BlogManager = () => {
       {loading ? (
         <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-muted-foreground text-center py-8">No posts found.</p>
+        <p className="text-muted-foreground text-center py-8" role="status">No posts found.</p>
       ) : (
         <div className="overflow-x-auto">
           <Table>

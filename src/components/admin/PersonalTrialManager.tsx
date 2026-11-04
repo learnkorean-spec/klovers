@@ -294,7 +294,7 @@ const PersonalTrialManager = () => {
         </CardHeader>
         <CardContent>
           {bookings.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">No bookings yet.</p>
+            <p className="py-4 text-center text-sm text-muted-foreground" role="status">No bookings yet.</p>
           ) : (
             <div className="space-y-2">
               {bookings.map((b) => {

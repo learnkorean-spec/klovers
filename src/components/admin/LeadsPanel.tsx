@@ -663,7 +663,7 @@ const LeadsPanel: React.FC = () => {
             ))}
           </div>
         ) : filtered.length === 0 && !leadsError ? (
-          <p className="text-muted-foreground text-center py-12">No leads found.</p>
+          <p className="text-muted-foreground text-center py-12" role="status">No leads found.</p>
         ) : !leadsError ? (
           <div className="border rounded-xl max-h-[600px] overflow-auto">
             <Table>

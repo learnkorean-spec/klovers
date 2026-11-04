@@ -1147,7 +1147,7 @@ const GroupAttendanceManager = ({
               {enrichedLoading ? (
                 <p className="text-muted-foreground text-center py-4">Loading groups...</p>
               ) : enrichedGroups.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No groups yet.</p>
+                <p className="text-muted-foreground text-center py-4" role="status">No groups yet.</p>
               ) : (
                 <div className="space-y-3">
                   {enrichedGroups.map(g => {
@@ -1364,7 +1364,7 @@ const GroupAttendanceManager = ({
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Current Members ({groupMembers.length})</Label>
             {groupMembers.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No students in this group yet.</p>
+              <p className="text-muted-foreground text-sm" role="status">No students in this group yet.</p>
             ) : (
               <div className="space-y-1 max-h-40 overflow-y-auto">
                 {groupMembers.map(m => (
@@ -1393,7 +1393,7 @@ const GroupAttendanceManager = ({
             />
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {filteredAvailable.length === 0 ? (
-                <p className="text-muted-foreground text-sm py-2">No available students found.</p>
+                <p className="text-muted-foreground text-sm py-2" role="status">No available students found.</p>
               ) : (
                 filteredAvailable.slice(0, 20).map(s => (
                   <div key={s.student_id} className="flex items-center justify-between p-2 rounded-md border border-border hover:bg-accent/30">

@@ -459,7 +459,7 @@ function EnrollmentCardInner(props: EnrollmentCardProps) {
         {logsOpen && (
           <div className="mt-2 space-y-1">
             {logsLoading && <p className="text-xs text-muted-foreground" role="status">Loading…</p>}
-            {!logsLoading && logs.length === 0 && <p className="text-xs text-muted-foreground italic">No logs found.</p>}
+            {!logsLoading && logs.length === 0 && <p className="text-xs text-muted-foreground italic" role="status">No logs found.</p>}
             {logs.map(log => (
               <div key={log.id} className="flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground w-36 shrink-0">{new Date(log.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>

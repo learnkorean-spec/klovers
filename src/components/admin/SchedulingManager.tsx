@@ -1273,7 +1273,7 @@ const GroupsManager = () => {
             {searchLoading && <p className="text-sm text-muted-foreground text-center py-2">Searching...</p>}
 
             {!searchLoading && studentSearch.length >= 2 && searchResults.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-2">No results found.</p>
+              <p className="text-sm text-muted-foreground text-center py-2" role="status">No results found.</p>
             )}
 
             {searchResults.length > 0 && (

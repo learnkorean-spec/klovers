@@ -685,7 +685,7 @@ const StudentManager = () => {
           {overviewLoading ? (
             <p className="text-muted-foreground text-center py-8" role="status">Loading...</p>
           ) : filteredOverview.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No students found.</p>
+            <p className="text-muted-foreground text-center py-8" role="status">No students found.</p>
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -1081,7 +1081,7 @@ const StudentManager = () => {
           {packagesLoading ? (
             <p className="text-sm text-muted-foreground text-center py-4" role="status">Loading...</p>
           ) : packagesForStudent.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">No packages found.</p>
+            <p className="text-sm text-muted-foreground text-center py-4" role="status">No packages found.</p>
           ) : (
             <div className="space-y-3">
               {packagesForStudent.map((pkg) => {
@@ -1153,7 +1153,7 @@ const StudentManager = () => {
               <Button size="sm" onClick={handleAddGroup}><Plus className="h-4 w-4" /></Button>
             </div>
             {groups.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No groups yet.</p>
+              <p className="text-sm text-muted-foreground text-center py-4" role="status">No groups yet.</p>
             ) : (
               <div className="space-y-1 max-h-60 overflow-y-auto">
                 {groups.map(g => (

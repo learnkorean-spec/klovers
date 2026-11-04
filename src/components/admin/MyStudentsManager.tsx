@@ -632,7 +632,7 @@ const BundleManager = ({
       </Button>
 
       {bundles.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-2">No bundles yet.</p>
+        <p className="text-sm text-muted-foreground py-2" role="status">No bundles yet.</p>
       ) : (
         <div className="space-y-1">
           {bundles.map(b => {

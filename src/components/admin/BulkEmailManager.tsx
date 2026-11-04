@@ -670,7 +670,7 @@ const BulkEmailManager = () => {
         </CardHeader>
         <CardContent>
           {campaigns.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No campaigns yet.</p>
+            <p className="text-sm text-muted-foreground" role="status">No campaigns yet.</p>
           ) : (
             <Table>
               <TableHeader>

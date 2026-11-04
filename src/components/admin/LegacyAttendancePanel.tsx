@@ -197,7 +197,7 @@ const LegacyAttendancePanel = ({
         {loading ? (
           <p className="text-sm text-muted-foreground text-center py-4" role="status">Loading...</p>
         ) : records.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">No attendance records yet.</p>
+          <p className="text-sm text-muted-foreground text-center py-4" role="status">No attendance records yet.</p>
         ) : (
           <div className="space-y-1 max-h-60 overflow-y-auto">
             {records.map((r) => (
