@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Lock, Video, Bell } from "lucide-react";
+import { withTimeout, isServiceOutage } from "@/lib/withTimeout";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
@@ -79,20 +80,30 @@ const AdminSettings = () => {
     }
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Unguarded getSession()/signInWithPassword() calls can hang forever
+      // if Supabase is slow or unreachable (the 17 Oct 2026 outage pattern),
+      // leaving this button spinning with no error and no way to retry.
+      const { data: { session } } = await withTimeout(supabase.auth.getSession(), 8000, "session");
       if (!session) {
         toast({ title: "Error", description: "Not authenticated.", variant: "destructive" });
         return;
       }
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: session.user.email!,
-        password: currentPassword,
-      });
+      const { error: signInError } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email: session.user.email!,
+          password: currentPassword,
+        }),
+        10000,
+        "password check",
+      );
       if (signInError) {
-        toast({ title: "Error", description: "Current password is incorrect.", variant: "destructive" });
+        const description = isServiceOutage(signInError)
+          ? "The server isn't responding. Check your connection and try again."
+          : "Current password is incorrect.";
+        toast({ title: "Error", description, variant: "destructive" });
         return;
       }
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await withTimeout(supabase.auth.updateUser({ password: newPassword }), 10000, "update password");
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
       } else {
@@ -100,7 +111,10 @@ const AdminSettings = () => {
         setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
       }
     } catch (err: unknown) {
-      toast({ title: "Error", description: err instanceof Error ? err.message : "Failed to update password", variant: "destructive" });
+      const description = isServiceOutage(err)
+        ? "The server isn't responding. Check your connection and try again."
+        : err instanceof Error ? err.message : "Failed to update password";
+      toast({ title: "Error", description, variant: "destructive" });
     } finally {
       setLoading(false);
     }
