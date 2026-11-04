@@ -4,6 +4,7 @@ import { Group, Matrix4, Quaternion, Vector3 } from "three";
 import { PALETTE, type Box2 } from "../game/config/world";
 import { std } from "../game/config/materials";
 import { isBlocked, pushOutOfBox } from "../game/systems/collision";
+import { damp, stepVelocity, stepYaw, yawFromDirection } from "../game/systems/movement";
 import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
 
 /**
@@ -250,6 +251,9 @@ export function usePlayerMovement({
   externalRef,
   colliders,
   radius = 0.35,
+  acceleration = 10,
+  deceleration = 12,
+  turnRate = 12,
 }: {
   bounds: { x: [number, number]; z: [number, number] };
   control: MutableRefObject<BodyControl>;
@@ -270,10 +274,22 @@ export function usePlayerMovement({
   /** The learner's own circular footprint, metres — matches the live
    * game's own `PLAYER.radius` (config/world.ts). */
   radius?: number;
+  /** Re, 4 Nov 2026 ("why can't you just copy the world1 code"): movement
+   * here used to be instant speed with a linear turn lerp — snappy, but not
+   * what the live game actually feels like. These three default to the
+   * live game's own `PLAYER` tuning (config/world.ts) and drive the exact
+   * same velocity/turn maths (systems/movement.ts's `stepVelocity`/
+   * `stepYaw`, reused unmodified, not reimplemented) — acceleration and
+   * braking instead of an instant stop/start, and a turn that eases instead
+   * of snapping to face the new direction. */
+  acceleration?: number;
+  deceleration?: number;
+  turnRate?: number;
 }) {
   const internalRef = useRef<Group>(null);
   const g = externalRef ?? internalRef;
   const pressed = useRef<Set<string>>(new Set());
+  const velocity = useRef({ x: 0, z: 0 });
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
@@ -308,11 +324,17 @@ export function usePlayerMovement({
       dz += dir[1];
     }
     const moving = dx !== 0 || dz !== 0;
-    if (moving) {
-      const len = Math.hypot(dx, dz) || 1;
-      const step = speed * Math.min(delta, 0.05); // clamp delta so a dropped frame can't teleport the player
-      const nx = group.position.x + (dx / len) * step;
-      const nz = group.position.z + (dz / len) * step;
+    const len = Math.hypot(dx, dz) || 1;
+    const wish = moving ? { x: dx / len, z: dz / len } : { x: 0, z: 0 };
+    const dt = Math.min(delta, 0.05); // clamp so a dropped frame can't teleport the player
+    // Re, 4 Nov 2026: the live game's own velocity/turn maths
+    // (systems/movement.ts), reused unmodified — acceleration and braking
+    // instead of an instant stop/start speed, a turn that eases toward the
+    // new heading instead of snapping to it.
+    velocity.current = stepVelocity(velocity.current, wish, speed, acceleration, deceleration, dt);
+    if (velocity.current.x !== 0 || velocity.current.z !== 0) {
+      const nx = group.position.x + velocity.current.x * dt;
+      const nz = group.position.z + velocity.current.z * dt;
       const p = { x: nx, z: nz };
       if (colliders && colliders.length) {
         // Two passes settle corners where two boxes meet — same as the
@@ -325,10 +347,10 @@ export function usePlayerMovement({
       }
       group.position.x = Math.min(bounds.x[1], Math.max(bounds.x[0], p.x));
       group.position.z = Math.min(bounds.z[1], Math.max(bounds.z[0], p.z));
-      const targetRot = Math.atan2(dx, dz);
-      let diff = targetRot - group.rotation.y;
-      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-      group.rotation.y += diff * Math.min(1, delta * 10);
+    }
+    if (moving) {
+      const targetRot = yawFromDirection(dx, dz);
+      group.rotation.y = stepYaw(group.rotation.y, targetRot, turnRate, dt);
       if (control.current.clip !== "walk") control.current.clip = "walk";
     } else if (control.current.clip === "walk") {
       control.current.clip = "idle";
@@ -549,7 +571,7 @@ export function FollowCamera({
       desiredPos.current.copy(staticPos.current);
       desiredQuat.current.copy(staticQuat.current);
     }
-    const k = 1 - Math.exp(-(pov || moving ? 3.2 : 1.8) * dt);
+    const k = damp(pov || moving ? 3.2 : 1.8, dt);
     curPos.current.lerp(desiredPos.current, k);
     curQuat.current.slerp(desiredQuat.current, k);
     camera.position.copy(curPos.current);
