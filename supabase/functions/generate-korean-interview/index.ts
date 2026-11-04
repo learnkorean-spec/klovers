@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
+import { chatComplete } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,9 +94,6 @@ Deno.serve(async (req) => {
 
     const toGenerate = Math.min(requestedCount, totalAllowed - totalGenerated);
 
-    const apiKey = getAiKey();
-    if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
-
     const langList = (languages_spoken || []).join(", ") || "English";
     const prompt = `You are a Korean interview preparation expert. Generate exactly ${toGenerate} realistic Korean job interview question-and-answer pairs for a "${job_title}" with ${years_experience || 0} years of experience${industry ? ` in the ${industry} industry` : ""}.
 
@@ -119,26 +116,9 @@ Requirements:
 
 Return ONLY a JSON array of objects, no other text.`;
 
-    const aiRes = await fetch(AI_CHAT_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: AI_TEXT_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-      }),
-    });
-
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      throw new Error(`AI API error: ${aiRes.status} - ${errText}`);
-    }
-
-    const aiData = await aiRes.json();
-    const rawContent = aiData.choices?.[0]?.message?.content || "";
+    // Falls back to AWS Bedrock (Amazon Nova Lite) if OpenAI is unavailable —
+    // see supabase/functions/_shared/ai.ts.
+    const rawContent = await chatComplete(prompt, { temperature: 0.7 });
 
     let newQuestions;
     try {

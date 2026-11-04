@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
+import { chatComplete } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,9 +17,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
-
-    const apiKey = getAiKey();
-    if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
     // ── Determine source/target based on direction ───────────────────────────
     const isReverse = direction === "ar-to-en";
@@ -99,26 +96,9 @@ KEYWORDS: ${(post.keywords || []).join(", ")}
 CONTENT:
 ${post.content}`;
 
-    const aiRes = await fetch(AI_CHAT_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: AI_TEXT_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.3,
-      }),
-    });
-
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      throw new Error(`AI API error: ${aiRes.status} - ${errText}`);
-    }
-
-    const aiData = await aiRes.json();
-    const rawContent = aiData.choices?.[0]?.message?.content || "";
+    // Falls back to AWS Bedrock (Amazon Nova Lite) if OpenAI is unavailable —
+    // see supabase/functions/_shared/ai.ts.
+    const rawContent = await chatComplete(prompt, { temperature: 0.3 });
 
     // Extract JSON from the response
     let translated;

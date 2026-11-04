@@ -1048,7 +1048,7 @@ function ProfileEditor({
 
   const canSave =
     draft.display_name.trim().length >= 2 &&
-    (draft.age == null || (draft.age >= EXCHANGE_MIN_AGE && draft.age <= EXCHANGE_MAX_AGE)) &&
+    draft.age != null && draft.age >= EXCHANGE_MIN_AGE && draft.age <= EXCHANGE_MAX_AGE &&
     !!draft.gender &&
     draft.native_languages.length > 0 &&
     draft.learning_languages.length > 0 &&
@@ -1061,8 +1061,8 @@ function ProfileEditor({
       toast({
         title: tr("Please complete the required fields", "يرجى إكمال الحقول المطلوبة"),
         description: tr(
-          `Name, an avatar, your gender, at least one language you speak, one you're learning, age ${EXCHANGE_MIN_AGE}+ if given, at least one goal, and ${EXCHANGE_AVAILABILITY_COUNT} free times.`,
-          `الاسم، صورة رمزية، جنسك، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، العمر ${EXCHANGE_MIN_AGE}+ إن تم إدخاله، هدف واحد على الأقل، و${EXCHANGE_AVAILABILITY_COUNT} وقتَي فراغ.`,
+          `Name, an avatar, your gender, at least one language you speak, one you're learning, your age (${EXCHANGE_MIN_AGE}+), at least one goal, and ${EXCHANGE_AVAILABILITY_COUNT} free times.`,
+          `الاسم، صورة رمزية، جنسك، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، عمرك (${EXCHANGE_MIN_AGE}+)، هدف واحد على الأقل، و${EXCHANGE_AVAILABILITY_COUNT} وقتَي فراغ.`,
         ),
         variant: "destructive",
       });
@@ -1193,7 +1193,7 @@ function ProfileEditor({
           />
         </div>
         <div>
-          <Label htmlFor="age">{tr("Age", "العمر")}</Label>
+          <Label htmlFor="age">{tr("Age", "العمر")} *</Label>
           <Input
             id="age"
             type="number"

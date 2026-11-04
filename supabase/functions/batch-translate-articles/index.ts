@@ -1,12 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
+import { chatComplete } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function translateOne(supabase: any, post: any, apiKey: string): Promise<string> {
+async function translateOne(supabase: any, post: any): Promise<string> {
   const arSlug = `${post.slug}-ar`;
 
   // Check if Arabic version already exists
@@ -46,32 +46,9 @@ KEYWORDS: ${(post.keywords || []).join(", ")}
 CONTENT:
 ${post.content}`;
 
-  const aiRes = await fetch(AI_CHAT_URL, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: AI_TEXT_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
-    }),
-  });
-
-  if (aiRes.status === 429) {
-    // Rate limited - wait and retry once
-    await new Promise(r => setTimeout(r, 10000));
-    return translateOne(supabase, post, apiKey);
-  }
-
-  if (!aiRes.ok) {
-    const errText = await aiRes.text();
-    throw new Error(`AI error ${aiRes.status}: ${errText.slice(0, 200)}`);
-  }
-
-  const aiData = await aiRes.json();
-  const rawContent = aiData.choices?.[0]?.message?.content || "";
+  // Falls back to AWS Bedrock (Amazon Nova Lite) if OpenAI is unavailable
+  // (including on 429/rate-limit) — see supabase/functions/_shared/ai.ts.
+  const rawContent = await chatComplete(prompt, { temperature: 0.3 });
 
   const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("No JSON in AI response");
@@ -113,13 +90,6 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const apiKey = getAiKey();
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
   // Get all English articles that don't have Arabic versions yet
   const { data: posts, error: fetchErr } = await supabase
     .from("blog_posts")
@@ -150,7 +120,7 @@ Deno.serve(async (req) => {
     const results: string[] = [];
     for (const post of untranslated) {
       try {
-        const result = await translateOne(supabase, post, apiKey);
+        const result = await translateOne(supabase, post);
         results.push(result);
         console.log(`Translated: ${result}`);
       } catch (e: any) {

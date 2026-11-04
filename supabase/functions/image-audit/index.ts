@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
+import { chatComplete, getAiKey, hasAnyChatProvider } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,29 +111,10 @@ function langLabel(lang: string | null): string {
   return (lang ?? "en").toLowerCase();
 }
 
-async function callAI(apiKey: string, prompt: string): Promise<string> {
-  const res = await fetch(AI_CHAT_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: AI_TEXT_MODEL,
-      temperature: 0.1,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    if (res.status === 429) throw new Error("rate_limited");
-    if (res.status === 402) throw new Error("credits_exhausted");
-    throw new Error(`AI error ${res.status}: ${errText.slice(0, 100)}`);
-  }
-
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "";
+async function callAI(_apiKey: string, prompt: string): Promise<string> {
+  // Falls back to AWS Bedrock (Amazon Nova Lite) if OpenAI is unavailable —
+  // see supabase/functions/_shared/ai.ts.
+  return await chatComplete(prompt, { temperature: 0.1 });
 }
 
 function parseJSON<T>(raw: string): T | null {
@@ -414,10 +395,10 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const apiKey = getAiKey();
-  if (!apiKey) {
+  const apiKey = getAiKey() ?? "";
+  if (!hasAnyChatProvider()) {
     return new Response(
-      JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
+      JSON.stringify({ error: "No AI provider configured (OPENAI_API_KEY or AWS Bedrock secrets)" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

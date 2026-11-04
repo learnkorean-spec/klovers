@@ -1,13 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
+import { chatComplete } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const AI_URL = AI_CHAT_URL;
-const MODEL = AI_TEXT_MODEL;
 
 // The 7 orchestra sections — each generates a different content layer
 const SECTIONS = [
@@ -137,15 +134,10 @@ REQUIREMENTS:
 - Return ONLY the JSON object, no markdown fences`;
 }
 
-async function callAI(apiKey: string, prompt: string): Promise<string> {
-  const res = await fetch(AI_URL, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: MODEL, messages: [{ role: "user", content: prompt }] }),
-  });
-  if (!res.ok) throw new Error(`AI API error: ${res.status} ${await res.text()}`);
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "";
+async function callAI(_apiKey: string, prompt: string): Promise<string> {
+  // Falls back to AWS Bedrock (Amazon Nova Lite) if OpenAI is unavailable —
+  // see supabase/functions/_shared/ai.ts.
+  return await chatComplete(prompt);
 }
 
 Deno.serve(async (req) => {
@@ -155,13 +147,6 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-
-  const apiKey = getAiKey();
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
 
   let lessonId: number | null = null;
   let bookFilter: string | null = null;
@@ -263,7 +248,7 @@ Deno.serve(async (req) => {
       }
 
       const prompt = buildPrompt(lesson);
-      const rawText = await callAI(apiKey, prompt);
+      const rawText = await callAI("", prompt);
 
       let content: any;
       try {
