@@ -1842,9 +1842,13 @@ const TrialBookingsManager = () => {
   const isRepeat = (b: TrialBooking) =>
     (emailCounts[(b.email || "").toLowerCase()] || 0) > 1;
 
+  // A handful of legacy/cancelled rows have no trial_date or start_time at
+  // all (e.g. a malformed cancellation) - without a date there's no sensible
+  // "upcoming" or "past" bucket for them, and leaving them in used to crash
+  // this whole tab on localeCompare(null). Drop them from both lists.
   const upcomingBookings = bookings
-    .filter((b) => trialDateObj(b) >= startOfToday)
-    .sort((a, b) => a.trial_date.localeCompare(b.trial_date) || a.start_time.localeCompare(b.start_time));
+    .filter((b) => b.trial_date && trialDateObj(b) >= startOfToday)
+    .sort((a, b) => a.trial_date.localeCompare(b.trial_date) || (a.start_time || "").localeCompare(b.start_time || ""));
 
   const windowDays = historyWindow === "all" ? null : parseInt(historyWindow, 10);
   const cutoff = windowDays
@@ -1853,13 +1857,14 @@ const TrialBookingsManager = () => {
 
   const pastBookings = bookings
     .filter((b) => {
+      if (!b.trial_date) return false;
       const d = trialDateObj(b);
       if (d >= startOfToday) return false;
       if (cutoff && d < cutoff) return false;
       return true;
     })
     // most recent first
-    .sort((a, b) => b.trial_date.localeCompare(a.trial_date) || b.start_time.localeCompare(a.start_time));
+    .sort((a, b) => b.trial_date.localeCompare(a.trial_date) || (b.start_time || "").localeCompare(a.start_time || ""));
 
   // Group by exact session (trial_date + start_time). Source of truth = trial_bookings,
   // so legacy/removed slots still surface here.
