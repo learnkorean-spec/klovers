@@ -920,8 +920,8 @@ const StudentManager = () => {
               </div>
               <div>
                 <label htmlFor="sm-email" className="text-sm font-medium text-foreground">Email * {lookingUpEmail && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}</label>
-                <Input id="sm-email" type="email" required aria-required="true" value={studentForm.email} onChange={(e) => setStudentForm(f => ({ ...f, email: e.target.value }))} onBlur={handleEmailBlur} />
-                {!editingStudentId && <p className="text-xs text-muted-foreground mt-0.5">Tab out to auto-lookup existing data</p>}
+                <Input id="sm-email" type="email" required aria-required="true" aria-describedby={!editingStudentId ? "sm-email-hint" : undefined} value={studentForm.email} onChange={(e) => setStudentForm(f => ({ ...f, email: e.target.value }))} onBlur={handleEmailBlur} />
+                {!editingStudentId && <p id="sm-email-hint" className="text-xs text-muted-foreground mt-0.5">Tab out to auto-lookup existing data</p>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -1033,8 +1033,8 @@ const StudentManager = () => {
               </div>
               <div>
                 <label htmlFor="sm-pkg-extra" className="text-sm font-medium text-foreground">Extra (unpaid)</label>
-                <Input id="sm-pkg-extra" type="number" min={0} value={packageForm.used_classes} onChange={(e) => setPackageForm(f => ({ ...f, used_classes: Number(e.target.value) }))} placeholder="0" />
-                <p className="text-xs text-muted-foreground mt-0.5">Classes attended but not paid</p>
+                <Input id="sm-pkg-extra" type="number" min={0} aria-describedby="sm-pkg-extra-hint" value={packageForm.used_classes} onChange={(e) => setPackageForm(f => ({ ...f, used_classes: Number(e.target.value) }))} placeholder="0" />
+                <p id="sm-pkg-extra-hint" className="text-xs text-muted-foreground mt-0.5">Classes attended but not paid</p>
               </div>
               <div>
                 <label htmlFor="sm-pkg-total-paid" className="text-sm font-medium text-foreground">Total Paid</label>
