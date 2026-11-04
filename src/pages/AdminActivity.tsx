@@ -153,7 +153,7 @@ const AdminActivity = () => {
 
   return (
     <AdminShell activeId="activity">
-      <main id="main-content">
+      <div id="main-content">
         <div className="mx-auto w-full max-w-6xl px-5 py-8 space-y-8">
 
           <header className="space-y-1">
@@ -461,7 +461,7 @@ const AdminActivity = () => {
           )}
 
         </div>
-      </main>
+      </div>
     </AdminShell>
   );
 };

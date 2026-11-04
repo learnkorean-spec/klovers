@@ -348,7 +348,7 @@ const AdminMessage = () => {
 
   return (
     <AdminShell activeId="message">
-      <main id="main-content">
+      <div id="main-content">
         <div className="mx-auto w-full max-w-4xl px-5 py-8 space-y-6">
 
           <header className="space-y-1">
@@ -630,7 +630,7 @@ const AdminMessage = () => {
           )}
 
         </div>
-      </main>
+      </div>
     </AdminShell>
   );
 };

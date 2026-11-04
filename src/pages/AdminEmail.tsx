@@ -13,11 +13,11 @@ import EmailDeliveryPanel from "@/components/admin/EmailDeliveryPanel";
 
 const AdminEmail = () => (
   <AdminShell activeId="email">
-    <main id="main-content">
+    <div id="main-content">
       <div className="mx-auto w-full max-w-6xl px-5 py-8">
         <EmailDeliveryPanel />
       </div>
-    </main>
+    </div>
   </AdminShell>
 );
 
