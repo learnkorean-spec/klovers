@@ -184,14 +184,15 @@ const RecordedClasses = ({ limit = 6 }: RecordedClassesProps) => {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Answer</Label>
-              <div className="flex gap-2">
+              <span id="rc-answer-label" className="text-sm font-medium leading-none">Answer</span>
+              <div className="flex gap-2" role="group" aria-labelledby="rc-answer-label">
                 {(["attended", "cancelled_no_charge"] as SessionOutcome[]).map(o => (
                   <Button
                     key={o}
                     type="button"
                     size="sm"
                     variant={outcome === o ? "default" : "outline"}
+                    aria-pressed={outcome === o}
                     onClick={() => setOutcome(o)}
                   >
                     {OUTCOME_LABEL[o]}

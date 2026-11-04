@@ -2010,12 +2010,12 @@ const MyStudentsManager = () => {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Learning</Label>
+                <Label htmlFor="student-subject">Learning</Label>
                 <Select
                   value={studentDraft.subject}
                   onValueChange={v => setStudentDraft({ ...studentDraft, subject: v as StudentSubject })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="student-subject"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STUDENT_SUBJECTS.map(s => (
                       <SelectItem key={s} value={s}>{SUBJECT_LABEL[s]}</SelectItem>
@@ -2024,12 +2024,12 @@ const MyStudentsManager = () => {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Status</Label>
+                <Label htmlFor="student-status">Status</Label>
                 <Select
                   value={studentDraft.status}
                   onValueChange={v => setStudentDraft({ ...studentDraft, status: v as StudentStatus })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="student-status"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STUDENT_STATUSES.map(s => (
                       <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>
@@ -2071,12 +2071,12 @@ const MyStudentsManager = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Currency</Label>
+                  <Label htmlFor="student-currency">Currency</Label>
                   <Select
                     value={studentDraft.currency || "none"}
                     onValueChange={v => setStudentDraft({ ...studentDraft, currency: v === "none" ? "" : v })}
                   >
-                    <SelectTrigger><SelectValue placeholder="Not set" /></SelectTrigger>
+                    <SelectTrigger id="student-currency"><SelectValue placeholder="Not set" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Not set</SelectItem>
                       {currencyChoicesFor(studentDraft.country, studentDraft.currency).map(c => (
@@ -2120,12 +2120,12 @@ const MyStudentsManager = () => {
           {classDraft && (
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label>Day</Label>
+                <Label htmlFor="class-day">Day</Label>
                 <Select
                   value={String(classDraft.weekday)}
                   onValueChange={v => { setConflicts([]); setClassDraft({ ...classDraft, weekday: Number(v) }); }}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="class-day"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {DAY_NAMES.map((d, i) => <SelectItem key={d} value={String(i)}>{d}</SelectItem>)}
                   </SelectContent>
@@ -2133,24 +2133,24 @@ const MyStudentsManager = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Starts</Label>
+                  <Label htmlFor="class-start">Starts</Label>
                   <Select
                     value={classDraft.start_time}
                     onValueChange={v => { setConflicts([]); setClassDraft({ ...classDraft, start_time: v }); }}
                   >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="class-start"><SelectValue /></SelectTrigger>
                     <SelectContent className="max-h-64">
                       {TIME_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Length</Label>
+                  <Label htmlFor="class-length">Length</Label>
                   <Select
                     value={String(classDraft.duration_minutes)}
                     onValueChange={v => { setConflicts([]); setClassDraft({ ...classDraft, duration_minutes: Number(v) }); }}
                   >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="class-length"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {DURATION_OPTIONS.map(d => (
                         <SelectItem key={d} value={String(d)}>
@@ -2267,7 +2267,7 @@ const MyStudentsManager = () => {
             return (
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <Label>Bundle</Label>
+                  <Label htmlFor="bundle-catalog">Bundle</Label>
                   <Select
                     value={bundleDraft.mode === "catalog" ? bundleDraft.catalog_key ?? "custom" : "custom"}
                     onValueChange={v => {
@@ -2279,7 +2279,7 @@ const MyStudentsManager = () => {
                       if (opt) applyCatalogOption(opt);
                     }}
                   >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="bundle-catalog"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {options.map(o => (
                         <SelectItem key={o.key} value={o.key}>
@@ -2317,12 +2317,12 @@ const MyStudentsManager = () => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Currency</Label>
+                    <Label htmlFor="bundle-currency">Currency</Label>
                     <Select
                       value={bundleDraft.currency}
                       onValueChange={v => editBundleField({ currency: v })}
                     >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger id="bundle-currency"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {currencyChoicesFor(student?.country, bundleDraft.currency).map(c => (
                           <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -2492,6 +2492,8 @@ const MyStudentsManager = () => {
                     return (
                       <button
                         key={key} type="button"
+                        role="checkbox"
+                        aria-checked={on}
                         onClick={() => setCatchUpPicked(prev => {
                           const next = new Set(prev);
                           if (next.has(key)) next.delete(key); else next.add(key);

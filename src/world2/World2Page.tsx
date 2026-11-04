@@ -425,6 +425,7 @@ function MapOverlay({
           <button
             key={n.id}
             onClick={() => onGo(n.id)}
+            aria-current={n.id === view ? "location" : undefined}
             className={`text-[9px] leading-tight text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded ${
               n.id === view ? "text-[#FFFF00] font-semibold" : "text-[#FFF9EC]/70 hover:text-[#FFF9EC]"
             }`}
@@ -623,6 +624,7 @@ export default function World2Page() {
         <div className="flex gap-2">
           <button
             onClick={() => goTo("entrance")}
+            aria-current={view === "entrance" ? "page" : undefined}
             className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
               view === "entrance"
                 ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"
@@ -635,6 +637,7 @@ export default function World2Page() {
             <button
               key={r.id}
               onClick={() => goTo(r.id)}
+              aria-current={r.id === view ? "page" : undefined}
               className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                 r.id === view
                   ? "bg-[#FFFF00] text-[#2E2E2E] border-[#FFFF00]"

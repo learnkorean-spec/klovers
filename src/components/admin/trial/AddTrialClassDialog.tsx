@@ -271,7 +271,7 @@ export default function AddTrialClassDialog({
               New slots are always in ADMIN_TIMEZONE; the start time above is
               simply read as the teacher's own clock. */}
           <div className="space-y-1.5">
-            <Label>Timezone</Label>
+            <span className="text-sm font-medium leading-none">Timezone</span>
             <div className="rounded-md border border-input bg-muted/50 px-3 py-2 text-sm">
               {form.timezone === ADMIN_TIMEZONE ? (
                 <span>

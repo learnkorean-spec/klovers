@@ -244,7 +244,7 @@ export default function TrialInviteGroups() {
   const error = waitingQ.error || slotsAtQ.error;
   if (error) {
     return (
-      <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+      <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
         {(error as Error).message}
       </div>
     );

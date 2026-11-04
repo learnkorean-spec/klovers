@@ -557,43 +557,43 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Level</Label>
+              <Label htmlFor="sched-slot-level">Level</Label>
               <Select value={fLevel} onValueChange={setFLevel}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="sched-slot-level"><SelectValue /></SelectTrigger>
                 <SelectContent>{LEVEL_SELECT_OPTIONS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Day of Week</Label>
+                <Label htmlFor="sched-slot-day">Day of Week</Label>
                 <Select value={String(fDay)} onValueChange={(v) => setFDay(Number(v))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="sched-slot-day"><SelectValue /></SelectTrigger>
                   <SelectContent>{DAY_NAMES.map((d, i) => <SelectItem key={i} value={String(i)}>{d}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Start Time</Label>
-                <Input value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="18:00" />
+                <Label htmlFor="sched-slot-time">Start Time</Label>
+                <Input id="sched-slot-time" value={fTime} onChange={(e) => setFTime(e.target.value)} placeholder="18:00" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Duration (min)</Label>
-                <Input type="number" value={fDuration} onChange={(e) => setFDuration(Number(e.target.value))} />
+                <Label htmlFor="sched-slot-duration">Duration (min)</Label>
+                <Input id="sched-slot-duration" type="number" value={fDuration} onChange={(e) => setFDuration(Number(e.target.value))} />
               </div>
               <div className="space-y-2">
-                <Label>Capacity</Label>
-                <Input type="number" value={fCapacity} onChange={(e) => setFCapacity(Number(e.target.value))} min={1} />
+                <Label htmlFor="sched-slot-capacity">Capacity</Label>
+                <Input id="sched-slot-capacity" type="number" value={fCapacity} onChange={(e) => setFCapacity(Number(e.target.value))} min={1} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Timezone</Label>
-              <Input value={fTimezone} onChange={(e) => setFTimezone(e.target.value)} />
+              <Label htmlFor="sched-slot-tz">Timezone</Label>
+              <Input id="sched-slot-tz" value={fTimezone} onChange={(e) => setFTimezone(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label htmlFor="sched-slot-type">Type</Label>
               <Select value={fCourseType} onValueChange={setFCourseType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="sched-slot-type"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="group">Group</SelectItem>
                   <SelectItem value="private">Private</SelectItem>
@@ -601,8 +601,8 @@ const PackagesManager = ({ onSwitchToGroups }: { onSwitchToGroups?: () => void }
               </Select>
             </div>
             <div className="flex items-center gap-3">
-              <Switch checked={fActive} onCheckedChange={setFActive} />
-              <Label>Active</Label>
+              <Switch id="sched-slot-active" checked={fActive} onCheckedChange={setFActive} />
+              <Label htmlFor="sched-slot-active">Active</Label>
             </div>
             <Button className="w-full" onClick={handleSave}>{editing ? "Save Changes" : "Create Slot"}</Button>
           </div>
@@ -1085,10 +1085,10 @@ const GroupsManager = () => {
                             if (e.key === "Escape") cancelEditName();
                           }}
                         />
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditName(g.id)}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditName(g.id)} aria-label="Save group name">
                           <Check className="h-3.5 w-3.5 text-green-600" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditName}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditName} aria-label="Cancel editing group name">
                           <X className="h-3.5 w-3.5 text-destructive" />
                         </Button>
                       </div>
@@ -1145,10 +1145,10 @@ const GroupsManager = () => {
                             if (e.key === "Escape") cancelEditLink();
                           }}
                         />
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditLink(g.id)}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => saveEditLink(g.id)} aria-label="Save meeting link">
                           <Check className="h-3.5 w-3.5 text-green-600" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditLink}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelEditLink} aria-label="Cancel editing meeting link">
                           <X className="h-3.5 w-3.5 text-destructive" />
                         </Button>
                       </div>
@@ -1178,7 +1178,7 @@ const GroupsManager = () => {
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteGroup(g)} title="Delete group">
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => toggleExpand(g.id)}>
+                  <Button variant="ghost" size="sm" aria-expanded={isExpanded} aria-label={`${isExpanded ? "Hide" : "Show"} members for ${g.name}`} onClick={() => toggleExpand(g.id)}>
                     {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     <Users className="h-4 w-4 ml-1" />
                     <span className="text-xs ml-1">{g.members.length}</span>
@@ -1225,9 +1225,9 @@ const GroupsManager = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Package</Label>
+              <Label htmlFor="sched-group-package">Package</Label>
               <Select value={addPkgId} onValueChange={setAddPkgId}>
-                <SelectTrigger><SelectValue placeholder="Select package..." /></SelectTrigger>
+                <SelectTrigger id="sched-group-package"><SelectValue placeholder="Select package..." /></SelectTrigger>
                 <SelectContent>
                   {packages.filter((p) => p.is_active && !groups.some((g) => g.package_id === p.id)).map((p) => (
                     <SelectItem key={p.id} value={p.id}>
@@ -1238,12 +1238,12 @@ const GroupsManager = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Group Name (optional – auto-generated if blank)</Label>
-              <Input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="e.g. Beginner A" />
+              <Label htmlFor="sched-group-name">Group Name (optional – auto-generated if blank)</Label>
+              <Input id="sched-group-name" value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="e.g. Beginner A" />
             </div>
             <div className="space-y-2">
-              <Label>Capacity</Label>
-              <Input type="number" value={addCapacity} onChange={(e) => setAddCapacity(Number(e.target.value))} min={1} />
+              <Label htmlFor="sched-group-capacity">Capacity</Label>
+              <Input id="sched-group-capacity" type="number" value={addCapacity} onChange={(e) => setAddCapacity(Number(e.target.value))} min={1} />
             </div>
             <Button className="w-full" onClick={handleAddGroup} disabled={!addPkgId}>Create Group</Button>
           </div>

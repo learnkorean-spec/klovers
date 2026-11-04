@@ -73,7 +73,7 @@ jobs:
         id: plan
         run: |
           set -euo pipefail
-          npx supabase@latest migration list | tee migration-list.txt
+          npx supabase@latest migration list --remote | tee migration-list.txt
 
           local_migrations=$(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)
           python3 scripts/parse-migration-list.py migration-list.txt \

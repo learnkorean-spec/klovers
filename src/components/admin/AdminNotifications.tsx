@@ -243,6 +243,7 @@ const SlotFullPanel = ({ notification, onGroupCreated }: SlotFullPanelProps) => 
       <Button
         variant="ghost"
         size="sm"
+        aria-expanded={expanded}
         className="w-full justify-between text-sm"
         onClick={handleExpand}
       >

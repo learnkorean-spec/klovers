@@ -525,8 +525,8 @@ const BookAssignmentManager = () => {
 
           <div className="space-y-4 py-1">
             {/* Student search */}
-            <div className="space-y-1.5">
-              <Label className="text-xs">Student</Label>
+            <div className="space-y-1.5" role="group" aria-labelledby="book-assign-student-label">
+              <span id="book-assign-student-label" className="text-xs font-medium leading-none">Student</span>
               {selectedUser ? (
                 <div className="flex items-center justify-between rounded-lg border px-3 py-2 bg-muted/40">
                   <div>
@@ -571,8 +571,9 @@ const BookAssignmentManager = () => {
 
             {/* Available from date */}
             <div className="space-y-1.5">
-              <Label className="text-xs">Available from (default: now)</Label>
+              <Label htmlFor="book-assign-available-from" className="text-xs">Available from (default: now)</Label>
               <Input
+                id="book-assign-available-from"
                 type="datetime-local"
                 value={availableFrom}
                 onChange={e => setAvailableFrom(e.target.value)}
@@ -582,8 +583,9 @@ const BookAssignmentManager = () => {
 
             {/* Notes */}
             <div className="space-y-1.5">
-              <Label className="text-xs">Notes (optional)</Label>
+              <Label htmlFor="book-assign-notes" className="text-xs">Notes (optional)</Label>
               <Textarea
+                id="book-assign-notes"
                 placeholder="e.g. Private student — gift on joining"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}

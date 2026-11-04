@@ -1150,7 +1150,7 @@ const StudentManager = () => {
           <div className="space-y-3">
             <div className="flex gap-2">
               <Input placeholder="New group name..." value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddGroup()} />
-              <Button size="sm" onClick={handleAddGroup}><Plus className="h-4 w-4" /></Button>
+              <Button size="sm" onClick={handleAddGroup} aria-label="Add group"><Plus className="h-4 w-4" /></Button>
             </div>
             {groups.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4" role="status">No groups yet.</p>
@@ -1161,7 +1161,7 @@ const StudentManager = () => {
                     <span className="text-sm text-foreground">{g.name}</span>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                        <Button variant="ghost" size="sm" aria-label={`Delete group "${g.name}"`}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
@@ -1191,18 +1191,18 @@ const StudentManager = () => {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1">
-              <Label>Group *</Label>
+              <Label htmlFor="enroll-group">Group *</Label>
               <Select value={enrollForm.group_id} onValueChange={v => setEnrollForm(f => ({ ...f, group_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger>
+                <SelectTrigger id="enroll-group"><SelectValue placeholder="Select group..." /></SelectTrigger>
                 <SelectContent>
                   {groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>Level</Label>
+              <Label htmlFor="enroll-level">Level</Label>
               <Select value={enrollForm.level || "__none__"} onValueChange={v => setEnrollForm(f => ({ ...f, level: v === "__none__" ? "" : v }))}>
-                <SelectTrigger><SelectValue placeholder="Select level..." /></SelectTrigger>
+                <SelectTrigger id="enroll-level"><SelectValue placeholder="Select level..." /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">— Not set —</SelectItem>
                   {LEVEL_SELECT_OPTIONS.map(l => (
@@ -1212,18 +1212,18 @@ const StudentManager = () => {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>Sessions included</Label>
-              <Input type="number" value={enrollForm.sessions} onChange={e => setEnrollForm(f => ({ ...f, sessions: e.target.value }))} />
+              <Label htmlFor="enroll-sessions">Sessions included</Label>
+              <Input id="enroll-sessions" type="number" value={enrollForm.sessions} onChange={e => setEnrollForm(f => ({ ...f, sessions: e.target.value }))} />
             </div>
             <div className="flex gap-2">
               <div className="flex-1 space-y-1">
-                <Label>Amount paid</Label>
-                <Input type="number" value={enrollForm.amount} onChange={e => setEnrollForm(f => ({ ...f, amount: e.target.value }))} />
+                <Label htmlFor="enroll-amount">Amount paid</Label>
+                <Input id="enroll-amount" type="number" value={enrollForm.amount} onChange={e => setEnrollForm(f => ({ ...f, amount: e.target.value }))} />
               </div>
               <div className="w-28 space-y-1">
-                <Label>Currency</Label>
+                <Label htmlFor="enroll-currency">Currency</Label>
                 <Select value={enrollForm.currency} onValueChange={v => setEnrollForm(f => ({ ...f, currency: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="enroll-currency"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="EGP">EGP</SelectItem>
                     <SelectItem value="USD">USD</SelectItem>
@@ -1232,8 +1232,8 @@ const StudentManager = () => {
               </div>
             </div>
             <div className="space-y-1">
-              <Label>Notes (optional)</Label>
-              <Textarea value={enrollForm.notes} onChange={e => setEnrollForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
+              <Label htmlFor="enroll-notes">Notes (optional)</Label>
+              <Textarea id="enroll-notes" value={enrollForm.notes} onChange={e => setEnrollForm(f => ({ ...f, notes: e.target.value }))} rows={2} />
             </div>
           </div>
           <DialogFooter>

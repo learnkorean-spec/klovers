@@ -57,11 +57,13 @@ export function ManualEnrollDialog({
 
           {/* Plan type */}
           <div className="space-y-1">
-            <Label>Plan Type</Label>
-            <div className="flex gap-2">
+            <span id="enroll-plan-type-label" className="text-sm font-medium leading-none">Plan Type</span>
+            <div className="flex gap-2" role="group" aria-labelledby="enroll-plan-type-label">
               {(["group", "private"] as const).map(pt => (
                 <button
                   key={pt}
+                  type="button"
+                  aria-pressed={enrollForm.plan_type === pt}
                   onClick={() => setEnrollForm(f => ({ ...f, plan_type: pt, group_id: "" }))}
                   className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     enrollForm.plan_type === pt
@@ -81,12 +83,12 @@ export function ManualEnrollDialog({
           {/* Duration + Sessions */}
           <div className="flex gap-3">
             <div className="flex-1 space-y-1">
-              <Label>Duration</Label>
+              <Label htmlFor="enroll-duration">Duration</Label>
               <Select
                 value={enrollForm.duration}
                 onValueChange={v => setEnrollForm(f => ({ ...f, duration: v, sessions: SESSIONS_BY_DURATION[v] ?? f.sessions }))}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="enroll-duration"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">1 month</SelectItem>
                   <SelectItem value="3">3 months</SelectItem>
@@ -95,8 +97,9 @@ export function ManualEnrollDialog({
               </Select>
             </div>
             <div className="flex-1 space-y-1">
-              <Label>Sessions</Label>
+              <Label htmlFor="enroll-sessions">Sessions</Label>
               <Input
+                id="enroll-sessions"
                 type="number"
                 min="1"
                 value={enrollForm.sessions}
@@ -108,8 +111,9 @@ export function ManualEnrollDialog({
           {/* Amount + Currency */}
           <div className="flex gap-3">
             <div className="flex-1 space-y-1">
-              <Label>Amount paid</Label>
+              <Label htmlFor="enroll-amount">Amount paid</Label>
               <Input
+                id="enroll-amount"
                 type="number"
                 min="0"
                 placeholder="Enter amount..."
@@ -118,9 +122,9 @@ export function ManualEnrollDialog({
               />
             </div>
             <div className="w-28 space-y-1">
-              <Label>Currency</Label>
+              <Label htmlFor="enroll-currency">Currency</Label>
               <Select value={enrollForm.currency} onValueChange={v => setEnrollForm(f => ({ ...f, currency: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="enroll-currency"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="EGP">EGP</SelectItem>
                   <SelectItem value="USD">USD</SelectItem>
@@ -132,9 +136,9 @@ export function ManualEnrollDialog({
           {/* Group — only for group plan */}
           {enrollForm.plan_type === "group" && (
             <div className="space-y-1">
-              <Label>Group *</Label>
+              <Label htmlFor="enroll-group">Group *</Label>
               <Select value={enrollForm.group_id} onValueChange={v => setEnrollForm(f => ({ ...f, group_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select group..." /></SelectTrigger>
+                <SelectTrigger id="enroll-group"><SelectValue placeholder="Select group..." /></SelectTrigger>
                 <SelectContent>
                   {pkgGroups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
                 </SelectContent>
@@ -144,9 +148,9 @@ export function ManualEnrollDialog({
 
           {/* Level */}
           <div className="space-y-1">
-            <Label>Level</Label>
+            <Label htmlFor="enroll-level">Level</Label>
             <Select value={enrollForm.level || "__none__"} onValueChange={v => setEnrollForm(f => ({ ...f, level: v === "__none__" ? "" : v }))}>
-              <SelectTrigger><SelectValue placeholder="Select level..." /></SelectTrigger>
+              <SelectTrigger id="enroll-level"><SelectValue placeholder="Select level..." /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">— Not set —</SelectItem>
                 {LEVEL_SELECT_OPTIONS.map((l) => (
@@ -159,8 +163,8 @@ export function ManualEnrollDialog({
 
           {/* Notes */}
           <div className="space-y-1">
-            <Label>Notes (optional)</Label>
-            <Textarea value={enrollForm.notes} onChange={e => setEnrollForm(f => ({ ...f, notes: e.target.value }))} rows={2} placeholder="Payment reference, special notes..." />
+            <Label htmlFor="enroll-notes">Notes (optional)</Label>
+            <Textarea id="enroll-notes" value={enrollForm.notes} onChange={e => setEnrollForm(f => ({ ...f, notes: e.target.value }))} rows={2} placeholder="Payment reference, special notes..." />
           </div>
         </div>
         <DialogFooter>
