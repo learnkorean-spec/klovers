@@ -794,11 +794,11 @@ export default function CreatorHub() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preview</span>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" disabled={activeIndex === 0} onClick={() => setActiveIndex(activeIndex - 1)}>
+              <Button size="sm" variant="ghost" disabled={activeIndex === 0} onClick={() => setActiveIndex(activeIndex - 1)} aria-label="Previous post">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm font-medium text-foreground">{activeIndex + 1} / {posts.length}</span>
-              <Button size="sm" variant="ghost" disabled={activeIndex >= posts.length - 1} onClick={() => setActiveIndex(activeIndex + 1)}>
+              <Button size="sm" variant="ghost" disabled={activeIndex >= posts.length - 1} onClick={() => setActiveIndex(activeIndex + 1)} aria-label="Next post">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
