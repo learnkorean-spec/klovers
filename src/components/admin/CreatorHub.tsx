@@ -379,6 +379,7 @@ function AllTemplateCards({ post, theme, format, active, onSelect, bgImage }: {
             <button
               key={tpl}
               onClick={() => onSelect(tpl)}
+              aria-pressed={isActive}
               className={`rounded-xl overflow-hidden border-2 transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                 isActive ? "border-primary shadow-lg shadow-primary/20 scale-[1.03]" : "border-border hover:border-primary/50"
               }`}
@@ -846,6 +847,7 @@ export default function CreatorHub() {
                   <button
                     key={t.key}
                     onClick={() => setTemplate(t.key)}
+                    aria-pressed={template === t.key}
                     className={`text-left p-2.5 rounded-lg border text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                       template === t.key
                         ? "border-primary bg-accent"
@@ -868,6 +870,7 @@ export default function CreatorHub() {
                 <button
                   key={key}
                   onClick={() => setTheme(key)}
+                  aria-pressed={theme === key}
                   className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     theme === key ? "border-primary bg-accent" : "border-border hover:border-muted-foreground/30"
                   }`}
@@ -982,6 +985,7 @@ export default function CreatorHub() {
                 <button
                   key={key}
                   onClick={() => setFormat(key)}
+                  aria-pressed={format === key}
                   className={`p-2.5 rounded-lg border text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     format === key ? "border-primary bg-accent" : "border-border hover:border-muted-foreground/30"
                   }`}
@@ -1100,6 +1104,7 @@ export default function CreatorHub() {
             <button
               key={c.id}
               onClick={() => setSelectedCampaign(c.id)}
+              aria-pressed={selectedCampaign === c.id}
               className={`rounded-xl border p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                 selectedCampaign === c.id
                   ? "ring-2 ring-primary border-primary bg-primary/5 shadow-sm"

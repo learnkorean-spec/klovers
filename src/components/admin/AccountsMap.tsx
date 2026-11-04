@@ -264,6 +264,7 @@ export default function AccountsMap() {
                 key={name}
                 type="button"
                 onClick={() => setQuery(on ? "" : name)}
+                aria-pressed={on}
                 className={cn(
                   "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   on ? "border-charcoal bg-klovers-yellow text-charcoal" : "border-border bg-background text-foreground hover:bg-muted",

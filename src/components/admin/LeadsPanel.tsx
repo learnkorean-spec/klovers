@@ -763,6 +763,7 @@ const LeadsPanel: React.FC = () => {
                                   const next = selected ? days.filter(d => d !== day) : [...days, day];
                                   setEditForm(f => ({ ...f, schedule: next.join("/") }));
                                 }}
+                                aria-pressed={selected}
                                 className={`px-2 py-0.5 rounded text-xs border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${selected ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
                               >
                                 {day.slice(0, 3)}

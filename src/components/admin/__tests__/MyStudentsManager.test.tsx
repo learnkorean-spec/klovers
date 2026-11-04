@@ -382,7 +382,7 @@ describe("batch catch-up", () => {
     click(screen.getByRole("button", { name: /Catch up/i }));
 
     const dialog = screen.getByRole("dialog");
-    const rows = within(dialog).getAllByRole("button").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""));
+    const rows = within(dialog).getAllByRole("checkbox").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""));
     click(rows[0]);                       // untick the first
     click(screen.getByRole("button", { name: /^Confirm$/i }));
 
@@ -640,7 +640,7 @@ describe("the catch-up queue has no expiry", () => {
 
     const dialog = screen.getByRole("dialog");
     // 9 recent rows rendered; the older 8 are named, not hidden without a count.
-    expect(within(dialog).getAllByRole("button").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""))).toHaveLength(9);
+    expect(within(dialog).getAllByRole("checkbox").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""))).toHaveLength(9);
     expect(within(dialog).getByText("8 older unconfirmed classes — show them")).toBeInTheDocument();
   });
 
@@ -650,7 +650,7 @@ describe("the catch-up queue has no expiry", () => {
     click(screen.getByText("8 older unconfirmed classes — show them"));
 
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getAllByRole("button").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""))).toHaveLength(17);
+    expect(within(dialog).getAllByRole("checkbox").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""))).toHaveLength(17);
     expect(within(dialog).queryByText(/older unconfirmed/)).not.toBeInTheDocument();
 
     click(within(dialog).getByRole("button", { name: /^Confirm$/i }));
@@ -677,7 +677,7 @@ describe("the catch-up queue has no expiry", () => {
     click(screen.getByRole("button", { name: /Catch up/i }));
 
     const dialog = screen.getByRole("dialog");
-    const rows = within(dialog).getAllByRole("button").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""));
+    const rows = within(dialog).getAllByRole("checkbox").filter(b => /\d{2}:\d{2}/.test(b.textContent ?? ""));
     click(rows[0]);   // untick the most recent (Sun 23 Aug)
 
     // Text is split across <strong> tags, so match on the normalised whole

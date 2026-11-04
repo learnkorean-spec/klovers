@@ -2492,6 +2492,8 @@ const MyStudentsManager = () => {
                     return (
                       <button
                         key={key} type="button"
+                        role="checkbox"
+                        aria-checked={on}
                         onClick={() => setCatchUpPicked(prev => {
                           const next = new Set(prev);
                           if (next.has(key)) next.delete(key); else next.add(key);
