@@ -1,6 +1,8 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY, paintPlanks } from "../game/environment/textures";
+import { Kit, basket } from "../game/environment/kit";
+import Batch from "../game/environment/Batch";
 import {
   LearnerPlaceholder,
   Hotspot,
@@ -286,6 +288,19 @@ export default function ConvenienceStoreScene({
   // comment: the same real photographed wood-plank floor World1's rooms
   // already use, upgraded in place once it downloads.
   const floorPhoto = usePhotoFloor("planks", 5, 3);
+  // Re, 4 Nov 2026 ("make it as world1, that's not the same"): a basket of
+  // goods by the wall — the same kit piece the live game's own rooms use,
+  // clear of the player's walk bounds and every hotspot, so the store reads
+  // a little more stocked. (A potted plant was tried near the door too, but
+  // from this room's own camera angle it sat visually behind Cluby at every
+  // position tried, reading as him standing in a bush — dropped rather than
+  // keep fighting the camera for it.)
+  const sceneKit = useMemo(() => {
+    const k = new Kit();
+    basket(k, -2.15, 1.6, 1.0, "fruitOrange");
+    return k;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { playerControl, clubyReact, react } = useLearnerReactions();
   const playerRef = useRef<Group>(null);
   const handleSelect = (id: string) => {
@@ -353,6 +368,7 @@ export default function ConvenienceStoreScene({
       <DrinkFridge onSelect={() => handleSelect("eumnyosu")} />
       <Checkout onSelect={() => handleSelect("gyesandae")} />
       <PriceTags onSelectPrice={() => handleSelect("eolmayeyo")} onSelectCount={handleCount} />
+      <Batch kit={sceneKit} />
       <FollowCamera target={playerRef} control={playerControl} />
       <Suspense fallback={<LearnerPlaceholder x={0.85} z={0.8} />}>
         {/* The learner's own character — keyboard-controlled (arrow keys /

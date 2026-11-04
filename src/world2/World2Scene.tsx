@@ -1,6 +1,8 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY, paintPlanks, paintPaving } from "../game/environment/textures";
+import { Kit, pot, basket } from "../game/environment/kit";
+import Batch from "../game/environment/Batch";
 import {
   LearnerPlaceholder,
   Hotspot,
@@ -280,6 +282,18 @@ export default function World2Scene({
   // comment: the same real photographed stone floor World1's rooms already
   // use, upgraded in place once it downloads.
   const groundPhoto = usePhotoFloor("paving", 6, 6);
+  // Re, 4 Nov 2026 ("make it as world1, that's not the same"): a couple of
+  // real market-goods props (kit.ts's own basket/pot, the same pieces
+  // VocabularyMarket.tsx uses) off to the sides — clear of the player's
+  // walk bounds and the counter's hotspots — so the alley reads as a
+  // stocked street-food corner, not an empty counter against a wall.
+  const sceneKit = useMemo(() => {
+    const k = new Kit();
+    basket(k, -2.6, 2.0, 1.1, "fruitRed");
+    pot(k, 2.6, 2.1, 0.85);
+    return k;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Shared with FoodCart's hotspots below: clicking a word plays a one-off
   // reaction (the player waves, Cluby hops) — cross-fades/decays back to
   // idle automatically on its own.
@@ -349,6 +363,7 @@ export default function World2Scene({
         />
       </mesh>
       <FoodCart onSelectVocab={handleSelect} />
+      <Batch kit={sceneKit} />
       <FollowCamera target={playerRef} control={playerControl} />
       <Suspense fallback={<LearnerPlaceholder x={-0.1} z={1.1} />}>
         {/* The learner's own character — keyboard-controlled (arrow keys /
