@@ -4,6 +4,7 @@ import { useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY, paintP
 import { GateWall, Signboard } from "../game/environment/parts";
 import { Kit, tree, pine, stoneLantern, bed, grass, slabWalk, platform, pot } from "../game/environment/kit";
 import Batch from "../game/environment/Batch";
+import { box, type Box2 } from "../game/config/world";
 import {
   LearnerPlaceholder,
   Hotspot,
@@ -125,11 +126,46 @@ export default function EntranceScene({
     return k;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // Re, 4 Nov 2026 ("movement is so bad"): collision for every solid piece
+  // of `envKit` above — same positions, same live-game sizing convention
+  // (config/world.ts's own PROPS/COLLIDERS: a fixed ~0.5 footprint for a
+  // tree/pine regardless of its visual scale, lanternSize 0.55, a bed's own
+  // w/d plus a hair of kerb). The learner is pushed out of all of these;
+  // the camera only avoids the tall ones (pines, trees, lanterns) — it's
+  // fine to see over a bed, the bench, or a pot, same as the live game's
+  // own `CAMERA_COLLIDERS` leaving those out too.
+  const tallColliders: Box2[] = useMemo(
+    () => [
+      box(-5.4, 0.6, 0.5, 0.5),
+      box(-6.3, 2.0, 0.5, 0.5),
+      box(5.4, 0.6, 0.5, 0.5),
+      box(6.3, 2.0, 0.5, 0.5),
+      box(-1.9, -1.9, 0.5, 0.5),
+      box(1.9, -1.9, 0.5, 0.5),
+      box(-1.1, -1.3, 0.58, 0.58),
+      box(1.1, -1.3, 0.58, 0.58),
+    ],
+    [],
+  );
+  const groundColliders: Box2[] = useMemo(
+    () => [
+      ...tallColliders,
+      box(-4.4, 2.3, 1.4, 2.1),
+      box(4.4, 2.3, 1.4, 2.1),
+      box(-3.3, 3.0, 1.4, 0.8),
+      box(3.3, 3.0, 0.5, 0.5),
+    ],
+    [tallColliders],
+  );
   const { playerControl } = useLearnerReactions();
   // Wide enough to reach both gates (±3.8 on x) with a little room to spare,
   // and deep enough (toward -1.6) to actually walk through the gate opening
   // rather than stopping dead at it.
-  const player = usePlayerMovement({ bounds: { x: [-5, 5], z: [-1.6, 3] }, control: playerControl });
+  const player = usePlayerMovement({
+    bounds: { x: [-5, 5], z: [-1.6, 3] },
+    control: playerControl,
+    colliders: groundColliders,
+  });
   const enteredRoom = useRef(false);
   useFrame(() => {
     if (enteredRoom.current) return;
@@ -145,7 +181,7 @@ export default function EntranceScene({
   });
   return (
     <group>
-      <FollowCamera target={player} control={playerControl} />
+      <FollowCamera target={player} control={playerControl} cameraColliders={tallColliders} />
       <fog attach="fog" args={["#2a2438", 9, 18]} />
       {/* Same hemisphere + warm key + cool fill recipe as World1's own
           lighting (src/game/World.tsx's LIGHT constant) — see World2Scene's

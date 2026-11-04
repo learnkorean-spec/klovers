@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Group, Matrix4, Quaternion, Vector3 } from "three";
-import { PALETTE } from "../game/config/world";
+import { PALETTE, type Box2 } from "../game/config/world";
 import { std } from "../game/config/materials";
+import { isBlocked, pushOutOfBox } from "../game/systems/collision";
 import RiggedBody, { type BodyControl, type DressRule } from "../game/player/RiggedBody";
 
 /**
@@ -247,6 +248,8 @@ export function usePlayerMovement({
   control,
   speed = 1.7,
   externalRef,
+  colliders,
+  radius = 0.35,
 }: {
   bounds: { x: [number, number]; z: [number, number] };
   control: MutableRefObject<BodyControl>;
@@ -255,6 +258,18 @@ export function usePlayerMovement({
    * the same transform this hook drives, instead of creating its own ref
    * that nothing outside this hook could ever see. */
   externalRef?: MutableRefObject<Group | null>;
+  /** Re, 4 Nov 2026 ("movement is so bad"): the entrance's new kit scenery
+   * (trees, lanterns, the bed, the bench) had no collision at all — the
+   * learner could walk straight into a lantern, and the chase camera
+   * (sitting just behind them) ended up with the lantern's own geometry
+   * between it and everything else, the clipped-through mess Re screenshot.
+   * This is the live game's own circle-vs-box player collision
+   * (systems/collision.ts's `pushOutOfBox`), reused as-is rather than
+   * reinvented — a scene with no solid decor just omits it. */
+  colliders?: Box2[];
+  /** The learner's own circular footprint, metres — matches the live
+   * game's own `PLAYER.radius` (config/world.ts). */
+  radius?: number;
 }) {
   const internalRef = useRef<Group>(null);
   const g = externalRef ?? internalRef;
@@ -298,8 +313,18 @@ export function usePlayerMovement({
       const step = speed * Math.min(delta, 0.05); // clamp delta so a dropped frame can't teleport the player
       const nx = group.position.x + (dx / len) * step;
       const nz = group.position.z + (dz / len) * step;
-      group.position.x = Math.min(bounds.x[1], Math.max(bounds.x[0], nx));
-      group.position.z = Math.min(bounds.z[1], Math.max(bounds.z[0], nz));
+      const p = { x: nx, z: nz };
+      if (colliders && colliders.length) {
+        // Two passes settle corners where two boxes meet — same as the
+        // live game's own `resolveCollisions`.
+        for (let pass = 0; pass < 2; pass++) {
+          let moved = false;
+          for (const b of colliders) if (pushOutOfBox(p, radius, b)) moved = true;
+          if (!moved) break;
+        }
+      }
+      group.position.x = Math.min(bounds.x[1], Math.max(bounds.x[0], p.x));
+      group.position.z = Math.min(bounds.z[1], Math.max(bounds.z[0], p.z));
       const targetRot = Math.atan2(dx, dz);
       let diff = targetRot - group.rotation.y;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
@@ -387,6 +412,7 @@ export function FollowCamera({
   ahead = 1.0,
   eyeHeight = 1.05,
   povEyeHeight = 1.6,
+  cameraColliders,
 }: {
   /** The moving character's own transform (Player's `exposedRef`, or the
    * ref returned directly by usePlayerMovement). */
@@ -400,6 +426,15 @@ export function FollowCamera({
    * above and the fix note on the POV branch below for why this is a
    * separate knob from `eyeHeight` (the chase camera's look-at height). */
   povEyeHeight?: number;
+  /** Re, 4 Nov 2026 ("movement is so bad"): the chase camera had no idea the
+   * entrance's new scenery (lanterns, trees) existed, so walking past one
+   * put its own geometry between the camera and everything else — the
+   * clipped-through mess Re screenshot. The live game's own camera avoids
+   * exactly this (ThirdPersonCamera.tsx's `cameraBlocked`/`isBlocked`
+   * against `CAMERA_COLLIDERS`, i.e. tall props only — low furniture the
+   * camera can see over is left out); same idea here, just sampled along
+   * the line to the desired spot instead of walled rooms with portals. */
+  cameraColliders?: Box2[];
 }) {
   const { camera } = useThree();
   const staticPos = useRef(new Vector3());
@@ -407,6 +442,13 @@ export function FollowCamera({
   const capturedStatic = useRef(false);
   const curPos = useRef(new Vector3());
   const curQuat = useRef(new Quaternion());
+  // Re, 4 Nov 2026 ("movement is so bad"): the camera used to drop the chase
+  // view and snap straight back to this captured opening shot the instant
+  // the learner let go of a key — jarring mid-room, and the likely source
+  // of half of "so bad". The live game's own camera never does this: once
+  // it's following, it keeps following. `everMoved` mirrors that — the
+  // opening shot plays once, then the chase camera owns the view for good.
+  const everMoved = useRef(false);
   // Scratch objects, reused every frame in the "moving" branch only — not
   // on the far more common idle path, where nothing new is allocated.
   const worldPos = useRef(new Vector3());
@@ -427,7 +469,8 @@ export function FollowCamera({
     }
     const dt = Math.min(rawDt, 0.05);
     const pov = povMode.firstPerson && target.current;
-    const moving = !pov && control.current.clip === "walk" && target.current;
+    if (!pov && control.current.clip === "walk") everMoved.current = true;
+    const moving = !pov && everMoved.current && target.current;
     if (pov && target.current) {
       target.current.getWorldPosition(worldPos.current);
       target.current.getWorldQuaternion(worldQuat.current);
@@ -463,6 +506,28 @@ export function FollowCamera({
         height,
         worldPos.current.z - forward.current.z * behind,
       );
+      if (cameraColliders && cameraColliders.length) {
+        // Walk the line from the learner out to the full "behind" distance
+        // in steps, and stop at the furthest one still clear — the same
+        // "back off until clear" idea as the live game's own wall-avoidance,
+        // just sampled rather than solved against room portals. `t=0` (right
+        // at the learner) is never itself blocked, so this always lands
+        // somewhere.
+        const hugeBounds = { minX: -1e6, maxX: 1e6, minZ: -1e6, maxZ: 1e6 };
+        const steps = 8;
+        let bestT = 0;
+        for (let i = steps; i >= 0; i--) {
+          const t = i / steps;
+          const tx = worldPos.current.x - forward.current.x * behind * t;
+          const tz = worldPos.current.z - forward.current.z * behind * t;
+          if (!isBlocked(tx, tz, 0.3, cameraColliders, hugeBounds)) {
+            bestT = t;
+            break;
+          }
+        }
+        desiredPos.current.x = worldPos.current.x - forward.current.x * behind * bestT;
+        desiredPos.current.z = worldPos.current.z - forward.current.z * behind * bestT;
+      }
       lookAt.current.set(
         worldPos.current.x + forward.current.x * ahead,
         eyeHeight,
