@@ -807,7 +807,7 @@ const LeadsPanel: React.FC = () => {
                           role="button"
                           tabIndex={0}
                           title="Click to change status"
-                          aria-label={`Lead status: ${lead.status}. Click to change.`}
+                          aria-label={`Lead status: ${lead.status === "trial_booked" ? "Trial Booked" : lead.status}. Click to change.`}
                         >
                           {lead.status === "trial_booked" ? "\u{1F381} Trial Booked" : lead.status}
                         </Badge>

@@ -164,7 +164,7 @@ export const StudentsTab = memo(function StudentsTab({
               </Select>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size={isMobile ? "icon" : "sm"} aria-label="Toggle table columns">
+                  <Button variant="outline" size={isMobile ? "icon" : "sm"} aria-label={isMobile ? t("students.columns") : undefined}>
                     <Columns3 className="h-4 w-4" />
                     {!isMobile && <span className="ml-1">{t("students.columns")}</span>}
                   </Button>
