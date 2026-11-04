@@ -6,6 +6,7 @@ import {
   Hotspot,
   Cluby,
   Player,
+  BackgroundFigure,
   FollowCamera,
   useLearnerReactions,
   DEFAULT_PLAYER_AVATAR,
@@ -105,6 +106,24 @@ function Alley() {
       {[-2.2, 2.2].map((x) => (
         <pointLight key={x} position={[x, 1.8, 1.2]} intensity={0.5} color="#FFB84D" distance={4} />
       ))}
+      {/* Re, 4 Nov 2026: "add more... tigstures and detailsa" — a string of
+          small red paper lanterns along the roofline, the single most
+          recognizable night-market prop missing from the alley; cheap
+          primitives (a cylinder body + a point light each), same technique
+          as the cart's own hanging lights below. */}
+      {[-3.6, -2.6, -1.6, 1.6, 2.6, 3.6].map((x) => (
+        <group key={x} position={[x, 2.55, 0.35]}>
+          <mesh>
+            <cylinderGeometry args={[0.1, 0.1, 0.16, 12]} />
+            <meshStandardMaterial color="#C43B2E" emissive="#9A2A1F" emissiveIntensity={0.5} roughness={0.6} />
+          </mesh>
+          <mesh position={[0, -0.1, 0]}>
+            <cylinderGeometry args={[0.02, 0.02, 0.06, 6]} />
+            <meshStandardMaterial color="#2a2019" roughness={0.8} />
+          </mesh>
+          <pointLight position={[0, 0, 0]} intensity={0.3} color="#FF7A54" distance={1.6} />
+        </group>
+      ))}
     </group>
   );
 }
@@ -159,6 +178,14 @@ function FoodCart({ onSelectVocab }: { onSelectVocab: (id: string) => void }) {
             <cylinderGeometry args={[0.12, 0.12, 0.02, 24]} />
             <meshStandardMaterial color="#c43b2e" roughness={0.4} />
           </mesh>
+          {/* a wisp of steam — a couple of soft, faint cones rising off the
+              pot, the detail that most reads "hot food" at a glance */}
+          {[-0.03, 0.04].map((sx, i) => (
+            <mesh key={i} position={[sx, 0.22 + i * 0.03, 0]} rotation={[0, 0, sx * 2]}>
+              <coneGeometry args={[0.025, 0.22, 8]} />
+              <meshStandardMaterial color="#FFF9EC" transparent opacity={0.16} depthWrite={false} />
+            </mesh>
+          ))}
         </group>
       </Hotspot>
       {/* kimbap tray (김밥): a few dark rice-roll cylinders lying on a board. Click to learn the word. */}
@@ -339,6 +366,14 @@ export default function World2Scene({
           since the companion learner that used to stand opposite the player
           is gone from this scene entirely. */}
       <Cluby x={-1.6} y={0} z={1.3} reactRef={clubyReact} />
+      {/* Re, 4 Nov 2026: "add more people" — two unnamed passersby near the
+          alley storefronts, clear of the player's own walk bounds (x±2.2,
+          z 0.5–3.2) and the counter's footprint, so the street reads as
+          lived-in without crowding the one learner this scene is about. See
+          `BackgroundFigure`'s own doc comment for why these are generic,
+          never named canon characters. */}
+      <BackgroundFigure x={-2.9} z={-1.3} rotY={2.4} toneIndex={0} />
+      <BackgroundFigure x={2.8} z={-1.6} rotY={-2.1} toneIndex={2} scale={0.96} />
     </group>
   );
 }

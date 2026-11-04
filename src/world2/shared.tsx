@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Group, Matrix4, Quaternion, Vector3 } from "three";
 import { PALETTE } from "../game/config/world";
@@ -482,6 +482,87 @@ export function LearnerPlaceholder({ x, z }: { x: number; z: number }) {
         <capsuleGeometry args={[0.22, 1.1, 4, 8]} />
         <meshStandardMaterial color="#FFF9EC" transparent opacity={0.35} />
       </mesh>
+    </group>
+  );
+}
+
+/** Muted, varied outfit tones for `BackgroundFigure` — picked to read as
+ * "a street/store full of other people", never close to Adam/Lina/Cluby's
+ * own canon palette (KLOVERS yellow, ivory) so a background figure is never
+ * mistaken for a chosen character at a glance. */
+const BG_FIGURE_TONES = ["#5C6B8A", "#8A6B5C", "#6B8A6F", "#8A5C76", "#6E6458"];
+
+/** A generic, unnamed background figure — the "more people" Re asked for
+ * (4 Nov 2026: "add more people and tigstures and detailsa") without
+ * introducing any named character. CLAUDE.md's story-canon check applies to
+ * any new character in a World2 scene: the Story Bible's draft Book-1 cast
+ * (Jihoon, Ms. Park, Mr. Kim, Yuna, Seoyeon, Taeyang, Hana) is explicitly
+ * scoped to Book 1's "Vocabulary Market" world with its own visual direction
+ * "still undecided... must be pinned down before any of them appear in
+ * production artwork" — not World2, and not ready either way. A plain,
+ * faceless, unnamed silhouette sidesteps that entirely: it reads as "this
+ * place has other people in it" the way a crowded street or a late-night
+ * store would, purely set dressing, never a speaking or clickable character
+ * (no Hotspot, no dialogue, no canon role to conflict with).
+ *
+ * Deliberately much simpler than RiggedBody's real rig — a handful of
+ * primitives, same philosophy as Cluby's own hand-built geometry — since
+ * this never needs to walk, talk, or be identified, only to stand there and
+ * breathe a little. */
+export function BackgroundFigure({
+  x,
+  z,
+  rotY = 0,
+  toneIndex = 0,
+  scale = 1,
+}: {
+  x: number;
+  z: number;
+  rotY?: number;
+  /** Picks a muted outfit tone from `BG_FIGURE_TONES` so a handful of these
+   * standing near each other don't look cloned. */
+  toneIndex?: number;
+  scale?: number;
+}) {
+  const g = useRef<Group>(null);
+  // A random-but-stable phase so several figures don't bob in lockstep.
+  const phase = useMemo(() => Math.random() * Math.PI * 2, []);
+  useFrame(({ clock }) => {
+    if (!g.current) return;
+    g.current.position.y = 0.012 * Math.sin(clock.elapsedTime * 1.1 + phase);
+    g.current.rotation.y = 0.05 * Math.sin(clock.elapsedTime * 0.35 + phase);
+  });
+  const tone = BG_FIGURE_TONES[toneIndex % BG_FIGURE_TONES.length];
+  return (
+    <group position={[x, 0, z]} rotation={[0, rotY, 0]} scale={scale}>
+      <group ref={g}>
+        {/* legs */}
+        <mesh position={[0, 0.34, 0]}>
+          <cylinderGeometry args={[0.08, 0.095, 0.68, 10]} />
+          <meshStandardMaterial color="#2E2E2E" roughness={0.9} />
+        </mesh>
+        {/* torso, a simple coat/hanbok-adjacent silhouette, never canon dress */}
+        <mesh position={[0, 0.95, 0]} castShadow>
+          <capsuleGeometry args={[0.155, 0.5, 4, 10]} />
+          <meshStandardMaterial color={tone} roughness={0.88} />
+        </mesh>
+        {/* arms, resting */}
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[s * 0.19, 0.78, 0]} rotation={[0, 0, s * 0.12]}>
+            <capsuleGeometry args={[0.04, 0.38, 4, 8]} />
+            <meshStandardMaterial color={tone} roughness={0.88} />
+          </mesh>
+        ))}
+        {/* head + simple dark hair cap */}
+        <mesh position={[0, 1.4, 0]}>
+          <sphereGeometry args={[0.115, 14, 12]} />
+          <meshStandardMaterial color="#caa07a" roughness={0.8} />
+        </mesh>
+        <mesh position={[0, 1.45, -0.015]} scale={[1, 0.65, 1.02]}>
+          <sphereGeometry args={[0.12, 14, 12]} />
+          <meshStandardMaterial color="#241b14" roughness={0.9} />
+        </mesh>
+      </group>
     </group>
   );
 }

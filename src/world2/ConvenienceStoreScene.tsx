@@ -6,6 +6,7 @@ import {
   Hotspot,
   Cluby,
   Player,
+  BackgroundFigure,
   FollowCamera,
   useLearnerReactions,
   DEFAULT_PLAYER_AVATAR,
@@ -102,6 +103,13 @@ function StoreShell() {
         <meshStandardMaterial color="#FFFF00" emissive="#FFD24C" emissiveIntensity={1.2} />
       </mesh>
       <pointLight position={[1.6, 2.3, 0.3]} intensity={1.4} color="#FFD98A" distance={3.5} />
+      {/* Re, 4 Nov 2026: "add more... tigstures and detailsa" — a woven
+          welcome mat at the glass door, the small real-world detail every
+          late-night store actually has at its threshold. */}
+      <mesh position={[2.6, 0.01, 0.15]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[0.9, 0.5]} />
+        <meshStandardMaterial color="#3a342c" roughness={0.95} />
+      </mesh>
     </group>
   );
 }
@@ -353,6 +361,14 @@ export default function ConvenienceStoreScene({
           learner that used to stand beside the player is gone from this
           scene entirely. */}
       <Cluby x={2.3} y={0.12} z={0.9} reactRef={clubyReact} />
+      {/* Re, 4 Nov 2026: "add more people" — two unnamed other shoppers,
+          clear of the player's own walk bounds (x -2.0..2.3, z -0.9..1.8)
+          and every hotspot's hit box, so the store reads as a real
+          late-night spot without crowding the one learner this room is
+          about. See `BackgroundFigure`'s own doc comment on why these are
+          generic, never named canon characters. */}
+      <BackgroundFigure x={-2.4} z={0.6} rotY={1.3} toneIndex={1} />
+      <BackgroundFigure x={-1.7} z={1.75} rotY={-0.6} toneIndex={4} scale={0.97} />
     </group>
   );
 }
