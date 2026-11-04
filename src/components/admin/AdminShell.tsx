@@ -411,7 +411,7 @@ const AdminShell = ({
           ))}
         </div>
 
-        <div className="min-w-0 flex-1">{children}</div>
+        <main className="min-w-0 flex-1">{children}</main>
       </div>
 
       <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen}>
