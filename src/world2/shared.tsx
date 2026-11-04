@@ -337,9 +337,10 @@ export function Player({
  * already flips to "walk"), it eases into a chase position behind and
  * slightly above them, looking a little ahead of their facing direction —
  * reading their world position/rotation through Three's own world-matrix
- * (getWorldPosition/getWorldQuaternion) rather than local coordinates, so
- * it tracks correctly even with World2Page's own SlowOrbit gently swaying
- * the room around them.
+ * (getWorldPosition/getWorldQuaternion) rather than local coordinates —
+ * originally so it still tracked correctly under World2Page's old
+ * "SlowOrbit" idle sway (removed 4 Nov 2026, see World2Page.tsx), kept now
+ * because reading world transforms is simply more correct than local ones.
  *
  * Re also asked for a "character POV" view, separate from this chase
  * camera: a `povMode` toggle (World2Page.tsx renders the button; mirrors
@@ -467,12 +468,33 @@ export function LearnerPlaceholder({ x, z }: { x: number; z: number }) {
 
 /** Wraps a clickable prop: a subtle hover highlight (scale pulse) plus a
  * pointer cursor, so it reads as "tap this to learn the word" rather than a
- * hidden easter egg. Shared by every room's clickable props. */
+ * hidden easter egg. Shared by every room's clickable props.
+ *
+ * Re, 4 Nov 2026: tested World2's hotspots live and found them hard to hit —
+ * several of the food props (a tray of 0.012-radius skewer sticks, a 0.11m
+ * pot) were nearly unclickable by mouse, let alone touch, because the only
+ * thing raycast-able was the tiny visual mesh itself. The live /world game's
+ * own interactables never have this problem: MarketShop.tsx wraps every
+ * clickable item in "an easy target: the thing's whole footprint, invisible"
+ * — a generous invisible box sized for a comfortable tap, independent of
+ * however small or oddly-shaped the actual prop is. `hitSize`/`hitCenter`
+ * bring that exact technique here, defaulting to a reasonable hand-sized
+ * box so existing call sites that don't pass one still get some padding. */
 export function Hotspot({
   onSelect,
+  hitSize = [0.4, 0.4, 0.4],
+  hitCenter = [0, 0, 0],
   children,
 }: {
   onSelect: () => void;
+  /** Size (x, y, z, metres) of the invisible click/tap target placed over
+   * the visual prop. Err generous — it's invisible, so it only ever makes
+   * the prop easier to hit, never changes how the scene looks. */
+  hitSize?: [number, number, number];
+  /** Where that invisible box sits, in the same local space as `children` —
+   * usually the prop's own centre, since most of these props are small and
+   * off to one side of this Hotspot's own origin. */
+  hitCenter?: [number, number, number];
   children: React.ReactNode;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -500,6 +522,10 @@ export function Hotspot({
         document.body.style.cursor = "auto";
       }}
     >
+      <mesh position={hitCenter} visible={false}>
+        <boxGeometry args={hitSize} />
+        <meshBasicMaterial />
+      </mesh>
       {children}
     </group>
   );

@@ -131,7 +131,7 @@ function FoodCart({ onSelectVocab }: { onSelectVocab: (id: string) => void }) {
       {/* skewers tray (어묵): a wooden tray of upright skewer sticks, set
           toward the back-centre of the counter, clear of where the
           characters' hands rest. Click to learn the word. */}
-      <Hotspot onSelect={() => onSelectVocab("eomuk")}>
+      <Hotspot onSelect={() => onSelectVocab("eomuk")} hitCenter={[-0.15, 1.12, -0.12]} hitSize={[0.5, 0.35, 0.4]}>
         <group position={[-0.15, 1.05, -0.12]}>
           <mesh>
             <boxGeometry args={[0.38, 0.03, 0.22]} />
@@ -146,7 +146,7 @@ function FoodCart({ onSelectVocab }: { onSelectVocab: (id: string) => void }) {
         </group>
       </Hotspot>
       {/* tteokbokki pot (떡볶이): a shallow bowl, red sauce visible. Click to learn the word. */}
-      <Hotspot onSelect={() => onSelectVocab("tteokbokki")}>
+      <Hotspot onSelect={() => onSelectVocab("tteokbokki")} hitCenter={[0.25, 1.08, -0.12]} hitSize={[0.4, 0.3, 0.4]}>
         <group position={[0.25, 1.05, -0.12]}>
           <mesh>
             <cylinderGeometry args={[0.14, 0.11, 0.08, 24]} />
@@ -159,7 +159,7 @@ function FoodCart({ onSelectVocab }: { onSelectVocab: (id: string) => void }) {
         </group>
       </Hotspot>
       {/* kimbap tray (김밥): a few dark rice-roll cylinders lying on a board. Click to learn the word. */}
-      <Hotspot onSelect={() => onSelectVocab("gimbap")}>
+      <Hotspot onSelect={() => onSelectVocab("gimbap")} hitCenter={[0.45, 1.07, -0.12]} hitSize={[0.4, 0.3, 0.4]}>
         <group position={[0.45, 1.04, -0.12]}>
           <mesh>
             <boxGeometry args={[0.26, 0.02, 0.18]} />
@@ -186,7 +186,7 @@ function FoodCart({ onSelectVocab }: { onSelectVocab: (id: string) => void }) {
         <meshStandardMaterial color="#FFF9EC" roughness={0.9} />
       </mesh>
       {/* menu board — click to learn how to ask for something */}
-      <Hotspot onSelect={() => onSelectVocab("juseyo")}>
+      <Hotspot onSelect={() => onSelectVocab("juseyo")} hitCenter={[-1.3, 1.3, -0.2]} hitSize={[0.65, 0.85, 0.35]}>
         <mesh position={[-1.3, 1.3, -0.2]} rotation={[0, 0.5, 0]}>
           <boxGeometry args={[0.5, 0.7, 0.04]} />
           <meshStandardMaterial map={boardWood} color="#6b4a30" roughness={0.8} />

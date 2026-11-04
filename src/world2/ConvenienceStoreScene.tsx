@@ -107,7 +107,7 @@ function StoreShell() {
 function SnackShelves({ onSelect }: { onSelect: () => void }) {
   const rows = useMemo(() => [0.35, 0.75, 1.15, 1.55], []);
   return (
-    <Hotspot onSelect={onSelect}>
+    <Hotspot onSelect={onSelect} hitCenter={[-1.5, 1.0, -1.4]} hitSize={[1.8, 2.1, 0.6]}>
       <group position={[-1.5, 0, -1.4]}>
         {/* frame */}
         <mesh position={[0, 1.0, 0]} castShadow receiveShadow>
@@ -142,7 +142,7 @@ function SnackShelves({ onSelect }: { onSelect: () => void }) {
 function DrinkFridge({ onSelect }: { onSelect: () => void }) {
   const rows = useMemo(() => [0.45, 0.95, 1.45], []);
   return (
-    <Hotspot onSelect={onSelect}>
+    <Hotspot onSelect={onSelect} hitCenter={[-0.1, 1.0, -1.4]} hitSize={[1.4, 2.1, 0.7]}>
       <group position={[-0.1, 0, -1.4]}>
         {/* The box is 0.55 deep, so its own front face sits at local z=0.275.
             The bottle rows and point light below used to sit at z=0.2 and
@@ -193,7 +193,7 @@ function DrinkFridge({ onSelect }: { onSelect: () => void }) {
 function Checkout({ onSelect }: { onSelect: () => void }) {
   const counterWood = useTiledTexture(paintPlanks, 1.4, 0.4);
   return (
-    <Hotspot onSelect={onSelect}>
+    <Hotspot onSelect={onSelect} hitCenter={[1.5, 0.9, -0.3]} hitSize={[1.6, 1.8, 0.7]}>
       <group position={[1.5, 0, -0.3]}>
         <mesh position={[0, 0.55, 0]} castShadow receiveShadow>
           <boxGeometry args={[1.5, 1.1, 0.55]} />
@@ -234,13 +234,13 @@ function PriceTags({ onSelectPrice, onSelectCount }: { onSelectPrice: () => void
   // margin or the shelf's own raycast hit wins every click.
   return (
     <group position={[-1.5, 1.0, -1.0]}>
-      <Hotspot onSelect={onSelectPrice}>
+      <Hotspot onSelect={onSelectPrice} hitCenter={[-0.5, 0, 0]} hitSize={[0.4, 0.3, 0.3]}>
         <mesh position={[-0.5, 0, 0]} rotation={[0, 0, 0.08]}>
           <planeGeometry args={[0.22, 0.14]} />
           <meshStandardMaterial color="#FFF9EC" />
         </mesh>
       </Hotspot>
-      <Hotspot onSelect={onSelectCount}>
+      <Hotspot onSelect={onSelectCount} hitCenter={[0.5, 0, 0]} hitSize={[0.4, 0.3, 0.3]}>
         <mesh position={[0.5, 0, 0]} rotation={[0, 0, -0.06]}>
           <planeGeometry args={[0.22, 0.14]} />
           <meshStandardMaterial color="#FFE99A" />

@@ -1,6 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import type { Group } from "three";
+import { Canvas } from "@react-three/fiber";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -371,22 +370,6 @@ function useFullscreen<T extends HTMLElement>() {
   return { ref, isFullscreen, toggle };
 }
 
-/** Camera gently orbits so the scene reads as a real 3D room, not a static
- * render. Amplitude was 0.35 rad (~20°) — wide enough that, combined with
- * Cluby standing close to Lina in World2Scene, the sway could carry Cluby's
- * silhouette directly over Lina's from this room's camera angle (Re flagged
- * this as the body "not looking well" — two separate characters reading as
- * one broken one). Narrowed to 0.12 rad (~7°): still a visible, living sway,
- * but far too small a swing for a stationary NPC's position to cross another
- * stationary NPC's from the camera's point of view. */
-function SlowOrbit({ children }: { children: React.ReactNode }) {
-  const g = useRef<Group>(null);
-  useFrame(({ clock }) => {
-    if (g.current) g.current.rotation.y = Math.sin(clock.elapsedTime * 0.15) * 0.12;
-  });
-  return <group ref={g}>{children}</group>;
-}
-
 /**
  * KLOVERS World 2 — hackathon preview page, route /world2.
  *
@@ -548,14 +531,25 @@ export default function World2Page() {
               >
                 <PostFinish />
                 <Suspense fallback={null}>
-                  <SlowOrbit>
-                    <room.Scene
-                      playerAvatar={playerAvatar}
-                      onSelectVocab={selectVocab}
-                      activeDialogueSpeaker={currentLine?.speaker ?? null}
-                      dialogueTurnKey={dialogueIndex ?? -1}
-                    />
-                  </SlowOrbit>
+                  {/* Re, 4 Nov 2026: "fix and make it as possible same
+                      looking and function of world1" — the live /world
+                      game never idly moves its own camera or scene; it only
+                      moves when the learner does (ThirdPersonCamera, driven
+                      by real player input). World2 used to wrap every room
+                      in a constant slow sway ("SlowOrbit") "so the scene
+                      reads as a real 3D room, not a static render" — but
+                      that meant every hotspot's on-screen position was
+                      always slowly drifting, on top of already being a
+                      small target (see Hotspot's own hitSize/hitCenter fix
+                      in shared.tsx), making them harder to hit than they
+                      needed to be. Removed: the room now holds still except
+                      when the learner actually moves, same as World1. */}
+                  <room.Scene
+                    playerAvatar={playerAvatar}
+                    onSelectVocab={selectVocab}
+                    activeDialogueSpeaker={currentLine?.speaker ?? null}
+                    dialogueTurnKey={dialogueIndex ?? -1}
+                  />
                 </Suspense>
               </Canvas>
               {!activeVocab && !currentLine && (
