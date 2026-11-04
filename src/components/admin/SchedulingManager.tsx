@@ -1178,7 +1178,7 @@ const GroupsManager = () => {
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteGroup(g)} title="Delete group">
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => toggleExpand(g.id)}>
+                  <Button variant="ghost" size="sm" aria-expanded={isExpanded} aria-label={`${isExpanded ? "Hide" : "Show"} members for ${g.name}`} onClick={() => toggleExpand(g.id)}>
                     {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     <Users className="h-4 w-4 ml-1" />
                     <span className="text-xs ml-1">{g.members.length}</span>

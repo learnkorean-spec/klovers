@@ -117,6 +117,8 @@ function PostRow({ item }: { item: PostAuditResult }) {
   return (
     <div className="border rounded-xl overflow-hidden">
       <button
+        type="button"
+        aria-expanded={open}
         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen((v) => !v)}
       >
@@ -197,6 +199,8 @@ function DebugInfo({ group }: { group: ParityGroup }) {
   return (
     <div className="border-t border-dashed pt-1.5 mt-1.5">
       <button
+        type="button"
+        aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1 rounded-sm text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
@@ -235,6 +239,8 @@ function ParitySection({ groups }: { groups: ParityGroup[] }) {
   return (
     <Card className="rounded-xl">
       <button
+        type="button"
+        aria-expanded={open}
         className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen((v) => !v)}
       >
