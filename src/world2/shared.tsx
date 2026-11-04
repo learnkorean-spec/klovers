@@ -497,24 +497,29 @@ export function FollowCamera({
       target.current.getWorldPosition(worldPos.current);
       target.current.getWorldQuaternion(worldQuat.current);
       forward.current.set(0, 0, 1).applyQuaternion(worldQuat.current);
-      // Re, 4 Nov 2026: shipped POV clipped straight into the character's
-      // own head/hair the instant it turned on — a -0.12 "behind centre"
-      // nudge (copied from the live game's POV_EYE recipe) wasn't enough
-      // clearance for RiggedBody's actual head radius, so the camera sat
-      // *inside* the head — live-tested on production and confirmed: it
-      // showed the inside of the hair mesh, then (as the learner turned) the
-      // inside of the face itself, nose and eyes rendered from within the
-      // skull. World1's own head model is evidently narrower; this one
-      // needs real clearance, not a graze. 0.35 — just behind the
-      // shoulder/collar line rather than grazing the skull — reads as "over
-      // their own shoulder" rather than literally between the eyes, but
-      // stays clear of the head from every facing angle, which the previous
-      // number demonstrably did not.
-      const povBehind = 0.35;
+      // Re, 4 Nov 2026: two bugs here, found live on production back to
+      // back. First, a -0.12 "behind centre" nudge (copied from the live
+      // game's POV_EYE recipe, which relies on being *inside* a head mesh
+      // whose backfaces are culled — not true of this rig) put the camera
+      // inside the hair/face geometry. Widening it to -0.35 cleared the
+      // geometry, but that's when the real bug showed: this function's own
+      // doc comment above says POV "sits just in front of the character's
+      // face... looking the way they're facing" — the *opposite* side from
+      // "behind centre" — and the code had never matched that comment. With
+      // the camera behind the head looking further out, the character's own
+      // skull sat directly on the sightline to the look-ahead point and
+      // blocked it: every frame rendered the back of their own head at
+      // point-blank range, not an outward view. The fix the comment always
+      // described: stand slightly *ahead* of the face (clear of the nose and
+      // any hair) and look further along the same forward direction — nothing
+      // of their own body is ever in front of their own face, so this can't
+      // clip into them from any facing angle, and it reads as seeing what
+      // they see rather than seeing them.
+      const povAhead = 0.4;
       desiredPos.current.set(
-        worldPos.current.x - forward.current.x * povBehind,
+        worldPos.current.x + forward.current.x * povAhead,
         povEyeHeight,
-        worldPos.current.z - forward.current.z * povBehind,
+        worldPos.current.z + forward.current.z * povAhead,
       );
       lookAt.current.set(
         desiredPos.current.x + forward.current.x * 3,
