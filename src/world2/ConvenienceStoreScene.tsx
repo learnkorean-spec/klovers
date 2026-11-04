@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { useTiledTexture, paintPlanks } from "../game/environment/textures";
+import { useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY, paintPlanks } from "../game/environment/textures";
 import {
   LearnerPlaceholder,
   Hotspot,
@@ -282,6 +282,10 @@ export default function ConvenienceStoreScene({
   dialogueTurnKey?: number;
 }) {
   const floor = useTiledTexture(paintPlanks, 5, 3);
+  // Render-quality pass, 4 Nov 2026 — see EntranceScene.tsx's matching
+  // comment: the same real photographed wood-plank floor World1's rooms
+  // already use, upgraded in place once it downloads.
+  const floorPhoto = usePhotoFloor("planks", 5, 3);
   const { playerControl, clubyReact, react } = useLearnerReactions();
   const playerRef = useRef<Group>(null);
   const handleSelect = (id: string) => {
@@ -334,7 +338,16 @@ export default function ConvenienceStoreScene({
       <StoreShell />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[14, 14]} />
-        <meshStandardMaterial map={floor} color="#7a6a52" roughness={0.9} />
+        <meshStandardMaterial
+          key={floorPhoto ? "photo" : "painted"}
+          map={floorPhoto?.map ?? floor}
+          normalMap={floorPhoto?.normal ?? null}
+          roughnessMap={floorPhoto?.rough ?? null}
+          color="#7a6a52"
+          roughness={floorPhoto ? 1 : 0.9}
+          onBeforeCompile={floorBreakup}
+          customProgramCacheKey={FLOOR_BREAKUP_KEY}
+        />
       </mesh>
       <SnackShelves onSelect={() => handleSelect("gwaja")} />
       <DrinkFridge onSelect={() => handleSelect("eumnyosu")} />

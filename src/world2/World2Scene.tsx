@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { useTiledTexture, paintPlanks, paintPaving } from "../game/environment/textures";
+import { useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY, paintPlanks, paintPaving } from "../game/environment/textures";
 import {
   LearnerPlaceholder,
   Hotspot,
@@ -276,6 +276,10 @@ export default function World2Scene({
   // Dressed-stone paving (same painter the live game's courtyards use)
   // instead of a flat plane, so the ground reads as a real street.
   const ground = useTiledTexture(paintPaving, 6, 6);
+  // Render-quality pass, 4 Nov 2026 — see EntranceScene.tsx's matching
+  // comment: the same real photographed stone floor World1's rooms already
+  // use, upgraded in place once it downloads.
+  const groundPhoto = usePhotoFloor("paving", 6, 6);
   // Shared with FoodCart's hotspots below: clicking a word plays a one-off
   // reaction (the player waves, Cluby hops) — cross-fades/decays back to
   // idle automatically on its own.
@@ -333,7 +337,16 @@ export default function World2Scene({
       <Alley />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[16, 16]} />
-        <meshStandardMaterial map={ground} color="#8a7560" roughness={0.95} />
+        <meshStandardMaterial
+          key={groundPhoto ? "photo" : "painted"}
+          map={groundPhoto?.map ?? ground}
+          normalMap={groundPhoto?.normal ?? null}
+          roughnessMap={groundPhoto?.rough ?? null}
+          color="#8a7560"
+          roughness={groundPhoto ? 1 : 0.95}
+          onBeforeCompile={floorBreakup}
+          customProgramCacheKey={FLOOR_BREAKUP_KEY}
+        />
       </mesh>
       <FoodCart onSelectVocab={handleSelect} />
       <FollowCamera target={playerRef} control={playerControl} />

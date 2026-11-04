@@ -1,6 +1,6 @@
 import { Suspense, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useTiledTexture, paintPaving } from "../game/environment/textures";
+import { useTiledTexture, usePhotoFloor, floorBreakup, FLOOR_BREAKUP_KEY, paintPaving } from "../game/environment/textures";
 import { GateWall, Signboard } from "../game/environment/parts";
 import {
   LearnerPlaceholder,
@@ -69,6 +69,14 @@ export default function EntranceScene({
   onEnterRoom: (roomId: "cart" | "store") => void;
 }) {
   const ground = useTiledTexture(paintPaving, 6, 6);
+  // Re, 4 Nov 2026 (render-quality pass): the live /world game's own rooms
+  // (VocabularyMarket.tsx etc.) upgrade this exact painted tile to a real
+  // photographed stone floor once it downloads (usePhotoFloor/floorBreakup —
+  // same CC0 assets, already on the CDN, no new download added by using
+  // them here). World2 never adopted that upgrade path; it's a direct,
+  // zero-risk texture-resolution win, since the painted tile still shows
+  // until the photo loads and stays if it never does.
+  const groundPhoto = usePhotoFloor("paving", 6, 6);
   const { playerControl } = useLearnerReactions();
   // Wide enough to reach both gates (±3.8 on x) with a little room to spare,
   // and deep enough (toward -1.6) to actually walk through the gate opening
@@ -106,7 +114,16 @@ export default function EntranceScene({
       />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial map={ground} color="#8a7560" roughness={0.95} />
+        <meshStandardMaterial
+          key={groundPhoto ? "photo" : "painted"}
+          map={groundPhoto?.map ?? ground}
+          normalMap={groundPhoto?.normal ?? null}
+          roughnessMap={groundPhoto?.rough ?? null}
+          color="#8a7560"
+          roughness={groundPhoto ? 1 : 0.95}
+          onBeforeCompile={floorBreakup}
+          customProgramCacheKey={FLOOR_BREAKUP_KEY}
+        />
       </mesh>
       {/* A plain sky backdrop well behind the gates — without it they'd read
           as floating against the canvas's own void, unlike every other
