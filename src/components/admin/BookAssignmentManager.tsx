@@ -308,6 +308,15 @@ const BookAssignmentManager = () => {
 
   return (
     <div className="space-y-4">
+      {/* Screen title - this tab has no page-level heading of its own
+          (AdminDashboard.tsx renders no h1/h2 around tab content), so
+          without this every CardTitle/h3 on the screen is an orphan with
+          nothing above it in the heading outline. */}
+      <div className="flex items-center gap-2">
+        <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
+        <h2 className="font-semibold text-foreground">Books</h2>
+      </div>
+
       {/* Header row */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="relative">

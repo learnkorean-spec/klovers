@@ -1505,7 +1505,7 @@ const MyStudentsManager = () => {
       <CardHeader className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2 text-xl">
+            <CardTitle as="h2" className="flex items-center gap-2 text-xl">
               <GraduationCap className="h-5 w-5" /> My students
             </CardTitle>
             <CardDescription>

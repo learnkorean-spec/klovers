@@ -1589,6 +1589,10 @@ const PrivateTimeConfig = () => {
 
   return (
     <div className="space-y-4">
+      {/* Screen title - this tab panel otherwise has two sibling CardTitles
+          with nothing above them in the heading outline. */}
+      <h2 className="text-lg font-semibold text-foreground">Private Config</h2>
+
       {/* Private Class Days */}
       <Card>
         <CardHeader>
@@ -2002,6 +2006,8 @@ const TrialBookingsManager = () => {
 
   return (
     <div className="space-y-6">
+      <h2 className="text-lg font-semibold text-foreground">Trial Bookings</h2>
+
       {/* Slot availability (next 7 days) — quick glance */}
       <div>
         <h3 className="text-sm font-semibold mb-3">Trial Slot Availability (next 7 days)</h3>

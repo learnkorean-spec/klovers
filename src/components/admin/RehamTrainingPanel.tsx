@@ -1863,7 +1863,7 @@ export default function RehamTrainingPanel() {
   return (
     <Card className="rounded-2xl">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
+        <CardTitle as="h2" className="text-base flex items-center gap-2">
           <GraduationCap className="h-5 w-5" />
           Interview Training — Reham (리함)
         </CardTitle>

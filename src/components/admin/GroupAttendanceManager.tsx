@@ -764,7 +764,7 @@ const GroupAttendanceManager = ({
         <TabsContent value="attendance" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Group Attendance</CardTitle>
+              <CardTitle as="h2" className="text-lg">Group Attendance</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
@@ -985,7 +985,7 @@ const GroupAttendanceManager = ({
           {/* Student picker */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Log Attendance</CardTitle>
+              <CardTitle as="h2" className="text-lg">Log Attendance</CardTitle>
               <p className="text-xs text-muted-foreground">Select a student to add/view attendance</p>
             </CardHeader>
             <CardContent>
@@ -1131,7 +1131,7 @@ const GroupAttendanceManager = ({
         <TabsContent value="groups" className="space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle as="h2" className="text-lg flex items-center gap-2">
                 <Users className="h-5 w-5" /> Groups
               </CardTitle>
               <div className="flex gap-2">
