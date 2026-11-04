@@ -32,9 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import {
-  Heart, X, Loader2, ShieldAlert, Sparkles, MessageCircle, Clock,
-  BookOpen, Globe2, GraduationCap, PenTool, Music2, Film, Coffee, Plane, Mic2, Palette, Headphones,
-  type LucideIcon,
+  Heart, X, Loader2, ShieldAlert, Sparkles, MessageCircle, Clock, Send,
 } from "lucide-react";
 import {
   EXCHANGE_LANGUAGES,
@@ -46,6 +44,8 @@ import {
   EXCHANGE_DAYS,
   EXCHANGE_TIME_BUCKETS,
   EXCHANGE_AVAILABILITY_COUNT,
+  EXCHANGE_GENDERS,
+  EXCHANGE_LOOKING_FOR_GENDERS,
   REPORT_REASONS,
   EXCHANGE_AVATAR_STYLES,
   AVATAR_ICON_PREFIX,
@@ -53,21 +53,16 @@ import {
   languageLabel,
   interestLabel,
   goalLabel,
+  genderLabel,
+  lookingForGenderLabel,
   formatAvailabilitySlot,
   shortTimezoneLabel,
 } from "@/constants/languageExchange";
+import { AvatarArt } from "@/components/exchange/AvatarArt";
 import { getUserTimezone } from "@/lib/viewerTimezone";
 
-/** Maps the icon-name strings stored in EXCHANGE_AVATAR_STYLES to the actual
- *  lucide-react components imported above (languageExchange.ts deliberately
- *  stores icon names as plain strings to stay icon-library-agnostic). */
-const AVATAR_ICON_COMPONENTS: Record<string, LucideIcon> = {
-  BookOpen, Globe2, GraduationCap, MessageCircle, PenTool, Music2,
-  Film, Coffee, Plane, Mic2, Palette, Headphones,
-};
-
 /**
- * Renders a profile's picture as one of the fixed built-in icon-on-color
+ * Renders a profile's picture as one of the fixed built-in cartoon-character
  * avatars (never a real photo — see the "Avatars only" comment in
  * languageExchange.ts). Any value that isn't a recognized "avatar://<key>"
  * falls back to initials, so a stray/legacy value is never rendered as an
@@ -84,13 +79,12 @@ function ExchangeAvatar({
 }) {
   const style = avatarStyleFromValue(avatarUrl);
   if (style) {
-    const Icon = AVATAR_ICON_COMPONENTS[style.icon] ?? Sparkles;
     return (
       <div
         className={className ?? "flex h-full w-full items-center justify-center"}
         style={{ backgroundColor: style.bg }}
       >
-        <Icon className="h-1/2 w-1/2 text-black/60" strokeWidth={1.75} />
+        <AvatarArt avatarKey={style.key} className="h-full w-full" />
       </div>
     );
   }
@@ -125,6 +119,8 @@ interface ExchangeProfileRow {
   avatar_url: string | null;
   bio: string | null;
   age: number | null;
+  gender: string | null;
+  looking_for_gender: string;
   native_languages: string[];
   learning_languages: string[];
   interests: string[];
@@ -136,19 +132,14 @@ interface ExchangeProfileRow {
   is_visible: boolean;
 }
 
-const CONTACT_TYPES = [
-  { value: "telegram", en: "Telegram", ar: "تيليجرام" },
-  { value: "whatsapp", en: "WhatsApp", ar: "واتساب" },
-  { value: "instagram", en: "Instagram", ar: "إنستغرام" },
-  { value: "email", en: "Email", ar: "البريد الإلكتروني" },
-];
-
 const emptyDraft = (): ExchangeProfileRow => ({
   user_id: "",
   display_name: "",
   avatar_url: null,
   bio: "",
   age: null,
+  gender: null,
+  looking_for_gender: "any",
   native_languages: [],
   learning_languages: [],
   interests: [],
@@ -361,7 +352,20 @@ function DiscoverDeck({
       toast({ title: tr("Couldn't load profiles", "تعذّر تحميل الملفات"), description: error.message, variant: "destructive" });
       setQueue([]);
     } else {
-      const rows = (data as unknown as ExchangeProfileRow[]) ?? [];
+      let rows = (data as unknown as ExchangeProfileRow[]) ?? [];
+      // Mutual gender preference (Re's request, 4 Nov 2026): show people
+      // whose preference includes me and who match what I'm looking for.
+      // Done client-side rather than as a 2nd server-side .or() (Postgrest
+      // only supports one `or` filter per query reliably) -- a profile that
+      // hasn't set gender/looking_for_gender yet (older data) is never
+      // hidden by this.
+      rows = rows.filter((p) => {
+        const theyWantMe =
+          !p.looking_for_gender || p.looking_for_gender === "any" || !myProfile.gender || p.looking_for_gender === myProfile.gender;
+        const iWantThem =
+          !myProfile.looking_for_gender || myProfile.looking_for_gender === "any" || !p.gender || myProfile.looking_for_gender === p.gender;
+        return theyWantMe && iWantThem;
+      });
       // Shuffle so the same top rows don't always lead.
       for (let i = rows.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -370,7 +374,7 @@ function DiscoverDeck({
       setQueue(rows);
     }
     setLoading(false);
-  }, [myProfile.user_id, myProfile.learning_languages, myProfile.native_languages, tr]);
+  }, [myProfile.user_id, myProfile.learning_languages, myProfile.native_languages, myProfile.gender, myProfile.looking_for_gender, tr]);
 
   useEffect(() => {
     loadQueue();
@@ -561,6 +565,11 @@ function SwipeCard({
               <h2 className="text-xl font-bold">
                 {profile.display_name}
                 {profile.age ? <span className="ms-2 font-normal text-muted-foreground">{profile.age}</span> : null}
+                {profile.gender ? (
+                  <span className="ms-2 align-middle text-xs font-normal text-muted-foreground">
+                    · {genderLabel(profile.gender, isAr ? "ar" : "en")}
+                  </span>
+                ) : null}
               </h2>
               <button
                 type="button"
@@ -652,11 +661,16 @@ function SwipeCard({
 
 /* ---------------------------------- Matches ---------------------------------- */
 
+interface MatchEntry {
+  matchId: string;
+  profile: ExchangeProfileRow;
+}
+
 function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar: string) => string; userId: string }) {
-  const [matches, setMatches] = useState<ExchangeProfileRow[]>([]);
+  const [matches, setMatches] = useState<MatchEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [reportTarget, setReportTarget] = useState<ExchangeProfileRow | null>(null);
-  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [chatMatch, setChatMatch] = useState<MatchEntry | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -672,9 +686,9 @@ function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar:
       return;
     }
 
-    const otherIds = ((matchRows as unknown as { user_a: string; user_b: string }[]) ?? []).map((m) =>
-      m.user_a === userId ? m.user_b : m.user_a,
-    );
+    const rows = (matchRows as unknown as { id: string; user_a: string; user_b: string }[]) ?? [];
+    const otherIdByMatch = new Map(rows.map((m) => [m.id, m.user_a === userId ? m.user_b : m.user_a]));
+    const otherIds = [...otherIdByMatch.values()];
 
     if (otherIds.length === 0) {
       setMatches([]);
@@ -691,13 +705,33 @@ function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar:
       // query failure here would otherwise render as "No matches yet".
       toast({ title: tr("Couldn't load matches", "تعذّر تحميل التطابقات"), description: profilesError.message, variant: "destructive" });
     }
-    setMatches((profilesData as unknown as ExchangeProfileRow[]) ?? []);
+    const profiles = (profilesData as unknown as ExchangeProfileRow[]) ?? [];
+    const byUserId = new Map(profiles.map((p) => [p.user_id, p]));
+    const entries: MatchEntry[] = [...otherIdByMatch.entries()]
+      .map(([matchId, otherId]) => {
+        const profile = byUserId.get(otherId);
+        return profile ? { matchId, profile } : null;
+      })
+      .filter((e): e is MatchEntry => e !== null);
+    setMatches(entries);
     setLoading(false);
   }, [userId, tr]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Mark match notifications as read the moment this tab is opened.
+  useEffect(() => {
+    supabase
+      .from("exchange_notifications" as any)
+      .update({ is_read: true })
+      .eq("user_id", userId)
+      .eq("is_read", false)
+      .then(({ error }) => {
+        if (error) console.error("exchange_notifications mark-read failed:", error.message);
+      });
+  }, [userId]);
 
   if (loading) {
     return (
@@ -719,78 +753,240 @@ function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar:
 
   return (
     <div className="space-y-3">
-      {matches.map((m) => {
-        const contactLabel = CONTACT_TYPES.find((c) => c.value === m.contact_type);
-        const isRevealed = revealed[m.user_id];
-        return (
-          <Card key={m.user_id}>
-            <CardContent className="flex items-start gap-4 p-4">
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full">
-                <ExchangeAvatar avatarUrl={m.avatar_url} name={m.display_name} className="flex h-full w-full items-center justify-center" />
+      {matches.map(({ matchId, profile: m }) => (
+        <Card key={matchId}>
+          <CardContent className="flex items-start gap-4 p-4">
+            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full">
+              <ExchangeAvatar avatarUrl={m.avatar_url} name={m.display_name} className="flex h-full w-full items-center justify-center" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-bold">
+                  {m.display_name}
+                  {m.age ? <span className="ms-1.5 font-normal text-muted-foreground">{m.age}</span> : null}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setReportTarget(m)}
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                  aria-label={tr("Report", "إبلاغ")}
+                >
+                  <ShieldAlert className="h-4 w-4" />
+                </button>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-bold">{m.display_name}</h3>
-                  <button
-                    type="button"
-                    onClick={() => setReportTarget(m)}
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                    aria-label={tr("Report", "إبلاغ")}
-                  >
-                    <ShieldAlert className="h-4 w-4" />
-                  </button>
+              {m.bio ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{m.bio}</p> : null}
+
+              {m.gender ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {genderLabel(m.gender, isAr ? "ar" : "en")}
+                  {" · "}
+                  {tr("Looking for", "يبحث عن")}: {lookingForGenderLabel(m.looking_for_gender || "any", isAr ? "ar" : "en")}
+                </p>
+              ) : null}
+
+              {m.goals?.length ? (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {m.goals.map((k) => (
+                    <Badge key={k} className="bg-[#FFFF00] text-foreground hover:bg-[#FFFF00] text-xs">
+                      {goalLabel(k, isAr ? "ar" : "en")}
+                    </Badge>
+                  ))}
                 </div>
-                {m.bio ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{m.bio}</p> : null}
+              ) : null}
 
-                {m.goals?.length ? (
-                  <div className="mt-1.5 flex flex-wrap gap-1">
-                    {m.goals.map((k) => (
-                      <Badge key={k} className="bg-[#FFFF00] text-foreground hover:bg-[#FFFF00] text-xs">
-                        {goalLabel(k, isAr ? "ar" : "en")}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : null}
+              {m.availability_slots?.length ? (
+                <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                  {m.availability_slots
+                    .map((s) => formatAvailabilitySlot(s, isAr ? "ar" : "en"))
+                    .join(isAr ? "، " : ", ")}
+                  {m.timezone ? ` (${shortTimezoneLabel(m.timezone)})` : ""}
+                </p>
+              ) : null}
 
-                {m.availability_slots?.length ? (
-                  <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5 shrink-0" />
-                    {m.availability_slots
-                      .map((s) => formatAvailabilitySlot(s, isAr ? "ar" : "en"))
-                      .join(isAr ? "، " : ", ")}
-                    {m.timezone ? ` (${shortTimezoneLabel(m.timezone)})` : ""}
-                  </p>
-                ) : null}
-
-                {m.contact_type && m.contact_value ? (
-                  isRevealed ? (
-                    <p className="mt-2 flex items-center gap-1.5 text-sm font-medium">
-                      <MessageCircle className="h-4 w-4 text-[#FFFF00]" />
-                      {contactLabel ? (isAr ? contactLabel.ar : contactLabel.en) : m.contact_type}: {m.contact_value}
-                    </p>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="mt-2"
-                      onClick={() => setRevealed((r) => ({ ...r, [m.user_id]: true }))}
-                    >
-                      {tr("Show contact info", "إظهار معلومات التواصل")}
-                    </Button>
-                  )
-                ) : (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {tr("No contact info shared.", "لم تتم مشاركة معلومات تواصل.")}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+              <Button size="sm" className="mt-2" onClick={() => setChatMatch({ matchId, profile: m })}>
+                <MessageCircle className="me-1.5 h-4 w-4" />
+                {tr("Chat", "محادثة")}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
 
       <ReportDialog target={reportTarget} isAr={isAr} tr={tr} onClose={() => setReportTarget(null)} />
+      {chatMatch && (
+        <ChatDialog
+          matchId={chatMatch.matchId}
+          partner={chatMatch.profile}
+          userId={userId}
+          isAr={isAr}
+          tr={tr}
+          onClose={() => setChatMatch(null)}
+        />
+      )}
     </div>
+  );
+}
+
+/* ---------------------------------- Chat ---------------------------------- */
+
+interface ExchangeMessageRow {
+  id: string;
+  match_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+}
+
+/**
+ * In-app chat for a confirmed match (Re's request, 4 Nov 2026): talk through
+ * the Klovers account itself instead of exchanging WhatsApp/email. Backed by
+ * exchange_messages (RLS: only the two matched users can read/write a given
+ * match's rows) and Supabase Realtime for live delivery — see
+ * supabase/migrations/20261104040000_exchange_chat.sql.
+ */
+function ChatDialog({
+  matchId,
+  partner,
+  userId,
+  isAr,
+  tr,
+  onClose,
+}: {
+  matchId: string;
+  partner: ExchangeProfileRow;
+  userId: string;
+  isAr: boolean;
+  tr: (en: string, ar: string) => string;
+  onClose: () => void;
+}) {
+  const [messages, setMessages] = useState<ExchangeMessageRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    supabase
+      .from("exchange_messages" as any)
+      .select("*")
+      .eq("match_id", matchId)
+      .order("created_at", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          toast({ title: tr("Couldn't load chat", "تعذّر تحميل المحادثة"), description: error.message, variant: "destructive" });
+        }
+        setMessages((data as unknown as ExchangeMessageRow[]) ?? []);
+        setLoading(false);
+      });
+
+    const channel = supabase
+      .channel(`exchange_messages:${matchId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "exchange_messages", filter: `match_id=eq.${matchId}` },
+        (payload) => {
+          const row = payload.new as unknown as ExchangeMessageRow;
+          setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [matchId, tr]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+  }, [messages.length]);
+
+  const send = async () => {
+    const body = draft.trim();
+    if (!body || sending) return;
+    setSending(true);
+    const { error } = await supabase.from("exchange_messages" as any).insert({
+      match_id: matchId,
+      sender_id: userId,
+      body,
+    });
+    setSending(false);
+    if (error) {
+      toast({ title: tr("Message not sent", "لم تُرسَل الرسالة"), description: error.message, variant: "destructive" });
+      return;
+    }
+    setDraft("");
+  };
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full">
+              <ExchangeAvatar avatarUrl={partner.avatar_url} name={partner.display_name} className="flex h-full w-full items-center justify-center" />
+            </div>
+            {partner.display_name}
+          </DialogTitle>
+          <DialogDescription>
+            {tr(
+              "Keep it here on Klovers — meet in public first, and never send money or passwords.",
+              "خلّي التواصل هنا جوه كلوفرز — التقيا في مكان عام أولًا، ولا ترسلا أبدًا أموالًا أو كلمات مرور.",
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto rounded-md border p-3" style={{ minHeight: 240 }}>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : messages.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              {tr("Say hello 👋", "ابدئي بالسلام 👋")}
+            </p>
+          ) : (
+            messages.map((m) => {
+              const mine = m.sender_id === userId;
+              return (
+                <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+                      mine ? "bg-[#FFFF00] text-foreground" : "bg-muted text-foreground"
+                    }`}
+                  >
+                    {m.body}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder={tr("Type a message…", "اكتبي رسالة…")}
+            maxLength={2000}
+            disabled={sending}
+          />
+          <Button onClick={send} disabled={sending || !draft.trim()} size="icon" aria-label={tr("Send", "إرسال")}>
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -853,6 +1049,7 @@ function ProfileEditor({
   const canSave =
     draft.display_name.trim().length >= 2 &&
     (draft.age == null || (draft.age >= EXCHANGE_MIN_AGE && draft.age <= EXCHANGE_MAX_AGE)) &&
+    !!draft.gender &&
     draft.native_languages.length > 0 &&
     draft.learning_languages.length > 0 &&
     draft.goals.length > 0 &&
@@ -864,8 +1061,8 @@ function ProfileEditor({
       toast({
         title: tr("Please complete the required fields", "يرجى إكمال الحقول المطلوبة"),
         description: tr(
-          `Name, an avatar, at least one language you speak, one you're learning, age ${EXCHANGE_MIN_AGE}+ if given, at least one goal, and ${EXCHANGE_AVAILABILITY_COUNT} free times.`,
-          `الاسم، صورة رمزية، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، العمر ${EXCHANGE_MIN_AGE}+ إن تم إدخاله، هدف واحد على الأقل، و${EXCHANGE_AVAILABILITY_COUNT} وقتَي فراغ.`,
+          `Name, an avatar, your gender, at least one language you speak, one you're learning, age ${EXCHANGE_MIN_AGE}+ if given, at least one goal, and ${EXCHANGE_AVAILABILITY_COUNT} free times.`,
+          `الاسم، صورة رمزية، جنسك، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، العمر ${EXCHANGE_MIN_AGE}+ إن تم إدخاله، هدف واحد على الأقل، و${EXCHANGE_AVAILABILITY_COUNT} وقتَي فراغ.`,
         ),
         variant: "destructive",
       });
@@ -878,6 +1075,8 @@ function ProfileEditor({
       avatar_url: draft.avatar_url,
       bio: draft.bio?.trim() || null,
       age: draft.age,
+      gender: draft.gender,
+      looking_for_gender: draft.looking_for_gender || "any",
       native_languages: draft.native_languages,
       learning_languages: draft.learning_languages,
       interests: draft.interests,
@@ -919,31 +1118,67 @@ function ProfileEditor({
         <Label>{tr("Avatar", "الصورة الرمزية")} *</Label>
         <p className="mb-2 text-sm text-muted-foreground">
           {tr(
-            "No photo uploads here — pick an icon avatar, so Language Exchange stays about learning, not looks.",
-            "لا يوجد رفع صور هنا — اختاري صورة رمزية، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
+            "No photo uploads here — pick a character avatar, so Language Exchange stays about learning, not looks.",
+            "لا يوجد رفع صور هنا — اختاري شخصية رمزية، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
           )}
         </p>
-        <div className="grid grid-cols-6 gap-2 sm:grid-cols-12">
+        <div className="grid grid-cols-6 gap-2 sm:grid-cols-7">
           {EXCHANGE_AVATAR_STYLES.map((style) => {
             const value = `${AVATAR_ICON_PREFIX}${style.key}`;
-            const Icon = AVATAR_ICON_COMPONENTS[style.icon] ?? Sparkles;
             const selected = draft.avatar_url === value;
             return (
               <button
                 key={style.key}
                 type="button"
                 onClick={() => setDraft((d) => ({ ...d, avatar_url: value }))}
-                className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
+                className={`flex h-14 w-14 items-center justify-center overflow-hidden rounded-full transition-all ${
                   selected ? "ring-2 ring-primary ring-offset-2" : "opacity-80 hover:opacity-100"
                 }`}
                 style={{ backgroundColor: style.bg }}
                 aria-label={style.key}
                 aria-pressed={selected}
               >
-                <Icon className="h-6 w-6 text-black/60" strokeWidth={1.75} />
+                <AvatarArt avatarKey={style.key} className="h-full w-full" />
               </button>
             );
           })}
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label>{tr("Your gender", "جنسك")} *</Label>
+          <div className="mt-1 flex gap-2">
+            {EXCHANGE_GENDERS.map((g) => (
+              <Button
+                key={g.key}
+                type="button"
+                variant={draft.gender === g.key ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDraft((d) => ({ ...d, gender: g.key }))}
+              >
+                {isAr ? g.ar : g.en}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label>{tr("Who do you want to practice with?", "مع مين تحبين تمارسي اللغة؟")}</Label>
+          <Select
+            value={draft.looking_for_gender || "any"}
+            onValueChange={(v) => setDraft((d) => ({ ...d, looking_for_gender: v }))}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {EXCHANGE_LOOKING_FOR_GENDERS.map((g) => (
+                <SelectItem key={g.key} value={g.key}>
+                  {isAr ? g.ar : g.en}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -1099,36 +1334,12 @@ function ProfileEditor({
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <Label>{tr("Contact method (shown only to matches)", "طريقة التواصل (تظهر للتطابقات فقط)")}</Label>
-          <Select
-            value={draft.contact_type ?? ""}
-            onValueChange={(v) => setDraft((d) => ({ ...d, contact_type: v }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={tr("Optional", "اختياري")} />
-            </SelectTrigger>
-            <SelectContent>
-              {CONTACT_TYPES.map((c) => (
-                <SelectItem key={c.value} value={c.value}>
-                  {isAr ? c.ar : c.en}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="contact_value">{tr("Contact details", "بيانات التواصل")}</Label>
-          <Input
-            id="contact_value"
-            value={draft.contact_value ?? ""}
-            onChange={(e) => setDraft((d) => ({ ...d, contact_value: e.target.value }))}
-            placeholder={tr("@username or email", "@اسم المستخدم أو البريد الإلكتروني")}
-            disabled={!draft.contact_type}
-          />
-        </div>
-      </div>
+      <p className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+        {tr(
+          "No WhatsApp or email here on purpose — once you match, you talk through the Klovers chat.",
+          "من غير واتساب ولا إيميل هنا عمدًا — بعد ما تعملي ماتش، التواصل بيبقى من خلال شات كلوفرز.",
+        )}
+      </p>
 
       <div className="flex items-center justify-between rounded-lg border p-4">
         <div>
