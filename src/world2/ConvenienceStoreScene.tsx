@@ -152,9 +152,15 @@ function DrinkFridge({ onSelect }: { onSelect: () => void }) {
             panel (Re flagged this, 3 Nov). Pulling the rows (0.32) and
             glass (0.4) in front of that face, with the light (0.33) just
             behind the glass, actually shows the stocked shelves now. */}
+        {/* Re, 4 Nov 2026: found live that this read as a flat glowing white
+            panel, not a fridge — metalness 0.2 + roughness 0.5 caught a
+            sharp specular highlight from the room's key light right behind
+            the glass, blowing the whole front face out to white and washing
+            the bottle rows out with it. Matte (metalness 0, roughness 0.9)
+            diffuses that highlight instead of mirroring it. */}
         <mesh position={[0, 1.0, 0]} castShadow receiveShadow>
           <boxGeometry args={[1.3, 2.0, 0.55]} />
-          <meshStandardMaterial color="#d7dde2" roughness={0.5} metalness={0.2} />
+          <meshStandardMaterial color="#d7dde2" roughness={0.9} metalness={0} />
         </mesh>
         {rows.map((y) => (
           <group key={y} position={[0, y, 0.32]}>
@@ -166,13 +172,15 @@ function DrinkFridge({ onSelect }: { onSelect: () => void }) {
             ))}
           </group>
         ))}
-        <pointLight position={[0, 1.4, 0.33]} intensity={0.4} color="#bfe6ef" distance={1.5} />
+        <pointLight position={[0, 1.4, 0.33]} intensity={0.12} color="#bfe6ef" distance={1.5} />
         {/* glass front — in front of the bottles now, so they're actually
             visible through it instead of hidden behind the fridge's own
-            opaque body. */}
+            opaque body. Lower opacity (0.3→0.18) and roughness up (0.1→0.4)
+            — a mirror-smooth, fairly opaque pane on top of the (now matte)
+            body was still enough to haze the bottles behind it. */}
         <mesh position={[0, 1.0, 0.4]}>
           <boxGeometry args={[1.12, 1.8, 0.02]} />
-          <meshStandardMaterial color="#bfe6ef" transparent opacity={0.3} roughness={0.1} />
+          <meshStandardMaterial color="#bfe6ef" transparent opacity={0.18} roughness={0.4} />
         </mesh>
       </group>
     </Hotspot>
