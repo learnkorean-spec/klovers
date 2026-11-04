@@ -247,9 +247,9 @@ const SessionAttendanceManager = () => {
         <CardContent className="pt-5 space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Select Group</label>
+              <label htmlFor="sam-select-group" className="text-sm font-medium text-foreground">Select Group</label>
               <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-                <SelectTrigger>
+                <SelectTrigger id="sam-select-group">
                   <SelectValue placeholder="Choose a group…" />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,10 +275,10 @@ const SessionAttendanceManager = () => {
 
             {selectedGroupId && (
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Generate Sessions</label>
+                <span id="sam-generate-sessions-label" className="text-sm font-medium text-foreground">Generate Sessions</span>
                 <div className="flex gap-2">
                   <Select value={String(weeksAhead)} onValueChange={v => setWeeksAhead(Number(v))}>
-                    <SelectTrigger className="w-36">
+                    <SelectTrigger className="w-36" aria-labelledby="sam-generate-sessions-label">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

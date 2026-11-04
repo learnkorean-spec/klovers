@@ -118,15 +118,16 @@ const StudentPreferenceDashboard = () => {
         <CardContent className="pt-6">
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground block mb-2">
+              <span id="spd-time-period-label" className="text-sm font-medium text-muted-foreground block mb-2">
                 Time Period
-              </label>
-              <div className="flex gap-2">
+              </span>
+              <div className="flex gap-2" role="group" aria-labelledby="spd-time-period-label">
                 {[7, 14, 30, 90].map((days) => (
                   <Button
                     key={days}
                     variant={daysBack === days ? "default" : "outline"}
                     size="sm"
+                    aria-pressed={daysBack === days}
                     onClick={() => setDaysBack(days)}
                   >
                     {days}d
@@ -137,15 +138,16 @@ const StudentPreferenceDashboard = () => {
 
             {levels.length > 0 && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground block mb-2">
+                <span id="spd-level-label" className="text-sm font-medium text-muted-foreground block mb-2">
                   Level
-                </label>
-                <div className="flex gap-2 flex-wrap">
+                </span>
+                <div className="flex gap-2 flex-wrap" role="group" aria-labelledby="spd-level-label">
                   {levels.map((level) => (
                     <Button
                       key={level}
                       variant={selectedLevel === level ? "default" : "outline"}
                       size="sm"
+                      aria-pressed={selectedLevel === level}
                       onClick={() => setSelectedLevel(level)}
                     >
                       {level}
