@@ -123,7 +123,9 @@ function StoreShell() {
         <sphereGeometry args={[0.05, 12, 10]} />
         <meshStandardMaterial color="#FFFF00" emissive="#FFD24C" emissiveIntensity={1.2} />
       </mesh>
-      <pointLight position={[1.6, 2.3, 0.3]} intensity={1.4} color="#FFD98A" distance={3.5} />
+      {/* Toned right down: under the World1 daylight rig the old night-time
+          strength only blew a white hot-spot onto the planks. */}
+      <pointLight position={[1.6, 2.3, 0.3]} intensity={0.35} color="#FFD98A" distance={2.5} />
       {/* Re, 4 Nov 2026: "add more... tigstures and detailsa" — a woven
           welcome mat at the glass door, the small real-world detail every
           late-night store actually has at its threshold. */}
@@ -403,7 +405,7 @@ export default function ConvenienceStoreScene({
           late-night spot without crowding the one learner this room is
           about. See `BackgroundFigure`'s own doc comment on why these are
           generic, never named canon characters. */}
-      <BackgroundFigure x={-2.4} z={0.6} rotY={1.3} toneIndex={1} />
+      <BackgroundFigure x={-2.5} z={-0.1} rotY={1.3} toneIndex={1} />
       <BackgroundFigure x={-1.7} z={1.75} rotY={-0.6} toneIndex={4} scale={0.97} />
     </group>
   );
