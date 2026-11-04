@@ -192,11 +192,19 @@ function FoodCart({ onSelectVocab }: { onSelectVocab: (id: string) => void }) {
           <meshStandardMaterial map={boardWood} color="#6b4a30" roughness={0.8} />
         </mesh>
       </Hotspot>
-      {/* three stools, tucked under the counter's overhang — set back from
-          where Adam and Lina stand (z 1.1) so nothing clips their legs */}
-      {[-1.1, -0.3, 1.1].map((x) => (
-        <mesh key={x} position={[x, 0.25, 1.5]} castShadow>
-          <cylinderGeometry args={[0.18, 0.16, 0.5, 16]} />
+      {/* Two stools, off to the sides of where Adam and Lina stand, clear
+          of the camera's direct line to the characters. Re, 4 Nov 2026:
+          "game looks so bad" — three of these, spread across x -1.1/-0.3/1.1
+          at z=1.5, sat directly in front of the characters, closest to
+          camera, and read as a wall of oversized barrels blocking the shot
+          (moving them back along z barely helped: at this scale and
+          distance they still overlapped the characters' silhouettes
+          dead-on). Two, pushed out to the sides (x ±1.8) and shrunk a
+          little, sit beside the counter the way stools actually would,
+          instead of standing in the way of the one shot everyone sees. */}
+      {[-1.8, 1.8].map((x) => (
+        <mesh key={x} position={[x, 0.21, 0.6]} castShadow>
+          <cylinderGeometry args={[0.15, 0.13, 0.42, 16]} />
           <meshStandardMaterial map={stoolWood} color="#9a7249" roughness={0.8} />
         </mesh>
       ))}
@@ -271,17 +279,22 @@ export default function World2Scene({
           of going flat black — same technique, re-tuned down for dusk
           instead of World1's golden-afternoon brightness (Re, 3 Nov 2026:
           "make the lighting match World1"). */}
-      <hemisphereLight args={["#FFE9CC", "#A08466", 0.45]} />
-      <directionalLight position={[-6, 4, -2]} intensity={0.25} color="#C4D3EC" />
+      {/* Re, 4 Nov 2026: "game looks so bad" — "dusk" was reading as just
+          dark on a normal monitor; a little more fill and key brightness
+          keeps the warm evening mood but actually lets the counter, food
+          props and characters read clearly instead of sinking into the
+          alley's fog. */}
+      <hemisphereLight args={["#FFE9CC", "#A08466", 0.8]} />
+      <directionalLight position={[-6, 4, -2]} intensity={0.42} color="#C4D3EC" />
       <directionalLight
         position={[3, 5, 2.5]}
-        intensity={1.7}
+        intensity={2.4}
         color="#FFCC8E"
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0005}
       />
-      <pointLight position={[0, 2.1, 0.3]} intensity={0.9} color="#FFD24C" distance={4.5} />
+      <pointLight position={[0, 2.1, 0.3]} intensity={1.6} color="#FFD24C" distance={5.5} />
       <Alley />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[16, 16]} />
@@ -310,14 +323,19 @@ export default function World2Scene({
         {/* The companion beside them, pointing at the menu */}
         <Learner avatar={companionAvatar} x={0.5} z={1.1} rotY={Math.PI * 0.65} control={companionControl} />
       </Suspense>
-      {/* Cluby sitting further right and back from Lina (x=0.5, z=1.1) —
-          moved here from x=1.1/z=1.4 after Re flagged that, at some points
-          in SlowOrbit's camera sway, Cluby's round silhouette landed
-          directly over Lina's torso from this room's camera angle, reading
-          as a broken/deformed body rather than two separate characters.
-          This extra separation (Δx 1.1 vs 0.6, Δz 0.8 vs 0.3 before) keeps
-          them visibly apart across the whole orbit range. */}
-      <Cluby x={1.6} y={0.5} z={1.9} />
+      {/* Cluby, left of the counter, clear of both learners and of the
+          camera's near field. Previously on the right (x=1.6, z=1.9,
+          elevated to y=0.5 to sit "on a stool") to keep clear of Lina's
+          torso during SlowOrbit's camera sway — but at z=1.9 it was also
+          the single nearest thing to the old tight camera, so perspective
+          blew it up into an oversized shape overlapping the vocab-card UI
+          (Re, 4 Nov 2026: "game looks so bad"). Moving it to the opposite
+          side entirely (left, away from both the learners on the right and
+          the UI card's own corner) solves the same silhouette-overlap
+          problem without relying on being close to camera, and grounds it
+          like every other room's Cluby instead of floating on an invisible
+          stool. */}
+      <Cluby x={-1.6} y={0} z={1.3} />
     </group>
   );
 }

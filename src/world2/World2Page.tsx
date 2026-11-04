@@ -73,6 +73,17 @@ const ROOMS: Room[] = [
     conceptImage: "/assets/world2/concept-pojangmacha.jpg",
     conceptAlt:
       "Meta Muse Image concept render: Adam and Lina at a lantern-lit Korean street food cart at dusk, with Cluby seated beside them",
+    // Re, 4 Nov 2026: "game looks so bad" — found live on kloversegy.com/world2
+    // that Cluby and the foreground stools sat closer to this camera than
+    // anything else in the shot, so perspective blew them up into oversized,
+    // frame-cropping shapes crowding the characters and the vocab card UI.
+    // Tried pulling the camera back + narrowing the FOV first; it barely
+    // helped (the near props shrink at nearly the same rate as everything
+    // else when they're this close), so the actual fix is in World2Scene.tsx
+    // itself: the stools moved behind the characters (z 1.5→0.85, nested at
+    // the counter instead of standing proud of it) and Cluby moved off to
+    // the side entirely, out of this camera's close foreground. Camera left
+    // at its original framing.
     cameraPosition: [2.6, 1.9, 3.8],
     cameraFov: 42,
     Scene: World2Scene,
