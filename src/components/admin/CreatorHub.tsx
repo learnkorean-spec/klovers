@@ -1201,8 +1201,9 @@ export default function CreatorHub() {
                     { label: "Hashtags / Extra", key: "extraText" as const, rows: 1 },
                   ].map(({ label, key, rows }) => (
                     <div key={key} className="space-y-1">
-                      <label className="text-xs font-semibold">{label}</label>
+                      <label htmlFor={`ch-edit-${key}`} className="text-xs font-semibold">{label}</label>
                       <textarea
+                        id={`ch-edit-${key}`}
                         rows={rows}
                         className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                         value={editDraftText[key]}
