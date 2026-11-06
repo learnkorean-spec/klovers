@@ -13,9 +13,13 @@ export { watercolorMode, type WatercolorMode } from "./styleMode";
  *
  *   wc     the place only (buildings, ground, plants) — inside the canon,
  *          whose environments are "soft painterly storybook"
- *   wcall  the place and the people and Cluby — needs a canon change
- *          (visualSystem.humans is photorealistic today), so it is only a
- *          draft until Re decides
+ *   wcall  the place and the people and Cluby — canon now has a separate
+ *          in-game rule for this (visualSystem.humans.inGame3d: "stylized
+ *          low-poly matching painterly storybook environments", settled
+ *          5 Nov 2026 — only visualSystem.humans.marketing stays
+ *          photorealistic), so a painterly pass on people is canon-
+ *          compatible; still a draft pending its own visual review, not a
+ *          canon blocker anymore
  */
 const VERT_DECL = "varying vec3 vWcPos;\n";
 const VERT_BODY = `

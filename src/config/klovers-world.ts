@@ -19,7 +19,7 @@
  */
 
 export const KLOVERS_WORLD = {
-  version: "1.2",
+  version: "1.3",
 
   corePromise: {
     internal:
@@ -699,8 +699,23 @@ export const KLOVERS_WORLD = {
   },
 
   visualSystem: {
-    humans:
-      "photorealistic_people_with_natural_skin_and_fabric",
+    /**
+     * Re, 5 Nov 2026 — this used to be a single string
+     * ("photorealistic_people_with_natural_skin_and_fabric"), which only
+     * ever matched the marketing imagery (hero photos, icons, trust
+     * badges — see `standingRule` below). It silently contradicted the
+     * in-game 3D human rig (World1/World2's walkable Adam/Lina), which has
+     * always been a stylized low-poly model and could never be true
+     * photorealism in a real-time browser game. Split so the canon states
+     * what's actually shipped in each place, instead of one rule two
+     * products quietly disagree with.
+     */
+    humans: {
+      marketing:
+        "photorealistic_people_with_natural_skin_and_fabric",
+      inGame3d:
+        "stylized_low_poly_matching_painterly_storybook_environments",
+    },
 
     cluby:
       "realistic_cute_3d_plush_with_soft_felt_fur",

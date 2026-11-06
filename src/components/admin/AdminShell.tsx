@@ -29,6 +29,7 @@ import {
   CalendarDays, Users, GraduationCap, Bell, Search, LayoutDashboard,
   ClipboardCheck, Clock, ChevronDown, FileText, Settings, LogOut, RefreshCw,
   CalendarRange, History, Sun, Moon, Mail, Archive, Lock, CalendarPlus, UserPlus,
+  ShieldAlert,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,10 @@ export const ADMIN_NAV: {
     { id: "leads", label: "Leads", to: "/admin?tab=leads", icon: Users },
   ],
   secondary: [
+    // Language Exchange (/exchange) moderation queue. Added 5 Nov 2026 after
+    // a safety audit found exchange_reports had no admin screen at all — see
+    // AdminExchangeReportsPage.tsx's own header comment.
+    { id: "exchange-reports", label: "Exchange reports", to: "/admin/exchange-reports", icon: ShieldAlert },
     // Not a `?tab=` deep link — a route of its own (/admin/week), because the
     // timetable is not a screen inside AdminDashboard.tsx. It reads the four
     // scheduling tables live; see WeekTimetable.tsx.
@@ -109,6 +114,12 @@ export const ADMIN_NAV: {
         { id: "pictures", label: "Pictures", to: "/admin?tab=pictures" },
         { id: "brand", label: "Brand", to: "/admin?tab=brand" },
         { id: "conversation-audio", label: "Book audio", to: "/admin?tab=conversation-audio" },
+        // Hackathon tool: generates a concept room (image + design brief) from
+        // a text theme via Meta's Model API. Admin-only, its own route (not a
+        // ?tab=) since it lives outside AdminDashboard.tsx's <TabsContent>
+        // set — see AiRoomLabPage.tsx. Does not touch the learner-facing
+        // World/World2 or the story canon; a dev still builds any room by hand.
+        { id: "ai-room-lab", label: "AI Room Lab", to: "/admin/ai-room-lab" },
       ],
     },
     {
@@ -220,6 +231,7 @@ const AdminShell = ({
     trials: fetched?.trials,
     enrollments: fetched?.enrollments,
     "teacher-onboarding": fetched?.teacherOnboarding,
+    "exchange-reports": fetched?.exchangeReports,
     ...badges,
   };
   // The admin had no theme control of its own. The only toggle lived in the

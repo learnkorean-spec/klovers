@@ -170,7 +170,17 @@ is deliberately very slow. Rules:
 
 ## 7. Visual style
 
-- **Humans**: photorealistic, natural skin and fabric.
+- **Humans — marketing imagery** (site photos, hero images, icons, trust
+  badges): photorealistic, natural skin and fabric. This is the rule the
+  "Standing rule: the theme is always the real scenes" section below is
+  about.
+- **Humans — in-game 3D character** (World1/World2's walkable Adam/Lina
+  rig): stylized low-poly, matching the "Environments: soft painterly
+  storybook" look below — a real-time browser game can't run a true
+  photorealistic human, so this is the game's own separate visual
+  language, not an exception being quietly allowed. (Settled 5 Nov 2026,
+  after this silently contradicted the shipped game for a while — see
+  `src/config/klovers-world.ts`'s `visualSystem.humans`.)
 - **Cluby**: realistic-cute 3D plush — mint-green, soft felt/fur texture,
   round head, two short butter-yellow horns, pointed ears with pink inner
   ear, warm dark-brown eyes, soft rosy cheeks, two tiny fangs, short mint
