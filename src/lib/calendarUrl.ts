@@ -9,8 +9,18 @@ export function buildGoogleCalendarUrl(params: {
   durationMin: number;
   description: string;
   timezone: string;
+  /**
+   * The actual room the class happens in (Google Meet link, etc). Without
+   * this, the calendar event carries no meeting link of its own — Google
+   * Calendar then shows "Join with Google Meet" and silently mints its OWN
+   * brand-new Meet room when the event is saved, which is NOT the room the
+   * teacher is actually using. That mismatch (calendar link != email link)
+   * is exactly what this field exists to prevent, so always pass it when
+   * a meeting_url is known.
+   */
+  location?: string | null;
 }): string {
-  const { title, date, time, durationMin, description, timezone } = params;
+  const { title, date, time, durationMin, description, timezone, location } = params;
   const [h, m] = time.split(":").map(Number);
   const dateClean = date.replace(/-/g, "");
   const start = `${dateClean}T${String(h).padStart(2, "0")}${String(m).padStart(2, "0")}00`;
@@ -18,13 +28,23 @@ export function buildGoogleCalendarUrl(params: {
   const endM = (m + durationMin) % 60;
   const end = `${dateClean}T${String(endH).padStart(2, "0")}${String(endM).padStart(2, "0")}00`;
 
+  // Put the room in both the description and the location field: `location`
+  // is what Google shows prominently and what most "Join" buttons read, but
+  // some calendar clients (and ICS exports downstream) only surface details.
+  const fullDescription = location && location.trim()
+    ? `${description}\n\nJoin: ${location.trim()}`
+    : description;
+
   const qs = new URLSearchParams({
     action: "TEMPLATE",
     text: title,
     dates: `${start}/${end}`,
-    details: description,
+    details: fullDescription,
     ctz: timezone,
   });
+  if (location && location.trim()) {
+    qs.set("location", location.trim());
+  }
   return `https://calendar.google.com/calendar/render?${qs.toString()}`;
 }
 

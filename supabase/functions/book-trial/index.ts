@@ -77,8 +77,13 @@ function buildCalendarUrl(params: {
   durationMin: number;
   description: string;
   timezone: string;
+  // The real Meet room (trial_slots.meeting_url). Without this the generated
+  // calendar event carries no meeting link, so Google Calendar can mint its
+  // own fresh Meet room on save -- a link that is NOT the one the teacher
+  // actually runs the class from and NOT the one in the confirmation email.
+  location?: string | null;
 }): string {
-  const { title, date, time, durationMin, description, timezone } = params;
+  const { title, date, time, durationMin, description, timezone, location } = params;
   const [h, m] = time.split(":").map(Number);
   // Format: YYYYMMDDTHHmmSS
   const dateClean = date.replace(/-/g, "");
@@ -87,13 +92,20 @@ function buildCalendarUrl(params: {
   const endM = (m + durationMin) % 60;
   const end = `${dateClean}T${String(endH).padStart(2, "0")}${String(endM).padStart(2, "0")}00`;
 
+  const fullDescription = location && location.trim()
+    ? `${description}\n\nJoin: ${location.trim()}`
+    : description;
+
   const params2 = new URLSearchParams({
     action: "TEMPLATE",
     text: title,
     dates: `${start}/${end}`,
-    details: description,
+    details: fullDescription,
     ctz: timezone,
   });
+  if (location && location.trim()) {
+    params2.set("location", location.trim());
+  }
   return `https://calendar.google.com/calendar/render?${params2.toString()}`;
 }
 
@@ -570,6 +582,7 @@ Deno.serve(async (req) => {
       durationMin: slotDurationMin,
       description: `Your free ${slotDurationMin}-min trial Korean class with Klovers Academy.\nLevel: ${level || "Beginner"}\n\nhttps://kloversegy.com`,
       timezone,
+      location: meetingUrl,
     });
     // meetingUrl already resolved from the merged slot query above
 

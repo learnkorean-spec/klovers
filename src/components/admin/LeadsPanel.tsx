@@ -266,7 +266,7 @@ const LeadsPanel: React.FC = () => {
       // 3. Fetch booking details for the email
       const { data: booking } = await supabase
         .from("trial_bookings")
-        .select("trial_date, start_time, timezone, day_of_week")
+        .select("trial_date, start_time, timezone, day_of_week, meeting_url")
         .eq("email", lead.email.toLowerCase())
         .eq("status", "confirmed")
         .order("created_at", { ascending: false })
@@ -283,6 +283,7 @@ const LeadsPanel: React.FC = () => {
           trial_date: booking.trial_date,
           start_time: booking.start_time || "18:00",
           timezone: booking.timezone,
+          meeting_url: (booking as { meeting_url?: string | null }).meeting_url,
         });
       }
 

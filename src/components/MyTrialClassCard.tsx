@@ -19,6 +19,7 @@ interface TrialBookingRow {
   status: "pending" | "confirmed";
   is_tba: boolean | null;
   rollover_status: "pending_notification" | "notified" | null;
+  meeting_url: string | null;
 }
 
 const TRIAL_DURATION_MIN = 45;
@@ -49,7 +50,7 @@ const MyTrialClassCard = () => {
 
       const { data } = await supabase
         .from("trial_bookings")
-        .select("id, trial_date, start_time, timezone, level, status, is_tba, rollover_status")
+        .select("id, trial_date, start_time, timezone, level, status, is_tba, rollover_status, meeting_url")
         .eq("user_id", session.user.id)
         .in("status", ["pending", "confirmed"])
         .order("trial_date", { ascending: true })
@@ -150,6 +151,10 @@ const MyTrialClassCard = () => {
     durationMin: TRIAL_DURATION_MIN,
     description: `Trial class with Klovers Academy.\nLevel: ${booking.level || "Beginner"}\nhttps://kloversegy.com`,
     timezone,
+    // Same room the confirmation email's "Join" link uses — without this the
+    // calendar event has no link of its own and can end up pointing somewhere
+    // else entirely (see src/lib/calendarUrl.ts).
+    location: booking.meeting_url,
   });
 
   return (

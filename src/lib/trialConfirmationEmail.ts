@@ -20,6 +20,12 @@ export async function sendTrialConfirmationEmail(params: {
   start_time: string; // HH:MM
   timezone?: string | null;
   language?: string; // defaults "ar"
+  // The real Meet room for this class (trial_bookings.meeting_url /
+  // trial_slots.meeting_url). Pass it whenever it's known — otherwise the
+  // "Add to Google Calendar" button in this email carries no meeting link,
+  // and the calendar event ends up pointing somewhere other than where the
+  // class actually is.
+  meeting_url?: string | null;
 }): Promise<boolean> {
   if (!TRIAL_CONFIRMATION_EMAIL_ENABLED) return false;
 
@@ -31,6 +37,7 @@ export async function sendTrialConfirmationEmail(params: {
     durationMin: 45,
     description: `Level: ${params.level || "Beginner"}`,
     timezone: tz,
+    location: params.meeting_url,
   });
   const trialDateFormatted = new Date(`${params.trial_date}T00:00:00`).toLocaleDateString("en-US", {
     weekday: "long",

@@ -1685,6 +1685,7 @@ interface TrialSlot {
   start_time: string;
   capacity: number;
   is_active: boolean;
+  meeting_url: string | null;
 }
 
 const DAY_NAMES_SHORT = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -1729,7 +1730,7 @@ const TrialBookingsManager = () => {
     setLoading(true);
     const [bookingsRes, slotsRes] = await Promise.all([
       supabase.from("trial_bookings").select("*").order("created_at", { ascending: false }),
-      supabase.from("trial_slots").select("day_of_week, start_time, capacity, is_active").eq("is_active", true),
+      supabase.from("trial_slots").select("day_of_week, start_time, capacity, is_active, meeting_url").eq("is_active", true),
     ]);
     if (bookingsRes.error) toast({ title: "Error", description: bookingsRes.error.message, variant: "destructive" });
     setBookings((bookingsRes.data as TrialBooking[] | null) || []);
@@ -1745,6 +1746,15 @@ const TrialBookingsManager = () => {
     const [date, dowStr, time] = slotValue.split("|");
     setActioningId(booking.id);
     try {
+      // The chosen day/time identifies a recurring slot, and that slot owns
+      // the real meeting room. Without copying it onto the booking here, the
+      // booking keeps whatever meeting_url it had before (often none), which
+      // is how the confirmation email's calendar link ends up pointing
+      // nowhere — or somewhere Google invents on its own.
+      const matchingSlot = slots.find(
+        (s) => s.day_of_week === Number(dowStr) && s.start_time === time
+      );
+
       // 1. Update trial booking status + assign to selected class date
       const { error: tbErr } = await supabase
         .from("trial_bookings")
@@ -1755,6 +1765,7 @@ const TrialBookingsManager = () => {
           day_of_week: Number(dowStr),
           start_time: time,
           is_tba: false,
+          ...(matchingSlot?.meeting_url ? { meeting_url: matchingSlot.meeting_url } : {}),
         } as any)
         .eq("id", booking.id);
       if (tbErr) throw tbErr;
@@ -1781,6 +1792,7 @@ const TrialBookingsManager = () => {
           trial_date: booking.trial_date,
           start_time: booking.start_time || "18:00",
           timezone: booking.timezone,
+          meeting_url: matchingSlot?.meeting_url ?? undefined,
         });
       } catch (emailErr) {
         console.error("send-confirmation-email failed:", emailErr);
