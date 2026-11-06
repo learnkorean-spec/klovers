@@ -248,6 +248,10 @@ export function generateICS(opts: {
   const end = new Date(start.getTime() + opts.durationMinutes * 60000);
   const fmt = (d: Date) =>
     `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
+  // LOCATION, not just URL: Google Calendar's own event view (and its "Join"
+  // affordance) reads LOCATION, not the VEVENT URL property, so without it
+  // the room this .ics carries can be invisible in the very apps students
+  // actually open it in.
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -259,6 +263,7 @@ export function generateICS(opts: {
     `SUMMARY:${opts.summary}`,
     `DESCRIPTION:${opts.description.replace(/\n/g, "\\n")}`,
     opts.url ? `URL:${opts.url}` : "",
+    opts.url ? `LOCATION:${opts.url}` : "",
     "END:VEVENT",
     "END:VCALENDAR",
   ].filter(Boolean).join("\r\n");

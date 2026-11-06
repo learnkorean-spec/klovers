@@ -48,10 +48,16 @@ export function buildTrialConfirmedEmail(p: EmailPayload) {
     } catch { /* skip if date parse fails */ }
   }
 
+  // One calendar-add path, not two. Offering both the .ics attachment AND a
+  // separate "Add to Google Calendar" button for the same class produces
+  // duplicate events: mail clients (Gmail especially) can auto-import an
+  // attached .ics on their own, and the button creates an independent second
+  // event if anyone clicks it too -- two blocks on the calendar for one
+  // class. So the button is shown only as a fallback, when there is no .ics
+  // to attach at all (e.g. the date failed to parse).
   const calSection = icsAttachment
     ? `<div style="margin: 16px 0; text-align: center;">
         <p style="margin: 0 0 8px; color: ${BRAND_MUTED}; font-size: 13px;">${isAr ? "ملف التقويم (.ics) مرفق بهذه الرسالة، ويضيف الحصة إلى أي تطبيق تقويم (Google وApple وOutlook)" : "A calendar file (.ics) is attached — open it to add your class to Google Calendar, Apple Calendar, or Outlook"}</p>
-        ${p.calendar_url ? `<a href="${p.calendar_url}" style="display: inline-block; background-color: ${BRAND_YELLOW} !important; color: ${BRAND_BLACK} !important; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px;">${isAr ? "أضف إلى Google Calendar" : "Add to Google Calendar"}</a>` : ""}
        </div>`
     : (p.calendar_url
         ? `<div style="margin: 16px 0; text-align: center;">
