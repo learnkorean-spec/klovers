@@ -1410,6 +1410,38 @@ function absoluteUrl(u) {
 }
 
 /**
+ * og:image / twitter:image / og:image:alt / dimensions for one route.
+ *
+ * Pulled out of buildHeadTags (8 Nov 2026) so the image tags can be set
+ * IN PLACE on index.html's existing early placeholders (see the og:title /
+ * og:description replaceLiteral calls below) instead of being stripped and
+ * re-appended just before </head>. The append-at-the-end approach pushed
+ * og:image past roughly byte 15,000 on an average marketing page (canonical,
+ * hreflang and up to three JSON-LD blocks all sit between it and <head>'s
+ * close) — and Facebook's scraper was confirmed (Sharing Debugger: response
+ * code 206, og:url present, og:image absent) to fetch this page with a Range
+ * request that stops short of that offset. The result: the FB share preview
+ * had no image, on an og:image tag that was completely valid and present —
+ * just too late in the document for the crawler's own byte budget. og:title
+ * and og:description already dodged this by being replaced in their early,
+ * original position; og:image/twitter:image now get the same treatment.
+ */
+function imageMetaFor(route) {
+  const isPost = Boolean(route.post);
+  const image = absoluteUrl(isPost ? route.post.heroImage : route.image || null);
+  const imageAlt = isPost && route.post.heroAlt ? route.post.heroAlt : route.imageAlt || SITE_NAME;
+  const imageDims =
+    route.imageWidth && route.imageHeight
+      ? [
+          `  <meta property="og:image:width" content="${attr(route.imageWidth)}" />`,
+          `  <meta property="og:image:height" content="${attr(route.imageHeight)}" />`,
+          `  <meta property="og:image:type" content="image/jpeg" />`,
+        ]
+      : [];
+  return { image, imageAlt, imageDims };
+}
+
+/**
  * A real, server-visible list of every published article, written into the
  * prerendered /blog document.
  *
@@ -1493,25 +1525,12 @@ function buildHeadTags(route) {
   // "Klovers"; a title already naming the brand gets no suffix at all.
   const fullTitle = brandTitle(route.title);
   const description = route.description || "";
-  // route.image is opt-in (only the /journey/:eraId routes set it so far) and
-  // falls back to the same DEFAULT_IMAGE every other marketing route already
-  // got, so this changes nothing for a route that does not set it.
-  const image = absoluteUrl(isPost ? route.post.heroImage : route.image || null);
-  const imageAlt = isPost && route.post.heroAlt ? route.post.heroAlt : route.imageAlt || SITE_NAME;
-  // Dimensions are opt-in per route, like `image` itself. index.html
-  // deliberately ships no og:image:width/height/type because one document is
-  // copied to every route and cannot know each one's size; a route that DOES
-  // know its image can say so here. Without these, Facebook and X reflow the
-  // card when the image finally loads, which is the layout jump the tags exist
-  // to prevent.
-  const imageDims =
-    route.imageWidth && route.imageHeight
-      ? [
-          `  <meta property="og:image:width" content="${attr(route.imageWidth)}" />`,
-          `  <meta property="og:image:height" content="${attr(route.imageHeight)}" />`,
-          `  <meta property="og:image:type" content="image/jpeg" />`,
-        ]
-      : [];
+  // og:image / twitter:image / og:image:alt / dimensions are no longer BUILT
+  // AS TAGS here — see imageMetaFor's docblock; they're set in place on
+  // index.html's own early tags instead of being appended down here. `image`
+  // itself is still needed below, as the JSON-LD `image` field for article /
+  // blog post schema.
+  const { image } = imageMetaFor(route);
 
   // The document's own language, which is also what the <html> element and the
   // article wrapper declare. index.html hardcodes og:locale="en_US" for every
@@ -1522,12 +1541,8 @@ function buildHeadTags(route) {
     `  <link rel="canonical" href="${attr(url)}" />`,
     `  <meta property="og:type" content="${isPost ? "article" : "website"}" />`,
     `  <meta property="og:url" content="${attr(url)}" />`,
-    `  <meta property="og:image" content="${attr(image)}" />`,
-    `  <meta property="og:image:alt" content="${attr(imageAlt)}" />`,
-    ...imageDims,
     `  <meta property="og:locale" content="${ogLocaleOf(lang)}" />`,
     `  <meta name="twitter:card" content="summary_large_image" />`,
-    `  <meta name="twitter:image" content="${attr(image)}" />`,
   ];
 
   // A marketing route with a real translation - today only the homepage pair,
@@ -1802,6 +1817,29 @@ for (const route of routes) {
     /<meta name="twitter:description" content="[^"]*"\s*\/?>/,
     `<meta name="twitter:description" content="${attr(description)}" />`
   );
+  // og:image / twitter:image, replaced in place rather than appended near
+  // </head> — see imageMetaFor's docblock for why this is load-bearing, not
+  // cosmetic: a tag appended at the tail of a long marketing or article head
+  // can land past the byte offset some crawlers (confirmed: Facebook's) cut
+  // their fetch off at, which silently drops the image from the share card
+  // despite the tag being completely valid.
+  {
+    const { image, imageAlt, imageDims } = imageMetaFor(route);
+    html = replaceLiteral(
+      html,
+      /<meta property="og:image" content="[^"]*"\s*\/?>/,
+      [
+        `<meta property="og:image" content="${attr(image)}" />`,
+        `    <meta property="og:image:alt" content="${attr(imageAlt)}" />`,
+        ...imageDims.map((l) => `  ${l}`),
+      ].join("\n")
+    );
+    html = replaceLiteral(
+      html,
+      /<meta name="twitter:image" content="[^"]*"\s*\/?>/,
+      `<meta name="twitter:image" content="${attr(image)}" />`
+    );
+  }
   // A route that must never be indexed (sign-in pages, the 3D world) says so
   // in the static HTML as well, not only after the app boots.
   if (route.noindex) {
@@ -1836,12 +1874,12 @@ for (const route of routes) {
   }
 
   // Drop the placeholders that the base document ships with, so the values
-  // written below are the only ones present.
+  // written below are the only ones present. og:image and twitter:image are
+  // NOT in this list on purpose — they were replaced in place, earlier in
+  // the document, above; stripping them here would delete the only copy.
   html = html.replace(/[ \t]*<meta property="og:type" content="[^"]*"\s*\/?>\n?/g, "");
   html = html.replace(/[ \t]*<meta property="og:url" content="[^"]*"\s*\/?>\n?/g, "");
-  html = html.replace(/[ \t]*<meta property="og:image" content="[^"]*"\s*\/?>\n?/g, "");
   html = html.replace(/[ \t]*<meta name="twitter:card" content="[^"]*"\s*\/?>\n?/g, "");
-  html = html.replace(/[ \t]*<meta name="twitter:image" content="[^"]*"\s*\/?>\n?/g, "");
   // og:locale joins that list. It was the one Open Graph tag left hardcoded,
   // so every Arabic page shipped `en_US`; the alternate shipped `ar_EG`, which
   // is not a value in Facebook's locale enumeration at all. Both are re-emitted
