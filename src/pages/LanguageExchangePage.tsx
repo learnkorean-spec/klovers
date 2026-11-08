@@ -161,7 +161,7 @@ export default function LanguageExchangePage() {
     title: tr("Language Exchange | Klovers", "تبادل اللغة | كلوفرز"),
     description: tr(
       "Find a language exchange partner: set your languages and interests, then swipe through profiles.",
-      "ابحث عن شريك لتبادل اللغة: حدّدي لغاتك واهتماماتك ثم تصفّحي الملفات الشخصية.",
+      "ابحث عن شريك لتبادل اللغة: حدّد لغاتك واهتماماتك ثم تصفّح الملفات الشخصية.",
     ),
     noindex: true,
   });
@@ -212,7 +212,7 @@ export default function LanguageExchangePage() {
           <p className="mt-3 text-muted-foreground">
             {tr(
               "Sign up free to create a profile and find a partner to practice a language with.",
-              "أنشئي حسابًا مجانيًا لإنشاء ملفك الشخصي والعثور على شريك لممارسة اللغة معه.",
+              "أنشئ حسابًا مجانيًا لإنشاء ملفك الشخصي والعثور على شريك لممارسة اللغة معه.",
             )}
           </p>
           <div className="mt-6 flex justify-center gap-3">
@@ -238,7 +238,7 @@ export default function LanguageExchangePage() {
           <p className="mt-2 text-sm text-muted-foreground">
             {tr(
               "Swipe through profiles, match, and practice together.",
-              "تصفّحي الملفات الشخصية، كوّني تطابقًا، ومارسي اللغة معًا.",
+              "تصفّح الملفات الشخصية، وكوّن تطابقًا، ومارس اللغة معًا.",
             )}
           </p>
         </div>
@@ -286,7 +286,7 @@ function NeedsProfileNotice({ tr, onGo }: { tr: (en: string, ar: string) => stri
     <Card>
       <CardContent className="py-10 text-center">
         <p className="text-muted-foreground">
-          {tr("Set up your exchange profile first — it only takes a minute.", "أنشئي ملف التبادل أولًا — الأمر يستغرق دقيقة فقط.")}
+          {tr("Set up your exchange profile first — it only takes a minute.", "أنشئ ملف التبادل أولًا — الأمر يستغرق دقيقة فقط.")}
         </p>
         <Button className="mt-4" onClick={onGo}>
           {tr("Set up my profile", "إعداد ملفي")}
@@ -429,7 +429,7 @@ function DiscoverDeck({
       <Card>
         <CardContent className="py-10 text-center">
           <p className="text-muted-foreground">
-            {tr("No new profiles right now — check back soon.", "لا توجد ملفات جديدة الآن — عودي لاحقًا.")}
+            {tr("No new profiles right now — check back soon.", "لا توجد ملفات جديدة الآن — عد لاحقًا.")}
           </p>
           <Button variant="outline" className="mt-4" onClick={loadQueue}>
             {tr("Refresh", "تحديث")}
@@ -453,7 +453,7 @@ function DiscoverDeck({
       <p className="mt-3 text-center text-xs text-muted-foreground">
         {tr(
           "Keep it safe: never send money, and meet in public first.",
-          "حافظي على سلامتك: لا ترسلي أموالًا أبدًا، والتقي في مكان عام أولًا.",
+          "حافظ على سلامتك: لا ترسل أموالًا أبدًا، والتقِ في مكان عام أولًا.",
         )}
       </p>
 
@@ -464,12 +464,12 @@ function DiscoverDeck({
             <DialogDescription>
               {tr(
                 `You and ${matchedWith?.display_name} both liked each other. Find them in Matches.`,
-                `أنتِ و${matchedWith?.display_name} أعجب كل منكما بالآخر. يمكنك إيجادهما في التطابقات.`,
+                `أنت و${matchedWith?.display_name} أعجب كل منكما بالآخر. يمكنك إيجادهما في التطابقات.`,
               )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-center">
-            <Button onClick={() => setMatchedWith(null)}>{tr("Keep swiping", "تابعي التصفّح")}</Button>
+            <Button onClick={() => setMatchedWith(null)}>{tr("Keep swiping", "تابع التصفّح")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -745,7 +745,7 @@ function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar:
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
-          {tr("No matches yet — keep swiping in Discover.", "لا توجد تطابقات بعد — تابعي التصفّح في اكتشاف.")}
+          {tr("No matches yet — keep swiping in Discover.", "لا توجد تطابقات بعد — تابع التصفّح في اكتشاف.")}
         </CardContent>
       </Card>
     );
@@ -935,7 +935,7 @@ function ChatDialog({
           <DialogDescription>
             {tr(
               "Keep it here on Klovers — meet in public first, and never send money or passwords.",
-              "خلّي التواصل هنا جوه كلوفرز — التقيا في مكان عام أولًا، ولا ترسلا أبدًا أموالًا أو كلمات مرور.",
+              "ليبقَ التواصل هنا داخل كلوفرز — التقيا في مكان عام أولًا، ولا ترسلا أبدًا أموالًا أو كلمات مرور.",
             )}
           </DialogDescription>
         </DialogHeader>
@@ -947,7 +947,7 @@ function ChatDialog({
             </div>
           ) : messages.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              {tr("Say hello 👋", "ابدئي بالسلام 👋")}
+              {tr("Say hello 👋", "ابدأ بالسلام 👋")}
             </p>
           ) : (
             messages.map((m) => {
@@ -977,7 +977,7 @@ function ChatDialog({
                 send();
               }
             }}
-            placeholder={tr("Type a message…", "اكتبي رسالة…")}
+            placeholder={tr("Type a message…", "اكتب رسالة…")}
             maxLength={2000}
             disabled={sending}
           />
@@ -1104,11 +1104,11 @@ function ProfileEditor({
     <div className="space-y-6">
       <Card className="border-[#FFFF00]/40 bg-[#FFFF00]/5">
         <CardContent className="p-4 text-sm">
-          <p className="font-semibold">{tr("Keep it safe", "حافظي على سلامتك")}</p>
+          <p className="font-semibold">{tr("Keep it safe", "حافظ على سلامتك")}</p>
           <p className="mt-1 text-muted-foreground">
             {tr(
               `You must be ${EXCHANGE_MIN_AGE} or older. Never send money or passwords. Meet in a public place first. Report anyone who makes you uncomfortable.`,
-              `يجب أن يكون عمرك ${EXCHANGE_MIN_AGE} عامًا أو أكثر. لا ترسلي أبدًا أموالًا أو كلمات مرور. التقي في مكان عام أولًا. أبلغي عن أي شخص يجعلك تشعرين بعدم الارتياح.`,
+              `يجب أن يكون عمرك ${EXCHANGE_MIN_AGE} عامًا أو أكثر. لا ترسل أبدًا أموالًا أو كلمات مرور. التقِ في مكان عام أولًا. أبلغ عن أي شخص يجعلك تشعر بعدم الارتياح.`,
             )}
           </p>
         </CardContent>
@@ -1119,7 +1119,7 @@ function ProfileEditor({
         <p className="mb-2 text-sm text-muted-foreground">
           {tr(
             "No photo uploads here — pick a character avatar, so Language Exchange stays about learning, not looks.",
-            "لا يوجد رفع صور هنا — اختاري شخصية رمزية، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
+            "لا يوجد رفع صور هنا — اختر شخصية رمزية، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
           )}
         </p>
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-7">
@@ -1163,7 +1163,7 @@ function ProfileEditor({
           </div>
         </div>
         <div>
-          <Label>{tr("Who do you want to practice with?", "مع مين تحبين تمارسي اللغة؟")}</Label>
+          <Label>{tr("Who do you want to practice with?", "مع من تفضّل ممارسة اللغة؟")}</Label>
           <Select
             value={draft.looking_for_gender || "any"}
             onValueChange={(v) => setDraft((d) => ({ ...d, looking_for_gender: v }))}
@@ -1206,19 +1206,19 @@ function ProfileEditor({
       </div>
 
       <div>
-        <Label htmlFor="bio">{tr("About you", "عنكِ")}</Label>
+        <Label htmlFor="bio">{tr("About you", "عنك")}</Label>
         <Textarea
           id="bio"
           value={draft.bio ?? ""}
           onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))}
           maxLength={300}
           rows={3}
-          placeholder={tr("What are you hoping to practice, and how?", "ماذا تأملين أن تمارسي، وكيف؟")}
+          placeholder={tr("What are you hoping to practice, and how?", "ما الذي تودّ ممارسته، وكيف؟")}
         />
       </div>
 
       <div>
-        <Label>{tr("Languages you speak", "اللغات التي تتحدثينها")} *</Label>
+        <Label>{tr("Languages you speak", "اللغات المُتحدَّثة")} *</Label>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {EXCHANGE_LANGUAGES.map((l) => (
             <Badge
@@ -1234,7 +1234,7 @@ function ProfileEditor({
       </div>
 
       <div>
-        <Label>{tr("Languages you're learning", "اللغات التي تتعلمينها")} *</Label>
+        <Label>{tr("Languages you're learning", "اللغات قيد التعلّم")} *</Label>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {EXCHANGE_LANGUAGES.map((l) => (
             <Badge
@@ -1266,7 +1266,7 @@ function ProfileEditor({
       </div>
 
       <div>
-        <Label>{tr("What are you looking for?", "عمّاذا تبحث/ين؟")} *</Label>
+        <Label>{tr("What are you looking for?", "ما الذي تبحث عنه؟")} *</Label>
         <p className="mt-1 text-xs text-muted-foreground">
           {tr(
             `Pick up to ${EXCHANGE_MAX_GOALS} — a study partner, a culture friend, TOPIK prep, or whatever fits.`,
@@ -1288,7 +1288,7 @@ function ProfileEditor({
       </div>
 
       <div>
-        <Label>{tr("When are you free?", "متى تكون/ين متفرغ/ة؟")} *</Label>
+        <Label>{tr("When are you free?", "متى تكون متفرغًا؟")} *</Label>
         <p className="mt-1 text-xs text-muted-foreground">
           {tr(
             `Pick ${EXCHANGE_AVAILABILITY_COUNT} times — this is what your match will see.`,
@@ -1337,7 +1337,7 @@ function ProfileEditor({
       <p className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
         {tr(
           "No WhatsApp or email here on purpose — once you match, you talk through the Klovers chat.",
-          "من غير واتساب ولا إيميل هنا عمدًا — بعد ما تعملي ماتش، التواصل بيبقى من خلال شات كلوفرز.",
+          "لا يوجد واتساب أو بريد إلكتروني هنا عن قصد — بعد إتمام المطابقة، يبقى التواصل عبر محادثة كلوفرز.",
         )}
       </p>
 
@@ -1345,7 +1345,7 @@ function ProfileEditor({
         <div>
           <p className="font-medium">{tr("Visible to others", "ظاهر للآخرين")}</p>
           <p className="text-sm text-muted-foreground">
-            {tr("Turn off to pause being shown in Discover.", "أوقفيه لتجميد ظهورك في اكتشاف.")}
+            {tr("Turn off to pause being shown in Discover.", "أوقفه لتجميد ظهورك في صفحة الاكتشاف.")}
           </p>
         </div>
         <Switch
