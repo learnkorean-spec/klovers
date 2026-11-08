@@ -1537,13 +1537,13 @@ function buildHeadTags(route) {
   // route; it is stripped below and re-emitted here so an Arabic page says so.
   const lang = languageOf(route);
 
-  const tags = [
-    `  <link rel="canonical" href="${attr(url)}" />`,
-    `  <meta property="og:type" content="${isPost ? "article" : "website"}" />`,
-    `  <meta property="og:url" content="${attr(url)}" />`,
-    `  <meta property="og:locale" content="${ogLocaleOf(lang)}" />`,
-    `  <meta name="twitter:card" content="summary_large_image" />`,
-  ];
+  // og:type, og:url, og:locale and twitter:card are no longer built as tags
+  // here — they're replaced in place, earlier in the document, in the main
+  // per-route loop below (next to the og:image/twitter:image replacement).
+  // Only canonical stays part of this late-appended block: index.html has
+  // no early placeholder for it (it's commented out there, intentionally,
+  // since it used to be set per-page by client JS).
+  const tags = [`  <link rel="canonical" href="${attr(url)}" />`];
 
   // A marketing route with a real translation - today only the homepage pair,
   // "/" and "/ar". Same rules as the blog clusters below: the tags are
@@ -1840,6 +1840,35 @@ for (const route of routes) {
       `<meta name="twitter:image" content="${attr(image)}" />`
     );
   }
+  // og:type, og:url, og:locale and twitter:card — same fix, same reason: a
+  // Facebook scrape of this exact page (confirmed via the Sharing Debugger
+  // right after the og:image fix above shipped) reported "Missing
+  // Properties: og:url, og:type" on a page whose truncated fetch this time
+  // happened to cut off a little earlier, before even these three-word
+  // tags. They have ready-made early placeholders in index.html just like
+  // og:title/og:description, so they get the same in-place treatment rather
+  // than being stripped and re-appended at the tail with the JSON-LD blocks.
+  {
+    const isPostRoute = Boolean(route.post);
+    const pageUrl = `${BASE_URL}${isHome ? "/" : route.path}`;
+    html = replaceLiteral(
+      html,
+      /<meta property="og:type" content="[^"]*"\s*\/?>/,
+      `<meta property="og:type" content="${isPostRoute ? "article" : "website"}" />`
+    );
+    html = replaceLiteral(
+      html,
+      /<meta property="og:url" content="[^"]*"\s*\/?>/,
+      `<meta property="og:url" content="${attr(pageUrl)}" />`
+    );
+    html = replaceLiteral(
+      html,
+      /<meta property="og:locale" content="[^"]*"\s*\/?>/,
+      `<meta property="og:locale" content="${ogLocaleOf(languageOf(route))}" />`
+    );
+    // twitter:card's value never varies by route; it only needed moving
+    // because it sat in the same late-appended block as the others.
+  }
   // A route that must never be indexed (sign-in pages, the 3D world) says so
   // in the static HTML as well, not only after the app boots.
   if (route.noindex) {
@@ -1874,17 +1903,15 @@ for (const route of routes) {
   }
 
   // Drop the placeholders that the base document ships with, so the values
-  // written below are the only ones present. og:image and twitter:image are
-  // NOT in this list on purpose — they were replaced in place, earlier in
-  // the document, above; stripping them here would delete the only copy.
-  html = html.replace(/[ \t]*<meta property="og:type" content="[^"]*"\s*\/?>\n?/g, "");
-  html = html.replace(/[ \t]*<meta property="og:url" content="[^"]*"\s*\/?>\n?/g, "");
-  html = html.replace(/[ \t]*<meta name="twitter:card" content="[^"]*"\s*\/?>\n?/g, "");
-  // og:locale joins that list. It was the one Open Graph tag left hardcoded,
-  // so every Arabic page shipped `en_US`; the alternate shipped `ar_EG`, which
-  // is not a value in Facebook's locale enumeration at all. Both are re-emitted
-  // per route by buildHeadTags — the alternate only where a translation exists.
-  html = html.replace(/[ \t]*<meta property="og:locale" content="[^"]*"\s*\/?>\n?/g, "");
+  // written below are the only ones present. og:image, twitter:image,
+  // og:type, og:url, og:locale and twitter:card are NOT in this list on
+  // purpose — they were all replaced in place, earlier in the document,
+  // above; stripping them here would delete their only copy.
+  //
+  // og:locale:alternate is the one still handled this way: it's genuinely
+  // conditional (only pages with a published translation get it; index.html
+  // ships it unconditionally), so it's still stripped here and re-emitted,
+  // only where it applies, by buildHeadTags below.
   html = html.replace(/[ \t]*<meta property="og:locale:alternate" content="[^"]*"\s*\/?>\n?/g, "");
 
   // The largest of these by far: buildHeadTags returns the canonical, every OG
