@@ -163,6 +163,20 @@ function ExchangeAppNav({ isAr }: { isAr: boolean }) {
 function ExchangeAmbientGlow() {
   return (
     <>
+      {/* Keyframes for the swipe-deck + match-celebration polish (9 Nov 2026,
+          Re: "upscale and make it attractive and interactive"). Scoped by
+          name, not by selector, so this is safe to inject from both the
+          signed-in and signed-out branches below without clashing. */}
+      <style>{`
+        @keyframes pm-pop-in { 0% { opacity: 0; transform: scale(0.82); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes pm-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes pm-heart-beat { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.18); } 45% { transform: scale(0.96); } 65% { transform: scale(1.08); } }
+        @keyframes pm-ring-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,62,165,0.45); } 100% { box-shadow: 0 0 0 16px rgba(255,62,165,0); } }
+        .pm-animate-pop { animation: pm-pop-in 0.35s cubic-bezier(0.2,0.8,0.2,1) both; }
+        .pm-animate-float { animation: pm-float 3.2s ease-in-out infinite; }
+        .pm-animate-heartbeat { animation: pm-heart-beat 1.1s ease-in-out infinite; }
+        .pm-animate-ring { animation: pm-ring-pulse 1.6s ease-out infinite; }
+      `}</style>
       <div className="pointer-events-none fixed -top-24 right-[-120px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,62,165,0.22),transparent_70%)] blur-xl" />
       <div className="pointer-events-none fixed top-[420px] left-[-160px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.16),transparent_70%)] blur-xl" />
     </>
@@ -291,10 +305,20 @@ export default function LanguageExchangePage() {
         </div>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="discover">{tr("Discover", "اكتشاف")}</TabsTrigger>
-            <TabsTrigger value="matches">{tr("Matches", "التطابقات")}</TabsTrigger>
-            <TabsTrigger value="profile">{tr("My Profile", "ملفي")}</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 rounded-full border border-white/[0.08] bg-white/[0.04] p-1.5">
+            {([
+              ["discover", tr("Discover", "اكتشاف")],
+              ["matches", tr("Matches", "التطابقات")],
+              ["profile", tr("My Profile", "ملفي")],
+            ] as const).map(([value, label]) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="rounded-full font-bold transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF3EA5] data-[state=active]:to-[#8B5CF6] data-[state=active]:text-white data-[state=active]:shadow-[0_4px_16px_-4px_rgba(255,62,165,0.6)]"
+              >
+                {label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
           <TabsContent value="discover" className="mt-6">
@@ -514,7 +538,9 @@ function DiscoverDeck({
   return (
     <div>
       <SwipeCard
+        key={current.user_id}
         profile={current}
+        nextProfiles={queue.slice(1, 3)}
         isAr={isAr}
         tr={tr}
         disabled={acting}
@@ -530,9 +556,22 @@ function DiscoverDeck({
       </p>
 
       <Dialog open={!!matchedWith} onOpenChange={(open) => !open && setMatchedWith(null)}>
-        <DialogContent className="dark pm-night text-center">
+        <DialogContent className="dark pm-night overflow-hidden text-center">
+          <div className="pm-animate-pop">
+            <div className="relative mx-auto mb-2 flex h-24 w-32 items-center justify-center">
+              <div className="absolute left-0 h-20 w-20 overflow-hidden rounded-full border-2 border-[#FF3EA5] bg-[#171329] shadow-[0_0_24px_rgba(255,62,165,0.5)]">
+                <ExchangeAvatar avatarUrl={myProfile.avatar_url} name={tr("You", "أنت")} className="flex h-full w-full items-center justify-center" />
+              </div>
+              <div className="absolute right-0 h-20 w-20 overflow-hidden rounded-full border-2 border-[#8B5CF6] bg-[#171329] shadow-[0_0_24px_rgba(139,92,246,0.5)]">
+                <ExchangeAvatar avatarUrl={matchedWith?.avatar_url ?? null} name={matchedWith?.display_name ?? ""} className="flex h-full w-full items-center justify-center" />
+              </div>
+              <div className="pm-animate-heartbeat relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#FF3EA5] to-[#8B5CF6] shadow-[0_0_0_4px_#171329]">
+                <Heart className="h-4 w-4 fill-white text-white" />
+              </div>
+            </div>
+          </div>
           <DialogHeader>
-            <DialogTitle className="text-2xl">{tr("It's a match! 🎉", "لقد تطابقتما! 🎉")}</DialogTitle>
+            <DialogTitle className="pm-animate-pop text-2xl">{tr("It's a match! 🎉", "لقد تطابقتما! 🎉")}</DialogTitle>
             <DialogDescription>
               {tr(
                 `You and ${matchedWith?.display_name} both liked each other. Find them in Matches.`,
@@ -541,7 +580,12 @@ function DiscoverDeck({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-center">
-            <Button onClick={() => setMatchedWith(null)}>{tr("Keep swiping", "تابع التصفّح")}</Button>
+            <Button
+              className="rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] font-bold text-white hover:opacity-90"
+              onClick={() => setMatchedWith(null)}
+            >
+              {tr("Keep swiping", "تابع التصفّح")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -558,6 +602,7 @@ function DiscoverDeck({
 
 function SwipeCard({
   profile,
+  nextProfiles,
   isAr,
   tr,
   disabled,
@@ -566,6 +611,7 @@ function SwipeCard({
   onReport,
 }: {
   profile: ExchangeProfileRow;
+  nextProfiles?: ExchangeProfileRow[];
   isAr: boolean;
   tr: (en: string, ar: string) => string;
   disabled: boolean;
@@ -576,15 +622,38 @@ function SwipeCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<{ startX: number; dragging: boolean } | null>(null);
   const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  // Exit animation (9 Nov 2026, Re: "make it attractive and interactive") —
+  // the card now flies off screen on like/pass, whether triggered by drag
+  // release or by tapping a button, instead of just vanishing. The real
+  // onLike/onPass (which writes the swipe row) fires after the animation so
+  // the deck below only advances once the card has actually left.
+  const [exiting, setExiting] = useState<"like" | "pass" | null>(null);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (exitTimer.current) clearTimeout(exitTimer.current);
+  }, []);
+
+  const triggerExit = (direction: "like" | "pass") => {
+    if (disabled || exiting) return;
+    setExiting(direction);
+    exitTimer.current = setTimeout(() => {
+      if (direction === "like") onLike();
+      else onPass();
+    }, 260);
+  };
 
   const resetDrag = () => {
     setDragX(0);
+    setDragging(false);
     dragState.current = null;
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if (disabled) return;
+    if (disabled || exiting) return;
     dragState.current = { startX: e.clientX, dragging: true };
+    setDragging(true);
     cardRef.current?.setPointerCapture(e.pointerId);
   };
 
@@ -596,135 +665,173 @@ function SwipeCard({
   const onPointerUp = () => {
     if (!dragState.current?.dragging) return;
     const threshold = 110;
-    if (dragX > threshold) onLike();
-    else if (dragX < -threshold) onPass();
-    resetDrag();
+    if (dragX > threshold) triggerExit("like");
+    else if (dragX < -threshold) triggerExit("pass");
+    else resetDrag();
   };
 
-  const rotation = Math.max(-12, Math.min(12, dragX / 12));
-  const likeOpacity = Math.min(1, Math.max(0, dragX / 100));
-  const passOpacity = Math.min(1, Math.max(0, -dragX / 100));
+  // While actively dragging the card tracks the pointer 1:1 with no easing;
+  // once released (either springing back or flying off), a transition takes
+  // over so both motions feel physical instead of snapping.
+  const exitX = exiting === "like" ? 560 : exiting === "pass" ? -560 : 0;
+  const effectiveX = exiting ? exitX : dragX;
+  const rotation = Math.max(-14, Math.min(14, effectiveX / 11));
+  const likeOpacity = Math.min(1, Math.max(0, effectiveX / 100));
+  const passOpacity = Math.min(1, Math.max(0, -effectiveX / 100));
 
   return (
     <div>
-      <div
-        ref={cardRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={resetDrag}
-        style={{ transform: `translateX(${dragX}px) rotate(${rotation}deg)`, touchAction: "pan-y" }}
-        className="relative cursor-grab select-none active:cursor-grabbing transition-transform"
-      >
-        <Card className="overflow-hidden">
-          <div className="relative h-72 w-full bg-muted">
-            <ExchangeAvatar avatarUrl={profile.avatar_url} name={profile.display_name} className="flex h-full w-full items-center justify-center" />
+      <div className="relative" style={{ perspective: 800 }}>
+        {/* Stacked next-up cards, peeking out from behind the current one so
+            the deck reads as a deck rather than a single flat card. Reversed
+            so the 2nd-next renders first (further back, lower z-index) and
+            the very-next renders last (closer to the top card). */}
+        {[...(nextProfiles ?? []).slice(0, 2)].reverse().map((p, reversedIndex) => {
+          const distanceFromTop = (nextProfiles ?? []).slice(0, 2).length - reversedIndex; // 1 = next card, 2 = one further back
+          return (
             <div
-              className="absolute top-5 rounded-xl border-4 border-green-500 px-3 py-1 text-xl font-black text-green-500 rotate-[-12deg]"
-              style={{ insetInlineStart: 16, opacity: likeOpacity }}
+              key={p.user_id}
+              aria-hidden
+              className="pm-animate-pop pointer-events-none absolute inset-0 select-none"
+              style={{
+                transform: `translateY(${distanceFromTop * 10}px) scale(${1 - distanceFromTop * 0.04})`,
+                opacity: 1 - distanceFromTop * 0.28,
+                zIndex: -distanceFromTop,
+                animationDelay: `${reversedIndex * 40}ms`,
+              }}
             >
-              {tr("LIKE", "إعجاب")}
+              <Card className="h-full overflow-hidden border-white/[0.06] shadow-[0_12px_40px_-16px_rgba(139,92,246,0.35)]">
+                <div className="h-72 w-full bg-muted" />
+              </Card>
             </div>
-            <div
-              className="absolute top-5 rounded-xl border-4 border-red-500 px-3 py-1 text-xl font-black text-red-500 rotate-[12deg]"
-              style={{ insetInlineEnd: 16, opacity: passOpacity }}
-            >
-              {tr("PASS", "تخطّي")}
-            </div>
-          </div>
-          <CardContent className="p-5">
-            <div className="flex items-baseline justify-between gap-2">
-              <h2 className="text-xl font-bold">
-                {profile.display_name}
-                {profile.age ? <span className="ms-2 font-normal text-muted-foreground">{profile.age}</span> : null}
-                {profile.gender ? (
-                  <span className="ms-2 align-middle text-xs font-normal text-muted-foreground">
-                    · {genderLabel(profile.gender, isAr ? "ar" : "en")}
-                  </span>
-                ) : null}
-              </h2>
-              <button
-                type="button"
-                onClick={onReport}
-                className="shrink-0 text-muted-foreground hover:text-destructive"
-                aria-label={tr("Report", "إبلاغ")}
+          );
+        })}
+
+        <div
+          ref={cardRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={resetDrag}
+          style={{
+            transform: `translateX(${effectiveX}px) rotate(${rotation}deg)`,
+            touchAction: "pan-y",
+            transition: dragging ? "none" : "transform 0.32s cubic-bezier(0.2,0.8,0.2,1)",
+            opacity: exiting ? 0.2 : 1,
+          }}
+          className="relative cursor-grab select-none active:cursor-grabbing"
+        >
+          <Card className="overflow-hidden border-white/[0.08] shadow-[0_0_0_1px_rgba(255,62,165,0.18),0_24px_60px_-20px_rgba(139,92,246,0.5)]">
+            <div className="relative h-72 w-full bg-muted">
+              <ExchangeAvatar avatarUrl={profile.avatar_url} name={profile.display_name} className="flex h-full w-full items-center justify-center" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent" />
+              <div
+                className="absolute top-5 rounded-xl border-4 border-[#22D3EE] px-3 py-1 text-xl font-black text-[#22D3EE] rotate-[-12deg]"
+                style={{ insetInlineStart: 16, opacity: likeOpacity }}
               >
-                <ShieldAlert className="h-5 w-5" />
-              </button>
+                {tr("LIKE", "إعجاب")}
+              </div>
+              <div
+                className="absolute top-5 rounded-xl border-4 border-[#FF3EA5] px-3 py-1 text-xl font-black text-[#FF3EA5] rotate-[12deg]"
+                style={{ insetInlineEnd: 16, opacity: passOpacity }}
+              >
+                {tr("PASS", "تخطّي")}
+              </div>
             </div>
-
-            {(profile.native_languages?.length || profile.learning_languages?.length) ? (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {profile.native_languages?.length ? (
-                  <>
-                    {tr("Speaks", "تتحدث")}{" "}
-                    {profile.native_languages.map((c) => languageLabel(c, isAr ? "ar" : "en")).join(", ")}
-                  </>
-                ) : null}
-                {profile.native_languages?.length && profile.learning_languages?.length ? " · " : ""}
-                {profile.learning_languages?.length ? (
-                  <>
-                    {tr("Learning", "تتعلم")}{" "}
-                    {profile.learning_languages.map((c) => languageLabel(c, isAr ? "ar" : "en")).join(", ")}
-                  </>
-                ) : null}
-              </p>
-            ) : null}
-
-            {profile.bio ? <p className="mt-3 text-sm">{profile.bio}</p> : null}
-
-            {profile.goals?.length ? (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {profile.goals.map((k) => (
-                  <Badge key={k} className="bg-[#8B5CF6] text-white hover:bg-[#8B5CF6]">
-                    {goalLabel(k, isAr ? "ar" : "en")}
-                  </Badge>
-                ))}
+            <CardContent className="p-5">
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 className="text-xl font-bold">
+                  {profile.display_name}
+                  {profile.age ? <span className="ms-2 font-normal text-muted-foreground">{profile.age}</span> : null}
+                  {profile.gender ? (
+                    <span className="ms-2 align-middle text-xs font-normal text-muted-foreground">
+                      · {genderLabel(profile.gender, isAr ? "ar" : "en")}
+                    </span>
+                  ) : null}
+                </h2>
+                <button
+                  type="button"
+                  onClick={onReport}
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                  aria-label={tr("Report", "إبلاغ")}
+                >
+                  <ShieldAlert className="h-5 w-5" />
+                </button>
               </div>
-            ) : null}
 
-            {profile.interests?.length ? (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {profile.interests.map((k) => (
-                  <Badge key={k} variant="secondary">
-                    {interestLabel(k, isAr ? "ar" : "en")}
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
+              {(profile.native_languages?.length || profile.learning_languages?.length) ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {profile.native_languages?.length ? (
+                    <>
+                      {tr("Speaks", "تتحدث")}{" "}
+                      {profile.native_languages.map((c) => languageLabel(c, isAr ? "ar" : "en")).join(", ")}
+                    </>
+                  ) : null}
+                  {profile.native_languages?.length && profile.learning_languages?.length ? " · " : ""}
+                  {profile.learning_languages?.length ? (
+                    <>
+                      {tr("Learning", "تتعلم")}{" "}
+                      {profile.learning_languages.map((c) => languageLabel(c, isAr ? "ar" : "en")).join(", ")}
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
 
-            {profile.availability_slots?.length ? (
-              <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4 shrink-0" />
-                {profile.availability_slots
-                  .map((s) => formatAvailabilitySlot(s, isAr ? "ar" : "en"))
-                  .join(isAr ? "، " : ", ")}
-                {profile.timezone ? ` (${shortTimezoneLabel(profile.timezone)})` : ""}
-              </p>
-            ) : null}
-          </CardContent>
-        </Card>
+              {profile.bio ? <p className="mt-3 text-sm">{profile.bio}</p> : null}
+
+              {profile.goals?.length ? (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {profile.goals.map((k) => (
+                    <Badge key={k} className="bg-[#8B5CF6] text-white hover:bg-[#8B5CF6]">
+                      {goalLabel(k, isAr ? "ar" : "en")}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+
+              {profile.interests?.length ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {profile.interests.map((k) => (
+                    <Badge key={k} variant="secondary">
+                      {interestLabel(k, isAr ? "ar" : "en")}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+
+              {profile.availability_slots?.length ? (
+                <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  {profile.availability_slots
+                    .map((s) => formatAvailabilitySlot(s, isAr ? "ar" : "en"))
+                    .join(isAr ? "، " : ", ")}
+                  {profile.timezone ? ` (${shortTimezoneLabel(profile.timezone)})` : ""}
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div className="mt-5 flex justify-center gap-6">
         <Button
           size="icon"
           variant="outline"
-          className="h-14 w-14 rounded-full border-red-300 text-red-500 hover:bg-red-50"
-          onClick={onPass}
-          disabled={disabled}
+          className="h-14 w-14 rounded-full border-2 border-[#FF3EA5]/50 bg-white/[0.03] text-[#FF3EA5] transition hover:-translate-y-0.5 hover:bg-[#FF3EA5]/10 active:scale-90"
+          onClick={() => triggerExit("pass")}
+          disabled={disabled || !!exiting}
           aria-label={tr("Pass", "تخطّي")}
         >
           <X className="h-6 w-6" />
         </Button>
         <Button
           size="icon"
-          className="h-14 w-14 rounded-full bg-green-500 text-white hover:bg-green-600"
-          onClick={onLike}
-          disabled={disabled}
+          className="h-16 w-16 rounded-full bg-gradient-to-br from-[#FF3EA5] to-[#8B5CF6] text-white shadow-[0_8px_24px_-6px_rgba(255,62,165,0.6)] transition hover:-translate-y-0.5 hover:brightness-110 active:scale-90"
+          onClick={() => triggerExit("like")}
+          disabled={disabled || !!exiting}
           aria-label={tr("Like", "إعجاب")}
         >
-          <Heart className="h-6 w-6" />
+          <Heart className="h-7 w-7 fill-white" />
         </Button>
       </div>
     </div>

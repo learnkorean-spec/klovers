@@ -90,7 +90,20 @@ const PolyglotMatchLandingPage = () => {
         .pm-grad-text {
           background: linear-gradient(90deg,#FF3EA5,#8B5CF6,#22D3EE);
           -webkit-background-clip: text; background-clip: text; color: transparent;
+          background-size: 200% auto;
+          animation: pm-grad-shift 6s ease-in-out infinite;
         }
+        @keyframes pm-grad-shift { 0%, 100% { background-position: 0% center; } 50% { background-position: 100% center; } }
+        @keyframes pm-fade-up { 0% { opacity: 0; transform: translateY(14px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes pm-float { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-10px) rotate(1.5deg); } }
+        .pm-fade-up { animation: pm-fade-up 0.6s cubic-bezier(0.2,0.8,0.2,1) both; }
+        .pm-float { animation: pm-float 5s ease-in-out infinite; }
+        .pm-hero-card { transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1); }
+        .pm-hero-card:hover { transform: scale(1.035) rotate(0deg) !important; animation-play-state: paused; }
+        .pm-step-card { transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
+        .pm-step-card:hover { transform: translateY(-6px); border-color: rgba(255,62,165,0.4); box-shadow: 0 20px 40px -20px rgba(139,92,246,0.5); }
+        .pm-pill { transition: transform 0.2s ease, background-color 0.2s ease; }
+        .pm-pill:hover { transform: translateY(-2px); background-color: rgba(255,255,255,0.1); }
       `}</style>
 
       {/* ambient glow */}
@@ -122,10 +135,10 @@ const PolyglotMatchLandingPage = () => {
       {/* HERO */}
       <div className="relative mx-auto flex max-w-6xl flex-wrap items-center gap-14 px-6 pb-24 pt-8">
         <div className="min-w-0 flex-[999_1_420px]">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[13px] font-bold text-[#D9D4F0]">
+          <span className="pm-fade-up inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[13px] font-bold text-[#D9D4F0]">
             ⚡ {isAr ? "تطابق فوري" : "Instant matching"}
           </span>
-          <h1 className="pm-display mt-6 text-[36px] font-bold leading-[1.1] sm:text-[52px]">
+          <h1 className="pm-display pm-fade-up mt-6 text-[36px] font-bold leading-[1.1] sm:text-[52px]" style={{ animationDelay: "80ms" }}>
             {isAr ? (
               <>
                 اسحب. تطابق.
@@ -140,21 +153,21 @@ const PolyglotMatchLandingPage = () => {
               </>
             )}
           </h1>
-          <p className="mt-6 max-w-[520px] text-[19px] leading-[1.8] text-[#C3BEDB]">
+          <p className="pm-fade-up mt-6 max-w-[520px] text-[19px] leading-[1.8] text-[#C3BEDB]" style={{ animationDelay: "160ms" }}>
             {isAr
               ? "أسرع طريقة تلاقي فيها شريك تبادل لغوي يناسبك فعلًا — اسحب يمينًا، كوّن تطابقًا، وابدأ الدردشة فورًا داخل كلوفرز."
               : "The fastest way to find a language-exchange partner who actually fits — swipe right, get a match, and start chatting instantly inside Klovers."}
           </p>
-          <div className="mt-8 flex flex-wrap gap-3.5">
+          <div className="pm-fade-up mt-8 flex flex-wrap gap-3.5" style={{ animationDelay: "240ms" }}>
             <Link
               to="/exchange/app"
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-8 py-4 text-[17px] font-bold text-white transition hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-8 py-4 text-[17px] font-bold text-white transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-10px_rgba(255,62,165,0.6)]"
             >
               {isAr ? "جرّب الآن — مجانًا" : "Try it now — free"}
             </Link>
             <a
               href="#safety"
-              className="inline-flex items-center justify-center rounded-full border-2 border-white/35 px-8 py-4 text-[17px] font-bold text-[#F3F1FA] transition hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center rounded-full border-2 border-white/35 px-8 py-4 text-[17px] font-bold text-[#F3F1FA] transition hover:-translate-y-0.5 hover:border-white/60"
             >
               {isAr ? "آمن بتصميمه" : "Safe by design"}
             </a>
@@ -162,7 +175,7 @@ const PolyglotMatchLandingPage = () => {
         </div>
 
         <div className="flex min-w-[280px] flex-1 justify-center">
-          <div className="w-full max-w-[340px] overflow-hidden rounded-[22px] border border-white/[0.08] bg-[#171329] shadow-[0_0_0_1px_rgba(255,62,165,0.25),0_20px_60px_-20px_rgba(139,92,246,0.45)]">
+          <div className="pm-float pm-hero-card w-full max-w-[340px] overflow-hidden rounded-[22px] border border-white/[0.08] bg-[#171329] shadow-[0_0_0_1px_rgba(255,62,165,0.25),0_20px_60px_-20px_rgba(139,92,246,0.45)]">
             <div className="flex h-[220px] items-center justify-center bg-gradient-to-br from-[#2A1F4D] via-[#512A6B] to-[#8B5CF6] text-6xl">
               🎧
             </div>
@@ -175,14 +188,15 @@ const PolyglotMatchLandingPage = () => {
                   </div>
                 </div>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#22D3EE]/30 bg-[#22D3EE]/10 px-3 py-1 text-[13px] font-bold text-[#7CE4F5]">
+                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#22D3EE]" />
                   {isAr ? "متصلة الآن" : "Online now"}
                 </span>
               </div>
               <div className="mt-5 flex gap-3">
-                <div className="flex flex-1 items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-3.5">
+                <div className="flex flex-1 items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-3.5 transition hover:-translate-y-0.5 hover:border-[#FF3EA5]/40 hover:bg-[#FF3EA5]/10">
                   <X className="h-5 w-5" />
                 </div>
-                <div className="flex flex-1 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] py-3.5">
+                <div className="flex flex-1 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] py-3.5 transition hover:-translate-y-0.5 hover:brightness-110">
                   <Heart className="h-5 w-5 fill-white" />
                 </div>
               </div>
@@ -197,7 +211,7 @@ const PolyglotMatchLandingPage = () => {
           ? ["🎭 شخصيات رمزية فقط — بدون صور", "🔒 محادثة مشفّرة داخل التطبيق", "🔞 16+ وإبلاغ بضغطة واحدة"]
           : ["🎭 Avatars only — no photos", "🔒 Encrypted in-app chat", "🔞 16+ with one-tap reporting"]
         ).map((pill) => (
-          <span key={pill} className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[13px] font-bold text-[#D9D4F0]">
+          <span key={pill} className="pm-pill rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[13px] font-bold text-[#D9D4F0]">
             {pill}
           </span>
         ))}
@@ -209,8 +223,12 @@ const PolyglotMatchLandingPage = () => {
           {isAr ? "ثلاث خطوات لماتش اليوم" : "Three steps to a match today"}
         </h2>
         <div className="grid gap-5 sm:grid-cols-3">
-          {steps.map((s) => (
-            <div key={s.title} className="rounded-[22px] border border-white/[0.08] bg-[#171329] p-7">
+          {steps.map((s, i) => (
+            <div
+              key={s.title}
+              className="pm-step-card pm-fade-up rounded-[22px] border border-white/[0.08] bg-[#171329] p-7"
+              style={{ animationDelay: `${i * 100}ms` }}
+            >
               <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${s.grad} font-extrabold`}>
                 {isAr ? s.n : s.nEn}
               </div>
@@ -232,7 +250,10 @@ const PolyglotMatchLandingPage = () => {
           </h2>
           <div className="grid gap-4 text-start sm:grid-cols-2">
             {safety.map((item) => (
-              <div key={item} className="rounded-[22px] border border-white/[0.08] bg-[#171329] p-5 flex items-center gap-3">
+              <div
+                key={item}
+                className="pm-step-card rounded-[22px] border border-white/[0.08] bg-[#171329] p-5 flex items-center gap-3"
+              >
                 <Lock className="h-4 w-4 shrink-0 text-[#A79FC9]" />
                 <span className="text-[15px]">{item}</span>
               </div>
@@ -252,7 +273,7 @@ const PolyglotMatchLandingPage = () => {
         </p>
         <Link
           to="/exchange/app"
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-12 py-[18px] text-[19px] font-bold text-white transition hover:-translate-y-0.5"
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-12 py-[18px] text-[19px] font-bold text-white transition hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-12px_rgba(255,62,165,0.7)]"
         >
           <Sparkles className="h-5 w-5" />
           {isAr ? "ابدأ التطابق الآن" : "Start matching now"}
