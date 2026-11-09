@@ -100,17 +100,17 @@ const PolyglotMatchLandingPage = () => {
       {/* NAV — pinned ltr so the logo always sits on the left, even in the
           Arabic/RTL layout (brand mark position shouldn't flip). */}
       <div dir="ltr" className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-7">
-        <div className="flex items-center gap-2.5">
+        <Link to={isAr ? "/ar" : "/"} className="flex items-center gap-2.5" aria-label={isAr ? "العودة إلى كلوفرز" : "Back to Klovers"}>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF3EA5] to-[#8B5CF6] text-lg font-extrabold">
             P
           </div>
           <div className="flex flex-col leading-tight">
             <span className="pm-display text-[19px] font-extrabold tracking-tight">PolyglotMatch</span>
-            <span className="text-[11px] font-semibold text-[#A79FC9]">
+            <span className="text-[11px] font-semibold text-[#A79FC9] hover:text-[#F3F1FA] transition">
               {isAr ? "من كلوفرز · by Klovers" : "by Klovers"}
             </span>
           </div>
-        </div>
+        </Link>
         <Link
           to="/exchange/app"
           className="rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-5 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5"
