@@ -94,7 +94,17 @@ export const goalLabel = (key: string, lang: "en" | "ar"): string =>
   EXCHANGE_GOALS.find((g) => g.key === key)?.[lang] ?? key;
 
 export const EXCHANGE_MAX_GOALS = 3;
-export const EXCHANGE_AVAILABILITY_COUNT = 2;
+/**
+ * Availability slots: require at least MIN, offer up to MAX pickers.
+ * Was a fixed EXCHANGE_AVAILABILITY_COUNT = 2 (exactly 2, no more) — raised
+ * to a 2-4 range on 2026-11-09 since requiring exactly 2 and only 2 was
+ * unnecessarily tight for scheduling a match. Server-side cap is
+ * supabase/migrations/20261104020000_exchange_goals_and_availability.sql's
+ * `cardinality(availability_slots) <= N` check, raised to match in
+ * 20261109000000_raise_exchange_availability_slots_cap.sql.
+ */
+export const EXCHANGE_AVAILABILITY_MIN = 2;
+export const EXCHANGE_AVAILABILITY_MAX = 4;
 
 /**
  * Own gender and who a profile wants to practice with (Re's request,
