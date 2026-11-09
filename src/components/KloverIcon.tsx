@@ -66,6 +66,7 @@ export type KloverIconName =
   // used only for the Game Worlds section headers — not the disc-and-drawing set above:
   | "world-hangul-village"
   | "world-vocab-market"
+  | "world-conversation-cafe"
   // Drawn from the 1024px icon library (public/assets/icons/library):
   | "reward-gift";
 
