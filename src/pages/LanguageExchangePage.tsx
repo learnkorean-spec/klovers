@@ -142,7 +142,7 @@ interface ExchangeProfileRow {
 // shadcn component here (Tabs, Card, etc.) picks up its dark palette.
 function ExchangeAppNav({ isAr }: { isAr: boolean }) {
   return (
-    <div dir="ltr" className="mx-auto flex max-w-2xl items-center justify-between px-4 py-5">
+    <div dir="ltr" className="relative mx-auto flex max-w-3xl items-center justify-between px-4 py-5">
       <Link to="/exchange" className="flex items-center gap-2" aria-label={isAr ? "العودة إلى PolyglotMatch" : "Back to PolyglotMatch"}>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF3EA5] to-[#8B5CF6] text-sm font-extrabold text-white">
           P
@@ -153,6 +153,19 @@ function ExchangeAppNav({ isAr }: { isAr: boolean }) {
         {isAr ? "من كلوفرز" : "by Klovers"}
       </span>
     </div>
+  );
+}
+
+// The same two blurred radial-gradient blobs PolyglotMatchLandingPage uses,
+// so a wide viewport doesn't just show a narrow centered column on a flat
+// black void (Re, 9 Nov 2026: "must look good for wide screen"). `fixed` so
+// it covers the viewport regardless of page scroll height or content width.
+function ExchangeAmbientGlow() {
+  return (
+    <>
+      <div className="pointer-events-none fixed -top-24 right-[-120px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,62,165,0.22),transparent_70%)] blur-xl" />
+      <div className="pointer-events-none fixed top-[420px] left-[-160px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.16),transparent_70%)] blur-xl" />
+    </>
   );
 }
 
@@ -234,9 +247,10 @@ export default function LanguageExchangePage() {
 
   if (!user) {
     return (
-      <div dir={isAr ? "rtl" : "ltr"} className="dark pm-night min-h-screen flex flex-col bg-background text-foreground">
+      <div dir={isAr ? "rtl" : "ltr"} className="dark pm-night relative min-h-screen flex flex-col overflow-x-hidden bg-background text-foreground">
+        <ExchangeAmbientGlow />
         <ExchangeAppNav isAr={isAr} />
-        <main className="flex-1 mx-auto max-w-lg px-5 py-20 text-center">
+        <main className="relative flex-1 mx-auto max-w-xl px-5 py-20 text-center">
           <Sparkles className="mx-auto h-10 w-10 text-[#FF3EA5]" />
           <h1 className="mt-4 text-3xl font-black tracking-tight">
             {tr("Language Exchange", "تبادل اللغة")}
@@ -262,9 +276,10 @@ export default function LanguageExchangePage() {
   }
 
   return (
-    <div dir={isAr ? "rtl" : "ltr"} className="dark pm-night min-h-screen flex flex-col bg-background text-foreground">
+    <div dir={isAr ? "rtl" : "ltr"} className="dark pm-night relative min-h-screen flex flex-col overflow-x-hidden bg-background text-foreground">
+      <ExchangeAmbientGlow />
       <ExchangeAppNav isAr={isAr} />
-      <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-8 sm:py-10">
+      <main className="relative flex-1 mx-auto w-full max-w-3xl px-4 py-8 sm:py-10">
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-black tracking-tight">{tr("Language Exchange", "تبادل اللغة")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
