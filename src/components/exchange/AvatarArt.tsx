@@ -86,6 +86,22 @@ export const EXCHANGE_AVATAR_DEFS: AvatarDef[] = [
   { key: "girl_hijab_teal", gender: "female", bg: BG_MINT_1, face: { skin: "#E0AC69", hair: "#2F6F62", hairStyle: "hijab", shirt: SHIRT_MINT } },
   { key: "girl_hijab_rose", gender: "female", bg: BG_PINK_2, face: { skin: "#F1C27D", hair: "#8E3B46", hairStyle: "hijab", shirt: SHIRT_PINK } },
   { key: "girl_fair_glasses", gender: "female", bg: BG_BUTTER_2, face: { skin: "#F1C27D", hair: "#3B2414", hairStyle: "ponytail", glasses: true, shirt: SHIRT_BUTTER } },
+
+  // Second pass (10 Nov 2026, Re: "add pictures" for the swipe deck) — more
+  // choice in the same cast/style, not a new art direction: still plain
+  // inline SVG, still the flat-vector/parametric face above, still no
+  // AI-generated or photo-real imagery anywhere in the picker (see the file
+  // header -- that's a deliberate anti-catfishing decision, not an oversight
+  // to fix). This just fills in hairstyle/skin-tone/accessory combinations
+  // the first 14 didn't cover.
+  { key: "boy_fair_long", gender: "male", bg: BG_IVORY, face: { skin: "#F1C27D", hair: "#B8860B", hairStyle: "long", shirt: SHIRT_MINT } },
+  { key: "boy_deep_ponytail", gender: "male", bg: BG_PINK_1, face: { skin: "#8D5524", hair: "#1A1A1A", hairStyle: "ponytail", shirt: SHIRT_INK } },
+  { key: "boy_tan_braids", gender: "male", bg: BG_MINT_1, face: { skin: "#D8A26A", hair: "#2B1B12", hairStyle: "braids", shirt: SHIRT_BUTTER } },
+  { key: "boy_fair_buzz_glasses", gender: "male", bg: BG_MINT_2, face: { skin: "#F1C27D", hair: "#1A1A1A", hairStyle: "buzz", glasses: true, shirt: SHIRT_PINK } },
+  { key: "girl_dark_short", gender: "female", bg: BG_BUTTER_1, face: { skin: "#C68642", hair: "#1A1A1A", hairStyle: "short", shirt: SHIRT_PINK } },
+  { key: "girl_red_bob", gender: "female", bg: BG_MINT_2, face: { skin: "#F1C27D", hair: "#B5471B", hairStyle: "bob", shirt: SHIRT_MINT } },
+  { key: "girl_tan_glasses_curly", gender: "female", bg: BG_PINK_1, face: { skin: "#D8A26A", hair: "#5A3825", hairStyle: "curly", glasses: true, shirt: SHIRT_BUTTER } },
+  { key: "girl_hijab_butter", gender: "female", bg: BG_BUTTER_2, face: { skin: "#E0AC69", hair: "#E3B94A", hairStyle: "hijab", shirt: SHIRT_BUTTER } },
 ];
 
 /** Blend a hex color toward white by `amount` (0-1) — used for the hair-shine highlight. */
