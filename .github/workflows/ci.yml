@@ -138,6 +138,91 @@ jobs:
           fi
           echo "No collisions found."
 
+      # BLOCKING. A policy on table T that subqueries T from inside its own
+      # USING/WITH CHECK clause makes Postgres re-evaluate that same policy
+      # for the inner query, which it detects as infinite recursion and
+      # refuses with "infinite recursion detected in policy for relation T" —
+      # at query time, not at CREATE POLICY time, so this shipped silently
+      # and broke /exchange's My Profile tab in production for days before
+      # anyone ran a SELECT against it (fixed 2026-11-08,
+      # 20261108170000_fix_exchange_profiles_select_visible_recursion.sql).
+      # Only new migration files are checked — a past file that already
+      # contains the old, superseded version of a fixed policy is historical
+      # record, not a live defect, and must not fail CI forever.
+      #
+      # The fix is always the same shape: move the self-lookup into a
+      # `security definer` helper function (this schema already has one:
+      # exchange_viewer_age(uuid), modeled on exchange_handle_swipe) — a
+      # SECURITY DEFINER function's internal query runs outside the calling
+      # policy's RLS check, so it no longer re-enters it.
+      - name: Check for self-referencing RLS policies (recursion risk)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+
+          if [ -z "$BASE" ] || [ -z "$HEAD" ]; then
+            # Push to main / manual dispatch: no PR diff available. Compare
+            # against the previous commit instead of the whole directory —
+            # unlike the version-collision check above, a self-reference
+            # already merged in the past is history, not something a later
+            # run can still "catch", and the whole directory will contain
+            # fixed-but-not-deleted old migrations forever.
+            BASE=$(git rev-parse HEAD~1 2>/dev/null || echo "")
+            HEAD=$(git rev-parse HEAD)
+          fi
+
+          if [ -z "$BASE" ]; then
+            echo "No base commit to diff against (first commit) - nothing to check."
+            exit 0
+          fi
+
+          git fetch origin "$BASE" --depth=1 -q 2>/dev/null || true
+          git fetch origin "$HEAD" --depth=1 -q 2>/dev/null || true
+
+          added=$(git diff --name-only --diff-filter=A "$BASE" "$HEAD" -- 'supabase/migrations/*.sql' || true)
+          if [ -z "$added" ]; then
+            echo "No new migration files - nothing to check."
+            exit 0
+          fi
+
+          violation=0
+          for f in $added; do
+            [ -f "$f" ] || continue
+            python3 - "$f" <<'PYEOF'
+import re, sys
+
+path = sys.argv[1]
+text = open(path, encoding="utf-8", errors="ignore").read()
+
+pattern = re.compile(
+    r'create\s+policy\s+"([^"]+)"\s*(?:\n\s*)?'
+    r'on\s+(?:public\.)?(\w+)\s+for\s+\w+(?:\s+to\s+\w+)?\s*'
+    r'((?:using|with\s+check)\s*\(.*?\))\s*(?=;|\n\s*(?:using|with\s+check))',
+    re.IGNORECASE | re.DOTALL,
+)
+
+found = False
+for m in pattern.finditer(text):
+    polname, table, clause = m.group(1), m.group(2), m.group(3)
+    if re.search(r'from\s+(?:public\.)?' + re.escape(table) + r'\b', clause, re.IGNORECASE):
+        line_no = text[: m.start()].count("\n") + 1
+        print(f"::error file={path},line={line_no}::Policy \"{polname}\" on {table} subqueries {table} from inside its own clause — this causes \"infinite recursion detected in policy for relation {table}\" at query time. Move the self-lookup into a SECURITY DEFINER helper function instead (see exchange_viewer_age(uuid) for the pattern).")
+        found = True
+
+sys.exit(1 if found else 0)
+PYEOF
+            if [ $? -ne 0 ]; then violation=1; fi
+          done
+
+          if [ "$violation" -eq 1 ]; then
+            echo "::error::Self-referencing RLS policy found in a new migration - see errors above."
+            exit 1
+          fi
+          echo "No self-referencing RLS policies in new migrations."
+
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
