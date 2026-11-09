@@ -111,8 +111,10 @@ function ExchangeAvatar({
  * last `generate_typescript_types` run, matching the existing pattern in e.g.
  * BulkEmailManager.tsx for other tables added after a types refresh.
  *
- * Served at /exchange and /ar/exchange from the same component (App.tsx),
- * same pattern as /games + /ar/games -> GamesPage.
+ * Served at /exchange/app and /ar/exchange/app (App.tsx). /exchange itself
+ * is now the PolyglotMatch marketing landing (9 Nov 2026, Re: "must be
+ * here") — PolyglotMatchLandingPage.tsx — whose CTAs link down into this
+ * page.
  */
 
 interface ExchangeProfileRow {
@@ -219,10 +221,10 @@ export default function LanguageExchangePage() {
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <Button asChild>
-              <Link to={`/signup?redirect=${encodeURIComponent("/exchange")}`}>{tr("Sign up", "إنشاء حساب")}</Link>
+              <Link to={`/signup?redirect=${encodeURIComponent("/exchange/app")}`}>{tr("Sign up", "إنشاء حساب")}</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to={`/login?redirect=${encodeURIComponent("/exchange")}`}>{tr("Log in", "تسجيل الدخول")}</Link>
+              <Link to={`/login?redirect=${encodeURIComponent("/exchange/app")}`}>{tr("Log in", "تسجيل الدخول")}</Link>
             </Button>
           </div>
         </main>

@@ -8,15 +8,19 @@ import { SITE_URL } from "@/lib/siteConfig";
 // swipe-matching side of Language Exchange, shown as its own brand with a
 // small "by Klovers" tag rather than folded into Klovers' yellow chrome.
 // Deliberately does NOT use the global <Header>/<Footer>: this page is meant
-// to read as its own product on first glance. It is a marketing front door
-// only — every CTA routes straight into the existing, already-live /exchange
-// feature (LanguageExchangePage.tsx), which is unchanged by this page.
+// to read as its own product on first glance.
 //
-// 9 Nov 2026 — built from the "Midnight Match" design concept explored with
-// Re; see the project doc claude/language-exchange-feature.md for context.
+// This IS /exchange and /ar/exchange (9 Nov 2026, Re: "must be here") — the
+// front door people land on. The actual swipe/match/chat app (unchanged) now
+// lives one level down at /exchange/app, which every CTA on this page links
+// to. /polyglotmatch redirects here so the short-lived standalone route
+// doesn't become a dead or duplicate URL.
+//
+// Built from the "Midnight Match" design concept explored with Re; see the
+// project doc claude/language-exchange-feature.md for context.
 
-const PAGE_URL_EN = `${SITE_URL}/polyglotmatch`;
-const PAGE_URL_AR = `${SITE_URL}/ar/polyglotmatch`;
+const PAGE_URL_EN = `${SITE_URL}/exchange`;
+const PAGE_URL_AR = `${SITE_URL}/ar/exchange`;
 
 const PolyglotMatchLandingPage = () => {
   const { language } = useLanguage();
@@ -107,7 +111,7 @@ const PolyglotMatchLandingPage = () => {
           </div>
         </div>
         <Link
-          to="/exchange"
+          to="/exchange/app"
           className="rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-5 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5"
         >
           {isAr ? "ابدأ الماتش" : "Start matching"}
@@ -142,7 +146,7 @@ const PolyglotMatchLandingPage = () => {
           </p>
           <div className="mt-8 flex flex-wrap gap-3.5">
             <Link
-              to="/exchange"
+              to="/exchange/app"
               className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-8 py-4 text-[17px] font-bold text-white transition hover:-translate-y-0.5"
             >
               {isAr ? "جرّب الآن — مجانًا" : "Try it now — free"}
@@ -246,7 +250,7 @@ const PolyglotMatchLandingPage = () => {
           {isAr ? "مجاني، وسريع، وآمن." : "Free, fast, and safe."}
         </p>
         <Link
-          to="/exchange"
+          to="/exchange/app"
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-12 py-[18px] text-[19px] font-bold text-white transition hover:-translate-y-0.5"
         >
           <Sparkles className="h-5 w-5" />

@@ -66,7 +66,7 @@ export default function ExchangeEntryCard({ isAr, compact = false }: ExchangeEnt
           <p className="text-sm text-charcoal/80 dark:text-foreground/80">{copy.line}</p>
           <div className="mt-1 flex flex-wrap items-center gap-3">
             <Link
-              to="/exchange"
+              to="/exchange/app"
               className="inline-flex min-h-11 items-center rounded-full border-2 border-teal-600 bg-teal-600 px-6 text-sm font-bold text-white hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-800"
             >
               {copy.cta}
