@@ -29,7 +29,7 @@ export const GAME_WORLDS: GameWorld[] = [
     nameAr: "قرية الهانغول",
     description: "Build your Korean from the very first letter.",
     descriptionAr: "بناء الكورية من أول حرف.",
-    icon: "game-flashcard-han",
+    icon: "world-hangul-village",
     gameIds: ["hangul", "romanization", "phonics", "scramble", "typekorean", "speedread", "grammarpattern", "tenshift", "negation", "errorcatch"],
   },
   {
@@ -38,7 +38,7 @@ export const GAME_WORLDS: GameWorld[] = [
     nameAr: "سوق المفردات",
     description: "Learn useful words for real life.",
     descriptionAr: "كلمات مفيدة للحياة اليومية.",
-    icon: "bibimbap",
+    icon: "world-vocab-market",
     gameIds: ["match", "flashcard", "numbers", "colors", "time", "counters", "opposites"],
   },
   {

@@ -61,6 +61,11 @@ export type KloverIconName =
   | "game-time-dates"
   | "game-topik-sheet"
   | "game-virtual-korea"
+  // Watercolor world-header icons matching the book illustration style
+  // (klovers-lesson-page-style-guide.md / klovers-book1-icon-gemini-prompts.md),
+  // used only for the Game Worlds section headers — not the disc-and-drawing set above:
+  | "world-hangul-village"
+  | "world-vocab-market"
   // Drawn from the 1024px icon library (public/assets/icons/library):
   | "reward-gift";
 
