@@ -67,6 +67,11 @@ const World2Page = lazy(() => import("./world2/World2Page"));
 const KoreanPlacementPage = lazy(() => import("./pages/KoreanPlacementPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
 const LanguageExchangePage = lazy(() => import("./pages/LanguageExchangePage"));
+// PolyglotMatch (9 Nov 2026): a distinct "night mode" marketing front door for
+// the swipe-matching side of Language Exchange, shown as "PolyglotMatch · by
+// Klovers". Every CTA on it routes into the existing /exchange page below —
+// this is a new entry point, not a replacement.
+const PolyglotMatchLandingPage = lazy(() => import("./pages/PolyglotMatchLandingPage"));
 const TextbookHubPage = lazy(() => import("./pages/TextbookHubPage"));
 const TextbookPage = lazy(() => import("./pages/TextbookPage"));
 const LessonDetailPage = lazy(() => import("./pages/LessonDetailPage"));
@@ -226,6 +231,7 @@ const App = () => (
                 <Route path="/ar/enroll-now" element={<EnrollNowPage />} />
                 <Route path="/ar/games" element={<GamesPage />} />
                 <Route path="/ar/exchange" element={<LanguageExchangePage />} />
+                <Route path="/ar/polyglotmatch" element={<PolyglotMatchLandingPage />} />
                 <Route path="/ar/affiliate" element={<AffiliatePage />} />
                 <Route path="/ar/interview-training" element={<KoreanInterviewPage />} />
                 <Route path="/ar/welcome-back" element={<ReturningStudentsLandingPage />} />
@@ -274,6 +280,7 @@ const App = () => (
                 <Route path="/unit-placement" element={<Navigate to="/placement-test" replace />} />
                 <Route path="/games" element={<GamesPage />} />
                 <Route path="/exchange" element={<LanguageExchangePage />} />
+                <Route path="/polyglotmatch" element={<PolyglotMatchLandingPage />} />
                 <Route path="/world" element={<WorldPage />} />
                 <Route path="/textbook" element={<AuthProtectedRoute><TextbookHubPage /></AuthProtectedRoute>} />
                 <Route path="/textbook/progress" element={<AuthProtectedRoute><TextbookProgressPage /></AuthProtectedRoute>} />
