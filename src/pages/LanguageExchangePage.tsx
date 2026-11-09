@@ -254,14 +254,19 @@ export default function LanguageExchangePage() {
 
           <TabsContent value="discover" className="mt-6">
             {myProfile ? (
-              <DiscoverDeck myProfile={myProfile} isAr={isAr} tr={tr} />
+              <DiscoverDeck
+                myProfile={myProfile}
+                isAr={isAr}
+                tr={tr}
+                onGoToProfile={() => setTab("profile")}
+              />
             ) : (
               <NeedsProfileNotice tr={tr} onGo={() => setTab("profile")} />
             )}
           </TabsContent>
 
           <TabsContent value="matches" className="mt-6">
-            <MatchesList isAr={isAr} tr={tr} userId={user.id} />
+            <MatchesList isAr={isAr} tr={tr} userId={user.id} onGoToDiscover={() => setTab("discover")} />
           </TabsContent>
 
           <TabsContent value="profile" className="mt-6">
@@ -304,10 +309,12 @@ function DiscoverDeck({
   myProfile,
   isAr,
   tr,
+  onGoToProfile,
 }: {
   myProfile: ExchangeProfileRow;
   isAr: boolean;
   tr: (en: string, ar: string) => string;
+  onGoToProfile?: () => void;
 }) {
   const [queue, setQueue] = useState<ExchangeProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -428,14 +435,32 @@ function DiscoverDeck({
 
   if (!current) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center">
-          <p className="text-muted-foreground">
-            {tr("No new profiles right now — check back soon.", "لا توجد ملفات جديدة الآن — عد لاحقًا.")}
-          </p>
-          <Button variant="outline" className="mt-4" onClick={loadQueue}>
-            {tr("Refresh", "تحديث")}
-          </Button>
+      <Card className="overflow-hidden border-dashed">
+        <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <Sparkles className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <p className="text-base font-semibold">
+              {tr("You're all caught up", "لقد اطّلعت على الجميع")}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {tr(
+                "No new profiles right now — new learners join often, so check back soon. A sharper profile also gets you seen by more people.",
+                "لا توجد ملفات جديدة الآن — ينضم متعلمون جدد باستمرار، فتفقّد الصفحة لاحقًا. ملف شخصي أكثر تفصيلًا يجعلك مرئيًا لعدد أكبر أيضًا.",
+              )}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button onClick={loadQueue}>
+              {tr("Refresh", "تحديث")}
+            </Button>
+            {onGoToProfile && (
+              <Button variant="outline" onClick={onGoToProfile}>
+                {tr("Polish my profile", "تحسين ملفي الشخصي")}
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
@@ -668,7 +693,17 @@ interface MatchEntry {
   profile: ExchangeProfileRow;
 }
 
-function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar: string) => string; userId: string }) {
+function MatchesList({
+  isAr,
+  tr,
+  userId,
+  onGoToDiscover,
+}: {
+  isAr: boolean;
+  tr: (en: string, ar: string) => string;
+  userId: string;
+  onGoToDiscover?: () => void;
+}) {
   const [matches, setMatches] = useState<MatchEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [reportTarget, setReportTarget] = useState<ExchangeProfileRow | null>(null);
@@ -745,9 +780,27 @@ function MatchesList({ isAr, tr, userId }: { isAr: boolean; tr: (en: string, ar:
 
   if (matches.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-muted-foreground">
-          {tr("No matches yet — keep swiping in Discover.", "لا توجد تطابقات بعد — تابع التصفّح في اكتشاف.")}
+      <Card className="overflow-hidden border-dashed">
+        <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <Heart className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <p className="text-base font-semibold">
+              {tr("No matches yet", "لا توجد تطابقات بعد")}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {tr(
+                "Like a few profiles in Discover — when someone likes you back, you'll both show up here.",
+                "اضغط إعجاب على بعض الملفات في اكتشاف — عندما يُعجب بك أحدهم أيضًا، ستظهران هنا معًا.",
+              )}
+            </p>
+          </div>
+          {onGoToDiscover && (
+            <Button onClick={onGoToDiscover}>
+              {tr("Go to Discover", "الذهاب إلى اكتشاف")}
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
