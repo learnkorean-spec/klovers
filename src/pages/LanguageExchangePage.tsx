@@ -515,7 +515,7 @@ function DiscoverDeck({
       </p>
 
       <Dialog open={!!matchedWith} onOpenChange={(open) => !open && setMatchedWith(null)}>
-        <DialogContent className="text-center">
+        <DialogContent className="dark pm-night text-center">
           <DialogHeader>
             <DialogTitle className="text-2xl">{tr("It's a match! 🎉", "لقد تطابقتما! 🎉")}</DialogTitle>
             <DialogDescription>
@@ -1009,7 +1009,7 @@ function ChatDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-md">
+      <DialogContent className="dark pm-night flex max-h-[80vh] flex-col sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full">
@@ -1276,7 +1276,7 @@ function ProfileEditor({
             <SelectTrigger className="mt-1">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="dark pm-night">
               {EXCHANGE_LOOKING_FOR_GENDERS.map((g) => (
                 <SelectItem key={g.key} value={g.key}>
                   {isAr ? g.ar : g.en}
@@ -1409,7 +1409,7 @@ function ProfileEditor({
                   <SelectTrigger>
                     <SelectValue placeholder={tr(`Day ${idx + 1}`, `اليوم ${idx + 1}`)} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark pm-night">
                     {EXCHANGE_DAYS.map((d) => (
                       <SelectItem key={d.en} value={d.en}>
                         {isAr ? d.ar : d.en}
@@ -1421,7 +1421,7 @@ function ProfileEditor({
                   <SelectTrigger>
                     <SelectValue placeholder={tr("Time of day", "وقت اليوم")} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark pm-night">
                     {EXCHANGE_TIME_BUCKETS.map((b) => (
                       <SelectItem key={b.key} value={b.key}>
                         {isAr ? b.ar : b.en}
@@ -1518,7 +1518,7 @@ function ReportDialog({
 
   return (
     <Dialog open={!!target} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="dark pm-night">
         <DialogHeader>
           <DialogTitle>{tr("Report", "الإبلاغ عن")} {target?.display_name}</DialogTitle>
           <DialogDescription>
@@ -1531,7 +1531,7 @@ function ReportDialog({
             <SelectTrigger>
               <SelectValue placeholder={tr("Reason", "السبب")} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="dark pm-night">
               {REPORT_REASONS.map((r) => (
                 <SelectItem key={r.key} value={r.key}>
                   {isAr ? r.ar : r.en}
