@@ -4,8 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -136,6 +134,36 @@ interface ExchangeProfileRow {
   is_visible: boolean;
 }
 
+// This page is reached only from PolyglotMatchLandingPage (/exchange), and
+// stays in that page's dark "night mode" rather than snapping back to the
+// bright yellow Klovers chrome (Re, 9 Nov 2026: "must be separated pages
+// with the night style") — a slim nav/footer of its own instead of the
+// global <Header>/<Footer>, plus `dark` forced on the root so every
+// shadcn component here (Tabs, Card, etc.) picks up its dark palette.
+function ExchangeAppNav({ isAr }: { isAr: boolean }) {
+  return (
+    <div dir="ltr" className="mx-auto flex max-w-2xl items-center justify-between px-4 py-5">
+      <Link to="/exchange" className="flex items-center gap-2" aria-label={isAr ? "العودة إلى PolyglotMatch" : "Back to PolyglotMatch"}>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF3EA5] to-[#8B5CF6] text-sm font-extrabold text-white">
+          P
+        </div>
+        <span className="text-[15px] font-extrabold tracking-tight">PolyglotMatch</span>
+      </Link>
+      <span className="text-[11px] font-semibold text-[#A79FC9]">
+        {isAr ? "من كلوفرز" : "by Klovers"}
+      </span>
+    </div>
+  );
+}
+
+function ExchangeAppFooter({ isAr }: { isAr: boolean }) {
+  return (
+    <div className="border-t border-white/[0.08] px-4 py-5 text-center text-[12px] text-[#7A7395]">
+      {isAr ? "PolyglotMatch © ٢٠٢٦ — من كلوفرز" : "PolyglotMatch © 2026 — by Klovers"}
+    </div>
+  );
+}
+
 const emptyDraft = (): ExchangeProfileRow => ({
   user_id: "",
   display_name: "",
@@ -206,10 +234,10 @@ export default function LanguageExchangePage() {
 
   if (!user) {
     return (
-      <div dir={isAr ? "rtl" : "ltr"} className="min-h-screen flex flex-col">
-        <Header />
+      <div dir={isAr ? "rtl" : "ltr"} className="dark min-h-screen flex flex-col bg-[#0C0A16] text-[#F3F1FA]">
+        <ExchangeAppNav isAr={isAr} />
         <main className="flex-1 mx-auto max-w-lg px-5 py-20 text-center">
-          <Sparkles className="mx-auto h-10 w-10 text-[#FFFF00]" />
+          <Sparkles className="mx-auto h-10 w-10 text-[#FF3EA5]" />
           <h1 className="mt-4 text-3xl font-black tracking-tight">
             {tr("Language Exchange", "تبادل اللغة")}
           </h1>
@@ -228,14 +256,14 @@ export default function LanguageExchangePage() {
             </Button>
           </div>
         </main>
-        <Footer />
+        <ExchangeAppFooter isAr={isAr} />
       </div>
     );
   }
 
   return (
-    <div dir={isAr ? "rtl" : "ltr"} className="min-h-screen flex flex-col bg-background">
-      <Header />
+    <div dir={isAr ? "rtl" : "ltr"} className="dark min-h-screen flex flex-col bg-[#0C0A16] text-[#F3F1FA]">
+      <ExchangeAppNav isAr={isAr} />
       <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-8 sm:py-10">
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-black tracking-tight">{tr("Language Exchange", "تبادل اللغة")}</h1>
@@ -285,7 +313,7 @@ export default function LanguageExchangePage() {
           </TabsContent>
         </Tabs>
       </main>
-      <Footer />
+      <ExchangeAppFooter isAr={isAr} />
     </div>
   );
 }
