@@ -146,8 +146,15 @@ async function generateConceptImage(
   apiKey: string,
   useCharacters: boolean,
   size: string = "1536x1024",
+  // When true (and useCharacters is false), reference ONLY Cluby's canon
+  // plush image — no Adam/Lina learner refs. Used for marketing art that
+  // wants Cluby's exact design (never a generic/invented teddy or bunny)
+  // alongside brand-new, non-canon people. Re's standing rule, 10 Nov 2026:
+  // any plush/mascot prop in generated art must be Cluby, not a lookalike.
+  clubyOnly = false,
 ): Promise<string> {
-  const endpoint = useCharacters ? "images/edits" : "images/generations";
+  const referencingCharacters = useCharacters || clubyOnly;
+  const endpoint = referencingCharacters ? "images/edits" : "images/generations";
   const body: Record<string, unknown> = {
     model: MUSE_IMAGE_MODEL,
     prompt,
@@ -161,6 +168,8 @@ async function generateConceptImage(
       { image_url: CHARACTER_REFS.learners },
       { image_url: CHARACTER_REFS.cluby },
     ];
+  } else if (clubyOnly) {
+    body.images = [{ image_url: CHARACTER_REFS.cluby }];
   }
 
   const res = await fetch(`${META_API_BASE}/${endpoint}`, {
@@ -420,6 +429,7 @@ serve(async (req) => {
 
     const body = await req.json();
     const useCharacters = body.useCharacters !== false; // default true
+    const clubyOnly = body.clubyOnly === true && !useCharacters; // default false
 
     // Batch mode: body.batch is a list of { theme, extraCharacter? } and the
     // response is a list of single book-cover images (one per theme), not
@@ -461,16 +471,25 @@ serve(async (req) => {
     }
     const theme = prompt.trim().slice(0, 500);
 
-    console.log("Generating AI room concepts for theme:", theme, "useCharacters:", useCharacters);
+    console.log(
+      "Generating AI room concepts for theme:",
+      theme,
+      "useCharacters:",
+      useCharacters,
+      "clubyOnly:",
+      clubyOnly,
+    );
 
     const results = await Promise.all(
       VARIANTS.map(async (variant) => {
         const imagePrompt = useCharacters
           ? `Photo-edit the exact same real people and creature from the reference images into a new setting — do not redraw or restyle them, keep their real faces, real hair, real skin, real outfits, and Cluby's exact plush look pixel-faithful to the references, as if they were composited/photographed into a new room: ${theme}. ${variant.angle}. Place them naturally in the room, doing something related to the room's theme. ${CHARACTER_DESCRIPTIONS} ${KLOVERS_STYLE}`
+          : clubyOnly
+          ? `Generate brand-new, original people (never the specific people in the reference image) in a photorealistic scene: ${theme}. ${variant.angle}. Include the exact plush creature from the reference image, pixel-faithful to its design (same colors, ears, face, proportions) — do not redraw, restyle, or invent a different teddy bear, bunny, or plush; it must be recognizably this same character. ${KLOVERS_STYLE}`
           : `A Korean-language-learning room scene: ${theme}. ${variant.angle}. ${KLOVERS_STYLE}`;
 
         const [imageDataUrl, designBrief] = await Promise.all([
-          generateConceptImage(imagePrompt, metaApiKey, useCharacters),
+          generateConceptImage(imagePrompt, metaApiKey, useCharacters, "1536x1024", clubyOnly),
           generateDesignBrief(theme, variant.angle, metaApiKey),
         ]);
 

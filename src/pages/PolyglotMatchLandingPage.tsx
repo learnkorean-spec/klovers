@@ -272,6 +272,40 @@ const PolyglotMatchLandingPage = () => {
         </div>
       </div>
 
+      {/* COMMUNITY BANNER — purely decorative marketing art, never shown inside
+          the actual swipe app. Features Cluby (KLOVERS' canon mascot, kept
+          pixel-faithful to its reference) alongside two brand-new, original
+          people who are NOT Adam/Lina and are not presented as a match
+          candidate — this is chrome around the product, not a profile. */}
+      <div className="relative mx-auto max-w-5xl px-6 pb-4">
+        <div className="pm-step-card overflow-hidden rounded-[28px] border border-white/[0.08] bg-[#171329]">
+          <div className="grid items-center gap-0 sm:grid-cols-2">
+            <img
+              src="https://ewtdgpbybkceokfohhyg.supabase.co/storage/v1/object/public/marketing-images/polyglot-match/cluby-study-buddies-b.png"
+              alt={isAr ? "كلوبي مع متعلمين يتبادلون اللغة" : "Cluby with language-exchange learners"}
+              className="h-[260px] w-full object-cover sm:h-[340px]"
+              loading="lazy"
+            />
+            <div className="p-8 sm:p-10">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FF3EA5]/30 bg-[#FF3EA5]/10 px-4 py-1.5 text-[13px] font-bold text-[#FF8FC8]">
+                <Sparkles className="h-3.5 w-3.5" />
+                {isAr ? "كلوبي يشجعك" : "Cluby's cheering you on"}
+              </span>
+              <h3 className="pm-display mt-4 text-[22px] font-bold sm:text-[26px]">
+                {isAr
+                  ? "تعلّم لغة جديدة مع أصدقاء حقيقيين"
+                  : "Learn a new language with real study buddies"}
+              </h3>
+              <p className="mt-3 text-[15px] leading-[1.8] text-[#A79FC9]">
+                {isAr
+                  ? "كل متطابق هنا هو حساب كلوفرز موثّق — تمرّن، اضحك، وتقدّم سويًا."
+                  : "Every match here is a verified Klovers account — practice, laugh, and make progress together."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* CTA */}
       <div className="relative px-6 py-24 text-center">
         <h2 className="pm-display mb-4 text-[30px] font-bold sm:text-[40px]">
