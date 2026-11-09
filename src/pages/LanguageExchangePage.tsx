@@ -234,7 +234,7 @@ export default function LanguageExchangePage() {
 
   if (!user) {
     return (
-      <div dir={isAr ? "rtl" : "ltr"} className="dark min-h-screen flex flex-col bg-[#0C0A16] text-[#F3F1FA]">
+      <div dir={isAr ? "rtl" : "ltr"} className="dark pm-night min-h-screen flex flex-col bg-background text-foreground">
         <ExchangeAppNav isAr={isAr} />
         <main className="flex-1 mx-auto max-w-lg px-5 py-20 text-center">
           <Sparkles className="mx-auto h-10 w-10 text-[#FF3EA5]" />
@@ -262,7 +262,7 @@ export default function LanguageExchangePage() {
   }
 
   return (
-    <div dir={isAr ? "rtl" : "ltr"} className="dark min-h-screen flex flex-col bg-[#0C0A16] text-[#F3F1FA]">
+    <div dir={isAr ? "rtl" : "ltr"} className="dark pm-night min-h-screen flex flex-col bg-background text-foreground">
       <ExchangeAppNav isAr={isAr} />
       <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-8 sm:py-10">
         <div className="mb-6 text-center">
@@ -661,7 +661,7 @@ function SwipeCard({
             {profile.goals?.length ? (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {profile.goals.map((k) => (
-                  <Badge key={k} className="bg-[#FFFF00] text-foreground hover:bg-[#FFFF00]">
+                  <Badge key={k} className="bg-[#8B5CF6] text-white hover:bg-[#8B5CF6]">
                     {goalLabel(k, isAr ? "ar" : "en")}
                   </Badge>
                 ))}
@@ -872,7 +872,7 @@ function MatchesList({
               {m.goals?.length ? (
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {m.goals.map((k) => (
-                    <Badge key={k} className="bg-[#FFFF00] text-foreground hover:bg-[#FFFF00] text-xs">
+                    <Badge key={k} className="bg-[#8B5CF6] text-white hover:bg-[#8B5CF6] text-xs">
                       {goalLabel(k, isAr ? "ar" : "en")}
                     </Badge>
                   ))}
@@ -1041,7 +1041,7 @@ function ChatDialog({
                 <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
-                      mine ? "bg-[#FFFF00] text-foreground" : "bg-muted text-foreground"
+                      mine ? "bg-[#FF3EA5] text-white" : "bg-muted text-foreground"
                     }`}
                   >
                     {m.body}
@@ -1207,7 +1207,7 @@ function ProfileEditor({
         <Progress value={completionPct} />
       </div>
 
-      <Card className="border-[#FFFF00]/40 bg-[#FFFF00]/5">
+      <Card className="border-[#FF3EA5]/40 bg-[#FF3EA5]/5">
         <CardContent className="p-4 text-sm">
           <p className="font-semibold">{tr("Keep it safe", "حافظ على سلامتك")}</p>
           <p className="mt-1 text-muted-foreground">
@@ -1383,7 +1383,7 @@ function ProfileEditor({
             <Badge
               key={g.key}
               variant={draft.goals.includes(g.key) ? "default" : "outline"}
-              className={draft.goals.includes(g.key) ? "cursor-pointer select-none bg-[#FFFF00] text-foreground hover:bg-[#FFFF00]" : "cursor-pointer select-none"}
+              className={draft.goals.includes(g.key) ? "cursor-pointer select-none bg-[#8B5CF6] text-white hover:bg-[#8B5CF6]" : "cursor-pointer select-none"}
               onClick={() => toggleFromList("goals", g.key, EXCHANGE_MAX_GOALS)}
             >
               {isAr ? g.ar : g.en}
