@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -43,7 +44,8 @@ import {
   EXCHANGE_MAX_GOALS,
   EXCHANGE_DAYS,
   EXCHANGE_TIME_BUCKETS,
-  EXCHANGE_AVAILABILITY_COUNT,
+  EXCHANGE_AVAILABILITY_MIN,
+  EXCHANGE_AVAILABILITY_MAX,
   EXCHANGE_GENDERS,
   EXCHANGE_LOOKING_FOR_GENDERS,
   REPORT_REASONS,
@@ -1046,23 +1048,30 @@ function ProfileEditor({
     return day && bucket;
   });
 
-  const canSave =
-    draft.display_name.trim().length >= 2 &&
-    draft.age != null && draft.age >= EXCHANGE_MIN_AGE && draft.age <= EXCHANGE_MAX_AGE &&
-    !!draft.gender &&
-    draft.native_languages.length > 0 &&
-    draft.learning_languages.length > 0 &&
-    draft.goals.length > 0 &&
-    validSlots.length === EXCHANGE_AVAILABILITY_COUNT &&
-    !!draft.avatar_url;
+  // Named so the completion meter below and `canSave` can never drift apart —
+  // each is "is this required field done?", counted for the meter and
+  // AND-ed together for canSave.
+  const requiredFieldsDone = [
+    !!draft.avatar_url,
+    draft.display_name.trim().length >= 2,
+    draft.age != null && draft.age >= EXCHANGE_MIN_AGE && draft.age <= EXCHANGE_MAX_AGE,
+    !!draft.gender,
+    draft.native_languages.length > 0,
+    draft.learning_languages.length > 0,
+    draft.goals.length > 0,
+    validSlots.length >= EXCHANGE_AVAILABILITY_MIN,
+  ];
+  const completedCount = requiredFieldsDone.filter(Boolean).length;
+  const completionPct = Math.round((completedCount / requiredFieldsDone.length) * 100);
+  const canSave = requiredFieldsDone.every(Boolean);
 
   const handleSave = async () => {
     if (!canSave) {
       toast({
         title: tr("Please complete the required fields", "يرجى إكمال الحقول المطلوبة"),
         description: tr(
-          `Name, an avatar, your gender, at least one language you speak, one you're learning, your age (${EXCHANGE_MIN_AGE}+), at least one goal, and ${EXCHANGE_AVAILABILITY_COUNT} free times.`,
-          `الاسم، صورة رمزية، جنسك، لغة واحدة على الأقل تتحدثينها، لغة تتعلمينها، عمرك (${EXCHANGE_MIN_AGE}+)، هدف واحد على الأقل، و${EXCHANGE_AVAILABILITY_COUNT} وقتَي فراغ.`,
+          `Name, an avatar, your gender, at least one language you speak, one you're learning, your age (${EXCHANGE_MIN_AGE}+), at least one goal, and at least ${EXCHANGE_AVAILABILITY_MIN} free times.`,
+          `الاسم، صورة رمزية، الجنس، لغة واحدة على الأقل من اللغات المُتحدَّثة، لغة من اللغات قيد التعلّم، العمر (${EXCHANGE_MIN_AGE}+)، هدف واحد على الأقل، و${EXCHANGE_AVAILABILITY_MIN} على الأقل من أوقات التفرّغ.`,
         ),
         variant: "destructive",
       });
@@ -1102,6 +1111,19 @@ function ProfileEditor({
 
   return (
     <div className="space-y-6">
+      <div>
+        <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+          <span>{tr("Profile completion", "اكتمال الملف الشخصي")}</span>
+          <span>
+            {tr(
+              `${completedCount}/${requiredFieldsDone.length} required fields`,
+              `${completedCount}/${requiredFieldsDone.length} من الحقول المطلوبة`,
+            )}
+          </span>
+        </div>
+        <Progress value={completionPct} />
+      </div>
+
       <Card className="border-[#FFFF00]/40 bg-[#FFFF00]/5">
         <CardContent className="p-4 text-sm">
           <p className="font-semibold">{tr("Keep it safe", "حافظ على سلامتك")}</p>
@@ -1270,7 +1292,7 @@ function ProfileEditor({
         <p className="mt-1 text-xs text-muted-foreground">
           {tr(
             `Pick up to ${EXCHANGE_MAX_GOALS} — a study partner, a culture friend, TOPIK prep, or whatever fits.`,
-            `اختاري حتى ${EXCHANGE_MAX_GOALS} — شريك دراسة، صديق ثقافي، تحضير TOPIK، أو ما يناسبك.`,
+            `اختر حتى ${EXCHANGE_MAX_GOALS} — شريك دراسة، صديق ثقافي، تحضير TOPIK، أو ما يناسبك.`,
           )}
         </p>
         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1291,12 +1313,12 @@ function ProfileEditor({
         <Label>{tr("When are you free?", "متى تكون متفرغًا؟")} *</Label>
         <p className="mt-1 text-xs text-muted-foreground">
           {tr(
-            `Pick ${EXCHANGE_AVAILABILITY_COUNT} times — this is what your match will see.`,
-            `اختاري ${EXCHANGE_AVAILABILITY_COUNT} وقتين — هذا ما سيراه تطابقك.`,
+            `Pick at least ${EXCHANGE_AVAILABILITY_MIN} times (up to ${EXCHANGE_AVAILABILITY_MAX}) — this is what your match will see.`,
+            `اختر ${EXCHANGE_AVAILABILITY_MIN} أوقات على الأقل (حتى ${EXCHANGE_AVAILABILITY_MAX}) — هذا ما سيظهر للطرف الآخر.`,
           )}
         </p>
         <div className="mt-2 space-y-2">
-          {Array.from({ length: EXCHANGE_AVAILABILITY_COUNT }).map((_, idx) => {
+          {Array.from({ length: EXCHANGE_AVAILABILITY_MAX }).map((_, idx) => {
             const { day, bucket } = slotAt(idx);
             return (
               <div key={idx} className="grid grid-cols-2 gap-2">
