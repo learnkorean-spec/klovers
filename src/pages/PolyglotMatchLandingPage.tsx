@@ -97,8 +97,9 @@ const PolyglotMatchLandingPage = () => {
       <div className="pointer-events-none fixed -top-24 right-[-120px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,62,165,0.30),transparent_70%)] blur-xl" />
       <div className="pointer-events-none fixed top-[420px] left-[-160px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.22),transparent_70%)] blur-xl" />
 
-      {/* NAV */}
-      <div className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-7">
+      {/* NAV — pinned ltr so the logo always sits on the left, even in the
+          Arabic/RTL layout (brand mark position shouldn't flip). */}
+      <div dir="ltr" className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-7">
         <div className="flex items-center gap-2.5">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF3EA5] to-[#8B5CF6] text-lg font-extrabold">
             P
