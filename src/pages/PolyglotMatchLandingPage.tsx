@@ -208,8 +208,18 @@ const PolyglotMatchLandingPage = () => {
       {/* TRUST STRIP */}
       <div className="relative mx-auto flex max-w-6xl flex-wrap justify-center gap-3.5 px-6 pb-16">
         {(isAr
-          ? ["🎭 شخصيات رمزية فقط — بدون صور", "🔒 محادثة مشفّرة داخل التطبيق", "🔞 16+ وإبلاغ بضغطة واحدة"]
-          : ["🎭 Avatars only — no photos", "🔒 Encrypted in-app chat", "🔞 16+ with one-tap reporting"]
+          ? [
+              "🎭 شخصيات رمزية فقط — بدون صور",
+              "🔒 محادثة مشفّرة داخل التطبيق",
+              "🔞 16+ وإبلاغ بضغطة واحدة",
+              "✅ كل الأعضاء حسابات كلوفرز موثّقة — لا حسابات مجهولة",
+            ]
+          : [
+              "🎭 Avatars only — no photos",
+              "🔒 Encrypted in-app chat",
+              "🔞 16+ with one-tap reporting",
+              "✅ Every member is a verified Klovers account — no anonymous sign-ups",
+            ]
         ).map((pill) => (
           <span key={pill} className="pm-pill rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[13px] font-bold text-[#D9D4F0]">
             {pill}

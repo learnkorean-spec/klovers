@@ -30,8 +30,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import {
-  Heart, X, Loader2, ShieldAlert, Sparkles, MessageCircle, Clock, Send,
+  Heart, X, Loader2, ShieldAlert, Sparkles, MessageCircle, Clock, Send, ShieldCheck, Share2, Link as LinkIcon, Undo2,
 } from "lucide-react";
 import {
   EXCHANGE_LANGUAGES,
@@ -189,6 +190,39 @@ function ExchangeAppFooter({ isAr }: { isAr: boolean }) {
       {isAr ? "PolyglotMatch © ٢٠٢٦ — من كلوفرز" : "PolyglotMatch © 2026 — by Klovers"}
     </div>
   );
+}
+
+/**
+ * Short "why you two might click" chips shown on a candidate's card (9 Nov
+ * 2026, Re: "push all to 9" — a concrete differentiator HelloTalk/Tandem's
+ * plain feed view doesn't surface). Pure function of the two profiles, so
+ * it's cheap to recompute per card with no extra fetch.
+ */
+function getMatchReasons(
+  me: ExchangeProfileRow,
+  other: ExchangeProfileRow,
+  tr: (en: string, ar: string) => string,
+  isAr: boolean,
+): string[] {
+  const reasons: string[] = [];
+
+  const sharedInterests = (me.interests ?? []).filter((i) => (other.interests ?? []).includes(i));
+  if (sharedInterests.length) {
+    reasons.push(`🎨 ${tr("Both into", "كلاكما يحب")} ${interestLabel(sharedInterests[0], isAr ? "ar" : "en")}`);
+  }
+
+  const sharedGoals = (me.goals ?? []).filter((g) => (other.goals ?? []).includes(g));
+  if (sharedGoals.length) {
+    reasons.push(`🎯 ${tr("Same goal", "هدف مشترك")}: ${goalLabel(sharedGoals[0], isAr ? "ar" : "en")}`);
+  }
+
+  const theySpeakWhatIWantToLearn = (other.native_languages ?? []).some((l) => (me.learning_languages ?? []).includes(l));
+  const iSpeakWhatTheyWantToLearn = (me.native_languages ?? []).some((l) => (other.learning_languages ?? []).includes(l));
+  if (theySpeakWhatIWantToLearn && iSpeakWhatTheyWantToLearn) {
+    reasons.push(`🔄 ${tr("Perfect language fit", "تبادل لغوي مثالي")}`);
+  }
+
+  return reasons.slice(0, 2);
 }
 
 const emptyDraft = (): ExchangeProfileRow => ({
@@ -460,6 +494,25 @@ function DiscoverDeck({
 
   const current = queue[0];
 
+  // Undo (9 Nov 2026, Re: "push all to 9") — scoped to "pass" only: a liked
+  // profile may already have formed a match server-side (and surfaced the
+  // celebration dialog) by the time the toast would fire, so reversing a
+  // like would need to also unwind that match. An accidental pass has no
+  // such side effect, so it's the safe case to offer a real undo for.
+  const undoPass = async (passedProfile: ExchangeProfileRow) => {
+    const { error } = await supabase
+      .from("exchange_swipes" as any)
+      .delete()
+      .eq("swiper_id", myProfile.user_id)
+      .eq("target_id", passedProfile.user_id)
+      .eq("action", "pass");
+    if (error) {
+      toast({ title: tr("Couldn't undo", "تعذّر التراجع"), description: error.message, variant: "destructive" });
+      return;
+    }
+    setQueue((q) => [passedProfile, ...q]);
+  };
+
   const act = async (action: "like" | "pass") => {
     if (!current || acting) return;
     setActing(true);
@@ -488,6 +541,17 @@ function DiscoverDeck({
         (m) => m.user_a === myProfile.user_id || m.user_b === myProfile.user_id,
       );
       if (isMatch) setMatchedWith(current);
+    } else {
+      const passedProfile = current;
+      toast({
+        description: tr(`Passed on ${passedProfile.display_name}`, `تخطّيت ${passedProfile.display_name}`),
+        action: (
+          <ToastAction altText={tr("Undo", "تراجع")} onClick={() => undoPass(passedProfile)}>
+            <Undo2 className="me-1 h-3.5 w-3.5" />
+            {tr("Undo", "تراجع")}
+          </ToastAction>
+        ),
+      });
     }
 
     setQueue((q) => q.slice(1));
@@ -503,35 +567,87 @@ function DiscoverDeck({
   }
 
   if (!current) {
+    // The real ceiling on a matching feature is liquidity — enough people in
+    // compatible language pairs for the deck to never run dry — and that's a
+    // growth problem code alone can't fix. The one lever actually available
+    // here is making it trivially easy for the person hitting this empty
+    // state to go recruit the exact partner they're missing (9 Nov 2026,
+    // Re: "push all to 9").
+    const shareUrl = `${window.location.origin}${isAr ? "/ar/exchange" : "/exchange"}`;
+    const shareText = tr(
+      "Join me on PolyglotMatch (by Klovers) to find a language exchange partner:",
+      "انضم إليّ على PolyglotMatch (من كلوفرز) لإيجاد شريك لتبادل اللغة:",
+    );
     return (
-      <Card className="overflow-hidden border-dashed">
-        <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Sparkles className="h-8 w-8 text-primary" />
-          </div>
-          <div>
-            <p className="text-base font-semibold">
-              {tr("You're all caught up", "لقد اطّلعت على الجميع")}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+      <div className="space-y-4">
+        <Card className="overflow-hidden border-dashed">
+          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <Sparkles className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <p className="text-base font-semibold">
+                {tr("You're all caught up", "لقد اطّلعت على الجميع")}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {tr(
+                  "No new profiles right now — new learners join often, so check back soon. A sharper profile also gets you seen by more people.",
+                  "لا توجد ملفات جديدة الآن — ينضم متعلمون جدد باستمرار، فتفقّد الصفحة لاحقًا. ملف شخصي أكثر تفصيلًا يجعلك مرئيًا لعدد أكبر أيضًا.",
+                )}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button onClick={loadQueue}>
+                {tr("Refresh", "تحديث")}
+              </Button>
+              {onGoToProfile && (
+                <Button variant="outline" onClick={onGoToProfile}>
+                  {tr("Polish my profile", "تحسين ملفي الشخصي")}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-[#8B5CF6]/30 bg-gradient-to-br from-[#8B5CF6]/10 to-[#FF3EA5]/10">
+          <CardContent className="flex flex-col items-center gap-3 py-7 text-center">
+            <Share2 className="h-6 w-6 text-[#FF3EA5]" />
+            <p className="text-sm font-semibold">
               {tr(
-                "No new profiles right now — new learners join often, so check back soon. A sharper profile also gets you seen by more people.",
-                "لا توجد ملفات جديدة الآن — ينضم متعلمون جدد باستمرار، فتفقّد الصفحة لاحقًا. ملف شخصي أكثر تفصيلًا يجعلك مرئيًا لعدد أكبر أيضًا.",
+                "The fastest way to get a match: bring the person you want to practice with.",
+                "أسرع طريقة لتحصل على تطابق: أحضر الشخص الذي تريد ممارسة اللغة معه.",
               )}
             </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <Button onClick={loadQueue}>
-              {tr("Refresh", "تحديث")}
-            </Button>
-            {onGoToProfile && (
-              <Button variant="outline" onClick={onGoToProfile}>
-                {tr("Polish my profile", "تحسين ملفي الشخصي")}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button
+                variant="outline"
+                className="gap-1.5 rounded-full border-[#22D3EE]/40 text-[#22D3EE] hover:bg-[#22D3EE]/10"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+                    toast({ title: tr("Link copied", "تم نسخ الرابط") });
+                  } catch {
+                    toast({ title: shareUrl, description: tr("Copy this link", "انسخ هذا الرابط") });
+                  }
+                }}
+              >
+                <LinkIcon className="h-4 w-4" />
+                {tr("Copy invite link", "نسخ رابط الدعوة")}
               </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <Button className="gap-1.5 rounded-full bg-[#25D366] text-white hover:bg-[#25D366]/90" asChild>
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  {tr("Share on WhatsApp", "مشاركة عبر واتساب")}
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -541,6 +657,7 @@ function DiscoverDeck({
         key={current.user_id}
         profile={current}
         nextProfiles={queue.slice(1, 3)}
+        matchReasons={getMatchReasons(myProfile, current, tr, isAr)}
         isAr={isAr}
         tr={tr}
         disabled={acting}
@@ -603,6 +720,7 @@ function DiscoverDeck({
 function SwipeCard({
   profile,
   nextProfiles,
+  matchReasons,
   isAr,
   tr,
   disabled,
@@ -612,6 +730,7 @@ function SwipeCard({
 }: {
   profile: ExchangeProfileRow;
   nextProfiles?: ExchangeProfileRow[];
+  matchReasons?: string[];
   isAr: boolean;
   tr: (en: string, ar: string) => string;
   disabled: boolean;
@@ -726,6 +845,13 @@ function SwipeCard({
               <ExchangeAvatar avatarUrl={profile.avatar_url} name={profile.display_name} className="flex h-full w-full items-center justify-center" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent" />
               <div
+                className="absolute bottom-3 flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-bold text-[#7CE4F5] backdrop-blur-sm"
+                style={{ insetInlineStart: 12 }}
+              >
+                <ShieldCheck className="h-3 w-3" />
+                {tr("Verified Klovers learner", "متعلّم موثّق من كلوفرز")}
+              </div>
+              <div
                 className="absolute top-5 rounded-xl border-4 border-[#22D3EE] px-3 py-1 text-xl font-black text-[#22D3EE] rotate-[-12deg]"
                 style={{ insetInlineStart: 16, opacity: likeOpacity }}
               >
@@ -758,6 +884,19 @@ function SwipeCard({
                   <ShieldAlert className="h-5 w-5" />
                 </button>
               </div>
+
+              {matchReasons?.length ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {matchReasons.map((reason) => (
+                    <span
+                      key={reason}
+                      className="rounded-full border border-[#FF3EA5]/30 bg-[#FF3EA5]/10 px-2.5 py-1 text-[12px] font-bold text-[#FF8FC8]"
+                    >
+                      {reason}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
 
               {(profile.native_languages?.length || profile.learning_languages?.length) ? (
                 <p className="mt-1 text-sm text-muted-foreground">
