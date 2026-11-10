@@ -15,8 +15,8 @@ const Footer = () => {
   const isAr = language === "ar";
 
   const learnLinks = isAr
-    ? [{ to: "/hangul-starter", label: "ورقة هانغول المجانية" }, { to: "/textbook", label: "الكتاب المدرسي" }, { to: "/games", label: "الألعاب" }, { to: "/review", label: "مراجعة المفردات" }, { to: "/placement-test", label: "اختبار تحديد المستوى" }, { to: "/shop", label: "متجر كلوفرز" }]
-    : [{ to: "/hangul-starter", label: "Free Hangul Sheet" }, { to: "/textbook", label: "Textbook" }, { to: "/games", label: "Games" }, { to: "/review", label: "Vocabulary Review" }, { to: "/placement-test", label: "Placement Test" }, { to: "/shop", label: "Klovers Supply" }];
+    ? [{ to: "/hangul-starter", label: "ورقة هانغول المجانية" }, { to: "/textbook", label: "الكتاب المدرسي" }, { to: "/games", label: "الألعاب" }, { to: "/review", label: "مراجعة المفردات" }, { to: "/placement-test", label: "اختبار تحديد المستوى" }, { to: "/shop", label: "متجر كلوفرز" }, { to: "/journey", label: "رحلة كوريا" }, { to: "/topik-exam-preparation", label: "التحضير لاختبار TOPIK" }, { to: "/learn-korean-kdramas", label: "تعلّم الكورية من الدراما" }, { to: "/scholarships", label: "المنح الدراسية" }]
+    : [{ to: "/hangul-starter", label: "Free Hangul Sheet" }, { to: "/textbook", label: "Textbook" }, { to: "/games", label: "Games" }, { to: "/review", label: "Vocabulary Review" }, { to: "/placement-test", label: "Placement Test" }, { to: "/shop", label: "Klovers Supply" }, { to: "/journey", label: "Korea Journey" }, { to: "/topik-exam-preparation", label: "TOPIK Preparation" }, { to: "/learn-korean-kdramas", label: "Learn Korean with K-Dramas" }, { to: "/scholarships", label: "Scholarships" }];
 
   // Reham's personal 1:1 lessons (19 Oct 2026) — a separate, lighter-weight
   // offering from the Korean group courses above, so these get their own
