@@ -178,6 +178,15 @@ function gridCopy(img: HTMLImageElement): string {
   return c.toDataURL("image/jpeg", 0.85);
 }
 
+/** The plain room as a smaller JPEG, sent alongside the grid copy. */
+function cleanCopy(img: HTMLImageElement): string {
+  const c = document.createElement("canvas");
+  c.width = 1024;
+  c.height = 1024;
+  c.getContext("2d")!.drawImage(img, 0, 0, 1024, 1024);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+
 /** If the vision step can't find an object, start its dot on a ring round the middle. */
 function fallbackDot(i: number, n: number): Pt {
   const a = (i / n) * Math.PI * 2 - Math.PI / 2;
@@ -213,7 +222,7 @@ export default function RoomSceneSheet() {
     setBusy("place");
     let points: (Pt | null)[] = [];
     try {
-      const data = await invoke({ mode: "room-locate", imageDataUrl: gridCopy(img), objects: list.map((l) => `${l.english}: ${l.object}`) });
+      const data = await invoke({ mode: "room-locate", cleanImageDataUrl: cleanCopy(img), imageDataUrl: gridCopy(img), objects: list.map((l) => `${l.english}: ${l.object}`) });
       points = data.points ?? [];
     } catch (e) {
       toast({ title: "Couldn't find the objects automatically", description: "Drag each dot onto its object.", variant: "destructive" });

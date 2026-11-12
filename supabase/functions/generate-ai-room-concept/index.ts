@@ -345,18 +345,23 @@ function roomScenePrompt(setting: string, objects: string[]): string {
  */
 const GRID_N = 12;
 async function locateRoomObjects(
+  cleanImageDataUrl: string,
   gridImageDataUrl: string,
   objects: string[],
   openAiKey: string,
 ): Promise<({ x: number; y: number } | null)[]> {
   const ask =
-    "This isometric room illustration has a grid drawn over it: columns A to L from left to " +
-    "right, rows 1 to 12 from top to bottom; each square is labelled in its corner. For each " +
-    "numbered object below, find that object in the picture (look carefully: similar objects " +
-    "such as a refrigerator and a microwave are different) and name the ONE grid square that " +
-    "contains the middle of that object. If an object is not in the picture, give null. " +
-    'Respond with ONLY a JSON array, one entry per object in order, each like "C7" or null. ' +
-    "No markdown, no prose.\n" +
+    "You get two copies of the same isometric room illustration: the first is clean, the " +
+    "second has a grid over it (columns A to L from left to right, rows 1 to 12 from top to " +
+    "bottom, each square labelled in its corner). For EACH object in the list below, work " +
+    "separately: first look at the clean picture and say in a few words where that exact " +
+    "object is (e.g. 'bottom left, on the floor in front of the table'), then use the grid " +
+    "copy to name the ONE square that contains the middle of that object. Never give two " +
+    "different objects the same square unless they really overlap. If an object is not in " +
+    "the picture, use null for its square.\n" +
+    'Respond with ONLY a JSON object of the form {"items": [{"n": 1, "object": "<name>", ' +
+    '"where": "<few words>", "square": "C7"}, ...]} with one item per object, in the same ' +
+    "order and with the same numbers as the list.\n" +
     objects.map((o, i) => `${i + 1}. ${o}`).join("\n");
   const res = await fetch(AI_CHAT_URL, {
     method: "POST",
@@ -364,11 +369,13 @@ async function locateRoomObjects(
     body: JSON.stringify({
       model: "gpt-4o",
       temperature: 0,
+      response_format: { type: "json_object" },
       messages: [
         {
           role: "user",
           content: [
             { type: "text", text: ask },
+            { type: "image_url", image_url: { url: cleanImageDataUrl, detail: "high" } },
             { type: "image_url", image_url: { url: gridImageDataUrl, detail: "high" } },
           ],
         },
@@ -377,12 +384,11 @@ async function locateRoomObjects(
   });
   if (!res.ok) throw new Error(`Locate error ${res.status}: ${await res.text()}`);
   const data = await res.json();
-  const content: string = data?.choices?.[0]?.message?.content ?? "";
-  const cleaned = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
-  const parsed = JSON.parse(cleaned);
-  const list = Array.isArray(parsed) ? parsed : [];
+  const content: string = data?.choices?.[0]?.message?.content ?? "{}";
+  const items: { n?: number; square?: string | null }[] = JSON.parse(content)?.items ?? [];
   return objects.map((_, i) => {
-    const m = /^([A-La-l])\s*(\d{1,2})$/.exec(String(list[i] ?? "").trim());
+    const it = items.find((x) => Number(x?.n) === i + 1) ?? items[i];
+    const m = /^([A-La-l])\s*(\d{1,2})$/.exec(String(it?.square ?? "").trim());
     if (!m) return null;
     const col = m[1].toUpperCase().charCodeAt(0) - 65;
     const row = Number(m[2]) - 1;
@@ -616,10 +622,11 @@ serve(async (req) => {
     }
     if (body.mode === "room-locate") {
       if (!openAiKey) throw new Error("OPENAI_API_KEY not configured (needed to place labels)");
-      const imageDataUrl = String(body.imageDataUrl ?? "");
+      const cleanUrl = String(body.cleanImageDataUrl ?? "");
+      const gridUrl = String(body.imageDataUrl ?? "");
       const objects = (Array.isArray(body.objects) ? body.objects : []).map((o: unknown) => String(o ?? "").slice(0, 120)).slice(0, 10);
-      if (!imageDataUrl.startsWith("data:image/") || !objects.length) throw new Error("imageDataUrl and objects are required");
-      const points = await locateRoomObjects(imageDataUrl, objects, openAiKey);
+      if (!gridUrl.startsWith("data:image/") || !objects.length) throw new Error("imageDataUrl and objects are required");
+      const points = await locateRoomObjects(cleanUrl.startsWith("data:image/") ? cleanUrl : gridUrl, gridUrl, objects, openAiKey);
       return new Response(JSON.stringify({ points }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
