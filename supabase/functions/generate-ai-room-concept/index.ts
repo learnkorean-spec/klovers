@@ -244,6 +244,76 @@ async function generateDesignBrief(
   }
 }
 
+interface VocabWord {
+  korean: string;
+  english: string;
+  picture: string;
+}
+
+/** Muse Spark: `count` concrete, picturable Korean words for a topic. */
+async function generateVocabWords(topic: string, count: number, apiKey: string): Promise<VocabWord[]> {
+  const systemPrompt =
+    "You write vocabulary sheets for KLOVERS, a Korean course for Arabic-speaking learners. " +
+    "Given a topic and a number N, respond with ONLY a JSON array (no markdown, no prose) of " +
+    "exactly N objects with keys: " +
+    '"korean" (the everyday Korean word as Koreans actually say it, Hangul only, 1-3 words), ' +
+    '"english" (short lowercase English meaning, 1-3 words), ' +
+    '"picture" (one short English description of a SINGLE concrete physical object that shows the ' +
+    'word clearly when painted alone, e.g. "an open spiral notebook with a pencil on it"). ' +
+    "Only concrete, drawable nouns a learner would use for this topic; no abstract ideas, no people, " +
+    "no duplicates, no two items that would look alike.";
+  const res = await fetch(`${META_API_BASE}/chat/completions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MUSE_SPARK_MODEL,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Topic: ${topic}\nN: ${count}` },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`Muse Spark error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  const content: string | undefined = data?.choices?.[0]?.message?.content;
+  if (!content) throw new Error("Muse Spark returned no content");
+  const cleaned = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error(`Muse Spark returned non-JSON content: ${cleaned.slice(0, 200)}`);
+  }
+  const list = Array.isArray(parsed) ? parsed : [];
+  return list
+    .map((w) => ({
+      korean: String((w as VocabWord).korean ?? "").trim(),
+      english: String((w as VocabWord).english ?? "").trim(),
+      picture: String((w as VocabWord).picture ?? "").trim(),
+    }))
+    .filter((w) => w.korean && w.english && w.picture)
+    .slice(0, count);
+}
+
+/**
+ * One vocabulary icon in the KLOVERS "Everyday Korean" sheet style (the
+ * Valentine's and beauty sheets Re shared, 12 Nov 2026): a single object,
+ * detailed realistic watercolor, soft natural colour, centred on a plain warm
+ * off-white ground with room around it, a faint shadow, no text at all.
+ */
+function vocabIconPrompt(picture: string): string {
+  return (
+    `A single ${picture}, centred, painted as a detailed, realistic watercolor illustration: ` +
+    "soft natural colours, delicate wet-on-wet washes with crisp fine details and gentle " +
+    "highlights, visible watercolor paper grain, warm soft light from the upper left, and a " +
+    "faint soft shadow beneath the object. Isolated on a plain, even, warm off-white background " +
+    "(#FAF6EC) with generous empty space on every side; the object fills about 70 percent of " +
+    "the frame. Only this one object: no other objects, no people, no hands, no table or " +
+    "scenery, no border or frame, and absolutely no text, letters, numbers, labels or logos " +
+    "anywhere. Square 1:1 composition."
+  );
+}
+
 interface CoverResult {
   theme: string;
   extraCharacter?: string;
@@ -430,6 +500,30 @@ serve(async (req) => {
     const body = await req.json();
     const useCharacters = body.useCharacters !== false; // default true
     const clubyOnly = body.clubyOnly === true && !useCharacters; // default false
+
+    // Watercolor vocabulary sheets (Re, 12 Nov 2026: "write for example 16
+    // pictures about studying, they must give me similar pictures to this
+    // style"). Two small modes, called by the Watercolor Vocabulary Sheet
+    // panel on /admin/ai-room-lab. The page asks for the word list first so
+    // Re can edit it, then requests ONE icon per call (a few in parallel),
+    // so no single call runs long, and lays the sheet out itself.
+    if (body.mode === "vocab-words") {
+      const topic = String(body.topic ?? "").trim().slice(0, 200);
+      const count = Math.min(16, Math.max(4, Number(body.count) || 9));
+      if (!topic) throw new Error("topic is required");
+      const words = await generateVocabWords(topic, count, metaApiKey);
+      return new Response(JSON.stringify({ topic, words }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (body.mode === "vocab-icon") {
+      const picture = String(body.picture ?? "").trim().slice(0, 300);
+      if (!picture) throw new Error("picture is required");
+      const imageDataUrl = await generateConceptImage(vocabIconPrompt(picture), metaApiKey, false, "1024x1024");
+      return new Response(JSON.stringify({ imageDataUrl }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Batch mode: body.batch is a list of { theme, extraCharacter? } and the
     // response is a list of single book-cover images (one per theme), not

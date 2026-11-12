@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, Sparkles, Download, Images } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import WatercolorVocabSheet from "@/components/admin/WatercolorVocabSheet";
 
 interface DesignBrief {
   roomName: string;
@@ -184,7 +185,7 @@ export default function AiRoomLabPage() {
           <div>
             <h1 className="text-lg font-bold text-foreground">AI Room Lab</h1>
             <p className="text-xs text-muted-foreground">
-              Generate candidate KLOVERS World room concepts and book-cover photos, powered by
+              Generate watercolor vocabulary sheets, KLOVERS World room concepts and book-cover photos, powered by
               Meta's Model API (Muse Image + Muse Spark)
             </p>
           </div>
@@ -192,6 +193,7 @@ export default function AiRoomLabPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-8">
+        <WatercolorVocabSheet />
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
