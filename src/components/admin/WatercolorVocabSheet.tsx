@@ -6,13 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Download, Loader2, Palette, RefreshCw, Sparkles, Trash2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { VOCAB_TOPICS } from "./vocabTopics";
 
 /**
  * Watercolor vocabulary sheets for social posts, in the KLOVERS "Everyday
  * Korean" style (Re, 12 Nov 2026: "write for example 16 pictures about
- * studying, they must give me similar pictures to this style"). Type a topic,
- * pick how many words (9 or 16, or 4/6/12), edit the suggested list, then
- * draw: each picture is one Muse Image call on the Meta Model API, and the
+ * studying, they must give me similar pictures to this style"; then "only 9
+ * pictures, prepare 50 topics in drop list ... i click the topic it generate
+ * 9"). Every sheet is a 3 x 3 grid. Pick one of 50 ready topics and its 9
+ * pictures start drawing at once, or type any topic and have 9 words
+ * suggested first. Each picture is each picture is one Muse Image call on the Meta Model API, and the
  * sheet itself is laid out here on a canvas so the header, cards and footer
  * match the shared examples exactly instead of being left to the image model.
  */
@@ -27,8 +30,8 @@ interface Word {
   status: Status;
 }
 
-const COUNTS = [4, 6, 9, 12, 16] as const;
-const GRID: Record<number, [number, number]> = { 4: [2, 2], 6: [3, 2], 9: [3, 3], 12: [4, 3], 16: [4, 4] };
+const COUNT = 9;
+const GRID: Record<number, [number, number]> = { 9: [3, 3] };
 const PARALLEL = 3;
 
 // Measured from the 1080 x 1350 sheet inside Re's examples.
@@ -202,7 +205,7 @@ function download(canvas: HTMLCanvasElement, name: string) {
 
 export default function WatercolorVocabSheet() {
   const [topic, setTopic] = useState("studying");
-  const [count, setCount] = useState<number>(9);
+  const [preset, setPreset] = useState("");
   const [subtitle, setSubtitle] = useState("Everyday Korean");
   const [words, setWords] = useState<Word[]>([]);
   const [suggesting, setSuggesting] = useState(false);
@@ -236,15 +239,16 @@ export default function WatercolorVocabSheet() {
     setSuggesting(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-ai-room-concept", {
-        body: { mode: "vocab-words", topic, count },
+        body: { mode: "vocab-words", topic, count: COUNT },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const list: Word[] = (data.words || []).map((w: Omit<Word, "status">) => ({ ...w, status: "idle" as Status }));
-      if (list.length !== count) {
-        toast({ title: `Got ${list.length} of ${count} words`, description: "Add or remove rows to reach the grid size you want." });
+      if (list.length !== COUNT) {
+        toast({ title: `Got ${list.length} of ${COUNT} words`, description: "Add or remove rows to make 9." });
       }
-      setWords(list);
+      setPreset("");
+      setWords(list.slice(0, COUNT));
     } catch (e) {
       toast({ title: "Couldn't suggest words", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
     } finally {
@@ -272,8 +276,8 @@ export default function WatercolorVocabSheet() {
     }
   };
 
-  const drawAll = async () => {
-    const todo = words.map((w, i) => (w.image ? -1 : i)).filter((i) => i >= 0);
+  const drawAll = async (list: Word[] = words) => {
+    const todo = list.map((w, i) => (w.image ? -1 : i)).filter((i) => i >= 0);
     if (!todo.length) return;
     setDrawing(true);
     const queue = [...todo];
@@ -285,7 +289,19 @@ export default function WatercolorVocabSheet() {
     setDrawing(false);
   };
 
-  const validCount = COUNTS.includes(words.length as (typeof COUNTS)[number]);
+  /** Pick a ready topic: load its 9 words and start painting straight away. */
+  const pickTopic = (value: string) => {
+    setPreset(value);
+    const t = VOCAB_TOPICS[Number(value)];
+    if (!t) return;
+    const list: Word[] = t.words.map(([korean, english, picture]) => ({ korean, english, picture, status: "idle" }));
+    setTopic(t.en.toLowerCase());
+    wordsRef.current = list;
+    setWords(list);
+    void drawAll(list);
+  };
+
+  const validCount = words.length === COUNT;
   const doneCount = words.filter((w) => w.image).length;
   const slug = topic.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "vocab";
 
@@ -298,32 +314,41 @@ export default function WatercolorVocabSheet() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Type a topic, pick how many words, check the list, then draw. Each picture is painted by
-          Muse Image in the KLOVERS watercolor style, and the sheet is laid out like the Everyday
-          Korean posts.
+          Choose one of 50 ready topics and its 9 pictures are painted straight away by Muse Image
+          in the KLOVERS watercolor style, laid out like the Everyday Korean posts. Or type your own
+          topic and have 9 words suggested first.
         </p>
-        <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto] md:items-end">
+        <div className="grid gap-3 md:grid-cols-2 md:items-end">
           <div className="space-y-1">
-            <Label htmlFor="vs-topic">Topic</Label>
-            <Input id="vs-topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="studying" />
-          </div>
-          <div className="space-y-1">
-            <Label>Words</Label>
-            <div className="flex gap-1">
-              {COUNTS.map((n) => (
-                <Button key={n} type="button" size="sm" variant={count === n ? "default" : "outline"} onClick={() => setCount(n)}>
-                  {n}
-                </Button>
+            <Label htmlFor="vs-preset">Choose a topic (50 ready, 9 pictures each)</Label>
+            <select
+              id="vs-preset"
+              value={preset}
+              disabled={drawing || suggesting}
+              onChange={(e) => pickTopic(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+            >
+              <option value="">Pick a topic...</option>
+              {VOCAB_TOPICS.map((t, i) => (
+                <option key={t.en} value={i}>
+                  {i + 1}. {t.en} ({t.ko})
+                </option>
               ))}
-            </div>
+            </select>
           </div>
           <div className="space-y-1">
             <Label htmlFor="vs-sub">Top-right label</Label>
             <Input id="vs-sub" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
           </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+          <div className="space-y-1">
+            <Label htmlFor="vs-topic">Or your own topic</Label>
+            <Input id="vs-topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="studying" />
+          </div>
           <Button onClick={suggest} disabled={suggesting || drawing || !topic.trim()}>
             {suggesting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-            1. Suggest {count} words
+            Suggest 9 words
           </Button>
         </div>
 
@@ -368,19 +393,19 @@ export default function WatercolorVocabSheet() {
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={drawing || words.length >= 16}
+                  disabled={drawing || words.length >= COUNT}
                   onClick={() => setWords((ws) => [...ws, { korean: "", english: "", picture: "", status: "idle" }])}
                 >
                   <Plus className="h-4 w-4 mr-1" /> Add word
                 </Button>
-                <Button onClick={drawAll} disabled={drawing || !validCount || doneCount === words.length}>
+                <Button onClick={() => void drawAll()} disabled={drawing || !validCount || doneCount === words.length}>
                   {drawing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Palette className="h-4 w-4 mr-2" />}
-                  2. Draw {doneCount ? `the remaining ${words.length - doneCount}` : `all ${words.length}`} pictures
+                  Draw {doneCount ? `the remaining ${words.length - doneCount}` : `all ${words.length}`} pictures
                 </Button>
                 <span className="text-xs text-muted-foreground">
                   {validCount
                     ? `${doneCount}/${words.length} drawn`
-                    : `A sheet needs 4, 6, 9, 12 or 16 words (now ${words.length}).`}
+                    : `A sheet needs exactly 9 words (now ${words.length}).`}
                 </span>
               </div>
             </div>
