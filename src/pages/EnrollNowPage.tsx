@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, CreditCard, LogIn, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CreditCard, LogIn, CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 import SchedulePicker from "@/components/SchedulePicker";
 import KloverIcon from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -146,6 +146,10 @@ const EnrollNowPage = () => {
   );
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  // WhatsApp number — always asked, always required. Without it, a seat
+  // booking has no way to be followed up if the student never returns
+  // (see "no phone anywhere in the enroll flow" — Nov 2026).
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [egyptPaymentMethod, setEgyptPaymentMethod] = useState<string>("");
   const nav = useNavigate();
@@ -222,6 +226,10 @@ const EnrollNowPage = () => {
     const lvl = searchParams.get("level");
     if (lvl && !selectedLevel) {
       setSelectedLevel(lvl);
+    }
+    const ph = searchParams.get("phone") || getDraft().phone;
+    if (ph && !phone) {
+      setPhone(ph);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentional: run once on mount to rehydrate from URL
@@ -444,10 +452,12 @@ const EnrollNowPage = () => {
       const metaName = session.user.user_metadata?.name || "";
       const { data: profile } = await supabase
         .from("profiles")
-        .select("name, country, course_level_key, level")
+        .select("name, country, course_level_key, level, phone")
         .eq("user_id", session.user.id)
         .maybeSingle();
       setProfileCountry((profile as any)?.country || "");
+      const profilePhone = (profile as any)?.phone?.trim();
+      if (profilePhone) setPhone((cur) => cur || profilePhone);
       // Prefill the level the placement test (or the student) already set,
       // unless one came in through the URL or was already picked.
       const knownLevel = normalizeLevel((profile as any)?.course_level_key || (profile as any)?.level || "");
@@ -513,6 +523,9 @@ const EnrollNowPage = () => {
   }, [promoApplied, originalPrice, discountAmount]);
   const finalPrice = originalPrice ? Math.max(0, originalPrice - discountAmount - promoDiscountAmount) : null;
 
+  const phoneDigits = phone.replace(/[^0-9]/g, "");
+  const phoneIsValid = phoneDigits.length >= 8 && phoneDigits.length <= 15;
+
   const canProceedStep1 = !!selectedCountry && !!tier && !!duration;
 
   // Day selection: always 1 preferred day
@@ -557,6 +570,7 @@ const EnrollNowPage = () => {
     if (selectedGroupName) params.set("groupName", selectedGroupName);
     if (selectedLevel) params.set("level", selectedLevel);
     if (selectedPackageId) params.set("packageId", selectedPackageId);
+    if (phone.trim()) params.set("phone", phone.trim());
     return `/enroll-now?${params.toString()}`;
   };
 
@@ -572,6 +586,7 @@ const EnrollNowPage = () => {
     if (selectedGroupName) draftData.groupName = selectedGroupName;
     if (selectedLevel) draftData.level = selectedLevel;
     if (selectedPackageId) draftData.packageId = selectedPackageId;
+    if (phone.trim()) draftData.phone = phone.trim();
     draftData.step = "4";
     localStorage.setItem("enroll_draft", JSON.stringify(draftData));
   };
@@ -584,6 +599,13 @@ const EnrollNowPage = () => {
       toast({ title: t("auth.accountRequired"), description: t("auth.accountRequiredDesc"), variant: "destructive" });
       nav(`/signup?redirect=${encodeURIComponent(returnUrl)}`);
       return;
+    }
+    // Keep the student's WhatsApp number on her profile so it's there the
+    // moment her enrollment lands in the admin dashboard (notify_new_enrollment
+    // reads profiles.phone) — not just in the lead record.
+    const trimmedPhone = phone.trim();
+    if (trimmedPhone) {
+      supabase.from("profiles").update({ phone: trimmedPhone }).eq("user_id", session.user.id).then(() => {});
     }
     // The old Step 3 (preferred day/time re-ask) was redundant with Step 2 and
     // has been removed. Derive the day-of-week/start-time from the Step 2
@@ -610,7 +632,7 @@ const EnrollNowPage = () => {
     setStep(4);
   };
 
-  const canProceedStep2 = !!selectedLevel && preferredDays.length > 0;
+  const canProceedStep2 = !!selectedLevel && preferredDays.length > 0 && phoneIsValid;
 
   const handleEgyptOrder = async () => {
     if (!duration) return;
@@ -624,9 +646,12 @@ const EnrollNowPage = () => {
         nav(`/login?redirect=${encodeURIComponent(returnUrl)}`);
         return;
       }
-      // Sync country to profile
+      // Sync country + WhatsApp number to profile
       if (resolvedCountry && session.user.id) {
         supabase.from("profiles").update({ country: resolvedCountry }).eq("user_id", session.user.id).then(() => {});
+      }
+      if (phone.trim() && session.user.id) {
+        supabase.from("profiles").update({ phone: phone.trim() }).eq("user_id", session.user.id).then(() => {});
       }
 
       const { data, error } = await supabase.rpc("create_egypt_order", {
@@ -677,6 +702,7 @@ const EnrollNowPage = () => {
         body: {
           name: name.trim(),
           email: email.trim().toLowerCase(),
+          phone: phone.trim(),
           country: selectedCountry,
           level: selectedLevel ? normalizeLevel(selectedLevel) : "",
           goal: `${classType} ${duration}mo – ${tier} tier, ${preferredDays.join("/")}, tz:${timezone}`,
@@ -743,7 +769,7 @@ const EnrollNowPage = () => {
 
   const handlePay = async () => {
     // Block payment if core schedule fields are missing (package is optional — may be preference-only)
-    if (!selectedLevel || preferredDays.length === 0) {
+    if (!selectedLevel || preferredDays.length === 0 || !phoneIsValid) {
       toast({ title: t("enrollToasts.missingSchedule"), description: t("enrollToasts.missingScheduleDesc"), variant: "destructive" });
       setStep(2);
       return;
@@ -775,9 +801,12 @@ const EnrollNowPage = () => {
       // Submit lead async (don't block checkout)
       submitLead();
 
-      // Sync country to profile
+      // Sync country + WhatsApp number to profile
       if (resolvedCountry && session.user.id) {
         supabase.from("profiles").update({ country: resolvedCountry }).eq("user_id", session.user.id).then(() => {});
+      }
+      if (phone.trim() && session.user.id) {
+        supabase.from("profiles").update({ phone: phone.trim() }).eq("user_id", session.user.id).then(() => {});
       }
 
       const normalizedLevel = normalizeLevel(selectedLevel);
@@ -1052,6 +1081,33 @@ const EnrollNowPage = () => {
                 </Select>
               </div>
 
+              {/* WhatsApp number — always asked, always required. The only way
+                  the admin can follow up if a booking is missed or email
+                  bounces (Nov 2026: enrollments had no phone field at all). */}
+              <div className="space-y-1.5">
+                <Label htmlFor="enroll-phone" className="flex items-center gap-1.5">
+                  <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                  {isAr ? "رقم الواتساب" : "WhatsApp number"}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="enroll-phone"
+                  type="tel"
+                  inputMode="tel"
+                  dir="ltr"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+20 10 0000 0000"
+                  className="text-start"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {isAr
+                    ? "عشان نقدر نتواصل معاكِ لو احتجنا، حتى لو البريد الإلكتروني ما وصلش."
+                    : "So we can reach you if needed, even if an email doesn't arrive."}
+                </p>
+              </div>
+
               {/* Timezone */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2"><KloverIcon name="calendar-check" className="h-4 w-4" /> {t("enrollNow.timezone")}</Label>
@@ -1203,6 +1259,8 @@ const EnrollNowPage = () => {
                 <p className="text-xs text-muted-foreground text-center">
                   {!selectedLevel
                     ? t("enrollNow.selectLevelError")
+                    : !phoneIsValid
+                    ? (isAr ? "من فضلك أدخلي رقم واتساب صحيح." : "Please enter a valid WhatsApp number.")
                     : preferredDays.length === 0
                     ? t("enrollNow.selectDayError")
                     : ""}

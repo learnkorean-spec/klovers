@@ -24,7 +24,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Search, Download, Trash2, Check, X, AlertCircle, ChevronLeft, ChevronRight,
-  Pencil, Mail, Eraser, Sparkles, Copy, Clock, CalendarCheck, XCircle,
+  Pencil, Mail, Eraser, Sparkles, Copy, Clock, CalendarCheck, XCircle, MessageCircle,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLeads } from "@/hooks/admin/useLeads";
@@ -369,8 +369,8 @@ const LeadsPanel: React.FC = () => {
   const pagedLeads = sortedLeads.slice(leadsPage * PAGE_SIZE, (leadsPage + 1) * PAGE_SIZE);
 
   const exportCSV = useCallback(() => {
-    const headers = ["Name", "Email", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Goal", "Date"];
-    const rows = sortedLeads.map((l) => [l.name, l.email, l.country, l.level, l.plan_type, l.duration, l.schedule, l.timezone, l.source, l.status, l.goal, new Date(l.created_at).toLocaleDateString()]);
+    const headers = ["Name", "Email", "Phone", "Country", "Level", "Plan", "Duration", "Schedule", "Timezone", "Source", "Status", "Goal", "Date"];
+    const rows = sortedLeads.map((l) => [l.name, l.email, l.phone || "", l.country, l.level, l.plan_type, l.duration, l.schedule, l.timezone, l.source, l.status, l.goal, new Date(l.created_at).toLocaleDateString()]);
     exportCSVUtil(headers, rows, "leads");
   }, [sortedLeads]);
 
@@ -548,12 +548,17 @@ const LeadsPanel: React.FC = () => {
                   const hoursAgo = Math.round((Date.now() - new Date(l.created_at).getTime()) / 3600000);
                   const timeLabel = hoursAgo < 24 ? `${hoursAgo}h ago` : `${Math.round(hoursAgo / 24)}d ago`;
                   const waMsg = encodeURIComponent(`Hi ${(l.name || "").split(" ")[0]}! \u{1F44B} We noticed you were almost done enrolling in Klovers Korean. Your spot is still available — would you like to complete your ${l.plan_type} class enrollment? \u{1F1F0}\u{1F1F7}`);
-                  const waLink = `https://wa.me/?text=${waMsg}`;
+                  // A lead's own number (collected on enroll-now since Nov 2026)
+                  // opens straight into a chat with them; with none on file,
+                  // fall back to the old behavior (opens WhatsApp's own contact
+                  // picker) rather than hiding the button.
+                  const waDigits = l.phone?.replace(/[^0-9]/g, "") ?? "";
+                  const waLink = waDigits.length >= 8 ? `https://wa.me/${waDigits}?text=${waMsg}` : `https://wa.me/?text=${waMsg}`;
                   return (
                     <div key={l.id} className="flex items-center justify-between bg-white dark:bg-background border border-amber-100 dark:border-amber-900/40 rounded-lg px-3 py-2 gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground truncate">{l.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{l.email}</p>
+                        <p className="text-xs text-muted-foreground truncate">{l.email}{l.phone ? ` · ${l.phone}` : ""}</p>
                       </div>
                       <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground shrink-0">
                         <span className="capitalize">{l.plan_type} · {l.duration}</span>
@@ -574,6 +579,13 @@ const LeadsPanel: React.FC = () => {
                               ? <><Check className="h-3 w-3 mr-1 text-green-600" />Sent ✓</>
                               : <><Copy className="h-3 w-3 mr-1" />Copy</>}
                         </Button>
+                        {waDigits.length >= 8 && (
+                          <Button size="sm" variant="outline" className="h-7 px-2 text-xs border-green-400 text-green-700 dark:text-green-400" asChild>
+                            <a href={waLink} target="_blank" rel="noreferrer">
+                              <MessageCircle className="h-3 w-3 mr-1" />WhatsApp
+                            </a>
+                          </Button>
+                        )}
                         <Button size="sm" variant="outline" className="h-7 px-2 text-xs" asChild>
                           <a href={`mailto:${l.email}?subject=Your Korean class spot is waiting!&body=Hi ${(l.name || "").split(" ")[0]},%0A%0AWe noticed you were almost done enrolling in Klovers Korean. Your spot is still available!%0A%0AComplete your enrollment: https://kloversegy.com/enroll-now%0A%0ABest,%0AKlovers Team`} target="_blank" rel="noreferrer">
                             <Mail className="h-3 w-3 mr-1" />Email
@@ -716,15 +728,30 @@ const LeadsPanel: React.FC = () => {
                       {editingLeadId === lead.id ? (
                         <Input value={editForm.email || ""} onChange={(e) => setEditForm(f => ({ ...f, email: e.target.value }))} className="h-8 text-sm" />
                       ) : (
-                        <div className="flex items-center gap-1 max-w-[220px]">
-                          <span className="truncate flex-1 text-sm">{lead.email}</span>
-                          <button
-                            className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                            onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); setCopiedLeadId(lead.id + "_email"); setTimeout(() => setCopiedLeadId(id => id === lead.id + "_email" ? null : id), 1500); }}
-                            aria-label="Copy email address"
-                          >
-                            {copiedLeadId === lead.id + "_email" ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
-                          </button>
+                        <div className="max-w-[220px]">
+                          <div className="flex items-center gap-1">
+                            <span className="truncate flex-1 text-sm">{lead.email}</span>
+                            <button
+                              className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                              onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lead.email); toast({ title: "Copied" }); setCopiedLeadId(lead.id + "_email"); setTimeout(() => setCopiedLeadId(id => id === lead.id + "_email" ? null : id), 1500); }}
+                              aria-label="Copy email address"
+                            >
+                              {copiedLeadId === lead.id + "_email" ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
+                            </button>
+                          </div>
+                          {lead.phone ? (
+                            <a
+                              href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400 hover:underline"
+                            >
+                              <MessageCircle className="h-3 w-3" />{lead.phone}
+                            </a>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">No phone</span>
+                          )}
                         </div>
                       )}
                     </TableCell>

@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { name, email, country, level, goal, plan_type, duration, schedule, timezone, source, user_id } = body;
+    const { name, email, phone, country, level, goal, plan_type, duration, schedule, timezone, source, user_id } = body;
 
     // Server-side validation
     const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
@@ -91,6 +91,13 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (phone && (typeof phone !== "string" || phone.length > 30)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid phone number." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Use service role to insert (bypasses RLS)
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -103,6 +110,7 @@ Deno.serve(async (req) => {
     const upsertPayload: Record<string, any> = {
       name: resolvedName,
       email: normalizedEmail,
+      phone: phone?.trim() || "",
       country: country?.trim() || "",
       level: level?.trim() || "",
       goal: goal?.trim() || "",
@@ -129,6 +137,7 @@ Deno.serve(async (req) => {
     if (existingLead) {
       // Update existing lead (merge new data)
       const updatePayload: Record<string, any> = {};
+      if (upsertPayload.phone) updatePayload.phone = upsertPayload.phone;
       if (upsertPayload.country) updatePayload.country = upsertPayload.country;
       if (upsertPayload.level) updatePayload.level = upsertPayload.level;
       if (upsertPayload.goal) updatePayload.goal = upsertPayload.goal;

@@ -47,6 +47,7 @@ interface UserProfile {
   user_id: string;
   name: string;
   email: string;
+  phone: string | null;
 }
 
 interface UserIdentifier {
@@ -187,7 +188,7 @@ const LeadFunnelPanel: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("user_id, name, email");
+        .select("user_id, name, email, phone");
       return (data ?? []) as UserProfile[];
     },
     staleTime: 5 * 60 * 1000,
@@ -206,13 +207,16 @@ const LeadFunnelPanel: React.FC = () => {
   });
 
   const userMap = useMemo(() => {
+    // profiles.phone is the source of truth now that enroll-now also writes
+    // to it (Nov 2026); trial_bookings.phone (by email) is kept only as a
+    // fallback for students who took a trial before that existed.
     const phoneByEmail = new Map(trialPhones.map((t) => [t.email.toLowerCase(), t.phone]));
     const map = new Map<string, UserIdentifier>();
     for (const p of profiles) {
       map.set(p.user_id, {
         name: p.name,
         email: p.email,
-        phone: phoneByEmail.get(p.email.toLowerCase()) ?? null,
+        phone: p.phone?.trim() || phoneByEmail.get(p.email.toLowerCase()) || null,
       });
     }
     return map;
