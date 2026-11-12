@@ -336,30 +336,40 @@ function roomScenePrompt(setting: string, objects: string[]): string {
   );
 }
 
-/** gpt-4o-mini looks at the painted room and points at each object (0-1 coords). */
+/**
+ * Points at each object in the painted room. The page sends a copy of the
+ * picture with a lettered 12 x 12 grid drawn over it (columns A-L, rows
+ * 1-12); naming a grid square is far more reliable for a vision model than
+ * guessing raw coordinates (the first live test put the refrigerator's dot on
+ * the microwave). Returns each object's square centre as 0-1 fractions.
+ */
+const GRID_N = 12;
 async function locateRoomObjects(
-  imageDataUrl: string,
+  gridImageDataUrl: string,
   objects: string[],
   openAiKey: string,
 ): Promise<({ x: number; y: number } | null)[]> {
   const ask =
-    "This is an isometric illustration of a room. For each numbered object below, give the " +
-    "point at the visual centre of that object in the image, as fractions of the image width " +
-    "(x, 0 = left edge, 1 = right edge) and height (y, 0 = top, 1 = bottom). If an object is " +
-    "not in the image, give null for it. Respond with ONLY a JSON array, one entry per object " +
-    'in order, each {"x": number, "y": number} or null. No markdown, no prose.\n' +
+    "This isometric room illustration has a grid drawn over it: columns A to L from left to " +
+    "right, rows 1 to 12 from top to bottom; each square is labelled in its corner. For each " +
+    "numbered object below, find that object in the picture (look carefully: similar objects " +
+    "such as a refrigerator and a microwave are different) and name the ONE grid square that " +
+    "contains the middle of that object. If an object is not in the picture, give null. " +
+    'Respond with ONLY a JSON array, one entry per object in order, each like "C7" or null. ' +
+    "No markdown, no prose.\n" +
     objects.map((o, i) => `${i + 1}. ${o}`).join("\n");
   const res = await fetch(AI_CHAT_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${openAiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: AI_TEXT_MODEL,
+      model: "gpt-4o",
+      temperature: 0,
       messages: [
         {
           role: "user",
           content: [
             { type: "text", text: ask },
-            { type: "image_url", image_url: { url: imageDataUrl, detail: "high" } },
+            { type: "image_url", image_url: { url: gridImageDataUrl, detail: "high" } },
           ],
         },
       ],
@@ -372,9 +382,12 @@ async function locateRoomObjects(
   const parsed = JSON.parse(cleaned);
   const list = Array.isArray(parsed) ? parsed : [];
   return objects.map((_, i) => {
-    const p = list[i] as { x?: number; y?: number } | null;
-    if (!p || typeof p.x !== "number" || typeof p.y !== "number") return null;
-    return { x: Math.min(1, Math.max(0, p.x)), y: Math.min(1, Math.max(0, p.y)) };
+    const m = /^([A-La-l])\s*(\d{1,2})$/.exec(String(list[i] ?? "").trim());
+    if (!m) return null;
+    const col = m[1].toUpperCase().charCodeAt(0) - 65;
+    const row = Number(m[2]) - 1;
+    if (row < 0 || row >= GRID_N) return null;
+    return { x: (col + 0.5) / GRID_N, y: (row + 0.5) / GRID_N };
   });
 }
 

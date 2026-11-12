@@ -25,7 +25,7 @@ import {
  * (Re, 12 Nov 2026, sharing a Seollal room and a bank waiting room: "add
  * generator for style 2 ... must be better as writing in my picture is so
  * small"). Pick a ready room (or type one), Muse Image paints it with no
- * text, gpt-4o-mini points at each object, and the labels are laid out here
+ * text, gpt-4o names the grid square of each object, and the labels are laid out here
  * on the canvas, much larger than in the originals. Every label bubble and
  * every dot can be dragged on the preview to fix placement by hand.
  */
@@ -143,6 +143,41 @@ function drawRoom(ctx: CanvasRenderingContext2D, img: HTMLImageElement | null, l
   }
 }
 
+/**
+ * A copy of the painted room with a lettered 12 x 12 grid on it (columns A-L,
+ * rows 1-12), sent to the vision model so it can name a square instead of
+ * guessing coordinates. Only used for placing dots; never shown or saved.
+ */
+function gridCopy(img: HTMLImageElement): string {
+  const n = 12;
+  const s = 1024;
+  const c = document.createElement("canvas");
+  c.width = s;
+  c.height = s;
+  const x = c.getContext("2d")!;
+  x.drawImage(img, 0, 0, s, s);
+  const cell = s / n;
+  x.strokeStyle = "rgba(255,0,80,0.55)";
+  x.lineWidth = 2;
+  for (let k = 1; k < n; k++) {
+    x.beginPath(); x.moveTo(k * cell, 0); x.lineTo(k * cell, s); x.stroke();
+    x.beginPath(); x.moveTo(0, k * cell); x.lineTo(s, k * cell); x.stroke();
+  }
+  x.font = "bold 15px Arial";
+  x.textBaseline = "top";
+  for (let r = 0; r < n; r++) {
+    for (let q = 0; q < n; q++) {
+      const t = `${String.fromCharCode(65 + q)}${r + 1}`;
+      const w = x.measureText(t).width;
+      x.fillStyle = "rgba(255,255,255,0.8)";
+      x.fillRect(q * cell + 2, r * cell + 2, w + 4, 17);
+      x.fillStyle = "#D00040";
+      x.fillText(t, q * cell + 4, r * cell + 3);
+    }
+  }
+  return c.toDataURL("image/jpeg", 0.85);
+}
+
 /** If the vision step can't find an object, start its dot on a ring round the middle. */
 function fallbackDot(i: number, n: number): Pt {
   const a = (i / n) * Math.PI * 2 - Math.PI / 2;
@@ -174,11 +209,11 @@ export default function RoomSceneSheet() {
   };
 
   /** Find each object in the painted room and lay the bubbles out. */
-  const place = async (img: HTMLImageElement, list: Lbl[], src: string, id: number) => {
+  const place = async (img: HTMLImageElement, list: Lbl[], id: number) => {
     setBusy("place");
     let points: (Pt | null)[] = [];
     try {
-      const data = await invoke({ mode: "room-locate", imageDataUrl: src, objects: list.map((l) => `${l.english}: ${l.object}`) });
+      const data = await invoke({ mode: "room-locate", imageDataUrl: gridCopy(img), objects: list.map((l) => `${l.english}: ${l.object}`) });
       points = data.points ?? [];
     } catch (e) {
       toast({ title: "Couldn't find the objects automatically", description: "Drag each dot onto its object.", variant: "destructive" });
@@ -204,7 +239,7 @@ export default function RoomSceneSheet() {
       const data = await invoke({ mode: "room-scene", setting: where, objects: list.map((l) => l.object) });
       if (id !== run.current) return;
       const img = await loadImage(data.imageDataUrl);
-      await place(img, list, data.imageDataUrl, id);
+      await place(img, list, id);
     } catch (e) {
       if (id === run.current) setBusy("");
       toast({ title: "Couldn't paint the room", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
@@ -353,8 +388,15 @@ export default function RoomSceneSheet() {
                   {busy === "paint" || busy === "place" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Paintbrush className="h-4 w-4 mr-2" />}
                   {image ? "Repaint room" : "Paint room"}
                 </Button>
+                <Button
+                  variant="outline"
+                  disabled={!image || !!busy}
+                  onClick={() => image && void place(image, labels, ++run.current)}
+                >
+                  <MapPin className="h-4 w-4 mr-1" /> Find objects again
+                </Button>
                 <Button variant="outline" onClick={relayout} disabled={!image || !!busy}>
-                  <MapPin className="h-4 w-4 mr-1" /> Tidy labels
+                  <Sparkles className="h-4 w-4 mr-1" /> Tidy labels
                 </Button>
                 <span className="text-xs text-muted-foreground">{status}</span>
               </div>
