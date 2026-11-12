@@ -465,6 +465,25 @@ async function locateRoomObjects(
   });
 }
 
+/**
+ * Book watercolor pictures (Re, 12 Nov 2026): her fixed style brief, applied
+ * to every prompt she pastes. Each image is a 2 x 2 grid of four separate
+ * illustrations with white gutters, so the page can crop the cells apart.
+ */
+const BOOK_GRID_STYLE =
+  "Create ONE square image divided into a clean 2-column by 2-row grid of 4 equal square " +
+  "cells, with a thin pure-white gutter/margin separating every cell so each one can be " +
+  "cropped out individually later. No grid lines, no numbers, no labels, no text anywhere in " +
+  "the image. Each cell is its own centered watercolor illustration on a pure white " +
+  "background, soft pastel palette, loose gentle watercolor brush texture with visible paper " +
+  "grain, no hard black outlines, warm soft lighting from the upper left, a faint light-gray " +
+  "watercolor shadow under each object, matching a children's Korean-language-learning " +
+  "picture book. High resolution, square 1:1 overall image.";
+
+function bookGridPrompt(prompt: string): string {
+  return `${BOOK_GRID_STYLE}\n\nThe four cells (top-left, top-right, bottom-left, bottom-right): ${prompt}`;
+}
+
 interface CoverResult {
   theme: string;
   extraCharacter?: string;
@@ -676,6 +695,14 @@ serve(async (req) => {
       });
     }
 
+    if (body.mode === "book-grid") {
+      const prompt = String(body.prompt ?? "").trim().slice(0, 2000);
+      if (!prompt) throw new Error("prompt is required");
+      const imageDataUrl = await generateConceptImage(bookGridPrompt(prompt), metaApiKey, false, "1024x1024");
+      return new Response(JSON.stringify({ imageDataUrl }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (body.mode === "room-scene") {
       const setting = String(body.setting ?? "").trim().slice(0, 300);
       const objects = (Array.isArray(body.objects) ? body.objects : [])

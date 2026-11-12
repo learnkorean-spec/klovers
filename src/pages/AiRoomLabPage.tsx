@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import WatercolorVocabSheet from "@/components/admin/WatercolorVocabSheet";
 import RoomSceneSheet from "@/components/admin/RoomSceneSheet";
+import BookWatercolorGrid from "@/components/admin/BookWatercolorGrid";
 
 interface DesignBrief {
   roomName: string;
@@ -199,6 +200,7 @@ export default function AiRoomLabPage() {
           <WatercolorVocabSheet />
           <RoomSceneSheet />
         </section>
+        <BookWatercolorGrid />
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
