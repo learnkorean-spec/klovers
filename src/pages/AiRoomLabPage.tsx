@@ -10,6 +10,7 @@ import { ArrowLeft, Loader2, Sparkles, Download, Images } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import WatercolorVocabSheet from "@/components/admin/WatercolorVocabSheet";
+import RoomSceneSheet from "@/components/admin/RoomSceneSheet";
 
 interface DesignBrief {
   roomName: string;
@@ -193,7 +194,11 @@ export default function AiRoomLabPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-8">
-        <WatercolorVocabSheet />
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold">Section 1: Everyday Korean posts</h2>
+          <WatercolorVocabSheet />
+          <RoomSceneSheet />
+        </section>
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">

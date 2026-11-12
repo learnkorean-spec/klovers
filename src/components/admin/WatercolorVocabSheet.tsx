@@ -37,7 +37,7 @@ const PARALLEL = 3;
 // Measured from the 1080 x 1350 sheet inside Re's examples.
 const W = 1080;
 const H = 1350;
-const C = {
+export const C = {
   page: "#FBF8F0",
   ink: "#2E2E2E",
   sub: "#8C8780",
@@ -46,11 +46,11 @@ const C = {
   yellow: "#FFF35C",
   yellowEdge: "#D9CB2E",
 };
-const KO_FONT = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
-const EN_FONT = "Inter, 'Segoe UI', Arial, sans-serif";
+export const KO_FONT = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif";
+export const EN_FONT = "Inter, 'Segoe UI', Arial, sans-serif";
 const BRAND_FONT = "Poppins, 'Segoe UI', Arial, sans-serif";
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+export function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -59,7 +59,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -70,7 +70,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 }
 
 /** The colour at an image's corner, so the card's picture area blends into it. */
-function cornerColor(img: HTMLImageElement): string {
+export function cornerColor(img: HTMLImageElement): string {
   const c = document.createElement("canvas");
   c.width = 8;
   c.height = 8;
@@ -84,14 +84,8 @@ function cornerColor(img: HTMLImageElement): string {
   return `rgb(${Math.round(r / n)},${Math.round(g / n)},${Math.round(b / n)})`;
 }
 
-async function drawSheet(ctx: CanvasRenderingContext2D, words: Word[], subtitle: string) {
-  await document.fonts?.ready;
-  const [cols, rows] = GRID[words.length] ?? [3, 3];
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = C.page;
-  ctx.fillRect(0, 0, W, H);
-
-  // Header: K badge, wordmark, subtitle, rule.
+/** KLOVERS header (K badge, wordmark, top-right label, rule), shared by both styles. */
+export function drawHeader(ctx: CanvasRenderingContext2D, subtitle: string) {
   ctx.beginPath();
   ctx.arc(100, 62, 23, 0, Math.PI * 2);
   ctx.fillStyle = C.yellow;
@@ -116,6 +110,28 @@ async function drawSheet(ctx: CanvasRenderingContext2D, words: Word[], subtitle:
   ctx.letterSpacing = "0px";
   ctx.fillStyle = C.line;
   ctx.fillRect(77, 100, 926, 2);
+}
+
+/** Footer rule and site address, shared by both styles. */
+export function drawFooter(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = C.line;
+  ctx.fillRect(77, 1290, 926, 2);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = C.ink;
+  ctx.font = `700 19px ${BRAND_FONT}`;
+  ctx.letterSpacing = "1px";
+  ctx.fillText("kloversegy.com", 80, 1318);
+  ctx.letterSpacing = "0px";
+}
+
+async function drawSheet(ctx: CanvasRenderingContext2D, words: Word[], subtitle: string) {
+  await document.fonts?.ready;
+  const [cols, rows] = GRID[words.length] ?? [3, 3];
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.page;
+  ctx.fillRect(0, 0, W, H);
+  drawHeader(ctx, subtitle);
 
   // Cards.
   const gx = 13, gy = 16, x0 = 77, y0 = 125, gw = 926, gh = 1146;
@@ -164,20 +180,11 @@ async function drawSheet(ctx: CanvasRenderingContext2D, words: Word[], subtitle:
     ctx.fillText(w.english, x + cw / 2, y + ih + labelH * 0.5 + enSize * 1.35);
   }
 
-  // Footer.
-  ctx.fillStyle = C.line;
-  ctx.fillRect(77, 1290, 926, 2);
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = C.ink;
-  ctx.font = `700 19px ${BRAND_FONT}`;
-  ctx.letterSpacing = "1px";
-  ctx.fillText("kloversegy.com", 80, 1318);
-  ctx.letterSpacing = "0px";
+  drawFooter(ctx);
 }
 
 /** The 9:16 story version: the sheet over a soft, blurred copy of itself. */
-function storyFrom(sheet: HTMLCanvasElement): HTMLCanvasElement {
+export function storyFrom(sheet: HTMLCanvasElement): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = 1080;
   c.height = 1920;
@@ -192,7 +199,7 @@ function storyFrom(sheet: HTMLCanvasElement): HTMLCanvasElement {
   return c;
 }
 
-function download(canvas: HTMLCanvasElement, name: string) {
+export function download(canvas: HTMLCanvasElement, name: string) {
   canvas.toBlob((blob) => {
     if (!blob) return;
     const a = document.createElement("a");
@@ -309,7 +316,7 @@ export default function WatercolorVocabSheet() {
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Palette className="h-4 w-4" /> Watercolor vocabulary sheet
+          <Palette className="h-4 w-4" /> Style 1: Watercolor word grid (9 pictures)
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -314,6 +314,70 @@ function vocabIconPrompt(picture: string): string {
   );
 }
 
+/**
+ * Style 2 (Re, 12 Nov 2026, sharing a Seollal room and a bank waiting room):
+ * one isometric cutaway room, painted in watercolor, whose objects get big
+ * Korean/English callouts laid over it on the page. The image itself must
+ * carry no text; the labels are drawn on the canvas, larger than the
+ * originals ("writing in my picture is so small").
+ */
+function roomScenePrompt(setting: string, objects: string[]): string {
+  return (
+    `An isometric cutaway illustration of ${setting}, shown as a single cube-shaped room ` +
+    "diorama seen from above at a 30 degree isometric angle: two back walls and the floor, " +
+    "the front walls removed, with thick pale grey cut wall edges outlining a hexagon. " +
+    "Painted as a detailed, delicate watercolor illustration: soft washes, fine ink-free " +
+    "details, gentle light from a window, warm cream walls, a soft butter-yellow wooden floor, " +
+    "sage green and warm wood accents. The room clearly contains each of these, each one " +
+    `large, fully visible and well separated from the others: ${objects.join("; ")}. ` +
+    "The room is centred and fills about 85 percent of a square frame, on a plain, even, warm " +
+    "off-white background (#FBF8F0) outside the room. No people, no animals, and absolutely no " +
+    "text, letters, numbers, labels, signs or logos anywhere. Square 1:1 composition."
+  );
+}
+
+/** gpt-4o-mini looks at the painted room and points at each object (0-1 coords). */
+async function locateRoomObjects(
+  imageDataUrl: string,
+  objects: string[],
+  openAiKey: string,
+): Promise<({ x: number; y: number } | null)[]> {
+  const ask =
+    "This is an isometric illustration of a room. For each numbered object below, give the " +
+    "point at the visual centre of that object in the image, as fractions of the image width " +
+    "(x, 0 = left edge, 1 = right edge) and height (y, 0 = top, 1 = bottom). If an object is " +
+    "not in the image, give null for it. Respond with ONLY a JSON array, one entry per object " +
+    'in order, each {"x": number, "y": number} or null. No markdown, no prose.\n' +
+    objects.map((o, i) => `${i + 1}. ${o}`).join("\n");
+  const res = await fetch(AI_CHAT_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${openAiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: AI_TEXT_MODEL,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: ask },
+            { type: "image_url", image_url: { url: imageDataUrl, detail: "high" } },
+          ],
+        },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`Locate error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  const content: string = data?.choices?.[0]?.message?.content ?? "";
+  const cleaned = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  const parsed = JSON.parse(cleaned);
+  const list = Array.isArray(parsed) ? parsed : [];
+  return objects.map((_, i) => {
+    const p = list[i] as { x?: number; y?: number } | null;
+    if (!p || typeof p.x !== "number" || typeof p.y !== "number") return null;
+    return { x: Math.min(1, Math.max(0, p.x)), y: Math.min(1, Math.max(0, p.y)) };
+  });
+}
+
 interface CoverResult {
   theme: string;
   extraCharacter?: string;
@@ -521,6 +585,29 @@ serve(async (req) => {
       if (!picture) throw new Error("picture is required");
       const imageDataUrl = await generateConceptImage(vocabIconPrompt(picture), metaApiKey, false, "1024x1024");
       return new Response(JSON.stringify({ imageDataUrl }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (body.mode === "room-scene") {
+      const setting = String(body.setting ?? "").trim().slice(0, 300);
+      const objects = (Array.isArray(body.objects) ? body.objects : [])
+        .map((o: unknown) => String(o ?? "").trim().slice(0, 120))
+        .filter(Boolean)
+        .slice(0, 10);
+      if (!setting || !objects.length) throw new Error("setting and objects are required");
+      const imageDataUrl = await generateConceptImage(roomScenePrompt(setting, objects), metaApiKey, false, "1024x1024");
+      return new Response(JSON.stringify({ imageDataUrl }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (body.mode === "room-locate") {
+      if (!openAiKey) throw new Error("OPENAI_API_KEY not configured (needed to place labels)");
+      const imageDataUrl = String(body.imageDataUrl ?? "");
+      const objects = (Array.isArray(body.objects) ? body.objects : []).map((o: unknown) => String(o ?? "").slice(0, 120)).slice(0, 10);
+      if (!imageDataUrl.startsWith("data:image/") || !objects.length) throw new Error("imageDataUrl and objects are required");
+      const points = await locateRoomObjects(imageDataUrl, objects, openAiKey);
+      return new Response(JSON.stringify({ points }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
