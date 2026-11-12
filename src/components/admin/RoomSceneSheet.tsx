@@ -225,7 +225,11 @@ export default function RoomSceneSheet() {
       const data = await invoke({ mode: "room-locate", cleanImageDataUrl: cleanCopy(img), imageDataUrl: gridCopy(img), objects: list.map((l) => `${l.english}: ${l.object}`) });
       points = data.points ?? [];
     } catch (e) {
-      toast({ title: "Couldn't find the objects automatically", description: "Drag each dot onto its object.", variant: "destructive" });
+      toast({
+        title: "Couldn't find the objects automatically",
+        description: `Drag each dot onto its object. (${e instanceof Error ? e.message.slice(0, 160) : "unknown error"})`,
+        variant: "destructive",
+      });
     }
     if (id !== run.current) return;
     const withDots = list.map((l, i) => {

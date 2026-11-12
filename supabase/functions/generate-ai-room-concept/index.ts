@@ -337,6 +337,93 @@ function roomScenePrompt(setting: string, objects: string[]): string {
 }
 
 /**
+ * One question about one or more images. The OpenAI key has been invalid in
+ * production (401 on 12 Nov 2026, the reason Style 2's first dots were only
+ * placeholders), so this tries Muse Spark on the Meta account first, then
+ * Amazon Nova (Pro, then Lite) on Bedrock, then OpenAI gpt-4o, and only
+ * fails if all of them do.
+ */
+async function askVision(
+  prompt: string,
+  images: string[],
+  metaApiKey: string,
+  openAiKey: string | undefined,
+): Promise<{ text: string; provider: string }> {
+  const errors: string[] = [];
+  const openAiStyle = (model: string) => ({
+    model,
+    temperature: 0,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          ...images.map((url) => ({ type: "image_url", image_url: { url } })),
+        ],
+      },
+    ],
+  });
+  try {
+    const res = await fetch(`${META_API_BASE}/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${metaApiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(openAiStyle(MUSE_SPARK_MODEL)),
+    });
+    if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
+    const text = (await res.json())?.choices?.[0]?.message?.content;
+    if (typeof text === "string" && text.includes("{")) return { text, provider: "muse-spark" };
+    throw new Error("no JSON in reply");
+  } catch (e) {
+    errors.push(`Muse Spark: ${String((e as Error)?.message ?? e)}`);
+  }
+  const ak = Deno.env.get("AWS_ACCESS_KEY_ID");
+  const sk = Deno.env.get("AWS_SECRET_ACCESS_KEY");
+  const region = Deno.env.get("AWS_REGION");
+  if (ak && sk && region) {
+    const { BedrockRuntimeClient, ConverseCommand } = await import("npm:@aws-sdk/client-bedrock-runtime@3");
+    const client = new BedrockRuntimeClient({ region, credentials: { accessKeyId: ak, secretAccessKey: sk } });
+    const imageBlocks = images.map((url) => {
+      const [head, b64] = url.split(",");
+      const format = /png/.test(head) ? "png" : "jpeg";
+      return { image: { format, source: { bytes: Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0)) } } };
+    });
+    for (const modelId of ["amazon.nova-pro-v1:0", "amazon.nova-lite-v1:0"]) {
+      try {
+        const res = await client.send(
+          new ConverseCommand({
+            modelId,
+            messages: [{ role: "user", content: [...imageBlocks, { text: prompt }] }],
+            inferenceConfig: { temperature: 0 },
+          }),
+        );
+        // deno-lint-ignore no-explicit-any
+        const text = res.output?.message?.content?.find((b: any) => typeof b.text === "string")?.text;
+        if (text && text.includes("{")) return { text, provider: modelId };
+        throw new Error("no JSON in reply");
+      } catch (e) {
+        errors.push(`${modelId}: ${String((e as Error)?.message ?? e).slice(0, 200)}`);
+      }
+    }
+  }
+  if (openAiKey) {
+    try {
+      const res = await fetch(AI_CHAT_URL, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${openAiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(openAiStyle("gpt-4o")),
+      });
+      if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
+      const text = (await res.json())?.choices?.[0]?.message?.content ?? "";
+      if (text.includes("{")) return { text, provider: "gpt-4o" };
+      throw new Error("no JSON in reply");
+    } catch (e) {
+      errors.push(`OpenAI: ${String((e as Error)?.message ?? e)}`);
+    }
+  }
+  throw new Error(`No vision model could read the picture. ${errors.join(" | ")}`);
+}
+
+/**
  * Points at each object in the painted room. The page sends a copy of the
  * picture with a lettered 12 x 12 grid drawn over it (columns A-L, rows
  * 1-12); naming a grid square is far more reliable for a vision model than
@@ -348,7 +435,8 @@ async function locateRoomObjects(
   cleanImageDataUrl: string,
   gridImageDataUrl: string,
   objects: string[],
-  openAiKey: string,
+  metaApiKey: string,
+  openAiKey: string | undefined,
 ): Promise<({ x: number; y: number } | null)[]> {
   const ask =
     "You get two copies of the same isometric room illustration: the first is clean, the " +
@@ -363,29 +451,9 @@ async function locateRoomObjects(
     '"where": "<few words>", "square": "C7"}, ...]} with one item per object, in the same ' +
     "order and with the same numbers as the list.\n" +
     objects.map((o, i) => `${i + 1}. ${o}`).join("\n");
-  const res = await fetch(AI_CHAT_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${openAiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      temperature: 0,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: ask },
-            { type: "image_url", image_url: { url: cleanImageDataUrl, detail: "high" } },
-            { type: "image_url", image_url: { url: gridImageDataUrl, detail: "high" } },
-          ],
-        },
-      ],
-    }),
-  });
-  if (!res.ok) throw new Error(`Locate error ${res.status}: ${await res.text()}`);
-  const data = await res.json();
-  const content: string = data?.choices?.[0]?.message?.content ?? "{}";
-  const items: { n?: number; square?: string | null }[] = JSON.parse(content)?.items ?? [];
+  const { text: content } = await askVision(ask, [cleanImageDataUrl, gridImageDataUrl], metaApiKey, openAiKey);
+  const json = content.slice(content.indexOf("{"), content.lastIndexOf("}") + 1) || "{}";
+  const items: { n?: number; square?: string | null }[] = JSON.parse(json)?.items ?? [];
   return objects.map((_, i) => {
     const it = items.find((x) => Number(x?.n) === i + 1) ?? items[i];
     const m = /^([A-La-l])\s*(\d{1,2})$/.exec(String(it?.square ?? "").trim());
@@ -621,12 +689,11 @@ serve(async (req) => {
       });
     }
     if (body.mode === "room-locate") {
-      if (!openAiKey) throw new Error("OPENAI_API_KEY not configured (needed to place labels)");
       const cleanUrl = String(body.cleanImageDataUrl ?? "");
       const gridUrl = String(body.imageDataUrl ?? "");
       const objects = (Array.isArray(body.objects) ? body.objects : []).map((o: unknown) => String(o ?? "").slice(0, 120)).slice(0, 10);
       if (!gridUrl.startsWith("data:image/") || !objects.length) throw new Error("imageDataUrl and objects are required");
-      const points = await locateRoomObjects(cleanUrl.startsWith("data:image/") ? cleanUrl : gridUrl, gridUrl, objects, openAiKey);
+      const points = await locateRoomObjects(cleanUrl.startsWith("data:image/") ? cleanUrl : gridUrl, gridUrl, objects, metaApiKey, openAiKey);
       return new Response(JSON.stringify({ points }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
