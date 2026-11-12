@@ -39,7 +39,48 @@ function readSaved(): string[] {
   }
 }
 
-/** Cut a 2 x 2 picture into its four cells, each trimmed of white and squared. */
+/**
+ * Turn a cell's background pure white (Re, 12 Nov 2026: the model often
+ * paints a pale cream/gray card with paper grain behind each object, and the
+ * cells are cut out for the book). Two steps, both soft so shadow edges stay
+ * smooth: white-balance the whole cell so the card colour (median of a ring
+ * just inside the cell's edge) becomes exactly white, then snap the last few
+ * levels of paper grain to white and ease the next few toward it. The faint
+ * shadow under each object is darker than that and survives.
+ */
+function whitenBackground(d: Uint8ClampedArray, w: number, h: number) {
+  const ring: number[][] = [];
+  const inset = Math.round(w * 0.06);
+  for (let t = inset; t < w - inset; t += 4) {
+    for (const [x, y] of [[t, inset], [t, h - 1 - inset], [inset, t], [w - 1 - inset, t]]) {
+      const i = (y * w + x) * 4;
+      ring.push([d[i], d[i + 1], d[i + 2]]);
+    }
+  }
+  const med = (k: number) => ring.map((p) => p[k]).sort((a, b) => a - b)[Math.floor(ring.length / 2)];
+  const card = [med(0), med(1), med(2)];
+  if (Math.min(...card) > 200 && Math.max(...card) - Math.min(...card) < 25) {
+    const f = card.map((c) => 255 / c);
+    for (let i = 0; i < d.length; i += 4) {
+      d[i] = Math.min(255, d[i] * f[0]);
+      d[i + 1] = Math.min(255, d[i + 1] * f[1]);
+      d[i + 2] = Math.min(255, d[i + 2] * f[2]);
+    }
+  }
+  for (let i = 0; i < d.length; i += 4) {
+    const gap = 765 - d[i] - d[i + 1] - d[i + 2];
+    if (gap <= 12) {
+      d[i] = d[i + 1] = d[i + 2] = 255;
+    } else if (gap < 28) {
+      const t = (28 - gap) / 16;
+      d[i] += (255 - d[i]) * t;
+      d[i + 1] += (255 - d[i + 1]) * t;
+      d[i + 2] += (255 - d[i + 2]) * t;
+    }
+  }
+}
+
+/** Cut a 2 x 2 picture into its four cells: background whitened, trimmed and squared. */
 async function cutCells(src: string): Promise<string[]> {
   const img = await loadImage(src);
   const W = img.naturalWidth;
@@ -55,7 +96,10 @@ async function cutCells(src: string): Promise<string[]> {
     c.height = qh;
     const x = c.getContext("2d", { willReadFrequently: true })!;
     x.drawImage(img, qx, qy, qw, qh, 0, 0, qw, qh);
-    const d = x.getImageData(0, 0, qw, qh).data;
+    const data = x.getImageData(0, 0, qw, qh);
+    const d = data.data;
+    whitenBackground(d, qw, qh);
+    x.putImageData(data, 0, 0);
     // Bounding box of anything that isn't near-white, ignoring a thin edge
     // strip where a neighbouring cell may bleed across the centre line.
     const edge = Math.round(qw * 0.01);
