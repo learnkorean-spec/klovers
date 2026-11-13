@@ -239,9 +239,14 @@ export default function AiRoomLabPage() {
         <BookWatercolorGrid key={`bk-${keys.book}`} headerAction={<ResetButton onReset={resetBook} />} />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Images className="h-4 w-4" /> Generate all book covers at once
-            </CardTitle>
+            <div className="flex items-center gap-3">
+              <a href="/assets/ai-room-lab/covers-example.webp" target="_blank" rel="noreferrer" title="Example: click to open" className="shrink-0">
+                <img src="/assets/ai-room-lab/covers-example.webp" alt="Book cover example: Adam, Lina and Cluby in a Seoul street, no text" className="h-20 w-14 rounded border object-cover bg-white" />
+              </a>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Images className="h-4 w-4" /> Generate all book covers at once
+              </CardTitle>
+            </div>
             <ResetButton onReset={resetCovers} />
           </CardHeader>
           <CardContent className="space-y-3">
@@ -349,7 +354,12 @@ export default function AiRoomLabPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-            <CardTitle className="text-base">Describe a single room theme</CardTitle>
+            <div className="flex items-center gap-3">
+              <a href="/assets/ai-room-lab/rooms-example.webp" target="_blank" rel="noreferrer" title="Example: click to open" className="shrink-0">
+                <img src="/assets/ai-room-lab/rooms-example.webp" alt="Room concept example: the convenience store that became a World2 room" className="h-16 w-32 rounded border object-cover bg-white" />
+              </a>
+              <CardTitle className="text-base">Describe a single room theme</CardTitle>
+            </div>
             <ResetButton onReset={resetRooms} />
           </CardHeader>
           <CardContent className="space-y-3">
