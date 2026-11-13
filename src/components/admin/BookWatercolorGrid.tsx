@@ -209,9 +209,14 @@ export default function BookWatercolorGrid({ headerAction }: { headerAction?: Re
       <h2 className="text-lg font-semibold">Section 2: Book watercolor pictures</h2>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-          <CardTitle className="text-base flex items-center gap-2">
-            <BookOpen className="h-4 w-4" /> 5 prompts, 5 pictures (each a 2 x 2 grid of 4 cells)
-          </CardTitle>
+          <div className="flex items-center gap-3">
+            <a href="/assets/ai-room-lab/book-example.webp" target="_blank" rel="noreferrer" title="Example: click to open" className="shrink-0">
+            <img src="/assets/ai-room-lab/book-example.webp" alt="Book example: four watercolor pictures in a 2 x 2 grid" className="h-16 w-16 rounded border object-cover bg-white" />
+          </a>
+            <CardTitle className="text-base flex items-center gap-2">
+              <BookOpen className="h-4 w-4" /> 5 prompts, 5 pictures (each a 2 x 2 grid of 4 cells)
+            </CardTitle>
+          </div>
           {headerAction}
         </CardHeader>
         <CardContent className="space-y-4">

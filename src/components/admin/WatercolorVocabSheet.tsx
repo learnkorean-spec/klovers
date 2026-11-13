@@ -315,9 +315,14 @@ export default function WatercolorVocabSheet({ headerAction }: { headerAction?: 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Palette className="h-4 w-4" /> Style 1: Watercolor word grid (9 pictures)
-        </CardTitle>
+        <div className="flex items-center gap-3">
+          <a href="/assets/ai-room-lab/style1-example.webp" target="_blank" rel="noreferrer" title="Example: click to open" className="shrink-0">
+            <img src="/assets/ai-room-lab/style1-example.webp" alt="Style 1 example: a watercolor word grid" className="h-20 w-16 rounded border object-cover bg-white" />
+          </a>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Palette className="h-4 w-4" /> Style 1: Watercolor word grid (9 pictures)
+          </CardTitle>
+        </div>
         {headerAction}
       </CardHeader>
       <CardContent className="space-y-4">

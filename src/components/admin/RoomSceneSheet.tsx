@@ -340,9 +340,14 @@ export default function RoomSceneSheet({ headerAction }: { headerAction?: ReactN
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Home className="h-4 w-4" /> Style 2: Labelled room (isometric watercolor)
-        </CardTitle>
+        <div className="flex items-center gap-3">
+          <a href="/assets/ai-room-lab/style2-example.webp" target="_blank" rel="noreferrer" title="Example: click to open" className="shrink-0">
+            <img src="/assets/ai-room-lab/style2-example.webp" alt="Style 2 example: a labelled watercolor room" className="h-20 w-16 rounded border object-cover bg-white" />
+          </a>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Home className="h-4 w-4" /> Style 2: Labelled room (isometric watercolor)
+          </CardTitle>
+        </div>
         {headerAction}
       </CardHeader>
       <CardContent className="space-y-4">
