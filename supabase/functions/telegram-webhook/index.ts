@@ -52,6 +52,21 @@
 // features like a non-creator admin) -- same reason post-scheduled-
 // telegram-posts and telegram-group-broadcast use the new id now too.
 //
+// Re, 13 Nov 2026: "the people attend the trial and i dont have thier number
+// after that i lost them ... add them to telegram and do the group ... all
+// not connected steps". Three additions close that:
+//   * /start with a TRIAL link code (trial_telegram.link_code, shown on the
+//     booking confirmation screen) links a trial student before she ever has
+//     an account, so the bot can reach her without a phone number.
+//   * my_chat_member keeps telegram_chats current: which groups the bot is
+//     in, and whether it may create invite links there. Re can also type
+//     /register inside a group to add it by hand.
+//   * chat_member reports the exact invite link a new member used. Each
+//     trial student gets her own single-use link (telegram-trial-invite), so
+//     a join is matched back to her booking and stamped joined_at.
+// A basic group that Telegram upgrades to a supergroup changes its chat id;
+// the migrate_to_chat_id service message is followed so no link goes stale.
+//
 // SECURITY
 // --------
 // Telegram is registered with a secret_token (setWebhook); every genuine
@@ -64,6 +79,7 @@
 // any group it has not been added to.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { refreshChat } from "../_shared/telegram.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -230,6 +246,54 @@ Deno.serve(async (req) => {
   try {
     const update = await req.json();
 
+    // The bot itself was added to / removed from / promoted in a chat.
+    const mine = update?.my_chat_member;
+    if (mine?.chat?.id && mine.chat.type !== "private") {
+      const status: string = mine.new_chat_member?.status ?? "unknown";
+      const canInvite = status === "creator" ||
+        (status === "administrator" && mine.new_chat_member?.can_invite_users === true);
+      const { error } = await supabase.from("telegram_chats").upsert({
+        chat_id: mine.chat.id,
+        title: mine.chat.title ?? null,
+        chat_type: mine.chat.type,
+        bot_status: status,
+        can_invite: canInvite,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "chat_id" });
+      if (error) console.error("telegram_chats upsert (my_chat_member) failed", error);
+      return new Response("ok");
+    }
+
+    // Somebody's membership changed in a group the bot administers. Only one
+    // case matters here: she joined through a link the bot made for her.
+    const member = update?.chat_member;
+    if (member?.chat?.id) {
+      const usedLink: string | undefined = member.invite_link?.invite_link;
+      const nowIn = ["member", "administrator", "restricted", "creator"]
+        .includes(member.new_chat_member?.status ?? "");
+      if (usedLink && nowIn) {
+        const { data: tt } = await supabase
+          .from("trial_telegram")
+          .select("booking_id, joined_at")
+          .eq("invite_link", usedLink)
+          .maybeSingle();
+        if (tt && !tt.joined_at) {
+          const joined = member.new_chat_member?.user;
+          await supabase.from("trial_telegram").update({
+            joined_at: new Date().toISOString(),
+            tg_user_id: joined?.id ?? null,
+            tg_username: joined?.username ?? null,
+            updated_at: new Date().toISOString(),
+          }).eq("booking_id", tt.booking_id);
+          const { data: booking } = await supabase.from("trial_bookings")
+            .select("name").eq("id", tt.booking_id).maybeSingle();
+          await sendMessage(cfg.bot_token, cfg.admin_chat_id,
+            `✅ ${booking?.name || "طالبة التراير"} دخلت جروب "${member.chat.title ?? ""}" باللينك بتاعها.`);
+        }
+      }
+      return new Response("ok");
+    }
+
     const cb = update?.callback_query;
     if (cb) {
       const chatId: number | undefined = cb.message?.chat?.id;
@@ -395,6 +459,33 @@ Deno.serve(async (req) => {
     const text: string = (msg.text ?? "").trim();
     const from = msg.from;
     const tgName = displayName(from);
+
+    // A basic group became a supergroup: same group, new chat id. Follow it
+    // everywhere the old id is stored, or every reminder and invite for that
+    // group would start failing silently.
+    const migratedTo: number | undefined = msg.migrate_to_chat_id;
+    if (migratedTo) {
+      await supabase.from("telegram_links")
+        .update({ chat_id: migratedTo, updated_at: new Date().toISOString() }).eq("chat_id", chatId);
+      await supabase.from("trial_telegram")
+        .update({ invite_chat_id: migratedTo, updated_at: new Date().toISOString() }).eq("invite_chat_id", chatId);
+      await supabase.from("telegram_chats").delete().eq("chat_id", chatId);
+      await refreshChat(supabase, cfg.bot_token, migratedTo);
+      return new Response("ok");
+    }
+
+    // Re typed /register inside one of her groups: record the group so it
+    // shows up in the "Who came" panel's group picker. Answered in her own
+    // chat with the bot, not in the group.
+    if (!isPrivate && /^\/register(?:@\w+)?$/i.test(text) && String(from?.id) === String(cfg.admin_chat_id)) {
+      const row = await refreshChat(supabase, cfg.bot_token, chatId);
+      await sendMessage(cfg.bot_token, cfg.admin_chat_id, !row
+        ? `⚠️ معرفتش أسجل جروب "${msg.chat.title ?? ""}".`
+        : row.can_invite
+          ? `✅ جروب "${row.title ?? ""}" اتسجل، والبوت يقدر يعمل لينكات دعوة فيه.`
+          : `✅ جروب "${row.title ?? ""}" اتسجل، بس البوت لسه مش أدمن بصلاحية "Invite Users via Link" — خليه أدمن عشان يقدر يعمل لينكات دعوة.`);
+      return new Response("ok");
+    }
 
     // Re talking to her own bot.
     if (String(chatId) === String(cfg.admin_chat_id)) {
@@ -581,6 +672,44 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (!link) {
+        // Not an enrolled student's code. A trial booking's code?
+        const { data: trial } = await supabase
+          .from("trial_telegram")
+          .select("booking_id, chat_id")
+          .eq("link_code", code)
+          .maybeSingle();
+
+        if (trial) {
+          const { data: booking } = await supabase.from("trial_bookings")
+            .select("name, class_language").eq("id", trial.booking_id).maybeSingle();
+          const firstTime = trial.chat_id !== chatId;
+          const { error: trialError } = await supabase.from("trial_telegram").update({
+            chat_id: chatId,
+            tg_user_id: from?.id ?? null,
+            tg_username: from?.username ?? null,
+            tg_first_name: from?.first_name ?? null,
+            linked_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }).eq("booking_id", trial.booking_id);
+          if (trialError) throw trialError;
+
+          const en = booking?.class_language === "english";
+          await sendMessage(cfg.bot_token, chatId, en
+            ? `Hi ${booking?.name || tgName} 👋
+You're connected to Klovers ✅
+We'll send your trial class link here before it starts, and you can write to us here any time.`
+            : `أهلاً ${booking?.name || tgName} 👋
+اتربطتي بـ Klovers ✅
+هنبعتلك هنا لينك حصة التراير قبل ما تبدأ، وتقدري تكتبيلنا هنا في أي وقت.`);
+
+          if (firstTime) {
+            const handle = from?.username ? ` (@${from.username})` : "";
+            await sendMessage(cfg.bot_token, cfg.admin_chat_id,
+              `🔗 ${booking?.name || "طالبة تراير"} (تراير) ربطت تيليجرام${handle}`);
+          }
+          return new Response("ok");
+        }
+
         await sendMessage(cfg.bot_token, chatId,
           "اللينك ده مش شغال 🙏 اطلب من المدرّسة لينك ربط جديد.");
         return new Response("ok");
@@ -639,9 +768,28 @@ Deno.serve(async (req) => {
       if (data?.name) who = data.name;
     }
 
+    // A trial student who linked from her booking: name her, and say so, so
+    // Re knows this is a lead writing in and not an enrolled student.
+    let isTrialLead = false;
+    if (!linked) {
+      const { data: trialRows } = await supabase
+        .from("trial_telegram")
+        .select("booking_id")
+        .eq("chat_id", chatId)
+        .order("linked_at", { ascending: false })
+        .limit(1);
+      const bookingId = trialRows?.[0]?.booking_id;
+      if (bookingId) {
+        const { data } = await supabase.from("trial_bookings")
+          .select("name").eq("id", bookingId).maybeSingle();
+        if (data?.name) who = data.name;
+        isTrialLead = true;
+      }
+    }
+
     const body = text || "(رسالة بدون نص — صورة أو ملف أو فويس)";
     await sendMessage(cfg.bot_token, cfg.admin_chat_id,
-      `📩 ${who}${linked ? "" : " (مش مربوط)"}${from?.username ? ` @${from.username}` : ""}:\n${body}`);
+      `📩 ${who}${linked ? "" : isTrialLead ? " (تراير)" : " (مش مربوط)"}${from?.username ? ` @${from.username}` : ""}:\n${body}`);
   } catch (e) {
     console.error("telegram-webhook error", e);
   }

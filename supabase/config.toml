@@ -37,6 +37,16 @@ verify_jwt = false
 [functions.telegram-group-attendance-ask]
 verify_jwt = false
 
+# telegram-followups is called only by pg_cron with the service role key.
+# telegram-trial-invite is called from the admin dashboard and checks the
+# caller is an admin itself (authorizeRequest). Declared here so the FIRST
+# deploy of each does not land on the platform default (verify_jwt = true).
+[functions.telegram-followups]
+verify_jwt = false
+
+[functions.telegram-trial-invite]
+verify_jwt = false
+
 [functions.submit-lead]
 verify_jwt = false
 

@@ -660,6 +660,30 @@ Deno.serve(async (req) => {
       } catch { /* non-critical */ }
     }
 
+    // 6. Her personal Telegram link. Best effort, never fatal.
+    //
+    // Re, 13 Nov 2026: "the people attend the trial and i dont have thier
+    // number after that i lost them". A phone number can be mistyped and an
+    // email can bounce; one tap on this link gives the bot a chat it can
+    // always reach her on (class link before the trial, her group invite and
+    // the enrol link after it). Any failure here, including the table not
+    // existing yet between this deploy and the Apply Migrations run, simply
+    // leaves telegram_url null and the success screen hides the button.
+    let telegramUrl: string | null = null;
+    try {
+      await supabase.from("trial_telegram")
+        .upsert({ booking_id: booking.id }, { onConflict: "booking_id", ignoreDuplicates: true });
+      const { data: tgRow } = await supabase
+        .from("trial_telegram")
+        .select("link_code")
+        .eq("booking_id", booking.id)
+        .maybeSingle();
+      const code = (tgRow as { link_code?: string } | null)?.link_code;
+      if (code) telegramUrl = `https://t.me/learnkoreanwithkloversbot?start=${code}`;
+    } catch (e) {
+      console.warn("[book-trial] telegram link not created:", e);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -672,6 +696,7 @@ Deno.serve(async (req) => {
           duration_min: slotDurationMin,
           timezone,
           calendar_url: calendarUrl,
+          telegram_url: telegramUrl,
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

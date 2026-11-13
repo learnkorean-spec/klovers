@@ -71,6 +71,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import {
+  FunnelBadges, TelegramGroupPicker, TelegramInviteButton,
+  useChosenChat, useFunnelStatus, useTelegramChats,
+} from "./TrialTelegramInvite";
 
 /** true / false / null — the three states, as one value the Select can hold. */
 type Mark = "yes" | "no" | "unknown";
@@ -99,9 +103,12 @@ type Row = {
  * Telegram group (a real add-by-phone isn't possible — Telegram's bot API
  * only lets a student join herself, via a link) AND the enroll-now booking
  * link, together, so nothing has to be chased down a second time. Same
- * community link as Footer/CommunityBand/FAQPage; a per-level invite link
- * is not available from Telegram's API without creating a group ahead of
- * time for every level, and Re confirmed one shared link is fine for now.
+ * community link as Footer/CommunityBand/FAQPage.
+ *
+ * Later the same day this became the FALLBACK. When a class group is chosen
+ * in the picker above the list, each student gets her own invite link to
+ * that group instead (TrialTelegramInvite). This plain WhatsApp button is
+ * what remains when no group is chosen, or before the bot is set up.
  */
 const TELEGRAM_COMMUNITY_LINK = "https://t.me/+Fu5T7d4wLMsxNDY9";
 const ENROLL_NOW_LINK = "https://kloversegy.com/enroll-now";
@@ -244,6 +251,16 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
     // A missing table before the migration lands must not blank the whole card.
     retry: false,
   });
+
+  // Telegram: the groups the bot can invite into, the one Re picked, and how
+  // far each student has got since the trial. All three are empty, and the
+  // panel behaves exactly as before, until the bot side is deployed.
+  const chatsQuery = useTelegramChats();
+  const chats = chatsQuery.data ?? [];
+  const [chosenChat, setChosenChat] = useChosenChat();
+  const chosenReady = chats.some(c => String(c.chat_id) === chosenChat && c.can_invite);
+  const bookingIds = useMemo(() => (data ?? []).map(r => r.id), [data]);
+  const { data: funnel } = useFunnelStatus(bookingIds);
 
   const confirmedAt = useMemo(() => {
     const m = new Map<string, string>();
@@ -459,6 +476,16 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
         </p>
       </div>
 
+      {chats.length > 0 && (
+        <TelegramGroupPicker
+          chats={chats}
+          chosen={chosenReady ? chosenChat : ""}
+          onChoose={setChosenChat}
+          onRefresh={() => chatsQuery.refetch()}
+          refreshing={chatsQuery.isFetching}
+        />
+      )}
+
       {sessions.map(s => {
         const isOpen = expanded.has(s.key);
         const label = `${formatSlotDate(s.date)} · ${(s.time ?? "TBA").slice(0, 5)}`;
@@ -581,6 +608,7 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
                     {r.attended_letter_sent_at && (
                       <Badge variant="outline" className="text-[10px]">letter sent</Badge>
                     )}
+                    <FunnelBadges status={funnel?.get(r.id)} />
                   </span>
 
                   <span className="flex items-center gap-1.5">
@@ -588,7 +616,14 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
                         Telegram link + the enroll-now link are needed — one
                         message, instead of hunting the number down again
                         later and sending each link separately. */}
-                    {r.attended === true && (
+                    {r.attended === true && chosenReady && (
+                      <TelegramInviteButton
+                        bookingId={r.id}
+                        chatId={chosenChat}
+                        status={funnel?.get(r.id)}
+                      />
+                    )}
+                    {r.attended === true && !chosenReady && (
                       hasPhone ? (
                         <Button
                           asChild

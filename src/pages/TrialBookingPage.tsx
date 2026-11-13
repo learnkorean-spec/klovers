@@ -22,7 +22,7 @@ import { track } from "@/lib/tracking";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
 import { LEVEL_SELECT_OPTIONS, getLevelShortLabel } from "@/constants/levels";
 import { ACTIVE_TRIAL_STATUS_LIST } from "@/constants/trialStatus";
-import { CalendarClock, CalendarX, ArrowRight, LayoutDashboard, MessageCircle, Link2, Check } from "lucide-react";
+import { CalendarClock, CalendarX, ArrowRight, LayoutDashboard, MessageCircle, Link2, Check, Send } from "lucide-react";
 import KloverIcon from "@/components/KloverIcon";
 import { countryLabel } from "@/lib/countryNames";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -188,6 +188,9 @@ interface BookingResult {
   duration_min: number;
   timezone: string;
   calendar_url: string;
+  /** Her personal bot link. Only on a fresh booking, and only once the
+   *  trial_telegram table exists; the button hides itself otherwise. */
+  telegram_url?: string | null;
 }
 
 /** A trial_bookings row, in the shape either recovery path can select. */
@@ -847,6 +850,38 @@ const TrialBookingPage = () => {
               </div>
 
               <div className="space-y-3">
+                {/* Telegram — one tap links her to the bot, so the class link
+                    and everything after the trial can reach her even when an
+                    email bounces or a phone number was mistyped (Re, 13 Nov
+                    2026: "i dont have thier number after that i lost them"). */}
+                {bookingResult.telegram_url && (
+                  <a
+                    href={bookingResult.telegram_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      track.custom("post_trial_cta_clicked", { cta: "telegram" });
+                      logLeadEvent({ source_type: "free_trial", cta_label: "post_booking_telegram" });
+                    }}
+                    className="w-full flex items-center gap-4 bg-sky-500/10 border-2 border-sky-500 rounded-xl p-4 text-start hover:bg-sky-500/20 hover:shadow-md transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-sky-500 flex items-center justify-center shrink-0">
+                      <Send className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-foreground">
+                        {language === "ar" ? "استلمي لينك الحصة على تيليجرام" : "Get your class link on Telegram"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {language === "ar"
+                          ? "افتحي البوت واضغطي Start، وهنبعتلك اللينك قبل الحصة."
+                          : "Open the bot and press Start. We'll send the link before class."}
+                      </p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-foreground rtl:rotate-180 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </a>
+                )}
+
                 {/* WhatsApp — primary action: fastest confirmation + human touch */}
                 <button
                   onClick={() => {
