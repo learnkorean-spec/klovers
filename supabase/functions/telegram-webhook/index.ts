@@ -42,6 +42,16 @@
 // unrestricted (nothing to check against) until the student runs /start
 // again, which backfills it silently.
 //
+// Re, 4 Nov 2026: "each chat must get ... new joiners" welcomed -- when
+// someone joins the big community group or the alumni group, greet them and
+// point them at a free trial. Channels don't emit new_chat_members (only
+// groups/supergroups do), so this only applies to those two. The alumni
+// group's id changed from -883335779 to -1004374526296 the moment the bot
+// was promoted to admin there (Telegram silently upgrades a basic group to
+// a supergroup, with a new id, the first time it needs supergroup-only
+// features like a non-creator admin) -- same reason post-scheduled-
+// telegram-posts and telegram-group-broadcast use the new id now too.
+//
 // SECURITY
 // --------
 // Telegram is registered with a secret_token (setWebhook); every genuine
@@ -57,6 +67,9 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+// Klovers Academy community chats (see klovers-telegram-integration notes).
+const WELCOME_GROUP_CHAT_IDS = new Set([-1001890232265, -1004374526296]);
 
 type Config = { bot_token: string; admin_chat_id: string; webhook_secret: string };
 
@@ -364,6 +377,20 @@ Deno.serve(async (req) => {
     if (!msg?.chat?.id) return new Response("ok");
 
     const chatId: number = msg.chat.id;
+
+    // --- new member welcome (community groups only; channels don't emit
+    // this event) -------------------------------------------------------
+    if (Array.isArray(msg.new_chat_members) && msg.new_chat_members.length > 0 && WELCOME_GROUP_CHAT_IDS.has(chatId)) {
+      for (const member of msg.new_chat_members) {
+        if (member.is_bot) continue;
+        const name = displayName(member);
+        const greeting = name ? `أهلاً بيكي ${name}` : "أهلاً بيكي";
+        await sendMessage(cfg.bot_token, chatId,
+          `${greeting} في عيلة Klovers 🇰🇷🌸\nهنا هتلاقي كل جديد عن الكورسات، مقالات تساعدك تتعلمي، وعروض من وقت للتاني.\nابدئي بحصة تجريبية مجانية من هنا:\n👉 https://kloversegy.com/free-trial`);
+      }
+      return new Response("ok");
+    }
+
     const isPrivate = msg.chat.type === "private";
     const text: string = (msg.text ?? "").trim();
     const from = msg.from;
