@@ -55,6 +55,7 @@ import { AlertCircle, AlertTriangle, Package, CalendarCheck, Users, GraduationCa
 import KloverIcon from "@/components/KloverIcon";
 import WorldEntryCard from "@/components/games/WorldEntryCard";
 import ExchangeEntryCard from "@/components/exchange/ExchangeEntryCard";
+import A0AudioEntryCard from "@/components/A0AudioEntryCard";
 import { Input } from "@/components/ui/input";
 import { toast, useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -912,6 +913,9 @@ const StudentDashboard = () => {
           {/* Language Exchange: a direct "go do this" card so students who
               never open the More menu still discover /exchange. */}
           <ExchangeEntryCard isAr={language === "ar"} compact />
+
+          {/* Hangul A0 book audio: the same page the book's QR code opens. */}
+          <A0AudioEntryCard isAr={language === "ar"} />
 
           {/* Account alerts (package running low / pending review) — compact */}
           {(() => {

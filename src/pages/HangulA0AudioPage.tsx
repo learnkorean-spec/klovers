@@ -7,7 +7,8 @@ import { A0_AUDIO, A0_PAGES } from "@/constants/hangulA0Audio";
  * Hangul A0 book audio. Each page of the printed/PDF book carries a QR code
  * that opens /a0 (the audio library: pick your page); /a0/<page> lists the Korean on that page and plays
  * each item (or all of them in order) from the recordings shipped with the
- * site. Open to everyone: a reader scanning the book is usually not signed in.
+ * site. Signed-in only (the route is wrapped in AuthProtectedRoute): a reader
+ * scanning the book signs in or makes a free account, then lands back here.
  */
 
 const BASE = "/assets/a0/audio/";
@@ -73,7 +74,9 @@ export default function HangulA0AudioPage() {
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFF00] text-lg font-black">K</span>
             Klovers
           </Link>
-          <span className="rounded-full bg-[#2E2E2E] px-3 py-1 text-xs font-bold text-[#FFFF00]">Hangul A0 · 한글</span>
+          <Link to="/dashboard" className="rounded-full bg-[#2E2E2E] px-3 py-1.5 text-xs font-bold text-[#FFFF00]">
+            My dashboard · لوحتي
+          </Link>
         </header>
 
         {current === null ? (

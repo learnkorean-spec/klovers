@@ -332,9 +332,10 @@ const App = () => (
                 <Route path="/admin/ai-room-lab" element={<ProtectedRoute><AiRoomLabPage /></ProtectedRoute>} />
                 <Route path="/admin/exchange-reports" element={<ProtectedRoute><AdminExchangeReportsPage /></ProtectedRoute>} />
                 <Route path="/world2" element={<World2Page />} />
-                {/* Hangul A0 book audio: the QR code on each book page opens /a0/<page>. */}
-                <Route path="/a0" element={<HangulA0AudioPage />} />
-                <Route path="/a0/:page" element={<HangulA0AudioPage />} />
+                {/* Hangul A0 book audio: the book's QR code opens /a0. Signed-in only (Re, 13 Nov 2026):
+                    listening happens inside the student's own account, next to the dashboard. */}
+                <Route path="/a0" element={<AuthProtectedRoute><HangulA0AudioPage /></AuthProtectedRoute>} />
+                <Route path="/a0/:page" element={<AuthProtectedRoute><HangulA0AudioPage /></AuthProtectedRoute>} />
                 <Route path="/admin/today" element={<ProtectedRoute><AdminToday /></ProtectedRoute>} />
                 {/* Must sit BEFORE /admin — /admin is exact-match in v6, so the
                     order is not load-bearing, but keeping the specific paths
