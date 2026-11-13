@@ -49,6 +49,7 @@ import { AlertCircle, AlertTriangle, Package, CalendarCheck, Users, GraduationCa
 import KloverIcon from "@/components/KloverIcon";
 import WorldEntryCard from "@/components/games/WorldEntryCard";
 import ExchangeEntryCard from "@/components/exchange/ExchangeEntryCard";
+import ExchangeAnnouncement from "@/components/exchange/ExchangeAnnouncement";
 import A0AudioEntryCard from "@/components/A0AudioEntryCard";
 import { Input } from "@/components/ui/input";
 import { toast, useToast } from "@/hooks/use-toast";
@@ -997,6 +998,9 @@ const StudentDashboard = () => {
           <DashboardTabBar />
 
           {alertsBlock}
+
+          {/* "Language exchange is open": on every tab, until dismissed. */}
+          <ExchangeAnnouncement isAr={language === "ar"} surface="korean_dashboard" />
 
           {/* ── TODAY: what do I do now? ── */}
           <TabsContent value="today" className={panel}>

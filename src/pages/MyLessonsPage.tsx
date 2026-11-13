@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Clock, Loader2, Video, AlertTriangle, Wallet } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import ExchangeAnnouncement from "@/components/exchange/ExchangeAnnouncement";
 import { formatMoney } from "@/types/students";
 import WorldEntryCard from "@/components/games/WorldEntryCard";
 import StudentSelfService from "@/components/StudentSelfService";
@@ -329,6 +330,8 @@ const MyLessonsPage = () => {
       {voca ? <VocaStudentHeader tr={tr} toggleLanguage={toggleLanguage} /> : <Header />}
       <main id="main-content" className={voca ? "pt-10 pb-16 px-4" : "pt-24 pb-16 px-4"}>
         <div className="max-w-2xl mx-auto space-y-5">
+
+          <ExchangeAnnouncement isAr={isAr} surface="english_dashboard" />
 
           {inWorld ? (
             <div className="space-y-2">

@@ -25,7 +25,8 @@ export type DashboardEvent =
   | { name: "dashboard_tab_view"; tab: string; starter: boolean }
   | { name: "dashboard_first_click"; target: string; tab: string; starter: boolean }
   | { name: "dashboard_clear_yes" | "dashboard_clear_no"; tab: string; starter: boolean }
-  | { name: "starter_step_click"; step: "level" | "lesson" | "trial" | "enroll" };
+  | { name: "starter_step_click"; step: "level" | "lesson" | "trial" | "enroll" }
+  | { name: "exchange_announce_click" | "exchange_announce_dismiss"; surface: string };
 
 export function dashEvent(e: DashboardEvent): void {
   const { name, ...params } = e;

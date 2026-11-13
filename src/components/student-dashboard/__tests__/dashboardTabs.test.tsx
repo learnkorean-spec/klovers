@@ -88,3 +88,22 @@ describe("ClarityPulse", () => {
     expect(screen.queryByText("Is this page clear?")).not.toBeInTheDocument();
   });
 });
+
+describe("ExchangeAnnouncement", () => {
+  it("links to the exchange app and stays hidden once dismissed", async () => {
+    const { default: ExchangeAnnouncement } = await import("@/components/exchange/ExchangeAnnouncement");
+    const { unmount } = wrap(<ExchangeAnnouncement isAr={false} surface="korean_dashboard" />);
+    expect(screen.getByText("Language exchange is open")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Find a partner" })).toHaveAttribute("href", "/exchange/app");
+    fireEvent.click(screen.getByRole("button", { name: "Hide this announcement" }));
+    expect(screen.queryByText("Language exchange is open")).not.toBeInTheDocument();
+    unmount();
+    wrap(<ExchangeAnnouncement isAr={false} surface="korean_dashboard" />);
+    expect(screen.queryByText("Language exchange is open")).not.toBeInTheDocument();
+  });
+  it("renders in Arabic", async () => {
+    const { default: ExchangeAnnouncement } = await import("@/components/exchange/ExchangeAnnouncement");
+    wrap(<ExchangeAnnouncement isAr surface="english_dashboard" />);
+    expect(screen.getByText("تبادل اللغة متاح الآن")).toBeInTheDocument();
+  });
+});
