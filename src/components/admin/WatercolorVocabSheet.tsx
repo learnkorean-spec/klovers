@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -210,7 +210,7 @@ export function download(canvas: HTMLCanvasElement, name: string) {
   }, "image/png");
 }
 
-export default function WatercolorVocabSheet() {
+export default function WatercolorVocabSheet({ headerAction }: { headerAction?: ReactNode }) {
   const [topic, setTopic] = useState("studying");
   const [preset, setPreset] = useState("");
   const [subtitle, setSubtitle] = useState("Everyday Korean");
@@ -314,10 +314,11 @@ export default function WatercolorVocabSheet() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
         <CardTitle className="text-base flex items-center gap-2">
           <Palette className="h-4 w-4" /> Style 1: Watercolor word grid (9 pictures)
         </CardTitle>
+        {headerAction}
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">

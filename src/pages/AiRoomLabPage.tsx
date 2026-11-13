@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import WatercolorVocabSheet from "@/components/admin/WatercolorVocabSheet";
 import RoomSceneSheet from "@/components/admin/RoomSceneSheet";
-import BookWatercolorGrid from "@/components/admin/BookWatercolorGrid";
+import BookWatercolorGrid, { BOOK_PROMPTS_STORE } from "@/components/admin/BookWatercolorGrid";
+import ResetButton from "@/components/admin/ResetButton";
 
 interface DesignBrief {
   roomName: string;
@@ -112,6 +113,40 @@ export default function AiRoomLabPage() {
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ done: number; total: number } | null>(null);
   const [covers, setCovers] = useState<CoverResult[]>([]);
+  // Re, 13 Nov 2026: every tool here can be reset. The three generator
+  // components reset by remounting (a new key); the two inline tools below
+  // reset their own state.
+  const [keys, setKeys] = useState({ style1: 0, style2: 0, book: 0 });
+  const bump = (k: keyof typeof keys) => setKeys((ks) => ({ ...ks, [k]: ks[k] + 1 }));
+  const resetBook = () => {
+    try {
+      localStorage.removeItem(BOOK_PROMPTS_STORE);
+    } catch {
+      /* storage blocked: the remount still clears what's on screen */
+    }
+    bump("book");
+  };
+  const resetCovers = () => {
+    setBatchText(ideasToText(DEFAULT_IDEAS));
+    setCovers([]);
+    setBatchProgress(null);
+  };
+  const resetRooms = () => {
+    setPrompt("");
+    setTheme(null);
+    setVariants([]);
+  };
+  const resetAll = () => {
+    setKeys((ks) => ({ style1: ks.style1 + 1, style2: ks.style2 + 1, book: ks.book + 1 }));
+    try {
+      localStorage.removeItem(BOOK_PROMPTS_STORE);
+    } catch {
+      /* ignore */
+    }
+    resetCovers();
+    resetRooms();
+    setUseCharacters(true);
+  };
 
   const generate = async () => {
     if (!prompt.trim()) return;
@@ -184,28 +219,30 @@ export default function AiRoomLabPage() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} aria-label="Back to admin">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-lg font-bold text-foreground">AI Room Lab</h1>
             <p className="text-xs text-muted-foreground">
               Generate watercolor vocabulary sheets, KLOVERS World room concepts and book-cover photos, powered by
               Meta's Model API (Muse Image + Muse Spark)
             </p>
           </div>
+          <ResetButton onReset={resetAll} label="Reset all tools" />
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-8">
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Section 1: Everyday Korean posts</h2>
-          <WatercolorVocabSheet />
-          <RoomSceneSheet />
+          <WatercolorVocabSheet key={`s1-${keys.style1}`} headerAction={<ResetButton onReset={() => bump("style1")} />} />
+          <RoomSceneSheet key={`s2-${keys.style2}`} headerAction={<ResetButton onReset={() => bump("style2")} />} />
         </section>
-        <BookWatercolorGrid />
+        <BookWatercolorGrid key={`bk-${keys.book}`} headerAction={<ResetButton onReset={resetBook} />} />
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle className="text-base flex items-center gap-2">
               <Images className="h-4 w-4" /> Generate all book covers at once
             </CardTitle>
+            <ResetButton onReset={resetCovers} />
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground">
@@ -311,8 +348,9 @@ export default function AiRoomLabPage() {
         )}
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle className="text-base">Describe a single room theme</CardTitle>
+            <ResetButton onReset={resetRooms} />
           </CardHeader>
           <CardContent className="space-y-3">
             <Textarea

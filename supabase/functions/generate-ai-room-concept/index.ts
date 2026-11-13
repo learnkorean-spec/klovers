@@ -14,7 +14,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { AI_CHAT_URL, AI_TEXT_MODEL, getAiKey } from "../_shared/ai.ts";
+import { AI_CHAT_URL, getAiKey } from "../_shared/ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -502,10 +502,10 @@ interface CoverScore {
 
 // Minimum score (out of 100) a cover must reach before it's handed back as
 // usable — Re's standing requirement (2 Nov 2026): "must pass 99 points of
-// 100 to rate covers". Scored by a vision-capable model (OpenAI gpt-4o-mini,
-// the same provider the rest of Klovers uses for text/image per
-// _shared/ai.ts) looking at the actual rendered image, not just the prompt —
-// Muse Spark is text-only and can't see what Muse Image actually drew.
+// 100 to rate covers". Scored by a vision model looking at the actual rendered
+// image, not just the prompt. Since 13 Nov 2026 this goes through askVision
+// (Muse Spark, then Amazon Nova, then OpenAI), because the OpenAI key alone
+// was returning 401 and every cover batch failed.
 const PASS_SCORE = 99;
 const MAX_ATTEMPTS = 3;
 
@@ -513,7 +513,8 @@ async function scoreCoverImage(
   imageDataUrl: string,
   theme: string,
   extraCharacter: string | undefined,
-  openAiKey: string,
+  metaApiKey: string,
+  openAiKey: string | undefined,
 ): Promise<CoverScore> {
   const rubric =
     "You are a strict art director grading a KLOVERS book-cover photo out of " +
@@ -536,36 +537,8 @@ async function scoreCoverImage(
     ' Respond with ONLY a JSON object: {"score": <0-100 integer>, "issues": ' +
     '[<short strings, empty array if none>]}. No markdown, no prose.';
 
-  const res = await fetch(AI_CHAT_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${openAiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: AI_TEXT_MODEL,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: rubric },
-            { type: "image_url", image_url: { url: imageDataUrl } },
-          ],
-        },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Cover scoring error ${res.status}: ${errText}`);
-  }
-
-  const data = await res.json();
-  const content: string | undefined = data?.choices?.[0]?.message?.content;
-  if (!content) throw new Error("Cover scoring returned no content");
-
-  const cleaned = content.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  const { text: content } = await askVision(rubric, [imageDataUrl], metaApiKey, openAiKey);
+  const cleaned = content.slice(content.indexOf("{"), content.lastIndexOf("}") + 1);
   try {
     const parsed = JSON.parse(cleaned) as { score: number; issues?: string[] };
     return {
@@ -580,7 +553,7 @@ async function scoreCoverImage(
 async function generateBookCover(
   item: BatchItem,
   apiKey: string,
-  openAiKey: string,
+  openAiKey: string | undefined,
   useCharacters: boolean,
 ): Promise<CoverResult> {
   const theme = item.theme.trim().slice(0, 500);
@@ -614,7 +587,7 @@ async function generateBookCover(
         `${KLOVERS_STYLE} ${COVER_STYLE}${avoidNote}`;
 
     const imageDataUrl = await generateConceptImage(imagePrompt, apiKey, useCharacters, "1024x1536");
-    const { score, issues } = await scoreCoverImage(imageDataUrl, theme, extraCharacter, openAiKey);
+    const { score, issues } = await scoreCoverImage(imageDataUrl, theme, extraCharacter, apiKey, openAiKey);
 
     if (!best || score > best.score) best = { imageDataUrl, score, issues };
     if (score >= PASS_SCORE) break;
@@ -732,7 +705,6 @@ serve(async (req) => {
     // covers" button so a whole set of cover ideas can be produced in one
     // request instead of one admin click per theme.
     if (Array.isArray(body.batch)) {
-      if (!openAiKey) throw new Error("OPENAI_API_KEY not configured (needed to score covers)");
 
       const items: BatchItem[] = body.batch
         .filter((it: unknown): it is BatchItem =>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,8 @@ import { loadImage } from "./WatercolorVocabSheet";
 
 const SLOTS = 5;
 const PARALLEL = 3;
-const STORE = "klovers-book-grid-prompts";
+export const BOOK_PROMPTS_STORE = "klovers-book-grid-prompts";
+const STORE = BOOK_PROMPTS_STORE;
 
 type Status = "idle" | "loading" | "done" | "error";
 interface Slot {
@@ -149,7 +150,7 @@ function save(url: string, name: string) {
   a.click();
 }
 
-export default function BookWatercolorGrid() {
+export default function BookWatercolorGrid({ headerAction }: { headerAction?: ReactNode }) {
   const [slots, setSlots] = useState<Slot[]>(() => {
     const saved = readSaved();
     return Array.from({ length: SLOTS }, (_, i) => ({ prompt: saved[i] ?? "", status: "idle" as Status }));
@@ -207,10 +208,11 @@ export default function BookWatercolorGrid() {
     <section className="space-y-4">
       <h2 className="text-lg font-semibold">Section 2: Book watercolor pictures</h2>
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base flex items-center gap-2">
             <BookOpen className="h-4 w-4" /> 5 prompts, 5 pictures (each a 2 x 2 grid of 4 cells)
           </CardTitle>
+          {headerAction}
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
@@ -255,13 +257,6 @@ export default function BookWatercolorGrid() {
             <Button onClick={() => void makeAll()} disabled={running || !pending.length}>
               {running ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <BookOpen className="h-4 w-4 mr-2" />}
               {pending.length ? `Generate ${pending.length} new picture${pending.length === 1 ? "" : "s"}` : "All prompts done"}
-            </Button>
-            <Button
-              variant="outline"
-              disabled={running}
-              onClick={() => setSlots(Array.from({ length: SLOTS }, () => ({ prompt: "", status: "idle" as Status })))}
-            >
-              Clear all
             </Button>
             {running && <span className="text-xs text-muted-foreground">About 30 seconds per picture, 3 at a time...</span>}
           </div>

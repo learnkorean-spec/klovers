@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -193,7 +193,7 @@ function fallbackDot(i: number, n: number): Pt {
   return { x: IMG.x + IMG.s / 2 + Math.cos(a) * 250, y: IMG.y + IMG.s / 2 + Math.sin(a) * 200 };
 }
 
-export default function RoomSceneSheet() {
+export default function RoomSceneSheet({ headerAction }: { headerAction?: ReactNode }) {
   const [preset, setPreset] = useState("");
   const [setting, setSetting] = useState("");
   const [subtitle, setSubtitle] = useState("Everyday Korean");
@@ -339,10 +339,11 @@ export default function RoomSceneSheet() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
         <CardTitle className="text-base flex items-center gap-2">
           <Home className="h-4 w-4" /> Style 2: Labelled room (isometric watercolor)
         </CardTitle>
+        {headerAction}
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
