@@ -480,6 +480,24 @@ const BOOK_GRID_STYLE =
   "watercolor shadow under each object, matching a children's Korean-language-learning " +
   "picture book. High resolution, square 1:1 overall image.";
 
+/**
+ * One book picture on its own (Re, 13 Nov 2026: "each picture must be
+ * generated separately"). Same brief as the grid, but a single illustration
+ * per image, so nothing bleeds between cells and every background is white.
+ */
+function bookCellPrompt(picture: string): string {
+  return (
+    `One single centered watercolor illustration of: ${picture}. Pure white background ` +
+    "(#FFFFFF) filling the whole square, with generous empty white space on every side; the " +
+    "subject fills about 70 percent of the frame. Soft pastel palette, loose gentle watercolor " +
+    "brush texture with visible paper grain, no hard black outlines, warm soft lighting from the " +
+    "upper left, a faint light-gray watercolor shadow under the subject, matching a children's " +
+    "Korean-language-learning picture book. No border, no frame, no card or colored panel behind " +
+    "the subject, and absolutely no text, letters, numbers or labels anywhere. High resolution, " +
+    "square 1:1 image."
+  );
+}
+
 function bookGridPrompt(prompt: string): string {
   return `${BOOK_GRID_STYLE}\n\nThe four cells (top-left, top-right, bottom-left, bottom-right): ${prompt}`;
 }
@@ -695,6 +713,14 @@ serve(async (req) => {
       });
     }
 
+    if (body.mode === "book-cell") {
+      const picture = String(body.picture ?? "").trim().slice(0, 1200);
+      if (!picture) throw new Error("picture is required");
+      const imageDataUrl = await generateConceptImage(bookCellPrompt(picture), metaApiKey, false, "1024x1024");
+      return new Response(JSON.stringify({ imageDataUrl }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (body.mode === "book-grid") {
       const prompt = String(body.prompt ?? "").trim().slice(0, 2000);
       if (!prompt) throw new Error("prompt is required");
