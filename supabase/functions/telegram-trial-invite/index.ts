@@ -47,7 +47,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const auth = await authorizeRequest(req, "admin");
+  // Admins from the dashboard; the service role so the same call can be made
+  // from SQL (app_private.invoke_edge) to check the bot's groups without a
+  // browser session.
+  const auth = await authorizeRequest(req, "admin-or-service");
   if (!auth.ok) return authorizationError(auth, corsHeaders);
   const supabase = auth.serviceClient;
 

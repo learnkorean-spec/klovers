@@ -54,6 +54,9 @@ export interface EmailPayload {
   calendar_url?: string;
   booking_id?: string;
   confirmation_token?: string;
+  /** Her personal bot link (book-trial). The email carries it as a second way
+   *  to get the class link, for the day this very email is the one that is lost. */
+  telegram_url?: string;
   meeting_url?: string;
   class_language?: string;
   confirmed_count?: number;

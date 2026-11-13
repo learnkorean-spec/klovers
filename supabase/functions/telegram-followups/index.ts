@@ -11,6 +11,12 @@
 //   3. Absence alert     a group student has missed three classes in a row
 //                        (on a real signal, see the SQL function): Re is told
 //                        once per streak, on Telegram and in the dashboard.
+//   4. Carry the link    she pressed Start as a TRIAL student and now has an
+//                        account: her chat is copied onto telegram_links, the
+//                        table every paid-student reminder reads. Without
+//                        this she would have to be sent a second link and
+//                        press Start again the day she enrols, and until she
+//                        did, her class reminders would go nowhere.
 //
 // Re, 13 Nov 2026: "all not connected steps that why i am lost and cannot
 // sent the emails so they pay". Sweeps 1 and 2 are the two places a student
@@ -59,7 +65,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "config error" }), { status: 500 });
   }
 
-  const out = { trial_reminders: 0, enroll_nudges: 0, absence_alerts: 0, errors: [] as string[] };
+  const out = {
+    trial_reminders: 0, enroll_nudges: 0, absence_alerts: 0, links_carried: 0, errors: [] as string[],
+  };
 
   // 1. Trial reminders ------------------------------------------------------
   {
@@ -134,6 +142,85 @@ Deno.serve(async (req) => {
         `\u{26A0}\u{FE0F} ${r.full_name} غابت 3 حصص ورا بعض في ${r.group_name} (آخرها ${r.last_session_date}) — كلميها.`);
       out.absence_alerts++;
     }
+  }
+
+  // 4. Carry trial links onto the student's account -------------------------
+  // Private chats only (chat_id > 0): a trial link is always pressed in a
+  // 1:1 chat with the bot, and a group id here would point every reminder
+  // for her at a room full of other people.
+  try {
+    const { data: linked, error } = await supabase
+      .from("trial_telegram")
+      .select("booking_id, chat_id, tg_user_id, tg_username, tg_first_name, linked_at")
+      .gt("chat_id", 0);
+    if (error) throw error;
+
+    const rows = (linked ?? []) as {
+      booking_id: string; chat_id: number; tg_user_id: number | null;
+      tg_username: string | null; tg_first_name: string | null; linked_at: string | null;
+    }[];
+
+    if (rows.length > 0) {
+      const { data: bookings, error: bErr } = await supabase
+        .from("trial_bookings")
+        .select("id, email, user_id")
+        .in("id", rows.map((r) => r.booking_id));
+      if (bErr) throw bErr;
+
+      const emails = Array.from(new Set(
+        (bookings ?? []).filter((b) => !b.user_id && b.email).map((b) => String(b.email).toLowerCase()),
+      ));
+      const userByEmail = new Map<string, string>();
+      if (emails.length > 0) {
+        const { data: profiles, error: pErr } = await supabase
+          .from("profiles").select("user_id, email").in("email", emails);
+        if (pErr) throw pErr;
+        for (const p of profiles ?? []) {
+          if (p.user_id && p.email) userByEmail.set(String(p.email).toLowerCase(), p.user_id);
+        }
+      }
+
+      // Newest link wins when one student has more than one trial booking.
+      const byUser = new Map<string, typeof rows[number]>();
+      for (const r of rows) {
+        const b = (bookings ?? []).find((x) => x.id === r.booking_id);
+        const uid = b?.user_id ?? (b?.email ? userByEmail.get(String(b.email).toLowerCase()) : undefined);
+        if (!uid) continue;
+        const prev = byUser.get(uid);
+        if (!prev || (r.linked_at ?? "") > (prev.linked_at ?? "")) byUser.set(uid, r);
+      }
+
+      if (byUser.size > 0) {
+        const { data: existing, error: eErr } = await supabase
+          .from("telegram_links").select("user_id, chat_id").in("user_id", Array.from(byUser.keys()));
+        if (eErr) throw eErr;
+        const have = new Map((existing ?? []).map((e) => [e.user_id as string, e.chat_id as number | null]));
+
+        for (const [uid, r] of byUser) {
+          // Already linked as a student, by her own press of a student link:
+          // that is the newer, deliberate choice. Never overwrite it.
+          if (have.get(uid) != null) continue;
+          const fields = {
+            chat_id: r.chat_id,
+            tg_user_id: r.tg_user_id,
+            tg_username: r.tg_username,
+            tg_first_name: r.tg_first_name,
+            linked_at: r.linked_at ?? new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          const { error: wErr } = have.has(uid)
+            ? await supabase.from("telegram_links").update(fields).eq("user_id", uid).is("chat_id", null)
+            : await supabase.from("telegram_links").insert({ user_id: uid, ...fields });
+          if (wErr) {
+            out.errors.push(`carry ${uid}: ${wErr.message}`);
+            continue;
+          }
+          out.links_carried++;
+        }
+      }
+    }
+  } catch (e) {
+    out.errors.push(`carry: ${String((e as Error)?.message ?? e)}`);
   }
 
   return new Response(JSON.stringify(out), { headers: { "Content-Type": "application/json" } });
