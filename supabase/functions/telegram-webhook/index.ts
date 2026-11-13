@@ -119,20 +119,12 @@ function displayName(from: { first_name?: string; last_name?: string; username?:
 }
 
 // Re, 2 Nov 2026: "group classes must be auto as well same like private" --
-// group equivalent of the "att:" branch below. Same claim-only semantics as
-// private: telegram_confirm_group_session inserts an UNAPPROVED
-// pkg_attendance row, never bills by itself -- Re still approves it in
-// GroupAttendanceManager.
-//
-// 13 Nov 2026: callback_data used to be gatt:<yes|no>:<session_id>:<user_id>
-// -- two UUIDs, 82 bytes, over Telegram's 64-byte callback_data cap, so
-// every send of this button had been failing outright (BUTTON_DATA_INVALID).
-// Dropped user_id from the button; a group session is shared by several
-// members, so instead of trusting a value baked into the tapped button, we
-// resolve exactly who tapped from who she actually is on Telegram: her own
-// tg_user_id, scoped to this chat. That's a tighter identity check than the
-// old "does the button's user_id match who tapped" comparison, not a looser
-// one -- it can't be spoofed by a crafted callback_data at all.
+// group equivalent of the "att:" branch below. A group session is shared by
+// several members (telegram_links keyed by user_id, not teacher_student_id),
+// so the callback_data carries which member is answering as a 4th segment:
+// gatt:<yes|no>:<session_id>:<user_id>. Same claim-only semantics as private:
+// telegram_confirm_group_session inserts an UNAPPROVED pkg_attendance row,
+// never bills by itself -- Re still approves it in GroupAttendanceManager.
 async function handleGroupAttendanceTap(
   supabase: ReturnType<typeof createClient>,
   cfg: Config,
@@ -143,6 +135,7 @@ async function handleGroupAttendanceTap(
 ) {
   const yes = gmatch[1] === "yes";
   const sessionId = gmatch[2];
+  const userId = gmatch[3];
   const tapperId: number | undefined = cb.from?.id;
 
   const { data: session } = await supabase
@@ -156,23 +149,18 @@ async function handleGroupAttendanceTap(
     return;
   }
 
-  if (tapperId == null) {
-    await answerCallbackQuery(cfg.bot_token, cb.id, "مش قادرين نتأكد مين بيضغط، جربي تاني.");
-    return;
-  }
-
+  // Resolve by (user_id) from the button itself, same reasoning as the
+  // private flow: don't trust chat_id alone to pick the right member.
   const { data: link } = await supabase
     .from("telegram_links")
     .select("user_id, chat_id, tg_user_id")
-    .eq("chat_id", chatId)
-    .eq("tg_user_id", tapperId)
+    .eq("user_id", userId)
     .maybeSingle();
 
-  if (!link) {
-    await answerCallbackQuery(cfg.bot_token, cb.id, "حسابك مش مربوط بالجروب ده. دوسي لينكك الشخصي الأول.");
+  if (!link || link.chat_id !== chatId) {
+    await answerCallbackQuery(cfg.bot_token, cb.id, "اللينك ده مش شغال.");
     return;
   }
-  const userId = link.user_id as string;
 
   const { data: profile } = await supabase.from("profiles")
     .select("name, language").eq("user_id", userId).maybeSingle();
@@ -180,6 +168,19 @@ async function handleGroupAttendanceTap(
   const dateLabel = new Date(session.session_date + "T12:00:00Z")
     .toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
   const lang = profile?.language === "en" ? "en" : "ar";
+
+  // Same identity lock as the private "att:" flow: confirm the tap actually
+  // came from THIS member, not a groupmate answering on her behalf. Only
+  // enforced once we actually have her tg_user_id on file.
+  if (link.tg_user_id != null && tapperId != null && link.tg_user_id !== tapperId) {
+    await answerCallbackQuery(
+      cfg.bot_token, cb.id,
+      lang === "en"
+        ? `This button is only for ${name || "that student"} to answer.`
+        : `الزرار ده مخصص لـ ${name || "الطالبة"} بس 🙏`,
+    );
+    return;
+  }
 
   const { error: rpcError } = await supabase.rpc("telegram_confirm_group_session", {
     p_session_id: sessionId,
@@ -243,11 +244,11 @@ Deno.serve(async (req) => {
         ? cb.data.match(/^(att|resched):(yes|no):([0-9a-fA-F-]{36})$/)
         : null;
       // "gatt:" = confirming attendance of a GROUP class that already
-      // happened (telegram-group-attendance-ask). Which member is answering
-      // is resolved inside handleGroupAttendanceTap from her own tg_user_id
-      // (not from the button), so the callback only carries the session id.
+      // happened (telegram-group-attendance-ask). A group session is shared
+      // by several members, so the callback also carries which member is
+      // answering -- that's the 4th segment, handled separately below.
       const gmatch = !match && typeof cb.data === "string"
-        ? cb.data.match(/^gatt:(yes|no):([0-9a-fA-F-]{36})$/)
+        ? cb.data.match(/^gatt:(yes|no):([0-9a-fA-F-]{36}):([0-9a-fA-F-]{36})$/)
         : null;
 
       if (!chatId || !messageId || (!match && !gmatch)) {
