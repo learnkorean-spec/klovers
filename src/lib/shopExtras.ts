@@ -26,7 +26,7 @@ export const SHOP_EXTRAS: Record<string, ShopExtras> = {
   "hangul-a0-store": {
     previews: [1, 2, 3, 4].map((n) => `/book-previews/hangul-a0-store-${n}.webp`),
     facts: [
-      { en: "78 pages", ar: "٧٨ صفحة" },
+      { en: "71 pages", ar: "٧١ صفحة" },
       { en: "Self-study edition", ar: "نسخة للدراسة الذاتية" },
       { en: "Answer key included", ar: "مفتاح الإجابات في آخر الكتاب" },
     ],
@@ -34,7 +34,7 @@ export const SHOP_EXTRAS: Record<string, ShopExtras> = {
   "hangul-a0-en-store": {
     previews: [1, 2, 3, 4].map((n) => `/book-previews/hangul-a0-en-store-${n}.webp`),
     facts: [
-      { en: "78 pages", ar: "٧٨ صفحة" },
+      { en: "71 pages", ar: "٧١ صفحة" },
       { en: "Self-study edition", ar: "نسخة للدراسة الذاتية" },
       { en: "Answer key included", ar: "مفتاح الإجابات في آخر الكتاب" },
     ],
