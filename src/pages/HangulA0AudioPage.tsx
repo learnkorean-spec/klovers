@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Pause, Play, Volume2 } from "lucide-react";
 import { A0_AUDIO, A0_PAGES } from "@/constants/hangulA0Audio";
+import kloversLogo from "@/assets/klovers-logo.jpg";
 
 /**
  * Hangul A0 book audio. Each page of the printed/PDF book carries a QR code
@@ -71,7 +72,7 @@ export default function HangulA0AudioPage() {
       <div className="mx-auto max-w-xl px-4 py-6">
         <header className="mb-5 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFF00] text-lg font-black">K</span>
+            <img src={kloversLogo} alt="" className="h-9 w-9 rounded-full object-cover" />
             Klovers
           </Link>
           <Link to="/dashboard" className="rounded-full bg-[#2E2E2E] px-3 py-1.5 text-xs font-bold text-[#FFFF00]">

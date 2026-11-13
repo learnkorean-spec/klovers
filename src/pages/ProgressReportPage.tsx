@@ -92,7 +92,7 @@ const ProgressReportPage = () => {
 
         {/* Header */}
         <div style={{ background: "#2E2E2E", padding: "32px 40px", textAlign: "center" }}>
-          <div style={{ display: "inline-block", width: 60, height: 60, borderRadius: "50%", background: "#FFFF00", lineHeight: "60px", fontSize: 28, fontWeight: 900, color: "#2E2E2E", marginBottom: 12 }}>K</div>
+          <img src="/klovers-logo.jpg" alt="Klovers" style={{ display: "inline-block", width: 60, height: 60, borderRadius: "50%", objectFit: "cover", marginBottom: 12 }} />
           <h1 style={{ color: "#FFFF00", margin: "0 0 4px", fontSize: 22, fontWeight: 800, letterSpacing: 1 }}>Klovers Korean Academy</h1>
           <p style={{ color: "rgba(255,249,236,0.8)", margin: 0, fontSize: 13 }}>{isAr ? "تقرير تقدم الطالب" : "Student Progress Report"} · {month}</p>
         </div>
