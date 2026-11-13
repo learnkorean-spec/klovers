@@ -10,7 +10,17 @@
 -- `class_type` column that no longer exists on enrollments (it was
 -- renamed to `level`) and therefore errored on every call, routing
 -- 100% of traffic through this under-specified fallback.
-CREATE OR REPLACE FUNCTION public.get_enrollment_for_payment(p_enrollment_id uuid)
+--
+-- Adding a column to a RETURNS TABLE function changes its return type, which
+-- CREATE OR REPLACE refuses ("cannot change return type of existing
+-- function", 13 Nov 2026 Apply Migrations runs), so the function is dropped
+-- and recreated in the same transaction. Every clause of the live version is
+-- kept (SECURITY DEFINER, STABLE, SET search_path, the auth checks), and its
+-- live EXECUTE grants are restored exactly: postgres (owner), authenticated
+-- and service_role only, never PUBLIC or anon.
+DROP FUNCTION IF EXISTS public.get_enrollment_for_payment(uuid);
+
+CREATE FUNCTION public.get_enrollment_for_payment(p_enrollment_id uuid)
  RETURNS TABLE(id uuid, plan_type text, duration integer, amount numeric, currency text, approval_status text, payment_status text, due_at timestamp with time zone, classes_included integer, receipt_url text, payment_method text, payment_date date, user_id uuid)
  LANGUAGE sql
  STABLE SECURITY DEFINER
@@ -38,3 +48,6 @@ AS $function$
       OR public.has_role(auth.uid(), 'admin'::public.app_role)
     );
 $function$;
+
+REVOKE ALL ON FUNCTION public.get_enrollment_for_payment(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_enrollment_for_payment(uuid) TO authenticated, service_role;
