@@ -72,10 +72,15 @@ const AdminExchangeReportsPage = () => {
 
     const userIds = [...new Set(rows.flatMap((r) => [r.reporter_id, r.reported_id]))];
     if (userIds.length > 0) {
-      const { data: profileRows } = await supabase
+      const { data: profileRows, error: profileError } = await supabase
         .from("exchange_profiles" as any)
         .select("user_id, display_name, is_visible")
         .in("user_id", userIds);
+      // The reports still render without this (ids instead of names), so say
+      // what is missing rather than show nameless rows as if that were normal.
+      if (profileError) {
+        toast({ title: "Couldn't load the reporters' names", description: profileError.message, variant: "destructive" });
+      }
       const map = new Map<string, ProfileLite>();
       ((profileRows as unknown as ProfileLite[]) ?? []).forEach((p) => map.set(p.user_id, p));
       setProfiles(map);

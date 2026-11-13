@@ -191,30 +191,7 @@ jobs:
           violation=0
           for f in $added; do
             [ -f "$f" ] || continue
-            python3 - "$f" <<'PYEOF'
-import re, sys
-
-path = sys.argv[1]
-text = open(path, encoding="utf-8", errors="ignore").read()
-
-pattern = re.compile(
-    r'create\s+policy\s+"([^"]+)"\s*(?:\n\s*)?'
-    r'on\s+(?:public\.)?(\w+)\s+for\s+\w+(?:\s+to\s+\w+)?\s*'
-    r'((?:using|with\s+check)\s*\(.*?\))\s*(?=;|\n\s*(?:using|with\s+check))',
-    re.IGNORECASE | re.DOTALL,
-)
-
-found = False
-for m in pattern.finditer(text):
-    polname, table, clause = m.group(1), m.group(2), m.group(3)
-    if re.search(r'from\s+(?:public\.)?' + re.escape(table) + r'\b', clause, re.IGNORECASE):
-        line_no = text[: m.start()].count("\n") + 1
-        print(f"::error file={path},line={line_no}::Policy \"{polname}\" on {table} subqueries {table} from inside its own clause — this causes \"infinite recursion detected in policy for relation {table}\" at query time. Move the self-lookup into a SECURITY DEFINER helper function instead (see exchange_viewer_age(uuid) for the pattern).")
-        found = True
-
-sys.exit(1 if found else 0)
-PYEOF
-            if [ $? -ne 0 ]; then violation=1; fi
+            if ! python3 scripts/check-rls-self-reference.py "$f"; then violation=1; fi
           done
 
           if [ "$violation" -eq 1 ]; then

@@ -33,6 +33,13 @@
 // still works per student on partial failures/re-runs).
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
+// A client built without a generated Database type. `ReturnType<typeof
+// createClient>` resolves every table and RPC to `never` under current
+// supabase-js typings, which failed `deno check` on every line that read a
+// column. Type-only: nothing about what runs has changed.
+// deno-lint-ignore no-explicit-any
+type Db = any;
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -44,7 +51,7 @@ function isAuthorizedServiceCall(req: Request): boolean {
 
 type Config = { bot_token: string; admin_chat_id: string; webhook_secret: string };
 
-async function getConfig(supabase: ReturnType<typeof createClient>): Promise<Config> {
+async function getConfig(supabase: Db): Promise<Config> {
   const { data, error } = await supabase.rpc("telegram_bot_config");
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
