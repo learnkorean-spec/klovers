@@ -117,8 +117,8 @@ export const BOOKS = {
     badge: "A0",
     titleAr: "الهانغُل من الصفر: المستوى A0",
     titleEn: "Hangeul from Zero: Level A0 (store, Arabic)",
-    subtitleAr: "نسخة الدراسة الذاتية · ٧٨ صفحة",
-    subtitleEn: "Self-study edition · 78 pages",
+    subtitleAr: "نسخة الدراسة الذاتية · ٧١ صفحة",
+    subtitleEn: "Self-study edition · 71 pages",
   },
   "hangul-a0-en-store": {
     use: "store",
@@ -128,8 +128,8 @@ export const BOOKS = {
     badge: "A0",
     titleAr: "الهانغُل من الصفر: المستوى A0 (النسخة الإنجليزية)",
     titleEn: "Hangeul from Zero: Level A0 (store, English)",
-    subtitleAr: "نسخة الدراسة الذاتية · ٧٨ صفحة",
-    subtitleEn: "Self-study edition · 78 pages",
+    subtitleAr: "نسخة الدراسة الذاتية · ٧١ صفحة",
+    subtitleEn: "Self-study edition · 71 pages",
   },
   "cluby-coloring-1": {
     use: "store",
