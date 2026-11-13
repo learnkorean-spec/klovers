@@ -113,6 +113,45 @@ const COPY = {
   morePractice: { en: "More practice", ar: "تدريب إضافي" },
   insightsTitle: { en: "Learning insights", ar: "إحصاءات التعلّم" },
   exportProgress: { en: "Export progress (.txt)", ar: "تصدير التقدّم (.txt)" },
+
+  // Tabs (13 Nov 2026): one page became four short ones after a new student
+  // said the dashboard was complicated and crowded.
+  tabsAria: { en: "Dashboard sections", ar: "أقسام لوحتي" },
+  tabToday: { en: "Today", ar: "اليوم" },
+  tabClasses: { en: "Classes", ar: "حصصي" },
+  tabProgress: { en: "Progress", ar: "تقدّمي" },
+  tabExplore: { en: "Explore", ar: "استكشاف" },
+
+  // New-student start: three steps and nothing else.
+  startTitle: { en: "Three steps to begin", ar: "ثلاث خطوات للبداية" },
+  startBody: { en: "One step at a time. Everything else opens up as you learn.", ar: "خطوة واحدة في كل مرة، وكل شيء آخر يأتي مع التعلّم." },
+  startLevelTitle: { en: "Find your level", ar: "تحديد المستوى" },
+  startLevelBody: { en: "A short test that places you in the right class.", ar: "اختبار قصير يحدّد الصف المناسب." },
+  startLevelCta: { en: "Take the test", ar: "بدء الاختبار" },
+  startLevelDone: { en: "Your level: {level}", ar: "المستوى الحالي: {level}" },
+  startLessonTitle: { en: "Open your first lesson", ar: "الدرس الأول" },
+  startLessonBody: { en: "A few minutes is enough to learn your first Korean words.", ar: "دقائق قليلة تكفي لتعلّم أولى الكلمات الكورية." },
+  startLessonCta: { en: "Start the lesson", ar: "بدء الدرس" },
+  startClassTitle: { en: "Book a free trial class", ar: "حجز حصة تجريبية مجانية" },
+  startClassBody: { en: "Meet the teacher in a live class before you enroll.", ar: "لقاء مباشر مع المعلّمة قبل التسجيل." },
+  startClassCta: { en: "Book the trial", ar: "حجز الحصة" },
+  startEnrollLink: { en: "Ready already? Enroll now", ar: "جاهز للبدء؟ التسجيل الآن" },
+  startStepOf: { en: "Step {n}", ar: "الخطوة {n}" },
+  startDone: { en: "Done", ar: "تمّت" },
+
+  // Explore doors (one slim row on Today; the full cards live in Explore)
+  doorsTitle: { en: "Explore", ar: "استكشاف" },
+  doorWorld: { en: "KLOVERS World", ar: "عالم كلوفرز" },
+  doorExchange: { en: "Language exchange", ar: "تبادل اللغة" },
+  doorAudio: { en: "Hangul book audio", ar: "صوت كتاب الهانغل" },
+  doorsMore: { en: "See all", ar: "عرض الكل" },
+  collectionSection: { en: "Collection and achievements", ar: "المجموعة والإنجازات" },
+
+  // One-tap clarity question
+  clarityQuestion: { en: "Is this page clear?", ar: "هل هذه الصفحة واضحة؟" },
+  clarityYes: { en: "Yes, clear", ar: "نعم، واضحة" },
+  clarityNo: { en: "A bit confusing", ar: "مربكة قليلًا" },
+  clarityThanks: { en: "Thank you. That helps us improve.", ar: "شكرًا، رأيك يساعدنا على التحسين." },
 } as const;
 
 export type CopyKey = keyof typeof COPY;

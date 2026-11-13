@@ -5,7 +5,9 @@ import { track } from "@/lib/tracking";
  * (lib/tracking.ts → gtag). No new provider.
  *
  * Events: dashboard_view, continue_learning_click, mission_completed,
- * journey_node_clicked, reward_progress_viewed, class_opened.
+ * journey_node_clicked, reward_progress_viewed, class_opened,
+ * dashboard_tab_view, dashboard_first_click, dashboard_clear_yes/no,
+ * starter_step_click.
  * cluby_unlocked (Cluby hatches — derived from real lesson progress, see
  * eggStatus in dashboardProgress.ts).
  * game_started / game_completed live on the games pages (not changed here).
@@ -17,7 +19,13 @@ export type DashboardEvent =
   | { name: "journey_node_clicked"; node: string; state: string }
   | { name: "reward_progress_viewed"; milestone: string | null; badges: number }
   | { name: "class_opened"; source: string }
-  | { name: "cluby_unlocked"; recent: boolean };
+  | { name: "cluby_unlocked"; recent: boolean }
+  // 13 Nov 2026 — tabbed dashboard: which tab is opened, the first thing a
+  // student taps on each visit, and the one-tap "is this page clear?" answer.
+  | { name: "dashboard_tab_view"; tab: string; starter: boolean }
+  | { name: "dashboard_first_click"; target: string; tab: string; starter: boolean }
+  | { name: "dashboard_clear_yes" | "dashboard_clear_no"; tab: string; starter: boolean }
+  | { name: "starter_step_click"; step: "level" | "lesson" | "trial" | "enroll" };
 
 export function dashEvent(e: DashboardEvent): void {
   const { name, ...params } = e;

@@ -23,15 +23,6 @@ import RegistrationChecklist from "@/components/RegistrationChecklist";
 import { useGamification } from "@/hooks/useGamification";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { BADGES, LEAGUES } from "@/constants/gamification";
-// Korean scene photos for immersive gallery
-import imgJeju from "@/assets/blog/jeju-island.jpg";
-import imgBBQ from "@/assets/blog/korean-bbq.jpg";
-import imgTemple from "@/assets/blog/korean-temple.jpg";
-import imgHanbok from "@/assets/blog/hanbok-fashion.jpg";
-import imgKpop from "@/assets/blog/kpop-concert.jpg";
-import imgNightMarket from "@/assets/blog/korean-nightmarket.jpg";
-import imgTea from "@/assets/blog/korean-tea.jpg";
-import imgMarket from "@/assets/blog/korean-market.jpg";
 // Below-fold components — lazy loaded to keep initial paint fast
 const AnalyticsSection = lazy(() =>
   import("@/components/AnalyticsSection").then(m => ({ default: m.AnalyticsSection }))
@@ -50,6 +41,9 @@ const StreakCalendar = lazy(() =>
 );
 const DailyBonusCard = lazy(() =>
   import("@/components/DailyBonusCard").then(m => ({ default: m.DailyBonusCard }))
+);
+const DiscoverKoreaGallery = lazy(() =>
+  import("@/components/student-dashboard/DiscoverKoreaGallery").then(m => ({ default: m.DiscoverKoreaGallery }))
 );
 import { AlertCircle, AlertTriangle, Package, CalendarCheck, Users, GraduationCap, RotateCcw, ChevronDown, Pencil, Check, X, Download, Copy } from "lucide-react";
 import KloverIcon from "@/components/KloverIcon";
@@ -82,6 +76,11 @@ import { EggStatusCard } from "@/components/student-dashboard/premium/EggStatusC
 import { RecentAchievements } from "@/components/student-dashboard/premium/RecentAchievements";
 import { BrandIcon } from "@/components/student-dashboard/premium/primitives";
 import { useDashCopy } from "@/components/student-dashboard/premium/copy";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { DashboardTabBar, isDashTab, type DashTab } from "@/components/student-dashboard/DashboardTabBar";
+import { ExploreDoors } from "@/components/student-dashboard/ExploreDoors";
+import { NewStudentStart } from "@/components/student-dashboard/NewStudentStart";
+import { ClarityPulse } from "@/components/student-dashboard/ClarityPulse";
 
 interface EnrollmentRecord {
   id: string;
@@ -584,6 +583,14 @@ const StudentDashboard = () => {
   }, [egg]);
   const [claimingWord, setClaimingWord] = useState(false);
   const [insightsOpen, setInsightsOpen] = useState(false);
+  // Four short pages instead of one long one. ?complete=… deep links (from
+  // the registration emails) land on Classes, where the checklist lives.
+  const [tab, setTab] = useState<DashTab>(() => {
+    if (completeParam) return "classes";
+    const q = searchParams.get("tab");
+    return isDashTab(q) ? q : "today";
+  });
+  const firstClickSent = useRef(false);
 
   useEffect(() => {
     missions?.forEach(m => { if (m.done) markMissionCompletedOnce(m.id, todayKey); });
@@ -676,7 +683,11 @@ const StudentDashboard = () => {
       navigate("/complete-profile");
       return;
     }
-    document.getElementById("profile-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    // The profile card lives on the Classes tab; wait for it to mount.
+    setTab("classes");
+    window.setTimeout(() => {
+      document.getElementById("profile-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
   };
   const hasBlockers = checklistItems.some(
     (i) => !i.completed && (i.key === "Preferred class days" || i.key === "Korean level")
@@ -881,488 +892,516 @@ const StudentDashboard = () => {
     </div>
   );
 
+  /* Account alerts (package running low / payment due / pending review).
+     Above the tabs on purpose: money and class-place notices must not hide
+     behind a tab the student has no reason to open. */
+  const alertsBlock = (() => {
+    const alerts: React.ReactNode[] = [];
+    if (enrollments.length > 0 && !isPrivate) {
+      const remaining = enrollments[0].sessions_total - attendanceDates.length;
+      if (remaining <= 2) {
+        alerts.push(
+          <div key="sessions" className="flex items-center gap-2 bg-ivory dark:bg-card border border-charcoal/20 rounded-xl px-3 py-2 text-sm">
+            <KloverIcon name="calendar-check" className="h-6 w-6 shrink-0" />
+            <span className="flex-1 font-medium text-charcoal dark:text-foreground">{remaining <= 0 ? t("dashboardPage.packageFinished") : tInterpolate(t("dashboardPage.sessionsLeftAlert"), { count: remaining })}</span>
+            <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal shrink-0 px-3" onClick={() => navigate("/enroll-now")}>{t("dashboardPage.renewArrow")}</Button>
+          </div>
+        );
+      }
+    }
+    // A roster student's money lives on her bundle, and StudentSelfService
+    // already shows what she owes with its own receipt upload. An old
+    // enrollments row (e.g. from the site's enrol flow) must not add a
+    // second, conflicting payment notice that pays into the wrong record.
+    if (!isPrivate) pendingEnrollments.forEach(pe => {
+      if (isPaymentDue(pe)) {
+        const amount = formatMoney(pe.amount, pe.currency);
+        const plan = planLabel(pe.plan_type);
+        const waText = tInterpolate(t("dashboardPage.paymentDueWhatsAppMsg"), { amount, plan });
+        alerts.push(
+          <div key={pe.id} role="alert" className="flex flex-col sm:flex-row sm:items-center gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 rounded-xl px-3 py-3 text-sm">
+            <AlertCircle className="h-5 w-5 text-amber-700 dark:text-amber-400 shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-amber-900 dark:text-amber-200">{tInterpolate(t("dashboardPage.paymentDueTitle"), { amount })}</p>
+              <p className="text-amber-800 dark:text-amber-300">{t("dashboardPage.paymentDueBody")}</p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal px-3" onClick={() => navigate(`/pay/${pe.id}`)}>{t("dashboardPage.paymentDuePay")}</Button>
+              <Button size="sm" variant="outline" className="min-h-11 text-xs px-3" onClick={() => trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(waText)}`, { cta_label: "dashboard_payment_due" })}>{t("dashboardPage.paymentDueWhatsApp")}</Button>
+            </div>
+          </div>
+        );
+        return;
+      }
+      const label = pe.approval_status === "PENDING_PAYMENT" ? t("dashboardPage.awaitingPayment") : pe.approval_status === "UNDER_REVIEW" ? t("dashboardPage.underReview") : t("dashboardPage.pendingLabel");
+      alerts.push(
+        <div key={pe.id} className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2 text-sm">
+          <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="flex-1 text-muted-foreground capitalize">{tInterpolate(t("dashboardPage.enrollmentStatusLine"), { plan: planLabel(pe.plan_type), status: label })}</span>
+        </div>
+      );
+    });
+    if (alerts.length === 0) return null;
+    return <div className="space-y-1.5">{alerts}</div>;
+  })();
+
+  /* ── New-student view ────────────────────────────────────────────────
+     Not enrolled, nothing pending, no lesson opened and no XP earned: Today
+     shows three steps instead of the full page. Derived from real rows, so
+     the first lesson she opens ends it without any stored flag. */
+  const starterCandidate = hasNoData && !isPrivate && pendingEnrollments.length === 0;
+  const starterLoading = starterCandidate && (learning.loading || gamLoading);
+  const hasStartedLearning =
+    lessonsCompleted > 0 ||
+    gamification.totalXp > 0 ||
+    (!!nextLesson && (nextLesson.stepsDone > 0 || nextLesson.reason !== "start_at_level"));
+  const starter = starterCandidate && !starterLoading && !hasStartedLearning;
+
+  const classFirst = !hasNoData || isPrivate || !!pendingLatest;
+
+  const changeTab = (next: string) => {
+    if (!isDashTab(next) || next === tab) return;
+    setTab(next);
+    setSearchParams(next === "today" ? {} : { tab: next }, { replace: true });
+    window.scrollTo({ top: 0 });
+    dashEvent({ name: "dashboard_tab_view", tab: next, starter });
+  };
+
+  /* The first thing a student taps on each visit: the plainest signal of
+     whether the page told her what to do. Never records link targets outside
+     the site (a class link is private) and never more than 60 characters. */
+  const handleFirstClick = (e: React.MouseEvent<HTMLElement>) => {
+    if (firstClickSent.current) return;
+    const el = (e.target as HTMLElement).closest<HTMLElement>("a, button, summary");
+    if (!el) return;
+    firstClickSent.current = true;
+    const href = el.getAttribute("href");
+    const target =
+      el.dataset.track ||
+      (href ? (href.startsWith("/") ? href.split("?")[0] : "external_link") : "") ||
+      el.getAttribute("aria-label") ||
+      (el.textContent || "").trim() ||
+      el.tagName.toLowerCase();
+    dashEvent({ name: "dashboard_first_click", target: target.slice(0, 60), tab, starter });
+  };
+
+  const panel = "mt-0 space-y-4 sm:space-y-5";
+
   return (
     <div className="min-h-screen bg-background">
       <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
       <Header />
-      <main id="main-content" className="pt-24 pb-16 px-4">
-        <div className="max-w-5xl mx-auto space-y-4 sm:space-y-5">
+      <main id="main-content" className="pt-20 pb-16 px-4" onClickCapture={handleFirstClick}>
+        <Tabs value={tab} onValueChange={changeTab} dir={language === "ar" ? "rtl" : "ltr"} className="max-w-5xl mx-auto space-y-4 sm:space-y-5">
 
-          {/* A. Compact hero — status + ONE action */}
-          <DashboardHero
-            firstName={firstName}
-            todayLabel={todayStr}
-            xp={xp}
-            streak={gamification.streak.current_streak}
-            streakState={heroStreakState}
-            continueHref={continueHref}
-            continueBook={nextLesson?.lesson.book ?? null}
-            continueLesson={nextLesson?.lesson.sort_order ?? null}
-            hasStarted={!!nextLesson && (nextLesson.stepsDone > 0 || nextLesson.reason !== "start_at_level")}
-            avatarSlot={avatarSlot}
-            clubyAwake={clubyAwake}
-          />
+          <DashboardTabBar />
 
-          {/* Cluby's clover egg: crack → glow → hatch from real learning. */}
-          {egg && <EggStatusCard egg={egg} />}
+          {alertsBlock}
 
-          {/* KLOVERS World: the story as a place to walk into, near the top
-              so it is seen on a phone without scrolling far. */}
-          <WorldEntryCard isAr={language === "ar"} compact />
+          {/* ── TODAY: what do I do now? ── */}
+          <TabsContent value="today" className={panel}>
+            {/* A. Compact hero — status + ONE action */}
+            <DashboardHero
+              firstName={firstName}
+              todayLabel={todayStr}
+              xp={xp}
+              streak={gamification.streak.current_streak}
+              streakState={heroStreakState}
+              continueHref={continueHref}
+              continueBook={nextLesson?.lesson.book ?? null}
+              continueLesson={nextLesson?.lesson.sort_order ?? null}
+              hasStarted={!!nextLesson && (nextLesson.stepsDone > 0 || nextLesson.reason !== "start_at_level")}
+              avatarSlot={avatarSlot}
+              clubyAwake={clubyAwake}
+            />
 
-          {/* Language Exchange: a direct "go do this" card so students who
-              never open the More menu still discover /exchange. */}
-          <ExchangeEntryCard isAr={language === "ar"} compact />
-
-          {/* Hangul A0 book audio: the same page the book's QR code opens. */}
-          <A0AudioEntryCard isAr={language === "ar"} />
-
-          {/* Account alerts (package running low / pending review) — compact */}
-          {(() => {
-            const alerts: React.ReactNode[] = [];
-            if (enrollments.length > 0 && !isPrivate) {
-              const remaining = enrollments[0].sessions_total - attendanceDates.length;
-              if (remaining <= 2) {
-                alerts.push(
-                  <div key="sessions" className="flex items-center gap-2 bg-ivory dark:bg-card border border-charcoal/20 rounded-xl px-3 py-2 text-sm">
-                    <KloverIcon name="calendar-check" className="h-6 w-6 shrink-0" />
-                    <span className="flex-1 font-medium text-charcoal dark:text-foreground">{remaining <= 0 ? t("dashboardPage.packageFinished") : tInterpolate(t("dashboardPage.sessionsLeftAlert"), { count: remaining })}</span>
-                    <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal shrink-0 px-3" onClick={() => navigate("/enroll-now")}>{t("dashboardPage.renewArrow")}</Button>
-                  </div>
-                );
-              }
-            }
-            // A roster student's money lives on her bundle, and StudentSelfService
-            // already shows what she owes with its own receipt upload. An old
-            // enrollments row (e.g. from the site's enrol flow) must not add a
-            // second, conflicting payment notice that pays into the wrong record.
-            if (!isPrivate) pendingEnrollments.forEach(pe => {
-              if (isPaymentDue(pe)) {
-                const amount = formatMoney(pe.amount, pe.currency);
-                const plan = planLabel(pe.plan_type);
-                const waText = tInterpolate(t("dashboardPage.paymentDueWhatsAppMsg"), { amount, plan });
-                alerts.push(
-                  <div key={pe.id} role="alert" className="flex flex-col sm:flex-row sm:items-center gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 rounded-xl px-3 py-3 text-sm">
-                    <AlertCircle className="h-5 w-5 text-amber-700 dark:text-amber-400 shrink-0" aria-hidden="true" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-amber-900 dark:text-amber-200">{tInterpolate(t("dashboardPage.paymentDueTitle"), { amount })}</p>
-                      <p className="text-amber-800 dark:text-amber-300">{t("dashboardPage.paymentDueBody")}</p>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <Button size="sm" className="min-h-11 text-xs bg-klovers-yellow hover:bg-klovers-yellow/90 text-charcoal px-3" onClick={() => navigate(`/pay/${pe.id}`)}>{t("dashboardPage.paymentDuePay")}</Button>
-                      <Button size="sm" variant="outline" className="min-h-11 text-xs px-3" onClick={() => trackAndOpenWhatsApp(`${WHATSAPP_BASE}?text=${encodeURIComponent(waText)}`, { cta_label: "dashboard_payment_due" })}>{t("dashboardPage.paymentDueWhatsApp")}</Button>
-                    </div>
-                  </div>
-                );
-                return;
-              }
-              const label = pe.approval_status === "PENDING_PAYMENT" ? t("dashboardPage.awaitingPayment") : pe.approval_status === "UNDER_REVIEW" ? t("dashboardPage.underReview") : t("dashboardPage.pendingLabel");
-              alerts.push(
-                <div key={pe.id} className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-3 py-2 text-sm">
-                  <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="flex-1 text-muted-foreground capitalize">{tInterpolate(t("dashboardPage.enrollmentStatusLine"), { plan: planLabel(pe.plan_type), status: label })}</span>
-                </div>
-              );
-            });
-            if (alerts.length === 0) return null;
-            return <div className="space-y-1.5">{alerts}</div>;
-          })()}
-
-          {/* A class starting today outranks everything below the hero. */}
-          {classIsToday && classBlock}
-
-          {/* D + B. Primary row: continue learning + today's missions */}
-          <div className="grid gap-4 lg:grid-cols-5 [&>*]:min-w-0">
-            <div className="lg:col-span-3 flex">
-              <div className="flex-1 flex flex-col [&>section]:flex-1">
-                <ContinueLearningCard next={nextLesson} loading={learning.loading} error={learning.error} onRetry={learning.retry} />
+            {starterLoading ? (
+              <div className="space-y-3" aria-busy="true">
+                <Skeleton className="h-24 rounded-[20px]" />
+                <Skeleton className="h-24 rounded-[20px]" />
+                <Skeleton className="h-24 rounded-[20px]" />
               </div>
-            </div>
-            <div className="lg:col-span-2 flex">
-              <div className="flex-1 flex flex-col [&>section]:flex-1">
-                <TodaysMissions
-                  missions={missions}
-                  loading={learning.loading}
-                  continueHref={continueHref}
-                  claimLabel={t("dashboardPage.claimXp")}
-                  claiming={claimingWord}
-                  onClaimWord={handleClaimWord}
-                  clubyAwake={clubyAwake}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* C. Learning journey */}
-          <LearningJourneyMap stops={journey.stops} currentIndex={journey.currentIndex} continueHref={continueHref} />
-
-          {/* C2. Which Korean scholarships this level can reach (4 Oct 2026).
-              Right under the journey map, because that is the question the map
-              answers next: the road, then where the road can lead. The level is
-              the one the placement test wrote to course_level_key, so this is
-              never a level the student claims for herself. */}
-          <ScholarshipMatches levelKey={profileLevel} signedIn />
-
-          {/* E | G + F. Collection & next unlock; beside it the upcoming class,
-              then recent achievements (tertiary). Mobile order: E, G, F. */}
-          <details className="group rounded-[20px] border border-foreground/10 bg-card">
-            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-display text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-[20px]">
-              {language === "ar" ? "المجموعة والإنجازات" : "Collection and achievements"}
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
-            </summary>
-            <div className="space-y-4 px-5 pb-5">
-          <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
-            <CollectionCard earned={learning.data?.badges ?? []} milestones={learning.data?.milestones ?? []} clubyAwake={clubyAwake} />
-            <div className="space-y-4">
-              {!classIsToday && classBlock}
-              <RecentAchievements earned={learning.data?.badges ?? []} />
-            </div>
-          </div>
-            </div>
-          </details>
-
-          {/* H. Secondary — account, classes, package */}
-          <section aria-labelledby="dash-account-title" className="space-y-4 pt-4">
-            <h2 id="dash-account-title" className="font-display text-base font-semibold text-foreground">{dc("accountTitle")}</h2>
-            {!hasNoData ? (
+            ) : starter ? (
               <>
-                <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
-                <div id="profile-card">
-                  <ProfileCard
-                    userId={userId}
-                    avatarUrl={avatarUrl}
-                    displayName={displayName}
-                    enrollmentCount={enrollments.length}
-                    journeyStage={journeyStage}
-                    onAvatarUploaded={(url) => setAvatarUrl(url)}
-                    onNameUpdated={(name) => setUserName(name)}
-                  />
+                <NewStudentStart
+                  levelLabel={profileLevel ? (getLevelShortLabel(profileLevel, language) || profileLevel) : null}
+                  lessonHref={continueHref}
+                />
+                <MyTrialClassCard />
+              </>
+            ) : (
+              <>
+                {/* A real class (or a place/payment waiting on one) comes first,
+                    whether or not it is today. A student with no class yet gets
+                    her lesson first and the enrol card after it. */}
+                {classFirst && classBlock}
+
+                {/* D + B. Continue learning + today's missions */}
+                <div className="grid gap-4 lg:grid-cols-5 [&>*]:min-w-0">
+                  <div className="lg:col-span-3 flex">
+                    <div className="flex-1 flex flex-col [&>section]:flex-1">
+                      <ContinueLearningCard next={nextLesson} loading={learning.loading} error={learning.error} onRetry={learning.retry} />
+                    </div>
+                  </div>
+                  <div className="lg:col-span-2 flex">
+                    <div className="flex-1 flex flex-col [&>section]:flex-1">
+                      <TodaysMissions
+                        missions={missions}
+                        loading={learning.loading}
+                        continueHref={continueHref}
+                        claimLabel={t("dashboardPage.claimXp")}
+                        claiming={claimingWord}
+                        onClaimWord={handleClaimWord}
+                        clubyAwake={clubyAwake}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <KloverIcon name="growth-chart" className="h-7 w-7" /> {t("dashboardPage.koreanLevel")}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {profileLevel ? (
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Badge className="text-sm px-3 py-1">{getLevelShortLabel(profileLevel, language) || profileLevel}</Badge>
-                            {/* No score out of anything: the old test scored out of 30 and the
-                                merged one out of up to 62, so a fixed "/40" was wrong either
-                                way. The date is what a student can act on — how stale it is. */}
-                            {placementTest && (
-                              <p className="text-xs text-muted-foreground mt-1">{tInterpolate(t("dashboardPage.tested"), { date: new Date(placementTest.created_at).toLocaleDateString(dateLocale) })}</p>
-                            )}
+
+                {/* Cluby's clover egg: crack → glow → hatch from real learning. */}
+                {egg && <EggStatusCard egg={egg} />}
+
+                {!classFirst && classBlock}
+
+                <ExploreDoors onSeeAll={() => changeTab("explore")} />
+              </>
+            )}
+
+            <ClarityPulse onVote={(clear) => dashEvent({ name: clear ? "dashboard_clear_yes" : "dashboard_clear_no", tab, starter })} />
+          </TabsContent>
+
+          {/* ── CLASSES: class, package, attendance, account ── */}
+          <TabsContent value="classes" className={panel}>
+            {classBlock}
+            <section aria-labelledby="dash-account-title" className="space-y-4 pt-4">
+              <h2 id="dash-account-title" className="font-display text-base font-semibold text-foreground">{dc("accountTitle")}</h2>
+              {!hasNoData ? (
+                <>
+                  <RegistrationChecklist userId={userId} enrollmentId={latestEnrollmentId} items={checklistItems} onItemCompleted={handleItemCompleted} autoFocusField={autoFocusField} />
+                  <div id="profile-card">
+                    <ProfileCard
+                      userId={userId}
+                      avatarUrl={avatarUrl}
+                      displayName={displayName}
+                      enrollmentCount={enrollments.length}
+                      journeyStage={journeyStage}
+                      onAvatarUploaded={(url) => setAvatarUrl(url)}
+                      onNameUpdated={(name) => setUserName(name)}
+                    />
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <KloverIcon name="growth-chart" className="h-7 w-7" /> {t("dashboardPage.koreanLevel")}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {profileLevel ? (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <Badge className="text-sm px-3 py-1">{getLevelShortLabel(profileLevel, language) || profileLevel}</Badge>
+                              {/* No score out of anything: the old test scored out of 30 and the
+                                  merged one out of up to 62, so a fixed "/40" was wrong either
+                                  way. The date is what a student can act on — how stale it is. */}
+                              {placementTest && (
+                                <p className="text-xs text-muted-foreground mt-1">{tInterpolate(t("dashboardPage.tested"), { date: new Date(placementTest.created_at).toLocaleDateString(dateLocale) })}</p>
+                              )}
+                            </div>
+                            <Button variant="outline" size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
+                              <RotateCcw className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.retake")}
+                            </Button>
                           </div>
-                          <Button variant="outline" size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
-                            <RotateCcw className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.retake")}
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-muted-foreground">{t("dashboardPage.takeTestPrompt")}</p>
-                          <Button size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
-                            <GraduationCap className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.takeTest")}
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                  {/* Package summary card (most recent) */}
-                  {enrollments[0] && !isPrivate && (() => {
-                    const enrollment = enrollments[0];
-                    const totalUsed = attendanceDates.length;
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm text-muted-foreground">{t("dashboardPage.takeTestPrompt")}</p>
+                            <Button size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
+                              <GraduationCap className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.takeTest")}
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    {/* Package summary card (most recent) */}
+                    {enrollments[0] && !isPrivate && (() => {
+                      const enrollment = enrollments[0];
+                      const totalUsed = attendanceDates.length;
+                      const remaining = enrollment.sessions_total - totalUsed;
+                      const extra = remaining < 0 ? Math.abs(remaining) : 0;
+                      const due = Math.round(extra * enrollment.unit_price);
+                      const curr = enrollment.currency === "EGP" ? t("dashboardPage.currencyEgp") : t("dashboardPage.currencyUsd");
+                      return (
+                        <Card className={remaining <= 0 && totalUsed > 0 ? "border-klovers-green border-2" : ""}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                              <CardTitle className="text-lg flex items-center gap-2 flex-wrap min-w-0">
+                                <Package className="h-4 w-4 shrink-0" />
+                                <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span>: {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
+                              </CardTitle>
+                              <Badge variant={remaining >= 0 ? "default" : "destructive"} className="shrink-0">
+                                {remaining >= 0 ? tInterpolate(t("dashboardPage.sessionsLeft"), { count: remaining }) : tInterpolate(t("dashboardPage.sessionsExtra"), { count: extra })}
+                              </Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {[
+                                { label: t("dashboardPage.pkgPackage"), val: enrollment.sessions_total, red: false },
+                                { label: t("dashboardPage.pkgUsed"), val: totalUsed, red: false },
+                                { label: remaining >= 0 ? t("dashboardPage.pkgRemaining") : t("dashboardPage.pkgExtraLabel"), val: remaining >= 0 ? remaining : extra, red: remaining < 0 },
+                                { label: t("dashboardPage.pkgDue"), val: `${curr}${due.toLocaleString()}`, red: due > 0 },
+                              ].map(({ label, val, red }) => (
+                                <div key={label} className={`rounded-lg p-3 text-center border ${red ? "bg-destructive/10 border-destructive/30" : "bg-muted/50 border-border"}`}>
+                                  <span className="text-[10px] text-muted-foreground block">{label}</span>
+                                  <p className={`text-lg font-bold ${red ? "text-destructive" : "text-foreground"}`}>{val}</p>
+                                </div>
+                              ))}
+                            </div>
+                            <div>
+                              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                                <span>{t("dashboardPage.sessionsUsed")}</span>
+                                <span>{Math.min(totalUsed, enrollment.sessions_total)}/{enrollment.sessions_total}</span>
+                              </div>
+                              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-klovers-yellow" : "bg-klovers-green"}`}
+                                  style={{ width: `${Math.min(100, (totalUsed / enrollment.sessions_total) * 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                            {due > 0 && (
+                              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
+                                <AlertTriangle className="h-4 w-4 shrink-0" />
+                                <span>{tInterpolate(t("dashboardPage.extraDueNote"), { extra, amount: `${curr}${due.toLocaleString()}` })}</span>
+                              </div>
+                            )}
+                            {groupName && (
+                              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Users className="h-3.5 w-3.5" />
+                                <span>{t("dashboardPage.group")}: <strong className="text-foreground">{groupName}</strong></span>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
+                  </div>
+                  <UpcomingSessionsCard sessions={upcomingSessions} zoomUrl={zoomUrl} showJoinAction={false} />
+                  {!isPrivate && <StudentAttendanceRequest userId={userId} />}
+                  {/* Additional packages (if > 1) */}
+                  {!isPrivate && enrollments.slice(1).map((enrollment) => {
+                    const totalUsed = enrollment.sessions_total - enrollment.sessions_remaining;
                     const remaining = enrollment.sessions_total - totalUsed;
                     const extra = remaining < 0 ? Math.abs(remaining) : 0;
                     const due = Math.round(extra * enrollment.unit_price);
                     const curr = enrollment.currency === "EGP" ? t("dashboardPage.currencyEgp") : t("dashboardPage.currencyUsd");
                     return (
-                      <Card className={remaining <= 0 && totalUsed > 0 ? "border-klovers-green border-2" : ""}>
+                      <Card key={enrollment.id}>
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between flex-wrap gap-2">
-                            <CardTitle className="text-lg flex items-center gap-2 flex-wrap min-w-0">
+                            <CardTitle className="text-base flex items-center gap-2 flex-wrap min-w-0">
                               <Package className="h-4 w-4 shrink-0" />
                               <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span>: {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
+                              <Badge variant="outline" className="ms-1 text-xs shrink-0">{t("dashboardPage.older")}</Badge>
                             </CardTitle>
-                            <Badge variant={remaining >= 0 ? "default" : "destructive"} className="shrink-0">
+                            <Badge variant={remaining >= 0 ? "secondary" : "destructive"} className="shrink-0">
                               {remaining >= 0 ? tInterpolate(t("dashboardPage.sessionsLeft"), { count: remaining }) : tInterpolate(t("dashboardPage.sessionsExtra"), { count: extra })}
                             </Badge>
                           </div>
                         </CardHeader>
-                        <CardContent className="space-y-3">
+                        <CardContent>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {[
-                              { label: t("dashboardPage.pkgPackage"), val: enrollment.sessions_total, red: false },
-                              { label: t("dashboardPage.pkgUsed"), val: totalUsed, red: false },
-                              { label: remaining >= 0 ? t("dashboardPage.pkgRemaining") : t("dashboardPage.pkgExtraLabel"), val: remaining >= 0 ? remaining : extra, red: remaining < 0 },
-                              { label: t("dashboardPage.pkgDue"), val: `${curr}${due.toLocaleString()}`, red: due > 0 },
-                            ].map(({ label, val, red }) => (
-                              <div key={label} className={`rounded-lg p-3 text-center border ${red ? "bg-destructive/10 border-destructive/30" : "bg-muted/50 border-border"}`}>
+                              { label: t("dashboardPage.pkgPackage"), val: enrollment.sessions_total },
+                              { label: t("dashboardPage.pkgUsed"), val: totalUsed },
+                              { label: remaining >= 0 ? t("dashboardPage.pkgRemaining") : t("dashboardPage.pkgExtraLabel"), val: remaining >= 0 ? remaining : extra },
+                              { label: t("dashboardPage.pkgDue"), val: `${curr}${due.toLocaleString()}` },
+                            ].map(({ label, val }) => (
+                              <div key={label} className="rounded-lg bg-muted/50 border border-border p-2 text-center">
                                 <span className="text-[10px] text-muted-foreground block">{label}</span>
-                                <p className={`text-lg font-bold ${red ? "text-destructive" : "text-foreground"}`}>{val}</p>
+                                <p className="text-base font-bold text-foreground">{val}</p>
                               </div>
                             ))}
                           </div>
-                          <div>
-                            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                              <span>{t("dashboardPage.sessionsUsed")}</span>
-                              <span>{Math.min(totalUsed, enrollment.sessions_total)}/{enrollment.sessions_total}</span>
-                            </div>
-                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all duration-500 ${remaining < 0 ? "bg-destructive" : remaining <= 2 ? "bg-klovers-yellow" : "bg-klovers-green"}`}
-                                style={{ width: `${Math.min(100, (totalUsed / enrollment.sessions_total) * 100)}%` }}
-                              />
-                            </div>
-                          </div>
-                          {due > 0 && (
-                            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/5 rounded-lg p-2">
-                              <AlertTriangle className="h-4 w-4 shrink-0" />
-                              <span>{tInterpolate(t("dashboardPage.extraDueNote"), { extra, amount: `${curr}${due.toLocaleString()}` })}</span>
-                            </div>
-                          )}
-                          {groupName && (
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Users className="h-3.5 w-3.5" />
-                              <span>{t("dashboardPage.group")}: <strong className="text-foreground">{groupName}</strong></span>
-                            </div>
-                          )}
                         </CardContent>
                       </Card>
                     );
-                  })()}
-                </div>
-                <UpcomingSessionsCard sessions={upcomingSessions} zoomUrl={zoomUrl} showJoinAction={false} />
-                {!isPrivate && <StudentAttendanceRequest userId={userId} />}
-                {/* Additional packages (if > 1) */}
-                {!isPrivate && enrollments.slice(1).map((enrollment) => {
-                  const totalUsed = enrollment.sessions_total - enrollment.sessions_remaining;
-                  const remaining = enrollment.sessions_total - totalUsed;
-                  const extra = remaining < 0 ? Math.abs(remaining) : 0;
-                  const due = Math.round(extra * enrollment.unit_price);
-                  const curr = enrollment.currency === "EGP" ? t("dashboardPage.currencyEgp") : t("dashboardPage.currencyUsd");
-                  return (
-                    <Card key={enrollment.id}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <CardTitle className="text-base flex items-center gap-2 flex-wrap min-w-0">
-                            <Package className="h-4 w-4 shrink-0" />
-                            <span className="capitalize break-words">{planLabel(enrollment.plan_type)}</span>: {tPlural("dashboardPage.monthsPlural", enrollment.duration)}
-                            <Badge variant="outline" className="ms-1 text-xs shrink-0">{t("dashboardPage.older")}</Badge>
-                          </CardTitle>
-                          <Badge variant={remaining >= 0 ? "secondary" : "destructive"} className="shrink-0">
-                            {remaining >= 0 ? tInterpolate(t("dashboardPage.sessionsLeft"), { count: remaining }) : tInterpolate(t("dashboardPage.sessionsExtra"), { count: extra })}
-                          </Badge>
+                  })}
+                  {attendanceDates.length > 0 && <AttendanceHistoryCard dates={attendanceDates} />}
+                  {/* ── Progress Report + Certificate ── */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank', 'noopener,noreferrer')}
+                      className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      <KloverIcon name="growth-chart" className="h-10 w-10 sm:h-12 sm:w-12" />
+                      <span className="text-sm font-semibold text-foreground">{t("dashboardPage.progressReport")}</span>
+                      <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPdf")}</span>
+                    </button>
+                    <button
+                      onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank', 'noopener,noreferrer')}
+                      className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      <KloverIcon name="badge-blossom" className="h-10 w-10 sm:h-12 sm:w-12" />
+                      <span className="text-sm font-semibold text-foreground">{t("dashboardPage.certificate")}</span>
+                      <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPng")}</span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <KloverIcon name="growth-chart" className="h-7 w-7" /> {t("dashboardPage.koreanLevel")}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {profileLevel ? (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Badge className="text-sm px-3 py-1">{getLevelShortLabel(profileLevel, language) || profileLevel}</Badge>
+                          {/* No score out of anything: the old test scored out of 30 and the
+                              merged one out of up to 62, so a fixed "/40" was wrong either
+                              way. The date is what a student can act on — how stale it is. */}
+                          {placementTest && (
+                            <p className="text-xs text-muted-foreground mt-1">{tInterpolate(t("dashboardPage.tested"), { date: new Date(placementTest.created_at).toLocaleDateString(dateLocale) })}</p>
+                          )}
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          {[
-                            { label: t("dashboardPage.pkgPackage"), val: enrollment.sessions_total },
-                            { label: t("dashboardPage.pkgUsed"), val: totalUsed },
-                            { label: remaining >= 0 ? t("dashboardPage.pkgRemaining") : t("dashboardPage.pkgExtraLabel"), val: remaining >= 0 ? remaining : extra },
-                            { label: t("dashboardPage.pkgDue"), val: `${curr}${due.toLocaleString()}` },
-                          ].map(({ label, val }) => (
-                            <div key={label} className="rounded-lg bg-muted/50 border border-border p-2 text-center">
-                              <span className="text-[10px] text-muted-foreground block">{label}</span>
-                              <p className="text-base font-bold text-foreground">{val}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-                {attendanceDates.length > 0 && <AttendanceHistoryCard dates={attendanceDates} />}
-                {/* ── Progress Report + Certificate ── */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => window.open(`/progress-report?uid=${userId}`, '_blank', 'noopener,noreferrer')}
-                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    <KloverIcon name="growth-chart" className="h-10 w-10 sm:h-12 sm:w-12" />
-                    <span className="text-sm font-semibold text-foreground">{t("dashboardPage.progressReport")}</span>
-                    <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPdf")}</span>
-                  </button>
-                  <button
-                    onClick={() => window.open(`/certificate?uid=${userId}&level=${encodeURIComponent(profileLevel || 'A0')}`, '_blank', 'noopener,noreferrer')}
-                    className="flex flex-col items-center gap-2 bg-card border border-border rounded-2xl p-4 hover:border-charcoal/30 hover:bg-ivory dark:hover:bg-card transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    <KloverIcon name="badge-blossom" className="h-10 w-10 sm:h-12 sm:w-12" />
-                    <span className="text-sm font-semibold text-foreground">{t("dashboardPage.certificate")}</span>
-                    <span className="text-xs text-muted-foreground">{t("dashboardPage.downloadPng")}</span>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <KloverIcon name="growth-chart" className="h-7 w-7" /> {t("dashboardPage.koreanLevel")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {profileLevel ? (
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Badge className="text-sm px-3 py-1">{getLevelShortLabel(profileLevel, language) || profileLevel}</Badge>
-                        {/* No score out of anything: the old test scored out of 30 and the
-                            merged one out of up to 62, so a fixed "/40" was wrong either
-                            way. The date is what a student can act on — how stale it is. */}
-                        {placementTest && (
-                          <p className="text-xs text-muted-foreground mt-1">{tInterpolate(t("dashboardPage.tested"), { date: new Date(placementTest.created_at).toLocaleDateString(dateLocale) })}</p>
-                        )}
+                        <Button variant="outline" size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
+                          <RotateCcw className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.retake")}
+                        </Button>
                       </div>
-                      <Button variant="outline" size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
-                        <RotateCcw className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.retake")}
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">{t("dashboardPage.findLevel")}</p>
-                      <Button size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
-                        <GraduationCap className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.takeTest")}
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </section>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">{t("dashboardPage.findLevel")}</p>
+                        <Button size="sm" className="min-h-11" onClick={() => navigate("/placement-test")}>
+                          <GraduationCap className="h-3.5 w-3.5 me-1.5" /> {t("dashboardPage.takeTest")}
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </section>
+          </TabsContent>
 
-          {/* H. More practice — tertiary */}
-          <details className="group rounded-[20px] border border-foreground/10 bg-card">
-            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-display text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-[20px]">
-              {language === "ar" ? "مزيد من التدريب واستكشاف كوريا" : "More practice and Discover Korea"}
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
-            </summary>
-            <div className="space-y-4 px-5 pb-5">
-          <section aria-labelledby="practice-extras-heading" className="space-y-4 pt-2">
-            <h2 id="practice-extras-heading" className="font-display text-base font-semibold text-foreground">{dc("morePractice")}</h2>
-            <Suspense fallback={<div className="h-20 bg-muted/40 rounded-xl animate-pulse" />}>
-              <DailyBonusCard />
-            </Suspense>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {practiceLinks.map(({ label, desc, icon, path }) => (
-                <button key={path} onClick={() => navigate(path)} aria-label={`${label}: ${desc}`}
-                  className="min-w-0 min-h-11 rounded-xl border border-foreground/10 bg-card p-3 text-start transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground">
-                  <BrandIcon name={icon} className="h-9 w-9 mb-1" />
-                  <p className="font-semibold text-foreground text-sm">{label}</p>
-                  <p className="text-muted-foreground text-xs">{desc}</p>
-                </button>
-              ))}
-            </div>
-            {/* ── Discover Korea Gallery ── */}
-            {(() => {
-              const SCENES = [
-                { img: imgJeju,        ko: "제주도",   en: "Jeju Island",       caption: "Volcanic paradise",    arName: "جزيرة جيجو",      arCaption: "جنة بركانية" },
-                { img: imgBBQ,         ko: "삼겹살",   en: "Korean BBQ",         caption: "Grilled pork belly",   arName: "الشواء الكوري",   arCaption: "لحم مشوي على الطريقة الكورية" },
-                { img: imgTemple,      ko: "사찰",     en: "Buddhist Temple",    caption: "Mountain temples",     arName: "معبد بوذي",       arCaption: "معابد بين الجبال" },
-                { img: imgHanbok,      ko: "한복",     en: "Traditional Hanbok", caption: "Centuries of fashion", arName: "الهانبوك التقليدي", arCaption: "أزياء عمرها قرون" },
-                { img: imgKpop,        ko: "케이팝",   en: "K-Pop Concert",      caption: "Global music wave",    arName: "حفلة كيبوب",      arCaption: "موجة موسيقية عالمية" },
-                { img: imgNightMarket, ko: "야시장",   en: "Night Market",       caption: "Street food & vibes",  arName: "السوق الليلي",    arCaption: "أكل الشارع وأجواء مميزة" },
-                { img: imgTea,         ko: "차 문화",  en: "Tea Culture",        caption: "Calm & tradition",     arName: "ثقافة الشاي",     arCaption: "هدوء وتقاليد" },
-                { img: imgMarket,      ko: "전통시장", en: "Traditional Market", caption: "Colors & local life",  arName: "السوق التقليدي",  arCaption: "ألوان وحياة محلية" },
-              ].map(({ en, caption, arName, arCaption, ...rest }) =>
-                language === "ar" ? { ...rest, en: arName, caption: arCaption } : { ...rest, en, caption }
-              );
-              return (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("dashboardPage.discoverKorea")}</h2>
-                  </div>
-                  <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground" tabIndex={0} role="region" aria-label={t("dashboardPage.discoverKorea")}>
-                    {SCENES.map(({ img, ko, en, caption }) => (
-                      <div key={ko} className="relative flex-none w-36 h-44 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:scale-[1.03] transition-all duration-300">
-                        <img src={img} alt={`${en} (${ko})`} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-2.5">
-                          <p className="text-white font-bold text-base leading-tight" lang="ko">{ko}</p>
-                          <p className="text-white/75 text-[10px] leading-tight">{en}</p>
-                          <p className="text-white/50 text-[9px] mt-0.5">{caption}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+          {/* ── PROGRESS: journey, collection, scholarships, insights ── */}
+          <TabsContent value="progress" className={panel}>
+            {/* C. Learning journey */}
+            <LearningJourneyMap stops={journey.stops} currentIndex={journey.currentIndex} continueHref={continueHref} />
+
+            {/* E + F. Collection & next unlock, recent achievements */}
+            <section aria-labelledby="dash-collection-title" className="space-y-3">
+              <h2 id="dash-collection-title" className="font-display text-base font-semibold text-foreground">{dc("collectionSection")}</h2>
+              <div className="grid gap-4 md:grid-cols-2 [&>*]:min-w-0">
+                <CollectionCard earned={learning.data?.badges ?? []} milestones={learning.data?.milestones ?? []} clubyAwake={clubyAwake} />
+                <div className="space-y-4">
+                  <RecentAchievements earned={learning.data?.badges ?? []} />
                 </div>
-              );
-            })()}
-            {/* ── Refer a Friend — slim strip ── */}
-            {userId && (() => {
-              const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
-              return (
-                <div className="flex flex-wrap items-center gap-3 bg-ivory dark:bg-card border border-charcoal/20 rounded-xl px-4 py-2.5">
-                  <KloverIcon name="reward-gift" className="h-8 w-8 sm:h-9 sm:w-9" />
-                  <span className="flex-1 text-sm text-muted-foreground min-w-0 break-words">
-                    <strong className="text-foreground">{t("dashboardPage.referTitle")}</strong> · {t("dashboardPage.referEarn")}
-                    {referralCount > 0 && <> · <span className="text-charcoal dark:text-foreground font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}
-                  </span>
-                  <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(refLink); toast({ title: t("dashboardPage.linkCopied") }); }}
-                    className="shrink-0 gap-1 border-charcoal/30 text-charcoal dark:text-foreground hover:bg-klovers-yellow/40 min-h-11 text-xs px-3">
-                    <Copy className="h-3 w-3" /> {t("dashboardPage.copyLink")}
+              </div>
+            </section>
+
+            {/* C2. Which Korean scholarships this level can reach (4 Oct 2026).
+                The level is the one the placement test wrote to
+                course_level_key, never one the student claims for herself. */}
+            <ScholarshipMatches levelKey={profileLevel} signedIn />
+
+            {/* Learning insights — collapsed; its charts only load when opened */}
+            <details
+              className="group rounded-[20px] border border-foreground/10 bg-card"
+              onToggle={(e) => setInsightsOpen((e.currentTarget as HTMLDetailsElement).open)}
+            >
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-display text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-[20px]">
+                {dc("insightsTitle")}
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              {insightsOpen && (
+                <div className="space-y-4 px-5 pb-5">
+                  {(() => {
+                    const WEEKLY_GOAL = 300;
+                    const pct = Math.min(100, Math.round((weeklyXp / WEEKLY_GOAL) * 100));
+                    const msg = pct >= 100 ? t("dashboardPage.goalCrushed") : pct >= 60 ? t("dashboardPage.almostThere") : pct >= 30 ? t("dashboardPage.goodStart") : t("dashboardPage.startEarning");
+                    return (
+                      <div className="flex-1 bg-card border border-border/60 rounded-2xl px-4 py-4 flex flex-col justify-between gap-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-foreground">{t("dashboardPage.weeklyXp")}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-muted-foreground text-xs">{weeklyXp}/{WEEKLY_GOAL}</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pct >= 100 ? "bg-klovers-green text-charcoal" : "bg-primary text-foreground"}`}>{pct}%</span>
+                          </div>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="text-xs text-muted-foreground">{msg}</p>
+                      </div>
+                    );
+                  })()}
+                  <Suspense fallback={<Skeleton className="h-24 rounded-xl" />}>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <AchievementMilestoneCard />
+                      <LearningGoalsCard />
+                    </div>
+                    {!hasNoData && (
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground mb-3">{t("dashboardPage.yourAnalytics")}</h3>
+                        <AnalyticsSection />
+                      </div>
+                    )}
+                    <StreakCalendar />
+                    <LeaderboardCard />
+                  </Suspense>
+                  <Button variant="outline" size="sm" onClick={handleExportProgress} aria-label={t("dashboardPage.exportAria")} className="min-h-11 gap-1.5">
+                    <Download className="h-3.5 w-3.5" aria-hidden="true" /> {dc("exportProgress")}
                   </Button>
                 </div>
-              );
-            })()}
-          </section>
-            </div>
-          </details>
+              )}
+            </details>
+          </TabsContent>
 
-          {/* H. Learning insights — collapsed; its charts only load when opened */}
-          <details
-            className="group rounded-[20px] border border-foreground/10 bg-card"
-            onToggle={(e) => setInsightsOpen((e.currentTarget as HTMLDetailsElement).open)}
-          >
-            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 font-display text-base font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-[20px]">
-              {dc("insightsTitle")}
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
-            </summary>
-            {insightsOpen && (
-              <div className="space-y-4 px-5 pb-5">
-                {(() => {
-                  const WEEKLY_GOAL = 300;
-                  const pct = Math.min(100, Math.round((weeklyXp / WEEKLY_GOAL) * 100));
-                  const msg = pct >= 100 ? t("dashboardPage.goalCrushed") : pct >= 60 ? t("dashboardPage.almostThere") : pct >= 30 ? t("dashboardPage.goodStart") : t("dashboardPage.startEarning");
-                  return (
-                    <div className="flex-1 bg-card border border-border/60 rounded-2xl px-4 py-4 flex flex-col justify-between gap-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-semibold text-foreground">{t("dashboardPage.weeklyXp")}</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-muted-foreground text-xs">{weeklyXp}/{WEEKLY_GOAL}</span>
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${pct >= 100 ? "bg-klovers-green text-charcoal" : "bg-primary text-foreground"}`}>{pct}%</span>
-                        </div>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-700" style={{ width: `${pct}%` }} />
-                      </div>
-                      <p className="text-xs text-muted-foreground">{msg}</p>
-                    </div>
-                  );
-                })()}
-                <Suspense fallback={<Skeleton className="h-24 rounded-xl" />}>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <AchievementMilestoneCard />
-                    <LearningGoalsCard />
-                  </div>
-                  {!hasNoData && (
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground mb-3">{t("dashboardPage.yourAnalytics")}</h3>
-                      <AnalyticsSection />
-                    </div>
-                  )}
-                  <StreakCalendar />
-                  <LeaderboardCard />
-                </Suspense>
-                <Button variant="outline" size="sm" onClick={handleExportProgress} aria-label={t("dashboardPage.exportAria")} className="min-h-11 gap-1.5">
-                  <Download className="h-3.5 w-3.5" aria-hidden="true" /> {dc("exportProgress")}
-                </Button>
+          {/* ── EXPLORE: the world, partners, audio, extra practice ── */}
+          <TabsContent value="explore" className={panel}>
+            <WorldEntryCard isAr={language === "ar"} compact />
+            <ExchangeEntryCard isAr={language === "ar"} compact />
+            <A0AudioEntryCard isAr={language === "ar"} />
+            <section aria-labelledby="practice-extras-heading" className="space-y-4 pt-2">
+              <h2 id="practice-extras-heading" className="font-display text-base font-semibold text-foreground">{dc("morePractice")}</h2>
+              <Suspense fallback={<div className="h-20 bg-muted/40 rounded-xl animate-pulse" />}>
+                <DailyBonusCard />
+              </Suspense>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {practiceLinks.map(({ label, desc, icon, path }) => (
+                  <button key={path} onClick={() => navigate(path)} aria-label={`${label}: ${desc}`}
+                    className="min-w-0 min-h-11 rounded-xl border border-foreground/10 bg-card p-3 text-start transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground">
+                    <BrandIcon name={icon} className="h-9 w-9 mb-1" />
+                    <p className="font-semibold text-foreground text-sm">{label}</p>
+                    <p className="text-muted-foreground text-xs">{desc}</p>
+                  </button>
+                ))}
               </div>
-            )}
-          </details>
-        </div>
+              <Suspense fallback={<div className="h-44 bg-muted/40 rounded-xl animate-pulse" />}>
+              <DiscoverKoreaGallery />
+            </Suspense>
+              {/* ── Refer a Friend — slim strip ── */}
+              {userId && (() => {
+                const refLink = `https://kloversegy.com/free-trial?ref=${userId}`;
+                return (
+                  <div className="flex flex-wrap items-center gap-3 bg-ivory dark:bg-card border border-charcoal/20 rounded-xl px-4 py-2.5">
+                    <KloverIcon name="reward-gift" className="h-8 w-8 sm:h-9 sm:w-9" />
+                    <span className="flex-1 text-sm text-muted-foreground min-w-0 break-words">
+                      <strong className="text-foreground">{t("dashboardPage.referTitle")}</strong> · {t("dashboardPage.referEarn")}
+                      {referralCount > 0 && <> · <span className="text-charcoal dark:text-foreground font-medium">{tInterpolate(t("dashboardPage.referJoined"), { count: referralCount })}</span></>}
+                    </span>
+                    <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(refLink); toast({ title: t("dashboardPage.linkCopied") }); }}
+                      className="shrink-0 gap-1 border-charcoal/30 text-charcoal dark:text-foreground hover:bg-klovers-yellow/40 min-h-11 text-xs px-3">
+                      <Copy className="h-3 w-3" /> {t("dashboardPage.copyLink")}
+                    </Button>
+                  </div>
+                );
+              })()}
+            </section>
+          </TabsContent>
+        </Tabs>
       </main>
       <Footer />
     </div>
