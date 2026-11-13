@@ -591,6 +591,10 @@ const StudentDashboard = () => {
     const q = searchParams.get("tab");
     return isDashTab(q) ? q : "today";
   });
+  // What changeTab compares against; kept in step with `tab` on every render
+  // so a tab set from anywhere else (the profile-card jump) is seen too.
+  const lastTab = useRef(tab);
+  lastTab.current = tab;
   const firstClickSent = useRef(false);
 
   useEffect(() => {
@@ -960,8 +964,13 @@ const StudentDashboard = () => {
 
   const classFirst = !hasNoData || isPrivate || !!pendingLatest;
 
+  // Radix fires onValueChange twice for one real click: once on mousedown and
+  // again on the focus that follows it, both before React re-renders. Checking
+  // against `tab` from the closure let both through, so every tab view was
+  // counted twice. The ref is updated synchronously, so the second is dropped.
   const changeTab = (next: string) => {
-    if (!isDashTab(next) || next === tab) return;
+    if (!isDashTab(next) || next === lastTab.current) return;
+    lastTab.current = next;
     setTab(next);
     setSearchParams(next === "today" ? {} : { tab: next }, { replace: true });
     window.scrollTo({ top: 0 });
