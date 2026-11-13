@@ -5,7 +5,7 @@ import { A0_AUDIO, A0_PAGES } from "@/constants/hangulA0Audio";
 
 /**
  * Hangul A0 book audio. Each page of the printed/PDF book carries a QR code
- * that opens /a0/<page>; this page lists the Korean on that page and plays
+ * that opens /a0 (the audio library: pick your page); /a0/<page> lists the Korean on that page and plays
  * each item (or all of them in order) from the recordings shipped with the
  * site. Open to everyone: a reader scanning the book is usually not signed in.
  */
