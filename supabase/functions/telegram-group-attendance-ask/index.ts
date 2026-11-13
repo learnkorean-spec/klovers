@@ -22,6 +22,14 @@
 // excludes anyone already asked, and anyone Re (or an earlier claim) has
 // already recorded a pkg_attendance row for -- so this function only has to
 // send messages.
+//
+// 13 Nov 2026: the button payload used to be `gatt:<yes|no>:<session_id>:
+// <user_id>` -- two full UUIDs, 82 bytes. Telegram caps callback_data at 64
+// bytes and silently rejects the whole sendMessage with BUTTON_DATA_INVALID
+// (confirmed live: every single group attendance-ask send had been failing
+// with this error). Dropped user_id from the button; telegram-webhook now
+// resolves which member tapped from who she actually is on Telegram
+// (chat_id + her own tg_user_id), not from a value baked into the button.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -47,7 +55,6 @@ async function askAttendance(
   token: string,
   chatId: number,
   sessionId: string,
-  userId: string,
   studentName: string,
   lang: string,
 ) {
@@ -68,8 +75,8 @@ async function askAttendance(
       text,
       reply_markup: {
         inline_keyboard: [[
-          { text: yesLabel, callback_data: `gatt:yes:${sessionId}:${userId}` },
-          { text: noLabel, callback_data: `gatt:no:${sessionId}:${userId}` },
+          { text: yesLabel, callback_data: `gatt:yes:${sessionId}` },
+          { text: noLabel, callback_data: `gatt:no:${sessionId}` },
         ]],
       },
     }),
@@ -109,7 +116,7 @@ Deno.serve(async (req) => {
   let asked = 0;
   for (const row of rows) {
     const sent = await askAttendance(
-      cfg.bot_token, row.chat_id, row.session_id, row.user_id, row.full_name, row.language ?? "ar",
+      cfg.bot_token, row.chat_id, row.session_id, row.full_name, row.language ?? "ar",
     );
     if (sent) {
       const { error: insErr } = await supabase
