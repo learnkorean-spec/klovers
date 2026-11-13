@@ -25,7 +25,6 @@ const METHOD_DETAIL_KEYS: Record<string, { labelKey: string; value: string }> = 
 interface EnrollmentData {
   id: string;
   plan_type: string;
-  class_type: string | null;
   duration: number;
   amount: number;
   currency: string;
@@ -376,7 +375,7 @@ const EgyptPaymentPage = () => {
       let data: any = null;
       const { data: direct, error: directErr } = await supabase
         .from("enrollments")
-        .select("id, plan_type, class_type, duration, amount, currency, approval_status, payment_status, due_at, classes_included, receipt_url, payment_method, payment_date")
+        .select("id, plan_type, duration, amount, currency, approval_status, payment_status, due_at, classes_included, receipt_url, payment_method, payment_date")
         .eq("id", enrollmentId!)
         .maybeSingle();
 
@@ -439,7 +438,7 @@ const EgyptPaymentPage = () => {
         if (rpcError.message?.includes("PENDING_PAYMENT")) {
           const { data: refreshed } = await supabase
             .from("enrollments")
-            .select("id, plan_type, class_type, duration, amount, currency, approval_status, payment_status, due_at, classes_included, receipt_url, payment_method, payment_date")
+            .select("id, plan_type, duration, amount, currency, approval_status, payment_status, due_at, classes_included, receipt_url, payment_method, payment_date")
             .eq("id", enrollment.id)
             .single();
           if (refreshed) {
