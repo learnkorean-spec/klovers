@@ -13,6 +13,7 @@ import WatercolorVocabSheet from "@/components/admin/WatercolorVocabSheet";
 import RoomSceneSheet from "@/components/admin/RoomSceneSheet";
 import BookWatercolorGrid, { BOOK_PROMPTS_STORE } from "@/components/admin/BookWatercolorGrid";
 import ResetButton from "@/components/admin/ResetButton";
+import StyleFromPicture from "@/components/admin/StyleFromPicture";
 
 interface DesignBrief {
   roomName: string;
@@ -116,7 +117,7 @@ export default function AiRoomLabPage() {
   // Re, 13 Nov 2026: every tool here can be reset. The three generator
   // components reset by remounting (a new key); the two inline tools below
   // reset their own state.
-  const [keys, setKeys] = useState({ style1: 0, style2: 0, book: 0 });
+  const [keys, setKeys] = useState({ style1: 0, style2: 0, style10: 0, book: 0 });
   const bump = (k: keyof typeof keys) => setKeys((ks) => ({ ...ks, [k]: ks[k] + 1 }));
   const resetBook = () => {
     try {
@@ -137,7 +138,7 @@ export default function AiRoomLabPage() {
     setVariants([]);
   };
   const resetAll = () => {
-    setKeys((ks) => ({ style1: ks.style1 + 1, style2: ks.style2 + 1, book: ks.book + 1 }));
+    setKeys((ks) => ({ style1: ks.style1 + 1, style2: ks.style2 + 1, style10: ks.style10 + 1, book: ks.book + 1 }));
     try {
       localStorage.removeItem(BOOK_PROMPTS_STORE);
     } catch {
@@ -235,6 +236,7 @@ export default function AiRoomLabPage() {
           <h2 className="text-lg font-semibold">Section 1: Everyday Korean posts</h2>
           <WatercolorVocabSheet key={`s1-${keys.style1}`} headerAction={<ResetButton onReset={() => bump("style1")} />} />
           <RoomSceneSheet key={`s2-${keys.style2}`} headerAction={<ResetButton onReset={() => bump("style2")} />} />
+          <StyleFromPicture key={`s10-${keys.style10}`} headerAction={<ResetButton onReset={() => bump("style10")} />} />
         </section>
         <BookWatercolorGrid key={`bk-${keys.book}`} headerAction={<ResetButton onReset={resetBook} />} />
         <Card>

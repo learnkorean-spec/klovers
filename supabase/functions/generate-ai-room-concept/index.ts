@@ -484,6 +484,56 @@ function bookGridPrompt(prompt: string): string {
   return `${BOOK_GRID_STYLE}\n\nThe four cells (top-left, top-right, bottom-left, bottom-right): ${prompt}`;
 }
 
+/**
+ * Style 10, "make it like my picture" (Re, 13 Nov 2026: "make that i can
+ * upload a picture and add a prompt to create similar style picture"). The
+ * uploaded picture is a STYLE reference only: a vision model first writes
+ * down its art style (never its subject), then Muse Image paints Re's prompt
+ * with the picture attached as a reference plus those style notes. If Meta
+ * won't take the picture inline it is put in the public marketing-images
+ * bucket and passed by URL; if editing fails altogether the notes alone
+ * drive a plain generation, so a picture still comes back.
+ */
+async function describeStyle(imageDataUrl: string, metaApiKey: string, openAiKey: string | undefined): Promise<string> {
+  const ask =
+    "Describe ONLY the visual art style of this picture so an illustrator could paint a " +
+    "completely different subject in exactly the same style. Cover: medium and technique " +
+    "(e.g. watercolor, 3D render, flat vector, photo), line work and outlines, colour palette " +
+    "(name the main colours), lighting and shadows, texture, level of detail, proportions of " +
+    "any characters (e.g. chibi, big eyes), background treatment and framing. Do NOT describe " +
+    'what the picture shows. Reply as JSON: {"style": "<one dense paragraph, max 120 words>"}';
+  const { text } = await askVision(ask, [imageDataUrl], metaApiKey, openAiKey);
+  const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+  const style = String(JSON.parse(json)?.style ?? "").trim();
+  if (!style) throw new Error("no style description");
+  return style.slice(0, 900);
+}
+
+async function museImage(endpoint: "images/edits" | "images/generations", body: Record<string, unknown>, apiKey: string): Promise<string> {
+  const res = await fetch(`${META_API_BASE}/${endpoint}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: MUSE_IMAGE_MODEL, n: 1, response_format: "b64_json", output_format: "png", ...body }),
+  });
+  if (!res.ok) throw new Error(`Muse Image error ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const b64 = (await res.json())?.data?.[0]?.b64_json;
+  if (!b64) throw new Error("Muse Image returned no image");
+  return `data:image/png;base64,${b64}`;
+}
+
+function styleCopyPrompt(prompt: string, style: string, withReference: boolean): string {
+  return (
+    (withReference
+      ? "Use the attached image ONLY as a style reference: match its art style, technique, colour " +
+        "palette, lighting, texture and level of detail exactly, but do NOT copy its subject, " +
+        "characters, objects or layout. "
+      : "") +
+    `Create a new picture of: ${prompt}.` +
+    (style ? ` Art style to match: ${style}` : "") +
+    " No text, letters, numbers, watermarks or logos unless the request asks for them."
+  );
+}
+
 interface CoverResult {
   theme: string;
   extraCharacter?: string;
@@ -668,6 +718,48 @@ serve(async (req) => {
       });
     }
 
+    if (body.mode === "style-copy") {
+      const prompt = String(body.prompt ?? "").trim().slice(0, 1500);
+      const ref = String(body.referenceImage ?? "");
+      const size = ["1024x1024", "1024x1536", "1536x1024"].includes(String(body.size)) ? String(body.size) : "1024x1024";
+      if (!prompt) throw new Error("prompt is required");
+      if (!/^data:image\/(png|jpe?g|webp);base64,/.test(ref)) throw new Error("upload a PNG, JPG or WebP picture");
+      if (ref.length > 8_000_000) throw new Error("picture is too large; use one under about 5 MB");
+
+      let style = "";
+      try {
+        style = await describeStyle(ref, metaApiKey, openAiKey);
+      } catch (e) {
+        console.warn("style-copy: describeStyle failed", e);
+      }
+      const notes: string[] = [];
+      let imageDataUrl = "";
+      try {
+        imageDataUrl = await museImage("images/edits", { prompt: styleCopyPrompt(prompt, style, true), size, images: [{ image_url: ref }] }, metaApiKey);
+        notes.push("reference picture attached");
+      } catch (inlineErr) {
+        notes.push(`inline reference refused (${String((inlineErr as Error).message).slice(0, 120)})`);
+        try {
+          const [head, b64] = ref.split(",");
+          const ext = /png/.test(head) ? "png" : /webp/.test(head) ? "webp" : "jpg";
+          const bytes = Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
+          const path = `ai-room-lab/style-refs/${crypto.randomUUID()}.${ext}`;
+          const up = await adminClient.storage.from("marketing-images").upload(path, bytes, { contentType: head.slice(5, head.indexOf(";")) });
+          if (up.error) throw up.error;
+          const url = adminClient.storage.from("marketing-images").getPublicUrl(path).data.publicUrl;
+          imageDataUrl = await museImage("images/edits", { prompt: styleCopyPrompt(prompt, style, true), size, images: [{ image_url: url }] }, metaApiKey);
+          notes.push("reference picture attached by URL");
+        } catch (urlErr) {
+          notes.push(`reference by URL failed (${String((urlErr as Error).message).slice(0, 120)})`);
+          if (!style) throw new Error(`Couldn't use the picture as a reference: ${notes.join("; ")}`);
+          imageDataUrl = await museImage("images/generations", { prompt: styleCopyPrompt(prompt, style, false), size }, metaApiKey);
+          notes.push("painted from the style notes only");
+        }
+      }
+      return new Response(JSON.stringify({ imageDataUrl, style, notes }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (body.mode === "book-grid") {
       const prompt = String(body.prompt ?? "").trim().slice(0, 2000);
       if (!prompt) throw new Error("prompt is required");
