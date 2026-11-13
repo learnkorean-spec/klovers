@@ -36,7 +36,13 @@ export type TelegramChat = {
   title: string | null;
   bot_status: string | null;
   can_invite: boolean;
+  /** t.me/<username> when the group is public; the fallback when the bot
+   *  may not create a personal link there. */
+  public_link?: string | null;
 };
+
+/** A group the button can actually send someone to. */
+export const chatUsable = (c: TelegramChat) => c.can_invite || !!c.public_link;
 
 export type FunnelStatus = {
   booking_id: string;
@@ -126,8 +132,9 @@ export function TelegramGroupPicker({
   onRefresh: () => void;
   refreshing: boolean;
 }) {
-  const ready = chats.filter(c => c.can_invite);
-  const notReady = chats.filter(c => !c.can_invite);
+  const ready = chats.filter(chatUsable);
+  const notReady = chats.filter(c => !chatUsable(c));
+  const chosenChat = chats.find(c => String(c.chat_id) === chosen);
 
   return (
     <div className="rounded-md border bg-background p-2 space-y-1.5">
@@ -140,7 +147,7 @@ export function TelegramGroupPicker({
           <SelectContent>
             {ready.map(c => (
               <SelectItem key={c.chat_id} value={String(c.chat_id)} className="text-xs">
-                {c.title || String(c.chat_id)}
+                {c.title || String(c.chat_id)}{c.can_invite ? "" : " — public link"}
               </SelectItem>
             ))}
             {notReady.map(c => (
@@ -158,6 +165,13 @@ export function TelegramGroupPicker({
           Refresh
         </Button>
       </div>
+      {chosenChat && !chosenChat.can_invite && chosenChat.public_link && (
+        <p className="text-[11px] text-amber-700 dark:text-amber-400">
+          The bot can't create personal links in this group, so everyone gets its public link
+          ({chosenChat.public_link.replace("https://", "")}). "Joined" will only show for students who
+          pressed Start on the bot. Turn on <em>Invite Users via Link</em> for the bot to track everyone.
+        </p>
+      )}
       <p className="text-[11px] text-muted-foreground">
         A group appears here once the bot is in it. To let it create invite links, make{" "}
         <strong>@learnkoreanwithkloversbot</strong> an admin of the group with{" "}

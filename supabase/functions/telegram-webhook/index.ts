@@ -278,12 +278,32 @@ Deno.serve(async (req) => {
       const usedLink: string | undefined = member.invite_link?.invite_link;
       const nowIn = ["member", "administrator", "restricted", "creator"]
         .includes(member.new_chat_member?.status ?? "");
-      if (usedLink && nowIn) {
-        const { data: tt } = await supabase
-          .from("trial_telegram")
-          .select("booking_id, joined_at")
-          .eq("invite_link", usedLink)
-          .maybeSingle();
+      if (nowIn) {
+        // Her own single-use link, when she was sent one. Otherwise (a public
+        // group, where everyone shares one link) the student who was invited
+        // to THIS group and whose Telegram account is the one that just
+        // joined: known only if she pressed Start on the bot.
+        const joinedId: number | undefined = member.new_chat_member?.user?.id;
+        let tt: { booking_id: string; joined_at: string | null } | null = null;
+        if (usedLink) {
+          const { data } = await supabase
+            .from("trial_telegram")
+            .select("booking_id, joined_at")
+            .eq("invite_link", usedLink)
+            .maybeSingle();
+          tt = data;
+        }
+        if (!tt && joinedId) {
+          const { data } = await supabase
+            .from("trial_telegram")
+            .select("booking_id, joined_at")
+            .eq("invite_chat_id", member.chat.id)
+            .eq("tg_user_id", joinedId)
+            .is("joined_at", null)
+            .order("invite_sent_at", { ascending: false })
+            .limit(1);
+          tt = data?.[0] ?? null;
+        }
         if (tt && !tt.joined_at) {
           const joined = member.new_chat_member?.user;
           await supabase.from("trial_telegram").update({
@@ -295,7 +315,7 @@ Deno.serve(async (req) => {
           const { data: booking } = await supabase.from("trial_bookings")
             .select("name").eq("id", tt.booking_id).maybeSingle();
           await sendMessage(cfg.bot_token, cfg.admin_chat_id,
-            `✅ ${booking?.name || "طالبة التراير"} دخلت جروب "${member.chat.title ?? ""}" باللينك بتاعها.`);
+            `✅ ${booking?.name || "طالبة التراير"} دخلت جروب "${member.chat.title ?? ""}".`);
         }
       }
       return new Response("ok");

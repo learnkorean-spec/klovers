@@ -73,7 +73,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   FunnelBadges, TelegramGroupPicker, TelegramInviteButton,
-  useChosenChat, useFunnelStatus, useTelegramChats,
+  chatUsable, useChosenChat, useFunnelStatus, useTelegramChats,
 } from "./TrialTelegramInvite";
 
 /** true / false / null — the three states, as one value the Select can hold. */
@@ -258,7 +258,7 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
   const chatsQuery = useTelegramChats();
   const chats = chatsQuery.data ?? [];
   const [chosenChat, setChosenChat] = useChosenChat();
-  const chosenReady = chats.some(c => String(c.chat_id) === chosenChat && c.can_invite);
+  const chosenReady = chats.some(c => String(c.chat_id) === chosenChat && chatUsable(c));
   const bookingIds = useMemo(() => (data ?? []).map(r => r.id), [data]);
   const { data: funnel } = useFunnelStatus(bookingIds);
 

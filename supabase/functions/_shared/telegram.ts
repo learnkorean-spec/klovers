@@ -89,7 +89,9 @@ export function cameMessage(name: string | null, isAr: boolean, groupLink: strin
  * Returns the stored row, or null when Telegram no longer knows the chat.
  */
 export async function refreshChat(supabase: Db, token: string, chatId: number) {
-  const chat = await tg<{ id: number; title?: string; type: string }>(token, "getChat", { chat_id: chatId });
+  const chat = await tg<{ id: number; title?: string; type: string; username?: string }>(
+    token, "getChat", { chat_id: chatId },
+  );
   if (!chat.ok) {
     await supabase.from("telegram_chats")
       .update({ bot_status: "unreachable", can_invite: false, updated_at: new Date().toISOString() })
@@ -114,7 +116,9 @@ export async function refreshChat(supabase: Db, token: string, chatId: number) {
   };
   const { error } = await supabase.from("telegram_chats").upsert(row, { onConflict: "chat_id" });
   if (error) console.error("telegram_chats upsert failed", error);
-  return row;
+  // A public group has a permanent t.me/<username> link anyone can join by.
+  // Returned to the caller, not stored: it is Telegram's to change.
+  return { ...row, public_link: chat.result.username ? `https://t.me/${chat.result.username}` : null };
 }
 
 // chat_member is never delivered unless it is asked for by name, and it is

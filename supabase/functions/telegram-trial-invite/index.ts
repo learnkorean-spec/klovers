@@ -86,8 +86,10 @@ Deno.serve(async (req) => {
     // student's /start, so nothing seeded them: check them here too.
     const ids = new Set<number>([-1001890232265, -1004374526296]);
     for (const row of known ?? []) ids.add(Number(row.chat_id));
+    const publicLinks = new Map<number, string>();
     for (const id of ids) {
-      await refreshChat(supabase, cfg.bot_token, id);
+      const fresh = await refreshChat(supabase, cfg.bot_token, id);
+      if (fresh?.public_link) publicLinks.set(id, fresh.public_link);
     }
 
     const { data: chats } = await supabase
@@ -96,7 +98,13 @@ Deno.serve(async (req) => {
       .in("bot_status", ["administrator", "creator", "member", "restricted"])
       .order("title", { ascending: true });
 
-    return json({ chats: chats ?? [], webhook });
+    return json({
+      chats: (chats ?? []).map((c: { chat_id: number }) => ({
+        ...c,
+        public_link: publicLinks.get(Number(c.chat_id)) ?? null,
+      })),
+      webhook,
+    });
   }
 
   // ── send ─────────────────────────────────────────────────────────────────
@@ -136,6 +144,14 @@ Deno.serve(async (req) => {
     let inviteLink: string | null =
       tt.invite_link && Number(tt.invite_chat_id) === chatId && !tt.joined_at ? tt.invite_link : null;
 
+    // Set when the bot may not create links in this group but the group is
+    // public: she is sent the group's own t.me link instead. It is the same
+    // link for everyone, so it is NOT stored as her invite_link (that column
+    // is unique per student, and is how a join is matched to a booking). A
+    // join through it is matched by her Telegram user id instead, which the
+    // bot only knows if she pressed Start (see chat_member in telegram-webhook).
+    let sharedLink: string | null = null;
+
     if (!inviteLink) {
       const created = await tg<{ invite_link: string }>(cfg.bot_token, "createChatInviteLink", {
         chat_id: chatId,
@@ -143,19 +159,24 @@ Deno.serve(async (req) => {
         name: `Trial: ${(booking.name || "student").trim()}`.slice(0, 32),
         member_limit: 1,
       });
-      if (!created.ok) {
-        await refreshChat(supabase, cfg.bot_token, chatId);
-        return json({
-          error: "cannot_invite",
-          detail: created.description,
-          group: chat.title,
-        }, 409);
+      if (created.ok) {
+        inviteLink = created.result.invite_link;
+      } else {
+        const fresh = await refreshChat(supabase, cfg.bot_token, chatId);
+        if (!fresh?.public_link) {
+          return json({
+            error: "cannot_invite",
+            detail: created.description,
+            group: chat.title,
+          }, 409);
+        }
+        sharedLink = fresh.public_link;
       }
-      inviteLink = created.result.invite_link;
     }
 
+    const linkToSend = (inviteLink ?? sharedLink)!;
     const isAr = (booking.class_language ?? "arabic") !== "english";
-    const text = cameMessage(booking.name, isAr, inviteLink);
+    const text = cameMessage(booking.name, isAr, linkToSend);
 
     let sentVia: "telegram" | "whatsapp" = "whatsapp";
     if (tt.chat_id) {
@@ -182,7 +203,10 @@ Deno.serve(async (req) => {
 
     return json({
       sent_via: sentVia,
-      invite_link: inviteLink,
+      invite_link: linkToSend,
+      // false: the group's public link went out, so "joined" will only show
+      // for a student who is on the bot.
+      personal_link: inviteLink !== null,
       group: chat.title,
       whatsapp_url: whatsappUrl,
       // When there is neither a linked bot chat nor a phone, Re still gets
