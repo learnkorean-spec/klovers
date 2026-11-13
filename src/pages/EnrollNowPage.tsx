@@ -335,29 +335,43 @@ const EnrollNowPage = () => {
       // A level with no configured package (Level 2/3 today) skips the queries
       // and goes straight to the engine-suggested options below.
       const pkgIds = rows.map((r: any) => r.id);
-      const { data: groups } = pkgIds.length === 0 ? { data: [] as any[] } : await supabase
-        .from("pkg_groups")
-        .select("id, package_id")
-        .in("package_id", pkgIds)
-        .eq("is_active", true);
-      const groupList = (groups as any[]) || [];
-      const groupIds = groupList.map((g: any) => g.id);
-
-      const memberCounts: Record<string, number> = {};
-      if (groupIds.length > 0) {
-        const { data: members } = await supabase
-          .from("pkg_group_members")
-          .select("group_id")
-          .in("group_id", groupIds)
-          .eq("member_status", "active");
-        for (const m of (members as any[]) || []) {
-          memberCounts[m.group_id] = (memberCounts[m.group_id] || 0) + 1;
-        }
-      }
-
+      // Demand per package, as a count from the server. Reading
+      // pkg_group_members here directly gives a student only her OWN row and a
+      // logged-out visitor nothing (RLS), so every slot looked empty and the
+      // ranking below never happened for anyone but an admin. The RPC returns
+      // one number per package and nothing about who the members are.
       const pkgMemberCount: Record<string, number> = {};
-      for (const g of groupList) {
-        pkgMemberCount[g.package_id] = (pkgMemberCount[g.package_id] || 0) + (memberCounts[g.id] || 0);
+      const { data: demandRows, error: demandErr } = pkgIds.length === 0
+        ? { data: [] as any[], error: null }
+        : await supabase.rpc("enroll_package_demand" as any, { p_package_ids: pkgIds });
+      if (!demandErr) {
+        for (const d of (demandRows as any[]) || []) pkgMemberCount[d.package_id] = d.active_members || 0;
+      } else {
+        // The function is not there yet (migration 20261113170000 pending):
+        // the previous direct read, which is at least right for admins.
+        const { data: groups } = pkgIds.length === 0 ? { data: [] as any[] } : await supabase
+          .from("pkg_groups")
+          .select("id, package_id")
+          .in("package_id", pkgIds)
+          .eq("is_active", true);
+        const groupList = (groups as any[]) || [];
+        const groupIds = groupList.map((g: any) => g.id);
+
+        const memberCounts: Record<string, number> = {};
+        if (groupIds.length > 0) {
+          const { data: members } = await supabase
+            .from("pkg_group_members")
+            .select("group_id")
+            .in("group_id", groupIds)
+            .eq("member_status", "active");
+          for (const m of (members as any[]) || []) {
+            memberCounts[m.group_id] = (memberCounts[m.group_id] || 0) + 1;
+          }
+        }
+
+        for (const g of groupList) {
+          pkgMemberCount[g.package_id] = (pkgMemberCount[g.package_id] || 0) + (memberCounts[g.id] || 0);
+        }
       }
 
       // 29 Sep 2026: an EMPTY group slot is not a hard reservation. If a private

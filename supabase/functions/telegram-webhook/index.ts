@@ -79,6 +79,13 @@
 // any group it has not been added to.
 
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+
+// A client built without a generated Database type. `ReturnType<typeof
+// createClient>` resolves every table and RPC to `never` under current
+// supabase-js typings, which failed `deno check` on every line that read a
+// column. Type-only: nothing about what runs has changed.
+// deno-lint-ignore no-explicit-any
+type Db = any;
 import { refreshChat } from "../_shared/telegram.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -91,7 +98,7 @@ type Config = { bot_token: string; admin_chat_id: string; webhook_secret: string
 
 let cachedConfig: Config | null = null;
 
-async function getConfig(supabase: ReturnType<typeof createClient>): Promise<Config> {
+async function getConfig(supabase: Db): Promise<Config> {
   if (cachedConfig) return cachedConfig;
   const { data, error } = await supabase.rpc("telegram_bot_config");
   if (error) throw error;
@@ -150,7 +157,7 @@ function displayName(from: { first_name?: string; last_name?: string; username?:
 // old "does the button's user_id match who tapped" comparison, not a looser
 // one -- it can't be spoofed by a crafted callback_data at all.
 async function handleGroupAttendanceTap(
-  supabase: ReturnType<typeof createClient>,
+  supabase: Db,
   cfg: Config,
   chatId: number,
   messageId: number,
@@ -657,8 +664,14 @@ Deno.serve(async (req) => {
       const code = startMatch[1];
       if (!code) {
         // Opened the bot without a personal link. If already linked, greet them.
-        const { data: existing } = await supabase
-          .from("telegram_links").select("id").eq("chat_id", chatId).maybeSingle();
+        // .limit(1), not .maybeSingle(): two rows can share one chat (sisters
+        // in one family chat), and maybeSingle() turns that into an error and
+        // tells an already-linked student she is not linked.
+        const { data: studentRows } = await supabase
+          .from("telegram_links").select("id").eq("chat_id", chatId).limit(1);
+        const { data: trialRows } = await supabase
+          .from("trial_telegram").select("booking_id").eq("chat_id", chatId).limit(1);
+        const existing = (studentRows?.length ?? 0) > 0 || (trialRows?.length ?? 0) > 0;
         await sendMessage(cfg.bot_token, chatId, existing
           ? "أهلاً بيك تاني في Klovers 👋 حسابك مربوط بالفعل، وهتوصلك هنا مواعيد الحصص والتنبيهات المهمة."
           : "أهلاً بيك في Klovers 👋\nعشان نربط حسابك، افتح لينك الربط الخاص بيك اللي بعتتهولك المدرّسة واضغط Start.");

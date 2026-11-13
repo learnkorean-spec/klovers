@@ -384,7 +384,9 @@ async function askVision(
     const client = new BedrockRuntimeClient({ region, credentials: { accessKeyId: ak, secretAccessKey: sk } });
     const imageBlocks = images.map((url) => {
       const [head, b64] = url.split(",");
-      const format = /png/.test(head) ? "png" : "jpeg";
+      // Typed as the literal union Bedrock's ImageBlock expects; as a plain
+      // `string` the block matched no ContentBlock member and failed deno check.
+      const format: "png" | "jpeg" = /png/.test(head) ? "png" : "jpeg";
       return { image: { format, source: { bytes: Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0)) } } };
     });
     for (const modelId of ["amazon.nova-pro-v1:0", "amazon.nova-lite-v1:0"]) {

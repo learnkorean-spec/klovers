@@ -1,5 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// A client built without a generated Database type. `ReturnType<typeof
+// createClient>` resolves every table and RPC to `never` under current
+// supabase-js typings, which failed `deno check` on every line that read a
+// column. Type-only: nothing about what runs has changed.
+// deno-lint-ignore no-explicit-any
+type Db = any;
+
 // Booking for Reham's own personal 1:1 lessons (Hungarian, Arabic-for-
 // foreigners, English) — intentionally separate and much lighter than
 // book-trial, which is built for the Korean group-class system (multiple
@@ -21,7 +28,7 @@ const RATE_LIMIT_MAX = 8;
 const LANGUAGES = new Set(["hungarian", "arabic", "english"]);
 
 async function checkRateLimit(
-  supabase: ReturnType<typeof createClient>,
+  supabase: Db,
   identifier: string,
   action: string,
 ): Promise<boolean> {

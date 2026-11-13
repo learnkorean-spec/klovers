@@ -450,6 +450,16 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
             <p style="margin: 0; color: ${BRAND_DARK}; font-size: 14px;">Your class link will be sent to you 24 hours before your session</p>
           </div>`);
 
+  // Re, 13 Nov 2026: "i dont have thier number after that i lost them". One
+  // tap here and the bot can reach her directly: the class link before the
+  // trial, her group and the enrol link after it. Quiet on purpose, a text
+  // link under the Meet button, so it never competes with "Confirm".
+  const telegramSection = p.telegram_url && /^https:\/\/t\.me\//.test(p.telegram_url)
+    ? (isAr
+        ? `<p style="margin: 0 0 20px; text-align: center; font-size: 13px; color: ${BRAND_MUTED};">تحبي يوصلك لينك الحصة على تيليجرام كمان؟ <a href="${p.telegram_url}" style="color: ${BRAND_DARK} !important; font-weight: bold; text-decoration: underline;">افتحي البوت واضغطي Start</a></p>`
+        : `<p style="margin: 0 0 20px; text-align: center; font-size: 13px; color: ${BRAND_MUTED};">Want the class link on Telegram too? <a href="${p.telegram_url}" style="color: ${BRAND_DARK} !important; font-weight: bold; text-decoration: underline;">Open the bot and press Start</a></p>`)
+    : "";
+
   // Two answers, because "declined" and "never opened the email" are different
   // problems and the academy has to act on them differently. Yellow stays the
   // one loud button; the decline is a quiet outline so saying no is easy but
@@ -544,7 +554,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
           ["التوقيت", tzDisplay],
         ])}
         ${respondSectionAr}
-        ${meetSection}
+        ${meetSection}${telegramSection}
         ${breakdownAr}
         <div style="margin: 28px 0 8px; text-align: center;">
           <p style="color: ${BRAND_DARK}; font-weight: bold; font-size: 15px; margin: 0 0 16px;">الاستعداد للحصة بخطوتين</p>
@@ -574,7 +584,7 @@ export function buildTrialAttendanceConfirmationEmail(p: EmailPayload) {
         ["Timezone", tzDisplay],
       ])}
       ${respondSectionEn}
-      ${meetSection}
+      ${meetSection}${telegramSection}
       ${breakdownEn}
       <div style="margin: 28px 0 8px; text-align: center;">
         <p style="color: ${BRAND_DARK}; font-weight: bold; font-size: 15px; margin: 0 0 16px;">Get ready — start with these two steps</p>
