@@ -60,7 +60,7 @@
  */
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Mail } from "lucide-react";
+import { Check, Mail, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,7 @@ type Row = {
   id: string;
   name: string | null;
   email: string | null;
+  phone: string | null;
   trial_date: string | null;
   start_time: string | null;
   class_language: string | null;
@@ -89,6 +90,32 @@ type Row = {
   attended: boolean | null;
   attended_letter_sent_at: string | null;
 };
+
+/**
+ * The one message that replaces three disconnected manual steps (Re, 13 Nov
+ * 2026: "i lost them... add them to telegram... guide each for the link to
+ * book the class... all not connected steps"). The moment a student is
+ * marked "Came", this is what she actually needs in hand: the community
+ * Telegram group (a real add-by-phone isn't possible — Telegram's bot API
+ * only lets a student join herself, via a link) AND the enroll-now booking
+ * link, together, so nothing has to be chased down a second time. Same
+ * community link as Footer/CommunityBand/FAQPage; a per-level invite link
+ * is not available from Telegram's API without creating a group ahead of
+ * time for every level, and Re confirmed one shared link is fine for now.
+ */
+const TELEGRAM_COMMUNITY_LINK = "https://t.me/+Fu5T7d4wLMsxNDY9";
+const ENROLL_NOW_LINK = "https://kloversegy.com/enroll-now";
+
+function cameWhatsAppMessage(name: string | null, isAr: boolean): string {
+  const first = (name || "").trim().split(" ")[0];
+  return isAr
+    ? `هاي ${first || "يا قمر"} \u{1F44B} سعيدين إنك جيتِ التراير!\n\n` +
+      `انضمي لجروب كلوفرز على تيليجرام عشان توصلك كل حاجة جديدة:\n${TELEGRAM_COMMUNITY_LINK}\n\n` +
+      `وعشان تثبتي مكانك وتكملي الكورس:\n${ENROLL_NOW_LINK}`
+    : `Hi ${first || "there"} \u{1F44B} so glad you made it to the trial!\n\n` +
+      `Join the Klovers Telegram group to keep up with everything:\n${TELEGRAM_COMMUNITY_LINK}\n\n` +
+      `And to lock in your seat and continue the course:\n${ENROLL_NOW_LINK}`;
+}
 
 type Confirmation = {
   trial_date: string;
@@ -187,7 +214,7 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
         // until they are regenerated; the error path below is what the admin
         // actually sees if they are missing.
         .select(
-          "id, name, email, trial_date, start_time, class_language, attendance_response, attended, attended_letter_sent_at" as "*",
+          "id, name, email, phone, trial_date, start_time, class_language, attendance_response, attended, attended_letter_sent_at" as "*",
         )
         .neq("status", "cancelled")
         .not("trial_date", "is", null)
@@ -527,46 +554,82 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
               </span>
             </div>
 
-            {shown.map(r => (
-              <div
-                key={r.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-background px-3 py-1 text-sm"
-              >
-                <span className="flex min-w-0 flex-wrap items-center gap-2">
-                  <span className="truncate font-medium">{r.name?.trim() || r.email || "—"}</span>
-                  {r.attendance_response === "yes" && (
-                    <span className="text-[11px] text-muted-foreground">said yes</span>
-                  )}
-                  {r.attendance_response === "no" && (
-                    <span className="text-[11px] text-muted-foreground">said she couldn't</span>
-                  )}
-                  {r.attended_letter_sent_at && (
-                    <Badge variant="outline" className="text-[10px]">letter sent</Badge>
-                  )}
-                </span>
+            {shown.map(r => {
+              const waDigits = r.phone?.replace(/[^0-9]/g, "") ?? "";
+              const hasPhone = waDigits.length >= 8;
+              // class_language mirrors the session-level badge above — only
+              // "english" reads as English, everything else (including null)
+              // defaults to Arabic, same convention as GroupWelcomeSender.
+              const isAr = (r.class_language ?? s.language) !== "english";
+              const waLink = hasPhone
+                ? `https://wa.me/${waDigits}?text=${encodeURIComponent(cameWhatsAppMessage(r.name, isAr))}`
+                : null;
 
-                {/* Locked by the session being confirmed (Reopen to change), and
-                    permanently once her letter has gone — the two letters
-                    contradict each other, so a later correction fixes the record
-                    without chasing the first letter with the second. */}
-                <Select
-                  value={markOf(r.attended)}
-                  onValueChange={v => setMark.mutate({ id: r.id, mark: v as Mark })}
-                  disabled={setMark.isPending || locked || !!r.attended_letter_sent_at}
+              return (
+                <div
+                  key={r.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-background px-3 py-1 text-sm"
                 >
-                  <SelectTrigger className="h-7 w-[9.5rem] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(["unknown", "yes", "no"] as Mark[]).map(m => (
-                      <SelectItem key={m} value={m} className="text-xs">
-                        {MARK_LABEL[m]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
+                  <span className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span className="truncate font-medium">{r.name?.trim() || r.email || "—"}</span>
+                    {r.attendance_response === "yes" && (
+                      <span className="text-[11px] text-muted-foreground">said yes</span>
+                    )}
+                    {r.attendance_response === "no" && (
+                      <span className="text-[11px] text-muted-foreground">said she couldn't</span>
+                    )}
+                    {r.attended_letter_sent_at && (
+                      <Badge variant="outline" className="text-[10px]">letter sent</Badge>
+                    )}
+                  </span>
+
+                  <span className="flex items-center gap-1.5">
+                    {/* Right after marking "Came" is exactly the moment the
+                        Telegram link + the enroll-now link are needed — one
+                        message, instead of hunting the number down again
+                        later and sending each link separately. */}
+                    {r.attended === true && (
+                      hasPhone ? (
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-xs border-green-400 text-green-700 dark:text-green-400"
+                        >
+                          <a href={waLink!} target="_blank" rel="noreferrer">
+                            <MessageCircle className="mr-1 h-3.5 w-3.5" />
+                            Telegram + enroll link
+                          </a>
+                        </Button>
+                      ) : (
+                        <span className="text-[11px] text-destructive">no phone</span>
+                      )
+                    )}
+
+                    {/* Locked by the session being confirmed (Reopen to change), and
+                        permanently once her letter has gone — the two letters
+                        contradict each other, so a later correction fixes the record
+                        without chasing the first letter with the second. */}
+                    <Select
+                      value={markOf(r.attended)}
+                      onValueChange={v => setMark.mutate({ id: r.id, mark: v as Mark })}
+                      disabled={setMark.isPending || locked || !!r.attended_letter_sent_at}
+                    >
+                      <SelectTrigger className="h-7 w-[9.5rem] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(["unknown", "yes", "no"] as Mark[]).map(m => (
+                          <SelectItem key={m} value={m} className="text-xs">
+                            {MARK_LABEL[m]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </span>
+                </div>
+              );
+            })}
 
             {(hidden > 0 || isOpen) && (
               <button
