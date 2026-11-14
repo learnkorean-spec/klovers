@@ -97,10 +97,14 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 // Re asked (18 Sep 2026) to be copied on the trial-booking confirmation, then
 // (14 Nov 2026) widened that to every trial-facing letter — booking,
 // reminders, the guide, follow-ups, rollover — so she always sees the same
-// letter the student gets, with the same links, not a summary of it. Blind-
-// copied, not CC'd: the student should not see Re's personal inbox in the
-// header of her own letter. See the bccList assignment below for the scope.
+// letter the student gets, with the same links, not a summary of it. Not a
+// plain Resend `bcc` (same point in the code below): that mails her the
+// identical bytes, greeting her by the student's name — she flagged this
+// exact thing (14 Nov 2026, screenshot of a letter opening "مرحباً yoona").
+// Instead her copy is a second, separately rendered send with her own name
+// in the greeting and every link, date and time otherwise unchanged.
 const TRIAL_BCC_EMAIL = "reham.elshrkawy@gmail.com";
+const TRIAL_BCC_NAME = "Reham";
 
 /**
  * The URL that belongs in the RFC 8058 `List-Unsubscribe` header.
@@ -339,152 +343,173 @@ serve(async (req) => {
       }
     }
 
+    // Pulled out into its own function (14 Nov 2026) so the exact same
+    // selection logic can be run a second time against a cloned payload with
+    // only `name` swapped — that is how Re's BCC copy below gets her own
+    // name in the greeting while every other word, date and link stays
+    // identical to what the student receives. Resend's own `bcc` field
+    // cannot do this: it mails every recipient the literal same bytes, so a
+    // plain bcc necessarily greets Re as "yoona".
+    function renderTemplateEmail(p: EmailPayload): {
+      subject: string;
+      html: string;
+      emailAttachments?: Array<{ filename: string; content: string; content_type?: string }>;
+    } {
+      const { name: pName, language: pLanguage, template: pTemplate } = p;
+      let subject: string;
+      let html: string;
+      let emailAttachments: Array<{ filename: string; content: string; content_type?: string }> | undefined;
+
+      // `placement_result` is dispatched AHEAD of the switch rather than as a
+      // case inside it, because its key is deliberately absent from the template
+      // union in common.ts. That file is 18 KB and is the single import of all
+      // 25 existing templates, and the only write path available here is a
+      // whole-file rewrite: a transcription slip in it breaks every letter
+      // Klovers sends. The only caller of this template is a database trigger,
+      // which is not type-checked against that union in any case. If common.ts
+      // is ever opened for another reason, move this into the switch.
+      // `admin_message` is here for exactly the reason given above, and is the
+      // second key deliberately absent from that union. `trial_guide` is the
+      // third, `trial_reask` the fourth, `class_reminder` the fifth,
+      // `trial_reminder` the sixth, `private_bundle_payment` the seventh and
+      // `course_welcome` the eighth; their only callers are the send-trial-guide
+      // cron, the send-trial-reask endpoint, the send-class-reminders cron, the
+      // send-trial-reminder cron, the admin_send_bundle_payment_ask database
+      // function and the admin Groups screen.
+      if ((pTemplate as string) === "admin_message") {
+        const adminMessage = buildAdminMessageEmail(p);
+        subject = adminMessage.subject;
+        html = adminMessage.html;
+      } else if ((pTemplate as string) === "placement_result") {
+        const placementResult = buildPlacementResultEmail(p);
+        subject = placementResult.subject;
+        html = placementResult.html;
+      } else if ((pTemplate as string) === "trial_guide") {
+        const trialGuide = buildTrialGuideEmail(p);
+        subject = trialGuide.subject;
+        html = trialGuide.html;
+      } else if ((pTemplate as string) === "trial_reask") {
+        const trialReask = buildTrialReaskEmail(p);
+        subject = trialReask.subject;
+        html = trialReask.html;
+      } else if ((pTemplate as string) === "class_reminder") {
+        const classReminder = buildClassReminderEmail(p);
+        subject = classReminder.subject;
+        html = classReminder.html;
+      } else if ((pTemplate as string) === "course_welcome") {
+        const courseWelcome = buildCourseWelcomeEmail(p);
+        subject = courseWelcome.subject;
+        html = courseWelcome.html;
+      } else if ((pTemplate as string) === "trial_reminder") {
+        const trialReminder = buildTrialReminderEmail(p);
+        subject = trialReminder.subject;
+        html = trialReminder.html;
+      } else if ((pTemplate as string) === "private_bundle_payment") {
+        const bundlePayment = buildPrivateBundlePaymentEmail(p);
+        subject = bundlePayment.subject;
+        html = bundlePayment.html;
+      } else switch (pTemplate) {
+        case "welcome":
+          ({ subject, html } = buildWelcomeEmail(pName, pLanguage || "en"));
+          break;
+        case "group_match":
+          ({ subject, html } = buildGroupMatchEmail(p));
+          break;
+        case "slot_confirmed":
+          ({ subject, html } = buildSlotConfirmedEmail(p));
+          break;
+        case "approval":
+          ({ subject, html } = buildApprovalEmail(p));
+          break;
+        case "pending_review":
+          ({ subject, html } = buildPendingReviewEmail(p));
+          break;
+        case "payment_confirmed":
+          ({ subject, html } = buildPaymentConfirmedEmail(p));
+          break;
+        case "class_link": {
+          const classLinkResult = buildClassLinkEmail(p);
+          subject = classLinkResult.subject;
+          html = classLinkResult.html;
+          if (classLinkResult.icsAttachment) emailAttachments = [classLinkResult.icsAttachment];
+          break;
+        }
+        // Takes the whole payload since 2026-09-15. It used to be called with
+        // (name, enrollment_id, language), which is why the letter could not
+        // print a price - the amount was in the payload the whole time and the
+        // template was never handed it.
+        case "payment_method_reminder":
+          ({ subject, html } = buildPaymentMethodReminderEmail(p));
+          break;
+        case "rejection":
+          ({ subject, html } = buildRejectionEmail(p));
+          break;
+        case "trial_confirmed": {
+          const trialResult = buildTrialConfirmedEmail(p);
+          subject = trialResult.subject;
+          html = trialResult.html;
+          if (trialResult.icsAttachment) emailAttachments = [trialResult.icsAttachment];
+          break;
+        }
+        case "trial_rebook_request":
+          ({ subject, html } = buildTrialRebookEmail(p));
+          break;
+        case "trial_prep":
+          ({ subject, html } = buildTrialPrepEmail(p));
+          break;
+        case "trial_followup_day1":
+          ({ subject, html } = buildTrialFollowupDay1Email(p));
+          break;
+        case "trial_followup_day3":
+          ({ subject, html } = buildTrialFollowupDay3Email(p));
+          break;
+        case "trial_followup_day7":
+          ({ subject, html } = buildTrialFollowupDay7Email(p));
+          break;
+        case "group_forming":
+          ({ subject, html } = buildGroupFormingEmail(p));
+          break;
+        case "receipt_nudge":
+          ({ subject, html } = buildReceiptNudgeEmail(p));
+          break;
+        case "group_forming_escalation":
+          ({ subject, html } = buildGroupFormingEscalationEmail(p));
+          break;
+        case "rejection_followup":
+          ({ subject, html } = buildRejectionFollowupEmail(p));
+          break;
+        case "pre_class_reminder":
+          ({ subject, html } = buildPreClassReminderEmail(p));
+          break;
+        case "class_feedback":
+          ({ subject, html } = buildClassFeedbackEmail(p));
+          break;
+        case "trial_attendance_confirmation": {
+          const attendResult = buildTrialAttendanceConfirmationEmail(p);
+          subject = attendResult.subject;
+          html = attendResult.html;
+          if (attendResult.icsAttachment) emailAttachments = [attendResult.icsAttachment];
+          break;
+        }
+        case "trial_group_full":
+          ({ subject, html } = buildTrialGroupFullEmail(p));
+          break;
+        case "trial_rollover":
+          ({ subject, html } = buildTrialRolloverEmail(p));
+          break;
+        case "enrollment":
+        default:
+          ({ subject, html } = buildEnrollmentEmail(p));
+          break;
+      }
+
+      return { subject, html, emailAttachments };
+    }
+
     let subject: string;
     let html: string;
     let emailAttachments: Array<{ filename: string; content: string; content_type?: string }> | undefined;
-
-    // `placement_result` is dispatched AHEAD of the switch rather than as a
-    // case inside it, because its key is deliberately absent from the template
-    // union in common.ts. That file is 18 KB and is the single import of all
-    // 25 existing templates, and the only write path available here is a
-    // whole-file rewrite: a transcription slip in it breaks every letter
-    // Klovers sends. The only caller of this template is a database trigger,
-    // which is not type-checked against that union in any case. If common.ts
-    // is ever opened for another reason, move this into the switch.
-    // `admin_message` is here for exactly the reason given above, and is the
-    // second key deliberately absent from that union. `trial_guide` is the
-    // third, `trial_reask` the fourth, `class_reminder` the fifth,
-    // `trial_reminder` the sixth, `private_bundle_payment` the seventh and
-    // `course_welcome` the eighth; their only callers are the send-trial-guide
-    // cron, the send-trial-reask endpoint, the send-class-reminders cron, the
-    // send-trial-reminder cron, the admin_send_bundle_payment_ask database
-    // function and the admin Groups screen.
-    if ((template as string) === "admin_message") {
-      const adminMessage = buildAdminMessageEmail(payload!);
-      subject = adminMessage.subject;
-      html = adminMessage.html;
-    } else if ((template as string) === "placement_result") {
-      const placementResult = buildPlacementResultEmail(payload!);
-      subject = placementResult.subject;
-      html = placementResult.html;
-    } else if ((template as string) === "trial_guide") {
-      const trialGuide = buildTrialGuideEmail(payload!);
-      subject = trialGuide.subject;
-      html = trialGuide.html;
-    } else if ((template as string) === "trial_reask") {
-      const trialReask = buildTrialReaskEmail(payload!);
-      subject = trialReask.subject;
-      html = trialReask.html;
-    } else if ((template as string) === "class_reminder") {
-      const classReminder = buildClassReminderEmail(payload!);
-      subject = classReminder.subject;
-      html = classReminder.html;
-    } else if ((template as string) === "course_welcome") {
-      const courseWelcome = buildCourseWelcomeEmail(payload!);
-      subject = courseWelcome.subject;
-      html = courseWelcome.html;
-    } else if ((template as string) === "trial_reminder") {
-      const trialReminder = buildTrialReminderEmail(payload!);
-      subject = trialReminder.subject;
-      html = trialReminder.html;
-    } else if ((template as string) === "private_bundle_payment") {
-      const bundlePayment = buildPrivateBundlePaymentEmail(payload!);
-      subject = bundlePayment.subject;
-      html = bundlePayment.html;
-    } else switch (template) {
-      case "welcome":
-        ({ subject, html } = buildWelcomeEmail(name, language || "en"));
-        break;
-      case "group_match":
-        ({ subject, html } = buildGroupMatchEmail(payload!));
-        break;
-      case "slot_confirmed":
-        ({ subject, html } = buildSlotConfirmedEmail(payload!));
-        break;
-      case "approval":
-        ({ subject, html } = buildApprovalEmail(payload!));
-        break;
-      case "pending_review":
-        ({ subject, html } = buildPendingReviewEmail(payload!));
-        break;
-      case "payment_confirmed":
-        ({ subject, html } = buildPaymentConfirmedEmail(payload!));
-        break;
-      case "class_link": {
-        const classLinkResult = buildClassLinkEmail(payload!);
-        subject = classLinkResult.subject;
-        html = classLinkResult.html;
-        if (classLinkResult.icsAttachment) emailAttachments = [classLinkResult.icsAttachment];
-        break;
-      }
-      // Takes the whole payload since 2026-09-15. It used to be called with
-      // (name, enrollment_id, language), which is why the letter could not
-      // print a price - the amount was in the payload the whole time and the
-      // template was never handed it.
-      case "payment_method_reminder":
-        ({ subject, html } = buildPaymentMethodReminderEmail(payload!));
-        break;
-      case "rejection":
-        ({ subject, html } = buildRejectionEmail(payload!));
-        break;
-      case "trial_confirmed": {
-        const trialResult = buildTrialConfirmedEmail(payload!);
-        subject = trialResult.subject;
-        html = trialResult.html;
-        if (trialResult.icsAttachment) emailAttachments = [trialResult.icsAttachment];
-        break;
-      }
-      case "trial_rebook_request":
-        ({ subject, html } = buildTrialRebookEmail(payload!));
-        break;
-      case "trial_prep":
-        ({ subject, html } = buildTrialPrepEmail(payload!));
-        break;
-      case "trial_followup_day1":
-        ({ subject, html } = buildTrialFollowupDay1Email(payload!));
-        break;
-      case "trial_followup_day3":
-        ({ subject, html } = buildTrialFollowupDay3Email(payload!));
-        break;
-      case "trial_followup_day7":
-        ({ subject, html } = buildTrialFollowupDay7Email(payload!));
-        break;
-      case "group_forming":
-        ({ subject, html } = buildGroupFormingEmail(payload!));
-        break;
-      case "receipt_nudge":
-        ({ subject, html } = buildReceiptNudgeEmail(payload!));
-        break;
-      case "group_forming_escalation":
-        ({ subject, html } = buildGroupFormingEscalationEmail(payload!));
-        break;
-      case "rejection_followup":
-        ({ subject, html } = buildRejectionFollowupEmail(payload!));
-        break;
-      case "pre_class_reminder":
-        ({ subject, html } = buildPreClassReminderEmail(payload!));
-        break;
-      case "class_feedback":
-        ({ subject, html } = buildClassFeedbackEmail(payload!));
-        break;
-      case "trial_attendance_confirmation": {
-        const attendResult = buildTrialAttendanceConfirmationEmail(payload!);
-        subject = attendResult.subject;
-        html = attendResult.html;
-        if (attendResult.icsAttachment) emailAttachments = [attendResult.icsAttachment];
-        break;
-      }
-      case "trial_group_full":
-        ({ subject, html } = buildTrialGroupFullEmail(payload!));
-        break;
-      case "trial_rollover":
-        ({ subject, html } = buildTrialRolloverEmail(payload!));
-        break;
-      case "enrollment":
-      default:
-        ({ subject, html } = buildEnrollmentEmail(payload!));
-        break;
-    }
+    ({ subject, html, emailAttachments } = renderTemplateEmail(payload!));
 
     // Re's ask (14 Nov 2026): every email a trial student gets, from the
     // booking confirmation through to the trial-day reminder and the
@@ -503,7 +528,7 @@ serve(async (req) => {
     // (class_reminder, course_welcome, payment_method_reminder, etc.) do
     // not, so this widens on its own as new trial letters are added without
     // a template-name list to keep in sync here.
-    const bccList = (template as string).startsWith("trial_") ? [TRIAL_BCC_EMAIL] : undefined;
+    const isTrialTemplate = (template as string).startsWith("trial_");
 
     // Present only when the CALLER passed an unsubscribe token, and that is
     // what scopes this correctly without a list of template names to keep in
@@ -517,9 +542,36 @@ serve(async (req) => {
       language === "ar",
     );
 
-    const result = await sendEmail(email, subject, html, emailAttachments, bccList, unsubscribeUrl);
+    const result = await sendEmail(email, subject, html, emailAttachments, undefined, unsubscribeUrl);
     console.log(`Email sent to ${email} (${template || "enrollment"}):`, result);
     await logEmail({ template: template || "enrollment", toEmail: email, toName: name, status: "sent", resendId: result.id });
+
+    // Re's own copy: rendered a second time from a cloned payload with only
+    // `name` swapped to hers, so her letter reads "مرحباً Reham" / "Hi Reham"
+    // while the date, time, meeting_url and every other link are exactly
+    // what the student above received. A failure here must never fail the
+    // student's own send or this response — it is best-effort, logged and
+    // swallowed.
+    if (isTrialTemplate) {
+      try {
+        const rePayload: EmailPayload = { ...(payload as EmailPayload), name: TRIAL_BCC_NAME };
+        const reRendered = renderTemplateEmail(rePayload);
+        const reResult = await sendEmail(
+          TRIAL_BCC_EMAIL,
+          reRendered.subject,
+          reRendered.html,
+          reRendered.emailAttachments,
+        );
+        console.log(`Trial copy sent to ${TRIAL_BCC_EMAIL} (${template}):`, reResult);
+        await logEmail({ template: `${template}_re_copy`, toEmail: TRIAL_BCC_EMAIL, toName: TRIAL_BCC_NAME, status: "sent", resendId: reResult.id });
+      } catch (copyError) {
+        const copyMsg = copyError instanceof Error ? copyError.message : String(copyError);
+        console.error("Re's trial-copy email failed (student's own email already sent fine):", copyMsg);
+        try {
+          await logEmail({ template: `${template}_re_copy`, toEmail: TRIAL_BCC_EMAIL, toName: TRIAL_BCC_NAME, status: "failed", error: copyMsg });
+        } catch { /* ignore */ }
+      }
+    }
 
     return new Response(
       JSON.stringify({ success: true, message: "Email sent", id: result.id }),
