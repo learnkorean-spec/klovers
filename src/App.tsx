@@ -65,6 +65,7 @@ const AiRoomLabPage = lazy(() => import("./pages/AiRoomLabPage"));
 const AdminExchangeReportsPage = lazy(() => import("./pages/AdminExchangeReportsPage"));
 const World2Page = lazy(() => import("./world2/World2Page"));
 const HangulA0AudioPage = lazy(() => import("./pages/HangulA0AudioPage"));
+const Book1AudioPage = lazy(() => import("./pages/Book1AudioPage"));
 const KoreanPlacementPage = lazy(() => import("./pages/KoreanPlacementPage"));
 const GamesPage = lazy(() => import("./pages/GamesPage"));
 const LanguageExchangePage = lazy(() => import("./pages/LanguageExchangePage"));
@@ -336,6 +337,9 @@ const App = () => (
                     listening happens inside the student's own account, next to the dashboard. */}
                 <Route path="/a0" element={<AuthProtectedRoute><HangulA0AudioPage /></AuthProtectedRoute>} />
                 <Route path="/a0/:page" element={<AuthProtectedRoute><HangulA0AudioPage /></AuthProtectedRoute>} />
+                {/* Korean Book 1 audio: same library, opened by the QR code at the start of Book 1. */}
+                <Route path="/b1" element={<AuthProtectedRoute><Book1AudioPage /></AuthProtectedRoute>} />
+                <Route path="/b1/:page" element={<AuthProtectedRoute><Book1AudioPage /></AuthProtectedRoute>} />
                 <Route path="/admin/today" element={<ProtectedRoute><AdminToday /></ProtectedRoute>} />
                 {/* Must sit BEFORE /admin — /admin is exact-match in v6, so the
                     order is not load-bearing, but keeping the specific paths
