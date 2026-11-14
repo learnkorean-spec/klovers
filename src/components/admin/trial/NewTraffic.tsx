@@ -233,7 +233,15 @@ const NewTraffic = () => {
                         href={b.meeting_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 truncate text-[11px] text-primary underline-offset-2 hover:underline"
+                        // Deliberately NOT text-primary: this theme's
+                        // --primary is brand yellow (60 100% 50%), which on
+                        // the card's white/light background is close to
+                        // unreadable — confirmed from Re's screenshot, where
+                        // this exact link was invisible. Plain readable blue,
+                        // underlined always (not just on hover), is the only
+                        // safe choice for body-text links here; text-primary
+                        // must not be reused for a link anywhere in this file.
+                        className="flex items-center gap-1 truncate text-[11px] font-medium text-blue-700 underline decoration-blue-700/40 underline-offset-2 hover:decoration-blue-700 dark:text-blue-400 dark:decoration-blue-400/40 dark:hover:decoration-blue-400"
                       >
                         <Video className="h-3 w-3 shrink-0" />
                         <span className="truncate">{b.meeting_url}</span>

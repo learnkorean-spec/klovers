@@ -374,7 +374,11 @@ function TopicGapPanel({
                           <span className="text-xs bg-primary/10 text-primary border border-primary/20 rounded px-1.5 py-0.5 font-semibold">Auto</span>
                         )}
                         {isCreated && (
-                          <a href={`/blog/${a.slug}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-xs text-primary flex items-center gap-0.5 hover:underline">
+                          // Not text-primary: this theme's --primary is brand
+                          // yellow, nearly unreadable as link text on a white
+                          // card (same bug flagged on the New Traffic meeting
+                          // link, 14 Nov 2026) — plain blue underline instead.
+                          <a href={`/blog/${a.slug}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-xs text-blue-700 dark:text-blue-400 flex items-center gap-0.5 underline decoration-blue-700/40 hover:decoration-blue-700 dark:decoration-blue-400/40 dark:hover:decoration-blue-400">
                             view <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
