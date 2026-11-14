@@ -32,9 +32,23 @@ interface BookingRow {
   phone: string | null;
   status: string | null;
   class_language: string | null;
+  trial_date: string | null;
+  start_time: string | null;
+  timezone: string | null;
   meeting_url: string | null;
   email_sent_at: string | null;
   created_at: string;
+}
+
+/** "2026-11-14" -> "Sat 14 Nov". Parsed as a plain date, never shifted by a timezone. */
+function formatTrialDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const weekday = dt.toLocaleString("en-GB", { weekday: "short", timeZone: "UTC" });
+  const month = dt.toLocaleString("en-GB", { month: "short", timeZone: "UTC" });
+  return `${weekday} ${d} ${month}`;
 }
 
 const WINDOWS = ["7", "14", "30"] as const;
@@ -64,7 +78,7 @@ const NewTraffic = () => {
           .limit(500),
         supabase
           .from("trial_bookings")
-          .select("id, name, email, phone, status, class_language, meeting_url, email_sent_at, created_at")
+          .select("id, name, email, phone, status, class_language, trial_date, start_time, timezone, meeting_url, email_sent_at, created_at")
           .gte("created_at", since)
           .neq("status", "cancelled")
           .order("created_at", { ascending: false })
@@ -155,6 +169,7 @@ const NewTraffic = () => {
                   : `https://wa.me/?text=${waMsg}`;
                 const tgLinked = data.telegramLinked.has(b.id);
                 const emailSent = !!b.email_sent_at;
+                const trialWhen = formatTrialDate(b.trial_date);
                 return (
                   <div key={b.id} className="flex flex-col gap-1.5 px-2.5 py-2 text-xs">
                     <div className="flex items-center justify-between gap-2">
@@ -167,6 +182,16 @@ const NewTraffic = () => {
                         {fmt(b.created_at)}
                       </span>
                     </div>
+
+                    {/* The trial itself, stated plainly — date, time and whose
+                        timezone the time is in — so "when is her trial" is
+                        never a second lookup, and not confusable with the
+                        "Nov 13" above, which is only when she signed up. */}
+                    <p className="font-medium text-foreground">
+                      {trialWhen
+                        ? `Trial: ${trialWhen} · ${b.start_time ?? "TBA"} (${b.timezone ?? "Africa/Cairo"})`
+                        : "Trial: no date booked yet"}
+                    </p>
 
                     {/* Every channel and every status she needs, on the row
                         itself — if WhatsApp doesn't land, Telegram status,
@@ -195,18 +220,30 @@ const NewTraffic = () => {
                         <Mail className="h-3 w-3" />
                         {emailSent ? "Pre-trial email sent" : "Email NOT sent"}
                       </Badge>
-                      {b.meeting_url && (
-                        <a
-                          href={b.meeting_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex h-6 items-center gap-1 rounded-md border px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                        >
-                          <Video className="h-3 w-3" />
-                          Class link
-                        </a>
-                      )}
                     </div>
+
+                    {/* The actual link the student's email points at, spelled
+                        out rather than hidden behind a generic button label —
+                        so there is no doubt which room is the real one for
+                        this trial. Red and explicit when there is none yet,
+                        since a confirmed booking with no room is exactly the
+                        gap that leaves a student with nowhere to go. */}
+                    {b.meeting_url ? (
+                      <a
+                        href={b.meeting_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 truncate text-[11px] text-primary underline-offset-2 hover:underline"
+                      >
+                        <Video className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{b.meeting_url}</span>
+                      </a>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[11px] font-medium text-destructive">
+                        <Video className="h-3 w-3 shrink-0" />
+                        No meeting link set yet
+                      </span>
+                    )}
                   </div>
                 );
               })}

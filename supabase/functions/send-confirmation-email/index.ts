@@ -94,10 +94,12 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-// Re asked (18 Sep 2026) to be copied on every trial-booking confirmation, so
-// she sees the same letter the student gets the moment a trial is booked —
-// not a summary of it, the actual email. Blind-copied, not CC'd: the student
-// should not see Re's personal inbox in the header of her own confirmation.
+// Re asked (18 Sep 2026) to be copied on the trial-booking confirmation, then
+// (14 Nov 2026) widened that to every trial-facing letter — booking,
+// reminders, the guide, follow-ups, rollover — so she always sees the same
+// letter the student gets, with the same links, not a summary of it. Blind-
+// copied, not CC'd: the student should not see Re's personal inbox in the
+// header of her own letter. See the bccList assignment below for the scope.
 const TRIAL_BCC_EMAIL = "reham.elshrkawy@gmail.com";
 
 /**
@@ -484,11 +486,24 @@ serve(async (req) => {
         break;
     }
 
-    // Re is bcc'd on the trial-booking confirmation only — the one letter
-    // that tells a student (and, this way, Re) that a trial is actually on
-    // the calendar. Every other template (reminders, follow-ups, payment
-    // letters, etc.) is unaffected.
-    const bccList = (template as string) === "trial_confirmed" ? [TRIAL_BCC_EMAIL] : undefined;
+    // Re's ask (14 Nov 2026): every email a trial student gets, from the
+    // booking confirmation through to the trial-day reminder and the
+    // post-trial follow-ups, should land in her own inbox too — same
+    // subject, same body, same links (the real meeting_url, the real
+    // confirmation token) — not a summary of it, the actual letter the
+    // student received. That way nothing about trial assigning, booking or
+    // follow-up can go wrong for a real student without her seeing it happen
+    // to a "student" of her own first.
+    //
+    // Every trial-facing template's slug starts with "trial_"
+    // (trial_confirmed, trial_prep, trial_reminder, trial_guide,
+    // trial_reask, trial_rollover, trial_followup_day1/3/7,
+    // trial_attendance_confirmation, trial_group_full,
+    // trial_rebook_request) — group-class and payment templates
+    // (class_reminder, course_welcome, payment_method_reminder, etc.) do
+    // not, so this widens on its own as new trial letters are added without
+    // a template-name list to keep in sync here.
+    const bccList = (template as string).startsWith("trial_") ? [TRIAL_BCC_EMAIL] : undefined;
 
     // Present only when the CALLER passed an unsubscribe token, and that is
     // what scopes this correctly without a list of template names to keep in
