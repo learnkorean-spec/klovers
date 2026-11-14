@@ -416,21 +416,31 @@ const AttendanceClaimPanel = ({ notification, onAllResolved, standalone }: Atten
 
     if (prof) {
       setStudentName(prof.name || "");
+      // Re, 14 Nov 2026: this card is for claims that need a decision -- a
+      // class that hasn't happened yet never belongs here. Every member of a
+      // group gets a default admin_approved=false "absent" placeholder row
+      // seeded ahead of time for every future session, so without a
+      // session_date filter this was pulling in weeks of not-yet-occurred
+      // placeholders (sorted by created_at, which a seeding batch can put
+      // ahead of the one real, already-happened claim) instead of showing
+      // just what's actually pending. Fetch a wide window, then keep only
+      // sessions that have already started, in Cairo time -- same as every
+      // other "has this class happened yet" check in this app.
       const { data: pending, error: pendingError } = await supabase
         .from("pkg_attendance")
         .select("session_id")
         .eq("user_id", uid)
         .eq("admin_approved", false)
         .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(100);
       if (pendingError) {
         toast({ title: "Couldn't load pending attendance", description: pendingError.message, variant: "destructive" });
         setMode("none");
         return;
       }
 
-      const sessionIds = (pending || []).map((p) => p.session_id);
-      if (sessionIds.length === 0) {
+      const candidateIds = (pending || []).map((p) => p.session_id);
+      if (candidateIds.length === 0) {
         setGroupRows([]);
         setMode("group");
         return;
@@ -439,14 +449,26 @@ const AttendanceClaimPanel = ({ notification, onAllResolved, standalone }: Atten
       const { data: sessions, error: sessionsError } = await supabase
         .from("pkg_group_sessions")
         .select("id, session_date, group_id")
-        .in("id", sessionIds);
+        .in("id", candidateIds);
       if (sessionsError) {
         toast({ title: "Couldn't load group sessions", description: sessionsError.message, variant: "destructive" });
         setMode("none");
         return;
       }
 
-      const groupIds = [...new Set((sessions || []).map((s) => s.group_id))];
+      const todayCairo = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date()); // YYYY-MM-DD
+      const pastOrTodaySessions = (sessions || [])
+        .filter((s) => (s.session_date ?? "") <= todayCairo)
+        .sort((a, b) => (b.session_date ?? "").localeCompare(a.session_date ?? ""))
+        .slice(0, 5);
+      const sessionIds = pastOrTodaySessions.map((s) => s.id);
+      if (sessionIds.length === 0) {
+        setGroupRows([]);
+        setMode("group");
+        return;
+      }
+
+      const groupIds = [...new Set(pastOrTodaySessions.map((s) => s.group_id))];
       const { data: groups, error: groupsError } = groupIds.length
         ? await supabase.from("pkg_groups").select("id, name").in("id", groupIds)
         : { data: [] as { id: string; name: string }[], error: null };
@@ -460,7 +482,7 @@ const AttendanceClaimPanel = ({ notification, onAllResolved, standalone }: Atten
       (groups || []).forEach((g) => { groupNameById[g.id] = g.name; });
 
       const sessionById: Record<string, { session_date: string; group_id: string }> = {};
-      (sessions || []).forEach((s) => { sessionById[s.id] = s; });
+      pastOrTodaySessions.forEach((s) => { sessionById[s.id] = s; });
 
       setGroupRows(sessionIds.map((sid) => ({
         session_id: sid,
