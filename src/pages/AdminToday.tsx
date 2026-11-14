@@ -31,7 +31,7 @@ import TrialSessionsToOpen from "@/components/admin/TrialSessionsToOpen";
 import ClassRooms from "@/components/admin/ClassRooms";
 import MoneyIn from "@/components/admin/MoneyIn";
 import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
-import { CalendarDays, Users, GraduationCap, Bell, ArrowRight } from "lucide-react";
+import { CalendarDays, Users, GraduationCap, Bell, ArrowRight, MessageCircle } from "lucide-react";
 
 type SlotRow = {
   id: string;
@@ -77,6 +77,21 @@ type Counts = {
   /** The newest few messages from today, so the card says what happened. */
   notificationsRecent: string[];
   oldestSignup: string | null;
+};
+
+/**
+ * A trial booking submitted today — the thing this section exists to show,
+ * so she can see who just signed up without opening Trials, and message
+ * each one straight away.
+ */
+type TrialSignupRow = {
+  id: string;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  level: string | null;
+  class_language: string | null;
+  created_at: string;
 };
 
 interface GroupClassRow {
@@ -148,6 +163,7 @@ const AdminToday = () => {
   const [counts, setCounts] = useState<Counts | null>(null);
   const [slots, setSlots] = useState<SlotRow[] | null>(null);
   const [groupClasses, setGroupClasses] = useState<GroupClassRow[] | null>(null);
+  const [todaySignups, setTodaySignups] = useState<TrialSignupRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Private lessons the weekly schedule says have happened and nobody has
   // answered for. Read here only to decide whether the section exists at all;
@@ -181,6 +197,7 @@ const AdminToday = () => {
           slotRows,
           packagesRes,
           pkgGroupsRes,
+          signupsToday,
         ] = await Promise.all([
           waitingBase(),
           waitingBase().eq("class_language", "arabic"),
@@ -234,6 +251,16 @@ const AdminToday = () => {
             .order("level", { ascending: true })
             .order("day_of_week", { ascending: true }),
           supabase.from("pkg_groups").select("id, package_id"),
+          // Whoever booked a trial since local midnight, newest first — the
+          // "who signed up today" list, kept separate from the waiting-list
+          // count above because that one only ever counts undated bookings
+          // and this one is about the day, not the queue.
+          supabase
+            .from("trial_bookings")
+            .select("id, name, email, phone, level, class_language, created_at")
+            .neq("status", "cancelled")
+            .gte("created_at", startOfTodayISO())
+            .order("created_at", { ascending: false }),
         ]);
 
         // Any failed request must surface as the banner. A rejected count
@@ -241,6 +268,7 @@ const AdminToday = () => {
         const failed = [
           waitingAll, waitingAr, waitingEn, unlevelled, payments,
           notifications, notificationsToday, oldest, slotRows, packagesRes, pkgGroupsRes,
+          signupsToday,
         ].find((r) => r.error);
         if (failed?.error) throw failed.error;
 
@@ -327,6 +355,7 @@ const AdminToday = () => {
         });
         setSlots(rows);
         setGroupClasses(groupRows);
+        setTodaySignups((signupsToday.data ?? []) as TrialSignupRow[]);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Could not load today's summary.");
       }
@@ -379,6 +408,84 @@ const AdminToday = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* TRIAL SIGNUPS — TODAY
+              Re's own ask: show whoever booked a trial since local midnight
+              right here, newest first, with a one-tap WhatsApp button already
+              carrying her phone number — rather than her having to open
+              Trials and hunt for the number herself. Stays empty, not hidden,
+              on a day with no signups, since "nothing yet today" is itself an
+              answer to the question this section exists to answer. */}
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">
+                TRIAL SIGNUPS — TODAY
+              </h2>
+              <p className="text-xs text-muted-foreground">newest first · tap to message on WhatsApp</p>
+            </div>
+
+            {!todaySignups && !error ? (
+              <Skeleton className="h-20 rounded-lg" />
+            ) : todaySignups && todaySignups.length > 0 ? (
+              <Card>
+                <CardContent className="p-4 space-y-2">
+                  {todaySignups.map(r => {
+                    const waDigits = r.phone?.replace(/[^0-9]/g, "") ?? "";
+                    const hasPhone = waDigits.length >= 8;
+                    const firstName = (r.name ?? "").trim().split(/\s+/)[0] || "there";
+                    const waMsg = encodeURIComponent(
+                      `Hi ${firstName}! \u{1F44B} Thanks for booking a free trial with Klovers Korean \u{1F1F0}\u{1F1F7} — I'm Reham, happy to help with anything before your class.`
+                    );
+                    const waLink = hasPhone
+                      ? `https://wa.me/${waDigits}?text=${waMsg}`
+                      : `https://wa.me/?text=${waMsg}`;
+                    const signupTime = new Date(r.created_at).toLocaleTimeString("en-GB", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    });
+                    return (
+                      <div
+                        key={r.id}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/40 px-3 py-2 text-sm"
+                      >
+                        <span className="flex min-w-0 flex-wrap items-center gap-2">
+                          <span className="truncate font-medium">{r.name?.trim() || r.email || "—"}</span>
+                          {r.class_language && (
+                            <Badge variant="secondary" className="capitalize text-[10px]">
+                              {r.class_language}
+                            </Badge>
+                          )}
+                          {r.level && (
+                            <span className="text-xs text-muted-foreground">
+                              {LEVEL_LABEL[r.level] ?? r.level}
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">{signupTime}</span>
+                        </span>
+                        <Button
+                          asChild
+                          size="sm"
+                          variant={hasPhone ? "default" : "outline"}
+                          className="h-7 px-2 text-xs"
+                        >
+                          <a href={waLink} target="_blank" rel="noopener noreferrer">
+                            <MessageCircle className="mr-1 h-3.5 w-3.5" />
+                            {hasPhone ? "WhatsApp" : "WhatsApp (no number)"}
+                          </a>
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            ) : todaySignups ? (
+              <Card>
+                <CardContent className="p-5 text-sm text-muted-foreground">
+                  No trial signups yet today.
+                </CardContent>
+              </Card>
+            ) : null}
+          </section>
 
           {/* NEEDS YOU */}
           <section className="space-y-3">
