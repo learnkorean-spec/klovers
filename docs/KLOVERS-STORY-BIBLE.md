@@ -179,6 +179,26 @@ is deliberately very slow. Rules:
 - Every discovery must connect to genuine learning progress — nothing is
   unlocked by random clicking or invented progress.
 
+### The first memories (Re, 16 Nov 2026: "continue as a full story")
+
+Eight small memories, one per chapter of KLOVERS World, in the road's order
+(`longTermStory.memories`; wording in `src/game/config/memories.ts`, drafted by
+Claude — Re may revise any of it):
+
+1. **Warmth** (courtyard, 따뜻해요) — being warm a long time; voices practising outside the shell.
+2. **Strokes in the dark** (Hangul Village, 글자) — letter shapes drawn stroke by stroke, by someone unseen.
+3. **A word before the thing** (Vocabulary Market, 기억) — someone once said a word to him, slowly, twice.
+4. **Someone answered** (Conversation Café, 대답) — he was never alone with the sounds.
+5. **More than one place** (Culture Street, 같이) — a holiday table laid with more than one small place.
+6. **A long way** (Seoul Journey, 멀리) — carried far, wrapped in something ivory.
+7. **Set down gently** (the alley market, 조심히) — a voice said one word he cannot make out.
+8. **A green light** (Namsan Tower, 빛) — far below, a small green light answers once. Nothing is explained.
+
+A memory returns only when Cluby has hatched, the chapter's place is open by the
+learner's real level, and the learner has finished that chapter there. It is
+then kept under the chapter in the world's "Story and missions" card. Nobody
+sees any of this before the hatch. Only the eighth touches the premise.
+
 ## 7. Visual style
 
 - **Humans — marketing imagery** (site photos, hero images, icons, trust
@@ -363,7 +383,10 @@ real step made the change and which one comes next. The dashboard records the
 stage per browser (`lib/clubyAwake.ts`); nothing done inside the world moves it.
 The later worlds' unnamed people (a student in the café, the stall cook, the
 station attendant, the two elders) now hold short conversations like the Book 1
-friends; they stay unnamed, since the canon names no one there.
+friends. **Re named them on 16 Nov 2026** (`supportingKoreanCast.laterWorlds`):
+Junho 준호 (the student in the café), Mrs. Choi 최 아주머니 (the stall cook),
+Donghyun 동현 (the station attendant), Grandpa Oh 오 할아버지 (the alley bench)
+and Grandma Han 한 할머니 (the Namsan lookout). Same rules as the Book 1 seven.
 
 **Existing student flow:** never force a learner who already has real
 progress to replay the beginner discovery sequence. Instead: "You've already

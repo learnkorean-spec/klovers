@@ -40,13 +40,15 @@ export interface WorldState {
   letters: string[];
   /** Missions finished (config/missions.ts), and best race times in seconds. Exploration only. */
   missionsDone: string[];
+  /** Cluby's memories that have returned (config/memories.ts), in the order they came. */
+  memories: string[];
   bestTimes: Record<string, number>;
   /** The mission being played, and the steps used so far in it. */
   mission: { id: string; done: string[] } | null;
 }
 
 const KEY = "klovers-world-state";
-const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false, tutorialDone: false, welcomed: false, tourSeen: [], tourDone: false, met: [], objectivesDone: [], discovered: [], lastRoom: null, words: [], letters: [], missionsDone: [], bestTimes: {}, mission: null };
+const EMPTY: WorldState = { hatchSeen: false, greeted: [], breadSign: false, tutorialDone: false, welcomed: false, tourSeen: [], tourDone: false, met: [], objectivesDone: [], discovered: [], lastRoom: null, words: [], letters: [], missionsDone: [], memories: [], bestTimes: {}, mission: null };
 
 function strings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
@@ -78,6 +80,7 @@ export function loadWorldState(): WorldState {
       words: strings(v.words),
       letters: strings(v.letters),
       missionsDone: strings(v.missionsDone),
+      memories: strings(v.memories),
       bestTimes: times(v.bestTimes),
       mission: v.mission && typeof v.mission === "object" && typeof (v.mission as { id?: unknown }).id === "string"
         ? { id: (v.mission as { id: string }).id, done: strings((v.mission as { done?: unknown }).done) }

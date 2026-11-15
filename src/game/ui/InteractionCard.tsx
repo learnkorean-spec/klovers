@@ -4,9 +4,10 @@ import { SHOP_ITEMS, SHOP_PRICES, wonInKorean, type QuizId, type ShopId } from "
 import { playClip, playClips, playVoice, shopClip, stopVoice } from "../systems/voice";
 import { canListen, listenFor, type SayResult } from "../systems/sayIt";
 import { speak } from "../systems/reactions";
+import { MEMORY_ORDER, memory as memoryText, type MemoryId } from "../config/memories";
 import { useSpeech } from "@/hooks/useSpeech";
 import type { NoticeKey } from "../config/rooms";
-import { CHATS, CHAT_PEOPLE, ROLE_CHATS, chatIsMan, chatNpc, isFriend, type ChatId } from "../config/chats";
+import { CHATS, ROLE_CHATS, chatIsMan, chatNameKo, chatNpc, isFriend, type ChatId } from "../config/chats";
 
 /**
  * The small web-UI cards opened from the 3D world (E / the round button).
@@ -16,7 +17,7 @@ import { CHATS, CHAT_PEOPLE, ROLE_CHATS, chatIsMan, chatNpc, isFriend, type Chat
  * does not stop the world.)
  */
 /** "review" is the Memory Garden's memory stone (game/ui/GardenReview.tsx), not drawn here. */
-export type CardKind = "egg" | "letter" | "word" | "locked" | "quiz" | "shop" | "review" | "chat";
+export type CardKind = "egg" | "letter" | "word" | "locked" | "quiz" | "shop" | "review" | "chat" | "memory";
 
 interface Props {
   lang: WorldLang;
@@ -49,6 +50,9 @@ interface Props {
   onChatDone?: () => void;
   /** Egg: its real stage (0 dormant, 1 cracked, 2 glowing). */
   eggStage?: 0 | 1 | 2 | 3;
+  /** Memory: which of Cluby's memories has returned, and its place in the order they came. */
+  memory?: MemoryId;
+  memoryNumber?: number;
 }
 
 
@@ -176,6 +180,8 @@ export default function InteractionCard({
   chatMet = false,
   onChatDone,
   eggStage = 0,
+  memory: memoryId,
+  memoryNumber = 1,
 }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
@@ -596,9 +602,9 @@ export default function InteractionCard({
         <div className="flex w-full items-center justify-between gap-2">
           <p className="text-start text-sm font-bold">
             {chatMet || chatOver ? c.name : c.role}
-            {(chatMet || chatOver) && isFriend(chat) && (
+            {(chatMet || chatOver) && (
               <span lang="ko" dir="ltr" className="mx-2 font-ko text-charcoal/70">
-                {CHAT_PEOPLE[chat].nameKo}
+                {chatNameKo(chat)}
               </span>
             )}
           </p>
@@ -728,6 +734,31 @@ export default function InteractionCard({
         )}
         </div>
       </div>
+    );
+  } else if (kind === "memory" && memoryId) {
+    // One of Cluby's memories returns: a few quiet lines and one Korean word.
+    const m = memoryText(lang, memoryId);
+    const ui = copy.memoryUi;
+    body = (
+      <>
+        <p className="text-[11px] font-bold uppercase tracking-wide text-charcoal/60">
+          {ui.label} · {ui.count(memoryNumber, MEMORY_ORDER.length)}
+        </p>
+        <h2 className="font-display text-xl font-bold">{m.title}</h2>
+        <p className="text-sm leading-relaxed text-charcoal/85">{m.text}</p>
+        <div className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white p-3" dir="ltr">
+          <Hear label={hearLabel} onPlay={() => speakKorean(m.ko)} />
+          <p lang="ko" className="font-ko text-2xl font-bold">
+            {m.ko}
+          </p>
+        </div>
+        <p className="text-sm text-charcoal/80">
+          {ui.word}: {m.gloss}
+        </p>
+        <button ref={first} type="button" className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal`} onClick={onClose}>
+          {ui.keep}
+        </button>
+      </>
     );
   } else if (kind === "egg") {
     const c = copy.egg;

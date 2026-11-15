@@ -3,6 +3,7 @@ import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { INTERACTABLES } from "../config/interactions";
 import { MISSIONS, missionRooms, missionSteps, type Mission, type MissionId } from "../config/missions";
 import { CHAPTERS, SIDE_MISSIONS, chapterDone, chapterMissions, currentChapter } from "../config/chapters";
+import { MEMORY_OF, memory as memoryText } from "../config/memories";
 import { ROOMS, type RoomId } from "../config/rooms";
 
 /**
@@ -481,11 +482,16 @@ export function MissionsCard({
   active,
   done,
   best,
+  remembered = [],
+  clubyHere = false,
   onStart,
   onStop,
   onClose,
 }: {
   lang: WorldLang;
+  /** Cluby's memories that have returned, and whether he has hatched (nothing of his is shown before). */
+  remembered?: readonly string[];
+  clubyHere?: boolean;
   isOpen: (r: RoomId) => boolean;
   active: MissionId | null;
   done: readonly string[];
@@ -580,6 +586,22 @@ export function MissionsCard({
               </div>
               <p className="text-sm text-charcoal/80">{t.line}</p>
               {open && <ul className="grid gap-2 sm:grid-cols-2">{chapterMissions(c).map(row)}</ul>}
+              {/* Cluby's memory of this chapter: kept here once it has returned. Never before he has hatched. */}
+              {clubyHere && open && remembered.includes(MEMORY_OF[c.id]) && (
+                <div className="rounded-xl bg-klovers-green/25 p-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-charcoal/60">
+                    {copy.memoryUi.label} · {memoryText(lang, MEMORY_OF[c.id]).title}
+                  </p>
+                  <p className="pt-1 text-sm text-charcoal/85">{memoryText(lang, MEMORY_OF[c.id]).text}</p>
+                  <p className="pt-1 text-sm">
+                    <span lang="ko" dir="ltr" className="font-ko font-bold">
+                      {memoryText(lang, MEMORY_OF[c.id]).ko}
+                    </span>{" "}
+                    · {memoryText(lang, MEMORY_OF[c.id]).gloss}
+                  </p>
+                </div>
+              )}
+              {clubyHere && open && !remembered.includes(MEMORY_OF[c.id]) && <p className="text-xs text-charcoal/70">{copy.memoryUi.waiting}</p>}
             </section>
           );
         })}

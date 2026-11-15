@@ -524,6 +524,15 @@ export const WORLD_COPY = {
       done: "Chapter complete",
       side: "Beside the road",
     },
+    /** Cluby's returning memories (config/memories.ts). Shown only once he has hatched. */
+    memoryUi: {
+      label: "Cluby remembers",
+      count: (n: number, of: number) => `Memory ${n} of ${of}`,
+      word: "The word of this memory",
+      keep: "Keep this memory",
+      waiting: "Finish this chapter: one of Cluby's memories is waiting here.",
+      returned: "A memory has returned",
+    },
     missionUi: {
       button: "Missions",
       title: "Missions",
@@ -1102,6 +1111,14 @@ export const WORLD_COPY = {
       now: "أنت هنا",
       done: "اكتمل الفصل",
       side: "بجانب الطريق",
+    },
+    memoryUi: {
+      label: "كلوبي يتذكّر",
+      count: (n: number, of: number) => `الذكرى ${n} من ${of}`,
+      word: "كلمة هذه الذكرى",
+      keep: "احتفظ بهذه الذكرى",
+      waiting: "أكمل هذا الفصل: إحدى ذكريات كلوبي تنتظر هنا.",
+      returned: "عادت ذكرى",
     },
     missionUi: {
       button: "المهام",

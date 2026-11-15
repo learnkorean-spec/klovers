@@ -28,7 +28,7 @@ export type FriendId = "jihoon" | "park" | "kim" | "yuna" | "seoyeon" | "taeyang
  * People of the later worlds who are not named in the canon (a student in the
  * café, the stall cook, the station attendant, two elders): the same kind of
  * conversation, opened by the line they already had, so each world on the
- * road has someone to talk with at its own level. They stay unnamed.
+ * road has someone to talk with at its own level.
  */
 export type RoleChatId = "cafe" | "cook" | "attendant" | "grandpa" | "grandma";
 export type ChatId = FriendId | RoleChatId;
@@ -47,24 +47,32 @@ export const CHAT_PEOPLE: Record<FriendId, { npc: string; canon: string; nameKo:
   hana: { npc: "m-hana", canon: "neighbor-hana", nameKo: "하나" },
 };
 
-/** The unnamed people: who speaks, and the recording of their opening line (systems/voice.ts). */
-export const ROLE_CHATS: Record<RoleChatId, { npc: string; voice: "cafeA" | "cook" | "attendant" | "grandpa" | "nalssi"; male: boolean }> = {
-  cafe: { npc: "k-table-1", voice: "cafeA", male: true },
-  cook: { npc: "c-cook", voice: "cook", male: false },
-  attendant: { npc: "s-attendant", voice: "attendant", male: true },
-  grandpa: { npc: "a-grandpa", voice: "grandpa", male: true },
-  grandma: { npc: "n-grandma", voice: "nalssi", male: false },
+/**
+ * The later worlds' people (canon supportingKoreanCast.laterWorlds, named by
+ * Re on 16 Nov 2026): who speaks, and the recording of their opening line
+ * (systems/voice.ts).
+ */
+export const ROLE_CHATS: Record<RoleChatId, { npc: string; canon: string; nameKo: string; voice: "cafeA" | "cook" | "attendant" | "grandpa" | "nalssi"; male: boolean }> = {
+  cafe: { npc: "k-table-1", canon: "cafe-regular-junho", nameKo: "준호", voice: "cafeA", male: true },
+  cook: { npc: "c-cook", canon: "stall-cook-choi", nameKo: "최 아주머니", voice: "cook", male: false },
+  attendant: { npc: "s-attendant", canon: "station-attendant-donghyun", nameKo: "동현", voice: "attendant", male: true },
+  grandpa: { npc: "a-grandpa", canon: "alley-grandfather-oh", nameKo: "오 할아버지", voice: "grandpa", male: true },
+  grandma: { npc: "n-grandma", canon: "namsan-grandmother-han", nameKo: "한 할머니", voice: "nalssi", male: false },
 };
 export const ROLE_CHAT_ORDER = Object.keys(ROLE_CHATS) as RoleChatId[];
 export const isFriend = (id: ChatId): id is FriendId => id in CHAT_PEOPLE;
 /** The person who speaks in a conversation. */
+/** Their Korean name, shown once they are a friend. */
+export const chatNameKo = (id: ChatId): string => (isFriend(id) ? CHAT_PEOPLE[id].nameKo : ROLE_CHATS[id].nameKo);
 export const chatNpc = (id: ChatId): string => (isFriend(id) ? CHAT_PEOPLE[id].npc : ROLE_CHATS[id].npc);
 const MEN: readonly ChatId[] = ["jihoon", "kim", "taeyang"];
 export const chatIsMan = (id: ChatId): boolean => (isFriend(id) ? MEN.includes(id) : ROLE_CHATS[id].male);
 
 /** What is saved in worldState.met once a conversation is finished. */
 export const chatMetKey = (id: ChatId): string => `chat-${id}`;
-export const chatsMet = (met: readonly string[]): number => CHAT_ORDER.filter((id) => met.includes(chatMetKey(id))).length;
+/** Everyone there is to befriend, along the road. */
+export const ALL_CHATS: readonly ChatId[] = [...CHAT_ORDER, ...(["cafe", "cook", "attendant", "grandpa", "grandma"] as const)];
+export const chatsMet = (met: readonly string[]): number => ALL_CHATS.filter((id) => met.includes(chatMetKey(id))).length;
 
 export interface ChatOption {
   /** The Korean reply on the button. */
@@ -362,7 +370,7 @@ const EN: Record<ChatId, Chat> = {
     closing: { ko: "아, 미안해요! 천천히 말할게요. 반가워요!", gloss: "Oh, sorry! I'll speak slowly. Nice to meet you!" },
   },
   cafe: {
-    name: "Student",
+    name: "Junho",
     role: "Student",
     focus: "Likes and drinks: 좋아해요, 마셔요 (not 먹어요), and 에서 왔어요 for where you are from.",
     turns: [
@@ -400,7 +408,7 @@ const EN: Record<ChatId, Chat> = {
     closing: { ko: "와, 반가워요! 한국어 잘하네요.", gloss: "Wow, nice to meet you! Your Korean is good." },
   },
   cook: {
-    name: "Stall cook",
+    name: "Mrs. Choi",
     role: "Stall cook",
     focus: "At the table: 잘 먹겠습니다 before, 맛있어요 / 매워요 while eating, 배불러요 when you have had enough.",
     turns: [
@@ -438,7 +446,7 @@ const EN: Record<ChatId, Chat> = {
     closing: { ko: "네, 또 오세요!", gloss: "All right, come again!" },
   },
   attendant: {
-    name: "Station attendant",
+    name: "Donghyun",
     role: "Station attendant",
     focus: "The subway: 까지 for how far, 이호선 for Line 2, 세 정거장 for three stops, 있어요 / 없어요.",
     turns: [
@@ -476,7 +484,7 @@ const EN: Record<ChatId, Chat> = {
     closing: { ko: "저기에서 표를 사세요. 안녕히 가세요!", gloss: "Buy a ticket over there. Goodbye!" },
   },
   grandpa: {
-    name: "Grandfather on the bench",
+    name: "Grandpa Oh",
     role: "Grandfather on the bench",
     focus: "Small talk with an elder: 에서 왔어요, 제일 좋아해요, and the modest answer to praise.",
     turns: [
@@ -514,7 +522,7 @@ const EN: Record<ChatId, Chat> = {
     closing: { ko: "하하, 열심히 하세요!", gloss: "Ha ha, keep working at it!" },
   },
   grandma: {
-    name: "Grandmother on the bench",
+    name: "Grandma Han",
     role: "Grandmother on the bench",
     focus: "Sharing what you notice: -네요, 보여요 (can be seen) and 하고 같이 (together with).",
     turns: [
@@ -821,7 +829,7 @@ const AR: Record<ChatId, Chat> = {
     closing: { ko: "아, 미안해요! 천천히 말할게요. 반가워요!", gloss: "آه، آسفة! سأتكلم ببطء. سعدتُ بلقائك!" },
   },
   cafe: {
-    name: "طالب",
+    name: "جون هو",
     role: "طالب",
     focus: "الإعجاب والمشروبات: 좋아해요، و마셔요 (وليس 먹어요)، و에서 왔어요 لبلد القدوم.",
     turns: [
@@ -859,7 +867,7 @@ const AR: Record<ChatId, Chat> = {
     closing: { ko: "와, 반가워요! 한국어 잘하네요.", gloss: "واو، تشرّفنا! كوريّتك جيدة." },
   },
   cook: {
-    name: "طبّاخة الكشك",
+    name: "السيدة تشوي",
     role: "طبّاخة الكشك",
     focus: "على المائدة: 잘 먹겠습니다 قبل الأكل، و맛있어요 / 매워요 أثناءه، و배불러요 عند الشبع.",
     turns: [
@@ -897,7 +905,7 @@ const AR: Record<ChatId, Chat> = {
     closing: { ko: "네, 또 오세요!", gloss: "حسنًا، ننتظر زيارتكم!" },
   },
   attendant: {
-    name: "موظف المحطة",
+    name: "دونغ هيون",
     role: "موظف المحطة",
     focus: "المترو: 까지 لنهاية الرحلة، و이호선 للخط الثاني، و세 정거장 لثلاث محطات، و있어요 / 없어요.",
     turns: [
@@ -935,7 +943,7 @@ const AR: Record<ChatId, Chat> = {
     closing: { ko: "저기에서 표를 사세요. 안녕히 가세요!", gloss: "التذاكر تُشترى من هناك. مع السلامة!" },
   },
   grandpa: {
-    name: "الجدّ على المقعد",
+    name: "الجدّ أو",
     role: "الجدّ على المقعد",
     focus: "حديث قصير مع كبير السن: 에서 왔어요، و제일 좋아해요، والردّ المتواضع على المديح.",
     turns: [
@@ -973,7 +981,7 @@ const AR: Record<ChatId, Chat> = {
     closing: { ko: "하하, 열심히 하세요!", gloss: "ها ها، بالتوفيق والاجتهاد!" },
   },
   grandma: {
-    name: "الجدّة على المقعد",
+    name: "الجدّة هان",
     role: "الجدّة على المقعد",
     focus: "مشاركة الملاحظة: -네요، و보여요 (يُرى)، و하고 같이 (مع).",
     turns: [

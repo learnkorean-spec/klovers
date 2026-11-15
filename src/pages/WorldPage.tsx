@@ -5,8 +5,9 @@ import { useSEO } from "@/hooks/useSEO";
 import { eggStageSeen, isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
 import { INTERACTABLES, shopOf, VILLAGE_LETTERS, type Interactable, type QuizId, type ShopId } from "@/game/config/interactions";
-import { chapterDone, chapterOf } from "@/game/config/chapters";
-import { CHATS, CHAT_ORDER, CHAT_PEOPLE, chatMetKey, chatsMet, isFriend, type ChatId } from "@/game/config/chats";
+import { CHAPTERS, chapterDone, chapterOf } from "@/game/config/chapters";
+import { memoryDue, type MemoryId } from "@/game/config/memories";
+import { ALL_CHATS, CHATS, chatMetKey, chatNameKo, chatsMet, type ChatId } from "@/game/config/chats";
 import { tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { useWorldAccess } from "@/game/systems/useWorldAccess";
@@ -188,7 +189,7 @@ const WorldPage = () => {
   const beaconEls = useRef(new Map<string, HTMLElement>());
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
-  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shop?: ShopId; shopPick?: string; chat?: ChatId; at?: string; npc?: string } | null>(null);
+  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shop?: ShopId; shopPick?: string; chat?: ChatId; at?: string; npc?: string; memory?: MemoryId } | null>(null);
   /** The shop thing last chosen: it hops in the scene. */
   const [shopChosen, setShopChosen] = useState<{ item: string; at: number } | null>(null);
   // A person's line or a word: shown over the world without stopping it.
@@ -702,6 +703,24 @@ const WorldPage = () => {
   // Onboarding: welcome once, then the controls taught one at a time.
   const welcoming = ready && !saved.welcomed && !sequence;
   pausedRef.current = card !== null || welcoming || missionsOpen || mapOpen;
+
+  // One of Cluby's memories returns, in its own place: only once he has
+  // hatched (real progress), the learner stands in a chapter's place (open
+  // by their real level) and has finished that chapter. A quiet moment after
+  // everything else on screen has been put away.
+  useEffect(() => {
+    if (!ready || card || bubble || sequence || welcoming || missionsOpen || mapOpen) return;
+    const ch = CHAPTERS.find((c) => c.room === currentRoom);
+    if (!ch) return;
+    const id = memoryDue(ch.id, { clubyHere: clubyAwake && saved.hatchSeen, chapterDone: chapterDone(ch, saved.missionsDone), remembered: saved.memories });
+    if (!id) return;
+    const t = window.setTimeout(() => {
+      patch({ memories: [...savedRef.current.memories, id] });
+      setCard({ kind: "memory", memory: id });
+      api.current?.celebrate();
+    }, 2200);
+    return () => window.clearTimeout(t);
+  }, [ready, card, bubble, sequence, welcoming, missionsOpen, mapOpen, currentRoom, clubyAwake, saved.hatchSeen, saved.missionsDone, saved.memories, patch]);
   const tutorialStep: TutorialStep = saved.tutorialDone ? "done" : !moved ? "move" : !looked ? "look" : "done";
   useEffect(() => {
     if (tutorialStep === "done" && !saved.tutorialDone && saved.welcomed) patch({ tutorialDone: true });
@@ -981,6 +1000,8 @@ const WorldPage = () => {
                 active={activeMission?.id ?? null}
                 done={saved.missionsDone}
                 best={saved.bestTimes}
+                remembered={saved.memories}
+                clubyHere={clubyAwake && saved.hatchSeen}
                 onStart={startMission}
                 onStop={() => {
                   stopMission();
@@ -1016,6 +1037,8 @@ const WorldPage = () => {
                 lang={lang}
                 kind={card.kind}
                 eggStage={eggStage}
+                memory={card.memory}
+                memoryNumber={card.memory ? saved.memories.indexOf(card.memory) + 1 : 1}
                 notice={card.notice}
                 quiz={card.quiz}
                 chat={card.chat}
@@ -1028,7 +1051,7 @@ const WorldPage = () => {
                     const met = [...cur.met, key];
                     patch({ met });
                     // A new friend is said once the card is put away (notes never sit under a card).
-                    if (isFriend(card.chat)) friendNote.current = { text: `${copy.chatUi.newFriend} · ${CHATS[lang][card.chat].name} · ${copy.chatUi.friends} ${chatsMet(met)}/${CHAT_ORDER.length}`, ko: CHAT_PEOPLE[card.chat].nameKo };
+                    friendNote.current = { text: `${copy.chatUi.newFriend} · ${CHATS[lang][card.chat].name} · ${copy.chatUi.friends} ${chatsMet(met)}/${ALL_CHATS.length}`, ko: chatNameKo(card.chat) };
                   }
                   if (card.at) markStep(card.at);
                   if (card.npc) cheer(card.npc, 2200);

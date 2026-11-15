@@ -389,6 +389,20 @@ export const KLOVERS_WORLD = {
     ],
     source: "Re, 4 Nov 2026 — claude/klovers-book1-model-lessons-plan.md",
     /**
+     * The people of the later worlds, named (Re, 16 Nov 2026: "give names and
+     * continue as a full story"). One per world after the market, each the
+     * person the learner talks with there in KLOVERS World. Same rules as
+     * Book 1's seven: someone to practise with, never a teacher, never a love
+     * interest. Their in-game looks are the ones they already had.
+     */
+    laterWorlds: [
+      { id: "cafe-regular-junho", name: { en: "Junho", ar: "جون هو", ko: "준호" }, role: "student_at_the_next_table", world: "conversation-cafe", neverUseAs: ["teacher", "romantic_interest"] },
+      { id: "stall-cook-choi", name: { en: "Mrs. Choi", ar: "السيدة تشوي", ko: "최 아주머니" }, role: "street_food_stall_cook", world: "culture-street", neverUseAs: ["teacher", "romantic_interest"] },
+      { id: "station-attendant-donghyun", name: { en: "Donghyun", ar: "دونغ هيون", ko: "동현" }, role: "subway_station_attendant", world: "seoul-journey", neverUseAs: ["teacher", "romantic_interest"] },
+      { id: "alley-grandfather-oh", name: { en: "Grandpa Oh", ar: "الجدّ أو", ko: "오 할아버지" }, role: "grandfather_on_the_alley_bench", world: "seoul-journey", neverUseAs: ["teacher", "romantic_interest"] },
+      { id: "namsan-grandmother-han", name: { en: "Grandma Han", ar: "الجدّة هان", ko: "한 할머니" }, role: "grandmother_on_the_lookout_bench", world: "seoul-journey", neverUseAs: ["teacher", "romantic_interest"] },
+    ],
+    /**
      * In KLOVERS World (Re, 15 Nov 2026: "new people must come into the
      * conversations"): all seven stand in the Vocabulary Market, Book 1's one
      * world, each with a short conversation in their own class's grammar that
@@ -675,6 +689,31 @@ export const KLOVERS_WORLD = {
       "Mystery must never block learning.",
       "Do not create dozens of collectible characters immediately.",
       "Every discovery must connect to genuine learning progress.",
+    ],
+
+    /**
+     * The first returning memories (Re, 16 Nov 2026: "continue as a full
+     * story"; wording drafted by Claude, Re may revise any of it). One per
+     * chapter of KLOVERS World, in the road's order. Each is a small thing
+     * Cluby senses again — never an explanation — and carries one Korean word.
+     * Only the last one touches the premise (a trace that he may not be the
+     * only one), and it explains nothing.
+     *
+     * A memory returns only when all three hold: Cluby has hatched (real
+     * progress), the chapter's place is open (the learner's real level), and
+     * the learner has finished that chapter in the world. It is then kept
+     * under the chapter in the world's story card. Nothing else unlocks.
+     * The words themselves live in src/game/config/memories.ts.
+     */
+    memories: [
+      { id: "warmth", chapter: "courtyard", word: "따뜻해요", gist: "warmth, and voices practising outside the shell" },
+      { id: "strokes", chapter: "hangul-village", word: "글자", gist: "letter shapes drawn one stroke at a time, by someone unseen" },
+      { id: "apple", chapter: "vocabulary-market", word: "기억", gist: "a word known before the thing was seen: someone once said it to him" },
+      { id: "answer", chapter: "conversation-cafe", word: "대답", gist: "he was not alone with the sounds: someone answered" },
+      { id: "table", chapter: "culture-street", word: "같이", gist: "a holiday table laid with more than one small place" },
+      { id: "journey", chapter: "seoul-journey-1", word: "멀리", gist: "being carried a long way, wrapped in something ivory" },
+      { id: "setdown", chapter: "seoul-journey-2", word: "조심히", gist: "being set down gently, and one word he cannot make out" },
+      { id: "light", chapter: "seoul-journey-3", word: "빛", gist: "from the tower, a small green light answers once from far away" },
     ],
   },
 

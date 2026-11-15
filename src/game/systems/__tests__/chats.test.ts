@@ -46,7 +46,7 @@ describe("conversations with the named Korean friends", () => {
     for (const a of spots) for (const b of spots) if (a.id < b.id) expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.id} ${b.id}`).toBeGreaterThan(1.5);
   });
 
-  it("lets the unnamed people of the later worlds talk too, opening with their recorded line", () => {
+  it("lets the people of the later worlds talk too, opening with their recorded line", () => {
     for (const id of ROLE_CHAT_ORDER) {
       const spots = INTERACTABLES.filter((i) => i.kind === "chat" && i.chat === id);
       expect(spots.length, id).toBe(1);
@@ -56,8 +56,10 @@ describe("conversations with the named Korean friends", () => {
       for (const lang of ["en", "ar"] as const) {
         // The recording says the first line, so the two must be the same sentence.
         expect(CHATS[lang][id].turns[0].ko).toBe(WORLD_COPY[lang].say[ROLE_CHATS[id].voice].ko);
-        // They stay unnamed (no canon name exists for them).
-        expect(CHATS[lang][id].name).toBe(CHATS[lang][id].role);
+        // Named by Re on 16 Nov 2026 (canon supportingKoreanCast.laterWorlds).
+        const c = KLOVERS_WORLD.supportingKoreanCast.laterWorlds.find((x) => x.id === ROLE_CHATS[id].canon)!;
+        expect(CHATS[lang][id].name).toBe(c.name[lang]);
+        expect(ROLE_CHATS[id].nameKo).toBe(c.name.ko);
       }
     }
     // One conversation in every world of the road after the market.
