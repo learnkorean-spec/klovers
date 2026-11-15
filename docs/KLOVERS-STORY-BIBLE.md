@@ -347,6 +347,14 @@ to board; the learner is free to play throughout. Site's own words; no new lore;
 no world order or unlock changes; the egg still hatches only on real
 progress, and Cluby is untouched.
 
+**KLOVERS World, the story as chapters (Re, 15 Nov 2026).** The world's
+"Story and missions" card lays the missions out as chapters along the canon's
+own road: the clover egg in the courtyard, then one chapter per world in level
+order (Seoul Journey's parts 2 and 3 are their own chapters). Each chapter's
+line restates that world's `narrativeEffect`; no lore is added. A chapter opens
+when its place does — from the learner's real course level — and finishing its
+missions is exploration only (`src/game/config/chapters.ts`).
+
 **Existing student flow:** never force a learner who already has real
 progress to replay the beginner discovery sequence. Instead: "You've already
 learned enough to wake him" — unlock Cluby directly and map the story state

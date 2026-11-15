@@ -4,7 +4,7 @@ import type { Group, Mesh } from "three";
 import { INTERACTABLES } from "../config/interactions";
 import { NPCS, type NpcPlacement } from "../config/npcs";
 import type { PlayerState } from "../systems/state";
-import { cheerAmount } from "../systems/reactions";
+import { cheerAmount, isSpeaking } from "../systems/reactions";
 import { angleDelta, damp } from "../systems/movement";
 import { REDUCED_MOTION } from "../systems/motion";
 import { CAST } from "./cast";
@@ -53,6 +53,8 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
   const real = useMemo(() => (REAL_PEOPLE ? realPersonInRoom(n, NPCS) : null), [n]);
   const control = useRef<BodyControl>({ clip: seated ? "sit" : n.pose === "talk" ? "talk" : n.pose === "browse" ? "look" : "idle", once: null, rate: 0.8 });
   const waved = useRef(false);
+  /** What they do when nobody is speaking with them. */
+  const restClip = useRef(control.current.clip);
 
   useFrame(({ clock }, rawDt) => {
     const g = root.current;
@@ -107,6 +109,9 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
       w.yaw += angleDelta(w.yaw, target) * damp(d < NOTICE ? 5 : 2, dt);
       g.rotation.y = w.yaw;
     }
+
+    // In a conversation: they talk with their hands while their line is heard.
+    if (talker) control.current.clip = isSpeaking(n.id, performance.now()) ? "talk" : restClip.current;
 
     // A reaction (answered, or pleased): a wave and a small lift.
     const cheer = cheerAmount(n.id, performance.now());

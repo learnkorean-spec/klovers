@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { SHOP_ITEMS, SHOP_PRICES, wonInKorean, type QuizId, type ShopId } from "../config/interactions";
 import { playClip, playClips, shopClip, stopVoice } from "../systems/voice";
+import { canListen, listenFor, type SayResult } from "../systems/sayIt";
+import { speak } from "../systems/reactions";
 import { useSpeech } from "@/hooks/useSpeech";
 import type { NoticeKey } from "../config/rooms";
 import { CHATS, CHAT_PEOPLE, type ChatId } from "../config/chats";
@@ -181,7 +183,42 @@ export default function InteractionCard({
   const say = (path: string, ko: string) => playClip(path, () => speakKorean(ko));
   const hearLabel = copy.card.listen;
   // Chat: the friend's own voice (no recordings yet: the browser's Korean voice, a man's or a woman's).
-  const { speakKorean: speakFriend } = useSpeech({ rate: 0.85, gender: chat && CHAT_MEN.includes(chat) ? "male" : "female" });
+  const { speakKorean: sayFriend } = useSpeech({ rate: 0.85, gender: chat && CHAT_MEN.includes(chat) ? "male" : "female" });
+  /** The friend says a line: heard, and seen (they gesture in the world while it lasts). */
+  const speakFriend = (ko: string) => {
+    if (chat) speak(CHAT_PEOPLE[chat].npc, ko.length);
+    sayFriend(ko);
+  };
+  // Chat: saying the fitting reply aloud (where the browser can listen).
+  const listenable = useRef(canListen()).current;
+  const [saying, setSaying] = useState(false);
+  const [said, setSaid] = useState<SayResult | null>(null);
+  const listener = useRef<{ stop: () => void } | null>(null);
+  useEffect(() => () => listener.current?.stop(), []);
+  const sayReply = (ko: string) => {
+    listener.current?.stop();
+    stopVoice();
+    setSaid(null);
+    setSaying(true);
+    const l = listenFor(ko);
+    listener.current = l;
+    l.done.then((r) => {
+      if (listener.current !== l) return;
+      setSaying(false);
+      setSaid(r);
+    });
+  };
+  const sayVerdict = (r: SayResult | null): string => {
+    if (!r) return "";
+    if ("error" in r) return r.error === "blocked" ? copy.card.micBlocked : copy.card.again;
+    return r.score >= 0.8 ? copy.card.great : r.score >= 0.5 ? copy.card.near : copy.card.again;
+  };
+  const resetSay = () => {
+    listener.current?.stop();
+    listener.current = null;
+    setSaying(false);
+    setSaid(null);
+  };
   /** Chat: which turn, and whether the conversation is over. */
   const [turn, setTurn] = useState(0);
   const [chatOver, setChatOver] = useState(false);
@@ -581,6 +618,20 @@ export default function InteractionCard({
                 {chosen.feedback}
               </p>
             )}
+            {chosen?.right && (saying || said) && (
+              <p role="status" className="text-sm text-charcoal/80">
+                {saying ? copy.card.listening : sayVerdict(said)}
+                {!saying && said && "heard" in said && said.score < 0.8 && (
+                  <>
+                    {" "}
+                    {copy.card.heard}:{" "}
+                    <span lang="ko" dir="ltr" className="font-ko font-bold">
+                      {said.heard}
+                    </span>
+                  </>
+                )}
+              </p>
+            )}
           </>
         )}
         </div>
@@ -593,6 +644,7 @@ export default function InteractionCard({
                 type="button"
                 className={`${btn} border-2 border-charcoal/30 text-charcoal outline-charcoal`}
                 onClick={() => {
+                  resetSay();
                   setTurn(0);
                   setPicked(null);
                   setChatOver(false);
@@ -617,7 +669,10 @@ export default function InteractionCard({
                   lang="ko"
                   dir="ltr"
                   disabled={chosen?.right === true}
-                  onClick={() => setPicked(i)}
+                  onClick={() => {
+                    resetSay();
+                    setPicked(i);
+                  }}
                   className={`min-h-12 w-full rounded-2xl border-2 px-3 py-2 font-ko text-base font-bold transition-colors ${
                     picked === i
                       ? o.right
@@ -634,11 +689,17 @@ export default function InteractionCard({
               <button type="button" className={`${btn} border-2 border-charcoal/30 text-charcoal outline-charcoal`} onClick={onClose}>
                 {ui.close}
               </button>
+              {chosen?.right && listenable && !/^\d/.test(chosen.ko) && (
+                <button type="button" disabled={saying} className={`${btn} border-2 border-charcoal text-charcoal outline-charcoal disabled:opacity-60`} onClick={() => sayReply(chosen.ko)}>
+                  {copy.card.say}
+                </button>
+              )}
               {chosen?.right && (
                 <button
                   type="button"
                   className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal`}
                   onClick={() => {
+                    resetSay();
                     setPicked(null);
                     if (last) {
                       setChatOver(true);

@@ -3,18 +3,17 @@ import { NPCS } from "../../config/npcs";
 import { realPersonInRoom } from "../../npc/realCast";
 
 describe("the world's people", () => {
-  it("never look like twins: within a room, no two share body, hair and skin", () => {
-    const rooms = new Map<string, Set<string>>();
+  it("are never repeated: in the whole world, no two share body, hair and skin", () => {
+    const seen = new Map<string, string>();
     for (const n of NPCS) {
       const p = realPersonInRoom(n, NPCS);
       const hair = p.rules.find((r) => r.match.test("Ch01_Hair"))!.color;
       const skin = p.rules.find((r) => r.match.test("Ch01_Body"))!.color;
       const key = `${p.model}|${hair}|${skin}`;
-      const seen = rooms.get(n.room) ?? new Set<string>();
-      expect(seen.has(key), `${n.id} looks like someone else in ${n.room}`).toBe(false);
-      seen.add(key);
-      rooms.set(n.room, seen);
+      expect(seen.get(key), `${n.id} (${n.room}) looks like ${seen.get(key)}`).toBeUndefined();
+      seen.set(key, n.id);
     }
+    expect(seen.size).toBe(NPCS.length);
   });
 
   it("have dark Korean hair (grey for elders) and a Korean skin tone", () => {

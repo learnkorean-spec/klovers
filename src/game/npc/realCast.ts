@@ -158,18 +158,19 @@ const lookKey = (p: PersonLook) => `${p.model}|${p.rules[0].color}|${p.rules[1].
 const assigned = new Map<string, PersonLook>();
 
 /**
- * A person's look, guaranteed different from everyone else in their room:
- * people are taken in list order, and anyone whose look is already used in
- * that room takes their next variation until it is free.
+ * A person's look, guaranteed different from everyone else in the whole
+ * world (Re, 15 Nov 2026: "do not repeat people"): people are taken in list
+ * order, and anyone whose body, hair and skin are already someone's — in any
+ * room — takes their next variation until it is free. So a learner walking
+ * from room to room never meets the same person twice.
  */
 export function realPersonInRoom(n: { id: string; room: string; cast: CastId }, everyone: readonly { id: string; room: string; cast: CastId }[]): PersonLook {
   const hit = assigned.get(n.id);
   if (hit) return hit;
   const used = new Set<string>();
   for (const m of everyone) {
-    if (m.room !== n.room) continue;
     let look = realPerson(m.cast, m.id);
-    for (let salt = 1; used.has(lookKey(look)) && salt < 50; salt++) look = realPerson(m.cast, m.id, salt);
+    for (let salt = 1; used.has(lookKey(look)) && salt < 400; salt++) look = realPerson(m.cast, m.id, salt);
     used.add(lookKey(look));
     assigned.set(m.id, look);
   }

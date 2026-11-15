@@ -12,7 +12,7 @@ import { ROOMS, type RoomId } from "./rooms";
  * learning data only). A mission inside a world the learner's real level has
  * not opened yet is shown, locked, with what opens it.
  */
-export type MissionId = "hello" | "consonants" | "vowels" | "letterRace" | "hubWalk" | "shopping" | "tour" | "cafe" | "culture" | "seoul" | "newFriends";
+export type MissionId = "hello" | "consonants" | "vowels" | "letterRace" | "hubWalk" | "shopping" | "tour" | "cafe" | "culture" | "seoul" | "newFriends" | "alley" | "namsan";
 
 export interface Mission {
   id: MissionId;
@@ -37,6 +37,9 @@ export const MISSIONS: Mission[] = [
   { id: "cafe", room: "conversation-cafe", steps: ["learn-keopi", "shop-cafe", "say-cafe-a", "say-cafe-b"] },
   { id: "seoul", room: "seoul-journey", steps: ["learn-jihacheol", "say-attendant", "quiz-gil", "learn-beoseu", "quiz-gyesan", "learn-namsan"] },
   { id: "culture", room: "culture-street", steps: ["quiz-insa", "learn-sinbal", "quiz-meal", "say-two-hands", "learn-seollal", "learn-chuseok"] },
+  // Seoul Journey parts 2 and 3 (course levels 5 and 6).
+  { id: "alley", room: "seoul-market", steps: ["learn-golmok", "learn-eolmayeyo", "quiz-kkakka", "say-deom", "learn-hotteok", "quiz-masisseo", "say-grandpa"] },
+  { id: "namsan", room: "seoul-namsan", steps: ["learn-jeonmangdae", "quiz-pyo", "learn-jamulsoe", "say-photo", "quiz-eodi", "say-nalssi"] },
 ];
 
 const BY_ID = new Map(INTERACTABLES.map((i) => [i.id, i]));

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { INTERACTABLES } from "../config/interactions";
 import { MISSIONS, missionRooms, missionSteps, type Mission, type MissionId } from "../config/missions";
+import { CHAPTERS, SIDE_MISSIONS, chapterDone, chapterMissions, currentChapter } from "../config/chapters";
 import { ROOMS, type RoomId } from "../config/rooms";
 
 /**
@@ -502,20 +503,9 @@ export function MissionsCard({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-  return (
-    <div className="pointer-events-auto absolute inset-0 z-20 flex items-start justify-center overflow-y-auto bg-charcoal/55 p-4 sm:items-center" onPointerDown={(e) => e.stopPropagation()}>
-      <div role="dialog" aria-modal="true" aria-labelledby="world-missions-title" className="flex w-full max-w-lg flex-col gap-3 rounded-3xl bg-ivory p-5 text-charcoal shadow-2xl">
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="world-missions-title" className="font-display text-xl font-bold">
-            {u.title}
-          </h2>
-          <button type="button" onClick={onClose} className="min-h-9 rounded-full border-2 border-charcoal/30 px-4 text-xs font-bold">
-            {u.close}
-          </button>
-        </div>
-        <p className="text-sm text-charcoal/75">{u.intro}</p>
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {MISSIONS.map((m: Mission) => {
+  const s = copy.chapterUi;
+  const now = currentChapter(done, isOpen);
+  const row = (m: Mission) => {
             const t = copy.missions[m.id];
             const open = missionRooms(m).every(isOpen);
             const isActive = active === m.id;
@@ -552,8 +542,53 @@ export function MissionsCard({
                 )}
               </li>
             );
-          })}
-        </ul>
+  };
+  return (
+    <div className="pointer-events-auto absolute inset-0 z-20 flex items-start justify-center overflow-y-auto bg-charcoal/55 p-4" onPointerDown={(e) => e.stopPropagation()}>
+      {/* my-auto: centred when it fits, and scrollable from its very top when it is longer than the screen. */}
+      <div role="dialog" aria-modal="true" aria-labelledby="world-missions-title" className="my-auto flex w-full max-w-lg flex-col gap-3 rounded-3xl bg-ivory p-5 text-charcoal shadow-2xl">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="world-missions-title" className="font-display text-xl font-bold">
+            {s.title}
+          </h2>
+          <button type="button" onClick={onClose} className="min-h-9 rounded-full border-2 border-charcoal/30 px-4 text-xs font-bold">
+            {u.close}
+          </button>
+        </div>
+        <p className="text-sm text-charcoal/75">{u.intro}</p>
+        {CHAPTERS.map((c, n) => {
+          const t = copy.chapters[c.id];
+          const open = isOpen(c.room);
+          const complete = chapterDone(c, done);
+          const here = now?.id === c.id;
+          const count = c.missions.filter((id) => done.includes(id)).length;
+          return (
+            <section key={c.id} aria-labelledby={`world-chapter-${c.id}`} className={`flex flex-col gap-2 rounded-2xl border-2 p-3 ${here ? "border-charcoal bg-white" : "border-charcoal/10"} ${open ? "" : "opacity-60"}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-charcoal/60">
+                    {s.chapter(n + 1)}
+                    {here ? ` · ${s.now}` : complete ? ` · ${s.done}` : !open ? ` · ${u.locked}` : ""}
+                  </p>
+                  <h3 id={`world-chapter-${c.id}`} className="font-display text-lg font-bold leading-tight">
+                    {t.title}
+                  </h3>
+                </div>
+                <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${complete ? "bg-klovers-green text-charcoal" : "bg-charcoal text-ivory"}`} dir="ltr">
+                  {count} / {c.missions.length}
+                </span>
+              </div>
+              <p className="text-sm text-charcoal/80">{t.line}</p>
+              {open && <ul className="grid gap-2 sm:grid-cols-2">{chapterMissions(c).map(row)}</ul>}
+            </section>
+          );
+        })}
+        <section aria-labelledby="world-chapter-side" className="flex flex-col gap-2">
+          <h3 id="world-chapter-side" className="text-[11px] font-bold uppercase tracking-wide text-charcoal/60">
+            {s.side}
+          </h3>
+          <ul className="grid gap-2 sm:grid-cols-2">{SIDE_MISSIONS.map(row)}</ul>
+        </section>
       </div>
     </div>
   );

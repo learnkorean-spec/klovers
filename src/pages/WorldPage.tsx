@@ -5,6 +5,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
 import { INTERACTABLES, shopOf, VILLAGE_LETTERS, type Interactable, type QuizId, type ShopId } from "@/game/config/interactions";
+import { chapterDone, chapterOf } from "@/game/config/chapters";
 import { CHATS, CHAT_ORDER, CHAT_PEOPLE, chatMetKey, chatsMet, type ChatId } from "@/game/config/chats";
 import { tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
@@ -374,7 +375,10 @@ const WorldPage = () => {
       setTimeLeft(null);
       targetRef.current = null;
       setMarker(null);
-      note(`${copy.missionUi.complete} · ${copy.missions[m.id].title}`);
+      // The last mission of a chapter closes the chapter: say that instead.
+      const ch = chapterOf(m.id);
+      if (ch && chapterDone(ch, finished)) note(`${copy.chapterUi.done} · ${copy.chapters[ch.id].title}`);
+      else note(`${copy.missionUi.complete} · ${copy.missions[m.id].title}`);
       api.current?.celebrate();
     },
     [patch, note, copy],

@@ -16,3 +16,15 @@ export function cheerAmount(npcId: string, now: number): number {
   if (!t || now >= t) return 0;
   return Math.min(1, (t - now) / 300);
 }
+
+const speakingUntil = new Map<string, number>();
+
+/** This person is saying a line of about this many Korean characters: they gesture as they talk. */
+export function speak(npcId: string, chars: number): void {
+  speakingUntil.set(npcId, performance.now() + 500 + chars * 190);
+}
+
+export function isSpeaking(npcId: string, now: number): boolean {
+  const t = speakingUntil.get(npcId);
+  return !!t && now < t;
+}

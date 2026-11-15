@@ -489,6 +489,8 @@ export const WORLD_COPY = {
       cafe: { title: "A café order", line: "Read the menu, order from the barista, and talk with both students." },
       seoul: { title: "A day in Seoul", line: "Subway, attendant, directions, bus, the bill, and Namsan Tower." },
       culture: { title: "Culture walk", line: "Greet the elder, shoes off, say grace, two hands, and the two holidays." },
+      alley: { title: "The alley market", line: "The alley, a price, a bargain, a little extra, hotteok, and the grandfather on the bench." },
+      namsan: { title: "Up Namsan", line: "The lookout, two tickets, the love locks, a photo, the way, and the weather." },
     },
     /** Conversations with the named Korean friends (config/chats.ts). */
     chatUi: {
@@ -501,6 +503,24 @@ export const WORLD_COPY = {
       newFriend: "New friend",
       friends: "Friends",
       finished: "A whole conversation in Korean!",
+    },
+    /** The story, as chapters (config/chapters.ts): the canon's road, one place per chapter. */
+    chapters: {
+      egg: { title: "The clover egg", line: "Two friends came to Korea to learn Korean. In a quiet hanok courtyard they found an ivory egg marked with a green clover. It answers only to real learning." },
+      hangul: { title: "Hangul Village", line: "The signs over the doors looked like drawings. One letter at a time, they start to say something." },
+      market: { title: "Vocabulary Market", line: "Words become things to point at and ask for, and there are new Korean friends to talk to." },
+      cafe: { title: "Conversation Café", line: "Korean stops being something to recognise and becomes something to use." },
+      culture: { title: "Culture Street", line: "The language starts to show its manners, its table and its holidays." },
+      seoul: { title: "Seoul Journey", line: "Separate lessons join into one city: the subway, the bus, the way, the bill." },
+      alley: { title: "Seoul: the alley market", line: "Deeper into the city: an alley where prices are asked, bargained and tasted." },
+      namsan: { title: "Seoul: Namsan Tower", line: "The road climbs above the city, to the tower and the view over all of it." },
+    },
+    chapterUi: {
+      title: "Story and missions",
+      chapter: (n: number) => `Chapter ${n}`,
+      now: "You are here",
+      done: "Chapter complete",
+      side: "Beside the road",
     },
     missionUi: {
       button: "Missions",
@@ -1048,6 +1068,8 @@ export const WORLD_COPY = {
       cafe: { title: "طلب في المقهى", line: "قراءة القائمة، والطلب من النادلة، والحديث مع الطالبين." },
       seoul: { title: "يوم في سيول", line: "المترو، وموظف المحطة، والاتجاهات، والحافلة، والحساب، وبرج نامسان." },
       culture: { title: "جولة الثقافة", line: "تحية الكبير، وخلع الحذاء، وما يُقال قبل الأكل، واليدان معًا، والعيدان." },
+      alley: { title: "سوق الزقاق", line: "الزقاق، السعر، المساومة، الزيادة الصغيرة، الهوتوك، والجدّ على المقعد." },
+      namsan: { title: "صعود نامسان", line: "المطلّ، تذكرتان، أقفال الحب، صورة، الطريق، والطقس." },
     },
     chatUi: {
       turn: (n: number, of: number) => `${n} / ${of}`,
@@ -1059,6 +1081,23 @@ export const WORLD_COPY = {
       newFriend: "صديق جديد",
       friends: "الأصدقاء",
       finished: "محادثة كاملة بالكورية!",
+    },
+    chapters: {
+      egg: { title: "بيضة البرسيم", line: "صديقان جاءا إلى كوريا لتعلّم الكورية. في فناء هانوك هادئ وجدا بيضة عاجية عليها برسيمة خضراء. لا تستجيب إلا للتعلّم الحقيقي." },
+      hangul: { title: "قرية الهانغول", line: "كانت اللافتات فوق الأبواب تبدو كالرسوم. حرفًا بعد حرف، تبدأ في قول شيء." },
+      market: { title: "سوق المفردات", line: "الكلمات تصير أشياء يُشار إليها وتُطلب، وهناك أصدقاء كوريون جدد للحديث معهم." },
+      cafe: { title: "مقهى المحادثة", line: "الكورية لم تعد شيئًا يُتعرَّف عليه فقط، بل شيئًا يُستعمل." },
+      culture: { title: "شارع الثقافة", line: "اللغة تبدأ في إظهار آدابها ومائدتها وأعيادها." },
+      seoul: { title: "رحلة سيول", line: "الدروس المتفرقة تجتمع في مدينة واحدة: المترو، الحافلة، الطريق، الحساب." },
+      alley: { title: "سيول: سوق الزقاق", line: "إلى عمق المدينة: زقاق تُسأل فيه الأسعار وتُساوَم وتُتذوَّق." },
+      namsan: { title: "سيول: برج نامسان", line: "الطريق يصعد فوق المدينة، إلى البرج والمنظر المطلّ عليها كلها." },
+    },
+    chapterUi: {
+      title: "القصة والمهام",
+      chapter: (n: number) => `الفصل ${n}`,
+      now: "أنت هنا",
+      done: "اكتمل الفصل",
+      side: "بجانب الطريق",
     },
     missionUi: {
       button: "المهام",
