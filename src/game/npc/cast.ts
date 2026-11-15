@@ -32,6 +32,23 @@ export const CAST = {
   barista: { skin: SKIN[2], hair: HAIR.dark, hairStyle: "bun", top: PALETTE.white, over: PALETTE.charcoal, lower: { kind: "trousers", color: PALETTE.charcoal }, shoes: PALETTE.charcoal },
   friendA: { skin: SKIN[0], hair: HAIR.brown, hairStyle: "short", top: SLATE, lower: { kind: "trousers", color: PALETTE.ivory }, shoes: PALETTE.white, prop: "cup", propColor: PALETTE.white },
   friendB: { skin: SKIN[3], hair: HAIR.black, hairStyle: "long", top: PALETTE.ivory, lower: { kind: "skirt", color: OLIVE }, shoes: PALETTE.charcoal },
+  // Book 1's new Korean people (canon supportingKoreanCast.book1; Re, 4 Nov 2026), met in the
+  // Vocabulary Market. Provisional in-game looks, like Minsu's first one: each dressed for
+  // their role, until Re pins down their artwork.
+  /** Jihoon (지훈) — a passer-by who gives directions: a student on his way, backpack on. */
+  jihoon: { skin: SKIN[4], hair: HAIR.black, hairStyle: "short", top: PALETTE.ivory, over: SLATE, lower: { kind: "trousers", color: PALETTE.charcoal }, shoes: PALETTE.white, prop: "bag", propColor: PALETTE.charcoal, scale: 1.02 },
+  /** Ms. Park (박 아주머니) — a market vendor: work apron, hair up. */
+  park: { skin: SKIN[1], hair: HAIR.dark, hairStyle: "bun", top: PALETTE.ivory, over: OLIVE, lower: { kind: "trousers", color: PALETTE.charcoal }, shoes: PALETTE.charcoal, scale: 0.95 },
+  /** Mr. Kim (김 선생님) — the information-desk clerk: dark jacket, white shirt, staff card. */
+  kim: { skin: SKIN[2], hair: HAIR.black, hairStyle: "short", top: PALETTE.white, over: PALETTE.charcoal, lanyard: "#6B4A33", lower: { kind: "trousers", color: PALETTE.charcoal }, shoes: PALETTE.charcoal, scale: 1.0 },
+  /** Yuna (유나) — a café barista: white shirt, brown apron. */
+  yuna: { skin: SKIN[0], hair: HAIR.dark, hairStyle: "bun", top: PALETTE.white, over: "#6B4A33", lower: { kind: "trousers", color: PALETTE.charcoal }, shoes: PALETTE.white, prop: "cup", propColor: PALETTE.white, scale: 0.98 },
+  /** Seoyeon (서연) — a classmate making plans: knit top, skirt, book bag. */
+  seoyeon: { skin: SKIN[5], hair: HAIR.black, hairStyle: "long", top: SAND, lower: { kind: "skirt", color: SLATE }, shoes: PALETTE.white, prop: "bag", propColor: "#8C5A4A", scale: 0.97 },
+  /** Taeyang (태양) — a friend proposing a weekend trip: casual jacket, phone in hand. */
+  taeyang: { skin: SKIN[3], hair: HAIR.dark, hairStyle: "short", top: PALETTE.white, over: "#8C7A66", lower: { kind: "trousers", color: SLATE }, shoes: PALETTE.white, prop: "phone", scale: 1.04 },
+  /** Hana (하나) — a neighbour out shopping: soft cardigan, a full shopping bag. */
+  hana: { skin: SKIN[2], hair: HAIR.brown, hairStyle: "bob", top: PALETTE.ivory, over: "#9C8469", lower: { kind: "trousers", color: SAND }, shoes: PALETTE.charcoal, prop: "bag", propColor: PALETTE.ivory, scale: 0.96 },
 } satisfies Record<string, PersonSpec>;
 
 export type CastId = keyof typeof CAST;

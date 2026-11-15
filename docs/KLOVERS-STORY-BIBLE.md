@@ -115,6 +115,17 @@ mockups.
 
 Full detail: `claude/klovers-book1-model-lessons-plan.md` (Claude Project docs).
 
+**In KLOVERS World (Re, 15 Nov 2026).** All seven now stand in the Vocabulary
+Market of the 3D world. Each has a short conversation in their own class's
+grammar: they speak, and the learner chooses each reply in Korean (a reply that
+does not fit explains itself; nothing is scored). Before a conversation they
+are known by their role ("Passer-by"); after it they are a friend, called by
+name. This is exploration only and is never counted as learning progress — the
+market itself still opens only at the learner's real level. Their in-game looks
+are **provisional**, as Minsu's first one was: the visual direction above is
+still undecided (`supportingKoreanCast.inKloversWorld` in the code canon;
+conversations in `src/game/config/chats.ts`).
+
 ## 5. Current worlds (in unlock order)
 
 1. **Hangul Village** — the Korean writing/sound system. Lead: male learner +

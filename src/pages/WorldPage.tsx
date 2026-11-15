@@ -5,6 +5,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
 import { INTERACTABLES, shopOf, VILLAGE_LETTERS, type Interactable, type QuizId, type ShopId } from "@/game/config/interactions";
+import { CHATS, CHAT_ORDER, CHAT_PEOPLE, chatMetKey, chatsMet, type ChatId } from "@/game/config/chats";
 import { tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { useWorldAccess } from "@/game/systems/useWorldAccess";
@@ -183,13 +184,15 @@ const WorldPage = () => {
   const beaconEls = useRef(new Map<string, HTMLElement>());
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
-  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shop?: ShopId; shopPick?: string } | null>(null);
+  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shop?: ShopId; shopPick?: string; chat?: ChatId; at?: string; npc?: string } | null>(null);
   /** The shop thing last chosen: it hops in the scene. */
   const [shopChosen, setShopChosen] = useState<{ item: string; at: number } | null>(null);
   // A person's line or a word: shown over the world without stopping it.
   const [bubble, setBubble] = useState<(Bubble & { at: string }) | null>(null);
   const [found, setFound] = useState<{ text: string; ko?: string } | null>(null);
   const foundTimer = useRef<number>();
+  /** A new friend was made in the card that is open: said when it closes. */
+  const friendNote = useRef<{ text: string; ko: string } | null>(null);
   const [way, setWay] = useState(false);
   const wayShown = useRef(false);
   const wayTimer = useRef<number>();
@@ -494,7 +497,8 @@ const WorldPage = () => {
       if (!it || it.id === bubble.at) return;
     }
     if (!it) return;
-    markStep(it.id);
+    // A conversation counts for a mission once it is finished, not when it is opened.
+    if (it.kind !== "chat") markStep(it.id);
     if (document.pointerLockElement && it.kind !== "say" && it.kind !== "learn" && it.kind !== "talk" && it.kind !== "cluby") document.exitPointerLock();
     if (it.npc) cheer(it.npc, 1200);
     switch (it.kind) {
@@ -521,6 +525,9 @@ const WorldPage = () => {
         break;
       case "say":
         if (it.say) setBubble({ kind: "say", id: it.say, at: it.id });
+        break;
+      case "chat":
+        if (it.chat) setCard({ kind: "chat", chat: it.chat, at: it.id, npc: it.npc });
         break;
       case "info":
         if (it.info) setBubble({ kind: "info", id: it.info, at: it.id });
@@ -709,6 +716,8 @@ const WorldPage = () => {
     if ((it.kind === "quiz" || it.kind === "letter") && it.letter) return { verb, sub: it.letter, subKo: true };
     if (it.kind === "quiz" && it.quiz) return { verb, sub: copy.quiz[it.quiz].ko, subKo: true };
     if (it.kind === "say" && it.say) return { verb, sub: copy.say[it.say].name };
+    // A named friend is called by name once met; before that, by who they are.
+    if (it.kind === "chat" && it.chat) return { verb, sub: CHATS[lang][it.chat][saved.met.includes(chatMetKey(it.chat)) ? "name" : "role"] };
     if (it.kind === "info" && it.info) return { verb, sub: copy.info[it.info].title };
     if (it.kind === "tour" && it.tour) return { verb, sub: VILLAGE.tour.find((b) => b.id === it.tour)?.sign, subKo: true };
     if (it.kind === "link" && it.href) return { verb, sub: VILLAGE.tourLinks.find((l) => l.href === it.href)?.sign, subKo: true };
@@ -998,6 +1007,22 @@ const WorldPage = () => {
                 kind={card.kind}
                 notice={card.notice}
                 quiz={card.quiz}
+                chat={card.chat}
+                chatMet={!!card.chat && saved.met.includes(chatMetKey(card.chat))}
+                onChatDone={() => {
+                  if (!card.chat) return;
+                  const key = chatMetKey(card.chat);
+                  const cur = savedRef.current;
+                  if (!cur.met.includes(key)) {
+                    const met = [...cur.met, key];
+                    patch({ met });
+                    // Shown once the card is put away (notes never sit under a card).
+                    friendNote.current = { text: `${copy.chatUi.newFriend} · ${CHATS[lang][card.chat].name} · ${copy.chatUi.friends} ${chatsMet(met)}/${CHAT_ORDER.length}`, ko: CHAT_PEOPLE[card.chat].nameKo };
+                  }
+                  if (card.at) markStep(card.at);
+                  if (card.npc) cheer(card.npc, 2200);
+                  api.current?.celebrate();
+                }}
                 shop={card.shop}
                 shopPick={card.shopPick}
                 onShopPick={pickShop}
@@ -1008,6 +1033,10 @@ const WorldPage = () => {
                   const was = card.kind;
                   setCard(null);
                   if (was === "egg" && currentRoom === "courtyard") showWay();
+                  if (friendNote.current) {
+                    note(friendNote.current.text, friendNote.current.ko);
+                    friendNote.current = null;
+                  }
                 }}
                 onGo={(href) => navigate(href)}
                 onWordSeen={learnWord}

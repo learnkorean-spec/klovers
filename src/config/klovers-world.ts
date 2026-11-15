@@ -388,6 +388,19 @@ export const KLOVERS_WORLD = {
       },
     ],
     source: "Re, 4 Nov 2026 — claude/klovers-book1-model-lessons-plan.md",
+    /**
+     * In KLOVERS World (Re, 15 Nov 2026: "new people must come into the
+     * conversations"): all seven stand in the Vocabulary Market, Book 1's one
+     * world, each with a short conversation in their own class's grammar that
+     * the learner answers (src/game/config/chats.ts). Their in-game looks are
+     * provisional, as Minsu's first one was, until the artwork is pinned down.
+     */
+    inKloversWorld: {
+      room: "vocabulary-market",
+      form: "choice_based_conversation_in_the_class_grammar",
+      look: "provisional_until_visual_direction_is_decided",
+      source: "Re, 15 Nov 2026",
+    },
   },
 
   characterRelationshipRules: {

@@ -1,6 +1,7 @@
 import { ALLEY, NAMSAN, boardSpot, CAFE, CULTURE, GARDEN, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
 import { ALLEY_FRIEND, NAMSAN_FRIEND, CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, MINSU_SPOT, NPCS, SEOUL_FRIEND } from "./npcs";
 import { PROPS } from "./world";
+import { CHAT_PEOPLE, type ChatId } from "./chats";
 
 /**
  * Things the learner can walk up to. Standing within `radius` (and, for a
@@ -26,10 +27,12 @@ import { PROPS } from "./world";
  *            name, what it is for, and a link to it
  * - locked   a gate to a world that is not open yet (or not built yet):
  *            inspecting it says, kindly, what opens it
+ * - chat     a short conversation with a named Korean friend: they speak,
+ *            the learner chooses each reply (config/chats.ts)
  * - shop     the market's little shop: pick one of three things and ask
  *            for it in Korean (the things can also be pressed in the scene)
  */
-export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour" | "shop" | "review";
+export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour" | "shop" | "review" | "chat";
 
 /** The verb on the prompt ([E] Inspect, the round button's label …). */
 export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read" | "shop" | "order" | "review";
@@ -77,6 +80,8 @@ export interface Interactable {
   learn?: LearnId;
   quiz?: QuizId;
   say?: SayId;
+  /** A conversation with a named friend (kind "chat"). */
+  chat?: ChatId;
   info?: InfoId;
   /** A Klovers tour board (reading it frames it close). */
   tour?: TourStop;
@@ -169,6 +174,15 @@ export const INTERACTABLES: Interactable[] = [
   { id: "say-shopkeeper", room: "vocabulary-market", kind: "say", action: "talk", say: "shopkeeper", npc: shopkeeper.id, x: stallFront(1, 0).x, z: shopkeeper.z + 0.2, radius: 1.2, priority: 1 },
   // A shopper asking the price; fruit on the produce table; a word to check.
   { id: "say-shopper", room: "vocabulary-market", kind: "say", action: "talk", say: "shopper", npc: "m-shopper", x: npc("m-shopper").x + 0.9, z: npc("m-shopper").z, radius: 1.1 },
+  // Book 1's new Korean people: a conversation with each (the learner stands on the side
+  // they face; these win a close call against the stalls' words).
+  { id: "chat-jihoon", room: "vocabulary-market", kind: "chat", action: "talk", chat: "jihoon", npc: CHAT_PEOPLE.jihoon.npc, x: 3.5, z: -6.3, radius: 1.2, priority: 2 },
+  { id: "chat-park", room: "vocabulary-market", kind: "chat", action: "talk", chat: "park", npc: CHAT_PEOPLE.park.npc, x: -6.3, z: 7.6, radius: 1.2, priority: 2 },
+  { id: "chat-kim", room: "vocabulary-market", kind: "chat", action: "talk", chat: "kim", npc: CHAT_PEOPLE.kim.npc, x: 6.0, z: 7.3, radius: 1.2, priority: 2 },
+  { id: "chat-yuna", room: "vocabulary-market", kind: "chat", action: "talk", chat: "yuna", npc: CHAT_PEOPLE.yuna.npc, x: 3.7, z: 1.1, radius: 1.0, priority: 2 },
+  { id: "chat-seoyeon", room: "vocabulary-market", kind: "chat", action: "talk", chat: "seoyeon", npc: CHAT_PEOPLE.seoyeon.npc, x: 1.8, z: 6.0, radius: 1.0, priority: 2 },
+  { id: "chat-taeyang", room: "vocabulary-market", kind: "chat", action: "talk", chat: "taeyang", npc: CHAT_PEOPLE.taeyang.npc, x: -0.8, z: 4.5, radius: 1.0, priority: 2 },
+  { id: "chat-hana", room: "vocabulary-market", kind: "chat", action: "talk", chat: "hana", npc: CHAT_PEOPLE.hana.npc, x: 1.9, z: 0.35, radius: 1.0, priority: 2 },
   { id: "learn-gwail", room: "vocabulary-market", kind: "learn", action: "learn", learn: "gwail", word: "과일", x: MARKET.tables[0][0], z: MARKET.tables[0][1] + MARKET.tables[0][3] / 2 + 0.6, radius: 1.2 },
   // The little shop: three things on the second produce table, from the square side.
   { id: "shop", room: "vocabulary-market", kind: "shop", action: "shop", shop: "fruit", x: MARKET.tables[MARKET.shop.table][0] - MARKET.tables[MARKET.shop.table][2] / 2 - 0.75, z: MARKET.tables[MARKET.shop.table][1], radius: 1.4, priority: 1 },

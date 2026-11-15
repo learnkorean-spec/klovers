@@ -61,13 +61,16 @@ export const NPCS: NpcPlacement[] = [
   { id: "hv-x1", room: "hangul-village", cast: "shopper", pose: "browse", x: -4.15, z: -14.15, yaw: -0.37, phase: 2.51 },
   { id: "hv-x2", room: "hangul-village", cast: "readerB", pose: "talk", x: 3.6, z: -13.9, yaw: -1.22, phase: 2.42 },
   { id: "hv-x3", room: "hangul-village", cast: "walker", pose: "talk", x: 2.71, z: -13.57, yaw: 1.93, phase: 1.66 },
-  // vocabulary-market
-  { id: "vm-x1", room: "vocabulary-market", cast: "readerA", pose: "browse", x: 4.6, z: -7.15, yaw: -1.57, phase: 2.67 },
-  { id: "vm-x2", room: "vocabulary-market", cast: "student2", pose: "talk", x: 0.85, z: 5.6, yaw: -2.36, phase: 1.1 },
-  { id: "vm-x3", room: "vocabulary-market", cast: "auntie", pose: "talk", x: 0.18, z: 4.92, yaw: 0.78, phase: 2.58 },
-  { id: "vm-x4", room: "vocabulary-market", cast: "readerB", pose: "walk", x: 7.1, z: 7.1, yaw: -1.54, path: [[7.1, 7.1], [2.96, 7.24]], phase: 2.4 },
-  { id: "vm-x5", room: "vocabulary-market", cast: "walker", pose: "browse", x: -7.4, z: 7.35, yaw: 1.74, phase: 0.73 },
-  { id: "vm-x6", room: "vocabulary-market", cast: "student2", pose: "walk", x: 1.85, z: -0.65, yaw: 0.69, path: [[1.85, -0.65], [4.04, 1.99]], phase: 1.06 },
+  // vocabulary-market: Book 1's new Korean people (canon supportingKoreanCast.book1), each with
+  // a short conversation the learner answers (config/chats.ts). They stand where the unnamed
+  // extras used to (spots already checked clear of stalls, doors, arrival spots and things to use).
+  { id: "m-jihoon", room: "vocabulary-market", cast: "jihoon", pose: "browse", x: 4.6, z: -7.15, yaw: -1.57, phase: 2.67, important: true },
+  { id: "m-seoyeon", room: "vocabulary-market", cast: "seoyeon", pose: "talk", x: 0.85, z: 5.6, yaw: -2.36, phase: 1.1, important: true },
+  { id: "m-taeyang", room: "vocabulary-market", cast: "taeyang", pose: "talk", x: 0.18, z: 4.92, yaw: 0.78, phase: 2.58, important: true },
+  { id: "m-kim", room: "vocabulary-market", cast: "kim", pose: "stand", x: 7.1, z: 7.1, yaw: -1.54, phase: 2.4, important: true },
+  { id: "m-park", room: "vocabulary-market", cast: "park", pose: "stand", x: -7.4, z: 7.35, yaw: 1.74, phase: 0.73, important: true },
+  { id: "m-hana", room: "vocabulary-market", cast: "hana", pose: "browse", x: 1.85, z: -0.65, yaw: 0.69, phase: 1.06, important: true },
+  { id: "m-yuna", room: "vocabulary-market", cast: "yuna", pose: "stand", x: 4.04, z: 1.99, yaw: -2.2, phase: 0.4, important: true },
   // hub
   { id: "h-x1", room: "hub", cast: "readerA", pose: "browse", x: 10.35, z: -8.65, yaw: -2.99, phase: 1.8 },
   { id: "h-x2", room: "hub", cast: "porter", pose: "talk", x: 2.1, z: -6.65, yaw: -2.67, phase: 2.13 },

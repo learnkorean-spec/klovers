@@ -4,6 +4,7 @@ import { SHOP_ITEMS, SHOP_PRICES, wonInKorean, type QuizId, type ShopId } from "
 import { playClip, playClips, shopClip, stopVoice } from "../systems/voice";
 import { useSpeech } from "@/hooks/useSpeech";
 import type { NoticeKey } from "../config/rooms";
+import { CHATS, CHAT_PEOPLE, type ChatId } from "../config/chats";
 
 /**
  * The small web-UI cards opened from the 3D world (E / the round button).
@@ -13,7 +14,7 @@ import type { NoticeKey } from "../config/rooms";
  * does not stop the world.)
  */
 /** "review" is the Memory Garden's memory stone (game/ui/GardenReview.tsx), not drawn here. */
-export type CardKind = "egg" | "letter" | "word" | "locked" | "quiz" | "shop" | "review";
+export type CardKind = "egg" | "letter" | "word" | "locked" | "quiz" | "shop" | "review" | "chat";
 
 interface Props {
   lang: WorldLang;
@@ -40,7 +41,14 @@ interface Props {
   onShopPaid?: () => void;
   /** Shop: a thing was chosen (its word is learned; the world reacts). */
   onShopPick?: (ko: string) => void;
+  /** Chat: which named friend, whether already a friend, and the end of the conversation. */
+  chat?: ChatId;
+  chatMet?: boolean;
+  onChatDone?: () => void;
 }
+
+/** The men among the named friends (the browser's Korean voice is picked to match). */
+const CHAT_MEN: readonly ChatId[] = ["jihoon", "kim", "taeyang"];
 
 /** Small drawings of the shop's three things, matching the 3D ones. */
 function ShopIcon({ ko, size = 44 }: { ko: string; size?: number }) {
@@ -162,6 +170,9 @@ export default function InteractionCard({
   shopPick,
   onShopPick,
   onShopPaid,
+  chat,
+  chatMet = false,
+  onChatDone,
 }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
@@ -169,6 +180,11 @@ export default function InteractionCard({
   /** Play a recorded line; the browser's voice if it cannot. */
   const say = (path: string, ko: string) => playClip(path, () => speakKorean(ko));
   const hearLabel = copy.card.listen;
+  // Chat: the friend's own voice (no recordings yet: the browser's Korean voice, a man's or a woman's).
+  const { speakKorean: speakFriend } = useSpeech({ rate: 0.85, gender: chat && CHAT_MEN.includes(chat) ? "male" : "female" });
+  /** Chat: which turn, and whether the conversation is over. */
+  const [turn, setTurn] = useState(0);
+  const [chatOver, setChatOver] = useState(false);
   useEffect(() => () => stopVoice(), []);
   const [picked, setPicked] = useState<number | null>(solved && kind === "word" ? 0 : kind === "shop" && shopPick ? Math.max(0, SHOP_ITEMS[shop].indexOf(shopPick)) : null);
 
@@ -516,6 +532,133 @@ export default function InteractionCard({
         </div>
       </>
     );
+  } else if (kind === "chat" && chat) {
+    // A conversation: the friend speaks, the learner chooses each reply. No
+    // penalty and no score: a reply that does not fit explains itself.
+    const c = CHATS[lang][chat];
+    const ui = copy.chatUi;
+    const t = c.turns[Math.min(turn, c.turns.length - 1)];
+    const chosen = picked === null ? null : t.options[picked];
+    const last = turn >= c.turns.length - 1;
+    const line = chatOver ? c.closing : t;
+    // On a phone held sideways the card is wide and in two columns (the friend's
+    // line beside the replies), so nothing is cut off below the screen.
+    const col = "flex w-full min-w-0 flex-col items-center gap-3";
+    body = (
+      <div className="flex w-full flex-col items-center gap-3 [@media(max-height:500px)]:grid [@media(max-height:500px)]:grid-cols-2 [@media(max-height:500px)]:items-start [@media(max-height:500px)]:gap-4">
+        <div className={col}>
+        <div className="flex w-full items-center justify-between gap-2">
+          <p className="text-start text-sm font-bold">
+            {chatMet || chatOver ? c.name : c.role}
+            {(chatMet || chatOver) && (
+              <span lang="ko" dir="ltr" className="mx-2 font-ko text-charcoal/70">
+                {CHAT_PEOPLE[chat].nameKo}
+              </span>
+            )}
+          </p>
+          <p className="shrink-0 rounded-full bg-charcoal px-2.5 py-0.5 text-xs font-bold text-ivory" dir="ltr">
+            {ui.turn(Math.min(turn + 1, c.turns.length), c.turns.length)}
+          </p>
+        </div>
+        <div className="w-full rounded-2xl bg-white p-3 text-start">
+          <div className="flex items-start gap-2" dir="ltr">
+            <Hear label={hearLabel} onPlay={() => speakFriend(line.ko)} />
+            <p lang="ko" className="font-ko text-lg font-bold leading-snug">
+              {line.ko}
+            </p>
+          </div>
+          {line.gloss !== "…" && <p className="pt-1 text-sm text-charcoal/80">{line.gloss}</p>}
+        </div>
+        {chatOver ? (
+          <p role="status" className="text-sm font-semibold">
+            {ui.finished}
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-semibold">{t.ask}</p>
+            {chosen && (
+              <p role="status" className="text-sm font-semibold">
+                {chosen.feedback}
+              </p>
+            )}
+          </>
+        )}
+        </div>
+        <div className={col}>
+        {chatOver ? (
+          <>
+            <p className="text-xs text-charcoal/70">{c.focus}</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                className={`${btn} border-2 border-charcoal/30 text-charcoal outline-charcoal`}
+                onClick={() => {
+                  setTurn(0);
+                  setPicked(null);
+                  setChatOver(false);
+                  speakFriend(c.turns[0].ko);
+                }}
+              >
+                {ui.again}
+              </button>
+              <button ref={first} type="button" className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal`} onClick={onClose}>
+                {ui.done}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex w-full flex-col gap-2" role="group" aria-label={ui.you}>
+              {t.options.map((o, i) => (
+                <button
+                  key={o.ko}
+                  ref={i === 0 ? first : undefined}
+                  type="button"
+                  lang="ko"
+                  dir="ltr"
+                  disabled={chosen?.right === true}
+                  onClick={() => setPicked(i)}
+                  className={`min-h-12 w-full rounded-2xl border-2 px-3 py-2 font-ko text-base font-bold transition-colors ${
+                    picked === i
+                      ? o.right
+                        ? "border-charcoal bg-klovers-green text-charcoal"
+                        : "border-charcoal bg-ivory text-charcoal"
+                      : "border-charcoal/30 bg-white text-charcoal hover:border-charcoal"
+                  }`}
+                >
+                  {o.ko}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              <button type="button" className={`${btn} border-2 border-charcoal/30 text-charcoal outline-charcoal`} onClick={onClose}>
+                {ui.close}
+              </button>
+              {chosen?.right && (
+                <button
+                  type="button"
+                  className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal`}
+                  onClick={() => {
+                    setPicked(null);
+                    if (last) {
+                      setChatOver(true);
+                      speakFriend(c.closing.ko);
+                      onChatDone?.();
+                    } else {
+                      setTurn(turn + 1);
+                      speakFriend(c.turns[turn + 1].ko);
+                    }
+                  }}
+                >
+                  {ui.next}
+                </button>
+              )}
+            </div>
+          </>
+        )}
+        </div>
+      </div>
+    );
   } else if (kind === "egg") {
     const c = copy.egg;
     body = (
@@ -608,7 +751,7 @@ export default function InteractionCard({
       <div
         role="dialog"
         aria-modal="true"
-        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col items-center gap-3 overflow-y-auto rounded-3xl bg-ivory p-6 text-center text-charcoal shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95"
+        className={`flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col items-center gap-3 overflow-y-auto rounded-3xl bg-ivory p-6 text-center text-charcoal shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 ${kind === "chat" ? "[@media(max-height:500px)]:max-w-2xl [@media(max-height:500px)]:p-4" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         {body}

@@ -23,6 +23,15 @@ const BODY: Record<CastId, { model: string; female: boolean }> = {
   walker: { model: "npc-megan", female: true },
   barista: { model: "npc-megan", female: true },
   friendB: { model: "npc-megan", female: true },
+  // Book 1's named Korean people: spread over the bodies so no two of them share one
+  // with the same hair and skin (people.test checks the whole market).
+  jihoon: { model: "npc-joe", female: false },
+  kim: { model: "npc-brian", female: false },
+  taeyang: { model: "npc-leonard", female: false },
+  park: { model: "npc-elizabeth", female: true },
+  hana: { model: "npc-elizabeth", female: true },
+  yuna: { model: "npc-megan", female: true },
+  seoyeon: { model: "npc-megan", female: true },
 };
 
 /**
@@ -43,7 +52,7 @@ const SKIN_KO = ["#EECFB6", "#E8C6A9", "#E0BC9C", "#D8B190", "#CFA683", "#C69A76
 const HAIR_KO = ["#100D0C", "#16110E", "#1C1511", "#231A14", "#2B1F17"];
 const HAIR_GREY = ["#8E8A86", "#A29E99", "#76726E"];
 /** Roles who keep the body chosen for them (named characters people recognise). */
-const FIXED_BODY = new Set<CastId>(["minsu"]);
+const FIXED_BODY = new Set<CastId>(["minsu", "jihoon", "park", "kim", "yuna", "seoyeon", "taeyang", "hana"]);
 
 function hash(id: string): number {
   let h = 2166136261;
