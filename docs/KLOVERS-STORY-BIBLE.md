@@ -355,6 +355,16 @@ line restates that world's `narrativeEffect`; no lore is added. A chapter opens
 when its place does — from the learner's real course level — and finishing its
 missions is exploration only (`src/game/config/chapters.ts`).
 
+**KLOVERS World, the egg's real stages (Re, 16 Nov 2026).** The egg in the
+courtyard shows the same stage as the dashboard's egg (`eggStatus`): a thin
+crack after the first Korean word, a soft yellow glow after the first sentence,
+and the hatch after the first conversation milestone. Inspecting it says which
+real step made the change and which one comes next. The dashboard records the
+stage per browser (`lib/clubyAwake.ts`); nothing done inside the world moves it.
+The later worlds' unnamed people (a student in the café, the stall cook, the
+station attendant, the two elders) now hold short conversations like the Book 1
+friends; they stay unnamed, since the canon names no one there.
+
 **Existing student flow:** never force a learner who already has real
 progress to replay the beginner discovery sequence. Instead: "You've already
 learned enough to wake him" — unlock Cluby directly and map the story state

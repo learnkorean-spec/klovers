@@ -1,4 +1,4 @@
-import { useRef, type MutableRefObject } from "react";
+import { useRef, useState, type MutableRefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import {
   AdditiveBlending,
@@ -131,7 +131,13 @@ const STRAW_RING = (() => {
 })();
 const STRAW = new MeshStandardMaterial({ color: "#C7A15F", roughness: 0.9 });
 
-const SHELL_MAT = (() => {
+/**
+ * `crack`: the thin crack a first Korean word makes (canon awakeningSequence
+ * "small_crack"), to the right of the clover, running up toward the break.
+ * `glow`: the soft KLOVERS yellow the shell takes after a first sentence
+ * ("soft_yellow_glow") — a faint light of its own over the whole shell.
+ */
+function shellMaterial(cracked: boolean, glowing: boolean) {
   const m = new MeshStandardMaterial({ color: new Color("#ffffff"), roughness: 0.48, side: DoubleSide });
   try {
     // Sharp enough for a close look on a computer; phones keep to their budget.
@@ -177,8 +183,35 @@ const SHELL_MAT = (() => {
       ctx.arc(rnd() * W, y, (0.6 + rnd() * 1.3) * k, 0, Math.PI * 2);
       ctx.fill();
     }
-    ectx.fillStyle = "#000";
+    // The shell's own light: none, or a soft yellow that is strongest round the middle.
+    if (glowing) {
+      const y = ectx.createLinearGradient(0, 0, 0, e.height);
+      y.addColorStop(0, "#2a2800");
+      y.addColorStop(0.55, "#75650a");
+      y.addColorStop(1, "#343100");
+      ectx.fillStyle = y;
+    } else ectx.fillStyle = "#000";
     ectx.fillRect(0, 0, e.width, e.height);
+    if (cracked) {
+      // A hairline that wanders up from beside the clover, with two short
+      // side cracks: dark at its heart, a paler chipped edge either side.
+      const pts: [number, number][] = [[0.585, 0.6], [0.592, 0.53], [0.58, 0.47], [0.598, 0.41], [0.588, 0.35], [0.604, 0.29], [0.597, 0.24]];
+      const side: [number, number][][] = [
+        [[0.58, 0.47], [0.562, 0.44], [0.556, 0.41]],
+        [[0.598, 0.41], [0.617, 0.385], [0.622, 0.36]],
+      ];
+      const stroke = (line: [number, number][], width: number, color: string) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width * k;
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        line.forEach(([u, v], i) => (i ? ctx.lineTo(u * W, v * H) : ctx.moveTo(u * W, v * H)));
+        ctx.stroke();
+      };
+      for (const line of [pts, ...side]) stroke(line, line === pts ? 7 : 5, "rgba(255,255,250,0.55)");
+      for (const line of [pts, ...side]) stroke(line, line === pts ? 2.6 : 1.8, "#4a3b2c");
+    }
     // The clover, centred where u = 0.5 (facing +z), a little below the
     // middle; drawn in metres so it stays round on the curved shell.
     const cv = 1 - 0.47;
@@ -248,7 +281,21 @@ const SHELL_MAT = (() => {
     m.color = new Color(PALETTE.ivory);
   }
   return m;
-})();
+}
+/** One shell paint per stage, made when first needed (most visits only ever use one). */
+const shells = new Map<string, MeshStandardMaterial>();
+function shellFor(stage: number): MeshStandardMaterial {
+  // Hatched (3) is the plain shell again: its halves lie open, the story has moved on to Cluby.
+  const crack = stage === 1 || stage === 2;
+  const glow = stage === 2;
+  const key = `${crack}|${glow}`;
+  let m = shells.get(key);
+  if (!m) {
+    m = shellMaterial(crack, glow);
+    shells.set(key, m);
+  }
+  return m;
+}
 
 /** Warm radial glow (canvas, painted once), added softly over the timber. */
 const GLOW = (() => {
@@ -281,9 +328,13 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
   const { x, z, w } = PROPS.eggPlinth;
   const egg = useRef<Group>(null);
   const cap = useRef<Group>(null);
+  // The shell shows what the learner's own progress has done to it.
+  const [stage, setStage] = useState(story.current.stage);
+  const shell = shellFor(stage);
 
   useFrame(() => {
     const s = story.current;
+    if (s.stage !== stage) setStage(s.stage);
     const now = performance.now();
     let rock = 0;
     let capOff = 0; // 0 = on, 1 = lying beside the nest
@@ -302,6 +353,8 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
     // A slow warm breath of light round the nest. The egg itself stays
     // perfectly still while dormant (canon); only the light lives.
     GLOW.opacity = REDUCED_MOTION ? 0.6 : 0.56 + 0.1 * Math.sin(now / 1500);
+    // A glowing egg (first sentence) lights its nest a little more.
+    if (s.stage === 2 && s.egg !== "open") GLOW.opacity += 0.18;
     // Inspected: the warm light answers — brighter for a moment, then calm.
     const pulse = Math.max(0, Math.min(1, (s.eggPulseUntil - now) / 1400));
     GLOW.opacity += 0.4 * pulse;
@@ -353,10 +406,10 @@ export default function CloverEgg({ story }: { story: MutableRefObject<StoryStat
       <group ref={egg} position={[0, PLINTH_H + 0.05, 0]}>
         <group position={[0, EGG_Y - PLINTH_H - 0.05, 0]}>
           {/* Lower shell */}
-          <mesh castShadow geometry={SHELL.lower} material={SHELL_MAT} />
+          <mesh castShadow geometry={SHELL.lower} material={shell} />
           {/* Cap (the clover is painted on the shell below the break) */}
           <group ref={cap}>
-            <mesh castShadow geometry={SHELL.cap} material={SHELL_MAT} />
+            <mesh castShadow geometry={SHELL.cap} material={shell} />
           </group>
         </group>
       </group>

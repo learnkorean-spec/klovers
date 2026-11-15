@@ -63,7 +63,7 @@ import {
   journeyStops, eggStatus, WORD_OF_DAY_ACTIVITY, type BrandIconName,
 } from "@/lib/dashboardProgress";
 import { dashEvent, markMissionCompletedOnce } from "@/lib/dashboardEvents";
-import { markClubyAwake } from "@/lib/clubyAwake";
+import { markClubyAwake, markEggStage } from "@/lib/clubyAwake";
 import { studentCalendarDaysUntil } from "@/lib/studentDashboardDate";
 import { getUserTimezone } from "@/lib/viewerTimezone";
 import { convertDateTimeToTimezone } from "@/lib/admin-utils";
@@ -580,7 +580,10 @@ const StudentDashboard = () => {
   const clubyAwake = egg?.stage === 3;
   // Lets celebrations outside the dashboard (XpAnimation) show Cluby only after he hatched.
   useEffect(() => {
-    if (egg) markClubyAwake(egg.stage === 3);
+    if (egg) {
+      markClubyAwake(egg.stage === 3);
+      markEggStage(egg.stage);
+    }
   }, [egg]);
   const [claimingWord, setClaimingWord] = useState(false);
   const [insightsOpen, setInsightsOpen] = useState(false);

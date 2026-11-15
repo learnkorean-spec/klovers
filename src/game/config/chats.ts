@@ -23,13 +23,21 @@ import type { WorldLang } from "./copy";
  * 5 what real data: the learner's course level opens the market (access.ts);
  * 6 what changes: the person becomes a friend, greeted by name afterwards.
  */
-export type ChatId = "jihoon" | "park" | "kim" | "yuna" | "seoyeon" | "taeyang" | "hana";
+export type FriendId = "jihoon" | "park" | "kim" | "yuna" | "seoyeon" | "taeyang" | "hana";
+/**
+ * People of the later worlds who are not named in the canon (a student in the
+ * café, the stall cook, the station attendant, two elders): the same kind of
+ * conversation, opened by the line they already had, so each world on the
+ * road has someone to talk with at its own level. They stay unnamed.
+ */
+export type RoleChatId = "cafe" | "cook" | "attendant" | "grandpa" | "grandma";
+export type ChatId = FriendId | RoleChatId;
 
 /** In the order Book 1's classes introduce them. */
-export const CHAT_ORDER: readonly ChatId[] = ["jihoon", "park", "kim", "yuna", "seoyeon", "taeyang", "hana"];
+export const CHAT_ORDER: readonly FriendId[] = ["jihoon", "park", "kim", "yuna", "seoyeon", "taeyang", "hana"];
 
 /** Who speaks: the person in config/npcs.ts and their id in the canon. */
-export const CHAT_PEOPLE: Record<ChatId, { npc: string; canon: string; nameKo: string }> = {
+export const CHAT_PEOPLE: Record<FriendId, { npc: string; canon: string; nameKo: string }> = {
   jihoon: { npc: "m-jihoon", canon: "classmate-jihoon", nameKo: "지훈" },
   park: { npc: "m-park", canon: "market-vendor-park", nameKo: "박 아주머니" },
   kim: { npc: "m-kim", canon: "info-desk-clerk-kim", nameKo: "김 선생님" },
@@ -38,6 +46,21 @@ export const CHAT_PEOPLE: Record<ChatId, { npc: string; canon: string; nameKo: s
   taeyang: { npc: "m-taeyang", canon: "new-friend-taeyang", nameKo: "태양" },
   hana: { npc: "m-hana", canon: "neighbor-hana", nameKo: "하나" },
 };
+
+/** The unnamed people: who speaks, and the recording of their opening line (systems/voice.ts). */
+export const ROLE_CHATS: Record<RoleChatId, { npc: string; voice: "cafeA" | "cook" | "attendant" | "grandpa" | "nalssi"; male: boolean }> = {
+  cafe: { npc: "k-table-1", voice: "cafeA", male: true },
+  cook: { npc: "c-cook", voice: "cook", male: false },
+  attendant: { npc: "s-attendant", voice: "attendant", male: true },
+  grandpa: { npc: "a-grandpa", voice: "grandpa", male: true },
+  grandma: { npc: "n-grandma", voice: "nalssi", male: false },
+};
+export const ROLE_CHAT_ORDER = Object.keys(ROLE_CHATS) as RoleChatId[];
+export const isFriend = (id: ChatId): id is FriendId => id in CHAT_PEOPLE;
+/** The person who speaks in a conversation. */
+export const chatNpc = (id: ChatId): string => (isFriend(id) ? CHAT_PEOPLE[id].npc : ROLE_CHATS[id].npc);
+const MEN: readonly ChatId[] = ["jihoon", "kim", "taeyang"];
+export const chatIsMan = (id: ChatId): boolean => (isFriend(id) ? MEN.includes(id) : ROLE_CHATS[id].male);
 
 /** What is saved in worldState.met once a conversation is finished. */
 export const chatMetKey = (id: ChatId): string => `chat-${id}`;
@@ -338,6 +361,196 @@ const EN: Record<ChatId, Chat> = {
     ],
     closing: { ko: "아, 미안해요! 천천히 말할게요. 반가워요!", gloss: "Oh, sorry! I'll speak slowly. Nice to meet you!" },
   },
+  cafe: {
+    name: "Student",
+    role: "Student",
+    focus: "Likes and drinks: 좋아해요, 마셔요 (not 먹어요), and 에서 왔어요 for where you are from.",
+    turns: [
+      {
+        ko: "커피 좋아해요?",
+        gloss: "Do you like coffee?",
+        ask: "You do.",
+        options: [
+          { ko: "네, 좋아해요.", right: true, feedback: "Yes: 네, 좋아해요. 좋아해요 = (I) like it." },
+          { ko: "아니요, 좋아해요.", right: false, feedback: "아니요 means no, and then it says you like it. Yes is 네: 네, 좋아해요." },
+          { ko: "네, 커피예요.", right: false, feedback: "That says \"yes, it is coffee\". To say you like it: 네, 좋아해요." },
+        ],
+      },
+      {
+        ko: "지금 뭐 마셔요?",
+        gloss: "What are you drinking now?",
+        ask: "You have a green tea (녹차).",
+        options: [
+          { ko: "녹차를 먹어요.", right: false, feedback: "먹어요 is for food. Drinks take 마셔요: 녹차를 마셔요." },
+          { ko: "녹차가 마셔요.", right: false, feedback: "가 would make the tea the one drinking! What you drink takes 를: 녹차를 마셔요." },
+          { ko: "녹차를 마셔요.", right: true, feedback: "Yes: 녹차를 마셔요. 를 marks what you drink; 마셔요 = drink." },
+        ],
+      },
+      {
+        ko: "어느 나라에서 왔어요?",
+        gloss: "Which country are you from?",
+        ask: "You are from Egypt (이집트).",
+        options: [
+          { ko: "이집트에 왔어요.", right: false, feedback: "에 왔어요 says \"I came to Egypt\". Where you come from takes 에서: 이집트에서 왔어요." },
+          { ko: "이집트에서 왔어요.", right: true, feedback: "Yes: 이집트에서 왔어요. Country + 에서 왔어요 = I am from…" },
+          { ko: "이집트에서 가요.", right: false, feedback: "That says \"I am going from Egypt\". For where you are from: 이집트에서 왔어요." },
+        ],
+      },
+    ],
+    closing: { ko: "와, 반가워요! 한국어 잘하네요.", gloss: "Wow, nice to meet you! Your Korean is good." },
+  },
+  cook: {
+    name: "Stall cook",
+    role: "Stall cook",
+    focus: "At the table: 잘 먹겠습니다 before, 맛있어요 / 매워요 while eating, 배불러요 when you have had enough.",
+    turns: [
+      {
+        ko: "맛있게 드세요!",
+        gloss: "Enjoy your food!",
+        ask: "The dish is in front of you. What do you say before eating?",
+        options: [
+          { ko: "잘 먹었습니다.", right: false, feedback: "잘 먹었습니다 is said after the meal. Before it: 잘 먹겠습니다!" },
+          { ko: "잘 먹겠습니다!", right: true, feedback: "Yes: 잘 먹겠습니다! \"I will eat well\": thanks to whoever made the food." },
+          { ko: "맛있게 드세요!", right: false, feedback: "That is what the cook says to you. Your answer: 잘 먹겠습니다!" },
+        ],
+      },
+      {
+        ko: "맛이 어때요?",
+        gloss: "How does it taste?",
+        ask: "It is a little spicy, but you like it.",
+        options: [
+          { ko: "조금 매워요. 하지만 맛있어요!", right: true, feedback: "Yes: 매워요 = spicy, 하지만 = but, 맛있어요 = delicious." },
+          { ko: "조금 매워요. 그래서 맛없어요.", right: false, feedback: "그래서 맛없어요 says \"so it's not tasty\": hard on a cook! You like it: 조금 매워요. 하지만 맛있어요!" },
+          { ko: "조금 추워요.", right: false, feedback: "추워요 is cold weather. Spicy is 매워요: 조금 매워요. 하지만 맛있어요!" },
+        ],
+      },
+      {
+        ko: "더 드릴까요?",
+        gloss: "Shall I give you some more?",
+        ask: "You are full. Refuse politely.",
+        options: [
+          { ko: "네, 배불러요.", right: false, feedback: "네 accepts more, then says you are full. To refuse kindly: 아니요, 괜찮아요. 배불러요." },
+          { ko: "아니요, 배고파요.", right: false, feedback: "배고파요 means \"I'm hungry\": then you would want more! Full is 배불러요: 아니요, 괜찮아요. 배불러요." },
+          { ko: "아니요, 괜찮아요. 배불러요.", right: true, feedback: "Yes: 괜찮아요 = no thank you, I'm fine; 배불러요 = I'm full." },
+        ],
+      },
+    ],
+    closing: { ko: "네, 또 오세요!", gloss: "All right, come again!" },
+  },
+  attendant: {
+    name: "Station attendant",
+    role: "Station attendant",
+    focus: "The subway: 까지 for how far, 이호선 for Line 2, 세 정거장 for three stops, 있어요 / 없어요.",
+    turns: [
+      {
+        ko: "어디까지 가세요?",
+        gloss: "How far are you going?",
+        ask: "You are going to Seoul Station (서울역).",
+        options: [
+          { ko: "서울역이에요.", right: false, feedback: "That says \"it is Seoul Station\". How far you go takes 까지: 서울역까지요." },
+          { ko: "서울역에서요.", right: false, feedback: "에서 is from: \"from Seoul Station\". As far as: 서울역까지요." },
+          { ko: "서울역까지요.", right: true, feedback: "Yes: 서울역까지요. 까지 = as far as; the short 요 keeps it polite." },
+        ],
+      },
+      {
+        ko: "이호선을 타세요. 세 정거장이에요.",
+        gloss: "…",
+        ask: "How many stops is it?",
+        options: [
+          { ko: "2", right: false, feedback: "이 (2) is the line: 이호선 = Line 2. The stops are 세 정거장: three." },
+          { ko: "3", right: true, feedback: "Yes: 세 정거장 = three stops, counted 한, 두, 세. Line names use 일, 이, 삼: 이호선 = Line 2." },
+          { ko: "4", right: false, feedback: "Four would be 네 정거장. He said 세 정거장: three." },
+        ],
+      },
+      {
+        ko: "교통카드 있어요?",
+        gloss: "Do you have a transit card?",
+        ask: "You do not.",
+        options: [
+          { ko: "아니요, 없어요.", right: true, feedback: "Yes: 없어요 = I don't have one. 있어요 = I have one." },
+          { ko: "아니요, 있어요.", right: false, feedback: "아니요 says no, 있어요 says you have one. You don't: 아니요, 없어요." },
+          { ko: "네, 없어요.", right: false, feedback: "네 says yes, 없어요 says you have none. To a plain question, answer: 아니요, 없어요." },
+        ],
+      },
+    ],
+    closing: { ko: "저기에서 표를 사세요. 안녕히 가세요!", gloss: "Buy a ticket over there. Goodbye!" },
+  },
+  grandpa: {
+    name: "Grandfather on the bench",
+    role: "Grandfather on the bench",
+    focus: "Small talk with an elder: 에서 왔어요, 제일 좋아해요, and the modest answer to praise.",
+    turns: [
+      {
+        ko: "어디서 왔어요?",
+        gloss: "Where are you from?",
+        ask: "You are from Egypt (이집트).",
+        options: [
+          { ko: "이집트에서 왔어요.", right: true, feedback: "Yes: 이집트에서 왔어요. Country + 에서 왔어요." },
+          { ko: "이집트에 왔어요.", right: false, feedback: "에 왔어요 says \"I came to Egypt\". From takes 에서: 이집트에서 왔어요." },
+          { ko: "이집트에 가요.", right: false, feedback: "That says \"I am going to Egypt\". Where you are from: 이집트에서 왔어요." },
+        ],
+      },
+      {
+        ko: "한국 음식 좋아해요?",
+        gloss: "Do you like Korean food?",
+        ask: "You like kimchi stew (김치찌개) best.",
+        options: [
+          { ko: "네, 김치찌개를 제일 싫어해요.", right: false, feedback: "싫어해요 means dislike! Like is 좋아해요: 네, 김치찌개를 제일 좋아해요." },
+          { ko: "네, 김치찌개를 제일 좋아해요.", right: true, feedback: "Yes: 제일 = the most. 제일 좋아해요 = I like it best." },
+          { ko: "네, 김치찌개가 제일 비싸요.", right: false, feedback: "비싸요 means expensive: \"kimchi stew is the most expensive\". You like it best: 네, 김치찌개를 제일 좋아해요." },
+        ],
+      },
+      {
+        ko: "한국말 잘하네요!",
+        gloss: "Your Korean is good!",
+        ask: "He praises you. Answer the modest way Koreans do.",
+        options: [
+          { ko: "네, 잘해요.", right: false, feedback: "\"Yes, I'm good at it\" sounds boastful in Korean. The modest answer: 아니에요, 아직 멀었어요." },
+          { ko: "네, 잘했어요.", right: false, feedback: "잘했어요 is \"well done\": you would be praising him. The modest answer: 아니에요, 아직 멀었어요." },
+          { ko: "아니에요, 아직 멀었어요.", right: true, feedback: "Yes: 아니에요, 아직 멀었어요. \"Not at all, I still have far to go\": the usual modest answer to praise." },
+        ],
+      },
+    ],
+    closing: { ko: "하하, 열심히 하세요!", gloss: "Ha ha, keep working at it!" },
+  },
+  grandma: {
+    name: "Grandmother on the bench",
+    role: "Grandmother on the bench",
+    focus: "Sharing what you notice: -네요, 보여요 (can be seen) and 하고 같이 (together with).",
+    turns: [
+      {
+        ko: "날씨가 정말 좋네요!",
+        gloss: "What lovely weather!",
+        ask: "Agree with her.",
+        options: [
+          { ko: "네, 정말 좋아해요.", right: false, feedback: "좋아해요 is liking something. For the weather being fine, echo her: 네, 정말 좋네요!" },
+          { ko: "네, 정말 좋네요!", right: true, feedback: "Yes: 네, 정말 좋네요! -네요 shares what you notice; echoing it is the friendly answer." },
+          { ko: "아니요, 좋네요.", right: false, feedback: "아니요 disagrees, then says it is fine. To agree: 네, 정말 좋네요!" },
+        ],
+      },
+      {
+        ko: "여기서 서울이 다 보이지요?",
+        gloss: "You can see all of Seoul from here, can't you?",
+        ask: "You can, and it is beautiful (아름다워요).",
+        options: [
+          { ko: "네, 다 봐요.", right: false, feedback: "봐요 is looking on purpose. What can be seen is 보여요: 네, 다 보여요. 정말 아름다워요." },
+          { ko: "네, 안 보여요.", right: false, feedback: "안 보여요 means it can't be seen. It can: 네, 다 보여요. 정말 아름다워요." },
+          { ko: "네, 다 보여요. 정말 아름다워요.", right: true, feedback: "Yes: 보여요 = it can be seen; 아름다워요 = it is beautiful." },
+        ],
+      },
+      {
+        ko: "혼자 왔어요?",
+        gloss: "Did you come alone?",
+        ask: "No: you came with a friend (친구).",
+        options: [
+          { ko: "아니요, 친구하고 같이 왔어요.", right: true, feedback: "Yes: 친구하고 같이 = together with a friend. 하고 = with." },
+          { ko: "아니요, 친구를 같이 왔어요.", right: false, feedback: "를 marks what an action is done to. With someone is 하고: 아니요, 친구하고 같이 왔어요." },
+          { ko: "네, 친구하고 같이 왔어요.", right: false, feedback: "네 says you came alone, then says you came with a friend. Say: 아니요, 친구하고 같이 왔어요." },
+        ],
+      },
+    ],
+    closing: { ko: "좋겠네요. 좋은 구경 하세요!", gloss: "How nice. Enjoy the view!" },
+  },
 };
 
 const AR: Record<ChatId, Chat> = {
@@ -606,6 +819,196 @@ const AR: Record<ChatId, Chat> = {
       },
     ],
     closing: { ko: "아, 미안해요! 천천히 말할게요. 반가워요!", gloss: "آه، آسفة! سأتكلم ببطء. سعدتُ بلقائك!" },
+  },
+  cafe: {
+    name: "طالب",
+    role: "طالب",
+    focus: "الإعجاب والمشروبات: 좋아해요، و마셔요 (وليس 먹어요)، و에서 왔어요 لبلد القدوم.",
+    turns: [
+      {
+        ko: "커피 좋아해요?",
+        gloss: "هل تحب القهوة؟",
+        ask: "نعم.",
+        options: [
+          { ko: "네, 좋아해요.", right: true, feedback: "نعم: 네, 좋아해요. 좋아해요 = أحبّها." },
+          { ko: "아니요, 좋아해요.", right: false, feedback: "아니요 تعني «لا»، ثم تقول الجملة إنك تحبها. «نعم» هي 네: 네, 좋아해요." },
+          { ko: "네, 커피예요.", right: false, feedback: "هذه تقول «نعم، إنها قهوة». للتعبير عن الإعجاب: 네, 좋아해요." },
+        ],
+      },
+      {
+        ko: "지금 뭐 마셔요?",
+        gloss: "ماذا تشرب الآن؟",
+        ask: "المشروب شاي أخضر (녹차).",
+        options: [
+          { ko: "녹차를 먹어요.", right: false, feedback: "먹어요 للطعام. المشروبات تأخذ 마셔요: 녹차를 마셔요." },
+          { ko: "녹차가 마셔요.", right: false, feedback: "가 تجعل الشاي هو الذي يشرب! ما يُشرب يأخذ 를: 녹차를 마셔요." },
+          { ko: "녹차를 마셔요.", right: true, feedback: "نعم: 녹차를 마셔요. 를 لما يُشرب، و마셔요 = أشرب." },
+        ],
+      },
+      {
+        ko: "어느 나라에서 왔어요?",
+        gloss: "من أي بلد أنت؟",
+        ask: "من مصر (이집트).",
+        options: [
+          { ko: "이집트에 왔어요.", right: false, feedback: "에 왔어요 تقول «جئت إلى مصر». بلد القدوم يأخذ 에서: 이집트에서 왔어요." },
+          { ko: "이집트에서 왔어요.", right: true, feedback: "نعم: 이집트에서 왔어요. اسم البلد + 에서 왔어요 = أنا من…" },
+          { ko: "이집트에서 가요.", right: false, feedback: "هذه تقول «أذهب من مصر». لبلد القدوم: 이집트에서 왔어요." },
+        ],
+      },
+    ],
+    closing: { ko: "와, 반가워요! 한국어 잘하네요.", gloss: "واو، تشرّفنا! كوريّتك جيدة." },
+  },
+  cook: {
+    name: "طبّاخة الكشك",
+    role: "طبّاخة الكشك",
+    focus: "على المائدة: 잘 먹겠습니다 قبل الأكل، و맛있어요 / 매워요 أثناءه، و배불러요 عند الشبع.",
+    turns: [
+      {
+        ko: "맛있게 드세요!",
+        gloss: "بالهناء والشفاء!",
+        ask: "الطبق أمامك. ماذا يُقال قبل الأكل؟",
+        options: [
+          { ko: "잘 먹었습니다.", right: false, feedback: "잘 먹었습니다 تُقال بعد الوجبة. قبلها: 잘 먹겠습니다!" },
+          { ko: "잘 먹겠습니다!", right: true, feedback: "نعم: 잘 먹겠습니다! «سآكل بامتنان»: شكر لمن أعدّ الطعام." },
+          { ko: "맛있게 드세요!", right: false, feedback: "هذا ما تقوله الطبّاخة لك. والردّ: 잘 먹겠습니다!" },
+        ],
+      },
+      {
+        ko: "맛이 어때요?",
+        gloss: "كيف الطعم؟",
+        ask: "حارّ قليلًا، لكنه يعجبك.",
+        options: [
+          { ko: "조금 매워요. 하지만 맛있어요!", right: true, feedback: "نعم: 매워요 = حارّ، 하지만 = لكن، 맛있어요 = لذيذ." },
+          { ko: "조금 매워요. 그래서 맛없어요.", right: false, feedback: "그래서 맛없어요 تقول «لذلك ليس لذيذًا»: قاسية على طبّاخة! الطعم يعجبك: 조금 매워요. 하지만 맛있어요!" },
+          { ko: "조금 추워요.", right: false, feedback: "추워요 لبرودة الطقس. الحارّ هو 매워요: 조금 매워요. 하지만 맛있어요!" },
+        ],
+      },
+      {
+        ko: "더 드릴까요?",
+        gloss: "هل أضيف المزيد؟",
+        ask: "شبعت. الرفض بلطف.",
+        options: [
+          { ko: "네, 배불러요.", right: false, feedback: "네 تقبل المزيد، ثم تقول إنك شبعت. للرفض بلطف: 아니요, 괜찮아요. 배불러요." },
+          { ko: "아니요, 배고파요.", right: false, feedback: "배고파요 تعني «أنا جائع»: إذن تريد المزيد! الشبع هو 배불러요: 아니요, 괜찮아요. 배불러요." },
+          { ko: "아니요, 괜찮아요. 배불러요.", right: true, feedback: "نعم: 괜찮아요 = لا شكرًا، و배불러요 = شبعت." },
+        ],
+      },
+    ],
+    closing: { ko: "네, 또 오세요!", gloss: "حسنًا، ننتظر زيارتكم!" },
+  },
+  attendant: {
+    name: "موظف المحطة",
+    role: "موظف المحطة",
+    focus: "المترو: 까지 لنهاية الرحلة، و이호선 للخط الثاني، و세 정거장 لثلاث محطات، و있어요 / 없어요.",
+    turns: [
+      {
+        ko: "어디까지 가세요?",
+        gloss: "إلى أين الوجهة؟",
+        ask: "الوجهة محطة سيول (서울역).",
+        options: [
+          { ko: "서울역이에요.", right: false, feedback: "هذه تقول «إنها محطة سيول». نهاية الرحلة تأخذ 까지: 서울역까지요." },
+          { ko: "서울역에서요.", right: false, feedback: "에서 تعني «من»: «من محطة سيول». حتى المحطة: 서울역까지요." },
+          { ko: "서울역까지요.", right: true, feedback: "نعم: 서울역까지요. 까지 = حتى، و요 القصيرة تحفظ التهذيب." },
+        ],
+      },
+      {
+        ko: "이호선을 타세요. 세 정거장이에요.",
+        gloss: "…",
+        ask: "كم محطة؟",
+        options: [
+          { ko: "2", right: false, feedback: "이 (2) رقم الخط: 이호선 = الخط الثاني. المحطات 세 정거장: ثلاث." },
+          { ko: "3", right: true, feedback: "نعم: 세 정거장 = ثلاث محطات، تُعدّ 한، 두، 세. وأسماء الخطوط تستعمل 일، 이، 삼: 이호선 = الخط الثاني." },
+          { ko: "4", right: false, feedback: "أربع محطات هي 네 정거장. قال 세 정거장: ثلاث." },
+        ],
+      },
+      {
+        ko: "교통카드 있어요?",
+        gloss: "هل معك بطاقة مواصلات؟",
+        ask: "لا.",
+        options: [
+          { ko: "아니요, 없어요.", right: true, feedback: "نعم: 없어요 = ليست معي. و있어요 = معي." },
+          { ko: "아니요, 있어요.", right: false, feedback: "아니요 تقول «لا»، و있어요 تقول إنها معك. ليست معك: 아니요, 없어요." },
+          { ko: "네, 없어요.", right: false, feedback: "네 تقول «نعم»، و없어요 تقول إنها ليست معك. الردّ على سؤال مباشر: 아니요, 없어요." },
+        ],
+      },
+    ],
+    closing: { ko: "저기에서 표를 사세요. 안녕히 가세요!", gloss: "التذاكر تُشترى من هناك. مع السلامة!" },
+  },
+  grandpa: {
+    name: "الجدّ على المقعد",
+    role: "الجدّ على المقعد",
+    focus: "حديث قصير مع كبير السن: 에서 왔어요، و제일 좋아해요، والردّ المتواضع على المديح.",
+    turns: [
+      {
+        ko: "어디서 왔어요?",
+        gloss: "من أين أنت؟",
+        ask: "من مصر (이집트).",
+        options: [
+          { ko: "이집트에서 왔어요.", right: true, feedback: "نعم: 이집트에서 왔어요. اسم البلد + 에서 왔어요." },
+          { ko: "이집트에 왔어요.", right: false, feedback: "에 왔어요 تقول «جئت إلى مصر». «من» تأخذ 에서: 이집트에서 왔어요." },
+          { ko: "이집트에 가요.", right: false, feedback: "هذه تقول «أذهب إلى مصر». لبلد القدوم: 이집트에서 왔어요." },
+        ],
+      },
+      {
+        ko: "한국 음식 좋아해요?",
+        gloss: "هل تحب الطعام الكوري؟",
+        ask: "أكثر ما تحبه يخنة الكيمتشي (김치찌개).",
+        options: [
+          { ko: "네, 김치찌개를 제일 싫어해요.", right: false, feedback: "싫어해요 تعني «أكره»! «أحب» هي 좋아해요: 네, 김치찌개를 제일 좋아해요." },
+          { ko: "네, 김치찌개를 제일 좋아해요.", right: true, feedback: "نعم: 제일 = الأكثر. 제일 좋아해요 = أحبه أكثر من غيره." },
+          { ko: "네, 김치찌개가 제일 비싸요.", right: false, feedback: "비싸요 تعني «غالٍ»: «يخنة الكيمتشي هي الأغلى». المقصود أنها الأحب: 네, 김치찌개를 제일 좋아해요." },
+        ],
+      },
+      {
+        ko: "한국말 잘하네요!",
+        gloss: "كوريّتك جيدة!",
+        ask: "يمدحك. الردّ بالتواضع المعتاد عند الكوريين.",
+        options: [
+          { ko: "네, 잘해요.", right: false, feedback: "«نعم، أنا جيد فيها» تبدو تفاخرًا بالكورية. الردّ المتواضع: 아니에요, 아직 멀었어요." },
+          { ko: "네, 잘했어요.", right: false, feedback: "잘했어요 تعني «أحسنت»: كأنك تمدحه هو. الردّ المتواضع: 아니에요, 아직 멀었어요." },
+          { ko: "아니에요, 아직 멀었어요.", right: true, feedback: "نعم: 아니에요, 아직 멀었어요. «لا أبدًا، ما زال الطريق طويلًا»: الردّ المتواضع المعتاد على المديح." },
+        ],
+      },
+    ],
+    closing: { ko: "하하, 열심히 하세요!", gloss: "ها ها، بالتوفيق والاجتهاد!" },
+  },
+  grandma: {
+    name: "الجدّة على المقعد",
+    role: "الجدّة على المقعد",
+    focus: "مشاركة الملاحظة: -네요، و보여요 (يُرى)، و하고 같이 (مع).",
+    turns: [
+      {
+        ko: "날씨가 정말 좋네요!",
+        gloss: "ما أجمل الطقس!",
+        ask: "الموافقة على كلامها.",
+        options: [
+          { ko: "네, 정말 좋아해요.", right: false, feedback: "좋아해요 للإعجاب بشيء. لجمال الطقس يُردَّد كلامها: 네, 정말 좋네요!" },
+          { ko: "네, 정말 좋네요!", right: true, feedback: "نعم: 네, 정말 좋네요! -네요 تشارك ما يُلاحَظ، وترديدها هو الردّ الودود." },
+          { ko: "아니요, 좋네요.", right: false, feedback: "아니요 تعترض، ثم تقول إن الطقس جميل. للموافقة: 네, 정말 좋네요!" },
+        ],
+      },
+      {
+        ko: "여기서 서울이 다 보이지요?",
+        gloss: "من هنا تُرى سيول كلها، أليس كذلك؟",
+        ask: "نعم، والمنظر جميل (아름다워요).",
+        options: [
+          { ko: "네, 다 봐요.", right: false, feedback: "봐요 للنظر المقصود. ما يُرى هو 보여요: 네, 다 보여요. 정말 아름다워요." },
+          { ko: "네, 안 보여요.", right: false, feedback: "안 보여요 تعني «لا يُرى». وهي تُرى: 네, 다 보여요. 정말 아름다워요." },
+          { ko: "네, 다 보여요. 정말 아름다워요.", right: true, feedback: "نعم: 보여요 = يُرى، و아름다워요 = جميل." },
+        ],
+      },
+      {
+        ko: "혼자 왔어요?",
+        gloss: "هل جئت وحدك؟",
+        ask: "لا: مع صديق (친구).",
+        options: [
+          { ko: "아니요, 친구하고 같이 왔어요.", right: true, feedback: "نعم: 친구하고 같이 = مع صديق. 하고 = مع." },
+          { ko: "아니요, 친구를 같이 왔어요.", right: false, feedback: "를 لما يقع عليه الفعل. «مع» هي 하고: 아니요, 친구하고 같이 왔어요." },
+          { ko: "네, 친구하고 같이 왔어요.", right: false, feedback: "네 تقول إنك جئت وحدك، ثم تقول إنك مع صديق. الصحيح: 아니요, 친구하고 같이 왔어요." },
+        ],
+      },
+    ],
+    closing: { ko: "좋겠네요. 좋은 구경 하세요!", gloss: "ما أجمل ذلك. مشاهدة ممتعة!" },
   },
 };
 

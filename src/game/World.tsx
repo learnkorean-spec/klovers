@@ -122,6 +122,8 @@ export interface WorldProps {
   access: WorldAccess;
   /** Cluby has really hatched (dashboard egg stage), or an admin preview. */
   clubyAwake: boolean;
+  /** The egg's real stage from the learner's progress (0–3); shown on the egg, never changed here. */
+  eggStage?: 0 | 1 | 2 | 3;
   /** What this browser has already seen in the world. */
   saved: WorldState;
   onSave?: (next: WorldState) => void;
@@ -208,7 +210,10 @@ export default function World(props: WorldProps) {
   const player = useRef(createPlayerState());
   const camera = useRef(createCameraState());
   const hatchedHere = saved.hatchSeen && clubyAwake;
-  const story = useRef<StoryState>(createStoryState(hatchedHere));
+  const story = useRef<StoryState>(createStoryState(hatchedHere, props.eggStage ?? 0));
+  useEffect(() => {
+    story.current.stage = props.eggStage ?? 0;
+  }, [props.eggStage]);
   const first = props.startRoom && props.startRoom !== "courtyard" ? props.startRoom : "courtyard";
   const [roomId, setRoomId] = useState<RoomId>(first);
   const roomRef = useRef(roomId);

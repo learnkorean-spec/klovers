@@ -16,6 +16,31 @@
  * authority. scripts/lib/games-free-set.test.mjs guards the gate itself.
  */
 const CLUBY_AWAKE_KEY = "kl_cluby_awake";
+const EGG_STAGE_KEY = "kl_egg_stage";
+
+/**
+ * The egg's real stage (lib/dashboardProgress.ts → eggStatus: 0 dormant,
+ * 1 cracked by a first word, 2 glowing after a first sentence, 3 hatched),
+ * recorded per browser by the dashboard so KLOVERS World can show the same
+ * egg the dashboard shows. Like the flag below: nothing is sent anywhere, and
+ * blocked storage simply means the egg looks dormant.
+ */
+export function markEggStage(stage: number): void {
+  try {
+    localStorage.setItem(EGG_STAGE_KEY, String(Math.max(0, Math.min(3, Math.round(stage)))));
+  } catch {
+    // Storage unavailable — nothing to do.
+  }
+}
+
+export function eggStageSeen(): 0 | 1 | 2 | 3 {
+  try {
+    const n = Number(localStorage.getItem(EGG_STAGE_KEY));
+    return n === 1 || n === 2 || n === 3 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
 
 export function markClubyAwake(awake: boolean): void {
   try {

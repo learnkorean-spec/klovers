@@ -12,6 +12,12 @@ export type ClubyMode = "hidden" | "emerge" | "follow";
 
 export interface StoryState {
   egg: EggPhase;
+  /**
+   * The egg's real stage from the learner's own progress (lib/clubyAwake
+   * eggStageSeen): 1 shows the crack a first word made, 2 the soft yellow
+   * glow of a first sentence. Never set by anything done in the world.
+   */
+  stage: 0 | 1 | 2 | 3;
   /** performance.now() when the hatch started. */
   eggT0: number;
   /** Inspected: the warm light round the egg brightens until then (the egg itself stays still). */
@@ -33,9 +39,10 @@ export interface StoryState {
   };
 }
 
-export function createStoryState(hatched: boolean): StoryState {
+export function createStoryState(hatched: boolean, stage: 0 | 1 | 2 | 3 = 0): StoryState {
   return {
     egg: hatched ? "open" : "dormant",
+    stage,
     eggT0: 0,
     eggPulseUntil: 0,
     cluby: { mode: hatched ? "follow" : "hidden", x: 0, y: 0, z: 0, yaw: 0, t0: 0, look: null, hopUntil: 0, ackUntil: 0 },

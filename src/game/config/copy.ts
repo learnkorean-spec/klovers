@@ -65,6 +65,8 @@ export const WORLD_COPY = {
     egg: {
       title: "The clover egg",
       line: "The shell is warm, though no one has seen it move. It is waiting for a first Korean word.",
+      cracked: "A thin crack runs down the shell. Your first Korean word did that. A first whole sentence will make it glow.",
+      glowing: "The shell glows a soft yellow. Your first sentence did that. A first short conversation will open it.",
       ctaGuest: "Start with Hangul",
       ctaStudent: "Continue learning",
       close: "Back to the courtyard",
@@ -654,6 +656,8 @@ export const WORLD_COPY = {
     egg: {
       title: "بيضة البرسيم",
       line: "القشرة دافئة، ولم يرَها أحد تتحرك. إنها تنتظر أول كلمة كورية.",
+      cracked: "شقّ رفيع يمتد على القشرة. أول كلمة كورية هي التي صنعته. وأول جملة كاملة ستجعلها تتوهّج.",
+      glowing: "القشرة تتوهّج بلون أصفر هادئ. أول جملة هي التي صنعت ذلك. وأول محادثة قصيرة ستفتحها.",
       ctaGuest: "البدء بالهانغول",
       ctaStudent: "متابعة التعلّم",
       close: "العودة إلى الساحة",

@@ -2,11 +2,11 @@ import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, use
 import { useLocation, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
-import { isClubyAwake } from "@/lib/clubyAwake";
+import { eggStageSeen, isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
 import { INTERACTABLES, shopOf, VILLAGE_LETTERS, type Interactable, type QuizId, type ShopId } from "@/game/config/interactions";
 import { chapterDone, chapterOf } from "@/game/config/chapters";
-import { CHATS, CHAT_ORDER, CHAT_PEOPLE, chatMetKey, chatsMet, type ChatId } from "@/game/config/chats";
+import { CHATS, CHAT_ORDER, CHAT_PEOPLE, chatMetKey, chatsMet, isFriend, type ChatId } from "@/game/config/chats";
 import { tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { useWorldAccess } from "@/game/systems/useWorldAccess";
@@ -26,6 +26,9 @@ import { currentObjective, type ObjectiveId } from "@/game/config/objectives";
 import type { DiscoveryKey } from "@/game/config/discoveries";
 // Type-only: erased at build time, so the 3D chunk stays lazy.
 import type { SpeechKey, WorldApi } from "@/game/World";
+
+/** Local development only (never in a build): ?egg=1 or ?egg=2 shows that stage of the egg, to check how it looks. */
+const DEV_EGG: 1 | 2 | null = import.meta.env.DEV && typeof window !== "undefined" ? ((n) => (n === 1 || n === 2 ? n : null))(Number(new URLSearchParams(window.location.search).get("egg"))) : null;
 
 const AVATAR_KEY = "klovers-world-avatar";
 const VIEW_KEY = "klovers-world-view";
@@ -227,6 +230,8 @@ const WorldPage = () => {
   // Cluby is shown only once he has really hatched (the dashboard's egg
   // stage, recorded per browser by lib/clubyAwake) — or in an admin preview.
   const clubyAwake = access.preview || (access.signedIn && isClubyAwake());
+  // The egg shows what the learner's own progress has done to it (a crack, a glow): real data only.
+  const eggStage: 0 | 1 | 2 | 3 = clubyAwake ? 3 : DEV_EGG ?? (access.signedIn ? eggStageSeen() : 0);
 
   const [view, setView] = useState<WorldView>(readView);
   const chooseView = useCallback((v: WorldView) => {
@@ -785,6 +790,7 @@ const WorldPage = () => {
                 avatar={avatar}
                 access={access}
                 clubyAwake={clubyAwake}
+                eggStage={eggStage}
                 saved={saved}
                 onSave={(next) => patch({ hatchSeen: next.hatchSeen, greeted: next.greeted })}
                 onApi={(a) => (api.current = a)}
@@ -1009,6 +1015,7 @@ const WorldPage = () => {
               <InteractionCard
                 lang={lang}
                 kind={card.kind}
+                eggStage={eggStage}
                 notice={card.notice}
                 quiz={card.quiz}
                 chat={card.chat}
@@ -1020,8 +1027,8 @@ const WorldPage = () => {
                   if (!cur.met.includes(key)) {
                     const met = [...cur.met, key];
                     patch({ met });
-                    // Shown once the card is put away (notes never sit under a card).
-                    friendNote.current = { text: `${copy.chatUi.newFriend} · ${CHATS[lang][card.chat].name} · ${copy.chatUi.friends} ${chatsMet(met)}/${CHAT_ORDER.length}`, ko: CHAT_PEOPLE[card.chat].nameKo };
+                    // A new friend is said once the card is put away (notes never sit under a card).
+                    if (isFriend(card.chat)) friendNote.current = { text: `${copy.chatUi.newFriend} · ${CHATS[lang][card.chat].name} · ${copy.chatUi.friends} ${chatsMet(met)}/${CHAT_ORDER.length}`, ko: CHAT_PEOPLE[card.chat].nameKo };
                   }
                   if (card.at) markStep(card.at);
                   if (card.npc) cheer(card.npc, 2200);

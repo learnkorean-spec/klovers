@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { SHOP_ITEMS, SHOP_PRICES, wonInKorean, type QuizId, type ShopId } from "../config/interactions";
-import { playClip, playClips, shopClip, stopVoice } from "../systems/voice";
+import { playClip, playClips, playVoice, shopClip, stopVoice } from "../systems/voice";
 import { canListen, listenFor, type SayResult } from "../systems/sayIt";
 import { speak } from "../systems/reactions";
 import { useSpeech } from "@/hooks/useSpeech";
 import type { NoticeKey } from "../config/rooms";
-import { CHATS, CHAT_PEOPLE, type ChatId } from "../config/chats";
+import { CHATS, CHAT_PEOPLE, ROLE_CHATS, chatIsMan, chatNpc, isFriend, type ChatId } from "../config/chats";
 
 /**
  * The small web-UI cards opened from the 3D world (E / the round button).
@@ -47,10 +47,10 @@ interface Props {
   chat?: ChatId;
   chatMet?: boolean;
   onChatDone?: () => void;
+  /** Egg: its real stage (0 dormant, 1 cracked, 2 glowing). */
+  eggStage?: 0 | 1 | 2 | 3;
 }
 
-/** The men among the named friends (the browser's Korean voice is picked to match). */
-const CHAT_MEN: readonly ChatId[] = ["jihoon", "kim", "taeyang"];
 
 /** Small drawings of the shop's three things, matching the 3D ones. */
 function ShopIcon({ ko, size = 44 }: { ko: string; size?: number }) {
@@ -175,6 +175,7 @@ export default function InteractionCard({
   chat,
   chatMet = false,
   onChatDone,
+  eggStage = 0,
 }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
@@ -183,12 +184,20 @@ export default function InteractionCard({
   const say = (path: string, ko: string) => playClip(path, () => speakKorean(ko));
   const hearLabel = copy.card.listen;
   // Chat: the friend's own voice (no recordings yet: the browser's Korean voice, a man's or a woman's).
-  const { speakKorean: sayFriend } = useSpeech({ rate: 0.85, gender: chat && CHAT_MEN.includes(chat) ? "male" : "female" });
+  const { speakKorean: sayFriend } = useSpeech({ rate: 0.85, gender: chat && chatIsMan(chat) ? "male" : "female" });
   /** The friend says a line: heard, and seen (they gesture in the world while it lasts). */
-  const speakFriend = (ko: string) => {
-    if (chat) speak(CHAT_PEOPLE[chat].npc, ko.length);
-    sayFriend(ko);
+  const speakFriend = (ko: string, opening = false) => {
+    if (chat) speak(chatNpc(chat), ko.length);
+    // An unnamed person's opening line is the one already recorded for them.
+    if (opening && chat && !isFriend(chat)) playVoice(ROLE_CHATS[chat].voice, () => sayFriend(ko));
+    else sayFriend(ko);
   };
+  // The person speaks first, as the card opens (the tap or key that opened it lets the sound play).
+  useEffect(() => {
+    if (kind === "chat" && chat) speakFriend(CHATS[lang][chat].turns[0].ko, true);
+    // Once, on opening.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Chat: saying the fitting reply aloud (where the browser can listen).
   const listenable = useRef(canListen()).current;
   const [saying, setSaying] = useState(false);
@@ -587,7 +596,7 @@ export default function InteractionCard({
         <div className="flex w-full items-center justify-between gap-2">
           <p className="text-start text-sm font-bold">
             {chatMet || chatOver ? c.name : c.role}
-            {(chatMet || chatOver) && (
+            {(chatMet || chatOver) && isFriend(chat) && (
               <span lang="ko" dir="ltr" className="mx-2 font-ko text-charcoal/70">
                 {CHAT_PEOPLE[chat].nameKo}
               </span>
@@ -599,7 +608,7 @@ export default function InteractionCard({
         </div>
         <div className="w-full rounded-2xl bg-white p-3 text-start">
           <div className="flex items-start gap-2" dir="ltr">
-            <Hear label={hearLabel} onPlay={() => speakFriend(line.ko)} />
+            <Hear label={hearLabel} onPlay={() => speakFriend(line.ko, !chatOver && turn === 0)} />
             <p lang="ko" className="font-ko text-lg font-bold leading-snug">
               {line.ko}
             </p>
@@ -648,7 +657,7 @@ export default function InteractionCard({
                   setTurn(0);
                   setPicked(null);
                   setChatOver(false);
-                  speakFriend(c.turns[0].ko);
+                  speakFriend(c.turns[0].ko, true);
                 }}
               >
                 {ui.again}
@@ -725,7 +734,8 @@ export default function InteractionCard({
     body = (
       <>
         <h2 className="font-display text-xl font-bold">{c.title}</h2>
-        <p className="text-sm text-charcoal/80">{c.line}</p>
+        {/* What the learner's own progress has done to the egg so far, and what comes next. */}
+        <p className="text-sm text-charcoal/80">{eggStage === 2 ? c.glowing : eggStage === 1 ? c.cracked : c.line}</p>
         <div className="flex flex-wrap justify-center gap-2 pt-1">
           <button ref={first} type="button" className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal`} onClick={() => onGo(signedIn ? "/dashboard" : "/hangul-starter")}>
             {signedIn ? c.ctaStudent : c.ctaGuest}

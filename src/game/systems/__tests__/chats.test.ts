@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CHATS, CHAT_ORDER, CHAT_PEOPLE, chatMetKey, chatsMet } from "../../config/chats";
+import { CHATS, CHAT_ORDER, CHAT_PEOPLE, ROLE_CHATS, ROLE_CHAT_ORDER, chatMetKey, chatNpc, chatsMet } from "../../config/chats";
+import { WORLD_COPY } from "../../config/copy";
 import { INTERACTABLES } from "../../config/interactions";
 import { MISSIONS, missionSteps } from "../../config/missions";
 import { NPCS } from "../../config/npcs";
@@ -45,8 +46,26 @@ describe("conversations with the named Korean friends", () => {
     for (const a of spots) for (const b of spots) if (a.id < b.id) expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.id} ${b.id}`).toBeGreaterThan(1.5);
   });
 
+  it("lets the unnamed people of the later worlds talk too, opening with their recorded line", () => {
+    for (const id of ROLE_CHAT_ORDER) {
+      const spots = INTERACTABLES.filter((i) => i.kind === "chat" && i.chat === id);
+      expect(spots.length, id).toBe(1);
+      expect(spots[0].npc).toBe(ROLE_CHATS[id].npc);
+      expect(chatNpc(id)).toBe(ROLE_CHATS[id].npc);
+      expect(NPCS.find((n) => n.id === ROLE_CHATS[id].npc)?.room).toBe(spots[0].room);
+      for (const lang of ["en", "ar"] as const) {
+        // The recording says the first line, so the two must be the same sentence.
+        expect(CHATS[lang][id].turns[0].ko).toBe(WORLD_COPY[lang].say[ROLE_CHATS[id].voice].ko);
+        // They stay unnamed (no canon name exists for them).
+        expect(CHATS[lang][id].name).toBe(CHATS[lang][id].role);
+      }
+    }
+    // One conversation in every world of the road after the market.
+    expect(new Set(ROLE_CHAT_ORDER.map((id) => INTERACTABLES.find((i) => i.chat === id)!.room))).toEqual(new Set(["conversation-cafe", "culture-street", "seoul-journey", "seoul-market", "seoul-namsan"]));
+  });
+
   it("gives every turn three replies, one that fits, the same in both languages", () => {
-    for (const id of CHAT_ORDER) {
+    for (const id of [...CHAT_ORDER, ...ROLE_CHAT_ORDER]) {
       const en = CHATS.en[id];
       const ar = CHATS.ar[id];
       expect(en.turns.length, id).toBeGreaterThanOrEqual(3);
@@ -63,10 +82,10 @@ describe("conversations with the named Korean friends", () => {
           expect(o.feedback.length).toBeGreaterThan(10);
           expect(u.options[k].feedback.length).toBeGreaterThan(10);
           // A reply that does not fit always shows the one that does.
-          if (!o.right) {
-            const right = t.options.find((x) => x.right)!.ko.replace(/[.!?]+$/, "");
-            expect(o.feedback, `${id} ${n} ${k}`).toContain(/^\d/.test(right) ? "이천" : right);
-            expect(u.options[k].feedback, `${id} ${n} ${k} ar`).toContain(/^\d/.test(right) ? "이천" : right);
+          const right = t.options.find((x) => x.right)!.ko.replace(/[.!?]+$/, "");
+          if (!o.right && !/^\d/.test(right)) {
+            expect(o.feedback, `${id} ${n} ${k}`).toContain(right);
+            expect(u.options[k].feedback, `${id} ${n} ${k} ar`).toContain(right);
           }
         });
       });

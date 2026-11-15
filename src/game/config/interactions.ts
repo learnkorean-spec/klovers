@@ -198,7 +198,7 @@ export const INTERACTABLES: Interactable[] = [
   // The other learner, by the counter: ordering together.
   { id: "say-friend-cafe", room: "conversation-cafe", kind: "say", action: "talk", say: "friendCafe", x: CAFE_FRIEND.x, z: CAFE_FRIEND.z, radius: 1.7 },
   // Two students at a table, from the aisle in front of them.
-  { id: "say-cafe-a", room: "conversation-cafe", kind: "say", action: "talk", say: "cafeA", npc: "k-table-1", x: npc("k-table-1").x - 0.2, z: npc("k-table-1").z + 1.15, radius: 1.0 },
+  { id: "say-cafe-a", room: "conversation-cafe", kind: "chat", action: "talk", chat: "cafe", npc: "k-table-1", x: npc("k-table-1").x - 0.2, z: npc("k-table-1").z + 1.15, radius: 1.0 },
   { id: "say-cafe-b", room: "conversation-cafe", kind: "say", action: "talk", say: "cafeB", npc: "k-table-2", x: npc("k-table-2").x + 0.2, z: npc("k-table-2").z + 1.15, radius: 1.0 },
 
   /* ── Culture Street: one stop per piece of everyday culture ── */
@@ -213,7 +213,7 @@ export const INTERACTABLES: Interactable[] = [
     id: `learn-${id}`, room: "culture-street", kind: "learn", action: "learn", learn: id, word: ["김치", "비빔밥", "떡볶이"][i],
     x: CULTURE.stall.x + CULTURE.stall.w / 2 + 0.75, z: CULTURE.stall.z + (i - 1) * 1.0, radius: 0.75,
   })),
-  { id: "say-cook", room: "culture-street", kind: "say", action: "talk", say: "cook", npc: "c-cook", x: CULTURE.stall.x + CULTURE.stall.w / 2 + 0.75, z: CULTURE.stall.z + 2.0, radius: 0.8 },
+  { id: "say-cook", room: "culture-street", kind: "chat", action: "talk", chat: "cook", npc: "c-cook", x: CULTURE.stall.x + CULTURE.stall.w / 2 + 0.75, z: CULTURE.stall.z + 2.0, radius: 0.8 },
   // The table across the street: what to say before eating.
   { id: "quiz-meal", room: "culture-street", kind: "quiz", action: "learn", quiz: "meal", x: CULTURE.table.x - 1.2, z: CULTURE.table.z, radius: 1.2 },
   // The hanbok shop: its seller hands things over with both hands.
@@ -229,7 +229,7 @@ export const INTERACTABLES: Interactable[] = [
   { id: "say-friend-seoul", room: "seoul-journey", kind: "say", action: "talk", say: "friendSeoul", x: SEOUL_FRIEND.x, z: SEOUL_FRIEND.z, radius: 1.7 },
   // The subway: its entrance (지하철), and the attendant at the top of the steps.
   { id: "learn-jihacheol", room: "seoul-journey", kind: "learn", action: "learn", learn: "jihacheol", word: "지하철", x: SEOUL.subway.x + 0.4, z: SEOUL.subway.z + SEOUL.subway.d / 2 + 0.8, radius: 1.2 },
-  { id: "say-attendant", room: "seoul-journey", kind: "say", action: "talk", say: "attendant", npc: "s-attendant", x: npc("s-attendant").x + 0.9, z: npc("s-attendant").z + 0.9, radius: 1.1, priority: 1 },
+  { id: "say-attendant", room: "seoul-journey", kind: "chat", action: "talk", chat: "attendant", npc: "s-attendant", x: npc("s-attendant").x + 0.9, z: npc("s-attendant").z + 0.9, radius: 1.1, priority: 1 },
   // Someone asks the way to the convenience store.
   { id: "quiz-gil", room: "seoul-journey", kind: "quiz", action: "talk", quiz: "gil", npc: "s-asker", x: npc("s-asker").x - 1.1, z: npc("s-asker").z, radius: 1.2, priority: 1 },
   { id: "learn-pyeonuijeom", room: "seoul-journey", kind: "learn", action: "learn", learn: "pyeonuijeom", word: "편의점", x: SEOUL.halfWidth - 1.3, z: SEOUL.store.z, radius: 1.4 },
@@ -285,7 +285,7 @@ export const INTERACTABLES: Interactable[] = [
   })),
   { id: "quiz-masisseo", room: "seoul-market", kind: "quiz", action: "talk", quiz: "masisseo", npc: "a-cook", x: ALLEY.cart.x + 1.1, z: ALLEY.cart.z + ALLEY.cart.d / 2 + 0.75, radius: 0.9, priority: 1 },
   // The elder on the bench by the café, and the barista.
-  { id: "say-grandpa", room: "seoul-market", kind: "say", action: "talk", say: "grandpa", npc: "a-grandpa", x: ALLEY.bench.x, z: ALLEY.bench.z + 1.3, radius: 1.2, priority: 1 },
+  { id: "say-grandpa", room: "seoul-market", kind: "chat", action: "talk", chat: "grandpa", npc: "a-grandpa", x: ALLEY.bench.x, z: ALLEY.bench.z + 1.3, radius: 1.2, priority: 1 },
   { id: "say-alley-cafe", room: "seoul-market", kind: "say", action: "talk", say: "alleyCafe", npc: "a-barista", x: 1.3, z: -11.0, radius: 1.1, priority: 1 },
 
   /* ── Seoul Journey part 1 → part 3: the 02 bus up Namsan ── */
@@ -301,7 +301,7 @@ export const INTERACTABLES: Interactable[] = [
   { id: "say-photo", room: "seoul-namsan", kind: "say", action: "talk", say: "photo", npc: "n-tourist", x: 5.3, z: -1.8, radius: 1.1, priority: 1 },
   { id: "quiz-eodi", room: "seoul-namsan", kind: "quiz", action: "talk", quiz: "eodi", npc: "n-asker", x: -1.1, z: 2.3, radius: 1.0, priority: 1 },
   { id: "learn-yagyeong", room: "seoul-namsan", kind: "learn", action: "learn", learn: "yagyeong", word: "야경", x: NAMSAN.viewers[0].x, z: NAMSAN.viewers[0].z - 1.0, radius: 1.0 },
-  { id: "say-nalssi", room: "seoul-namsan", kind: "say", action: "talk", say: "nalssi", npc: "n-grandma", x: NAMSAN.bench.x + 1.35, z: NAMSAN.bench.z, radius: 1.2, priority: 1 },
+  { id: "say-nalssi", room: "seoul-namsan", kind: "chat", action: "talk", chat: "grandma", npc: "n-grandma", x: NAMSAN.bench.x + 1.35, z: NAMSAN.bench.z, radius: 1.2, priority: 1 },
 
   /* ── Cluby's Memory Garden: the memory stone, where words come back ── */
   { id: "review-garden", room: "memory-garden", kind: "review", action: "review", x: GARDEN.stone.x, z: GARDEN.stone.z + 1.05, radius: 1.5, priority: 1 },
