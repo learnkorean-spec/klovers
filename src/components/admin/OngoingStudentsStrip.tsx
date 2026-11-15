@@ -105,6 +105,34 @@ type GroupStudent = {
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 /**
+ * Colors that mark which students actually belong together — the same class,
+ * or (for private students) the exact same weekly slot — so a scan of the
+ * list answers "who's together" without reading every row. Amber and pink are
+ * already used elsewhere on this card (needs attention, paused), so they're
+ * deliberately left out here: a group color must never be mistaken for a
+ * status.
+ */
+const GROUP_COLORS = [
+  { border: "border-indigo-300", bg: "bg-indigo-50", text: "text-indigo-700", dot: "bg-indigo-500" },
+  { border: "border-teal-300", bg: "bg-teal-50", text: "text-teal-700", dot: "bg-teal-500" },
+  { border: "border-violet-300", bg: "bg-violet-50", text: "text-violet-700", dot: "bg-violet-500" },
+  { border: "border-sky-300", bg: "bg-sky-50", text: "text-sky-700", dot: "bg-sky-500" },
+  { border: "border-emerald-300", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
+  { border: "border-orange-300", bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-500" },
+  { border: "border-cyan-300", bg: "bg-cyan-50", text: "text-cyan-700", dot: "bg-cyan-500" },
+  { border: "border-fuchsia-300", bg: "bg-fuchsia-50", text: "text-fuchsia-700", dot: "bg-fuchsia-500" },
+] as const;
+
+type GroupColor = (typeof GROUP_COLORS)[number];
+
+/** The same key always gets the same color, stable across reloads and re-renders. */
+function colorForGroup(key: string): GroupColor {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return GROUP_COLORS[hash % GROUP_COLORS.length];
+}
+
+/**
  * Why this student needs attention, or null when they do not.
  *
  * Only two things are worth interrupting for: nobody has recorded anything they
@@ -258,6 +286,42 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
   const groupRows = groupStudents ?? [];
   const total = rows.length + groupRows.length;
 
+  // Private students who share the exact same weekly schedule are, in
+  // practice, in the same session — give them a matching color so that's
+  // visible at a glance instead of only readable by comparing two rows by
+  // eye. A schedule nobody else has stays uncolored: a group of one isn't one.
+  const scheduleGroups = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const { student } of rows) {
+      const key = formatWeeklySummary(student.classes);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const colors = new Map<string, GroupColor>();
+    for (const [key, count] of counts) {
+      if (count > 1) colors.set(key, colorForGroup(key));
+    }
+    return colors;
+  }, [rows]);
+
+  // A class seat's group name is the real, authoritative grouping (unlike a
+  // private schedule that merely happens to line up), so every seat gets a
+  // color, even one whose only other members aren't on this list.
+  const classGroupColors = useMemo(() => {
+    const colors = new Map<string, GroupColor>();
+    for (const s of groupRows) {
+      if (!colors.has(s.groupName)) colors.set(s.groupName, colorForGroup(s.groupName));
+    }
+    return colors;
+  }, [groupRows]);
+
+  const legendEntries = useMemo(
+    () => [
+      ...[...scheduleGroups].map(([label, color]) => ({ label, color })),
+      ...[...classGroupColors].map(([label, color]) => ({ label, color })),
+    ],
+    [scheduleGroups, classGroupColors],
+  );
+
   // Nobody at all means no strip, rather than an empty card sitting above the
   // list on every load.
   if (!studentsQ.isLoading && total === 0) return null;
@@ -315,6 +379,19 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
             </>
           )}
         </p>
+        {legendEntries.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-1" aria-label="Class and shared-slot colors">
+            {legendEntries.map(({ label, color }) => (
+              <span
+                key={label}
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${color.bg} ${color.text}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${color.dot}`} aria-hidden="true" />
+                {label}
+              </span>
+            ))}
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="pt-0 space-y-4">
@@ -332,11 +409,14 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                     const reason = attentionReason({ student, balance });
                     const account = accounts?.get(student.id);
                     const paused = student.status === "paused";
+                    const slotKey = formatWeeklySummary(student.classes);
+                    const slotColor = scheduleGroups.get(slotKey);
                     return (
                       <li
                         key={student.id}
                         className={
-                          "rounded-xl border px-3 py-2 space-y-1 " +
+                          "relative rounded-xl border px-3 py-2 space-y-1 " +
+                          (slotColor ? "pl-4 " : "") +
                           (paused
                             ? "border-pink-400 bg-pink-50/40 dark:bg-pink-950/10"
                             : reason
@@ -344,11 +424,24 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                               : "bg-muted/30")
                         }
                       >
+                        {slotColor && (
+                          <span
+                            className={`absolute inset-y-0 left-0 w-1.5 rounded-l-xl ${slotColor.dot}`}
+                            aria-hidden="true"
+                          />
+                        )}
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="text-sm font-medium text-foreground">{student.full_name}</span>
                           <span className="text-xs text-muted-foreground">
                             {SUBJECT_LABEL[student.subject]}
                           </span>
+                          {slotColor && (
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${slotColor.bg} ${slotColor.text}`}
+                            >
+                              Shares this slot
+                            </span>
+                          )}
                           {paused && (
                             <Badge variant="outline" className="text-[10px] border-pink-400 text-pink-600">
                               Paused
@@ -416,11 +509,22 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                   In a class · {groupRows.length}
                 </p>
                 <ul className="space-y-2">
-                  {groupRows.map(s => (
-                    <li key={`${s.groupName}-${s.userId}`} className="rounded-xl border bg-muted/30 px-3 py-2 space-y-1">
+                  {groupRows.map(s => {
+                    const color = classGroupColors.get(s.groupName)!;
+                    return (
+                    <li key={`${s.groupName}-${s.userId}`} className="relative rounded-xl border bg-muted/30 px-3 py-2 pl-4 space-y-1">
+                      <span
+                        className={`absolute inset-y-0 left-0 w-1.5 rounded-l-xl ${color.dot}`}
+                        aria-hidden="true"
+                      />
                       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                         <span className="text-sm font-medium text-foreground">{s.name}</span>
-                        <span className="text-xs text-muted-foreground">{s.groupName}</span>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${color.bg} ${color.text}`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${color.dot}`} aria-hidden="true" />
+                          {s.groupName}
+                        </span>
                         {!s.started && (
                           <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">
                             class not started
@@ -438,7 +542,8 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                         </p>
                       )}
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               </div>
             )}
