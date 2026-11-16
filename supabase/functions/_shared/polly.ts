@@ -33,23 +33,23 @@ export async function pollySpeak(text: string, voice: PollyVoice): Promise<Uint8
   const region = Deno.env.get("AWS_POLLY_REGION") || "us-east-1";
   if (!accessKeyId || !secretAccessKey) throw new Error("Polly not configured (missing AWS secrets)");
 
-  const { PollyClient, SynthesizeSpeechCommand } = await import("npm:@aws-sdk/client-polly@3");
-  const client = new PollyClient({ region, credentials: { accessKeyId, secretAccessKey } });
-  const res = await client.send(
-    new SynthesizeSpeechCommand({
+  // Plain signed fetch, not @aws-sdk/client-polly: the SDK's client pulls in
+  // an HTTP/2 handler and fails on Supabase's edge runtime with
+  // "ERR_NOT_IMPLEMENTED: Http2Session.settings" (seen 16 Nov 2026).
+  const { AwsClient } = await import("npm:aws4fetch@1");
+  const aws = new AwsClient({ accessKeyId, secretAccessKey, region, service: "polly" });
+  const res = await aws.fetch(`https://polly.${region}.amazonaws.com/v1/speech`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
       Text: text,
-      // Plain strings from our own config; the SDK types them as string unions.
-      // deno-lint-ignore no-explicit-any
-      VoiceId: voice.voiceId as any,
-      // deno-lint-ignore no-explicit-any
-      Engine: voice.engine as any,
+      VoiceId: voice.voiceId,
+      Engine: voice.engine,
       LanguageCode: "ko-KR",
       OutputFormat: "mp3",
       SampleRate: "24000",
     }),
-  );
-  if (!res.AudioStream) throw new Error("Polly returned no audio");
-  // The SDK's stream helper gives the whole MP3 at once.
-  // deno-lint-ignore no-explicit-any
-  return await (res.AudioStream as any).transformToByteArray();
+  });
+  if (!res.ok) throw new Error(`Polly ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  return new Uint8Array(await res.arrayBuffer());
 }
