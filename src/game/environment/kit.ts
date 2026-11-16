@@ -700,8 +700,7 @@ function boulder(seed: number): BufferGeometry {
  * between them, cupped up a little toward the rim (radius 0.5, about 0.2
  * tall). Its yellow middle is a separate small ball (see `flowers`).
  */
-function bloomHead(): BufferGeometry {
-  const N = 20;
+function bloomHead(N = 20): BufferGeometry {
   const rings = [0.35, 1.0];
   const lobe = (a: number) => 0.5 * (0.5 + 0.5 * Math.pow(Math.abs(Math.cos(2.5 * a)), 0.6));
   const pos: number[] = [0, 0.0, 0];
@@ -973,7 +972,8 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   hedge: hedgeBlock(),
   hedgeB: hedgeBlock(1.7),
   lilyPad: new CylinderGeometry(0.5, 0.5, 1, 22, 1, false, 0.35, Math.PI * 2 - 0.35),
-  bloom: bloomHead(),
+  // On phones ten points round: still five petals with a notch between each, at half the triangles.
+  bloom: bloomHead(phoneTier() ? 10 : 20),
   leaves: leafRosette(),
   // Foliage pads of a red pine (two shapes, so neighbouring pads differ).
   // (B, for the small side pads, is lighter on desktop.)
