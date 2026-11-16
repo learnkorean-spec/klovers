@@ -833,6 +833,16 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
     const r = cloneSkinned(person.scene) as Group;
     prepare(r, rules);
     addCorneas(r);
+    // This body wears another body's hair, and its lashes still point into
+    // the hair picture it no longer has: they came out as thick black bands
+    // round the eyes. Without lashes the eyes are clean.
+    if (model === "npc-brian") {
+      const lost: Mesh[] = [];
+      r.traverse((o) => {
+        if (/Eyelashes$/.test(o.name)) lost.push(o as Mesh);
+      });
+      for (const m of lost) m.removeFromParent();
+    }
     if (head) {
       // No motion here moves a bone's scale (rotations only), so this holds.
       r.traverse((o) => {
@@ -842,7 +852,7 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
     if (face) setFace(r, face);
     cullable(r);
     return r;
-  }, [person, rules, head, face]);
+  }, [person, rules, head, face, model]);
   const lod = useLod(root, model);
   const lips = useMemo(() => findLips(root), [root]);
   const lipAmount = useRef(0);
