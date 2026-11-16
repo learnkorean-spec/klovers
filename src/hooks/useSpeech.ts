@@ -1,10 +1,17 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { cloudVoiceFits, currentCloudVoice, playCloudKorean, stopCloudVoice } from "@/lib/cloudVoice";
 
 interface UseSpeechOptions {
   language?: string;
   rate?: number;
   pitch?: number;
   gender?: "male" | "female";
+  /**
+   * Korean is read by the cloud voice (Amazon Polly via the `tts-ko` edge
+   * function, cached) with the browser voice as fallback. Default true; pass
+   * false to keep the browser voice only.
+   */
+  cloud?: boolean;
 }
 
 /* âââ Voice picker: best-effort male / female for a given language âââ */
@@ -75,7 +82,7 @@ function pickVoice(
  * Convenience helpers: speakAsMale / speakAsFemale for quick use.
  */
 export function useSpeech(options: UseSpeechOptions = {}) {
-  const { language = "ko-KR", rate = 1, pitch = 1 } = options;
+  const { language = "ko-KR", rate = 1, pitch = 1, cloud = true } = options;
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [voicesReady, setVoicesReady] = useState(false);
@@ -100,18 +107,22 @@ export function useSpeech(options: UseSpeechOptions = {}) {
    */
   const speak = useCallback(
     (text: string, opts?: UseSpeechOptions) => {
-      if (!("speechSynthesis" in window)) {
-        console.warn("Speech Synthesis API not supported in this browser");
-        return;
-      }
-
       const finalLang = opts?.language || language;
       const finalRate = opts?.rate || rate;
       const finalPitch = opts?.pitch || pitch;
       const finalGender = opts?.gender;
+      const useCloud = (opts?.cloud ?? cloud) && finalLang.toLowerCase().startsWith("ko") && cloudVoiceFits(text);
 
-      window.speechSynthesis.cancel();
+      stopCloudVoice();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       setIsPaused(false);
+
+      const browserSpeak = () => {
+      if (!("speechSynthesis" in window)) {
+        console.warn("Speech Synthesis API not supported in this browser");
+        setIsSpeaking(false);
+        return;
+      }
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = finalLang;
@@ -127,11 +138,27 @@ export function useSpeech(options: UseSpeechOptions = {}) {
       utterance.onerror = () => { setIsSpeaking(false); setIsPaused(false); };
 
       window.speechSynthesis.speak(utterance);
+      };
+
+      if (!useCloud) return browserSpeak();
+      setIsSpeaking(true);
+      playCloudKorean(text, {
+        gender: finalGender,
+        rate: finalRate,
+        onEnd: () => { setIsSpeaking(false); setIsPaused(false); },
+        onFail: browserSpeak,
+      });
     },
-    [language, rate, pitch],
+    [language, rate, pitch, cloud],
   );
 
   const pause = useCallback(() => {
+    const a = currentCloudVoice();
+    if (a && !a.paused) {
+      a.pause();
+      setIsPaused(true);
+      return;
+    }
     if ("speechSynthesis" in window && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
       window.speechSynthesis.pause();
       setIsPaused(true);
@@ -139,6 +166,12 @@ export function useSpeech(options: UseSpeechOptions = {}) {
   }, []);
 
   const resume = useCallback(() => {
+    const a = currentCloudVoice();
+    if (a && a.paused) {
+      void a.play().catch(() => {});
+      setIsPaused(false);
+      return;
+    }
     if ("speechSynthesis" in window && window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
       setIsPaused(false);
@@ -151,7 +184,8 @@ export function useSpeech(options: UseSpeechOptions = {}) {
   }, [isPaused, pause, resume]);
 
   const cancel = useCallback(() => {
-    window.speechSynthesis.cancel();
+    stopCloudVoice();
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     setIsSpeaking(false);
     setIsPaused(false);
   }, []);

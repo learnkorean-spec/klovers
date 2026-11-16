@@ -188,12 +188,12 @@ export default function InteractionCard({
 }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
-  const { speakKorean } = useSpeech({ rate: 0.85 });
+  const { speakKorean } = useSpeech({ rate: 0.85, cloud: false });
   /** Play a recorded line; the browser's voice if it cannot. */
   const say = (path: string, ko: string) => playClip(path, () => speakKorean(ko));
   const hearLabel = copy.card.listen;
   // Chat: each person's own recorded voice; the browser's Korean voice (a man's or a woman's) if a file cannot play.
-  const { speakKorean: sayFriend } = useSpeech({ rate: 0.85, gender: chat && chatIsMan(chat) ? "male" : "female" });
+  const { speakKorean: sayFriend } = useSpeech({ rate: 0.85, gender: chat && chatIsMan(chat) ? "male" : "female", cloud: false });
   /** The friend says a line: heard, and seen (they gesture in the world while it lasts). */
   const speakFriend = (ko: string) => {
     if (!chat) return;

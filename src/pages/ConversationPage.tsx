@@ -20,7 +20,7 @@ const BUCKET_BASE =
 export default function ConversationPage() {
   const { code } = useParams<{ code: string }>();
   const convo = useMemo(() => findConversation(code), [code]);
-  const { speakKorean, cancel } = useSpeech({ language: "ko-KR", rate: 0.85 });
+  const { speakKorean, cancel } = useSpeech({ language: "ko-KR", rate: 0.85, cloud: false });
 
   const [playing, setPlaying] = useState<number | null>(null);
   const [hasAudio, setHasAudio] = useState<boolean[]>([]);
