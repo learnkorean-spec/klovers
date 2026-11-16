@@ -990,8 +990,8 @@ const BASE_GEOMETRY: Record<string, BufferGeometry> = {
   leafyLow: leafyBall(1),
   // Whole far-tree crowns (the tree rings past the rooftops), two shapes.
   // Desktop: rounder knots (the faceted outline showed against the sky).
-  crownA: farCrown(1, phoneTier() ? 1 : 2),
-  crownB: farCrown(2, phoneTier() ? 1 : 2),
+  crownA: farCrown(1, phoneTier() ? 0 : 2),
+  crownB: farCrown(2, phoneTier() ? 0 : 2),
   // One apple, tangerine or potato in a heap: a small smooth ball.
   fruit: lumpyBall(1, 0.05),
   // Far scenery (the tree ring past the rooftops): a quarter of the triangles.
