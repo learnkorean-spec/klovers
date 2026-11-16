@@ -51,6 +51,24 @@ export default function ConversationAudio() {
     }
   };
 
+  /** Copies the previewed Amazon lines over the live audio the QR plays. */
+  const publish = async (code: string) => {
+    const preview = state[`${code}:polly`];
+    const indices = (preview?.results ?? []).filter((r) => r.ok && r.voice?.startsWith("polly:")).map((r) => r.index);
+    const key = `${code}:publish`;
+    setState((s) => ({ ...s, [key]: { running: true } }));
+    try {
+      const { data, error } = await supabase.functions.invoke("conversation-audio", {
+        body: { action: "publish", code, indices },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setState((s) => ({ ...s, [key]: { running: false, results: data.results } }));
+    } catch (e) {
+      setState((s) => ({ ...s, [key]: { running: false, error: e instanceof Error ? e.message : String(e) } }));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -155,6 +173,11 @@ export default function ConversationAudio() {
                         )}
                       </div>
                     ))}
+                    <PublishRow
+                      count={preview.results.filter((r) => r.ok && r.voice?.startsWith("polly:")).length}
+                      pub={state[`${c.code}:publish`]}
+                      onPublish={() => publish(c.code)}
+                    />
                   </div>
                 )}
               </CardContent>
@@ -162,6 +185,43 @@ export default function ConversationAudio() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** Two taps on purpose: the first arms, the second replaces the live audio. */
+function PublishRow({ count, pub, onPublish }: { count: number; pub?: RunState; onPublish: () => void }) {
+  const [armed, setArmed] = useState(false);
+  if (!count) return null;
+  const done = pub?.results?.filter((r) => r.ok).length ?? 0;
+  return (
+    <div className="space-y-1 border-t pt-2">
+      {pub?.results ? (
+        <p className="flex items-center gap-1.5 font-medium text-green-700">
+          <CheckCircle2 className="h-3.5 w-3.5" /> {done} of {pub.results.length} lines are now live on the QR page
+        </p>
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant={armed ? "destructive" : "secondary"}
+            disabled={pub?.running}
+            onClick={() => (armed ? onPublish() : setArmed(true))}
+          >
+            {pub?.running && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+            {armed ? `Yes — make these ${count} lines live` : `Approve & publish ${count} Amazon lines`}
+          </Button>
+          {armed && !pub?.running && (
+            <button className="text-muted-foreground underline" onClick={() => setArmed(false)}>
+              cancel
+            </button>
+          )}
+        </div>
+      )}
+      {pub?.error && <p className="text-destructive">{pub.error}</p>}
+      {pub?.results?.filter((r) => !r.ok).map((r) => (
+        <p key={r.index} className="text-destructive">line {r.index + 1}: {r.error}</p>
+      ))}
     </div>
   );
 }

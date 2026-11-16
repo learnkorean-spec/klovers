@@ -21,6 +21,7 @@ import { hasPolly, parsePollyVoice, pollySpeak } from "../_shared/polly.ts";
  * the AWS credits; speakers without one still use OpenAI. Polly runs write to
  * conversations/<code>/preview/<index>.mp3 — never over the live files the
  * book's QR codes play — until Re has listened and approved them.
+ * action "publish" then copies the previewed lines to the live paths.
  */
 
 const corsHeaders = {
@@ -66,6 +67,41 @@ serve(async (req) => {
 
     const body = await req.json();
     const code: string = String(body.code || "").toLowerCase();
+
+    // action "publish": copy approved preview files over the live ones the
+    // book's QR plays. Only the line indices given are copied, so a line
+    // without a preview (e.g. Minsu while the OpenAI key is broken) keeps
+    // whatever it had — or the page's browser-voice fallback.
+    if (body.action === "publish") {
+      if (!/^[a-z0-9-]{2,24}$/.test(code)) throw new Error("Bad conversation code");
+      const indices: number[] = Array.isArray(body.indices)
+        ? body.indices.filter((n: unknown) => Number.isInteger(n) && (n as number) >= 0 && (n as number) < 100)
+        : [];
+      if (!indices.length) throw new Error("No lines to publish");
+      const published: { index: number; ok: boolean; error?: string }[] = [];
+      for (const i of indices) {
+        const { data: file, error: dlErr } = await admin.storage
+          .from(BUCKET)
+          .download(`conversations/${code}/preview/${i}.mp3`);
+        if (dlErr || !file) {
+          published.push({ index: i, ok: false, error: "no preview for this line" });
+          continue;
+        }
+        const { error: upErr } = await admin.storage
+          .from(BUCKET)
+          .upload(`conversations/${code}/${i}.mp3`, new Uint8Array(await file.arrayBuffer()), {
+            contentType: "audio/mpeg",
+            upsert: true,
+            cacheControl: "300",
+          });
+        published.push(upErr ? { index: i, ok: false, error: upErr.message } : { index: i, ok: true });
+      }
+      return new Response(
+        JSON.stringify({ code, action: "publish", made: published.filter((p) => p.ok).length, total: indices.length, results: published }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const lines: Line[] = Array.isArray(body.lines) ? body.lines : [];
     const voices: Record<string, string> = body.voices || {};
     const provider: "openai" | "polly" = body.provider === "polly" ? "polly" : "openai";
