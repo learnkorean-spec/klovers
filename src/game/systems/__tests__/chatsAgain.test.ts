@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { CHATS, CHATS2, SECOND_ORDER, chatAgain, chatAgainKey, chatClip, chatMetKey, chatOf } from "../../config/chats";
 
-/** The second, longer talk with the market's seven friends and the five people of the later worlds. */
+/** The second, longer talk with everyone on the road. */
 describe("a second talk with each friend", () => {
   it("is offered only once they are a friend, and only by those who have one", () => {
     expect(chatAgain("jihoon", [])).toBe(false);
     expect(chatAgain("jihoon", [chatMetKey("jihoon")])).toBe(true);
-    expect(chatAgain("gardener", [chatMetKey("gardener")])).toBe(false);
     expect(chatOf("en", "jihoon", true)).toBe(CHATS2.en.jihoon);
     expect(chatAgain("grandma", [chatMetKey("grandma")])).toBe(true);
-    expect(SECOND_ORDER.length).toBe(12);
-    expect(chatOf("en", "gardener", true)).toBe(CHATS.en.gardener);
+    expect(SECOND_ORDER.length).toBe(15);
+    expect(chatOf("en", "gardener", false)).toBe(CHATS.en.gardener);
     expect(chatAgainKey("hana")).not.toBe(chatMetKey("hana"));
   });
 
@@ -41,6 +40,15 @@ describe("a second talk with each friend", () => {
             if (!o.right) expect(o.feedback, o.ko).toMatch(/[가-힣]/); // it says what to say instead
           }
         }
+  });
+
+  it("writes the sounds out for the three first people, as their first talks do", () => {
+    for (const id of ["gardener", "neighbour"] as const)
+      for (const t of CHATS2.en[id].turns) {
+        expect(t.roman, t.ko).toBeTruthy();
+        for (const o of t.options) expect(o.roman, o.ko).toBeTruthy();
+      }
+    for (const t of CHATS2.en.painter.turns) expect(t.show).toMatch(/^[가-힣]$/);
   });
 
   it("is a different conversation from the first, with recordings of its own", () => {

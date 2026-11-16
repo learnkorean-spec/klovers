@@ -1720,12 +1720,120 @@ const AR2B: Record<LaterId, Again> = {
       ] },
     ], closing: { ko: "자, 하나, 둘, 셋! 잘 나왔어요.", gloss: "هيا: واحد، اثنان، ثلاثة! خرجت الصورة جميلة." } },
 };
+/** And with the three people a beginner meets first (16 Nov 2026), still with the sounds written out. */
+type FirstId = "gardener" | "neighbour" | "painter";
+const EN2C: Record<FirstId, Again> = {
+  gardener: { focus: "Thank you and a first question: 감사합니다 (thanks), 죄송합니다 (sorry), and 이거 뭐예요? (what is this?).", turns: [
+      { ko: "안녕하세요! 또 왔어요?", roman: "annyeonghaseyo! tto wasseoyo?", gloss: "Hello! You came again?", ask: "Say yes, and greet him.", options: [
+        { ko: "네, 안녕하세요!", roman: "ne, annyeonghaseyo!", right: true, feedback: "Yes: 네 = yes, and a greeting is answered with a greeting." },
+        { ko: "아니요, 안녕하세요!", roman: "aniyo, annyeonghaseyo!", right: false, feedback: "아니요 = no, but you did come. 네, 안녕하세요!" },
+        { ko: "네, 안녕히 계세요!", roman: "ne, annyeonghi gyeseyo!", right: false, feedback: "안녕히 계세요 is a goodbye. Hello: 안녕하세요!" },
+      ] },
+      { ko: "이거 받으세요. 꽃이에요.", roman: "igeo badeuseyo. kkochieyo.", gloss: "Take this. It is a flower.", ask: "He gives you a flower. Thank him.", options: [
+        { ko: "죄송합니다!", roman: "joesonghamnida!", right: false, feedback: "죄송합니다 = I am sorry. Thank you: 감사합니다!" },
+        { ko: "감사합니다!", roman: "gamsahamnida!", right: true, feedback: "Yes: 감사합니다 = thank you." },
+        { ko: "안녕하세요!", roman: "annyeonghaseyo!", right: false, feedback: "That is hello again. Thank you: 감사합니다!" },
+      ] },
+      { ko: "꽃 이름은 무궁화예요.", roman: "kkot ireumeun mugunghwayeyo.", gloss: "The flower's name is mugunghwa.", ask: "There is a tree beside him. Ask what it is.", options: [
+        { ko: "이거 꽃이에요.", roman: "igeo kkochieyo.", right: false, feedback: "That says \"this is a flower\". To ask: 이거 뭐예요?" },
+        { ko: "저는 뭐예요?", roman: "jeoneun mwoyeyo?", right: false, feedback: "That asks \"what am I?\". 이거 = this: 이거 뭐예요?" },
+        { ko: "이거 뭐예요?", roman: "igeo mwoyeyo?", right: true, feedback: "Yes: 이거 = this, 뭐예요? = what is it?" },
+      ] },
+    ], closing: { ko: "그건 소나무예요. 또 오세요!", roman: "geugeon sonamuyeyo. tto oseyo!", gloss: "That is a pine tree. Come again!" } },
+  neighbour: { focus: "A little more about you: 한국어 (Korean) and 한국 (Korea), 재미있어요 / 조금 어려워요, and 물 주세요 (water, please).", turns: [
+      { ko: "안녕하세요! 오늘도 공부해요?", roman: "annyeonghaseyo! oneuldo gongbuhaeyo?", gloss: "Hello! Studying today too?", ask: "Yes: you study Korean (한국어, hangugeo).", options: [
+        { ko: "네, 한국어 공부해요.", roman: "ne, hangugeo gongbuhaeyo.", right: true, feedback: "Yes: 한국어 = Korean, the language. 공부해요 = study." },
+        { ko: "네, 한국 공부해요.", roman: "ne, hanguk gongbuhaeyo.", right: false, feedback: "한국 is Korea, the country. The language: 한국어." },
+        { ko: "아니요, 한국어 공부해요.", roman: "aniyo, hangugeo gongbuhaeyo.", right: false, feedback: "아니요 = no, and then you say you do. 네, 한국어 공부해요." },
+      ] },
+      { ko: "한국어 재미있어요?", roman: "hangugeo jaemiisseoyo?", gloss: "Is Korean fun?", ask: "Answer truly: fun, or a little difficult.", options: [
+        { ko: "네, 재미있어요!", roman: "ne, jaemiisseoyo!", right: true, feedback: "Yes: 재미있어요 = it is fun.", reply: { ko: "좋아요! 매일 조금씩 해요.", roman: "joayo! maeil jogeumssik haeyo.", gloss: "Good! A little every day." } },
+        { ko: "네, 학생이에요.", roman: "ne, haksaeng-ieyo.", right: false, feedback: "That says \"yes, I am a student\". She asked whether it is fun: 재미있어요, or 조금 어려워요." },
+        { ko: "조금 어려워요.", roman: "jogeum eoryeowoyo.", right: true, feedback: "Yes: 조금 = a little, 어려워요 = difficult. An honest answer.", reply: { ko: "괜찮아요. 천천히 해요.", roman: "gwaenchanayo. cheoncheonhi haeyo.", gloss: "That is all right. Take it slowly." } },
+      ] },
+      { ko: "물 드릴까요?", roman: "mul deurilkkayo?", gloss: "Shall I give you some water?", ask: "Yes, please: ask for water (물, mul).", options: [
+        { ko: "네, 물이에요.", roman: "ne, murieyo.", right: false, feedback: "That says \"yes, it is water\". To ask for it: 물 주세요." },
+        { ko: "네, 물 주세요.", roman: "ne, mul juseyo.", right: true, feedback: "Yes: 물 = water, 주세요 = please give me." },
+        { ko: "아니요, 물 주세요.", roman: "aniyo, mul juseyo.", right: false, feedback: "아니요 = no, and then you ask for it. 네, 물 주세요." },
+      ] },
+    ], closing: { ko: "여기 있어요. 또 봐요!", roman: "yeogi isseoyo. tto bwayo!", gloss: "Here you are. See you again!" } },
+  painter: { focus: "More reading: ㅂ ㅅ with ㅣ ㅓ, and a letter underneath (받침): 문.", turns: [
+      { ko: "또 왔어요? 새 간판이에요!", roman: "tto wasseoyo? sae ganpanieyo!", gloss: "You came again? A new sign!", show: "비", ask: "Read it.", options: [
+        { ko: "ba", right: false, feedback: "ㅏ is a. This vowel is ㅣ (i): 비 is bi." },
+        { ko: "bi", right: true, feedback: "Yes: ㅂ (b) + ㅣ (i) = 비, bi. It means rain." },
+        { ko: "si", right: false, feedback: "ㅅ is s. This first letter is ㅂ (b): 비 is bi." },
+      ] },
+      { ko: "잘했어요! 이건요?", roman: "jalhaesseoyo! igeonyo?", gloss: "Well done! And this one?", show: "서", ask: "This one is his own family name. Read it.", options: [
+        { ko: "seo", right: true, feedback: "Yes: ㅅ (s) + ㅓ (eo) = 서, seo. Mr. Seo's own name." },
+        { ko: "so", right: false, feedback: "ㅗ is o. This vowel is ㅓ (eo), with its small line pointing left: 서 is seo." },
+        { ko: "neo", right: false, feedback: "ㄴ is n. This first letter is ㅅ (s): 서 is seo." },
+      ] },
+      { ko: "하하, 맞아요! 마지막은 어려워요.", roman: "haha, majayo! majimageun eoryeowoyo.", gloss: "Haha, right! The last one is hard.", show: "문", ask: "Three letters: one sits underneath. Read it.", options: [
+        { ko: "mu", right: false, feedback: "That leaves out the letter underneath, ㄴ (n): 문 is mun." },
+        { ko: "num", right: false, feedback: "Read from the top: ㅁ (m) first, ㄴ (n) last: 문 is mun." },
+        { ko: "mun", right: true, feedback: "Yes: ㅁ (m) + ㅜ (u), with ㄴ (n) underneath = 문, mun. It means door." },
+      ] },
+    ], closing: { ko: "와, 받침도 읽어요! 대단해요.", roman: "wa, batchimdo ilgeoyo! daedanhaeyo.", gloss: "Wow, you read the letter underneath too! Amazing." } },
+};
+const AR2C: Record<FirstId, Again> = {
+  gardener: { focus: "الشكر وأول سؤال: 감사합니다 (شكرًا)، 죄송합니다 (آسف)، و 이거 뭐예요؟ (ما هذا؟).", turns: [
+      { ko: "안녕하세요! 또 왔어요?", roman: "annyeonghaseyo! tto wasseoyo?", gloss: "مرحبًا! جئت مرة أخرى؟", ask: "قل نعم، وحيِّه.", options: [
+        { ko: "네, 안녕하세요!", roman: "ne, annyeonghaseyo!", right: true, feedback: "نعم: 네 = نعم، والتحية تُردّ بتحية." },
+        { ko: "아니요, 안녕하세요!", roman: "aniyo, annyeonghaseyo!", right: false, feedback: "아니요 = لا، لكنك جئت فعلًا. الصحيح: 네, 안녕하세요!" },
+        { ko: "네, 안녕히 계세요!", roman: "ne, annyeonghi gyeseyo!", right: false, feedback: "안녕히 계세요 وداع. التحية: 안녕하세요!" },
+      ] },
+      { ko: "이거 받으세요. 꽃이에요.", roman: "igeo badeuseyo. kkochieyo.", gloss: "خذ هذه. إنها زهرة.", ask: "يعطيك زهرة. اشكره.", options: [
+        { ko: "죄송합니다!", roman: "joesonghamnida!", right: false, feedback: "죄송합니다 = آسف. الشكر: 감사합니다!" },
+        { ko: "감사합니다!", roman: "gamsahamnida!", right: true, feedback: "نعم: 감사합니다 = شكرًا." },
+        { ko: "안녕하세요!", roman: "annyeonghaseyo!", right: false, feedback: "هذه تحية مرة أخرى. الشكر: 감사합니다!" },
+      ] },
+      { ko: "꽃 이름은 무궁화예요.", roman: "kkot ireumeun mugunghwayeyo.", gloss: "اسم الزهرة موغونغهوا.", ask: "بجانبه شجرة. اسأل ما هي.", options: [
+        { ko: "이거 꽃이에요.", roman: "igeo kkochieyo.", right: false, feedback: "هكذا تقول «هذه زهرة». للسؤال: 이거 뭐예요؟" },
+        { ko: "저는 뭐예요?", roman: "jeoneun mwoyeyo?", right: false, feedback: "هكذا تسأل «ما أنا؟». 이거 = هذا: 이거 뭐예요؟" },
+        { ko: "이거 뭐예요?", roman: "igeo mwoyeyo?", right: true, feedback: "نعم: 이거 = هذا، و 뭐예요؟ = ما هو؟" },
+      ] },
+    ], closing: { ko: "그건 소나무예요. 또 오세요!", roman: "geugeon sonamuyeyo. tto oseyo!", gloss: "تلك شجرة صنوبر. تعال مرة أخرى!" } },
+  neighbour: { focus: "المزيد عن نفسك: 한국어 (اللغة الكورية) و 한국 (كوريا)، و 재미있어요 / 조금 어려워요، و 물 주세요 (ماء من فضلك).", turns: [
+      { ko: "안녕하세요! 오늘도 공부해요?", roman: "annyeonghaseyo! oneuldo gongbuhaeyo?", gloss: "مرحبًا! تدرس اليوم أيضًا؟", ask: "نعم: تدرس الكورية (한국어، hangugeo).", options: [
+        { ko: "네, 한국어 공부해요.", roman: "ne, hangugeo gongbuhaeyo.", right: true, feedback: "نعم: 한국어 = اللغة الكورية. و 공부해요 = أدرس." },
+        { ko: "네, 한국 공부해요.", roman: "ne, hanguk gongbuhaeyo.", right: false, feedback: "한국 هي كوريا، البلد. اللغة: 한국어." },
+        { ko: "아니요, 한국어 공부해요.", roman: "aniyo, hangugeo gongbuhaeyo.", right: false, feedback: "아니요 = لا، ثم تقول إنك تدرس. الصحيح: 네, 한국어 공부해요." },
+      ] },
+      { ko: "한국어 재미있어요?", roman: "hangugeo jaemiisseoyo?", gloss: "هل الكورية ممتعة؟", ask: "أجب بصدق: ممتعة، أو صعبة قليلًا.", options: [
+        { ko: "네, 재미있어요!", roman: "ne, jaemiisseoyo!", right: true, feedback: "نعم: 재미있어요 = ممتعة.", reply: { ko: "좋아요! 매일 조금씩 해요.", roman: "joayo! maeil jogeumssik haeyo.", gloss: "جيد! قليلًا كل يوم." } },
+        { ko: "네, 학생이에요.", roman: "ne, haksaeng-ieyo.", right: false, feedback: "هكذا تقول «نعم، أنا طالب». هي سألت هل هي ممتعة: 재미있어요 أو 조금 어려워요." },
+        { ko: "조금 어려워요.", roman: "jogeum eoryeowoyo.", right: true, feedback: "نعم: 조금 = قليلًا، و 어려워요 = صعبة. جواب صادق.", reply: { ko: "괜찮아요. 천천히 해요.", roman: "gwaenchanayo. cheoncheonhi haeyo.", gloss: "لا بأس. على مهلك." } },
+      ] },
+      { ko: "물 드릴까요?", roman: "mul deurilkkayo?", gloss: "هل أعطيك ماءً؟", ask: "نعم من فضلك: اطلب الماء (물، mul).", options: [
+        { ko: "네, 물이에요.", roman: "ne, murieyo.", right: false, feedback: "هكذا تقول «نعم، إنه ماء». لتطلبه: 물 주세요." },
+        { ko: "네, 물 주세요.", roman: "ne, mul juseyo.", right: true, feedback: "نعم: 물 = ماء، و 주세요 = أعطني من فضلك." },
+        { ko: "아니요, 물 주세요.", roman: "aniyo, mul juseyo.", right: false, feedback: "아니요 = لا، ثم تطلبه. الصحيح: 네, 물 주세요." },
+      ] },
+    ], closing: { ko: "여기 있어요. 또 봐요!", roman: "yeogi isseoyo. tto bwayo!", gloss: "تفضّل. أراك مرة أخرى!" } },
+  painter: { focus: "قراءة أكثر: ㅂ ㅅ مع ㅣ ㅓ، وحرف في الأسفل (받침): 문.", turns: [
+      { ko: "또 왔어요? 새 간판이에요!", roman: "tto wasseoyo? sae ganpanieyo!", gloss: "جئت مرة أخرى؟ لافتة جديدة!", show: "비", ask: "اقرأها.", options: [
+        { ko: "ba", right: false, feedback: "ㅏ هو a. هذا الحرف الصوتي ㅣ (i): 비 تُقرأ bi." },
+        { ko: "bi", right: true, feedback: "نعم: ㅂ (b) + ㅣ (i) = 비، bi. ومعناها مطر." },
+        { ko: "si", right: false, feedback: "ㅅ هو s. الحرف الأول هنا ㅂ (b): 비 تُقرأ bi." },
+      ] },
+      { ko: "잘했어요! 이건요?", roman: "jalhaesseoyo! igeonyo?", gloss: "أحسنت! وهذه؟", show: "서", ask: "هذه اسم عائلته هو. اقرأها.", options: [
+        { ko: "seo", right: true, feedback: "نعم: ㅅ (s) + ㅓ (eo) = 서، seo. اسم السيد سو نفسه." },
+        { ko: "so", right: false, feedback: "ㅗ هو o. هذا الحرف ㅓ (eo)، وخطّه الصغير يتجه يسارًا: 서 تُقرأ seo." },
+        { ko: "neo", right: false, feedback: "ㄴ هو n. الحرف الأول هنا ㅅ (s): 서 تُقرأ seo." },
+      ] },
+      { ko: "하하, 맞아요! 마지막은 어려워요.", roman: "haha, majayo! majimageun eoryeowoyo.", gloss: "هاها، صحيح! الأخيرة صعبة.", show: "문", ask: "ثلاثة حروف: واحد منها في الأسفل. اقرأها.", options: [
+        { ko: "mu", right: false, feedback: "هكذا تترك الحرف الذي في الأسفل ㄴ (n): 문 تُقرأ mun." },
+        { ko: "num", right: false, feedback: "اقرأ من الأعلى: ㅁ (m) أولًا و ㄴ (n) آخرًا: 문 تُقرأ mun." },
+        { ko: "mun", right: true, feedback: "نعم: ㅁ (m) + ㅜ (u) وتحتهما ㄴ (n) = 문، mun. ومعناها باب." },
+      ] },
+    ], closing: { ko: "와, 받침도 읽어요! 대단해요.", roman: "wa, batchimdo ilgeoyo! daedanhaeyo.", gloss: "واو، تقرأ الحرف السفلي أيضًا! مذهل." } },
+};
 /** Everyone who has a second talk, along the road. */
-export type SecondId = FriendId | LaterId;
-export const SECOND_ORDER: readonly SecondId[] = [...CHAT_ORDER, "cafe", "cook", "attendant", "grandpa", "grandma"];
+export type SecondId = FirstId | FriendId | LaterId;
+export const SECOND_ORDER: readonly SecondId[] = ["gardener", "neighbour", "painter", ...CHAT_ORDER, "cafe", "cook", "attendant", "grandpa", "grandma"];
 export const hasSecond = (id: ChatId): id is SecondId => (SECOND_ORDER as readonly string[]).includes(id);
 const again = (first: Record<ChatId, Chat>, more: Record<SecondId, Again>) => Object.fromEntries(SECOND_ORDER.map((id) => [id, { ...first[id], ...more[id] }])) as Record<SecondId, Chat>;
-export const CHATS2: Record<WorldLang, Record<SecondId, Chat>> = { en: again(EN, { ...EN2, ...EN2B }), ar: again(AR, { ...AR2, ...AR2B }) };
+export const CHATS2: Record<WorldLang, Record<SecondId, Chat>> = { en: again(EN, { ...EN2C, ...EN2, ...EN2B }), ar: again(AR, { ...AR2C, ...AR2, ...AR2B }) };
 
 /** Saved in worldState.met once the second talk is finished. */
 export const chatAgainKey = (id: ChatId): string => `chat2-${id}`;
