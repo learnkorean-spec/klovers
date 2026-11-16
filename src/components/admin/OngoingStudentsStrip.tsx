@@ -2,9 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, ArrowRight, AlertTriangle, Link2, Link2Off, Users } from "lucide-react";
+import { GraduationCap, ArrowRight, AlertTriangle, Link2, Link2Off, Users, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useMyStudents, useBundleBalances } from "@/hooks/admin/useMyStudents";
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent,
+} from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useMyStudents, useBundleBalances, useReorderStudents } from "@/hooks/admin/useMyStudents";
 import PrivateStudentPause from "@/components/admin/PrivateStudentPause";
 import {
   formatMoney,
@@ -89,6 +94,22 @@ import {
  * `classmatesByStudent` in MyStudentsManager.tsx already uses for this exact
  * pair: same `meeting_url` AND a matching weekday/start time/length. That is
  * what "the same class" actually means here, independent of billing.
+ *
+ * WHY THE PRIVATE LIST IS DRAGGABLE (2026-11-16)
+ * -----------------------------------------------
+ * Coloring classmates the same was only half the ask: Naira and Renad
+ * Elsenduony are one class, but Namy — alphabetically between them — still
+ * sits in between on screen, because the list was sorted by name with nothing
+ * else to go on. Automatic grouping can color two classmates alike; it cannot
+ * know Re wants them adjacent, because "adjacent" is a layout preference, not
+ * a fact the data implies. So this list is manually ordered instead of
+ * name-sorted: `teacher_students.sort_order` (added for exactly this — see
+ * `MyStudent.sort_order`'s own doc) holds the position, dragging a row writes
+ * it via `useReorderStudents`, and `useMyStudents` orders by it everywhere —
+ * so Student Admin's roster reflects the same order without needing its own
+ * drag handles. MyStudentsManager's own list is the one exception: it sorts
+ * "needs action" first on purpose (a triage view, not a roster), so it is
+ * deliberately left alone rather than switched to sort_order.
  */
 
 interface Props {
@@ -187,6 +208,124 @@ function attentionReason(row: Row): string | null {
   }
   if (row.balance.remaining_classes === 0) return "Bundle finished — needs to renew";
   return null;
+}
+
+/** One private-student row, draggable to set `sort_order`. Pulled out of the
+ * list render because `useSortable` is a hook: it cannot be called from
+ * inside a `.map()` callback in the parent, only from its own component. */
+function SortablePrivateRow({
+  student, balance, reason, account, accountsLoaded, paused, classmate, onChanged,
+}: {
+  student: MyStudentWithClasses;
+  balance: BundleBalance | undefined;
+  reason: string | null;
+  account: Account | undefined;
+  accountsLoaded: boolean;
+  paused: boolean;
+  classmate: { color: GroupColor; label: string } | undefined;
+  onChanged: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: student.id,
+  });
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={
+        "relative rounded-xl border px-3 py-2 space-y-1 " +
+        (classmate ? "pl-4 " : "") +
+        (isDragging ? "z-10 shadow-md " : "") +
+        (paused
+          ? "border-pink-400 bg-pink-50/40 dark:bg-pink-950/10"
+          : reason
+            ? "border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20"
+            : "bg-muted/30")
+      }
+    >
+      {classmate && (
+        <span
+          className={`absolute inset-y-0 left-0 w-1.5 rounded-l-xl ${classmate.color.dot}`}
+          aria-hidden="true"
+        />
+      )}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <button
+          type="button"
+          className="cursor-grab touch-none text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing"
+          aria-label={`Drag to reorder ${student.full_name}`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
+        <span className="text-sm font-medium text-foreground">{student.full_name}</span>
+        <span className="text-xs text-muted-foreground">
+          {SUBJECT_LABEL[student.subject]}
+        </span>
+        {classmate && (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${classmate.color.bg} ${classmate.color.text}`}
+          >
+            Group
+          </span>
+        )}
+        {paused && (
+          <Badge variant="outline" className="text-[10px] border-pink-400 text-pink-600">
+            Paused
+          </Badge>
+        )}
+        {balance && (
+          <span className="text-xs text-muted-foreground">
+            {balance.label} · {balance.used_classes} of {balance.total_classes} used ·{" "}
+            <span className="text-foreground">
+              {balance.remaining_classes} left
+            </span>{" "}
+            · {formatMoney(balance.total_price, balance.currency)}
+          </span>
+        )}
+        <PrivateStudentPause
+          student={student}
+          onChanged={onChanged}
+          className="ms-auto"
+        />
+      </div>
+
+      <p className="text-[11px] text-muted-foreground/80">
+        {formatWeeklySummary(student.classes)}
+      </p>
+
+      {accountsLoaded && (
+        account ? (
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Link2 className="h-3 w-3 shrink-0" />
+            Same person as{" "}
+            <span className="text-foreground">{account.name || "an account"}</span>
+            {account.email && <span className="text-muted-foreground/80">· {account.email}</span>}
+          </p>
+        ) : (
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Link2Off className="h-3 w-3 shrink-0" />
+            No account and no address — cannot be emailed or reminded
+          </p>
+        )
+      )}
+
+      {paused ? (
+        <p className="text-[11px] text-pink-600 dark:text-pink-400">
+          Paused — no lessons go on her calendar, her package does not renew, and no
+          payment letter is sent. Her package, her counted lessons and her balance are
+          all kept, so Resume puts her straight back.
+        </p>
+      ) : reason ? (
+        <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400 flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3 shrink-0" />
+          {reason}
+        </p>
+      ) : null}
+    </li>
+  );
 }
 
 export default function OngoingStudentsStrip({ setAdminTab }: Props) {
@@ -310,6 +449,22 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
   function reload() {
     void studentsQ.refetch();
     void balancesQ.refetch();
+  }
+
+  const reorderMutation = useReorderStudents();
+  // A small move distance before a drag starts, so clicking Pause or any other
+  // control inside a row still registers as a click rather than a cancelled
+  // drag.
+  const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const ids = rows.map((r) => r.student.id);
+    const from = ids.indexOf(active.id as string);
+    const to = ids.indexOf(over.id as string);
+    if (from === -1 || to === -1) return;
+    reorderMutation.mutate(arrayMove(ids, from, to));
   }
 
   const groupRows = groupStudents ?? [];
@@ -454,100 +609,25 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Private · {rows.length}
                 </p>
-                <ul className="space-y-2">
-                  {rows.map(({ student, balance }) => {
-                    const reason = attentionReason({ student, balance });
-                    const account = accounts?.get(student.id);
-                    const paused = student.status === "paused";
-                    const classmate = classmatesById.get(student.id);
-                    return (
-                      <li
-                        key={student.id}
-                        className={
-                          "relative rounded-xl border px-3 py-2 space-y-1 " +
-                          (classmate ? "pl-4 " : "") +
-                          (paused
-                            ? "border-pink-400 bg-pink-50/40 dark:bg-pink-950/10"
-                            : reason
-                              ? "border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20"
-                              : "bg-muted/30")
-                        }
-                      >
-                        {classmate && (
-                          <span
-                            className={`absolute inset-y-0 left-0 w-1.5 rounded-l-xl ${classmate.color.dot}`}
-                            aria-hidden="true"
-                          />
-                        )}
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <span className="text-sm font-medium text-foreground">{student.full_name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {SUBJECT_LABEL[student.subject]}
-                          </span>
-                          {classmate && (
-                            <span
-                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${classmate.color.bg} ${classmate.color.text}`}
-                            >
-                              Group
-                            </span>
-                          )}
-                          {paused && (
-                            <Badge variant="outline" className="text-[10px] border-pink-400 text-pink-600">
-                              Paused
-                            </Badge>
-                          )}
-                          {balance && (
-                            <span className="text-xs text-muted-foreground">
-                              {balance.label} · {balance.used_classes} of {balance.total_classes} used ·{" "}
-                              <span className="text-foreground">
-                                {balance.remaining_classes} left
-                              </span>{" "}
-                              · {formatMoney(balance.total_price, balance.currency)}
-                            </span>
-                          )}
-                          <PrivateStudentPause
-                            student={student}
-                            onChanged={reload}
-                            className="ms-auto"
-                          />
-                        </div>
-
-                        <p className="text-[11px] text-muted-foreground/80">
-                          {formatWeeklySummary(student.classes)}
-                        </p>
-
-                        {accounts && (
-                          account ? (
-                            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                              <Link2 className="h-3 w-3 shrink-0" />
-                              Same person as{" "}
-                              <span className="text-foreground">{account.name || "an account"}</span>
-                              {account.email && <span className="text-muted-foreground/80">· {account.email}</span>}
-                            </p>
-                          ) : (
-                            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                              <Link2Off className="h-3 w-3 shrink-0" />
-                              No account and no address — cannot be emailed or reminded
-                            </p>
-                          )
-                        )}
-
-                        {paused ? (
-                          <p className="text-[11px] text-pink-600 dark:text-pink-400">
-                            Paused — no lessons go on her calendar, her package does not renew, and no
-                            payment letter is sent. Her package, her counted lessons and her balance are
-                            all kept, so Resume puts her straight back.
-                          </p>
-                        ) : reason ? (
-                          <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3 shrink-0" />
-                            {reason}
-                          </p>
-                        ) : null}
-                      </li>
-                    );
-                  })}
-                </ul>
+                <DndContext sensors={dragSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={rows.map((r) => r.student.id)} strategy={verticalListSortingStrategy}>
+                    <ul className="space-y-2">
+                      {rows.map(({ student, balance }) => (
+                        <SortablePrivateRow
+                          key={student.id}
+                          student={student}
+                          balance={balance}
+                          reason={attentionReason({ student, balance })}
+                          account={accounts?.get(student.id)}
+                          accountsLoaded={!!accounts}
+                          paused={student.status === "paused"}
+                          classmate={classmatesById.get(student.id)}
+                          onChanged={reload}
+                        />
+                      ))}
+                    </ul>
+                  </SortableContext>
+                </DndContext>
               </div>
             )}
 

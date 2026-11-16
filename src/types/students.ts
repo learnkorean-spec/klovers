@@ -26,6 +26,8 @@ export interface MyStudent {
   country: string | null;
   /** ISO 4217. Defaults from country, then overridable — what they pay in is an agreement. */
   currency: string | null;
+  /** Manual display order from dragging in the admin UI. Null = never ordered, sorts last. */
+  sort_order: number | null;
   created_at: string;
   updated_at: string;
 }

@@ -42,7 +42,12 @@ export function useMyStudents() {
         await Promise.all([
           supabase
             .from("teacher_students")
-            .select("id, full_name, subject, status, note, meeting_url, country, currency, created_at, updated_at")
+            .select("id, full_name, subject, status, note, meeting_url, country, currency, sort_order, created_at, updated_at")
+            // Manually dragged order wins; anyone never dragged (sort_order
+            // null) sorts after everyone who has been, then alphabetically —
+            // matches the "Null = never ordered, sorts last" contract on
+            // MyStudent.sort_order.
+            .order("sort_order", { ascending: true, nullsFirst: false })
             .order("full_name"),
           supabase
             .from("teacher_student_classes")
@@ -109,6 +114,59 @@ export function useUpdateStudent() {
       if (error) throw error;
     },
     onSuccess: () => invalidateStudentsAndAvailability(qc),
+  });
+}
+
+/**
+ * Saves a manual drag order. Called once per drop with the student's new full
+ * neighbour list (in its new order) rather than a single moved id + index, so
+ * the write is the same shape regardless of which direction something moved
+ * or how far — the caller just re-numbers everyone in the list it already has
+ * and sends that.
+ *
+ * sort_order is written 10 apart (10, 20, 30…), not 1 apart, so a future
+ * "drop between two rows" can get its own value without renumbering
+ * everything else — unused today, but free to leave room for since the whole
+ * point of this column over array position is that it is meant to be read
+ * elsewhere (MyStudentsManager, anything added later) without redoing this
+ * work.
+ */
+export function useReorderStudents() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      await Promise.all(
+        orderedIds.map((id, i) =>
+          supabase.from("teacher_students").update({ sort_order: (i + 1) * 10 }).eq("id", id),
+        ),
+      ).then(results => {
+        const failed = results.find(r => r.error);
+        if (failed?.error) throw failed.error;
+      });
+    },
+    // Optimistic: dragging that snaps back after a refetch round-trip reads as
+    // broken, not as "saving". The real order is already known locally — it is
+    // exactly what the drag just produced — so it is applied to the cache
+    // immediately and reconciled with the server in the background.
+    onMutate: async (orderedIds) => {
+      await qc.cancelQueries({ queryKey: KEYS.all });
+      const previous = qc.getQueryData<MyStudentWithClasses[]>(KEYS.all);
+      if (previous) {
+        const rank = new Map(orderedIds.map((id, i) => [id, i]));
+        const next = [...previous].sort((a, b) => {
+          const ra = rank.has(a.id) ? rank.get(a.id)! : Infinity;
+          const rb = rank.has(b.id) ? rank.get(b.id)! : Infinity;
+          if (ra !== rb) return ra - rb;
+          return a.full_name.localeCompare(b.full_name);
+        });
+        qc.setQueryData(KEYS.all, next);
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) qc.setQueryData(KEYS.all, context.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: KEYS.all }),
   });
 }
 
