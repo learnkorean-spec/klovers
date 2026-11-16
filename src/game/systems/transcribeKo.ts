@@ -9,7 +9,17 @@
  * decoded by hand below (no SDK: it is small, and keeps the bundle light).
  */
 
+/**
+ * Off until Amazon Transcribe is enabled on the AWS account: on 16 Nov 2026 the
+ * live test reached Amazon but got "SubscriptionRequiredException — the AWS
+ * Access Key Id needs a subscription for the service" (Free-plan account;
+ * Polly works, Transcribe doesn't). While off, iPhones simply don't show
+ * "Say it", exactly as before. Flip to true once a test returns Korean text.
+ */
+export const TRANSCRIBE_ON = false;
+
 export const canStream = (): boolean =>
+  TRANSCRIBE_ON &&
   typeof window !== "undefined" &&
   typeof WebSocket !== "undefined" &&
   !!navigator.mediaDevices?.getUserMedia &&
