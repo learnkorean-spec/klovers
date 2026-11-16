@@ -1001,6 +1001,7 @@ const WorldPage = () => {
                 done={saved.missionsDone}
                 best={saved.bestTimes}
                 remembered={saved.memories}
+                met={saved.met}
                 clubyHere={clubyAwake && saved.hatchSeen}
                 onStart={startMission}
                 onStop={() => {

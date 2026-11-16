@@ -146,15 +146,15 @@ const EN: Record<ChatId, Chat> = {
       {
         ko: "저쪽으로 쭉 가세요. 오른쪽에 있어요.",
         gloss: "Go straight that way. It is on the right.",
-        ask: "He was kind. Thank him.",
+        ask: "He was kind. Thank him: there are two ways.",
         options: [
           { ko: "미안합니다.", right: false, feedback: "미안합니다 means \"I'm sorry\". To thank someone: 감사합니다." },
-          { ko: "안녕하세요.", right: false, feedback: "안녕하세요 is hello. To thank someone: 감사합니다." },
-          { ko: "감사합니다!", right: true, feedback: "Yes: 감사합니다! 오른쪽 = right, 왼쪽 = left, 쭉 = straight on." },
+          { ko: "고맙습니다!", right: true, feedback: "Yes: 고맙습니다 is a thank-you too, a little warmer than 감사합니다. Both are polite.", reply: { ko: "별말씀을요!", gloss: "Don't mention it!" } },
+          { ko: "감사합니다!", right: true, feedback: "Yes: 감사합니다! 오른쪽 = right, 왼쪽 = left, 쭉 = straight on.", reply: { ko: "천만에요!", gloss: "You're welcome!" } },
         ],
       },
     ],
-    closing: { ko: "아니에요. 또 만나요!", gloss: "Not at all. See you again!" },
+    closing: { ko: "또 만나요!", gloss: "See you again!" },
   },
   park: {
     name: "Ms. Park",
@@ -212,11 +212,11 @@ const EN: Record<ChatId, Chat> = {
       {
         ko: "학생입니까?",
         gloss: "Are you a student?",
-        ask: "You are. Answer in his formal style.",
+        ask: "Answer truly, in his formal style: a student (학생) or an office worker (회사원).",
         options: [
-          { ko: "네, 학생입니다.", right: true, feedback: "Yes: 학생입니다. 입니다 is the formal 이에요; the question form is 입니까?" },
+          { ko: "네, 학생입니다.", right: true, feedback: "Yes: 학생입니다. 입니다 is the formal 이에요; the question form is 입니까?", reply: { ko: "아, 학생이십니까. 환영합니다.", gloss: "Ah, a student. Welcome." } },
           { ko: "네, 학생이에요.", right: false, feedback: "Good Korean, and polite, but it is the everyday style. To match his formal one: 네, 학생입니다." },
-          { ko: "아니요, 학생입니다.", right: false, feedback: "아니요 means no, and then it says you are a student. Yes is 네: 네, 학생입니다." },
+          { ko: "아니요, 회사원입니다.", right: true, feedback: "Yes: 아니요 = no, 회사원입니다 = I am an office worker. Formal, like him.", reply: { ko: "아, 회사원이십니까. 환영합니다.", gloss: "Ah, an office worker. Welcome." } },
         ],
       },
       {
@@ -298,15 +298,15 @@ const EN: Record<ChatId, Chat> = {
       {
         ko: "내일 두 시에 만나요!",
         gloss: "Let's meet tomorrow at two!",
-        ask: "Agree to her plan.",
+        ask: "Agree to her plan, or say you are busy (바빠요).",
         options: [
-          { ko: "네, 내일 만나요!", right: true, feedback: "Yes: 내일 = tomorrow. 두 시에: the time something happens takes 에." },
+          { ko: "네, 내일 만나요!", right: true, feedback: "Yes: 내일 = tomorrow. 두 시에: the time something happens takes 에.", reply: { ko: "좋아요! 두 시예요, 잊지 마세요.", gloss: "Great! Two o'clock, don't forget." } },
           { ko: "네, 어제 만나요!", right: false, feedback: "어제 is yesterday! Tomorrow is 내일: 네, 내일 만나요!" },
-          { ko: "네, 지금 만나요!", right: false, feedback: "지금 is now, but she said tomorrow: 네, 내일 만나요!" },
+          { ko: "미안해요, 내일은 바빠요.", right: true, feedback: "Yes: 미안해요 = sorry, 바빠요 = I am busy. A polite way to say no.", reply: { ko: "괜찮아요. 그럼 다음에 만나요!", gloss: "That's fine. Let's meet next time, then!" } },
         ],
       },
     ],
-    closing: { ko: "좋아요! 내일 봐요.", gloss: "Great! See you tomorrow." },
+    closing: { ko: "그럼 또 봐요!", gloss: "See you again, then!" },
   },
   taeyang: {
     name: "Taeyang",
@@ -354,11 +354,11 @@ const EN: Record<ChatId, Chat> = {
       {
         ko: "안녕하세요! 한국어 할 수 있어요?",
         gloss: "Hello! Can you speak Korean?",
-        ask: "You can, a little (조금).",
+        ask: "Answer truly: a little (조금), or not well (잘 못해요).",
         options: [
-          { ko: "아니요, 할 수 있어요.", right: false, feedback: "아니요 means no, and then it says you can. Yes is 네: 네, 조금 할 수 있어요." },
+          { ko: "아니요, 잘 못해요.", right: true, feedback: "Yes: 잘 못해요 = I can't do it well. A modest, honest answer.", reply: { ko: "아니에요, 지금 잘하고 있어요!", gloss: "Not at all, you are doing well right now!" } },
           { ko: "네, 조금 할 수 없어요.", right: false, feedback: "할 수 없어요 means \"I can't\". You can: 네, 조금 할 수 있어요." },
-          { ko: "네, 조금 할 수 있어요.", right: true, feedback: "Yes: 할 수 있어요, \"I can\". 할 수 없어요 = I can't." },
+          { ko: "네, 조금 할 수 있어요.", right: true, feedback: "Yes: 할 수 있어요, \"I can\". 할 수 없어요 = I can't.", reply: { ko: "와, 대단해요!", gloss: "Wow, that's great!" } },
         ],
       },
       {
@@ -519,11 +519,11 @@ const EN: Record<ChatId, Chat> = {
       {
         ko: "커피 좋아해요?",
         gloss: "Do you like coffee?",
-        ask: "You do.",
+        ask: "Answer truly: you like it, or you prefer tea (차).",
         options: [
-          { ko: "네, 좋아해요.", right: true, feedback: "Yes: 네, 좋아해요. 좋아해요 = (I) like it." },
+          { ko: "네, 좋아해요.", right: true, feedback: "Yes: 네, 좋아해요. 좋아해요 = (I) like it.", reply: { ko: "저도요! 여기 커피가 맛있어요.", gloss: "Me too! The coffee here is good." } },
           { ko: "아니요, 좋아해요.", right: false, feedback: "아니요 means no, and then it says you like it. Yes is 네: 네, 좋아해요." },
-          { ko: "네, 커피예요.", right: false, feedback: "That says \"yes, it is coffee\". To say you like it: 네, 좋아해요." },
+          { ko: "아니요, 차를 좋아해요.", right: true, feedback: "Yes: 차 = tea. 차를 좋아해요 = I like tea.", reply: { ko: "아, 그래요? 여기 녹차도 맛있어요.", gloss: "Oh, really? The green tea here is good too." } },
         ],
       },
       {
@@ -567,11 +567,11 @@ const EN: Record<ChatId, Chat> = {
       {
         ko: "맛이 어때요?",
         gloss: "How does it taste?",
-        ask: "It is a little spicy, but you like it.",
+        ask: "Say what you think: delicious, or a little spicy (매워요) but good.",
         options: [
-          { ko: "조금 매워요. 하지만 맛있어요!", right: true, feedback: "Yes: 매워요 = spicy, 하지만 = but, 맛있어요 = delicious." },
+          { ko: "조금 매워요. 하지만 맛있어요!", right: true, feedback: "Yes: 매워요 = spicy, 하지만 = but, 맛있어요 = delicious.", reply: { ko: "다행이에요! 물도 드세요.", gloss: "I'm glad! Have some water too." } },
           { ko: "조금 매워요. 그래서 맛없어요.", right: false, feedback: "그래서 맛없어요 says \"so it's not tasty\": hard on a cook! You like it: 조금 매워요. 하지만 맛있어요!" },
-          { ko: "조금 추워요.", right: false, feedback: "추워요 is cold weather. Spicy is 매워요: 조금 매워요. 하지만 맛있어요!" },
+          { ko: "정말 맛있어요!", right: true, feedback: "Yes: 정말 = really, 맛있어요 = delicious. The words every cook hopes for.", reply: { ko: "고마워요! 많이 드세요.", gloss: "Thank you! Eat plenty." } },
         ],
       },
       {
@@ -615,15 +615,15 @@ const EN: Record<ChatId, Chat> = {
       {
         ko: "교통카드 있어요?",
         gloss: "Do you have a transit card?",
-        ask: "You do not.",
+        ask: "Answer truly: you have one (있어요) or you don't (없어요).",
         options: [
-          { ko: "아니요, 없어요.", right: true, feedback: "Yes: 없어요 = I don't have one. 있어요 = I have one." },
-          { ko: "아니요, 있어요.", right: false, feedback: "아니요 says no, 있어요 says you have one. You don't: 아니요, 없어요." },
+          { ko: "아니요, 없어요.", right: true, feedback: "Yes: 없어요 = I don't have one. 있어요 = I have one.", reply: { ko: "그럼 저기에서 표를 사세요.", gloss: "Then buy a ticket over there." } },
+          { ko: "네, 있어요.", right: true, feedback: "Yes: 있어요 = I have one. 없어요 = I don't.", reply: { ko: "좋아요. 그럼 바로 타세요!", gloss: "Good. Then go straight on board!" } },
           { ko: "네, 없어요.", right: false, feedback: "네 says yes, 없어요 says you have none. To a plain question, answer: 아니요, 없어요." },
         ],
       },
     ],
-    closing: { ko: "저기에서 표를 사세요. 안녕히 가세요!", gloss: "Buy a ticket over there. Goodbye!" },
+    closing: { ko: "안녕히 가세요!", gloss: "Goodbye!" },
   },
   grandpa: {
     name: "Grandpa Oh",
@@ -643,11 +643,11 @@ const EN: Record<ChatId, Chat> = {
       {
         ko: "한국 음식 좋아해요?",
         gloss: "Do you like Korean food?",
-        ask: "You like kimchi stew (김치찌개) best.",
+        ask: "Say which you like best: kimchi stew (김치찌개) or bibimbap (비빔밥).",
         options: [
           { ko: "네, 김치찌개를 제일 싫어해요.", right: false, feedback: "싫어해요 means dislike! Like is 좋아해요: 네, 김치찌개를 제일 좋아해요." },
-          { ko: "네, 김치찌개를 제일 좋아해요.", right: true, feedback: "Yes: 제일 = the most. 제일 좋아해요 = I like it best." },
-          { ko: "네, 김치찌개가 제일 비싸요.", right: false, feedback: "비싸요 means expensive: \"kimchi stew is the most expensive\". You like it best: 네, 김치찌개를 제일 좋아해요." },
+          { ko: "네, 김치찌개를 제일 좋아해요.", right: true, feedback: "Yes: 제일 = the most. 제일 좋아해요 = I like it best.", reply: { ko: "오, 김치찌개! 나도 좋아해요.", gloss: "Oh, kimchi stew! I like it too." } },
+          { ko: "네, 비빔밥을 제일 좋아해요.", right: true, feedback: "Yes: 비빔밥 = rice mixed with vegetables. 제일 좋아해요 = I like it best.", reply: { ko: "비빔밥! 건강에 좋아요.", gloss: "Bibimbap! It is good for your health." } },
         ],
       },
       {
@@ -691,15 +691,15 @@ const EN: Record<ChatId, Chat> = {
       {
         ko: "혼자 왔어요?",
         gloss: "Did you come alone?",
-        ask: "No: you came with a friend (친구).",
+        ask: "Answer truly: alone (혼자), or with a friend (친구하고 같이).",
         options: [
-          { ko: "아니요, 친구하고 같이 왔어요.", right: true, feedback: "Yes: 친구하고 같이 = together with a friend. 하고 = with." },
-          { ko: "아니요, 친구를 같이 왔어요.", right: false, feedback: "를 marks what an action is done to. With someone is 하고: 아니요, 친구하고 같이 왔어요." },
+          { ko: "아니요, 친구하고 같이 왔어요.", right: true, feedback: "Yes: 친구하고 같이 = together with a friend. 하고 = with.", reply: { ko: "좋겠네요!", gloss: "How nice!" } },
+          { ko: "네, 혼자 왔어요.", right: true, feedback: "Yes: 혼자 = alone. 혼자 왔어요 = I came alone.", reply: { ko: "와, 용감하네요!", gloss: "Wow, how brave!" } },
           { ko: "네, 친구하고 같이 왔어요.", right: false, feedback: "네 says you came alone, then says you came with a friend. Say: 아니요, 친구하고 같이 왔어요." },
         ],
       },
     ],
-    closing: { ko: "좋겠네요. 좋은 구경 하세요!", gloss: "How nice. Enjoy the view!" },
+    closing: { ko: "좋은 구경 하세요!", gloss: "Enjoy the view!" },
   },
 };
 
@@ -732,15 +732,15 @@ const AR: Record<ChatId, Chat> = {
       {
         ko: "저쪽으로 쭉 가세요. 오른쪽에 있어요.",
         gloss: "السير مباشرةً من هناك. المحل على اليمين.",
-        ask: "كان لطيفًا. حان وقت الشكر.",
+        ask: "كان لطيفًا. حان وقت الشكر: هناك طريقتان.",
         options: [
           { ko: "미안합니다.", right: false, feedback: "미안합니다 تعني «آسف». للشكر: 감사합니다." },
-          { ko: "안녕하세요.", right: false, feedback: "안녕하세요 تحية. للشكر: 감사합니다." },
-          { ko: "감사합니다!", right: true, feedback: "نعم: 감사합니다! 오른쪽 = اليمين، 왼쪽 = اليسار، 쭉 = مباشرةً." },
+          { ko: "고맙습니다!", right: true, feedback: "نعم: 고맙습니다 شكر أيضًا، وأدفأ قليلًا من 감사합니다. كلتاهما مهذّبتان.", reply: { ko: "별말씀을요!", gloss: "لا داعي للشكر!" } },
+          { ko: "감사합니다!", right: true, feedback: "نعم: 감사합니다! 오른쪽 = اليمين، 왼쪽 = اليسار، 쭉 = مباشرةً.", reply: { ko: "천만에요!", gloss: "على الرحب والسعة!" } },
         ],
       },
     ],
-    closing: { ko: "아니에요. 또 만나요!", gloss: "لا شكر على واجب. إلى اللقاء!" },
+    closing: { ko: "또 만나요!", gloss: "إلى اللقاء!" },
   },
   park: {
     name: "الآنسة بارك",
@@ -798,11 +798,11 @@ const AR: Record<ChatId, Chat> = {
       {
         ko: "학생입니까?",
         gloss: "هل أنتم طلاب؟",
-        ask: "نعم. الإجابة بأسلوبه الرسمي.",
+        ask: "الإجابة بصدق وبأسلوبه الرسمي: طالب (학생) أو موظف في شركة (회사원).",
         options: [
-          { ko: "네, 학생입니다.", right: true, feedback: "نعم: 학생입니다. 입니다 هي الصيغة الرسمية من 이에요، وصيغة السؤال 입니까?" },
+          { ko: "네, 학생입니다.", right: true, feedback: "نعم: 학생입니다. 입니다 هي الصيغة الرسمية من 이에요، وصيغة السؤال 입니까?", reply: { ko: "아, 학생이십니까. 환영합니다.", gloss: "آه، طالب. أهلًا وسهلًا." } },
           { ko: "네, 학생이에요.", right: false, feedback: "جملة صحيحة ومهذّبة، لكنها بالأسلوب اليومي. لمجاراة أسلوبه الرسمي: 네, 학생입니다." },
-          { ko: "아니요, 학생입니다.", right: false, feedback: "아니요 تعني «لا»، ثم تقول الجملة إنك طالب. «نعم» هي 네: 네, 학생입니다." },
+          { ko: "아니요, 회사원입니다.", right: true, feedback: "نعم: 아니요 = لا، و회사원입니다 = أنا موظف في شركة. بأسلوب رسمي مثله.", reply: { ko: "아, 회사원이십니까. 환영합니다.", gloss: "آه، موظف في شركة. أهلًا وسهلًا." } },
         ],
       },
       {
@@ -884,15 +884,15 @@ const AR: Record<ChatId, Chat> = {
       {
         ko: "내일 두 시에 만나요!",
         gloss: "نلتقي غدًا في الساعة الثانية!",
-        ask: "الموافقة على موعدها.",
+        ask: "الموافقة على موعدها، أو الاعتذار بالانشغال (바빠요).",
         options: [
-          { ko: "네, 내일 만나요!", right: true, feedback: "نعم: 내일 = غدًا. 두 시에: وقت حدوث الشيء يأخذ 에." },
+          { ko: "네, 내일 만나요!", right: true, feedback: "نعم: 내일 = غدًا. 두 시에: وقت حدوث الشيء يأخذ 에.", reply: { ko: "좋아요! 두 시예요, 잊지 마세요.", gloss: "رائع! الساعة الثانية، لا تنسَ." } },
           { ko: "네, 어제 만나요!", right: false, feedback: "어제 تعني أمس! غدًا هي 내일: 네, 내일 만나요!" },
-          { ko: "네, 지금 만나요!", right: false, feedback: "지금 تعني الآن، لكنها قالت غدًا: 네, 내일 만나요!" },
+          { ko: "미안해요, 내일은 바빠요.", right: true, feedback: "نعم: 미안해요 = آسف، و바빠요 = مشغول. طريقة مهذّبة للاعتذار.", reply: { ko: "괜찮아요. 그럼 다음에 만나요!", gloss: "لا بأس. نلتقي في المرة القادمة إذن!" } },
         ],
       },
     ],
-    closing: { ko: "좋아요! 내일 봐요.", gloss: "رائع! إلى الغد." },
+    closing: { ko: "그럼 또 봐요!", gloss: "إلى اللقاء إذن!" },
   },
   taeyang: {
     name: "تايانغ",
@@ -940,11 +940,11 @@ const AR: Record<ChatId, Chat> = {
       {
         ko: "안녕하세요! 한국어 할 수 있어요?",
         gloss: "مرحبًا! هل تتكلم الكورية؟",
-        ask: "نعم، قليلًا (조금).",
+        ask: "الإجابة بصدق: قليلًا (조금) أو ليس جيدًا (잘 못해요).",
         options: [
-          { ko: "아니요, 할 수 있어요.", right: false, feedback: "아니요 تعني «لا»، ثم تقول الجملة إنك تستطيع. «نعم» هي 네: 네, 조금 할 수 있어요." },
+          { ko: "아니요, 잘 못해요.", right: true, feedback: "نعم: 잘 못해요 = لا أجيدها. إجابة متواضعة وصادقة.", reply: { ko: "아니에요, 지금 잘하고 있어요!", gloss: "لا أبدًا، أنت تجيدها الآن!" } },
           { ko: "네, 조금 할 수 없어요.", right: false, feedback: "할 수 없어요 تعني «لا أستطيع». وأنت تستطيع: 네, 조금 할 수 있어요." },
-          { ko: "네, 조금 할 수 있어요.", right: true, feedback: "نعم: 할 수 있어요 «أستطيع». و할 수 없어요 = لا أستطيع." },
+          { ko: "네, 조금 할 수 있어요.", right: true, feedback: "نعم: 할 수 있어요 «أستطيع». و할 수 없어요 = لا أستطيع.", reply: { ko: "와, 대단해요!", gloss: "واو، رائع!" } },
         ],
       },
       {
@@ -1105,11 +1105,11 @@ const AR: Record<ChatId, Chat> = {
       {
         ko: "커피 좋아해요?",
         gloss: "هل تحب القهوة؟",
-        ask: "نعم.",
+        ask: "الإجابة بصدق: تحبها، أو تفضّل الشاي (차).",
         options: [
-          { ko: "네, 좋아해요.", right: true, feedback: "نعم: 네, 좋아해요. 좋아해요 = أحبّها." },
+          { ko: "네, 좋아해요.", right: true, feedback: "نعم: 네, 좋아해요. 좋아해요 = أحبّها.", reply: { ko: "저도요! 여기 커피가 맛있어요.", gloss: "وأنا أيضًا! القهوة هنا لذيذة." } },
           { ko: "아니요, 좋아해요.", right: false, feedback: "아니요 تعني «لا»، ثم تقول الجملة إنك تحبها. «نعم» هي 네: 네, 좋아해요." },
-          { ko: "네, 커피예요.", right: false, feedback: "هذه تقول «نعم، إنها قهوة». للتعبير عن الإعجاب: 네, 좋아해요." },
+          { ko: "아니요, 차를 좋아해요.", right: true, feedback: "نعم: 차 = الشاي. 차를 좋아해요 = أحب الشاي.", reply: { ko: "아, 그래요? 여기 녹차도 맛있어요.", gloss: "آه، حقًا؟ الشاي الأخضر هنا لذيذ أيضًا." } },
         ],
       },
       {
@@ -1153,11 +1153,11 @@ const AR: Record<ChatId, Chat> = {
       {
         ko: "맛이 어때요?",
         gloss: "كيف الطعم؟",
-        ask: "حارّ قليلًا، لكنه يعجبك.",
+        ask: "قل رأيك: لذيذ، أو حارّ قليلًا (매워요) لكنه طيب.",
         options: [
-          { ko: "조금 매워요. 하지만 맛있어요!", right: true, feedback: "نعم: 매워요 = حارّ، 하지만 = لكن، 맛있어요 = لذيذ." },
+          { ko: "조금 매워요. 하지만 맛있어요!", right: true, feedback: "نعم: 매워요 = حارّ، 하지만 = لكن، 맛있어요 = لذيذ.", reply: { ko: "다행이에요! 물도 드세요.", gloss: "الحمد لله! تفضّل ماء أيضًا." } },
           { ko: "조금 매워요. 그래서 맛없어요.", right: false, feedback: "그래서 맛없어요 تقول «لذلك ليس لذيذًا»: قاسية على طبّاخة! الطعم يعجبك: 조금 매워요. 하지만 맛있어요!" },
-          { ko: "조금 추워요.", right: false, feedback: "추워요 لبرودة الطقس. الحارّ هو 매워요: 조금 매워요. 하지만 맛있어요!" },
+          { ko: "정말 맛있어요!", right: true, feedback: "نعم: 정말 = حقًا، و맛있어요 = لذيذ. الكلمات التي تتمناها كل طبّاخة.", reply: { ko: "고마워요! 많이 드세요.", gloss: "شكرًا! تفضّل وكُل كثيرًا." } },
         ],
       },
       {
@@ -1201,15 +1201,15 @@ const AR: Record<ChatId, Chat> = {
       {
         ko: "교통카드 있어요?",
         gloss: "هل معك بطاقة مواصلات؟",
-        ask: "لا.",
+        ask: "الإجابة بصدق: معك (있어요) أو ليست معك (없어요).",
         options: [
-          { ko: "아니요, 없어요.", right: true, feedback: "نعم: 없어요 = ليست معي. و있어요 = معي." },
-          { ko: "아니요, 있어요.", right: false, feedback: "아니요 تقول «لا»، و있어요 تقول إنها معك. ليست معك: 아니요, 없어요." },
+          { ko: "아니요, 없어요.", right: true, feedback: "نعم: 없어요 = ليست معي. و있어요 = معي.", reply: { ko: "그럼 저기에서 표를 사세요.", gloss: "إذن التذاكر تُشترى من هناك." } },
+          { ko: "네, 있어요.", right: true, feedback: "نعم: 있어요 = معي. و없어요 = ليست معي.", reply: { ko: "좋아요. 그럼 바로 타세요!", gloss: "جيد. اركب مباشرةً إذن!" } },
           { ko: "네, 없어요.", right: false, feedback: "네 تقول «نعم»، و없어요 تقول إنها ليست معك. الردّ على سؤال مباشر: 아니요, 없어요." },
         ],
       },
     ],
-    closing: { ko: "저기에서 표를 사세요. 안녕히 가세요!", gloss: "التذاكر تُشترى من هناك. مع السلامة!" },
+    closing: { ko: "안녕히 가세요!", gloss: "مع السلامة!" },
   },
   grandpa: {
     name: "الجدّ أو",
@@ -1229,11 +1229,11 @@ const AR: Record<ChatId, Chat> = {
       {
         ko: "한국 음식 좋아해요?",
         gloss: "هل تحب الطعام الكوري؟",
-        ask: "أكثر ما تحبه يخنة الكيمتشي (김치찌개).",
+        ask: "قل أيهما تحب أكثر: يخنة الكيمتشي (김치찌개) أو البيبيمباب (비빔밥).",
         options: [
           { ko: "네, 김치찌개를 제일 싫어해요.", right: false, feedback: "싫어해요 تعني «أكره»! «أحب» هي 좋아해요: 네, 김치찌개를 제일 좋아해요." },
-          { ko: "네, 김치찌개를 제일 좋아해요.", right: true, feedback: "نعم: 제일 = الأكثر. 제일 좋아해요 = أحبه أكثر من غيره." },
-          { ko: "네, 김치찌개가 제일 비싸요.", right: false, feedback: "비싸요 تعني «غالٍ»: «يخنة الكيمتشي هي الأغلى». المقصود أنها الأحب: 네, 김치찌개를 제일 좋아해요." },
+          { ko: "네, 김치찌개를 제일 좋아해요.", right: true, feedback: "نعم: 제일 = الأكثر. 제일 좋아해요 = أحبه أكثر من غيره.", reply: { ko: "오, 김치찌개! 나도 좋아해요.", gloss: "أوه، يخنة الكيمتشي! أنا أيضًا أحبها." } },
+          { ko: "네, 비빔밥을 제일 좋아해요.", right: true, feedback: "نعم: 비빔밥 = أرز مخلوط بالخضار. 제일 좋아해요 = أحبه أكثر من غيره.", reply: { ko: "비빔밥! 건강에 좋아요.", gloss: "بيبيمباب! مفيد للصحة." } },
         ],
       },
       {
@@ -1277,15 +1277,15 @@ const AR: Record<ChatId, Chat> = {
       {
         ko: "혼자 왔어요?",
         gloss: "هل جئت وحدك؟",
-        ask: "لا: مع صديق (친구).",
+        ask: "الإجابة بصدق: وحدك (혼자) أو مع صديق (친구하고 같이).",
         options: [
-          { ko: "아니요, 친구하고 같이 왔어요.", right: true, feedback: "نعم: 친구하고 같이 = مع صديق. 하고 = مع." },
-          { ko: "아니요, 친구를 같이 왔어요.", right: false, feedback: "를 لما يقع عليه الفعل. «مع» هي 하고: 아니요, 친구하고 같이 왔어요." },
+          { ko: "아니요, 친구하고 같이 왔어요.", right: true, feedback: "نعم: 친구하고 같이 = مع صديق. 하고 = مع.", reply: { ko: "좋겠네요!", gloss: "ما أجمل ذلك!" } },
+          { ko: "네, 혼자 왔어요.", right: true, feedback: "نعم: 혼자 = وحدي. 혼자 왔어요 = جئت وحدي.", reply: { ko: "와, 용감하네요!", gloss: "واو، يا للشجاعة!" } },
           { ko: "네, 친구하고 같이 왔어요.", right: false, feedback: "네 تقول إنك جئت وحدك، ثم تقول إنك مع صديق. الصحيح: 아니요, 친구하고 같이 왔어요." },
         ],
       },
     ],
-    closing: { ko: "좋겠네요. 좋은 구경 하세요!", gloss: "ما أجمل ذلك. مشاهدة ممتعة!" },
+    closing: { ko: "좋은 구경 하세요!", gloss: "مشاهدة ممتعة!" },
   },
 };
 

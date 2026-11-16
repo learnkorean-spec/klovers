@@ -4,7 +4,11 @@ import { INTERACTABLES } from "../config/interactions";
 import { MISSIONS, missionRooms, missionSteps, type Mission, type MissionId } from "../config/missions";
 import { CHAPTERS, SIDE_MISSIONS, chapterDone, chapterMissions, currentChapter } from "../config/chapters";
 import { MEMORY_OF, memory as memoryText } from "../config/memories";
+import { ALL_CHATS, CHATS, chatMetKey, chatNameKo, type ChatId } from "../config/chats";
 import { ROOMS, type RoomId } from "../config/rooms";
+
+/** Who there is to talk with in each place, in the order they are listed. */
+const PEOPLE_OF = (room: RoomId): ChatId[] => ALL_CHATS.filter((id) => INTERACTABLES.some((i) => i.kind === "chat" && i.chat === id && i.room === room));
 
 /**
  * The walking map and the missions, all DOM / 2D canvas (no 3D cost):
@@ -484,6 +488,7 @@ export function MissionsCard({
   best,
   remembered = [],
   clubyHere = false,
+  met = [],
   onStart,
   onStop,
   onClose,
@@ -492,6 +497,8 @@ export function MissionsCard({
   /** Cluby's memories that have returned, and whether he has hatched (nothing of his is shown before). */
   remembered?: readonly string[];
   clubyHere?: boolean;
+  /** Who the learner has talked with (worldState.met). */
+  met?: readonly string[];
   isOpen: (r: RoomId) => boolean;
   active: MissionId | null;
   done: readonly string[];
@@ -586,6 +593,29 @@ export function MissionsCard({
               </div>
               <p className="text-sm text-charcoal/80">{t.line}</p>
               {open && <ul className="grid gap-2 sm:grid-cols-2">{chapterMissions(c).map(row)}</ul>}
+              {/* The people of this place: who they are once met, and what talking with them practised. */}
+              {open && PEOPLE_OF(c.room).length > 0 && (
+                <ul className="flex flex-col gap-1.5">
+                  {PEOPLE_OF(c.room).map((id) => {
+                    const p = CHATS[lang][id];
+                    const friend = met.includes(chatMetKey(id));
+                    return (
+                      <li key={id} className={`rounded-xl px-3 py-2 text-sm ${friend ? "bg-white" : "border border-dashed border-charcoal/25 text-charcoal/70"}`}>
+                        <p className="font-bold">
+                          {friend ? p.name : p.role}
+                          {friend && (
+                            <span lang="ko" dir="ltr" className="mx-2 font-ko font-normal text-charcoal/70">
+                              {chatNameKo(id)}
+                            </span>
+                          )}
+                          {!friend && <span className="mx-2 font-normal">· {copy.chatUi.notMet}</span>}
+                        </p>
+                        {friend && <p className="pt-0.5 text-xs text-charcoal/75">{p.focus}</p>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
               {/* Cluby's memory of this chapter: kept here once it has returned. Never before he has hatched. */}
               {clubyHere && open && remembered.includes(MEMORY_OF[c.id]) && (
                 <div className="rounded-xl bg-klovers-green/25 p-3">

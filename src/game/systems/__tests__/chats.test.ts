@@ -119,11 +119,12 @@ describe("conversations with the named Korean friends", () => {
           expect(o.feedback.length).toBeGreaterThan(10);
           expect(u.options[k].feedback.length).toBeGreaterThan(10);
           // A reply that does not fit always shows the one that does.
-          const right = t.options.find((x) => x.right)!.ko.replace(/[.!?]+$/, "");
+          const rights = t.options.filter((x) => x.right).map((x) => x.ko.replace(/[.!?]+$/, ""));
           expect(u.options[k].reply?.ko).toBe(o.reply?.ko);
-          if (!o.right && !/^\d/.test(right)) {
-            expect(o.feedback, `${id} ${n} ${k}`).toContain(right);
-            expect(u.options[k].feedback, `${id} ${n} ${k} ar`).toContain(right);
+          // A reply that does not fit always shows one that does.
+          if (!o.right && !rights.some((r) => /^\d/.test(r))) {
+            expect(rights.some((r) => o.feedback.includes(r)), `${id} ${n} ${k}`).toBe(true);
+            expect(rights.some((r) => u.options[k].feedback.includes(r)), `${id} ${n} ${k} ar`).toBe(true);
           }
         });
       });
