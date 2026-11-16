@@ -74,6 +74,21 @@ import {
  * student is still a student; she is shown, said to be paused, and given the
  * button back. She is not amber either: amber means something needs doing, and
  * a deliberate freeze is the opposite of that.
+ *
+ * WHY "CLASSMATES" ARE MATCHED BY MEETING LINK, NOT SCHEDULE TEXT (2026-11-16)
+ * -----------------------------------------------------------------------------
+ * Naira and Renad Elsenduony are one real class — same Monday 00:00 Meet
+ * link — billed as two separate private bundles in different currencies
+ * (EGP vs USD) because each pays a different amount. Re flagged that they
+ * must always show as the same color and read as "Group", regardless of what
+ * either one pays. Matching on the formatted weekly-schedule text alone (the
+ * previous approach) was wrong in both directions: two unrelated students who
+ * each happen to teach Mon 00:00, on different Meet links, would be colored
+ * as classmates; two real classmates with more than one weekly class, listed
+ * in a different order, could fail to match. The fix is the same rule
+ * `classmatesByStudent` in MyStudentsManager.tsx already uses for this exact
+ * pair: same `meeting_url` AND a matching weekday/start time/length. That is
+ * what "the same class" actually means here, independent of billing.
  */
 
 interface Props {
@@ -103,6 +118,9 @@ type GroupStudent = {
 };
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** "23:00:00" or "23:00" -> "23:00". Matches MyStudentsManager.tsx's own helper of the same name. */
+const trimSeconds = (t: string) => t.slice(0, 5);
 
 /**
  * Colors that mark which students actually belong together — the same class,
@@ -286,21 +304,39 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
   const groupRows = groupStudents ?? [];
   const total = rows.length + groupRows.length;
 
-  // Private students who share the exact same weekly schedule are, in
-  // practice, in the same session — give them a matching color so that's
-  // visible at a glance instead of only readable by comparing two rows by
-  // eye. A schedule nobody else has stays uncolored: a group of one isn't one.
-  const scheduleGroups = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const { student } of rows) {
-      const key = formatWeeklySummary(student.classes);
-      counts.set(key, (counts.get(key) ?? 0) + 1);
+  // Private students who are actually taught together, in the same session —
+  // same meeting link, same weekday/time/length — even though each has her
+  // own teacher_students row, her own bundle and her own price. See the
+  // "CLASSMATES ARE MATCHED BY MEETING LINK" note above: this must hold
+  // however their billing differs, so matching is on the meeting room and
+  // the class slot, never on how the schedule happens to format as text.
+  const classmatesById = useMemo(() => {
+    const colorByMeetingUrl = new Map<string, GroupColor>();
+    const info = new Map<string, { color: GroupColor; label: string }>();
+    const withLink = rows.filter((r) => r.student.meeting_url);
+    for (const { student: a } of withLink) {
+      for (const { student: b } of withLink) {
+        if (a.id === b.id || a.meeting_url !== b.meeting_url) continue;
+        const shared = a.classes.find((ca) =>
+          b.classes.some(
+            (cb) =>
+              ca.weekday === cb.weekday &&
+              trimSeconds(ca.start_time) === trimSeconds(cb.start_time) &&
+              ca.duration_minutes === cb.duration_minutes,
+          ),
+        );
+        if (shared) {
+          const key = a.meeting_url as string;
+          if (!colorByMeetingUrl.has(key)) colorByMeetingUrl.set(key, colorForGroup(key));
+          info.set(a.id, {
+            color: colorByMeetingUrl.get(key)!,
+            label: `${DAY_NAMES[shared.weekday].slice(0, 3)} ${trimSeconds(shared.start_time)}`,
+          });
+          break;
+        }
+      }
     }
-    const colors = new Map<string, GroupColor>();
-    for (const [key, count] of counts) {
-      if (count > 1) colors.set(key, colorForGroup(key));
-    }
-    return colors;
+    return info;
   }, [rows]);
 
   // A class seat's group name is the real, authoritative grouping (unlike a
@@ -314,13 +350,16 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
     return colors;
   }, [groupRows]);
 
-  const legendEntries = useMemo(
-    () => [
-      ...[...scheduleGroups].map(([label, color]) => ({ label, color })),
+  const legendEntries = useMemo(() => {
+    const byLabel = new Map<string, GroupColor>();
+    for (const { label, color } of classmatesById.values()) {
+      if (!byLabel.has(label)) byLabel.set(label, color);
+    }
+    return [
+      ...[...byLabel].map(([label, color]) => ({ label, color })),
       ...[...classGroupColors].map(([label, color]) => ({ label, color })),
-    ],
-    [scheduleGroups, classGroupColors],
-  );
+    ];
+  }, [classmatesById, classGroupColors]);
 
   // Nobody at all means no strip, rather than an empty card sitting above the
   // list on every load.
@@ -409,14 +448,13 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                     const reason = attentionReason({ student, balance });
                     const account = accounts?.get(student.id);
                     const paused = student.status === "paused";
-                    const slotKey = formatWeeklySummary(student.classes);
-                    const slotColor = scheduleGroups.get(slotKey);
+                    const classmate = classmatesById.get(student.id);
                     return (
                       <li
                         key={student.id}
                         className={
                           "relative rounded-xl border px-3 py-2 space-y-1 " +
-                          (slotColor ? "pl-4 " : "") +
+                          (classmate ? "pl-4 " : "") +
                           (paused
                             ? "border-pink-400 bg-pink-50/40 dark:bg-pink-950/10"
                             : reason
@@ -424,9 +462,9 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                               : "bg-muted/30")
                         }
                       >
-                        {slotColor && (
+                        {classmate && (
                           <span
-                            className={`absolute inset-y-0 left-0 w-1.5 rounded-l-xl ${slotColor.dot}`}
+                            className={`absolute inset-y-0 left-0 w-1.5 rounded-l-xl ${classmate.color.dot}`}
                             aria-hidden="true"
                           />
                         )}
@@ -435,11 +473,11 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
                           <span className="text-xs text-muted-foreground">
                             {SUBJECT_LABEL[student.subject]}
                           </span>
-                          {slotColor && (
+                          {classmate && (
                             <span
-                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${slotColor.bg} ${slotColor.text}`}
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${classmate.color.bg} ${classmate.color.text}`}
                             >
-                              Shares this slot
+                              Group
                             </span>
                           )}
                           {paused && (
