@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
-import { AdditiveBlending, AnimationMixer, Color, DoubleSide, Frustum, LoopOnce, LoopRepeat, Matrix4, Mesh, MeshStandardMaterial, Quaternion, Sphere, SphereGeometry, Vector3, type Camera, type AnimationAction, type AnimationClip, type Bone, type BufferGeometry, type Group, type Material, type SkinnedMesh, type Texture } from "three";
+import { AdditiveBlending, AnimationMixer, BufferAttribute, CircleGeometry, Color, DoubleSide, Frustum, LoopOnce, LoopRepeat, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, Sphere, SphereGeometry, Vector3, type Camera, type AnimationAction, type AnimationClip, type Bone, type BufferGeometry, type Group, type Material, type SkinnedMesh, type Texture } from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { isTouchFirst } from "../systems/webgl";
 import { pickQuality } from "../systems/quality";
@@ -672,15 +672,129 @@ function setFace(root: Group, face: Record<string, number>) {
   });
 }
 
-/** The lips' blend shape on every mesh that has it, with the person's own resting value. */
-function findLips(root: Group): { m: Mesh; i: number; rest: number }[] {
-  const out: { m: Mesh; i: number; rest: number }[] = [];
-  root.traverse((o) => {
+/** Where a body's mouth is (in its own mesh's units), found from the lips' blend shape. */
+interface Mouth {
+  /** Height of the line between the lips, the lips' depth there, half the mouth's width, and how far the lower lip drops fully open. */
+  line: number;
+  z: number;
+  half: number;
+  drop: number;
+}
+
+/**
+ * An open mouth for a body that has none. The bodies carry a "fuller lips"
+ * shape; where it moves the skin is where the lips are. From that: the line
+ * between the lips, and a new blend shape that lowers the lower lip and chin
+ * under it (most in the middle, nothing at the corners, fading down the
+ * chin). Made once per loaded body, before anyone is cloned from it.
+ */
+function addMouthOpen(scene: Group): void {
+  scene.traverse((o) => {
     const m = o as Mesh;
-    const i = m.morphTargetDictionary?.mouthFull;
-    if (i !== undefined && m.morphTargetInfluences) out.push({ m, i, rest: m.morphTargetInfluences[i] });
+    const dict = m.morphTargetDictionary;
+    if (!m.isMesh || !/Body/.test(m.name) || !dict || dict.mouthFull === undefined || dict.mouthOpen !== undefined || !m.morphTargetInfluences) return;
+    const g = m.geometry;
+    const pos = g.attributes.position;
+    const full = g.morphAttributes.position?.[dict.mouthFull];
+    if (!full) return;
+    const n = pos.count;
+    const w = new Float32Array(n);
+    let wmax = 0;
+    for (let i = 0; i < n; i++) {
+      w[i] = Math.hypot(full.getX(i), full.getY(i), full.getZ(i));
+      wmax = Math.max(wmax, w[i]);
+    }
+    if (!wmax) return;
+    let sw = 0;
+    let line = 0;
+    let sx = 0;
+    let front = -Infinity;
+    for (let i = 0; i < n; i++) {
+      if (w[i] < 0.3 * wmax) continue;
+      sw += w[i];
+      line += w[i] * pos.getY(i);
+      sx += w[i] * pos.getX(i) ** 2;
+      front = Math.max(front, pos.getZ(i));
+    }
+    line /= sw;
+    const half = Math.sqrt(sx / sw) * 1.3;
+    const lip = half * 0.4;
+    // The line between the lips is the deepest crease in the middle of them.
+    let seam = Infinity;
+    const about = line;
+    for (let i = 0; i < n; i++) {
+      const z = pos.getZ(i);
+      if (z < front - half * 2.2 || Math.abs(pos.getX(i)) > half * 0.3 || Math.abs(pos.getY(i) - about) > lip * 0.7) continue;
+      if (z < seam) {
+        seam = z;
+        line = pos.getY(i);
+      }
+    }
+    const drop = lip * 0.6;
+    const delta = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const z = pos.getZ(i);
+      if (z < front - half * 2.2) continue; // the face's front only, not the neck behind
+      const u = pos.getX(i) / half;
+      const v = (line - pos.getY(i)) / lip;
+      if (v <= 0 || v > 8 || Math.abs(u) >= 1) continue;
+      delta[i * 3 + 1] = -drop * (1 - u * u) ** 2 * Math.exp(-v / 3.5);
+    }
+    for (const key of Object.keys(g.morphAttributes)) g.morphAttributes[key].push(new BufferAttribute(key === "position" ? delta : new Float32Array(n * 3), 3));
+    dict.mouthOpen = m.morphTargetInfluences.length;
+    m.morphTargetInfluences.push(0);
+    g.userData.mouth = { line, z: Number.isFinite(seam) ? seam : front - lip * 0.5, half, drop } satisfies Mouth;
+  });
+}
+
+const MOUTH_DARK = new MeshBasicMaterial({ color: "#2b0f10", transparent: true, opacity: 0.92, depthWrite: false });
+const MOUTH_SHAPE = new CircleGeometry(1, 18);
+const _mouthM = new Matrix4();
+const _mouthT = new Matrix4();
+
+/** The lips of one person: the blend shapes to move, and the dark of the open mouth behind them. */
+interface Lips {
+  m: SkinnedMesh;
+  full: number;
+  open: number;
+  rest: number;
+  mouth: Mouth;
+  /** Mesh units → the head bone's own space (so the dark stays in the mouth as the head moves). */
+  toHead: Matrix4;
+  dark: Mesh;
+}
+
+function findLips(root: Group): Lips[] {
+  const out: Lips[] = [];
+  root.traverse((o) => {
+    const m = o as SkinnedMesh;
+    const dict = m.morphTargetDictionary;
+    const mouth = m.geometry?.userData.mouth as Mouth | undefined;
+    if (!m.isSkinnedMesh || !dict || dict.mouthOpen === undefined || !mouth || !m.morphTargetInfluences) return;
+    const h = m.skeleton.bones.findIndex((b) => /Head$/.test(b.name));
+    if (h < 0) return;
+    const dark = new Mesh(MOUTH_SHAPE, MOUTH_DARK);
+    dark.matrixAutoUpdate = false;
+    dark.visible = false;
+    dark.frustumCulled = false;
+    dark.renderOrder = 2;
+    m.skeleton.bones[h].add(dark);
+    out.push({ m, full: dict.mouthFull, open: dict.mouthOpen, rest: m.morphTargetInfluences[dict.mouthFull], mouth, toHead: new Matrix4().multiplyMatrices(m.skeleton.boneInverses[h], m.bindMatrix), dark });
   });
   return out;
+}
+
+/** Set one person's mouth: how wide the lips (−1…1 about rest) and how open (0…1). */
+function setLips(l: Lips, wide: number, open: number): void {
+  const inf = l.m.morphTargetInfluences!;
+  inf[l.full] = l.rest + wide;
+  inf[l.open] = open;
+  l.dark.visible = open > 0.08;
+  if (!l.dark.visible) return;
+  const gap = l.mouth.drop * open;
+  _mouthT.makeScale(l.mouth.half * 0.62, gap * 0.5, 1).setPosition(0, l.mouth.line - gap * 0.5, l.mouth.z + l.mouth.half * 0.05);
+  l.dark.matrix.copy(_mouthM.multiplyMatrices(l.toHead, _mouthT));
+  l.dark.matrixWorldNeedsUpdate = true;
 }
 
 /**
@@ -706,6 +820,7 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
   const anims = useLoader(GLTFLoader, clipUrls, extend) as GLTF[];
 
   const root = useMemo(() => {
+    addMouthOpen(person.scene as Group);
     const r = cloneSkinned(person.scene) as Group;
     prepare(r, rules);
     addCorneas(r);
@@ -821,11 +936,11 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
     if (lod.level === 2 && st.odd) return;
     mixer.update(st.pending);
     st.pending = 0;
-    // Lips: moving while a line is said, easing back to rest after it.
+    // The mouth: opening and closing with the syllables while a line is said, easing shut after it.
     if (lips.length && (c.speaking || lipAmount.current > 0.001)) {
       lipAmount.current += ((c.speaking ? 1 : 0) - lipAmount.current) * Math.min(1, d * 12);
-      const v = (lipBeat(st.t) * 0.85 + 0.15) * lipAmount.current;
-      for (const l of lips) l.m.morphTargetInfluences![l.i] = l.rest + v;
+      const beat = lipBeat(st.t);
+      for (const l of lips) setLips(l, beat * 0.35 * lipAmount.current, Math.max(0, beat * 0.5 + 0.45) * lipAmount.current);
     }
 
     // Look at the learner when they are near and in front; otherwise back.
