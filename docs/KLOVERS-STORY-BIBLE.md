@@ -126,6 +126,10 @@ are **provisional**, as Minsu's first one was: the visual direction above is
 still undecided (`supportingKoreanCast.inKloversWorld` in the code canon;
 conversations in `src/game/config/chats.ts`).
 
+**A second talk (16 Nov 2026).** Once one of the seven is a friend, talking to
+them again opens a second, harder conversation in the same class's grammar.
+Nothing else about them changes.
+
 ## 5. Current worlds (in unlock order)
 
 1. **Hangul Village** — the Korean writing/sound system. Lead: male learner +

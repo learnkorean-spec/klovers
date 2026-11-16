@@ -7,7 +7,7 @@ import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
 import { INTERACTABLES, shopOf, VILLAGE_LETTERS, type Interactable, type QuizId, type ShopId } from "@/game/config/interactions";
 import { CHAPTERS, chapterDone, chapterOf } from "@/game/config/chapters";
 import { memoryDue, type MemoryId } from "@/game/config/memories";
-import { ALL_CHATS, CHATS, chatMetKey, chatNameKo, chatsMet, type ChatId } from "@/game/config/chats";
+import { ALL_CHATS, CHATS, chatAgain, chatAgainKey, chatMetKey, chatNameKo, chatsMet, type ChatId } from "@/game/config/chats";
 import { tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
 import { useWorldAccess } from "@/game/systems/useWorldAccess";
@@ -189,7 +189,7 @@ const WorldPage = () => {
   const beaconEls = useRef(new Map<string, HTMLElement>());
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
-  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shop?: ShopId; shopPick?: string; chat?: ChatId; at?: string; npc?: string; memory?: MemoryId } | null>(null);
+  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shop?: ShopId; shopPick?: string; chat?: ChatId; second?: boolean; at?: string; npc?: string; memory?: MemoryId } | null>(null);
   /** The shop thing last chosen: it hops in the scene. */
   const [shopChosen, setShopChosen] = useState<{ item: string; at: number } | null>(null);
   // A person's line or a word: shown over the world without stopping it.
@@ -537,7 +537,7 @@ const WorldPage = () => {
         if (it.say) setBubble({ kind: "say", id: it.say, at: it.id });
         break;
       case "chat":
-        if (it.chat) setCard({ kind: "chat", chat: it.chat, at: it.id, npc: it.npc });
+        if (it.chat) setCard({ kind: "chat", chat: it.chat, second: chatAgain(it.chat, savedRef.current.met), at: it.id, npc: it.npc });
         break;
       case "info":
         if (it.info) setBubble({ kind: "info", id: it.info, at: it.id });
@@ -1050,15 +1050,17 @@ const WorldPage = () => {
                 quiz={card.quiz}
                 chat={card.chat}
                 chatMet={!!card.chat && saved.met.includes(chatMetKey(card.chat))}
+                chatSecond={card.second}
                 onChatDone={() => {
                   if (!card.chat) return;
-                  const key = chatMetKey(card.chat);
+                  const key = card.second ? chatAgainKey(card.chat) : chatMetKey(card.chat);
                   const cur = savedRef.current;
                   if (!cur.met.includes(key)) {
                     const met = [...cur.met, key];
                     patch({ met });
                     // A new friend is said once the card is put away (notes never sit under a card).
-                    friendNote.current = { text: `${copy.chatUi.newFriend} · ${CHATS[lang][card.chat].name} · ${copy.chatUi.friends} ${chatsMet(met)}/${ALL_CHATS.length}`, ko: chatNameKo(card.chat) };
+                    if (card.second) friendNote.current = { text: `${copy.chatUi.further} · ${CHATS[lang][card.chat].name}`, ko: chatNameKo(card.chat) };
+                    else friendNote.current = { text: `${copy.chatUi.newFriend} · ${CHATS[lang][card.chat].name} · ${copy.chatUi.friends} ${chatsMet(met)}/${ALL_CHATS.length}`, ko: chatNameKo(card.chat) };
                   }
                   if (card.at) markStep(card.at);
                   if (card.npc) cheer(card.npc, 2200);

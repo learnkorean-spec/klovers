@@ -7,7 +7,7 @@ import { speak, speakFor } from "../systems/reactions";
 import { MEMORY_ORDER, memory as memoryText, type MemoryId } from "../config/memories";
 import { useSpeech } from "@/hooks/useSpeech";
 import type { NoticeKey } from "../config/rooms";
-import { CHATS, chatClip, chatIsMan, chatNameKo, chatNpc, type ChatId } from "../config/chats";
+import { chatClip, chatOf, chatIsMan, chatNameKo, chatNpc, type ChatId } from "../config/chats";
 
 /**
  * The small web-UI cards opened from the 3D world (E / the round button).
@@ -47,6 +47,8 @@ interface Props {
   /** Chat: which named friend, whether already a friend, and the end of the conversation. */
   chat?: ChatId;
   chatMet?: boolean;
+  /** The second, longer talk with a friend (they were met before this card opened). */
+  chatSecond?: boolean;
   onChatDone?: () => void;
   /** Egg: its real stage (0 dormant, 1 cracked, 2 glowing). */
   eggStage?: 0 | 1 | 2 | 3;
@@ -178,6 +180,7 @@ export default function InteractionCard({
   onShopPaid,
   chat,
   chatMet = false,
+  chatSecond = false,
   onChatDone,
   eggStage = 0,
   memory: memoryId,
@@ -201,7 +204,7 @@ export default function InteractionCard({
   };
   // The person speaks first, as the card opens (the tap or key that opened it lets the sound play).
   useEffect(() => {
-    if (kind === "chat" && chat) speakFriend(CHATS[lang][chat].turns[0].ko);
+    if (kind === "chat" && chat) speakFriend(chatOf(lang, chat, chatSecond).turns[0].ko);
     // Once, on opening.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -588,7 +591,7 @@ export default function InteractionCard({
   } else if (kind === "chat" && chat) {
     // A conversation: the friend speaks, the learner chooses each reply. No
     // penalty and no score: a reply that does not fit explains itself.
-    const c = CHATS[lang][chat];
+    const c = chatOf(lang, chat, chatSecond);
     const ui = copy.chatUi;
     const t = c.turns[Math.min(turn, c.turns.length - 1)];
     const chosen = picked === null ? null : t.options[picked];
