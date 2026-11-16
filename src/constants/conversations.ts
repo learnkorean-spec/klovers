@@ -249,5 +249,5 @@ export const VOICE_BY_SPEAKER: Record<string, string> = {
  */
 export const POLLY_VOICE_BY_SPEAKER: Record<string, string> = {
   "리나": "Seoyeon:generative", // Lina — Polly's most natural Korean voice
-  "아담": "Hyunduk:long-form",  // Adam — Polly's only male Korean voice
+  "아담": "Hyunduk:generative", // Adam — Polly's only male Korean voice
 };

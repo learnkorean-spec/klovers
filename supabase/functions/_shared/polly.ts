@@ -8,7 +8,7 @@
  * Korean voices (ko-KR), per the Polly docs on 16 Nov 2026:
  *   Seoyeon — female — generative / neural   (generative is the most natural)
  *   Jihye   — female — neural / standard
- *   Hyunduk — male   — long-form
+ *   Hyunduk — male   — generative   (long-form is rejected for this voice)
  */
 
 export type PollyEngine = "generative" | "neural" | "long-form" | "standard";
