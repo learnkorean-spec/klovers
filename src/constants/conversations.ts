@@ -240,3 +240,14 @@ export const VOICE_BY_SPEAKER: Record<string, string> = {
   "아담": "echo",  // Adam — male, lighter, clearly not Minsu
   "리나": "nova",  // Lina — female
 };
+
+/**
+ * Amazon Polly voices (16 Nov 2026), paid from the AWS credits. Only used by
+ * the admin "Try Amazon voices" preview until Re approves them. Polly has one
+ * male Korean voice (Hyunduk), so it goes to Adam; Minsu keeps OpenAI's onyx
+ * so the two men still sound different.
+ */
+export const POLLY_VOICE_BY_SPEAKER: Record<string, string> = {
+  "리나": "Seoyeon:generative", // Lina — Polly's most natural Korean voice
+  "아담": "Hyunduk:long-form",  // Adam — Polly's only male Korean voice
+};

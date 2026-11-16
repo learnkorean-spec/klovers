@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getAiKey } from "../_shared/ai.ts";
+import { hasPolly, parsePollyVoice, pollySpeak } from "../_shared/polly.ts";
 
 /**
  * Generates the spoken Korean for one book conversation.
@@ -14,6 +15,12 @@ import { getAiKey } from "../_shared/ai.ts";
  *
  * Re listens to lesson 1 before the rest are generated — a textbook's audio is
  * copied by the learner, so the intonation is hers to approve, not ours.
+ *
+ * provider "polly" (16 Nov 2026): voices a speaker with Amazon Polly when
+ * `pollyVoices` names a Polly voice for them ("Seoyeon:generative"), paid from
+ * the AWS credits; speakers without one still use OpenAI. Polly runs write to
+ * conversations/<code>/preview/<index>.mp3 — never over the live files the
+ * book's QR codes play — until Re has listened and approved them.
  */
 
 const corsHeaders = {
@@ -37,7 +44,6 @@ serve(async (req) => {
 
   try {
     const apiKey = getAiKey();
-    if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
     const authHeader = req.headers.get("Authorization");
     const supabase = createClient(
@@ -62,37 +68,57 @@ serve(async (req) => {
     const code: string = String(body.code || "").toLowerCase();
     const lines: Line[] = Array.isArray(body.lines) ? body.lines : [];
     const voices: Record<string, string> = body.voices || {};
+    const provider: "openai" | "polly" = body.provider === "polly" ? "polly" : "openai";
+    const pollyVoices: Record<string, string> =
+      provider === "polly" ? (body.pollyVoices || {}) : {};
+    if (provider === "polly" && !hasPolly()) throw new Error("Polly not configured (missing AWS secrets)");
+    if (provider === "openai" && !apiKey) throw new Error("OPENAI_API_KEY not configured");
     const speed: number = Number(body.speed) || 0.92; // a little under natural,
                                                      // so a learner can follow
     if (!/^[a-z0-9-]{2,24}$/.test(code)) throw new Error("Bad conversation code");
     if (!lines.length) throw new Error("No lines given");
 
-    const results: { index: number; ok: boolean; url?: string; error?: string }[] = [];
+    const results: { index: number; ok: boolean; url?: string; error?: string; voice?: string }[] = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const voice = voices[line.who] || "alloy";
+      const pollySpec = pollyVoices[line.who];
       try {
-        const res = await fetch(TTS_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: TTS_MODEL,
-            voice,
-            input: line.ko,
-            speed,
-            response_format: "mp3",
-          }),
-        });
-        if (!res.ok) {
-          results.push({ index: i, ok: false, error: `${res.status} ${await res.text()}` });
-          continue;
+        let bytes: Uint8Array;
+        let usedVoice: string;
+        if (pollySpec) {
+          bytes = await pollySpeak(line.ko, parsePollyVoice(pollySpec));
+          usedVoice = `polly:${pollySpec}`;
+        } else {
+          if (!apiKey) {
+            results.push({ index: i, ok: false, error: "No Polly voice for this speaker and no OpenAI key" });
+            continue;
+          }
+          const res = await fetch(TTS_URL, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: TTS_MODEL,
+              voice,
+              input: line.ko,
+              speed,
+              response_format: "mp3",
+            }),
+          });
+          if (!res.ok) {
+            results.push({ index: i, ok: false, error: `${res.status} ${await res.text()}` });
+            continue;
+          }
+          bytes = new Uint8Array(await res.arrayBuffer());
+          usedVoice = `openai:${voice}`;
         }
-        const bytes = new Uint8Array(await res.arrayBuffer());
-        const path = `conversations/${code}/${i}.mp3`;
+        const path = provider === "polly"
+          ? `conversations/${code}/preview/${i}.mp3`
+          : `conversations/${code}/${i}.mp3`;
         const { error: upErr } = await admin.storage
           .from(BUCKET)
           .upload(path, bytes, { contentType: "audio/mpeg", upsert: true });
@@ -101,7 +127,7 @@ serve(async (req) => {
           continue;
         }
         const { data: pub } = admin.storage.from(BUCKET).getPublicUrl(path);
-        results.push({ index: i, ok: true, url: pub.publicUrl });
+        results.push({ index: i, ok: true, url: pub.publicUrl, voice: usedVoice });
       } catch (e) {
         results.push({ index: i, ok: false, error: String(e) });
       }
@@ -109,7 +135,7 @@ serve(async (req) => {
 
     const made = results.filter((r) => r.ok).length;
     return new Response(
-      JSON.stringify({ code, model: TTS_MODEL, made, total: lines.length, results }),
+      JSON.stringify({ code, provider, model: provider === "polly" ? "polly" : TTS_MODEL, made, total: lines.length, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {

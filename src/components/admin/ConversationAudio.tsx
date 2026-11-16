@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Volume2, Loader2, ExternalLink, CheckCircle2, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CONVERSATIONS, VOICE_BY_SPEAKER } from "@/constants/conversations";
+import { CONVERSATIONS, POLLY_VOICE_BY_SPEAKER, VOICE_BY_SPEAKER } from "@/constants/conversations";
 
 /**
  * Admin → Conversation audio.
@@ -15,31 +15,38 @@ import { CONVERSATIONS, VOICE_BY_SPEAKER } from "@/constants/conversations";
  * Generate lesson 1 first and listen before doing the rest: a textbook's audio
  * is copied by the learner, so the intonation has to be approved, not assumed.
  */
-type LineResult = { index: number; ok: boolean; url?: string; error?: string };
+type LineResult = { index: number; ok: boolean; url?: string; error?: string; voice?: string };
 type RunState = { running: boolean; results?: LineResult[]; error?: string };
 
 export default function ConversationAudio() {
   const [state, setState] = useState<Record<string, RunState>>({});
 
-  const generate = async (code: string) => {
+  /**
+   * provider "polly" writes a preview (conversations/<code>/preview/…) with the
+   * Amazon voices — the live audio the book's QR codes play is not touched.
+   */
+  const generate = async (code: string, provider: "openai" | "polly" = "openai") => {
     const convo = CONVERSATIONS.find((c) => c.code === code);
     if (!convo) return;
-    setState((s) => ({ ...s, [code]: { running: true } }));
+    const key = provider === "polly" ? `${code}:polly` : code;
+    setState((s) => ({ ...s, [key]: { running: true } }));
     try {
       const { data, error } = await supabase.functions.invoke("conversation-audio", {
         body: {
           code,
           lines: convo.lines.map((l) => ({ who: l.who, ko: l.ko })),
           voices: VOICE_BY_SPEAKER,
+          provider,
+          ...(provider === "polly" ? { pollyVoices: POLLY_VOICE_BY_SPEAKER } : {}),
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setState((s) => ({ ...s, [code]: { running: false, results: data.results } }));
+      setState((s) => ({ ...s, [key]: { running: false, results: data.results } }));
     } catch (e) {
       setState((s) => ({
         ...s,
-        [code]: { running: false, error: e instanceof Error ? e.message : String(e) },
+        [key]: { running: false, error: e instanceof Error ? e.message : String(e) },
       }));
     }
   };
@@ -60,6 +67,7 @@ export default function ConversationAudio() {
       <div className="grid gap-4 sm:grid-cols-2">
         {CONVERSATIONS.map((c) => {
           const run = state[c.code] || { running: false };
+          const preview = state[`${c.code}:polly`] || { running: false };
           const made = run.results?.filter((r) => r.ok).length ?? 0;
           const failed = run.results?.filter((r) => !r.ok) ?? [];
           return (
@@ -85,6 +93,16 @@ export default function ConversationAudio() {
                   >
                     {run.running && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
                     {run.results ? "Generate again" : "Generate audio"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => generate(c.code, "polly")}
+                    disabled={preview.running}
+                    title="Amazon Polly voices (AWS credits). Writes a preview only — the live book audio is not changed."
+                  >
+                    {preview.running && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+                    Try Amazon voices
                   </Button>
                   <a
                     href={`/c/${c.code}`}
@@ -112,6 +130,30 @@ export default function ConversationAudio() {
                       <p key={f.index} className="text-destructive">
                         line {f.index + 1}: {f.error}
                       </p>
+                    ))}
+                  </div>
+                )}
+                {preview.error && (
+                  <p className="flex items-start gap-1.5 text-xs text-destructive">
+                    <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {preview.error}
+                  </p>
+                )}
+
+                {preview.results && (
+                  <div className="space-y-2 rounded-md border border-dashed p-2 text-xs">
+                    <p className="font-medium">Amazon voices — preview, not live yet</p>
+                    {preview.results.map((r) => (
+                      <div key={r.index} className="space-y-1">
+                        <p className="text-muted-foreground">
+                          <span lang="ko">{c.lines[r.index]?.who}</span> · line {r.index + 1}
+                          {r.voice ? ` · ${r.voice}` : ""}
+                        </p>
+                        {r.ok && r.url ? (
+                          <audio controls preload="none" src={`${r.url}?v=${Date.now()}`} className="h-8 w-full" />
+                        ) : (
+                          <p className="text-destructive">{r.error}</p>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
