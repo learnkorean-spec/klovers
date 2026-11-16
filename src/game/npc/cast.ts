@@ -35,6 +35,8 @@ export const CAST = {
   // Book 1's new Korean people (canon supportingKoreanCast.book1; Re, 4 Nov 2026), met in the
   // Vocabulary Market. Provisional in-game looks, like Minsu's first one: each dressed for
   // their role, until Re pins down their artwork.
+  /** Mr. Seo (서 아저씨) — Hangul Village's sign painter: work apron over a pale shirt, sleeves rolled. */
+  painter: { skin: SKIN[2], hair: HAIR.dark, hairStyle: "short", top: PALETTE.ivory, over: SLATE, rolledSleeves: true, lower: { kind: "trousers", color: PALETTE.charcoal }, shoes: PALETTE.charcoal, scale: 1.0 },
   /** Jihoon (지훈) — a passer-by who gives directions: a student on his way, backpack on. */
   jihoon: { skin: SKIN[4], hair: HAIR.black, hairStyle: "short", top: PALETTE.ivory, over: SLATE, lower: { kind: "trousers", color: PALETTE.charcoal }, shoes: PALETTE.white, prop: "bag", propColor: PALETTE.charcoal, scale: 1.02 },
   /** Ms. Park (박 아주머니) — a market vendor: work apron, hair up. */

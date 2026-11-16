@@ -30,7 +30,7 @@ export type FriendId = "jihoon" | "park" | "kim" | "yuna" | "seoyeon" | "taeyang
  * conversation, opened by the line they already had, so each world on the
  * road has someone to talk with at its own level.
  */
-export type RoleChatId = "cafe" | "cook" | "attendant" | "grandpa" | "grandma";
+export type RoleChatId = "gardener" | "neighbour" | "painter" | "cafe" | "cook" | "attendant" | "grandpa" | "grandma";
 export type ChatId = FriendId | RoleChatId;
 
 /** In the order Book 1's classes introduce them. */
@@ -52,7 +52,11 @@ export const CHAT_PEOPLE: Record<FriendId, { npc: string; canon: string; nameKo:
  * Re on 16 Nov 2026): who speaks, and the recording of their opening line
  * (systems/voice.ts).
  */
-export const ROLE_CHATS: Record<RoleChatId, { npc: string; canon: string; nameKo: string; voice: "cafeA" | "cook" | "attendant" | "grandpa" | "nalssi"; male: boolean }> = {
+export const ROLE_CHATS: Record<RoleChatId, { npc: string; canon: string; nameKo: string; voice?: "auntie" | "cafeA" | "cook" | "attendant" | "grandpa" | "nalssi"; male: boolean }> = {
+  // The first steps (canon supportingKoreanCast.firstSteps): the two places every visitor can enter.
+  gardener: { npc: "c-gardener", canon: "courtyard-gardener-baek", nameKo: "백 할아버지", male: true },
+  neighbour: { npc: "v-well-1", canon: "village-neighbour-yoon", nameKo: "윤 아주머니", voice: "auntie", male: false },
+  painter: { npc: "hv-x1", canon: "village-sign-painter-seo", nameKo: "서 아저씨", male: true },
   cafe: { npc: "k-table-1", canon: "cafe-regular-junho", nameKo: "준호", voice: "cafeA", male: true },
   cook: { npc: "c-cook", canon: "stall-cook-choi", nameKo: "최 아주머니", voice: "cook", male: false },
   attendant: { npc: "s-attendant", canon: "station-attendant-donghyun", nameKo: "동현", voice: "attendant", male: true },
@@ -71,21 +75,32 @@ export const chatIsMan = (id: ChatId): boolean => (isFriend(id) ? MEN.includes(i
 /** What is saved in worldState.met once a conversation is finished. */
 export const chatMetKey = (id: ChatId): string => `chat-${id}`;
 /** Everyone there is to befriend, along the road. */
-export const ALL_CHATS: readonly ChatId[] = [...CHAT_ORDER, ...(["cafe", "cook", "attendant", "grandpa", "grandma"] as const)];
+export const ALL_CHATS: readonly ChatId[] = [...(["gardener", "neighbour", "painter"] as const), ...CHAT_ORDER, ...(["cafe", "cook", "attendant", "grandpa", "grandma"] as const)];
 export const chatsMet = (met: readonly string[]): number => ALL_CHATS.filter((id) => met.includes(chatMetKey(id))).length;
 
 export interface ChatOption {
   /** The Korean reply on the button. */
   ko: string;
+  /** How it sounds, in Latin letters: only in the first places, where the learner cannot read Hangul yet. */
+  roman?: string;
   right: boolean;
   /** Why it fits, or what it really says and what to say instead. */
   feedback: string;
+  /**
+   * What the person says back to this reply. A turn may have more than one
+   * reply that fits (a yes and a no, say); each then gets its own answer, so
+   * the conversation goes the way the learner took it.
+   */
+  reply?: { ko: string; roman?: string; gloss: string };
 }
 
 export interface ChatTurn {
   /** The person's line. */
   ko: string;
+  roman?: string;
   gloss: string;
+  /** Something they hold up to be read (a freshly painted sign). */
+  show?: string;
   /** The situation: what the learner wants to say now. */
   ask: string;
   options: [ChatOption, ChatOption, ChatOption];
@@ -99,7 +114,7 @@ export interface Chat {
   focus: string;
   turns: ChatTurn[];
   /** The person's last line, once every turn is answered. */
-  closing: { ko: string; gloss: string };
+  closing: { ko: string; roman?: string; gloss: string };
 }
 
 const EN: Record<ChatId, Chat> = {
@@ -368,6 +383,133 @@ const EN: Record<ChatId, Chat> = {
       },
     ],
     closing: { ko: "아, 미안해요! 천천히 말할게요. 반가워요!", gloss: "Oh, sorry! I'll speak slowly. Nice to meet you!" },
+  },
+  gardener: {
+    name: "Grandpa Baek",
+    role: "Gardener",
+    focus: "The first three: 안녕하세요 (hello), 네 / 아니요 (yes / no), and the two goodbyes: 안녕히 계세요 to someone staying, 안녕히 가세요 to someone leaving.",
+    turns: [
+      {
+        ko: "안녕하세요!",
+        roman: "annyeonghaseyo!",
+        gloss: "Hello!",
+        ask: "An elder greets you. Greet him back.",
+        options: [
+          { ko: "안녕하세요!", roman: "annyeonghaseyo!", right: true, feedback: "Yes: 안녕하세요! The polite hello, right for anyone." },
+          { ko: "안녕!", roman: "annyeong!", right: false, feedback: "안녕 is only for close friends and children. To an elder: 안녕하세요!" },
+          { ko: "감사합니다!", roman: "gamsahamnida!", right: false, feedback: "감사합니다 means thank you. Hello is 안녕하세요!" },
+        ],
+      },
+      {
+        ko: "꽃 좋아해요?",
+        roman: "kkot joahaeyo?",
+        gloss: "Do you like flowers?",
+        ask: "Answer truly: yes or no are both fine.",
+        options: [
+          { ko: "네, 좋아해요.", roman: "ne, joahaeyo.", right: true, feedback: "네 = yes. 좋아해요 = (I) like it.", reply: { ko: "저도요! 꽃은 예뻐요.", roman: "jeodoyo! kkocheun yeppeoyo.", gloss: "Me too! Flowers are pretty." } },
+          { ko: "아니요.", roman: "aniyo.", right: true, feedback: "아니요 = no. Said gently, it is perfectly polite.", reply: { ko: "괜찮아요. 나무도 있어요!", roman: "gwaenchanayo. namudo isseoyo!", gloss: "That's all right. There are trees too!" } },
+          { ko: "안녕히 가세요.", roman: "annyeonghi gaseyo.", right: false, feedback: "That is a goodbye. Answer with 네 (yes) or 아니요 (no): 네, 좋아해요." },
+        ],
+      },
+      {
+        ko: "또 오세요!",
+        roman: "tto oseyo!",
+        gloss: "Come again!",
+        ask: "You are leaving; he stays with his flowers. Say goodbye.",
+        options: [
+          { ko: "안녕히 가세요!", roman: "annyeonghi gaseyo!", right: false, feedback: "가세요 is \"go well\": said to the one who leaves. He is staying: 안녕히 계세요!" },
+          { ko: "안녕히 계세요!", roman: "annyeonghi gyeseyo!", right: true, feedback: "Yes: 안녕히 계세요! \"Stay well\": said to the one who stays behind." },
+          { ko: "안녕하세요!", roman: "annyeonghaseyo!", right: false, feedback: "안녕하세요 is hello. Leaving someone who stays: 안녕히 계세요!" },
+        ],
+      },
+    ],
+    closing: { ko: "네, 안녕히 가세요!", roman: "ne, annyeonghi gaseyo!", gloss: "Yes, goodbye! (He says 가세요, because you are the one leaving.)" },
+  },
+  neighbour: {
+    name: "Mrs. Yoon",
+    role: "Neighbour",
+    focus: "Saying who you are: 저는 …이에요, and 공부해요 (study). Then a first word read from a sign.",
+    turns: [
+      {
+        ko: "안녕하세요!",
+        roman: "annyeonghaseyo!",
+        gloss: "Hello!",
+        ask: "Greet her and say you are a student (학생, haksaeng).",
+        options: [
+          { ko: "안녕하세요! 저는 학생이에요.", roman: "annyeonghaseyo! jeoneun haksaeng-ieyo.", right: true, feedback: "Yes: 저는 학생이에요. 저는 = I, 이에요 = am." },
+          { ko: "감사합니다! 저는 학생이에요.", roman: "gamsahamnida! jeoneun haksaeng-ieyo.", right: false, feedback: "감사합니다 is thank you. Start with hello: 안녕하세요! 저는 학생이에요." },
+          { ko: "안녕히 가세요! 저는 학생이에요.", roman: "annyeonghi gaseyo! jeoneun haksaeng-ieyo.", right: false, feedback: "안녕히 가세요 is goodbye. Start with hello: 안녕하세요! 저는 학생이에요." },
+        ],
+      },
+      {
+        ko: "한국어 공부해요?",
+        roman: "hangugeo gongbuhaeyo?",
+        gloss: "Are you studying Korean?",
+        ask: "You are.",
+        options: [
+          { ko: "네, 한국어예요.", roman: "ne, hangugeo-yeyo.", right: false, feedback: "That says \"yes, it is Korean\". To say you study it: 네, 한국어 공부해요." },
+          { ko: "네, 한국어 공부해요.", roman: "ne, hangugeo gongbuhaeyo.", right: true, feedback: "Yes: 공부해요 = (I) study. 한국어 = the Korean language.", reply: { ko: "와, 대단해요!", roman: "wa, daedanhaeyo!", gloss: "Wow, that's great!" } },
+          { ko: "아니요, 한국어 공부해요.", roman: "aniyo, hangugeo gongbuhaeyo.", right: false, feedback: "아니요 is no, and then it says you study it. Yes is 네: 네, 한국어 공부해요." },
+        ],
+      },
+      {
+        ko: "이거 읽을 수 있어요?",
+        roman: "igeo ilgeul su isseoyo?",
+        gloss: "Can you read this?",
+        show: "나무",
+        ask: "She points at a sign. Read it.",
+        options: [
+          { ko: "ma-nu", right: false, feedback: "The first letter is ㄴ (n), the second ㅁ (m): na-mu. 나무 = a tree." },
+          { ko: "na-mu", right: true, feedback: "Yes: ㄴ + ㅏ = na, ㅁ + ㅜ = mu. 나무 = a tree." },
+          { ko: "na-mo", right: false, feedback: "ㅜ is u (the short stroke points down); ㅗ is o. So: na-mu. 나무 = a tree." },
+        ],
+      },
+    ],
+    closing: { ko: "맞아요! 잘했어요!", roman: "majayo! jalhaesseoyo!", gloss: "That's right! Well done!" },
+  },
+  painter: {
+    name: "Mr. Seo",
+    role: "Sign painter",
+    focus: "Reading: one consonant and one vowel make a syllable. ㄱ ㄴ ㄷ ㅁ with ㅏ ㅗ ㅜ.",
+    turns: [
+      {
+        ko: "안녕하세요! 저는 간판을 그려요.",
+        roman: "annyeonghaseyo! jeoneun ganpaneul geuryeoyo.",
+        gloss: "Hello! I paint the signs.",
+        show: "가",
+        ask: "He holds up a fresh sign. Read it.",
+        options: [
+          { ko: "na", right: false, feedback: "ㄴ is n. This first letter is ㄱ (g): ga." },
+          { ko: "da", right: false, feedback: "ㄷ is d. This first letter is ㄱ (g): ga." },
+          { ko: "ga", right: true, feedback: "Yes: ㄱ (g) + ㅏ (a) = 가, ga. The consonant on the left, the vowel on the right." },
+        ],
+      },
+      {
+        ko: "이것은요?",
+        roman: "igeoseunyo?",
+        gloss: "And this one?",
+        show: "노",
+        ask: "This vowel sits underneath. Read it.",
+        options: [
+          { ko: "no", right: true, feedback: "Yes: ㄴ (n) + ㅗ (o) = 노, no. ㅗ and ㅜ sit under the consonant." },
+          { ko: "nu", right: false, feedback: "ㅜ (stroke pointing down) is u. Here the stroke points up: ㅗ, o. So: no." },
+          { ko: "mo", right: false, feedback: "ㅁ (a box) is m. This letter is ㄴ (n): no." },
+        ],
+      },
+      {
+        ko: "마지막이에요!",
+        roman: "majimagieyo!",
+        gloss: "The last one!",
+        show: "모두",
+        ask: "Two syllables make a word. Read it.",
+        options: [
+          { ko: "mu-do", right: false, feedback: "The vowels are the other way round: ㅗ (o) first, then ㅜ (u). mo-du." },
+          { ko: "mo-du", right: true, feedback: "Yes: ㅁ + ㅗ = mo, ㄷ + ㅜ = du. 모두 = everyone, all." },
+          { ko: "no-du", right: false, feedback: "The first letter is ㅁ (m), the box: mo-du." },
+        ],
+      },
+    ],
+    closing: { ko: "와, 다 읽었어요! 모두 잘했어요.", roman: "wa, da ilgeosseoyo! modu jalhaesseoyo.", gloss: "Wow, you read them all! All well done." },
   },
   cafe: {
     name: "Junho",
@@ -827,6 +969,133 @@ const AR: Record<ChatId, Chat> = {
       },
     ],
     closing: { ko: "아, 미안해요! 천천히 말할게요. 반가워요!", gloss: "آه، آسفة! سأتكلم ببطء. سعدتُ بلقائك!" },
+  },
+  gardener: {
+    name: "الجدّ بيك",
+    role: "البستاني",
+    focus: "الثلاث الأولى: 안녕하세요 (مرحبًا)، و네 / 아니요 (نعم / لا)، وعبارتا الوداع: 안녕히 계세요 لمن يبقى، و안녕히 가세요 لمن يغادر.",
+    turns: [
+      {
+        ko: "안녕하세요!",
+        roman: "annyeonghaseyo!",
+        gloss: "مرحبًا!",
+        ask: "رجل كبير في السن يحيّيك. ردّ التحية.",
+        options: [
+          { ko: "안녕하세요!", roman: "annyeonghaseyo!", right: true, feedback: "نعم: 안녕하세요! التحية المهذّبة، تصلح مع أي شخص." },
+          { ko: "안녕!", roman: "annyeong!", right: false, feedback: "안녕 للأصدقاء المقرّبين والأطفال فقط. لكبير السن: 안녕하세요!" },
+          { ko: "감사합니다!", roman: "gamsahamnida!", right: false, feedback: "감사합니다 تعني «شكرًا». التحية هي 안녕하세요!" },
+        ],
+      },
+      {
+        ko: "꽃 좋아해요?",
+        roman: "kkot joahaeyo?",
+        gloss: "هل تحب الأزهار؟",
+        ask: "الإجابة بصدق: «نعم» و«لا» كلتاهما مقبولتان.",
+        options: [
+          { ko: "네, 좋아해요.", roman: "ne, joahaeyo.", right: true, feedback: "네 = نعم. 좋아해요 = أحبّها.", reply: { ko: "저도요! 꽃은 예뻐요.", roman: "jeodoyo! kkocheun yeppeoyo.", gloss: "وأنا أيضًا! الأزهار جميلة." } },
+          { ko: "아니요.", roman: "aniyo.", right: true, feedback: "아니요 = لا. وإذا قيلت بلطف فهي مهذّبة تمامًا.", reply: { ko: "괜찮아요. 나무도 있어요!", roman: "gwaenchanayo. namudo isseoyo!", gloss: "لا بأس. هناك أشجار أيضًا!" } },
+          { ko: "안녕히 가세요.", roman: "annyeonghi gaseyo.", right: false, feedback: "هذه عبارة وداع. الإجابة تكون بـ 네 (نعم) أو 아니요 (لا): 네, 좋아해요." },
+        ],
+      },
+      {
+        ko: "또 오세요!",
+        roman: "tto oseyo!",
+        gloss: "ننتظر زيارتك مرة أخرى!",
+        ask: "أنت تغادر، وهو يبقى مع أزهاره. حان وقت الوداع.",
+        options: [
+          { ko: "안녕히 가세요!", roman: "annyeonghi gaseyo!", right: false, feedback: "가세요 تعني «اذهب بسلام»: تُقال لمن يغادر. وهو باقٍ: 안녕히 계세요!" },
+          { ko: "안녕히 계세요!", roman: "annyeonghi gyeseyo!", right: true, feedback: "نعم: 안녕히 계세요! «ابقَ بسلام»: تُقال لمن يبقى في مكانه." },
+          { ko: "안녕하세요!", roman: "annyeonghaseyo!", right: false, feedback: "안녕하세요 تحية اللقاء. عند وداع من يبقى: 안녕히 계세요!" },
+        ],
+      },
+    ],
+    closing: { ko: "네, 안녕히 가세요!", roman: "ne, annyeonghi gaseyo!", gloss: "نعم، مع السلامة! (قال 가세요 لأنك أنت من يغادر.)" },
+  },
+  neighbour: {
+    name: "السيدة يون",
+    role: "الجارة",
+    focus: "التعريف بالنفس: 저는 …이에요، و공부해요 (أدرس). ثم قراءة أول كلمة من لافتة.",
+    turns: [
+      {
+        ko: "안녕하세요!",
+        roman: "annyeonghaseyo!",
+        gloss: "مرحبًا!",
+        ask: "ردّ التحية مع ذكر أنك طالب (학생, haksaeng).",
+        options: [
+          { ko: "안녕하세요! 저는 학생이에요.", roman: "annyeonghaseyo! jeoneun haksaeng-ieyo.", right: true, feedback: "نعم: 저는 학생이에요. 저는 = أنا، و이에요 = فعل الكينونة." },
+          { ko: "감사합니다! 저는 학생이에요.", roman: "gamsahamnida! jeoneun haksaeng-ieyo.", right: false, feedback: "감사합니다 تعني «شكرًا». البداية بالتحية: 안녕하세요! 저는 학생이에요." },
+          { ko: "안녕히 가세요! 저는 학생이에요.", roman: "annyeonghi gaseyo! jeoneun haksaeng-ieyo.", right: false, feedback: "안녕히 가세요 عبارة وداع. البداية بالتحية: 안녕하세요! 저는 학생이에요." },
+        ],
+      },
+      {
+        ko: "한국어 공부해요?",
+        roman: "hangugeo gongbuhaeyo?",
+        gloss: "هل تدرس الكورية؟",
+        ask: "نعم.",
+        options: [
+          { ko: "네, 한국어예요.", roman: "ne, hangugeo-yeyo.", right: false, feedback: "هذه تقول «نعم، إنها الكورية». للقول إنك تدرسها: 네, 한국어 공부해요." },
+          { ko: "네, 한국어 공부해요.", roman: "ne, hangugeo gongbuhaeyo.", right: true, feedback: "نعم: 공부해요 = أدرس. 한국어 = اللغة الكورية.", reply: { ko: "와, 대단해요!", roman: "wa, daedanhaeyo!", gloss: "واو، رائع!" } },
+          { ko: "아니요, 한국어 공부해요.", roman: "aniyo, hangugeo gongbuhaeyo.", right: false, feedback: "아니요 تعني «لا»، ثم تقول الجملة إنك تدرسها. «نعم» هي 네: 네, 한국어 공부해요." },
+        ],
+      },
+      {
+        ko: "이거 읽을 수 있어요?",
+        roman: "igeo ilgeul su isseoyo?",
+        gloss: "هل تستطيع قراءة هذه؟",
+        show: "나무",
+        ask: "تشير إلى لافتة. اقرأها.",
+        options: [
+          { ko: "ma-nu", right: false, feedback: "الحرف الأول ㄴ (n) والثاني ㅁ (m): na-mu. 나무 = شجرة." },
+          { ko: "na-mu", right: true, feedback: "نعم: ㄴ + ㅏ = na، و ㅁ + ㅜ = mu. 나무 = شجرة." },
+          { ko: "na-mo", right: false, feedback: "ㅜ تُنطق u (الخط القصير يتجه إلى الأسفل)، أما ㅗ فهي o. إذن: na-mu. 나무 = شجرة." },
+        ],
+      },
+    ],
+    closing: { ko: "맞아요! 잘했어요!", roman: "majayo! jalhaesseoyo!", gloss: "صحيح! أحسنت!" },
+  },
+  painter: {
+    name: "السيد سو",
+    role: "رسّام اللافتات",
+    focus: "القراءة: حرف ساكن وحرف علة يكوّنان مقطعًا. ㄱ ㄴ ㄷ ㅁ مع ㅏ ㅗ ㅜ.",
+    turns: [
+      {
+        ko: "안녕하세요! 저는 간판을 그려요.",
+        roman: "annyeonghaseyo! jeoneun ganpaneul geuryeoyo.",
+        gloss: "مرحبًا! أنا أرسم اللافتات.",
+        show: "가",
+        ask: "يرفع لافتة جديدة. اقرأها.",
+        options: [
+          { ko: "na", right: false, feedback: "ㄴ تُنطق n. الحرف الأول هنا ㄱ (g): ga." },
+          { ko: "da", right: false, feedback: "ㄷ تُنطق d. الحرف الأول هنا ㄱ (g): ga." },
+          { ko: "ga", right: true, feedback: "نعم: ㄱ (g) + ㅏ (a) = 가، ga. الساكن على اليسار وحرف العلة على اليمين." },
+        ],
+      },
+      {
+        ko: "이것은요?",
+        roman: "igeoseunyo?",
+        gloss: "وهذه؟",
+        show: "노",
+        ask: "حرف العلة هنا في الأسفل. اقرأها.",
+        options: [
+          { ko: "no", right: true, feedback: "نعم: ㄴ (n) + ㅗ (o) = 노، no. ㅗ و ㅜ يُكتبان تحت الحرف الساكن." },
+          { ko: "nu", right: false, feedback: "ㅜ (الخط يتجه إلى الأسفل) تُنطق u. هنا الخط يتجه إلى الأعلى: ㅗ، o. إذن: no." },
+          { ko: "mo", right: false, feedback: "ㅁ (المربع) تُنطق m. هذا الحرف ㄴ (n): no." },
+        ],
+      },
+      {
+        ko: "마지막이에요!",
+        roman: "majimagieyo!",
+        gloss: "الأخيرة!",
+        show: "모두",
+        ask: "مقطعان يكوّنان كلمة. اقرأها.",
+        options: [
+          { ko: "mu-do", right: false, feedback: "حرفا العلة بالعكس: ㅗ (o) أولًا ثم ㅜ (u). mo-du." },
+          { ko: "mo-du", right: true, feedback: "نعم: ㅁ + ㅗ = mo، و ㄷ + ㅜ = du. 모두 = الجميع، كل." },
+          { ko: "no-du", right: false, feedback: "الحرف الأول ㅁ (m)، المربع: mo-du." },
+        ],
+      },
+    ],
+    closing: { ko: "와, 다 읽었어요! 모두 잘했어요.", roman: "wa, da ilgeosseoyo! modu jalhaesseoyo.", gloss: "واو، قرأت كل شيء! أحسنت في الجميع." },
   },
   cafe: {
     name: "جون هو",

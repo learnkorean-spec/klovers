@@ -43,7 +43,7 @@ describe("conversations with the named Korean friends", () => {
 
   it("keeps each place to talk clear of the others, so the right person answers", () => {
     const spots = INTERACTABLES.filter((i) => i.kind === "chat");
-    for (const a of spots) for (const b of spots) if (a.id < b.id) expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.id} ${b.id}`).toBeGreaterThan(1.5);
+    for (const a of spots) for (const b of spots) if (a.id < b.id && a.room === b.room) expect(Math.hypot(a.x - b.x, a.z - b.z), `${a.id} ${b.id}`).toBeGreaterThan(1.5);
   });
 
   it("lets the people of the later worlds talk too, opening with their recorded line", () => {
@@ -54,16 +54,50 @@ describe("conversations with the named Korean friends", () => {
       expect(chatNpc(id)).toBe(ROLE_CHATS[id].npc);
       expect(NPCS.find((n) => n.id === ROLE_CHATS[id].npc)?.room).toBe(spots[0].room);
       for (const lang of ["en", "ar"] as const) {
-        // The recording says the first line, so the two must be the same sentence.
-        expect(CHATS[lang][id].turns[0].ko).toBe(WORLD_COPY[lang].say[ROLE_CHATS[id].voice].ko);
+        // A recording says the first line, so the two must be the same sentence.
+        const voice = ROLE_CHATS[id].voice;
+        if (voice) expect(CHATS[lang][id].turns[0].ko).toBe(WORLD_COPY[lang].say[voice].ko);
         // Named by Re on 16 Nov 2026 (canon supportingKoreanCast.laterWorlds).
-        const c = KLOVERS_WORLD.supportingKoreanCast.laterWorlds.find((x) => x.id === ROLE_CHATS[id].canon)!;
+        const cast = KLOVERS_WORLD.supportingKoreanCast;
+        const c = [...cast.firstSteps, ...cast.laterWorlds].find((x) => x.id === ROLE_CHATS[id].canon)!;
         expect(CHATS[lang][id].name).toBe(c.name[lang]);
         expect(ROLE_CHATS[id].nameKo).toBe(c.name.ko);
       }
     }
-    // One conversation in every world of the road after the market.
-    expect(new Set(ROLE_CHAT_ORDER.map((id) => INTERACTABLES.find((i) => i.chat === id)!.room))).toEqual(new Set(["conversation-cafe", "culture-street", "seoul-journey", "seoul-market", "seoul-namsan"]));
+    // Someone to talk with in every place of the road (the market has Book 1's seven).
+    expect(new Set(ROLE_CHAT_ORDER.map((id) => INTERACTABLES.find((i) => i.chat === id)!.room))).toEqual(new Set(["courtyard", "hangul-village", "conversation-cafe", "culture-street", "seoul-journey", "seoul-market", "seoul-namsan"]));
+    // Every place to talk is on floor the learner can stand on.
+    for (const i of INTERACTABLES.filter((x) => x.kind === "chat")) expect(isBlocked(i.x, i.z, 0.3, ROOMS[i.room].colliders, ROOMS[i.room].bounds), i.id).toBe(false);
+  });
+
+  it("writes the first places for someone who cannot read Hangul yet", () => {
+    for (const id of ["gardener", "neighbour", "painter"] as const)
+      for (const lang of ["en", "ar"] as const) {
+        const c = CHATS[lang][id];
+        expect(c.closing.roman, id).toBeTruthy();
+        for (const t of c.turns) {
+          expect(t.roman, `${id} ${t.ko}`).toBeTruthy();
+          // A Korean reply shows how it sounds; a reading answer is already in Latin letters.
+          for (const o of t.options) expect(!!o.roman || !/[가-힣]/.test(o.ko), `${id} ${o.ko}`).toBe(true);
+          for (const o of t.options) if (o.reply) expect(o.reply.roman, `${id} ${o.reply.ko}`).toBeTruthy();
+        }
+      }
+  });
+
+  it("lets a reply change what the person says next, and only a fitting reply", () => {
+    let branching = 0;
+    for (const id of [...CHAT_ORDER, ...ROLE_CHAT_ORDER])
+      for (const t of CHATS.en[id].turns) {
+        for (const o of t.options) if (o.reply) expect(o.right, `${id} ${o.ko}`).toBe(true);
+        if (t.options.filter((o) => o.right).length > 1) {
+          branching++;
+          // Two ways to answer mean two different answers back.
+          const replies = t.options.filter((o) => o.right).map((o) => o.reply?.ko);
+          expect(new Set(replies).size, id).toBe(replies.length);
+          expect(replies.every(Boolean), id).toBe(true);
+        }
+      }
+    expect(branching).toBeGreaterThan(0);
   });
 
   it("gives every turn three replies, one that fits, the same in both languages", () => {
@@ -76,7 +110,8 @@ describe("conversations with the named Korean friends", () => {
       en.turns.forEach((t, n) => {
         const u = ar.turns[n];
         expect(u.ko).toBe(t.ko);
-        expect(t.options.filter((o) => o.right).length, `${id} ${n}`).toBe(1);
+        expect(t.options.filter((o) => o.right).length, `${id} ${n}`).toBeGreaterThanOrEqual(1);
+        expect(t.options.filter((o) => !o.right).length, `${id} ${n}`).toBeGreaterThanOrEqual(1);
         expect(new Set(t.options.map((o) => o.ko)).size).toBe(3);
         t.options.forEach((o, k) => {
           expect(u.options[k].ko).toBe(o.ko);
@@ -85,6 +120,7 @@ describe("conversations with the named Korean friends", () => {
           expect(u.options[k].feedback.length).toBeGreaterThan(10);
           // A reply that does not fit always shows the one that does.
           const right = t.options.find((x) => x.right)!.ko.replace(/[.!?]+$/, "");
+          expect(u.options[k].reply?.ko).toBe(o.reply?.ko);
           if (!o.right && !/^\d/.test(right)) {
             expect(o.feedback, `${id} ${n} ${k}`).toContain(right);
             expect(u.options[k].feedback, `${id} ${n} ${k} ar`).toContain(right);

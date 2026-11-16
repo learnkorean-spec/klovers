@@ -395,6 +395,19 @@ export const KLOVERS_WORLD = {
      * Book 1's seven: someone to practise with, never a teacher, never a love
      * interest. Their in-game looks are the ones they already had.
      */
+    /**
+     * The first people a learner meets (Re, 16 Nov 2026: "you can always use
+     * new people as long as they are in the story and really teach"). They
+     * stand in the two places every visitor can enter, so a beginner has
+     * someone to answer in Korean from the first minute: a greeting, a yes or
+     * a no, a goodbye, and reading a first syllable. Their lines carry a
+     * romanisation, because a learner here cannot read Hangul yet.
+     */
+    firstSteps: [
+      { id: "courtyard-gardener-baek", name: { en: "Grandpa Baek", ar: "الجدّ بيك", ko: "백 할아버지" }, role: "gardener_of_the_hanok_courtyard", world: "courtyard", neverUseAs: ["teacher", "romantic_interest"] },
+      { id: "village-neighbour-yoon", name: { en: "Mrs. Yoon", ar: "السيدة يون", ko: "윤 아주머니" }, role: "neighbour_at_the_village_well", world: "hangul-village", neverUseAs: ["teacher", "romantic_interest"] },
+      { id: "village-sign-painter-seo", name: { en: "Mr. Seo", ar: "السيد سو", ko: "서 아저씨" }, role: "sign_painter_of_hangul_village", world: "hangul-village", neverUseAs: ["teacher", "romantic_interest"] },
+    ],
     laterWorlds: [
       { id: "cafe-regular-junho", name: { en: "Junho", ar: "جون هو", ko: "준호" }, role: "student_at_the_next_table", world: "conversation-cafe", neverUseAs: ["teacher", "romantic_interest"] },
       { id: "stall-cook-choi", name: { en: "Mrs. Choi", ar: "السيدة تشوي", ko: "최 아주머니" }, role: "street_food_stall_cook", world: "culture-street", neverUseAs: ["teacher", "romantic_interest"] },

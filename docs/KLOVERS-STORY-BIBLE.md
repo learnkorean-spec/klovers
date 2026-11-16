@@ -388,6 +388,17 @@ Junho 준호 (the student in the café), Mrs. Choi 최 아주머니 (the stall c
 Donghyun 동현 (the station attendant), Grandpa Oh 오 할아버지 (the alley bench)
 and Grandma Han 한 할머니 (the Namsan lookout). Same rules as the Book 1 seven.
 
+**The first people a learner meets (Re, 16 Nov 2026: "you can always use new
+people as long as they are in the story and really teach").** Three people
+stand in the two places every visitor can enter (`supportingKoreanCast.firstSteps`),
+so a beginner answers in Korean from the first minute: **Grandpa Baek 백 할아버지**,
+the courtyard's gardener (hello, yes or no, and the two goodbyes); **Mrs. Yoon
+윤 아주머니**, the neighbour at the village well (saying who you are, and reading
+a first word); **Mr. Seo 서 아저씨**, the village's sign painter (reading 가, 노,
+모두 from his fresh signs). Their lines show how they sound in Latin letters,
+because a learner here cannot read Hangul yet. Where a question has two honest
+answers (a yes and a no), both fit and the person answers each differently.
+
 **Existing student flow:** never force a learner who already has real
 progress to replay the beginner discovery sequence. Instead: "You've already
 learned enough to wake him" — unlock Cluby directly and map the story state

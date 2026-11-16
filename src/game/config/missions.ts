@@ -25,9 +25,9 @@ export interface Mission {
 }
 
 export const MISSIONS: Mission[] = [
-  { id: "hello", room: "courtyard", steps: ["talk-friend", "talk-minsu", "say-auntie", "say-vendor"] },
+  { id: "hello", room: "courtyard", steps: ["talk-friend", "chat-gardener", "talk-minsu", "say-auntie", "say-vendor"] },
   { id: "consonants", room: "hangul-village", steps: ["letter-giyeok", "learn-nieun", "learn-digeut", "quiz-rieul", "learn-mieum"] },
-  { id: "vowels", room: "hangul-village", steps: ["quiz-a", "quiz-eo", "learn-o", "quiz-u"] },
+  { id: "vowels", room: "hangul-village", steps: ["quiz-a", "quiz-eo", "learn-o", "quiz-u", "chat-painter"] },
   { id: "letterRace", room: "hangul-village", steps: ["learn-nieun", "learn-digeut", "learn-o", "learn-mieum", "learn-well"], seconds: 120 },
   { id: "hubWalk", room: "hub", steps: ["learn-map", "learn-board", "quiz-sijang", "say-hub-friend"] },
   { id: "shopping", room: "vocabulary-market", steps: ["learn-mul", "learn-bap", "learn-chaek", "learn-kkot", "learn-sagwa"] },

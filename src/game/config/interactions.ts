@@ -140,6 +140,8 @@ const baker = npc("m-keeper-1");
 export const INTERACTABLES: Interactable[] = [
   /* ── Courtyard (onboarding): the egg, one person, one thing to look at ── */
   { id: "egg", room: "courtyard", kind: "egg", action: "inspect", x: PROPS.eggPlinth.x, z: PROPS.eggPlinth.z, radius: 2.15 },
+  // Grandpa Baek, the gardener: the learner's first Korean conversation (hello, yes or no, goodbye).
+  { id: "chat-gardener", room: "courtyard", kind: "chat", action: "talk", chat: "gardener", npc: "c-gardener", x: npc("c-gardener").x - 1.0, z: npc("c-gardener").z - 0.6, radius: 1.5, priority: 1 },
   { id: "talk-friend", room: "courtyard", kind: "talk", action: "talk", who: "friend", x: FRIEND_SPOT.x, z: FRIEND_SPOT.z, radius: 1.9 },
   // The stone lantern by the north gate, on the way out.
   { id: "learn-lantern", room: "courtyard", kind: "learn", action: "inspect", learn: "seokdeung", x: PROPS.lanterns[1].x - 0.75, z: PROPS.lanterns[1].z + 0.45, radius: 1.3 },
@@ -147,6 +149,8 @@ export const INTERACTABLES: Interactable[] = [
   { id: "learn-tree", room: "courtyard", kind: "learn", action: "inspect", learn: "beotnamu", x: PROPS.beds[0].x + 0.4, z: PROPS.beds[0].z + 1.7, radius: 1.4 },
 
   /* ── Hangul Village: letters on the doors, people in the street ── */
+  // Mr. Seo, the sign painter: reading a first syllable, then a first word.
+  { id: "chat-painter", room: "hangul-village", kind: "chat", action: "talk", chat: "painter", npc: "hv-x1", x: npc("hv-x1").x + 0.87, z: npc("hv-x1").z + 0.5, radius: 1.4, priority: 1 },
   { id: "talk-minsu", room: "hangul-village", kind: "talk", action: "talk", who: "minsu", x: MINSU_SPOT.x, z: MINSU_SPOT.z, radius: 1.9, npc: "v-minsu" },
   { id: "letter-giyeok", room: "hangul-village", kind: "letter", action: "learn", letter: "ㄱ", x: signX(-1), z: signZ(0), radius: 1.7 },
   { id: "learn-nieun", room: "hangul-village", kind: "learn", action: "learn", learn: "nieun", letter: "ㄴ", x: signX(-1), z: signZ(1), radius: 1.6 },
@@ -160,7 +164,7 @@ export const INTERACTABLES: Interactable[] = [
   { id: "learn-mieum", room: "hangul-village", kind: "learn", action: "learn", learn: "mieum", letter: "ㅁ", x: signX(-1), z: signZ(4), radius: 1.5 },
   // The well in the middle of the street.
   { id: "learn-well", room: "hangul-village", kind: "learn", action: "inspect", learn: "umul", x: VILLAGE.well.x - 1.3, z: VILLAGE.well.z - 0.6, radius: 1.1 },
-  { id: "say-auntie", room: "hangul-village", kind: "say", action: "talk", say: "auntie", npc: "v-well-1", x: npc("v-well-1").x + 0.4, z: npc("v-well-1").z - 1.0, radius: 1.5 },
+  { id: "say-auntie", room: "hangul-village", kind: "chat", action: "talk", chat: "neighbour", npc: "v-well-1", x: npc("v-well-1").x + 0.4, z: npc("v-well-1").z - 1.0, radius: 1.5 },
   { id: "say-vendor", room: "hangul-village", kind: "say", action: "talk", say: "vendor", npc: "v-vendor", x: npc("v-vendor").x - 0.1, z: npc("v-vendor").z + 1.6, radius: 1.5 },
 
   /* ── Vocabulary Market: things to name, a shopkeeper, the baker ── */

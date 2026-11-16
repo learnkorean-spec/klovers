@@ -58,7 +58,8 @@ export const NPCS: NpcPlacement[] = [
   { id: "c-x5", room: "courtyard", cast: "auntie", pose: "browse", x: 10.35, z: -6.9, yaw: -1.63, phase: 2.84 },
   { id: "c-x6", room: "courtyard", cast: "porter", pose: "walk", x: -6.4, z: 2.35, yaw: 2.69, path: [[-6.4, 2.35], [-3.7, -3.15]], phase: 1.35 },
   // hangul-village
-  { id: "hv-x1", room: "hangul-village", cast: "shopper", pose: "browse", x: -4.15, z: -14.15, yaw: -0.37, phase: 2.51 },
+  // Mr. Seo, the village's sign painter (canon supportingKoreanCast.firstSteps): reading a first syllable with him.
+  { id: "hv-x1", room: "hangul-village", cast: "painter", pose: "stand", x: -4.15, z: -14.15, yaw: 1.05, phase: 2.51, important: true },
   { id: "hv-x2", room: "hangul-village", cast: "readerB", pose: "talk", x: 3.6, z: -13.9, yaw: -1.22, phase: 2.42 },
   { id: "hv-x3", room: "hangul-village", cast: "walker", pose: "talk", x: 2.71, z: -13.57, yaw: 1.93, phase: 1.66 },
   // vocabulary-market: Book 1's new Korean people (canon supportingKoreanCast.book1), each with

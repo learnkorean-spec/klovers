@@ -195,7 +195,8 @@ export default function InteractionCard({
   const speakFriend = (ko: string, opening = false) => {
     if (chat) speak(chatNpc(chat), ko.length);
     // An unnamed person's opening line is the one already recorded for them.
-    if (opening && chat && !isFriend(chat)) playVoice(ROLE_CHATS[chat].voice, () => sayFriend(ko));
+    const recorded = opening && chat && !isFriend(chat) ? ROLE_CHATS[chat].voice : undefined;
+    if (recorded) playVoice(recorded, () => sayFriend(ko));
     else sayFriend(ko);
   };
   // The person speaks first, as the card opens (the tap or key that opened it lets the sound play).
@@ -592,7 +593,9 @@ export default function InteractionCard({
     const t = c.turns[Math.min(turn, c.turns.length - 1)];
     const chosen = picked === null ? null : t.options[picked];
     const last = turn >= c.turns.length - 1;
-    const line = chatOver ? c.closing : t;
+    // Their own answer to the reply just given, when they have one: the conversation goes the way the learner took it.
+    const answered = !chatOver && chosen?.right && chosen.reply ? chosen.reply : null;
+    const line: { ko: string; roman?: string; gloss: string } = chatOver ? c.closing : (answered ?? t);
     // On a phone held sideways the card is wide and in two columns (the friend's
     // line beside the replies), so nothing is cut off below the screen.
     const col = "flex w-full min-w-0 flex-col items-center gap-3";
@@ -619,8 +622,20 @@ export default function InteractionCard({
               {line.ko}
             </p>
           </div>
+          {/* How it sounds, in the first places only (the learner cannot read Hangul yet). */}
+          {line.roman && (
+            <p dir="ltr" className="pt-0.5 text-xs italic text-charcoal/60">
+              {line.roman}
+            </p>
+          )}
           {line.gloss !== "…" && <p className="pt-1 text-sm text-charcoal/80">{line.gloss}</p>}
         </div>
+        {/* Something held up to be read: a freshly painted sign. */}
+        {!chatOver && !answered && t.show && (
+          <p lang="ko" dir="ltr" className="rounded-2xl border-4 border-charcoal bg-white px-6 py-2 font-ko text-5xl font-bold leading-tight [@media(max-height:500px)]:text-4xl">
+            {t.show}
+          </p>
+        )}
         {chatOver ? (
           <p role="status" className="text-sm font-semibold">
             {ui.finished}
@@ -687,8 +702,9 @@ export default function InteractionCard({
                   onClick={() => {
                     resetSay();
                     setPicked(i);
+                    if (o.right && o.reply) speakFriend(o.reply.ko);
                   }}
-                  className={`min-h-12 w-full rounded-2xl border-2 px-3 py-2 font-ko text-base font-bold transition-colors ${
+                  className={`flex min-h-12 w-full flex-col items-center justify-center rounded-2xl border-2 px-3 py-1.5 font-ko text-base font-bold transition-colors ${
                     picked === i
                       ? o.right
                         ? "border-charcoal bg-klovers-green text-charcoal"
@@ -697,6 +713,7 @@ export default function InteractionCard({
                   }`}
                 >
                   {o.ko}
+                  {o.roman && <span className="font-sans text-xs font-normal italic text-charcoal/60">{o.roman}</span>}
                 </button>
               ))}
             </div>
@@ -704,7 +721,7 @@ export default function InteractionCard({
               <button type="button" className={`${btn} border-2 border-charcoal/30 text-charcoal outline-charcoal`} onClick={onClose}>
                 {ui.close}
               </button>
-              {chosen?.right && listenable && !/^\d/.test(chosen.ko) && (
+              {chosen?.right && listenable && /[가-힣]/.test(chosen.ko) && (
                 <button type="button" disabled={saying} className={`${btn} border-2 border-charcoal text-charcoal outline-charcoal disabled:opacity-60`} onClick={() => sayReply(chosen.ko)}>
                   {copy.card.say}
                 </button>

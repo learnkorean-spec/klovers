@@ -480,9 +480,9 @@ export const WORLD_COPY = {
     ],
     /** Missions (config/missions.ts) and the map. */
     missions: {
-      hello: { title: "Say hello", line: "Greet Lina or Adam in the courtyard, then Minsu and two neighbours in the village." },
+      hello: { title: "Say hello", line: "Greet Lina or Adam and Grandpa Baek the gardener in the courtyard, then Minsu and two neighbours in the village." },
       consonants: { title: "First consonants", line: "Read ㄱ ㄴ ㄷ ㄹ ㅁ on the village doors." },
-      vowels: { title: "Vowel doors", line: "Find ㅏ ㅓ ㅗ ㅜ along the village street." },
+      vowels: { title: "Vowel doors", line: "Find ㅏ ㅓ ㅗ ㅜ along the village street, then read Mr. Seo's fresh signs." },
       letterRace: { title: "Letter race", line: "Five spots in the village in two minutes." },
       hubWalk: { title: "Around the Hub", line: "The map, the notice board, the signpost question and a student." },
       shopping: { title: "Shopping list", line: "물 · 밥 · 책 · 꽃 · 사과: find each one in the market." },
@@ -1070,9 +1070,9 @@ export const WORLD_COPY = {
       { big: `+${toArabicDigits(STUDENTS_TAUGHT.replace("+", ""))}`, label: "طالب" },
     ],
     missions: {
-      hello: { title: "التحية", line: "التحية على لينا أو آدم في الساحة، وعلى مين سو وجارين في القرية." },
+      hello: { title: "التحية", line: "التحية على لينا أو آدم والجدّ بيك البستاني في الساحة، وعلى مين سو وجارين في القرية." },
       consonants: { title: "أول الحروف الساكنة", line: "قراءة ㄱ ㄴ ㄷ ㄹ ㅁ على أبواب القرية." },
-      vowels: { title: "أبواب الحروف المتحركة", line: "العثور على ㅏ ㅓ ㅗ ㅜ على طول شارع القرية." },
+      vowels: { title: "أبواب الحروف المتحركة", line: "العثور على ㅏ ㅓ ㅗ ㅜ على طول شارع القرية، ثم قراءة لافتات السيد سو الجديدة." },
       letterRace: { title: "سباق الحروف", line: "خمسة أماكن في القرية خلال دقيقتين." },
       hubWalk: { title: "جولة في الساحة", line: "الخريطة، ولوحة الإعلانات، وسؤال اللافتة، وطالب في الساحة." },
       shopping: { title: "قائمة التسوّق", line: "물 · 밥 · 책 · 꽃 · 사과: العثور على كل واحدة في السوق." },
