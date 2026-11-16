@@ -719,25 +719,33 @@ function addMouthOpen(scene: Group): void {
     line /= sw;
     const half = Math.sqrt(sx / sw) * 1.3;
     const lip = half * 0.4;
-    // The line between the lips: the crease in the face's outer surface, down
-    // the middle. The bodies have the inside of a mouth too, so only the
-    // outermost skin at each height counts (the furthest forward in a thin band).
-    const band = half * 0.07;
-    const outer = new Map<number, { z: number; y: number }>();
+    // The line between the lips. Down the middle of the mouth, the inner edge
+    // of the upper lip, the inner edge of the lower lip and the start of the
+    // inside of the mouth all sit at one height: nowhere else do so many of
+    // the lips' points share a height. (Depth does not find it: the bodies
+    // carry the inside of a mouth, and creases above and below the lips are
+    // as deep as the one between them.)
+    const mid: { y: number; z: number }[] = [];
     for (let i = 0; i < n; i++) {
       const y = pos.getY(i);
-      if (Math.abs(pos.getX(i)) > half * 0.3 || Math.abs(y - line) > lip * 0.7) continue;
-      const k = Math.round(y / band);
-      const z = pos.getZ(i);
-      const at = outer.get(k);
-      if (!at || z > at.z) outer.set(k, { z, y });
+      if (w[i] >= 0.12 * wmax && Math.abs(pos.getX(i)) <= half * 0.25 && Math.abs(y - line) <= lip * 1.25) mid.push({ y, z: pos.getZ(i) });
     }
-    let seam = Infinity;
-    for (const at of outer.values()) {
-      if (at.z < seam) {
-        seam = at.z;
-        line = at.y;
+    mid.sort((a, b) => a.y - b.y);
+    const span = half * 0.035;
+    let most = 0;
+    let seam = front - lip * 0.5;
+    for (let i = 0, j = 0; i < mid.length; i++) {
+      while (j < mid.length && mid[j].y <= mid[i].y + span) j++;
+      if (j - i > most) {
+        most = j - i;
+        line = mid[i].y;
+        seam = -Infinity;
+        for (let k = i; k < j; k++) seam = Math.max(seam, mid[k].z);
       }
+    }
+    // How deep the lips meet there: the furthest-forward skin at that height (whatever the lips' shape moves or not).
+    for (let i = 0; i < n; i++) {
+      if (Math.abs(pos.getX(i)) <= half * 0.25 && Math.abs(pos.getY(i) - line) <= span) seam = Math.max(seam, pos.getZ(i));
     }
     const drop = lip * 0.6;
     const delta = new Float32Array(n * 3);
@@ -752,7 +760,7 @@ function addMouthOpen(scene: Group): void {
     for (const key of Object.keys(g.morphAttributes)) g.morphAttributes[key].push(new BufferAttribute(key === "position" ? delta : new Float32Array(n * 3), 3));
     dict.mouthOpen = m.morphTargetInfluences.length;
     m.morphTargetInfluences.push(0);
-    g.userData.mouth = { line, z: Number.isFinite(seam) ? seam : front - lip * 0.5, half, drop } satisfies Mouth;
+    g.userData.mouth = { line, z: seam, half, drop } satisfies Mouth;
   });
 }
 
