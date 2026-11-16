@@ -129,14 +129,25 @@ const trimSeconds = (t: string) => t.slice(0, 5);
  * already used elsewhere on this card (needs attention, paused), so they're
  * deliberately left out here: a group color must never be mistaken for a
  * status.
+ *
+ * "violet" and "orange" are deliberately NOT in this list (2026-11-16).
+ * tailwind.config.ts retunes both of those hue names to the Klovers brand's
+ * near-monochrome charcoal/pale-yellow ramp (its own comment: "any colour
+ * outside the Klovers palette gets fixed") — so `bg-violet-500` renders as
+ * charcoal and `bg-violet-50`/`text-violet-700` as pale-yellow-on-charcoal,
+ * not purple. On this card that is indistinguishable from "no color at all",
+ * which is exactly the opposite of what this array is for: Naira and Renad
+ * Elsenduony hashed to "violet" and rendered as a flat gray bar with no
+ * visible grouping. "rose" and "lime" are not retuned anywhere in
+ * tailwind.config.ts, so they're used here instead.
  */
 const GROUP_COLORS = [
   { border: "border-indigo-300", bg: "bg-indigo-50", text: "text-indigo-700", dot: "bg-indigo-500" },
   { border: "border-teal-300", bg: "bg-teal-50", text: "text-teal-700", dot: "bg-teal-500" },
-  { border: "border-violet-300", bg: "bg-violet-50", text: "text-violet-700", dot: "bg-violet-500" },
+  { border: "border-rose-300", bg: "bg-rose-50", text: "text-rose-700", dot: "bg-rose-500" },
   { border: "border-sky-300", bg: "bg-sky-50", text: "text-sky-700", dot: "bg-sky-500" },
   { border: "border-emerald-300", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
-  { border: "border-orange-300", bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-500" },
+  { border: "border-lime-300", bg: "bg-lime-50", text: "text-lime-700", dot: "bg-lime-500" },
   { border: "border-cyan-300", bg: "bg-cyan-50", text: "text-cyan-700", dot: "bg-cyan-500" },
   { border: "border-fuchsia-300", bg: "bg-fuchsia-50", text: "text-fuchsia-700", dot: "bg-fuchsia-500" },
 ] as const;
