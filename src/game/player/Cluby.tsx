@@ -182,13 +182,15 @@ export default function Cluby({ story, player, layout, guide, interests }: Props
       g.position.set(c.x, 0, c.z);
       // A little personality while waiting: a slow side-to-side sway.
       if (body.current) {
-        const sway = d <= 0.35 && m.idleFor > 3 && !c.look ? Math.sin(t * 1.4) * 0.07 : 0;
+        // Remembering: head to one side, held still. Otherwise a slow sway while waiting.
+        const sway = now < c.rememberUntil ? 0.16 : d <= 0.35 && m.idleFor > 3 && !c.look ? Math.sin(t * 1.4) * 0.07 : 0;
         body.current.rotation.z += (sway - body.current.rotation.z) * damp(4, dt);
       }
     }
 
     // A happy hop (a right answer, a new place).
-    if (now < c.hopUntil) hop = Math.abs(Math.sin(now / 110)) * 0.22;
+    if (now < c.rememberUntil) hop = 0;
+    else if (now < c.hopUntil) hop = Math.abs(Math.sin(now / 110)) * 0.22;
     else if (now < c.ackUntil) hop = Math.abs(Math.sin(now / 140)) * 0.1;
     if (body.current) {
       body.current.position.y = hop + Math.sin(now / 600) * 0.01;
@@ -199,7 +201,7 @@ export default function Cluby({ story, player, layout, guide, interests }: Props
     g.scale.setScalar(scale);
     // Point with the right arm while showing the way.
     if (armR.current) {
-      const target = c.look ? -2.3 : 0;
+      const target = c.look && now >= c.rememberUntil ? -2.3 : 0;
       armR.current.rotation.x += (target - armR.current.rotation.x) * damp(8, dt);
     }
   });

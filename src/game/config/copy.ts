@@ -53,6 +53,8 @@ export const WORLD_COPY = {
       hub: { text: "Every path starts here." },
       "klovers-house": { text: "Everything Klovers does is on these walls." },
       wordRight: { ko: "잘했어!", text: "Well done." },
+      // A memory is returning (config/memories.ts): he stops, and says only this.
+      remember: { ko: "어…?", text: "Cluby goes very still." },
       // Talking to Cluby: one short line per place.
       "talk-courtyard": { ko: "가자!", text: "Let's see what's outside!" },
       "talk-hangul-village": { ko: "한글!", text: "Look, letters everywhere." },
@@ -655,6 +657,7 @@ export const WORLD_COPY = {
       hub: { text: "من هنا تبدأ كل الطرق." },
       "klovers-house": { text: "كل ما تقدّمه كلوفرز على هذه الجدران." },
       wordRight: { ko: "잘했어!", text: "أحسنت." },
+      remember: { ko: "어…?", text: "كلوبي يسكن تمامًا." },
       "talk-courtyard": { ko: "가자!", text: "هيا نرَ ما في الخارج!" },
       "talk-hangul-village": { ko: "한글!", text: "الحروف في كل مكان حولنا." },
       "talk-vocabulary-market": { ko: "이게 뭐예요?", text: "ما هذا؟ لكل شيء هنا اسم كوري." },

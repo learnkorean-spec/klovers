@@ -714,12 +714,18 @@ const WorldPage = () => {
     if (!ch) return;
     const id = memoryDue(ch.id, { clubyHere: clubyAwake && saved.hatchSeen, chapterDone: chapterDone(ch, saved.missionsDone), remembered: saved.memories });
     if (!id) return;
+    // First he notices: he turns to the middle of the place and goes still.
+    // Then, a breath later, the memory itself.
+    const pose = api.current?.pose();
+    const notice = window.setTimeout(() => api.current?.remember(0, 0), 1200);
     const t = window.setTimeout(() => {
       patch({ memories: [...savedRef.current.memories, id] });
       setCard({ kind: "memory", memory: id });
-      api.current?.celebrate();
-    }, 2200);
-    return () => window.clearTimeout(t);
+    }, pose ? 4200 : 2200);
+    return () => {
+      window.clearTimeout(notice);
+      window.clearTimeout(t);
+    };
   }, [ready, card, bubble, sequence, welcoming, missionsOpen, mapOpen, currentRoom, clubyAwake, saved.hatchSeen, saved.missionsDone, saved.memories, patch]);
   const tutorialStep: TutorialStep = saved.tutorialDone ? "done" : !moved ? "move" : !looked ? "look" : "done";
   useEffect(() => {

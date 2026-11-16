@@ -83,7 +83,7 @@ export type WorldNotice = NoticeKey;
 
 /** Short things Cluby says (text lives in config/copy.ts, per language). */
 export type SpeechKey =
-  | "hello" | "found" | "follow" | "hangul-village" | "vocabulary-market" | "hub" | "klovers-house" | "wordRight" | "letters"
+  | "hello" | "found" | "follow" | "hangul-village" | "vocabulary-market" | "hub" | "klovers-house" | "wordRight" | "letters" | "remember"
   | "talk-courtyard" | "talk-hangul-village" | "talk-vocabulary-market" | "talk-hub" | "talk-conversation-cafe" | "talk-klovers-house";
 
 /** Commands the page can give the scene (HTML UI → 3D). */
@@ -94,6 +94,8 @@ export interface WorldApi {
   skip: () => void;
   /** Cluby's happy hop and line after a right answer. */
   celebrate: (line?: SpeechKey) => void;
+  /** One of Cluby's memories is returning: he turns to this spot and goes still for a while. */
+  remember: (x: number, z: number) => void;
   /** Spoken to: Cluby turns to the learner, hops, and says his line here. */
   clubyTalk: () => void;
   /** The egg was inspected: its light answers (the egg stays still). */
@@ -352,6 +354,22 @@ export default function World(props: WorldProps) {
     [say],
   );
 
+  const remember = useCallback(
+    (x: number, z: number) => {
+      const s = story.current;
+      if (s.cluby.mode !== "follow") return;
+      const at = { x, z };
+      s.cluby.look = at;
+      s.cluby.hopUntil = 0;
+      s.cluby.rememberUntil = performance.now() + 9000;
+      say("remember", 4200);
+      timers.current.push(window.setTimeout(() => {
+        if (story.current.cluby.look === at) story.current.cluby.look = null;
+      }, 9000));
+    },
+    [say],
+  );
+
   const clubyTalk = useCallback(() => {
     const s = story.current;
     if (s.cluby.mode !== "follow") return;
@@ -424,8 +442,8 @@ export default function World(props: WorldProps) {
       tourFrame.current = { x: at.x, z: at.z, distance: c.distance };
       c.distance = 3.3;
     };
-    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }), goTo, tourTo, pose });
-  }, [hatch, finishHatch, celebrate, clubyTalk, pulseEgg, point, travel]);
+    cb.current.onApi?.({ hatch, skip: finishHatch, celebrate, remember, clubyTalk, pulseEgg, point, enter: (to, arrive) => travel({ to, arrive }), goTo, tourTo, pose });
+  }, [hatch, finishHatch, celebrate, remember, clubyTalk, pulseEgg, point, travel]);
 
   // New room mounted: learner at the arrival point, camera behind, Cluby beside.
   useLayoutEffect(() => {

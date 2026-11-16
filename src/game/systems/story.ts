@@ -36,6 +36,12 @@ export interface StoryState {
     hopUntil: number;
     /** Spoken to: turns to the learner until this time. */
     ackUntil: number;
+    /**
+     * A memory is returning (config/memories.ts): until this time he stands
+     * quite still, facing `look`, head a little to one side. No hop, no
+     * pointing: it is the one moment he is not busy with the learner.
+     */
+    rememberUntil: number;
   };
 }
 
@@ -45,7 +51,7 @@ export function createStoryState(hatched: boolean, stage: 0 | 1 | 2 | 3 = 0): St
     stage,
     eggT0: 0,
     eggPulseUntil: 0,
-    cluby: { mode: hatched ? "follow" : "hidden", x: 0, y: 0, z: 0, yaw: 0, t0: 0, look: null, hopUntil: 0, ackUntil: 0 },
+    cluby: { mode: hatched ? "follow" : "hidden", x: 0, y: 0, z: 0, yaw: 0, t0: 0, look: null, hopUntil: 0, ackUntil: 0, rememberUntil: 0 },
   };
 }
 
