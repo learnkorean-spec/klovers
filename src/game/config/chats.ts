@@ -1290,3 +1290,27 @@ const AR: Record<ChatId, Chat> = {
 };
 
 export const CHATS: Record<WorldLang, Record<ChatId, Chat>> = { en: EN, ar: AR };
+
+/**
+ * The recorded file of one of a person's lines (public/assets/world/voice/chat):
+ * "<chat>-<turn>" for what they say, "<chat>-<turn>-r<option>" for their answer
+ * to a reply, "<chat>-end" for the goodbye. Each person has one voice of their
+ * own for the whole conversation. Undefined when the line is not theirs.
+ */
+export function chatClip(id: ChatId, ko: string): string | undefined {
+  const c = CHATS.en[id];
+  if (c.closing.ko === ko) return `chat/${id}-end.mp3`;
+  for (let t = 0; t < c.turns.length; t++) {
+    if (c.turns[t].ko === ko) return `chat/${id}-${t}.mp3`;
+    const o = c.turns[t].options.findIndex((x) => x.right && x.reply?.ko === ko);
+    if (o >= 0) return `chat/${id}-${t}-r${o}.mp3`;
+  }
+  return undefined;
+}
+
+/** Every recorded line of a conversation (for the test that each file exists). */
+export function chatClips(id: ChatId): string[] {
+  const c = CHATS.en[id];
+  const all = [...c.turns.flatMap((t) => [t.ko, ...t.options.flatMap((o) => (o.right && o.reply ? [o.reply.ko] : []))]), c.closing.ko];
+  return [...new Set(all.map((ko) => chatClip(id, ko)!))];
+}

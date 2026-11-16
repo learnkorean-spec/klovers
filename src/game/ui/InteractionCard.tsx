@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { SHOP_ITEMS, SHOP_PRICES, wonInKorean, type QuizId, type ShopId } from "../config/interactions";
-import { playClip, playClips, playVoice, shopClip, stopVoice } from "../systems/voice";
+import { playClip, playClips, shopClip, stopVoice } from "../systems/voice";
 import { canListen, listenFor, type SayResult } from "../systems/sayIt";
 import { speak } from "../systems/reactions";
 import { MEMORY_ORDER, memory as memoryText, type MemoryId } from "../config/memories";
 import { useSpeech } from "@/hooks/useSpeech";
 import type { NoticeKey } from "../config/rooms";
-import { CHATS, ROLE_CHATS, chatIsMan, chatNameKo, chatNpc, isFriend, type ChatId } from "../config/chats";
+import { CHATS, chatClip, chatIsMan, chatNameKo, chatNpc, type ChatId } from "../config/chats";
 
 /**
  * The small web-UI cards opened from the 3D world (E / the round button).
@@ -189,19 +189,19 @@ export default function InteractionCard({
   /** Play a recorded line; the browser's voice if it cannot. */
   const say = (path: string, ko: string) => playClip(path, () => speakKorean(ko));
   const hearLabel = copy.card.listen;
-  // Chat: the friend's own voice (no recordings yet: the browser's Korean voice, a man's or a woman's).
+  // Chat: each person's own recorded voice; the browser's Korean voice (a man's or a woman's) if a file cannot play.
   const { speakKorean: sayFriend } = useSpeech({ rate: 0.85, gender: chat && chatIsMan(chat) ? "male" : "female" });
   /** The friend says a line: heard, and seen (they gesture in the world while it lasts). */
-  const speakFriend = (ko: string, opening = false) => {
-    if (chat) speak(chatNpc(chat), ko.length);
-    // An unnamed person's opening line is the one already recorded for them.
-    const recorded = opening && chat && !isFriend(chat) ? ROLE_CHATS[chat].voice : undefined;
-    if (recorded) playVoice(recorded, () => sayFriend(ko));
+  const speakFriend = (ko: string) => {
+    if (!chat) return;
+    speak(chatNpc(chat), ko.length);
+    const clip = chatClip(chat, ko);
+    if (clip) playClip(clip, () => sayFriend(ko));
     else sayFriend(ko);
   };
   // The person speaks first, as the card opens (the tap or key that opened it lets the sound play).
   useEffect(() => {
-    if (kind === "chat" && chat) speakFriend(CHATS[lang][chat].turns[0].ko, true);
+    if (kind === "chat" && chat) speakFriend(CHATS[lang][chat].turns[0].ko);
     // Once, on opening.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -617,7 +617,7 @@ export default function InteractionCard({
         </div>
         <div className="w-full rounded-2xl bg-white p-3 text-start">
           <div className="flex items-start gap-2" dir="ltr">
-            <Hear label={hearLabel} onPlay={() => speakFriend(line.ko, !chatOver && turn === 0)} />
+            <Hear label={hearLabel} onPlay={() => speakFriend(line.ko)} />
             <p lang="ko" className="font-ko text-lg font-bold leading-snug">
               {line.ko}
             </p>
@@ -678,7 +678,7 @@ export default function InteractionCard({
                   setTurn(0);
                   setPicked(null);
                   setChatOver(false);
-                  speakFriend(c.turns[0].ko, true);
+                  speakFriend(c.turns[0].ko);
                 }}
               >
                 {ui.again}
@@ -764,7 +764,7 @@ export default function InteractionCard({
         <h2 className="font-display text-xl font-bold">{m.title}</h2>
         <p className="text-sm leading-relaxed text-charcoal/85">{m.text}</p>
         <div className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white p-3" dir="ltr">
-          <Hear label={hearLabel} onPlay={() => speakKorean(m.ko)} />
+          <Hear label={hearLabel} onPlay={() => say(`chat/memory-${memoryId}.mp3`, m.ko)} />
           <p lang="ko" className="font-ko text-2xl font-bold">
             {m.ko}
           </p>
