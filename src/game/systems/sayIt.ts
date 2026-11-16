@@ -1,9 +1,15 @@
+import { canStream, listenViaTranscribe } from "./transcribeKo";
+
 /**
- * "Say it" practice: the browser's own speech recognition listens once in
- * Korean, and the learner hears how close they came. Nothing is recorded or
- * sent anywhere by this code (the browser's recogniser may use its own
- * service, as with any dictation). Where the browser cannot listen, the
- * button is simply not shown.
+ * "Say it" practice: listens once in Korean, and the learner hears how close
+ * they came. Where the browser has its own speech recognition it is used (the
+ * browser's recogniser may use its own service, as with any dictation).
+ *
+ * 16 Nov 2026: on iPhones/iPads, and on any browser without a recogniser, the
+ * microphone is streamed for a few seconds to Amazon Transcribe instead
+ * (systems/transcribeKo.ts, paid from Klovers' AWS credits, signed-in learners
+ * only) — before this, "Say it" did not work on most iPhones. Nothing is kept:
+ * the audio is only transcribed. Where neither works, the button is not shown.
  */
 
 type Recognition = {
@@ -24,7 +30,14 @@ function ctor(): (new () => Recognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-export const canListen = (): boolean => ctor() !== null;
+/** iOS Safari exposes a recogniser that mostly fails, so prefer Amazon there. */
+const isIOS = (): boolean =>
+  typeof navigator !== "undefined" &&
+  (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
+const useStream = (): boolean => canStream() && (isIOS() || ctor() === null);
+
+export const canListen = (): boolean => ctor() !== null || canStream();
 
 /** Hangul syllables (and Latin letters, digits) only: spaces and marks don't count. */
 const clean = (s: string) => s.replace(/[^\p{Script=Hangul}a-z0-9]/giu, "").toLowerCase();
@@ -54,6 +67,13 @@ export type SayResult = { score: number; heard: string } | { error: "blocked" | 
 
 /** Listens once (Korean) and scores the best of the browser's guesses. */
 export function listenFor(target: string): { done: Promise<SayResult>; stop: () => void } {
+  if (useStream()) {
+    const l = listenViaTranscribe();
+    return {
+      done: l.done.then((r) => ("heard" in r ? { score: similarity(target, r.heard), heard: r.heard } : r)),
+      stop: l.stop,
+    };
+  }
   const C = ctor();
   if (!C) return { done: Promise.resolve({ error: "nothing" }), stop: () => {} };
   const r = new C();
