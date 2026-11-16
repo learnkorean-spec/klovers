@@ -56,7 +56,7 @@ export function stopVoice(): void {
 }
 
 /** Play a recorded file (path under /assets/world/voice/). Call from the tap itself. */
-export function playClip(path: string, fallback: () => void): void {
+export function playClip(path: string, fallback: () => void, onLength?: (seconds: number) => void): void {
   stopVoice();
   unlock();
   if (typeof Audio === "undefined" || unavailable.has(path)) return fallback();
@@ -70,6 +70,8 @@ export function playClip(path: string, fallback: () => void): void {
     fallback();
   };
   a.addEventListener("error", giveUp, { once: true });
+  // How long the line really lasts: the speaker's mouth and hands keep time with it.
+  if (onLength) a.addEventListener("loadedmetadata", () => Number.isFinite(a.duration) && onLength(a.duration), { once: true });
   a.play().catch(giveUp);
 }
 

@@ -24,6 +24,11 @@ export function speak(npcId: string, chars: number): void {
   speakingUntil.set(npcId, performance.now() + 500 + chars * 190);
 }
 
+/** The line's real length is known (a recording): speak for exactly that long. */
+export function speakFor(npcId: string, seconds: number): void {
+  speakingUntil.set(npcId, performance.now() + seconds * 1000);
+}
+
 export function isSpeaking(npcId: string, now: number): boolean {
   const t = speakingUntil.get(npcId);
   return !!t && now < t;

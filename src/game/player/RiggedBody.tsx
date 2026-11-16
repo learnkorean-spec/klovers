@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type MutableRefObject } from "react";
+import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { AdditiveBlending, AnimationMixer, Color, DoubleSide, Frustum, LoopOnce, LoopRepeat, Matrix4, Mesh, MeshStandardMaterial, Quaternion, Sphere, SphereGeometry, Vector3, type Camera, type AnimationAction, type AnimationClip, type Bone, type BufferGeometry, type Group, type Material, type SkinnedMesh, type Texture } from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -495,6 +495,8 @@ export interface BodyControl {
   once: Clip | null;
   /** Playback speed for walk / run (feet keep pace with the ground). */
   rate: number;
+  /** Saying a line now: the lips move (people in a conversation set this). */
+  speaking?: boolean;
 }
 
 /** Where a person may look: someone's position (the learner), or nobody. */
@@ -670,6 +672,26 @@ function setFace(root: Group, face: Record<string, number>) {
   });
 }
 
+/** The lips' blend shape on every mesh that has it, with the person's own resting value. */
+function findLips(root: Group): { m: Mesh; i: number; rest: number }[] {
+  const out: { m: Mesh; i: number; rest: number }[] = [];
+  root.traverse((o) => {
+    const m = o as Mesh;
+    const i = m.morphTargetDictionary?.mouthFull;
+    if (i !== undefined && m.morphTargetInfluences) out.push({ m, i, rest: m.morphTargetInfluences[i] });
+  });
+  return out;
+}
+
+/**
+ * How far the lips are from rest at this moment of a line, −1…1: syllables
+ * at about five a second, uneven like speech (two rates beating), never a
+ * steady pulse.
+ */
+export function lipBeat(t: number): number {
+  return Math.sin(t * 31) * 0.6 + Math.sin(t * 19.3 + 1.1) * 0.4;
+}
+
 export default function RiggedBody({ model, rules, female, control, look, head, face }: { model: string; rules: DressRule[]; female: boolean; control: MutableRefObject<BodyControl>; look?: LookTarget; head?: HeadShape; face?: Record<string, number> }) {
   // Fetch the light copy alongside the body, not after it (each load below waits for the one before).
   if (LOD_MODELS.has(model) && lodFlag() !== "off") {
@@ -698,6 +720,8 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
     return r;
   }, [person, rules, head, face]);
   const lod = useLod(root, model);
+  const lips = useMemo(() => findLips(root), [root]);
+  const lipAmount = useRef(0);
 
   const { mixer, actions } = useMemo(() => {
     const mx = new AnimationMixer(root);
@@ -797,6 +821,12 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
     if (lod.level === 2 && st.odd) return;
     mixer.update(st.pending);
     st.pending = 0;
+    // Lips: moving while a line is said, easing back to rest after it.
+    if (lips.length && (c.speaking || lipAmount.current > 0.001)) {
+      lipAmount.current += ((c.speaking ? 1 : 0) - lipAmount.current) * Math.min(1, d * 12);
+      const v = (lipBeat(st.t) * 0.85 + 0.15) * lipAmount.current;
+      for (const l of lips) l.m.morphTargetInfluences![l.i] = l.rest + v;
+    }
 
     // Look at the learner when they are near and in front; otherwise back.
     const { head, neck } = bones;

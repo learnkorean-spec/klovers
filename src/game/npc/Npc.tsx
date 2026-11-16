@@ -111,7 +111,11 @@ export default function Npc({ n, player }: { n: NpcPlacement; player?: MutableRe
     }
 
     // In a conversation: they talk with their hands while their line is heard.
-    if (talker) control.current.clip = isSpeaking(n.id, performance.now()) ? "talk" : restClip.current;
+    if (talker) {
+      const speaking = isSpeaking(n.id, performance.now());
+      control.current.clip = speaking ? "talk" : restClip.current;
+      control.current.speaking = speaking;
+    }
 
     // A reaction (answered, or pleased): a wave and a small lift.
     const cheer = cheerAmount(n.id, performance.now());

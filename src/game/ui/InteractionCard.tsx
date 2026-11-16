@@ -3,7 +3,7 @@ import { WORLD_COPY, type WorldLang } from "../config/copy";
 import { SHOP_ITEMS, SHOP_PRICES, wonInKorean, type QuizId, type ShopId } from "../config/interactions";
 import { playClip, playClips, shopClip, stopVoice } from "../systems/voice";
 import { canListen, listenFor, type SayResult } from "../systems/sayIt";
-import { speak } from "../systems/reactions";
+import { speak, speakFor } from "../systems/reactions";
 import { MEMORY_ORDER, memory as memoryText, type MemoryId } from "../config/memories";
 import { useSpeech } from "@/hooks/useSpeech";
 import type { NoticeKey } from "../config/rooms";
@@ -196,7 +196,7 @@ export default function InteractionCard({
     if (!chat) return;
     speak(chatNpc(chat), ko.length);
     const clip = chatClip(chat, ko);
-    if (clip) playClip(clip, () => sayFriend(ko));
+    if (clip) playClip(clip, () => sayFriend(ko), (seconds) => speakFor(chatNpc(chat), seconds));
     else sayFriend(ko);
   };
   // The person speaks first, as the card opens (the tap or key that opened it lets the sound play).
