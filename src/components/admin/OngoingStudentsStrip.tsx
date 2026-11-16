@@ -110,6 +110,28 @@ import {
  * drag handles. MyStudentsManager's own list is the one exception: it sorts
  * "needs action" first on purpose (a triage view, not a roster), so it is
  * deliberately left alone rather than switched to sort_order.
+ *
+ * WHY NAIRA AND RENAD ARE UNDER THEIR OWN "GROUP" SECTION NOW (2026-11-16)
+ * --------------------------------------------------------------------------
+ * Coloring them alike and dragging them adjacent still left them inside the
+ * "Private · N" list and its count — correct about the billing, wrong about
+ * the question Re actually asked: "those 2 in a group not private". Private
+ * billing and being taught together are two different facts, and this card
+ * was only showing the first one structurally.
+ *
+ * MyStudentsManager.tsx already drew this exact line for this exact pair —
+ * see its own classmatesByStudent/kind comment, which names Naira and Renad
+ * as the reason it exists: a private student with a classmate (same
+ * meeting_url + weekday/start_time/duration, via classmatesById above) is
+ * "group" for display, full stop, while her teacher_students row, her
+ * bundle, her currency and her price are not touched at all. This section
+ * applies that same split here: any private row with a classmatesById match
+ * renders under "Group" instead of "Private", using the identical
+ * SortablePrivateRow (still her own bundle, still her own balance, still
+ * her own drag handle to reorder relative to her classmates) — only which
+ * list it appears in, and which count it's added to, changes. Nothing about
+ * teacher_students or its bundle rows is written by this split; it reads
+ * classmatesById, which is already purely derived.
  */
 
 interface Props {
@@ -457,14 +479,21 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
   // drag.
   const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const ids = rows.map((r) => r.student.id);
-    const from = ids.indexOf(active.id as string);
-    const to = ids.indexOf(over.id as string);
-    if (from === -1 || to === -1) return;
-    reorderMutation.mutate(arrayMove(ids, from, to));
+  // Scoped to whichever section's own id list is dragged within — "Private"
+  // and "Group" reorder independently of each other, each still just writing
+  // sort_order 10-apart on teacher_students for its own rows. The two
+  // sections never need a shared order: nothing reads "where does a Private
+  // row rank against a Group row", only "where does she rank among her own
+  // section".
+  function makeDragEndHandler(sectionIds: string[]) {
+    return (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      const from = sectionIds.indexOf(active.id as string);
+      const to = sectionIds.indexOf(over.id as string);
+      if (from === -1 || to === -1) return;
+      reorderMutation.mutate(arrayMove(sectionIds, from, to));
+    };
   }
 
   const groupRows = groupStudents ?? [];
@@ -504,6 +533,13 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
     }
     return info;
   }, [rows]);
+
+  // "those 2 in a group not private" — a private row with a classmatesById
+  // match is structurally a Group row now, not just a colored Private one.
+  // See the "WHY NAIRA AND RENAD ARE UNDER THEIR OWN GROUP SECTION" note at
+  // the top of this file.
+  const soloRows = useMemo(() => rows.filter((r) => !classmatesById.has(r.student.id)), [rows, classmatesById]);
+  const pairedRows = useMemo(() => rows.filter((r) => classmatesById.has(r.student.id)), [rows, classmatesById]);
 
   // A class seat's group name is the real, authoritative grouping (unlike a
   // private schedule that merely happens to line up), so every seat gets a
@@ -570,7 +606,8 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Everyone currently studying — {rows.length} private and {groupRows.length} in a class.
+          Everyone currently studying — {soloRows.length} private, {pairedRows.length > 0 && `${pairedRows.length} in a group (private billing), `}
+          {groupRows.length} in a class.
           Private students say whether they are also an account on the site, which is what decides
           whether a letter or a payment reminder can reach them. Pause freezes a private student:
           nothing automatic happens to her and everything is kept. Edit private students in Student
@@ -604,15 +641,51 @@ export default function OngoingStudentsStrip({ setAdminTab }: Props) {
           <p className="text-sm text-muted-foreground" role="status">Loading…</p>
         ) : (
           <>
-            {rows.length > 0 && (
+            {soloRows.length > 0 && (
               <div className="space-y-2">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Private · {rows.length}
+                  Private · {soloRows.length}
                 </p>
-                <DndContext sensors={dragSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <SortableContext items={rows.map((r) => r.student.id)} strategy={verticalListSortingStrategy}>
+                <DndContext
+                  sensors={dragSensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={makeDragEndHandler(soloRows.map((r) => r.student.id))}
+                >
+                  <SortableContext items={soloRows.map((r) => r.student.id)} strategy={verticalListSortingStrategy}>
                     <ul className="space-y-2">
-                      {rows.map(({ student, balance }) => (
+                      {soloRows.map(({ student, balance }) => (
+                        <SortablePrivateRow
+                          key={student.id}
+                          student={student}
+                          balance={balance}
+                          reason={attentionReason({ student, balance })}
+                          account={accounts?.get(student.id)}
+                          accountsLoaded={!!accounts}
+                          paused={student.status === "paused"}
+                          classmate={classmatesById.get(student.id)}
+                          onChanged={reload}
+                        />
+                      ))}
+                    </ul>
+                  </SortableContext>
+                </DndContext>
+              </div>
+            )}
+
+            {pairedRows.length > 0 && (
+              <div className="space-y-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Users className="h-3 w-3" />
+                  Group (private billing) · {pairedRows.length}
+                </p>
+                <DndContext
+                  sensors={dragSensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={makeDragEndHandler(pairedRows.map((r) => r.student.id))}
+                >
+                  <SortableContext items={pairedRows.map((r) => r.student.id)} strategy={verticalListSortingStrategy}>
+                    <ul className="space-y-2">
+                      {pairedRows.map(({ student, balance }) => (
                         <SortablePrivateRow
                           key={student.id}
                           student={student}
