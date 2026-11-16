@@ -426,7 +426,7 @@ export const KLOVERS_WORLD = {
       room: "vocabulary-market",
       form: "choice_based_conversation_in_the_class_grammar",
       look: "provisional_until_visual_direction_is_decided",
-      // Once someone is a friend, a second and harder talk with them (same class's grammar). Re, 16 Nov 2026: "push".
+      // Once someone is a friend, a second and harder talk with them (same class's grammar). Re, 16 Nov 2026: "push". The five named people of the later worlds have one too, at their world's level.
       secondTalk: "after_the_first_is_finished_same_person_same_class",
       source: "Re, 15 Nov 2026",
     },

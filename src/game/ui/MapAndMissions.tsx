@@ -4,7 +4,7 @@ import { INTERACTABLES } from "../config/interactions";
 import { MISSIONS, missionRooms, missionSteps, type Mission, type MissionId } from "../config/missions";
 import { CHAPTERS, SIDE_MISSIONS, chapterDone, chapterMissions, currentChapter } from "../config/chapters";
 import { MEMORY_OF, memory as memoryText } from "../config/memories";
-import { ALL_CHATS, CHATS, CHATS2, chatAgainKey, chatMetKey, chatNameKo, isFriend, type ChatId } from "../config/chats";
+import { ALL_CHATS, CHATS, CHATS2, chatAgainKey, chatMetKey, chatNameKo, hasSecond, type ChatId } from "../config/chats";
 import { ROOMS, type RoomId } from "../config/rooms";
 
 /** Who there is to talk with in each place, in the order they are listed. */
@@ -611,8 +611,8 @@ export function MissionsCard({
                           {!friend && <span className="mx-2 font-normal">· {copy.chatUi.notMet}</span>}
                         </p>
                         {friend && <p className="pt-0.5 text-xs text-charcoal/75">{p.focus}</p>}
-                        {/* The market's friends have a second talk: asked for until held, then what it practised. */}
-                        {friend && isFriend(id) && (met.includes(chatAgainKey(id)) ? <p className="pt-0.5 text-xs text-charcoal/75">{copy.chatUi.twoTalks} · {CHATS2[lang][id].focus}</p> : <p className="pt-0.5 text-xs font-bold text-charcoal/80">{copy.chatUi.talkAgain}</p>)}
+                        {/* Most people have a second talk: asked for until held, then what it practised. */}
+                        {friend && hasSecond(id) && (met.includes(chatAgainKey(id)) ? <p className="pt-0.5 text-xs text-charcoal/75">{copy.chatUi.twoTalks} · {CHATS2[lang][id].focus}</p> : <p className="pt-0.5 text-xs font-bold text-charcoal/80">{copy.chatUi.talkAgain}</p>)}
                       </li>
                     );
                   })}
