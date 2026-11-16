@@ -10,13 +10,13 @@
  */
 
 /**
- * Off until Amazon Transcribe is enabled on the AWS account: on 16 Nov 2026 the
- * live test reached Amazon but got "SubscriptionRequiredException — the AWS
- * Access Key Id needs a subscription for the service" (Free-plan account;
- * Polly works, Transcribe doesn't). While off, iPhones simply don't show
- * "Say it", exactly as before. Flip to true once a test returns Korean text.
+ * On since 16 Nov 2026. The first live test got "SubscriptionRequiredException"
+ * because the AWS account was on the Free plan; after the account was upgraded
+ * to the Paid plan (credits still apply first), a test streaming Lina's Polly
+ * line came back as "네, 여기가 요즘 유명한 카페에요." Set to false to hide
+ * "Say it" on browsers without their own speech recognition again.
  */
-export const TRANSCRIBE_ON = false;
+export const TRANSCRIBE_ON = true;
 
 export const canStream = (): boolean =>
   TRANSCRIBE_ON &&
