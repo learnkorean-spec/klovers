@@ -1541,15 +1541,198 @@ const AR2: Record<FriendId, Again> = {
       ] },
     ], closing: { ko: "하나, 둘, 셋! 고마워요, 정말 친절하네요.", gloss: "واحد، اثنان، ثلاثة! شكرًا، أنت لطيف جدًا." } },
 };
-const again = (first: Record<ChatId, Chat>, more: Record<FriendId, Again>) => Object.fromEntries(CHAT_ORDER.map((id) => [id, { ...first[id], ...more[id] }])) as Record<FriendId, Chat>;
-export const CHATS2: Record<WorldLang, Record<FriendId, Chat>> = { en: again(EN, EN2), ar: again(AR, AR2) };
+/**
+ * And with the five people of the later worlds (16 Nov 2026): each at their
+ * own world's level, one step on from their first talk.
+ */
+type LaterId = "cafe" | "cook" | "attendant" | "grandpa" | "grandma";
+const EN2B: Record<LaterId, Again> = {
+  cafe: { focus: "Habits and free time: 자주 / 매주 와요, 주말에 …을/를 봐요, and a day with 에.", turns: [
+      { ko: "어, 또 왔네요! 여기 자주 와요?", gloss: "Oh, you came again! Do you come here often?", ask: "You come every week (매주).", options: [
+        { ko: "네, 매주 와요.", right: true, feedback: "Yes: 매주 와요 = I come every week." },
+        { ko: "네, 매주 가요.", right: false, feedback: "가요 is going somewhere else. You are here now, so: 와요." },
+        { ko: "네, 매주 왔어요.", right: false, feedback: "왔어요 is one visit in the past. A habit takes the present: 매주 와요." },
+      ] },
+      { ko: "저도요. 여기서 숙제해요. 주말에는 보통 뭐 해요?", gloss: "Me too. I do my homework here. What do you usually do at weekends?", ask: "You watch Korean dramas (한국 드라마).", options: [
+        { ko: "한국 드라마를 마셔요.", right: false, feedback: "마셔요 is for drinks. Watching: 봐요." },
+        { ko: "한국 드라마를 봐요.", right: true, feedback: "Yes: 봐요 = watch. 드라마를 봐요." },
+        { ko: "한국 드라마가 봐요.", right: false, feedback: "That makes the drama the one watching. What you watch takes 를: 드라마를 봐요." },
+      ] },
+      { ko: "오, 저도 좋아해요! 같이 볼까요?", gloss: "Oh, I like them too! Shall we watch one together?", ask: "Accept, and say Saturday (토요일).", options: [
+        { ko: "좋아요! 토요일에 봐요.", right: true, feedback: "Yes: 토요일에 봐요. A day takes 에; said to a friend, 봐요 is also \"let's watch\"." },
+        { ko: "좋아요! 토요일에서 봐요.", right: false, feedback: "에서 is for places. A day takes 에: 토요일에." },
+        { ko: "좋아요! 토요일에 봤어요.", right: false, feedback: "봤어요 is the past. For the Saturday ahead: 봐요." },
+      ] },
+    ], closing: { ko: "좋아요! 토요일에 여기서 만나요.", gloss: "Great! Let's meet here on Saturday." } },
+  cook: { focus: "Ordering at a stall: 안 맵게 해 주세요, 도 (too), 괜찮아요 to decline, 모두 얼마예요?, and 서비스 (on the house).", turns: [
+      { ko: "또 왔네요! 오늘은 떡볶이 어때요?", gloss: "You came again! How about tteokbokki today?", ask: "Yes, but ask her to make it not spicy.", options: [
+        { ko: "좋아요! 안 맵게 해 주세요.", right: true, feedback: "Yes: 안 맵게 해 주세요 = please make it not spicy. 맵게 = spicily, 안 = not." },
+        { ko: "좋아요! 안 매워요.", right: false, feedback: "안 매워요 says \"it is not spicy\". To ask her: 안 맵게 해 주세요." },
+        { ko: "좋아요! 맵게 해 주세요.", right: false, feedback: "That asks for it spicy. Not spicy: 안 맵게 해 주세요." },
+      ] },
+      { ko: "알겠어요. 김밥도 하나 드릴까요?", gloss: "Got it. Shall I give you a gimbap too?", ask: "Take it or not: both are fine.", options: [
+        { ko: "네, 김밥도 하나 주세요.", right: true, feedback: "Yes: 도 = too. 김밥도 하나 주세요.", reply: { ko: "네! 떡볶이하고 김밥 나왔어요.", gloss: "Here you are! Tteokbokki and gimbap." } },
+        { ko: "아니요, 괜찮아요.", right: true, feedback: "Yes: 괜찮아요 is the polite \"no, thank you\".", reply: { ko: "네! 떡볶이 나왔어요.", gloss: "Here you are! Your tteokbokki." } },
+        { ko: "네, 김밥은 괜찮아요.", right: false, feedback: "네 accepts, and 괜찮아요 declines. One or the other: 네, 김밥도 하나 주세요 — or 아니요, 괜찮아요." },
+      ] },
+      { ko: "어때요? 안 매워요?", gloss: "How is it? Not spicy?", ask: "It is good. Ask how much it is altogether (모두).", options: [
+        { ko: "맛있어요! 모두 몇 개예요?", right: false, feedback: "몇 개예요 asks how many. The price: 얼마예요?" },
+        { ko: "맛있어요! 모두 뭐예요?", right: false, feedback: "뭐예요 asks what it is. The price: 얼마예요?" },
+        { ko: "맛있어요! 모두 얼마예요?", right: true, feedback: "Yes: 모두 얼마예요? = how much altogether?" },
+      ] },
+    ], closing: { ko: "오늘은 서비스예요. 다음에 또 와요!", gloss: "Today it is on the house. Come again!" } },
+  attendant: { focus: "Changing lines: 까지 가요, 에서 갈아타요, 분쯤 걸려요, and 알겠어요 (not 알아요).", turns: [
+      { ko: "안녕하세요! 오늘은 어디까지 가세요?", gloss: "Hello! Where are you going today?", ask: "To Namsan (남산).", options: [
+        { ko: "남산까지 가요.", right: true, feedback: "Yes: 남산까지 가요. 까지 = as far as." },
+        { ko: "남산부터 가요.", right: false, feedback: "부터 = starting from. Where you are going: 까지." },
+        { ko: "남산까지 와요.", right: false, feedback: "와요 is coming here. You are leaving: 가요." },
+      ] },
+      { ko: "남산은 사호선이에요. 여기는 이호선이니까 갈아타야 해요.", gloss: "Namsan is on Line 4. This is Line 2, so you have to change.", ask: "Ask where you change lines (갈아타요).", options: [
+        { ko: "어디까지 갈아타요?", right: false, feedback: "어디까지 asks how far. Where it happens: 어디에서." },
+        { ko: "어디에서 갈아타요?", right: true, feedback: "Yes: 어디에서 갈아타요? Where you do something takes 에서." },
+        { ko: "어디에서 내려요?", right: false, feedback: "내려요 = get off. Changing lines: 갈아타요." },
+      ] },
+      { ko: "사당역에서 갈아타세요. 이십 분쯤 걸려요.", gloss: "Change at Sadang station. It takes about twenty minutes.", ask: "Say you have understood, and thank him.", options: [
+        { ko: "네, 몰라요. 감사합니다!", right: false, feedback: "몰라요 = I do not know. Understood: 알겠어요." },
+        { ko: "네, 알아요. 감사합니다!", right: false, feedback: "알아요 = I know it already, which can sound like \"I knew that\". After being told something new: 알겠어요." },
+        { ko: "네, 알겠어요. 감사합니다!", right: true, feedback: "Yes: 알겠어요 = I see, understood." },
+      ] },
+    ], closing: { ko: "네, 조심히 가세요!", gloss: "Take care on your way!" } },
+  grandpa: { focus: "Talking with an elder: 밥 먹었어요? as a greeting, 식사하셨어요? for them, 그런데 (but), and the promise 하겠습니다.", turns: [
+      { ko: "오, 또 왔군요! 밥은 먹었어요?", gloss: "Oh, you came again! Have you eaten?", ask: "A Korean greeting. You have eaten: say so, and ask him back politely.", options: [
+        { ko: "네, 먹었어요. 할아버지는 식사하셨어요?", right: true, feedback: "Yes: for an elder, 먹다 becomes 식사하시다: 식사하셨어요?" },
+        { ko: "네, 먹었어요. 할아버지는 먹었어?", right: false, feedback: "먹었어 is casual, for friends your age or younger. To an elder: 식사하셨어요?" },
+        { ko: "네, 먹어요. 할아버지는 식사하셨어요?", right: false, feedback: "먹어요 is \"I eat\" (now, or usually). He asked about before: 먹었어요." },
+      ] },
+      { ko: "그럼요, 먹었지요. 한국 생활은 어때요?", gloss: "Of course I have. How is life in Korea?", ask: "It is fun, but Korean is difficult (어려워요).", options: [
+        { ko: "재미있어요. 그래서 한국어가 어려워요.", right: false, feedback: "그래서 = so: \"it is fun, so Korean is hard\". For \"but\": 그런데." },
+        { ko: "재미있어요. 그런데 한국어가 어려워요.", right: true, feedback: "Yes: 그런데 = but. 한국어가 어려워요." },
+        { ko: "재미있어요. 그런데 한국어가 쉬워요.", right: false, feedback: "쉬워요 = easy. Difficult: 어려워요." },
+      ] },
+      { ko: "하하, 천천히 하면 돼요. 매일 조금씩 하세요.", gloss: "Haha, slowly is fine. A little every day.", ask: "Promise him you will work hard.", options: [
+        { ko: "네, 열심히 하세요!", right: false, feedback: "하세요 tells him to work hard. Your own promise: 하겠습니다." },
+        { ko: "네, 열심히 했습니다!", right: false, feedback: "했습니다 is the past: \"I worked hard\". A promise: 하겠습니다." },
+        { ko: "네, 열심히 하겠습니다!", right: true, feedback: "Yes: 하겠습니다 = I will, a polite promise." },
+      ] },
+    ], closing: { ko: "그래요, 또 놀러 와요!", gloss: "Good. Come and visit again!" } },
+  grandma: { focus: "Weather and seasons: 추워요 / 더워요, 맑아요 / 흐려요, 봄 · 여름 · 가을 · 겨울, and accepting an offer with -아/어 주세요.", turns: [
+      { ko: "어머, 또 만났네요! 오늘은 좀 춥지요?", gloss: "Oh my, we meet again! It is a little cold today, isn't it?", ask: "Agree: it is cold, but the sky is clear.", options: [
+        { ko: "네, 추워요. 그런데 하늘이 맑아요.", right: true, feedback: "Yes: 추워요 = it is cold; 하늘이 맑아요 = the sky is clear." },
+        { ko: "네, 더워요. 그런데 하늘이 맑아요.", right: false, feedback: "더워요 = hot. She said cold: 추워요." },
+        { ko: "네, 추워요. 그런데 하늘이 흐려요.", right: false, feedback: "흐려요 = cloudy. Clear: 맑아요." },
+      ] },
+      { ko: "그렇지요? 가을에는 단풍이 정말 예뻐요. 어느 계절을 좋아해요?", gloss: "Isn't it? In autumn the leaves are really pretty. Which season do you like?", ask: "Name the season you like: spring or winter.", options: [
+        { ko: "봄을 좋아해요.", right: true, feedback: "Yes: 봄 = spring. 봄을 좋아해요.", reply: { ko: "봄에는 여기 벚꽃이 피어요.", gloss: "In spring the cherry blossoms bloom here." } },
+        { ko: "계절을 좋아해요.", right: false, feedback: "That says \"I like seasons\". Name one: 봄 (spring), 여름 (summer), 가을 (autumn), 겨울 (winter)." },
+        { ko: "겨울을 좋아해요.", right: true, feedback: "Yes: 겨울 = winter. 겨울을 좋아해요.", reply: { ko: "겨울에는 여기 눈이 많이 와요.", gloss: "In winter it snows a lot here." } },
+      ] },
+      { ko: "그때 또 오세요. 아, 사진 한 장 찍어 줄까요?", gloss: "Come again then. Oh, shall I take a photo of you?", ask: "Accept her offer, and thank her.", options: [
+        { ko: "네, 찍어 드릴게요. 감사합니다!", right: false, feedback: "찍어 드릴게요 offers to take one of her. She offered; to accept: 찍어 주세요." },
+        { ko: "네, 찍어 주세요. 감사합니다!", right: true, feedback: "Yes: 찍어 주세요 = please take one for me." },
+        { ko: "네, 찍으세요. 감사합니다!", right: false, feedback: "찍으세요 is an instruction. Accepting a favour: 찍어 주세요." },
+      ] },
+    ], closing: { ko: "자, 하나, 둘, 셋! 잘 나왔어요.", gloss: "Now: one, two, three! It came out well." } },
+};
+const AR2B: Record<LaterId, Again> = {
+  cafe: { focus: "العادات ووقت الفراغ: 자주 / 매주 와요، و 주말에 …을/를 봐요، واليوم مع 에.", turns: [
+      { ko: "어, 또 왔네요! 여기 자주 와요?", gloss: "أوه، جئت مرة أخرى! هل تأتي إلى هنا كثيرًا؟", ask: "تأتي كل أسبوع (매주).", options: [
+        { ko: "네, 매주 와요.", right: true, feedback: "نعم: 매주 와요 = آتي كل أسبوع." },
+        { ko: "네, 매주 가요.", right: false, feedback: "가요 للذهاب إلى مكان آخر. أنت هنا الآن، إذن: 와요." },
+        { ko: "네, 매주 왔어요.", right: false, feedback: "왔어요 زيارة واحدة في الماضي. العادة تأخذ المضارع: 매주 와요." },
+      ] },
+      { ko: "저도요. 여기서 숙제해요. 주말에는 보통 뭐 해요?", gloss: "وأنا كذلك. أحلّ واجباتي هنا. ماذا تفعل عادةً في عطلة الأسبوع؟", ask: "تشاهد المسلسلات الكورية (한국 드라마).", options: [
+        { ko: "한국 드라마를 마셔요.", right: false, feedback: "마셔요 للمشروبات. المشاهدة: 봐요." },
+        { ko: "한국 드라마를 봐요.", right: true, feedback: "نعم: 봐요 = أشاهد. 드라마를 봐요." },
+        { ko: "한국 드라마가 봐요.", right: false, feedback: "هكذا يصبح المسلسل هو الذي يشاهد. ما تشاهده يأخذ 를: 드라마를 봐요." },
+      ] },
+      { ko: "오, 저도 좋아해요! 같이 볼까요?", gloss: "أوه، وأنا أحبها أيضًا! هل نشاهد معًا؟", ask: "وافق، واقترح يوم السبت (토요일).", options: [
+        { ko: "좋아요! 토요일에 봐요.", right: true, feedback: "نعم: 토요일에 봐요. اليوم يأخذ 에، وحين تُقال لصديق فإن 봐요 تعني أيضًا «هيا نشاهد»." },
+        { ko: "좋아요! 토요일에서 봐요.", right: false, feedback: "에서 للأماكن. اليوم يأخذ 에: 토요일에." },
+        { ko: "좋아요! 토요일에 봤어요.", right: false, feedback: "봤어요 فعل ماضٍ. للسبت القادم: 봐요." },
+      ] },
+    ], closing: { ko: "좋아요! 토요일에 여기서 만나요.", gloss: "رائع! نلتقي هنا يوم السبت." } },
+  cook: { focus: "الطلب عند البسطة: 안 맵게 해 주세요، و 도 (أيضًا)، و 괜찮아요 للاعتذار، و 모두 얼마예요؟، و 서비스 (على حساب المحل).", turns: [
+      { ko: "또 왔네요! 오늘은 떡볶이 어때요?", gloss: "جئت مرة أخرى! ما رأيك في التوكبوكي اليوم؟", ask: "نعم، لكن اطلب منها ألا تجعله حارًّا.", options: [
+        { ko: "좋아요! 안 맵게 해 주세요.", right: true, feedback: "نعم: 안 맵게 해 주세요 = اجعليه غير حارّ من فضلك. 맵게 = بشكل حارّ، و 안 = ليس." },
+        { ko: "좋아요! 안 매워요.", right: false, feedback: "안 매워요 تقول «ليس حارًّا». لتطلب منها: 안 맵게 해 주세요." },
+        { ko: "좋아요! 맵게 해 주세요.", right: false, feedback: "هكذا تطلبه حارًّا. غير حارّ: 안 맵게 해 주세요." },
+      ] },
+      { ko: "알겠어요. 김밥도 하나 드릴까요?", gloss: "حاضر. هل أعطيك كيمباب أيضًا؟", ask: "خذه أو لا: الاثنان جائزان.", options: [
+        { ko: "네, 김밥도 하나 주세요.", right: true, feedback: "نعم: 도 = أيضًا. 김밥도 하나 주세요.", reply: { ko: "네! 떡볶이하고 김밥 나왔어요.", gloss: "تفضّل! التوكبوكي والكيمباب." } },
+        { ko: "아니요, 괜찮아요.", right: true, feedback: "نعم: 괜찮아요 هي «لا، شكرًا» المهذّبة.", reply: { ko: "네! 떡볶이 나왔어요.", gloss: "تفضّل! التوكبوكي." } },
+        { ko: "네, 김밥은 괜찮아요.", right: false, feedback: "네 موافقة و 괜찮아요 اعتذار. اختر واحدًا: 네, 김밥도 하나 주세요 أو 아니요, 괜찮아요." },
+      ] },
+      { ko: "어때요? 안 매워요?", gloss: "كيف هو؟ ليس حارًّا؟", ask: "إنه لذيذ. اسأل عن السعر كله (모두).", options: [
+        { ko: "맛있어요! 모두 몇 개예요?", right: false, feedback: "몇 개예요 تسأل عن العدد. السعر: 얼마예요؟" },
+        { ko: "맛있어요! 모두 뭐예요?", right: false, feedback: "뭐예요 تسأل «ما هذا؟». السعر: 얼마예요؟" },
+        { ko: "맛있어요! 모두 얼마예요?", right: true, feedback: "نعم: 모두 얼마예요؟ = كم المجموع؟" },
+      ] },
+    ], closing: { ko: "오늘은 서비스예요. 다음에 또 와요!", gloss: "اليوم على حساب المحل. تعال مرة أخرى!" } },
+  attendant: { focus: "تبديل الخطوط: 까지 가요، و 에서 갈아타요، و 분쯤 걸려요، و 알겠어요 (لا 알아요).", turns: [
+      { ko: "안녕하세요! 오늘은 어디까지 가세요?", gloss: "مرحبًا! إلى أين تذهب اليوم؟", ask: "إلى نامسان (남산).", options: [
+        { ko: "남산까지 가요.", right: true, feedback: "نعم: 남산까지 가요. و 까지 = حتى / إلى." },
+        { ko: "남산부터 가요.", right: false, feedback: "부터 = ابتداءً من. وجهتك: 까지." },
+        { ko: "남산까지 와요.", right: false, feedback: "와요 للمجيء إلى هنا. أنت مغادر: 가요." },
+      ] },
+      { ko: "남산은 사호선이에요. 여기는 이호선이니까 갈아타야 해요.", gloss: "نامسان على الخط الرابع. هذا الخط الثاني، فعليك أن تبدّل.", ask: "اسأل أين تبدّل الخط (갈아타요).", options: [
+        { ko: "어디까지 갈아타요?", right: false, feedback: "어디까지 تسأل «إلى أين». مكان الفعل: 어디에서." },
+        { ko: "어디에서 갈아타요?", right: true, feedback: "نعم: 어디에서 갈아타요؟ مكان الفعل يأخذ 에서." },
+        { ko: "어디에서 내려요?", right: false, feedback: "내려요 = أنزل. تبديل الخط: 갈아타요." },
+      ] },
+      { ko: "사당역에서 갈아타세요. 이십 분쯤 걸려요.", gloss: "بدّل في محطة سادانغ. يستغرق نحو عشرين دقيقة.", ask: "قل إنك فهمت، واشكره.", options: [
+        { ko: "네, 몰라요. 감사합니다!", right: false, feedback: "몰라요 = لا أعرف. فهمت: 알겠어요." },
+        { ko: "네, 알아요. 감사합니다!", right: false, feedback: "알아요 = أعرف ذلك مسبقًا، وقد تُفهم «كنت أعرف». بعد أن تُخبَر بشيء جديد: 알겠어요." },
+        { ko: "네, 알겠어요. 감사합니다!", right: true, feedback: "نعم: 알겠어요 = فهمت." },
+      ] },
+    ], closing: { ko: "네, 조심히 가세요!", gloss: "انتبه لنفسك في الطريق!" } },
+  grandpa: { focus: "الحديث مع كبير السن: 밥 먹었어요؟ كتحية، و 식사하셨어요؟ له، و 그런데 (لكن)، والوعد 하겠습니다.", turns: [
+      { ko: "오, 또 왔군요! 밥은 먹었어요?", gloss: "أوه، جئت مرة أخرى! هل أكلت؟", ask: "تحية كورية. لقد أكلت: قل ذلك، واسأله بأدب.", options: [
+        { ko: "네, 먹었어요. 할아버지는 식사하셨어요?", right: true, feedback: "نعم: مع كبير السن تصير 먹다 식사하시다: 식사하셨어요؟" },
+        { ko: "네, 먹었어요. 할아버지는 먹었어?", right: false, feedback: "먹었어 كلام غير رسمي لمن في سنّك أو أصغر. لكبير السن: 식사하셨어요؟" },
+        { ko: "네, 먹어요. 할아버지는 식사하셨어요?", right: false, feedback: "먹어요 تعني «آكل» (الآن أو عادةً). هو سأل عمّا مضى: 먹었어요." },
+      ] },
+      { ko: "그럼요, 먹었지요. 한국 생활은 어때요?", gloss: "بالطبع أكلت. كيف الحياة في كوريا؟", ask: "ممتعة، لكن الكورية صعبة (어려워요).", options: [
+        { ko: "재미있어요. 그래서 한국어가 어려워요.", right: false, feedback: "그래서 = لذلك: «ممتعة، لذلك الكورية صعبة». لمعنى «لكن»: 그런데." },
+        { ko: "재미있어요. 그런데 한국어가 어려워요.", right: true, feedback: "نعم: 그런데 = لكن. 한국어가 어려워요." },
+        { ko: "재미있어요. 그런데 한국어가 쉬워요.", right: false, feedback: "쉬워요 = سهلة. صعبة: 어려워요." },
+      ] },
+      { ko: "하하, 천천히 하면 돼요. 매일 조금씩 하세요.", gloss: "هاها، على مهلك. قليلًا كل يوم.", ask: "عِده بأنك ستجتهد.", options: [
+        { ko: "네, 열심히 하세요!", right: false, feedback: "하세요 تطلب منه هو أن يجتهد. وعدك أنت: 하겠습니다." },
+        { ko: "네, 열심히 했습니다!", right: false, feedback: "했습니다 فعل ماضٍ: «اجتهدت». الوعد: 하겠습니다." },
+        { ko: "네, 열심히 하겠습니다!", right: true, feedback: "نعم: 하겠습니다 = سأفعل، وعد مهذّب." },
+      ] },
+    ], closing: { ko: "그래요, 또 놀러 와요!", gloss: "حسنًا. تعال لزيارتي مرة أخرى!" } },
+  grandma: { focus: "الطقس والفصول: 추워요 / 더워요، و 맑아요 / 흐려요، و 봄 · 여름 · 가을 · 겨울، وقبول العرض بـ -아/어 주세요.", turns: [
+      { ko: "어머, 또 만났네요! 오늘은 좀 춥지요?", gloss: "يا إلهي، التقينا مرة أخرى! الجو بارد قليلًا اليوم، أليس كذلك؟", ask: "وافقها: الجو بارد، لكن السماء صافية.", options: [
+        { ko: "네, 추워요. 그런데 하늘이 맑아요.", right: true, feedback: "نعم: 추워요 = الجو بارد، و 하늘이 맑아요 = السماء صافية." },
+        { ko: "네, 더워요. 그런데 하늘이 맑아요.", right: false, feedback: "더워요 = حارّ. هي قالت بارد: 추워요." },
+        { ko: "네, 추워요. 그런데 하늘이 흐려요.", right: false, feedback: "흐려요 = غائمة. صافية: 맑아요." },
+      ] },
+      { ko: "그렇지요? 가을에는 단풍이 정말 예뻐요. 어느 계절을 좋아해요?", gloss: "أليس كذلك؟ في الخريف أوراق الشجر جميلة جدًا. أي فصل تحب؟", ask: "سمِّ الفصل الذي تحبه: الربيع أو الشتاء.", options: [
+        { ko: "봄을 좋아해요.", right: true, feedback: "نعم: 봄 = الربيع. 봄을 좋아해요.", reply: { ko: "봄에는 여기 벚꽃이 피어요.", gloss: "في الربيع تتفتح أزهار الكرز هنا." } },
+        { ko: "계절을 좋아해요.", right: false, feedback: "هكذا تقول «أحب الفصول». سمِّ واحدًا: 봄 (الربيع)، 여름 (الصيف)، 가을 (الخريف)، 겨울 (الشتاء)." },
+        { ko: "겨울을 좋아해요.", right: true, feedback: "نعم: 겨울 = الشتاء. 겨울을 좋아해요.", reply: { ko: "겨울에는 여기 눈이 많이 와요.", gloss: "في الشتاء يتساقط الثلج كثيرًا هنا." } },
+      ] },
+      { ko: "그때 또 오세요. 아, 사진 한 장 찍어 줄까요?", gloss: "تعال حينها مرة أخرى. آه، هل ألتقط لك صورة؟", ask: "اقبل عرضها واشكرها.", options: [
+        { ko: "네, 찍어 드릴게요. 감사합니다!", right: false, feedback: "찍어 드릴게요 عرض منك أن تصوّرها أنت. هي التي عرضت؛ للقبول: 찍어 주세요." },
+        { ko: "네, 찍어 주세요. 감사합니다!", right: true, feedback: "نعم: 찍어 주세요 = التقطي لي صورة من فضلك." },
+        { ko: "네, 찍으세요. 감사합니다!", right: false, feedback: "찍으세요 أمر مباشر. لقبول معروف: 찍어 주세요." },
+      ] },
+    ], closing: { ko: "자, 하나, 둘, 셋! 잘 나왔어요.", gloss: "هيا: واحد، اثنان، ثلاثة! خرجت الصورة جميلة." } },
+};
+/** Everyone who has a second talk, along the road. */
+export type SecondId = FriendId | LaterId;
+export const SECOND_ORDER: readonly SecondId[] = [...CHAT_ORDER, "cafe", "cook", "attendant", "grandpa", "grandma"];
+export const hasSecond = (id: ChatId): id is SecondId => (SECOND_ORDER as readonly string[]).includes(id);
+const again = (first: Record<ChatId, Chat>, more: Record<SecondId, Again>) => Object.fromEntries(SECOND_ORDER.map((id) => [id, { ...first[id], ...more[id] }])) as Record<SecondId, Chat>;
+export const CHATS2: Record<WorldLang, Record<SecondId, Chat>> = { en: again(EN, { ...EN2, ...EN2B }), ar: again(AR, { ...AR2, ...AR2B }) };
 
 /** Saved in worldState.met once the second talk is finished. */
 export const chatAgainKey = (id: ChatId): string => `chat2-${id}`;
 /** Is it the second talk now? (They are a friend already, and there is more to say.) */
-export const chatAgain = (id: ChatId, met: readonly string[]): boolean => isFriend(id) && met.includes(chatMetKey(id));
+export const chatAgain = (id: ChatId, met: readonly string[]): boolean => hasSecond(id) && met.includes(chatMetKey(id));
 /** The conversation to hold with this person now. */
-export const chatOf = (lang: WorldLang, id: ChatId, second: boolean): Chat => (second && isFriend(id) ? CHATS2[lang][id] : CHATS[lang][id]);
+export const chatOf = (lang: WorldLang, id: ChatId, second: boolean): Chat => (second && hasSecond(id) ? CHATS2[lang][id] : CHATS[lang][id]);
 
 /**
  * The recorded file of one of a person's lines (public/assets/world/voice/chat):
@@ -1560,7 +1743,7 @@ export const chatOf = (lang: WorldLang, id: ChatId, second: boolean): Chat => (s
  */
 export function chatClip(id: ChatId, ko: string): string | undefined {
   const talks: [string, Chat][] = [[id, CHATS.en[id]]];
-  if (isFriend(id)) talks.push([`${id}2`, CHATS2.en[id]]);
+  if (hasSecond(id)) talks.push([`${id}2`, CHATS2.en[id]]);
   for (const [name, c] of talks) {
     if (c.closing.ko === ko) return `chat/${name}-end.mp3`;
     for (let t = 0; t < c.turns.length; t++) {
@@ -1574,7 +1757,7 @@ export function chatClip(id: ChatId, ko: string): string | undefined {
 
 /** Every recorded line of a person's conversations (for the test that each file exists). */
 export function chatClips(id: ChatId): string[] {
-  const talks = isFriend(id) ? [CHATS.en[id], CHATS2.en[id]] : [CHATS.en[id]];
+  const talks = hasSecond(id) ? [CHATS.en[id], CHATS2.en[id]] : [CHATS.en[id]];
   const all = talks.flatMap((c) => [...c.turns.flatMap((t) => [t.ko, ...t.options.flatMap((o) => (o.right && o.reply ? [o.reply.ko] : []))]), c.closing.ko]);
   return [...new Set(all.map((ko) => chatClip(id, ko)!))];
 }

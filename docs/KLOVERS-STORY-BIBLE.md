@@ -128,7 +128,9 @@ conversations in `src/game/config/chats.ts`).
 
 **A second talk (16 Nov 2026).** Once one of the seven is a friend, talking to
 them again opens a second, harder conversation in the same class's grammar.
-Nothing else about them changes.
+The five named people of the later worlds (Junho, Mrs. Choi, Donghyun, Grandpa
+Oh, Grandma Han) have a second talk too, at their own world's level. Nothing
+else about them changes.
 
 ## 5. Current worlds (in unlock order)
 

@@ -719,15 +719,24 @@ function addMouthOpen(scene: Group): void {
     line /= sw;
     const half = Math.sqrt(sx / sw) * 1.3;
     const lip = half * 0.4;
-    // The line between the lips is the deepest crease in the middle of them.
-    let seam = Infinity;
-    const about = line;
+    // The line between the lips: the crease in the face's outer surface, down
+    // the middle. The bodies have the inside of a mouth too, so only the
+    // outermost skin at each height counts (the furthest forward in a thin band).
+    const band = half * 0.07;
+    const outer = new Map<number, { z: number; y: number }>();
     for (let i = 0; i < n; i++) {
+      const y = pos.getY(i);
+      if (Math.abs(pos.getX(i)) > half * 0.3 || Math.abs(y - line) > lip * 0.7) continue;
+      const k = Math.round(y / band);
       const z = pos.getZ(i);
-      if (z < front - half * 2.2 || Math.abs(pos.getX(i)) > half * 0.3 || Math.abs(pos.getY(i) - about) > lip * 0.7) continue;
-      if (z < seam) {
-        seam = z;
-        line = pos.getY(i);
+      const at = outer.get(k);
+      if (!at || z > at.z) outer.set(k, { z, y });
+    }
+    let seam = Infinity;
+    for (const at of outer.values()) {
+      if (at.z < seam) {
+        seam = at.z;
+        line = at.y;
       }
     }
     const drop = lip * 0.6;
