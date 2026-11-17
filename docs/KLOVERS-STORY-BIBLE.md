@@ -202,7 +202,9 @@ Claude — Re may revise any of it):
 
 A memory returns only when Cluby has hatched, the chapter's place is open by the
 learner's real level, and the learner has finished that chapter there. It is
-then kept under the chapter in the world's "Story and missions" card. Nobody
+then kept under the chapter in the world's "Story and missions" card, and a lit
+stone lantern for it stands in Cluby's Memory Garden, where the memory and its
+word can be read again (one lantern per kept memory, none for those to come). Nobody
 sees any of this before the hatch. Only the eighth touches the premise.
 
 ## 7. Visual style

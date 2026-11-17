@@ -6,7 +6,7 @@ import { eggStageSeen, isClubyAwake } from "@/lib/clubyAwake";
 import { WORLD_COPY, type WorldLang } from "@/game/config/copy";
 import { INTERACTABLES, shopOf, VILLAGE_LETTERS, type Interactable, type QuizId, type ShopId } from "@/game/config/interactions";
 import { CHAPTERS, chapterDone, chapterOf } from "@/game/config/chapters";
-import { memoryDue, type MemoryId } from "@/game/config/memories";
+import { memory, memoryDue, type MemoryId } from "@/game/config/memories";
 import { ALL_CHATS, CHATS, chatAgain, chatAgainKey, chatMetKey, chatNameKo, chatsMet, type ChatId } from "@/game/config/chats";
 import { tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId } from "@/game/config/rooms";
 import { DEFAULT_AVATAR, isAvatarId, type AvatarId } from "@/game/player/characters";
@@ -189,7 +189,7 @@ const WorldPage = () => {
   const beaconEls = useRef(new Map<string, HTMLElement>());
   const [speechKey, setSpeechKey] = useState<SpeechKey | null>(null);
   const [sequence, setSequence] = useState(false);
-  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shop?: ShopId; shopPick?: string; chat?: ChatId; second?: boolean; at?: string; npc?: string; memory?: MemoryId } | null>(null);
+  const [card, setCard] = useState<{ kind: CardKind; notice?: NoticeKey; quiz?: QuizId; shop?: ShopId; shopPick?: string; chat?: ChatId; second?: boolean; again?: boolean; at?: string; npc?: string; memory?: MemoryId } | null>(null);
   /** The shop thing last chosen: it hops in the scene. */
   const [shopChosen, setShopChosen] = useState<{ item: string; at: number } | null>(null);
   // A person's line or a word: shown over the world without stopping it.
@@ -577,6 +577,10 @@ const WorldPage = () => {
       case "review":
         setCard({ kind: "review" });
         break;
+      case "keepsake":
+        // A kept memory, read again at its lantern in the Memory Garden.
+        if (it.memory) setCard({ kind: "memory", memory: it.memory, again: true });
+        break;
       case "door":
         if (it.to && it.arrive) api.current?.enter(it.to, it.arrive);
         break;
@@ -753,6 +757,7 @@ const WorldPage = () => {
     // A named friend is called by name once met; before that, by who they are.
     if (it.kind === "chat" && it.chat) return { verb, sub: CHATS[lang][it.chat][saved.met.includes(chatMetKey(it.chat)) ? "name" : "role"] };
     if (it.kind === "info" && it.info) return { verb, sub: copy.info[it.info].title };
+    if (it.kind === "keepsake" && it.memory) return { verb, sub: memory(lang, it.memory).ko, subKo: true };
     if (it.kind === "tour" && it.tour) return { verb, sub: VILLAGE.tour.find((b) => b.id === it.tour)?.sign, subKo: true };
     if (it.kind === "link" && it.href) return { verb, sub: VILLAGE.tourLinks.find((l) => l.href === it.href)?.sign, subKo: true };
     if (it.kind === "talk" && it.who) return { verb, sub: it.who === "minsu" ? copy.names.minsu : copy.names[avatar === "lina" ? "adam" : "lina"] };
@@ -1046,6 +1051,7 @@ const WorldPage = () => {
                 eggStage={eggStage}
                 memory={card.memory}
                 memoryNumber={card.memory ? saved.memories.indexOf(card.memory) + 1 : 1}
+                memoryAgain={card.again}
                 notice={card.notice}
                 quiz={card.quiz}
                 chat={card.chat}

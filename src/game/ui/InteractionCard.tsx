@@ -55,6 +55,8 @@ interface Props {
   /** Memory: which of Cluby's memories has returned, and its place in the order they came. */
   memory?: MemoryId;
   memoryNumber?: number;
+  /** Read again at its lantern in the Memory Garden (it was kept before). */
+  memoryAgain?: boolean;
 }
 
 
@@ -185,6 +187,7 @@ export default function InteractionCard({
   eggStage = 0,
   memory: memoryId,
   memoryNumber = 1,
+  memoryAgain = false,
 }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
@@ -776,7 +779,7 @@ export default function InteractionCard({
           {ui.word}: {m.gloss}
         </p>
         <button ref={first} type="button" className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal`} onClick={onClose}>
-          {ui.keep}
+          {memoryAgain ? ui.kept : ui.keep}
         </button>
       </>
     );
