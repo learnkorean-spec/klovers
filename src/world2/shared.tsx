@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
+import { cloudVoiceFits, playCloudKorean } from "@/lib/cloudVoice";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Group, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { PALETTE, type Box2 } from "../game/config/world";
@@ -55,6 +56,13 @@ export type DialogueLine = {
  * Shared by the vocab flashcard and the dialogue card so both "Hear it"
  * buttons use the exact same voice and rate. */
 export function speakKorean(text: string) {
+  if (typeof window === "undefined") return;
+  // Amazon Polly (cached, AWS credits) first; the browser voice below if it can't play.
+  if (cloudVoiceFits(text)) return playCloudKorean(text, { rate: 0.85, onFail: () => browserKorean(text) });
+  browserKorean(text);
+}
+
+function browserKorean(text: string) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
   try {
     window.speechSynthesis.cancel();

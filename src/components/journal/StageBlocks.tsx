@@ -50,7 +50,7 @@ function SaveWordButton({
 
 function ListenButton({ text, isAr, tone = "light" }: { text: string; isAr: boolean; tone?: "light" | "dark" }) {
   const { speakKorean } = useSpeech();
-  if (typeof window !== "undefined" && !("speechSynthesis" in window)) return null;
+  if (typeof window !== "undefined" && !("speechSynthesis" in window) && typeof Audio === "undefined") return null;
   return (
     <button
       type="button"

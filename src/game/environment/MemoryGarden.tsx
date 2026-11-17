@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { MeshStandardMaterial } from "three";
-import { GARDEN, GARDEN_BEDS } from "../config/rooms";
+import { GARDEN, GARDEN_BEDS, GARDEN_LANTERNS } from "../config/rooms";
 import { FLOOR_GRID } from "../config/world";
 import Batch from "./Batch";
 import { Kit, flowers, jitter, rock, steppingStones, stoneLantern, tree } from "./kit";
@@ -195,9 +195,17 @@ function flowerKit(total: number, open: number): Kit {
   return k;
 }
 
-export default function MemoryGarden({ words, reviewed }: { words: number; reviewed: number }) {
+/** One lit stone lantern for each memory Cluby has kept, along the west wall. */
+function lanternKit(kept: number): Kit {
+  const k = new Kit();
+  for (let i = 0; i < Math.min(kept, GARDEN_LANTERNS.length); i++) stoneLantern(k, GARDEN_LANTERNS[i].x, GARDEN_LANTERNS[i].z, 1.05);
+  return k;
+}
+
+export default function MemoryGarden({ words, reviewed, kept = 0 }: { words: number; reviewed: number; kept?: number }) {
   const still = useMemo(() => (STILL ??= gardenKit()), []);
   const blooms = useMemo(() => flowerKit(words, reviewed), [words, reviewed]);
+  const lanterns = useMemo(() => lanternKit(kept), [kept]);
   return (
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
@@ -210,6 +218,7 @@ export default function MemoryGarden({ words, reviewed }: { words: number; revie
       </mesh>
       <Batch kit={still} />
       <Batch kit={blooms} />
+      {kept > 0 && <Batch kit={lanterns} />}
       {/* The gate back to the Hub, in the east side, with the garden's name over it. */}
       <group rotation={[0, Math.PI / 2, 0]}>
         <GateWall z={H + 0.2} facing={-1} open accent={false} halfWidth={H} sign={GARDEN.sign} />

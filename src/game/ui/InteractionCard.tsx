@@ -55,6 +55,8 @@ interface Props {
   /** Memory: which of Cluby's memories has returned, and its place in the order they came. */
   memory?: MemoryId;
   memoryNumber?: number;
+  /** Read again at its lantern in the Memory Garden (it was kept before). */
+  memoryAgain?: boolean;
 }
 
 
@@ -185,15 +187,16 @@ export default function InteractionCard({
   eggStage = 0,
   memory: memoryId,
   memoryNumber = 1,
+  memoryAgain = false,
 }: Props) {
   const copy = WORLD_COPY[lang];
   const first = useRef<HTMLButtonElement>(null);
-  const { speakKorean } = useSpeech({ rate: 0.85 });
+  const { speakKorean } = useSpeech({ rate: 0.85, cloud: false });
   /** Play a recorded line; the browser's voice if it cannot. */
   const say = (path: string, ko: string) => playClip(path, () => speakKorean(ko));
   const hearLabel = copy.card.listen;
   // Chat: each person's own recorded voice; the browser's Korean voice (a man's or a woman's) if a file cannot play.
-  const { speakKorean: sayFriend } = useSpeech({ rate: 0.85, gender: chat && chatIsMan(chat) ? "male" : "female" });
+  const { speakKorean: sayFriend } = useSpeech({ rate: 0.85, gender: chat && chatIsMan(chat) ? "male" : "female", cloud: false });
   /** The friend says a line: heard, and seen (they gesture in the world while it lasts). */
   const speakFriend = (ko: string) => {
     if (!chat) return;
@@ -776,7 +779,7 @@ export default function InteractionCard({
           {ui.word}: {m.gloss}
         </p>
         <button ref={first} type="button" className={`${btn} bg-klovers-yellow text-charcoal outline-charcoal`} onClick={onClose}>
-          {ui.keep}
+          {memoryAgain ? ui.kept : ui.keep}
         </button>
       </>
     );

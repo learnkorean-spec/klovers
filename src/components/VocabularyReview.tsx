@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { cloudVoiceFits, playCloudKorean } from "@/lib/cloudVoice";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -42,13 +43,18 @@ export function VocabularyReview({
   const currentCard = deck[currentIndex];
   const progress = ((currentIndex + 1) / deck.length) * 100;
 
-  const speakKorean = (text: string) => {
+  const browserSpeak = (text: string) => {
     if ("speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "ko-KR";
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
     }
+  };
+  // Amazon Polly (cached, AWS credits) first; the browser voice if it can't play.
+  const speakKorean = (text: string) => {
+    if (cloudVoiceFits(text)) playCloudKorean(text, { onFail: () => browserSpeak(text) });
+    else browserSpeak(text);
   };
 
   const handleRating = async (quality: number) => {

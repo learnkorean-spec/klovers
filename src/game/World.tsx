@@ -4,7 +4,7 @@ import { AdditiveBlending, Color, MeshBasicMaterial, PCFSoftShadowMap, Perspecti
 import { HDRLoader } from "three/examples/jsm/loaders/HDRLoader.js";
 import { FOLIAGE_TIME, upgradeMaterialDetails } from "./config/materials";
 import { REDUCED_MOTION } from "./systems/motion";
-import { INTERACTABLES, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
+import { INTERACTABLES, keepsakes, nearbyInteractables, pickInteractable, type Interactable } from "./config/interactions";
 import { ALLEY, NAMSAN, CULTURE, findPortal, GARDEN, HUB, MARKET, ROOMS, SEOUL, tourSpot, VILLAGE, type NoticeKey, type Portal, type RoomId, type RoomLayout, type Spawn, type TourStop } from "./config/rooms";
 import { CAMERA, PALETTE, PROPS, ROOM } from "./config/world";
 import ThirdPersonCamera from "./camera/ThirdPersonCamera";
@@ -227,6 +227,7 @@ export default function World(props: WorldProps) {
   cb.current = props;
   const savedRef = useRef(saved);
   savedRef.current = saved;
+  const kept = useMemo(() => keepsakes(saved.memories), [saved.memories]);
   const timers = useRef<number[]>([]);
   const sequence = useRef<"none" | "hatch">("none");
   const glRef = useRef<WebGLRenderer | null>(null);
@@ -603,7 +604,7 @@ export default function World(props: WorldProps) {
       {roomId === "hub" && <Hub cafeOpen={access.open.has("conversation-cafe")} marketOpen={access.open.has("vocabulary-market")} cultureOpen={access.open.has("culture-street")} seoulOpen={access.open.has("seoul-journey")} gardenOpen={access.open.has("memory-garden")} />}
       {roomId === "seoul-market" && <SeoulMarket />}
       {roomId === "seoul-namsan" && <SeoulNamsan />}
-      {roomId === "memory-garden" && <MemoryGarden words={props.garden?.words ?? 0} reviewed={props.garden?.reviewed ?? 0} />}
+      {roomId === "memory-garden" && <MemoryGarden words={props.garden?.words ?? 0} reviewed={props.garden?.reviewed ?? 0} kept={kept.length} />}
       {roomId === "conversation-cafe" && <ConversationCafe words={saved.words} />}
       {roomId === "culture-street" && <CultureStreet words={saved.words} />}
       {roomId === "seoul-journey" && <SeoulJourney words={saved.words} player={player} />}
@@ -629,7 +630,7 @@ export default function World(props: WorldProps) {
       <Cluby story={story} player={player} layout={layout} guide={objectiveSpot ?? (props.objective === undefined ? guideFor(roomId, access) : null)} interests={interestsIn(roomId)} />
       <ThirdPersonCamera player={player} camera={camera} layout={layout} onFirstLook={onFirstLook} />
       <PortalWatcher key={`p-${roomId}`} player={player} layout={layout} access={access} onDoor={travel} onNotice={(n) => cb.current.onNotice?.(n)} />
-      <FocusWatcher
+      <FocusWatcher kept={kept}
         key={`f-${roomId}`}
         room={roomId}
         player={player}
@@ -642,7 +643,7 @@ export default function World(props: WorldProps) {
       />
       <DiscoveryWatcher key={`d-${roomId}`} room={roomId} player={player} onDiscover={(k) => cb.current.onDiscover?.(k)} />
       {props.beaconEls && (
-        <BeaconWatcher key={`b-${roomId}`} room={roomId} player={player} view={camera} story={story} access={access} els={props.beaconEls} onNearby={(l) => cb.current.onNearby?.(l)} />
+        <BeaconWatcher kept={kept} key={`b-${roomId}`} room={roomId} player={player} view={camera} story={story} access={access} els={props.beaconEls} onNearby={(l) => cb.current.onNearby?.(l)} />
       )}
       <SkyLight />
       <FoliageClock />
@@ -720,7 +721,9 @@ const IDLE_AFTER = 10;
  * pickInteractable), the learner's first real move, and long pauses.
  * Cluby joins the candidates while he follows: turn to him to talk.
  */
-function FocusWatcher({ room, player, story, access, focusRef, onFocus, onFirstMove, onIdle }: {
+function FocusWatcher({ room, player, story, access, focusRef, onFocus, onFirstMove, onIdle, kept }: {
+  /** Cluby's kept memories at their lanterns (they exist only once kept). */
+  kept: Interactable[];
   room: RoomId;
   access: WorldAccess;
   player: MutableRefObject<PlayerState>;
@@ -763,7 +766,7 @@ function FocusWatcher({ room, player, story, access, focusRef, onFocus, onFirstM
     }
     if (p.frozen) return;
     const s = story.current;
-    const extra: Interactable[] = [];
+    const extra: Interactable[] = [...kept];
     if (s.cluby.mode === "follow") {
       const c = clubyIt.current;
       c.room = room;
@@ -864,7 +867,8 @@ function hudRects(layer: HTMLElement | null, w: number, h: number): HudRect[] {
   return out;
 }
 
-function BeaconWatcher({ room, player, view, story, access, els, onNearby }: {
+function BeaconWatcher({ room, player, view, story, access, els, onNearby, kept }: {
+  kept: Interactable[];
   room: RoomId;
   player: MutableRefObject<PlayerState>;
   view: MutableRefObject<CameraState>;
@@ -890,7 +894,7 @@ function BeaconWatcher({ room, player, view, story, access, els, onNearby }: {
       const egg = story.current.egg;
       const l = p.frozen
         ? []
-        : nearbyInteractables(room, p.position.x, p.position.z, (r) => access.open.has(r), 4, 10, INTERACTABLES, view.current.yaw).filter((it) => !(it.kind === "egg" && (egg === "open" || egg === "hatching")));
+        : nearbyInteractables(room, p.position.x, p.position.z, (r) => access.open.has(r), 4, 10, kept.length ? [...INTERACTABLES, ...kept] : INTERACTABLES, view.current.yaw).filter((it) => !(it.kind === "egg" && (egg === "open" || egg === "hatching")));
       const k = l.map((i) => i.id).join(",");
       if (k !== key.current) {
         key.current = k;

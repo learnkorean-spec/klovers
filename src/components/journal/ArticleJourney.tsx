@@ -81,7 +81,7 @@ export function ArticleLearningIntro({
 
 function SpeakButton({ text, isAr }: { text: string; isAr: boolean }) {
   const { speakKorean } = useSpeech();
-  if (typeof window !== "undefined" && !("speechSynthesis" in window)) return null;
+  if (typeof window !== "undefined" && !("speechSynthesis" in window) && typeof Audio === "undefined") return null;
   return (
     <button
       type="button"

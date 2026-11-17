@@ -64,7 +64,7 @@ export default function DialogueBubble({
   onOpenInfo?: (id: InfoId) => void;
 }) {
   const copy = WORLD_COPY[lang];
-  const { speakKorean } = useSpeech({ rate: 0.85 });
+  const { speakKorean } = useSpeech({ rate: 0.85, cloud: false });
   const speakable = useMemo(canSpeak, []);
   const listenable = useMemo(canListen, []);
   /** Guided practice: 0 listen first, 1 then say it. */

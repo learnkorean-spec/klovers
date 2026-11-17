@@ -228,3 +228,6 @@ enabled = false
 
 [functions.world-voice]
 verify_jwt = false
+
+[functions.tts-ko]
+verify_jwt = false

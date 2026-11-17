@@ -1,4 +1,5 @@
-import { ALLEY, NAMSAN, boardSpot, CAFE, CULTURE, GARDEN, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
+import { ALLEY, NAMSAN, boardSpot, CAFE, CULTURE, GARDEN, GARDEN_LANTERNS, HOUSE, SEOUL, HUB, hubGateSpot, MARKET, ROOMS, tourSpot, VILLAGE, type InfoId, type NoticeKey, type RoomId, type TourStop } from "./rooms";
+import { MEMORY_ORDER, type MemoryId } from "./memories";
 import { ALLEY_FRIEND, NAMSAN_FRIEND, CAFE_FRIEND, CULTURE_FRIEND, FRIEND_SPOT, MINSU_SPOT, NPCS, SEOUL_FRIEND } from "./npcs";
 import { PROPS } from "./world";
 import { CHAT_PEOPLE, type ChatId } from "./chats";
@@ -32,7 +33,7 @@ import { CHAT_PEOPLE, type ChatId } from "./chats";
  * - shop     the market's little shop: pick one of three things and ask
  *            for it in Korean (the things can also be pressed in the scene)
  */
-export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour" | "shop" | "review" | "chat";
+export type InteractionKind = "egg" | "letter" | "learn" | "quiz" | "word" | "say" | "talk" | "cluby" | "link" | "door" | "locked" | "info" | "tour" | "shop" | "review" | "chat" | "keepsake";
 
 /** The verb on the prompt ([E] Inspect, the round button's label …). */
 export type InteractionAction = "inspect" | "talk" | "learn" | "enter" | "help" | "read" | "shop" | "order" | "review";
@@ -82,6 +83,8 @@ export interface Interactable {
   say?: SayId;
   /** A conversation with a named friend (kind "chat"). */
   chat?: ChatId;
+  /** One of Cluby's kept memories, read again at its lantern (kind "keepsake"). */
+  memory?: MemoryId;
   info?: InfoId;
   /** A Klovers tour board (reading it frames it close). */
   tour?: TourStop;
@@ -340,6 +343,18 @@ export function usable(it: Interactable, room: RoomId, isOpen: IsOpen): boolean 
  * guide a learner to them: within `range` metres, nearest first — and what
  * lies ahead (along `yaw`, the way the view looks) counts as nearer.
  */
+/**
+ * Cluby's kept memories, each at its lantern in the Memory Garden, to be read
+ * again: the first kept at the first lantern, and so on. Only kept ones
+ * exist — the garden shows nothing of the memories still to come.
+ */
+export function keepsakes(kept: readonly string[]): Interactable[] {
+  return kept
+    .filter((id): id is MemoryId => (MEMORY_ORDER as readonly string[]).includes(id))
+    .slice(0, GARDEN_LANTERNS.length)
+    .map((id, i) => ({ id: `keep-${id}`, room: "memory-garden" as const, kind: "keepsake" as const, action: "read" as const, x: GARDEN_LANTERNS[i].x + 0.95, z: GARDEN_LANTERNS[i].z, radius: 1.2, memory: id }));
+}
+
 export function nearbyInteractables(room: RoomId, x: number, z: number, isOpen: IsOpen, max = 4, range = 10, list = INTERACTABLES, yaw?: number): Interactable[] {
   const fx = yaw === undefined ? 0 : -Math.sin(yaw);
   const fz = yaw === undefined ? 0 : -Math.cos(yaw);

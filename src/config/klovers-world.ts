@@ -718,6 +718,12 @@ export const KLOVERS_WORLD = {
      * progress), the chapter's place is open (the learner's real level), and
      * the learner has finished that chapter in the world. It is then kept
      * under the chapter in the world's story card. Nothing else unlocks.
+     *
+     * Where a kept memory stays (17 Nov 2026, memorySystem.principle: what
+     * was learned remains visible): a lit stone lantern in Cluby's Memory
+     * Garden, one per kept memory in the order they returned, where the
+     * memory and its word can be read again. Only kept memories have a
+     * lantern: the garden shows nothing of those still to come.
      * The words themselves live in src/game/config/memories.ts.
      */
     memories: [

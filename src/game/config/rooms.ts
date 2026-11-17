@@ -930,7 +930,12 @@ export const GARDEN = {
   /** A bench facing the pond from the south-west. */
   bench: { x: -4.6, z: 4.6, w: 1.9, d: 0.8 },
   sign: "기억 정원",
+  /** Cluby's kept memories stand as lanterns in a row along the west wall, from the north end. */
+  lanterns: { x: -7.15, z: -6.3, step: 1.8, n: 8 },
 } as const;
+
+/** Where the n-th kept memory's lantern stands. */
+export const GARDEN_LANTERNS = Array.from({ length: GARDEN.lanterns.n }, (_, i) => ({ x: GARDEN.lanterns.x, z: GARDEN.lanterns.z + i * GARDEN.lanterns.step }));
 
 const gardenBeds = Array.from({ length: GARDEN.bedRing.n }, (_, i) => {
   const a = (i / GARDEN.bedRing.n) * Math.PI * 2 + Math.PI / GARDEN.bedRing.n;
@@ -950,6 +955,8 @@ const MEMORY_GARDEN: RoomLayout = {
     box(GARDEN.bench.x, GARDEN.bench.z, GARDEN.bench.w, GARDEN.bench.d),
     // The flower beds are low: step between them, not over them.
     ...gardenBeds.map((b) => box(b.x, b.z, 1.2, 1.2)),
+    // The lantern row by the west wall (solid whether or not a lantern stands there yet: it is the wall's edge).
+    ...GARDEN_LANTERNS.map((l) => box(l.x, l.z, 0.6, 0.6)),
   ],
   cameraColliders: [box(GARDEN.tree.x, GARDEN.tree.z, 0.5, 0.5)],
   spawns: {
