@@ -155,16 +155,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Newly-registered profiles that have never been sent this email.
+    // Profiles that have never been sent this email — new registrations
+    // going forward, AND (per Re, 2026-11-17) the pre-existing backlog that
+    // was deliberately backfilled out of this when the feature first shipped.
     // welcome_email_sent_at is the idempotency marker, checked here AND
     // written right after a verified send, same discipline as
     // send-name-collection-email's cap — an unrecorded send is one this
     // function would send again next hour.
+    //
+    // BATCH_LIMIT caps each run: the 1s-per-send pause below (Resend rate
+    // limiting) means an unbounded batch could run long enough to risk the
+    // edge function's own execution limit on a big backlog. At 40/run and an
+    // hourly schedule, a one-time backlog the size of the whole student base
+    // clears within a few hours instead of one oversized, riskier call.
+    const BATCH_LIMIT = 40;
     const { data: profiles, error } = await supabase
       .from("profiles")
-      .select("user_id, email, name, language, unsubscribe_token, email_unsubscribed")
+      .select("user_id, email, name, language, unsubscribe_token, email_unsubscribed, created_at")
       .is("welcome_email_sent_at", null)
-      .not("email", "is", null);
+      .not("email", "is", null)
+      .order("created_at", { ascending: true })
+      .limit(BATCH_LIMIT);
 
     if (error) throw error;
 
