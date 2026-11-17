@@ -151,6 +151,11 @@ verify_jwt = false
 [functions.send-trial-followups]
 verify_jwt = false
 
+# Same reason: invoked hourly by trigger_send_welcome_email() via
+# app_private.invoke_edge, auth is cronAuth.isCronOrAdmin, not a user JWT.
+[functions.send-welcome-email]
+verify_jwt = false
+
 [functions.recover-silent-trials]
 verify_jwt = false
 
