@@ -39,10 +39,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
  */
 const CARDS: Record<
   string,
-  { image: string; badge: string; icon: KloverIconName; href: { ar: string; en: string } }
+  { image: string; focus: string; badge: string; icon: KloverIconName; href: { ar: string; en: string } }
 > = {
   travel: {
     image: "/assets/world/why-travel.webp",
+    // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
+    focus: "20% 50%",
     badge: "bg-ivory",
     icon: "globe-plane",
     href: {
@@ -52,6 +54,8 @@ const CARDS: Record<
   },
   career: {
     image: "/assets/world/why-career.webp",
+    // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
+    focus: "7% 50%",
     badge: "bg-klovers-yellow",
     icon: "badge-blossom",
     href: {
@@ -61,6 +65,8 @@ const CARDS: Record<
   },
   study: {
     image: "/assets/world/why-study.webp",
+    // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
+    focus: "48% 50%",
     badge: "bg-klovers-yellow",
     icon: "books-stack",
     href: {
@@ -70,6 +76,8 @@ const CARDS: Record<
   },
   culture: {
     image: "/assets/world/why-culture.webp",
+    // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
+    focus: "45% 50%",
     badge: "bg-ivory",
     icon: "palace-blossoms",
     href: {
@@ -154,6 +162,7 @@ const WhyLearnKorean = () => {
                     loading="lazy"
                     decoding="async"
                     className="aspect-[4/3] w-full rounded-xl object-cover sm:aspect-[4/5] sm:rounded-2xl"
+                    style={{ objectPosition: card.focus }}
                   />
                   {/* The badge sits on the corner of the photograph, half over it. */}
                   <span
