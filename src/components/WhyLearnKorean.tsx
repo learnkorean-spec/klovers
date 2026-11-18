@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Sprout } from "lucide-react";
-import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import { ArrowRight, Briefcase, Clapperboard, GraduationCap, Plane, Sprout, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -26,6 +25,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
  *  - Nothing is written over a photograph, so no scrim is needed. If text
  *    ever goes back on top of an image, the scrim comes back with it.
  *
+ * 18 Nov 2026: Re found the anime-style scenes "childy". The photos are now
+ * photorealistic Adam and Lina (same faces, grown-up outfits) from AI Room
+ * Lab, each with a `focus` point so the crop keeps both in frame. The
+ * colourful KloverIcon badges became one quiet line-icon style.
+ *
  * 23 Sep 2026 (mobile): two cards per row on phones, with 4:3 photos instead
  * of 4:5 and smaller type. Stacked one per row, this section measured 3,023px
  * at 375px wide - the longest thing on the homepage. From sm up it is
@@ -35,18 +39,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 /**
  * One row per card, keyed by the `icon` string the translations already use.
  * `href` is a pair because the blog is a pair (every article has an `-ar`
- * twin). `badge` is a literal class string for Tailwind's scanner.
+ * twin). `icon` is a plain line icon, the same for all four badges.
  */
 const CARDS: Record<
   string,
-  { image: string; focus: string; badge: string; icon: KloverIconName; href: { ar: string; en: string } }
+  { image: string; focus: string; icon: LucideIcon; href: { ar: string; en: string } }
 > = {
   travel: {
     image: "/assets/world/why-travel.webp",
     // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
     focus: "20% 50%",
-    badge: "bg-ivory",
-    icon: "globe-plane",
+    icon: Plane,
     href: {
       ar: "/blog/korean-transportation-guide-seoul-ar",
       en: "/blog/korean-transportation-guide-seoul",
@@ -56,8 +59,7 @@ const CARDS: Record<
     image: "/assets/world/why-career.webp",
     // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
     focus: "7% 50%",
-    badge: "bg-klovers-yellow",
-    icon: "badge-blossom",
+    icon: Briefcase,
     href: {
       ar: "/blog/korean-job-interview-phrases-ar",
       en: "/blog/korean-job-interview-phrases",
@@ -67,8 +69,7 @@ const CARDS: Record<
     image: "/assets/world/why-study.webp",
     // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
     focus: "48% 50%",
-    badge: "bg-klovers-yellow",
-    icon: "books-stack",
+    icon: GraduationCap,
     href: {
       ar: "/blog/korean-education-system-hagwon-culture-ar",
       en: "/blog/korean-education-system-hagwon-culture",
@@ -78,8 +79,7 @@ const CARDS: Record<
     image: "/assets/world/why-culture.webp",
     // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
     focus: "45% 50%",
-    badge: "bg-ivory",
-    icon: "palace-blossoms",
+    icon: Clapperboard,
     href: {
       ar: "/blog/best-kdrama-learn-korean-difficulty-ranked-ar",
       en: "/blog/best-kdrama-learn-korean-difficulty-ranked",
@@ -144,7 +144,7 @@ const WhyLearnKorean = () => {
           {items.map((item, index) => {
             const card = CARDS[item.icon];
             if (!card) return null;
-            const { icon } = card;
+            const Icon = card.icon;
 
             return (
               <Link
@@ -153,6 +153,7 @@ const WhyLearnKorean = () => {
                 className="group block rounded-2xl sm:rounded-3xl border border-ivory/10 bg-ivory/[0.06] p-2 sm:p-3 transition-colors duration-300 hover:border-klovers-yellow/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-klovers-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
               >
                 <div className="relative">
+                  <div className="overflow-hidden rounded-xl sm:rounded-2xl">
                   <img
                     src={card.image}
                     alt=""
@@ -161,15 +162,16 @@ const WhyLearnKorean = () => {
                     height={500}
                     loading="lazy"
                     decoding="async"
-                    className="aspect-[4/3] w-full rounded-xl object-cover sm:aspect-[4/5] sm:rounded-2xl"
+                    className="aspect-[4/3] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100 sm:aspect-[4/5]"
                     style={{ objectPosition: card.focus }}
                   />
+                  </div>
                   {/* The badge sits on the corner of the photograph, half over it. */}
                   <span
                     aria-hidden="true"
-                    className={`absolute -bottom-4 start-2 grid h-9 w-9 place-items-center rounded-full shadow-md sm:-bottom-5 sm:h-12 sm:w-12 ${card.badge}`}
+                    className="absolute -bottom-4 start-2 grid h-9 w-9 place-items-center rounded-full border border-klovers-yellow/70 bg-charcoal text-klovers-yellow shadow-md sm:-bottom-5 sm:h-12 sm:w-12"
                   >
-                    <KloverIcon name={icon} className="h-7 w-7 sm:h-9 sm:w-9" />
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.75} />
                   </span>
                 </div>
 
