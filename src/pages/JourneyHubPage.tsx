@@ -101,7 +101,7 @@ export default function JourneyHubPage() {
             <p className="mt-2 text-sm leading-relaxed">
               {isAr
                 ? "أول حصة مباشرة مجانية، بالعربية أو بالإنجليزية."
-                : "The first live class is free, in English."}
+                : "The first live class is free."}
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <Link

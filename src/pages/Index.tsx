@@ -50,7 +50,7 @@ const JoinOurTeam = lazy(() => import("@/components/JoinOurTeam"));
  */
 export const HOME_TITLE = "Klovers: Live Online Korean Classes in Small Groups";
 export const HOME_DESCRIPTION =
-  "Klovers: live, interactive Korean classes with a real teacher, in small groups or 1:1, across time zones. Free trial, placement test and gamified practice.";
+  "Klovers: live, interactive Korean classes with a real teacher, in small groups or flexible 1:1. Free trial, placement test and gamified practice.";
 const HOME_TITLE_AR = "كلوفرز: حصص كورية مباشرة في مجموعات صغيرة";
 const HOME_DESCRIPTION_AR =
   "كلوفرز: حصص كورية مباشرة عبر الإنترنت مع معلمة حقيقية، في مجموعات صغيرة، بالعربية أو بالإنجليزية. حصة تجريبية مجانية واختبار تحديد مستوى مجاني.";
