@@ -298,11 +298,11 @@ export const translations = {
       title: "About Klovers",
       story: {
         title: "Reham's Story",
-        content: "Klovers was founded by Reham Elshrkawy, who studied Korean language and literature at the Faculty of Al-Alsun and has taught Korean since 2013. She has taught more than 200 students herself. She started Klovers so learners could study Korean live, in small groups, with explanations in English or Arabic and a clear path from Hangul to Level 6.",
+        content: "Klovers was founded by Reham Elshrkawy, who studied Korean language and literature at the Faculty of Al-Alsun and has taught Korean since 2013. She has taught more than 200 students herself. She started Klovers so learners could study Korean live, in small groups, with clear explanations and a path from Hangul to Level 6.",
       },
       philosophy: {
         title: "Teaching Philosophy",
-        content: "Classes are built around speaking from the first minute. Every point is explained simply, in English or Arabic, your pronunciation is corrected while you talk, and after every class you know what comes next.",
+        content: "Classes are built around speaking from the first minute. Every point is explained simply, your pronunciation is corrected while you talk, and after every class you know what comes next.",
       },
       experience: {
         title: "Experience & Credentials",
@@ -310,7 +310,7 @@ export const translations = {
           "Korean language and literature degree, Faculty of Al-Alsun",
           "13+ years teaching Korean (since 2013)",
           "200+ students taught personally",
-          "Classes in English or Arabic",
+          "1:1 lessons in English",
           "A clear path: Hangul, then Levels 1 to 6",
           "A TOPIK preparation track for students with an exam date",
         ],

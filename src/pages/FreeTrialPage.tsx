@@ -145,7 +145,7 @@ const FreeTrialPage = () => {
     title: isAr ? "حجز حصة كورية مجانية" : "Book Your Free Korean Class",
     description: isAr
       ? "حصة كورية مباشرة مجانية مدتها ٣٠ دقيقة مع معلّمة حقيقية، بالعربية أو بالإنجليزية، ودون بطاقة دفع."
-      : "Try a free 30-minute live Korean class at Klovers, in English or Arabic. A real teacher, no credit card.",
+      : "Try a free 30-minute live Korean class at Klovers. A real teacher, no credit card.",
     canonical: "https://kloversegy.com/free-trial",
   });
 

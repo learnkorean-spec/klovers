@@ -82,7 +82,7 @@ export const CONTACT_BODY_HTML = `<div id="contact-prerendered" lang="en" dir="l
       <ul>
         <li><strong>200+</strong> Students taught by Reham</li>
         <li><strong>5.0</strong> from 7 Google reviews</li>
-        <li><strong>EN · AR</strong> Classes in English or Arabic</li>
+        <li><strong>EN</strong> 1:1 lessons in English</li>
       </ul>
       <p><strong>Satisfaction Guarantee:</strong> If your first paid class isn't right for you, we refund or rebook.</p>
       <p><a href="/free-trial">Book a free trial class</a> · <a href="/placement-test">Take the free placement test</a> · <a href="/pricing">Pricing</a> · <a href="/faq">FAQ</a> · <a href="/about">About Klovers</a></p>
@@ -265,7 +265,7 @@ export const TOPIK_BODY_HTML = `<div id="topik-exam-preparation-prerendered" lan
       <p>In the last weeks, full papers under exam timing, then review every wrong answer.</p>
       <p>Past papers are published free on the official TOPIK site.</p>
       <h2>The Klovers TOPIK track</h2>
-      <p>Exam technique, for a TOPIK date you have already put in the calendar. Taught live by Reham, in English or Arabic.</p>
+      <p>Exam technique, for a TOPIK date you have already put in the calendar. Taught live by Reham.</p>
       <ul>
         <li>Past papers under real exam timing</li>
         <li>Listening and reading strategy</li>

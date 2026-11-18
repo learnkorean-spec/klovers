@@ -221,7 +221,7 @@ const TopikExamPage = () => {
             <h2 className={sectionTitle}>{tr("The Klovers TOPIK track", "مسار TOPIK في كلوفرز")}</h2>
             <p className="text-base text-foreground/80 mb-5">
               {tr(
-                "Exam technique, for a TOPIK date you have already put in the calendar. Taught live by Reham, in English or Arabic.",
+                "Exam technique, for a TOPIK date you have already put in the calendar. Taught live by Reham.",
                 "أساليب الاختبار، لموعد TOPIK محدد مسبقًا في التقويم. حصص مباشرة مع ريهام، بالعربية أو الإنجليزية.",
               )}
             </p>

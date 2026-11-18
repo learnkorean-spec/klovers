@@ -405,7 +405,7 @@ const HOME_BODY_HTML = `<div id="home-prerendered" lang="en" dir="ltr">
       <p>Live group classes are priced in US dollars, at $60 a month for 4 live classes. Some countries have local pricing - Egypt is priced in Egyptian pounds - and <a href="/pricing">the pricing page</a> shows the price for your country.</p>
       <h2>How we teach</h2>
       <ul>
-        <li><strong>Clear explanations</strong> - every point explained simply, in English or Arabic.</li>
+        <li><strong>Clear explanations</strong> - every point explained simply.</li>
         <li><strong>Small groups</strong> - you speak in every class.</li>
         <li><strong>Instant feedback</strong> - pronunciation corrected live.</li>
         <li><strong>A clear path</strong> - Hangul first, then Levels 1 to 6.</li>
@@ -464,7 +464,7 @@ const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
 // added here, must match src/lib/trustFigures.ts.
 const COURSES_BODY_HTML = `<div id="courses-prerendered" lang="en" dir="ltr">
       <h1>Korean Courses: from Hangul to Level 6</h1>
-      <p>Live online Korean classes with a real teacher, in English or Arabic. Every class is 60 minutes, once a week. A level is 24 classes over 6 months - except Hangul Foundation, which is 4 classes.</p>
+      <p>Live online Korean classes with a real teacher. Every class is 60 minutes, once a week. A level is 24 classes over 6 months - except Hangul Foundation, which is 4 classes.</p>
       <h2>Hangul Foundation (4 classes)</h2>
       <p>Read and write Korean from zero: the basic vowels and consonants and how a syllable is built; tense and aspirated consonants and combined vowels; the final consonant (batchim); pronunciation rules and your first sentences.</p>
       <h2>Levels 1 to 6 (24 classes, 6 months each)</h2>
@@ -515,7 +515,7 @@ const JOURNEY_BODY_HTML = `<div id="journey-prerendered" lang="en" dir="ltr">
         <li><h2><a href="/journey/traditional-life">Traditional Life</a></h2><p>Hanok villages. Inside the traditional Korean house: mountain-and-river placement, ondol floor heating, the cool maru hall, and clay tile roofs.</p></li>
         <li><h2><a href="/journey/modern-korea">Modern Korea</a></h2><p>1950s to today. Hallyu, the Korean wave: from Winter Sonata to Gangnam Style, Parasite and Squid Game, and why so many people now learn Korean.</p></li>
       </ol>
-      <p>The first live class is free, in English or Arabic.</p>
+      <p>The first live class is free.</p>
       <p><a href="/free-trial">Book a free class</a> · <a href="/blog">The Klovers journal</a> · <a href="/courses">Courses</a></p>
     </div>`;
 
@@ -528,7 +528,7 @@ const PRICING_BODY_HTML = `<div id="pricing-prerendered" lang="en" dir="ltr">
       <p>One-to-one lessons with flexible scheduling, at your own pace.</p>
       <h2>What every plan includes</h2>
       <ul>
-        <li>Live 60-minute classes with the teacher, once a week, in English or Arabic</li>
+        <li>Live 60-minute classes with the teacher, once a week</li>
         <li>The structured path from Hangul Foundation to Level 6</li>
         <li>Group classes are recorded and shared with enrolled students, so a missed class can be caught up</li>
         <li>A student dashboard with attendance, current level and remaining classes, plus free practice games and vocabulary review</li>
@@ -545,7 +545,7 @@ const PRICING_BODY_HTML = `<div id="pricing-prerendered" lang="en" dir="ltr">
 
 const FREE_TRIAL_BODY_HTML = `<div id="free-trial-prerendered" lang="en" dir="ltr">
       <h1>Book Your Free Korean Class</h1>
-      <p>Try Korean for free: one live 30-minute class with our teacher, in English or Arabic. No credit card and no account needed - pick a session, add your name, email and WhatsApp number, and we email you the class link.</p>
+      <p>Try Korean for free: one live 30-minute class with our teacher. No credit card and no account needed - pick a session, add your name, email and WhatsApp number, and we email you the class link.</p>
       <h2>What happens in your trial</h2>
       <ol>
         <li>A 30-minute sample class with our teacher</li>
@@ -713,7 +713,7 @@ const MARKETING_ROUTES = [
     path: "/",
     title: "Klovers: Live Online Korean Classes in Small Groups",
     description:
-      "Klovers: live, interactive Korean classes with a real teacher, in small groups. Free trial class, free placement test and gamified practice.",
+      "Klovers: live, interactive Korean classes with a real teacher, in small groups or flexible 1:1. Free trial, placement test and gamified practice.",
     body: HOME_BODY_HTML,
     alternates: HOME_ALTERNATES,
     // The homepage shares as the Seoul skyline, not as the 1:1 logo. useSEO
@@ -758,7 +758,7 @@ const MARKETING_ROUTES = [
     path: "/courses",
     title: "Korean Courses",
     description:
-      "Klovers Korean courses: Hangul in four classes, then Levels 1 to 6. Live classes with a teacher, once a week, in English or Arabic.",
+      "Klovers Korean courses: Hangul in four classes, then Levels 1 to 6. Live classes with a teacher, once a week.",
     body: COURSES_BODY_HTML,
   },
   {
@@ -849,7 +849,7 @@ const MARKETING_ROUTES = [
     // two differing). It names Klovers, so no " | Klovers" suffix is added.
     title: "Book Your Free Korean Class",
     description:
-      "Try a free 30-minute live Korean class at Klovers, in English or Arabic. No credit card and no account needed - pick a session and we email you the link.",
+      "Try a free 30-minute live Korean class at Klovers. No credit card and no account needed - pick a session and we email you the link.",
     body: FREE_TRIAL_BODY_HTML,
   },
   {
