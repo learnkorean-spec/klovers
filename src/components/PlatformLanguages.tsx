@@ -8,6 +8,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * menu. This band, straight under the hero, says what Klovers is: one
  * teaching platform that already runs four language schools, and the proof.
  *
+ * 19 Nov 2026 (Re): the copy used to say the whole system (group classes,
+ * placement test, textbooks, games, dashboard) runs all four languages. It
+ * does not: only Korean has group classes, the placement test, the books and
+ * the games. maktub, Voca and Buda share the pricing tiers (Korean private
+ * prices, src/lib/stripePrices.ts) and the student dashboard, as 1:1 lessons.
+ * Keep this paragraph true to that until the other three really catch up.
+ *
  * Canon: homepage slot 2 ("live-class-trust", no characters). Deliberately
  * typographic, no mascot and no illustration.
  *
@@ -84,8 +91,8 @@ const PlatformLanguages = () => {
           </h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground md:text-lg">
             {isAr
-              ? "بدأت Klovers بالكورية. والمنظومة نفسها (الحصص المباشرة، اختبار تحديد المستوى، الكتب، الألعاب ولوحة الطالب) تعمل الآن لأربع لغات، وتُبنى عليها كل لغة جديدة. وفي حكاية كلوفرز، تبدأ رحلة آدم ولينا وكلوبي من كوريا، ثم يسافرون مع كل لغة جديدة."
-              : "Klovers started with Korean. The same system (live classes, placement testing, our own textbooks, practice games and a student dashboard) now runs four languages, and every new one is built on it. In the Klovers story, Adam, Lina and Cluby start their journey in Korea, then travel with every new language."}
+              ? "بدأت Klovers بالكورية: حصص جماعية وفردية مباشرة، واختبار تحديد مستوى، وكتب من تأليفنا، وألعاب، ولوحة طالب. والعربية والإنجليزية والمجرية تعمل اليوم بالأسعار نفسها واللوحة نفسها كدروس فردية، وكل لغة منها تكبر حتى تكتمل لها المنظومة كلها. وفي حكاية كلوفرز، تبدأ رحلة آدم ولينا وكلوبي من كوريا، ثم يسافرون مع كل لغة جديدة."
+              : "Klovers started with Korean: live group and private classes, a placement test, our own textbooks, games and a student dashboard. Arabic, English and Hungarian run on the same pricing and dashboard as 1:1 lessons today, and each one grows into the full system next. In the Klovers story, Adam, Lina and Cluby start their journey in Korea, then travel with every new language."}
           </p>
           {/* 18 Nov 2026 (Re): the language-journey line (canon languageJourney).
               Text only: slot 2 stays typographic, no characters drawn here. */}
