@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { TapCluby } from "@/components/TapCluby";
 import type { BrandIconName } from "@/lib/dashboardProgress";
 
 /**
@@ -118,17 +119,17 @@ export function ClubyNote({
         {text}
       </p>
       {!failed && (
-        <img
+        <TapCluby
           src={`/assets/cluby/cluby-${pose}.webp`}
           alt={alt}
           width={size === "sm" ? 48 : 88}
           height={size === "sm" ? 48 : 88}
           loading="lazy"
           decoding="async"
-          draggable={false}
           onError={() => setFailed(true)}
+          wrapperClassName="shrink-0"
           className={cn(
-            "shrink-0 select-none object-contain",
+            "select-none object-contain",
             size === "sm" ? "h-12 w-12" : "h-[88px] w-[88px]",
           )}
         />

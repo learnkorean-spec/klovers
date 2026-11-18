@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { TapCluby } from "@/components/TapCluby";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -1064,12 +1065,14 @@ const TrialBookingPage = () => {
         <section className="py-16 md:py-20 bg-gradient-to-b from-primary/10 via-background to-background">
           <div className="container mx-auto px-4 text-center max-w-3xl">
             <div className="flex items-center justify-center gap-3 md:gap-4 mb-3">
-              <img
+              <TapCluby
                 src="/assets/cluby/cluby-wave.webp"
                 width={314}
                 height={440}
                 alt={language === "ar" ? "كلوبي يلوّح بالترحيب" : "Cluby waving hello"}
-                className="h-16 md:h-24 w-auto shrink-0 drop-shadow-md"
+                wrapperClassName="shrink-0"
+                notePlacement="bottom"
+                className="h-16 md:h-24 w-auto drop-shadow-md"
                 loading="eager"
                 decoding="async"
               />

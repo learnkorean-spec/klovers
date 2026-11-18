@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { TapCluby } from "@/components/TapCluby";
 import { ArrowRight, Lock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -142,14 +143,15 @@ const ScholarshipsSection = () => {
 
         {/* Cluby, once, small, reading — the 3D canon plush. */}
         <div className="mt-10 flex flex-col items-center gap-4 rounded-3xl border border-ivory/10 bg-ivory/[0.06] p-5 sm:flex-row sm:items-center sm:gap-6">
-          <img
+          <TapCluby
             src="/assets/cluby/cluby-reading.webp"
             alt={copy.clubyAlt}
             width={96}
             height={96}
             loading="lazy"
             decoding="async"
-            className="h-20 w-20 shrink-0 rounded-2xl object-contain sm:h-24 sm:w-24"
+            wrapperClassName="shrink-0"
+            className="h-20 w-20 rounded-2xl object-contain sm:h-24 sm:w-24"
           />
           <div className="text-center sm:text-start">
             <p className="cluby-note text-lg text-ivory sm:text-xl">{copy.clubyNote}</p>

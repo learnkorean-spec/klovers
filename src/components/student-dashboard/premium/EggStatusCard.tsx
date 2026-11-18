@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TapCluby } from "@/components/TapCluby";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EggStatus } from "@/lib/dashboardProgress";
@@ -48,7 +49,7 @@ export function EggStatusCard({ egg }: { egg: EggStatus }) {
     >
       <div className="relative grid h-20 w-20 shrink-0 place-items-center sm:h-24 sm:w-24">
         {hatched ? (
-          <img src="/assets/cluby/cluby-hatch.webp" alt={c("clubyAlt")} width={96} height={96} className="h-full w-full object-contain" />
+          <TapCluby src="/assets/cluby/cluby-hatch.webp" alt={c("clubyAlt")} width={96} height={96} wrapperClassName="h-full w-full" notePlacement="bottom" className="h-full w-full object-contain" />
         ) : (
           <EggArt stage={egg.stage} label={c("eggAria")} />
         )}

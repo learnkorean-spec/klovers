@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { TapCluby } from "@/components/TapCluby";
 import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -184,14 +185,15 @@ const FAQPage = () => {
 
             {/* CTA Section */}
             <div className="max-w-2xl mx-auto mt-16 text-center p-8 rounded-2xl bg-card border">
-              <img
+              <TapCluby
                 src="/assets/cluby/cluby-wave.webp"
                 alt={isAr ? "كلوبي يلوّح بالتحية" : "Cluby waving hello"}
                 width={314}
                 height={440}
                 loading="lazy"
                 decoding="async"
-                className="mx-auto mb-4 h-24 w-auto object-contain"
+                wrapperClassName="mx-auto mb-4"
+                className="h-24 w-auto object-contain"
               />
               <h2 className="text-2xl font-bold text-foreground mb-2">
                 {t("faqPage", "ctaTitle")}

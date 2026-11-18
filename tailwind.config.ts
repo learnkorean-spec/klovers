@@ -236,6 +236,22 @@ export default {
   				'58%': { transform: 'translateY(-22%) scale(1, 1)' },
   				'82%': { transform: 'translateY(0) scale(1.06, 0.94)' },
   			},
+  			// One hop on tap (components/TapCluby.tsx).
+  			'cluby-hop': {
+  				'0%, 100%': { transform: 'translateY(0) scale(1, 1)' },
+  				'15%': { transform: 'translateY(0) scale(1.1, 0.88)' },
+  				'45%': { transform: 'translateY(-28%) scale(0.94, 1.08)' },
+  				'70%': { transform: 'translateY(0) scale(1.08, 0.92)' },
+  				'85%': { transform: 'translateY(-4%) scale(1, 1)' },
+  			},
+  			// Five quick taps: one wobbly spin (TapCluby's 어지러워요).
+  			'cluby-dizzy': {
+  				'0%': { transform: 'rotate(0deg)' },
+  				'60%': { transform: 'rotate(360deg) scale(0.92)' },
+  				'75%': { transform: 'rotate(350deg)' },
+  				'90%': { transform: 'rotate(366deg)' },
+  				'100%': { transform: 'rotate(360deg)' },
+  			},
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
@@ -243,6 +259,8 @@ export default {
   			'scroll-left': 'scroll-left 35s linear infinite',
   			'scroll-right': 'scroll-right 35s linear infinite',
   			'cluby-jump': 'cluby-jump 1.5s ease-in-out infinite',
+  			'cluby-hop': 'cluby-hop 0.6s ease-out',
+  			'cluby-dizzy': 'cluby-dizzy 0.9s ease-in-out',
   		},
   		boxShadow: {
   			'2xs': 'var(--shadow-2xs)',

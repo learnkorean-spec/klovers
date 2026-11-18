@@ -8,6 +8,7 @@
  * Everything sold comes from Stripe (see src/lib/shop.ts). Categories show
  * only once they hold a product, so the page never advertises an empty shelf.
  */
+import { TapCluby } from "@/components/TapCluby";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
@@ -307,14 +308,15 @@ export default function ShopPage() {
             {/* 4 · More than a file — Cluby keeps the books */}
             <section className="py-12 md:py-16">
               <div className="container mx-auto grid max-w-5xl items-center gap-8 px-4 md:grid-cols-2">
-                <img
+                <TapCluby
                   src="/assets/cluby/cluby-reading.webp"
                   alt={tr("Cluby reading a Klovers book", "كلوبي يقرأ كتابًا")}
                   width={480}
                   height={480}
                   loading="lazy"
                   decoding="async"
-                  className="mx-auto w-full max-w-xs rounded-[28px]"
+                  wrapperClassName="mx-auto w-full max-w-xs"
+                  className="w-full rounded-[28px]"
                 />
                 <div>
                   <h2 className="font-display text-2xl font-bold text-foreground md:text-3xl">{tr("More than a file.", "أكثر من ملف.")}</h2>
