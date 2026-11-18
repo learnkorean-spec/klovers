@@ -12,7 +12,14 @@
 // cover: cover_b2.jpg stays cover_b2.jpg forever). Section 3 below now does
 // stale-while-revalidate instead, so this bump is the last one that should
 // ever be needed for an image content change - see the note there.
-const CACHE_NAME = "klovers-v4";
+//
+// v5 (18 Nov 2026): the stale-while-revalidate rule in section 3 never ran for
+// anything under /assets/, because section 2 below matched "/assets/" first and
+// answered Cache-First forever. The icon set (/assets/icons/*.webp, same file
+// names) was repainted in watercolor and returning visitors, Re included, kept
+// seeing the old clay icons. Section 2 now leaves images to section 3, and this
+// bump flushes the copies already stuck in v4.
+const CACHE_NAME = "klovers-v5";
 const OFFLINE_URL = "/";
 
 // Assets to pre-cache on install (shell)
@@ -75,9 +82,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. Immutable static assets (hashed filenames) → Cache-First
+  // 2. Immutable static assets (hashed filenames) → Cache-First.
+  // Images under /assets/ are NOT immutable (the icons and covers keep their
+  // file names when repainted), so they fall through to section 3.
+  const isImagePath = /\.(webp|png|jpe?g|gif|svg|avif)$/i.test(url.pathname);
   if (
-    url.pathname.startsWith("/assets/") ||
+    (url.pathname.startsWith("/assets/") && !isImagePath) ||
     url.pathname.endsWith(".js") ||
     url.pathname.endsWith(".css") ||
     url.pathname.endsWith(".woff2") ||
