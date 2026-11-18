@@ -3,10 +3,10 @@ import { ArrowRight } from "lucide-react";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-// 18 Nov 2026 (Re): professional portrait made from her own photo (ElevenLabs,
-// gemini-3-pro-image, face kept from the reference). Old café photo kept at
-// @/assets/reham-teacher.jpg.
-import rehamPhoto from "@/assets/reham-teacher-pro.jpg";
+// 18 Nov 2026 (Re: "remove from original picture, do not create new"): a plain
+// crop of her real photo (reham-teacher.jpg) that leaves out the iced-coffee
+// glass and straw. No AI, no retouching: every pixel is the original's.
+import rehamPhoto from "@/assets/reham-teacher-crop.jpg";
 import { logLeadEvent } from "@/lib/leadTracking";
 import { STUDENTS_TAUGHT, TEACHING_YEARS, TEACHING_YEARS_COUNT, toArabicDigits } from "@/lib/trustFigures";
 
@@ -89,7 +89,7 @@ const MeetTeacher = () => {
                   alt={isAr ? "ريهام الشرقاوي، معلمة اللغة الكورية" : "Reham Elshrkawy, Korean teacher"}
                   loading="lazy"
                   decoding="async"
-                  className="w-full aspect-[3/4] object-cover object-top"
+                  className="w-full aspect-[4/5] object-cover object-top"
                 />
                 {/* Name overlay. Yellow type is correct HERE: it sits on a
                     near-black scrim, not on a light ground. */}
