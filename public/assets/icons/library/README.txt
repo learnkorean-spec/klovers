@@ -26,7 +26,7 @@ All files:
 20-settings.png
 
 Format:
-- 1024 × 1024 PNG
+- 768 × 768 PNG (watercolor set, Nov 2026)
 - transparent canvas
 - one icon per file
 - ready to upload individually to GitHub
