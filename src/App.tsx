@@ -182,6 +182,19 @@ const AppInner = () => {
 // Reads the page language from <html lang> so it works outside the language provider.
 const PageLoader = () => {
   const isAr = typeof document !== "undefined" && document.documentElement.lang === "ar";
+  // On the homepage, index.html's static hero shell is already on screen while
+  // this chunk loads; a spinner drawn on top of it landed in the middle of the
+  // subtitle (18 Nov 2026). Keep the status for screen readers, drop the ring.
+  const shellEl = typeof document !== "undefined" ? document.getElementById("kl-hero-shell") : null;
+  // The element is in every page's HTML but stays `hidden` off the homepage.
+  const heroShell = !!shellEl && !shellEl.hidden && shellEl.childElementCount > 0;
+  if (heroShell) {
+    return (
+      <div role="status" className="sr-only">
+        {isAr ? "جارٍ التحميل…" : "Loading…"}
+      </div>
+    );
+  }
   return (
     <div role="status" aria-label={isAr ? "جارٍ تحميل الصفحة" : "Loading page"} className="min-h-screen flex items-center justify-center">
       <div className="w-8 h-8 border-4 border-klovers-yellow border-t-transparent rounded-full animate-spin" aria-hidden="true" />

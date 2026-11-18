@@ -15,6 +15,7 @@ import ExchangeEntryCard from "@/components/exchange/ExchangeEntryCard";
 
 // Lazy-load below-fold sections for faster initial paint
 const MeetTeacher = lazy(() => import("@/components/MeetTeacher"));
+const PlatformLanguages = lazy(() => import("@/components/PlatformLanguages"));
 const HowItWorks = lazy(() => import("@/components/HowItWorks"));
 const LearningRoadmap = lazy(() => import("@/components/LearningRoadmap"));
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
@@ -243,6 +244,16 @@ const Index = () => {
         {/* Returning students promotional banner (signed-in returning students only) */}
         <ReturningStudentBanner />
 
+        {/* Trust (canon slot 2) - what Klovers is: one platform, four
+            language schools, and the real numbers (PlatformLanguages.tsx). */}
+        <div id="platform" style={{ minHeight: 600 }}>
+          <NearViewport minHeight={600}>
+            <Suspense fallback={<SectionFallback />}>
+              <PlatformLanguages />
+            </Suspense>
+          </NearViewport>
+        </div>
+
         {/* Desire — the teacher, verified facts only */}
         <div id="meet-teacher" style={{ minHeight: 400 }}>
           <NearViewport minHeight={400}>
@@ -256,6 +267,15 @@ const Index = () => {
           <NearViewport minHeight={480}>
             <Suspense fallback={<SectionFallback />}>
               <HowItWorks />
+            </Suspense>
+          </NearViewport>
+        </div>
+        {/* Desire — real reviews, moved up 18 Nov 2026 so proof comes right
+            after "how it works", not two thirds down the page. */}
+        <div id="testimonials" style={{ minHeight: 400 }}>
+          <NearViewport minHeight={400}>
+            <Suspense fallback={<SectionFallback />}>
+              <TestimonialsSection />
             </Suspense>
           </NearViewport>
         </div>
@@ -288,14 +308,6 @@ const Index = () => {
         </div>
         {/* Desire — reinforces motivation after seeing proof */}
         <WhyLearnKorean />
-        {/* Desire — real reviews, in the reader's language */}
-        <div id="testimonials" style={{ minHeight: 400 }}>
-          <NearViewport minHeight={400}>
-            <Suspense fallback={<SectionFallback />}>
-              <TestimonialsSection />
-            </Suspense>
-          </NearViewport>
-        </div>
         {/* The community band — 2,000+ on social media (see CommunityBand.tsx). */}
         <CommunityBand />
         {/* The shop door — Lina's bag by the courtyard gate, the first book on the shelf */}

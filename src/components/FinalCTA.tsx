@@ -251,10 +251,12 @@ const FinalCTA = () => {
 
           <div className="flex items-center gap-3 rounded-2xl border-2 border-charcoal bg-ivory px-5 py-4 text-start">
             <KloverIcon name="chat-annyeong" className="h-9 w-9 shrink-0" />
+            {/* Was the 2,000+ community line, which the CommunityBand above
+                already says; replaced 18 Nov 2026 so the CTA does not repeat. */}
             <p className="text-sm font-bold leading-snug text-charcoal">
               {isAr
-                ? `مجتمع يضم أكثر من ${toArabicDigits(COMMUNITY.replace(/[^0-9]/g, ""))} متابع على وسائل التواصل`
-                : `Join ${COMMUNITY} people in our social media community`}
+                ? "حصص مباشرة أونلاين، من أي مكان في العالم"
+                : "Live online classes, from anywhere in the world"}
             </p>
           </div>
         </div>

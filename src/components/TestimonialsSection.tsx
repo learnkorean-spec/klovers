@@ -74,15 +74,6 @@ const reviews = [
     level: "Level 1 → Level 3",
   },
   {
-    name: "Nami Waka",
-    flag: "\u{1F30D}",
-    lang: "en",
-    text: "Reham is a wonderful teacher. She has a really nice smile. I'm looking forward to having her teach me Korean from now on.",
-    date: "Jul 2024",
-    duration: "2 months",
-    level: "Beginner",
-  },
-  {
     name: "Kholoud Al-Bahay",
     flag: "\u{1F1F8}\u{1F1E6}",
     lang: "en",

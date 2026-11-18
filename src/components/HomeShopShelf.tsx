@@ -118,12 +118,12 @@ const HomeShopShelf = () => {
             {tr("Klovers Supply", "متجر كلوفرز")}
           </span>
           <h2 id="shop-shelf-title" className="text-3xl font-extrabold leading-tight tracking-tight md:text-4xl">
-            {tr("The bag by the courtyard gate", "الحقيبة عند بوابة الفناء")}
+            {tr("Our own books, for self-study", "كتبنا الخاصة، للدراسة الذاتية")}
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
             {tr(
-              "Lina never leaves for a lesson empty-handed. In her bag are the books Klovers writes for its own classes, now in self-study editions that go straight to My books.",
-              "لا تخرج لينا إلى درسٍ بيدين فارغتين. في حقيبتها الكتب التي تكتبها كلوفرز لحصصها، وقد صارت الآن في نسخ للدراسة الذاتية تُضاف مباشرة إلى «كتبي».",
+              "Klovers writes the textbooks it teaches from. They are now sold as self-study editions with answer keys, and open in My books right after purchase.",
+              "تكتب كلوفرز الكتب التي تدرّس منها، وهي متاحة الآن كنسخ للدراسة الذاتية مع مفتاح الإجابات، وتُفتح في «كتبي» مباشرة بعد الشراء.",
             )}
           </p>
 
