@@ -764,7 +764,8 @@ export const LIBRARY_SITE: SitePicture[] = [
   { group: "brand", dir: "", file: "klovers-logo.jpg" },
   { group: "brand", dir: "", file: "klovers-mascot.svg" },
   { group: "brand", dir: "", file: "hero-world.jpg" },
-  { group: "brand", dir: "", file: "hero-learner.jpg", label: "الهيرو الحالي: متعلمة في حصة أونلاين (بدون كلوبي)" },
+  { group: "brand", dir: "", file: "hero-learner.jpg", label: "الهيرو السابق: متعلمة في حصة أونلاين (الصورة كاملة)" },
+  { group: "brand", dir: "", file: "hero-learner-v2.jpg", label: "الهيرو الحالي: نفس الصورة مقصوصة لتبتعد الطالبة عن العنوان" },
   { group: "brand", dir: "/assets/cluby", file: "online-class.webp", label: "كيف تبدو الحصة الأولى: آدم ولينا في حصة أونلاين (بدون كلوبي)" },
   { group: "brand", dir: "", file: "og-seoul-skyline.jpg" },
 ];

@@ -11,14 +11,14 @@ import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
  * phones the crop moves right (object-[97%_center]) so the text lands on sky
  * and roofs instead of faces.
  *
- * 18 Nov 2026 (Re, incubation review): replaced with hero-learner.jpg, a
+ * 18 Nov 2026 (Re, incubation review): replaced with hero-learner-v2.jpg, a
  * photoreal learner in a live ONLINE class at home with Cluby on the desk
  * (made in /admin/ai-room-lab, clubyOnly mode). The old porch scene read as
  * illustrated and did not show the product. Learner sits left, so the same
  * crops still work. Phones now crop at 60% (not 97%) so the laptop with the
  * live class AND Cluby stay in frame; at 97% only Cluby and a bare table showed.
  */
-const heroPoster = "/hero-learner.jpg";
+const heroPoster = "/hero-learner-v2.jpg";
 /*
  * 6 Oct 2026 (mobile LCP): the same photo through Vercel Image Optimization
  * ("images" in vercel.json) - AVIF/WebP, 21 KB at 828w and 59 KB at full
@@ -29,7 +29,7 @@ const heroPoster = "/hero-learner.jpg";
  * on Vercel, so the dev server keeps the plain JPG.
  */
 const HERO_SRCSET = import.meta.env.PROD
-  ? [828, 1200, 1920].map((w) => `/_vercel/image?url=%2Fhero-learner.jpg&w=${w}&q=70 ${w}w`).join(", ")
+  ? [828, 1200, 1920].map((w) => `/_vercel/image?url=%2Fhero-learner-v2.jpg&w=${w}&q=70 ${w}w`).join(", ")
   : undefined;
 const HERO_SIZES = "(max-width: 767px) 155vh, 100vw";
 const heroVideo = "/videos/hero-korea-video-new.mp4";
@@ -218,7 +218,9 @@ const HeroSection = () => {
     },
   ];
 
-  const headlineSize = "text-[clamp(1.625rem,7vw,2.25rem)] md:text-[clamp(2.25rem,5vw,3.75rem)]";
+  // lg: 4.2vw capped at 3.5rem so each headline line fits the 48rem column that
+  // sits over the window, clear of the learner's face (18 Nov 2026).
+  const headlineSize = "text-[clamp(1.625rem,7vw,2.25rem)] md:text-[clamp(2.25rem,5vw,3.75rem)] lg:text-[clamp(2.25rem,4.2vw,3.5rem)]";
 
   return (
     <>
@@ -239,7 +241,7 @@ const HeroSection = () => {
           loading="eager"
           fetchPriority="high"
           decoding="async"
-          className={`absolute inset-0 w-full h-full object-cover object-[60%_center] lg:object-center transition-opacity duration-1000 motion-safe:animate-ken-burns brightness-110 saturate-[1.15] ${
+          className={`absolute inset-0 w-full h-full object-cover object-[60%_center] lg:object-[50%_18%] transition-opacity duration-1000 motion-safe:animate-ken-burns brightness-110 saturate-[1.15] ${
             videoReady ? "opacity-0" : "opacity-100"
           }`}
         />
@@ -294,7 +296,7 @@ const HeroSection = () => {
             Class", ~870px) on one line. The paragraph is unaffected: it carries
             its own max-w-2xl below.
           */}
-          <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-[4%] lg:max-w-4xl flex flex-col items-center gap-5 sm:gap-6">
+          <div className="max-w-5xl mx-auto lg:ml-auto lg:mr-[4%] lg:max-w-[48rem] flex flex-col items-center gap-5 sm:gap-6">
 
             {/* 1. Headline. Yellow as TYPE is correct here and only here - the
                 ground behind it is the charcoal scrim above, never a light

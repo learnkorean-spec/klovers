@@ -1,12 +1,10 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
-import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import { type KloverIconName } from "@/components/KloverIcon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logLeadEvent } from "@/lib/leadTracking";
 import PriceTeaser from "@/components/PriceTeaser";
-import { toArabicDigits } from "@/lib/trustFigures";
 
 /**
  * "How we teach" - four steps.
@@ -25,6 +23,7 @@ import { toArabicDigits } from "@/lib/trustFigures";
  * objects only, and the first-class box carries the painted café scene with
  * Cluby, its edges dissolved by a radial mask so it meets the page.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for a possible return of the grid
 const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] }[] = [
   {
     icon: "flashcard-ga",
@@ -70,34 +69,10 @@ const HowItWorks = () => {
           </p>
         </div>
 
-        {/* Step order follows the reading direction: 1→4 left-to-right in
-            English, right-to-left in Arabic (grid inherits the page dir). */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto" dir={isAr ? "rtl" : "ltr"}>
-          {STEPS.map((step, index) => {
-            const [title, description] = isAr ? step.ar : step.en;
-            return (
-              // Wrapper carries the relative context so the badge is NOT clipped by the Card
-              <div key={step.icon} className="relative pt-3">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-                  <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-sm border border-charcoal/25">
-                    {isAr ? toArabicDigits(index + 1) : index + 1}
-                  </span>
-                </div>
-                <Card className="group hover:shadow-md transition-all duration-300 border-border hover:border-primary/40 text-center h-full">
-                  <CardContent className="pt-7 pb-4 px-3 sm:pt-8 sm:pb-6 sm:px-4">
-                    {/* Ivory dome: the drawings need a light surface to keep their
-                        outline; on dark they stand on the card directly. */}
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-ivory dark:bg-transparent border border-charcoal/15 dark:border-transparent flex items-center justify-center mx-auto mb-2 sm:mb-3 group-hover:scale-105 transition-transform">
-                      <KloverIcon name={step.icon} className="h-9 w-9 sm:h-12 sm:w-12" />
-                    </div>
-                    <h3 className="font-semibold text-foreground mb-1.5 sm:mb-2 text-sm md:text-base" dir={isAr ? "rtl" : "ltr"}>{title}</h3>
-                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed" dir={isAr ? "rtl" : "ltr"}>{description}</p>
-                  </CardContent>
-                </Card>
-              </div>
-            );
-          })}
-        </div>
+        {/* The four step cards (clear explanations, small groups, instant
+            feedback, clear path) were removed 18 Nov 2026: the four promise
+            cards under the hero already say the same thing, one scroll up.
+            STEPS is kept below in case the grid comes back. */}
 
         {/* "What your first class looks like" — pedagogy + trust. The online-class
             scene sits on the start side on lg+, above the bullets on phones. */}
