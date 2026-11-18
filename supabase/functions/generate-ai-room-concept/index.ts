@@ -712,6 +712,53 @@ function placePhotoPrompt(country: string, place: string, scene: string, people:
   ].filter(Boolean).join(" ");
 }
 
+/**
+ * Story scenes (Re, 18 Nov 2026: "always use the characters and extra new
+ * people from different places for the story, in different clothes, but
+ * the characters must be consistent"). Adam and Lina keep their faces and
+ * hair from the reference photo in every picture while their clothes change
+ * with the scene; Cluby never changes. Every named supporting person has one
+ * fixed look (canon: src/config/klovers-world.ts) so they stay recognisable
+ * from picture to picture.
+ */
+const STORY_CAST: Record<string, string> = {
+  minsu: "Minsu, a Korean man in his early 20s, slim, short straight black hair with a soft fringe, kind narrow eyes, clean-shaven",
+  jihoon: "Jihoon, a Korean man in his mid 20s, round thin-framed glasses, short wavy black hair",
+  park: "Ms. Park, a Korean woman in her mid 50s, short permed dark-brown hair, warm round face, market apron",
+  kim: "Mr. Kim, a Korean man in his 40s, neat side-parted black hair, calm face, smart shirt",
+  yuna: "Yuna, a Korean woman in her mid 20s, sleek black bob haircut, small silver earrings, barista apron",
+  seoyeon: "Seoyeon, a Korean woman in her early 20s, long straight black hair worn half-up, bright smile",
+  taeyang: "Taeyang, a tall Korean man in his early 20s, light-brown dyed hair, sporty build",
+  hana: "Hana, a Korean woman in her late 20s, shoulder-length dark hair with straight bangs, gentle smile",
+  junho: "Junho, a Korean man in his early 20s, messy black hair, wireless earbuds",
+  choi: "Mrs. Choi, a Korean woman in her 60s, grey hair in a low bun, street-food cook",
+  donghyun: "Donghyun, a Korean man in his late 20s, short black hair, subway station staff vest",
+  seo: "Mr. Seo, a Korean man in his 50s, salt-and-pepper beard, paint-stained work apron",
+  yoon: "Mrs. Yoon, a Korean woman in her 50s, hair tied back, cardigan",
+  omar: "Omar, an Egyptian classmate in his early 20s, short curly black hair, neat short beard",
+  zsofia: "Zsofia, a Hungarian classmate in her early 20s, long blonde hair in a side braid, light freckles",
+  amara: "Amara, a British classmate in her early 20s, dark skin, long box braids",
+  layla: "Layla, a Saudi classmate in her early 20s, wearing a soft pastel hijab",
+};
+
+function storyScenePrompt(scene: string, adam: string, lina: string, cast: string[], withCluby: boolean): string {
+  const people = cast.map((k) => STORY_CAST[k]).filter(Boolean);
+  return [
+    "A real, natural photograph from the KLOVERS Korean-learning story, set in real-looking South Korea.",
+    `The scene: ${scene}.`,
+    "Reference image 1 shows Adam and Lina. Keep their FACES, skin, hair colour and hairstyle EXACTLY as in the reference so they are instantly recognisable (Adam: early 20s, wavy dark-brown hair; Lina: early 20s, long wavy auburn-copper hair, light freckles). Only their clothes change.",
+    adam ? `Adam wears: ${adam}.` : "",
+    lina ? `Lina wears: ${lina}.` : "",
+    withCluby
+      ? "Reference image 2 shows Cluby: keep Cluby EXACTLY as the reference, a small realistic-cute mint-green plush creature with two butter-yellow horns, pink inner ears, ivory mini hanbok top, yellow wrap skirt and a green four-leaf-clover emblem. Never a teddy bear, never another colour. Cluby is a companion sitting or standing nearby, not a pet."
+      : "Cluby is not in this picture.",
+    people.length ? `Also in the scene, each with their own distinct face as described: ${people.join("; ")}.` : "",
+    "Adam and Lina are friends and study companions, not a couple: no romantic poses.",
+    "Everyone is an adult. People are photorealistic: real skin, real hair, real fabric, natural candid poses and expressions, natural light. Varied, specific real location, not a generic café.",
+    "No readable text, letters, numbers, logos or signs anywhere; any sign is blank or out of focus.",
+  ].filter(Boolean).join(" ");
+}
+
 const REVIEWS_BUCKET = "marketing-images";
 const REVIEWS_PATH = "ai-room-lab/picture-reviews.json";
 
@@ -827,6 +874,16 @@ serve(async (req) => {
       if (error) throw error;
       const url = adminClient.storage.from(REVIEWS_BUCKET).getPublicUrl(path).data.publicUrl;
       return new Response(JSON.stringify({ url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (body.mode === "story-scene") {
+      const scene = String(body.scene ?? "").trim().slice(0, 800);
+      if (!scene) throw new Error("scene is required");
+      const cast = (Array.isArray(body.cast) ? body.cast : []).map((c: unknown) => String(c)).filter((c: string) => c in STORY_CAST).slice(0, 4);
+      const withCluby = body.cluby !== false;
+      const size = ["1024x1024", "1024x1536", "1536x1024"].includes(String(body.size)) ? String(body.size) : "1536x1024";
+      const prompt = storyScenePrompt(scene, String(body.adam ?? "").slice(0, 200), String(body.lina ?? "").slice(0, 200), cast, withCluby);
+      const imageDataUrl = await generateConceptImage(prompt, metaApiKey, true, size);
+      return new Response(JSON.stringify({ imageDataUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (body.mode === "picture-check") {
       const image = String(body.image ?? "");

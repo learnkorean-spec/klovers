@@ -418,3 +418,15 @@ answers (a yes and a no), both fit and the person answers each differently.
 progress to replay the beginner discovery sequence. Instead: "You've already
 learned enough to wake him" — unlock Cluby directly and map the story state
 onto their existing learning progress.
+
+## Wardrobe and cast looks (Re, 18 Nov 2026)
+
+Adam's and Lina's faces and hair always match the canon reference photo.
+Their clothes change with the scene (season, place, activity), and every
+outfit keeps one KLOVERS-yellow piece. Cluby never changes. Each named
+supporting person has one fixed look (see `STORY_CAST` in
+`supabase/functions/generate-ai-room-concept/index.ts`) so they stay
+recognisable from picture to picture. Classmates from other countries (Omar,
+Egypt; Zsofia, Hungary; Amara, UK; Layla, Saudi Arabia) appear in pictures as
+fellow students in the learners' Korean class: background companions, never
+teachers, never love interests.

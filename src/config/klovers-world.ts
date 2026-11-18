@@ -224,6 +224,9 @@ export const KLOVERS_WORLD = {
         ethnicityRule: "not_korean_and_not_asian",
         hair: "wavy_dark_brown",
 
+        // Re, 18 Nov 2026: clothes change with the scene; face and hair never
+        // do. The list below is Adam's signature look (default); any outfit
+        // keeps one KLOVERS-yellow piece. See `wardrobeRule`.
         outfit: [
           "klovers_yellow_tailored_blazer",
           "ivory_tshirt",
@@ -430,6 +433,30 @@ export const KLOVERS_WORLD = {
       secondTalk: "after_the_first_is_finished_same_person_same_class",
       source: "Re, 15 Nov 2026",
     },
+  },
+
+  /**
+   * Wardrobe and cast-look rule (Re, 18 Nov 2026: "always use the characters
+   * and extra new people from different places for the story, in different
+   * clothes as well, but characters must be consistent"). Generated scenes
+   * keep Adam's and Lina's faces and hair from the canon reference photo;
+   * their clothes follow the scene (season, place, activity), each outfit
+   * keeping one KLOVERS-yellow piece. Cluby never changes. Every named
+   * supporting person has one fixed look, kept in STORY_CAST in
+   * supabase/functions/generate-ai-room-concept/index.ts, so they stay
+   * recognisable across pictures. Classmates from other countries (Omar from
+   * Egypt, Zsofia from Hungary, Amara from the UK, Layla from Saudi Arabia)
+   * appear in pictures as fellow students in the learners' Korean class:
+   * background companions in artwork, not story characters with their own
+   * plot, never teachers, never love interests.
+   */
+  wardrobeRule: {
+    facesAndHair: "fixed_from_canon_reference",
+    clothes: "change_with_the_scene_one_klovers_yellow_piece",
+    cluby: "never_changes",
+    supportingCastLooks: "fixed_per_person_in_STORY_CAST",
+    internationalClassmates: ["omar_egypt", "zsofia_hungary", "amara_uk", "layla_saudi_arabia"],
+    source: "Re, 18 Nov 2026",
   },
 
   characterRelationshipRules: {
