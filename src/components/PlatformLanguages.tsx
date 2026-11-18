@@ -39,8 +39,8 @@ const SCHOOLS: School[] = [
   {
     script: "한국어",
     brand: "Klovers",
-    en: { lang: "Korean", note: "Live small-group classes, Hangul to Level 6" },
-    ar: { lang: "الكورية", note: "حصص جماعية مباشرة، من الهانغول إلى المستوى السادس" },
+    en: { lang: "Korean", note: "Live private and group classes, Hangul to Level 6" },
+    ar: { lang: "الكورية", note: "حصص خاصة وجماعية مباشرة، من الهانغول إلى المستوى السادس" },
     href: "/courses",
     flagship: true,
   },
@@ -48,22 +48,22 @@ const SCHOOLS: School[] = [
     script: "العربية",
     scriptDir: "rtl",
     brand: "maktub",
-    en: { lang: "Arabic", note: "1:1 lessons for non-native speakers" },
-    ar: { lang: "العربية", note: "دروس فردية لغير الناطقين بها" },
+    en: { lang: "Arabic", note: "Private and group classes for non-native speakers" },
+    ar: { lang: "العربية", note: "حصص خاصة وجماعية لغير الناطقين بها" },
     href: "/learn-arabic",
   },
   {
     script: "English",
     brand: "Voca",
-    en: { lang: "English", note: "1:1 lessons, grammar to fluency" },
-    ar: { lang: "الإنجليزية", note: "دروس فردية، من القواعد إلى الطلاقة" },
+    en: { lang: "English", note: "Private and group classes, grammar to fluency" },
+    ar: { lang: "الإنجليزية", note: "حصص خاصة وجماعية، من القواعد إلى الطلاقة" },
     href: "/learn-english",
   },
   {
     script: "Magyar",
     brand: "Buda",
-    en: { lang: "Hungarian", note: "1:1 lessons from the first word" },
-    ar: { lang: "المجرية", note: "دروس فردية من الكلمة الأولى" },
+    en: { lang: "Hungarian", note: "Private and group classes from the first word" },
+    ar: { lang: "المجرية", note: "حصص خاصة وجماعية من الكلمة الأولى" },
     href: "/learn-hungarian",
   },
 ];
@@ -91,8 +91,8 @@ const PlatformLanguages = () => {
           </h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground md:text-lg">
             {isAr
-              ? "بدأت Klovers بالكورية: حصص جماعية وفردية مباشرة، واختبار تحديد مستوى، وكتب من تأليفنا، وألعاب، ولوحة طالب. والعربية والإنجليزية والمجرية تعمل اليوم بالأسعار نفسها واللوحة نفسها كدروس فردية، وكل لغة منها تكبر حتى تكتمل لها المنظومة كلها. وفي حكاية كلوفرز، تبدأ رحلة آدم ولينا وكلوبي من كوريا، ثم يسافرون مع كل لغة جديدة."
-              : "Klovers started with Korean: live group and private classes, a placement test, our own textbooks, games and a student dashboard. Arabic, English and Hungarian run on the same pricing and dashboard as 1:1 lessons today, and each one grows into the full system next. In the Klovers story, Adam, Lina and Cluby start their journey in Korea, then travel with every new language."}
+              ? "بدأت Klovers بالكورية: حصص جماعية وفردية مباشرة، واختبار تحديد مستوى، وكتب من تأليفنا، وألعاب، ولوحة طالب. والعربية والإنجليزية والمجرية تعمل اليوم بالأسعار نفسها واللوحة نفسها كحصص خاصة وجماعية، وكل لغة منها تكبر حتى تكتمل لها المنظومة كلها. وفي حكاية كلوفرز، تبدأ رحلة آدم ولينا وكلوبي من كوريا، ثم يسافرون مع كل لغة جديدة."
+              : "Klovers started with Korean: live group and private classes, a placement test, our own textbooks, games and a student dashboard. Arabic, English and Hungarian run on the same pricing and dashboard with private and group classes today, and each one grows into the full system next. In the Klovers story, Adam, Lina and Cluby start their journey in Korea, then travel with every new language."}
           </p>
           {/* 18 Nov 2026 (Re): the language-journey line (canon languageJourney).
               Text only: slot 2 stays typographic, no characters drawn here. */}
