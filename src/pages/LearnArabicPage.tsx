@@ -57,8 +57,11 @@ import cairoRooftop from "@/assets/arabic-cairo-rooftop.jpg";
 const FOREST = "#0b2d1f";
 const FOREST_DEEP = "#061b17";
 const SAND = "#eadfcb";
-const KLOVERS_GREEN = "#39FF14";
-const KLOVERS_GREEN_DEEP = "#1FB800";
+// 18 Nov 2026 (Re): "all must be connected with klovers yellow". maktub's
+// accent was the neon status green; it is now KLOVERS yellow like Voca and
+// Buda. The deep shade is a dark olive-yellow, readable on the light SAND ground.
+const KLOVERS_YELLOW = "#FFFF00";
+const KLOVERS_YELLOW_DEEP = "#6B5E00";
 
 const headingFont = { fontFamily: "Poppins, system-ui, sans-serif" };
 const arabicFont = (isAr: boolean) => (isAr ? { fontFamily: "Cairo, system-ui, sans-serif" } : {});
@@ -78,7 +81,7 @@ type TrFn = (en: string, ar: string) => string;
  */
 const MaktubLogoMark = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" className={className} role="img" aria-label="maktub">
-    <rect width="48" height="48" rx="14" fill={KLOVERS_GREEN} />
+    <rect width="48" height="48" rx="14" fill={KLOVERS_YELLOW} />
     <path
       d="M12 34V18.6h3.9l.3 2.4c.7-.9 1.5-1.6 2.5-2.1a7 7 0 0 1 3.2-.7c1.5 0 2.8.3 3.7 1 1 .6 1.7 1.5 2.1 2.7.7-1.1 1.6-2 2.7-2.6a7.6 7.6 0 0 1 3.7-1c2 0 3.6.6 4.7 1.8 1.1 1.2 1.7 3 1.7 5.4V34h-4.3v-8c0-1.4-.3-2.5-.8-3.2-.5-.7-1.4-1.1-2.5-1.1-1.3 0-2.3.5-3 1.4-.7.9-1.1 2.2-1.1 3.8V34h-4.3v-8c0-1.4-.3-2.5-.8-3.2-.5-.7-1.3-1.1-2.5-1.1-1.3 0-2.3.5-3 1.4-.7.9-1.1 2.2-1.1 3.8V34H12Z"
       fill={FOREST_DEEP}
@@ -105,7 +108,7 @@ const MaktubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; t
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-3 focus:z-50 focus:rounded-full focus:px-4 focus:py-2 focus:text-sm focus:font-semibold"
-        style={{ backgroundColor: KLOVERS_GREEN, color: "#1A1A1A" }}
+        style={{ backgroundColor: KLOVERS_YELLOW, color: "#1A1A1A" }}
       >
         {tr("Skip to content", "الانتقال إلى المحتوى")}
       </a>
@@ -140,7 +143,7 @@ const MaktubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; t
             size="sm"
             asChild
             className="hidden rounded-full font-semibold hover:brightness-95 sm:inline-flex"
-            style={{ backgroundColor: KLOVERS_GREEN, color: "#1A1A1A" }}
+            style={{ backgroundColor: KLOVERS_YELLOW, color: "#1A1A1A" }}
           >
             <a href="#trial-booking">{tr("Book a trial class", "احجز حصة تجريبية")}</a>
           </Button>
@@ -163,7 +166,7 @@ const MaktubFooter = ({ tr }: { isAr: boolean; tr: TrFn }) => (
           </div>
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em]">
             <span className="text-white/80">{tr("Arabi ", "عربي ")}</span>
-            <span style={{ color: KLOVERS_GREEN }}>{tr("made simple.", "ببساطة.")}</span>
+            <span style={{ color: KLOVERS_YELLOW }}>{tr("made simple.", "ببساطة.")}</span>
           </p>
           <p className="mt-4 max-w-sm text-sm text-white/70">
             {tr(
@@ -361,7 +364,7 @@ const LearnArabicPage = () => {
           <div
             aria-hidden="true"
             className="pointer-events-none absolute -top-24 h-72 w-72 rounded-full blur-3xl ltr:-right-24 rtl:-left-24"
-            style={{ backgroundColor: `${KLOVERS_GREEN}33` }}
+            style={{ backgroundColor: `${KLOVERS_YELLOW}33` }}
           />
           <div className="container relative mx-auto px-4 py-24 sm:py-32 max-w-5xl">
             <div className="max-w-2xl">
@@ -370,11 +373,11 @@ const LearnArabicPage = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mb-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-semibold transition hover:bg-white/10"
-                style={{ borderColor: KLOVERS_GREEN, color: KLOVERS_GREEN }}
+                style={{ borderColor: KLOVERS_YELLOW, color: KLOVERS_YELLOW }}
               >
                 {tr("Part of maktub: see the full site", "جزء من مكتوب: شاهد الموقع الكامل")}
               </a>
-              <p className="text-lg" style={{ fontFamily: "Cairo, system-ui, sans-serif", color: KLOVERS_GREEN }} dir="rtl" lang="ar">
+              <p className="text-lg" style={{ fontFamily: "Cairo, system-ui, sans-serif", color: KLOVERS_YELLOW }} dir="rtl" lang="ar">
                 اهلا بيك في كلوفرز
               </p>
               <h1
@@ -383,7 +386,7 @@ const LearnArabicPage = () => {
               >
                 {tr("Speak real Arabic.", "تكلّم عربي حقيقي.")}
                 <br />
-                <span style={{ color: KLOVERS_GREEN }}>{tr("Connect for real.", "وتواصل فعلًا.")}</span>
+                <span style={{ color: KLOVERS_YELLOW }}>{tr("Connect for real.", "وتواصل فعلًا.")}</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg text-white/85">
                 {tr(
@@ -396,7 +399,7 @@ const LearnArabicPage = () => {
                   size="lg"
                   asChild
                   className="rounded-full font-semibold hover:brightness-95"
-                  style={{ backgroundColor: KLOVERS_GREEN, color: "#1A1A1A" }}
+                  style={{ backgroundColor: KLOVERS_YELLOW, color: "#1A1A1A" }}
                 >
                   <Link to="#trial-booking">
                     {tr("Book a trial class", "احجز حصة تجريبية")}
@@ -435,8 +438,8 @@ const LearnArabicPage = () => {
                 <div
                   key={d.name}
                   className="rounded-2xl border border-foreground/10 bg-card p-6 transition hover:shadow-sm"
-                  style={{ borderColor: `${KLOVERS_GREEN}00` }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = KLOVERS_GREEN)}
+                  style={{ borderColor: `${KLOVERS_YELLOW}00` }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = KLOVERS_YELLOW)}
                   onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -448,7 +451,7 @@ const LearnArabicPage = () => {
                   <p className="mt-3 text-sm leading-relaxed text-foreground/70">{d.description}</p>
                   <span
                     className="mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-                    style={{ backgroundColor: KLOVERS_GREEN, color: "#1A1A1A" }}
+                    style={{ backgroundColor: KLOVERS_YELLOW, color: "#1A1A1A" }}
                   >
                     {tr("Open for trial classes", "متاحة للحجز التجريبي")}
                   </span>
@@ -469,7 +472,7 @@ const LearnArabicPage = () => {
                 <li
                   key={line}
                   className="border-s-4 ps-4 leading-relaxed text-[#1A1A1A]/80"
-                  style={{ borderColor: KLOVERS_GREEN_DEEP }}
+                  style={{ borderColor: KLOVERS_YELLOW_DEEP }}
                 >
                   {line}
                 </li>
@@ -489,7 +492,7 @@ const LearnArabicPage = () => {
                 <li key={s.title}>
                   <span
                     className="inline-flex h-10 w-10 items-center justify-center rounded-full text-base font-extrabold"
-                    style={{ backgroundColor: KLOVERS_GREEN, color: "#1A1A1A", ...headingFont }}
+                    style={{ backgroundColor: KLOVERS_YELLOW, color: "#1A1A1A", ...headingFont }}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -507,7 +510,7 @@ const LearnArabicPage = () => {
           tr={tr}
           id="pricing"
           ink="#1A1A1A"
-          signal={KLOVERS_GREEN}
+          signal={KLOVERS_YELLOW}
           signalText="#1A1A1A"
           headingStyle={headingFont}
           trialHref="#trial-booking"
@@ -518,7 +521,7 @@ const LearnArabicPage = () => {
           <div className="container mx-auto px-4 max-w-5xl grid gap-10 md:grid-cols-[14rem_1fr] md:items-center">
             <div
               className="relative mx-auto h-56 w-56 shrink-0 overflow-hidden rounded-full border-4 md:mx-0"
-              style={{ borderColor: `${KLOVERS_GREEN}cc` }}
+              style={{ borderColor: `${KLOVERS_YELLOW}cc` }}
             >
               <img
                 src={rehamPhoto}
@@ -532,7 +535,7 @@ const LearnArabicPage = () => {
               <h2 className="text-2xl sm:text-3xl font-bold" style={headingFont}>
                 {tr("Meet your tutor", "تعرّف على معلمتك")}
               </h2>
-              <p className="mt-4 text-lg italic leading-snug" style={{ color: KLOVERS_GREEN }}>
+              <p className="mt-4 text-lg italic leading-snug" style={{ color: KLOVERS_YELLOW }}>
                 {tr(
                   "“I know exactly where a translation breaks down between languages. It's the same gap that makes textbook Arabic feel nothing like real use.”",
                   "«أعرف بالضبط أين تنهار الترجمة بين اللغات، وهي نفس الفجوة التي تجعل العربية الفصحى في الكتب لا تشبه الاستخدام الفعلي.»",
@@ -579,7 +582,7 @@ const LearnArabicPage = () => {
             </p>
             <PersonalTrialBooking
               language="arabic"
-              accentColor={KLOVERS_GREEN_DEEP}
+              accentColor={KLOVERS_YELLOW_DEEP}
               accentHoverColor={FOREST}
               whatsappMessage={{
                 en: "Hi! I'd like to book a free trial Arabic lesson but none of the available times work for me. Can we find another time?",
@@ -623,7 +626,7 @@ const LearnArabicPage = () => {
                 size="lg"
                 asChild
                 className="rounded-full font-semibold hover:brightness-95"
-                style={{ backgroundColor: KLOVERS_GREEN, color: "#1A1A1A" }}
+                style={{ backgroundColor: KLOVERS_YELLOW, color: "#1A1A1A" }}
               >
                 <Link to="#trial-booking">
                   {tr("Book a trial class", "احجز حصة تجريبية")}

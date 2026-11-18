@@ -53,7 +53,10 @@ import rehamPhoto from "@/assets/reham-teacher.jpg";
  */
 
 const DANUBE = "#0C1D2E"; // ink
-const GOLD = "#D9A648"; // signal accent
+// 18 Nov 2026 (Re): "all must be connected with klovers yellow". Buda's
+// signal accent was a muted gold (#D9A648); it is now KLOVERS yellow, like Voca.
+// Every text use of it sits on the dark DANUBE ground, so it stays readable.
+const GOLD = "#FFFF00"; // signal accent = KLOVERS yellow
 const CREAM = "#F5F0E6"; // paper
 const STEEL = "#3A5668"; // secondary accent
 
