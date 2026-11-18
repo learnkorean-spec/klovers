@@ -1508,14 +1508,14 @@ function ProfileEditor({
         <Label>{tr("Avatar", "الصورة الرمزية")} *</Label>
         <p className="mb-2 text-sm text-muted-foreground">
           {tr(
-            "No photo uploads here. Pick Lina, Adam or Cluby from the Klovers cast, so Language Exchange stays about learning, not looks.",
-            "لا يوجد رفع صور هنا. اختر لينا أو آدم أو كلوبي من شخصيات كلوفرز، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
+            "No photo uploads here. Pick Lina, Adam, Cluby or one of the people from their story, so Language Exchange stays about learning, not looks.",
+            "لا يوجد رفع صور هنا. اختر لينا أو آدم أو كلوبي أو أحد أصدقائهم من قصة كلوفرز، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
           )}
         </p>
         <CastLine who="cluby" isAr={isAr} compact className="mb-3">
           {tr(
-            "Who will you be today? Pick Lina, Adam or me. We're all learning too!",
-            "من ستكون اليوم؟ اختر لينا أو آدم أو أنا. كلنا نتعلم أيضًا!",
+            "Who will you be today? Lina, Adam, me, or a friend we met on the way. We're all learning too!",
+            "من ستكون اليوم؟ لينا أو آدم أو أنا، أو صديق قابلناه في الطريق. كلنا نتعلم أيضًا!",
           )}
         </CastLine>
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-7">
@@ -1527,8 +1527,10 @@ function ProfileEditor({
                 key={style.key}
                 type="button"
                 onClick={() => setDraft((d) => ({ ...d, avatar_url: value }))}
-                className={`flex h-14 w-14 items-center justify-center overflow-hidden rounded-full transition-all ${
-                  selected ? "ring-2 ring-primary ring-offset-2" : "opacity-80 hover:opacity-100"
+                className={`flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 transition-all ${
+                  selected
+                    ? "border-[#FFE600] ring-2 ring-[#FFE600] ring-offset-2 ring-offset-background scale-105"
+                    : "border-[#FFE600]/50 opacity-85 hover:border-[#FFE600] hover:opacity-100"
                 }`}
                 style={{ backgroundColor: style.bg }}
                 aria-label={style.label ? (isAr ? style.label.ar : style.label.en) : style.key}

@@ -16,7 +16,7 @@
 type Speaker = "lina" | "adam" | "cluby";
 
 const CAST: Record<Speaker, { en: string; ar: string; img: string }> = {
-  lina: { en: "Lina", ar: "لينا", img: "/assets/exchange/avatars/lina-classic.webp" },
+  lina: { en: "Lina", ar: "لينا", img: "/assets/exchange/avatars/lina-street.webp" },
   adam: { en: "Adam", ar: "آدم", img: "/assets/exchange/avatars/adam-classic.webp" },
   cluby: { en: "Cluby", ar: "كلوبي", img: "/assets/exchange/avatars/cluby-celebrate.webp" },
 };

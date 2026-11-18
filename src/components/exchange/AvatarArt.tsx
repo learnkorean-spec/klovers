@@ -133,13 +133,28 @@ const cast = (
   ar: string,
 ): AvatarDef => ({ key, gender, bg: BG_IVORY, img: `/assets/exchange/avatars/${key}.webp`, label: { en, ar } });
 
+/**
+ * 19 Nov 2026 (Re: "must have characters from our characters all, any person
+ * we have his picture, and must have yellow"): every avatar in the picker now
+ * shows a KLOVERS-yellow piece inside the circle, and the set grows from the
+ * trio to everyone in the story we already have a canon picture of. Lina's
+ * first six crops showed only her white top, so they were re-cropped from
+ * scenes where her yellow shows (kept below in RETIRED_CAST so profiles that
+ * saved them still render). Named supporting people are cropped from the
+ * world pictures where their role matches the canon
+ * (supportingKoreanCast): the market vendor is Ms. Park, the Hangul Village
+ * sign painter is Mr. Seo, the culture-street cook is Mrs. Choi, the café
+ * barista is Yuna. The four friends from the Seoul rooftop and the Han river
+ * picnic have no canon names, so they are labelled by the scene, not given
+ * invented names. No new pictures were generated.
+ */
 export const CHARACTER_AVATARS: AvatarDef[] = [
-  cast("lina-classic", "female", "Lina", "لينا"),
-  cast("lina-cafe", "female", "Lina at the café", "لينا في المقهى"),
-  cast("lina-hanok", "female", "Lina in the hanok", "لينا في الهانوك"),
-  cast("lina-palace", "female", "Lina at the palace", "لينا عند القصر"),
-  cast("lina-online", "female", "Lina in class", "لينا في الحصة"),
-  cast("lina-market", "female", "Lina at the market", "لينا في السوق"),
+  cast("lina-street", "female", "Lina", "لينا"),
+  cast("lina-cafe-yellow", "female", "Lina at the café", "لينا في المقهى"),
+  cast("lina-market-scarf", "female", "Lina at the market", "لينا في السوق"),
+  cast("lina-picnic", "female", "Lina at the Han river", "لينا عند نهر هان"),
+  cast("lina-headband", "female", "Lina with her yellow headband", "لينا بالطوق الأصفر"),
+  cast("lina-vest", "female", "Lina planning a trip", "لينا تخطط لرحلة"),
   cast("adam-classic", "male", "Adam", "آدم"),
   cast("adam-cafe", "male", "Adam at the café", "آدم في المقهى"),
   cast("adam-picnic", "male", "Adam at the Han river", "آدم عند نهر هان"),
@@ -152,12 +167,30 @@ export const CHARACTER_AVATARS: AvatarDef[] = [
   cast("cluby-reading", "any", "Cluby reading", "كلوبي يقرأ"),
   cast("cluby-market", "any", "Cluby at the market", "كلوبي في السوق"),
   cast("cluby-study", "any", "Cluby studying", "كلوبي يذاكر"),
+  cast("yuna-cafe", "female", "Yuna, the café barista", "يونا، باريستا المقهى"),
+  cast("park-market", "female", "Ms. Park from the market", "الآنسة بارك من السوق"),
+  cast("choi-street", "female", "Mrs. Choi, the street-food cook", "السيدة تشوي، طبّاخة الشارع"),
+  cast("seo-village", "male", "Mr. Seo, the sign painter", "السيد سو، رسّام اللافتات"),
+  cast("friend-seoul-cap", "male", "A friend from the Seoul trip", "صديق من رحلة سيول"),
+  cast("friend-seoul-hijab", "female", "A friend from the Seoul trip", "صديقة من رحلة سيول"),
+  cast("friend-picnic-beanie", "male", "A friend from the Han river picnic", "صديق من نزهة نهر هان"),
+  cast("friend-picnic-scarf", "female", "A friend from the Han river picnic", "صديقة من نزهة نهر هان"),
+];
+
+/** Lina's 18 Nov crops (no yellow in frame), still rendered for old profiles. */
+const RETIRED_CAST: AvatarDef[] = [
+  cast("lina-classic", "female", "Lina", "لينا"),
+  cast("lina-cafe", "female", "Lina at the café", "لينا في المقهى"),
+  cast("lina-hanok", "female", "Lina in the hanok", "لينا في الهانوك"),
+  cast("lina-palace", "female", "Lina at the palace", "لينا عند القصر"),
+  cast("lina-online", "female", "Lina in class", "لينا في الحصة"),
+  cast("lina-market", "female", "Lina at the market", "لينا في السوق"),
 ];
 
 /** What the picker offers. */
 export const EXCHANGE_AVATAR_DEFS: AvatarDef[] = CHARACTER_AVATARS;
 /** Everything that can still be rendered (picker set + retired faces). */
-export const ALL_AVATAR_DEFS: AvatarDef[] = [...CHARACTER_AVATARS, ...LEGACY_FACE_AVATARS];
+export const ALL_AVATAR_DEFS: AvatarDef[] = [...CHARACTER_AVATARS, ...RETIRED_CAST, ...LEGACY_FACE_AVATARS];
 
 /** Blend a hex color toward white by `amount` (0-1) — used for the hair-shine highlight. */
 function lighten(hex: string, amount: number): string {
