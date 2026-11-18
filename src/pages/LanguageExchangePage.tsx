@@ -60,6 +60,7 @@ import {
   shortTimezoneLabel,
 } from "@/constants/languageExchange";
 import { AvatarArt } from "@/components/exchange/AvatarArt";
+import { CastLine } from "@/components/exchange/CastLine";
 import { getUserTimezone } from "@/lib/viewerTimezone";
 
 /**
@@ -584,9 +585,6 @@ function DiscoverDeck({
       <div className="space-y-4">
         <Card className="overflow-hidden border-dashed">
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
             <div>
               <p className="text-base font-semibold">
                 {tr("You're all caught up", "لقد اطّلعت على الجميع")}
@@ -598,6 +596,12 @@ function DiscoverDeck({
                 )}
               </p>
             </div>
+            <CastLine who="cluby" isAr={isAr} className="w-full max-w-md">
+              {tr(
+                "That's everyone for today! While new learners join, a quick game keeps your words warm, and your partner will notice.",
+                "هذا كل شيء اليوم! وحتى ينضم متعلمون جدد، لعبة سريعة تُبقي كلماتك حاضرة، وسيلاحظ شريكك الفرق.",
+              )}
+            </CastLine>
             <div className="flex flex-wrap items-center justify-center gap-2">
               <Button onClick={loadQueue}>
                 {tr("Refresh", "تحديث")}
@@ -655,6 +659,12 @@ function DiscoverDeck({
 
   return (
     <div>
+      <CastLine who="lina" isAr={isAr} compact className="mb-4">
+        {tr(
+          "Look for a shared interest on the card, then ask about it in the language they're learning. That's how real conversations start.",
+          "ابحث عن اهتمام مشترك في البطاقة، ثم اسأل عنه باللغة التي يتعلمها. هكذا تبدأ المحادثات الحقيقية.",
+        )}
+      </CastLine>
       <SwipeCard
         key={current.user_id}
         profile={current}
@@ -667,12 +677,12 @@ function DiscoverDeck({
         onPass={() => act("pass")}
         onReport={() => setReportTarget(current)}
       />
-      <p className="mt-3 text-center text-xs text-muted-foreground">
+      <CastLine who="adam" isAr={isAr} compact className="mt-4">
         {tr(
           "Keep it safe: never send money, and meet in public first.",
           "حافظ على سلامتك: لا ترسل أموالًا أبدًا، والتقِ في مكان عام أولًا.",
         )}
-      </p>
+      </CastLine>
 
       <Dialog open={!!matchedWith} onOpenChange={(open) => !open && setMatchedWith(null)}>
         <DialogContent className="dark pm-night overflow-hidden text-center">
@@ -698,6 +708,12 @@ function DiscoverDeck({
               )}
             </DialogDescription>
           </DialogHeader>
+          <CastLine who="cluby" isAr={isAr} compact>
+            {tr(
+              "Yay! Say hi in the language they're learning, then ask one easy question. Short and kind wins.",
+              "رائع! قل مرحبًا باللغة التي يتعلمها، ثم اسأل سؤالًا واحدًا سهلًا. الرسالة القصيرة اللطيفة تنجح دائمًا.",
+            )}
+          </CastLine>
           <DialogFooter className="sm:justify-center">
             <Button
               className="rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] font-bold text-white hover:opacity-90"
@@ -1075,9 +1091,6 @@ function MatchesList({
     return (
       <Card className="overflow-hidden border-dashed">
         <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <Heart className="h-8 w-8 text-primary" />
-          </div>
           <div>
             <p className="text-base font-semibold">
               {tr("No matches yet", "لا توجد تطابقات بعد")}
@@ -1089,6 +1102,12 @@ function MatchesList({
               )}
             </p>
           </div>
+          <CastLine who="lina" isAr={isAr} className="w-full max-w-md">
+            {tr(
+              "Shared interests make the best partners. Like a few people who love what you love, and someone will like you back.",
+              "الاهتمامات المشتركة تصنع أفضل الشركاء. أعجب ببعض من يحبون ما تحب، وسيعجب بك أحدهم أيضًا.",
+            )}
+          </CastLine>
           {onGoToDiscover && (
             <Button onClick={onGoToDiscover}>
               {tr("Go to Discover", "الذهاب إلى اكتشاف")}
@@ -1471,14 +1490,17 @@ function ProfileEditor({
       </div>
 
       <Card className="border-[#FF3EA5]/40 bg-[#FF3EA5]/5">
-        <CardContent className="p-4 text-sm">
-          <p className="font-semibold">{tr("Keep it safe", "حافظ على سلامتك")}</p>
+        <CardContent className="flex items-start gap-3 p-4 text-sm">
+          <img src="/assets/exchange/avatars/adam-classic.webp" alt="" aria-hidden="true" width={96} height={96} loading="lazy" className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-[#FF3EA5]/60" />
+          <div>
+          <p className="font-semibold">{tr("Adam: keep it safe", "آدم: حافظ على سلامتك")}</p>
           <p className="mt-1 text-muted-foreground">
             {tr(
               `You must be ${EXCHANGE_MIN_AGE} or older. Never send money or passwords. Meet in a public place first. Report anyone who makes you uncomfortable.`,
               `يجب أن يكون عمرك ${EXCHANGE_MIN_AGE} عامًا أو أكثر. لا ترسل أبدًا أموالًا أو كلمات مرور. التقِ في مكان عام أولًا. أبلغ عن أي شخص يجعلك تشعر بعدم الارتياح.`,
             )}
           </p>
+          </div>
         </CardContent>
       </Card>
 
@@ -1490,6 +1512,12 @@ function ProfileEditor({
             "لا يوجد رفع صور هنا. اختر لينا أو آدم أو كلوبي من شخصيات كلوفرز، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
           )}
         </p>
+        <CastLine who="cluby" isAr={isAr} compact className="mb-3">
+          {tr(
+            "Who will you be today? Pick Lina, Adam or me. We're all learning too!",
+            "من ستكون اليوم؟ اختر لينا أو آدم أو أنا. كلنا نتعلم أيضًا!",
+          )}
+        </CastLine>
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-7">
           {EXCHANGE_AVATAR_STYLES.map((style) => {
             const value = `${AVATAR_ICON_PREFIX}${style.key}`;
