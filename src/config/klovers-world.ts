@@ -459,6 +459,12 @@ export const KLOVERS_WORLD = {
     // wears at least one visible KLOVERS-yellow piece.
     everyoneWearsYellow: "every_person_in_every_story_picture_wears_one_visible_klovers_yellow_piece",
     cluby: "never_changes",
+    // Re, 18 Nov 2026 ("he wanna see the 3 characters in their traditional
+    // clothes"): the ONE exception. In the maktub Arabic-journey pictures only
+    // (see languageJourney.arabic), Cluby wears a small version of that
+    // country's traditional dress. His body, colours, horns, ears and the
+    // green clover emblem never change.
+    clubyException: "maktub_arabic_journey_pictures_wear_mini_local_traditional_dress_body_and_clover_unchanged",
     supportingCastLooks: "fixed_per_person_in_STORY_CAST",
     internationalClassmates: ["omar_egypt", "zsofia_hungary", "amara_uk", "layla_saudi_arabia"],
     source: "Re, 18 Nov 2026",
@@ -496,6 +502,32 @@ export const KLOVERS_WORLD = {
       "wardrobeRule_one_klovers_yellow_piece_in_every_outfit",
       "real_teachers_are_never_replaced_by_story_characters",
     ],
+    /**
+     * ARABIC (maktub), Re 18 Nov 2026: "adam and lina and cluby must travel to
+     * maktub to study arabic ... user must have a map of the arabic spoken
+     * countries, he wanna see the 3 characters in their traditional clothes".
+     * A MARKETING tease on /learn-arabic (marketing may tease the story; the
+     * logged-in product is unchanged). The six questions:
+     *  1. Learned: Arabic is many countries and dialects; each pin names the
+     *     country's dialect and how people greet there.
+     *  2. Why now: the visitor picks a country on the map.
+     *  3. Owner: Lina (culture, real-life context), with Adam and Cluby.
+     *  4. World: a new marketing-only "Arabic journey" on maktub; no game
+     *     world is added.
+     *  5. Learner data: none. It is a tease, so it never claims progress.
+     *  6. Afterwards: nothing in the logged-in story changes.
+     * Each country picture: real landmark, the trio in that country's
+     * traditional dress (respectful, worn as guests), one KLOVERS-yellow piece
+     * each, maktub's palette (forest green, sand, lime) in the setting.
+     */
+    arabic: {
+      site: "maktub_/learn-arabic",
+      kind: "marketing_tease_map_of_arabic_speaking_countries",
+      owner: "lina_with_adam_and_cluby",
+      clothes: "each_countrys_traditional_dress_plus_one_klovers_yellow_piece",
+      cluby: "mini_local_traditional_dress_see_wardrobeRule.clubyException",
+      palette: "maktub_forest_green_sand_lime",
+    },
     newPeople:
       "New students and local people appear per country over time, each following the supportingKoreanCast precedent: a native speaker or fellow student, never a teacher, never a love interest, one fixed look each, and one visible KLOVERS-yellow piece in every picture.",
     status: "decision_recorded_nothing_built_yet",
