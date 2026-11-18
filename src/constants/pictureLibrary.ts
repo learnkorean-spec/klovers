@@ -123,16 +123,6 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   { file: "b1i005_008_alt", label: "بديل أيقونات ٥–٨: المغنّية بفستان وردي (لم تُستعمل)" },
   // Homepage batch 1 (1 Oct 2026): brand clothes and scenes right, but the faces
   // came out in the soft illustrated style, not KLOVERS REAL — kept, not placed.
-  { file: "kb_home_hero_v1", label: "الصفحة الرئيسية: الشرفة وقت الغروب (hero): مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
-  { file: "kb_home_career_v1", label: "لماذا الكورية: العمل: مكتب يطلّ على سيول: مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
-  { file: "kb_home_culture_v1", label: "لماذا الكورية: الثقافة: لينا أمام اللابتوب: مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
-  { file: "kb_home_study_v1", label: "لماذا الكورية: الدراسة: آدم بين أشجار الجنكة: مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
-  { file: "kb_home_travel_v1", label: "لماذا الكورية: السفر: كشك الطعام والخريطة: مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
-  { file: "kb_home_picnic_v1", label: "نزهة على نهر الهان مع كلوبي: مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
-  { file: "kb_home_cafe_v1", label: "كيف نبدأ: لينا تكتب وآدم يشير: مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
-  { file: "kb_home_hangul_village_v1", label: "قرية الهانغل: آدم وكلوبي عند اللافتة: مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
-  { file: "kb_home_market_v1", label: "سوق المفردات: لينا وكلوبي والتفاح: مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
-  { file: "kb_home_conv_cafe_v1", label: "مقهى المحادثة: آدم ولينا وكلوبي على السور: مرفوضة للموقع: الوشوش ليست بالنمط الحقيقي" },
   // Homepage batch 2 (Re, 4 Oct 2026): the SAME TEN SCENES as batch 1 above,
   // regenerated in KLOVERS REAL once the standing rule settled that the theme is
   // always the real scenes. The names carry the pairing on purpose — every _v2 sits
@@ -150,28 +140,9 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   // One caveat, recorded rather than left to whoever places the rest: Cluby's eyes are
   // closed (happy squint) in most of these, and the brand sheet's on-model panel tests
   // open brown eyes — the same test that settled the first three hero takes.
-  { file: "kb_home_hero_v2", label: "الصفحة الرئيسية: الثلاثة يقرأون على شرفة هانوك وقت الغروب (hero): مرشّحة: خانة الهيرو العربي تحمل نسخة أقدم" },
-  { file: "kb_home_career_v2", label: "لماذا الكورية: العمل: آدم ولينا أمام اللابتوب بإطلالة سيول: كانت مستخدَمة في why-career.webp حتى ١٨ نوفمبر، استُبدلت بصورة واقعية (why-career-v2.webp)" },
-  { file: "kb_home_culture_v2", label: "لماذا الكورية: الثقافة: لينا على اللابتوب في غرفة هانوك: كانت مستخدَمة في why-culture.webp حتى ١٨ نوفمبر، استُبدلت بصورة واقعية (why-culture-v2.webp)" },
-  { file: "kb_home_study_v2", label: "لماذا الكورية: الدراسة: آدم بين أشجار الجنكة يحمل كتبه: كانت مستخدَمة في why-study.webp حتى ١٨ نوفمبر، استُبدلت بصورة واقعية (why-study-v2.webp)" },
-  { file: "kb_home_travel_v2", label: "لماذا الكورية: السفر: كشك الطعام الليلي بين الفوانيس: كانت مستخدَمة في why-travel.webp حتى ١٨ نوفمبر، استُبدلت بصورة واقعية (why-travel-v2.webp)" },
-  { file: "kb_home_picnic_v2", label: "نزهة على نهر الهان مع كلوبي وأفق سيول: مستخدَمة: cluby/picnic.webp" },
-  { file: "kb_home_cafe_v2", label: "كيف نبدأ: لينا تكتب وآدم يشير إلى الدفتر: مستخدَمة: cluby/cafe.webp (‏٨ مواضع)" },
-  { file: "kb_home_hangul_village_v2", label: "قرية الهانغل: آدم وكلوبي عند لافتة فارغة، وهو ما يطابق الكانون: العلامات تصير مقروءة تدريجيًا: مستخدَمة: story/world-hangul-village.webp" },
-  { file: "kb_home_market_v2", label: "سوق المفردات: لينا وكلوبي والتفاح (‏사과، مثال الكانون نفسه): مستخدَمة: story/world-vocabulary-market.webp" },
-  { file: "kb_home_conv_cafe_v2", label: "مقهى المحادثة: آدم يتحدث ولينا تسمع وكلوبي على السور: مستخدَمة: story/world-conversation-cafe.webp" },
   // Hero re-takes and two portraits, shared 5 Oct 2026. The other ten pictures in that
   // upload were byte-for-byte the _v2 scenes already above, so they are not filed twice.
-  { file: "kb_home_hero_v3a", label: "الهيرو: الثلاثة يقرأون على الشرفة، عينا كلوبي مفتوحتان بنيّتان: مرشّحة: خلل بكسلات في زاوية السماء العليا اليمنى (تُقصّ أو تُمدّد السماء)" },
-  { file: "kb_home_hero_v3b", label: "الهيرو: الثلاثة يقرأون على الشرفة، كلوبي مغمض العينين ضاحكًا: مرشّحة: خلل بكسلات في زاوية السماء العليا اليمنى (تُقصّ أو تُمدّد السماء)" },
-  { file: "kb_home_hero_v3c", label: "الهيرو: الثلاثة يقرأون على الشرفة، عينا كلوبي مفتوحتان: مرشّحة: زاوية السماء العليا اليمنى شفافة وفيها خلل (تُقصّ أو تُمدّد السماء)" },
   { file: "kb_lina_bust_real", label: "لينا: نصفية بالنمط الحقيقي، يدها على صدرها وتبتسم (الأصل بخلفية شفافة، محفوظة هنا على عاجي)" },
-  { file: "kb_home_world_culture_v3", label: "عالم الثقافة: لينا وكلوبي يمشيان نحو بوابة القصر في ضوء ذهبي (أفقي ١٦:٩، ١٦٧٢×٩٤١)" },
-  { file: "kb_home_world_seoul_v3", label: "رحلة سيول: آدم ولينا وكلوبي على سطح يطلّون على أضواء سيول وبرج N عند الغروب (أفقي ١٦:٩، ١٦٧٢×٩٤١)" },
-  { file: "kb_home_scene_hanok_v3", label: "بوابة الهانوك: لينا تخرج من البوابة وكلوبي بجانبها وأغصان مزهرة (طولي ٣:٤، ١٠٨٦×١٤٤٨: أقل من ١٦٠٠ على الضلع الطويل)" },
-  { file: "kb_home_shop_lina_v3", label: "المتجر: لينا على مقعد عند بوابة الفناء وحقيبة كتب بجانبها، اليمين فارغ للنص (أفقي ١٦:٩، ١٦٧٢×٩٤١)" },
-  { file: "kb_home_shop_lina_mobile_v3", label: "المتجر للجوال: لينا على المقعد مع الحقيبة (طولي ٣:٤، ١٠٨٦×١٤٤٨: أقل من ١٦٠٠ على الضلع الطويل)" },
-  { file: "kb_home_egg_teaser_v3", label: "تشويقة البيضة: آدم ولينا ليلًا حول حوض حجري وبيضة مضيئة عليها شعار البرسيم، بدون كلوبي (أفقي ١٦:٩، ١٦٧٢×٩٤١)" },
 ];
 
 export const LIBRARY_ICONS: LibraryIcon[] = [
