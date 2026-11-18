@@ -259,7 +259,7 @@ const GameWorldsHub = ({ title, isLoggedIn, isAr, totalXp, streak, onPlay }: Pro
           <img
             src={clubyAwake ? BANNER_AFTER_HATCH : BANNER_BEFORE_HATCH}
             alt={clubyAwake
-              ? (isAr ? "الصديقان وكلوبي في نزهة على ضفاف نهر الهان" : "The two friends and Cluby having a picnic by the Han river")
+              ? (isAr ? "آدم ولينا وأصدقاؤهما وكلوبي في نزهة على ضفاف نهر الهان" : "Adam, Lina, their classmates and Cluby having a picnic by the Han river")
               : (isAr ? "الصديقان يكتشفان بيضة البرسيم المضيئة في ساحة هانوك" : "The two friends discovering the glowing clover egg in a hanok courtyard")}
             width={1600}
             height={900}

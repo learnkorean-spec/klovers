@@ -46,7 +46,7 @@ const CARDS: Record<
   { image: string; focus: string; icon: LucideIcon; href: { ar: string; en: string } }
 > = {
   travel: {
-    image: "/assets/world/why-travel-v2.webp",
+    image: "/assets/world/why-travel-v3.webp",
     // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
     focus: "20% 50%",
     icon: Plane,
@@ -56,7 +56,7 @@ const CARDS: Record<
     },
   },
   career: {
-    image: "/assets/world/why-career-v2.webp",
+    image: "/assets/world/why-career-v3.webp",
     // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
     focus: "7% 50%",
     icon: Briefcase,
@@ -66,7 +66,7 @@ const CARDS: Record<
     },
   },
   study: {
-    image: "/assets/world/why-study-v2.webp",
+    image: "/assets/world/why-study-v3.webp",
     // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
     focus: "48% 50%",
     icon: GraduationCap,
@@ -76,7 +76,7 @@ const CARDS: Record<
     },
   },
   culture: {
-    image: "/assets/world/why-culture-v2.webp",
+    image: "/assets/world/why-culture-v3.webp",
     // Horizontal focus point: keeps Adam and Lina in frame on the 4:5 crop.
     focus: "45% 50%",
     icon: Clapperboard,

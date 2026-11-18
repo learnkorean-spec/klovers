@@ -55,34 +55,28 @@ const CARD_ACCENT: Record<string, string> = {
 };
 
 /**
- * The painted story world at the top of each card (story canon,
- * /assets/story/world-*.webp, 1600x900). Hangul -> the Hangul village,
- * first words -> the vocabulary market, everyday talk -> the conversation
- * café, culture -> culture street, Levels 4-6 -> the Seoul journey, anything
- * else (TOPIK prep) -> the memory garden.
+ * The photo at the top of each card (Re, 18 Nov 2026: "those pictures are so
+ * bad"). One continuous journey through Korea: every level opens a new, real
+ * place, and the scene grows with the language. Adam and Lina keep their faces
+ * and wear Korean-style clothes that fit each place; Cluby is in every one,
+ * holding something for that stage (a brush, an apple, a latte...). Made with
+ * the story-scene mode of /admin/ai-room-lab. Files: /assets/courses/<key>.webp.
  */
-type CourseWorld = { src: string; en: string; ar: string };
-const W = {
-  village: { src: "/assets/story/world-hangul-village.webp", en: "Painted hanok village where Hangul begins", ar: "قرية هانوك مرسومة حيث تبدأ الهانغول" },
-  market: { src: "/assets/story/world-vocabulary-market.webp", en: "Painted Korean market full of first words", ar: "سوق كوري مرسوم مليء بالكلمات الأولى" },
-  cafe: { src: "/assets/story/world-conversation-cafe.webp", en: "Painted Korean café for everyday conversation", ar: "مقهى كوري مرسوم للمحادثة اليومية" },
-  street: { src: "/assets/story/world-culture-street.webp", en: "Painted Seoul street of Korean culture", ar: "شارع مرسوم في سيول للثقافة الكورية" },
-  garden: { src: "/assets/story/world-memory-garden.webp", en: "Painted memory garden for review", ar: "حديقة الذاكرة المرسومة للمراجعة" },
-  seoul: { src: "/assets/story/world-seoul-journey.webp", en: "Painted journey to the Seoul skyline", ar: "رحلة مرسومة نحو أفق سيول" },
-} satisfies Record<string, CourseWorld>;
-
-const COURSE_WORLD: Record<string, CourseWorld> = {
-  // Unknown keys fall back to the memory garden (see below).
-  hangul: W.village,
-  l1: W.market,
-  l2: W.cafe,
-  l3: W.street,
-  l4: W.seoul,
-  l5: W.seoul,
-  l6: W.seoul,
-  reading_speaking: W.cafe,
-  topik_prep: W.garden,
+type CourseImage = { en: string; ar: string };
+const COURSE_IMAGE: Record<string, CourseImage> = {
+  hangul: { en: "Adam and Lina learning brush calligraphy in a Bukchon hanok, Cluby holding a tiny brush", ar: "آدم ولينا يتعلمان الخط بالفرشاة في بيت هانوك، وكلوبي يمسك فرشاة صغيرة" },
+  l1: { en: "Lina buying apples at Gwangjang Market while Cluby hugs an apple", ar: "لينا تشتري التفاح في سوق غوانغجانغ وكلوبي يحتضن تفاحة" },
+  l2: { en: "Adam and Lina ordering at a small Seoul café, Cluby beside a latte", ar: "آدم ولينا يطلبان في مقهى صغير في سيول، وكلوبي بجانب كوب لاتيه" },
+  l3: { en: "Adam and Lina asking for directions on a Seoul subway platform", ar: "آدم ولينا يسألان عن الطريق في محطة مترو سيول" },
+  l4: { en: "A seminar discussion at a Korean university in cherry-blossom season", ar: "نقاش في قاعة جامعة كورية في موسم أزهار الكرز" },
+  l5: { en: "Lina presenting in a Seoul office meeting room", ar: "لينا تقدّم عرضًا في قاعة اجتماعات بمكتب في سيول" },
+  l6: { en: "Friends from many countries on a Seoul rooftop at sunset", ar: "أصدقاء من بلاد مختلفة على سطح في سيول وقت الغروب" },
+  reading_speaking: { en: "Reading aloud and chatting with Korean friends in a Seoul bookstore", ar: "قراءة بصوت عالٍ ومحادثة مع أصدقاء كوريين في مكتبة في سيول" },
+  topik_prep: { en: "Studying for TOPIK in a quiet Seoul library", ar: "مذاكرة لاختبار TOPIK في مكتبة هادئة في سيول" },
 };
+
+/** The level ladder, for the journey dots under each level photo. */
+const LADDER = ["hangul", "l1", "l2", "l3", "l4", "l5", "l6"];
 
 const CoursesSection = () => {
   const { language } = useLanguage();
@@ -114,23 +108,46 @@ const CoursesSection = () => {
           {COURSE_CARDS.map((course) => {
             const features = isAr ? course.features_ar : course.features_en;
             const label = isAr ? course.cta_ar : course.cta_en;
-            const world = COURSE_WORLD[course.key] ?? W.garden;
+            const pic = COURSE_IMAGE[course.key];
+            const step = LADDER.indexOf(course.key);
 
             return (
               <Card
                 key={course.key}
                 className="group flex flex-col hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 overflow-hidden border-border hover:border-primary/50"
               >
-                <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-                  <img
-                    src={world.src}
-                    alt={isAr ? world.ar : world.en}
-                    width={1600}
-                    height={900}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                <div className="relative aspect-[3/2] overflow-hidden bg-muted">
+                  {pic && (
+                    <img
+                      src={`/assets/courses/${course.key}.webp`}
+                      alt={isAr ? pic.ar : pic.en}
+                      width={1200}
+                      height={800}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
+                  {/* Journey dots: where this level sits on the ladder. */}
+                  {step >= 0 && (
+                    <div
+                      className="absolute bottom-2 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 flex items-center gap-1.5 rounded-full bg-background/80 px-2.5 py-1 backdrop-blur-sm"
+                      aria-hidden="true"
+                    >
+                      {LADDER.map((k, i) => (
+                        <span
+                          key={k}
+                          className={`rounded-full ${
+                            i === step
+                              ? "h-2 w-5 bg-primary ring-1 ring-foreground/30"
+                              : i < step
+                                ? "h-2 w-2 bg-foreground/50"
+                                : "h-2 w-2 bg-foreground/15"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-2 mb-2">

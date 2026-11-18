@@ -210,7 +210,7 @@ const LoginPage = () => {
         <figure className="relative overflow-hidden rounded-3xl border border-border bg-charcoal shadow-sm">
           <img
             src="/assets/cluby/picnic.webp"
-            alt={isAr ? "صديقان وكلوبي في نزهة على نهر الهان" : "Two friends and Cluby having a picnic by the Han river"}
+            alt={isAr ? "آدم ولينا وأصدقاؤهما وكلوبي في نزهة على نهر الهان" : "Adam, Lina, their classmates and Cluby having a picnic by the Han river"}
             width={1600}
             height={900}
             decoding="async"
