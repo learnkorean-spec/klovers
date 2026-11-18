@@ -336,7 +336,7 @@ never "you failed" or "bad answer."
 
 | Order | Section | Characters | Story function |
 |---|---|---|---|
-| 1 | Hero | (none: one photoreal adult learner in a live online class; Re, 18 Nov 2026, Cluby read as a children's site) | Invitation |
+| 1 | Hero | Cluby, small and still on the edge of the promise cards; the photo stays one adult learner in a live online class (Re, 19 Nov 2026: back "normally, do not over put it") | Invitation |
 | 2 | Live-class trust | (none) | Prove real teaching |
 | 3 | How Klovers works | male + female learner (Cluby optional) | Show learners like the visitor |
 | 4 | Learning journey | male learner + Cluby | Progression |

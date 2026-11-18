@@ -18,7 +18,9 @@ import { cloudVoiceFits, playCloudKorean } from "@/lib/cloudVoice";
  *    renders, and never on the egg-gated surfaces (games, hub, leaderboard,
  *    XP celebration) before lib/clubyAwake.ts says he hatched.
  *  - Never inside a link or another button (a tap there must navigate).
- *  - Reduced motion: no hop or spin, the note and the voice still work.
+ *  - Reduced motion: the short hop still plays, because the visitor asked
+ *    for it with a tap (Re, 19 Nov: "not moving" on a reduced-motion PC);
+ *    only the dizzy spin is skipped.
  *  - Sound only after a tap (mobile autoplay rules), one clip at a time.
  */
 
@@ -124,7 +126,7 @@ export function TapCluby({
         {...img}
         className={cn(
           "transition-transform duration-200 group-hover/cluby:-rotate-3 group-hover/cluby:scale-105",
-          anim === "hop" && "motion-safe:animate-cluby-hop",
+          anim === "hop" && "animate-cluby-hop",
           anim === "spin" && "motion-safe:animate-cluby-dizzy",
           className,
         )}

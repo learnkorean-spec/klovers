@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import { TapCluby } from "@/components/TapCluby";
 /*
  * 27 Sep 2026: the photo is now the Klovers world - the two learners and
  * Cluby studying on a hanok porch, Namsan Tower in the sky on the RIGHT.
@@ -100,14 +101,15 @@ import { useUpcomingTrialSlots, viewerTimezone } from "@/hooks/useUpcomingTrialS
 
 /** This week's Cluby image on the hero card. Swap this one line per occasion. */
 const CLUBY_BADGE = {
-  src: "/assets/cluby/cluby-hanbok.webp",
+  // 19 Nov 2026: plain week, the everyday wave (Chuseok's hanbok is over).
+  src: "/assets/cluby/cluby-wave.webp",
   // Halved from 980x1274 on 2026-10-03. The badge's box is 65x84 CSS px, or
   // 92x120 from the md breakpoint up — so the largest it is ever drawn is
   // 276x360 device pixels on a 3x screen. The file was 333 KB of pixels for a
   // box that small; it is 48 KB now, and these are the dimensions the file
   // actually has, so the reserved box stays exact. Ratio is unchanged.
-  width: 490,
-  height: 637,
+  width: 314,
+  height: 440,
 };
 
 const HeroSection = () => {
@@ -404,10 +406,22 @@ const HeroSection = () => {
 
       {/* ── The board's four promise cards, lifted onto the cover ── */}
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
-        {/* 18 Nov 2026 (Re): the jumping Cluby badge that sat here is gone -
-            "dont like the cluby now its children website". The hero is now
-            adult and photographic only; CLUBY_BADGE above is kept, unused,
-            in case it comes back for an occasion. */}
+        {/* 19 Nov 2026 (Re): Cluby is back on the homepage, "normally, do not
+            over put it". After 18 Nov's removal the hero photo stays adult and
+            photographic; Cluby only sits small on the top edge of the end-side
+            card, standing still (no jump loop). He moves only when tapped:
+            one hop and a short Korean line (components/TapCluby.tsx). */}
+        <div className="absolute bottom-full end-8 z-10 md:end-10">
+          <TapCluby
+            src={CLUBY_BADGE.src}
+            alt={isAr ? "كلوبي" : "Cluby"}
+            width={CLUBY_BADGE.width}
+            height={CLUBY_BADGE.height}
+            loading="lazy"
+            decoding="async"
+            className="h-[84px] w-[65px] object-contain object-bottom drop-shadow-[0_10px_14px_rgba(46,46,46,0.4)] md:h-[120px] md:w-[92px]"
+          />
+        </div>
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {cards.map(({ icon, tone, title, body }) => (
             <div

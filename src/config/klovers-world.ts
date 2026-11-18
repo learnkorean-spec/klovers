@@ -1028,7 +1028,10 @@ export const KLOVERS_WORLD = {
       // 18 Nov 2026 (Re): no Cluby in the hero. A mascot first thing on the
       // page read as a children's site to adult buyers and incubator judges.
       // The hero is one photoreal adult learner in a live online class.
-      characters: [],
+      // 19 Nov 2026 (Re): Cluby comes back "normally, do not over put it":
+      // the photo stays adult, and Cluby sits small and still on the edge of
+      // the promise cards below it, moving only when tapped (TapCluby).
+      characters: ["cluby"],
       storyFunction: "invitation",
     },
 
