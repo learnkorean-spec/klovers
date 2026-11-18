@@ -95,6 +95,11 @@ const KDramaLearningPage = lazy(() => import("./pages/KDramaLearningPage"));
 const LearnHungarianPage = lazy(() => import("./pages/LearnHungarianPage"));
 const LearnArabicPage = lazy(() => import("./pages/LearnArabicPage"));
 const LearnEnglishPage = lazy(() => import("./pages/LearnEnglishPage"));
+// Article libraries for Voca (English) and Buda (Hungarian), 18 Nov 2026.
+const VocaArticlesIndexPage = lazy(() => import("./pages/LangArticlesPages").then(m => ({ default: m.VocaArticlesIndexPage })));
+const VocaArticlePage = lazy(() => import("./pages/LangArticlesPages").then(m => ({ default: m.VocaArticlePage })));
+const BudaArticlesIndexPage = lazy(() => import("./pages/LangArticlesPages").then(m => ({ default: m.BudaArticlesIndexPage })));
+const BudaArticlePage = lazy(() => import("./pages/LangArticlesPages").then(m => ({ default: m.BudaArticlePage })));
 // The scholarships page carries a real Arabic twin (/ar/scholarships), listed in
 // scripts/lib/arabic-page-meta.mjs and scripts/lib/arabic-pages.mjs.
 const ScholarshipsPage = lazy(() => import("./pages/ScholarshipsPage"));
@@ -306,6 +311,10 @@ const App = () => (
                 <Route path="/learn-hungarian" element={<LearnHungarianPage />} />
                 <Route path="/learn-arabic" element={<LearnArabicPage />} />
                 <Route path="/learn-english" element={<LearnEnglishPage />} />
+                <Route path="/learn-english/articles" element={<VocaArticlesIndexPage />} />
+                <Route path="/learn-english/articles/:slug" element={<VocaArticlePage />} />
+                <Route path="/learn-hungarian/articles" element={<BudaArticlesIndexPage />} />
+                <Route path="/learn-hungarian/articles/:slug" element={<BudaArticlePage />} />
                 <Route path="/scholarships" element={<ScholarshipsPage />} />
                 <Route path="/interview-training" element={<KoreanInterviewPage />} />
                 <Route path="/welcome-back" element={<ReturningStudentsLandingPage />} />

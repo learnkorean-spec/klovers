@@ -7,8 +7,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
 import PersonalLessonPricing from "@/components/PersonalLessonPricing";
+import ArticlesTeaser from "@/components/ArticlesTeaser";
 import budapestParliamentPhoto from "@/assets/hungarian-parliament-budapest.jpg";
 import fishermansBastionPhoto from "@/assets/hungarian-fishermans-bastion.jpg";
+import rehamPhoto from "@/assets/reham-teacher.jpg";
 
 /**
  * /learn-hungarian and /ar/learn-hungarian
@@ -100,6 +102,7 @@ const BudaHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; tog
     { href: "#how-it-works", label: tr("How it works", "كيف تسير الدروس") },
     { href: "#pricing", label: tr("Pricing", "الأسعار") },
     { href: "#faq", label: tr("FAQ", "الأسئلة الشائعة") },
+    { href: "/learn-hungarian/articles", label: tr("Articles", "المقالات") },
   ];
   return (
     <header className="sticky top-0 z-40 border-b border-foreground/10 bg-background/90 backdrop-blur">
@@ -422,6 +425,51 @@ const LearnHungarianPage = () => {
           </div>
         </section>
 
+        {/* Meet your teacher — 18 Nov 2026, so all three doors (maktub, Voca,
+            Buda) carry the same teacher panel. Danube-navy, gold ring. */}
+        <section id="meet-tutor" className="py-20 border-b text-white scroll-mt-24" style={{ backgroundColor: DANUBE }}>
+          <div className="container mx-auto px-4 max-w-5xl grid gap-10 md:grid-cols-[12rem_1fr] md:items-center">
+            <div
+              className="relative mx-auto h-44 w-44 shrink-0 overflow-hidden rounded-full border-4 md:mx-0"
+              style={{ borderColor: GOLD }}
+            >
+              <img
+                src={rehamPhoto}
+                alt={tr("Reham Elshrkawy", "ريهام الشرقاوي")}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: GOLD }}>
+                {tr("Meet your teacher", "تعرّف على مدرّستك")}
+              </p>
+              <h2 className="mt-2 text-2xl sm:text-3xl font-bold" style={displayFont}>
+                {tr("Reham Elshrkawy", "ريهام الشرقاوي")}
+              </h2>
+              <p className="mt-4 text-white/80 leading-relaxed">
+                {tr(
+                  "Reham learned Hungarian herself, on a Balassi Institute scholarship, and has taught languages since 2013. She explains every Hungarian rule in Arabic or English, because she remembers exactly where it gets hard.",
+                  "تعلّمت ريهام المجرية بنفسها بمنحة من معهد بالاسي، وتُدرّس اللغات منذ 2013. تشرح كل قاعدة مجرية بالعربية أو الإنجليزية، لأنها تتذكر جيدًا أين تصعب.",
+                )}
+              </p>
+              <div className="mt-6">
+                <Button
+                  size="lg"
+                  asChild
+                  variant="outline"
+                  className="rounded-full font-semibold border-white/70 text-white hover:bg-white/10 bg-transparent"
+                >
+                  <Link to="/blog/meet-reham-hungarian-arabic-korean-teacher">
+                    {tr("Read my story", "اقرأ قصتي")}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Trial booking — the second and last use of the bridge rule. */}
         <section className="py-20 border-b scroll-mt-24" style={{ backgroundColor: CREAM }} id="trial">
           <div className="container mx-auto px-4 max-w-2xl">
@@ -454,6 +502,9 @@ const LearnHungarianPage = () => {
         </section>
 
         {/* Common questions — visible text backing the FAQPage schema above */}
+        {/* Articles — 18 Nov 2026: the door's own article library, same level as maktub's. */}
+        <ArticlesTeaser path="/learn-hungarian" ink={DANUBE} paper={CREAM} isAr={isAr} langAr="المجرية" langEn="Hungarian" />
+
         <section className="py-20 border-b scroll-mt-24" id="faq">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
