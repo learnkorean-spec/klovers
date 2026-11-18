@@ -71,8 +71,8 @@ const DOORS: Door[] = [
     tone: "bg-klovers-yellow",
     titleEn: "Cluby",
     titleAr: "كلوبي",
-    bodyEn: "Your study buddy, cheering you on in every game world.",
-    bodyAr: "رفيق المذاكرة، يشجّع المتعلّم في كل عالم من عوالم الألعاب.",
+    bodyEn: "Your study buddy, who travels with every language and cheers you on in every game world.",
+    bodyAr: "رفيق المذاكرة، يسافر مع كل لغة ويشجّعك في كل عالم من عوالم الألعاب.",
   },
   {
     to: "/journey/before-korea",
@@ -80,8 +80,8 @@ const DOORS: Door[] = [
     tone: "bg-ivory",
     titleEn: "Culture",
     titleAr: "الثقافة",
-    bodyEn: "Korea's story, from the first legend to today.",
-    bodyAr: "حكاية كوريا، من أول أسطورة حتى اليوم.",
+    bodyEn: "Korea's story, from the first legend to today. The first stop of the journey.",
+    bodyAr: "حكاية كوريا، من أول أسطورة حتى اليوم. أولى محطات الرحلة.",
   },
   {
     to: "/courses",
