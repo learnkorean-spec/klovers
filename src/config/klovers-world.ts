@@ -884,7 +884,10 @@ export const KLOVERS_WORLD = {
     {
       order: 1,
       section: "hero",
-      characters: ["cluby"],
+      // 18 Nov 2026 (Re): no Cluby in the hero. A mascot first thing on the
+      // page read as a children's site to adult buyers and incubator judges.
+      // The hero is one photoreal adult learner in a live online class.
+      characters: [],
       storyFunction: "invitation",
     },
 

@@ -11,14 +11,14 @@ import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
  * phones the crop moves right (object-[97%_center]) so the text lands on sky
  * and roofs instead of faces.
  *
- * 18 Nov 2026 (Re, incubation review): replaced with hero-online.jpg, a
+ * 18 Nov 2026 (Re, incubation review): replaced with hero-learner.jpg, a
  * photoreal learner in a live ONLINE class at home with Cluby on the desk
  * (made in /admin/ai-room-lab, clubyOnly mode). The old porch scene read as
  * illustrated and did not show the product. Learner sits left, so the same
  * crops still work. Phones now crop at 60% (not 97%) so the laptop with the
  * live class AND Cluby stay in frame; at 97% only Cluby and a bare table showed.
  */
-const heroPoster = "/hero-online.jpg";
+const heroPoster = "/hero-learner.jpg";
 /*
  * 6 Oct 2026 (mobile LCP): the same photo through Vercel Image Optimization
  * ("images" in vercel.json) - AVIF/WebP, 21 KB at 828w and 59 KB at full
@@ -29,7 +29,7 @@ const heroPoster = "/hero-online.jpg";
  * on Vercel, so the dev server keeps the plain JPG.
  */
 const HERO_SRCSET = import.meta.env.PROD
-  ? [828, 1200, 1920].map((w) => `/_vercel/image?url=%2Fhero-online.jpg&w=${w}&q=70 ${w}w`).join(", ")
+  ? [828, 1200, 1920].map((w) => `/_vercel/image?url=%2Fhero-learner.jpg&w=${w}&q=70 ${w}w`).join(", ")
   : undefined;
 const HERO_SIZES = "(max-width: 767px) 155vh, 100vw";
 const heroVideo = "/videos/hero-korea-video-new.mp4";
@@ -401,32 +401,10 @@ const HeroSection = () => {
 
       {/* ── The board's four promise cards, lifted onto the cover ── */}
       <div className="relative z-20 mx-auto max-w-6xl px-4 -mt-12 pb-12 sm:-mt-20">
-        {/* This week's Cluby badge, sitting on the top edge of the end-side
-            card and peeking up into the hero. Decorative: the cards carry
-            the meaning. See CLUBY_BADGE above to swap it. A real jump loop
-            (bar-jump/bar-shadow, both motion-safe) - squash, launch, turn,
-            land, rest - not just a static badge. Portrait box (~0.77
-            aspect) to match the full-body cutout instead of a square crop. */}
-        <div
-          className="pointer-events-none absolute bottom-full end-8 z-10 h-[84px] w-[65px] select-none md:end-10 md:h-[120px] md:w-[92px]"
-        >
-          {/* Ground shadow: shrinks and fades as Cluby leaves the ground. */}
-          <div
-            aria-hidden="true"
-            className="absolute bottom-0 start-1/2 h-[14px] w-[60%] -translate-x-1/2 rounded-full bg-charcoal/45 blur-[3px] motion-safe:animate-bar-shadow rtl:translate-x-1/2"
-          />
-          <img
-            src={CLUBY_BADGE.src}
-            alt=""
-            aria-hidden="true"
-            width={CLUBY_BADGE.width}
-            height={CLUBY_BADGE.height}
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-            className="relative h-full w-full select-none object-contain object-bottom drop-shadow-[0_10px_14px_rgba(46,46,46,0.4)] motion-safe:animate-bar-jump"
-          />
-        </div>
+        {/* 18 Nov 2026 (Re): the jumping Cluby badge that sat here is gone -
+            "dont like the cluby now its children website". The hero is now
+            adult and photographic only; CLUBY_BADGE above is kept, unused,
+            in case it comes back for an occasion. */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {cards.map(({ icon, tone, title, body }) => (
             <div

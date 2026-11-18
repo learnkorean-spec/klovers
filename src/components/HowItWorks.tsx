@@ -110,9 +110,9 @@ const HowItWorks = () => {
           <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-6">
             <img
               src="/assets/cluby/online-class.webp"
-              alt={isAr ? "صديقان مع كلوبي في حصة كورية مباشرة أونلاين على اللابتوب" : "Two friends and Cluby in a live online Korean class on a laptop"}
-              width={1200}
-              height={800}
+              alt={isAr ? "صديقان في حصة كورية مباشرة أونلاين على اللابتوب" : "Two friends in a live online Korean class on a laptop"}
+              width={1058}
+              height={960}
               loading="lazy"
               decoding="async"
               className="mx-auto h-auto w-full max-w-md lg:max-w-none"

@@ -146,7 +146,7 @@
       the phone slot is 155vh wide, not 100vw. href stays the plain JPG for
       browsers that ignore imagesrcset.
     -->
-    <link rel="preload" as="image" href="/hero-online.jpg" imagesrcset="/_vercel/image?url=%2Fhero-online.jpg&amp;w=828&amp;q=70 828w, /_vercel/image?url=%2Fhero-online.jpg&amp;w=1200&amp;q=70 1200w, /_vercel/image?url=%2Fhero-online.jpg&amp;w=1920&amp;q=70 1920w" imagesizes="(max-width: 767px) 155vh, 100vw" fetchpriority="high" />
+    <link rel="preload" as="image" href="/hero-learner.jpg" imagesrcset="/_vercel/image?url=%2Fhero-learner.jpg&amp;w=828&amp;q=70 828w, /_vercel/image?url=%2Fhero-learner.jpg&amp;w=1200&amp;q=70 1200w, /_vercel/image?url=%2Fhero-learner.jpg&amp;w=1920&amp;q=70 1920w" imagesizes="(max-width: 767px) 155vh, 100vw" fetchpriority="high" />
 
     <!--
       Fonts — the brand type system from the Klovers concept board:
@@ -529,7 +529,7 @@
 
         var local = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$|\.local$/.test(window.location.hostname);
         var srcset = local ? "" : [828, 1200, 1920].map(function (w) {
-          return "/_vercel/image?url=%2Fhero-online.jpg&w=" + w + "&q=70 " + w + "w";
+          return "/_vercel/image?url=%2Fhero-learner.jpg&w=" + w + "&q=70 " + w + "w";
         }).join(", ");
         var img = document.createElement("img");
         img.className = "kl-s-img";
@@ -537,7 +537,7 @@
         img.decoding = "async";
         img.setAttribute("fetchpriority", "high");
         if (srcset) { img.sizes = "(max-width: 767px) 155vh, 100vw"; img.srcset = srcset; }
-        img.src = "/hero-online.jpg";
+        img.src = "/hero-learner.jpg";
         shell.appendChild(img);
 
         var scrim = document.createElement("div");

@@ -329,7 +329,7 @@ never "you failed" or "bad answer."
 
 | Order | Section | Characters | Story function |
 |---|---|---|---|
-| 1 | Hero | Cluby | Invitation |
+| 1 | Hero | (none: one photoreal adult learner in a live online class; Re, 18 Nov 2026, Cluby read as a children's site) | Invitation |
 | 2 | Live-class trust | (none) | Prove real teaching |
 | 3 | How Klovers works | male + female learner (Cluby optional) | Show learners like the visitor |
 | 4 | Learning journey | male learner + Cluby | Progression |
