@@ -11,6 +11,8 @@ import ArticlesTeaser from "@/components/ArticlesTeaser";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import englishConversationPhoto from "@/assets/english-conversation-practice.jpg";
 import StoryMoment from "@/components/StoryMoment";
+import JourneyMap from "@/components/journey/JourneyMap";
+import { ENGLISH_H, ENGLISH_OTHER, ENGLISH_PLACES, ENGLISH_W } from "@/components/journey/data/english";
 import englishOpenBookPhoto from "@/assets/english-open-book.jpg";
 
 /**
@@ -418,6 +420,29 @@ const LearnEnglishPage = () => {
           width={720}
           height={800}
           imageSide="end"
+        />
+
+        {/* The journey map (Re, 18 Nov 2026), same idea on every site. Canon: languageJourney.english. */}
+        <JourneyMap
+          isAr={isAr}
+          tr={tr}
+          theme={{ bg: INK, panel: SIGNAL_DEEP, otherLand: "#7d1a1a", land: PAPER, hover: "#ffd6a0", selected: SIGNAL, selectedText: "#111111", kicker: SIGNAL, cta: SIGNAL, ctaText: "#111111" }}
+          width={ENGLISH_W}
+          height={ENGLISH_H}
+          otherLandPath={ENGLISH_OTHER}
+          places={ENGLISH_PLACES}
+          imageDir="voca/journey"
+          kickerEn="The English journey"
+          kickerAr="رحلة الإنجليزية"
+          titleEn="Travel the English-speaking world with Adam, Lina and Cluby"
+          titleAr="سافر في العالم الناطق بالإنجليزية مع آدم ولينا وكلوبي"
+          introEn="English lives in many countries, each with its own way of talking. Pick one and see the three of them there, in what people wear there, and the local way to say it."
+          introAr="الإنجليزية تعيش في بلاد كثيرة، ولكل بلد طريقته في الكلام. اختر بلدًا وشاهد الثلاثة هناك بالزي التقليدي لأهله، وكيف يقولونها هناك."
+          ctaHref="#trial"
+          ctaEn="Start your own English journey"
+          ctaAr="ابدأ رحلتك مع الإنجليزية"
+          mapLabelEn="Map of English-speaking countries"
+          mapLabelAr="خريطة الدول الناطقة بالإنجليزية"
         />
 
         <section className="py-20 border-b">

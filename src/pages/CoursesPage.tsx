@@ -10,6 +10,8 @@ import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LEVELS } from "@/constants/levels";
 import StoryMoment from "@/components/StoryMoment";
+import JourneyMap from "@/components/journey/JourneyMap";
+import { KOREA_H, KOREA_HOME, KOREA_OTHER, KOREA_PLACES, KOREA_W } from "@/components/journey/data/korea";
 import { COURSE_CARDS } from "@/constants/courseCards";
 
 const CoursesPage = () => {
@@ -108,6 +110,30 @@ const CoursesPage = () => {
           body={isAr
             ? "آدم ولينا يصعدان الطريق نفسه الذي تصعده: الهانغول أولًا، ثم المستويات من ١ إلى ٦. وكلوبي يمشي معهما ويتذكّر كل كلمة يتعلّمانها. في كلوفرز، تتقدّم الحكاية فقط عندما يتقدّم تعلّمك الحقيقي."
             : "Adam and Lina climb the same path you do: Hangul first, then Levels 1 to 6. Cluby walks with them and remembers every word they learn. At Klovers, the story moves forward only when your real learning does."}
+        />
+
+        {/* The journey map (Re, 18 Nov 2026), same idea on every site. Canon: languageJourney.korean. */}
+        <JourneyMap
+          isAr={isAr}
+          tr={tr}
+          theme={{ bg: "#1A1A1A", panel: "#0f0f0f", otherLand: "#2c2c2c", land: "#FFF9EC", hover: "#d9f99d", selected: "#FFFF00", selectedText: "#111111", kicker: "#FFFF00", cta: "#FFFF00", ctaText: "#111111" }}
+          width={KOREA_W}
+          height={KOREA_H}
+          otherLandPath={KOREA_OTHER}
+          homeLandPath={KOREA_HOME}
+          places={KOREA_PLACES}
+          imageDir="journey/korea"
+          kickerEn="The Korea journey"
+          kickerAr="رحلة كوريا"
+          titleEn="Travel Korea with Adam, Lina and Cluby"
+          titleAr="سافر في كوريا مع آدم ولينا وكلوبي"
+          introEn="From palace hanbok in Seoul to persimmon-dyed clothes on Jeju, every place dresses and talks a little differently. Pick a pin and see the three of them there, and a first Korean phrase to say."
+          introAr="من هانبوك القصور في سيول إلى ملابس جيجو المصبوغة بالكاكا، لكل مكان زيّه وطريقة كلامه. اختر نقطة وشاهد الثلاثة هناك، ومعها أول جملة كورية تقولها."
+          ctaHref="/free-trial"
+          ctaEn="Start your own Korea journey"
+          ctaAr="ابدأ رحلتك مع الكورية"
+          mapLabelEn="Map of South Korea"
+          mapLabelAr="خريطة كوريا الجنوبية"
         />
 
         <section className="py-20 md:py-28 bg-card">

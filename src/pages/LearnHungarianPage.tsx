@@ -11,6 +11,8 @@ import ArticlesTeaser from "@/components/ArticlesTeaser";
 import budapestParliamentPhoto from "@/assets/hungarian-parliament-budapest.jpg";
 import fishermansBastionPhoto from "@/assets/hungarian-fishermans-bastion.jpg";
 import StoryMoment from "@/components/StoryMoment";
+import JourneyMap from "@/components/journey/JourneyMap";
+import { HUNGARY_H, HUNGARY_HOME, HUNGARY_OTHER, HUNGARY_PLACES, HUNGARY_W } from "@/components/journey/data/hungary";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 
 /**
@@ -102,6 +104,7 @@ const BudaLogoMark = ({ className = "" }: { className?: string }) => (
 const BudaHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; toggleLanguage: () => void }) => {
   const { user } = useAuth();
   const navLinks = [
+    { href: "#journey", label: tr("Journey", "الرحلة") },
     { href: "#who-its-for", label: tr("Who it's for", "لمن هذه الدروس") },
     { href: "#how-it-works", label: tr("How it works", "كيف تسير الدروس") },
     { href: "#pricing", label: tr("Pricing", "الأسعار") },
@@ -401,6 +404,30 @@ const LearnHungarianPage = () => {
           width={720}
           height={800}
           imageSide="end"
+        />
+
+        {/* The journey map (Re, 18 Nov 2026), same idea on every site. Canon: languageJourney.hungarian. */}
+        <JourneyMap
+          isAr={isAr}
+          tr={tr}
+          theme={{ bg: DANUBE, panel: "#081422", otherLand: "#1d3346", land: CREAM, hover: "#9fb6c6", selected: GOLD, selectedText: "#111111", kicker: GOLD, cta: GOLD, ctaText: "#111111" }}
+          width={HUNGARY_W}
+          height={HUNGARY_H}
+          otherLandPath={HUNGARY_OTHER}
+          homeLandPath={HUNGARY_HOME}
+          places={HUNGARY_PLACES}
+          imageDir="buda/journey"
+          kickerEn="The Hungarian journey"
+          kickerAr="رحلة المجرية"
+          titleEn="Travel Hungary with Adam, Lina and Cluby"
+          titleAr="سافر في المجر مع آدم ولينا وكلوبي"
+          introEn="Every corner of Hungary has its own folk dress and its own embroidery. Pick a place and see the three of them there, and a first Hungarian word to say."
+          introAr="لكل ركن في المجر زيّه الشعبي وتطريزه الخاص. اختر مكانًا وشاهد الثلاثة هناك، ومعه أول كلمة مجرية تقولها."
+          ctaHref="#trial"
+          ctaEn="Start your own Hungarian journey"
+          ctaAr="ابدأ رحلتك مع المجرية"
+          mapLabelEn="Map of Hungary"
+          mapLabelAr="خريطة المجر"
         />
 
         <section className="py-20 border-b">
