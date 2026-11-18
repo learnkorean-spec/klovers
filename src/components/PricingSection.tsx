@@ -575,7 +575,7 @@ const PricingSection = () => {
             <KloverIcon name="chat-annyeong" className="h-10 w-10" />
             {/* Verified facts only, the same ones MeetTeacher states. The old
                 line claimed "TOPIK-certified", which is not one of them. */}
-            <p className="text-sm font-semibold text-foreground">{tr("Taught in English & Arabic", "الشرح بالعربية أو الإنجليزية")}</p>
+            <p className="text-sm font-semibold text-foreground">{tr("Taught in English", "الشرح بالعربية أو الإنجليزية")}</p>
             <p className="text-xs text-muted-foreground">{tr("Al-Alsun Korean graduate · 13 years teaching", "خريجة الألسن، قسم اللغة الكورية · ١٣ عامًا من التدريس")}</p>
           </div>
           <div className="flex flex-col items-center gap-1">

@@ -28,7 +28,7 @@ import { toArabicDigits } from "@/lib/trustFigures";
 const STEPS: { icon: KloverIconName; en: [string, string]; ar: [string, string] }[] = [
   {
     icon: "flashcard-ga",
-    en: ["Clear Explanations", "Every point explained simply, in English or Arabic, so you understand instead of memorizing."],
+    en: ["Clear Explanations", "Every point explained simply, in English, so you understand instead of memorizing."],
     ar: ["شرح واضح", "شرح كل نقطة ببساطة، بالعربية أو الإنجليزية، للفهم لا للحفظ."],
   },
   {

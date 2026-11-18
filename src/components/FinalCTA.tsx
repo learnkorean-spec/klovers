@@ -47,7 +47,7 @@ import PriceTeaser from "@/components/PriceTeaser";
 const SOCIAL_PROOF = [
   { icon: "diploma-scroll" as KloverIconName, value: STUDENTS_TAUGHT, en: "Students taught by Reham", ar: "طالب تعلّموا مع ريهام" },
   { icon: "badge-blossom" as KloverIconName, value: `${RATING.value} / 5`, en: `From ${RATING.count} Google reviews`, ar: `من ${toArabicDigits(RATING.count)} مراجعات جوجل` },
-  { icon: "globe-plane" as KloverIconName, value: "EN · AR", valueAr: "عربي · إنجليزي", en: "Classes in English or Arabic", ar: "حصص بالعربية أو الإنجليزية" },
+  { icon: "globe-plane" as KloverIconName, value: "EN", valueAr: "عربي · إنجليزي", en: "Classes in English", ar: "حصص بالعربية أو الإنجليزية" },
 ];
 
 const QUIET_LINK =

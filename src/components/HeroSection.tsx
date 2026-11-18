@@ -372,7 +372,7 @@ const HeroSection = () => {
             <p className="text-ivory/85 text-sm font-medium" style={{ textShadow: "0 1px 8px rgba(20,20,18,0.8)" }}>
               {isAr
                 ? "مجموعات صغيرة · بالعربية أو الإنجليزية · مناسبة للمبتدئين"
-                : "Small groups · English & Arabic · Beginner friendly"}
+                : "Small groups · Taught in English · Beginner friendly"}
             </p>
 
             {/* 5 and 6 (the next-class chip and the monthly-window caveat) moved

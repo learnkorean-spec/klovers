@@ -24,7 +24,7 @@ const TRUST_STATS = [
   { value: TEACHING_YEARS, label: "Years Teaching", valueAr: `${TEACHING_YEARS_COUNT}+`, labelAr: "عامًا من التدريس" },
   { value: STUDENTS_TAUGHT, label: "Students Taught", valueAr: STUDENTS_TAUGHT, labelAr: "طالب تعلّموا مع المعلّمة" },
   { value: `${RATING.value} ★`, label: `From ${RATING.count} ${RATING.source} reviews`, valueAr: `${RATING.value} ★`, labelAr: `من ${RATING.count} تقييمات على جوجل` },
-  { value: "EN · AR", label: "Classes in English or Arabic", valueAr: "عربي · إنجليزي", labelAr: "لغة الشرح في الحصص" },
+  { value: "EN", label: "Classes in English", valueAr: "عربي · إنجليزي", labelAr: "لغة الشرح في الحصص" },
   { value: "Hangul → 6", label: "Levels", valueAr: "الهانغول ← ٦", labelAr: "المستويات" },
 ];
 

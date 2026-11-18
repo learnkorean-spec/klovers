@@ -39,7 +39,7 @@ import { STUDENTS_TAUGHT, TEACHING_YEARS, TEACHING_YEARS_COUNT, toArabicDigits }
 const HIGHLIGHTS = [
   { icon: "student-girl-heart" as KloverIconName, value: STUDENTS_TAUGHT, en: "Students taught", ar: "طالب تعلّموا معها" },
   { icon: "books-stack" as KloverIconName, value: TEACHING_YEARS, en: "Years teaching Korean", ar: "عامًا في تدريس الكورية" },
-  { icon: "chat-annyeong" as KloverIconName, value: "EN · AR", valueAr: "عربي · إنجليزي", en: "Classes in English or Arabic", ar: "حصص بالعربية أو الإنجليزية" },
+  { icon: "chat-annyeong" as KloverIconName, value: "EN", valueAr: "عربي · إنجليزي", en: "Classes in English", ar: "حصص بالعربية أو الإنجليزية" },
 ];
 
 const MeetTeacher = () => {
@@ -119,7 +119,7 @@ const MeetTeacher = () => {
               <p>
                 {isAr
                   ? "الحصة معها حديث حقيقي من الدقيقة الأولى: الشرح بالعربية أو الإنجليزية، وتصحيح النطق أثناء الكلام، وفي المجموعة الصغيرة يأخذ كل طالب دوره."
-                  : "Her classes are built around speaking from the first minute: she explains in English or Arabic, corrects your pronunciation while you talk, and in a small group everyone gets their turn."}
+                  : "Her classes are built around speaking from the first minute: she explains in English, corrects your pronunciation while you talk, and in a small group everyone gets their turn."}
               </p>
               <p>
                 {isAr
