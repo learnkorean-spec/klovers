@@ -578,6 +578,9 @@ const LearnHungarianPage = () => {
         <Link to="/" className="font-bold underline" style={{ color: DANUBE }}>
           {tr("Klovers — back to Korean lessons", "كلوفرز — العودة إلى دروس الكورية")}
         </Link>
+        <span style={{ color: "#555555" }}>
+          {tr("· Adam, Lina and Cluby start in Korea and travel with every language.", "· آدم ولينا وكلوبي يبدؤون من كوريا ويسافرون مع كل لغة.")}
+        </span>
       </div>
 
       <footer className="py-10 px-4" style={{ backgroundColor: "#0a0a0a", color: "#d9d9d9" }}>

@@ -112,7 +112,7 @@ const AboutPage = () => {
                   className="aspect-[16/9] w-full object-cover"
                 />
                 <figcaption className="px-5 py-4 text-sm font-semibold text-charcoal dark:text-foreground">
-                  {isAr ? "هكذا يبدو التعلّم مع كلوفرز: أصدقاء حول طاولة واحدة، وخطوة جديدة كل أسبوع." : "How learning with Klovers feels: friends at one table, one new step every week."}
+                  {isAr ? "هكذا يبدو التعلّم مع كلوفرز: أصدقاء حول طاولة واحدة، وخطوة جديدة كل أسبوع. تبدأ الحكاية من كوريا، ويسافر الثلاثي مع كل لغة جديدة." : "How learning with Klovers feels: friends at one table, one new step every week. The story starts in Korea, and the trio travels with every new language."}
                 </figcaption>
               </figure>
 

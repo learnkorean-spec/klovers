@@ -84,8 +84,8 @@ const PlatformLanguages = () => {
           </h2>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground md:text-lg">
             {isAr
-              ? "بدأت Klovers بالكورية. والمنظومة نفسها (الحصص المباشرة، اختبار تحديد المستوى، الكتب، الألعاب ولوحة الطالب) تعمل الآن لأربع لغات، وتُبنى عليها كل لغة جديدة."
-              : "Klovers started with Korean. The same system (live classes, placement testing, our own textbooks, practice games and a student dashboard) now runs four languages, and every new one is built on it."}
+              ? "بدأت Klovers بالكورية. والمنظومة نفسها (الحصص المباشرة، اختبار تحديد المستوى، الكتب، الألعاب ولوحة الطالب) تعمل الآن لأربع لغات، وتُبنى عليها كل لغة جديدة. وفي حكاية كلوفرز، تبدأ رحلة آدم ولينا وكلوبي من كوريا، ثم يسافرون مع كل لغة جديدة."
+              : "Klovers started with Korean. The same system (live classes, placement testing, our own textbooks, practice games and a student dashboard) now runs four languages, and every new one is built on it. In the Klovers story, Adam, Lina and Cluby start their journey in Korea, then travel with every new language."}
           </p>
         </div>
 
