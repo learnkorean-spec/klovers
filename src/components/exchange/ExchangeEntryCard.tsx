@@ -57,7 +57,7 @@ export default function ExchangeEntryCard({ isAr, compact = false }: ExchangeEnt
         <div className="pointer-events-none absolute -bottom-28 -left-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.22),transparent_70%)] blur-xl" aria-hidden="true" />
 
         <div
-          className={`relative flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-br from-[#2A1F4D] via-[#512A6B] to-[#8B5CF6]/80 ${compact ? "h-36" : "h-48"} md:h-full`}
+          className={`relative flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-br from-[#2A1F4D] via-[#512A6B] to-[#8B5CF6]/80 ${compact ? "h-36" : "h-48"} md:h-auto`}
           aria-hidden="true"
         >
           <FaceSvg
