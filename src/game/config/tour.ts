@@ -157,10 +157,10 @@ export function tourSlides(lang: WorldLang): TourSlide[] {
           layout: "pictures",
           items: [],
           pictures: [
-            { src: "/assets/world/why-culture.webp", label: "الثقافة" },
-            { src: "/assets/world/why-study.webp", label: "الدراسة" },
-            { src: "/assets/world/why-career.webp", label: "المهنة" },
-            { src: "/assets/world/why-travel.webp", label: "السفر" },
+            { src: "/assets/world/why-culture-v2.webp", label: "الثقافة" },
+            { src: "/assets/world/why-study-v2.webp", label: "الدراسة" },
+            { src: "/assets/world/why-career-v2.webp", label: "المهنة" },
+            { src: "/assets/world/why-travel-v2.webp", label: "السفر" },
           ],
         }
       : {
@@ -169,10 +169,10 @@ export function tourSlides(lang: WorldLang): TourSlide[] {
           layout: "pictures",
           items: [],
           pictures: [
-            { src: "/assets/world/why-culture.webp", label: "K-Culture" },
-            { src: "/assets/world/why-study.webp", label: "Study" },
-            { src: "/assets/world/why-career.webp", label: "Career" },
-            { src: "/assets/world/why-travel.webp", label: "Travel" },
+            { src: "/assets/world/why-culture-v2.webp", label: "K-Culture" },
+            { src: "/assets/world/why-study-v2.webp", label: "Study" },
+            { src: "/assets/world/why-career-v2.webp", label: "Career" },
+            { src: "/assets/world/why-travel-v2.webp", label: "Travel" },
           ],
         },
     trial: ar

@@ -151,10 +151,10 @@ export const LIBRARY_SCENES: LibraryScene[] = [
   // closed (happy squint) in most of these, and the brand sheet's on-model panel tests
   // open brown eyes — the same test that settled the first three hero takes.
   { file: "kb_home_hero_v2", label: "الصفحة الرئيسية: الثلاثة يقرأون على شرفة هانوك وقت الغروب (hero): مرشّحة: خانة الهيرو العربي تحمل نسخة أقدم" },
-  { file: "kb_home_career_v2", label: "لماذا الكورية: العمل: آدم ولينا أمام اللابتوب بإطلالة سيول: مستخدَمة: why-career.webp" },
-  { file: "kb_home_culture_v2", label: "لماذا الكورية: الثقافة: لينا على اللابتوب في غرفة هانوك: مستخدَمة: why-culture.webp" },
-  { file: "kb_home_study_v2", label: "لماذا الكورية: الدراسة: آدم بين أشجار الجنكة يحمل كتبه: مستخدَمة: why-study.webp" },
-  { file: "kb_home_travel_v2", label: "لماذا الكورية: السفر: كشك الطعام الليلي بين الفوانيس: مستخدَمة: why-travel.webp" },
+  { file: "kb_home_career_v2", label: "لماذا الكورية: العمل: آدم ولينا أمام اللابتوب بإطلالة سيول: كانت مستخدَمة في why-career.webp حتى ١٨ نوفمبر، استُبدلت بصورة واقعية (why-career-v2.webp)" },
+  { file: "kb_home_culture_v2", label: "لماذا الكورية: الثقافة: لينا على اللابتوب في غرفة هانوك: كانت مستخدَمة في why-culture.webp حتى ١٨ نوفمبر، استُبدلت بصورة واقعية (why-culture-v2.webp)" },
+  { file: "kb_home_study_v2", label: "لماذا الكورية: الدراسة: آدم بين أشجار الجنكة يحمل كتبه: كانت مستخدَمة في why-study.webp حتى ١٨ نوفمبر، استُبدلت بصورة واقعية (why-study-v2.webp)" },
+  { file: "kb_home_travel_v2", label: "لماذا الكورية: السفر: كشك الطعام الليلي بين الفوانيس: كانت مستخدَمة في why-travel.webp حتى ١٨ نوفمبر، استُبدلت بصورة واقعية (why-travel-v2.webp)" },
   { file: "kb_home_picnic_v2", label: "نزهة على نهر الهان مع كلوبي وأفق سيول: مستخدَمة: cluby/picnic.webp" },
   { file: "kb_home_cafe_v2", label: "كيف نبدأ: لينا تكتب وآدم يشير إلى الدفتر: مستخدَمة: cluby/cafe.webp (‏٨ مواضع)" },
   { file: "kb_home_hangul_village_v2", label: "قرية الهانغل: آدم وكلوبي عند لافتة فارغة، وهو ما يطابق الكانون: العلامات تصير مقروءة تدريجيًا: مستخدَمة: story/world-hangul-village.webp" },
