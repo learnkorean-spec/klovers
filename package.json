@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/prerender-meta.mjs",
+    "build": "node scripts/build-picture-manifest.mjs && vite build && node scripts/prerender-meta.mjs",
     "content-audit": "node scripts/content-audit.mjs",
     "content:apply": "node scripts/content-edit-cli.mjs apply",
     "content:rollback": "node scripts/content-edit-cli.mjs rollback",

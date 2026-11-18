@@ -662,6 +662,59 @@ async function generateBookCover(
   };
 }
 
+/**
+ * Picture check (Re, 18 Nov 2026: "a new tab in the lab to check which
+ * pictures must be changed and which is good to go"). One vision question
+ * per picture, judged against the current KLOVERS look.
+ */
+const PICTURE_CHECK_PROMPT = `You are checking one picture used on KLOVERS, a Korean-learning brand for ADULT Arabic speakers.
+Where it is used: {WHERE}
+The current house style:
+- Vocabulary icons: soft pastel WATERCOLOR on white, visible paper grain, no hard black outlines.
+- People and scenes: photorealistic, adult, set in real-looking Korea (or the country named), warm natural light.
+- Cluby, the mascot, is a mint-green plush with yellow horns, pink inner ears, ivory hanbok top, yellow wrap skirt and a clover emblem.
+Mark it "change" if ANY of these is true, and give the matching reason code:
+- old-clay: plasticine / clay 3D look
+- old-3d: glossy 3D sticker or app-icon look
+- mixed-style: flat vector, line icon or sticker style that does not match watercolor
+- childish: cartoon kids, chibi faces, smiley faces on objects, anime, fantasy creatures
+- fake-text: any garbled, fake or misspelled letters (Korean, Arabic or English)
+- off-canon: Cluby looks wrong (teddy bear, wrong colours) or a person looks AI-broken (hands, faces)
+- generic: could be anywhere, nothing shows Korea or the topic
+Otherwise mark it "good".
+Reply with JSON only: {"status":"good"|"change","reason":"<code or empty>","note":"<one short sentence in English: what is wrong, or why it is fine>"}`;
+
+async function checkPicture(imageDataUrl: string, where: string, metaApiKey: string, openAiKey: string | undefined) {
+  const { text, provider } = await askVision(PICTURE_CHECK_PROMPT.replace("{WHERE}", where || "unknown"), [imageDataUrl], metaApiKey, openAiKey);
+  const m = text.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error("the checker gave no verdict");
+  const v = JSON.parse(m[0]);
+  const status = v.status === "change" ? "change" : "good";
+  return { status, reason: String(v.reason ?? "").slice(0, 30), note: String(v.note ?? "").slice(0, 300), provider };
+}
+
+/**
+ * Real places (Re, 18 Nov 2026: "why no pictures from Korea? and the other
+ * countries"). Photographs of real, recognisable places in Korea and in the
+ * countries behind the other Klovers sites, not storybook scenes.
+ */
+function placePhotoPrompt(country: string, place: string, scene: string, people: boolean): string {
+  return [
+    `A real travel photograph taken in ${place ? `${place}, ` : ""}${country}.`,
+    scene ? `What is happening: ${scene}.` : "",
+    "It must be unmistakably this real place: true local architecture, streets, signage shapes, plants, food and weather of that country, as a local would recognise it.",
+    people
+      ? `Include real adult local people of ${country} going about their day, natural poses, diverse faces, everyday modern clothes (traditional dress only if the scene calls for it).`
+      : "No people in the frame, or only small distant figures.",
+    "Shot on a full-frame camera, natural light, true colours, realistic depth of field, editorial travel-magazine quality.",
+    "Not an illustration, not a painting, not cartoon, not 3D render, no fantasy elements.",
+    "No readable text, logos or watermarks anywhere: any signs must be blurred or seen from an angle so no letters can be read.",
+  ].filter(Boolean).join(" ");
+}
+
+const REVIEWS_BUCKET = "marketing-images";
+const REVIEWS_PATH = "ai-room-lab/picture-reviews.json";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -761,6 +814,37 @@ serve(async (req) => {
       return new Response(JSON.stringify({ imageDataUrl, style, notes }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    if (body.mode === "picture-check") {
+      const image = String(body.image ?? "");
+      if (!/^data:image\/(png|jpe?g|webp);base64,/.test(image)) throw new Error("image must be a data URL");
+      const result = await checkPicture(image, String(body.where ?? "").slice(0, 200), metaApiKey, openAiKey);
+      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (body.mode === "picture-reviews-load") {
+      const { data, error } = await adminClient.storage.from(REVIEWS_BUCKET).download(REVIEWS_PATH);
+      const reviews = error || !data ? {} : JSON.parse(await data.text());
+      return new Response(JSON.stringify({ reviews }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (body.mode === "picture-reviews-save") {
+      const reviews = body.reviews && typeof body.reviews === "object" ? body.reviews : null;
+      if (!reviews) throw new Error("reviews are required");
+      const json = JSON.stringify(reviews);
+      if (json.length > 2_000_000) throw new Error("too many reviews to save at once");
+      const { error } = await adminClient.storage
+        .from(REVIEWS_BUCKET)
+        .upload(REVIEWS_PATH, new Blob([json], { type: "application/json" }), { upsert: true, contentType: "application/json", cacheControl: "0" });
+      if (error) throw error;
+      return new Response(JSON.stringify({ saved: Object.keys(reviews).length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (body.mode === "place-photo") {
+      const country = String(body.country ?? "").trim().slice(0, 60);
+      const place = String(body.place ?? "").trim().slice(0, 120);
+      const scene = String(body.scene ?? "").trim().slice(0, 400);
+      const size = ["1024x1024", "1024x1536", "1536x1024"].includes(String(body.size)) ? String(body.size) : "1536x1024";
+      if (!country) throw new Error("country is required");
+      const imageDataUrl = await generateConceptImage(placePhotoPrompt(country, place, scene, body.people !== false), metaApiKey, false, size);
+      return new Response(JSON.stringify({ imageDataUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     if (body.mode === "book-grid") {
       const prompt = String(body.prompt ?? "").trim().slice(0, 2000);

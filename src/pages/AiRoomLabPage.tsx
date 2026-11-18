@@ -14,6 +14,9 @@ import RoomSceneSheet from "@/components/admin/RoomSceneSheet";
 import BookWatercolorGrid, { BOOK_PROMPTS_STORE } from "@/components/admin/BookWatercolorGrid";
 import ResetButton from "@/components/admin/ResetButton";
 import StyleFromPicture from "@/components/admin/StyleFromPicture";
+import PictureCheck from "@/components/admin/PictureCheck";
+import RealPlacePhotos from "@/components/admin/RealPlacePhotos";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DesignBrief {
   roomName: string;
@@ -117,7 +120,7 @@ export default function AiRoomLabPage() {
   // Re, 13 Nov 2026: every tool here can be reset. The three generator
   // components reset by remounting (a new key); the two inline tools below
   // reset their own state.
-  const [keys, setKeys] = useState({ style1: 0, style2: 0, style10: 0, book: 0 });
+  const [keys, setKeys] = useState({ style1: 0, style2: 0, style10: 0, book: 0, places: 0 });
   const bump = (k: keyof typeof keys) => setKeys((ks) => ({ ...ks, [k]: ks[k] + 1 }));
   const resetBook = () => {
     try {
@@ -138,7 +141,7 @@ export default function AiRoomLabPage() {
     setVariants([]);
   };
   const resetAll = () => {
-    setKeys((ks) => ({ style1: ks.style1 + 1, style2: ks.style2 + 1, style10: ks.style10 + 1, book: ks.book + 1 }));
+    setKeys((ks) => ({ style1: ks.style1 + 1, style2: ks.style2 + 1, style10: ks.style10 + 1, book: ks.book + 1, places: ks.places + 1 }));
     try {
       localStorage.removeItem(BOOK_PROMPTS_STORE);
     } catch {
@@ -231,7 +234,17 @@ export default function AiRoomLabPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 space-y-8">
+      <Tabs defaultValue="make" className="max-w-6xl mx-auto px-4 md:px-6 pt-4">
+        <TabsList>
+          <TabsTrigger value="make">Make pictures</TabsTrigger>
+          <TabsTrigger value="check">Check pictures</TabsTrigger>
+        </TabsList>
+        <TabsContent value="check" className="py-4">
+          <PictureCheck />
+        </TabsContent>
+        <TabsContent value="make" forceMount className="data-[state=inactive]:hidden">
+      <div className="py-4 space-y-8">
+        <RealPlacePhotos key={`rp-${keys.places}`} headerAction={<ResetButton onReset={() => bump("places")} />} />
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Section 1: Everyday Korean posts</h2>
           <WatercolorVocabSheet key={`s1-${keys.style1}`} headerAction={<ResetButton onReset={() => bump("style1")} />} />
@@ -462,6 +475,8 @@ export default function AiRoomLabPage() {
           </div>
         )}
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
