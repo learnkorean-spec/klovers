@@ -15,7 +15,8 @@ import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
  * photoreal learner in a live ONLINE class at home with Cluby on the desk
  * (made in /admin/ai-room-lab, clubyOnly mode). The old porch scene read as
  * illustrated and did not show the product. Learner sits left, so the same
- * crops still work. Phones now crop at 60% (not 97%) so the laptop with the
+ * crops still work. Phones crop at 5% (hero-learner-v2 is already cut on the
+ * left) so the laptop with the
  * live class AND Cluby stay in frame; at 97% only Cluby and a bare table showed.
  */
 const heroPoster = "/hero-learner-v2.jpg";
@@ -241,7 +242,7 @@ const HeroSection = () => {
           loading="eager"
           fetchPriority="high"
           decoding="async"
-          className={`absolute inset-0 w-full h-full object-cover object-[60%_center] lg:object-[50%_18%] transition-opacity duration-1000 motion-safe:animate-ken-burns brightness-110 saturate-[1.15] ${
+          className={`absolute inset-0 w-full h-full object-cover object-[5%_center] lg:object-[50%_18%] transition-opacity duration-1000 motion-safe:animate-ken-burns brightness-110 saturate-[1.15] ${
             videoReady ? "opacity-0" : "opacity-100"
           }`}
         />
