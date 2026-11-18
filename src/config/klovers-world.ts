@@ -464,7 +464,10 @@ export const KLOVERS_WORLD = {
     // (see languageJourney.arabic), Cluby wears a small version of that
     // country's traditional dress. His body, colours, horns, ears and the
     // green clover emblem never change.
-    clubyException: "maktub_arabic_journey_pictures_wear_mini_local_traditional_dress_body_and_clover_unchanged",
+    // Widened the same day (Re: "must be an idea like this in each website"):
+    // the journey-map pictures on every language site (Klovers Korea, maktub,
+    // Voca, Buda) follow the same exception.
+    clubyException: "journey_map_pictures_on_every_language_site_wear_mini_local_traditional_dress_body_and_clover_unchanged",
     supportingCastLooks: "fixed_per_person_in_STORY_CAST",
     internationalClassmates: ["omar_egypt", "zsofia_hungary", "amara_uk", "layla_saudi_arabia"],
     source: "Re, 18 Nov 2026",
@@ -528,6 +531,17 @@ export const KLOVERS_WORLD = {
       cluby: "mini_local_traditional_dress_see_wardrobeRule.clubyException",
       palette: "maktub_forest_green_sand_lime",
     },
+    /**
+     * The same journey map on every site (Re, 18 Nov 2026: "must be an idea
+     * like this in each website to hook and interact"). Same six answers as
+     * `arabic` above, per site: learned = the places and what people wear and
+     * say there; why now = the visitor picks a pin; owner = Lina with Adam and
+     * Cluby; world = marketing-only journey, no game world; learner data =
+     * none (a tease); afterwards = nothing changes in the logged-in story.
+     */
+    korean: { site: "klovers_/courses", kind: "marketing_tease_map_of_korea", clothes: "regional_and_historical_hanbok_plus_one_klovers_yellow_piece" },
+    english: { site: "voca_/learn-english", kind: "marketing_tease_map_of_english_speaking_countries", clothes: "each_countrys_traditional_dress_plus_one_klovers_yellow_piece", palette: "voca_maroon_cream_yellow" },
+    hungarian: { site: "buda_/learn-hungarian", kind: "marketing_tease_map_of_hungary", clothes: "regional_hungarian_folk_dress_plus_one_klovers_yellow_piece", palette: "buda_danube_navy_cream_steel_yellow" },
     newPeople:
       "New students and local people appear per country over time, each following the supportingKoreanCast precedent: a native speaker or fellow student, never a teacher, never a love interest, one fixed look each, and one visible KLOVERS-yellow piece in every picture.",
     status: "decision_recorded_nothing_built_yet",

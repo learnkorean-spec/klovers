@@ -778,18 +778,18 @@ function storyScenePrompt(scene: string, adam: string, lina: string, cast: strin
  * languageJourney.arabic and wardrobeRule.clubyException in
  * src/config/klovers-world.ts.
  */
-function travelScenePrompt(country: string, scene: string, adam: string, lina: string, cluby: string): string {
+function travelScenePrompt(country: string, scene: string, adam: string, lina: string, cluby: string, language = "Arabic", brand = "maktub", palette = "maktub's palette, deep forest green, warm sand and small touches of lime green"): string {
   return [
-    `A real, natural travel photograph from the KLOVERS story: Adam, Lina and Cluby have travelled to ${country} to learn Arabic with maktub.`,
+    `A real, natural travel photograph from the KLOVERS story: Adam, Lina and Cluby have travelled to ${country} to learn ${language} with ${brand}.`,
     `The scene: ${scene}.`,
     "Reference image 1 shows Adam and Lina. Keep their FACES, skin, hair colour and hairstyle EXACTLY as in the reference so they are instantly recognisable (Adam: early 20s, wavy dark-brown hair; Lina: early 20s, long wavy auburn-copper hair, light freckles). Only their clothes change.",
     `Adam wears ${country}'s traditional dress: ${adam}.`,
     `Lina wears ${country}'s traditional dress: ${lina}.`,
-    `Reference image 2 shows Cluby: keep Cluby's body EXACTLY as the reference, a small realistic-cute mint-green plush creature with two butter-yellow horns, pink inner ears and a green four-leaf-clover emblem on his chest. Never a teddy bear, never another colour. Here, instead of his hanbok, Cluby wears a tiny version of ${country}'s traditional dress: ${cluby}. Cluby is a companion standing or sitting nearby, not a pet.`,
+    `Reference image 2 shows Cluby: keep Cluby's body EXACTLY as the reference, a small realistic-cute mint-green plush creature with two butter-yellow horns, pink inner ears and a green four-leaf-clover emblem on his chest. Never a teddy bear, never another colour. Here Cluby wears a tiny version of ${country}'s traditional dress: ${cluby}. Cluby is a companion standing or sitting nearby, not a pet.`,
     "They wear the dress respectfully, as welcomed guests, worn properly and modestly.",
     "Adam and Lina are friends and study companions, not a couple: no romantic poses.",
     KLOVERS_YELLOW_RULE,
-    "Colour mood: maktub's palette, deep forest green, warm sand and small touches of lime green in the setting and props, with the KLOVERS-yellow pieces popping.",
+    `Colour mood: ${palette} in the setting and props, with the KLOVERS-yellow pieces popping.`,
     "Everyone is an adult. People are photorealistic: real skin, real hair, real fabric, natural candid poses and expressions, natural light. A real, recognisable place in that country.",
     "No readable text, letters, numbers, logos or signs anywhere; any sign is blank or out of focus. No weapons.",
   ].join(" ");
@@ -916,7 +916,7 @@ serve(async (req) => {
       const scene = String(body.scene ?? "").trim().slice(0, 800);
       if (!country || !scene) throw new Error("country and scene are required");
       const size = ["1024x1024", "1024x1536", "1536x1024"].includes(String(body.size)) ? String(body.size) : "1536x1024";
-      const prompt = travelScenePrompt(country, scene, String(body.adam ?? "").slice(0, 240), String(body.lina ?? "").slice(0, 240), String(body.cluby ?? "").slice(0, 200));
+      const prompt = travelScenePrompt(country, scene, String(body.adam ?? "").slice(0, 240), String(body.lina ?? "").slice(0, 240), String(body.cluby ?? "").slice(0, 200), String(body.language ?? "Arabic").slice(0, 40), String(body.brand ?? "maktub").slice(0, 40), String(body.palette ?? "maktub's palette, deep forest green, warm sand and small touches of lime green").slice(0, 200));
       const imageDataUrl = await generateConceptImage(prompt, metaApiKey, true, size);
       return new Response(JSON.stringify({ imageDataUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
