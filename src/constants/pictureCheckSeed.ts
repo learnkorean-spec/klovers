@@ -112,6 +112,8 @@ export const CHECK_SEED: Record<string, [CheckStatus, CheckReason]> = {
   "/assets/cluby/cluby-wave.webp": ["good", ""],
   "/assets/cluby/cta-mobile.webp": ["good", ""],
   "/assets/cluby/cta.webp": ["good", ""],
+  "/assets/cluby/cta-cluby-seoul.webp": ["good", ""],
+  "/assets/cluby/cta-cluby-seoul-mobile.webp": ["good", ""],
   "/assets/cluby/hero-ar.webp": ["skip", "reference"],
   "/assets/cluby/hero-en.webp": ["skip", "reference"],
   "/assets/cluby/hero-mobile.webp": ["skip", "reference"],

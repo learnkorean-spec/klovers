@@ -80,15 +80,21 @@ const FinalCTA = () => {
       {/* ── The scene: Cluby pointing at Seoul, heading in the sky ── */}
       <div className="relative">
         <picture>
-          <source media="(max-width: 767px)" srcSet="/assets/cluby/cta-mobile.webp" />
+          {/* 18 Nov 2026 (Re: "replace this"): the Adam + Lina street scene put
+              both faces under the heading and cut Adam's head off. Back to the
+              canon owner of this slot (Cluby alone, invite_user_forward): Cluby
+              waving from a hanok terrace over Seoul, empty sky above for the
+              heading. New file names so Vercel's 30-day image cache can't
+              serve the old picture. */}
+          <source media="(max-width: 767px)" srcSet="/assets/cluby/cta-cluby-seoul-mobile.webp" />
           <img
-            src="/assets/cluby/cta.webp"
-            alt={isAr ? "كلوبي على تلّة يشير إلى أفق سيول وقت الغروب" : "Cluby on a hill pointing at the Seoul skyline at sunset"}
+            src="/assets/cluby/cta-cluby-seoul.webp"
+            alt={isAr ? "كلوبي يلوّح من شرفة هانوك فوق سيول وقت الغروب" : "Cluby waving from a hanok terrace above Seoul at sunset"}
             width={1600}
             height={900}
             loading="lazy"
             decoding="async"
-            className="block aspect-[4/5] w-full object-cover md:aspect-[16/9] md:max-h-[720px]"
+            className="block aspect-[4/5] w-full object-cover md:aspect-[16/9] md:max-h-[720px] md:object-[center_70%]"
           />
         </picture>
 
