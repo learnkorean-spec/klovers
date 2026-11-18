@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import { RETIRED_SLUGS } from "../scripts/lib/retired-arabic-slugs.mjs";
 import { ARABIC_TWIN_PATHS } from "../scripts/lib/arabic-page-meta.mjs";
+import { LANG_ARTICLE_PATHS } from "../scripts/lib/lang-articles.mjs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY =
@@ -88,6 +89,15 @@ const STATIC_PAGES = [
   // Product pages stay out: they are client-rendered from Stripe and have no
   // prerendered head of their own.
   { loc: "/shop", priority: "0.6", changefreq: "weekly" },
+  // English (Voca) and Hungarian (Buda) articles (18 Nov 2026): each door's
+  // /articles index and its 18 articles. Arabic-only pages, so no alternates.
+  // The list lives in scripts/lib/lang-articles.mjs, checked against
+  // src/content/*Articles.ts by scripts/lang-articles.test.mjs.
+  ...LANG_ARTICLE_PATHS.map((loc) => ({
+    loc,
+    priority: loc.endsWith("/articles") ? "0.6" : "0.5",
+    changefreq: "monthly",
+  })),
 ];
 
 // Arabic twins (GEO-03, 27 Sep 2026): each English page in
