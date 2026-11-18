@@ -89,7 +89,17 @@ export interface JourneyMapProps {
 
 const JourneyMap = (p: JourneyMapProps) => {
   const { isAr, tr, theme: t } = p;
-  const [selected, setSelected] = useState<string>(p.places[0].key);
+  // ?stop=<key> opens straight on a place, so a stop can be shared (a post,
+  // a WhatsApp message) and lands on the right picture.
+  const [selected, setSelected] = useState<string>(() => {
+    try {
+      const want = new URLSearchParams(window.location.search).get("stop");
+      if (want && p.places.some((c) => c.key === want)) return want;
+    } catch {
+      /* no window */
+    }
+    return p.places[0].key;
+  });
   const [hover, setHover] = useState<string | null>(null);
   const storeKey = `klovers-journey-passport:${p.imageDir}`;
   const [visited, setVisited] = useState<string[]>(() => {
@@ -104,6 +114,22 @@ const JourneyMap = (p: JourneyMapProps) => {
   useEffect(() => {
     setVisited((v) => (v.includes(selected) ? v : [...v, selected]));
   }, [selected]);
+  // Keep ?stop= in step with the choice (replaceState: no history spam).
+  const [touched, setTouched] = useState(false);
+  useEffect(() => {
+    if (!touched) return;
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("stop", selected);
+      window.history.replaceState(window.history.state, "", url.toString());
+    } catch {
+      /* ignore */
+    }
+  }, [selected, touched]);
+  const choose = (key: string) => {
+    setTouched(true);
+    setSelected(key);
+  };
   useEffect(() => {
     try {
       window.localStorage.setItem(storeKey, JSON.stringify(visited));
@@ -111,6 +137,16 @@ const JourneyMap = (p: JourneyMapProps) => {
       /* storage blocked: stamps just last for this visit */
     }
   }, [storeKey, visited]);
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get("stop")) {
+        document.getElementById(p.id ?? "journey")?.scrollIntoView({ block: "start" });
+      }
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const total = p.places.length;
   const stamped = p.places.filter((c) => visited.includes(c.key)).length;
   const done = stamped >= total;
@@ -134,7 +170,7 @@ const JourneyMap = (p: JourneyMapProps) => {
   const pinFill = (key: string) => (key === selected ? t.selected : key === hover ? t.hover : t.kicker);
 
   const handlers = (key: string) => ({
-    onClick: () => setSelected(key),
+    onClick: () => choose(key),
     onMouseEnter: () => setHover(key),
     onMouseLeave: () => setHover(null),
   });
@@ -214,7 +250,7 @@ const JourneyMap = (p: JourneyMapProps) => {
                   type="button"
                   role="listitem"
                   aria-pressed={c.key === selected}
-                  onClick={() => setSelected(c.key)}
+                  onClick={() => choose(c.key)}
                   className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
                   style={
                     c.key === selected
@@ -286,7 +322,7 @@ const JourneyMap = (p: JourneyMapProps) => {
                 {!done && (
                   <button
                     type="button"
-                    onClick={() => setSelected(nextStop.key)}
+                    onClick={() => choose(nextStop.key)}
                     className="inline-flex items-center justify-center rounded-full border border-[#1A1A1A]/20 px-6 py-3 text-sm font-semibold hover:bg-neutral-100"
                   >
                     {tr(`Next stop: ${nextStop.en}`, `المحطة التالية: ${nextStop.ar}`)} {isAr ? "←" : "→"}

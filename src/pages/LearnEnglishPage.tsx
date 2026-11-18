@@ -122,6 +122,7 @@ const VocaLogoMark = ({ className = "" }: { className?: string }) => (
 const VocaHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; toggleLanguage: () => void }) => {
   const { user } = useAuth();
   const navLinks = [
+    { href: "#journey", label: tr("Journey", "الرحلة") },
     { href: "#who-its-for", label: tr("Who it's for", "لمن هذه الدروس") },
     { href: "#how-it-works", label: tr("How it works", "كيف تسير الدروس") },
     { href: "#pricing", label: tr("Pricing", "الأسعار") },
