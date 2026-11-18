@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LEVELS } from "@/constants/levels";
 import { WHATSAPP_BASE } from "@/lib/siteConfig";
+import StoryMoment from "@/components/StoryMoment";
 import { trackAndOpenWhatsApp } from "@/lib/leadTracking";
 
 /**
@@ -296,6 +297,19 @@ const TeachWithUsPage = () => {
             </div>
           </div>
         </section>
+        {/* Story (canon guard: real teachers are never replaced by story
+            characters; Adam and Lina appear here as learners). */}
+        <StoryMoment
+          image="/assets/cluby/online-class.webp"
+          width={1058}
+          height={960}
+          alt={isAr ? "آدم ولينا في حصة كورية مباشرة أونلاين" : "Adam and Lina in a live online Korean class"}
+          eyebrow={isAr ? "حكاية كلوفرز" : "The Klovers story"}
+          title={isAr ? "خلف كل حكاية، معلّم حقيقي" : "Behind every story, a real teacher"}
+          body={isAr
+            ? "آدم ولينا وكلوبي هم حكاية كلوفرز، لكن من يعلّم هو معلّم حقيقي في حصة مباشرة. انضم إلينا وكن أنت هذا المعلّم."
+            : "Adam, Lina and Cluby are the Klovers story, but the person who teaches is always a real teacher in a live class. Join us and be that teacher."}
+        />
       </main>
       <Footer />
     </div>

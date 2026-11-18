@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { trustCopy } from "@/lib/trustFigures";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
+import StoryMoment from "@/components/StoryMoment";
 import { Lock, Loader2, ChevronRight } from "lucide-react";
 
 const INDUSTRY_KEYS = [
@@ -299,6 +300,19 @@ export default function KoreanInterviewPage() {
             </div>
           </div>
         </section>
+
+        {/* Story (Re, 18 Nov 2026: every page connects to the story). */}
+        <StoryMoment
+          image="/assets/world/why-career-v3.webp"
+          width={1200}
+          height={800}
+          alt={isAr ? "آدم ولينا في اجتماع عمل باللغة الكورية مع زميل كوري في مكتب في سيول" : "Adam and Lina in a Korean-language work meeting with a Korean colleague in a Seoul office"}
+          eyebrow={isAr ? "حكاية كلوفرز" : "The Klovers story"}
+          title={isAr ? "من الفصل إلى المكتب" : "From the classroom to the office"}
+          body={isAr
+            ? "آدم ولينا بدآ بالهانغول مثلك تمامًا. واليوم يجلسان في اجتماع عمل في سيول ويتكلّمان الكورية بثقة. هذا التدريب هو الخطوة بين الاثنين."
+            : "Adam and Lina started with Hangul, just like you. Today they sit in a work meeting in Seoul and speak Korean with confidence. This training is the step in between."}
+        />
 
         {/* ── How It Works ── */}
         <section className="max-w-5xl mx-auto px-4 py-16">
