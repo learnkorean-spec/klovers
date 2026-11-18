@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * The journey map, one component for every language site (Re, 18 Nov 2026:
@@ -15,6 +15,13 @@ import { useState } from "react";
  * The chip list under the map is the keyboard / screen-reader / phone path.
  * Pictures: /assets/<imageDir>/<key>.webp (1200x800), made with the
  * travel-scene mode of /admin/ai-room-lab.
+ *
+ * Passport (Re, 18 Nov 2026: "continue", to hook and interact): every place
+ * the visitor opens gets a stamp, a "Next stop" button walks to the next
+ * unseen one, and the last stamp ends on the trial CTA. Stamps are a light
+ * per-browser convenience in localStorage (one key per site). They are NOT
+ * learning progress and never say so: story progress comes only from real
+ * learning (canon).
  */
 
 export interface JourneyFact {
@@ -84,7 +91,43 @@ const JourneyMap = (p: JourneyMapProps) => {
   const { isAr, tr, theme: t } = p;
   const [selected, setSelected] = useState<string>(p.places[0].key);
   const [hover, setHover] = useState<string | null>(null);
+  const storeKey = `klovers-journey-passport:${p.imageDir}`;
+  const [visited, setVisited] = useState<string[]>(() => {
+    try {
+      const raw = window.localStorage.getItem(storeKey);
+      const list = raw ? (JSON.parse(raw) as unknown) : [];
+      return Array.isArray(list) ? list.filter((k): k is string => typeof k === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    setVisited((v) => (v.includes(selected) ? v : [...v, selected]));
+  }, [selected]);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(storeKey, JSON.stringify(visited));
+    } catch {
+      /* storage blocked: stamps just last for this visit */
+    }
+  }, [storeKey, visited]);
+  const total = p.places.length;
+  const stamped = p.places.filter((c) => visited.includes(c.key)).length;
+  const done = stamped >= total;
+  const nextStop = (() => {
+    const i = p.places.findIndex((c) => c.key === selected);
+    for (let n = 1; n <= total; n++) {
+      const c = p.places[(i + n) % total];
+      if (!visited.includes(c.key)) return c;
+    }
+    return p.places[(i + 1) % total];
+  })();
   const current = p.places.find((c) => c.key === selected) ?? p.places[0];
+  // Warm the next picture so "Next stop" flips without a blank frame.
+  useEffect(() => {
+    const img = new Image();
+    img.src = `/assets/${p.imageDir}/${nextStop.key}.webp`;
+  }, [p.imageDir, nextStop.key]);
   const heading = { fontFamily: t.headingFont ?? "Poppins, system-ui, sans-serif" };
 
   const shapeFill = (key: string) => (key === selected ? t.selected : key === hover ? t.hover : t.land);
@@ -145,7 +188,26 @@ const JourneyMap = (p: JourneyMapProps) => {
                 ))}
             </svg>
 
-            <div className="mt-4 flex flex-wrap gap-2" role="list">
+            <div className="mt-4 flex items-center gap-3">
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: t.kicker }}>
+                {tr("Passport", "جواز السفر")}
+              </span>
+              <div
+                className="h-2 flex-1 overflow-hidden rounded-full bg-white/10"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={total}
+                aria-valuenow={stamped}
+                aria-label={tr("Places visited", "الأماكن التي زرتها")}
+              >
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(stamped / total) * 100}%`, backgroundColor: t.selected }} />
+              </div>
+              <span className="text-xs tabular-nums text-white/80">
+                {stamped}/{total}
+              </span>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2" role="list">
               {p.places.map((c) => (
                 <button
                   key={c.key}
@@ -160,6 +222,7 @@ const JourneyMap = (p: JourneyMapProps) => {
                       : { backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.85)" }
                   }
                 >
+                  {visited.includes(c.key) && c.key !== selected && <span aria-hidden="true">✓ </span>}
                   {isAr ? c.ar : c.en}
                 </button>
               ))}
@@ -204,13 +267,32 @@ const JourneyMap = (p: JourneyMapProps) => {
                   </div>
                 ))}
               </dl>
-              <a
-                href={p.ctaHref}
-                className="mt-6 inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold"
-                style={{ backgroundColor: t.cta, color: t.ctaText }}
-              >
-                {tr(p.ctaEn, p.ctaAr)}
-              </a>
+              {done && (
+                <p className="mt-5 rounded-2xl bg-neutral-100 p-4 text-sm leading-relaxed">
+                  {tr(
+                    `Every stamp collected: you have seen all ${total} stops with Adam, Lina and Cluby. The real trip starts with your first class.`,
+                    `جمعت كل الأختام: شاهدت المحطات الـ${total} كلها مع آدم ولينا وكلوبي. الرحلة الحقيقية تبدأ بأول حصة.`,
+                  )}
+                </p>
+              )}
+              <div className="mt-6 flex flex-wrap gap-3">
+                <a
+                  href={p.ctaHref}
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold"
+                  style={{ backgroundColor: t.cta, color: t.ctaText }}
+                >
+                  {tr(p.ctaEn, p.ctaAr)}
+                </a>
+                {!done && (
+                  <button
+                    type="button"
+                    onClick={() => setSelected(nextStop.key)}
+                    className="inline-flex items-center justify-center rounded-full border border-[#1A1A1A]/20 px-6 py-3 text-sm font-semibold hover:bg-neutral-100"
+                  >
+                    {tr(`Next stop: ${nextStop.en}`, `المحطة التالية: ${nextStop.ar}`)} {isAr ? "←" : "→"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
