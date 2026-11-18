@@ -10,6 +10,7 @@ import PersonalLessonPricing from "@/components/PersonalLessonPricing";
 import ArticlesTeaser from "@/components/ArticlesTeaser";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import englishConversationPhoto from "@/assets/english-conversation-practice.jpg";
+import StoryMoment from "@/components/StoryMoment";
 import englishOpenBookPhoto from "@/assets/english-open-book.jpg";
 
 /**
@@ -400,6 +401,25 @@ const LearnEnglishPage = () => {
         />
 
         {/* Not a textbook — second photo, kept as-is but reframed. */}
+        {/* Story tease (Re, 18 Nov 2026): the trio travels with every language.
+            No country is named or drawn: which one comes next is still open
+            (canon languageJourney.notDecidedYet). */}
+        <StoryMoment
+          image="/assets/story/trio-journey-start.webp"
+          alt={tr("Adam, Lina and Cluby with yellow suitcases in front of a world map", "آدم ولينا وكلوبي بحقائب سفر صفراء أمام خريطة العالم")}
+          eyebrow={tr("The Klovers story", "حكاية كلوفرز")}
+          title={tr("Korea first. English next.", "كوريا أولًا. ثم الإنجليزية.")}
+          body={tr(
+            "Adam, Lina and Cluby began their journey in Korea with Klovers. English is one of the languages they travel with next, and Voca is where that part of the story starts.",
+            "بدأ آدم ولينا وكلوبي رحلتهم من كوريا مع كلوفرز. والإنجليزية من اللغات التي يسافرون معها بعد ذلك، وVoca هي المكان الذي يبدأ فيه هذا الجزء من الحكاية.",
+          )}
+          tone="dark"
+          background={INK}
+          width={720}
+          height={800}
+          imageSide="end"
+        />
+
         <section className="py-20 border-b">
           <div className="container mx-auto px-4 max-w-6xl grid items-center gap-12 lg:grid-cols-2">
             <div className="overflow-hidden rounded-2xl border border-border shadow-lg bg-muted order-2 lg:order-1">

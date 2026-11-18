@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useSEO } from "@/hooks/useSEO";
 import { useLanguage } from "@/contexts/LanguageContext";
+import StoryMoment from "@/components/StoryMoment";
 import { ERAS } from "@/constants/eras";
 
 /**
@@ -49,6 +50,17 @@ export default function JourneyHubPage() {
             </p>
           </div>
         </section>
+
+        <StoryMoment
+          image="/assets/story/journey-palace.webp"
+          height={1067}
+          alt={isAr ? "آدم ولينا وكلوبي بحقائب صفراء أمام بوابة قصر كوري قديم" : "Adam, Lina and Cluby with yellow suitcases at the gate of an old Korean palace"}
+          eyebrow={isAr ? "المحطة الأولى" : "The first stop"}
+          title={isAr ? "تبدأ الرحلة من كوريا" : "The journey starts in Korea"}
+          body={isAr
+            ? "هنا يبدأ آدم ولينا وكلوبي رحلتهم: في ماضي كوريا وحاضرها. كل محطة بالأسفل تضيف كلمات حقيقية إلى حكايتهم وإلى تعلّمك. وبعد كوريا، يسافر الثلاثي مع كل لغة جديدة في كلوفرز."
+            : "This is where Adam, Lina and Cluby begin: in Korea's past and present. Every station below adds real words to their story, and to your learning. After Korea, the trio travels with every new language at Klovers."}
+        />
 
         <section className="px-4 py-12 md:py-16">
           <ol className="max-w-5xl mx-auto grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

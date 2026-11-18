@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LEVELS } from "@/constants/levels";
+import StoryMoment from "@/components/StoryMoment";
 import { COURSE_CARDS } from "@/constants/courseCards";
 
 const CoursesPage = () => {
@@ -97,6 +98,17 @@ const CoursesPage = () => {
       <Header />
       <main id="main-content" className="pt-16">
         <CoursesSection />
+
+        {/* Story (canon: progression from real learning; Cluby is the memory keeper). */}
+        <StoryMoment
+          image="/assets/story/courses-path.webp"
+          alt={isAr ? "آدم ولينا وكلوبي يصعدون درجات طريق حجري نحو جناح هانوك على قمة تلّة في سيول" : "Adam, Lina and Cluby climbing a stone path toward a hanok pavilion on a Seoul hilltop"}
+          eyebrow={isAr ? "حكاية كلوفرز" : "The Klovers story"}
+          title={isAr ? "مستوى بعد مستوى، مثل آدم ولينا" : "One level at a time, like Adam and Lina"}
+          body={isAr
+            ? "آدم ولينا يصعدان الطريق نفسه الذي تصعده: الهانغول أولًا، ثم المستويات من ١ إلى ٦. وكلوبي يمشي معهما ويتذكّر كل كلمة يتعلّمانها. في كلوفرز، تتقدّم الحكاية فقط عندما يتقدّم تعلّمك الحقيقي."
+            : "Adam and Lina climb the same path you do: Hangul first, then Levels 1 to 6. Cluby walks with them and remembers every word they learn. At Klovers, the story moves forward only when your real learning does."}
+        />
 
         <section className="py-20 md:py-28 bg-card">
           <div className="container mx-auto px-4">
