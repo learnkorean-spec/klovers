@@ -825,6 +825,25 @@ export const KLOVERS_WORLD = {
     /** No size carves an exception out of the rule above. */
     illustrationExceptionAtSmallSizes: false,
 
+    /**
+     * Re, 18 Nov 2026 — "we must change all to watercolor theme." The ONE
+     * deliberate exception to the rule above, and it is about the icon set,
+     * not about size: every file in public/assets/icons (and its library/
+     * folder) is painted in the book watercolor style, characters included —
+     * Cluby/Klobi (klobi-*, library/01-klubi) and the two student faces
+     * (student-boy-thumbsup, student-girl-heart). The photographic icons and
+     * the 3D plush Cluby icons these replace are retired.
+     *
+     * UNCHANGED: hero and marketing photography, the in-game 3D rig, and the
+     * canonical 3D plush Cluby everywhere outside the icon set. Do not read this
+     * as licence for illustrated characters anywhere other than the icon set.
+     */
+    iconSet: {
+      style: "watercolor_matching_the_books",
+      scope: "public/assets/icons/** only",
+      includesCharacters: ["cluby", "student_boy", "student_girl"],
+    },
+
     forbiddenStyles: [
       "flat_cartoon_everywhere",
       "anime",

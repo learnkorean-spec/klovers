@@ -252,6 +252,13 @@ That retires:
 The Book A-0 cover art being illustrated does **not** license an illustrated
 style in the product; it is source material for the characters, not a style.
 
+**Exception — the icon set, Re, 18 Nov 2026.** "We must change all to watercolor
+theme." Every icon in `public/assets/icons/` is now painted in the book
+watercolor style, **including the characters** (Cluby/Klobi and the two student
+faces). Hero and marketing photography, the in-game 3D rig and the 3D plush
+Cluby outside the icon set are unchanged — this is not licence for illustrated
+characters anywhere else. See `visualSystem.iconSet` in the canon.
+
 What the rule does not decide: an illustrated *place, object or historic scene*
 — an era painting, a folk-tale monster — is a different question.
 

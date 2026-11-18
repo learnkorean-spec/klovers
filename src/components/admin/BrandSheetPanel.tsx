@@ -64,9 +64,8 @@ const IMAGE_RULES = [
 ];
 
 const ICON_RULES = [
-  "One Cluby, and always the 3D plush — never the flat 2D set in public/assets/characters/.",
-  "klobi-reading and game-klobi-thumbsup are excluded and still to be redrawn in 3D.",
-  "student-boy-thumbsup and student-girl-heart are illustrated faces, so they break the standing rule. Replace those two files with photographs of Adam and Lina and keep the same file names — the 23 call sites then need no edit at all.",
+  "Every icon is watercolor, painted like the books (Re, 18 Nov 2026). One Cluby: in icons he is the watercolor Klobi; everywhere outside the icon set he stays the 3D plush — never the flat 2D set in public/assets/characters/.",
+  "student-boy-thumbsup and student-girl-heart are watercolor too. To redraw either, keep the same file name — the 23 call sites then need no edit at all.",
   "An icon sits on a rounded tile at about 80% of it, with the same corner radius along a row.",
   "Lucide line icons only for tiny functional glyphs. Never emoji as UI.",
 ];
@@ -187,6 +186,11 @@ export default function BrandSheetPanel() {
             and the drawn blog covers. The Book A-0 cover being illustrated does not license an
             illustrated style in the product — it is source material for the characters, not a
             style.
+          </p>
+          <p>
+            <strong>Exception — the icon set (Re, 18 Nov 2026):</strong> every icon in{" "}
+            <code>public/assets/icons/</code> is watercolor, characters included. Hero photography,
+            the in-game 3D rig and the 3D plush Cluby outside the icon set are unchanged.
           </p>
           <p className="text-xs text-ivory/65">
             Re, 5 Oct 2026. Canon: <code>src/config/klovers-world.ts</code> &rarr;{" "}
@@ -329,9 +333,10 @@ export default function BrandSheetPanel() {
             <strong>Fixed, and no longer listed here:</strong> every 2D drawing of Cluby — the flat
             set the game hub drew from <code>public/assets/characters/</code>, and the four flat
             mascot icons (<code>klobi-reading</code>, <code>klobi-headphones</code>,{" "}
-            <code>game-klobi-thumbsup</code>, <code>game-klobi-han</code>), now 3D plush renders at
-            the same file names; the two illustrated trust icons (<code>student-boy-thumbsup</code>{" "}
-            and <code>student-girl-heart</code>, now photographs); the nine small sites those two
+            <code>game-klobi-thumbsup</code>, <code>game-klobi-han</code>), 3D plush renders until
+            18 Nov 2026, now watercolor at the same file names; the two trust icons (
+            <code>student-boy-thumbsup</code> and <code>student-girl-heart</code>), photographs until
+            the same date, now watercolor; the nine small sites those two
             used at 14 to 24px; the three cartoon brand files (<code>klovers-mascot.png</code>, its
             byte-identical twin <code>klovers-characters.png</code>, and{" "}
             <code>characters/hanbok-pair.jpg</code>), retired by one real portrait that also saves 3
