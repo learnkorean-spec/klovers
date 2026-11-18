@@ -59,7 +59,7 @@ export default function ExchangeEntryCard({ isAr, compact = false }: ExchangeEnt
    * your interests.
    */
   return (
-    <section className={compact ? "" : "px-4 pt-4"} aria-labelledby="exchange-entry-title">
+    <section className={compact ? "" : "px-4 pb-12 pt-6 md:pb-16"} aria-labelledby="exchange-entry-title">
       <div className="pm-fuse mx-auto max-w-6xl rounded-[24px] p-[2px] shadow-[0_24px_50px_-26px_rgba(255,62,165,0.6)]">
         <div
           dir={isAr ? "rtl" : "ltr"}
