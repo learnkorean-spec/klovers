@@ -64,7 +64,7 @@ const SCHOOLS: School[] = [
 const STATS = [
   { value: "200+", valueAr: "+٢٠٠", en: "students taught live", ar: "طالب درسوا مباشرة" },
   { value: "314", valueAr: "٣١٤", en: "textbook lessons written in-house", ar: "درسًا في كتبنا الخاصة" },
-  { value: "4,300+", valueAr: "+٤٣٠٠", en: "vocabulary items with audio and practice", ar: "كلمة مع النطق والتدريب" },
+  { value: "4,300+", valueAr: "+٤٣٠٠", en: "vocabulary items across our lessons", ar: "كلمة في دروسنا" },
   { value: "5", valueAr: "٥", en: "countries our learners join from", ar: "دول يدرس منها طلابنا" },
 ];
 
@@ -108,8 +108,12 @@ const PlatformLanguages = () => {
                       </span>
                     )}
                   </div>
-                  <p dir={s.scriptDir ?? "auto"} lang={s.brand === "Klovers" ? "ko" : undefined} className="mt-6 font-display text-4xl font-extrabold text-charcoal">
-                    {s.script}
+                  {/* The script sits in an inline span with its own dir, so an RTL
+                      word (العربية) still lines up with the other three cards. */}
+                  <p className="mt-6 font-display text-4xl font-extrabold text-charcoal">
+                    <span dir={s.scriptDir ?? "ltr"} lang={s.brand === "Klovers" ? "ko" : undefined} className="inline-block">
+                      {s.script}
+                    </span>
                   </p>
                   <p className="mt-4 text-lg font-bold text-charcoal">{copy.lang}</p>
                   <p className="mt-1 flex-1 text-sm leading-relaxed text-charcoal/80">{copy.note}</p>
