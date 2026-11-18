@@ -3,6 +3,7 @@ import { Sparkles, ShieldCheck, MessageCircle, Lock, X, Heart } from "lucide-rea
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
 import { SITE_URL } from "@/lib/siteConfig";
+import { ExchangeJourney } from "@/components/exchange/ExchangeJourney";
 
 // PolyglotMatch — a distinct, dark "night mode" visual identity for the
 // swipe-matching side of Language Exchange, shown as its own brand with a
@@ -56,7 +57,7 @@ const PolyglotMatchLandingPage = () => {
       body: isAr
         ? "تصفّح ملفات متعلمين آخرين، وأعجب بمن يثير اهتمامك."
         : "Browse other learners' profiles and like the ones you connect with.",
-      grad: "from-[#8B5CF6] to-[#22D3EE]",
+      grad: "from-[#8B5CF6] to-[#FFE600] text-[#0C0A16]",
     },
     {
       n: "٣",
@@ -65,7 +66,7 @@ const PolyglotMatchLandingPage = () => {
       body: isAr
         ? "عند التطابق المتبادل، تُفتح المحادثة فورًا داخل كلوفرز."
         : "On a mutual like, the chat opens instantly inside Klovers.",
-      grad: "from-[#22D3EE] to-[#FF3EA5]",
+      grad: "from-[#FF3EA5] to-[#FFE600] text-[#0C0A16]",
     },
   ];
 
@@ -88,7 +89,7 @@ const PolyglotMatchLandingPage = () => {
       <style>{`
         .pm-display { font-family: 'Poppins', 'Cairo', sans-serif; }
         .pm-grad-text {
-          background: linear-gradient(90deg,#FF3EA5,#8B5CF6,#22D3EE);
+          background: linear-gradient(90deg,#FF3EA5,#8B5CF6,#FFE600,#FF3EA5);
           -webkit-background-clip: text; background-clip: text; color: transparent;
           background-size: 200% auto;
           animation: pm-grad-shift 6s ease-in-out infinite;
@@ -108,25 +109,25 @@ const PolyglotMatchLandingPage = () => {
 
       {/* ambient glow */}
       <div className="pointer-events-none fixed -top-24 right-[-120px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,62,165,0.30),transparent_70%)] blur-xl" />
-      <div className="pointer-events-none fixed top-[420px] left-[-160px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.22),transparent_70%)] blur-xl" />
+      <div className="pointer-events-none fixed top-[420px] left-[-160px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,230,0,0.16),transparent_70%)] blur-xl" />
 
       {/* NAV — pinned ltr so the logo always sits on the left, even in the
           Arabic/RTL layout (brand mark position shouldn't flip). */}
       <div dir="ltr" className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-7">
         <Link to={isAr ? "/ar" : "/"} className="flex items-center gap-2.5" aria-label={isAr ? "العودة إلى كلوفرز" : "Back to Klovers"}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF3EA5] to-[#8B5CF6] text-lg font-extrabold">
+          <div className="flex h-10 w-10 items-center justify-center pm-fuse rounded-xl text-lg font-extrabold text-[#0C0A16]">
             P
           </div>
           <div className="flex flex-col leading-tight">
             <span className="pm-display text-[19px] font-extrabold tracking-tight">PolyglotMatch</span>
-            <span className="text-[11px] font-semibold text-[#A79FC9] hover:text-[#F3F1FA] transition">
+            <span className="text-[11px] font-bold text-[#FFE600] hover:text-[#FFF59A] transition">
               {isAr ? "من كلوفرز · by Klovers" : "by Klovers"}
             </span>
           </div>
         </Link>
         <Link
           to="/exchange/app"
-          className="rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-5 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5"
+          className="pm-fuse-btn rounded-full px-5 py-2.5 text-sm font-extrabold transition hover:-translate-y-0.5"
         >
           {isAr ? "ابدأ الماتش" : "Start matching"}
         </Link>
@@ -161,7 +162,7 @@ const PolyglotMatchLandingPage = () => {
           <div className="pm-fade-up mt-8 flex flex-wrap gap-3.5" style={{ animationDelay: "240ms" }}>
             <Link
               to="/exchange/app"
-              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-8 py-4 text-[17px] font-bold text-white transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-10px_rgba(255,62,165,0.6)]"
+              className="inline-flex items-center justify-center pm-fuse-btn rounded-full px-8 py-4 text-[17px] font-extrabold transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-10px_rgba(255,62,165,0.6)]"
             >
               {isAr ? "جرّب الآن — مجانًا" : "Try it now — free"}
             </Link>
@@ -175,20 +176,30 @@ const PolyglotMatchLandingPage = () => {
         </div>
 
         <div className="flex min-w-[280px] flex-1 justify-center">
-          <div className="pm-float pm-hero-card w-full max-w-[340px] overflow-hidden rounded-[22px] border border-white/[0.08] bg-[#171329] shadow-[0_0_0_1px_rgba(255,62,165,0.25),0_20px_60px_-20px_rgba(139,92,246,0.45)]">
-            <div className="flex h-[220px] items-center justify-center bg-gradient-to-br from-[#2A1F4D] via-[#512A6B] to-[#8B5CF6] text-6xl">
-              🎧
+          <div className="pm-float pm-hero-card w-full max-w-[340px] overflow-hidden rounded-[22px] border border-white/[0.08] bg-[#171329] shadow-[0_0_0_1px_rgba(255,230,0,0.35),0_20px_60px_-20px_rgba(255,62,165,0.5)]">
+            <div className="relative h-[240px] overflow-hidden">
+              <img
+                src="/assets/exchange/avatars/lina-cafe-yellow.webp"
+                alt={isAr ? "لينا من كلوفرز" : "Lina from KLOVERS"}
+                width={384}
+                height={384}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#171329] via-transparent to-transparent" />
+              <span className="absolute start-3 top-3 rounded-full bg-[#FFE600] px-3 py-1 text-[11px] font-extrabold text-[#0C0A16]">
+                {isAr ? "من قصة كلوفرز" : "From the KLOVERS story"}
+              </span>
             </div>
             <div className="p-5">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <div className="text-[17px] font-extrabold">{isAr ? "نور · 21" : "Nour · 21"}</div>
+                  <div className="text-[17px] font-extrabold">{isAr ? "لينا" : "Lina"}</div>
                   <div className="text-[13px] text-[#A79FC9]">
-                    {isAr ? "تتعلم الكورية · كيبوب ودراما" : "Learning Korean · K-pop & dramas"}
+                    {isAr ? "تتعلم الكورية · دراما ومقاهٍ" : "Learning Korean · K-dramas & cafés"}
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#22D3EE]/30 bg-[#22D3EE]/10 px-3 py-1 text-[13px] font-bold text-[#7CE4F5]">
-                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#22D3EE]" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#FFE600]/40 bg-[#FFE600]/10 px-3 py-1 text-[13px] font-bold text-[#FFE600]">
+                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#FFE600]" />
                   {isAr ? "متصلة الآن" : "Online now"}
                 </span>
               </div>
@@ -196,8 +207,8 @@ const PolyglotMatchLandingPage = () => {
                 <div className="flex flex-1 items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-3.5 transition hover:-translate-y-0.5 hover:border-[#FF3EA5]/40 hover:bg-[#FF3EA5]/10">
                   <X className="h-5 w-5" />
                 </div>
-                <div className="flex flex-1 items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] py-3.5 transition hover:-translate-y-0.5 hover:brightness-110">
-                  <Heart className="h-5 w-5 fill-white" />
+                <div className="flex flex-1 items-center justify-center pm-fuse-btn rounded-2xl py-3.5 transition hover:-translate-y-0.5 hover:brightness-110">
+                  <Heart className="h-5 w-5 fill-[#0C0A16]" />
                 </div>
               </div>
             </div>
@@ -248,6 +259,9 @@ const PolyglotMatchLandingPage = () => {
           ))}
         </div>
       </div>
+
+      {/* THE JOURNEY CONTINUES (19 Nov 2026) */}
+      <ExchangeJourney isAr={isAr} />
 
       {/* SAFETY */}
       <div id="safety" className="bg-[#120F22] px-6 py-20">
@@ -317,7 +331,7 @@ const PolyglotMatchLandingPage = () => {
         </p>
         <Link
           to="/exchange/app"
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] px-12 py-[18px] text-[19px] font-bold text-white transition hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-12px_rgba(255,62,165,0.7)]"
+          className="inline-flex items-center gap-2 pm-fuse-btn rounded-full px-12 py-[18px] text-[19px] font-extrabold transition hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-12px_rgba(255,62,165,0.7)]"
         >
           <Sparkles className="h-5 w-5" />
           {isAr ? "ابدأ التطابق الآن" : "Start matching now"}

@@ -49,10 +49,10 @@ export function CastLine({
         height={96}
         loading="lazy"
         decoding="async"
-        className={`${size} shrink-0 rounded-full object-cover ring-2 ring-[#FF3EA5]/60 shadow-[0_0_18px_rgba(255,62,165,0.35)]`}
+        className={`${size} shrink-0 rounded-full object-cover ring-2 ring-[#FFE600] shadow-[0_0_18px_rgba(255,62,165,0.45)]`}
       />
       <div className="relative min-w-0 flex-1 rounded-2xl rounded-ss-sm border border-white/10 bg-white/[0.05] px-3.5 py-2.5 backdrop-blur-sm">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-[#FF7AC6]">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[#FFE600]">
           {isAr ? c.ar : c.en}
         </p>
         <div className={`${compact ? "text-xs" : "text-sm"} mt-0.5 leading-relaxed text-white/85`}>{children}</div>

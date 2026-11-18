@@ -61,6 +61,7 @@ import {
 } from "@/constants/languageExchange";
 import { AvatarArt } from "@/components/exchange/AvatarArt";
 import { CastLine } from "@/components/exchange/CastLine";
+import { ExchangeJourneyStrip } from "@/components/exchange/ExchangeJourney";
 import { getUserTimezone } from "@/lib/viewerTimezone";
 
 /**
@@ -148,12 +149,12 @@ function ExchangeAppNav({ isAr }: { isAr: boolean }) {
   return (
     <div dir="ltr" className="relative mx-auto flex max-w-3xl items-center justify-between px-4 py-5">
       <Link to="/exchange" className="flex items-center gap-2" aria-label={isAr ? "العودة إلى PolyglotMatch" : "Back to PolyglotMatch"}>
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF3EA5] to-[#8B5CF6] text-sm font-extrabold text-white">
+        <div className="flex h-8 w-8 items-center justify-center pm-fuse rounded-lg text-sm font-extrabold text-[#0C0A16]">
           P
         </div>
         <span className="text-[15px] font-extrabold tracking-tight">PolyglotMatch</span>
       </Link>
-      <span className="text-[11px] font-semibold text-[#A79FC9]">
+      <span className="text-[11px] font-bold text-[#FFE600]">
         {isAr ? "من كلوفرز" : "by Klovers"}
       </span>
     </div>
@@ -182,7 +183,7 @@ function ExchangeAmbientGlow() {
         .pm-animate-ring { animation: pm-ring-pulse 1.6s ease-out infinite; }
       `}</style>
       <div className="pointer-events-none fixed -top-24 right-[-120px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,62,165,0.22),transparent_70%)] blur-xl" />
-      <div className="pointer-events-none fixed top-[420px] left-[-160px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.16),transparent_70%)] blur-xl" />
+      <div className="pointer-events-none fixed top-[420px] left-[-160px] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle,rgba(255,230,0,0.12),transparent_70%)] blur-xl" />
     </>
   );
 }
@@ -312,6 +313,7 @@ export default function LanguageExchangePage() {
               "أنشئ حسابًا مجانيًا لإنشاء ملفك الشخصي والعثور على شريك لممارسة اللغة معه.",
             )}
           </p>
+          <ExchangeJourneyStrip isAr={isAr} className="mx-auto mt-5 max-w-xl" />
           <div className="mt-6 flex justify-center gap-3">
             <Button asChild>
               <Link to={`/signup?redirect=${encodeURIComponent("/exchange/app")}`}>{tr("Sign up", "إنشاء حساب")}</Link>
@@ -339,6 +341,7 @@ export default function LanguageExchangePage() {
               "تصفّح الملفات الشخصية، وكوّن تطابقًا، ومارس اللغة معًا.",
             )}
           </p>
+          <ExchangeJourneyStrip isAr={isAr} className="mx-auto mt-5 max-w-xl" />
         </div>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
@@ -351,7 +354,7 @@ export default function LanguageExchangePage() {
               <TabsTrigger
                 key={value}
                 value={value}
-                className="rounded-full font-bold transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#FF3EA5] data-[state=active]:to-[#8B5CF6] data-[state=active]:text-white data-[state=active]:shadow-[0_4px_16px_-4px_rgba(255,62,165,0.6)]"
+                className="pm-fuse-tab rounded-full font-bold transition-all data-[state=active]:shadow-[0_4px_16px_-4px_rgba(255,62,165,0.6)]"
               >
                 {label}
               </TabsTrigger>
@@ -716,7 +719,7 @@ function DiscoverDeck({
           </CastLine>
           <DialogFooter className="sm:justify-center">
             <Button
-              className="rounded-full bg-gradient-to-r from-[#FF3EA5] to-[#8B5CF6] font-bold text-white hover:opacity-90"
+              className="pm-fuse-btn rounded-full font-extrabold hover:opacity-90"
               onClick={() => setMatchedWith(null)}
             >
               {tr("Keep swiping", "تابع التصفّح")}
@@ -983,12 +986,12 @@ function SwipeCard({
         </Button>
         <Button
           size="icon"
-          className="h-16 w-16 rounded-full bg-gradient-to-br from-[#FF3EA5] to-[#8B5CF6] text-white shadow-[0_8px_24px_-6px_rgba(255,62,165,0.6)] transition hover:-translate-y-0.5 hover:brightness-110 active:scale-90"
+          className="pm-fuse-btn h-16 w-16 rounded-full shadow-[0_8px_24px_-6px_rgba(255,62,165,0.6)] transition hover:-translate-y-0.5 hover:brightness-110 active:scale-90"
           onClick={() => triggerExit("like")}
           disabled={disabled || !!exiting}
           aria-label={tr("Like", "إعجاب")}
         >
-          <Heart className="h-7 w-7 fill-white" />
+          <Heart className="h-7 w-7 fill-[#0C0A16]" />
         </Button>
       </div>
     </div>

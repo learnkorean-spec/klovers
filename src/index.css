@@ -284,7 +284,7 @@ Type, loaded in index.html:
    * over the plain `.dark` block above on specificity.
    *   background #0C0A16   primary (pink)   #FF3EA5
    *   card       #171329   secondary(purple) #8B5CF6
-   *   foreground #F3F1FA   accent  (cyan)   #22D3EE
+   *   foreground #F3F1FA   accent  (KLOVERS yellow) #FFE600
    */
   .dark.pm-night {
     --background: 250 36% 6%;
@@ -305,7 +305,8 @@ Type, loaded in index.html:
     --muted: 251 30% 16%;
     --muted-foreground: 251 28% 71%;
 
-    --accent: 188 86% 53%;
+    /* 19 Nov 2026: accent is KLOVERS yellow (was cyan), the fusion colour. */
+    --accent: 54 100% 50%;
     --accent-foreground: 250 36% 6%;
 
     --border: 250 20% 22%;
@@ -834,4 +835,26 @@ Type, loaded in index.html:
 .bg-purple-900.bg-purple-900,
 .bg-purple-950.bg-purple-950 {
   color: #FFF9EC;
+}
+
+/* PolyglotMatch x KLOVERS fusion (Re, 19 Nov 2026: "a fusion between the
+   polyglot colors and yellow"): PolyglotMatch pink/violet meeting KLOVERS
+   yellow. Used on /exchange, /exchange/app and the home entry card. */
+.pm-fuse {
+  background-image: linear-gradient(110deg, #FF3EA5 0%, #B14DE0 45%, #FFE600 100%);
+}
+.pm-fuse-btn {
+  background-image: linear-gradient(100deg, #FF3EA5 0%, #FF7A59 55%, #FFE600 100%);
+  color: #0C0A16;
+}
+.pm-fuse-text {
+  background-image: linear-gradient(90deg, #FF3EA5, #8B5CF6, #FFE600);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.pm-fuse-tab[data-state="active"] {
+  background-image: linear-gradient(100deg, #FF3EA5 0%, #FF7A59 55%, #FFE600 100%);
+  color: #0C0A16;
+  box-shadow: 0 4px 16px -4px rgba(255, 62, 165, 0.6);
 }
