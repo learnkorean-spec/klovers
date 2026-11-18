@@ -52,9 +52,15 @@ export default function ExchangeEntryCard({ isAr, compact = false }: ExchangeEnt
         dir={isAr ? "rtl" : "ltr"}
         className="relative mx-auto grid max-w-6xl overflow-hidden rounded-[22px] border border-white/[0.08] bg-[#0C0A16] text-[#F3F1FA] shadow-[0_0_0_1px_rgba(255,62,165,0.18),0_20px_60px_-20px_rgba(139,92,246,0.45)] md:grid-cols-[1.1fr_1fr]"
       >
-        {/* ambient glow, same two blobs as the landing page */}
-        <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(255,62,165,0.30),transparent_70%)] blur-xl" aria-hidden="true" />
-        <div className="pointer-events-none absolute -bottom-28 -left-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.22),transparent_70%)] blur-xl" aria-hidden="true" />
+        {/* ambient glow, same two blobs as the landing page. They live inside
+            their own clipping layer: left loose they stick out past the card,
+            which makes the card (overflow-hidden) a scrollable box, and then
+            scrollIntoView / Tab-focus on the CTA slides the whole card up and
+            to the left. */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(255,62,165,0.30),transparent_70%)] blur-xl" />
+          <div className="absolute -bottom-28 -left-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.22),transparent_70%)] blur-xl" />
+        </div>
 
         <div
           className={`relative flex items-center justify-center gap-3 overflow-hidden bg-gradient-to-br from-[#2A1F4D] via-[#512A6B] to-[#8B5CF6]/80 ${compact ? "h-36" : "h-48"} md:h-auto`}
