@@ -85,7 +85,9 @@ function ExchangeAvatar({
         className={className ?? "flex h-full w-full items-center justify-center"}
         style={{ backgroundColor: style.bg }}
       >
-        <AvatarArt avatarKey={style.key} className="h-full w-full" />
+        {/* Square, centred: a character portrait must not stretch across the
+            wide swipe-card panel (18 Nov 2026). */}
+        <AvatarArt avatarKey={style.key} className="aspect-square h-full max-w-full" />
       </div>
     );
   }
@@ -1484,8 +1486,8 @@ function ProfileEditor({
         <Label>{tr("Avatar", "الصورة الرمزية")} *</Label>
         <p className="mb-2 text-sm text-muted-foreground">
           {tr(
-            "No photo uploads here — pick a character avatar, so Language Exchange stays about learning, not looks.",
-            "لا يوجد رفع صور هنا — اختر شخصية رمزية، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
+            "No photo uploads here. Pick Lina, Adam or Cluby from the Klovers cast, so Language Exchange stays about learning, not looks.",
+            "لا يوجد رفع صور هنا. اختر لينا أو آدم أو كلوبي من شخصيات كلوفرز، حتى يبقى تبادل اللغة عن التعلّم لا عن الشكل.",
           )}
         </p>
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-7">
@@ -1501,7 +1503,8 @@ function ProfileEditor({
                   selected ? "ring-2 ring-primary ring-offset-2" : "opacity-80 hover:opacity-100"
                 }`}
                 style={{ backgroundColor: style.bg }}
-                aria-label={style.key}
+                aria-label={style.label ? (isAr ? style.label.ar : style.label.en) : style.key}
+                title={style.label ? (isAr ? style.label.ar : style.label.en) : undefined}
                 aria-pressed={selected}
               >
                 <AvatarArt avatarKey={style.key} className="h-full w-full" />

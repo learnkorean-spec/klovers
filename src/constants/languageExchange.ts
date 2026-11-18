@@ -7,7 +7,7 @@
  * src/i18n/translations.ts for a single page.
  */
 
-import { EXCHANGE_AVATAR_DEFS } from "@/components/exchange/AvatarArt";
+import { ALL_AVATAR_DEFS, EXCHANGE_AVATAR_DEFS } from "@/components/exchange/AvatarArt";
 
 export interface LanguageOption {
   code: string;
@@ -179,7 +179,8 @@ export function shortTimezoneLabel(tz: string | null | undefined): string {
  * biggest catfishing/harassment surface a swipe-based feature can have).
  *
  * No upload exists for this feature at all: a profile picks one of a fixed
- * set of original cartoon-character avatars (src/components/exchange/AvatarArt.tsx),
+ * set of avatars (src/components/exchange/AvatarArt.tsx): since 18 Nov 2026
+ * the KLOVERS cast itself (Lina, Adam, Cluby), before that flat cartoon faces,
  * stored as "avatar://<key>" in the existing `avatar_url` column (no schema
  * change needed — it was already free text). The character set deliberately
  * excludes anything romantic (no hearts, no couple poses, no flirtatious
@@ -203,7 +204,7 @@ export const isBuiltInAvatarValue = (v: string | null | undefined): boolean =>
 export const avatarStyleFromValue = (v: string | null | undefined) => {
   if (!isBuiltInAvatarValue(v)) return null;
   const key = v!.slice(AVATAR_ICON_PREFIX.length);
-  return EXCHANGE_AVATAR_DEFS.find((a) => a.key === key) ?? null;
+  return ALL_AVATAR_DEFS.find((a) => a.key === key) ?? null;
 };
 
 export const REPORT_REASONS: { key: string; en: string; ar: string }[] = [

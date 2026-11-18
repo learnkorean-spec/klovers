@@ -46,9 +46,13 @@ export interface FaceDef {
 
 export interface AvatarDef {
   key: string;
-  gender: "male" | "female";
+  gender: "male" | "female" | "any";
   bg: string;
-  face: FaceDef;
+  /** Flat SVG face (the retired 4-10 Nov cast, still rendered for old profiles). */
+  face?: FaceDef;
+  /** Character portrait (Lina, Adam, Cluby), the picker's set since 18 Nov 2026. */
+  img?: string;
+  label?: { en: string; ar: string };
 }
 
 // Pastel tints of the Klovers brand set (mint #9FDDBE, butter #F3D46A, pink
@@ -71,7 +75,11 @@ const SHIRT_BUTTER = "#E3B94A";
 const SHIRT_PINK = "#E598A8";
 const SHIRT_INK = "#4A2E1F"; // Cluby's own eye-ink, doubles as a warm charcoal
 
-export const EXCHANGE_AVATAR_DEFS: AvatarDef[] = [
+/**
+ * Retired 18 Nov 2026 (see CHARACTER_AVATARS below). Kept only so a profile
+ * that saved one of these keys still renders; no longer offered in the picker.
+ */
+export const LEGACY_FACE_AVATARS: AvatarDef[] = [
   { key: "boy_dark_short", gender: "male", bg: BG_MINT_1, face: { skin: "#C68642", hair: "#2B1B12", hairStyle: "short", shirt: SHIRT_MINT } },
   { key: "boy_olive_curly", gender: "male", bg: BG_BUTTER_1, face: { skin: "#E0AC69", hair: "#5A3825", hairStyle: "curly", shirt: SHIRT_BUTTER } },
   { key: "boy_deep_buzz", gender: "male", bg: BG_BUTTER_2, face: { skin: "#8D5524", hair: "#1A1A1A", hairStyle: "buzz", shirt: SHIRT_INK } },
@@ -103,6 +111,53 @@ export const EXCHANGE_AVATAR_DEFS: AvatarDef[] = [
   { key: "girl_tan_glasses_curly", gender: "female", bg: BG_PINK_1, face: { skin: "#D8A26A", hair: "#5A3825", hairStyle: "curly", glasses: true, shirt: SHIRT_BUTTER } },
   { key: "girl_hijab_butter", gender: "female", bg: BG_BUTTER_2, face: { skin: "#E0AC69", hair: "#E3B94A", hairStyle: "hijab", shirt: SHIRT_BUTTER } },
 ];
+
+/**
+ * 18 Nov 2026 (Re: "must have avatars from our characters lina adam cluby"):
+ * the picker now offers the KLOVERS cast itself, 6 x Lina, 6 x Adam,
+ * 6 x Cluby, each cropped from an existing canon picture on the site (no new
+ * generation), so every face is exactly the canon look and each one wears
+ * the outfit of the scene it came from (wardrobe rule: one KLOVERS-yellow
+ * piece; Cluby never changes, so the two blue-hanbok Cluby pictures were
+ * left out). Files: public/assets/exchange/avatars/<key>.webp, 384 px.
+ *
+ * Why this is fine for the avatars-only rule above: these are the brand's
+ * own well-known characters, shared by everyone, so they cannot pass as a
+ * stranger's real photo. The 4 Nov concern was new photoreal faces that
+ * could; a Lina avatar reads as "a Klovers learner", like a team jersey.
+ */
+const cast = (
+  key: string,
+  gender: AvatarDef["gender"],
+  en: string,
+  ar: string,
+): AvatarDef => ({ key, gender, bg: BG_IVORY, img: `/assets/exchange/avatars/${key}.webp`, label: { en, ar } });
+
+export const CHARACTER_AVATARS: AvatarDef[] = [
+  cast("lina-classic", "female", "Lina", "لينا"),
+  cast("lina-cafe", "female", "Lina at the café", "لينا في المقهى"),
+  cast("lina-hanok", "female", "Lina in the hanok", "لينا في الهانوك"),
+  cast("lina-palace", "female", "Lina at the palace", "لينا عند القصر"),
+  cast("lina-online", "female", "Lina in class", "لينا في الحصة"),
+  cast("lina-market", "female", "Lina at the market", "لينا في السوق"),
+  cast("adam-classic", "male", "Adam", "آدم"),
+  cast("adam-cafe", "male", "Adam at the café", "آدم في المقهى"),
+  cast("adam-picnic", "male", "Adam at the Han river", "آدم عند نهر هان"),
+  cast("adam-online", "male", "Adam in class", "آدم في الحصة"),
+  cast("adam-village", "male", "Adam in Hangul Village", "آدم في قرية الهانغول"),
+  cast("adam-talk", "male", "Adam chatting", "آدم يتحدث"),
+  cast("cluby-celebrate", "any", "Cluby celebrating", "كلوبي يحتفل"),
+  cast("cluby-star", "any", "Cluby with a star", "كلوبي ومعه نجمة"),
+  cast("cluby-wave", "any", "Cluby waving", "كلوبي يلوّح"),
+  cast("cluby-reading", "any", "Cluby reading", "كلوبي يقرأ"),
+  cast("cluby-market", "any", "Cluby at the market", "كلوبي في السوق"),
+  cast("cluby-study", "any", "Cluby studying", "كلوبي يذاكر"),
+];
+
+/** What the picker offers. */
+export const EXCHANGE_AVATAR_DEFS: AvatarDef[] = CHARACTER_AVATARS;
+/** Everything that can still be rendered (picker set + retired faces). */
+export const ALL_AVATAR_DEFS: AvatarDef[] = [...CHARACTER_AVATARS, ...LEGACY_FACE_AVATARS];
 
 /** Blend a hex color toward white by `amount` (0-1) — used for the hair-shine highlight. */
 function lighten(hex: string, amount: number): string {
@@ -227,7 +282,22 @@ export function FaceSvg({ face, className }: { face: FaceDef; className?: string
 }
 
 export function AvatarArt({ avatarKey, className }: { avatarKey: string; className?: string }) {
-  const def = EXCHANGE_AVATAR_DEFS.find((a) => a.key === avatarKey);
+  const def = ALL_AVATAR_DEFS.find((a) => a.key === avatarKey);
   if (!def) return null;
-  return <FaceSvg face={def.face} className={className} />;
+  if (def.img) {
+    return (
+      <img
+        src={def.img}
+        alt=""
+        aria-hidden="true"
+        width={384}
+        height={384}
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+        className={`${className ?? ""} object-cover`}
+      />
+    );
+  }
+  return def.face ? <FaceSvg face={def.face} className={className} /> : null;
 }
