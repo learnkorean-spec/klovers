@@ -815,6 +815,19 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // Saves a lab picture to storage so it can be put on the site at a fixed
+    // path (Re, 18 Nov 2026: replace every old-style picture with lab ones).
+    if (body.mode === "save-image") {
+      const name = String(body.name ?? "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").slice(0, 80);
+      const image = String(body.imageDataUrl ?? "");
+      if (!name || !/^data:image\/png;base64,/.test(image)) throw new Error("name and a PNG imageDataUrl are required");
+      const bytes = Uint8Array.from(atob(image.split(",")[1]), (ch) => ch.charCodeAt(0));
+      const path = `ai-room-lab/out/${name}.png`;
+      const { error } = await adminClient.storage.from(REVIEWS_BUCKET).upload(path, bytes, { upsert: true, contentType: "image/png", cacheControl: "60" });
+      if (error) throw error;
+      const url = adminClient.storage.from(REVIEWS_BUCKET).getPublicUrl(path).data.publicUrl;
+      return new Response(JSON.stringify({ url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     if (body.mode === "picture-check") {
       const image = String(body.image ?? "");
       if (!/^data:image\/(png|jpe?g|webp);base64,/.test(image)) throw new Error("image must be a data URL");
