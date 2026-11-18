@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import PersonalTrialBooking from "@/components/PersonalTrialBooking";
 import PersonalLessonPricing from "@/components/PersonalLessonPricing";
+import ArticlesTeaser from "@/components/ArticlesTeaser";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import englishConversationPhoto from "@/assets/english-conversation-practice.jpg";
 import englishOpenBookPhoto from "@/assets/english-open-book.jpg";
@@ -122,6 +123,7 @@ const VocaHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; tog
     { href: "#how-it-works", label: tr("How it works", "كيف تسير الدروس") },
     { href: "#pricing", label: tr("Pricing", "الأسعار") },
     { href: "#faq", label: tr("FAQ", "الأسئلة الشائعة") },
+    { href: "/learn-english/articles", label: tr("Articles", "المقالات") },
   ];
   return (
     <header className="sticky top-0 z-40 border-b border-foreground/10 bg-background/90 backdrop-blur">
@@ -504,6 +506,9 @@ const LearnEnglishPage = () => {
         </section>
 
         {/* Common questions — visible text backing the FAQPage schema above */}
+        {/* Articles — 18 Nov 2026: the door's own article library, same level as maktub's. */}
+        <ArticlesTeaser path="/learn-english" ink={INK} paper={PAPER} isAr={isAr} langAr="الإنجليزية" langEn="English" />
+
         <section className="py-20 border-b scroll-mt-24" id="faq">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl sm:text-3xl font-semibold text-foreground" style={displayFont}>
