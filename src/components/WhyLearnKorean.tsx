@@ -158,11 +158,14 @@ const WhyLearnKorean = () => {
                     src={card.image}
                     alt=""
                     aria-hidden="true"
-                    width={400}
-                    height={500}
+                    width={1200}
+                    height={800}
                     loading="lazy"
                     decoding="async"
-                    className="aspect-[4/3] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100 sm:aspect-[4/5]"
+                    /* 18 Nov 2026: the v3 photos are 3:2; the old 4/5 frame threw
+                       away half of each (Lina was cut off in K-Culture). The
+                       frame now matches the photo, so the whole scene shows. */
+                    className="aspect-[3/2] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                     style={{ objectPosition: card.focus }}
                   />
                   </div>

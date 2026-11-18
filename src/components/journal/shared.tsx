@@ -358,9 +358,12 @@ export function ArticleCard({
           alt={post.hero_alt || post.title}
           fallback={<CoverFallback stage={learning.stage} />}
           variant="card"
-          className="!aspect-[4/5] !rounded-none transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
+          /* 18 Nov 2026: was a 4/5 frame with the caption laid over its lower
+             half, so a 16:9 cover showed only a thin middle strip (heads cut
+             off). The cover now shows near-whole and the caption sits under it. */
+          className="!aspect-[16/10] !rounded-none transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
         />
-        <div className="absolute inset-x-0 bottom-0 bg-charcoal/90 p-4 backdrop-blur-[2px]">
+        <div className="bg-charcoal p-4">
           <div className="mb-1.5 flex flex-wrap gap-1.5">
             <CategoryChip stage={learning.stage} isAr={isAr} tone="dark" />
             {doneBadge}
