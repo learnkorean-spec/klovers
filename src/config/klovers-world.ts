@@ -453,6 +453,11 @@ export const KLOVERS_WORLD = {
   wardrobeRule: {
     facesAndHair: "fixed_from_canon_reference",
     clothes: "change_with_the_scene_one_klovers_yellow_piece",
+    // Re, 18 Nov 2026: "all must be connected with klovers yellow color in
+    // their designs". Not only Adam and Lina: every person in a story
+    // picture (supporting cast, classmates, locals, background people)
+    // wears at least one visible KLOVERS-yellow piece.
+    everyoneWearsYellow: "every_person_in_every_story_picture_wears_one_visible_klovers_yellow_piece",
     cluby: "never_changes",
     supportingCastLooks: "fixed_per_person_in_STORY_CAST",
     internationalClassmates: ["omar_egypt", "zsofia_hungary", "amara_uk", "layla_saudi_arabia"],
@@ -492,7 +497,7 @@ export const KLOVERS_WORLD = {
       "real_teachers_are_never_replaced_by_story_characters",
     ],
     newPeople:
-      "New students and local people appear per country over time, each following the supportingKoreanCast precedent: a native speaker or fellow student, never a teacher, never a love interest, one fixed look each.",
+      "New students and local people appear per country over time, each following the supportingKoreanCast precedent: a native speaker or fellow student, never a teacher, never a love interest, one fixed look each, and one visible KLOVERS-yellow piece in every picture.",
     status: "decision_recorded_nothing_built_yet",
     notDecidedYet: [
       "which_countries_and_in_what_order",

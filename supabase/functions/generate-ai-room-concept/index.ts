@@ -41,6 +41,15 @@ const MUSE_SPARK_MODEL = "muse-spark-1.3";
 // redundant anchor alongside the reference images — the two reference
 // images are explicitly labelled (reference image 1 vs. 2) so the model
 // doesn't conflate or guess which description applies to which image.
+// Re, 18 Nov 2026: "all must be connected with klovers yellow color in their
+// designs". Every person in a story picture, supporting and background people
+// included, wears at least one visible KLOVERS-yellow piece. Cluby already
+// does (his canon yellow wrap skirt) and never changes.
+const KLOVERS_YELLOW_RULE =
+  "Every person in the picture, including every supporting and background " +
+  "person, wears at least one clearly visible bright KLOVERS-yellow (#FFFF00) " +
+  "piece, such as a jacket, scarf, cap, bag, apron, hijab or sneakers.";
+
 const CHARACTER_DESCRIPTIONS =
   "Reference image 1 shows Adam and Lina, two real people — match their real " +
   "faces, skin, and hair exactly. Adam wears a bright yellow blazer, cream " +
@@ -54,7 +63,8 @@ const CHARACTER_DESCRIPTIONS =
   "a short mint tail with small spikes, wearing an ivory mini hanbok top, a " +
   "bright KLOVERS-yellow wrap skirt, and a small green four-leaf-clover " +
   "emblem on the chest. Cluby's body and fur must stay mint green at all " +
-  "times — never beige, tan, or yellow-brown like an ordinary teddy bear.";
+  "times — never beige, tan, or yellow-brown like an ordinary teddy bear. " +
+  KLOVERS_YELLOW_RULE;
 
 const KLOVERS_STYLE =
   "The room/environment: soft, warm, premium Korean-storybook atmosphere and " +
@@ -120,7 +130,8 @@ function newCharacterInstruction(extraCharacter: string): string {
     `hairstyle, and outfit, clearly different from Adam and Lina and from any ` +
     `other person already in the scene — per KLOVERS World's standing rule ` +
     `that every background person looks different and Korean. This is a new ` +
-    `side character for the scene, not a replacement for Adam, Lina, or Cluby.`
+    `side character for the scene, not a replacement for Adam, Lina, or Cluby. ` +
+    KLOVERS_YELLOW_RULE
   );
 }
 
@@ -581,7 +592,8 @@ async function scoreCoverImage(
     "photorealism and fidelity, clean uncluttered premium Korean-storybook " +
     "composition, portrait framing with usable empty margin at top and bottom " +
     "for a title to be overlaid later, warm ivory/yellow/charcoal KLOVERS " +
-    "palette, and whether the scene matches the requested theme. " +
+    "palette, whether every person wears at least one visible KLOVERS-yellow " +
+    "piece, and whether the scene matches the requested theme. " +
     `Theme: "${theme}".` +
     (extraCharacter
       ? ` It should include a new supporting character: "${extraCharacter}".`
@@ -754,6 +766,7 @@ function storyScenePrompt(scene: string, adam: string, lina: string, cast: strin
       : "Cluby is not in this picture.",
     people.length ? `Also in the scene, each with their own distinct face as described: ${people.join("; ")}.` : "",
     "Adam and Lina are friends and study companions, not a couple: no romantic poses.",
+    KLOVERS_YELLOW_RULE,
     "Everyone is an adult. People are photorealistic: real skin, real hair, real fabric, natural candid poses and expressions, natural light. Varied, specific real location, not a generic café.",
     "No readable text, letters, numbers, logos or signs anywhere; any sign is blank or out of focus.",
   ].filter(Boolean).join(" ");

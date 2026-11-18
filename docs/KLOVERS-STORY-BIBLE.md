@@ -423,7 +423,10 @@ onto their existing learning progress.
 
 Adam's and Lina's faces and hair always match the canon reference photo.
 Their clothes change with the scene (season, place, activity), and every
-outfit keeps one KLOVERS-yellow piece. Cluby never changes. Each named
+outfit keeps one KLOVERS-yellow piece. The same goes for everyone else in a
+story picture (Re, 18 Nov 2026): supporting cast, classmates, locals and
+background people each wear at least one visible KLOVERS-yellow piece, so
+every scene reads as Klovers at a glance. Cluby never changes. Each named
 supporting person has one fixed look (see `STORY_CAST` in
 `supabase/functions/generate-ai-room-concept/index.ts`) so they stay
 recognisable from picture to picture. Classmates from other countries (Omar,

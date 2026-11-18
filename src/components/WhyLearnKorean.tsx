@@ -195,16 +195,17 @@ const WhyLearnKorean = () => {
             One story moment, so the trio is allowed (uiRules.trioUse). Korea is
             the first stop; no other country is named or drawn, because which
             countries come next is still Re's open decision. Picture: AI Room
-            Lab, 98/100, no text in it. */}
+            Lab, 99/100, no text in it. Everyone in it wears KLOVERS yellow
+            (canon wardrobeRule.everyoneWearsYellow). */}
         <figure className="mx-auto mt-12 grid max-w-5xl items-center gap-6 overflow-hidden rounded-3xl border border-klovers-yellow/40 bg-ivory/[0.06] md:mt-16 md:grid-cols-[2fr_3fr]">
           <img
             src="/assets/story/trio-journey-start.webp"
-            alt={isAr ? "آدم ولينا وكلوبي بحقائب سفر صفراء أمام خريطة العالم، والطرق تنطلق من كوريا" : "Adam, Lina and Cluby with yellow suitcases in front of a world map, routes starting from Korea"}
+            alt={isAr ? "آدم ولينا وكلوبي بحقائب سفر صفراء أمام خريطة العالم، ومسافر يلوّح لهم" : "Adam, Lina and Cluby with yellow suitcases in front of a world map, a fellow traveler waving to them"}
             width={720}
-            height={884}
+            height={800}
             loading="lazy"
             decoding="async"
-            className="aspect-[4/3] w-full object-cover object-[50%_40%] md:aspect-[4/5] md:h-full"
+            className="aspect-[4/3] w-full object-cover object-[50%_45%] md:aspect-[4/5] md:h-full"
           />
           <figcaption className="px-6 pb-7 text-center md:py-8 md:pe-10 md:ps-0 md:text-start">
             <span className="inline-block rounded-full bg-klovers-yellow px-3 py-1 text-xs font-bold uppercase tracking-widest text-charcoal">
