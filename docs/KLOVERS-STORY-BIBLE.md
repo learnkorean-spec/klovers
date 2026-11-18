@@ -430,3 +430,36 @@ recognisable from picture to picture. Classmates from other countries (Omar,
 Egypt; Zsofia, Hungary; Amara, UK; Layla, Saudi Arabia) appear in pictures as
 fellow students in the learners' Korean class: background companions, never
 teachers, never love interests.
+
+## Language journey (Re, 18 Nov 2026)
+
+Klovers is growing from one Korean school into a family of languages (Korean,
+Arabic, English, Hungarian and more) that mixes self-paced learning, live
+teachers and exchange partners. The story grows with it.
+
+**Decision.** Adam, Lina and Cluby travel to the country of each language their
+learners study. The opening can change a little to fit each language and
+country, and new students and local people join over time.
+
+**What does not change.** Korea stays the first language, and the origin story
+above stays exactly as written: the egg in the hanok, the hatch earned by real
+Korean learning. Adam and Lina stay friends and study companions, not a couple.
+Cluby stays a companion and memory keeper, not a pet. Story progress still comes
+from real learning progress. Every outfit still keeps one KLOVERS-yellow piece.
+Real teachers are never replaced by story characters. New people follow the
+Minsu precedent: a native speaker or fellow student, never a teacher, never a
+love interest, one fixed look each.
+
+**Status.** Decision recorded, nothing built yet
+(`languageJourney` in `src/config/klovers-world.ts`). Before a country ships it
+gets its own entry in the code canon, and its story moment answers the six
+questions in CLAUDE.md.
+
+**Still to decide (Re).**
+
+1. Which countries, and in what order.
+2. How each language's opening differs, and whether the egg hatch repeats for
+   each language.
+3. When the trio leaves Korea, relative to a learner's own progress.
+4. Names and looks of the new students.
+5. Whether The Forgotten Clovers mystery reaches other countries.

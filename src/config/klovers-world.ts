@@ -19,7 +19,7 @@
  */
 
 export const KLOVERS_WORLD = {
-  version: "1.3",
+  version: "1.4",
 
   corePromise: {
     internal:
@@ -457,6 +457,50 @@ export const KLOVERS_WORLD = {
     supportingCastLooks: "fixed_per_person_in_STORY_CAST",
     internationalClassmates: ["omar_egypt", "zsofia_hungary", "amara_uk", "layla_saudi_arabia"],
     source: "Re, 18 Nov 2026",
+  },
+
+  /**
+   * THE LEARNERS TRAVEL WITH THE LANGUAGES (Re, 18 Nov 2026: "they will travel
+   * to the countries of the languages they study", "the start may change a bit
+   * but we can fit it to each language", "we are upgrading the story as we will
+   * add new countries and new students"). Klovers is growing from one Korean
+   * school into a family of languages (Korean, Arabic, English, Hungarian and
+   * more) that mixes self-paced learning, live teachers and exchange partners,
+   * and the story has to carry that.
+   *
+   * What this records: Adam, Lina and Cluby go to the country of each language
+   * their learners study. What it does NOT do: change anything already
+   * written above. Korea stays the first language and the origin story
+   * (the egg in the hanok, the hatch from real Korean learning) stays exactly
+   * as it is. Nothing is built from this entry yet; it only opens the door.
+   *
+   * Before any country ships, it gets its own entry here and its story moment
+   * answers the six questions in CLAUDE.md (what is learned, why now, which
+   * character owns it, which world, which real learner data triggers it, what
+   * changes afterwards).
+   */
+  languageJourney: {
+    source: "Re, 18 Nov 2026",
+    decision: "the_trio_travels_to_the_country_of_each_language_their_learners_study",
+    korea: "stays_first_language_and_origin_unchanged",
+    opening: "each_language_may_adapt_its_opening_to_fit_its_country_the_trio_and_their_roles_stay",
+    keeps: [
+      "adam_lina_friends_and_study_companions_not_a_couple",
+      "cluby_companion_and_memory_keeper_not_a_pet",
+      "story_progress_comes_from_real_learning_progress",
+      "wardrobeRule_one_klovers_yellow_piece_in_every_outfit",
+      "real_teachers_are_never_replaced_by_story_characters",
+    ],
+    newPeople:
+      "New students and local people appear per country over time, each following the supportingKoreanCast precedent: a native speaker or fellow student, never a teacher, never a love interest, one fixed look each.",
+    status: "decision_recorded_nothing_built_yet",
+    notDecidedYet: [
+      "which_countries_and_in_what_order",
+      "how_each_languages_opening_differs_and_whether_the_egg_hatch_repeats_per_language",
+      "when_the_trio_leaves_korea_relative_to_a_learners_own_progress",
+      "names_and_looks_of_the_new_students",
+      "whether_the_forgotten_clovers_mystery_reaches_other_countries",
+    ],
   },
 
   characterRelationshipRules: {
