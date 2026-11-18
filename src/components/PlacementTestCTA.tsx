@@ -162,21 +162,10 @@ const PlacementTestCTA = () => {
           </div>
 
           {/* ── Right: Animated Level Card (decorative) ── */}
-          {/* Top padding leaves room for Cluby above the card when stacked. */}
-          <div className="flex justify-center pt-24 md:pt-20">
+          <div className="flex justify-center">
             <div className="relative w-full max-w-sm">
-              {/* 3D Cluby with a gold star, perched on the card's top corner. */}
-              <img
-                src="/assets/cluby/cluby-star.webp"
-                alt={isAr ? "كلوبي يمسك نجمة ذهبية" : "Cluby holding a gold star"}
-                width={333}
-                height={440}
-                loading="lazy"
-                decoding="async"
-                draggable={false}
-                className="pointer-events-none absolute bottom-full -end-2 z-20 h-auto w-24 translate-y-4 select-none drop-shadow-[0_12px_16px_rgba(46,46,46,0.35)] sm:w-28"
-              />
-
+              {/* The perched Cluby-with-a-star was removed 18 Nov 2026 (Re: the
+                  front page should read as an adult school, not a kids' site). */}
               <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
                 <div className="bg-charcoal px-5 py-4 flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center">

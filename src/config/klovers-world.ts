@@ -1026,19 +1026,16 @@ export const KLOVERS_WORLD = {
         "real_world_study_path",
     },
 
-    {
-      order: 8,
-      section: "egg-teaser",
-      characters: [
-        "maleLearner",
-        "femaleLearner",
-      ],
-      explicitlyExclude: [
-        "cluby",
-      ],
-      storyFunction:
-        "origin_mystery_teaser",
-    },
+    /*
+     * Slot 8 ("egg-teaser", male + female learner, Cluby excluded,
+     * origin_mystery_teaser) was RETIRED from the homepage by Re on 18 Nov
+     * 2026, ahead of the StartIT incubation review: a glowing egg on the
+     * front page read as a children's site to adult buyers and judges. The
+     * mystery itself is untouched: the egg still sleeps in the courtyard of
+     * KLOVERS World and hatches from real learning in the logged-in product
+     * (see clubyVisibility). src/components/EggTeaser.tsx is kept, unrendered,
+     * so the beat can come back by re-adding this entry and <EggTeaser />.
+     */
 
     {
       order: 9,

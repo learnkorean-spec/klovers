@@ -26,7 +26,6 @@ const HomeFAQ = lazy(() => import("@/components/HomeFAQ"));
 // last story beat before the final CTA, so this sits above it.
 const ScholarshipsSection = lazy(() => import("@/components/ScholarshipsSection"));
 const HomeShopShelf = lazy(() => import("@/components/HomeShopShelf"));
-const EggTeaser = lazy(() => import("@/components/EggTeaser"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 // Secondary audience, not part of the student narrative above — teachers
 // looking to join Klovers. Deliberately last, after every student-facing
@@ -215,7 +214,6 @@ const Index = () => {
       { id: "meet-teacher", label: "section_meet_teacher" },
       { id: "language-exchange", label: "section_language_exchange" },
       { id: "scholarships", label: "section_scholarships" },
-      { id: "egg-teaser", label: "section_egg_teaser" },
       { id: "final-cta", label: "section_final_cta" },
     ];
     const observers: IntersectionObserver[] = [];
@@ -330,14 +328,7 @@ const Index = () => {
             </Suspense>
           </NearViewport>
         </div>
-        {/* Story — homepageNarrative slot 8, "egg-teaser" (origin mystery, no Cluby) */}
-        <div id="egg-teaser">
-          <NearViewport>
-            <Suspense fallback={<SectionFallback />}>
-              <EggTeaser />
-            </Suspense>
-          </NearViewport>
-        </div>
+        {/* Egg teaser retired from the homepage, 18 Nov 2026 (see canon). */}
         {/* Action — final, low-pressure invitation */}
         <div id="final-cta">
           <NearViewport>

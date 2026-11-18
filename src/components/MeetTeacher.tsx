@@ -3,7 +3,10 @@ import { ArrowRight } from "lucide-react";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import rehamPhoto from "@/assets/reham-teacher.jpg";
+// 18 Nov 2026 (Re): professional portrait made from her own photo (ElevenLabs,
+// gemini-3-pro-image, face kept from the reference). Old café photo kept at
+// @/assets/reham-teacher.jpg.
+import rehamPhoto from "@/assets/reham-teacher-pro.jpg";
 import { logLeadEvent } from "@/lib/leadTracking";
 import { STUDENTS_TAUGHT, TEACHING_YEARS, TEACHING_YEARS_COUNT, toArabicDigits } from "@/lib/trustFigures";
 

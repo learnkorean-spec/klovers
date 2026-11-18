@@ -111,10 +111,11 @@ describe("KLOVERS_WORLD — internal consistency", () => {
     ]);
   });
 
-  it("keeps the egg-teaser excluding Cluby, which is what the egg teaser depends on", () => {
+  it("keeps the egg mystery off the homepage (retired by Re, 18 Nov 2026)", () => {
+    // The beat moved out of marketing entirely; the hatch itself is still
+    // gated in the logged-in product, which the clubyVisibility tests cover.
     const teaser = KLOVERS_WORLD.homepageNarrative.find((s) => s.section === "egg-teaser");
-    expect(teaser).toBeDefined();
-    expect(teaser!.explicitlyExclude).toContain("cluby");
+    expect(teaser).toBeUndefined();
   });
 
   it("keeps the trust section free of story characters", () => {
@@ -280,7 +281,9 @@ describe("orphans — a story component nothing renders", () => {
    * list stays a live backlog rather than a graveyard, and anything still on it
    * is genuinely unplayable.
    */
-  const ALLOWED_UNMOUNTED = new Set(["HomeGamesSection"]);
+  // EggTeaser: homepage slot 8 retired by Re on 18 Nov 2026, kept built so it
+  // can return (see klovers-world.ts homepageNarrative).
+  const ALLOWED_UNMOUNTED = new Set(["HomeGamesSection", "EggTeaser"]);
 
   /**
    * KNOWN BACKLOG — thirty components nothing imports, audited 2026-09-26 and

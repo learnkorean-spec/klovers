@@ -343,7 +343,7 @@ never "you failed" or "bad answer."
 | 5 | Practice / games | Cluby | Practice and reward |
 | 6 | Culture | female learner + Cluby | Real-world Korea |
 | 7 | Scholarships | male learner + Cluby (supporting) | Real-world study path |
-| 8 | Egg teaser | male + female learner (Cluby explicitly excluded) | Origin-mystery teaser |
+| ~~8~~ | ~~Egg teaser~~ | retired from the homepage by Re, 18 Nov 2026 (read as a children's site); the egg lives on in KLOVERS World and the logged-in product | n/a |
 | 9 | Final CTA | Cluby | Invite the visitor forward |
 
 Rule of thumb: at most one primary character per ordinary section; using all
