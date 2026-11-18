@@ -87,6 +87,13 @@ const PlatformLanguages = () => {
               ? "بدأت Klovers بالكورية. والمنظومة نفسها (الحصص المباشرة، اختبار تحديد المستوى، الكتب، الألعاب ولوحة الطالب) تعمل الآن لأربع لغات، وتُبنى عليها كل لغة جديدة. وفي حكاية كلوفرز، تبدأ رحلة آدم ولينا وكلوبي من كوريا، ثم يسافرون مع كل لغة جديدة."
               : "Klovers started with Korean. The same system (live classes, placement testing, our own textbooks, practice games and a student dashboard) now runs four languages, and every new one is built on it. In the Klovers story, Adam, Lina and Cluby start their journey in Korea, then travel with every new language."}
           </p>
+          {/* 18 Nov 2026 (Re): the language-journey line (canon languageJourney).
+              Text only: slot 2 stays typographic, no characters drawn here. */}
+          <p className="mt-5 font-display text-xl font-extrabold text-charcoal md:text-2xl">
+            <span className="bg-klovers-yellow px-2 box-decoration-clone">
+              {isAr ? "كوريا أولًا. ثم العالم." : "Korea first. Then the world."}
+            </span>
+          </p>
         </div>
 
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
