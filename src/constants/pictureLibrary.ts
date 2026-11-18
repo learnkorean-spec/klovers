@@ -873,5 +873,7 @@ export const LIBRARY_SITE: SitePicture[] = [
   { group: "brand", dir: "", file: "klovers-logo.jpg" },
   { group: "brand", dir: "", file: "klovers-mascot.svg" },
   { group: "brand", dir: "", file: "hero-world.jpg" },
+  { group: "brand", dir: "", file: "hero-online.jpg", label: "الهيرو الحالي: متعلمة في حصة أونلاين وكلوبي على المكتب" },
+  { group: "brand", dir: "/assets/cluby", file: "online-class.webp", label: "كيف تبدو الحصة الأولى: آدم ولينا في حصة أونلاين" },
   { group: "brand", dir: "", file: "og-seoul-skyline.jpg" },
 ];

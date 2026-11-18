@@ -10,8 +10,14 @@ import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
  * pushed to the right-hand sky (physical margin, same in AR and EN), and on
  * phones the crop moves right (object-[97%_center]) so the text lands on sky
  * and roofs instead of faces.
+ *
+ * 18 Nov 2026 (Re, incubation review): replaced with hero-online.jpg, a
+ * photoreal learner in a live ONLINE class at home with Cluby on the desk
+ * (made in /admin/ai-room-lab, clubyOnly mode). The old porch scene read as
+ * illustrated and did not show the product. Learner sits left, so the same
+ * crops still work: phones (97%) land on Cluby and the window.
  */
-const heroPoster = "/hero-world.jpg";
+const heroPoster = "/hero-online.jpg";
 /*
  * 6 Oct 2026 (mobile LCP): the same photo through Vercel Image Optimization
  * ("images" in vercel.json) - AVIF/WebP, 21 KB at 828w and 59 KB at full
@@ -22,7 +28,7 @@ const heroPoster = "/hero-world.jpg";
  * on Vercel, so the dev server keeps the plain JPG.
  */
 const HERO_SRCSET = import.meta.env.PROD
-  ? [828, 1200, 1920].map((w) => `/_vercel/image?url=%2Fhero-world.jpg&w=${w}&q=70 ${w}w`).join(", ")
+  ? [828, 1200, 1920].map((w) => `/_vercel/image?url=%2Fhero-online.jpg&w=${w}&q=70 ${w}w`).join(", ")
   : undefined;
 const HERO_SIZES = "(max-width: 767px) 155vh, 100vw";
 const heroVideo = "/videos/hero-korea-video-new.mp4";

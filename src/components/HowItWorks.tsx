@@ -99,7 +99,7 @@ const HowItWorks = () => {
           })}
         </div>
 
-        {/* "What your first class looks like" — pedagogy + trust. The café
+        {/* "What your first class looks like" — pedagogy + trust. The online-class
             scene sits on the start side on lg+, above the bullets on phones. */}
         <div className="max-w-4xl mx-auto mt-10 md:mt-12 bg-background border border-border rounded-2xl p-5 sm:p-6">
           <p className="text-center mb-4">
@@ -109,8 +109,8 @@ const HowItWorks = () => {
           </p>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:items-center lg:gap-6">
             <img
-              src="/assets/cluby/cafe.webp"
-              alt={isAr ? "صديقان مع كلوبي يذاكران الكورية على طاولة في مقهى" : "Two friends and Cluby studying Korean together at a café table"}
+              src="/assets/cluby/online-class.webp"
+              alt={isAr ? "صديقان مع كلوبي في حصة كورية مباشرة أونلاين على اللابتوب" : "Two friends and Cluby in a live online Korean class on a laptop"}
               width={1200}
               height={800}
               loading="lazy"
