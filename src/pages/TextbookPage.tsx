@@ -108,7 +108,7 @@ const TextbookPage = () => {
         {/* Hero */}
         <section className="text-center mb-8 px-4">
           {/* World mode: each book opens onto its world (see constants/bookWorlds.ts). */}
-          <div className="relative mx-auto mb-5 h-28 max-w-4xl overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card md:h-44">
+          <div className="relative mx-auto mb-5 aspect-[16/8] max-h-80 max-w-4xl overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card md:aspect-[16/7]">
             <img
               src={world.image}
               alt={isAr ? world.altAr : world.altEn}
@@ -116,7 +116,7 @@ const TextbookPage = () => {
               height={900}
               loading="lazy"
               decoding="async"
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover object-[center_20%]"
             />
             <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent" />
             <p className="absolute inset-x-0 bottom-0 p-3 text-sm text-white md:p-4">

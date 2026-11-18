@@ -29,7 +29,7 @@ export default function WorldEntryCard({ isAr, compact = false }: WorldEntryCard
           height={900}
           loading="lazy"
           decoding="async"
-          className={`${compact ? "h-36" : "h-48"} w-full object-cover md:h-full`}
+          className="aspect-[16/9] w-full object-cover object-[center_30%] md:aspect-auto md:h-full"
         />
         <div className={`flex flex-col justify-center gap-3 ${compact ? "p-5 md:p-6" : "p-6 md:p-8"}`}>
           <p className="text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">{copy.entryEyebrow}</p>

@@ -140,7 +140,7 @@ const TextbookHubPage = () => {
                   to={`/textbook/${book.key}`}
                   className="group relative flex flex-col overflow-hidden rounded-3xl border-2 border-border bg-card transition-all hover:border-foreground hover:shadow-lg hover:-translate-y-1"
                 >
-                  <div className="relative h-36 overflow-hidden bg-muted">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-muted">
                     <img
                       src={book.image || FALLBACK_IMAGE}
                       width={1600}

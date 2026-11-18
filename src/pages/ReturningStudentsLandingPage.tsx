@@ -242,7 +242,7 @@ const ReturningStudentsLandingPage = () => {
                 width={1600}
                 height={900}
                 decoding="async"
-                className="h-40 w-full object-cover object-[center_60%] sm:h-56 md:h-72"
+                className="aspect-[16/8] w-full object-cover object-[center_40%]"
               />
             </figure>
 

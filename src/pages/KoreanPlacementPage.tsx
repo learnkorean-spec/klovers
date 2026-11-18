@@ -861,7 +861,7 @@ const KoreanPlacementPage = () => {
                 width={1600}
                 height={900}
                 decoding="async"
-                className="hidden sm:block w-full aspect-[16/6] object-cover"
+                className="hidden sm:block w-full aspect-[16/8] object-cover object-[center_15%]"
               />
               <CardContent className="pt-8 pb-7 space-y-7">
 
@@ -998,7 +998,7 @@ const KoreanPlacementPage = () => {
               width={1600}
               height={900}
               decoding="async"
-              className="w-full aspect-[16/6] object-cover"
+              className="w-full aspect-[16/8] object-cover object-[center_15%]"
             />
             <CardContent className="pt-6 space-y-5">
               {/* World mode: one scene line naming the world this level opens. */}

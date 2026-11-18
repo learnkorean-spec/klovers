@@ -360,7 +360,7 @@ const MySchedulePage = () => {
           </div>
 
           {/* World mode: the weekly class is a table at the Conversation Café (lead: the two learners). Kept short so the schedule stays above the fold. */}
-          <div className="relative h-24 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card sm:h-28">
+          <div className="relative aspect-[16/7] max-h-80 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card">
             <img
               src="/assets/cluby/cafe.webp"
               alt={language === "ar" ? "مقهى المحادثة في عالم كلوفرز" : "The Conversation Café in the Klovers world"}
@@ -368,7 +368,7 @@ const MySchedulePage = () => {
               height={800}
               loading="lazy"
               decoding="async"
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover object-[center_20%]"
             />
             <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-charcoal/85 via-charcoal/50 to-transparent rtl:bg-gradient-to-l" />
             <div className="relative max-w-xs p-4">

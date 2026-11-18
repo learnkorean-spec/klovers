@@ -110,7 +110,7 @@ export function VocabularyReviewPage() {
             </Button>
             {/* World mode: review lives in Cluby's Memory Garden (lead: Cluby).
                 Scene with Cluby holding a clover: Re's image, 25 Sep 2026. */}
-            <div className="relative mb-3 h-28 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card md:h-40">
+            <div className="relative mb-3 aspect-[16/7] max-h-80 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card">
               <img
                 src="/assets/story/world-memory-garden-cluby-leaf.webp"
                 alt={isAr ? "كلوبي يحمل ورقة برسيم في حديقة الذاكرة، حيث تنمو الكلمات التي تعلّمها الطالب" : "Cluby holding a clover leaf in the Memory Garden, where learned words grow"}
@@ -118,7 +118,7 @@ export function VocabularyReviewPage() {
                 height={900}
                 loading="lazy"
                 decoding="async"
-                className="absolute inset-0 h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover object-[center_20%]"
               />
               <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/35 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 flex items-end gap-3 p-4">

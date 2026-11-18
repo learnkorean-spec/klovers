@@ -134,7 +134,7 @@ const ScholarshipsPage = () => {
               width={1024}
               height={576}
               decoding="async"
-              className="mt-10 aspect-[16/7] w-full rounded-3xl border border-ivory/15 object-cover"
+              className="mt-10 aspect-[16/7] w-full rounded-3xl border border-ivory/15 object-cover object-[center_20%]"
             />
 
             <p className="mt-4 text-xs text-ivory/60">

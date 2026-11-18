@@ -720,7 +720,7 @@ const GamesPage = () => {
                 width={1600}
                 height={900}
                 decoding="async"
-                className="w-full h-32 rounded-xl object-cover object-[center_60%] border border-border"
+                className="w-full aspect-[16/8] rounded-xl object-cover object-[center_45%] border border-border"
               />
               <h2 className="text-xl font-bold text-foreground">
                 {cheered

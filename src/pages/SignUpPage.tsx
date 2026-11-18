@@ -231,7 +231,7 @@ const SignUpPage = () => {
             width={1600}
             height={900}
             decoding="async"
-            className="h-28 w-full object-cover object-[center_60%] lg:h-[30rem]"
+            className="aspect-[16/9] w-full object-cover object-[center_40%] lg:aspect-auto lg:h-[30rem]"
           />
           <figcaption className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-charcoal/90 via-charcoal/50 to-transparent p-6 pt-20 text-start lg:block">
             <span className="block font-display text-2xl font-extrabold leading-tight text-ivory">

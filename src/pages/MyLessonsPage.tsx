@@ -335,7 +335,7 @@ const MyLessonsPage = () => {
 
           {inWorld ? (
             <div className="space-y-2">
-              <div className="relative h-32 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card md:h-40">
+              <div className="relative aspect-[16/7] max-h-80 overflow-hidden rounded-2xl border border-border bg-ivory dark:bg-card">
                 <img
                   src={CAFE_IMAGE}
                   alt={c.cafeAlt}
@@ -343,7 +343,7 @@ const MyLessonsPage = () => {
                   height={900}
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover object-[center_20%]"
                 />
                 <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/85 via-charcoal/35 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-4">

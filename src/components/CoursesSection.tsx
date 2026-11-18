@@ -121,7 +121,7 @@ const CoursesSection = () => {
                 key={course.key}
                 className="group flex flex-col hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 overflow-hidden border-border hover:border-primary/50"
               >
-                <div className="relative h-32 overflow-hidden bg-muted sm:h-36">
+                <div className="relative aspect-[16/9] overflow-hidden bg-muted">
                   <img
                     src={world.src}
                     alt={isAr ? world.ar : world.en}

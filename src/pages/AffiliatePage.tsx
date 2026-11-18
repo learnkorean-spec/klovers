@@ -193,7 +193,7 @@ export default function AffiliatePage() {
               height={900}
               loading="lazy"
               decoding="async"
-              className="mb-10 w-full aspect-[16/7] rounded-3xl border border-border object-cover"
+              className="mb-10 w-full aspect-[16/7] rounded-3xl border border-border object-cover object-[center_20%]"
             />
             <div className="grid md:grid-cols-3 gap-6">
               {[

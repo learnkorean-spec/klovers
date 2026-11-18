@@ -336,7 +336,7 @@ const DailyQuizPage = () => {
           <Card className="w-full max-w-md text-center">
             <CardHeader>
               {/* World mode: the daily quiz is a walk through the Vocabulary Market (lead: the two learners). */}
-              <div className="relative -mx-2 mb-3 h-28 overflow-hidden rounded-xl border border-border bg-ivory dark:bg-card sm:h-32">
+              <div className="relative -mx-2 mb-3 aspect-[16/7] max-h-80 overflow-hidden rounded-xl border border-border bg-ivory dark:bg-card">
                 <img
                   src="/assets/story/world-vocabulary-market.webp"
                   alt={isAr ? "سوق المفردات، بأكشاكه وفوانيسه في عالم كلوفرز" : "The Vocabulary Market, its stalls and lanterns, in the Klovers world"}
@@ -344,7 +344,7 @@ const DailyQuizPage = () => {
                   height={900}
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover object-[center_20%]"
                 />
                 <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent" />
                 <p className="absolute inset-x-0 bottom-0 p-3 text-start text-[11px] font-extrabold uppercase tracking-wider text-klovers-yellow">

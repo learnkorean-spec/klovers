@@ -219,7 +219,7 @@ const PricingStory = () => {
           width={1200}
           height={800}
           decoding="async"
-          className="h-28 w-full object-cover object-[center_45%] sm:h-40 md:h-56"
+          className="aspect-[16/8] w-full object-cover object-[center_35%] md:aspect-[16/6]"
         />
         <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-charcoal/85 via-charcoal/40 to-transparent px-4 pb-3 pt-10 text-start md:px-6 md:pb-4">
           <span className="font-display text-sm font-extrabold text-ivory md:text-lg">

@@ -102,7 +102,7 @@ const TextbookProgressPage = () => {
           {(() => {
             const world = bookWorld("korean-1");
             return (
-              <div className="relative -mx-2 -mt-2 mb-4 h-24 overflow-hidden rounded-lg bg-ivory dark:bg-muted md:h-32">
+              <div className="relative -mx-2 -mt-2 mb-4 aspect-[16/7] max-h-80 overflow-hidden rounded-lg bg-ivory dark:bg-muted">
                 <img
                   src={world.image}
                   alt={isAr ? world.altAr : world.altEn}
@@ -110,7 +110,7 @@ const TextbookProgressPage = () => {
                   height={900}
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover object-[center_20%]"
                 />
                 <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/20 to-transparent" />
                 <p className="absolute inset-x-0 bottom-0 p-3 text-sm text-white">

@@ -97,7 +97,7 @@ const TopikExamPage = () => {
               width={1600}
               height={900}
               decoding="async"
-              className="mt-10 w-full aspect-[16/7] rounded-3xl border border-ivory/15 object-cover"
+              className="mt-10 w-full aspect-[16/7] rounded-3xl border border-ivory/15 object-cover object-[center_20%]"
             />
           </div>
         </section>
