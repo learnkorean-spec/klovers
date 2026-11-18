@@ -8,6 +8,7 @@ import PersonalTrialBooking from "@/components/PersonalTrialBooking";
 import PersonalLessonPricing from "@/components/PersonalLessonPricing";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import cairoRooftop from "@/assets/arabic-cairo-rooftop.jpg";
+import ArabicJourneyMap from "@/components/maktub/ArabicJourneyMap";
 
 /**
  * /learn-arabic and /ar/learn-arabic
@@ -86,8 +87,9 @@ const MaktubLogoMark = ({ className = "" }: { className?: string }) => (
       d="M12 34V18.6h3.9l.3 2.4c.7-.9 1.5-1.6 2.5-2.1a7 7 0 0 1 3.2-.7c1.5 0 2.8.3 3.7 1 1 .6 1.7 1.5 2.1 2.7.7-1.1 1.6-2 2.7-2.6a7.6 7.6 0 0 1 3.7-1c2 0 3.6.6 4.7 1.8 1.1 1.2 1.7 3 1.7 5.4V34h-4.3v-8c0-1.4-.3-2.5-.8-3.2-.5-.7-1.4-1.1-2.5-1.1-1.3 0-2.3.5-3 1.4-.7.9-1.1 2.2-1.1 3.8V34h-4.3v-8c0-1.4-.3-2.5-.8-3.2-.5-.7-1.3-1.1-2.5-1.1-1.3 0-2.3.5-3 1.4-.7.9-1.1 2.2-1.1 3.8V34H12Z"
       fill={FOREST_DEEP}
     />
-    <circle cx="37" cy="12.5" r="3.5" fill={FOREST_DEEP} />
-    <circle cx="38.1" cy="11.3" r="1" fill="#FFF9EC" />
+    {/* Re, 18 Nov 2026: the dot on the m is KLOVERS yellow, maktub's link
+        back to Klovers. Forest ring so it still reads on the lime tile. */}
+    <circle cx="37" cy="12.5" r="3.6" fill="#FFFF00" stroke={FOREST_DEEP} strokeWidth="1.4" />
   </svg>
 );
 
@@ -98,6 +100,7 @@ const MaktubHeader = ({ isAr, tr, toggleLanguage }: { isAr: boolean; tr: TrFn; t
   // compact dashboard link to a signed-in user instead of nothing.
   const { user } = useAuth();
   const navLinks = [
+    { href: "#journey", label: tr("Journey", "الرحلة") },
     { href: "#dialects", label: tr("Dialects", "اللهجات") },
     { href: "#meet-tutor", label: tr("Tutor", "المعلمة") },
     { href: "#pricing", label: tr("Pricing", "الأسعار") },
@@ -420,6 +423,8 @@ const LearnArabicPage = () => {
             </div>
           </div>
         </section>
+
+        <ArabicJourneyMap isAr={isAr} tr={tr} />
 
         {/* Pick a dialect — maktub's card grid, replacing v1's parchment split. */}
         <section id="dialects" className="py-20 border-b scroll-mt-24">
