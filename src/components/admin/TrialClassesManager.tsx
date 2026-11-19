@@ -25,6 +25,7 @@ import { useAllTrialSlots } from "@/hooks/useTrialAdmin";
 import AddTrialClassDialog from "@/components/admin/trial/AddTrialClassDialog";
 import TrialSlotProposals from "@/components/admin/trial/TrialSlotProposals";
 import NewTraffic from "@/components/admin/trial/NewTraffic";
+import FacebookPostsPanel from "@/components/admin/FacebookPostsPanel";
 import TrialAttendanceRoster from "@/components/admin/trial/TrialAttendanceRoster";
 import { pickRebookTargets } from "@/components/admin/trial/rebookTargets";
 import { emailLanguageFor } from "@/components/admin/trial/emailLanguage";
@@ -1001,6 +1002,9 @@ const TrialClassesManager = () => {
           it carries no button. */}
       {/* Fresh arrivals first: is new traffic coming in, and where does it stall? */}
       <NewTraffic />
+
+      {/* Which Facebook posts get seen and which bring trial bookings. */}
+      <FacebookPostsPanel />
 
       <TrialSlotProposals />
 

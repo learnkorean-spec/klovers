@@ -231,3 +231,10 @@ verify_jwt = false
 
 [functions.tts-ko]
 verify_jwt = false
+
+# facebook-post-insights is called by pg_cron (service role) and by the admin
+# dashboard (admin JWT); authorizeRequest("admin-or-service") decides, so the
+# gateway check is off. Without this the FIRST deploy lands on the platform
+# default (verify_jwt = true) and rejects the cron call.
+[functions.facebook-post-insights]
+verify_jwt = false
