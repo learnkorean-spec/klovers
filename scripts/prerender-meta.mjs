@@ -905,7 +905,7 @@ const MARKETING_ROUTES = [
     path: "/learn-hungarian",
     title: "Learn Hungarian in Arabic or English — with Reham Elshrkawy",
     description:
-      "One-on-one online Hungarian lessons, explained in Arabic or English, with a teacher who lived in Budapest and knows exactly what a beginner needs — for a move, a Hungarian scholarship, or a Hungarian family.",
+      "Private and group online Hungarian lessons, explained in Arabic or English, with a teacher who lived in Budapest and knows exactly what a beginner needs — for a move, a Hungarian scholarship, or a Hungarian family.",
     body: LEARN_HUNGARIAN_BODY_HTML,
     articleLd: false,
     published: "2026-10-19",
@@ -932,7 +932,7 @@ const MARKETING_ROUTES = [
     path: "/learn-english",
     title: "Learn English, explained in Arabic — with Reham Elshrkawy",
     description:
-      "One-on-one online English lessons, explained in Arabic, focused on real conversation and speaking confidence — for work, interviews, travel, or exam preparation.",
+      "Private and group online English lessons, explained in Arabic, focused on real conversation and speaking confidence — for work, interviews, travel, or exam preparation.",
     body: LEARN_ENGLISH_BODY_HTML,
     articleLd: false,
     published: "2026-10-19",
@@ -957,7 +957,7 @@ const MARKETING_ROUTES = [
     path: "/learn-arabic",
     title: "Learn Arabic — Standard (Fusha) or Egyptian Dialect — with Reham Elshrkawy",
     description:
-      "One-on-one online Arabic lessons for non-native speakers anywhere in the world, explained in English — Modern Standard Arabic (Fusha) for reading, writing and formal use, or spoken Egyptian dialect for real conversation, with a native teacher who has taught students in more than fifteen countries.",
+      "Private and group online Arabic lessons for non-native speakers anywhere in the world, explained in English — Modern Standard Arabic (Fusha) for reading, writing and formal use, or spoken Egyptian dialect for real conversation, with a native teacher who has taught students in more than fifteen countries.",
     body: LEARN_ARABIC_BODY_HTML,
     articleLd: false,
     published: "2026-10-19",

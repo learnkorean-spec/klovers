@@ -370,7 +370,7 @@ export const LEARN_ENGLISH_BODY_HTML = `<div id="learn-english-prerendered" lang
       <h3>Can these lessons help me pass IELTS, TOEFL, or a job interview?</h3>
       <p>Yes — lessons are built around your actual goal, whether that's an exam section, interview questions, or everyday work English, not a fixed textbook order.</p>
       <h3>I already study Korean at Klovers — can I add English lessons too?</h3>
-      <p>Yes — this is the same teacher's personal 1:1 lessons, separate from your Korean classes. Message us and we'll fit a schedule around both.</p>
+      <p>Yes — this is the same teacher's private and group lessons, separate from your Korean classes. Message us and we'll fit a schedule around both.</p>
       <p><a href="/contact?subject=English+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
     </div>`;
 
@@ -404,7 +404,7 @@ export const LEARN_ARABIC_BODY_HTML = `<div id="learn-arabic-prerendered" lang="
       <h3>What's the difference between Standard Arabic (Fusha) and Egyptian dialect — which should I learn?</h3>
       <p>Fusha is the formal, written Arabic used in media, religious texts and official documents, and it's the same everywhere in the Arab world. Egyptian dialect is how people actually speak day to day, and it's the dialect most widely understood across the Arab world, thanks to Egyptian film and TV. Many students learn both — we'll figure out the right mix for your goal.</p>
       <h3>I'm already learning Korean at Klovers — can I also book these Arabic lessons?</h3>
-      <p>Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself.</p>
+      <p>Yes — this is the same teacher's private and group lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself.</p>
       <h3>Do I need to know any Arabic already to start?</h3>
       <p>No — lessons start from zero, whether you're learning Fusha or spoken dialect, even if you've studied Classical Arabic before. Everything is explained in English first.</p>
       <p><a href="/contact?subject=Arabic+lessons">Message me about lessons</a> · <a href="/blog/meet-reham-hungarian-arabic-korean-teacher">Read my story</a></p>
@@ -659,7 +659,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "I already study Korean at Klovers — can I add English lessons too?",
-        "a": "Yes — this is the same teacher's personal 1:1 lessons, separate from your Korean classes. Message us and we'll fit a schedule around both."
+        "a": "Yes — this is the same teacher's private and group lessons, separate from your Korean classes. Message us and we'll fit a schedule around both."
     }
 ],
   "/learn-arabic": [
@@ -669,7 +669,7 @@ export const MARKETING_FAQ = {
     },
     {
         "q": "I'm already learning Korean at Klovers — can I also book these Arabic lessons?",
-        "a": "Yes — this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself."
+        "a": "Yes — this is the same teacher's private and group lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself."
     },
     {
         "q": "Do I need to know any Arabic already to start?",

@@ -8,12 +8,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * menu. This band, straight under the hero, says what Klovers is: one
  * teaching platform that already runs four language schools, and the proof.
  *
- * 19 Nov 2026 (Re): the copy used to say the whole system (group classes,
- * placement test, textbooks, games, dashboard) runs all four languages. It
- * does not: only Korean has group classes, the placement test, the books and
- * the games. maktub, Voca and Buda share the pricing tiers (Korean private
- * prices, src/lib/stripePrices.ts) and the student dashboard, as 1:1 lessons.
- * Keep this paragraph true to that until the other three really catch up.
+ * 19 Nov 2026 (Re, later the same day): after an earlier pass limited group
+ * classes to Korean, Re confirmed that all four languages (Korean, Arabic,
+ * English, Hungarian) offer private AND group classes. The cards and the
+ * /learn-arabic, /learn-english and /learn-hungarian copy (including the
+ * prerendered meta in scripts/) now say so. The placement test, the books and
+ * the games are still Korean-only; do not claim them for the other three
+ * until they really exist.
  *
  * Canon: homepage slot 2 ("live-class-trust", no characters). Deliberately
  * typographic, no mascot and no illustration.

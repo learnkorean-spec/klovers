@@ -175,7 +175,7 @@ const MaktubFooter = ({ tr }: { isAr: boolean; tr: TrFn }) => (
           <p className="mt-4 max-w-sm text-sm text-white/70">
             {tr(
               "Live online Arabic classes with a native-speaking tutor: Modern Standard Arabic and real spoken Egyptian dialect, explained in English.",
-              "دروس عربية فردية عبر الإنترنت مع معلمة أصلية: الفصحى والعامية المصرية المنطوقة، بشرح بالإنجليزية.",
+              "دروس عربية خاصة وجماعية عبر الإنترنت مع معلمة أصلية: الفصحى والعامية المصرية المنطوقة، بشرح بالإنجليزية.",
             )}
           </p>
         </div>
@@ -227,8 +227,8 @@ const LearnArabicPage = () => {
       ? "تعلّم العربية الفصحى أو العامية المصرية مع ريهام الشرقاوي"
       : "Learn Arabic: Standard (Fusha) or Egyptian Dialect, with Reham Elshrkawy",
     description: isAr
-      ? "دروس عربية فردية عبر الإنترنت لغير الناطقين بها من أي مكان في العالم، بشرح بالإنجليزية، الفصحى أو العامية المصرية المنطوقة، مع معلمة أصلية."
-      : "One-on-one online Arabic lessons for non-native speakers anywhere in the world, explained in English: Modern Standard Arabic (Fusha) for reading, writing and formal use, or spoken Egyptian dialect for real conversation, with a native teacher who has taught students in more than fifteen countries.",
+      ? "دروس عربية خاصة وجماعية عبر الإنترنت لغير الناطقين بها من أي مكان في العالم، بشرح بالإنجليزية، الفصحى أو العامية المصرية المنطوقة، مع معلمة أصلية."
+      : "Private and group online Arabic lessons for non-native speakers anywhere in the world, explained in English: Modern Standard Arabic (Fusha) for reading, writing and formal use, or spoken Egyptian dialect for real conversation, with a native teacher who has taught students in more than fifteen countries.",
     canonical: isAr ? "https://kloversegy.com/ar/learn-arabic" : "https://kloversegy.com/learn-arabic",
     alternates: {
       en: "https://kloversegy.com/learn-arabic",
@@ -256,8 +256,8 @@ const LearnArabicPage = () => {
         "أدرس الكورية بالفعل في كلوفرز، هل يمكنني حجز هذه الدروس العربية أيضًا؟",
       ),
       a: tr(
-        "Yes, this is the same teacher's personal 1:1 lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself.",
-        "نعم، هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية الجماعية. وهذا جمع شائع للناطقين بالكورية المهتمين بالعربية، سواء للسفر أو العمل أو لمجرد اللغة نفسها.",
+        "Yes, this is the same teacher's private and group lessons, separate from the Korean group classes. It's a common pairing for Korean speakers with an interest in Arabic, whether for travel, work, or just the language itself.",
+        "نعم، هذه دروس خاصة وجماعية تقدّمها المعلمة نفسها، منفصلة عن حصص الكورية الجماعية. وهذا جمع شائع للناطقين بالكورية المهتمين بالعربية، سواء للسفر أو العمل أو لمجرد اللغة نفسها.",
       ),
     },
     {

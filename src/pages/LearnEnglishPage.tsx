@@ -187,8 +187,8 @@ const LearnEnglishPage = () => {
       ? "تعلّم الإنجليزية بشرح بالعربية مع ريهام الشرقاوي"
       : "Learn English, explained in Arabic, with Reham Elshrkawy",
     description: isAr
-      ? "دروس إنجليزية فردية عبر الإنترنت، بشرح بالعربية، تركّز على المحادثة الحقيقية والثقة في الحديث، للعمل، أو المقابلات، أو السفر، أو التحضير للامتحانات."
-      : "One-on-one online English lessons, explained in Arabic, focused on real conversation and speaking confidence, for work, interviews, travel, or exam preparation.",
+      ? "دروس إنجليزية خاصة وجماعية عبر الإنترنت، بشرح بالعربية، تركّز على المحادثة الحقيقية والثقة في الحديث، للعمل، أو المقابلات، أو السفر، أو التحضير للامتحانات."
+      : "Private and group online English lessons, explained in Arabic, focused on real conversation and speaking confidence, for work, interviews, travel, or exam preparation.",
     canonical: isAr ? "https://kloversegy.com/ar/learn-english" : "https://kloversegy.com/learn-english",
     alternates: {
       en: "https://kloversegy.com/learn-english",
@@ -216,8 +216,8 @@ const LearnEnglishPage = () => {
         "أدرس الكورية بالفعل في كلوفرز، هل يمكنني إضافة دروس الإنجليزية أيضًا؟",
       ),
       a: tr(
-        "Yes, this is the same teacher's personal 1:1 lessons, separate from your Korean classes. Message us and we'll fit a schedule around both.",
-        "نعم، هذه دروس فردية خاصة بالمعلمة نفسها، منفصلة عن حصص الكورية. راسلنا ونرتّب جدولًا يناسب الاثنين.",
+        "Yes, this is the same teacher's private and group lessons, separate from your Korean classes. Message us and we'll fit a schedule around both.",
+        "نعم، هذه دروس خاصة وجماعية تقدّمها المعلمة نفسها، منفصلة عن حصص الكورية. راسلنا ونرتّب جدولًا يناسب الاثنين.",
       ),
     },
   ];

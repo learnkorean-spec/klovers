@@ -169,8 +169,8 @@ const LearnHungarianPage = () => {
       ? "تعلّم المجرية بالعربية أو الإنجليزية مع ريهام الشرقاوي"
       : "Learn Hungarian in Arabic or English, with Reham Elshrkawy",
     description: isAr
-      ? "دروس مجرية فردية عبر الإنترنت، بشرح بالعربية أو الإنجليزية، مع معلمة عاشت في بودابست وتعرف تمامًا ما يحتاجه المبتدئ: من أجل السفر، أو منحة مجرية، أو أسرة مجرية."
-      : "One-on-one online Hungarian lessons, explained in Arabic or English, with a teacher who lived in Budapest and knows exactly what a beginner needs: for a move, a Hungarian scholarship, or a Hungarian family.",
+      ? "دروس مجرية خاصة وجماعية عبر الإنترنت، بشرح بالعربية أو الإنجليزية، مع معلمة عاشت في بودابست وتعرف ما يحتاجه المبتدئ: للسفر، أو منحة مجرية، أو أسرة مجرية."
+      : "Private and group online Hungarian lessons, explained in Arabic or English, with a teacher who lived in Budapest and knows exactly what a beginner needs: for a move, a Hungarian scholarship, or a Hungarian family.",
     canonical: isAr ? "https://kloversegy.com/ar/learn-hungarian" : "https://kloversegy.com/learn-hungarian",
     alternates: {
       en: "https://kloversegy.com/learn-hungarian",
