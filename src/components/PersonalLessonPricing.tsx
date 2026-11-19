@@ -1,4 +1,5 @@
-import { tierPrices, tierCountries, type TierKey } from "@/lib/stripePrices";
+import { useState } from "react";
+import { tierPrices, tierCountries, type TierKey, type ClassType } from "@/lib/stripePrices";
 
 /**
  * Pricing for the three personal-lesson pages (maktub/Arabic, Voca/English,
@@ -80,6 +81,13 @@ const PersonalLessonPricing = ({
   highlightTier = "local",
   trialHref = "#trial",
 }: PersonalLessonPricingProps) => {
+  // Private and group are both offered in all four languages (confirmed 19 Nov
+  // 2026). Both prices come from the same canonical table in stripePrices.ts.
+  const [classType, setClassType] = useState<ClassType>("private");
+  const CLASS_TYPES: { key: ClassType; en: string; ar: string }[] = [
+    { key: "private", en: "Private (1:1)", ar: "خاص (فردي)" },
+    { key: "group", en: "Group", ar: "جروب" },
+  ];
   return (
     <section className="py-20 border-b scroll-mt-24" style={background ? { backgroundColor: background } : undefined} id={id}>
       <div className="container mx-auto px-4 max-w-5xl">
@@ -92,10 +100,33 @@ const PersonalLessonPricing = ({
             "الأسعار حسب المنطقة، نفس الدروس في كل مكان: ٤ دروس شهريًا، بفاتورة شهرية. غير متأكد من فئتك؟ اسأل في المكالمة المجانية.",
           )}
         </p>
-        <div className="mt-9 grid gap-5 sm:grid-cols-3">
+        <div
+          role="radiogroup"
+          aria-label={tr("Class type", "نوع الحصة")}
+          className="mt-6 inline-flex rounded-full border p-1"
+          style={{ borderColor: `${ink}26` }}
+        >
+          {CLASS_TYPES.map((ct) => {
+            const active = ct.key === classType;
+            return (
+              <button
+                key={ct.key}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setClassType(ct.key)}
+                className="rounded-full px-5 py-2 text-sm font-semibold transition-colors"
+                style={active ? { backgroundColor: signal, color: signalText } : { color: ink }}
+              >
+                {tr(ct.en, ct.ar)}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-6 grid gap-5 sm:grid-cols-3">
           {TIER_ORDER.map((tier) => {
-            const perLesson = tierPrices[tier].private[1] / 4;
-            const monthly = tierPrices[tier].private[1];
+            const monthly = tierPrices[tier][classType][1];
+            const perLesson = monthly / 4;
             const isHighlighted = tier === highlightTier;
             const label = TIER_LABEL[tier];
             return (
@@ -123,6 +154,17 @@ const PersonalLessonPricing = ({
             );
           })}
         </div>
+        <p className="mt-4 text-xs" style={{ color: `${ink}99` }}>
+          {classType === "group"
+            ? tr(
+                "Group classes are shared with other learners at your level. Days and times are set with you on the free call.",
+                "حصص الجروب مع متعلمين آخرين في مستواك. الأيام والمواعيد نحددها معك في المكالمة المجانية.",
+              )
+            : tr(
+                "Private lessons are one-to-one. You choose the days and times with your teacher.",
+                "الدروس الخاصة فردية. تختار الأيام والمواعيد مع مدرّستك.",
+              )}
+        </p>
         <p className="mt-6 text-xs" style={{ color: `${ink}80` }}>
           {tr(
             `Countries not listed above fall under the nearest tier — ${tierCountries.local.length + tierCountries.regional.length + tierCountries.global.length} countries covered in total.`,
