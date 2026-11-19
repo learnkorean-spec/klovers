@@ -323,12 +323,20 @@ export const LEARN_HUNGARIAN_BODY_HTML = `<div id="learn-hungarian-prerendered" 
         <li><strong>Built around what you actually need</strong> — Scholarship paperwork, everyday survival phrases, or conversation with family — the lessons follow your actual situation, not a fixed textbook order.</li>
       </ol>
       <h2>Pricing</h2>
-      <p>Priced by region, same lessons everywhere — 4 lessons a month, billed monthly.</p>
+      <p>Priced by region, same lessons everywhere. 4 lessons a month, billed monthly. Choose private (1:1) or group.</p>
+      <h3>Private (1:1)</h3>
       <ul>
-        <li><strong>Egypt &amp; nearby</strong> (Egypt, Morocco, Tunisia, Algeria, Jordan, Iraq, and nearby): &#36;12.50/lesson — &#36;50/month</li>
-        <li><strong>Southeast Asia &amp; Latin America</strong> (Malaysia, Indonesia, India, Brazil, Mexico, Turkey, and nearby): &#36;20/lesson — &#36;80/month</li>
-        <li><strong>Gulf, US, UK &amp; Europe</strong> (UAE, Saudi Arabia, the US, the UK, Germany, and nearby): &#36;30/lesson — &#36;120/month</li>
+        <li><strong>Egypt &amp; nearby</strong> (Egypt, Morocco, Tunisia, Algeria, Jordan, Iraq, and nearby): &#36;12.50/lesson, &#36;50/month</li>
+        <li><strong>Southeast Asia &amp; Latin America</strong> (Malaysia, Indonesia, India, Brazil, Mexico, Turkey, and nearby): &#36;20/lesson, &#36;80/month</li>
+        <li><strong>Gulf, US, UK &amp; Europe</strong> (UAE, Saudi Arabia, the US, the UK, Germany, and nearby): &#36;30/lesson, &#36;120/month</li>
       </ul>
+      <h3>Group</h3>
+      <ul>
+        <li><strong>Egypt &amp; nearby</strong>: &#36;6.25/lesson, &#36;25/month</li>
+        <li><strong>Southeast Asia &amp; Latin America</strong>: &#36;10/lesson, &#36;40/month</li>
+        <li><strong>Gulf, US, UK &amp; Europe</strong>: &#36;15/lesson, &#36;60/month</li>
+      </ul>
+      <p>Group days and times are set with you on the free call.</p>
       <h2>Not a textbook — a guide who's done this</h2>
       <p>Between Cairo and Budapest I spent years learning Hungarian the hard way, long before I taught it to anyone. I also worked for years doing Korean-Arabic interpreting and international operations, so I know what it means when a deadline or a document genuinely has to be right.</p>
       <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — Hungarian lessons follow the same one-on-one, real-conversation approach.</p>
@@ -357,12 +365,20 @@ export const LEARN_ENGLISH_BODY_HTML = `<div id="learn-english-prerendered" lang
         <li><strong>Built around what you actually need</strong> — Job interviews, exam sections, or everyday conversation — the lessons follow your actual situation, not a fixed textbook order.</li>
       </ol>
       <h2>Pricing</h2>
-      <p>Priced by region, same lessons everywhere — 4 lessons a month, billed monthly.</p>
+      <p>Priced by region, same lessons everywhere. 4 lessons a month, billed monthly. Choose private (1:1) or group.</p>
+      <h3>Private (1:1)</h3>
       <ul>
-        <li><strong>Egypt &amp; nearby</strong> (Egypt, Morocco, Tunisia, Algeria, Jordan, Iraq, and nearby): &#36;12.50/lesson — &#36;50/month</li>
-        <li><strong>Southeast Asia &amp; Latin America</strong> (Malaysia, Indonesia, India, Brazil, Mexico, Turkey, and nearby): &#36;20/lesson — &#36;80/month</li>
-        <li><strong>Gulf, US, UK &amp; Europe</strong> (UAE, Saudi Arabia, the US, the UK, Germany, and nearby): &#36;30/lesson — &#36;120/month</li>
+        <li><strong>Egypt &amp; nearby</strong> (Egypt, Morocco, Tunisia, Algeria, Jordan, Iraq, and nearby): &#36;12.50/lesson, &#36;50/month</li>
+        <li><strong>Southeast Asia &amp; Latin America</strong> (Malaysia, Indonesia, India, Brazil, Mexico, Turkey, and nearby): &#36;20/lesson, &#36;80/month</li>
+        <li><strong>Gulf, US, UK &amp; Europe</strong> (UAE, Saudi Arabia, the US, the UK, Germany, and nearby): &#36;30/lesson, &#36;120/month</li>
       </ul>
+      <h3>Group</h3>
+      <ul>
+        <li><strong>Egypt &amp; nearby</strong>: &#36;6.25/lesson, &#36;25/month</li>
+        <li><strong>Southeast Asia &amp; Latin America</strong>: &#36;10/lesson, &#36;40/month</li>
+        <li><strong>Gulf, US, UK &amp; Europe</strong>: &#36;15/lesson, &#36;60/month</li>
+      </ul>
+      <p>Group days and times are set with you on the free call.</p>
       <h2>Not a textbook — a guide who's done this</h2>
       <p>Years of Korean-Arabic interpreting and international operations meant English was never optional for me — it was the language a deadline or a document had to be right in. That's the same standard I bring to a lesson.</p>
       <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — English lessons follow the same one-on-one, real-conversation approach.</p>
@@ -391,12 +407,20 @@ export const LEARN_ARABIC_BODY_HTML = `<div id="learn-arabic-prerendered" lang="
         <li><strong>Built around what you actually need</strong> — Exam prep, reading religious texts, travel, work, family, or everyday conversation — the lessons follow your actual goal, not a fixed textbook order.</li>
       </ol>
       <h2>Pricing</h2>
-      <p>Priced by region, same lessons everywhere — 4 lessons a month, billed monthly.</p>
+      <p>Priced by region, same lessons everywhere. 4 lessons a month, billed monthly. Choose private (1:1) or group.</p>
+      <h3>Private (1:1)</h3>
       <ul>
-        <li><strong>Egypt &amp; nearby</strong> (Egypt, Morocco, Tunisia, Algeria, Jordan, Iraq, and nearby): &#36;12.50/lesson — &#36;50/month</li>
-        <li><strong>Southeast Asia &amp; Latin America</strong> (Malaysia, Indonesia, India, Brazil, Mexico, Turkey, and nearby): &#36;20/lesson — &#36;80/month</li>
-        <li><strong>Gulf, US, UK &amp; Europe</strong> (UAE, Saudi Arabia, the US, the UK, Germany, and nearby): &#36;30/lesson — &#36;120/month</li>
+        <li><strong>Egypt &amp; nearby</strong> (Egypt, Morocco, Tunisia, Algeria, Jordan, Iraq, and nearby): &#36;12.50/lesson, &#36;50/month</li>
+        <li><strong>Southeast Asia &amp; Latin America</strong> (Malaysia, Indonesia, India, Brazil, Mexico, Turkey, and nearby): &#36;20/lesson, &#36;80/month</li>
+        <li><strong>Gulf, US, UK &amp; Europe</strong> (UAE, Saudi Arabia, the US, the UK, Germany, and nearby): &#36;30/lesson, &#36;120/month</li>
       </ul>
+      <h3>Group</h3>
+      <ul>
+        <li><strong>Egypt &amp; nearby</strong>: &#36;6.25/lesson, &#36;25/month</li>
+        <li><strong>Southeast Asia &amp; Latin America</strong>: &#36;10/lesson, &#36;40/month</li>
+        <li><strong>Gulf, US, UK &amp; Europe</strong>: &#36;15/lesson, &#36;60/month</li>
+      </ul>
+      <p>Group days and times are set with you on the free call.</p>
       <h2>Not a textbook — a guide who's done this</h2>
       <p>Years of Korean-Arabic interpreting and international operations taught me exactly where a translation breaks down between languages — the same gap that makes textbook Arabic feel nothing like real use, whether you're writing formally or speaking day to day.</p>
       <p>I also founded and run Klovers, an online academy teaching Korean to students in more than fifteen countries since 2013 — Arabic lessons follow the same one-on-one, real-conversation approach.</p>
