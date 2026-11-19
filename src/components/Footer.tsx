@@ -22,8 +22,8 @@ const Footer = () => {
   // offering from the Korean group courses above, so these get their own
   // footer column rather than being folded into "Learn".
   const personalLessonLinks = isAr
-    ? [{ to: "/learn-hungarian", label: "المجرية (دروس فردية)" }, { to: "/learn-english", label: "الإنجليزية (دروس فردية)" }, { to: "/learn-arabic", label: "العربية (دروس فردية)" }]
-    : [{ to: "/learn-hungarian", label: "Hungarian (1:1)" }, { to: "/learn-english", label: "English (1:1)" }, { to: "/learn-arabic", label: "Arabic (1:1)" }];
+    ? [{ to: "/learn-hungarian", label: "المجرية (خاصة وجماعية)" }, { to: "/learn-english", label: "الإنجليزية (خاصة وجماعية)" }, { to: "/learn-arabic", label: "العربية (خاصة وجماعية)" }]
+    : [{ to: "/learn-hungarian", label: "Hungarian (private & group)" }, { to: "/learn-english", label: "English (private & group)" }, { to: "/learn-arabic", label: "Arabic (private & group)" }];
 
   const companyLinks = isAr
     ? [{ to: "/courses", label: "الدورات" }, { to: "/pricing", label: "الأسعار" }, { to: "/about", label: "من نحن" }, { to: "/blog", label: "المدونة" }, { to: "/contact", label: "تواصل معنا" }, { to: "/faq", label: "الأسئلة الشائعة" }]
@@ -82,7 +82,7 @@ const Footer = () => {
 
           {/* Personal lessons (Hungarian, English, Arabic — 19 Oct 2026) */}
           <div>
-            <h3 className="font-semibold mb-4 text-background">{isAr ? "دروس فردية" : "Personal Lessons"}</h3>
+            <h3 className="font-semibold mb-4 text-background">{isAr ? "دروس خاصة وجماعية" : "Private & Group Lessons"}</h3>
             <ul className="space-y-1">
               {personalLessonLinks.map(({ to, label }) => (
                 <li key={to}>
