@@ -18,9 +18,11 @@
 import { authorizeRequest } from "../_shared/authorize.ts";
 import { parseInsights, parseUtm, scrub } from "../_shared/fbInsights.ts";
 
-const FB_PAGE_TOKEN = Deno.env.get("facebook_page_access_token");
 const GRAPH = "https://graph.facebook.com/v25.0";
 const METRICS = "post_total_media_view_unique,post_media_view";
+// The Klovers Facebook Page. It is owned by the KLovers business portfolio, so
+// it never shows up in me/accounts; asking for it by id is what works.
+const PAGE_ID = Deno.env.get("facebook_page_id") ?? "2190017347877607";
 
 type FbPost = {
   id: string;
@@ -51,8 +53,26 @@ Deno.serve(async (req) => {
   const auth = await authorizeRequest(req, "admin-or-service");
   if (!auth.ok) return json({ error: auth.error }, auth.status);
 
-  if (!FB_PAGE_TOKEN) {
+  // Read the secret per request so a rotated token is used straight away.
+  const storedToken = Deno.env.get("facebook_page_access_token");
+  if (!storedToken) {
     return json({ error: "facebook_page_access_token secret not set" }, 500);
+  }
+
+  // The secret may hold a Page token, a user token or a business system-user
+  // token. Exchange it for the Page's own token; if that fails (it already is
+  // the Page token, or lacks access) keep the stored one.
+  let FB_PAGE_TOKEN = storedToken;
+  let tokenSource = "stored";
+  try {
+    const r = await fetch(`${GRAPH}/${PAGE_ID}?fields=access_token&access_token=${storedToken}`);
+    const p = await r.json();
+    if (typeof p?.access_token === "string" && p.access_token) {
+      FB_PAGE_TOKEN = p.access_token;
+      tokenSource = "page_from_stored";
+    }
+  } catch {
+    // keep the stored token
   }
 
   const body = await req.json().catch(() => ({}));
@@ -72,15 +92,15 @@ Deno.serve(async (req) => {
   let posts: FbPost[];
   try {
     const res = await fetch(
-      `${GRAPH}/me/posts?fields=${encodeURIComponent(fields)}&limit=${limit}&access_token=${FB_PAGE_TOKEN}`,
+      `${GRAPH}/${PAGE_ID}/posts?fields=${encodeURIComponent(fields)}&limit=${limit}&access_token=${FB_PAGE_TOKEN}`,
     );
     const payload = await res.json();
     if (!res.ok || !Array.isArray(payload?.data)) {
-      return json({ error: "facebook fetch failed", detail: scrub(JSON.stringify(payload?.error ?? payload), FB_PAGE_TOKEN) }, 502);
+      return json({ error: "facebook fetch failed", token_source: tokenSource, detail: scrub(scrub(JSON.stringify(payload?.error ?? payload), FB_PAGE_TOKEN), storedToken) }, 502);
     }
     posts = payload.data as FbPost[];
   } catch (e) {
-    return json({ error: "facebook fetch failed", detail: scrub(String(e), FB_PAGE_TOKEN) }, 502);
+    return json({ error: "facebook fetch failed", token_source: tokenSource, detail: scrub(scrub(String(e), FB_PAGE_TOKEN), storedToken) }, 502);
   }
 
   const rows = await mapLimit(posts, 5, async (post) => {
@@ -125,7 +145,7 @@ Deno.serve(async (req) => {
   const withInsights = rows.filter((r) => r.reach !== null).length;
 
   if (dryRun) {
-    return json({ dry_run: true, checked: rows.length, with_insights: withInsights, posts: summary });
+    return json({ dry_run: true, token_source: tokenSource, checked: rows.length, with_insights: withInsights, posts: summary });
   }
 
   const { error } = await auth.serviceClient
