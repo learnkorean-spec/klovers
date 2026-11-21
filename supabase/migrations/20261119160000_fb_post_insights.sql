@@ -122,6 +122,9 @@ begin
 end;
 $$;
 
+-- Only the cron job (postgres) should fire this; keep it off the public API.
+revoke all on function public.trigger_facebook_post_insights() from public, anon, authenticated;
+
 do $$
 begin
   if exists (select 1 from cron.job where jobname = 'facebook-post-insights-daily') then
