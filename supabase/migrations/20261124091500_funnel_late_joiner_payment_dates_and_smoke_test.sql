@@ -167,15 +167,22 @@ BEGIN
     VALUES ('Smoke Test', _email, 'new', 'smoke_test', _uid, '+201000000000');
     _steps := _steps || jsonb_build_object('step', _step, 'ok', true);
 
-    -- 4. A bookable trial slot exists
+    -- 4. The booking page offers a trial she is allowed to book. Read through
+    --    get_trial_availability(), the RPC the page itself calls, and held to
+    --    book-trial's own rule (registrations close 1 day before the class):
+    --    a slot the page offers but the server refuses is a dead end.
     _step := 'trial_slot_available';
-    SELECT s.* INTO _slot
-      FROM public.trial_slots s
-     WHERE s.is_active AND s.trial_date >= _today AND s.archived_at IS NULL
-     ORDER BY s.trial_date, s.start_time
+    SELECT a.next_trial_date AS trial_date, a.start_time, a.day_of_week, a.timezone
+      INTO _slot
+      FROM public.get_trial_availability('arabic') a
+     ORDER BY a.next_trial_date, a.start_time
      LIMIT 1;
     IF NOT FOUND THEN
-      RAISE EXCEPTION 'no active trial slot on or after today: nobody can book a trial';
+      RAISE EXCEPTION 'the booking page offers no Arabic trial: nobody can book one';
+    END IF;
+    IF _slot.trial_date - (now() AT TIME ZONE COALESCE(_slot.timezone, 'Asia/Kuala_Lumpur'))::date <= 1 THEN
+      RAISE EXCEPTION 'the booking page offers % % but book-trial refuses it (closes 1 day before)',
+        _slot.trial_date, _slot.start_time;
     END IF;
     _steps := _steps || jsonb_build_object('step', _step, 'ok', true,
                 'detail', _slot.trial_date || ' ' || _slot.start_time);

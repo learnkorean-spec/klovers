@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw, TrendingUp, MousePointerClick, Users, UserPlus, Eye, ChevronLeft, ChevronRight, Download, Mail } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import BookingSources from "@/components/admin/BookingSources";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -386,6 +387,8 @@ const LeadFunnelPanel: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      <BookingSources />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">

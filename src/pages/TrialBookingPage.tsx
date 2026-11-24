@@ -182,6 +182,10 @@ const isMissingAuditColumn = (error: any) =>
 // ───────────────────────────────────────────────────────────────────────────
 
 interface BookingResult {
+  /** The trial_bookings row id. Sent back by book-trial; logged with the
+   *  confirmation event so v_trial_booking_source can tie the booking to the
+   *  visit it came from. */
+  id?: string;
   trial_date: string;
   day_name: string;
   start_time: string;
@@ -595,7 +599,11 @@ const TrialBookingPage = () => {
       logLeadEvent({
         source_type: "free_trial",
         cta_label: "trial_booked_confirmed",
-        metadata: { trial_date: bookingResult.trial_date, day_name: bookingResult.day_name },
+        metadata: {
+          trial_date: bookingResult.trial_date,
+          day_name: bookingResult.day_name,
+          booking_id: bookingResult.id ?? null,
+        },
       });
     }
   }, [bookingResult]);
