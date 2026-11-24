@@ -346,7 +346,7 @@ const FreeTrialPage = () => {
                   <p className="text-xs text-muted-foreground text-center md:text-start">
                     {user
                       ? tr("Signed in. The dates are on the next page.", "تم تسجيل الدخول، والمواعيد في الصفحة التالية.")
-                      : tr("No account or card needed: a name and an email are enough.", "لا حاجة إلى حساب أو بطاقة، يكفي الاسم والبريد الإلكتروني.")}
+                      : tr("No account or card needed: just your name, email and WhatsApp number.", "لا حاجة إلى حساب أو بطاقة، فقط الاسم والبريد ورقم واتساب.")}
                   </p>
 
                   {/* Live availability. Computed, not copy: capacity minus
