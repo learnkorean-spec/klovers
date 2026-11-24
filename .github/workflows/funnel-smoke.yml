@@ -1,0 +1,21 @@
+# Full-funnel smoke test, HTTP half: the pages and endpoints a visitor walks
+# through on the way to a class, checked against the live site. Writes nothing.
+# The database half (account -> trial -> seat -> payment dates -> paid -> active
+# class, always rolled back) is public.fn_funnel_smoke_test(), run by pg_cron.
+name: Funnel smoke
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/funnel-smoke.mjs
