@@ -44,8 +44,17 @@ const useIsMobile = () => {
   return mobile;
 };
 
-const StickyEnrollBar = () => {
-  const { language } = useLanguage();
+type StickyEnrollBarProps = {
+  /** The language of the page content, when it can differ from the site
+   *  language (an Arabic article read on the English site). */
+  lang?: "ar" | "en";
+  /** Where the bar is shown, recorded with the click. */
+  source?: string;
+};
+
+const StickyEnrollBar = ({ lang, source = "page" }: StickyEnrollBarProps = {}) => {
+  const { language: siteLanguage } = useLanguage();
+  const language = lang ?? siteLanguage;
   const isAr = language === "ar";
   const isMobile = useIsMobile();
   const [scrolledPast, setScrolledPast] = useState(false);
@@ -94,8 +103,8 @@ const StickyEnrollBar = () => {
     >
       <div className="mx-auto flex max-w-md items-center gap-2">
         <Link
-          to="/free-trial"
-          onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "sticky_bar_free_trial", metadata: { language } }); } catch {} }}
+          to={isAr ? "/ar/free-trial" : "/free-trial"}
+          onClick={() => { try { logLeadEvent({ source_type: "free_trial", cta_label: "sticky_bar_free_trial", metadata: { language, source } }); } catch {} }}
           className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
         >
           {isAr ? "حجز حصة مجانية" : "Book Free Class"}

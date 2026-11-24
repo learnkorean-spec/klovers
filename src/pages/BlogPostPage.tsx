@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
+import StickyEnrollBar from "@/components/StickyEnrollBar";
+import { arabicTwinOf } from "@/lib/arabicRoutes";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -553,6 +555,10 @@ const BlogPostPage = () => {
   // same window. Not proof the CTAs don't work, but it meant nobody could
   // tell either way. All three links below are now instrumented the same
   // way JourneyMilestone and MiniQuiz already track theirs.
+  // 24 Nov 2026: an Arabic article's buttons open the Arabic page. They opened
+  // the English URLs, so an Arabic reader who clicked landed on English copy.
+  const localPath = (path: string) => (isRtl && path.startsWith("/") ? arabicTwinOf(path) ?? path : path);
+
   const ctaBlock = (position: "early" | "end") => (
     <div className="mt-12 p-8 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl text-center space-y-4">
       <p className="text-sm font-bold text-foreground uppercase tracking-widest">
@@ -564,7 +570,7 @@ const BlogPostPage = () => {
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
         <Button asChild size="lg" className="gap-2">
           <Link
-            to={post.cta_url || "/placement-test"}
+            to={localPath(post.cta_url || "/placement-test")}
             onClick={() => trackJourney("course_cta_clicked", { cta: "article_cta_primary", position, slug: post.slug })}
           >
             {post.cta_url ? (isAr ? "البدء الآن" : "Get Started") : (isAr ? "اختبار تحديد المستوى المجاني" : "Take the Free Placement Test")} <ArrowRight className="h-4 w-4" />
@@ -572,7 +578,7 @@ const BlogPostPage = () => {
         </Button>
         <Button asChild size="lg" variant="outline" className="gap-2">
           <Link
-            to="/enroll"
+            to={isRtl ? "/ar/pricing" : "/enroll"}
             onClick={() => trackJourney("course_cta_clicked", { cta: "article_cta_pricing", position, slug: post.slug })}
           >
             {isAr ? "عرض الدورات والأسعار" : "View Courses & Pricing"}
@@ -787,7 +793,7 @@ const BlogPostPage = () => {
             </div>
             <Button asChild className="gap-2 shrink-0">
               <Link
-                to="/free-trial"
+                to={localPath("/free-trial")}
                 onClick={() => trackJourney("course_cta_clicked", { cta: "article_free_trial", slug: post.slug })}
               >
                 {isAr ? "الحجز مجانًا" : "Book Free Class"}
@@ -884,6 +890,10 @@ const BlogPostPage = () => {
           </div>
         </article>
       </main>
+      {/* Phones only, after the first screen of reading. In 60 days to
+          24 Nov 2026, 4,096 blog visits produced 17 CTA clicks; the in-article
+          blocks are easy to scroll past on a phone. Same bar as the homepage. */}
+      <StickyEnrollBar lang={isRtl ? "ar" : "en"} source="blog" />
       <Footer />
       <ScrollToTop />
     </div>
