@@ -402,15 +402,11 @@ const TrialBookingPage = () => {
       return;
     }
 
-    // If we still don't have a level (profile empty + dropdown untouched), ask for it.
-    if (needsLevel && !selectedLevel) {
-      toast({
-        title: t("trialBooking.pickLevelTitle"),
-        description: t("trialBooking.pickLevelDesc"),
-        variant: "destructive",
-      });
-      return;
-    }
+    // The level is optional (24 Nov 2026). It was a required first question,
+    // and "Hangul / Level 1 (TOPIK 1)" means little to someone who has never
+    // studied: a hard stop before the name field. A booking with no level is
+    // stored with level null, as 15 older bookings already are; the teacher
+    // sees the student's level in the class and the placement test sets it.
 
     // No number, no booking. See the comment on the `phone` state above.
     if (!phoneIsValid) {
