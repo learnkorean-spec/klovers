@@ -46,6 +46,8 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SITE_URL = "https://kloversegy.com";
 const FUNCTION_BASE = "https://ewtdgpbybkceokfohhyg.supabase.co/functions/v1";
 const ENROL_URL = `${SITE_URL}/enroll-now`;
+// Arabic letters open the Arabic page (24 Nov 2026).
+const ENROL_URL_AR = `${SITE_URL}/ar/enroll-now`;
 const TRIAL_URL = `${SITE_URL}/trial-booking`;
 const WA_URL = "https://wa.me/201010003084";
 
@@ -142,12 +144,12 @@ function cameLetter(name: string, isAr: boolean, unsubUrl: string) {
   if (isAr) {
     return {
       subject: "كلوفرز — مقعد في المجموعة",
-      text: `مرحباً ${who}،\n\nيسعدنا حضور الحصة معنا.\n\nالتسجيل مفتوح: اختيار المستوى والموعد المناسب من صفحة التسجيل:\n${ENROL_URL}\n\nيُحجز المقعد من وقت التسجيل، والدفع بعد بداية المجموعة.\n\nإلغاء الاشتراك: ${unsubUrl}\nكلوفرز — kloversegy.com`,
+      text: `مرحباً ${who}،\n\nيسعدنا حضور الحصة معنا.\n\nالتسجيل مفتوح: اختيار المستوى والموعد المناسب من صفحة التسجيل:\n${ENROL_URL_AR}\n\nيُحجز المقعد من وقت التسجيل، والدفع بعد بداية المجموعة.\n\nإلغاء الاشتراك: ${unsubUrl}\nكلوفرز — kloversegy.com`,
       html: wrap(
         `<h1 style="color:#2E2E2E;font-size:22px;margin:0 0 12px;">مرحباً ${who}،</h1>
          <p style="margin:0 0 6px;">يسعدنا حضور الحصة معنا.</p>
          <p style="margin:0;">التسجيل مفتوح: اختيار المستوى والموعد المناسب من صفحة التسجيل.</p>
-         ${button("اختيار المجموعة", ENROL_URL)}
+         ${button("اختيار المجموعة", ENROL_URL_AR)}
          <p style="margin:0;">يُحجز المقعد من وقت التسجيل، والدفع بعد بداية المجموعة.</p>`,
         true, unsubUrl,
       ),

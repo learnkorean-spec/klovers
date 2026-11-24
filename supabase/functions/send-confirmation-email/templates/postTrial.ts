@@ -39,6 +39,9 @@ import {
 } from "./common.ts";
 
 const ENROL_URL = "https://kloversegy.com/enroll-now";
+// The Arabic letter opens the Arabic page: /enroll-now shows English to anyone
+// whose phone is not set to Arabic (24 Nov 2026).
+const ENROL_URL_AR = "https://kloversegy.com/ar/enroll-now";
 const WA_URL = "https://wa.me/201010003084";
 
 // Rule 2: WhatsApp in the body, above the signature, not only in the footer.
@@ -64,7 +67,7 @@ export function buildTrialFollowupDay1Email(p: EmailPayload) {
         <p>التسجيل مفتوح الآن.</p>
         <p>اختيار المستوى والموعد المناسب من صفحة التسجيل.</p>
         <div style="margin: 24px 0; text-align: center;">
-          ${brandButton("اختيار المجموعة", ENROL_URL)}
+          ${brandButton("اختيار المجموعة", ENROL_URL_AR)}
         </div>
         <p>المقعد يُحجز باسمك من وقت التسجيل، والدفع بعد بداية المجموعة.</p>
         ${whatsappLine(true)}
