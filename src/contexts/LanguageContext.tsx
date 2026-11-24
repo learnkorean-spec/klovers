@@ -108,6 +108,18 @@ const translations = {
  * for the first. Only written after a successful UPDATE, so a failure retries
  * on the next load.
  */
+/** True for a real visitor whose browser's first language is Arabic. */
+const prefersArabicOnFirstVisit = (): boolean => {
+  try {
+    if (typeof navigator === "undefined") return false;
+    if (/bot|crawl|spider|slurp|lighthouse|headlesschrome|prerender/i.test(navigator.userAgent || "")) return false;
+    const first = (navigator.languages && navigator.languages[0]) || navigator.language || "";
+    return first.toLowerCase().startsWith("ar");
+  } catch {
+    return false;
+  }
+};
+
 const LANG_SYNCED_KEY = "k-lovers-lang-synced";
 
 const alreadySynced = (stamp: string): boolean => {
@@ -139,7 +151,23 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     const asked = languageFromSearch(window.location.search);
     if (asked) return asked;
     const saved = localStorage.getItem("k-lovers-lang");
-    return (saved === "ar" ? "ar" : "en") as Language;
+    if (saved === "ar" || saved === "en") return saved;
+    // First visit, nothing chosen yet (24 Nov 2026): a browser set to Arabic
+    // reads Arabic. Arabic posts, Arabic emails and WhatsApp links all point at
+    // the English URLs ("/free-trial", "/enroll-now"), so an Arabic reader on a
+    // new phone landed on English copy. A page with an Arabic twin moves to it
+    // (replaceState runs before the router mounts, so the router starts on the
+    // /ar URL); any other page just renders in Arabic. Once the language is
+    // saved below, this never runs again, and the switcher still wins.
+    // Crawlers are left alone so "/" stays the English page they index.
+    if (prefersArabicOnFirstVisit()) {
+      const twin = arabicTwinOf(window.location.pathname);
+      if (twin) {
+        window.history.replaceState(window.history.state, "", twin + window.location.search + window.location.hash);
+      }
+      return "ar";
+    }
+    return "en";
   });
 
   useEffect(() => {
