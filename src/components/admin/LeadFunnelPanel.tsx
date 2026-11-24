@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw, TrendingUp, MousePointerClick, Users, UserPlus, Eye, ChevronLeft, ChevronRight, Download, Mail } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import BookingSources from "@/components/admin/BookingSources";
+import EnrollSteps from "@/components/admin/EnrollSteps";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -388,7 +389,10 @@ const LeadFunnelPanel: React.FC = () => {
         </div>
       </div>
 
-      <BookingSources />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <BookingSources />
+        <EnrollSteps />
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">

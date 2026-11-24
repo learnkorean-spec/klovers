@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import rehamPhoto from "@/assets/reham-teacher.jpg";
 import { useSearchParams } from "react-router-dom";
 import { useSEO } from "@/hooks/useSEO";
@@ -134,6 +134,18 @@ const EnrollNowPage = () => {
     initialStep === 3 ? 4 :
     initialStep === 4 ? 4 : 1
   );
+  // 24 Nov 2026: each step is logged once per visit, so the admin funnel can
+  // show where people stop between "enrolment is open" and paying. Until now
+  // only the final checkout click was recorded (6 events ever).
+  const stepsLogged = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    if (stepsLogged.current.has(step)) return;
+    stepsLogged.current.add(step);
+    try {
+      logLeadEvent({ source_type: "enroll", cta_label: `step_${step}_viewed`, metadata: { language: isAr ? "ar" : "en" } });
+    } catch { /* tracking never blocks enrolment */ }
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [classType, setClassType] = useState<ClassType>(
     (searchParams.get("classType") as ClassType) || "group"
   );

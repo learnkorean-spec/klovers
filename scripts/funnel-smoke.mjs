@@ -27,7 +27,11 @@ const ANON =
   process.env.SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV3dGRncGJ5YmtjZW9rZm9oaHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5Mzg4NzAsImV4cCI6MjA4OTUxNDg3MH0.KPKgPrhms2frDi09sdNChScBrHS00O7UhX2k8SArTxs";
 
-const PAGES = ["/", "/free-trial", "/trial-booking", "/placement-test", "/signup", "/enroll-now", "/pricing"];
+const PAGES = [
+  "/", "/free-trial", "/trial-booking", "/placement-test", "/signup", "/enroll-now", "/pricing",
+  // The Arabic twins: Arabic posts, articles and first-time Arabic browsers land here.
+  "/ar", "/ar/free-trial", "/ar/enroll-now", "/ar/pricing", "/ar/placement-test",
+];
 
 const results = [];
 const record = (step, ok, detail = "") => {
