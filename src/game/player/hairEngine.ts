@@ -528,8 +528,10 @@ function grow(m: Measure, style: HairStyle, dense: boolean): Strand[] {
   }
   // a soft, full hairline: extra roots just inside it, all the way round
   const lineN = dense ? 60 : 40;
-  for (let i = 0; i < lineN; i++) {
-    const az = -Math.PI + ((i + 0.5) / lineN) * Math.PI * 2;
+  const frontN = dense ? 26 : 16;
+  for (let i = 0; i < lineN + frontN; i++) {
+    // the first roots go all the way round; the rest crowd the front hairline (forehead and temples)
+    const az = i < lineN ? -Math.PI + ((i + 0.5) / lineN) * Math.PI * 2 : -1.25 + ((i - lineN + 0.5) / frontN) * 2.5;
     const hy = hairlineY(m, az) + 0.004;
     // walk up from below until the skull is above the hairline
     const d = new Vector3();
