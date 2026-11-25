@@ -40,7 +40,7 @@ h1{font-size:20pt;margin:4mm 0 1mm}h2{font-size:12pt;margin:4mm 0 2mm}
 .goals li{font-size:9pt;margin:1mm 5mm 1mm 0}
 .vg{display:grid;grid-template-columns:repeat(4,1fr);gap:2.5mm;margin-top:2mm}
 .v{border:.35mm solid #FFFF00;border-radius:3mm;padding:2mm 1mm;text-align:center;background:#FFF9EC}
-.v img{width:13mm;height:13mm;object-fit:contain;mix-blend-mode:multiply}
+.v img{width:16mm;height:16mm;object-fit:contain;mix-blend-mode:multiply}
 .v .k{font-size:12.5pt;font-weight:700}.v .a{font-size:8pt;color:#333}
 table{width:100%;border-collapse:collapse;font-size:9pt}td,th{border:.3mm solid #1a1a1a;padding:1.6mm 2mm;text-align:right}th{background:#FFFF00}
 .big{font-size:20pt;font-weight:700;text-align:center}
@@ -93,7 +93,7 @@ def blk(b):
         items="".join(f'<div class="fl"><span class="num">{n(i+1)}</span><span class="kr">{e(x)}</span></div>' for i,x in enumerate(b["items"], b.get("start",0)))
         return f'<div class="box"><p class="sub"><span class="num">{n(b["no"])}</span><b>{e(b["title"])}</b></p>'+(f'<p class="sub kr" style="direction:ltr;text-align:left">{e(b["hint"])}</p>' if b.get("hint") else "")+f'{items}</div>'
     if t=="choose":
-        ch="".join(f'<div><span><span class="num">{n(i+1)}</span><span class="kr">{e(w)}</span></span><span>'+"".join(f'<span class="opt kr">{e(o)}</span>' for o in opts)+'</span></div>' for i,(w,opts) in enumerate(b["items"]))
+        ch="".join(f'<div><span><span class="num">{n(i+1)}</span><span class="kr">{e(w)}</span></span><span>'+"".join(f'<span class="opt kr">{e(o)}</span>' for o in opts)+'</span></div>' for i,(w,opts) in enumerate(b["items"], b.get("start",0)))
         return f'<div class="box"><p class="sub"><span class="num">{n(b["no"])}</span><b>{e(b["title"])}</b></p><div class="ch">{ch}</div></div>'
     if t=="reading":
         qs=""

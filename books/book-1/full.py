@@ -100,8 +100,115 @@ def pack_cards(cards):
     if cur: pages.append(cur)
     return pages
 
+def atoms_of(U):
+    """Flatten a unit into atoms: a title is glued to the next block, a note to the previous one."""
+    flat = [b for pg in U["pages"] for b in pg]
+    atoms = []; i = 0
+    while i < len(flat):
+        grp = [flat[i]]; i += 1
+        if grp[0]["type"] == "title" and i < len(flat) and flat[i]["type"] != "title":
+            grp.append(flat[i]); i += 1
+        while i < len(flat) and flat[i]["type"] == "note":
+            grp.append(flat[i]); i += 1
+        atoms.append(grp)
+    return atoms
+
+GAP = 7
+SPLIT = {"table": ("rows", 1), "fill": ("items", 1), "translate": ("items", 1), "choose": ("items", 2), "dialogue": ("lines", 1), "vocab": ("items", 4)}
+def body_blocks(pg):
+    return [b for b in pg.get_text("blocks") if 35 < b[1] < 566 and "ّبها" not in b[4] and "الكورية، ِع" not in b[4] and "الصفحة" not in b[4] and "kloversegy" not in b[4].replace(" ", "")]
+
+def split_block(b, k):
+    key, _ = SPLIT[b["type"]]
+    b1 = dict(b); b2 = dict(b)
+    b1[key] = b[key][:k]; b2[key] = b[key][k:]
+    if b["type"] in ("fill", "translate", "choose"): b2["start"] = b.get("start", 0) + k
+    if b["type"] == "table" and b.get("title"): b2["title"] = b["title"] + " (تابع)"
+    if b["type"] == "table" and not b.get("title"): b2["title"] = "(تابع)"
+    if b["type"] == "vocab": b2["title"] = b.get("title", "المفردات") + " (تابع)"
+    if b["type"] in ("fill", "translate", "choose"): b2["title"] = b["title"] + " (تابع)"
+    return b1, b2
+
+UFAC = {}
+def reflow(units, safe=1.0):
+    flat = [(U, b) for U in units for pg in U["pages"] for b in pg]
+    html = "".join(B.frame(B.blk(b), i+1, 99, U["title"], U["number"]) for i, (U, b) in enumerate(flat))
+    d = render_pdf(html, "measure_units")
+    assert len(d) == len(flat)
+    probe = render_pdf(B.frame("<p>x</p>", 1, 99, "x", 1), "measure_probe")
+    top = min(b[1] for b in body_blocks(probe[0])); limit = 548; cap = limit - top
+    H = {}
+    for k, pg in enumerate(d):
+        bb = body_blocks(pg); imgs = [im["bbox"][3] for im in pg.get_image_info() if 40 < im["bbox"][1] and im["bbox"][3] < 566]
+        ys = [b[3] for b in bb] + imgs
+        H[k] = (max(ys) - top) if ys else 0
+    OVER = 12
+    result = {}; fills = []; k = 0
+    for U in units:
+        blocks = []
+        for pg in U["pages"]:
+            for b in pg: blocks.append((b, H[k])); k += 1
+        # atoms: title glued to next block, notes glued to previous
+        atoms = []; i = 0
+        while i < len(blocks):
+            grp = [blocks[i]]; i += 1
+            if grp[0][0]["type"] == "title" and i < len(blocks) and blocks[i][0]["type"] != "title":
+                grp.append(blocks[i]); i += 1
+            while i < len(blocks) and blocks[i][0]["type"] == "note":
+                grp.append(blocks[i]); i += 1
+            atoms.append(grp)
+        def pack(atoms, scale):
+            scale = scale * UFAC.get(U["number"], 1.0)
+            pages = []; useds = []; cur = []; used = 0
+            def flush():
+                nonlocal cur, used
+                if cur: pages.append(cur); useds.append(used)
+                cur = []; used = 0
+            queue = list(atoms)
+            while queue:
+                atom = queue.pop(0)
+                h = sum(x[1] for x in atom) + 3 * (len(atom) - 1)
+                if used + h + GAP <= cap * 0.94 * scale:
+                    cur += [x[0] for x in atom]; used += h + GAP; continue
+                space = cap * safe * scale - used - GAP
+                done = False
+                for j in range(len(atom) - 1, -1, -1):
+                    blk_, bh = atom[j]
+                    if blk_["type"] not in SPLIT: continue
+                    key, step = SPLIT[blk_["type"]]; nitems = len(blk_[key])
+                    rows = nitems / step
+                    per = (bh - OVER) / max(rows, 1)
+                    before = sum(x[1] for x in atom[:j]) + 3 * j
+                    avail = space - before - OVER
+                    kr = int(avail // per); kk = kr * step
+                    if nitems - kk < 2 * step: kk = nitems - 2 * step; kr = kk // step
+                    if kr >= 2 and nitems - kk >= step:
+                        b1, b2 = split_block(blk_, kk)
+                        h1 = OVER + kr * per; h2 = OVER + (rows - kr) * per
+                        cur += [x[0] for x in atom[:j]] + [b1]; used += before + h1 + GAP
+                        flush()
+                        queue.insert(0, [(b2, h2)] + atom[j+1:]); done = True
+                    break
+                if done: continue
+                flush(); queue.insert(0, atom)
+            flush()
+            return pages, useds
+        pages, useds = pack(atoms, 1.0)
+        p = len(pages)
+        if p > 1:
+            scale = min(1.0, (sum(useds) / p) / (cap * 0.94) * 1.12)
+            for sc in (scale, min(1.0, scale * 1.06), min(1.0, scale * 1.12), 1.0):
+                pg2, us2 = pack(atoms, sc)
+                if len(pg2) <= p: pages, useds = pg2, us2; break
+        fills.extend(u / cap for u in useds)
+        result[U["number"]] = ["".join(B.blk(b) for b in pg) for pg in pages]
+    print("avg fill %.0f%%, pages under 60%%: %d of %d" % (100 * sum(fills) / len(fills), sum(f < .6 for f in fills), len(fills)))
+    return result
+
 def main():
-    unit_pages = [(U, B.pages(U)) for U in UNITS]
+    SAFE = float(sys.argv[1]) if len(sys.argv) > 1 else 0.97
+    RF = reflow(UNITS, SAFE)
+    unit_pages = [(U, RF[U["number"]]) for U in UNITS]
     acards = [answer_card(U) for U in UNITS]
     # answer pages: 2 units per page by default
     apages = pack_cards(acards)
@@ -139,7 +246,16 @@ def main():
     book = pymupdf.open(); book.insert_pdf(cover); book.insert_pdf(body)
     book.save(out / "book-1.pdf")
     print("pages", len(book), "expected", total)
+    bad_units = set()
     for i, pg in enumerate(body):
         low = [b for b in pg.get_text("blocks") if b[3] > 548 and "kloversegy" not in b[4] and "الصفحة" not in b[4] and "تعلّم" not in b[4] and "الكورية، ِع" not in b[4] and "ّبها" not in b[4] and "kloversegy" not in b[4].replace(" ","")]
-        if low: print("OVERFLOW body page", i+2, low[0][4][:40].replace("\n", " "))
-main()
+        if low:
+            print("OVERFLOW body page", i+2, low[0][4][:40].replace("\n", " "))
+            for un, st in start.items():
+                if st <= i + 2 < st + len(dict((U["number"], P) for U, P in unit_pages)[un]): bad_units.add(un)
+    return bad_units
+for it in range(5):
+    bad = main()
+    if not bad: break
+    print("iteration", it, "overflow units", sorted(bad))
+    for un in bad: UFAC[un] = UFAC.get(un, 1.0) * 0.93
