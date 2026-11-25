@@ -80,6 +80,7 @@ export const ADMIN_NAV: {
     // nobody can find would not have fixed that.
     { id: "message", label: "Write a letter", to: "/admin/message", icon: Mail },
     { id: "my-students", label: "My students", to: "/admin?tab=my-students", icon: LayoutDashboard },
+    { id: "payments-board", label: "Payments & classes", to: "/admin?tab=payments-board", icon: LayoutDashboard },
     { id: "placement-tests", label: "Placement tests", to: "/admin?tab=placement-tests", icon: ClipboardCheck },
     { id: "availability", label: "Availability", to: "/admin?tab=availability", icon: Clock },
     // Teacher roster + per-course onboarding checklist. Separate from

@@ -26,7 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Eye, AlertCircle, Bell, Mail, Sparkles, Settings, BarChart3, Users, FileCheck, Clock, Tag, Loader2, Image, Palette, Trophy, TrendingUp, Link, BookOpen, GraduationCap, Volume2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, Package, Lock, CalendarPlus } from "lucide-react";
+import { ChevronDown, Package, Lock, CalendarPlus, CreditCard } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
@@ -51,6 +51,7 @@ const TeacherAvailabilityManager = lazy(() => import("@/components/admin/Teacher
 const TeacherOnboardingManager = lazy(() => import("@/components/admin/TeacherOnboardingManager"));
 const PersonalTrialManager = lazy(() => import("@/components/admin/PersonalTrialManager"));
 const MyStudentsManager = lazy(() => import("@/components/admin/MyStudentsManager"));
+const PaymentsBoard = lazy(() => import("@/components/admin/PaymentsBoard"));
 const UpcomingPrivateClasses = lazy(() => import("@/components/admin/UpcomingPrivateClasses"));
 const StudentPreferenceDashboard = lazy(() => import("@/components/admin/StudentPreferenceDashboard"));
 const BulkEmailManager = lazy(() => import("@/components/admin/BulkEmailManager"));
@@ -1012,7 +1013,7 @@ const AdminDashboard = () => {
   // The assertion under this list fails loudly if it happens again.
   const TAB_GROUPS: { id: string; label: string; icon: typeof Users; tabs: string[] }[] = [
     { id: "ops",     label: "Operations", icon: BarChart3, tabs: ["students", "enrollments", "leads", "trials", "personal-trials", "lead-funnel", "sales", "promos", "manage"] },
-    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "placement-tests", "preferences", "availability", "teacher-onboarding", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
+    { id: "learn",   label: "Learning",   icon: Users,     tabs: ["my-students", "payments-board", "placement-tests", "preferences", "availability", "teacher-onboarding", "group-matcher", "group-attendance", "session-attendance", "league-users"] },
     { id: "content", label: "Content",    icon: Sparkles,  tabs: ["blog", "seo-orchestration", "image-audit", "campaigns", "books", "trial-books", "book-plan", "pictures", "brand", "conversation-audio"] },
     { id: "config",  label: "Config",     icon: Settings,  tabs: ["notifications", "scheduling", "settings", "connectors"] },
   ];
@@ -1328,6 +1329,11 @@ const AdminDashboard = () => {
                 {inActiveGroup("my-students") && (
                   <TabsTrigger value="my-students" className={TAB_CLS}>
                     <GraduationCap className="h-3.5 w-3.5" /> My Students
+                  </TabsTrigger>
+                )}
+                {inActiveGroup("payments-board") && (
+                  <TabsTrigger value="payments-board" className={TAB_CLS}>
+                    <CreditCard className="h-3.5 w-3.5" /> Payments &amp; classes
                   </TabsTrigger>
                 )}
                 {inActiveGroup("placement-tests") && (
@@ -1726,6 +1732,14 @@ const AdminDashboard = () => {
               <TabErrorBoundary name="My Students">
                 <UpcomingPrivateClasses />
                 <MyStudentsManager />
+              </TabErrorBoundary>
+            </TabsContent>
+
+            {/* PAYMENTS & CLASSES TAB — who has paid and classes left, group and
+                private students in one list. Read-only; see lib/paymentsBoard.ts. */}
+            <TabsContent value="payments-board">
+              <TabErrorBoundary name="Payments & classes">
+                <PaymentsBoard />
               </TabErrorBoundary>
             </TabsContent>
 
