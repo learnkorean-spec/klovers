@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Klovers Book 1 generator (A0 style). Usage: python3 build.py 05  -> out/unit-05.pdf
+"""Klovers Book 1 generator (A0 style, brand yellow #FFFF00 only). Usage: python3 build.py 05  -> out/unit-05.pdf
 Reads units/NN.json, writes HTML, prints to PDF with headless Chrome (A5)."""
 import json, sys, subprocess, html, pathlib
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -8,7 +8,10 @@ ICONS = REPO / "public/picture-library/icons"
 LOGO = REPO / "public/klovers-logo.jpg"
 AR = "٠١٢٣٤٥٦٧٨٩"
 def n(x): return "".join(AR[int(c)] if c.isdigit() else c for c in str(x))
-e = html.escape
+import re
+def e(x):
+    """escape and wrap every Korean/particle run in an isolated LTR span (fixes bidi order)"""
+    return re.sub(r"([가-힣][가-힣/ ~·\-]*[가-힣]|[가-힣])", r'<span class="kr">\1</span>', html.escape(x))
 
 CSS = """
 @font-face{font-family:Cairo;font-weight:400;src:url(fonts/cairo-arabic-400-normal.woff2)}
@@ -25,20 +28,20 @@ body{font-family:Cairo,KR,sans-serif;color:#1a1a1a;direction:rtl;background:#FFF
 .kr{font-family:KR,Cairo;direction:ltr;unicode-bidi:isolate}
 h1{font-size:20pt;margin:4mm 0 1mm}h2{font-size:12pt;margin:4mm 0 2mm}
 .sub{font-size:9pt;color:#444;margin-bottom:3mm}
-.box{background:#FFF9EC;border:.35mm solid #FFEB00;border-radius:3mm;padding:3mm 4mm;margin:2.5mm 0}
-.tag{display:inline-block;background:#FFEB00;border-radius:1.5mm;font-size:7.5pt;font-weight:700;padding:.3mm 2mm;margin-left:2mm}
+.box{background:#FFF9EC;border:.35mm solid #FFFF00;border-radius:3mm;padding:3mm 4mm;margin:2.5mm 0}
+.tag{display:inline-block;background:#FFFF00;border-radius:1.5mm;font-size:7.5pt;font-weight:700;padding:.3mm 2mm;margin-left:2mm}
 .goals li{font-size:9pt;margin:1mm 5mm 1mm 0}
 .vg{display:grid;grid-template-columns:repeat(4,1fr);gap:2.5mm;margin-top:2mm}
-.v{border:.35mm solid #FFEB00;border-radius:3mm;padding:2mm 1mm;text-align:center;background:#FFF9EC}
+.v{border:.35mm solid #FFFF00;border-radius:3mm;padding:2mm 1mm;text-align:center;background:#FFF9EC}
 .v img{width:13mm;height:13mm;object-fit:contain;mix-blend-mode:multiply}
 .v .k{font-size:12.5pt;font-weight:700}.v .a{font-size:8pt;color:#333}
-table{width:100%;border-collapse:collapse;font-size:9pt}td,th{border:.3mm solid #e6d8a0;padding:1.6mm 2mm;text-align:right}th{background:#FFF1A8}
+table{width:100%;border-collapse:collapse;font-size:9pt}td,th{border:.3mm solid #1a1a1a;padding:1.6mm 2mm;text-align:right}th{background:#FFFF00}
 .big{font-size:20pt;font-weight:700;text-align:center}
 .dl{display:flex;gap:2mm;margin:1.8mm 0;align-items:flex-start}
-.who{min-width:11mm;font-size:8pt;font-weight:700;background:#FFEB00;border-radius:1.5mm;text-align:center;padding:.6mm}
+.who{min-width:11mm;font-size:8pt;font-weight:700;background:#FFFF00;border-radius:1.5mm;text-align:center;padding:.6mm}
 .dk{font-size:10.5pt;font-weight:700;direction:ltr;text-align:left}.da{font-size:8.5pt;color:#333}
-.cl{margin-top:3mm;border:.35mm solid #1a1a1a;border-radius:3mm;padding:2.5mm 3.5mm;font-size:8.5pt;background:#fff7d6}
-.num{display:inline-block;min-width:5mm;text-align:center;background:#FFEB00;border-radius:1.5mm;font-size:8pt;font-weight:700;margin-left:1.5mm}
+.cl{margin-top:3mm;border:.35mm solid #1a1a1a;border-radius:3mm;padding:2.5mm 3.5mm;font-size:8.5pt;background:#FFF9EC}
+.num{display:inline-block;min-width:5mm;text-align:center;background:#FFFF00;border-radius:1.5mm;font-size:8pt;font-weight:700;margin-left:1.5mm}
 .ch{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm 5mm}.ch div{font-size:10.5pt;border-bottom:.2mm dotted #bbb;padding:1.2mm 0;display:flex;justify-content:space-between}
 .opt{display:inline-block;margin-left:5mm;font-size:10pt}
 """
