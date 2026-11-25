@@ -38,6 +38,8 @@ export interface CameraState {
   pitchTarget: number | null;
   /** First-person view: the camera is the learner's eyes (own body hidden). */
   pov: boolean;
+  /** When the learner last dragged the view by hand (ms): touch steering waits after it. */
+  lastLookAt?: number;
 }
 
 export function createPlayerState(): PlayerState {

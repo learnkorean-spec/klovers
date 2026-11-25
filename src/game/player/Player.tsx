@@ -65,12 +65,14 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
 
     let wish = wishDirection(keys, camera.current.yaw);
     let targetSpeed: number = keys.run ? PLAYER.runSpeed : PLAYER.walkSpeed;
+    let stickPush = false;
     if (wish.x === 0 && wish.z === 0 && !still) {
       // Touch joystick: a light push walks, a full push runs.
       const st = stickDirection(touchStick.x, touchStick.y, camera.current.yaw);
       if (st.strength > 0) {
         wish = { x: st.x, z: st.z };
-        targetSpeed = st.strength > 0.92 ? PLAYER.runSpeed : PLAYER.walkSpeed * Math.max(0.45, st.strength);
+        stickPush = true;
+        targetSpeed = st.strength > 0.8 ? PLAYER.runSpeed : PLAYER.walkSpeed * Math.max(0.45, st.strength);
       }
     }
     // Tap-to-go: any input of the learner's own takes over at once.
@@ -160,6 +162,17 @@ export default function Player({ input, player, camera, layout, avatar, onArrive
     if (p.autoTarget && speed > 0.3) {
       const c = camera.current;
       c.yaw += angleDelta(c.yaw, p.yaw + Math.PI) * damp(3, dt);
+    }
+
+    // Touch: walking forward with the thumb steers the view round behind the
+    // body, the more the thumb leans sideways the faster, so one thumb is
+    // enough to walk a curve (a second thumb can still drag the view; the
+    // follow waits a moment after it).
+    if (stickPush && touchStick.y > 0.3 && speed > 0.3) {
+      const c = camera.current;
+      if (!c.pov && !c.focus && c.yawTarget === null && performance.now() - (c.lastLookAt ?? 0) > 700) {
+        c.yaw += angleDelta(c.yaw, p.yaw + Math.PI) * damp(1.6, dt) * Math.min(1, Math.abs(touchStick.x) * 1.6);
+      }
     }
 
     if (root.current) {

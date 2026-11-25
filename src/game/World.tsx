@@ -859,7 +859,8 @@ function hudRects(layer: HTMLElement | null, w: number, h: number): HudRect[] {
   // letters, the room's banner, the map's label) are kept clear too: a sign
   // over the objective made both unreadable on a phone.
   layer.parentElement.querySelectorAll<HTMLElement>(".pointer-events-auto, [role=status], [data-hud]").forEach((e) => {
-    if (layer.contains(e) || e.tagName === "CANVAS") return;
+    // The joystick's zone is the whole lower-left half, not a control: only its ring counts.
+    if (layer.contains(e) || e.tagName === "CANVAS" || e.hasAttribute("data-stick-zone")) return;
     const r = e.getBoundingClientRect();
     if (r.width < 2 || r.height < 2 || r.width * r.height > w * h * 0.5) return;
     out.push({ l: r.left - base.left, t: r.top - base.top, r: r.right - base.left, b: r.bottom - base.top });

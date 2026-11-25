@@ -16,13 +16,15 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * bar rather than beside them. It now takes its turn through the shared
  * bottom layer like the other three (see src/lib/bottomLayer.ts).
  *
+ * Never inside the 3D world (/world): the joystick lives in the same bottom corner.
+ *
  * Never inside the booking and payment steps (6 Oct 2026): a second box asking
  * for something else in the middle of choosing a class or paying is a reason to
  * leave. It waits until the student is on another page.
  *
  * Analytics: fires `pwa_installed` on successful install.
  */
-const FUNNEL_PATHS = ["/enroll", "/enroll-now", "/trial-booking", "/trial-book", "/free-trial", "/checkout", "/login", "/signup", "/sign-up", "/forgot-password"];
+const FUNNEL_PATHS = ["/world", "/enroll", "/enroll-now", "/trial-booking", "/trial-book", "/free-trial", "/checkout", "/login", "/signup", "/sign-up", "/forgot-password"];
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;

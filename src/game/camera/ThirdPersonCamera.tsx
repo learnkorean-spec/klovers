@@ -99,6 +99,7 @@ export default function ThirdPersonCamera({ player, camera, layout, onFirstLook 
     const look = (dx: number, dy: number) => {
       const c = camera.current;
       c.yaw -= dx * CAMERA.mouseSensitivity;
+      c.lastLookAt = performance.now();
       c.pitch = clamp(c.pitch + dy * CAMERA.mouseSensitivity, CAMERA.minPitch, CAMERA.maxPitch);
       if (!announced) {
         announced = true;
