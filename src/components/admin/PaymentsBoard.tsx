@@ -83,9 +83,9 @@ const PAY_CLS = {
   cancelled: "bg-muted text-muted-foreground border-border",
 } as const;
 
-function Tile({ label, value, tone }: { label: string; value: number; tone?: string }) {
+function Tile({ label, value, tone, cls = "" }: { label: string; value: number; tone?: string; cls?: string }) {
   return (
-    <Card>
+    <Card className={cls}>
       <CardContent className="p-3 text-center">
         <div className={`text-2xl font-bold ${tone ?? ""}`}>{value}</div>
         <div className="text-xs text-muted-foreground">{label}</div>
@@ -111,12 +111,12 @@ export default function PaymentsBoard() {
 
   return (
     <div dir="rtl" lang="ar" className="space-y-4">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <Tile label="طلاب نشطين" value={t.active} />
-        <Tile label="دفعوا" value={t.paid} tone="text-emerald-700" />
-        <Tile label="لم يدفعوا" value={t.unpaid} tone={t.unpaid ? "text-red-600" : ""} />
-        <Tile label="محتاجين باقة جديدة" value={t.needBundle} tone={t.needBundle ? "text-red-600" : ""} />
-        <Tile label="باقي حصة واحدة" value={t.oneLeft} tone={t.oneLeft ? "text-amber-600" : ""} />
+      <div className="grid grid-cols-6 gap-2 sm:grid-cols-10">
+        <Tile cls="col-span-2" label="طلاب نشطين" value={t.active} />
+        <Tile cls="col-span-2" label="دفعوا" value={t.paid} tone="text-emerald-700" />
+        <Tile cls="col-span-2" label="لم يدفعوا" value={t.unpaid} tone={t.unpaid ? "text-red-600" : ""} />
+        <Tile cls="col-span-3 sm:col-span-2" label="محتاجين باقة جديدة" value={t.needBundle} tone={t.needBundle ? "text-red-600" : ""} />
+        <Tile cls="col-span-3 sm:col-span-2" label="باقي حصة واحدة" value={t.oneLeft} tone={t.oneLeft ? "text-amber-600" : ""} />
       </div>
 
       <Card>
