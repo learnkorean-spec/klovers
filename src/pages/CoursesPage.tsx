@@ -4,6 +4,8 @@ import { useSEO } from "@/hooks/useSEO";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CoursesSection from "@/components/CoursesSection";
+import MeetTeacher from "@/components/MeetTeacher";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import KloverIcon, { type KloverIconName } from "@/components/KloverIcon";
@@ -168,6 +170,9 @@ const CoursesPage = () => {
             </div>
           </div>
         </section>
+        {/* Trust block: the real teacher bio and the real reviews, same components as the homepage and /pricing. */}
+        <MeetTeacher />
+        <TestimonialsSection />
       </main>
       <Footer />
     </div>
