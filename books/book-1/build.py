@@ -10,8 +10,15 @@ AR = "٠١٢٣٤٥٦٧٨٩"
 def n(x): return "".join(AR[int(c)] if c.isdigit() else c for c in str(x))
 import re
 def e(x):
-    """escape and wrap every Korean/particle run in an isolated LTR span (fixes bidi order)"""
-    return re.sub(r"([가-힣][가-힣/ ~·\-]*[가-힣]|[가-힣])", r'<span class="kr">\1</span>', html.escape(x))
+    """escape and wrap every Korean run (with its attached - ( ) / ~ marks) in an isolated LTR span"""
+    H="[가-힣ㄱ-ㅣ]"; T="[가-힣ㄱ-ㅣ/()~+\\-·]"
+    pat=re.compile(r"[-+~(]*"+H+T+"*(?: "+H+T+"*)*")
+    return pat.sub(lambda m:'<span class="kr">'+html.escape(m.group(0))+'</span>', x).replace("&","&amp;").replace("&amp;amp;","&amp;") if False else _wrap(x,pat)
+def _wrap(x,pat):
+    out=[];i=0
+    for m in pat.finditer(x):
+        out.append(html.escape(x[i:m.start()])); out.append('<span class="kr">'+html.escape(m.group(0))+'</span>'); i=m.end()
+    out.append(html.escape(x[i:])); return "".join(out)
 
 CSS = """
 @font-face{font-family:Cairo;font-weight:400;src:url(fonts/cairo-arabic-400-normal.woff2)}
