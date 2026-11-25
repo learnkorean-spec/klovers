@@ -20,8 +20,11 @@
  * would quietly de-list every blog post.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, mkdtempSync } from "fs";
 import { dirname, join } from "path";
+import { tmpdir } from "os";
+import { pathToFileURL } from "url";
+import { transform } from "esbuild";
 import { createClient } from "@supabase/supabase-js";
 import { baseOf, buildRelatedMap, RELATED_MIN } from "./lib/related-posts.mjs";
 import { RETIRED_SLUGS } from "./lib/retired-arabic-slugs.mjs";
@@ -30,6 +33,7 @@ import { PRELOAD_PATTERN, preloadTagFor } from "./lib/lcp-preload.mjs";
 import { markdownToHtml } from "./lib/markdown-to-html.mjs";
 import { MARKER_START, MARKER_END } from "./lib/related-links.mjs";
 import { replaceLiteral } from "./lib/replace-literal.mjs";
+import { LANG_BRANDS, buildLangArticleRoutes } from "./lib/lang-article-pages.mjs";
 import {
   ABOUT_BODY_HTML,
   AFFILIATE_BODY_HTML,
@@ -445,12 +449,12 @@ const HOME_BODY_HTML_AR = `<div id="home-prerendered" lang="ar" dir="rtl">
       <h2>أكثر من مجرد حصص</h2>
       <ul>
         <li><a href="/review">تدريب</a> - مراجعة الكلمات بين الحصص.</li>
-        <li><a href="/games">ألعاب لتعلّم الكورية</a> - تدريب مجاني على الهانغول والمفردات والقواعد.</li>
-        <li><a href="/journey/before-korea">الثقافة</a> - حكاية كوريا من أول أسطورة حتى اليوم.</li>
+        <li><a href="/ar/games">ألعاب لتعلّم الكورية</a> - تدريب مجاني على الهانغول والمفردات والقواعد.</li>
+        <li><a href="/ar/journey/before-korea">الثقافة</a> - حكاية كوريا من أول أسطورة حتى اليوم.</li>
         <li><a href="/ar/courses">مسار التعلّم</a> - الهانغول، ثم المستويات من ١ إلى ٦.</li>
         <li><a href="/ar/blog">المجلة</a> - مقالات بالعربية عن الثقافة الكورية ونصائح للمذاكرة.</li>
       </ul>
-      <p><a href="/ar/courses">الدورات</a> · <a href="/ar/pricing">الأسعار</a> · <a href="/ar/about">من نحن</a> · <a href="/ar/faq">الأسئلة الشائعة</a> · <a href="/contact">التواصل</a></p>
+      <p><a href="/ar/courses">الدورات</a> · <a href="/ar/pricing">الأسعار</a> · <a href="/ar/about">من نحن</a> · <a href="/ar/faq">الأسئلة الشائعة</a> · <a href="/ar/contact">التواصل</a></p>
     </div>`;
 
 // ── Courses / pricing / free-trial body fragments ─────────────────────────
@@ -1272,6 +1276,44 @@ for (const page of ARABIC_PAGES) {
   });
 }
 
+// ── Voca / Buda article libraries (25 Nov 2026) ──────────────────────────────
+// The 36 articles under /learn-english/articles and /learn-hungarian/articles
+// used to ship the generic SPA shell: title "Klovers", description "Klovers."
+// and no body, because only the browser set them. They come from TypeScript
+// content files, which this plain Node script cannot import, so each file is
+// transpiled with esbuild (already a Vite dependency) into a temp module and
+// imported. Entry shape and the visible copy live in lib/lang-article-pages.mjs.
+async function loadLangArticles(file, exportName) {
+  const src = readFileSync(join(process.cwd(), "src", "content", file), "utf-8");
+  const { code } = await transform(src, { loader: "ts", format: "esm" });
+  const dir = mkdtempSync(join(tmpdir(), "lang-articles-"));
+  const out = join(dir, file.replace(/\.ts$/, ".mjs"));
+  writeFileSync(out, code, "utf-8");
+  const mod = await import(pathToFileURL(out).href);
+  const list = mod[exportName];
+  if (!Array.isArray(list) || list.length === 0) {
+    throw new Error(`${file} did not export a non-empty ${exportName}`);
+  }
+  return list;
+}
+
+{
+  const sources = { voca: ["vocaArticles.ts", "VOCA_ARTICLES"], buda: ["budaArticles.ts", "BUDA_ARTICLES"] };
+  const brands = [];
+  for (const brand of LANG_BRANDS) {
+    const [file, exportName] = sources[brand.key];
+    brands.push({ ...brand, articles: await loadLangArticles(file, exportName) });
+  }
+  const langRoutes = buildLangArticleRoutes(BASE_URL, brands);
+  for (const r of langRoutes) {
+    if (MARKETING_ROUTES.some((m) => m.path === r.path)) {
+      throw new Error(`${r.path} is already a marketing route; lang-article-pages must not duplicate it`);
+    }
+  }
+  MARKETING_ROUTES.push(...langRoutes);
+  console.log(`Added ${langRoutes.length} Voca/Buda article routes (index + articles).`);
+}
+
 const routes = [...MARKETING_ROUTES, ...blogRoutes];
 
 // Slug bases, used to decide whether an EN<->AR partner really exists.
@@ -1636,7 +1678,7 @@ function buildHeadTags(route) {
         headline: route.title,
         description,
         image: [image],
-        inLanguage: "en",
+        inLanguage: route.lang === "ar" ? "ar" : "en",
         ...(route.published ? { datePublished: route.published } : {}),
         ...(route.modified || route.published
           ? { dateModified: route.modified || route.published }

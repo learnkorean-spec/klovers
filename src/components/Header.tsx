@@ -279,7 +279,7 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <Button size="sm" asChild className="min-h-11 rounded-full">
-                <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
+                <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} rel="nofollow">
                   {isAr ? "تسجيل الدخول" : "Sign In"}
                 </Link>
               </Button>
@@ -378,7 +378,7 @@ const Header = () => {
                 </>
               ) : (
                 <Button asChild className="min-h-11 w-full rounded-full" onClick={() => setIsMenuOpen(false)}>
-                  <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}>
+                  <Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} rel="nofollow">
                     {isAr ? "تسجيل الدخول" : "Sign In"}
                   </Link>
                 </Button>
