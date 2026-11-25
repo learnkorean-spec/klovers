@@ -6,7 +6,7 @@ import { isTouchFirst } from "../systems/webgl";
 import { pickQuality } from "../systems/quality";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { growHair, type HairStyle } from "./hairEngine";
+import { growHair, LINA_HAIR, type HairStyle } from "./hairEngine";
 
 /**
  * A real, rigged person (a Mixamo character) driven by a small set of
@@ -837,6 +837,8 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
   const person = useLoader(GLTFLoader, `${BASE}${model}.glb`, extend) as GLTF;
   const anims = useLoader(GLTFLoader, clipUrls, extend) as GLTF[];
 
+  // Lina wears her grown hair everywhere she appears (the game, World 2, the entrance).
+  const hairStyle = hair ?? (model === "lina" ? LINA_HAIR : undefined);
   const root = useMemo(() => {
     addMouthOpen(person.scene as Group);
     const r = cloneSkinned(person.scene) as Group;
@@ -860,10 +862,10 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
     }
     if (face) setFace(r, face);
     // Grown hair (hairEngine) in place of the model's own cards; fewer locks on phones.
-    if (hair) growHair(r, hair, !isTouchFirst());
+    if (hairStyle) growHair(r, hairStyle, !isTouchFirst());
     cullable(r);
     return r;
-  }, [person, rules, head, face, model, hair]);
+  }, [person, rules, head, face, model, hairStyle]);
   const lod = useLod(root, model);
   const lips = useMemo(() => findLips(root), [root]);
   const lipAmount = useRef(0);

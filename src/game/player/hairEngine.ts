@@ -555,6 +555,8 @@ function grow(m: Measure, style: HairStyle, dense: boolean): Strand[] {
     for (let c = 0; c < perGuide; c++) {
       const layer = c === 0 ? 0 : c < perGuide - 1 ? 1 : 2;
       const lift = 0.004 + layer * 0.0055 + r() * 0.003;
+      // each lock ends at its own height: ragged, uneven ends instead of one cut line
+      const endJit = (r() - 0.35) * 0.09 + (layer === 2 ? 0.02 : 0);
       const p = groot.clone();
       p.x += (r() - 0.5) * 0.016;
       p.z += (r() - 0.5) * 0.016;
@@ -607,7 +609,7 @@ function grow(m: Measure, style: HairStyle, dense: boolean): Strand[] {
           collide(m, next, 0.006 + lift * 1.1);
           vel.subVectors(next, cur).normalize();
           pts.push(next);
-          if (next.y < tipY) break;
+          if (next.y < tipY + endJit) break;
         }
       }
       if (pts.length < 6) continue;

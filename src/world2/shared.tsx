@@ -126,8 +126,6 @@ export const DRESS: Record<"adam" | "lina", DressRule[]> = {
     { match: /Shirt/, color: PALETTE.ivory },
     { match: /Pants/, color: "#F2E200" },
     { match: /Shoes/, color: PALETTE.ivory },
-    { match: /HairLong/, color: "#7A3520", contrast: 0.4 },
-    { match: /Hair/, color: "#5E2A17", contrast: 0.35 },
   ],
 };
 
