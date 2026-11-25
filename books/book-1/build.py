@@ -37,9 +37,9 @@ h1{font-size:20pt;margin:4mm 0 1mm}h2{font-size:12pt;margin:4mm 0 2mm}
 .v .k{font-size:12.5pt;font-weight:700}.v .a{font-size:8pt;color:#333}
 table{width:100%;border-collapse:collapse;font-size:9pt}td,th{border:.3mm solid #1a1a1a;padding:1.6mm 2mm;text-align:right}th{background:#FFFF00}
 .big{font-size:20pt;font-weight:700;text-align:center}
-.dl{display:flex;gap:2mm;margin:1.8mm 0;align-items:flex-start}
+.dl{display:grid;grid-template-columns:1fr 1fr 12mm;direction:ltr;gap:3mm;margin:2.2mm 0;align-items:center;border-bottom:.2mm dotted #bbb;padding-bottom:2mm}
 .who{min-width:11mm;font-size:8pt;font-weight:700;background:#FFFF00;border-radius:1.5mm;text-align:center;padding:.6mm}
-.dk{font-size:10.5pt;font-weight:700;direction:ltr;text-align:left}.da{font-size:8.5pt;color:#333}
+.dk{font-family:KR,Cairo;font-size:10.5pt;font-weight:700;direction:ltr;text-align:left}.da{font-size:9pt;color:#333;direction:rtl;text-align:right}
 .cl{margin-top:3mm;border:.35mm solid #1a1a1a;border-radius:3mm;padding:2.5mm 3.5mm;font-size:8.5pt;background:#FFF9EC}
 .num{display:inline-block;min-width:5mm;text-align:center;background:#FFFF00;border-radius:1.5mm;font-size:8pt;font-weight:700;margin-left:1.5mm}
 .ch{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm 5mm}.ch div{font-size:10.5pt;border-bottom:.2mm dotted #bbb;padding:1.2mm 0;display:flex;justify-content:space-between}
@@ -65,14 +65,14 @@ def pages(U):
              f'<h2>المفردات</h2><div class="vg">{vg}</div>')
     G = U["grammar"]
     rules = "".join(f'<tr><td>{e(a)}</td><td class="kr big" style="font-size:13pt">{e(b)}</td><td class="kr">{e(c)}</td></tr>' for a,b,c in G["rules"])
-    ex = "".join(f'<tr><td class="kr" style="direction:ltr;text-align:left;font-weight:700">{e(k)}</td><td>{e(a)}</td></tr>' for k,a in G["examples"])
+    ex = "".join(f'<tr><td class="kr" style="direction:ltr;text-align:left;font-weight:700">{e(k)}</td><td style="direction:rtl;text-align:right">{e(a)}</td></tr>' for k,a in G["examples"])
     P.append(f'<p class="sub">القاعدة {n(U["grammar_id"])}</p><h1>{e(G["name"])} <span class="kr">{e(G["particle"])}</span></h1>'
              f'<p class="sub">{e(G["explain"])}</p><p class="sub">{e(G["why"])}</p>'
              f'<table><tr><th>الاسم</th><th>الأداة</th><th>مثال</th></tr>{rules}</table>'
-             f'<h2>الجمل</h2><table><tr><th>الجملة</th><th>المعنى</th></tr>{ex}</table>'
+             f'<h2>الجمل</h2><table style="direction:ltr"><tr><th style="text-align:left">الجملة</th><th>المعنى</th></tr>{ex}</table>'
              f'<div class="cl"><span class="tag">انتباه</span>{e(G["note"])}</div>')
     D = U["dialogue"]
-    lines = "".join(f'<div class="dl"><span class="who">{e(w)}</span><div><div class="dk kr">{e(k)}</div><div class="da">{e(a)}</div></div></div>' for w,k,a in D["lines"])
+    lines = "".join(f'<div class="dl"><div class="dk">{e(k)}</div><div class="da">{e(a)}</div><span class="who">{e(w)}</span></div>' for w,k,a in D["lines"])
     P.append(f'<p class="sub">المحادثة</p><h1>{e(D["title"])}</h1><div class="box">{lines}</div>'
              f'<div class="cl"><span class="tag">ملاحظة كلوبي</span>{e(D["cluby"])}</div>')
     pr = U["practice"]
