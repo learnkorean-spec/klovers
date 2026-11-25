@@ -4,13 +4,14 @@ import { PALETTE } from "../config/world";
 import type { PlayerState } from "../systems/state";
 import type { AvatarId } from "./characters";
 import RiggedBody, { type BodyControl, type DressRule } from "./RiggedBody";
+import { LINA_HAIR } from "./hairEngine";
 
 /**
  * The learners as real, rigged people: Adam (Mixamo "Josh") and Lina
  * ("Kate"), dressed to the canon (Adam: yellow blazer, ivory tee and
  * trousers, white trainers; Lina: ivory top, yellow below, long wavy copper
- * hair — added to the model as hair cards on her own head and upper back,
- * since "Kate" comes with short hair).
+ * hair — grown by the hair engine (hairEngine.ts) in place of the model's
+ * own short hair).
  * Standing, walking and running blend by speed; a hop plays the jump; the
  * other learner waves when the player arrives, then talks while near.
  */
@@ -25,11 +26,6 @@ const DRESS: Record<AvatarId, DressRule[]> = {
     { match: /Shirt/, color: PALETTE.ivory },
     { match: /Pants/, color: "#F2E200" },
     { match: /Shoes/, color: PALETTE.ivory },
-    // Canon: long, wavy, auburn copper. Dyed (not tinted) so the crown and
-    // the long strands, cut from different parts of the texture, match; the
-    // crown a shade deeper, as it takes the sun from above.
-    { match: /HairLong/, color: "#7A3520", contrast: 0.4 },
-    { match: /Hair/, color: "#5E2A17", contrast: 0.35 },
   ],
 };
 
@@ -67,5 +63,5 @@ export default function RealAvatar({
     c.rate = clip === "walk" ? Math.min(1.5, Math.max(0.6, speed / 1.5)) : clip === "run" ? Math.min(1.3, Math.max(0.8, speed / 5.5)) : 1;
   });
 
-  return <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} look={greet} />;
+  return <RiggedBody model={avatar} rules={DRESS[avatar]} female={avatar === "lina"} control={control} look={greet} hair={avatar === "lina" ? LINA_HAIR : undefined} />;
 }

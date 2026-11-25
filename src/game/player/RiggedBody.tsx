@@ -6,6 +6,7 @@ import { isTouchFirst } from "../systems/webgl";
 import { pickQuality } from "../systems/quality";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { growHair, type HairStyle } from "./hairEngine";
 
 /**
  * A real, rigged person (a Mixamo character) driven by a small set of
@@ -823,7 +824,7 @@ export function lipBeat(t: number): number {
   return Math.sin(t * 31) * 0.6 + Math.sin(t * 19.3 + 1.1) * 0.4;
 }
 
-export default function RiggedBody({ model, rules, female, control, look, head, face }: { model: string; rules: DressRule[]; female: boolean; control: MutableRefObject<BodyControl>; look?: LookTarget; head?: HeadShape; face?: Record<string, number> }) {
+export default function RiggedBody({ model, rules, female, control, look, head, face, hair }: { model: string; rules: DressRule[]; female: boolean; control: MutableRefObject<BodyControl>; look?: LookTarget; head?: HeadShape; face?: Record<string, number>; hair?: HairStyle }) {
   // Fetch the light copy alongside the body, not after it (each load below waits for the one before).
   if (LOD_MODELS.has(model) && lodFlag() !== "off") {
     useLoader.preload(GLTFLoader, `${BASE}${model}.lod.glb`, extend);
@@ -858,9 +859,11 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
       });
     }
     if (face) setFace(r, face);
+    // Grown hair (hairEngine) in place of the model's own cards; fewer locks on phones.
+    if (hair) growHair(r, hair, !isTouchFirst());
     cullable(r);
     return r;
-  }, [person, rules, head, face, model]);
+  }, [person, rules, head, face, model, hair]);
   const lod = useLod(root, model);
   const lips = useMemo(() => findLips(root), [root]);
   const lipAmount = useRef(0);
