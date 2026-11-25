@@ -43,7 +43,7 @@ table{width:100%;border-collapse:collapse;font-size:9pt}td,th{border:.3mm solid 
 .cl{margin-top:3mm;border:.35mm solid #1a1a1a;border-radius:3mm;padding:2.5mm 3.5mm;font-size:8.5pt;background:#FFF9EC}
 .num{display:inline-block;min-width:5mm;text-align:center;background:#FFFF00;border-radius:1.5mm;font-size:8pt;font-weight:700;margin-left:1.5mm}
 .ch{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm 5mm}.ch div{font-size:10.5pt;border-bottom:.2mm dotted #bbb;padding:1.2mm 0;display:flex;justify-content:space-between}
-.opt{display:inline-block;margin-left:5mm;font-size:10pt}
+.fl{display:flex;gap:2mm;align-items:center;direction:ltr;margin:.9mm 0;font-size:10pt;border-bottom:.2mm dotted #bbb;padding:.5mm 0}.fl .ln{flex:1;border-bottom:.3mm solid #1a1a1a;height:4mm}.kko{direction:ltr;text-align:left;font-family:KR,Cairo;font-weight:700}.aar{direction:rtl;text-align:right}\n.opt{display:inline-block;margin-left:5mm;font-size:10pt}
 """
 
 def frame(body, idx, total, title, u):
@@ -56,39 +56,58 @@ LOGO_B64 = base64.b64encode(LOGO.read_bytes()).decode()
 def icon(f):
     return "data:image/jpeg;base64," + base64.b64encode((ICONS / f"{f}.jpg").read_bytes()).decode()
 
+def blk(b):
+    t=b["type"]
+    if t=="title":
+        return (f'<p class="sub">{e(b["kicker"])}</p>' if b.get("kicker") else "")+f'<h1>{e(b["h1"])}</h1>'+(f'<p class="sub">{e(b["sub"])}</p>' if b.get("sub") else "")
+    if t=="text": return f'<p class="sub">{e(b["text"])}</p>'
+    if t=="goals":
+        return f'<div class="box"><span class="tag">★</span><b>{e(b.get("title","في نهاية هذه الوحدة"))}</b><ul class="goals">'+"".join(f"<li>{e(g)}</li>" for g in b["items"])+"</ul></div>"
+    if t=="vocab":
+        vg="".join(f'<div class="v"><img src="{icon(i)}"><div class="k kr">{e(k)}</div><div class="a">{e(a)}</div></div>' if i else f'<div class="v"><div class="k kr" style="margin-top:4mm">{e(k)}</div><div class="a">{e(a)}</div></div>' for i,k,a in b["items"])
+        return f'<h2>{e(b.get("title","المفردات"))}</h2><div class="vg">{vg}</div>'
+    if t=="table":
+        cols=list(range(len(b["head"])))
+        if not b.get("keep"):  # rule: Korean columns on the left, Arabic columns on the right
+            iko=[c for c in cols if all(r[c].startswith("ko:") for r in b["rows"])]
+            cols=iko+[c for c in cols if c not in iko]
+        heads=[b["head"][c] for c in cols]; rws=[[r[c] for c in cols] for r in b["rows"]]
+        head="".join(f"<th>{e(h)}</th>" for h in heads)
+        rows=""
+        for r in rws:
+            rows+="<tr>"+"".join((f'<td class="kko">{e(c[3:])}</td>' if c.startswith("ko:") else f'<td class="aar">{e(c)}</td>') for c in r)+"</tr>"
+        return (f'<h2>{e(b["title"])}</h2>' if b.get("title") else "")+f'<table style="direction:ltr"><tr>{head}</tr>{rows}</table>'
+    if t=="dialogue":
+        lines="".join(f'<div class="dl"><div class="dk">{e(k)}</div><div class="da">{e(a)}</div><span class="who">{e(w)}</span></div>' for w,k,a in b["lines"])
+        return f'<div class="box">{lines}</div>'
+    if t=="note":
+        return f'<div class="cl"><span class="tag">{e(b.get("tag","ملاحظة"))}</span>{e(b["text"])}</div>'
+    if t=="fill":
+        items="".join(f'<div class="fl"><span class="num">{n(i+1)}</span><span class="kr">{e(x)}</span></div>' for i,x in enumerate(b["items"], b.get("start",0)))
+        return f'<div class="box"><p class="sub"><span class="num">{n(b["no"])}</span><b>{e(b["title"])}</b></p>'+(f'<p class="sub kr" style="direction:ltr;text-align:left">{e(b["hint"])}</p>' if b.get("hint") else "")+f'{items}</div>'
+    if t=="choose":
+        ch="".join(f'<div><span><span class="num">{n(i+1)}</span><span class="kr">{e(w)}</span></span><span>'+"".join(f'<span class="opt kr">{e(o)}</span>' for o in opts)+'</span></div>' for i,(w,opts) in enumerate(b["items"]))
+        return f'<div class="box"><p class="sub"><span class="num">{n(b["no"])}</span><b>{e(b["title"])}</b></p><div class="ch">{ch}</div></div>'
+    if t=="reading":
+        qs=""
+        for i,(q,opts,_) in enumerate(b["questions"]):
+            qs+=f'<p class="sub" style="margin-top:3mm"><span class="num">{n(i+1)}</span>{e(q)}</p><p>'+"".join(f'<span class="opt kr">{"①②③④"[j]} {e(o)}</span>' for j,o in enumerate(opts))+"</p>"
+        return f'<div class="box"><p class="sub"><span class="num">{n(b["no"])}</span><b>{e(b.get("title","قراءة: النص ثم الأسئلة"))}</b></p><p class="kr" style="font-weight:700;font-size:10.5pt;white-space:pre-line;text-align:left">{e(b["text"])}</p>{qs}</div>'
+    if t=="translate":
+        items="".join(f'<div class="fl"><span class="num">{n(i+1)}</span><span>{e(x)}</span><span class="ln"></span></div>' for i,x in enumerate(b["items"], b.get("start",0)))
+        return f'<div class="box"><p class="sub"><span class="num">{n(b["no"])}</span><b>{e(b["title"])}</b></p>{items}</div>'
+    raise ValueError(t)
+
 def pages(U):
-    u = U["number"]; t = U["title"]; P = []
-    goals = "".join(f"<li>{e(g)}</li>" for g in U["goals"])
-    vg = "".join(f'<div class="v"><img src="{icon(i)}"><div class="k kr">{e(k)}</div><div class="a">{e(a)}</div></div>' for i,k,a in U["vocab"])
-    P.append(f'<h1>{e(t)}</h1><p class="sub">{e(U["lead"])} {e(U["intro"])}</p>'
-             f'<div class="box"><span class="tag">★</span><b>في نهاية هذه الوحدة</b><ul class="goals">{goals}</ul></div>'
-             f'<h2>المفردات</h2><div class="vg">{vg}</div>')
-    G = U["grammar"]
-    rules = "".join(f'<tr><td>{e(a)}</td><td class="kr big" style="font-size:13pt">{e(b)}</td><td class="kr">{e(c)}</td></tr>' for a,b,c in G["rules"])
-    ex = "".join(f'<tr><td class="kr" style="direction:ltr;text-align:left;font-weight:700">{e(k)}</td><td style="direction:rtl;text-align:right">{e(a)}</td></tr>' for k,a in G["examples"])
-    P.append(f'<p class="sub">القاعدة {n(U["grammar_id"])}</p><h1>{e(G["name"])} <span class="kr">{e(G["particle"])}</span></h1>'
-             f'<p class="sub">{e(G["explain"])}</p><p class="sub">{e(G["why"])}</p>'
-             f'<table><tr><th>الاسم</th><th>الأداة</th><th>مثال</th></tr>{rules}</table>'
-             f'<h2>الجمل</h2><table style="direction:ltr"><tr><th style="text-align:left">الجملة</th><th>المعنى</th></tr>{ex}</table>'
-             f'<div class="cl"><span class="tag">انتباه</span>{e(G["note"])}</div>')
-    D = U["dialogue"]
-    lines = "".join(f'<div class="dl"><div class="dk">{e(k)}</div><div class="da">{e(a)}</div><span class="who">{e(w)}</span></div>' for w,k,a in D["lines"])
-    P.append(f'<p class="sub">المحادثة</p><h1>{e(D["title"])}</h1><div class="box">{lines}</div>'
-             f'<div class="cl"><span class="tag">ملاحظة كلوبي</span>{e(D["cluby"])}</div>')
-    pr = U["practice"]
-    ch = "".join(f'<div><span><span class="num">{n(i+1)}</span><span class="kr">{e(w)}</span></span><span><span class="opt kr">을</span><span class="opt kr">를</span></span></div>' for i,(w,_) in enumerate(pr["choose"]))
-    qs = ""
-    for i,(q,opts,_) in enumerate(pr["questions"]):
-        qs += f'<p class="sub" style="margin-top:3mm"><span class="num">{n(i+1)}</span>{e(q)}</p><p>' + "".join(f'<span class="opt kr">{"①②③④"[j]} {e(o)}</span>' for j,o in enumerate(opts)) + "</p>"
-    P.append(f'<h1>التدريب</h1><div class="box"><p class="sub"><span class="num">١</span><b>اختر <span class="kr">을</span> أو <span class="kr">를</span></b></p><div class="ch">{ch}</div></div>'
-             f'<div class="box"><p class="sub"><span class="num">٢</span><b>قراءة: النص ثم الأسئلة</b></p><p class="kr" style="font-weight:700;font-size:10.5pt;white-space:pre-line;text-align:left">{e(pr["reading"])}</p>{qs}</div>')
-    return P
+    return ["".join(blk(b) for b in pg) for pg in U["pages"]]
 
 def answers(U):
-    pr = U["practice"]
-    a1 = "، ".join(f'{n(i+1)}) {"을" if o==0 else "를"}' for i,(_,o) in enumerate(pr["choose"]))
-    a2 = "، ".join(f'{n(i+1)}) {"①②③④"[o]}' for i,(_,_,o) in enumerate(pr["questions"]))
-    return a1, a2
+    out=[]
+    for pg in U["pages"]:
+        for b in pg:
+            if b["type"]=="choose":
+                out.append(f'{n(b["no"])}) '+"، ".join(f'{n(i+1)} {o[1]}' for i,o in enumerate(b["items"])) if False else None)
+    return None
 
 if __name__ == "__main__":
     num = sys.argv[1]
@@ -104,4 +123,10 @@ if __name__ == "__main__":
     pdf = out / f"unit-{num}.pdf"
     subprocess.run(["google-chrome","--headless=new","--no-sandbox","--disable-gpu","--no-pdf-header-footer",
                     f"--print-to-pdf={pdf}", h.as_uri()], check=True, capture_output=True)
-    print("wrote", pdf, "pages", total, "answers", answers(U))
+    print("wrote", pdf, "pages", total)
+    try:
+        import pymupdf
+        for i,pg in enumerate(pymupdf.open(pdf)):
+            low=[b for b in pg.get_text("blocks") if b[3]>548 and "kloversegy" not in b[4] and "الصفحة" not in b[4] and "تعلّم" not in b[4]]
+            if low: print("  OVERFLOW page", i+1, low[0][4][:40].replace("\n"," "))
+    except ImportError: pass
