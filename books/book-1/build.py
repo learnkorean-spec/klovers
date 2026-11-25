@@ -35,7 +35,7 @@ body{font-family:Cairo,KR,sans-serif;color:#1a1a1a;direction:rtl;background:#FFF
 .kr{font-family:KR,Cairo;direction:ltr;unicode-bidi:isolate}
 h1{font-size:20pt;margin:4mm 0 1mm}h2{font-size:12pt;margin:4mm 0 2mm}
 .sub{font-size:9pt;color:#444;margin-bottom:3mm}
-.box{background:#FFF9EC;border:.35mm solid #FFFF00;border-radius:3mm;padding:3mm 4mm;margin:2.5mm 0}
+.box{background:#FFF9EC;border:.35mm solid #FFFF00;border-radius:3mm;padding:2.5mm 4mm;margin:2mm 0}
 .tag{display:inline-block;background:#FFFF00;border-radius:1.5mm;font-size:7.5pt;font-weight:700;padding:.3mm 2mm;margin-left:2mm}
 .goals li{font-size:9pt;margin:1mm 5mm 1mm 0}
 .vg{display:grid;grid-template-columns:repeat(4,1fr);gap:2.5mm;margin-top:2mm}

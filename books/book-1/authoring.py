@@ -2,7 +2,7 @@
 import json
 QN="اختبار الوحدة: جملتان لكل قاعدة، مع كلمات من وحدات سابقة. الحل بدون النظر إلى الصفحات، ثم التصحيح من مفتاح الإجابات."
 def quiz(fills, words):
-    if len(fills)+len(words)<=14:
+    if len(fills)+len(words)<=13:
         return [[{"type":"title","h1":"اختبار الوحدة","sub":QN},{"type":"fill","no":1,"title":"القواعد: أكمل الجملة","items":fills},{"type":"translate","no":2,"title":"المفردات: اكتب الكلمة بالكوري","items":words,"start":len(fills)}]]
     h=(len(fills)+1)//2 if len(fills)>9 else len(fills)
     return [[{"type":"title","h1":"اختبار الوحدة","sub":QN},{"type":"fill","no":1,"title":"القواعد: أكمل الجملة","items":fills[:h]}],
