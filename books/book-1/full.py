@@ -1,5 +1,5 @@
 """Build the whole Book 1: cover, contents, units 1-24 (global page numbers), answer key, closing pages."""
-import json, re, subprocess, sys
+import json, re, subprocess, sys, base64
 from pathlib import Path
 import build as B
 import pymupdf
@@ -52,6 +52,18 @@ def answer_card(U):
     return f'<div class="ac"><h3>الوحدة {n(num)} · {e(U["title"])}</h3>{rows}</div>'
 
 EXTRA_CSS = """
+.page.op{padding:0;background:#222}.op .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.op .otop{position:absolute;top:6mm;left:8mm;right:8mm;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.op .okick{background:#FFFF00;color:#1a1a1a;font-weight:800;font-size:9pt;padding:1mm 4mm;border-radius:5mm}
+.op .ologo{background:rgba(255,255,255,.92);border-radius:5mm;padding:.8mm 3mm;font-weight:800;font-size:8pt;display:flex;gap:1.5mm;align-items:center}.op .ologo img{height:5mm;border-radius:50%}
+.op .obot{position:absolute;left:0;right:0;bottom:0;padding:48mm 10mm 14mm;background:linear-gradient(to top,rgba(14,11,5,.92) 0%,rgba(14,11,5,.78) 55%,rgba(14,11,5,0) 100%);color:#fff;z-index:2}
+.op .obot h1{margin:0 0 2mm;font-size:27pt;line-height:1.25;color:#fff;text-shadow:0 .5mm 2mm rgba(0,0,0,.5)}
+.op .osub{margin:0 0 3mm;font-size:10pt;line-height:1.7;color:rgba(255,255,255,.92)}
+.op .ogoals{margin:0 0 4mm;padding:0;list-style:none;font-size:9.5pt;line-height:1.8}.op .ogoals li{position:relative;padding-right:5mm}
+.op .ogoals li:before{content:"";position:absolute;right:0;top:2.3mm;width:2.2mm;height:2.2mm;border-radius:50%;background:#FFFF00}
+.op .opills{display:flex;gap:2.5mm;flex-wrap:wrap}.op .opills span{background:rgba(255,255,255,.16);border:.25mm solid rgba(255,255,255,.4);border-radius:5mm;padding:.8mm 3.5mm;font-size:8pt;font-weight:700}
+.op .oft{position:absolute;bottom:0;left:0;right:0;height:9mm;display:flex;justify-content:space-between;align-items:center;padding:0 8mm;font-size:6.5pt;color:rgba(255,255,255,.9);background:rgba(10,8,4,.62);z-index:3}
+
 .ac{border:.3mm solid #1a1a1a;border-radius:2.5mm;padding:1.6mm 2.6mm;margin:1.6mm 0;font-size:8pt;background:#FFF9EC}
 .ac h3{margin:0 0 1mm;font-size:9.5pt;background:#FFFF00;display:inline-block;padding:.3mm 2mm;border-radius:1.5mm}
 .as{margin:.5mm 0}.al{font-weight:700;font-size:7.5pt;color:#444}
@@ -129,6 +141,45 @@ def split_block(b, k):
     if b["type"] in ("fill", "translate", "choose"): b2["title"] = b["title"] + " (تابع)"
     return b1, b2
 
+def prepare(U):
+    """Return (unit copy without the opener title/goals, goals list, sub text)."""
+    pages = [list(p) for p in U["pages"]]
+    sub = ""; goals = []
+    first = pages[0]
+    keep = []
+    for b in first:
+        if b["type"] == "title" and not sub and b.get("h1") == U["title"]: sub = b.get("sub", ""); continue
+        if b["type"] == "goals": goals = b["items"]; continue
+        keep.append(b)
+    pages[0] = keep
+    out = []
+    for pg in pages:
+        npg = []
+        for b in pg:
+            npg.append(b)
+            if b["type"] == "title" and b.get("kicker") == "المحادثة":
+                npg.append({"type": "scene", "file": f"b1s_{U['number']:02d}.jpg"})
+        if npg: out.append(npg)
+    V = sum(len(b["items"]) for pg in out for b in pg if b["type"] == "vocab")
+    return dict(U, pages=out), goals, sub, V
+
+def opener_page(U, goals, sub, nvocab):
+    n_ = U["number"]
+    img = ROOT / "assets/opener-01.jpg" if n_ == 1 else None
+    if img is not None:
+        src = "data:image/jpeg;base64," + base64.b64encode(img.read_bytes()).decode()
+    else:
+        src = B.scene_img(f"b1s_{n_:02d}.jpg")
+    g = "".join(f"<li>{e(x)}</li>" for x in goals)
+    sub_html = f'<p class="osub">{e(sub)}</p>' if sub else ""
+    pills = f'<span>القواعد: {e(GRAM[n_])}</span>' + (f'<span>المفردات: {n(nvocab)} كلمة</span>' if nvocab else "")
+    def make(idx, total):
+        return f'''<section class="page op"><img class="bg" src="{src}">
+<div class="otop"><span class="okick">الوحدة {n(n_)}</span><span class="ologo">كلوفرز <img src="data:image/jpeg;base64,{B.LOGO_B64}"></span></div>
+<div class="obot"><h1>{e(U["title"])}</h1>{sub_html}{('<ul class="ogoals">'+g+'</ul>') if g else ''}<div class="opills">{pills}</div></div>
+<div class="oft"><span>تعلّم الكورية، عِشها، أحبّها.</span><span>الصفحة {n(idx)} من {n(total)}</span><span>kloversegy.com</span></div></section>'''
+    return make
+
 UFAC = {}
 def reflow(units, safe=1.0):
     flat = [(U, b) for U in units for pg in U["pages"] for b in pg]
@@ -154,6 +205,8 @@ def reflow(units, safe=1.0):
             grp = [blocks[i]]; i += 1
             if grp[0][0]["type"] == "title" and i < len(blocks) and blocks[i][0]["type"] != "title":
                 grp.append(blocks[i]); i += 1
+                if grp[-1][0]["type"] == "scene" and i < len(blocks):
+                    grp.append(blocks[i]); i += 1
             while i < len(blocks) and blocks[i][0]["type"] == "note":
                 grp.append(blocks[i]); i += 1
             atoms.append(grp)
@@ -190,6 +243,8 @@ def reflow(units, safe=1.0):
                         queue.insert(0, [(b2, h2)] + atom[j+1:]); done = True
                     break
                 if done: continue
+                if not cur:
+                    cur += [x[0] for x in atom]; used += h + GAP; flush(); continue
                 flush(); queue.insert(0, atom)
             flush()
             return pages, useds
@@ -201,20 +256,27 @@ def reflow(units, safe=1.0):
                 pg2, us2 = pack(atoms, sc)
                 if len(pg2) <= p: pages, useds = pg2, us2; break
         fills.extend(u / cap for u in useds)
-        result[U["number"]] = ["".join(B.blk(b) for b in pg) for pg in pages]
+        out_pages = []
+        for pg, us in zip(pages, useds):
+            hh = min(cap * 0.955, us * 1.3) / 0.75 * 0.75
+            hmm = hh / 2.835
+            st = "display:flex;flex-direction:column;justify-content:space-between;min-height:%.1fmm" % hmm if len(pg) > 1 else ""
+            out_pages.append(f'<div style="{st}">' + "".join(f"<div>{B.blk(b)}</div>" for b in pg) + "</div>")
+        result[U["number"]] = out_pages
     print("avg fill %.0f%%, pages under 60%%: %d of %d" % (100 * sum(fills) / len(fills), sum(f < .6 for f in fills), len(fills)))
     return result
 
 def main():
     SAFE = float(sys.argv[1]) if len(sys.argv) > 1 else 0.97
-    RF = reflow(UNITS, SAFE)
-    unit_pages = [(U, RF[U["number"]]) for U in UNITS]
+    PREP = [prepare(U) for U in UNITS]
+    RF = reflow([p[0] for p in PREP], SAFE)
+    unit_pages = [(U, [opener_page(U, g, sb, nv)] + RF[U["number"]]) for U, (_, g, sb, nv) in zip(UNITS, PREP)]
     acards = [answer_card(U) for U in UNITS]
     # answer pages: 2 units per page by default
     apages = pack_cards(acards)
     ntoc = 1
     total = 1 + ntoc + sum(len(p) for _, p in unit_pages) + len(apages) + 2
-    idx = 2; html = ""; start = {}
+    idx = 2; html = ""; start = {}; OPS = set()
     # contents
     start_page = 1 + ntoc + 1
     rows = ""; p = start_page
@@ -230,7 +292,8 @@ def main():
     html += simple_frame(toc, idx, total, "المحتويات"); idx += 1
     for U, P in unit_pages:
         for pg in P:
-            html += B.frame(pg, idx, total, U["title"], U["number"]); idx += 1
+            if callable(pg): OPS.add(idx)
+            html += pg(idx, total) if callable(pg) else B.frame(pg, idx, total, U["title"], U["number"]); idx += 1
     for ap in apages:
         html += simple_frame(f'<h1 class="h1" style="margin:0 0 1mm">مفتاح الإجابات</h1><p class="sub">راجعي إجاباتك هنا بعد الحل.</p>{ap}', idx, total, "مفتاح الإجابات"); idx += 1
     html += simple_frame('<div class="end"><h2>نهاية المستوى ١</h2><p class="sub">٣٢ قاعدة، وأول محادثات حقيقية مع لينا وآدم.<br>المستوى ٢ يأخذنا إلى مقهى المحادثة: جمل أطول، وخطط، ووصف، وقصص.</p></div>', idx, total, "نهاية المستوى ١"); idx += 1
@@ -248,6 +311,7 @@ def main():
     print("pages", len(book), "expected", total)
     bad_units = set()
     for i, pg in enumerate(body):
+        if i + 2 in OPS: continue
         low = [b for b in pg.get_text("blocks") if b[3] > 548 and "kloversegy" not in b[4] and "الصفحة" not in b[4] and "تعلّم" not in b[4] and "الكورية، ِع" not in b[4] and "ّبها" not in b[4] and "kloversegy" not in b[4].replace(" ","")]
         if low:
             print("OVERFLOW body page", i+2, low[0][4][:40].replace("\n", " "))
