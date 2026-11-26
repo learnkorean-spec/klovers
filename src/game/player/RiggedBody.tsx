@@ -43,6 +43,8 @@ export type DressRule = {
 
 const LIMITS = typeof window !== "undefined" ? pickQuality() : { maxTexture: 4096, maxDetail: 4096 };
 const fitted = new WeakSet<Texture>();
+/** Android phones that report 6 GB or more: the person you play keeps full 2048² colour maps. */
+const strongPhone = typeof navigator !== "undefined" && ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 0) >= 6;
 
 /**
  * Shrinks a texture whose side is over the tier's limit (systems/quality),
@@ -52,7 +54,7 @@ const fitted = new WeakSet<Texture>();
  * parts are ever over the limit (the hair's colour map is 1024²), so
  * drawing through a 2D canvas loses nothing.
  */
-function fitTexture(t: Texture, max: number) {
+function fitTexture(t: Texture, max: number, sharpen = false) {
   if (fitted.has(t)) return;
   fitted.add(t);
   const img = t.image as (CanvasImageSource & { width: number; height: number; close?: () => void }) | undefined;
@@ -69,6 +71,8 @@ function fitTexture(t: Texture, max: number) {
   ctx.imageSmoothingQuality = "high";
   try {
     ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    // Shrinking softens the cloth and skin: a light sharpen puts the crispness back (no extra memory).
+    if (sharpen) unsharp(ctx, cv.width, cv.height);
   } catch {
     return;
   }
@@ -77,6 +81,32 @@ function fitTexture(t: Texture, max: number) {
   img.close?.();
   t.image = cv;
   t.needsUpdate = true;
+}
+
+/** 3x3 unsharp mask on the colour channels (alpha untouched). */
+function unsharp(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const src = ctx.getImageData(0, 0, w, h);
+  const out = ctx.createImageData(w, h);
+  const a = src.data;
+  const o = out.data;
+  const k = 0.45;
+  for (let y = 0; y < h; y++) {
+    const y0 = Math.max(0, y - 1) * w;
+    const y1 = y * w;
+    const y2 = Math.min(h - 1, y + 1) * w;
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - 1);
+      const x2 = Math.min(w - 1, x + 1);
+      const i = (y1 + x) * 4;
+      for (let c = 0; c < 3; c++) {
+        const blur = (a[(y0 + x0) * 4 + c] + a[(y0 + x) * 4 + c] + a[(y0 + x2) * 4 + c] + a[(y1 + x0) * 4 + c] + a[i + c] + a[(y1 + x2) * 4 + c] + a[(y2 + x0) * 4 + c] + a[(y2 + x) * 4 + c] + a[(y2 + x2) * 4 + c]) / 9;
+        const v = a[i + c] + (a[i + c] - blur) * k;
+        o[i + c] = v < 0 ? 0 : v > 255 ? 255 : v;
+      }
+      o[i + 3] = a[i + 3];
+    }
+  }
+  ctx.putImageData(out, 0, 0);
 }
 
 /** Small greyscale copies of textures, read once, for measuring brightness. */
@@ -393,7 +423,7 @@ function cullable(root: Group) {
 /** A face's own proportions: the head bone scaled a little (width, height, depth). */
 export type HeadShape = [number, number, number];
 
-function prepare(root: Group, rules: DressRule[]) {
+function prepare(root: Group, rules: DressRule[], hi = false) {
   root.traverse((o) => {
     // Mixamo numbers the rig per character ("mixamorig9:Hips"); the shared
     // motions use the plain name, so every rig is renamed to match.
@@ -435,7 +465,7 @@ function prepare(root: Group, rules: DressRule[]) {
     // renderer clamps this to what the graphics card allows.
     const aniso = isTouchFirst() ? 4 : 16;
     for (const t of [mat.map, mat.normalMap, mat.roughnessMap, mat.aoMap]) {
-      if (t) fitTexture(t, t === mat.map ? LIMITS.maxTexture : LIMITS.maxDetail);
+      if (t) fitTexture(t, t === mat.map ? (hi ? Math.max(LIMITS.maxTexture, 2048) : LIMITS.maxTexture) : LIMITS.maxDetail, t === mat.map && !mat.alphaTest);
       if (t && t.anisotropy < aniso) {
         t.anisotropy = aniso;
         t.needsUpdate = true;
@@ -842,7 +872,7 @@ export default function RiggedBody({ model, rules, female, control, look, head, 
   const root = useMemo(() => {
     addMouthOpen(person.scene as Group);
     const r = cloneSkinned(person.scene) as Group;
-    prepare(r, rules);
+    prepare(r, rules, strongPhone && (model === "lina" || model === "adam"));
     addCorneas(r);
     // This body wears another body's hair, and its lashes still point into
     // the hair picture it no longer has: they came out as thick black bands
