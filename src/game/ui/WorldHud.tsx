@@ -218,7 +218,7 @@ export default function WorldHud(p: HudProps) {
 
       <div className="mx-auto mt-2 flex flex-col items-center gap-2">
         {p.landscapeTip && (
-          <div className="pointer-events-auto flex max-w-sm items-center justify-between gap-3 rounded-2xl bg-charcoal/90 px-4 py-2.5 text-sm text-ivory">
+          <div className="pointer-events-auto flex max-w-sm items-center justify-between gap-2 rounded-2xl bg-charcoal/90 py-1.5 ps-3 pe-1.5 text-xs text-ivory">
             <span>{copy.landscapeTip}</span>
             <button type="button" onClick={p.onDismissTip} className="min-h-9 shrink-0 rounded-full bg-klovers-yellow px-3 text-xs font-bold text-charcoal">
               {copy.gotIt}
