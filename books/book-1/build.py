@@ -28,7 +28,8 @@ CSS = """
 @page{size:148mm 210mm;margin:0}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Cairo,KR,sans-serif;color:#1a1a1a;direction:rtl;background:#FFF9EC}
-.scn{height:46mm;border-radius:3mm;overflow:hidden;border:.3mm solid #1a1a1a;margin:2mm 0 3mm}.scn img{width:100%;height:100%;object-fit:cover;display:block}
+.scn{height:46mm;border-radius:3mm;overflow:hidden;border:.3mm solid #1a1a1a;margin:2mm 0 3mm}.scn{position:relative}.scn .qr{position:absolute;left:3mm;bottom:3mm;background:#fff;border-radius:2.5mm;padding:1.2mm 1.2mm .6mm;text-align:center;font-size:6pt;font-weight:700;box-shadow:0 .3mm 1.5mm rgba(0,0,0,.35)}.scn .qr img{width:15mm;height:15mm;display:block;object-fit:contain}
+.scn img{width:100%;height:100%;object-fit:cover;display:block}
 .page{width:148mm;height:210mm;background:#FFF9EC;position:relative;overflow:hidden;page-break-after:always;padding:15mm 11mm 17mm}
 .hd{position:absolute;top:5mm;left:8mm;right:8mm;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;border-bottom:.3mm solid #1a1a1a;padding-bottom:1.5mm}
 .hd .logo{display:flex;align-items:center;gap:2mm;font-weight:700}.hd img{width:7mm;height:7mm;border-radius:50%}
@@ -69,12 +70,21 @@ def scene_img(f):
     p = SCENES / f
     return "data:image/jpeg;base64," + base64.b64encode(p.read_bytes()).decode()
 
+def qr_img(url):
+    import qrcode, io
+    q = qrcode.QRCode(border=1, box_size=8); q.add_data(url); q.make()
+    buf = io.BytesIO(); q.make_image(fill_color="black", back_color="white").save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
 def blk(b):
     t=b["type"]
     if t=="title":
         return (f'<p class="sub">{e(b["kicker"])}</p>' if b.get("kicker") else "")+f'<h1>{e(b["h1"])}</h1>'+(f'<p class="sub">{e(b["sub"])}</p>' if b.get("sub") else "")
     if t=="scene":
-        return f'<div class="scn"><img src="{scene_img(b["file"])}"></div>'
+        qr = ""
+        if b.get("qr"):
+            qr = f'<div class="qr"><img src="{qr_img(b["qr"])}"><span>استمع</span></div>'
+        return f'<div class="scn"><img src="{scene_img(b["file"])}">{qr}</div>'
     if t=="text": return f'<p class="sub">{e(b["text"])}</p>'
     if t=="goals":
         return f'<div class="box"><span class="tag">★</span><b>{e(b.get("title","في نهاية هذه الوحدة"))}</b><ul class="goals">'+"".join(f"<li>{e(g)}</li>" for g in b["items"])+"</ul></div>"
