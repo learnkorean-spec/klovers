@@ -87,7 +87,7 @@ export default function ConversationPage() {
       // No file yet: read it with the visitor's own Korean voice, male or
       // female to match the speaker, so the page works before audio exists.
       speakKorean(convo.lines[i].ko, {
-        gender: convo.lines[i].who === "리나" ? "female" : "male",
+        gender: convo.lines[i].who === "리나" || convo.lines[i].who === "선생님" ? "female" : "male",
       });
       // The browser voice gives us no reliable end event across devices.
       window.setTimeout(() => setPlaying((p) => (p === i ? null : p)), 4000);
