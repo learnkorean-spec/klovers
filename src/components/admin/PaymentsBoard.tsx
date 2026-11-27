@@ -140,7 +140,7 @@ export default function PaymentsBoard() {
     : "";
 
   return (
-    <div dir="rtl" lang="ar" className="space-y-4">
+    <div dir="rtl" lang="ar" className="space-y-4 pb-24">
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span>{updated && `آخر تحديث ${updated}`}</span>
         <Button size="sm" variant="outline" disabled={isFetching} onClick={() => refetch()}>
@@ -162,7 +162,7 @@ export default function PaymentsBoard() {
           <ul className="space-y-1.5">
             {data.map((r) => (
               <li key={r.key} className="flex items-center gap-2 text-xs">
-                <span className="w-24 shrink-0 truncate sm:w-36">{r.name}</span>
+                <span dir="auto" className="w-24 shrink-0 truncate text-start sm:w-36">{r.name}</span>
                 <div
                   role="img"
                   aria-label={`${r.name}: باقي ${r.left} من ${r.total} حصة`}
@@ -187,15 +187,15 @@ export default function PaymentsBoard() {
               <CardContent className="space-y-1 p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="truncate font-medium">{r.name}</div>
-                    <div className="truncate text-xs text-muted-foreground">{r.where}</div>
+                    <div dir="auto" className="truncate font-medium">{r.name}</div>
+                    <div dir="auto" className="truncate text-xs text-muted-foreground">{r.where}</div>
                   </div>
                   <Badge variant="outline" className={`shrink-0 ${PAY_CLS[r.payment]}`}>{PAY_LABEL[r.payment]}</Badge>
                 </div>
                 <div className="text-sm">
                   باقي <b className={r.left <= 0 ? "text-red-600" : ""}>{r.left}</b> من {r.total} حصة
                 </div>
-                {r.note && <p className="line-clamp-2 break-words text-xs text-muted-foreground">{r.note}</p>}
+                {r.note && <p dir="auto" className="line-clamp-2 break-words text-xs text-muted-foreground">{r.note}</p>}
               </CardContent>
             </Card>
           </li>
