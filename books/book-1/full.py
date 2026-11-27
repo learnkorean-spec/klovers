@@ -250,6 +250,12 @@ def reflow(units, safe=1.0):
             return pages, useds
         pages, useds = pack(atoms, 1.0)
         p = len(pages)
+        Z = 1.0
+        if p > 1 and useds[-1] < cap * 0.6:
+            for z in (0.97, 0.94, 0.91, 0.88, 0.85, 0.82):
+                pg2, us2 = pack(atoms, 1 / z)
+                if len(pg2) < p:
+                    pages, useds, Z = pg2, us2, z; p = len(pages); break
         if p > 1:
             scale = min(1.0, (sum(useds) / p) / (cap * 0.94) * 1.12)
             for sc in (scale, min(1.0, scale * 1.06), min(1.0, scale * 1.12), 1.0):
@@ -258,10 +264,16 @@ def reflow(units, safe=1.0):
         fills.extend(u / cap for u in useds)
         out_pages = []
         for pg, us in zip(pages, useds):
-            hh = min(cap * 0.955, us * 1.3) / 0.75 * 0.75
+            notes = ""
+            if us * Z < cap * 0.6:
+                notes = ('<div class="box" style="flex:1 1 auto;margin-top:4mm;display:flex;flex-direction:column"><p class="sub"><b>مساحة للكتابة: ملاحظاتي وكلماتي الجديدة</b></p>'
+                         '<div style="flex:1;overflow:hidden;min-height:20mm">' + '<div style="height:8.4mm;border-bottom:.3mm solid #cfc7b2"></div>' * 30 + '</div></div>')
+                us = cap * 0.9 / Z
+            hh = min(cap * 0.955, us * Z * 1.3) / Z
             hmm = hh / 2.835
-            st = "display:flex;flex-direction:column;justify-content:space-between;min-height:%.1fmm" % hmm if len(pg) > 1 else ""
-            out_pages.append(f'<div style="{st}">' + "".join(f"<div>{B.blk(b)}</div>" for b in pg) + "</div>")
+            st = "display:flex;flex-direction:column;justify-content:space-between;min-height:%.1fmm" % hmm if (len(pg) > 1 or notes) else ""
+            if Z != 1.0: st += (";" if st else "") + "zoom:%.2f" % Z
+            out_pages.append(f'<div style="{st}">' + "".join(f"<div>{B.blk(b)}</div>" for b in pg) + notes + "</div>")
         result[U["number"]] = out_pages
     print("avg fill %.0f%%, pages under 60%%: %d of %d" % (100 * sum(fills) / len(fills), sum(f < .6 for f in fills), len(fills)))
     return result
