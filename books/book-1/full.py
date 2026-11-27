@@ -52,17 +52,17 @@ def answer_card(U):
     return f'<div class="ac"><h3>الوحدة {n(num)} · {e(U["title"])}</h3>{rows}</div>'
 
 EXTRA_CSS = """
-.page.op{padding:0;background:#16110a}.op .bg{position:absolute;top:0;left:0;width:100%;height:122mm;object-fit:cover;object-position:50% 30%}
-.op .otop{position:absolute;top:6mm;left:8mm;right:8mm;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.page.op{padding:0;background:#FFF9EC}.op .bg{position:absolute;top:0;left:0;width:100%;height:auto;display:block}
+.op .otop{position:absolute;top:5mm;left:8mm;right:8mm;display:flex;justify-content:space-between;align-items:center;z-index:2}
 .op .okick{background:#FFFF00;color:#1a1a1a;font-weight:800;font-size:9pt;padding:1mm 4mm;border-radius:5mm}
 .op .ologo{background:rgba(255,255,255,.92);border-radius:5mm;padding:.8mm 3mm;font-weight:800;font-size:8pt;display:flex;gap:1.5mm;align-items:center}.op .ologo img{height:5mm;border-radius:50%}
-.op .obot{position:absolute;left:0;right:0;top:104mm;bottom:9mm;padding:18mm 10mm 6mm;background:linear-gradient(to bottom,rgba(22,17,10,0) 0%,#16110a 18mm);color:#fff;z-index:2}
-.op .obot h1{margin:0 0 3mm;font-size:30pt;line-height:1.25;color:#fff;text-shadow:0 .5mm 2mm rgba(0,0,0,.5)}
-.op .osub{margin:0 0 3mm;font-size:10pt;line-height:1.7;color:rgba(255,255,255,.92)}
-.op .ogoals{margin:0 0 4mm;padding:0;list-style:none;font-size:9.5pt;line-height:1.8}.op .ogoals li{position:relative;padding-right:5mm}
-.op .ogoals li:before{content:"";position:absolute;right:0;top:2.3mm;width:2.2mm;height:2.2mm;border-radius:50%;background:#FFFF00}
-.op .opills{display:flex;gap:2.5mm;flex-wrap:wrap}.op .opills span{background:rgba(255,255,255,.16);border:.25mm solid rgba(255,255,255,.4);border-radius:5mm;padding:.8mm 3.5mm;font-size:8pt;font-weight:700}
-.op .oft{position:absolute;bottom:0;left:0;right:0;height:9mm;display:flex;justify-content:space-between;align-items:center;padding:0 8mm;font-size:6.5pt;color:rgba(255,255,255,.9);background:rgba(10,8,4,.62);z-index:3}
+.op .obot{position:absolute;left:0;right:0;top:106mm;bottom:12mm;padding:0 12mm;color:#1a1a1a;display:flex;flex-direction:column;justify-content:flex-start}
+.op .obot h1{margin:0 0 4mm;font-size:30pt;line-height:1.25;color:#1a1a1a;border-bottom:1mm solid #FFFF00;padding-bottom:3mm}
+.op .osub{margin:0 0 5mm;font-size:11pt;line-height:1.8;color:#444}
+.op .ogoals{margin:0 0 6mm;padding:4mm 5mm;list-style:none;font-size:10.5pt;line-height:1.9;background:#fff;border:.4mm solid #1a1a1a;border-radius:3mm}.op .ogoals li{position:relative;padding-right:5mm}
+.op .ogoals li:before{content:"";position:absolute;right:0;top:2.3mm;width:2.2mm;height:2.2mm;border-radius:50%;background:#FFFF00;border:.3mm solid #1a1a1a}
+.op .opills{display:flex;gap:2.5mm;flex-wrap:wrap}.op .opills span{background:#FFFF00;border:.3mm solid #1a1a1a;border-radius:5mm;padding:.8mm 3.5mm;font-size:8.5pt;font-weight:700}
+.op .oft{position:absolute;bottom:0;left:0;right:0;height:9mm;display:flex;justify-content:space-between;align-items:center;padding:0 8mm;font-size:6.5pt;color:#555;border-top:.2mm solid #1a1a1a;z-index:3}
 
 .ac{border:.3mm solid #1a1a1a;border-radius:2.5mm;padding:1.6mm 2.6mm;margin:1.6mm 0;font-size:8pt;background:#FFF9EC}
 .ac h3{margin:0 0 1mm;font-size:9.5pt;background:#FFFF00;display:inline-block;padding:.3mm 2mm;border-radius:1.5mm}
@@ -309,6 +309,14 @@ def main():
     book = pymupdf.open(); book.insert_pdf(cover); book.insert_pdf(body)
     book.save(out / "book-1.pdf")
     print("pages", len(book), "expected", total)
+    soft = []
+    for pi, pg in enumerate(book):
+        for im in pg.get_image_info():
+            bw = (im["bbox"][2]-im["bbox"][0])/72; bh = (im["bbox"][3]-im["bbox"][1])/72
+            if bw < 0.3 or bh < 0.3 or (im["width"], im["height"]) == (420, 276): continue
+            dpi = min(im["width"]/bw, im["height"]/bh)
+            if dpi < 150: soft.append((pi+1, im["width"], im["height"], round(dpi)))
+    print("BLURRY IMAGES (<150dpi):", soft if soft else "none")
     bad_units = set()
     for i, pg in enumerate(body):
         if i + 2 in OPS: continue
