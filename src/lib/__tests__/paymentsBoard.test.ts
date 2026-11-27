@@ -89,4 +89,35 @@ describe("payments board", () => {
     });
     expect(r[0].payment).toBe("unpaid");
   });
+
+  it("adds up a student's active bundles instead of keeping the last one", () => {
+    const r = buildBoard({
+      ...input,
+      enrollments: [], members: [], profileNames: {},
+      bundles: [
+        bundle("s9", "Dina", "u-dina", -1, 4, "2026-10-01"),   // overdrawn old bundle
+        bundle("s9", "Dina", "u-dina", 4, 4, "2026-11-20"),    // the new one
+      ],
+    });
+    expect(r).toHaveLength(1);
+    expect(r[0].left).toBe(3);
+    expect(r[0].total).toBe(8);
+    expect(r[0].payment).toBe("paid");
+  });
+
+  it("is unpaid when any active bundle is unpaid", () => {
+    const r = buildBoard({
+      ...input, enrollments: [], members: [], profileNames: {},
+      bundles: [bundle("s9", "Dina", "u-dina", 0, 4, "2026-10-01"), bundle("s9", "Dina", "u-dina", 4, 4, null)],
+    });
+    expect(r[0].payment).toBe("unpaid");
+  });
+
+  it("keeps two students without an account apart", () => {
+    const r = buildBoard({
+      ...input, enrollments: [], members: [], profileNames: {},
+      bundles: [bundle("s7", "A", null, 2, 4, "2026-10-01"), bundle("s8", "B", null, 3, 4, "2026-10-01")],
+    });
+    expect(r).toHaveLength(2);
+  });
 });

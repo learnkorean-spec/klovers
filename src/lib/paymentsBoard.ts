@@ -81,20 +81,34 @@ export function buildBoard(input: BoardInput): BoardRow[] {
 
   const rows = new Map<string, BoardRow>();
 
-  // 1. Private students first: their bundle is the record we prefer.
+  // 1. Private students first: their bundles are the record we prefer.
+  // A student can hold more than one active bundle (an old one that ran out
+  // and the one opened after it), so bundles are grouped per student and
+  // added up. Keeping one row per bundle would hide classes, and keeping the
+  // last one seen would silently drop the others.
   const bundleUsers = new Set<string>();
+  const perStudent = new Map<string, BundleInput[]>();
   for (const b of input.bundles) {
     const key = b.user_id ?? b.student_id;
     if (b.user_id) bundleUsers.add(b.user_id);
+    const list = perStudent.get(key) ?? [];
+    list.push(b);
+    perStudent.set(key, list);
+  }
+  for (const [key, list] of perStudent) {
+    const first = list[0];
+    const notes = list.map((b) => b.note).filter((n): n is string => !!n);
+    const labels = [...new Set(list.map((b) => b.label || b.subject || "private"))];
     rows.set(key, {
       key,
-      name: b.full_name,
-      where: b.label || (b.subject ?? "private"),
+      name: first.full_name,
+      where: labels.join(" + "),
       kind: "private",
-      payment: b.paid_on ? "paid" : "unpaid",
-      left: b.remaining_classes,
-      total: b.total_classes,
-      note: b.note ?? "",
+      // Paid only when every active bundle is paid.
+      payment: list.every((b) => b.paid_on) ? "paid" : "unpaid",
+      left: list.reduce((n, b) => n + b.remaining_classes, 0),
+      total: list.reduce((n, b) => n + b.total_classes, 0),
+      note: notes.join(" | "),
     });
   }
 
