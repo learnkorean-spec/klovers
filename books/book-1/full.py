@@ -52,12 +52,12 @@ def answer_card(U):
     return f'<div class="ac"><h3>الوحدة {n(num)} · {e(U["title"])}</h3>{rows}</div>'
 
 EXTRA_CSS = """
-.page.op{padding:0;background:#222}.op .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.page.op{padding:0;background:#16110a}.op .bg{position:absolute;top:0;left:0;width:100%;height:122mm;object-fit:cover;object-position:50% 30%}
 .op .otop{position:absolute;top:6mm;left:8mm;right:8mm;display:flex;justify-content:space-between;align-items:center;z-index:2}
 .op .okick{background:#FFFF00;color:#1a1a1a;font-weight:800;font-size:9pt;padding:1mm 4mm;border-radius:5mm}
 .op .ologo{background:rgba(255,255,255,.92);border-radius:5mm;padding:.8mm 3mm;font-weight:800;font-size:8pt;display:flex;gap:1.5mm;align-items:center}.op .ologo img{height:5mm;border-radius:50%}
-.op .obot{position:absolute;left:0;right:0;bottom:0;padding:48mm 10mm 14mm;background:linear-gradient(to top,rgba(14,11,5,.92) 0%,rgba(14,11,5,.78) 55%,rgba(14,11,5,0) 100%);color:#fff;z-index:2}
-.op .obot h1{margin:0 0 2mm;font-size:27pt;line-height:1.25;color:#fff;text-shadow:0 .5mm 2mm rgba(0,0,0,.5)}
+.op .obot{position:absolute;left:0;right:0;top:104mm;bottom:9mm;padding:18mm 10mm 6mm;background:linear-gradient(to bottom,rgba(22,17,10,0) 0%,#16110a 18mm);color:#fff;z-index:2}
+.op .obot h1{margin:0 0 3mm;font-size:30pt;line-height:1.25;color:#fff;text-shadow:0 .5mm 2mm rgba(0,0,0,.5)}
 .op .osub{margin:0 0 3mm;font-size:10pt;line-height:1.7;color:rgba(255,255,255,.92)}
 .op .ogoals{margin:0 0 4mm;padding:0;list-style:none;font-size:9.5pt;line-height:1.8}.op .ogoals li{position:relative;padding-right:5mm}
 .op .ogoals li:before{content:"";position:absolute;right:0;top:2.3mm;width:2.2mm;height:2.2mm;border-radius:50%;background:#FFFF00}
@@ -165,7 +165,7 @@ def prepare(U):
 
 def opener_page(U, goals, sub, nvocab):
     n_ = U["number"]
-    img = ROOT / "assets/opener-01.jpg" if n_ == 1 else None
+    img = None
     if img is not None:
         src = "data:image/jpeg;base64," + base64.b64encode(img.read_bytes()).decode()
     else:
