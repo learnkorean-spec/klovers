@@ -227,10 +227,12 @@ begin
      set level = _next, course_level_key = _next
    where user_id = _user_id;
 
-  insert into public.admin_notifications (message, type, category, related_user_id, related_group_id)
+  -- related_group_id is not set: its foreign key points at student_groups, not
+  -- pkg_groups, so a pkg group id would be rejected.
+  insert into public.admin_notifications (message, type, category, related_user_id)
   values (_name || ' finished ' || upper(_seat.level) || ' and was moved to ' || coalesce(_group.name, upper(_next))
           || '. Her new enrolment is unpaid until you mark it paid.',
-          'level_up', 'update', _user_id, _group.id);
+          'level_up', 'update', _user_id);
 
   return jsonb_build_object(
     'status', 'moved', 'from_level', _seat.level, 'to_level', _next,
