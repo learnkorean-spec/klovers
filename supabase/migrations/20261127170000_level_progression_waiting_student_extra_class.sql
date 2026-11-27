@@ -9,8 +9,8 @@
 --   1. roll_enrolment_if_overdrawn does nothing for a student who has finished
 --      her level and has a next level to go to (the only change to it is the
 --      new early return; the rest is the live body, unchanged).
---   2. When the group moves, an extra class she was charged while waiting is
---      cleared back to 0: a free class, not a debt on a paid enrolment.
+--   2. See 20261127180000: when the group moves, an extra class she was charged
+--      while waiting is a DEBT and moves with her (not cleared).
 -- Tested in a rolled-back transaction on Aya Arafa: extra class left her at -1
 -- with no renewal and no payment ask, then the group moved and she cleared to 0.
 
