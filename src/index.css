@@ -858,3 +858,13 @@ Type, loaded in index.html:
   color: #0C0A16;
   box-shadow: 0 4px 16px -4px rgba(255, 62, 165, 0.6);
 }
+
+/* KLOVERS World on a phone: the cookie notice sits bottom-right so the joystick corner stays clear. */
+@media (pointer: coarse) {
+  body[data-world="true"] .klovers-consent {
+    inset-inline: auto;
+    right: 0.5rem;
+    width: calc(100% - 1rem);
+    max-width: 60%;
+  }
+}

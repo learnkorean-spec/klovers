@@ -280,6 +280,14 @@ const WorldPage = () => {
     [patch],
   );
 
+  // The cookie notice moves to the bottom-right on phones here (index.css), so the joystick corner stays clear.
+  useEffect(() => {
+    document.body.dataset.world = "true";
+    return () => {
+      delete document.body.dataset.world;
+    };
+  }, []);
+
   // "Objective complete" stays a moment once nothing covers it (a talk card
   // may still be open when the objective finishes).
   useEffect(() => {
