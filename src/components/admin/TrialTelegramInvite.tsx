@@ -109,6 +109,33 @@ export function useFunnelStatus(bookingIds: string[]) {
   });
 }
 
+/**
+ * Each booking's personal bot link (t.me/<bot>?start=<code>). Only bookings
+ * made since 14 Nov 2026 have one; the map simply lacks the others.
+ */
+export function useTrialBotLinks(bookingIds: string[]) {
+  const key = [...bookingIds].sort().join(",");
+  return useQuery({
+    queryKey: ["admin", "trial-bot-links", key],
+    enabled: bookingIds.length > 0,
+    queryFn: async (): Promise<Map<string, string>> => {
+      const { data, error } = await (supabase as never as {
+        from: (t: string) => {
+          select: (c: string) => {
+            in: (c: string, v: string[]) =>
+              Promise<{ data: { booking_id: string; link_code: string }[] | null; error: Error | null }>;
+          };
+        };
+      }).from("trial_telegram").select("booking_id, link_code").in("booking_id", bookingIds);
+      if (error) throw error;
+      return new Map((data ?? []).map(r => [
+        r.booking_id, `https://t.me/learnkoreanwithkloversbot?start=${r.link_code}`,
+      ]));
+    },
+    retry: false,
+  });
+}
+
 /** Chosen group, remembered on this browser between visits. */
 export function useChosenChat() {
   const [chosen, setChosenState] = useState<string>(readChosen);

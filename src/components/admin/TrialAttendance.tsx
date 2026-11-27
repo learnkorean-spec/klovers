@@ -73,7 +73,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   FunnelBadges, TelegramGroupPicker, TelegramInviteButton,
-  chatUsable, useChosenChat, useFunnelStatus, useTelegramChats,
+  chatUsable, useChosenChat, useTrialBotLinks, useFunnelStatus, useTelegramChats,
 } from "./TrialTelegramInvite";
 
 /** true / false / null — the three states, as one value the Select can hold. */
@@ -93,7 +93,56 @@ type Row = {
   attendance_response: string | null;
   attended: boolean | null;
   attended_letter_sent_at: string | null;
+  starts_at: string | null;
+  meeting_url: string | null;
+  student_timezone: string | null;
 };
+
+/**
+ * What goes to a student BEFORE her trial, by WhatsApp, from Re herself.
+ *
+ * Re, 27 Nov 2026, about a student booked for the next day who had not
+ * opened his confirmation email and had not pressed Start on the bot: "how we
+ * dont lose him?". Until the trial happens the only things that reach him are
+ * emails, and an unopened email is exactly how a booked seat turns into a
+ * no-show. This is one tap for a person-to-person message with the three
+ * things he needs: when (in HIS time zone, not Cairo's), the class link, and
+ * his bot link so the next reminder does not depend on email at all.
+ */
+function beforeTrialWhatsAppMessage(r: Row, isAr: boolean, botLink: string | undefined): string {
+  const first = (r.name || "").trim().split(" ")[0];
+  let when = "";
+  if (r.starts_at) {
+    const fmt = (timeZone: string) =>
+      new Intl.DateTimeFormat(isAr ? "ar-EG-u-nu-latn" : "en-US", {
+        weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone,
+      }).format(new Date(r.starts_at!));
+    try {
+      when = r.student_timezone
+        ? `${fmt(r.student_timezone)} ${isAr ? "(بتوقيتك)" : "(your time)"}`
+        : `${fmt("Africa/Cairo")} ${isAr ? "(بتوقيت مصر)" : "(Cairo time)"}`;
+    } catch {
+      // A time zone name the browser does not know: say it in Cairo time.
+      when = `${fmt("Africa/Cairo")} ${isAr ? "(بتوقيت مصر)" : "(Cairo time)"}`;
+    }
+  }
+  const lines = isAr
+    ? [
+        `هاي ${first || "يا قمر"} \u{1F44B} أنا ريهام من Klovers.`,
+        when ? `حصة التراير المجانية بتاعتك يوم ${when}.` : "",
+        r.meeting_url ? `لينك الحصة:\n${r.meeting_url}` : "",
+        botLink ? `واضغطي هنا عشان البوت يبعتلك اللينك قبل الحصة:\n${botLink}` : "",
+        "مستنياكي!",
+      ]
+    : [
+        `Hi ${first || "there"} \u{1F44B} this is Reham from Klovers.`,
+        when ? `Your free Korean trial class is on ${when}.` : "",
+        r.meeting_url ? `Class link:\n${r.meeting_url}` : "",
+        botLink ? `Tap here and our bot will send you the link before class:\n${botLink}` : "",
+        "See you there!",
+      ];
+  return lines.filter(Boolean).join("\n\n");
+}
 
 /**
  * The one message that replaces three disconnected manual steps (Re, 13 Nov
@@ -221,12 +270,15 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
         // until they are regenerated; the error path below is what the admin
         // actually sees if they are missing.
         .select(
-          "id, name, email, phone, trial_date, start_time, class_language, attendance_response, attended, attended_letter_sent_at" as "*",
+          "id, name, email, phone, trial_date, start_time, class_language, attendance_response, attended, attended_letter_sent_at, starts_at, meeting_url, student_timezone" as "*",
         )
         .neq("status", "cancelled")
         .not("trial_date", "is", null)
         .gte("trial_date", localISODate(-days))
-        .lte("trial_date", localISODate(0))
+        // Two days AHEAD as well: a student booked for tomorrow is the one
+        // the "Remind on WhatsApp" button exists for, and she was invisible
+        // here until the day of her class.
+        .lte("trial_date", localISODate(2))
         .order("trial_date", { ascending: false })
         .order("start_time", { ascending: true });
       if (error) throw error;
@@ -261,6 +313,7 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
   const chosenReady = chats.some(c => String(c.chat_id) === chosenChat && chatUsable(c));
   const bookingIds = useMemo(() => (data ?? []).map(r => r.id), [data]);
   const { data: funnel } = useFunnelStatus(bookingIds);
+  const { data: botLinks } = useTrialBotLinks(bookingIds);
 
   const confirmedAt = useMemo(() => {
     const m = new Map<string, string>();
@@ -591,6 +644,15 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
               const waLink = hasPhone
                 ? `https://wa.me/${waDigits}?text=${encodeURIComponent(cameWhatsAppMessage(r.name, isAr))}`
                 : null;
+              // Her trial has not started yet: the useful message is the
+              // reminder, not the after-trial invite.
+              const upcoming = !!r.starts_at && new Date(r.starts_at).getTime() > Date.now();
+              const onBot = funnel?.get(r.id)?.tg_linked === true;
+              const remindLink = hasPhone && upcoming
+                ? `https://wa.me/${waDigits}?text=${encodeURIComponent(
+                    beforeTrialWhatsAppMessage(r, isAr, onBot ? undefined : botLinks?.get(r.id)),
+                  )}`
+                : null;
 
               return (
                 <div
@@ -616,6 +678,22 @@ const TrialAttendance = ({ days = 14 }: TrialAttendanceProps) => {
                         Telegram link + the enroll-now link are needed — one
                         message, instead of hunting the number down again
                         later and sending each link separately. */}
+                    {remindLink && (
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs border-green-400 text-green-700 dark:text-green-400"
+                      >
+                        <a href={remindLink} target="_blank" rel="noreferrer">
+                          <MessageCircle className="mr-1 h-3.5 w-3.5" />
+                          Remind on WhatsApp
+                        </a>
+                      </Button>
+                    )}
+                    {upcoming && !hasPhone && (
+                      <span className="text-[11px] text-destructive">no phone</span>
+                    )}
                     {r.attended === true && chosenReady && (
                       <TelegramInviteButton
                         bookingId={r.id}
