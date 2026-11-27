@@ -39,16 +39,6 @@ const CookieBanner = () => {
   });
 
   const allowed = useBottomSlot("consent", show);
-  // On the 3D world a phone's bottom-left corner is the joystick: the notice
-  // sits in the bottom-right there, so it never covers the stick.
-  // Read from the address bar: this banner sits outside the router.
-  const onWorld = typeof window !== "undefined" && /^\/world(\/|$)/.test(window.location.pathname);
-  const corner = onWorld ? "left-auto right-2 w-[calc(100%-1rem)] sm:w-auto sm:inset-x-0 max-w-[60%] sm:max-w-2xl sm:mx-auto" : "inset-x-0";
-
-  const choose = (choice: ConsentChoice) => {
-    saveConsent(choice);
-    setShow(false);
-  };
 
   if (!show || !allowed) return null;
 
@@ -57,7 +47,7 @@ const CookieBanner = () => {
       role="region"
       aria-label={isAr ? "إشعار ملفات تعريف الارتباط" : "Cookie notice"}
       dir={isAr ? "rtl" : "ltr"}
-      className={`fixed bottom-0 z-[150] p-3 sm:p-4 pointer-events-none ${corner}`}
+      className="klovers-consent fixed bottom-0 inset-x-0 z-[150] p-3 sm:p-4 pointer-events-none"
     >
       <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl shadow-2xl px-4 py-3 sm:px-5 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4 pointer-events-auto">
         <p className="text-xs sm:text-sm text-muted-foreground flex-1 leading-snug sm:leading-relaxed">
