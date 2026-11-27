@@ -6806,6 +6806,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_mark_enrollment_paid: {
+        Args: { _amount: number; _enrollment_id: string; _paid_on?: string }
+        Returns: Json
+      }
       admin_remove_attendance: {
         Args: { p_enrollment_id: string; p_session_date: string }
         Returns: number
