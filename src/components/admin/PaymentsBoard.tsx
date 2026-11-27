@@ -5,7 +5,12 @@
  * Arabic, RTL. Rows are stacked cards (not a table) so it never needs a
  * horizontal scroll on a phone.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +31,7 @@ async function loadBoard(): Promise<BoardRow[]> {
     fetchAllPages((from, to) =>
       supabase
         .from("enrollments")
-        .select("id, user_id, payment_status, approval_status, enrollment_status, sessions_remaining, sessions_total, created_at")
+        .select("id, user_id, payment_status, approval_status, enrollment_status, sessions_remaining, sessions_total, created_at, currency, matched_at, approval_email_sent_at, payment_email_sent_at")
         .is("deleted_at", null)
         .order("id")
         .range(from, to),
@@ -116,7 +121,73 @@ function Tile({ label, value, tone, cls = "" }: { label: string; value: number; 
   );
 }
 
+/**
+ * "Mark paid" for one seated, unpaid group student. It is the only thing on
+ * this board that writes, so it says exactly what will happen first: the
+ * database reacts to PAID (admin notification, a students row, and sometimes
+ * an email to the student), and it cannot be undone from here.
+ */
+function MarkPaidDialog({ row, onClose }: { row: BoardRow | null; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [amount, setAmount] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const close = () => { setAmount(""); setErr(null); onClose(); };
+  const value = Number(amount);
+  const valid = Number.isFinite(value) && value > 0;
+
+  async function confirm() {
+    if (!row?.enrollmentId || !valid) return;
+    setBusy(true);
+    setErr(null);
+    const { error } = await supabase.rpc("admin_mark_enrollment_paid", {
+      _enrollment_id: row.enrollmentId,
+      _amount: value,
+    });
+    setBusy(false);
+    if (error) { setErr(error.message); return; }
+    await qc.invalidateQueries({ queryKey: ["admin"] });
+    close();
+  }
+
+  return (
+    <Dialog open={!!row} onOpenChange={(o) => { if (!o && !busy) close(); }}>
+      <DialogContent dir="rtl" lang="ar" className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>تسجيل دفع {row?.name}</DialogTitle>
+          <DialogDescription>
+            هيتسجّل الدفع على اشتراكها، وبيتضاف لها الحصص. مش هتقدري ترجّعيه من هنا.
+          </DialogDescription>
+        </DialogHeader>
+        <label className="block space-y-1 text-sm">
+          <span>المبلغ اللي اتدفع ({row?.currency ?? "EGP"})</span>
+          <Input
+            inputMode="decimal"
+            dir="ltr"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="مثلاً 1200"
+          />
+        </label>
+        <p className="rounded bg-amber-50 p-2 text-xs text-amber-900" role="note">
+          {row?.emailsOnPaid
+            ? "هيتبعت للطالبة إيميل تلقائي (تأكيد الدفع أو الموافقة)."
+            : "مش هيتبعت لها إيميل."}{" "}
+          وهيتسجّل إشعار في لوحة الأدمن وصف باسمها في جدول students.
+        </p>
+        {err && <p role="alert" className="text-sm text-red-600">{err}</p>}
+        <DialogFooter className="gap-2 sm:justify-start">
+          <Button onClick={confirm} disabled={!valid || busy}>{busy ? "جاري الحفظ…" : "تأكيد الدفع"}</Button>
+          <Button variant="outline" onClick={close} disabled={busy}>إلغاء</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function PaymentsBoard() {
+  const [paying, setPaying] = useState<BoardRow | null>(null);
   const { data, isLoading, error, refetch, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ["admin", "payments-board"],
     queryFn: loadBoard,
@@ -195,12 +266,18 @@ export default function PaymentsBoard() {
                 <div className="text-sm">
                   باقي <b className={r.left <= 0 ? "text-red-600" : ""}>{r.left}</b> من {r.total} حصة
                 </div>
+                {r.enrollmentId && (
+                  <Button size="sm" variant="outline" className="mt-1" onClick={() => setPaying(r)}>
+                    تسجيل الدفع
+                  </Button>
+                )}
                 {r.note && <p dir="auto" className="line-clamp-2 break-words text-xs text-muted-foreground">{r.note}</p>}
               </CardContent>
             </Card>
           </li>
         ))}
       </ul>
+      <MarkPaidDialog row={paying} onClose={() => setPaying(null)} />
     </div>
   );
 }

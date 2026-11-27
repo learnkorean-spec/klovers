@@ -4,7 +4,7 @@
  * The Supabase client is faked table by table.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 type Rows = Record<string, unknown[]>;
@@ -12,6 +12,8 @@ let tables: Rows = {};
 let balances: unknown[] = [];
 let failTable: string | null = null;
 const rangeCalls: Array<[string, number, number]> = [];
+const rpcCalls: Array<[string, Record<string, unknown>]> = [];
+let markPaidError: string | null = null;
 
 vi.mock("@/integrations/supabase/client", () => {
   const from = (table: string) => {
@@ -28,7 +30,13 @@ vi.mock("@/integrations/supabase/client", () => {
       ).then(res);
     return q;
   };
-  return { supabase: { from, rpc: () => Promise.resolve({ data: balances, error: null }) } };
+  return { supabase: { from, rpc: (name: string, args: Record<string, unknown>) => {
+      rpcCalls.push([name, args]);
+      if (name === "admin_mark_enrollment_paid") {
+        return Promise.resolve(markPaidError ? { data: null, error: { message: markPaidError } } : { data: {}, error: null });
+      }
+      return Promise.resolve({ data: balances, error: null });
+    } } };
 });
 
 import PaymentsBoard from "@/components/admin/PaymentsBoard";
@@ -43,6 +51,8 @@ const renderBoard = () =>
 beforeEach(() => {
   failTable = null;
   rangeCalls.length = 0;
+  rpcCalls.length = 0;
+  markPaidError = null;
   tables = {
     enrollments: [
       { id: "e1", user_id: "u1", payment_status: "PAID", approval_status: "APPROVED", enrollment_status: "active", sessions_remaining: 2, sessions_total: 4, created_at: "2026-11-14" },
@@ -85,5 +95,48 @@ describe("PaymentsBoard", () => {
     await waitFor(() => expect(screen.getByText("طلاب نشطين")).toBeInTheDocument());
     const pages = rangeCalls.filter(([t]) => t === "enrollments").map(([, a]) => a);
     expect(pages).toEqual([0, 1000]);
+  });
+
+  describe("mark paid", () => {
+    const unpaidSeat = () => {
+      tables.enrollments = [
+        { id: "e9", user_id: "u9", payment_status: "PENDING_PAYMENT", approval_status: "APPROVED", enrollment_status: "active", sessions_remaining: 4, sessions_total: 4, created_at: "2026-11-20", currency: "EGP", matched_at: null, approval_email_sent_at: null, payment_email_sent_at: null },
+      ];
+      tables.pkg_group_members = [{ enrollment_id: "e9", user_id: "u9", member_status: "active", group_id: "g1" }];
+      tables.profiles = [{ user_id: "u9", name: "Una" }];
+    };
+
+    it("shows no button when everyone is paid", async () => {
+      renderBoard();
+      await waitFor(() => expect(screen.getByText("طلاب نشطين")).toBeInTheDocument());
+      expect(screen.queryByRole("button", { name: "تسجيل الدفع" })).toBeNull();
+    });
+
+    it("needs an amount, warns about the email, then calls the function", async () => {
+      unpaidSeat();
+      renderBoard();
+      fireEvent.click(await screen.findByRole("button", { name: "تسجيل الدفع" }));
+      expect(screen.getByRole("note")).toHaveTextContent("هيتبعت للطالبة إيميل");
+      const confirm = screen.getByRole("button", { name: "تأكيد الدفع" });
+      expect(confirm).toBeDisabled();
+      fireEvent.change(screen.getByRole("textbox"), { target: { value: "1200" } });
+      fireEvent.click(confirm);
+      await waitFor(() =>
+        expect(rpcCalls.find(([n]) => n === "admin_mark_enrollment_paid")?.[1]).toEqual({
+          _enrollment_id: "e9", _amount: 1200,
+        }),
+      );
+    });
+
+    it("shows the database error and keeps the dialog open", async () => {
+      unpaidSeat();
+      markPaidError = "enrollment_not_approved";
+      renderBoard();
+      fireEvent.click(await screen.findByRole("button", { name: "تسجيل الدفع" }));
+      fireEvent.change(screen.getByRole("textbox"), { target: { value: "500" } });
+      fireEvent.click(screen.getByRole("button", { name: "تأكيد الدفع" }));
+      expect(await screen.findByText("enrollment_not_approved")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "تأكيد الدفع" })).toBeInTheDocument();
+    });
   });
 });

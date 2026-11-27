@@ -31,6 +31,11 @@ export interface BoardRow {
   left: number;
   total: number;
   note: string;
+  /** Set only on a seated, unpaid group row: the one a "mark paid" applies to. */
+  enrollmentId?: string;
+  currency?: string;
+  /** True when marking it paid will email the student (see willEmailOnPaid). */
+  emailsOnPaid?: boolean;
 }
 
 export interface EnrollmentInput {
@@ -42,6 +47,10 @@ export interface EnrollmentInput {
   sessions_remaining: number | null;
   sessions_total: number | null;
   created_at: string;
+  currency?: string | null;
+  matched_at?: string | null;
+  approval_email_sent_at?: string | null;
+  payment_email_sent_at?: string | null;
 }
 
 export interface MemberInput {
@@ -72,6 +81,17 @@ export interface BoardInput {
 }
 
 const isPaid = (s: string | null) => (s ?? "").toUpperCase() === "PAID";
+
+/**
+ * Whether flipping this enrollment to PAID makes the database email the
+ * student, from the live triggers: the approval email goes out when the row is
+ * matched and has not had one; the payment-confirmed email when neither email
+ * has been sent. Shown to Re before she confirms, so it is never a surprise.
+ */
+export function willEmailOnPaid(e: EnrollmentInput): boolean {
+  if (e.approval_email_sent_at) return false;
+  return !!e.matched_at || !e.payment_email_sent_at;
+}
 
 export function buildBoard(input: BoardInput): BoardRow[] {
   const seated = new Map<string, MemberInput>(); // enrollment_id -> active seat
@@ -135,15 +155,24 @@ export function buildBoard(input: BoardInput): BoardRow[] {
       return score(b) - score(a) || b.created_at.localeCompare(a.created_at);
     })[0];
     const cancelled = (pick.enrollment_status ?? "active") === "cancelled";
+    const payment: PaymentState = cancelled ? "cancelled" : isPaid(pick.payment_status) ? "paid" : "unpaid";
+    // Only a seated, approved, still-unpaid row can be marked paid.
+    const markable =
+      payment === "unpaid" &&
+      seated.has(pick.id) &&
+      (pick.approval_status ?? "").toUpperCase() === "APPROVED";
     rows.set(userId, {
       key: userId,
       name: input.profileNames[userId] ?? "—",
       where: seated.get(pick.id)?.group_name ?? "—",
       kind: "group",
-      payment: cancelled ? "cancelled" : isPaid(pick.payment_status) ? "paid" : "unpaid",
+      payment,
       left: pick.sessions_remaining ?? 0,
       total: pick.sessions_total ?? 0,
       note: "",
+      ...(markable
+        ? { enrollmentId: pick.id, currency: pick.currency ?? "EGP", emailsOnPaid: willEmailOnPaid(pick) }
+        : {}),
     });
   }
 

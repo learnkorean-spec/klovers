@@ -4,7 +4,7 @@
  * have both a bundle and legacy enrollment rows).
  */
 import { describe, it, expect } from "vitest";
-import { buildBoard, boardTiles, type BoardInput } from "@/lib/paymentsBoard";
+import { buildBoard, boardTiles, willEmailOnPaid, type BoardInput } from "@/lib/paymentsBoard";
 
 const enr = (id: string, user: string, pay: string, left: number, total: number, over = {}) => ({
   id, user_id: user, payment_status: pay, approval_status: "APPROVED",
@@ -119,5 +119,45 @@ describe("payments board", () => {
       bundles: [bundle("s7", "A", null, 2, 4, "2026-10-01"), bundle("s8", "B", null, 3, 4, "2026-10-01")],
     });
     expect(r).toHaveLength(2);
+  });
+
+  describe("mark paid", () => {
+    const unpaid = (over = {}) =>
+      buildBoard({
+        ...input,
+        enrollments: [enr("e-u", "u-u", "PENDING_PAYMENT", 4, 4, { currency: "USD", ...over })],
+        members: [{ enrollment_id: "e-u", user_id: "u-u", member_status: "active", group_name: "G" }],
+        profileNames: { "u-u": "Una" }, bundles: [],
+      })[0];
+
+    it("offers it on a seated, approved, unpaid group row", () => {
+      const r = unpaid();
+      expect(r.enrollmentId).toBe("e-u");
+      expect(r.currency).toBe("USD");
+    });
+
+    it("does not offer it on paid rows or bundle rows", () => {
+      expect(rows.every((r) => r.enrollmentId === undefined)).toBe(true);
+    });
+
+    it("does not offer it when the enrollment is not approved", () => {
+      expect(unpaid({ approval_status: "PENDING" }).enrollmentId).toBeUndefined();
+    });
+
+    it("does not offer it on a cancelled row", () => {
+      expect(unpaid({ enrollment_status: "cancelled" }).enrollmentId).toBeUndefined();
+    });
+
+    it("defaults the currency to EGP", () => {
+      expect(unpaid({ currency: null }).currency).toBe("EGP");
+    });
+
+    it("predicts the email from the trigger rule", () => {
+      const e = enr("x", "u", "PENDING_PAYMENT", 4, 4);
+      expect(willEmailOnPaid(e)).toBe(true);
+      expect(willEmailOnPaid({ ...e, approval_email_sent_at: "2026-11-01" })).toBe(false);
+      expect(willEmailOnPaid({ ...e, payment_email_sent_at: "2026-11-01" })).toBe(false);
+      expect(willEmailOnPaid({ ...e, payment_email_sent_at: "2026-11-01", matched_at: "2026-11-02" })).toBe(true);
+    });
   });
 });
