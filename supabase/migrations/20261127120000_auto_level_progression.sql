@@ -65,7 +65,7 @@ declare
   _old_name  text;
 begin
   -- Her current seat in a group class, newest first.
-  select m.group_id, m.joined_at, m.enrollment_id, g.name as group_name, sp.level, sp.day_of_week
+  select m.group_id, m.joined_at, m.enrollment_id, g.name as group_name, sp.level, sp.day_of_week, sp.start_time
     into _seat
     from public.pkg_group_members m
     join public.pkg_groups g on g.id = m.group_id
@@ -122,8 +122,9 @@ begin
     return jsonb_build_object('status', 'already_moved');
   end if;
 
-  -- An open class time at the next level with a free seat. Same weekday first,
-  -- then the fullest group, so a half-full group fills before a new one opens.
+  -- An open class time at the next level with a free seat. Her own weekday and
+  -- time first (so a Hangul class and the Level 1 class after it can share a
+  -- slot), then the same weekday, then the fullest group, so a half-full group fills before a new one opens.
   select p.* into _pkg
     from public.schedule_packages p
    where p.level = _next
@@ -134,7 +135,8 @@ begin
              join public.pkg_groups g on g.id = m.group_id
             where g.package_id = p.id and g.is_active and m.member_status = 'active'
          ), 0) < coalesce(p.capacity, 8)
-   order by (p.day_of_week = _seat.day_of_week) desc,
+   order by (p.day_of_week = _seat.day_of_week and p.start_time = _seat.start_time) desc,
+            (p.day_of_week = _seat.day_of_week) desc,
             coalesce((
               select count(*) from public.pkg_group_members m
                 join public.pkg_groups g on g.id = m.group_id
