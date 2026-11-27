@@ -158,7 +158,7 @@ def prepare(U):
         for b in pg:
             npg.append(b)
             if b["type"] == "title" and b.get("kicker") == "المحادثة":
-                npg.append({"type": "scene", "file": f"b1s_{U['number']:02d}.jpg", "qr": f"https://kloversegy.com/c/b1-{U['number']}"})
+                npg.append({"type": "scene", "file": f"b1d_{U['number']:02d}.jpg", "qr": f"https://kloversegy.com/c/b1-{U['number']}"})
         if npg: out.append(npg)
     V = sum(len(b["items"]) for pg in out for b in pg if b["type"] == "vocab")
     return dict(U, pages=out), goals, sub, V

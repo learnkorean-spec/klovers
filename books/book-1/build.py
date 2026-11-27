@@ -68,6 +68,8 @@ def icon(f):
 SCENES = ROOT.parent.parent / "public/picture-library/scenes"
 def scene_img(f):
     p = SCENES / f
+    d = ROOT / "assets" / "dialogue" / f
+    if d.exists(): p = d
     return "data:image/jpeg;base64," + base64.b64encode(p.read_bytes()).decode()
 
 def qr_img(url):
