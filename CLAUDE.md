@@ -223,3 +223,12 @@ Story progression must be based on real learning progress.
 
 Marketing may tease the story. The logged-in product lets the learner
 experience the story.
+
+## Books: rules for every book and level (Re's standing rule, 2026-11-26)
+
+- Brand yellow is `#FFFF00` only. No other yellow, no pale yellow tints.
+- Korean on the left, Arabic on the right, in every Korean/Arabic pair
+  (dialogues, example tables, vocabulary). Applies to all levels and both editions.
+- A0 style otherwise: cream `#FFF9EC` page, official logo, "الصفحة N من M" footer,
+  "الوحدة" not "الحصة", no class counts or lesson length in sold books.
+- The Book 1 generator is `books/book-1/build.py`; keep these rules in it.
