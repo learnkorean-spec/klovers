@@ -144,9 +144,12 @@ export const AdminKpiStrip = memo(function AdminKpiStrip({ overviewRows, actiona
         iconColor: "text-charcoal",
         value: activeRows.length,
         label: "Active Students",
+        // Says what it counts. The payments board lists every active seat,
+        // paid or not, so its number is larger; this one is the students list
+        // filtered to paid with classes left.
         sublabel: legacy && legacy.students > 0
-          ? `${overviewRows.length} total · +${legacy.students} legacy`
-          : `${overviewRows.length} total`,
+          ? `paid, classes left · ${overviewRows.length} on file · +${legacy.students} legacy`
+          : `paid, classes left · ${overviewRows.length} on file`,
         sparkData: enrollSparkline,
         to: "/admin?tab=students&filter=active",
         opens: "the active students",
