@@ -20,6 +20,10 @@
 // no new column was needed.
 //
 // Body { "dry_run": true } sends nothing and reports who WOULD be written to.
+// Body { "test": true } sends one copy of each of the three emails (welcome,
+// reminder 1, reminder 2) to the site's own admin address and to nobody
+// else, records nothing, and returns. It is how the copy is looked at in a
+// real inbox before any student receives it.
 //
 // Auth: _shared/cronAuth.ts (Vault-backed cron secret, or an admin JWT) —
 // never a bare CRON_SECRET env-var comparison. See cronAuth.ts for why that
@@ -171,9 +175,11 @@ Deno.serve(async (req) => {
     }
 
     let dryRun = false;
+    let testRun = false;
     try {
       const body = await req.json();
       dryRun = body?.dry_run === true;
+      testRun = body?.test === true;
     } catch {
       // No body, or not JSON: a normal cron run.
     }
@@ -192,6 +198,38 @@ Deno.serve(async (req) => {
       return rows[0] ? { date: rows[0].next_trial_date!, startTime: rows[0].start_time! } : null;
     };
     const nextTrial = { ar: await nextTrialFor("arabic"), en: await nextTrialFor("english") };
+
+    if (testRun) {
+      const { data: adminRows, error: adminErr } = await supabase
+        .from("user_roles").select("user_id").eq("role", "admin").limit(1);
+      if (adminErr) throw adminErr;
+      const adminId = adminRows?.[0]?.user_id;
+      const { data: admin, error: adminProfileErr } = await supabase
+        .from("profiles").select("email, name, language, unsubscribe_token")
+        .eq("user_id", adminId ?? "").maybeSingle();
+      if (adminProfileErr) throw adminProfileErr;
+      if (!admin?.email) throw new Error("no admin profile to send the test to");
+
+      const lang: "ar" | "en" = admin.language === "en" ? "en" : "ar";
+      const isAr = lang === "ar";
+      const token = admin.unsubscribe_token ?? undefined;
+      const welcome = buildEmail(admin.name ?? "", lang, token, nextTrial[lang]);
+      const previews = [
+        { subject: `[TEST] ${welcome.subject}`, html: welcome.html },
+        ...([1, 2] as NudgeStep[]).map((step) => {
+          const n = buildNudge(step, admin.name ?? "", isAr, nextTrial[lang], token);
+          return { subject: `[TEST] ${n.subject}`, html: n.html };
+        }),
+      ];
+      for (const p of previews) {
+        await sendEmail(admin.email, p.subject, p.html, unsubscribeUrl(token, isAr));
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      return new Response(
+        JSON.stringify({ success: true, test: true, sent: previews.length, language: lang, next_trial: nextTrial }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // Profiles that have never been sent this email — new registrations
     // going forward, AND (per Re, 2026-11-17) the pre-existing backlog that
@@ -347,13 +385,15 @@ Deno.serve(async (req) => {
         const template = NUDGE_TEMPLATES[step - 1];
         budget--;
 
+        // Built before the dry-run check, so a dry run exercises the template.
+        const { subject, html } = buildNudge(step, c.name ?? "", isAr, nextTrial[lang], c.unsubscribe_token ?? undefined);
+
         if (dryRun) {
           nudges.would_send.push(`${template}:${lang}`);
           continue;
         }
 
         try {
-          const { subject, html } = buildNudge(step, c.name ?? "", isAr, nextTrial[lang], c.unsubscribe_token ?? undefined);
           const result = await sendEmail(String(c.email), subject, html, unsubscribeUrl(c.unsubscribe_token ?? undefined, isAr));
           // The log row IS the "already sent" marker. If it cannot be written
           // the next run would send again, so stop the whole batch here.
