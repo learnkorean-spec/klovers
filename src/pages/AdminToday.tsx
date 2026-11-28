@@ -32,6 +32,7 @@ import ClassRooms from "@/components/admin/ClassRooms";
 import MoneyIn from "@/components/admin/MoneyIn";
 import RenewalsSoon from "@/components/admin/RenewalsSoon";
 import GroupFillCard from "@/components/admin/GroupFillCard";
+import TrialConversionCard from "@/components/admin/TrialConversionCard";
 import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
 import { CalendarDays, Users, GraduationCap, Bell, ArrowRight, MessageCircle } from "lucide-react";
 
@@ -538,6 +539,7 @@ const AdminToday = () => {
 
                 <RenewalsSoon />
                 <GroupFillCard />
+                <TrialConversionCard />
 
                 <ActionCard
                   icon={<GraduationCap className="h-4 w-4" />}

@@ -230,3 +230,27 @@ export function groupFill(
     })
     .sort((a, b) => a.rate - b.rate || a.name.localeCompare(b.name));
 }
+
+export interface TrialConversion {
+  attended: number;
+  paid: number;
+  /** paid / attended as a whole percent, 0 when nobody attended. */
+  percent: number;
+}
+
+/**
+ * Of the people who attended a free trial (distinct accounts), how many now
+ * hold a PAID enrollment. Bookings without an account cannot be matched and
+ * are left out, so this is a floor, not an exact figure.
+ */
+export function trialConversion(
+  trials: { user_id: string | null; status: string }[],
+  paidUserIds: Set<string>,
+): TrialConversion {
+  const attendedIds = new Set<string>();
+  for (const t of trials) if (t.status === "confirmed_attendance" && t.user_id) attendedIds.add(t.user_id);
+  let paid = 0;
+  for (const id of attendedIds) if (paidUserIds.has(id)) paid++;
+  const attended = attendedIds.size;
+  return { attended, paid, percent: attended > 0 ? Math.round((paid / attended) * 100) : 0 };
+}
