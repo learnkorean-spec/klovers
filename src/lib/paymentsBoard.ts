@@ -201,3 +201,32 @@ export function renewalsSoon(rows: BoardRow[]): BoardRow[] {
     .filter((r) => r.payment === "paid" && r.left <= 1)
     .sort((a, b) => a.left - b.left || a.name.localeCompare(b.name));
 }
+
+export interface GroupFill {
+  id: string;
+  name: string;
+  filled: number;
+  capacity: number;
+  /** filled / capacity, 0 when capacity is missing. */
+  rate: number;
+}
+
+/** Seats taken against capacity for each active group, emptiest first. Only members with status 'active' hold a seat. */
+export function groupFill(
+  groups: { id: string; name: string; capacity: number | null; is_active: boolean | null }[],
+  members: { group_id: string; member_status: string | null }[],
+): GroupFill[] {
+  const taken = new Map<string, number>();
+  for (const m of members) {
+    if (m.member_status !== "active") continue;
+    taken.set(m.group_id, (taken.get(m.group_id) ?? 0) + 1);
+  }
+  return groups
+    .filter((g) => g.is_active !== false)
+    .map((g) => {
+      const capacity = g.capacity ?? 0;
+      const filled = taken.get(g.id) ?? 0;
+      return { id: g.id, name: g.name, filled, capacity, rate: capacity > 0 ? filled / capacity : 0 };
+    })
+    .sort((a, b) => a.rate - b.rate || a.name.localeCompare(b.name));
+}
