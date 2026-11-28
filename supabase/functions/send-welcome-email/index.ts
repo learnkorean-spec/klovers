@@ -11,6 +11,16 @@
 // email_logs record (template "welcome_auto"), so the two can never
 // collide or double-send.
 //
+// 28 Nov 2026: this function also sends the two free-trial reminders to
+// people who signed up and never booked one (see trialNudges.ts for the
+// numbers behind it). They live here, on the same hourly run, because they
+// are the continuation of this email for the same person: welcome on day 0,
+// "your free class is waiting" on day 2, one last reminder on day 6. Their
+// idempotency record is email_logs (templates signup_trial_nudge_1 / _2), so
+// no new column was needed.
+//
+// Body { "dry_run": true } sends nothing and reports who WOULD be written to.
+//
 // Auth: _shared/cronAuth.ts (Vault-backed cron secret, or an admin JWT) —
 // never a bare CRON_SECRET env-var comparison. See cronAuth.ts for why that
 // used to silently drop every scheduled call.
@@ -22,6 +32,7 @@ import {
   BRAND_DARK, BRAND_GRAY, BRAND_TEXT, BRAND_MUTED, WHATSAPP_URL, SITE_URL,
   FUNCTION_BASE, brandWrapper, brandButton, unsubscribeFooter,
 } from "../send-confirmation-email/templates/common.ts";
+import { buildNudge, NUDGE_TEMPLATES, trialBlock, type NextTrial, type NudgeStep } from "./trialNudges.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,14 +69,16 @@ function unsubscribeUrl(token: string | undefined, isAr: boolean) {
     : `${SITE_URL}/unsubscribe`;
 }
 
-function buildEmail(name: string, lang: "ar" | "en", unsubToken: string | undefined) {
+function buildEmail(name: string, lang: "ar" | "en", unsubToken: string | undefined, next: NextTrial) {
   const isAr = lang === "ar";
   const unsubUrl = unsubscribeUrl(unsubToken, isAr);
   const safeName = (name || "").trim();
 
   const arContent = `
     <h1 style="color: ${BRAND_DARK}; font-size: 22px;">أهلاً بك في عائلة KLovers${safeName ? `، ${safeName}` : ""}! 🎉</h1>
-    <p>تم تسجيلك بنجاح. هذه أسرع طريقة تبدئي بها:</p>
+    <p>تم تسجيلك بنجاح.</p>
+    ${trialBlock(true, next)}
+    <p>وهذه خطوتان تانيين مفيدين:</p>
     <div style="background-color: ${BRAND_GRAY}; border-right: 4px solid #FFD700; border-radius: 4px; padding: 14px 18px; margin: 16px 0;">
       <p style="margin: 0 0 8px; color: ${BRAND_TEXT}; font-size: 14px;">1️⃣ اعرفي مستواك الحقيقي قبل أي شيء.</p>
       <p style="margin: 0; color: ${BRAND_TEXT}; font-size: 14px;">2️⃣ تصفحي الدورات واختاري ما يناسبك.</p>
@@ -76,7 +89,7 @@ function buildEmail(name: string, lang: "ar" | "en", unsubToken: string | undefi
     <div style="margin: 16px 0; text-align: center;">
       ${brandButton("تصفحي الدورات", COURSES_URL(true))}
     </div>
-    <p style="color: ${BRAND_TEXT}; font-size: 15px; margin-top: 28px;">وانضمي لمجتمعنا على تيليجرام — تحديثات، تذكيرات، وطلاب زيك يتعلموا الكورية:</p>
+    <p style="color: ${BRAND_TEXT}; font-size: 15px; margin-top: 28px;">وانضمي لمجتمعنا على تيليجرام. فيه تحديثات وتذكيرات وطلاب زيك بيتعلموا الكورية:</p>
     <div style="margin: 12px 0; text-align: center;">
       ${telegramButton(true)}
     </div>
@@ -88,7 +101,9 @@ function buildEmail(name: string, lang: "ar" | "en", unsubToken: string | undefi
 
   const enContent = `
     <h1 style="color: ${BRAND_DARK}; font-size: 22px;">Welcome to the KLovers family${safeName ? `, ${safeName}` : ""}! 🎉</h1>
-    <p>You're officially registered. Here's the fastest way to get started:</p>
+    <p>You're officially registered.</p>
+    ${trialBlock(false, next)}
+    <p>Two more things worth doing:</p>
     <div style="background-color: ${BRAND_GRAY}; border-left: 4px solid #FFD700; border-radius: 4px; padding: 14px 18px; margin: 16px 0;">
       <p style="margin: 0 0 8px; color: ${BRAND_TEXT}; font-size: 14px;">1️⃣ Find your real Korean level first.</p>
       <p style="margin: 0; color: ${BRAND_TEXT}; font-size: 14px;">2️⃣ Browse our courses and pick what fits you.</p>
@@ -99,7 +114,7 @@ function buildEmail(name: string, lang: "ar" | "en", unsubToken: string | undefi
     <div style="margin: 16px 0; text-align: center;">
       ${brandButton("Browse courses", COURSES_URL(false))}
     </div>
-    <p style="color: ${BRAND_TEXT}; font-size: 15px; margin-top: 28px;">And join our Telegram community — updates, reminders, and other students learning Korean with you:</p>
+    <p style="color: ${BRAND_TEXT}; font-size: 15px; margin-top: 28px;">And join our Telegram community for updates, reminders, and other students learning Korean with you:</p>
     <div style="margin: 12px 0; text-align: center;">
       ${telegramButton(false)}
     </div>
@@ -155,6 +170,29 @@ Deno.serve(async (req) => {
       });
     }
 
+    let dryRun = false;
+    try {
+      const body = await req.json();
+      dryRun = body?.dry_run === true;
+    } catch {
+      // No body, or not JSON: a normal cron run.
+    }
+
+    // The next free trial in each class language, for the date line in every
+    // email below. A failure here only drops that one line.
+    const nextTrialFor = async (classLanguage: "arabic" | "english"): Promise<NextTrial> => {
+      const { data, error: availError } = await supabase.rpc("get_trial_availability", { p_language: classLanguage });
+      if (availError) {
+        console.error("get_trial_availability failed:", availError.message);
+        return null;
+      }
+      const rows = ((data ?? []) as { next_trial_date: string | null; start_time: string | null; booked_count: number; capacity: number }[])
+        .filter((r) => r.next_trial_date && r.start_time && Number(r.booked_count) < Number(r.capacity))
+        .sort((a, b) => `${a.next_trial_date} ${a.start_time}`.localeCompare(`${b.next_trial_date} ${b.start_time}`));
+      return rows[0] ? { date: rows[0].next_trial_date!, startTime: rows[0].start_time! } : null;
+    };
+    const nextTrial = { ar: await nextTrialFor("arabic"), en: await nextTrialFor("english") };
+
     // Profiles that have never been sent this email — new registrations
     // going forward, AND (per Re, 2026-11-17) the pre-existing backlog that
     // was deliberately backfilled out of this when the feature first shipped.
@@ -188,15 +226,21 @@ Deno.serve(async (req) => {
 
       if (profile.email_unsubscribed) {
         // Still mark it, or this profile is re-selected every single run.
-        await supabase.from("profiles")
-          .update({ welcome_email_sent_at: new Date().toISOString() })
-          .eq("user_id", profile.user_id);
+        if (!dryRun) {
+          await supabase.from("profiles")
+            .update({ welcome_email_sent_at: new Date().toISOString() })
+            .eq("user_id", profile.user_id);
+        }
         unsubscribed++;
         continue;
       }
 
       const lang: "ar" | "en" = profile.language === "en" ? "en" : "ar";
-      const { subject, html, unsubUrl } = buildEmail(profile.name ?? "", lang, profile.unsubscribe_token ?? undefined);
+      const { subject, html, unsubUrl } = buildEmail(
+        profile.name ?? "", lang, profile.unsubscribe_token ?? undefined, nextTrial[lang],
+      );
+
+      if (dryRun) { sent++; continue; }
 
       try {
         const result = await sendEmail(profile.email, subject, html, unsubUrl);
@@ -232,8 +276,106 @@ Deno.serve(async (req) => {
 
     console.log(`Welcome emails complete: sent=${sent}, skipped=${skipped}, unsubscribed=${unsubscribed}`);
 
+    // ── Free-trial reminders ───────────────────────────────────────────────
+    // Signed up between 2 and 60 days ago, and still: no trial booking under
+    // this email, no enrolment, not a private student, not an admin, not
+    // unsubscribed. Step 1 once; step 2 once, four days after step 1.
+    //
+    // Small batches on purpose. Each send is followed by the same 1s pause as
+    // above, the whole call has 60s, and a burst is what tripped Resend's
+    // rate limit on the 24 Nov re-invite. The first backlog (about 44 people)
+    // therefore goes out over several hourly runs, not in one.
+    const nudges = { step1: 0, step2: 0, failed: 0, would_send: [] as string[] };
+    const NUDGE_BUDGET = Math.max(0, Math.min(10, 45 - sent));
+    const DAY = 86_400_000;
+    const now = Date.now();
+
+    const { data: candidates, error: candError } = await supabase
+      .from("profiles")
+      .select("user_id, email, name, language, unsubscribe_token, created_at")
+      .not("email", "is", null)
+      .eq("email_unsubscribed", false)
+      .gte("created_at", new Date(now - 60 * DAY).toISOString())
+      .lte("created_at", new Date(now - 2 * DAY).toISOString())
+      .order("created_at", { ascending: true });
+    if (candError) throw candError;
+
+    const pool = (candidates ?? []).filter((c) => !!c.email);
+    if (pool.length > 0 && NUDGE_BUDGET > 0) {
+      const emails = pool.map((c) => String(c.email));
+      const lower = (v: unknown) => String(v ?? "").toLowerCase();
+      const ids = pool.map((c) => c.user_id);
+
+      const [booked, enrolled, privateStudents, admins, logs] = await Promise.all([
+        supabase.from("trial_bookings").select("email").in("email", Array.from(new Set([...emails, ...emails.map(lower)]))),
+        supabase.from("enrollments").select("user_id").in("user_id", ids).is("deleted_at", null),
+        supabase.from("teacher_students").select("email, user_id"),
+        supabase.from("user_roles").select("user_id").in("user_id", ids),
+        supabase.from("email_logs").select("template, to_email, created_at")
+          .in("template", [...NUDGE_TEMPLATES]).in("to_email", emails),
+      ]);
+      for (const r of [booked, enrolled, privateStudents, admins, logs]) {
+        if (r.error) throw r.error;
+      }
+
+      const hasTrial = new Set((booked.data ?? []).map((r) => lower(r.email)));
+      const hasEnrolment = new Set((enrolled.data ?? []).map((r) => r.user_id));
+      const privateEmails = new Set((privateStudents.data ?? []).map((r) => lower(r.email)).filter(Boolean));
+      const privateIds = new Set((privateStudents.data ?? []).map((r) => r.user_id).filter(Boolean));
+      const adminIds = new Set((admins.data ?? []).map((r) => r.user_id));
+      const sentAt = new Map<string, number>();
+      for (const l of logs.data ?? []) {
+        sentAt.set(`${l.template}|${lower(l.to_email)}`, new Date(l.created_at).getTime());
+      }
+
+      let budget = NUDGE_BUDGET;
+      for (const c of pool) {
+        if (budget <= 0) break;
+        const email = lower(c.email);
+        if (hasTrial.has(email) || hasEnrolment.has(c.user_id)) continue;
+        if (privateEmails.has(email) || privateIds.has(c.user_id) || adminIds.has(c.user_id)) continue;
+
+        const first = sentAt.get(`${NUDGE_TEMPLATES[0]}|${email}`);
+        const second = sentAt.get(`${NUDGE_TEMPLATES[1]}|${email}`);
+        let step: NudgeStep | null = null;
+        if (first === undefined) step = 1;
+        else if (second === undefined && now - first >= 4 * DAY) step = 2;
+        if (!step) continue;
+
+        const lang: "ar" | "en" = c.language === "en" ? "en" : "ar";
+        const isAr = lang === "ar";
+        const template = NUDGE_TEMPLATES[step - 1];
+        budget--;
+
+        if (dryRun) {
+          nudges.would_send.push(`${template}:${lang}`);
+          continue;
+        }
+
+        try {
+          const { subject, html } = buildNudge(step, c.name ?? "", isAr, nextTrial[lang], c.unsubscribe_token ?? undefined);
+          const result = await sendEmail(String(c.email), subject, html, unsubscribeUrl(c.unsubscribe_token ?? undefined, isAr));
+          // The log row IS the "already sent" marker. If it cannot be written
+          // the next run would send again, so stop the whole batch here.
+          const { error: logErr } = await supabase.from("email_logs").insert({
+            template, to_email: String(c.email), to_name: c.name ?? null,
+            status: "sent", resend_id: result.id ?? null,
+          });
+          if (logErr) throw new Error(`sent but not logged: ${logErr.message}`);
+          if (step === 1) nudges.step1++; else nudges.step2++;
+          await new Promise((r) => setTimeout(r, 1000));
+        } catch (nudgeErr) {
+          nudges.failed++;
+          console.error(`trial nudge ${template} failed for user ${c.user_id}:`,
+            nudgeErr instanceof Error ? nudgeErr.message : String(nudgeErr));
+          if (String(nudgeErr).includes("not logged")) break;
+        }
+      }
+    }
+    console.log(`Trial nudges: step1=${nudges.step1}, step2=${nudges.step2}, failed=${nudges.failed}, dry_run=${dryRun}`);
+
     return new Response(
-      JSON.stringify({ success: true, sent, skipped, unsubscribed }),
+      JSON.stringify({ success: true, dry_run: dryRun, sent, skipped, unsubscribed, nudges, next_trial: nextTrial }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
