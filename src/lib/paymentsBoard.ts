@@ -211,9 +211,9 @@ export interface GroupFill {
   rate: number;
 }
 
-/** Seats taken against capacity for each active group, emptiest first. Only members with status 'active' hold a seat. */
+/** Seats taken against capacity for each started, active group, emptiest first. Only members with status 'active' hold a seat. */
 export function groupFill(
-  groups: { id: string; name: string; capacity: number | null; is_active: boolean | null }[],
+  groups: { id: string; name: string; capacity: number | null; is_active: boolean | null; start_date: string | null }[],
   members: { group_id: string; member_status: string | null }[],
 ): GroupFill[] {
   const taken = new Map<string, number>();
@@ -222,7 +222,8 @@ export function groupFill(
     taken.set(m.group_id, (taken.get(m.group_id) ?? 0) + 1);
   }
   return groups
-    .filter((g) => g.is_active !== false)
+    // A group with no start date has not begun: its empty seats are not unused capacity yet.
+    .filter((g) => g.is_active !== false && !!g.start_date)
     .map((g) => {
       const capacity = g.capacity ?? 0;
       const filled = taken.get(g.id) ?? 0;

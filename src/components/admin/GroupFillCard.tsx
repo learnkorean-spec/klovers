@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { groupFill } from "@/lib/paymentsBoard";
 
-/** Seats filled across active groups. 50 to 75% per group is a healthy range; below that a class time is running thin. */
+/** Seats filled across groups that have started. 50 to 75% per group is a healthy range; below that a class time is running thin. */
 export default function GroupFillCard() {
   const { data } = useQuery({
     queryKey: ["admin", "group-fill"],
     staleTime: 60_000,
     queryFn: async () => {
       const [g, m] = await Promise.all([
-        supabase.from("pkg_groups").select("id, name, capacity, is_active"),
+        supabase.from("pkg_groups").select("id, name, capacity, is_active, start_date"),
         supabase.from("pkg_group_members").select("group_id, member_status").eq("member_status", "active"),
       ]);
       if (g.error) throw g.error;
