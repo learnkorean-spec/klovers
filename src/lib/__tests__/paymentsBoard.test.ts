@@ -4,7 +4,7 @@
  * have both a bundle and legacy enrollment rows).
  */
 import { describe, it, expect } from "vitest";
-import { buildBoard, boardTiles, willEmailOnPaid, renewalsSoon, groupFill, type BoardInput } from "@/lib/paymentsBoard";
+import { buildBoard, boardTiles, willEmailOnPaid, renewalsSoon, groupFill, trialConversion, type BoardInput } from "@/lib/paymentsBoard";
 
 const enr = (id: string, user: string, pay: string, left: number, total: number, over = {}) => ({
   id, user_id: user, payment_status: pay, approval_status: "APPROVED",
@@ -188,5 +188,24 @@ describe("groupFill", () => {
       ],
     );
     expect(out.map((r) => [r.name, r.filled, r.rate])).toEqual([["B", 1, 0.25], ["A", 2, 0.5]]);
+  });
+});
+
+describe("trialConversion", () => {
+  it("counts distinct attendees with an account and how many paid", () => {
+    const out = trialConversion(
+      [
+        { user_id: "a", status: "confirmed_attendance" },
+        { user_id: "a", status: "confirmed_attendance" },
+        { user_id: "b", status: "confirmed_attendance" },
+        { user_id: null, status: "confirmed_attendance" },
+        { user_id: "c", status: "no_show" },
+      ],
+      new Set(["a", "c"]),
+    );
+    expect(out).toEqual({ attended: 2, paid: 1, percent: 50 });
+  });
+  it("is zero with no attendees", () => {
+    expect(trialConversion([], new Set()).percent).toBe(0);
   });
 });
