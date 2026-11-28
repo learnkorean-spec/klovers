@@ -30,6 +30,7 @@ import GroupsToStart from "@/components/admin/GroupsToStart";
 import TrialSessionsToOpen from "@/components/admin/TrialSessionsToOpen";
 import ClassRooms from "@/components/admin/ClassRooms";
 import MoneyIn from "@/components/admin/MoneyIn";
+import RenewalsSoon from "@/components/admin/RenewalsSoon";
 import { usePrivateConfirmQueue } from "@/hooks/admin/usePrivateConfirmQueue";
 import { CalendarDays, Users, GraduationCap, Bell, ArrowRight, MessageCircle } from "lucide-react";
 
@@ -533,6 +534,8 @@ const AdminToday = () => {
                   }
                   primary
                 />
+
+                <RenewalsSoon />
 
                 <ActionCard
                   icon={<GraduationCap className="h-4 w-4" />}

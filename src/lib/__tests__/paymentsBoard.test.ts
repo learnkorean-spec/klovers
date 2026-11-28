@@ -4,7 +4,7 @@
  * have both a bundle and legacy enrollment rows).
  */
 import { describe, it, expect } from "vitest";
-import { buildBoard, boardTiles, willEmailOnPaid, type BoardInput } from "@/lib/paymentsBoard";
+import { buildBoard, boardTiles, willEmailOnPaid, renewalsSoon, type BoardInput } from "@/lib/paymentsBoard";
 
 const enr = (id: string, user: string, pay: string, left: number, total: number, over = {}) => ({
   id, user_id: user, payment_status: pay, approval_status: "APPROVED",
@@ -159,5 +159,14 @@ describe("payments board", () => {
       expect(willEmailOnPaid({ ...e, payment_email_sent_at: "2026-11-01" })).toBe(false);
       expect(willEmailOnPaid({ ...e, payment_email_sent_at: "2026-11-01", matched_at: "2026-11-02" })).toBe(true);
     });
+  });
+});
+
+describe("renewalsSoon", () => {
+  const row = (name: string, payment: "paid" | "unpaid" | "cancelled", left: number) =>
+    ({ key: name, name, where: "g", kind: "group", payment, left, total: 4, note: "" }) as never;
+  it("keeps paid rows with one class left or none, fewest first", () => {
+    const out = renewalsSoon([row("b", "paid", 1), row("a", "paid", 0), row("c", "paid", 3), row("d", "unpaid", 0), row("e", "cancelled", 0)]);
+    expect(out.map((r) => r.name)).toEqual(["a", "b"]);
   });
 });
