@@ -4,7 +4,7 @@
  * have both a bundle and legacy enrollment rows).
  */
 import { describe, it, expect } from "vitest";
-import { buildBoard, boardTiles, willEmailOnPaid, renewalsSoon, type BoardInput } from "@/lib/paymentsBoard";
+import { buildBoard, boardTiles, willEmailOnPaid, renewalsSoon, groupFill, type BoardInput } from "@/lib/paymentsBoard";
 
 const enr = (id: string, user: string, pay: string, left: number, total: number, over = {}) => ({
   id, user_id: user, payment_status: pay, approval_status: "APPROVED",
@@ -168,5 +168,25 @@ describe("renewalsSoon", () => {
   it("keeps paid rows with one class left or none, fewest first", () => {
     const out = renewalsSoon([row("b", "paid", 1), row("a", "paid", 0), row("c", "paid", 3), row("d", "unpaid", 0), row("e", "cancelled", 0)]);
     expect(out.map((r) => r.name)).toEqual(["a", "b"]);
+  });
+});
+
+describe("groupFill", () => {
+  it("counts only active members, skips inactive groups, emptiest first", () => {
+    const out = groupFill(
+      [
+        { id: "a", name: "A", capacity: 4, is_active: true },
+        { id: "b", name: "B", capacity: 4, is_active: true },
+        { id: "c", name: "C", capacity: 4, is_active: false },
+      ],
+      [
+        { group_id: "a", member_status: "active" },
+        { group_id: "a", member_status: "active" },
+        { group_id: "a", member_status: "completed" },
+        { group_id: "b", member_status: "active" },
+        { group_id: "c", member_status: "active" },
+      ],
+    );
+    expect(out.map((r) => [r.name, r.filled, r.rate])).toEqual([["B", 1, 0.25], ["A", 2, 0.5]]);
   });
 });
