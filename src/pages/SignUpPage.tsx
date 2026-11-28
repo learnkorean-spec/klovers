@@ -33,6 +33,10 @@ const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [level, setLevel] = useState("");
+  // Optional. 28 Nov 2026: of the 44 people who signed up in the previous 60
+  // days and never booked a trial, 2 had a phone number on file, so Re could
+  // write to 2 of them. Nobody is turned away for leaving it empty.
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -85,6 +89,7 @@ const SignUpPage = () => {
           // Stored in user_metadata so it survives email-confirmation flows
           // where there's no immediate session to update profiles directly.
           ...(persistedLevel ? { level: persistedLevel } : {}),
+          ...(phone.trim() ? { phone: phone.trim().slice(0, 30) } : {}),
           // Which language they are reading Klovers in, right now, on this page.
           // Until this line existed nothing ever wrote profiles.language and all
           // 107 rows sat on the 'ar' default, so every language-aware letter went
@@ -163,6 +168,9 @@ const SignUpPage = () => {
       const patch: Record<string, string> = {};
       if (tz) patch.timezone = tz;
       if (derivedCountry) patch.country = derivedCountry;
+      // Only a number that could be dialled: 8 to 15 digits, as on /enroll-now.
+      const phoneDigits = phone.replace(/[^0-9]/g, "");
+      if (phoneDigits.length >= 8 && phoneDigits.length <= 15) patch.phone = phone.trim().slice(0, 30);
 
       if (Object.keys(patch).length > 0) {
         void (async () => {
@@ -342,6 +350,22 @@ const SignUpPage = () => {
                   </div>
                 );
               })()}
+              <label htmlFor="signup-phone" className="sr-only">
+                {isAr ? "رقم الواتساب (اختياري)" : "WhatsApp number (optional)"}
+              </label>
+              <Input
+                id="signup-phone"
+                name="phone"
+                type="tel"
+                inputMode="tel"
+                dir="ltr"
+                autoComplete="tel"
+                placeholder={isAr ? "رقم الواتساب (اختياري)" : "WhatsApp number (optional)"}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                maxLength={30}
+                className="text-start"
+              />
               {redirectTo !== "/trial-booking" && (
                 <Select value={level} onValueChange={setLevel}>
                   <SelectTrigger aria-label={isAr ? "مستوى اللغة الكورية (اختياري)" : "Korean level (optional)"}>

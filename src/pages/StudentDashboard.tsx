@@ -890,9 +890,13 @@ const StudentDashboard = () => {
               </div>
             ))}
           </div>
+          {/* Free trial first. Everyone who reaches this card has no
+              enrolment, and "pay for a course" was the big button while the
+              free class was the quiet one beside it. Of 44 recent signups who
+              never booked, 5 ever saw the trial page. */}
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button onClick={() => navigate("/enroll-now")} size="lg" className="flex-1">{t("dashboardPage.enrollNow")}</Button>
-            <Button variant="outline" size="lg" onClick={() => navigate("/free-trial")} className="flex-1">{t("dashboardPage.bookFreeTrial")}</Button>
+            <Button size="lg" onClick={() => navigate("/free-trial")} className="flex-1">{t("dashboardPage.bookFreeTrial")}</Button>
+            <Button variant="outline" onClick={() => navigate("/enroll-now")} size="lg" className="flex-1">{t("dashboardPage.enrollNow")}</Button>
           </div>
         </CardContent>
       </Card>
