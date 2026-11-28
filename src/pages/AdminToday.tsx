@@ -30,6 +30,7 @@ import GroupsToStart from "@/components/admin/GroupsToStart";
 import TrialSessionsToOpen from "@/components/admin/TrialSessionsToOpen";
 import ClassRooms from "@/components/admin/ClassRooms";
 import MoneyIn from "@/components/admin/MoneyIn";
+import LazyMount from "@/components/admin/LazyMount";
 import RenewalsSoon from "@/components/admin/RenewalsSoon";
 import GroupFillCard from "@/components/admin/GroupFillCard";
 import TrialConversionCard from "@/components/admin/TrialConversionCard";
@@ -390,7 +391,7 @@ const AdminToday = () => {
       activeId="today"
     >
       <div id="main-content">
-        <div className="mx-auto w-full max-w-6xl px-5 py-8 space-y-8">
+        <div className="mx-auto w-full max-w-6xl px-5 py-8 pb-28 space-y-8 sm:pb-8 max-sm:[&_button]:min-h-10 max-sm:[&_a.inline-flex]:min-h-10">
 
           <header className="flex flex-wrap items-end justify-between gap-4">
             <div className="space-y-1">
@@ -612,7 +613,7 @@ const AdminToday = () => {
               </h2>
               <p className="text-xs text-muted-foreground">what has been collected so far</p>
             </div>
-            <MoneyIn />
+            <LazyMount><MoneyIn /></LazyMount>
           </section>
 
           {/* GROUPS TO START
@@ -633,7 +634,7 @@ const AdminToday = () => {
               </h2>
               <p className="text-xs text-muted-foreground">sets the first class date and the payment deadline</p>
             </div>
-            <GroupsToStart />
+            <LazyMount><GroupsToStart /></LazyMount>
           </section>
 
           {/* PRIVATE CLASSES TO CONFIRM
@@ -689,7 +690,7 @@ const AdminToday = () => {
               </h2>
               <p className="text-xs text-muted-foreground">open one to change the date or the answer</p>
             </div>
-            <RecordedClasses limit={6} />
+            <LazyMount><RecordedClasses limit={6} /></LazyMount>
           </section>
 
           {/* TRIAL — WHO CAME
@@ -712,7 +713,7 @@ const AdminToday = () => {
               </h2>
               <p className="text-xs text-muted-foreground">undecided is not a no-show</p>
             </div>
-            <TrialAttendance days={14} />
+            <LazyMount><TrialAttendance days={14} /></LazyMount>
           </section>
 
           {/* CLASS ROOMS
@@ -734,7 +735,7 @@ const AdminToday = () => {
               </h2>
               <p className="text-xs text-muted-foreground">the link students are sent</p>
             </div>
-            <ClassRooms />
+            <LazyMount><ClassRooms /></LazyMount>
           </section>
 
           {/* TRIAL SESSIONS — CAN THEY BE BOOKED
@@ -752,7 +753,7 @@ const AdminToday = () => {
               </h2>
               <p className="text-xs text-muted-foreground">whether a student can book it at all</p>
             </div>
-            <TrialSessionsToOpen />
+            <LazyMount><TrialSessionsToOpen /></LazyMount>
           </section>
 
           {/* TRIAL WEEK */}

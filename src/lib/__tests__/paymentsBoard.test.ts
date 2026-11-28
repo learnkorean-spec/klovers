@@ -172,12 +172,13 @@ describe("renewalsSoon", () => {
 });
 
 describe("groupFill", () => {
-  it("counts only active members, skips inactive groups, emptiest first", () => {
+  it("counts only active members, skips inactive and unstarted groups, emptiest first", () => {
     const out = groupFill(
       [
-        { id: "a", name: "A", capacity: 4, is_active: true },
-        { id: "b", name: "B", capacity: 4, is_active: true },
-        { id: "c", name: "C", capacity: 4, is_active: false },
+        { id: "a", name: "A", capacity: 4, is_active: true, start_date: "2026-11-01" },
+        { id: "b", name: "B", capacity: 4, is_active: true, start_date: "2026-11-01" },
+        { id: "c", name: "C", capacity: 4, is_active: false, start_date: "2026-11-01" },
+        { id: "d", name: "D", capacity: 8, is_active: true, start_date: null },
       ],
       [
         { group_id: "a", member_status: "active" },
