@@ -194,3 +194,10 @@ export function boardTiles(rows: BoardRow[]) {
     oneLeft: active.filter((r) => r.left === 1).length,
   };
 }
+
+/** Paid students with one class left or none, fewest first. Cancelled and unpaid rows are not renewals. */
+export function renewalsSoon(rows: BoardRow[]): BoardRow[] {
+  return rows
+    .filter((r) => r.payment === "paid" && r.left <= 1)
+    .sort((a, b) => a.left - b.left || a.name.localeCompare(b.name));
+}

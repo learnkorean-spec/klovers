@@ -23,7 +23,7 @@ import {
   type BoardRow,
 } from "@/lib/paymentsBoard";
 
-async function loadBoard(): Promise<BoardRow[]> {
+export async function loadBoard(): Promise<BoardRow[]> {
   // Every query reads all of its rows (PostgREST silently stops at 1000) and
   // all of them start together: names come from profiles directly rather than
   // after the enrollments, so there is no second round trip on a phone.
