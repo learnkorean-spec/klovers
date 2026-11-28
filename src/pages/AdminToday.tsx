@@ -211,6 +211,9 @@ const AdminToday = () => {
             // never holds it, so this card read 0 while a payment was owed.
             .eq("approval_status", "APPROVED")
             .eq("payment_status", "PENDING_PAYMENT")
+            // A cancelled enrollment is never going to pay. Without this the
+            // card counted 2 of them and disagreed with the payments board.
+            .eq("enrollment_status", "active")
             .is("deleted_at", null),
           // Unread business updates only. Without the two filters this counted
           // every row the table had ever held — a number that only grows — and
@@ -466,7 +469,7 @@ const AdminToday = () => {
                           asChild
                           size="sm"
                           variant={hasPhone ? "default" : "outline"}
-                          className="h-7 px-2 text-xs"
+                          className="h-9 px-3 text-xs sm:h-7 sm:px-2"
                         >
                           <a href={waLink} target="_blank" rel="noopener noreferrer">
                             <MessageCircle className="mr-1 h-3.5 w-3.5" />
@@ -492,11 +495,11 @@ const AdminToday = () => {
             <h2 className="text-xs font-bold tracking-[0.08em] text-muted-foreground">NEEDS YOU</h2>
 
             {!counts && !error ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-44 rounded-lg" />)}
               </div>
             ) : counts ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
                 <ActionCard
                   icon={<CalendarDays className="h-4 w-4" />}
@@ -755,11 +758,11 @@ const AdminToday = () => {
             </div>
 
             {!slots && !error ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
               </div>
             ) : slots && slots.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {slots.map(s => {
                   const cap = s.capacity ?? 0;
                   return (
@@ -830,11 +833,11 @@ const AdminToday = () => {
             </div>
 
             {!groupClasses && !error ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
               </div>
             ) : groupClasses && groupClasses.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {groupClasses.map(p => (
                   <Card key={p.id}>
                     <CardContent className="p-4 space-y-3">
@@ -929,7 +932,7 @@ const ActionCard = ({
   urgent?: boolean;
   primary?: boolean;
 }) => (
-  <Card className={urgent ? "border-foreground" : undefined}>
+  <Card className={`min-w-0 ${urgent ? "border-foreground" : ""}`}>
     <CardContent className="p-5 flex h-full flex-col gap-2.5">
       <div className="flex items-center gap-2 text-muted-foreground">
         {urgent && <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" aria-hidden="true" />}
@@ -940,8 +943,8 @@ const ActionCard = ({
         <span className="text-3xl font-extrabold leading-none tracking-tight">{value}</span>
         <span className="text-sm text-muted-foreground">{unit}</span>
       </div>
-      <div className="text-sm leading-relaxed text-muted-foreground">{body}</div>
-      <Button asChild variant={primary ? "default" : "outline"} className="mt-auto w-full">
+      <div className="min-w-0 break-words text-sm leading-relaxed text-muted-foreground">{body}</div>
+      <Button asChild variant={primary ? "default" : "outline"} className="mt-auto min-h-11 w-full sm:min-h-9">
         <Link to={to}>{cta}</Link>
       </Button>
     </CardContent>

@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
  *   trials             pending trial bookings that are still live: waiting for a
  *                      date, or dated today or later. Past-dated pending bookings
  *                      are hidden from the trial list and are not counted.
- *   enrollments        approved but not yet paid (payment_status = PENDING_PAYMENT)
+ *   enrollments        approved but not yet paid (payment_status = PENDING_PAYMENT) and still active, same as the payments board
  *   teacherOnboarding  teachers still mid-onboarding (status = 'onboarding')
  *   exchangeReports    unreviewed Language Exchange reports (exchange_reports.reviewed = false)
  */
@@ -33,6 +33,7 @@ export function useSidebarBadges() {
           .select("id", { count: "exact", head: true })
           .eq("approval_status", "APPROVED")
           .eq("payment_status", "PENDING_PAYMENT")
+          .eq("enrollment_status", "active")
           .is("deleted_at", null),
         // 42P01 = relation does not exist: the teacher_onboarding migration
         // may not be applied yet (this repo never auto-applies migrations,
